@@ -1,6 +1,6 @@
 /** Pages (D-119): publish, update data, private/workspace/public, view links, PDF, versions. */
-import { registerPageTools, ToolRegistry } from "@kasama/agent";
-import { PAGE_CSP } from "@kasama/domain";
+import { registerPageTools, ToolRegistry } from "@casama/agent";
+import { PAGE_CSP } from "@casama/domain";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createPagesApp } from "../src/pages/app.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
@@ -91,7 +91,7 @@ afterAll(async () => {
 });
 
 const HTML = `<!doctype html><html><head><title>Sales</title></head><body><h1 id="t"></h1>
-<script>const d = JSON.parse(document.getElementById("kasama-data").textContent); document.getElementById("t").textContent = "Total " + d.total;</script></body></html>`;
+<script>const d = JSON.parse(document.getElementById("casama-data").textContent); document.getElementById("t").textContent = "Total " + d.total;</script></body></html>`;
 
 describe("pages", () => {
   let pageId: string;
@@ -133,10 +133,10 @@ describe("pages", () => {
     expect(res.headers.get("content-security-policy")).toContain("connect-src 'none'");
     expect(res.headers.get("x-robots-tag")).toContain("noindex");
     const body = await res.text();
-    expect(body).toContain('id="kasama-data"');
+    expect(body).toContain('id="casama-data"');
     expect(body).toContain('"total":42');
     expect(body).not.toContain("</script><b>"); // data can't break out of its script block
-    expect(body).toContain("kasama-updated");
+    expect(body).toContain("casama-updated");
     // Single use.
     expect((await pages.request(pathOf(link))).status).toBe(404);
     // No cookie, no page.
@@ -243,7 +243,7 @@ describe("pages", () => {
     const res = await open(await viewLink(pageId, owner.token, "pdf"));
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toBe("application/pdf");
-    expect(printed.at(-1)).toContain('id="kasama-data"');
+    expect(printed.at(-1)).toContain('id="casama-data"');
     const off = createPagesApp({ db: h.handle.db });
     const first = await pages.request(pathOf(await viewLink(pageId, owner.token, "pdf")));
     const cookie = first.headers.get("set-cookie")?.split(";")[0] ?? "";

@@ -6,7 +6,7 @@ create table public.computers (
   kind text not null default 'team' check (kind in ('private', 'team', 'local')),
   owner_bot_id uuid references public.bots (id) on delete cascade,
   name text not null default 'Team computer',
-  provider text not null default 'docker' check (provider in ('docker', 'e2b', 'daytona', 'local', 'kasama-cloud')),
+  provider text not null default 'docker' check (provider in ('docker', 'e2b', 'daytona', 'local', 'casama-cloud')),
   provider_ref text,
   profile text not null default 'headless' check (profile in ('headless', 'desktop')),
   state text not null default 'stopped' check (state in ('provisioning', 'starting', 'running', 'idle', 'sleeping', 'stopped', 'error')),

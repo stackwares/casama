@@ -54,7 +54,7 @@
             "callId": "s1",
             "name": "setup__apply",
             "args": {
-              "instructions": "You are Kasama, a coding assistant for Ana. Be brief and review code carefully.",
+              "instructions": "You are Casama, a coding assistant for Ana. Be brief and review code carefully.",
               "memories": ["Prefers TypeScript", "Reviews PRs in the morning"]
             }
           }

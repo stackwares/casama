@@ -1,10 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { resolveTxt as dnsResolveTxt } from "node:dns/promises";
+import { openApiConfig, registerComponents } from "@casama/contracts";
+import { pgErrorCode, pgErrorMessage } from "@casama/db";
+import { registerEnterpriseRoutes } from "@casama/ee";
+import { captureError } from "@casama/observability";
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { openApiConfig, registerComponents } from "@kasama/contracts";
-import { pgErrorCode, pgErrorMessage } from "@kasama/db";
-import { registerEnterpriseRoutes } from "@kasama/ee";
-import { captureError } from "@kasama/observability";
 import { Scalar } from "@scalar/hono-api-reference";
 import { sql } from "drizzle-orm";
 import { cors } from "hono/cors";
@@ -15,6 +15,7 @@ import { httpMetrics, renderMetrics } from "./metrics.ts";
 import { idempotency } from "./middleware/idempotency.ts";
 import { rateLimit } from "./middleware/rate-limit.ts";
 import { registerA2aRoutes } from "./routes/a2a.ts";
+import { registerAboutYouRoutes } from "./routes/about-you.ts";
 import { registerAbuseRoutes } from "./routes/abuse.ts";
 import { registerActionRuleRoutes } from "./routes/action-rules.ts";
 import { registerAdminRoutes } from "./routes/admin.ts";
@@ -33,8 +34,8 @@ import { registerCheckinRoutes } from "./routes/checkins.ts";
 import { registerComputerRoutes } from "./routes/computers.ts";
 import { registerDeviceDataRoutes } from "./routes/device-data.ts";
 import { registerEncryptionRoutes } from "./routes/encryption.ts";
-import { registerKnowledgeRoutes } from "./routes/knowledge.ts";
 import { registerJoiningRoutes } from "./routes/joining.ts";
+import { registerKnowledgeRoutes } from "./routes/knowledge.ts";
 import { registerLinkRoutes } from "./routes/links.ts";
 import { registerLiveRoutes } from "./routes/live.ts";
 import { registerInternalRoutes, registerLocalRoutes } from "./routes/local.ts";
@@ -187,7 +188,7 @@ export function createApp(deps: AppDeps) {
   // Optional bearer auth: verifies the token when present; routes that need it call requireClaims.
   app.use("/v1/*", async (c, next) => {
     // Hosted MCP tool calls (D-117) arrive in-process with their person already resolved.
-    const inProcess = (c.env as InProcessEnv | undefined)?.kasamaClaims;
+    const inProcess = (c.env as InProcessEnv | undefined)?.casamaClaims;
     if (inProcess) {
       c.set("claims", inProcess);
       return next();
@@ -261,12 +262,13 @@ export function createApp(deps: AppDeps) {
   registerSecretStoreRoutes(app, deps);
   registerDeviceDataRoutes(app, deps);
   registerAttentionRoutes(app, deps);
+  registerAboutYouRoutes(app, deps);
   registerMcpRoutes(app, deps);
   // Enterprise features (ee/, commercial license, D-073); inert without a license key.
   registerEnterpriseRoutes(app as never, {
     db: deps.db,
-    licenseKey: deps.env.KASAMA_LICENSE_KEY,
-    licensePublicKey: deps.env.NODE_ENV === "test" ? deps.env.KASAMA_LICENSE_PUBLIC_KEY : undefined,
+    licenseKey: deps.env.CASAMA_LICENSE_KEY,
+    licensePublicKey: deps.env.NODE_ENV === "test" ? deps.env.CASAMA_LICENSE_PUBLIC_KEY : undefined,
     authAdmin: deps.env.SUPABASE_SERVICE_ROLE_KEY
       ? {
           url: `${deps.env.SUPABASE_URL}/auth/v1`,

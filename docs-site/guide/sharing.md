@@ -20,7 +20,7 @@ uses. It never holds keys, secrets or sign-ins.
 2. Optional: tick **Include memories**. Leave it off unless you trust who you share with, since it
    carries what the bot has learned about you and your work.
 3. Choose how to share it:
-   - **Save as file** saves a `.kasama-bot.json` file.
+   - **Save as file** saves a `.casama-bot.json` file.
    - **Copy link** creates a link and copies it. Links work for 30 days.
 
 Anyone who can see the bot can save it as a file. Creating a link, and including memories, is for
@@ -38,14 +38,14 @@ What a template carries:
 | The apps and services it uses, by name only | |
 | Memories, only if you ticked **Include memories** | |
 
-Templates use the open `kasama.bot` format, which is also what the community template repository
+Templates use the open `casama.bot` format, which is also what the community template repository
 accepts. See [Bot templates](/develop/bot-templates) for the file format.
 
 ## Import a bot
 
 1. Open the template:
    - **A file:** select **Add** (the **+** button) → **Import a bot**, then pick the file.
-   - **A link:** open it. It works for anyone signed in to Kasama, in any workspace.
+   - **A link:** open it. It works for anyone signed in to Casama, in any workspace.
 2. Review **What comes with it**: the instructions, skills, routines, the apps to
    **Connect after importing**, and how many memories it has.
 3. Choose whether to **Schedule its routines** and **Keep its memories**.
@@ -53,7 +53,7 @@ accepts. See [Bot templates](/develop/bot-templates) for the file format.
    model is filled in.
 5. Select **Import a bot**.
 
-The new bot belongs to you, and its routines run in your timezone. Kasama can't sign in to apps for
+The new bot belongs to you, and its routines run in your timezone. Casama can't sign in to apps for
 you, so if the template uses any, you see which ones to connect in Integrations. Importing counts
 toward your workspace's bot limit.
 
@@ -79,7 +79,7 @@ listed, and every change is recorded in the audit log. Access can also be given 
 (for example everyone who is an admin or higher) through the API; such entries show as
 **Everyone who is …**.
 
-From the CLI, `kasama bot create --private` creates a bot that only you can see.
+From the CLI, `casama bot create --private` creates a bot that only you can see.
 
 ### A bot working for someone uses only their things
 
@@ -128,7 +128,7 @@ Along the way:
   `~/imported/hermes/` on the new bot's computer. Tick **Copy … other files** to do that.
 
 The import goes through the same review and limits as a template, so there's one way to create a
-bot from outside Kasama.
+bot from outside Casama.
 
 ## Import memories from ChatGPT or Claude
 

@@ -18,6 +18,7 @@ import '../features/search/search_view.dart';
 import '../features/groups/group_chats.dart';
 import '../features/pages/pages_screen.dart';
 import '../features/welcome/welcome_screen.dart';
+import '../features/settings/about_you_screen.dart';
 import '../features/settings/password_managers_screen.dart';
 import '../features/teach/teach_draft_screen.dart';
 import '../features/projects/projects_screen.dart';
@@ -220,7 +221,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          // Back from a sign-in email, Google, Apple or SSO (kasama://app/login-callback): Supabase
+          // Back from a sign-in email, Google, Apple or SSO (casama://app/login-callback): Supabase
           // takes the session from the link; once signed in this just goes home.
           GoRoute(path: '/login-callback', redirect: (_, _) => '/bots'),
           GoRoute(
@@ -313,6 +314,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(path: 'admin', pageBuilder: _page((_, _) => const AdminScreen())),
               GoRoute(path: 'billing', pageBuilder: _page((_, _) => const BillingScreen())),
               GoRoute(path: 'privacy', pageBuilder: _page((_, _) => const PrivacyScreen())),
+              GoRoute(path: 'about-you', pageBuilder: _page((_, _) => const AboutYouScreen())),
               GoRoute(path: 'two-step', pageBuilder: _page((_, _) => const TwoStepSettingsScreen())),
               GoRoute(path: 'workspace', pageBuilder: _page((_, _) => const WorkspaceSettingsScreen())),
               GoRoute(path: 'people', pageBuilder: _page((_, _) => const PeopleScreen())),

@@ -7,14 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/core/config.dart';
-import 'package:kasama_app/core/local_cache.dart';
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_app/core/router.dart';
-import 'package:kasama_app/core/server_config_cache.dart';
-import 'package:kasama_app/l10n/generated/app_localizations.dart';
-import 'package:kasama_app/main.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_app/core/config.dart';
+import 'package:casama_app/core/local_cache.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/core/router.dart';
+import 'package:casama_app/core/server_config_cache.dart';
+import 'package:casama_app/l10n/generated/app_localizations.dart';
+import 'package:casama_app/main.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
@@ -34,7 +34,7 @@ class _Backend extends FakeBackend {
 }
 
 PublicConfig _config({String supabaseUrl = 'https://db.example.com'}) => PublicConfig.fromJson({
-  'product_name': 'Kasama',
+  'product_name': 'Casama',
   'api_version': '1',
   'supabase_url': supabaseUrl,
   'supabase_anon_key': 'anon',
@@ -63,20 +63,20 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     SharedPreferences.setMockInitialValues({});
     // bootstrap opens the offline cache, which asks path_provider where to keep it.
-    final dir = Directory.systemTemp.createTempSync('kasama_cache');
+    final dir = Directory.systemTemp.createTempSync('casama_cache');
     addTearDown(() => dir.deleteSync(recursive: true));
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(const MethodChannel('plugins.flutter.io/path_provider'), (_) async => dir.path);
-    const url = 'http://kasama.invalid';
+    const url = 'http://casama.invalid';
     // Never reached and nothing saved: it fails, and the startup gate offers Retry.
     await expectLater(bootstrap(const AppConfig(apiUrl: url)), throwsA(anything));
-    await ServerConfigCache.write(url, _config(supabaseUrl: 'http://db.kasama.invalid'));
+    await ServerConfigCache.write(url, _config(supabaseUrl: 'http://db.casama.invalid'));
     final (_, backend) = await bootstrap(const AppConfig(apiUrl: url));
-    expect(backend.config?.supabaseUrl, 'http://db.kasama.invalid');
+    expect(backend.config?.supabaseUrl, 'http://db.casama.invalid');
     await Supabase.instance.dispose();
   });
 
   test('unreadable saved settings mean none', () async {
-    SharedPreferences.setMockInitialValues({'kasama.server_config.https://a.example.com': '{"broken": true}'});
+    SharedPreferences.setMockInitialValues({'casama.server_config.https://a.example.com': '{"broken": true}'});
     expect(await ServerConfigCache.read('https://a.example.com'), isNull);
   });
 

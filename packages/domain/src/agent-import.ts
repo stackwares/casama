@@ -1,5 +1,5 @@
 /**
- * Import an agent (D-122): turns an OpenClaw or Hermes Agent folder into a Kasama bot template
+ * Import an agent (D-122): turns an OpenClaw or Hermes Agent folder into a Casama bot template
  * (persona, skills, routines, memories) plus the files nothing maps to. Built from each project's
  * public documentation of its folder layout; no code from either project.
  *
@@ -43,7 +43,7 @@ export interface AgentImportPlan {
   skills: ImportedSkill[];
   routines: ImportedRoutine[];
   memories: ImportedMemory[];
-  /** Files with no Kasama equivalent: copied to ~/imported/ on the bot's computer. */
+  /** Files with no Casama equivalent: copied to ~/imported/ on the bot's computer. */
   leftovers: string[];
   /** Files never imported (secrets, settings, databases, logs), with why. */
   skipped: Array<{ path: string; reason: string }>;

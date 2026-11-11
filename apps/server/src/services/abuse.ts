@@ -1,14 +1,14 @@
 /**
- * Kasama Cloud abuse controls (SPEC: Phase 8 launch items; D-094): the sign-up gate (Firebase App
+ * Casama Cloud abuse controls (SPEC: Phase 8 launch items; D-094): the sign-up gate (Firebase App
  * Check or a proof-of-work puzzle), and suspending workspaces.
  */
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import type { Env } from "../env.ts";
 
-/** On for Kasama Cloud (billing on) unless turned off; self-hosted servers keep it off. */
+/** On for Casama Cloud (billing on) unless turned off; self-hosted servers keep it off. */
 export function abuseControlsOn(env: Pick<Env, "ABUSE_CONTROLS" | "BILLING_ENABLED">) {
   if (env.ABUSE_CONTROLS === "on") return true;
   if (env.ABUSE_CONTROLS === "off") return false;

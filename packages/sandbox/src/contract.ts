@@ -32,7 +32,7 @@ export function sandboxContract(
       const r = await collectExec(h.exec("echo out; echo err >&2; exit 7"));
       expect(r).toMatchObject({ stdout: "out\n", stderr: "err\n", code: 7 });
       const who = await collectExec(h.exec("whoami; pwd"));
-      expect(who.stdout).toMatch(/^kasama\n.*\/workspace\n$/);
+      expect(who.stdout).toMatch(/^casama\n.*\/workspace\n$/);
     });
 
     it("streams output as it is produced", async () => {

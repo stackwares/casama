@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 /// Turns live-view input into teach steps (D-120): a click is a step, typing is gathered into one
 /// step until something else happens (a click, a special key, a pause), and scrolling likewise.

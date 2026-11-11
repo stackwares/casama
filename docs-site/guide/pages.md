@@ -82,17 +82,17 @@ the app, public links and PDF export.
 - **No outside requests.** Pages can't load scripts, styles, images or data from other sites, or
   send forms. Images and fonts must be built in. Everything a page shows comes from its own HTML
   and data.
-- **No Kasama actions.** Buttons on a page can't call Kasama or the bot. To act on what you see, go
+- **No Casama actions.** Buttons on a page can't call Casama or the bot. To act on what you see, go
   back to the chat.
 - **Theme.** Pages don't take on your app theme. Bots are asked to use the light and dark colors
-  Kasama provides, so pages follow your system's light or dark mode.
+  Casama provides, so pages follow your system's light or dark mode.
 - **Size.** The HTML can be up to 2 MB and the data up to 1 MB.
-- **Versions.** Kasama keeps the last 20 versions of each page.
+- **Versions.** Casama keeps the last 20 versions of each page.
 
 ## For self-hosters
 
 Pages are served from their own address, separate from the app, so a page can never touch your
-Kasama session. Set `PAGES_URL` to its public address and `PAGES_PORT` to serve it from the API
+Casama session. Set `PAGES_URL` to its public address and `PAGES_PORT` to serve it from the API
 process. PDF export needs headless Chromium: set `PDF_CHROMIUM_PATH`. See
 [Configuration](/self-hosting/configuration).
 

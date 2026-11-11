@@ -1,5 +1,5 @@
 # Egress proxy: the only route out of computer networks. No dependencies beyond Node.js.
-#   docker build -f infra/egress-proxy/Dockerfile -t kasama/egress-proxy:dev .
+#   docker build -f infra/egress-proxy/Dockerfile -t casama/egress-proxy:dev .
 FROM node:24-slim
 WORKDIR /app
 COPY infra/egress-proxy/src ./src

@@ -1,6 +1,6 @@
 /** Ask for a secret in chat (D-101): the run waits, the value goes to Vault and never into the run. */
 import { fileURLToPath } from "node:url";
-import { checkSecretHosts, registrableDomain } from "@kasama/agent";
+import { checkSecretHosts, registrableDomain } from "@casama/agent";
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";

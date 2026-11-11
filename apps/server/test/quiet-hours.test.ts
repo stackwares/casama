@@ -1,5 +1,5 @@
 /** Quiet hours (D-109): pushes wait; urgent approvals and per-bot "always" still push. */
-import { NotificationService, RecordingPushSender } from "@kasama/agent";
+import { NotificationService, RecordingPushSender } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 

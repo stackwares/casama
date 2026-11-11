@@ -3,31 +3,31 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
-import 'package:kasama_sdk/chatgpt_sign_in.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/chatgpt_sign_in.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 import 'runner.dart';
 
-/// Resolves --org (slug or id), falling back to the default set with `kasama org use`.
-Future<OrganizationWithRole> orgFrom(CliContext ctx, KasamaClient c, String? flag) {
+/// Resolves --org (slug or id), falling back to the default set with `casama org use`.
+Future<OrganizationWithRole> orgFrom(CliContext ctx, CasamaClient c, String? flag) {
   final ref = flag ?? ctx.settings.get('org');
   if (ref == null) {
-    throw CliError('org_required', 'Pass --org <slug> or set a default with `kasama org use <slug>`.');
+    throw CliError('org_required', 'Pass --org <slug> or set a default with `casama org use <slug>`.');
   }
   return resolveOrg(c, ref);
 }
 
 /// Resolves a bot by id or (case-insensitive) name within an organization.
-Future<Bot> botFrom(KasamaClient c, OrganizationWithRole org, String ref) async {
+Future<Bot> botFrom(CasamaClient c, OrganizationWithRole org, String ref) async {
   final bots = (await c.bots.listBots(orgId: org.id)).data!.items;
   for (final b in bots) {
     if (b.id == ref || b.name.toLowerCase() == ref.toLowerCase()) return b;
   }
-  throw CliError('bot_not_found', 'No bot "$ref" in ${org.name}. See `kasama bot list`.');
+  throw CliError('bot_not_found', 'No bot "$ref" in ${org.name}. See `casama bot list`.');
 }
 
 void addOrgOption(Command<int> cmd) =>
-    cmd.argParser.addOption('org', abbr: 'o', help: 'Organization slug or id (default: `kasama org use`).');
+    cmd.argParser.addOption('org', abbr: 'o', help: 'Organization slug or id (default: `casama org use`).');
 
 class OrgUseCommand extends KCommand {
   OrgUseCommand(super.ctx);
@@ -72,7 +72,7 @@ class CredentialAddCommand extends KCommand {
       ..addOption('provider', mandatory: true, allowed: ProviderId.values.map((p) => p.value).toList())
       ..addOption('label', defaultsTo: 'Default')
       ..addOption('base-url', help: 'Required for openai_compatible (for example http://localhost:11434/v1).')
-      ..addOption('key', help: 'API key (or KASAMA_MODEL_KEY; prompted when omitted).');
+      ..addOption('key', help: 'API key (or CASAMA_MODEL_KEY; prompted when omitted).');
   }
   @override
   String get name => 'add';
@@ -85,7 +85,7 @@ class CredentialAddCommand extends KCommand {
     final provider = ProviderId.values.firstWhere((p) => p.value == argResults!['provider']);
     String? key = argResults!['key'] as String?;
     if (key == null && provider != ProviderId.openaiCompatible) {
-      key = readSecret('API key: ', env: 'KASAMA_MODEL_KEY');
+      key = readSecret('API key: ', env: 'CASAMA_MODEL_KEY');
     }
     final cred = (await c.credentials.createCredential(
       createCredentialRequest: CreateCredentialRequest(
@@ -122,7 +122,7 @@ class CredentialListCommand extends KCommand {
       }
       return '${k.id}\t${k.provider.value}\t${k.label}\t…${k.keyHint ?? ''}\t$tested';
     }).join('\n');
-    return ctx.emit(list.toJson(), lines.isEmpty ? 'No model keys yet. Add one with `kasama credential add`.' : lines);
+    return ctx.emit(list.toJson(), lines.isEmpty ? 'No model keys yet. Add one with `casama credential add`.' : lines);
   }
 }
 
@@ -255,7 +255,7 @@ class BotCreateCommand extends KCommand {
   @override
   String get description => 'Create a bot.';
   @override
-  String get invocation => 'kasama bot create <name> --credential <id> [--model <model>]';
+  String get invocation => 'casama bot create <name> --credential <id> [--model <model>]';
   @override
   Future<int> run() async {
     final rest = argResults!.rest;
@@ -303,7 +303,7 @@ class BotCreateCommand extends KCommand {
       ),
     ))
         .data!;
-    return ctx.emit(bot.toJson(), 'Created ${bot.name} (${bot.id}). Chat with it: kasama chat "${bot.name}"');
+    return ctx.emit(bot.toJson(), 'Created ${bot.name} (${bot.id}). Chat with it: casama chat "${bot.name}"');
   }
 }
 
@@ -323,7 +323,7 @@ class BotListCommand extends KCommand {
     final lines = list.items
         .map((b) => '${b.id}\t${b.name}\t${b.status.value}\t${b.modelPolicy.primary?.model ?? '(no model)'}\t${b.visibility.value}')
         .join('\n');
-    return ctx.emit(list.toJson(), lines.isEmpty ? 'No bots yet. Create one with `kasama bot create`.' : lines);
+    return ctx.emit(list.toJson(), lines.isEmpty ? 'No bots yet. Create one with `casama bot create`.' : lines);
   }
 }
 
@@ -403,7 +403,7 @@ class EventPrinter {
 }
 
 /// Streams a run to the terminal. Ctrl+C cancels the run; a second Ctrl+C exits.
-Future<int> streamRun(CliContext ctx, KasamaClient c, String runId, {int afterSeq = 0}) async {
+Future<int> streamRun(CliContext ctx, CasamaClient c, String runId, {int afterSeq = 0}) async {
   final printer = EventPrinter(ctx);
   StreamSubscription<ProcessSignal>? sigint;
   var interrupts = 0;
@@ -439,7 +439,7 @@ class ChatCommand extends KCommand {
   @override
   String get description => 'Chat with a bot. With a message, sends it and exits; without, starts an interactive chat.';
   @override
-  String get invocation => 'kasama chat <bot> [message]';
+  String get invocation => 'casama chat <bot> [message]';
   @override
   Future<int> run() async {
     final rest = argResults!.rest;
@@ -539,7 +539,7 @@ class MemoryListCommand extends KCommand {
   @override
   String get description => 'List a bot\'s memories, pinned first.';
   @override
-  String get invocation => 'kasama memory list <bot>';
+  String get invocation => 'casama memory list <bot>';
   @override
   Future<int> run() async {
     final rest = argResults!.rest;

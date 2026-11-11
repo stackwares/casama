@@ -1,4 +1,4 @@
--- Hosted MCP endpoint (SPEC: Post-v1 roadmap → Hosted MCP endpoint; D-117). The @kasama/mcp tools
+-- Hosted MCP endpoint (SPEC: Post-v1 roadmap → Hosted MCP endpoint; D-117). The @casama/mcp tools
 -- over Streamable HTTP at /mcp, authorized with OAuth (dynamic client registration, PKCE) or a
 -- workspace API key. Every token acts as one person in one workspace.
 

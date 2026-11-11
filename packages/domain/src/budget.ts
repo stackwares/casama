@@ -9,7 +9,7 @@ export interface BudgetState {
   /** The org's cost in the current quota period. */
   orgPeriod: number;
   quotaLimit?: number | null;
-  /** Prepaid credit balance when the plan is credit-gated (Kasama Cloud, D-070); null = no gate. */
+  /** Prepaid credit balance when the plan is credit-gated (Casama Cloud, D-070); null = no gate. */
   credits?: number | null;
   /** Computer-seconds this month and the plan's monthly computer hours. */
   computerSeconds?: number;

@@ -1,4 +1,3 @@
-import type { OpenAPIHono } from "@hono/zod-openapi";
 import {
   existingWelcome,
   handleWelcomeAction,
@@ -6,11 +5,12 @@ import {
   type StoredMemory,
   startWelcome,
   storeFromConfig,
-} from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { contentKeys, type JwtClaims, schema, withUserSession } from "@kasama/db";
-import { parseMentions, templateById } from "@kasama/domain";
-import { withSpan } from "@kasama/observability";
+} from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { contentKeys, type JwtClaims, schema, withUserSession } from "@casama/db";
+import { parseMentions, templateById } from "@casama/domain";
+import { withSpan } from "@casama/observability";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
 import { streamSSE } from "hono/streaming";
 import { enforceLimit } from "../../billing/limits.ts";
@@ -406,7 +406,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       const kept = Array.isArray(m.content)
         ? (m.content as Array<{ type?: string }>).filter((p) => p.type !== "text")
         : [];
-      if (!m.parent) await tx.execute(sql`select set_config('kasama.branch_root', 'on', true)`);
+      if (!m.parent) await tx.execute(sql`select set_config('casama.branch_root', 'on', true)`);
       const [msg] = await tx.execute<{ id: string }>(sql`
         insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id, parent_message_id)
         values (${m.org_id}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid,
@@ -676,11 +676,20 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     }
     if (!orgId) throw new ApiError(409, "slug_taken", "Could not create your space; try again");
     if (deps.billing?.enabled) await deps.billing.recompute(orgId);
+    // About you (D-169): the name card is filled in from a real name only, never the email.
+    const [profile] = await db.execute<{ name: string | null }>(sql`
+      select coalesce(nullif(btrim(preferred_name), ''), nullif(split_part(btrim(display_name), ' ', 1), '')) as name
+      from public.profiles where user_id = ${claims.sub}::uuid`);
+    const emailPrefix = email.split("@")[0] ?? "";
+    const realFirst =
+      b.first_name?.trim() ||
+      (profile?.name && profile.name !== emailPrefix ? profile.name : "") ||
+      (first !== emailPrefix ? first : "");
     const w = await startWelcome(db, {
       orgId,
       userId: claims.sub,
-      firstName: first,
-      botName: b.bot_name ?? "Kasama",
+      firstName: realFirst ? `${realFirst[0]?.toUpperCase()}${realFirst.slice(1)}` : "",
+      botName: b.bot_name ?? "Casama",
     });
     return c.json(
       { org_id: w.orgId, bot_id: w.botId, conversation_id: w.conversationId, created: true },

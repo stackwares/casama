@@ -1,5 +1,5 @@
-import { createDb } from "@kasama/db";
-import { createAuthUser, startTestDatabase } from "@kasama/db/testing";
+import { createDb } from "@casama/db";
+import { createAuthUser, startTestDatabase } from "@casama/db/testing";
 import { expect, it } from "vitest";
 import { cleanupIdempotencyKeys } from "../src/worker/workflows.ts";
 

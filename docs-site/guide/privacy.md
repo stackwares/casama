@@ -2,7 +2,7 @@
 
 Your chats, memories and files belong to you. This page covers how to export your data, delete
 your account, control how long run history is kept, encrypt workspace content, and protect your
-sign-in. It also explains what Kasama never sends to a model or anywhere else.
+sign-in. It also explains what Casama never sends to a model or anywhere else.
 
 ## Export your data
 
@@ -13,8 +13,8 @@ sign-in. It also explains what Kasama never sends to a model or anywhere else.
 From the CLI:
 
 ```sh
-kasama account export              # writes kasama-export-<date>.zip
-kasama account export -o my-data.zip
+casama account export              # writes casama-export-<date>.zip
+casama account export -o my-data.zip
 ```
 
 The export is built with your own permissions, so it holds exactly what you can see. It contains
@@ -36,7 +36,7 @@ You're signed out everywhere at once, your devices stop receiving push notificat
 shows the date your data will be erased. From the CLI:
 
 ```sh
-kasama account delete --confirm ana@example.com
+casama account delete --confirm ana@example.com
 ```
 
 ### What gets deleted
@@ -87,7 +87,7 @@ What changes when it's on:
 - Exact-word search no longer matches text inside encrypted content. Titles and names still match,
   and memory and knowledge search still work by meaning.
 - If the workspace is deleted, its key is destroyed and the content can't be recovered.
-- You don't keep or copy any key. Kasama creates the workspace's key and wraps it with the
+- You don't keep or copy any key. Casama creates the workspace's key and wraps it with the
   server's key.
 
 To rotate, tap **Rotate key**. This rewraps the workspace key with the server's current key;
@@ -113,7 +113,7 @@ You can add more than one authenticator with **Add another authenticator**, and 
 each one. Removing your only authenticator turns two-step sign-in off.
 
 After you enter your password, the app asks **Enter your code** before anything else. The CLI asks
-for the code too, or takes it from `kasama login --code` or the `KASAMA_2FA_CODE` environment
+for the code too, or takes it from `casama login --code` or the `CASAMA_2FA_CODE` environment
 variable.
 
 Workspaces can require two-step sign-in for owners and admins. See
@@ -121,14 +121,14 @@ Workspaces can require two-step sign-in for owners and admins. See
 
 ## What models never see
 
-- **Secrets.** Bots refer to secrets with placeholders such as `{{secret:NAME}}`. Kasama fills in
+- **Secrets.** Bots refer to secrets with placeholders such as `{{secret:NAME}}`. Casama fills in
   the real value only when a request goes to a host the secret allows, after the model has
   written the call. Two-step seeds only ever produce codes. Known secret values are replaced with
   `[secret:NAME]` before anything reaches the model, the run timeline or logs.
 - **Model keys and connection tokens.** These stay in the server's vault and are used by the
   server, not the bot.
 
-See [Autonomy, approvals and action rules](/guide/autonomy#untrusted-content) for how Kasama
+See [Autonomy, approvals and action rules](/guide/autonomy#untrusted-content) for how Casama
 handles untrusted content.
 
 ## Run tracing
@@ -145,7 +145,7 @@ input and output, with secrets and model keys removed. Workspaces can opt out wi
 ## Telemetry
 
 - **Usage ping:** off by default. A self-hosted server sends nothing unless its owner sets
-  `TELEMETRY=on`. Then, once a week, it sends a random instance id, the Kasama version, and the
+  `TELEMETRY=on`. Then, once a week, it sends a random instance id, the Casama version, and the
   number of bots and users active in the last 7 days. Nothing else. The admin console shows
   whether it's on.
 - **Error reports and product analytics:** off unless whoever builds the app or runs the server

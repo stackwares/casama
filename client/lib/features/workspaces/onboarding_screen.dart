@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -9,7 +9,7 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
-import '../../ui/kasama_mark.dart';
+import '../../ui/casama_mark.dart';
 import '../bots/bots_screen.dart';
 import '../settings/model_keys_screen.dart';
 import '../../ui/glow_button.dart';
@@ -162,7 +162,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               padding: const EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.sm, AppSpace.xs, 0),
               child: Row(
                 children: [
-                  const KasamaMark(size: 30),
+                  const CasamaMark(size: 30),
                   const SizedBox(width: AppSpace.sm),
                   Expanded(
                     child: Text(l10n.onboardingTitle, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),

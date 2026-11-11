@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 import { once } from "node:events";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
-import { loadIntegration, parseOAuthSecret } from "@kasama/agent";
-import type { CatalogApp } from "@kasama/domain";
+import { loadIntegration, parseOAuthSecret } from "@casama/agent";
+import type { CatalogApp } from "@casama/domain";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -59,7 +59,7 @@ async function startVendor() {
       const body = JSON.parse(raw);
       return json(res, 201, {
         ...body,
-        client_id: "kasama-client",
+        client_id: "casama-client",
         token_endpoint_auth_method: "none",
       });
     }
@@ -272,9 +272,7 @@ describe("built-in app connections", () => {
       "http://localhost:8787/oauth/callback",
     );
     expect(oauthRedirectFor("http://10.0.2.2:8787")).toBe("http://localhost:8787/oauth/callback");
-    expect(oauthRedirectFor("https://api.kasama.dev")).toBe(
-      "https://api.kasama.dev/oauth/callback",
-    );
+    expect(oauthRedirectFor("https://api.casama.ai")).toBe("https://api.casama.ai/oauth/callback");
     expect(oauthRedirectFor("http://127.0.0.1:8787")).toBe("http://127.0.0.1:8787/oauth/callback");
   });
 

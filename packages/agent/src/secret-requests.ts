@@ -3,7 +3,7 @@
  * pauses the run (durably, in the run loop) until a person saves the value through a protected card
  * or declines. The run only ever learns "Saved NAME for SERVICE"; the value goes to Vault.
  */
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import type { EventBus } from "./events.ts";

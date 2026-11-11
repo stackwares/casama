@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/core/backend.dart';
-import 'package:kasama_app/features/chat/chat_screen.dart';
-import 'package:kasama_app/features/skills/skills_screen.dart';
+import 'package:casama_app/core/backend.dart';
+import 'package:casama_app/features/chat/chat_screen.dart';
+import 'package:casama_app/features/skills/skills_screen.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';

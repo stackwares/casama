@@ -4,7 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -180,7 +180,7 @@ class _Report extends StatelessWidget {
 
   void _export(BuildContext button, {required bool csv}) {
     final stamp = report.since.toIso8601String().substring(0, 10);
-    final name = 'kasama-usage-${period.name}-$stamp.${csv ? 'csv' : 'json'}';
+    final name = 'casama-usage-${period.name}-$stamp.${csv ? 'csv' : 'json'}';
     final body = csv ? usageCsv(report) : const JsonEncoder.withIndent('  ').convert(report.toJson());
     shareFiles(
       [XFile.fromData(utf8.encode(body), name: name, mimeType: csv ? 'text/csv' : 'application/json')],

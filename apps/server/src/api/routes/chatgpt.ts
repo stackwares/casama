@@ -5,7 +5,7 @@
  * relays the code here. The server keeps the PKCE verifier, exchanges the code, verifies the ID
  * token and writes the tokens to Vault: they never reach the client device.
  */
-import type { OpenAPIHono } from "@hono/zod-openapi";
+
 import {
   authorizeUrl,
   CHATGPT_DYNAMIC_CLIENT,
@@ -16,9 +16,10 @@ import {
   pkcePair,
   randomToken,
   tokensFrom,
-} from "@kasama/agent";
-import { PRODUCT_NAME, routes } from "@kasama/contracts";
-import { type JwtClaims, schema, withUserSession } from "@kasama/db";
+} from "@casama/agent";
+import { PRODUCT_NAME, routes } from "@casama/contracts";
+import { type JwtClaims, schema, withUserSession } from "@casama/db";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { eq, sql } from "drizzle-orm";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { ApiError } from "../errors.ts";
@@ -32,7 +33,7 @@ function requireClaims(claims: JwtClaims | undefined): JwtClaims {
   return claims;
 }
 
-/** Whether this server offers ChatGPT plan sign-in (off on Kasama Cloud until OpenAI approves). */
+/** Whether this server offers ChatGPT plan sign-in (off on Casama Cloud until OpenAI approves). */
 export function chatGptSignInEnabled(env: AppDeps["env"]) {
   if (env.CHATGPT_SIGN_IN === "on") return true;
   if (env.CHATGPT_SIGN_IN === "off") return false;

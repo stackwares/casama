@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "dev.kasama" "\0"
-            VALUE "FileDescription", "kasama_app" "\0"
+            VALUE "CompanyName", "dev.casama" "\0"
+            VALUE "FileDescription", "casama_app" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "kasama_app" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 Kasama. All rights reserved." "\0"
-            VALUE "OriginalFilename", "kasama_app.exe" "\0"
-            VALUE "ProductName", "kasama_app" "\0"
+            VALUE "InternalName", "casama_app" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Casama. All rights reserved." "\0"
+            VALUE "OriginalFilename", "casama_app.exe" "\0"
+            VALUE "ProductName", "casama_app" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
@@ -113,7 +113,7 @@ END
 /////////////////////////////////////////////////////////////////////////////
 //
 // WinSparkle: updates must carry a DSA signature from the matching private key
-// (~/.config/kasama/winsparkle-dsa-private.pem on the release machine).
+// (~/.config/casama/winsparkle-dsa-private.pem on the release machine).
 //
 DSAPub      DSAPEM      "..\\dsa_pub.pem"
 

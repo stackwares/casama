@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/features/bots/links_screen.dart';
+import 'package:casama_app/features/bots/links_screen.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
@@ -19,19 +19,19 @@ void main() {
     await tester.enterText(find.byKey(const Key('inviteName')), 'Sam');
     await tester.tap(find.byKey(const Key('inviteName-ok')));
     await tester.pumpAndSettle();
-    expect(find.text('kasama-link:abc123'), findsOneWidget);
+    expect(find.text('casama-link:abc123'), findsOneWidget);
     await tester.tap(find.text('Close'));
     await tester.pumpAndSettle();
     expect(find.text('Waiting for your contact to accept'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('acceptLink')));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('acceptInvite')), 'kasama-link:xyz');
+    await tester.enterText(find.byKey(const Key('acceptInvite')), 'casama-link:xyz');
     await tester.enterText(find.byKey(const Key('acceptName')), 'Lee');
     await tester.pump();
     await tester.tap(find.byKey(const Key('saveAcceptLink')));
     await tester.pumpAndSettle();
-    expect(backend.linkActions, ['invite:Sam', 'accept:kasama-link:xyz:Lee']);
+    expect(backend.linkActions, ['invite:Sam', 'accept:casama-link:xyz:Lee']);
     expect(find.text('Linked with Ben'), findsOneWidget);
 
     await tester.tap(find.text('Lee'));

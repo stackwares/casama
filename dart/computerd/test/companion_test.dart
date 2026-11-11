@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
-import 'package:kasama_computerd/computerd.dart';
+import 'package:casama_computerd/computerd.dart';
 import 'package:test/test.dart';
 
 const token = 'test-token-0123456789abcdef';

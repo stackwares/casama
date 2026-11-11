@@ -4,8 +4,8 @@
  * event, a finished workout, a notification from a watched app, Focus on or off. A wake-up also
  * brings the morning brief forward (check-ins, D-114).
  */
-import { checkinCapReached, type MapsProvider, travelMinutes } from "@kasama/agent";
-import type { Database } from "@kasama/db";
+import { checkinCapReached, type MapsProvider, travelMinutes } from "@casama/agent";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { createRoutineRun } from "./routines.ts";
 

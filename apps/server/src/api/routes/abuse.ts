@@ -1,13 +1,14 @@
 /**
- * Kasama Cloud abuse controls (D-094):
+ * Casama Cloud abuse controls (D-094):
  * - GET /v1/signup/challenge: a proof-of-work puzzle for clients without App Check.
  * - POST /hooks/auth/before-user-created: Supabase Auth's hook; a new email account must carry a
  *   valid `signup_proof` in its user metadata (App Check token or solved puzzle).
  * - POST /internal/abuse: the egress proxy reports abuse; mining stops the computer and suspends
  *   the workspace.
  */
+
+import { routes } from "@casama/contracts";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { routes } from "@kasama/contracts";
 import { sql } from "drizzle-orm";
 import { verifyStandardWebhook } from "../../billing/dodo.ts";
 import {

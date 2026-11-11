@@ -1,9 +1,9 @@
-/** Kasama Cloud abuse controls (D-094): sign-up gate, egress abuse reports, suspension. */
+/** Casama Cloud abuse controls (D-094): sign-up gate, egress abuse reports, suspension. */
 import { createHash, randomUUID } from "node:crypto";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { ComputerService } from "@kasama/agent";
-import { unavailableProvider } from "@kasama/sandbox";
+import { ComputerService } from "@casama/agent";
+import { unavailableProvider } from "@casama/sandbox";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { internalToken } from "../src/api/routes/local.ts";
@@ -141,7 +141,7 @@ describe("egress abuse and suspension", () => {
   const report = (kind: string) =>
     h.request("/internal/abuse", {
       method: "POST",
-      headers: { "x-kasama-internal": internalToken(h.deps.env) },
+      headers: { "x-casama-internal": internalToken(h.deps.env) },
       json: { computer: computerId, kind, target: "pool.example:3333" },
     });
 

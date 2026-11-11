@@ -193,28 +193,28 @@ importers:
       '@hono/zod-openapi':
         specifier: ^1.6.3
         version: 1.6.3(hono@4.13.17)(zod@4.6.7)
-      '@kasama/agent':
+      '@casama/agent':
         specifier: workspace:*
         version: link:../../packages/agent
-      '@kasama/contracts':
+      '@casama/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
-      '@kasama/db':
+      '@casama/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@kasama/domain':
+      '@casama/domain':
         specifier: workspace:*
         version: link:../../packages/domain
-      '@kasama/ee':
+      '@casama/ee':
         specifier: workspace:*
         version: link:../../ee
-      '@kasama/mcp':
+      '@casama/mcp':
         specifier: workspace:*
         version: link:../../packages/mcp
-      '@kasama/observability':
+      '@casama/observability':
         specifier: workspace:*
         version: link:../../packages/observability
-      '@kasama/sandbox':
+      '@casama/sandbox':
         specifier: workspace:*
         version: link:../../packages/sandbox
       '@modelcontextprotocol/sdk':
@@ -254,7 +254,7 @@ importers:
       '@hono/node-server':
         specifier: ^2.1.6
         version: 2.1.6(hono@4.13.17)
-      '@kasama/sandbox':
+      '@casama/sandbox':
         specifier: workspace:*
         version: link:../../packages/sandbox
       hono:
@@ -276,7 +276,7 @@ importers:
 
   ee:
     dependencies:
-      '@kasama/db':
+      '@casama/db':
         specifier: workspace:*
         version: link:../packages/db
       drizzle-orm:
@@ -311,19 +311,19 @@ importers:
       '@ai-sdk/xai':
         specifier: ^5.0.40
         version: 5.0.40(zod@4.6.7)
-      '@kasama/contracts':
+      '@casama/contracts':
         specifier: workspace:*
         version: link:../contracts
-      '@kasama/db':
+      '@casama/db':
         specifier: workspace:*
         version: link:../db
-      '@kasama/domain':
+      '@casama/domain':
         specifier: workspace:*
         version: link:../domain
-      '@kasama/observability':
+      '@casama/observability':
         specifier: workspace:*
         version: link:../observability
-      '@kasama/sandbox':
+      '@casama/sandbox':
         specifier: workspace:*
         version: link:../sandbox
       '@modelcontextprotocol/sdk':

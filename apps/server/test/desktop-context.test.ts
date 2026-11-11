@@ -1,6 +1,6 @@
 /** Desktop context (D-152): folder-watch triggers and file search on the person's own computer. */
-import { registerDesktopContextTools, ToolRegistry } from "@kasama/agent";
-import type { ExecChunk, SandboxHandle } from "@kasama/sandbox";
+import { registerDesktopContextTools, ToolRegistry } from "@casama/agent";
+import type { ExecChunk, SandboxHandle } from "@casama/sandbox";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { matchesPattern } from "../src/worker/device-triggers.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";

@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/backend.dart';
@@ -37,7 +37,7 @@ class DeviceSync {
   AppLifecycleListener? _life;
   bool _busy = false;
 
-  static const _keyPref = 'kasama.device_key';
+  static const _keyPref = 'casama.aiice_key';
 
   /// A random id for this install, kept across launches.
   Future<String> deviceKey() async {

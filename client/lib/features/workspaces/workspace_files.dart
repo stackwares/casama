@@ -2,7 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
@@ -30,7 +30,7 @@ class WorkspaceFilesSection extends ConsumerWidget {
     Future<void> export() async {
       final zip = await runGuarded(context, () => backend.exportWorkspaceFiles(orgId));
       if (zip == null) return;
-      await (saveZip ?? (b) => FilePicker.saveFile(fileName: 'kasama-routines-and-skills.zip', bytes: b))(zip);
+      await (saveZip ?? (b) => FilePicker.saveFile(fileName: 'casama-routines-and-skills.zip', bytes: b))(zip);
     }
 
     Future<void> import() async {

@@ -1,8 +1,8 @@
-# What is Kasama
+# What is Casama
 
-Kasama gives you AI teammates, called bots, that keep working after you close the chat. Each bot has
+Casama gives you AI teammates, called bots, that keep working after you close the chat. Each bot has
 its own instructions, memory, skills and a sandboxed Linux computer. It can research, write, code,
-browse and run tasks on a schedule, and it asks before doing anything risky. You run Kasama on your
+browse and run tasks on a schedule, and it asks before doing anything risky. You run Casama on your
 own server with your own model keys, and reach your bots from apps on every platform, the terminal,
 chat apps or your AI coding tools.
 
@@ -63,18 +63,18 @@ a message comes in, or when your phone says you've arrived somewhere. See
 Google, any MCP server, plugins, chat apps, password managers and your devices. Secrets are stored
 in a vault and are never shown to the model. See [Apps and connections](/guide/connections).
 
-## Ways to run Kasama
+## Ways to run Casama
 
 | Option | What it is |
 | --- | --- |
 | **Self-hosted** | The whole stack on your own server with one install script. No paywall and no limits. See [Self-hosting](/self-hosting/). |
-| **Kasama Cloud** | The hosted service, with plans and credits. Optional. |
-| **Cloud Connect** | A self-hosted server that borrows Kasama Cloud computers or model credits. See [Cloud Connect](/guide/cloud-connect). |
+| **Casama Cloud** | The hosted service, with plans and credits. Optional. |
+| **Cloud Connect** | A self-hosted server that borrows Casama Cloud computers or model credits. See [Cloud Connect](/guide/cloud-connect). |
 
 ## Where you use it
 
 - **Apps** for iOS, Android, macOS, Windows, Linux and the web.
-- The **`kasama` CLI** for the terminal and scripts. See [CLI](/develop/cli).
+- The **`casama` CLI** for the terminal and scripts. See [CLI](/develop/cli).
 - **Chat apps** such as Telegram, Slack, WhatsApp, email and SMS. See [Chat apps](/guide/chat-apps).
 - **AI apps and coding tools** over MCP. See [Connect AI apps](/guide/mcp).
 - The **HTTP API** and the **Dart SDK** for your own software. See [HTTP API](/develop/api).
@@ -103,10 +103,10 @@ in a vault and are never shown to the model. See [Apps and connections](/guide/c
 
 ## Open source
 
-Kasama is licensed under Apache-2.0, except the `ee/` folder (enterprise features such as SAML
-single sign-on and audit-log export), which is source-available under the Kasama Enterprise License
+Casama is licensed under Apache-2.0, except the `ee/` folder (enterprise features such as SAML
+single sign-on and audit-log export), which is source-available under the Casama Enterprise License
 and needs a license key in production. Telemetry is off unless you turn it on.
-The code is on [GitHub](https://github.com/stackwares/kasama), and contributions are welcome.
+The code is on [GitHub](https://github.com/stackwares/casama), and contributions are welcome.
 
 ## Related
 

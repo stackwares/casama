@@ -11,7 +11,7 @@ import 'local_server.dart';
 
 final localServerManagerProvider = Provider<LocalServerManager>((ref) => LocalServerManager());
 
-/// "Run Kasama on this computer" (D-147).
+/// "Run Casama on this computer" (D-147).
 class LocalServerSheet extends ConsumerStatefulWidget {
   const LocalServerSheet({super.key});
   @override

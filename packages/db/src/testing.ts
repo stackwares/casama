@@ -56,7 +56,7 @@ export async function startTestDatabase(): Promise<TestDatabase> {
     const admin = postgres(url, { max: 4, onnotice: () => {} });
     return { url, admin, stop: () => admin.end() };
   }
-  const dataDir = mkdtempSync(join(tmpdir(), "kasama-pg-"));
+  const dataDir = mkdtempSync(join(tmpdir(), "casama-pg-"));
   execFileSync(
     pgBin("initdb"),
     ["-D", dataDir, "-U", "postgres", "--auth=trust", "-E", "UTF8", "--no-locale"],

@@ -1,7 +1,6 @@
 import { randomBytes } from "node:crypto";
-import type { OpenAPIHono } from "@hono/zod-openapi";
-import { secretStoreFor, startTicketWork } from "@kasama/agent";
-import { routes } from "@kasama/contracts";
+import { secretStoreFor, startTicketWork } from "@casama/agent";
+import { routes } from "@casama/contracts";
 import {
   contentKeys,
   type Database,
@@ -9,7 +8,7 @@ import {
   pgErrorCode,
   schema,
   withUserSession,
-} from "@kasama/db";
+} from "@casama/db";
 import {
   BOT_TEMPLATES,
   isValidCron,
@@ -18,7 +17,8 @@ import {
   parseTotp,
   TotpError,
   templateById,
-} from "@kasama/domain";
+} from "@casama/domain";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -356,7 +356,7 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const admin = await isAdmin(db, claims, ask.org_id);
     const store = await secretStoreFor(db, ask.org_id, deps.apps?.fetch ?? fetch);
     if (store.kind === "infisical") {
-      // Infisical keeps the value (D-145); Kasama keeps the name, hosts and bot.
+      // Infisical keeps the value (D-145); Casama keeps the name, hosts and bot.
       const [existing] = await db.execute<{ id: string }>(
         sql`select id from public.secrets where org_id = ${ask.org_id}::uuid and name = ${ask.name}`,
       );
@@ -1073,8 +1073,8 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       for (const h of [
         "x-hub-signature-256",
         "x-github-event",
-        "x-kasama-signature",
-        "x-kasama-event",
+        "x-casama-signature",
+        "x-casama-event",
       ]) {
         const v = c.req.header(h);
         if (v) headers[h] = v;

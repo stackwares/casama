@@ -2,8 +2,8 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-/// The Kasama cloud bots. Art lives in assets/mascots (rendered from assets/bots by
-/// scripts/kasama-mascot-render.mjs): `<name>.webp` loops an 8 second animation, `<name>.png` is the still pose.
+/// The Casama cloud bots. Art lives in assets/mascots (rendered from assets/bots by
+/// scripts/casama-mascot-render.mjs): `<name>.webp` loops an 8 second animation, `<name>.png` is the still pose.
 enum Mascot {
   winky('Winky'),
   sleepy('Sleepy'),
@@ -64,7 +64,7 @@ class MascotImage extends StatelessWidget {
   /// the cloud itself fills the box (the overflow is transparent).
   static const _zoom = 1.14;
 
-  /// Pixel size the assets are rendered at (see scripts/kasama-mascot-render.mjs). Enough for a
+  /// Pixel size the assets are rendered at (see scripts/casama-mascot-render.mjs). Enough for a
   /// 96pt avatar on a 3x screen; never decode above it.
   static const assetPx = 320;
 

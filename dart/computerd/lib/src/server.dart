@@ -7,7 +7,7 @@ import 'package:path/path.dart' as p;
 
 import 'mcp_bridge.dart';
 
-/// computerd configuration. Inside a computer: HOME=/home/kasama, workspace under it.
+/// computerd configuration. Inside a computer: HOME=/home/casama, workspace under it.
 class ComputerdConfig {
   ComputerdConfig({
     required this.home,
@@ -70,7 +70,7 @@ class ComputerdConfig {
       throw StateError('COMPUTERD_TOKEN (at least 16 characters) is required');
     }
     return ComputerdConfig(
-      home: env['COMPUTERD_HOME'] ?? env['HOME'] ?? '/home/kasama',
+      home: env['COMPUTERD_HOME'] ?? env['HOME'] ?? '/home/casama',
       token: token,
       port: int.tryParse(env['COMPUTERD_PORT'] ?? '') ?? 7070,
       address: env['COMPUTERD_ADDRESS'] ?? '0.0.0.0',
@@ -230,7 +230,7 @@ class Computerd {
     Future<List<dynamic>> query(String q) async {
       final r = await Process.run('sqlite3', ['-readonly', '-json', db, q]);
       if (r.exitCode != 0) {
-        throw _ApiError(502, 'messages_unreadable', 'Could not read Messages (give the Kasama app Full Disk Access): ${(r.stderr as String).trim()}');
+        throw _ApiError(502, 'messages_unreadable', 'Could not read Messages (give the Casama app Full Disk Access): ${(r.stderr as String).trim()}');
       }
       final out = (r.stdout as String).trim();
       return out.isEmpty ? const [] : jsonDecode(out) as List<dynamic>;
@@ -515,7 +515,7 @@ class Computerd {
   Future<void> _archive(HttpRequest req) async {
     final body = await _body(req);
     final path = _resolve((body['path'] as String?) ?? config.home);
-    final excludes = <String>[...((body['exclude'] as List?)?.cast<String>() ?? const []), '.cache/ms-playwright', '.npm/_cacache', '.cache/pip', '.kasama-restore-*'];
+    final excludes = <String>[...((body['exclude'] as List?)?.cast<String>() ?? const []), '.cache/ms-playwright', '.npm/_cacache', '.cache/pip', '.casama-restore-*'];
     final process = await Process.start('tar', ['-czf', '-', for (final e in excludes) '--exclude=./$e', '-C', path, '.']);
     final res = req.response;
     res.headers.contentType = ContentType('application', 'gzip');
@@ -555,7 +555,7 @@ class Computerd {
     final path = _resolve(req.uri.queryParameters['path'] ?? config.home);
     final dir = Directory(path);
     // Stage inside the target: the parent may be read-only (the home volume is the only writable place).
-    final staging = Directory(p.join(path, '.kasama-restore-${DateTime.now().microsecondsSinceEpoch}'));
+    final staging = Directory(p.join(path, '.casama-restore-${DateTime.now().microsecondsSinceEpoch}'));
     staging.createSync(recursive: true);
     final process = await Process.start('tar', ['-xzf', '-', '-C', staging.path]);
     await process.stdin.addStream(req);

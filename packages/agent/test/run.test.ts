@@ -1,6 +1,6 @@
-import { createDb, type DbHandle } from "@kasama/db";
-import { createAuthUser, startTestDatabase, type TestDatabase } from "@kasama/db/testing";
-import { forcedIds, runSpanId, runTraceId } from "@kasama/observability";
+import { createDb, type DbHandle } from "@casama/db";
+import { createAuthUser, startTestDatabase, type TestDatabase } from "@casama/db/testing";
+import { forcedIds, runSpanId, runTraceId } from "@casama/observability";
 import { trace } from "@opentelemetry/api";
 import {
   InMemorySpanExporter,
@@ -707,16 +707,16 @@ describe("run tracing (D-107)", () => {
       .filter((s) => s.spanContext().traceId === runTraceId(runId));
     const run = spans.find((s) => s.name.startsWith("invoke_agent"));
     expect(run?.spanContext().spanId).toBe(runSpanId(runId, "run"));
-    expect(run?.attributes["kasama.run.status"]).toBe("completed");
+    expect(run?.attributes["casama.run.status"]).toBe("completed");
     expect(Number(run?.attributes["gen_ai.usage.input_tokens"])).toBeGreaterThan(0);
     const chats = spans.filter((s) => s.attributes["gen_ai.operation.name"] === "chat");
     expect(chats.length).toBeGreaterThanOrEqual(2);
     for (const c of chats) expect(c.parentSpanContext?.spanId).toBe(runSpanId(runId, "run"));
     expect(chats[0]?.attributes["gen_ai.usage.input_tokens"]).toBe(10_000);
-    expect(typeof chats[0]?.attributes["kasama.cost_usd"]).toBe("number");
+    expect(typeof chats[0]?.attributes["casama.cost_usd"]).toBe("number");
     const tool = spans.find((s) => s.attributes["gen_ai.tool.name"] === "memory.write");
-    expect(tool?.attributes["kasama.tool.outcome"]).toBe("ok");
-    expect(tool?.attributes["kasama.tool.risk"]).toBeDefined();
+    expect(tool?.attributes["casama.tool.outcome"]).toBe("ok");
+    expect(tool?.attributes["casama.tool.risk"]).toBeDefined();
     const all = JSON.stringify(spans.map((s) => ({ n: s.name, a: s.attributes, e: s.events })));
     expect(all).not.toMatch(/teal/i);
     const [row] = await tdb.admin<
@@ -756,5 +756,152 @@ describe("run tracing (D-107)", () => {
     await new Promise((r) => setTimeout(r, 50));
     expect(batches).toEqual([]);
     await tdb.admin`update public.organizations set llm_tracing = true where id = ${orgId}`;
+  });
+});
+
+describe("About you (D-169)", () => {
+  const aboutFixtures: FixtureFile[] = [
+    {
+      name: "about-you",
+      turns: [
+        {
+          when: { systemIncludes: "extract lasting memories", lastUserIncludes: "two kids" },
+          events: [
+            {
+              type: "text",
+              text: '{"memories":[{"kind":"fact","about":"person","content":"Has two kids.","importance":0.7},{"kind":"fact","about":"work","content":"The bakery launch is in May.","importance":0.6}]}',
+            },
+            finish(1),
+          ],
+        },
+        {
+          when: { systemIncludes: "extract lasting memories" },
+          events: [{ type: "text", text: '{"memories":[]}' }, finish(1)],
+        },
+        { when: { lastRole: "user" }, events: [{ type: "text", text: "Got it." }, finish()] },
+      ],
+    },
+  ];
+
+  it("reads the person's profile, keeps person facts out of the bot's memory, and respects team spaces", async () => {
+    await tdb.admin`update public.profiles set preferred_name = 'Sam', pronouns = 'they/them' where user_id = ${userId}`;
+    await tdb.admin`insert into public.user_about (user_id, about, reply_style)
+      values (${userId}, 'Runs a small bakery.', 'Short answers, no emoji.')`;
+    const gateway = new ReplayGateway(aboutFixtures);
+
+    // A personal space (the person is its only member): everything applies, and facts are learned.
+    const botId = await makeBot();
+    const first = await startRun(botId, "I have two kids and the bakery launch is in May");
+    expect(await runAgent(first.runId, deps(gateway))).toEqual({ status: "completed" });
+    const facts = await tdb.admin<{ content: string; source_bot_id: string }[]>`
+      select content, source_bot_id from public.user_facts where user_id = ${userId}`;
+    expect(facts.map((f) => f.content)).toEqual(["Has two kids."]);
+    expect(facts[0]?.source_bot_id).toBe(botId);
+    const mems = await tdb.admin<{ content: string }[]>`
+      select content from public.memories where bot_id = ${botId}`;
+    expect(mems.map((m) => m.content)).toEqual(["The bakery launch is in May."]);
+    const written = (await events(first.runId)).filter((e) => e.type === "memory.written");
+    expect(written.some((e) => e.payload.scope === "profile")).toBe(true);
+    expect(JSON.stringify(written)).not.toContain("two kids");
+
+    const second = await startRun(botId, "What should I plan this week?");
+    await runAgent(second.runId, deps(gateway));
+    const personal = gateway.requests
+      .find((r) => r.messages.at(-1)?.content.includes("plan this week"))
+      ?.system.join("\n");
+    expect(personal).toContain("You're talking with Sam (pronouns: they/them)");
+    expect(personal).toContain("Short answers, no emoji.");
+    expect(personal).toContain("Runs a small bakery.");
+    expect(personal).toContain("- Has two kids.");
+
+    // A team space: name and reply style only, until the person turns it on there.
+    const other = await createAuthUser(tdb.admin, "teammate@example.com");
+    const [team] = await tdb.admin<{ id: string }[]>`
+      insert into public.organizations (name, slug) values ('Team', 'about-team') returning id`;
+    const teamId = team!.id;
+    await tdb.admin`insert into public.memberships (org_id, user_id, role)
+      values (${teamId}, ${userId}, 'owner'), (${teamId}, ${other.id}, 'member')`;
+    const [cred] = await tdb.admin<{ id: string }[]>`
+      insert into public.model_credentials (org_id, provider, label, vault_secret_id)
+      values (${teamId}, 'openrouter', 'Main', vault.create_secret(${SECRET})) returning id`;
+    const policy = {
+      primary: { credential_id: cred!.id, model: "fixture-primary" },
+      cheap: { credential_id: cred!.id, model: "fixture-cheap" },
+    };
+    const [tb] = await tdb.admin<{ id: string }[]>`
+      insert into public.bots (org_id, created_by, name, persona_md, model_policy, budget)
+      values (${teamId}, ${userId}, 'Teamy', '', ${tdb.admin.json(policy)}, ${tdb.admin.json({ per_run_usd: 5, daily_usd: 50 })})
+      returning id`;
+    const ask = async (text: string) => {
+      const [c] = await tdb.admin<{ id: string }[]>`
+        insert into public.conversations (org_id, bot_id) values (${teamId}, ${tb!.id}) returning id`;
+      const [run] = await tdb.admin<{ id: string }[]>`
+        insert into public.runs (org_id, bot_id, conversation_id, created_by) values (${teamId}, ${tb!.id}, ${c!.id}, ${userId}) returning id`;
+      await tdb.admin`insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
+        values (${teamId}, ${c!.id}, 'user', ${userId}, ${tdb.admin.json([{ type: "text", text }])}, ${run!.id})`;
+      await runAgent(run!.id, deps(gateway));
+      return gateway.requests
+        .find((r) => r.messages.at(-1)?.content.includes(text))
+        ?.system.join("\n");
+    };
+    const teamPrompt = await ask("Team question one");
+    expect(teamPrompt).toContain("You're talking with Sam");
+    expect(teamPrompt).toContain("Short answers, no emoji.");
+    expect(teamPrompt).not.toContain("bakery");
+    expect(teamPrompt).not.toContain("two kids");
+
+    await tdb.admin`insert into public.profile_spaces (user_id, org_id, share_about) values (${userId}, ${teamId}, true)`;
+    expect(await ask("Team question two")).toContain("- Has two kids.");
+
+    // Learning off: facts about the person are dropped, not moved into the bot's memory.
+    await tdb.admin`delete from public.user_facts where user_id = ${userId}`;
+    await tdb.admin`update public.user_about set learn = false where user_id = ${userId}`;
+    const third = await startRun(botId, "Again: I have two kids");
+    await runAgent(third.runId, deps(gateway));
+    expect(
+      (await tdb.admin`select 1 from public.user_facts where user_id = ${userId}`).length,
+    ).toBe(0);
+    expect(
+      (
+        await tdb.admin`select 1 from public.memories where bot_id = ${botId} and content ilike '%kids%'`
+      ).length,
+    ).toBe(0);
+    await tdb.admin`delete from public.user_about where user_id = ${userId}`;
+    await tdb.admin`update public.profiles set preferred_name = null, pronouns = null where user_id = ${userId}`;
+  });
+
+  it("memory.write with about: person saves to the profile", async () => {
+    const tools = builtinTools({
+      db: h.db,
+      memory: async () => new PostgresMemoryStore(h.db, hashEmbedder()),
+    });
+    const def = tools.get("memory.write");
+    const emitted: Array<Record<string, unknown>> = [];
+    const botId = await makeBot();
+    const ctx = {
+      runId: (await startRun(botId, "x")).runId,
+      botId,
+      orgId,
+      actingUserId: userId,
+      output: async () => {},
+      emit: async (_t: string, p: Record<string, unknown>) => {
+        emitted.push(p);
+      },
+    };
+    const r = await def!.execute(
+      { content: "Prefers tea over coffee.", kind: "preference", about: "person" } as never,
+      ctx,
+    );
+    expect(r.content).toBe("Saved to their profile.");
+    expect(emitted[0]?.scope).toBe("profile");
+    const again = await def!.execute(
+      { content: "prefers tea over coffee", about: "person" } as never,
+      ctx,
+    );
+    expect(again.content).toBe("Already in their profile.");
+    await expect(
+      def!.execute({ content: "x", about: "person" } as never, { ...ctx, actingUserId: null }),
+    ).rejects.toThrow(/isn't for a person/);
+    await tdb.admin`delete from public.user_facts where user_id = ${userId}`;
   });
 });

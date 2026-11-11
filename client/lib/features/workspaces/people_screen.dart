@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
@@ -54,7 +54,9 @@ class PeopleScreen extends ConsumerWidget {
               GroupedTile(
                 key: Key('member-${m.userId}'),
                 icon: LucideIcons.user,
-                title: m.email ?? m.userId,
+                // About you (D-169): the name they go by and their pronouns, then the email.
+                title: [m.name ?? m.email ?? m.userId, if (m.pronouns != null) '(${m.pronouns})'].join(' '),
+                subtitle: m.name != null ? m.email : null,
                 trailing: Text(_roleLabel(context, m.role.value), style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant)),
               ),
           ],

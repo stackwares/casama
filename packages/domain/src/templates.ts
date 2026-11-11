@@ -23,7 +23,7 @@ export interface BotTemplate {
   routines?: Array<{ name: string; instructions_md: string; schedule_cron: string }>;
 }
 
-/** Joined into a persona: how every Kasama bot should behave, whatever its job. */
+/** Joined into a persona: how every Casama bot should behave, whatever its job. */
 const p = (...lines: string[]) => lines.join("\n");
 
 export const BOT_TEMPLATES: BotTemplate[] = [

@@ -1,6 +1,6 @@
 /**
  * Issues an enterprise license key (maintainers only). Needs the private signing key, kept outside
- * the repository (default ~/.config/kasama/license-signing-key.pem or KASAMA_LICENSE_SIGNING_KEY).
+ * the repository (default ~/.config/casama/license-signing-key.pem or CASAMA_LICENSE_SIGNING_KEY).
  *   node ee/scripts/issue-license.ts --customer Acme --features audit_export,sso --seats 50 --days 365
  */
 import { readFileSync } from "node:fs";
@@ -19,8 +19,8 @@ const { values } = parseArgs({
 });
 if (!values.customer) throw new Error("--customer is required");
 const pem = readFileSync(
-  process.env.KASAMA_LICENSE_SIGNING_KEY ??
-    join(homedir(), ".config/kasama/license-signing-key.pem"),
+  process.env.CASAMA_LICENSE_SIGNING_KEY ??
+    join(homedir(), ".config/casama/license-signing-key.pem"),
   "utf8",
 );
 const token = await new SignJWT({
@@ -28,7 +28,7 @@ const token = await new SignJWT({
   seats: Number(values.seats),
 })
   .setProtectedHeader({ alg: "EdDSA" })
-  .setIssuer("kasama-licensing")
+  .setIssuer("casama-licensing")
   .setSubject(values.customer)
   .setIssuedAt()
   .setExpirationTime(`${values.days}d`)

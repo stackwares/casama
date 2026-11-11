@@ -7,7 +7,7 @@ export interface ApprovalInput {
   /** Read-only tools never need approval (search, read, list, snapshot). */
   readOnly: boolean;
   /**
-   * Tools that only change the bot's own state inside Kasama, visibly and reversibly (its notes,
+   * Tools that only change the bot's own state inside Casama, visibly and reversibly (its notes,
    * schedule, board tasks, messages to the person): never asked for, whatever the autonomy (D-155).
    */
   selfOnly?: boolean;

@@ -1,8 +1,9 @@
 /** Skills library routes (D-104): catalog, GitHub preview and install, update checks with a diff. */
+
+import { routes } from "@casama/contracts";
+import { type Database, type JwtClaims, pgErrorCode, withUserSession } from "@casama/db";
+import { lineDiff } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { routes } from "@kasama/contracts";
-import { type Database, type JwtClaims, pgErrorCode, withUserSession } from "@kasama/db";
-import { lineDiff } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import {
   GitHubReader,

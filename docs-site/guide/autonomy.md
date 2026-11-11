@@ -24,7 +24,7 @@ below. Tools from connected apps marked **Read-only** still ask under **Ask befo
 With the CLI, set the level when you create a bot:
 
 ```sh
-kasama bot create "Ada" --credential <key-id> --autonomy ask_always
+casama bot create "Ada" --credential <key-id> --autonomy ask_always
 ```
 
 A bot that manages other bots can change autonomy too, but it can never give any bot, itself
@@ -65,7 +65,7 @@ To answer it:
 | --- | --- |
 | **Approve** | The step runs and the bot carries on. |
 | **Deny** | Only that step fails. The bot is told, and it continues without it. |
-| **Always allow** | The step runs, and Kasama adds an action rule so this bot runs this tool without asking from now on. |
+| **Always allow** | The step runs, and Casama adds an action rule so this bot runs this tool without asking from now on. |
 | No answer for 24 hours | The request expires and is treated like a deny. |
 
 A run that waits for approval costs nothing while it waits, and it survives server restarts.
@@ -80,7 +80,7 @@ conversation. Approvals from routines and other background work wait until your 
 end. See [Notifications and attention](/guide/attention).
 
 You can also approve or deny from an AI app connected over MCP, if your workspace allows it. See
-[Connect AI apps to Kasama](/guide/mcp).
+[Connect AI apps to Casama](/guide/mcp).
 
 ## Action rules
 
@@ -120,7 +120,7 @@ Deleting a rule is recorded in the workspace's audit log.
 
 ### Which rule wins
 
-1. Kasama finds the rules that match the call: by exact tool, by tool group (for example every
+1. Casama finds the rules that match the call: by exact tool, by tool group (for example every
    tool from one connected app), or by category.
 2. A rule with limits only matches when the call is within them.
 3. The most specific rule wins: the bot's own rule over a workspace rule, then tool over group
@@ -137,7 +137,7 @@ API. See [API](/develop/api).
 
 ## Actions that never ask
 
-Some actions change only the bot's own state inside Kasama, where you can see and undo them.
+Some actions change only the bot's own state inside Casama, where you can see and undo them.
 These never ask for approval under any autonomy level, including **Ask before acting**:
 
 - Its notes (memory) and its own routines. What a routine then does still goes through
@@ -146,7 +146,7 @@ These never ask for approval under any autonomy level, including **Ask before ac
 - Board tickets, comments and suggestions.
 - Housekeeping: loading a skill, making a checkpoint, organizing the sidebar.
 
-Anything that reaches outside Kasama or costs money still follows the normal rules: sending
+Anything that reaches outside Casama or costs money still follows the normal rules: sending
 through chat apps or email, web requests, the shell, browsing, payments, publishing or sharing
 pages, calls, and creating, archiving or rewriting bots. An **Ask me first** rule still wins over
 a self-only action.
@@ -162,13 +162,13 @@ a self-only action.
 ## Untrusted content
 
 Web pages, emails, files and output from connected apps can contain text written to trick a bot.
-Kasama protects against this in three ways:
+Casama protects against this in three ways:
 
 - Untrusted content reaches the model inside labeled blocks, and the bot is told never to follow
   instructions found inside them.
 - Under **Ask for risky actions**, once a run has read untrusted content, medium-risk actions ask
   for approval until you approve something again.
-- Secrets never reach the model. Bots use placeholders such as `{{secret:NAME}}`, and Kasama fills
+- Secrets never reach the model. Bots use placeholders such as `{{secret:NAME}}`, and Casama fills
   in the value only when the request goes to a host the secret allows. See
   [Privacy and security](/guide/privacy).
 
@@ -186,7 +186,7 @@ limits, each run has a loop guard:
 ## Checkpoints as a safety net
 
 Before a shell command that deletes data (such as `rm -rf`, `git reset --hard` or uninstalling
-packages), Kasama saves a checkpoint of the bot's computer. Bots can also make checkpoints
+packages), Casama saves a checkpoint of the bot's computer. Bots can also make checkpoints
 themselves before risky work. Restoring a checkpoint puts the computer's files back as they were.
 See [Computers](/guide/computers).
 

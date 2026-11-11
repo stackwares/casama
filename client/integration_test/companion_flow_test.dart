@@ -1,5 +1,5 @@
 // Phase 6 gate: this Mac's desktop app acts as a bot's computer and completes a browser task with
-// agent-browser (its own browser, in a separate "kasama" namespace). Needs the local stack and
+// agent-browser (its own browser, in a separate "casama" namespace). Needs the local stack and
 // agent-browser on PATH (Homebrew). See scripts/e2e-app.sh (E2E_COMPANION=1).
 import 'dart:io';
 import 'dart:math';
@@ -8,9 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:kasama_app/core/config.dart';
-import 'package:kasama_app/main.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_app/core/config.dart';
+import 'package:casama_app/main.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 import 'app_flow_test.dart' show tap, typeMessage, waitFor;
 
@@ -22,7 +22,7 @@ void main() {
     final page = await HttpServer.bind(InternetAddress.loopbackIPv4, 47123);
     page.listen((r) {
       r.response.headers.contentType = ContentType.html;
-      r.response.write('<html><body><h1>Kasama companion check</h1><p>The secret word is marigold-4242.</p></body></html>');
+      r.response.write('<html><body><h1>Casama companion check</h1><p>The secret word is marigold-4242.</p></body></html>');
       r.response.close();
     });
     addTearDown(() => page.close(force: true));
@@ -93,10 +93,10 @@ void main() {
     expect(tools, ['b1', 'b2'], reason: 'browser.open and browser.read both ran on this computer');
     debugPrint('COMPANION E2E: browser task completed on this computer');
 
-    // Clean up the agent-browser session the bot opened (only Kasama's namespace).
+    // Clean up the agent-browser session the bot opened (only Casama's namespace).
     await Process.run('/opt/homebrew/bin/agent-browser', ['close'], environment: {
-      'AGENT_BROWSER_NAMESPACE': 'kasama',
-      'AGENT_BROWSER_SESSION': 'kasama-companion',
+      'AGENT_BROWSER_NAMESPACE': 'casama',
+      'AGENT_BROWSER_SESSION': 'casama-companion',
     });
   });
 }

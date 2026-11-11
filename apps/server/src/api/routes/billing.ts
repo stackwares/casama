@@ -1,7 +1,8 @@
 /** Billing (Phase 7, D-070): plans, entitlements, checkout, store purchases, webhooks, Cloud Connect keys. */
+
+import { routes } from "@casama/contracts";
+import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { newConnectKey } from "../../billing/connect.ts";
 import { BillingService } from "../../billing/service.ts";
@@ -51,7 +52,7 @@ export function registerBillingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.listPlans, async (c) => {
     requireClaims(c.get("claims"));
     if (!billing.enabled) return c.json({ enabled: false, plans: [], packs: [] }, 200);
-    // The self-hosted plan is not offered on Kasama Cloud.
+    // The self-hosted plan is not offered on Casama Cloud.
     const plans = (await billing.plans()).filter((p) => p.code !== "selfhost");
     const packs = await billing.packs();
     return c.json(

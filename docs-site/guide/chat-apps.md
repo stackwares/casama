@@ -2,14 +2,14 @@
 
 Chat apps let people reach a bot from the messaging tools they already use: Telegram, email, SMS,
 Slack, WhatsApp, Messenger, Feishu and iMessage. The bot answers in the same thread, and every
-conversation also shows up in the Kasama app.
+conversation also shows up in the Casama app.
 
 ## How it works
 
 - Each chat app is connected to one bot.
 - A bot only answers people on the chat app's **Allowed senders** list. Messages from anyone else
   get no reply and are logged in the chat app's **Activity** as "Ignored: not on the allowed list".
-- Each outside thread becomes one Kasama conversation, titled with the app and the sender or
+- Each outside thread becomes one Casama conversation, titled with the app and the sender or
   subject, such as "Telegram: Ana". Follow-up messages in that thread continue the same
   conversation.
 - Each message reaches the bot prefixed with where it came from, such as
@@ -30,8 +30,8 @@ You need to manage the bot to connect a chat app.
 5. Under **Allowed senders**, add one per line: email addresses (or `*@example.com` for a whole
    domain), phone numbers, or user ids.
 6. Tap **Add**.
-7. Kasama shows the **Webhook address**. Paste it into the app's webhook settings. Telegram is the
-   exception: Kasama sets its webhook for you.
+7. Casama shows the **Webhook address**. Paste it into the app's webhook settings. Telegram is the
+   exception: Casama sets its webhook for you.
 
 | App       | What you paste                                                                  | Where the webhook goes                                     |
 | --------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------- |
@@ -44,7 +44,7 @@ You need to manage the bot to connect a chat app.
 | Feishu    | **App ID**, **App secret**, **Encrypt key** and **Verification token**          | The app's event subscription request URL                   |
 | iMessage  | Nothing; pick your **Mac**                                                      | None                                                       |
 
-For WhatsApp and Messenger, Kasama generates a **Verify token** for Meta's setup and shows it once,
+For WhatsApp and Messenger, Casama generates a **Verify token** for Meta's setup and shows it once,
 right after you connect. Copy it then.
 
 Each app's requests are checked before anything happens: Telegram's secret token, the Svix-style
@@ -115,7 +115,7 @@ iMessage has no bot API, so your own Mac does the work through the desktop app.
 3. Give the desktop app Full Disk Access in macOS System Settings, so it can read Messages.
 4. In the bot's **Chat apps**, connect **iMessage** and pick your **Mac**.
 
-Your Mac reads new messages and sends replies through Messages. Kasama checks for new messages every
+Your Mac reads new messages and sends replies through Messages. Casama checks for new messages every
 minute. The first check only takes a starting point, so old messages are never answered. Only the
 Mac's owner can connect it, and only bots allowed on that Mac can use it. See
 [Your own computer](/guide/companion).

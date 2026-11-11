@@ -1,7 +1,7 @@
 # Usage, budgets and plans
 
-Kasama tracks what every bot spends on models, cloud computers and other metered services. Use
-this page to see where the money goes, cap what a bot can spend, and understand Kasama Cloud plans
+Casama tracks what every bot spends on models, cloud computers and other metered services. Use
+this page to see where the money goes, cap what a bot can spend, and understand Casama Cloud plans
 and credits. If you self-host, there are no plans or paywalls: you pay your providers directly and
 set your own limits.
 
@@ -31,18 +31,18 @@ final word.
 From the CLI:
 
 ```sh
-kasama usage --period day    # or month (the default)
+casama usage --period day    # or month (the default)
 ```
 
 It prints the total and each bot's cost and tokens. For machine-readable output, put `--json`
-before the command: `kasama --json usage`.
+before the command: `casama --json usage`.
 
 ## Ask a bot about your usage
 
 1. On the **Usage** screen, tap **Ask a bot about this**.
 2. Under **Which bot should look at this?**, pick a bot.
 
-Kasama starts a new chat with that bot and sends a summary of the period. The bot can also check
+Casama starts a new chat with that bot and sends a summary of the period. The bot can also check
 live numbers itself: every bot has a read-only usage tool that reports the workspace's spend for a
 day, week, month or year, by bot, model, day and metered kind. You can ask any bot "what did we
 spend this week?" at any time.
@@ -59,7 +59,7 @@ Every bot has two spending limits:
 Set them when you create a bot with the CLI:
 
 ```sh
-kasama bot create "Ada" --credential <key-id> --run-budget 2 --daily-budget 20
+casama bot create "Ada" --credential <key-id> --run-budget 2 --daily-budget 20
 ```
 
 Or pass `budget` (`per_run_usd`, `daily_usd`) when creating a bot through the [API](/develop/api).
@@ -100,16 +100,16 @@ failed with a clear message and a stable code:
 | `budget_exceeded` | The run reached its per-run budget |
 | `daily_budget_exceeded` | The bot reached its daily budget |
 | `quota_exceeded` | The workspace reached its monthly spend limit |
-| `out_of_credits` | A Kasama Cloud workspace has no credits left |
-| `computer_hours_exceeded` | A Kasama Cloud workspace used its computer hours for the month |
+| `out_of_credits` | A Casama Cloud workspace has no credits left |
+| `computer_hours_exceeded` | A Casama Cloud workspace used its computer hours for the month |
 | `max_steps_exceeded` | The run used all its steps |
 | `wall_time_exceeded` | The run ran out of time |
 | `stuck_looping` | The bot kept failing the same way and stopped |
 | `no_model_configured` | The bot has no model. Add a model key and pick a model in **Bot settings**. |
 
-## Kasama Cloud plans and credits
+## Casama Cloud plans and credits
 
-On Kasama Cloud, each workspace has a plan. Open **Settings → Billing** to see it.
+On Casama Cloud, each workspace has a plan. Open **Settings → Billing** to see it.
 
 - **Your plan** shows the plan, how it's billed (**Billed on the web**, **Billed through the App
   Store** or **Billed through Google Play**), when it renews or ends, and your **Credits**
@@ -122,7 +122,7 @@ Owners and admins can change plans and buy credits. Members see the plan and usa
 
 ### What credits pay for
 
-Credits pay for what Kasama Cloud provides: cloud computer time, live view time, and model calls
+Credits pay for what Casama Cloud provides: cloud computer time, live view time, and model calls
 through [Cloud Connect](/guide/cloud-connect). Usage is deducted from the balance every minute.
 Model calls on your own model keys are never charged; you pay your provider directly.
 
@@ -155,7 +155,7 @@ of the paid period; a refund ends it.
 
 Billing is off on a self-hosted server unless you turn it on. **Settings → Billing** is hidden,
 and the workspace has no plan limits. If you open the billing screen anyway, it says **Billing is
-off on this server. Self-hosted Kasama has no limits.** Bot budgets and any quotas the instance
+off on this server. Self-hosted Casama has no limits.** Bot budgets and any quotas the instance
 owner sets still apply.
 
 ## Limits
@@ -163,7 +163,7 @@ owner sets still apply.
 - The app doesn't edit bot budgets yet. Set them at creation with the CLI or API, or ask a bot that
   manages bots to lower them. Changing an existing bot's budget isn't available in the app or the
   CLI.
-- `kasama usage` supports `day` and `month` only. Use the app for weeks and years.
+- `casama usage` supports `day` and `month` only. Use the app for weeks and years.
 - Usage costs are estimates, not invoices.
 
 ## Related

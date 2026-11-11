@@ -1,5 +1,5 @@
-name: kasama_computerd
-description: "Daemon inside each Kasama computer: exec with streaming, files, archives, terminal, health."
+name: casama_computerd
+description: "Daemon inside each Casama computer: exec with streaming, files, archives, terminal, health."
 version: 0.1.0
 publish_to: none
 resolution: workspace

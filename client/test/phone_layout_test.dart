@@ -3,11 +3,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/core/local_cache.dart';
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_app/core/router.dart';
-import 'package:kasama_app/l10n/generated/app_localizations.dart';
-import 'package:kasama_app/theme/app_theme.dart';
+import 'package:casama_app/core/local_cache.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/core/router.dart';
+import 'package:casama_app/l10n/generated/app_localizations.dart';
+import 'package:casama_app/theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_backend.dart';

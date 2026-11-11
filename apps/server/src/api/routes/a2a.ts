@@ -6,16 +6,16 @@
  * the key's person, so tasks run with the bot's normal approvals, budgets and audit log.
  */
 import { createHash, randomUUID } from "node:crypto";
-import type { OpenAPIHono } from "@hono/zod-openapi";
 import {
   A2A_VERSION,
   type A2aAgentCard,
   type A2aMessage,
   type A2aState,
   type A2aTask,
-} from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { contentKeys, type JwtClaims, withUserSession } from "@kasama/db";
+} from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { contentKeys, type JwtClaims, withUserSession } from "@casama/db";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -58,7 +58,7 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     b: NonNullable<Awaited<ReturnType<typeof published>>>,
   ): A2aAgentCard => ({
     name: b.name,
-    description: (b.persona_md || `${b.name}, an AI teammate on Kasama.`)
+    description: (b.persona_md || `${b.name}, an AI teammate on Casama.`)
       .replace(/\s+/g, " ")
       .slice(0, 500),
     version: "1.0.0",
@@ -78,7 +78,7 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     ],
     securitySchemes: {
       workspaceKey: {
-        httpAuthSecurityScheme: { scheme: "Bearer", bearerFormat: "Kasama workspace API key" },
+        httpAuthSecurityScheme: { scheme: "Bearer", bearerFormat: "Casama workspace API key" },
       },
     },
     securityRequirements: [{ workspaceKey: [] }],
@@ -168,7 +168,7 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       c.json({ jsonrpc: "2.0", id: id ?? null, error: { code, message } }, status as 200);
     const tok = (c.req.header("authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
     const botId = c.req.param("botId");
-    // A linked bot on another Kasama server (D-143) calls with its link's token, whether or not
+    // A linked bot on another Casama server (D-143) calls with its link's token, whether or not
     // this bot is published; the request runs as this bot's owner.
     let linkId: string | null = null;
     let b = tok.startsWith("klink_") ? null : await published(botId);
@@ -201,7 +201,7 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           returning user_id`)
         : [];
     if (!key) {
-      c.header("www-authenticate", 'Bearer realm="kasama-a2a"');
+      c.header("www-authenticate", 'Bearer realm="casama-a2a"');
       return rpcError(null, E.invalid, "Use a workspace API key (Bearer ksk_…)", 401);
     }
     const version = c.req.header("a2a-version");

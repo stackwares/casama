@@ -14,13 +14,13 @@ update public.conversations c set head_message_id = (
   select id from public.messages m where m.conversation_id = c.id order by created_at desc, id desc limit 1);
 
 -- New messages continue the current branch unless they say where they go (edits, a run's reply
--- after the person switched branches). `kasama.branch_root` = 'on' starts a new first message.
+-- after the person switched branches). `casama.branch_root` = 'on' starts a new first message.
 create or replace function public.messages_branch()
 returns trigger
 language plpgsql security definer set search_path = ''
 as $$
 begin
-  if new.parent_message_id is null and coalesce(current_setting('kasama.branch_root', true), '') <> 'on' then
+  if new.parent_message_id is null and coalesce(current_setting('casama.branch_root', true), '') <> 'on' then
     select head_message_id into new.parent_message_id from public.conversations where id = new.conversation_id;
   end if;
   return new;
@@ -71,7 +71,7 @@ as $$
              and s.parent_message_id is not distinct from p.parent_message_id) as sibling_count
   from path p order by p.depth desc
 $$;
-grant execute on function public.conversation_thread(uuid) to authenticated, kasama_worker;
+grant execute on function public.conversation_thread(uuid) to authenticated, casama_worker;
 
 -- The newest leaf under a message: where switching to that branch lands.
 create or replace function public.branch_leaf(p_message uuid)
@@ -86,4 +86,4 @@ as $$
   )
   select id from down where id is not null order by depth desc limit 1
 $$;
-grant execute on function public.branch_leaf(uuid) to authenticated, kasama_worker;
+grant execute on function public.branch_leaf(uuid) to authenticated, casama_worker;

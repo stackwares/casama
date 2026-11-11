@@ -3,8 +3,8 @@
  * desktop app (Spotlight on macOS, Windows Search on Windows, locate or find on Linux), only inside
  * the folders they allowed.
  */
-import type { Database } from "@kasama/db";
-import { collectExec } from "@kasama/sandbox";
+import type { Database } from "@casama/db";
+import { collectExec } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { wrapUntrusted } from "./context.ts";
@@ -44,7 +44,7 @@ export function registerDesktopContextTools(registry: ToolRegistry, deps: { db: 
     readOnly: true,
     untrustedOutput: true,
     description:
-      "Search files on the person's own computer (the Kasama desktop app), only inside the folders they allowed: Spotlight on a Mac, Windows Search on Windows, locate on Linux. Returns paths; read one with files.read.",
+      "Search files on the person's own computer (the Casama desktop app), only inside the folders they allowed: Spotlight on a Mac, Windows Search on Windows, locate on Linux. Returns paths; read one with files.read.",
     risk: "low",
     requires: { computer: true },
     schema: z.object({

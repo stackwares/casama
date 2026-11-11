@@ -42,7 +42,7 @@ export class SupervisorProvider implements SandboxProvider {
   private get authHeaders(): Record<string, string> {
     return {
       authorization: `Bearer ${this.token}`,
-      ...(this.id === "docker" ? {} : { "x-kasama-provider": this.id }),
+      ...(this.id === "docker" ? {} : { "x-casama-provider": this.id }),
     };
   }
 

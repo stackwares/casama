@@ -94,7 +94,7 @@ class _ChatMarkdownState extends State<ChatMarkdown> {
               launchUrl(uri, mode: LaunchMode.externalApplication);
               return;
             }
-            // Files the bot made ("sandbox:/home/kasama/workspace/x.md", "workspace/x.md") open in the app.
+            // Files the bot made ("sandbox:/home/casama/workspace/x.md", "workspace/x.md") open in the app.
             final path = computerPathFromLink(url);
             final files = FileLinkScope.maybeOf(context);
             if (path != null && files != null) files.open(path);

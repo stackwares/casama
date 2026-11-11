@@ -1,15 +1,15 @@
-// End-to-end Phase 0 gate through the real CLI. Runs only when KASAMA_E2E_API is set
+// End-to-end Phase 0 gate through the real CLI. Runs only when CASAMA_E2E_API is set
 // (see scripts/e2e-cli.sh, which starts a stack and sets it).
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:kasama_cli/kasama_cli.dart';
+import 'package:casama_cli/casama_cli.dart';
 import 'package:test/test.dart';
 
 void main() {
-  final api = Platform.environment['KASAMA_E2E_API'];
+  final api = Platform.environment['CASAMA_E2E_API'];
 
-  Future<(int, Map<String, dynamic>)> kasama(String configDir, List<String> args) async {
+  Future<(int, Map<String, dynamic>)> casama(String configDir, List<String> args) async {
     final out = StringBuffer();
     final err = StringBuffer();
     final code = await runCli(['--api', api!, '--json', ...args],
@@ -19,11 +19,11 @@ void main() {
   }
 
   test('sign up, log in, create a workspace, invite and join', () async {
-    final owner = Directory.systemTemp.createTempSync('kasama-owner').path;
-    final friend = Directory.systemTemp.createTempSync('kasama-friend').path;
+    final owner = Directory.systemTemp.createTempSync('casama-owner').path;
+    final friend = Directory.systemTemp.createTempSync('casama-friend').path;
 
     // Each user gets their own config dir (session file).
-    Future<(int, Map<String, dynamic>)> as(String dir, List<String> args) => kasama(dir, args);
+    Future<(int, Map<String, dynamic>)> as(String dir, List<String> args) => casama(dir, args);
 
     var (code, out) = await as(owner, ['signup', '--email', 'owner@example.com', '--password', 'pw-123456']);
     expect(code, 0, reason: '$out');
@@ -60,10 +60,10 @@ void main() {
     (code, out) = await as(friend, ['org', 'invite', 'x@example.com', '--org', 'acme-team']);
     expect(code, 1);
     expect(out['error'], 'forbidden');
-  }, skip: api == null ? 'set KASAMA_E2E_API (run scripts/e2e-cli.sh)' : false);
+  }, skip: api == null ? 'set CASAMA_E2E_API (run scripts/e2e-cli.sh)' : false);
 
   test('Phase 1 gate: chat streams, memory carries across chats, keys never come back', () async {
-    final dir = Directory.systemTemp.createTempSync('kasama-p1').path;
+    final dir = Directory.systemTemp.createTempSync('casama-p1').path;
     const key = 'sk-or-v1-E2E-SECRET-KEY-abcdef123456';
     final outputs = <String>[];
 
@@ -128,10 +128,10 @@ void main() {
     for (final o in outputs) {
       expect(o, isNot(contains(key)));
     }
-  }, skip: api == null ? 'set KASAMA_E2E_API (run scripts/e2e-cli.sh)' : false);
+  }, skip: api == null ? 'set CASAMA_E2E_API (run scripts/e2e-cli.sh)' : false);
 
   test('Phase 2 gate: a bot researches the web and writes a report; files, checkpoints, sleep and restore', () async {
-    final dir = Directory.systemTemp.createTempSync('kasama-p2').path;
+    final dir = Directory.systemTemp.createTempSync('casama-p2').path;
     Future<(int, String, String)> raw(List<String> args) async {
       final out = StringBuffer();
       final err = StringBuffer();
@@ -178,5 +178,5 @@ void main() {
     expect(out, contains('running'));
     (code, out, err) = await raw(['computer', 'files', 'get', 'notes/upload.txt']);
     expect(out, 'from the CLI');
-  }, timeout: const Timeout(Duration(minutes: 6)), skip: (api == null || Platform.environment['E2E_SANDBOX'] != '1') ? 'set KASAMA_E2E_API and E2E_SANDBOX=1' : false);
+  }, timeout: const Timeout(Duration(minutes: 6)), skip: (api == null || Platform.environment['E2E_SANDBOX'] != '1') ? 'set CASAMA_E2E_API and E2E_SANDBOX=1' : false);
 }

@@ -8,7 +8,7 @@ export interface RunEventHub {
 
 export async function pgRunEventHub(client: postgres.Sql): Promise<RunEventHub> {
   const subs = new Map<string, Set<() => void>>();
-  const listener = await client.listen("kasama_run_events", (payload) => {
+  const listener = await client.listen("casama_run_events", (payload) => {
     const runId = payload.split(":")[0] ?? "";
     for (const cb of subs.get(runId) ?? []) cb();
   });

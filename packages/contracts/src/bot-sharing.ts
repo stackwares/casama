@@ -41,5 +41,8 @@ export const WorkspaceMember = z
     user_id: Uuid,
     email: z.string().nullable(),
     role: z.enum(["owner", "admin", "member"]),
+    /** About you (D-169): what they go by and their pronouns, when set. */
+    name: z.string().nullable().optional(),
+    pronouns: z.string().nullable().optional(),
   })
   .openapi("WorkspaceMember");

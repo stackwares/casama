@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/features/chat/chat_screen.dart';
-import 'package:kasama_app/features/devices/device_collector.dart';
-import 'package:kasama_app/features/devices/device_connections_screen.dart';
-import 'package:kasama_app/features/devices/device_events.dart';
-import 'package:kasama_app/features/devices/device_sync.dart';
-import 'package:kasama_app/features/devices/health_summary.dart';
+import 'package:casama_app/features/chat/chat_screen.dart';
+import 'package:casama_app/features/devices/device_collector.dart';
+import 'package:casama_app/features/devices/device_connections_screen.dart';
+import 'package:casama_app/features/devices/device_events.dart';
+import 'package:casama_app/features/devices/device_sync.dart';
+import 'package:casama_app/features/devices/health_summary.dart';
 import 'dart:async';
 
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:native_geofence/native_geofence.dart' show GeofenceEvent;
 import 'package:shared_preferences/shared_preferences.dart';
 

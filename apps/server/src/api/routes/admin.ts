@@ -1,15 +1,16 @@
 /** Owner admin console (Phase 6): instance totals, users, quotas, services, update notices. */
+
+import { routes } from "@casama/contracts";
+import type { JwtClaims } from "@casama/db";
+import { verifyLicense } from "@casama/ee";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { routes } from "@kasama/contracts";
-import type { JwtClaims } from "@kasama/db";
-import { verifyLicense } from "@kasama/ee";
 import { sql } from "drizzle-orm";
 import { suspendOrg, unsuspendOrg } from "../../services/abuse.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
 
-export const KASAMA_VERSION = "0.8.0";
+export const CASAMA_VERSION = "0.8.0";
 
 const num = (v: unknown) => Number(v ?? 0);
 
@@ -51,7 +52,7 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       (select count(*) from public.computers where state in ('running', 'idle') and kind <> 'local') as computers`);
     return c.json(
       {
-        version: KASAMA_VERSION,
+        version: CASAMA_VERSION,
         users: num(r?.users),
         orgs: num(r?.orgs),
         bots: num(r?.bots),
@@ -212,8 +213,8 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         })
       : null;
     const license = await verifyLicense(
-      env.KASAMA_LICENSE_KEY,
-      env.NODE_ENV === "test" ? env.KASAMA_LICENSE_PUBLIC_KEY : undefined,
+      env.CASAMA_LICENSE_KEY,
+      env.NODE_ENV === "test" ? env.CASAMA_LICENSE_PUBLIC_KEY : undefined,
     );
     const items = [
       {
@@ -314,9 +315,9 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     };
     return c.json(
       {
-        current: KASAMA_VERSION,
+        current: CASAMA_VERSION,
         latest,
-        update_available: !!latest && newer(latest, KASAMA_VERSION),
+        update_available: !!latest && newer(latest, CASAMA_VERSION),
         url: link,
       },
       200,

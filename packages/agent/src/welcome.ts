@@ -9,9 +9,9 @@
  * itself (open a connection, a screen, or an invite) and never reach the server.
  */
 import { randomUUID } from "node:crypto";
-import type { Database } from "@kasama/db";
-import { contentKeys } from "@kasama/db";
-import { defaultModelFor } from "@kasama/domain";
+import type { Database } from "@casama/db";
+import { contentKeys } from "@casama/db";
+import { defaultModelFor } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { surfaceMessages } from "./tools/ui.ts";
 
@@ -31,6 +31,7 @@ export type Scope = "just_me" | "team" | "business";
 
 export interface WelcomeState {
   step:
+    | "name"
     | "focus"
     | "scope"
     | "connect"
@@ -176,6 +177,29 @@ const column = (children: string[], rest: Array<Record<string, unknown>>) => [
   ...rest,
 ];
 
+/** About you (D-169): what to call the person, the sign-in first name filled in. */
+export function nameCard(firstName: string) {
+  return card(
+    column(
+      ["q", "name", "row"],
+      [
+        text("q", "## What should I call you?"),
+        {
+          id: "name",
+          component: "TextField",
+          label: "Your name",
+          value: { "@path": "/form/name" },
+          variant: "shortText",
+        },
+        { id: "row", component: "Row", children: ["go", "skip"] },
+        ...button("go", "Continue", "welcome.name", { name: { "@path": "/form/name" } }, "primary"),
+        ...button("skip", "Skip", "welcome.name", { skip: true }, "borderless"),
+      ],
+    ),
+    { form: { name: firstName.trim().slice(0, 60) } },
+  );
+}
+
 export function focusCard() {
   return card(
     column(
@@ -228,13 +252,13 @@ export function scopeCard() {
   );
 }
 
-export function openingMessage(botName: string) {
+export function openingMessage(botName: string, firstName = "") {
   return [
     {
       type: "text",
       text: `Hi! I'm ${botName}, your assistant. I can work on my own computer, use your apps when you connect them, and remember how you like things done. A couple of quick questions so I can start in the right place.`,
     },
-    focusCard(),
+    nameCard(firstName),
   ];
 }
 
@@ -626,6 +650,25 @@ export async function handleWelcomeAction(
   };
 
   switch (action.name) {
+    case "welcome.name": {
+      const name =
+        !ctx.skip && typeof ctx.name === "string"
+          ? ctx.name.trim().replace(/\s+/g, " ").slice(0, 60)
+          : "";
+      if (name)
+        await db.execute(
+          sql`update public.profiles set preferred_name = ${name} where user_id = ${c.userId}::uuid`,
+        );
+      // Answered or skipped, the one-time name card elsewhere never asks again.
+      await db.execute(sql`
+        insert into public.user_about (user_id, name_asked_at) values (${c.userId}::uuid, now())
+        on conflict (user_id) do update set name_asked_at = coalesce(public.user_about.name_asked_at, now())`);
+      s.step = "focus";
+      return scripted([
+        ...(name ? [{ type: "text", text: `Nice to meet you, ${name}!` }] : []),
+        focusCard(),
+      ]);
+    }
     case "welcome.focus": {
       const picked = Array.isArray(ctx.focus) ? (ctx.focus as string[]) : [];
       s.focus = ctx.skip
@@ -655,10 +698,10 @@ export async function handleWelcomeAction(
       if (s.scope)
         await memory(
           s.scope === "just_me"
-            ? "Uses Kasama just for themselves."
+            ? "Uses Casama just for themselves."
             : s.scope === "team"
-              ? "Uses Kasama with their team."
-              : "Uses Kasama for their business.",
+              ? "Uses Casama with their team."
+              : "Uses Casama for their business.",
         );
       const hasModel = await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides);
       const apps = s.focus.flatMap((f) => MAIN_CONNECTION[f]);
@@ -807,16 +850,16 @@ export async function startWelcome(
   return db.transaction(async (tx) => {
     const [bot] = await tx.execute<{ id: string }>(sql`
       insert into public.bots (org_id, created_by, name, persona_md, avatar_url, visibility)
-      values (${a.orgId}::uuid, ${a.userId}::uuid, ${a.botName}, ${`You are ${a.botName}, ${a.firstName || "this person"}'s personal assistant. Be warm, brief and practical.`},
+      values (${a.orgId}::uuid, ${a.userId}::uuid, ${a.botName}, ${`You are ${a.botName}, this person's personal assistant. Be warm, brief and practical.`},
               ${`mascot:${a.mascot ?? "winky"}`}, 'private')
       returning id`);
     const [conv] = await tx.execute<{ id: string }>(sql`
       insert into public.conversations (org_id, bot_id, title, created_by, last_message_at, purpose, welcome)
-      values (${a.orgId}::uuid, ${bot?.id}::uuid, 'Welcome', ${a.userId}::uuid, now(), 'welcome', ${JSON.stringify({ step: "focus", focus: [] })}::jsonb)
+      values (${a.orgId}::uuid, ${bot?.id}::uuid, 'Welcome', ${a.userId}::uuid, now(), 'welcome', ${JSON.stringify({ step: "name", focus: [] })}::jsonb)
       returning id`);
     await tx.execute(sql`
       insert into public.messages (org_id, conversation_id, role, content, bot_id)
-      values (${a.orgId}::uuid, ${conv?.id}::uuid, 'assistant', ${contentKeys.sealJson(a.orgId, openingMessage(a.botName))}::jsonb, ${bot?.id}::uuid)`);
+      values (${a.orgId}::uuid, ${conv?.id}::uuid, 'assistant', ${contentKeys.sealJson(a.orgId, openingMessage(a.botName, a.firstName))}::jsonb, ${bot?.id}::uuid)`);
     return { orgId: a.orgId, botId: bot?.id as string, conversationId: conv?.id as string };
   });
 }

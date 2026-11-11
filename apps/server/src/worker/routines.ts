@@ -5,10 +5,10 @@ import {
   scanContext,
   takeHeldForBrief,
   wrapUntrusted,
-} from "@kasama/agent";
-import type { Database } from "@kasama/db";
-import { contentKeys } from "@kasama/db";
-import { nextRunAt } from "@kasama/domain";
+} from "@casama/agent";
+import type { Database } from "@casama/db";
+import { contentKeys } from "@casama/db";
+import { nextRunAt } from "@casama/domain";
 import { sql } from "drizzle-orm";
 
 interface RoutineRow {
@@ -195,7 +195,7 @@ export async function fireDueCalendarRuns(db: Database, now = new Date()): Promi
     const due = await tx.execute<{
       routine_id: string;
       event_id: string;
-      event: import("@kasama/agent").CalEvent;
+      event: import("@casama/agent").CalEvent;
     }>(sql`
       select f.routine_id, f.event_id, f.event from public.calendar_fires f join public.routines r on r.id = f.routine_id
       where f.fired_at is null and r.enabled and f.fire_at <= ${now.toISOString()}::timestamptz
@@ -254,10 +254,10 @@ export async function handleRoutineWebhook(
   if (r.trigger?.type !== expected) return { ok: false, reason: "wrong_trigger" };
   if (!r.secret) return { ok: false, reason: "no_secret" };
   const signature =
-    kind === "github" ? headers["x-hub-signature-256"] : headers["x-kasama-signature"];
+    kind === "github" ? headers["x-hub-signature-256"] : headers["x-casama-signature"];
   if (!signature || !safeEqual(signature, signBody(r.secret, body)))
     return { ok: false, reason: "bad_signature" };
-  const event = kind === "github" ? headers["x-github-event"] : headers["x-kasama-event"];
+  const event = kind === "github" ? headers["x-github-event"] : headers["x-casama-event"];
   if (r.trigger.events?.length && (!event || !r.trigger.events.includes(event)))
     return { ok: false, reason: "event_ignored" };
   const runId = await createRoutineRun(

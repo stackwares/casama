@@ -1,6 +1,6 @@
 # Quick start
 
-Get a Kasama server running, sign in, and give your first bot a task. With Docker already installed,
+Get a Casama server running, sign in, and give your first bot a task. With Docker already installed,
 this takes about 15 minutes, most of it building images.
 
 ## 1. Start a server
@@ -8,14 +8,14 @@ this takes about 15 minutes, most of it building images.
 You need a machine with Docker. For a trial on your own computer:
 
 ```sh
-git clone https://github.com/stackwares/kasama && cd kasama
+git clone https://github.com/stackwares/casama && cd casama
 ./install.sh --local
 ```
 
 For a server other people reach over the internet, point a domain at the machine first, then:
 
 ```sh
-./install.sh --domain kasama.example.com
+./install.sh --domain casama.example.com
 ```
 
 The installer checks Docker, generates every secret, builds and starts the stack, and waits until
@@ -24,14 +24,14 @@ requirements, every option and production advice.
 
 ::: tip Prefer not to use a terminal?
 The desktop app can run a server on the computer it's installed on: on the sign-in screen, choose
-**More options** → **Run Kasama on this computer**.
+**More options** → **Run Casama on this computer**.
 :::
 
 ## 2. Install a client
 
 - **Apps**: iOS, Android, macOS, Windows, Linux and the web.
-- **CLI**: `brew install stackwares/tap/kasama`, or download a binary from the
-  [releases page](https://github.com/stackwares/kasama/releases). See [CLI](/develop/cli).
+- **CLI**: `brew install stackwares/tap/casama`, or download a binary from the
+  [releases page](https://github.com/stackwares/casama/releases). See [CLI](/develop/cli).
 
 ## 3. Sign in to your server
 
@@ -39,7 +39,7 @@ The desktop app can run a server on the computer it's installed on: on the sign-
 
 1. Tap **Sign in or create account**.
 2. Tap **More options**, then the **Server** button, and enter your server's address (for example
-   `https://kasama.example.com`, or the address `--local` printed).
+   `https://casama.example.com`, or the address `--local` printed).
 3. Tap **Continue with email** → **Use a password instead** → **New here? Create an account**, and
    enter an email and password.
 
@@ -54,8 +54,8 @@ them set up on the server. A new server has neither, so start with a password. S
 **With the CLI:**
 
 ```sh
-kasama config --api-url https://kasama.example.com
-kasama signup --email you@example.com
+casama config --api-url https://casama.example.com
+casama signup --email you@example.com
 ```
 
 ## 4. Meet your first bot
@@ -73,17 +73,17 @@ yourself? Choose **Set up manually**.
 With the CLI:
 
 ```sh
-kasama org create "My team" && kasama org use my-team
-kasama credential add --provider openrouter      # prompts for the key
-kasama bot create Ada --credential <id>
-kasama chat Ada "Research the top three open-source vector databases and write a comparison to report.md"
+casama org create "My team" && casama org use my-team
+casama credential add --provider openrouter      # prompts for the key
+casama bot create Ada --credential <id>
+casama chat Ada "Research the top three open-source vector databases and write a comparison to report.md"
 ```
 
 ::: tip No API key?
 Run a model locally with Ollama and add it as an OpenAI-compatible endpoint, using an address the
 server can reach (on a self-hosted server, the Ollama machine's network address rather than
 `localhost`, allowed with `OUTBOUND_ALLOW_CIDRS`; see [Configuration](/self-hosting/configuration)):
-`kasama credential add --provider openai_compatible --base-url http://192.168.1.20:11434/v1`.
+`casama credential add --provider openai_compatible --base-url http://192.168.1.20:11434/v1`.
 :::
 
 ## 5. Give it real work

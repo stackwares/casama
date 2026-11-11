@@ -6,7 +6,7 @@
 import { writeFileSync } from "node:fs";
 
 const api = process.argv[2] ?? "http://127.0.0.1:8787";
-const out = process.argv[3] ?? "/tmp/kasama-load.json";
+const out = process.argv[3] ?? "/tmp/casama-load.json";
 const supabase = process.env.SUPABASE_URL ?? "http://127.0.0.1:54321";
 const anon = process.env.SUPABASE_ANON_KEY as string;
 const WAKE = Number(process.env.LOAD_WAKE_BOTS ?? 200);

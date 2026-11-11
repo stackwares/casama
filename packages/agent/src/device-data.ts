@@ -4,7 +4,7 @@
  * reminders on the device. The data is the person's own: only runs acting for them, by bots they
  * allowed, read it.
  */
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";

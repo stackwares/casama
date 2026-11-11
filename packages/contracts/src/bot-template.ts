@@ -8,7 +8,7 @@ import { Uuid } from "./common.ts";
  */
 export const BotTemplateFile = z
   .object({
-    format: z.literal("kasama.bot"),
+    format: z.literal("casama.bot"),
     version: z.number().int().min(1).max(1).openapi({ description: "Format version (1)" }),
     name: z.string().min(1).max(80),
     description: z.string().max(300).optional(),

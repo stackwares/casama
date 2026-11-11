@@ -1,5 +1,5 @@
 /** Sign-in codes (D-102): {{totp:NAME}} yields the current code only, only on allowed hosts. */
-import { parseTotp, totpCode } from "@kasama/domain";
+import { parseTotp, totpCode } from "@casama/domain";
 import { describe, expect, it } from "vitest";
 import { Redactor } from "../src/redact.ts";
 import { hasPlaceholders, type NamedSecret, resolvePlaceholders } from "../src/secrets.ts";

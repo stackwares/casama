@@ -1,5 +1,5 @@
-import type { Database } from "@kasama/db";
-import type { CheckpointRef, SandboxHandle, SandboxProvider, SnapshotRef } from "@kasama/sandbox";
+import type { Database } from "@casama/db";
+import type { CheckpointRef, SandboxHandle, SandboxProvider, SnapshotRef } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 
 export const IDLE_SLEEP_MS = 10 * 60_000;
@@ -38,7 +38,7 @@ export class ComputerService {
   readonly provider: ComputerProvider;
   /** Providers that are not behind the supervisor (the `local` desktop companion, D-066). */
   readonly extra: Record<string, ComputerProvider>;
-  /** Kasama Cloud (D-094): free-plan workspaces start computers only with a verified owner email. */
+  /** Casama Cloud (D-094): free-plan workspaces start computers only with a verified owner email. */
   requireVerifiedEmail = false;
   constructor(
     db: Database,
@@ -171,7 +171,7 @@ export class ComputerService {
         const spec = {
           profile: c.profile,
           size: { cpus: c.size?.cpus, memoryMb: c.size?.memory_mb },
-          labels: { "dev.kasama.org": c.org_id },
+          labels: { "dev.casama.org": c.org_id },
         };
         const h = await this.providerFor(c).resume(computerId, c.snapshot_ref ?? undefined, spec);
         await this.setState(computerId, "running", emit);

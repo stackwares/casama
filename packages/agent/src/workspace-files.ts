@@ -2,7 +2,7 @@
  * Routines and skills as files (D-124): exporting a workspace to Markdown files and applying a
  * folder of them back. Shared by the API (export, import) and the worker (git sync).
  */
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import {
   type FolderIndex,
   fileSlug,
@@ -13,7 +13,7 @@ import {
   renderRoutineFile,
   renderSkillFile,
   WORKSPACE_FOLDER,
-} from "@kasama/domain";
+} from "@casama/domain";
 import { sql } from "drizzle-orm";
 
 const enc = (s: string) => new TextEncoder().encode(s);
@@ -26,7 +26,7 @@ export async function exportWorkspaceFiles(db: Database, orgId: string) {
   const bots = await db.execute<{ id: string; name: string }>(
     sql`select id, name from public.bots where org_id = ${orgId}::uuid and archived_at is null order by created_at`,
   );
-  const index: FolderIndex = { format: "kasama.files", version: 1, bots: {} };
+  const index: FolderIndex = { format: "casama.files", version: 1, bots: {} };
   const folderOf = new Map<string, string>();
   for (const b of bots) {
     let f = fileSlug(b.name);

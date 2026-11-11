@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -51,7 +51,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
     final l10n = context.l10n;
     await runGuarded(context, () async {
       final bytes = await ref.read(backendProvider).exportMyData();
-      final name = 'kasama-export-${DateTime.now().toIso8601String().substring(0, 10)}.zip';
+      final name = 'casama-export-${DateTime.now().toIso8601String().substring(0, 10)}.zip';
       await ref.read(saveExportProvider)(bytes, name, origin: origin);
       if (mounted) showMessage(context, l10n.exportReady((bytes.length / 1024).toStringAsFixed(0)));
     });

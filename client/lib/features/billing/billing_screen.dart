@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -104,7 +104,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     final url = switch (source) {
       'dodo' => await ref.read(backendProvider).billingPortalUrl(_orgId),
       'app_store' => 'https://apps.apple.com/account/subscriptions',
-      _ => 'https://play.google.com/store/account/subscriptions?package=com.kasama.app',
+      _ => 'https://play.google.com/store/account/subscriptions?package=ai.casama.app',
     };
     await ref.read(openUrlProvider)(url);
   });
@@ -486,7 +486,7 @@ class _KeyCreatedSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final line = 'KASAMA_CLOUD_KEY=$secret';
+    final line = 'CASAMA_CLOUD_KEY=$secret';
     return FormSheet(
       icon: LucideIcons.keyRound,
       iconColor: context.appColors.warning,

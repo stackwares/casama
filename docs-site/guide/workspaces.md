@@ -22,9 +22,9 @@ remembers your choice on each device.
 From the CLI:
 
 ```sh
-kasama org create "Ada's team"
-kasama org list
-kasama org use <slug>  # the default workspace for other commands
+casama org create "Ada's team"
+casama org list
+casama org use <slug>  # the default workspace for other commands
 ```
 
 To rename a workspace or change its look, an owner or admin opens **Settings → Workspace
@@ -38,7 +38,7 @@ below it can.
 | Role | What it can do |
 | --- | --- |
 | **Member** | Create bots and manage the ones they created; use team bots; answer approvals for bots they can use; see usage and the plan; manage their own quiet hours, two-step sign-in and data |
-| **Admin** | Invite people (by link, code or email) as members or admins; approve requests to join; open the workspace to their email domain; rename the workspace and change its look; manage every team bot; add workspace action rules; set run history retention; require two-step sign-in; manage workspace settings such as bots talking to each other, phone calls, where secrets and memory are kept, AI app connections and workspace files; buy plans and credits and create Cloud Connect keys on Kasama Cloud |
+| **Admin** | Invite people (by link, code or email) as members or admins; approve requests to join; open the workspace to their email domain; rename the workspace and change its look; manage every team bot; add workspace action rules; set run history retention; require two-step sign-in; manage workspace settings such as bots talking to each other, phone calls, where secrets and memory are kept, AI app connections and workspace files; buy plans and credits and create Cloud Connect keys on Casama Cloud |
 | **Owner** | Everything above, plus turn on encryption, set up payments, and make other people owners |
 
 A workspace always has at least one owner. Private bots are visible only to the person who created
@@ -90,7 +90,7 @@ to one to **Send again** (a new link, valid 7 more days) or **Cancel invite**.
 From the CLI:
 
 ```sh
-kasama org invite ada@example.com --org <slug> --role admin
+casama org invite ada@example.com --org <slug> --role admin
 ```
 
 ### Join by email domain
@@ -113,11 +113,11 @@ uses and whether it's **Revoked**; tap **Revoke** to stop one.
 
 ### Joining
 
-Open the link. Kasama shows the workspace first: its name, who invited you, how many members it
+Open the link. Casama shows the workspace first: its name, who invited you, how many members it
 has and the role you'd get. Tap **Join** (or **Ask to join** when an admin approves new people).
 After joining, you land on a welcome page with the workspace's bots.
 
-- **Not signed in yet:** tap **Sign in to join**. Kasama remembers the invite and shows it again
+- **Not signed in yet:** tap **Sign in to join**. Casama remembers the invite and shows it again
   after you sign in, even if the app restarted.
 - **Got a code or a link in a message:** open the workspace switcher, tap **Join with a link or
   code** and paste or type it. On phones you can also scan the QR code. On Android and desktop, a
@@ -128,7 +128,7 @@ The person who made the invite gets a notification when you join.
 
 **Opening links in the app.** When the app is installed, an invite link opens it directly once the
 server publishes the app's link files (see [Configuration](/self-hosting/configuration)).
-Otherwise the link opens a page in the browser with **Open in Kasama**. On a self-hosted server
+Otherwise the link opens a page in the browser with **Open in Casama**. On a self-hosted server
 without the web app, that page comes from the API.
 
 ## Require two-step sign-in for admins
@@ -148,16 +148,16 @@ yourself out. Once it's on:
 
 ## Enterprise single sign-on (SAML)
 
-SAML single sign-on is an enterprise feature. It needs a Kasama Enterprise license key
-(`KASAMA_LICENSE_KEY`) and, when self-hosting, `SUPABASE_SERVICE_ROLE_KEY` with SAML enabled in
+SAML single sign-on is an enterprise feature. It needs a Casama Enterprise license key
+(`CASAMA_LICENSE_KEY`) and, when self-hosting, `SUPABASE_SERVICE_ROLE_KEY` with SAML enabled in
 the auth service. Without a valid key, the enterprise endpoints answer `402 license_required`; the
-rest of Kasama works as usual.
+rest of Casama works as usual.
 
 Owners and admins set it up through the API:
 
 1. Get a verification record for each email domain:
    `GET /v1/orgs/{id}/sso/verification?domain=example.com`.
-2. Add the returned TXT record (`kasama-verification=...`) to that domain's DNS.
+2. Add the returned TXT record (`casama-verification=...`) to that domain's DNS.
 3. Register your identity provider with its metadata URL (or XML) and your domains:
 
    ```http
@@ -168,7 +168,7 @@ Owners and admins set it up through the API:
    ```
 
 4. People sign in by tapping **Continue with SSO** on the sign-in screen and entering their work
-   email. Kasama sends them to your identity provider.
+   email. Casama sends them to your identity provider.
 
 `GET /v1/orgs/{id}/sso` shows the setup and `DELETE` removes it. A domain can belong to only one
 workspace's SSO.
@@ -187,7 +187,7 @@ Open **Settings → Admin console**. It has these tabs:
 
 | Tab | What you can do |
 | --- | --- |
-| **Overview** | Totals such as bots, **Computers running** and **Personal computers online**; the Kasama version and update notices |
+| **Overview** | Totals such as bots, **Computers running** and **Personal computers online**; the Casama version and update notices |
 | **Users** | Every user, their workspaces and when they last signed in |
 | **Workspaces** | Each workspace's members and bots; **Edit quotas** (**Max bots**, **Monthly spend limit (USD)**); **Suspend** a workspace (its computers and bots stop, nothing is deleted) and **Lift suspension** |
 | **Services** | Which optional services are configured, and whether each is **OK**, **Down** or **Off** |

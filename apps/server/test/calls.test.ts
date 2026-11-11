@@ -3,7 +3,7 @@ import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { fileURLToPath } from "node:url";
-import { numberProblem, registerCallTools, ToolRegistry, twilioSignature } from "@kasama/agent";
+import { numberProblem, registerCallTools, ToolRegistry, twilioSignature } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { WebSocket, WebSocketServer } from "ws";
 import { type Harness, j, startHarness } from "./helpers.ts";
@@ -321,7 +321,7 @@ describe("calls for you", () => {
       emit: async () => {},
     } as never;
     const reg = new ToolRegistry();
-    const { TwilioClient } = await import("@kasama/agent");
+    const { TwilioClient } = await import("@casama/agent");
     let cap = 1;
     registerCallTools(reg, {
       db: h.handle.db,

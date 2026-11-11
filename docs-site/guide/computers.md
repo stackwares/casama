@@ -37,7 +37,7 @@ also deletes its files, snapshots and checkpoints. The team computer has no **De
 
 ## What's on a computer
 
-Every computer starts from Kasama's image, based on Ubuntu 24.04:
+Every computer starts from Casama's image, based on Ubuntu 24.04:
 
 | Area | Included |
 | --- | --- |
@@ -46,7 +46,7 @@ Every computer starts from Kasama's image, based on Ubuntu 24.04:
 | Browser | Chromium, driven by the bot through agent-browser |
 | Desktop computers only | A desktop with a taskbar (**Browser**, **Terminal**, **Text editor**), accessibility tooling so the bot can use apps, and the live view streamer |
 
-The bot works as an unprivileged user named `kasama`, and its home folder is the only place that
+The bot works as an unprivileged user named `casama`, and its home folder is the only place that
 persists. On the default Docker provider the rest of the filesystem is read-only, so install extra
 tools into the home folder: `pip install` installs for the user, and `npm install -g` installs
 under `~/.npm-global`. `/tmp` is a 1 GB scratch space that's cleared when the computer sleeps.
@@ -68,7 +68,7 @@ To switch, tap **Switch to desktop** on the Screen tab, or use **Switch to deskt
 headless** in the computer's **More** menu. A running computer restarts into the new profile, and
 its files are kept.
 
-If a bot on a headless computer asks you to take over, for example to sign in, Kasama switches that
+If a bot on a headless computer asks you to take over, for example to sign in, Casama switches that
 computer to the desktop profile for you and reopens the bot's current page in a visible window.
 
 ## The computer panel
@@ -225,7 +225,7 @@ shell, files and browser. Admins change it from the team computer's **More** men
 ## Network and egress
 
 On the default Docker provider, a computer has no direct route to the internet. All its traffic
-goes through Kasama's egress proxy, which:
+goes through Casama's egress proxy, which:
 
 - Allows outbound HTTP and HTTPS to public addresses.
 - Refuses private, loopback, link-local (including cloud metadata), CGNAT, multicast and reserved
@@ -234,20 +234,20 @@ goes through Kasama's egress proxy, which:
   clone repositories over HTTPS.
 - Applies per-computer connection and bandwidth rate limits.
 
-Computers can't reach each other or Kasama's internal services.
+Computers can't reach each other or Casama's internal services.
 
 ## Use computers from the CLI
 
 The [CLI](/develop/cli) works with the team computer by default, or another one with `--computer`:
 
 ```sh
-kasama computer status                 # list computers and their state
-kasama computer start                  # wake (restore) the computer
-kasama computer stop                   # save files and sleep
-kasama computer shell                  # interactive terminal
-kasama computer files ls workspace     # also get, put and rm
-kasama computer checkpoints            # list undo points
-kasama computer restore <checkpoint-id>
+casama computer status                 # list computers and their state
+casama computer start                  # wake (restore) the computer
+casama computer stop                   # save files and sleep
+casama computer shell                  # interactive terminal
+casama computer files ls workspace     # also get, put and rm
+casama computer checkpoints            # list undo points
+casama computer restore <checkpoint-id>
 ```
 
 ## Limits

@@ -54,7 +54,7 @@ describe("Agent Plugins 1.0", () => {
           remote: {
             type: "streamable-http",
             url: "https://mcp.example.com/mcp",
-            headers: { "X-Client": "kasama" },
+            headers: { "X-Client": "casama" },
           },
           plain: { type: "streamable-http", url: "http://mcp.example.com/mcp" },
           local: { type: "streamable-http", url: "http://127.0.0.1:9000/mcp" },
@@ -73,7 +73,7 @@ describe("Agent Plugins 1.0", () => {
     expect(insidePlugin("a")).toBe(false);
   });
 
-  it("reads a package: skills, servers, hosts and Kasama's secret declarations", () => {
+  it("reads a package: skills, servers, hosts and Casama's secret declarations", () => {
     const p = checkPlugin(
       files({
         "plugin.json": {
@@ -81,7 +81,7 @@ describe("Agent Plugins 1.0", () => {
           name: "weather",
           version: "1.2.0",
           extensions: {
-            "com.kasama": {
+            "com.casama": {
               secrets: [
                 {
                   name: "WEATHER_KEY",

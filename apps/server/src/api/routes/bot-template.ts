@@ -1,9 +1,9 @@
 /** Share a bot as a template (D-110): export, share links, preview and import. */
 import { createHash, randomBytes } from "node:crypto";
+import { type BotTemplateFile, routes } from "@casama/contracts";
+import { contentKeys, type Database, type JwtClaims, withUserSession } from "@casama/db";
+import { isValidCron, isValidTimezone, nextRunAt } from "@casama/domain";
 import type { OpenAPIHono, z } from "@hono/zod-openapi";
-import { type BotTemplateFile, routes } from "@kasama/contracts";
-import { contentKeys, type Database, type JwtClaims, withUserSession } from "@kasama/db";
-import { isValidCron, isValidTimezone, nextRunAt } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import { enforceLimit } from "../../billing/limits.ts";
 import { checkBundle } from "../../services/skills.ts";
@@ -73,7 +73,7 @@ export async function exportTemplate(
           select kind, content from public.memories where bot_id = ${botId}::uuid order by pinned desc, importance desc limit 200`)
       : [];
   return {
-    format: "kasama.bot",
+    format: "casama.bot",
     version: 1,
     name: bot.name,
     description: "",

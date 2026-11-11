@@ -43,8 +43,8 @@ describe("unsplash wallpapers", () => {
       id: "abc",
       thumb_url: "https://s",
       author: "Ana",
-      author_url: "https://unsplash.com/@ana?utm_source=kasama&utm_medium=referral",
-      source_url: "https://unsplash.com/photos/abc?utm_source=kasama&utm_medium=referral",
+      author_url: "https://unsplash.com/@ana?utm_source=casama&utm_medium=referral",
+      source_url: "https://unsplash.com/photos/abc?utm_source=casama&utm_medium=referral",
     });
     expect(p!.url).toContain("w=2400");
     await src.search(undefined, 1);

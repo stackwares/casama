@@ -4,10 +4,10 @@
  * request is checked with the provider's signature before anything happens.
  */
 import { randomBytes } from "node:crypto";
+import { ADAPTERS, handleInbound, loadChannel } from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { ADAPTERS, handleInbound, loadChannel } from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";

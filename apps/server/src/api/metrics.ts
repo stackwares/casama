@@ -3,7 +3,7 @@
  * (cheap aggregates over short windows), plus in-process HTTP counters. Served at /metrics; set
  * METRICS_TOKEN to require a bearer token.
  */
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import type { MiddlewareHandler } from "hono";
 
@@ -38,7 +38,7 @@ export async function renderMetrics(db: Database) {
   const runs = await db.execute<{ status: string; n: number }>(sql`
     select status, count(*)::int as n from public.runs where created_at > now() - interval '15 minutes' group by 1`);
   add(
-    "kasama_runs_15m",
+    "casama_runs_15m",
     "gauge",
     "Runs created in the last 15 minutes by status",
     runs.map((r) => [{ status: r.status }, r.n]),
@@ -47,7 +47,7 @@ export async function renderMetrics(db: Database) {
     .filter((r) => ["completed", "failed"].includes(r.status))
     .reduce((a, r) => a + r.n, 0);
   const failed = runs.find((r) => r.status === "failed")?.n ?? 0;
-  add("kasama_run_failure_ratio_15m", "gauge", "Failed / finished runs over the last 15 minutes", [
+  add("casama_run_failure_ratio_15m", "gauge", "Failed / finished runs over the last 15 minutes", [
     [{}, finished ? failed / finished : 0],
   ]);
 
@@ -56,7 +56,7 @@ export async function renderMetrics(db: Database) {
            percentile_cont(0.95) within group (order by extract(epoch from first_token_at - created_at)) as p95,
            count(*)::int as n
     from public.runs where first_token_at is not null and created_at > now() - interval '1 hour'`);
-  add("kasama_time_to_first_token_seconds", "gauge", "Run start to first model token, last hour", [
+  add("casama_time_to_first_token_seconds", "gauge", "Run start to first model token, last hour", [
     [{ quantile: "0.5" }, num(t?.p50)],
     [{ quantile: "0.95" }, num(t?.p95)],
   ]);
@@ -71,7 +71,7 @@ export async function renderMetrics(db: Database) {
     select percentile_cont(0.5) within group (order by extract(epoch from created_at - prev_at)) as p50,
            percentile_cont(0.95) within group (order by extract(epoch from created_at - prev_at)) as p95
     from s where state = 'running' and prev in ('provisioning', 'starting')`);
-  add("kasama_computer_start_seconds", "gauge", "Computer provisioning or wake time, last hour", [
+  add("casama_computer_start_seconds", "gauge", "Computer provisioning or wake time, last hour", [
     [{ quantile: "0.5" }, num(cs?.p50)],
     [{ quantile: "0.95" }, num(cs?.p95)],
   ]);
@@ -80,7 +80,7 @@ export async function renderMetrics(db: Database) {
     sql`select state, count(*)::int as n from public.computers where kind <> 'local' group by 1`,
   );
   add(
-    "kasama_computers",
+    "casama_computers",
     "gauge",
     "Computers by state",
     comps.map((r) => [{ state: r.state }, r.n]),
@@ -88,7 +88,7 @@ export async function renderMetrics(db: Database) {
 
   const [cost] = await db.execute<{ avg: number | null }>(sql`
     select avg(cost_usd)::float as avg from public.runs where status = 'completed' and created_at > now() - interval '1 hour'`);
-  add("kasama_cost_per_run_usd", "gauge", "Average cost of completed runs, last hour", [
+  add("casama_cost_per_run_usd", "gauge", "Average cost of completed runs, last hour", [
     [{}, num(cost?.avg)],
   ]);
 
@@ -98,20 +98,20 @@ export async function renderMetrics(db: Database) {
       where status in ('ENQUEUED', 'PENDING') group by 1`)
     .catch(() => [] as Array<{ q: string; n: number }>);
   add(
-    "kasama_queue_depth",
+    "casama_queue_depth",
     "gauge",
     "Workflows enqueued or running by queue",
     queues.map((r) => [{ queue: r.q }, r.n]),
   );
 
   add(
-    "kasama_http_requests_total",
+    "casama_http_requests_total",
     "counter",
     "API responses by status class",
     [...http].map(([k, v]) => [{ class: k }, v]),
   );
-  add("kasama_http_request_seconds_sum", "counter", "Total API response time", [[{}, latency.sum]]);
-  add("kasama_http_request_seconds_count", "counter", "API responses timed", [[{}, latency.count]]);
+  add("casama_http_request_seconds_sum", "counter", "Total API response time", [[{}, latency.sum]]);
+  add("casama_http_request_seconds_count", "counter", "API responses timed", [[{}, latency.count]]);
 
   const out: string[] = [];
   for (const [name, [type, doc]] of Object.entries(help)) {

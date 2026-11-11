@@ -12,7 +12,7 @@ import 'providers.dart';
 import 'router.dart';
 
 /// App Group shared by the app and its iOS widget and share extensions.
-const appGroupId = 'group.com.kasama.app';
+const appGroupId = 'group.ai.casama.app';
 
 bool get _ios => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 bool get _android => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
@@ -46,7 +46,7 @@ final homeWidgetSyncProvider = Provider<void>((ref) {
 });
 
 /// Share to bot: shared text and links open quick ask. Android uses receive_sharing_intent;
-/// the iOS share extension writes to the App Group and opens kasama://app/quick-ask?shared=1.
+/// the iOS share extension writes to the App Group and opens casama://app/quick-ask?shared=1.
 final shareToBotProvider = Provider<void>((ref) {
   if (!_android) return;
   void open(List<SharedMediaFile> items) {
@@ -90,7 +90,7 @@ class LiveRunActivities implements RunActivities {
     if (!_ios) return false;
     if (!_ready) {
       try {
-        await _plugin.init(appGroupId: appGroupId, urlScheme: 'kasama');
+        await _plugin.init(appGroupId: appGroupId, urlScheme: 'casama');
         _ready = await _plugin.areActivitiesEnabled();
       } catch (_) {
         _ready = false;

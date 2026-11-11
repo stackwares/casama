@@ -1,4 +1,4 @@
-# Scrapes the Kasama API (/metrics) and node-exporter on each host. Used by the `monitoring`
+# Scrapes the Casama API (/metrics) and node-exporter on each host. Used by the `monitoring`
 # compose profile (infra/compose/docker-compose.yml); edit targets for multi-host installs.
 global:
   scrape_interval: 30s
@@ -6,7 +6,7 @@ global:
 rule_files:
   - /etc/prometheus/alerts.yml
 scrape_configs:
-  - job_name: kasama-api
+  - job_name: casama-api
     metrics_path: /metrics
     authorization:
       credentials_file: /etc/prometheus/metrics_token

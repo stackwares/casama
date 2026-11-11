@@ -30,7 +30,7 @@ as $$
     select 1 from public.runs r join public.conversations c on c.id = r.conversation_id
     where r.id = p_run and c.private and c.created_by is distinct from (select auth.uid()))
 $$;
-grant execute on function public.run_visible(uuid) to authenticated, kasama_worker;
+grant execute on function public.run_visible(uuid) to authenticated, casama_worker;
 drop policy run_events_select on public.run_events;
 create policy run_events_select on public.run_events for select to authenticated
   using (public.can_access_bot(bot_id) and public.run_visible(run_id));

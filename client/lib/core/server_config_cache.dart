@@ -1,13 +1,13 @@
 import 'dart:convert';
 
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// The server's public settings (Supabase address, defaults, feature switches), saved per server
 /// so the app starts from them without waiting on the network, or with no network at all, and
 /// refreshes them in the background (D-158). Public data: kept across sign-outs.
 abstract final class ServerConfigCache {
-  static String _key(String apiUrl) => 'kasama.server_config.$apiUrl';
+  static String _key(String apiUrl) => 'casama.server_config.$apiUrl';
 
   /// The settings saved for [apiUrl], or null (never saved, unreadable, or from an older app).
   static Future<PublicConfig?> read(String apiUrl) async {

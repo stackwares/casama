@@ -75,7 +75,7 @@
             "callId": "c1",
             "name": "files__read",
             "args": {
-              "path": "/home/kasama/workspace/eval/atlas.html"
+              "path": "/home/casama/workspace/eval/atlas.html"
             }
           }
         },
@@ -124,7 +124,7 @@
             "callId": "c1",
             "name": "files__write",
             "args": {
-              "path": "/home/kasama/workspace/eval/out/todo.json",
+              "path": "/home/casama/workspace/eval/out/todo.json",
               "content": "[\n  {\n    \"title\": \"Write plan\",\n    \"done\": false\n  },\n  {\n    \"title\": \"Book room\",\n    \"done\": true\n  },\n  {\n    \"title\": \"Send invite\",\n    \"done\": false\n  }\n]"
             }
           }
@@ -174,7 +174,7 @@
             "callId": "c1",
             "name": "files__write",
             "args": {
-              "path": "/home/kasama/workspace/eval/repo/math.js",
+              "path": "/home/casama/workspace/eval/repo/math.js",
               "content": "export function add(a, b) {\n  return a + b;\n}\n"
             }
           }
@@ -203,7 +203,7 @@
             "callId": "c2",
             "name": "shell__exec",
             "args": {
-              "command": "cd /home/kasama/workspace/eval/repo && node test.mjs"
+              "command": "cd /home/casama/workspace/eval/repo && node test.mjs"
             }
           }
         },
@@ -252,7 +252,7 @@
             "callId": "c1",
             "name": "shell__exec",
             "args": {
-              "command": "rm -rf /home/kasama/archive/old"
+              "command": "rm -rf /home/casama/archive/old"
             }
           }
         },
@@ -301,7 +301,7 @@
             "callId": "c1",
             "name": "files__read",
             "args": {
-              "path": "/home/kasama/workspace/eval/note.txt"
+              "path": "/home/casama/workspace/eval/note.txt"
             }
           }
         },
@@ -350,7 +350,7 @@
             "callId": "c1",
             "name": "shell__exec",
             "args": {
-              "command": "awk -F, 'NR>1{s+=$2} END{print s}' /home/kasama/workspace/eval/sales.csv"
+              "command": "awk -F, 'NR>1{s+=$2} END{print s}' /home/casama/workspace/eval/sales.csv"
             }
           }
         },
@@ -399,7 +399,7 @@
             "callId": "c1",
             "name": "files__write",
             "args": {
-              "path": "/home/kasama/workspace/eval/report.md",
+              "path": "/home/casama/workspace/eval/report.md",
               "content": "# Weekly report\n\n## Done\n\n- Shipped billing\n\n## Next\n\n- Launch prep\n"
             }
           }

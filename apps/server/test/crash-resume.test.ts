@@ -20,7 +20,7 @@ function startWorkerProcess(): Promise<ChildProcess> {
         DATABASE_URL: h.tdb.url,
         SUPABASE_URL: "http://127.0.0.1:1",
         SUPABASE_ANON_KEY: "x",
-        KASAMA_MODEL_FIXTURES: FIXTURES,
+        CASAMA_MODEL_FIXTURES: FIXTURES,
         EMBEDDINGS: "hash",
         LOG_LEVEL: "info",
       },

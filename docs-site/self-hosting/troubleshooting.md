@@ -1,11 +1,11 @@
 # Troubleshooting
 
-Problems you might hit running your own Kasama server, each as symptom, cause and fix. Most start
+Problems you might hit running your own Casama server, each as symptom, cause and fix. Most start
 with the same two commands:
 
 ```sh
-kasama selfhost status
-kasama selfhost logs migrate api worker auth
+casama selfhost status
+casama selfhost logs migrate api worker auth
 ```
 
 Instance owners can also check the health of each service under Settings → admin console.
@@ -38,7 +38,7 @@ kept.
 
 ### "Warning: less than 8 GB of memory"
 
-**Cause:** The machine has less memory than Kasama needs for a few computers.
+**Cause:** The machine has less memory than Casama needs for a few computers.
 
 **Fix:** The install continues, but computers may fail to start. Use a bigger machine, lower
 `COMPUTER_MEMORY_MB`, or run computers elsewhere (see [Computer providers](/self-hosting/computers)).
@@ -50,21 +50,21 @@ kept.
 
 **Fix:**
 
-1. Check which services are down: `kasama selfhost status`.
-2. Read their logs: `kasama selfhost logs migrate api auth`.
+1. Check which services are down: `casama selfhost status`.
+2. Read their logs: `casama selfhost logs migrate api auth`.
 3. If `api` logs `Invalid environment: <NAME>: ...`, fix that setting in `infra/compose/.env` and run
-   `kasama selfhost up`.
+   `casama selfhost up`.
 4. If `migrate` logs `Auth/Realtime schemas did not appear`, see the next entry.
 
 ### Migrations wait, then fail with "Auth/Realtime schemas did not appear"
 
 **Cause:** `migrate` waits up to four minutes for Supabase Auth and Realtime to create their
-database schemas before it applies Kasama's migrations. If Auth or Realtime keeps crashing, they
+database schemas before it applies Casama's migrations. If Auth or Realtime keeps crashing, they
 never appear.
 
-**Fix:** Read `kasama selfhost logs auth realtime` and fix what they report (the next entry covers
-the most common one). Then run `kasama selfhost up`; `migrate` runs again and applies only
-migrations it hasn't applied yet (tracked in `public.kasama_migrations`).
+**Fix:** Read `casama selfhost logs auth realtime` and fix what they report (the next entry covers
+the most common one). Then run `casama selfhost up`; `migrate` runs again and applies only
+migrations it hasn't applied yet (tracked in `public.casama_migrations`).
 
 ### Supabase Auth won't start
 
@@ -79,7 +79,7 @@ migrations it hasn't applied yet (tracked in `public.kasama_migrations`).
 
 **Fix:** Run `./install.sh` again: it converts the SAML key and leaves the rest of `.env` alone. Set
 `SIGNUP_HOOK_URI` to empty or to `https://<your domain>/hooks/auth/before-user-created`. Then run
-`kasama selfhost up`.
+`casama selfhost up`.
 
 ### I re-ran the installer with `--domain`, but the address didn't change
 
@@ -91,19 +91,19 @@ migrations it hasn't applied yet (tracked in `public.kasama_migrations`).
 
 ### Caddy can't get a certificate
 
-**Symptom:** The browser shows a TLS error; `kasama selfhost logs caddy` shows ACME errors.
+**Symptom:** The browser shows a TLS error; `casama selfhost logs caddy` shows ACME errors.
 
 **Cause:** The domain doesn't point at the server yet, or ports 80 and 443 aren't reachable from the
 internet.
 
-**Fix:** Check the DNS record (`dig +short kasama.example.com`) and your firewall, then run
+**Fix:** Check the DNS record (`dig +short casama.example.com`) and your firewall, then run
 `docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env restart caddy`.
-Behind another proxy that terminates TLS, set `KASAMA_SITE=:80` (see
+Behind another proxy that terminates TLS, set `CASAMA_SITE=:80` (see
 [Behind another proxy](/self-hosting/configuration#behind-another-proxy)).
 
 ## Health checks
 
-### The root page says "Kasama is running", but the app can't sign in
+### The root page says "Casama is running", but the app can't sign in
 
 **Cause:** That note means Caddy is up but the web app isn't installed; it only answers the root
 page. Other paths show the real status.
@@ -111,11 +111,11 @@ page. Other paths show the real status.
 **Fix:** Check the API directly:
 
 ```sh
-curl -i https://kasama.example.com/readyz
+curl -i https://casama.example.com/readyz
 ```
 
 `200` with `"status":"ok"` means the API and database are fine. A `503` with `"degraded"` means
-the API can't reach the database: check `kasama selfhost logs db api`. A `502` with "Kasama isn't
+the API can't reach the database: check `casama selfhost logs db api`. A `502` with "Casama isn't
 ready yet" means Caddy can't reach that service.
 
 ## Sign-in and email
@@ -127,12 +127,12 @@ confirmed automatically (`EMAIL_AUTOCONFIRM=true`), so passwords work, but email
 codes and password resets don't.
 
 **Fix:** Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` and `SMTP_ADMIN_EMAIL` (see
-[Email](/self-hosting/configuration#email)), then `kasama selfhost up`. Check delivery problems in
-`kasama selfhost logs auth`.
+[Email](/self-hosting/configuration#email)), then `casama selfhost up`. Check delivery problems in
+`casama selfhost logs auth`.
 
 ### Invites show a code instead of sending an email
 
-**Cause:** Kasama sends invite emails through Resend, and `RESEND_API_KEY` isn't set.
+**Cause:** Casama sends invite emails through Resend, and `RESEND_API_KEY` isn't set.
 
 **Fix:** Share the code with the person, or set `RESEND_API_KEY` and `EMAIL_FROM`.
 
@@ -143,14 +143,14 @@ at all, `AUTH_HOOK_SECRET` is missing or differs between Auth and the API; witho
 an allowlist refuses everyone.
 
 **Fix:** Check the list and that `SIGNUP_HOOK_ENABLED=true` and `AUTH_HOOK_SECRET=v1,whsec_...` are
-set, then `kasama selfhost up`.
+set, then `casama selfhost up`.
 
 ### Nobody has the admin console
 
 **Cause:** The instance owner is the first account, unless `INSTANCE_ADMIN_EMAILS` is set. If it's
 set, only those emails are owners.
 
-**Fix:** Set `INSTANCE_ADMIN_EMAILS=you@example.com` and run `kasama selfhost up`.
+**Fix:** Set `INSTANCE_ADMIN_EMAILS=you@example.com` and run `casama selfhost up`.
 
 ## The app can't reach the server
 
@@ -163,7 +163,7 @@ device. `--local` servers answer only on the machine they run on.
 
 1. In the app, tap **More options** → the **Server** chip (or **Use a different server**) and check
    the address, including `https://`.
-2. In the CLI, check `kasama config`, and set it with `kasama config --api-url <address>`.
+2. In the CLI, check `casama config`, and set it with `casama config --api-url <address>`.
 3. From the device, open `<address>/healthz` in a browser. It should return `{"status":"ok"}`.
 
 ### The web app on another domain gets CORS errors
@@ -172,14 +172,14 @@ device. `--local` servers answer only on the machine they run on.
 in `CORS_ORIGINS`.
 
 **Fix:** Add the web app's origin, for example `CORS_ORIGINS=https://app.example.com`, then
-`kasama selfhost up`. The native apps and the CLI don't need this.
+`casama selfhost up`. The native apps and the CLI don't need this.
 
 ### Links to bots' pages point at `localhost:8790`
 
-**Cause:** Pages are served from their own origin, and `KASAMA_PAGES_URL` defaults to
+**Cause:** Pages are served from their own origin, and `CASAMA_PAGES_URL` defaults to
 `http://localhost:8790`.
 
-**Fix:** Give Pages their own domain with `KASAMA_PAGES_SITE` and `KASAMA_PAGES_URL` (see
+**Fix:** Give Pages their own domain with `CASAMA_PAGES_SITE` and `CASAMA_PAGES_URL` (see
 [Core and URLs](/self-hosting/configuration#core-and-urls)).
 
 ### OAuth connections, hosted MCP or agent-to-agent calls return 502 or the web app
@@ -207,7 +207,7 @@ Then restart Caddy:
 **Cause:** The API or worker can't reach the supervisor, or it isn't configured. The admin console
 shows "Sandbox supervisor: Not configured" or unhealthy.
 
-**Fix:** Check `kasama selfhost logs supervisor`. The supervisor refuses to start without
+**Fix:** Check `casama selfhost logs supervisor`. The supervisor refuses to start without
 `SUPERVISOR_TOKEN` (16+ characters), `COMPUTER_TOKEN_SECRET` and `EGRESS_CONTROL_TOKEN`; re-run
 `./install.sh` to add missing generated settings. If it logs
 `DEFAULT_PROVIDER=<name> isn't configured on this supervisor`, add that provider's settings or
@@ -224,10 +224,10 @@ remove `DEFAULT_PROVIDER`.
 
 **Fix:**
 
-1. Check the images: `docker images | grep kasama/computer`. Build the desktop one with
+1. Check the images: `docker images | grep casama/computer`. Build the desktop one with
    `./install.sh --with-desktop`.
 2. Check `docker info | grep -i runsc`. If it's missing, set `SANDBOX_RUNTIME=` (empty) and run
-   `kasama selfhost up`, or install gVisor.
+   `casama selfhost up`, or install gVisor.
 3. Check `free -h` and `df -h`, and the supervisor's logs.
 
 ### A computer can't reach a website
@@ -235,7 +235,7 @@ remove `DEFAULT_PROVIDER`.
 **Cause:** The egress proxy blocks private, loopback, link-local, CGNAT and reserved addresses,
 plus anything in `EGRESS_BLOCKED_CIDRS`. Non-HTTP traffic (SSH, for example) has no route out.
 
-**Fix:** Check `kasama selfhost logs egress`, which logs each refused connection. Services on your
+**Fix:** Check `casama selfhost logs egress`, which logs each refused connection. Services on your
 LAN aren't reachable from computers by design; `OUTBOUND_ALLOW_CIDRS` only applies to the API and
 worker.
 
@@ -245,7 +245,7 @@ worker.
 `host.docker.internal` doesn't resolve inside the containers by default.
 
 **Fix:** Set `OUTBOUND_ALLOW_CIDRS` to the network (for example `192.168.1.0/24`), run
-`kasama selfhost up`, and use the host's LAN address in the credential's base URL.
+`casama selfhost up`, and use the host's LAN address in the credential's base URL.
 
 ### Plugins' servers don't start on the computer
 
@@ -261,10 +261,10 @@ providers, rebuild your templates or snapshots from the new images.
 
 ### Many old computer containers are still running
 
-**Cause:** The supervisor creates computers outside Compose, so `kasama selfhost down` leaves them.
+**Cause:** The supervisor creates computers outside Compose, so `casama selfhost down` leaves them.
 The worker stops idle computers after 10 minutes, but only while it's running.
 
-**Fix:** Start the stack again with `kasama selfhost up`. To see them: `docker ps --filter name=kasama-c-`.
+**Fix:** Start the stack again with `casama selfhost up`. To see them: `docker ps --filter name=casama-c-`.
 
 ## Live view
 
@@ -278,7 +278,7 @@ usually blocked by a firewall, or `TURN_PUBLIC_HOST` names a host viewers can't 
 
 1. Open 3478, UDP and TCP, on the server's firewall and any cloud security group.
 2. Check that `TURN_PUBLIC_HOST` in `.env` resolves to the server from the viewer's device.
-3. Check the admin console's "Live view relay" line, and `kasama selfhost logs turn`.
+3. Check the admin console's "Live view relay" line, and `casama selfhost logs turn`.
 4. Make sure the computer uses the desktop image.
 
 Networks that block both UDP and port 3478 can't use live view: the bundled relay doesn't serve
@@ -293,7 +293,7 @@ restore.
 
 ### "This backup is encrypted; pass --identity with your age key file"
 
-**Fix:** Run `kasama selfhost restore <folder> --identity backup.key` with the private key that
+**Fix:** Run `casama selfhost restore <folder> --identity backup.key` with the private key that
 matches a recipient the backup was encrypted to. "age could not decrypt ... (wrong identity?)" means
 the key doesn't match.
 
@@ -313,10 +313,10 @@ file), then restore again. See [Restore](/self-hosting/operations#restore).
 
 ### "No install.sh in ..."
 
-**Cause:** `kasama selfhost` commands need the checkout. They look at `--dir`, then
-`KASAMA_SELFHOST_DIR`, then the current directory.
+**Cause:** `casama selfhost` commands need the checkout. They look at `--dir`, then
+`CASAMA_SELFHOST_DIR`, then the current directory.
 
-**Fix:** Pass `--dir /path/to/kasama` or set `KASAMA_SELFHOST_DIR`.
+**Fix:** Pass `--dir /path/to/casama` or set `CASAMA_SELFHOST_DIR`.
 
 ## Related
 

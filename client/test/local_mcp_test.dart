@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_app/features/companion/companion.dart';
-import 'package:kasama_app/features/companion/companion_screen.dart';
-import 'package:kasama_app/l10n/generated/app_localizations.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/features/companion/companion.dart';
+import 'package:casama_app/features/companion/companion_screen.dart';
+import 'package:casama_app/l10n/generated/app_localizations.dart';
 
 import 'app_test.dart' show setSize;
 import 'companion_test.dart' show FakeCompanion, MemoryMcp, MemoryTokens;

@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:path/path.dart' as p;
 
 import 'commands_bots.dart' show addOrgOption, orgFrom;
 import 'runner.dart';
 
-/// Routines and skills as files (D-124): `kasama files export <dir>` and `kasama files import <dir>`.
+/// Routines and skills as files (D-124): `casama files export <dir>` and `casama files import <dir>`.
 class FilesCommand extends Command<int> {
   FilesCommand(CliContext ctx) {
     addSubcommand(FilesExportCommand(ctx));
@@ -29,7 +29,7 @@ class FilesExportCommand extends KCommand {
   @override
   String get description => 'Write the workspace\'s routines and skills to a folder.';
   @override
-  String get invocation => 'kasama files export <folder>';
+  String get invocation => 'casama files export <folder>';
   @override
   Future<int> run() async {
     final rest = argResults!.rest;
@@ -62,7 +62,7 @@ class FilesImportCommand extends KCommand {
   @override
   String get description => 'Create and update routines and skills from a folder of files.';
   @override
-  String get invocation => 'kasama files import <folder> [--dry-run]';
+  String get invocation => 'casama files import <folder> [--dry-run]';
   @override
   Future<int> run() async {
     final rest = argResults!.rest;

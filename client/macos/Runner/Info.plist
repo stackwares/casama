@@ -6,10 +6,10 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.kasama.app</string>
+			<string>ai.casama.app</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>kasama</string>
+				<string>casama</string>
 			</array>
 		</dict>
 	</array>
@@ -18,7 +18,7 @@
 	<key>NSAppleEventsUsageDescription</key>
 	<string>Quick ask reads the front window's title and your browser's current tab, only when you press the shortcut.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Kasama uses the microphone for dictation and voice calls with your bots.</string>
+	<string>Casama uses the microphone for dictation and voice calls with your bots.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -30,9 +30,9 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Kasama</string>
+	<string>Casama</string>
 	<key>CFBundleDisplayName</key>
-	<string>Kasama</string>
+	<string>Casama</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -40,12 +40,12 @@
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<!-- Sparkle (direct download only): updates must be signed with the matching private key
-	     (login Keychain, account "kasama"; backup in ~/.config/kasama). The Mac App Store build
+	     (login Keychain, account "casama"; backup in ~/.config/casama). The Mac App Store build
 	     never starts the updater. -->
 	<key>SUPublicEDKey</key>
 	<string>GjC+He1N0LPq8LjS8d8BCclJL3MnzTS/vy2CtXSxlLY=</string>
 	<!-- Checks every 6 hours and installs on quit, without Sparkle's first-run question; Settings
-	     turns automatic checks off (kasama/mac setAutoUpdateChecks). -->
+	     turns automatic checks off (casama/mac setAutoUpdateChecks). -->
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUAutomaticallyUpdate</key>

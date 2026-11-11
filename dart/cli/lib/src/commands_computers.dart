@@ -4,13 +4,13 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 import 'commands_bots.dart';
 import 'runner.dart';
 
 /// Resolves --computer (id), else the organization's team computer.
-Future<Computer> computerFrom(CliContext ctx, KasamaClient c, ArgResults args) async {
+Future<Computer> computerFrom(CliContext ctx, CasamaClient c, ArgResults args) async {
   final id = args['computer'] as String?;
   if (id != null) return (await c.computers.getComputer(id: id)).data!;
   final org = await orgFrom(ctx, c, args['org'] as String?);
@@ -134,7 +134,7 @@ class ComputerFilesCommand extends _ComputerCommand {
   @override
   String get description => 'Files in the computer: ls [path], get <path>, put <local> <path>, rm <path>.';
   @override
-  String get invocation => 'kasama computer files <ls|get|put|rm> ...';
+  String get invocation => 'casama computer files <ls|get|put|rm> ...';
   @override
   Future<int> run() async {
     final rest = argResults!.rest;

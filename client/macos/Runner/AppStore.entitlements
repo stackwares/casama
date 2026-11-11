@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- Mac App Store build (scripts/package-macos-appstore.sh): sandboxed, and only what that build
      uses. Controlling this Mac for bots, the local server, reading other apps (Apple Events) and
-     folder watching are off in it (KASAMA_DISTRIBUTION=appstore), so their entitlements are absent.
+     folder watching are off in it (CASAMA_DISTRIBUTION=appstore), so their entitlements are absent.
      The direct download keeps Release.entitlements (no sandbox, hardened runtime, notarized). -->
 <plist version="1.0">
 <dict>

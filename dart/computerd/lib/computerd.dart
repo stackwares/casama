@@ -1,4 +1,4 @@
-/// Daemon inside each Kasama computer.
+/// Daemon inside each Casama computer.
 library;
 
 export 'src/mcp_bridge.dart' show LocalMcpServer, McpBridge;

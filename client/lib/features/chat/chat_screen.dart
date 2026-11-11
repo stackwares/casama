@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
@@ -275,9 +275,43 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _followIfAtBottom({bool force = false}) {
     if (_focusPending != null) return;
     if (!force && !_stickToBottom) return;
+    _toEnd();
+  }
+
+  /// Jumps to the end of the thread. Rows are built lazily, so the end first known is only an
+  /// estimate: the rows a jump builds can make the thread longer, so jump again until it holds.
+  void _toEnd([int tries = 6]) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scroll.hasClients) _scroll.jumpTo(_scroll.position.maxScrollExtent);
+      if (!mounted || !_scroll.hasClients) return;
+      final p = _scroll.position;
+      if (p.pixels == p.maxScrollExtent) return;
+      p.jumpTo(p.maxScrollExtent);
+      if (tries > 1) _toEnd(tries - 1);
     });
+  }
+
+  double? _viewport;
+
+  /// The thread got shorter (the keyboard opened, or the composer grew): keep what was at its
+  /// bottom in view instead of leaving it under the composer. Following the latest message stays
+  /// pinned to the end; otherwise the list moves up by as much as it shrank.
+  bool _onThreadMetrics(ScrollMetricsNotification n) {
+    if (n.depth != 0) return false;
+    final viewport = n.metrics.viewportDimension;
+    final before = _viewport;
+    _viewport = viewport;
+    if (before == null || viewport >= before || _focusPending != null) return false;
+    if (_stickToBottom) {
+      _toEnd();
+      return false;
+    }
+    final shrunk = before - viewport;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scroll.hasClients) return;
+      final p = _scroll.position;
+      p.jumpTo((p.pixels + shrunk).clamp(p.minScrollExtent, p.maxScrollExtent));
+    });
+    return false;
   }
 
   void _jumpToLatest() {
@@ -499,7 +533,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 Expanded(
                   child: Stack(
                     children: [
-                      Positioned.fill(child: thread),
+                      Positioned.fill(
+                        child: NotificationListener<ScrollMetricsNotification>(onNotification: _onThreadMetrics, child: thread),
+                      ),
                       // The thread fades out above the composer instead of being cut.
                       Positioned(
                         left: 0,
@@ -831,6 +867,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 plain: !showSteps,
                 entry: n,
                 onRestore: computer == null ? null : (cp) => confirmRestore(context, ref, computer.id, cp),
+                onUndo: (factId) async {
+                  final l10n = context.l10n;
+                  final ok = await runGuarded(context, () async {
+                    await ref.read(backendProvider).deleteUserFact(factId);
+                    return true;
+                  });
+                  if (ok == true && context.mounted) showMessage(context, l10n.removedFromProfile);
+                },
                 onDetails: () => showErrorDetails(context, entry: n, botId: widget.botId),
               );
               if (!(last && n.kind == NoticeKind.failed && !chat.running)) return line;

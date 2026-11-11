@@ -71,8 +71,8 @@ and the event name when the sender includes one.
 4. Add the URL as a webhook in the other service, signed with the secret.
 
 Every request must be signed with HMAC-SHA256 of the raw body: GitHub sends `X-Hub-Signature-256`,
-and other services send `X-Kasama-Signature: sha256=<hex>`. Unsigned or wrongly signed requests are
-ignored. Kasama answers `202 Accepted` either way, so nobody can probe which routines exist. See
+and other services send `X-Casama-Signature: sha256=<hex>`. Unsigned or wrongly signed requests are
+ignored. Casama answers `202 Accepted` either way, so nobody can probe which routines exist. See
 [Webhooks](/develop/webhooks) for signing examples.
 
 ## Meeting triggers
@@ -91,7 +91,7 @@ before every meeting with a customer.
    - **Only titles containing (optional)**.
 5. Tap **Create**.
 
-Kasama checks the calendar every 5 minutes, looking 36 hours ahead, and skips cancelled events. Each
+Casama checks the calendar every 5 minutes, looking 36 hours ahead, and skips cancelled events. Each
 matching event starts one run, within a minute of its time. If the event moves before then, the run
 moves with it. The run gets the event's title, times, guests, link, location and description.
 
@@ -129,7 +129,7 @@ never sees your events.
 | Notification | A notification arrives from an app you picked. One-time codes are masked. | Android's notification access |
 | File added | A new file appears in a watched folder, optionally matching a pattern such as `*.pdf`. | Watched folders in the desktop app |
 
-Set up places, watched apps and watched folders in **Settings → Device connections**. Kasama keeps
+Set up places, watched apps and watched folders in **Settings → Device connections**. Casama keeps
 only place names and times, never a location trail. See [Devices](/guide/devices) for setup and
 privacy details.
 
@@ -146,7 +146,7 @@ A routine posts its results in a chat with you, so they read like the rest of yo
 The start of each run shows as "Routine "Daily summary" ran" rather than as a message from you, and
 the open chat updates when the result arrives.
 
-You also get a notification with the result, linked to the chat. Kasama's
+You also get a notification with the result, linked to the chat. Casama's
 [attention rules](/guide/attention) decide when it reaches you, and the notification says which
 routine sent it.
 
@@ -207,8 +207,8 @@ scheduled time becomes the fallback.
 - Device routines can only be created by asking a bot; **New routine** doesn't offer them.
 - Focus and Do Not Disturb events, and Android's first unlock as a wake-up signal, aren't collected
   yet.
-- Android hears notifications only while the Kasama app's process is running.
-- Calendar changes are picked up by the 5-minute check; Kasama doesn't receive change
+- Android hears notifications only while the Casama app's process is running.
+- Calendar changes are picked up by the 5-minute check; Casama doesn't receive change
   notifications from calendar providers yet.
 - Watchers can't watch email or chat replies yet; replies on tickets work.
 - In the app you can't edit a routine after creating it. Ask the bot to change it instead.

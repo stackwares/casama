@@ -92,6 +92,8 @@ describe("privacy, metrics and telemetry (Phase 8)", () => {
   afterAll(async () => h?.stop());
 
   it("exports everything the user can see as a ZIP, without secrets or keys", async () => {
+    await h.tdb
+      .admin`insert into public.user_facts (user_id, content) values (${owner.id}, 'Grows tomatoes')`;
     const res = await h.request("/v1/me/export", { token: owner.token });
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toBe("application/zip");
@@ -102,6 +104,7 @@ describe("privacy, metrics and telemetry (Phase 8)", () => {
     expect(names).toContain("workspaces/private-co/messages.json");
     const all = names.map((n) => strFromU8(files[n] as Uint8Array)).join("\n");
     expect(all).toContain("Hello export");
+    expect(strFromU8(files["account.json"] as Uint8Array)).toContain("Grows tomatoes");
     expect(all).toContain("API_TOKEN");
     expect(all).not.toContain("privacy-secret-value");
     expect(all).not.toContain("sk-privacy-secret-key");
@@ -147,10 +150,10 @@ describe("privacy, metrics and telemetry (Phase 8)", () => {
 
   it("serves the dashboard metrics in Prometheus format", async () => {
     const text = await (await h.request("/metrics")).text();
-    expect(text).toContain("# TYPE kasama_runs_15m gauge");
-    expect(text).toMatch(/kasama_runs_15m\{status="completed"\} \d+/);
-    expect(text).toContain('kasama_time_to_first_token_seconds{quantile="0.95"}');
-    expect(text).toContain("kasama_run_failure_ratio_15m");
+    expect(text).toContain("# TYPE casama_runs_15m gauge");
+    expect(text).toMatch(/casama_runs_15m\{status="completed"\} \d+/);
+    expect(text).toContain('casama_time_to_first_token_seconds{quantile="0.95"}');
+    expect(text).toContain("casama_run_failure_ratio_15m");
     expect(text).not.toContain("Hello export");
   });
 

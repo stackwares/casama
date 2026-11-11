@@ -1,21 +1,21 @@
-# Connect AI apps to Kasama (MCP)
+# Connect AI apps to Casama (MCP)
 
-Kasama is an MCP server, so AI apps such as Claude Code, Cursor and other MCP clients can list your
+Casama is an MCP server, so AI apps such as Claude Code, Cursor and other MCP clients can list your
 bots, give them tasks and read the results. Use it when you work in another AI app and want a
-Kasama bot, with its own computer, memory and tools, to do part of the job.
+Casama bot, with its own computer, memory and tools, to do part of the job.
 
 There are two ways to connect:
 
 | | Hosted, by URL | Local, over stdio |
 | --- | --- | --- |
-| Address | `https://<your Kasama API>/mcp` (Streamable HTTP) | The `kasama-mcp` command from `@kasama/mcp` |
+| Address | `https://<your Casama API>/mcp` (Streamable HTTP) | The `casama-mcp` command from `@casama/mcp` |
 | Best for | Apps that only take a URL: web and mobile AI apps, custom connectors | Desktop coding tools |
-| Sign-in | OAuth, or a workspace API key | Your `kasama login` session, or `KASAMA_TOKEN` |
+| Sign-in | OAuth, or a workspace API key | Your `casama login` session, or `CASAMA_TOKEN` |
 | Scope | One workspace | Every workspace you belong to |
 
 Both give the same tools, and your bots' approvals, action rules and budgets apply either way.
 
-This page is about AI apps using Kasama. To let your bots use other MCP servers as tools, see
+This page is about AI apps using Casama. To let your bots use other MCP servers as tools, see
 [Connections](/guide/connections).
 
 ## Find your address
@@ -24,7 +24,7 @@ This page is about AI apps using Kasama. To let your bots use other MCP servers 
 2. Under **Connect AI apps**, copy the address.
 
 It's your API's address followed by `/mcp`, for example `https://api.example.com/mcp`. Self-hosters
-can set the advertised address with `PUBLIC_API_URL`; otherwise Kasama uses the address the request
+can set the advertised address with `PUBLIC_API_URL`; otherwise Casama uses the address the request
 came in on.
 
 ## Hosted with OAuth (recommended)
@@ -35,8 +35,8 @@ came in on.
    https://api.example.com/mcp
    ```
 
-2. The app finds Kasama's sign-in on its own, registers itself, and opens Kasama in your browser.
-3. On the screen that says the app wants to use Kasama, pick the **Workspace** and tap
+2. The app finds Casama's sign-in on its own, registers itself, and opens Casama in your browser.
+3. On the screen that says the app wants to use Casama, pick the **Workspace** and tap
    **Allow** (or **Refuse**).
 4. When you see **Done. You can go back to the AI app.**, return to the app.
 
@@ -60,7 +60,7 @@ Cursor (`~/.cursor/mcp.json`):
 ```json
 {
   "mcpServers": {
-    "kasama": {
+    "casama": {
       "url": "https://api.example.com/mcp",
       "headers": { "Authorization": "Bearer ksk_..." }
     }
@@ -71,7 +71,7 @@ Cursor (`~/.cursor/mcp.json`):
 Claude Code:
 
 ```sh
-claude mcp add --transport http kasama https://api.example.com/mcp \
+claude mcp add --transport http casama https://api.example.com/mcp \
   --header "Authorization: Bearer ksk_..."
 ```
 
@@ -79,18 +79,18 @@ Any client that supports Streamable HTTP with custom headers works the same way.
 
 ## Local over stdio
 
-The local server runs on your machine and uses the same sign-in as the Kasama CLI.
+The local server runs on your machine and uses the same sign-in as the Casama CLI.
 
 1. Sign in with the CLI:
 
    ```sh
-   kasama login
+   casama login
    ```
 
 2. Add the server to your tool. Claude Code:
 
    ```sh
-   claude mcp add kasama -- npx -y @kasama/mcp
+   claude mcp add casama -- npx -y @casama/mcp
    ```
 
    Any tool that takes a JSON config:
@@ -98,16 +98,16 @@ The local server runs on your machine and uses the same sign-in as the Kasama CL
    ```json
    {
      "mcpServers": {
-       "kasama": { "command": "npx", "args": ["-y", "@kasama/mcp"] }
+       "casama": { "command": "npx", "args": ["-y", "@casama/mcp"] }
      }
    }
    ```
 
 | Environment variable | What it does |
 | --- | --- |
-| `KASAMA_API_URL` | Your Kasama API. Default: the address from `kasama config`, else `http://localhost:8787`. |
-| `KASAMA_TOKEN` | An access token to use instead of the CLI's saved session |
-| `KASAMA_CONFIG_DIR` | Where to find the CLI's saved session and config |
+| `CASAMA_API_URL` | Your Casama API. Default: the address from `casama config`, else `http://localhost:8787`. |
+| `CASAMA_TOKEN` | An access token to use instead of the CLI's saved session |
+| `CASAMA_CONFIG_DIR` | Where to find the CLI's saved session and config |
 
 With the CLI session, the server refreshes your sign-in as needed. See [CLI](/develop/cli).
 
@@ -123,7 +123,7 @@ With the CLI session, the server refreshes your sign-in as needed. See [CLI](/de
 | `decide_approval` | Approves or denies a pending action. The bot continues, or skips the step, right away. |
 
 `ask_bot` waits up to 10 minutes. If the bot needs approval, the result says `waiting_approval`;
-approve it in the Kasama app, or with `decide_approval` if your workspace allows it.
+approve it in the Casama app, or with `decide_approval` if your workspace allows it.
 
 ## Allow approvals from AI apps
 

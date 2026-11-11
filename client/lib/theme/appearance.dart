@@ -14,14 +14,14 @@ import 'wallpaper.dart';
 class Appearance {
   const Appearance({
     this.mode = ThemeMode.system,
-    this.schemeId = 'kasama',
+    this.schemeId = 'casama',
     this.headingFont = defaultHeadingFont,
     this.bodyFont = defaultBodyFont,
     this.wallpaper = const WallpaperSpec(),
   });
   final ThemeMode mode;
 
-  /// `kasama` or a FlexScheme name (see [themeChoices]).
+  /// `casama` or a FlexScheme name (see [themeChoices]).
   final String schemeId;
 
   /// Google Font family names for headlines and for everything else.
@@ -63,7 +63,7 @@ class AppearanceNotifier extends Notifier<Appearance> {
       final p = await SharedPreferences.getInstance();
       state = Appearance(
         mode: ThemeMode.values.asNameMap()[p.getString(_modeKey)] ?? ThemeMode.system,
-        schemeId: themeChoiceById(p.getString(_schemeKey) ?? 'kasama').id,
+        schemeId: themeChoiceById(p.getString(_schemeKey) ?? 'casama').id,
         headingFont: p.getString(_headingKey) ?? defaultHeadingFont,
         bodyFont: p.getString(_bodyKey) ?? defaultBodyFont,
         wallpaper: _loadWallpaper(p),

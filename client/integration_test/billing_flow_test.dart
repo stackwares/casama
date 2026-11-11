@@ -2,7 +2,7 @@
 // Android, desktop). Needs a billing-enabled API with the local billing mock:
 //   node --env-file=.env apps/server/test/fake-billing-server.ts http://127.0.0.1:8788 /tmp/billing.env
 //   MODE=api node --env-file=.env --env-file=/tmp/billing.env apps/server/src/main.ts
-// and KASAMA_API_URL=http://localhost:8788 (see scripts/e2e-app.sh, E2E_BILLING=1).
+// and CASAMA_API_URL=http://localhost:8788 (see scripts/e2e-app.sh, E2E_BILLING=1).
 import 'dart:io';
 import 'dart:math';
 
@@ -10,8 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:kasama_app/core/config.dart';
-import 'package:kasama_app/main.dart';
+import 'package:casama_app/core/config.dart';
+import 'package:casama_app/main.dart';
 
 import 'app_flow_test.dart' show tap, waitFor;
 
@@ -37,7 +37,7 @@ void main() {
     await tap(tester, find.byKey(const Key('createWorkspace')));
     await waitFor(tester, find.byKey(const Key('apiKey')).hitTestable());
 
-    // A new Kasama Cloud workspace starts on the free plan.
+    // A new Casama Cloud workspace starts on the free plan.
     final router = GoRouter.of(tester.element(find.byKey(const Key('apiKey'))));
     router.go('/settings/billing');
     final plan = find.byKey(const Key('currentPlan'));

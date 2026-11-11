@@ -6,8 +6,8 @@
 
 export const PLUGIN_SCHEMA_1_0 = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json";
 export const MCP_SCHEMA_1_0 = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json";
-/** Kasama's own extension namespace inside `extensions` (allowed by the specification). */
-export const KASAMA_EXTENSION = "com.kasama";
+/** Casama's own extension namespace inside `extensions` (allowed by the specification). */
+export const CASAMA_EXTENSION = "com.casama";
 /** The most a plugin folder can hold (fetched from GitHub at install). */
 export const PLUGIN_MAX_FILES = 400;
 export const PLUGIN_MAX_BYTES = 10 * 1024 * 1024;
@@ -51,7 +51,7 @@ export type PluginServer =
     }
   | { key: string; type: "streamable-http" | "sse"; url: string; headers: Record<string, string> };
 
-/** A secret the plugin needs, from Kasama's extension: where it goes and why. */
+/** A secret the plugin needs, from Casama's extension: where it goes and why. */
 export interface PluginSecret {
   name: string;
   description: string;
@@ -98,7 +98,7 @@ export function checkManifest(raw: unknown, warnings: string[] = []): PluginMani
   if (typeof raw.$schema !== "string" || !raw.$schema)
     throw new PluginError("plugin.json needs $schema");
   if (raw.$schema !== PLUGIN_SCHEMA_1_0)
-    throw new PluginError(`Unsupported Agent Plugins version (${raw.$schema}); Kasama reads 1.0.0`);
+    throw new PluginError(`Unsupported Agent Plugins version (${raw.$schema}); Casama reads 1.0.0`);
   if (typeof raw.name !== "string" || !raw.name) throw new PluginError("plugin.json needs a name");
   if (raw.name.length > 64 || !NAME.test(raw.name))
     throw new PluginError(
@@ -232,7 +232,7 @@ export function checkMcp(raw: unknown, warnings: string[] = []): PluginServer[] 
     .filter((s): s is PluginServer => s !== null);
 }
 
-/** Secrets from `extensions["com.kasama"].secrets`, kept only when they point at a real server. */
+/** Secrets from `extensions["com.casama"].secrets`, kept only when they point at a real server. */
 export function pluginSecrets(
   rawManifest: unknown,
   servers: PluginServer[],
@@ -240,7 +240,7 @@ export function pluginSecrets(
 ): PluginSecret[] {
   const ext =
     isObj(rawManifest) && isObj(rawManifest.extensions)
-      ? rawManifest.extensions[KASAMA_EXTENSION]
+      ? rawManifest.extensions[CASAMA_EXTENSION]
       : undefined;
   if (!isObj(ext) || !Array.isArray(ext.secrets)) return [];
   const out: PluginSecret[] = [];

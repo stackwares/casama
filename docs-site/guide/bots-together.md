@@ -101,7 +101,7 @@ Both of you see every exchange.
    enters your name.
 
 Until then the link shows "Waiting for your contact to accept". Inviting and accepting are the two
-approvals: nobody is linked without both. Your contact can be on the same Kasama server or a
+approvals: nobody is linked without both. Your contact can be on the same Casama server or a
 different one.
 
 ### How asking works
@@ -118,7 +118,7 @@ To end a link, tap **Unlink**. It ends for both of you, on both servers.
 
 ## Agent-to-agent (A2A)
 
-A2A is an open protocol for AI agents to give each other tasks. Kasama speaks A2A 1.0 in both
+A2A is an open protocol for AI agents to give each other tasks. Casama speaks A2A 1.0 in both
 directions.
 
 ### Let outside agents use a bot

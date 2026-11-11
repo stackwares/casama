@@ -2,7 +2,7 @@
 import { once } from "node:events";
 import { createServer, type IncomingMessage, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { checkCalendarTriggers } from "@kasama/agent";
+import { checkCalendarTriggers } from "@casama/agent";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";

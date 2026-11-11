@@ -52,7 +52,7 @@ describe("local computer companion (Phase 6)", () => {
 
   beforeAll(async () => {
     computerdBinary();
-    home = mkdtempSync(join(tmpdir(), "kasama-companion-"));
+    home = mkdtempSync(join(tmpdir(), "casama-companion-"));
     mkdirSync(join(home, "Shared"));
     mkdirSync(join(home, "Private"));
     writeFileSync(join(home, "Shared", "report-draft.md"), "# Draft\n");

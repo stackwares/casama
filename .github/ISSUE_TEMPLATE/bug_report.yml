@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting. Please check [Troubleshooting](https://github.com/stackwares/kasama/blob/main/docs-site/self-hosting/troubleshooting.md) and existing issues first. Never paste secrets, keys or tokens.
+        Thanks for reporting. Please check [Troubleshooting](https://github.com/stackwares/casama/blob/main/docs-site/self-hosting/troubleshooting.md) and existing issues first. Never paste secrets, keys or tokens.
   - type: textarea
     id: what
     attributes: { label: What happened, description: Steps to reproduce, as exact as you can. }
@@ -38,19 +38,19 @@ body:
     attributes:
       {
         label: Version or commit,
-        description: "For example the app's About screen, `kasama --version`, or `git rev-parse --short HEAD`.",
+        description: "For example the app's About screen, `casama --version`, or `git rev-parse --short HEAD`.",
       }
   - type: dropdown
     id: hosting
     attributes:
       label: Server
       options:
-        [Self-hosted (Docker Compose), Self-hosted (Helm or other), Kasama Cloud, Local development]
+        [Self-hosted (Docker Compose), Self-hosted (Helm or other), Casama Cloud, Local development]
   - type: textarea
     id: logs
     attributes:
       {
         label: Logs,
-        description: "Relevant output (`kasama selfhost logs`, browser console, app error details).",
+        description: "Relevant output (`casama selfhost logs`, browser console, app error details).",
         render: shell,
       }

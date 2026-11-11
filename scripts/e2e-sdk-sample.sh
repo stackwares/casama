@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 6 gate: an external app (examples/sdk_sample) streams a run with kasama_sdk against the
+# Phase 6 gate: an external app (examples/sdk_sample) streams a run with casama_sdk against the
 # local stack (API on :8787, worker with fixtures).
 set -euo pipefail
 cd "$(dirname "$0")/../examples/sdk_sample"

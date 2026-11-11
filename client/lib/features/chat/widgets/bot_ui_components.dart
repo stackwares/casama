@@ -8,9 +8,9 @@ import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
 import 'chat_markdown.dart';
 
-/// The basic A2UI catalog (D-086) with Kasama's own look for the parts bots use most: buttons,
+/// The basic A2UI catalog (D-086) with Casama's own look for the parts bots use most: buttons,
 /// rows of buttons, text, choice chips and dividers. Everything else is the basic catalog's.
-CatalogImplementation kasamaUiCatalog({OpenUrlCallback? openUrl}) {
+CatalogImplementation casamaUiCatalog({OpenUrlCallback? openUrl}) {
   final base = basicCatalog(openUrl: openUrl);
   ComponentImplementation swap(ComponentImplementation c, ComponentWidgetBuilder builder) => ComponentImplementation(
     name: c.name,
@@ -126,7 +126,7 @@ Widget _divider(BuildContext context, ComponentNode<ComponentImplementation> nod
         ? LimitedBox(maxHeight: 24, child: VerticalDivider(width: 1, color: context.appColors.hairline))
         : Divider(height: AppSpace.sm, thickness: 1, color: context.appColors.hairline);
 
-// Choice chips get Kasama's pill chips; checkbox and radio lists keep the basic look.
+// Choice chips get Casama's pill chips; checkbox and radio lists keep the basic look.
 Widget _choicePicker(BuildContext context, ComponentNode<ComponentImplementation> node, ComponentProps props, ChildWidgetBuilder buildChild) {
   if (props.string('displayStyle') != 'chips' || (props.boolean('filterable') ?? false)) {
     return BasicComponents.choicePicker.builder(context, node, props, buildChild);

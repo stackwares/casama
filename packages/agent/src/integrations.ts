@@ -1,4 +1,4 @@
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { refreshAuthorization } from "@modelcontextprotocol/sdk/client/auth.js";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
@@ -99,7 +99,7 @@ export class McpAdapter implements IntegrationAdapter {
 
   private async connect() {
     if (this.client) return this.client;
-    const client = new Client({ name: "kasama", version: "0.1.0" });
+    const client = new Client({ name: "casama", version: "0.1.0" });
     const url = new URL(this.url);
     const opts = { requestInit: { headers: this.headers }, fetch: this.fetchImpl as never };
     // Legacy SSE servers still exist; their endpoint ends in /sse.
@@ -172,9 +172,9 @@ export class LocalMcpAdapter implements IntegrationAdapter {
     if (!ctx.local) throw new Error("Personal computers are not set up on this server");
     this.url = `${ctx.local.apiUrl.replace(/\/$/, "")}/internal/local/${computer}/http/mcp/${server}`;
     this.headers = {
-      "x-kasama-internal": ctx.local.internalToken,
+      "x-casama-internal": ctx.local.internalToken,
       ...(ctx.activity
-        ? { "x-kasama-activity": Buffer.from(JSON.stringify(ctx.activity)).toString("base64") }
+        ? { "x-casama-activity": Buffer.from(JSON.stringify(ctx.activity)).toString("base64") }
         : {}),
     };
     const t = Number(rec.config.timeout_s);
@@ -183,7 +183,7 @@ export class LocalMcpAdapter implements IntegrationAdapter {
 
   private async connect() {
     if (this.client) return this.client;
-    const client = new Client({ name: "kasama", version: "0.1.0" });
+    const client = new Client({ name: "casama", version: "0.1.0" });
     const transport = new StreamableHTTPClientTransport(new URL(this.url), {
       requestInit: { headers: this.headers },
     });
@@ -251,7 +251,7 @@ function localError(err: unknown): Error {
   const msg = (err as Error)?.message ?? String(err);
   if (/device_offline|409/.test(msg))
     return new Error(
-      'The computer running this MCP server is offline. Open the Kasama desktop app there and turn on "Use this computer for bots".',
+      'The computer running this MCP server is offline. Open the Casama desktop app there and turn on "Use this computer for bots".',
     );
   if (/bot_not_allowed|403/.test(msg))
     return new Error(
@@ -604,7 +604,7 @@ export class ComputerMcpAdapter implements IntegrationAdapter {
       throw new Error(
         "This plugin's server runs on the bot's computer, which isn't available here",
       );
-    const client = new Client({ name: "kasama", version: "0.1.0" });
+    const client = new Client({ name: "casama", version: "0.1.0" });
     const transport = new StreamableHTTPClientTransport(new URL("http://computer/mcp"), {
       fetch: (await this.ctx.computerMcp(this.rec)) as never,
     });

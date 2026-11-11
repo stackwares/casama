@@ -1,0 +1,59 @@
+//
+// AUTO-GENERATED FILE, DO NOT MODIFY!
+//
+
+// ignore_for_file: unused_element
+import 'package:casama_api/src/model/organization_with_role.dart';
+import 'package:copy_with_extension/copy_with_extension.dart';
+import 'package:json_annotation/json_annotation.dart';
+
+part 'organization_list.g.dart';
+
+
+@CopyWith()
+@JsonSerializable(
+  checked: true,
+  createToJson: true,
+  disallowUnrecognizedKeys: false,
+  explicitToJson: true,
+)
+class OrganizationList {
+  /// Returns a new [OrganizationList] instance.
+  OrganizationList({
+
+    required  this.items,
+  });
+
+  @JsonKey(
+    
+    name: r'items',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final List<OrganizationWithRole> items;
+
+
+
+
+
+    @override
+    bool operator ==(Object other) => identical(this, other) || other is OrganizationList &&
+      other.items == items;
+
+    @override
+    int get hashCode =>
+        items.hashCode;
+
+  factory OrganizationList.fromJson(Map<String, dynamic> json) => _$OrganizationListFromJson(json);
+
+  Map<String, dynamic> toJson() => _$OrganizationListToJson(this);
+
+  @override
+  String toString() {
+    return toJson().toString();
+  }
+
+}
+

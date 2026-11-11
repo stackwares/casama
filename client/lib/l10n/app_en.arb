@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Kasama",
+  "appTitle": "Casama",
   "loading": "Loading…",
   "retry": "Try again",
   "cancel": "Cancel",
@@ -11,7 +11,7 @@
   "create": "Create",
   "continueLabel": "Continue",
   "somethingWentWrong": "Something went wrong",
-  "signInTitle": "Sign in to Kasama",
+  "signInTitle": "Sign in to Casama",
   "signUpTitle": "Create your account",
   "email": "Email",
   "password": "Password",
@@ -591,7 +591,7 @@
   "companionIntro": "Let chosen bots work on this computer: run commands, edit files in folders you pick, browse and use apps. Everything they do shows on screen and can be stopped. Off until you approve each capability.",
   "thisComputer": "This computer",
   "companionOnline": "On: bots you allow can use this computer",
-  "companionError": "Cannot reach Kasama; retrying",
+  "companionError": "Cannot reach Casama; retrying",
   "companionOff": "Off",
   "companionCapabilities": "What bots may do",
   "companionCapabilitiesHelp": "Approve each one. High-risk actions always ask, whatever the bot's autonomy.",
@@ -633,7 +633,7 @@
   "editQuotas": "Edit quotas",
   "maxBots": "Max bots",
   "monthlyUsd": "Monthly spend limit (USD)",
-  "updateAvailable": "Kasama {latest} is available (you run {current})",
+  "updateAvailable": "Casama {latest} is available (you run {current})",
   "@updateAvailable": {
     "placeholders": {
       "latest": {
@@ -644,8 +644,8 @@
       }
     }
   },
-  "kasamaVersion": "Kasama {version}",
-  "@kasamaVersion": {
+  "casamaVersion": "Casama {version}",
+  "@casamaVersion": {
     "placeholders": {
       "version": {
         "type": "String"
@@ -700,9 +700,9 @@
       }
     }
   },
-  "connectingToServer": "Connecting to Kasama…",
-  "cannotReachServer": "Can't reach your Kasama server",
-  "connectionFailed": "Couldn't reach your Kasama server. Check your connection and try again.",
+  "connectingToServer": "Connecting to Casama…",
+  "cannotReachServer": "Can't reach your Casama server",
+  "connectionFailed": "Couldn't reach your Casama server. Check your connection and try again.",
   "cannotReachServerHelp": "Check your connection, or that the server at {url} is running.",
   "@cannotReachServerHelp": {
     "placeholders": {
@@ -715,7 +715,7 @@
   "notNow": "Not now",
   "seePlans": "See plans",
   "billing": "Billing",
-  "billingOffSelfHosted": "Billing is off on this server. Self-hosted Kasama has no limits.",
+  "billingOffSelfHosted": "Billing is off on this server. Self-hosted Casama has no limits.",
   "restorePurchases": "Restore purchases",
   "restoreStarted": "Checking your purchases…",
   "plans": "Plans",
@@ -810,10 +810,10 @@
   "thisMonth": "This month",
   "noBillableUsage": "No billable usage yet.",
   "cloudConnect": "Cloud Connect",
-  "cloudConnectHelp": "Let a self-hosted Kasama use cloud computers and model credits, billed to this workspace.",
+  "cloudConnectHelp": "Let a self-hosted Casama use cloud computers and model credits, billed to this workspace.",
   "cloudConnectNewKey": "New Cloud Connect key",
   "cloudConnectKeyCreated": "Key created",
-  "cloudConnectKeyOnce": "Copy it now; it is shown only once. Set it on your server with KASAMA_CLOUD_URL.",
+  "cloudConnectKeyOnce": "Copy it now; it is shown only once. Set it on your server with CASAMA_CLOUD_URL.",
   "copy": "Copy",
   "revoke": "Revoke",
   "instanceName": "Server name",
@@ -936,14 +936,14 @@
   "createMenuTitle": "Add",
   "createBotHelp": "A teammate with its own instructions, memory and tools",
   "createGroupHelp": "Several bots in one chat; @mention who should answer",
-  "importBotHelp": "From a Kasama bot file someone shared",
+  "importBotHelp": "From a Casama bot file someone shared",
   "importAgentHelp": "From an OpenClaw or Hermes Agent folder",
   "archivedBotsHelp": "Bring back a bot you archived",
   "checkForUpdates": "Check for updates",
   "autoUpdates": "Update automatically",
   "autoUpdatesHelp": "Download new versions in the background and install them when you quit.",
-  "upToDate": "Kasama is up to date",
-  "updateReady": "Kasama {version} is available",
+  "upToDate": "Casama is up to date",
+  "updateReady": "Casama {version} is available",
   "@updateReady": {
     "placeholders": {
       "version": {
@@ -960,7 +960,7 @@
     }
   },
   "openAtLogin": "Open at login",
-  "openAtLoginHelp": "Start Kasama when you log in to this Mac, ready for the quick-ask shortcut.",
+  "openAtLoginHelp": "Start Casama when you log in to this Mac, ready for the quick-ask shortcut.",
   "signInCta": "Sign in or create account",
   "signInTagline": "Your AI teammates, each with its own computer, memory and tools.",
   "noBotsHelp": "A bot is a teammate with its own computer. Create one to start chatting.",
@@ -1254,7 +1254,7 @@
   },
   "revokeKeyBody": "That server stops using cloud computers and credits right away.",
   "handBackHelp": "The bot picks up where you left off. Tell it what you did, if it helps.",
-  "serverHelp": "Use your own Kasama server. Enter the address you or your admin set up.",
+  "serverHelp": "Use your own Casama server. Enter the address you or your admin set up.",
   "ssoHelp": "Enter your work email and we'll send you to your company's sign-in page.",
   "colorScheme": "Color scheme",
   "searchThemes": "Search schemes",
@@ -1302,8 +1302,8 @@
   "themeName": "Theme name",
   "importTheme": "Import a theme",
   "themeCode": "Theme code",
-  "themeCodeHelp": "Paste a code someone shared with you. It starts with kasama-theme:",
-  "invalidThemeCode": "That isn't a Kasama theme code.",
+  "themeCodeHelp": "Paste a code someone shared with you. It starts with casama-theme:",
+  "invalidThemeCode": "That isn't a Casama theme code.",
   "themeImported": "Added {name} to your themes",
   "@themeImported": {
     "placeholders": {
@@ -1369,7 +1369,7 @@
   "otherModel": "Computers and other",
   "deletedBot": "Not tied to a bot",
   "usageHelp": "Costs are estimates from token counts and published prices. Your model provider's bill is the final word.",
-  "usageAskPrompt": "Here is my Kasama usage for {period}. Help me understand where the money goes and how I could spend less. You can also check live numbers with your usage tool.\n\n{summary}",
+  "usageAskPrompt": "Here is my Casama usage for {period}. Help me understand where the money goes and how I could spend less. You can also check live numbers with your usage tool.\n\n{summary}",
   "@usageAskPrompt": {
     "placeholders": {
       "period": {
@@ -1497,7 +1497,7 @@
   "pasteLabel": "Paste",
   "connectingLabel": "Connecting…",
   "connectFailedTitle": "Couldn't connect",
-  "adminSetupNeeded": "One-click sign-in for {app} needs a one-time setup by whoever runs this Kasama server.",
+  "adminSetupNeeded": "One-click sign-in for {app} needs a one-time setup by whoever runs this Casama server.",
   "@adminSetupNeeded": {
     "placeholders": {
       "app": {
@@ -1612,7 +1612,7 @@
     "description": "Sign-in button label required by OpenAI's branding rules"
   },
   "chatGptConnectHelp": "Run your bots on your ChatGPT plan instead of an API key. Their model calls count toward your plan's limits, and only you can use it.",
-  "chatGptDesktopOnly": "To connect your ChatGPT plan, open the desktop app, or run \"kasama credential chatgpt\" in the CLI.",
+  "chatGptDesktopOnly": "To connect your ChatGPT plan, open the desktop app, or run \"casama credential chatgpt\" in the CLI.",
   "chatGptWaiting": "Finish signing in with ChatGPT in your browser…",
   "chatGptConnected": "Connected your ChatGPT plan ({account}).",
   "@chatGptConnected": {
@@ -1837,7 +1837,7 @@
     }
   },
   "changedByPerson": "Changed by a person",
-  "changedBySystem": "Changed by Kasama",
+  "changedBySystem": "Changed by Casama",
   "fieldName": "name",
   "fieldInstructions": "instructions",
   "fieldModel": "model",
@@ -2000,7 +2000,7 @@
   "includeMemories": "Include memories",
   "includeMemoriesHelp": "What it has learned about you and your work. Leave off unless you trust who you share with.",
   "saveAsFile": "Save as file",
-  "notABotTemplate": "That file isn't a Kasama bot template.",
+  "notABotTemplate": "That file isn't a Casama bot template.",
   "importBot": "Import a bot",
   "botImported": "{name} is ready.",
   "@botImported": {
@@ -2139,7 +2139,7 @@
     }
   },
   "connectAiApp": "Connect an AI app",
-  "connectAiAppAsk": "{app} wants to use Kasama",
+  "connectAiAppAsk": "{app} wants to use Casama",
   "@connectAiAppAsk": {
     "placeholders": {
       "app": {
@@ -2318,7 +2318,7 @@
   "plugins": "Plugins",
   "pluginsRow": "Skills and tools from plugin packages",
   "noPlugins": "No plugins yet",
-  "pluginsHelp": "Plugins are Agent Plugins 1.0 packages on GitHub. They can bring skills and MCP tools; their servers run on this bot's computer, never on Kasama's servers.",
+  "pluginsHelp": "Plugins are Agent Plugins 1.0 packages on GitHub. They can bring skills and MCP tools; their servers run on this bot's computer, never on Casama's servers.",
   "addPlugin": "Add a plugin",
   "addPluginHelp": "Paste a GitHub link to the plugin's folder. You'll see what it adds before anything is installed.",
   "pluginAdds": "It adds",
@@ -2539,7 +2539,7 @@
   },
   "gitSync": "Git sync",
   "gitSyncOff": "Off",
-  "gitSyncHelp": "Changes in Kasama are committed to the repository, and pushes to it update Kasama after they're checked. If a file changed in both places, Kasama keeps its version and opens a pull request. Needs a GITHUB_TOKEN secret allowed for api.github.com.",
+  "gitSyncHelp": "Changes in Casama are committed to the repository, and pushes to it update Casama after they're checked. If a file changed in both places, Casama keeps its version and opens a pull request. Needs a GITHUB_TOKEN secret allowed for api.github.com.",
   "gitSyncNeedsToken": "Needs a GITHUB_TOKEN secret",
   "gitSyncLast": "Synced {date}",
   "@gitSyncLast": {
@@ -2745,7 +2745,7 @@
   "tryAgain": "Try again",
   "inviteLinkCopied": "Invite link copied. Send it to the people you work with.",
   "connectManaged": "Sign in through Composio",
-  "connectManagedHelp": "Kasama reads your inbox through Composio's Google sign-in for now. You can disconnect any time.",
+  "connectManagedHelp": "Casama reads your inbox through Composio's Google sign-in for now. You can disconnect any time.",
   "sharing": "Sharing",
   "sharingRow": "Who can chat with, edit or manage it",
   "sharingHelp": "Everyone in the workspace can chat with a bot unless you make it private. People you add can chat, edit its settings, or also manage who has access. A bot working for someone only uses their own personal computer and connections.",
@@ -2873,7 +2873,7 @@
   "encryptionConfirm": "Content will be encrypted with this workspace's key. If the workspace is deleted, its key is destroyed and the content can't be recovered. Exact-word search stops matching encrypted text.",
   "encryptionTurnOn": "Turn on",
   "encryptionRotate": "Rotate key",
-  "encryptionKeyManaged": "Kasama creates and keeps this workspace's key for you, wrapped with the server's own key. There's nothing to save or copy.",
+  "encryptionKeyManaged": "Casama creates and keeps this workspace's key for you, wrapped with the server's own key. There's nothing to save or copy.",
   "encryptionRotateTitle": "Rotate the key?",
   "encryptionRotateBody": "The workspace key is wrapped again with the server's current key. Your content stays readable and nothing needs re-encrypting. Do this after changing the server's key, or on a schedule.",
   "encryptionRotateHelp": "Rewraps the workspace key with the server's current key",
@@ -2890,7 +2890,7 @@
   "memoryBackendHelp": "Bots' long-term memory",
   "memoryBackendSheetHelp": "Keep your bots' memory in Honcho or Supermemory with your own account. The memory screen, exports and deletion work the same.",
   "memoryHonchoWorkspace": "Honcho workspace",
-  "memoryHonchoWorkspaceHelp": "Leave empty to use one made for this Kasama workspace",
+  "memoryHonchoWorkspaceHelp": "Leave empty to use one made for this Casama workspace",
   "memoryBaseUrl": "Server address (optional)",
   "memoryBaseUrlHelp": "Only for a self-hosted Honcho or Supermemory",
   "memoryCopyExisting": "Copy current memories over",
@@ -2964,7 +2964,7 @@
   "linksInvite": "Invite a contact",
   "linksContactName": "Contact's name",
   "linksInviteReady": "Send this invite",
-  "linksInviteHelp": "Send it to your contact. They accept it in Kasama with one of their bots. It works once, for 7 days.",
+  "linksInviteHelp": "Send it to your contact. They accept it in Casama with one of their bots. It works once, for 7 days.",
   "linksAccept": "Accept an invite",
   "linksAcceptHelp": "Paste the invite your contact sent you.",
   "linksInviteText": "Invite",
@@ -2994,16 +2994,16 @@
       }
     }
   },
-  "wakeWordHelp": "While Kasama is open, this device listens for your phrase and starts a live call with the bot you choose.",
+  "wakeWordHelp": "While Casama is open, this device listens for your phrase and starts a live call with the bot you choose.",
   "wakeWordListen": "Listen for the wake word",
   "wakeWordPhrase": "Phrase",
-  "wakeWordPhraseHelp": "Two or three words, like \"hey kasama\"",
+  "wakeWordPhraseHelp": "Two or three words, like \"hey casama\"",
   "wakeWordBot": "Call this bot",
   "wakeWordDownloading": "Downloading the on-device model…",
   "wakeWordPrivacy": "Listening happens on this device with an open-source model (about 18 MB, downloaded once). Nothing is sent anywhere until the call starts.",
   "secretStore": "Where secrets are kept",
   "secretStoreVault": "This server's vault",
-  "secretStoreHelp": "Keep bots' named secrets in your own Infisical project. Kasama keeps only each secret's name and where it may be used.",
+  "secretStoreHelp": "Keep bots' named secrets in your own Infisical project. Casama keeps only each secret's name and where it may be used.",
   "secretStoreSite": "Infisical address",
   "secretStoreProject": "Project ID",
   "secretStoreEnv": "Environment",
@@ -3011,8 +3011,8 @@
   "secretStoreClientSecret": "Client secret",
   "secretStoreMove": "Move current secrets into Infisical",
   "secretStoreBack": "Use this server's vault again",
-  "localServer": "Run Kasama on this computer",
-  "localServerHelp": "Starts your own Kasama server here with Docker and connects to it. Only this computer can reach it.",
+  "localServer": "Run Casama on this computer",
+  "localServerHelp": "Starts your own Casama server here with Docker and connects to it. Only this computer can reach it.",
   "localServerIntro": "Needs Docker Desktop running and a few GB of disk. The first start takes several minutes.",
   "localServerChecking": "Checking Docker…",
   "localServerDownloading": "Downloading the server…",
@@ -3062,7 +3062,7 @@
   "deviceKindActivity": "computer activity",
   "deviceConnections": "Device connections",
   "deviceConnectionsHelp": "Share data from this device with your bots. Each kind is off until you turn it on, and only bots you allow can read it, only in your own chats.",
-  "deviceConnectionsNone": "This device can't share data yet. On your phone, open Kasama and turn on what you'd like to share.",
+  "deviceConnectionsNone": "This device can't share data yet. On your phone, open Casama and turn on what you'd like to share.",
   "deviceKeepFor": "Keep for",
   "deviceKeepLiveOnly": "Live only",
   "deviceKeepDays": "{count, plural, =1{1 day} other{{count} days}}",
@@ -3076,7 +3076,7 @@
   "devicePrivateModel": "Private models only",
   "devicePrivateModelHelp": "Only bots on a local model can read it",
   "deviceNoBots": "No bots yet. A bot asks when it needs this.",
-  "devicePermissionDenied": "Kasama doesn't have permission. Allow it in the system settings, then try again.",
+  "devicePermissionDenied": "Casama doesn't have permission. Allow it in the system settings, then try again.",
   "deviceOtherDevices": "Your other devices",
   "deviceForget": "Forget this device",
   "deviceConnectionsRowHelp": "Calendar, contacts and more from this device",
@@ -3087,7 +3087,7 @@
   "healthNeedsEncryption": "Health data needs encryption at rest. Turn it on for a workspace you own, then try again.",
   "placeAddHere": "Add where I am now",
   "placeName": "Name this place (Home, Work, Gym)",
-  "placeNoLocation": "Your location isn't available. Allow location for Kasama, then try again.",
+  "placeNoLocation": "Your location isn't available. Allow location for Casama, then try again.",
   "placesHelp": "Bots hear when you arrive at or leave these places. Only the place name and the time are shared, never your route.",
   "watchedAppsHelp": "Only notifications from these apps are shared. One-time codes are hidden before anything leaves your phone.",
   "watchedAppAdd": "Add an app (name or package id)",
@@ -3106,7 +3106,7 @@
   "ctxSelection": "Selected text",
   "ctxAddScreenshot": "Add a screenshot",
   "ctxScreenshotAdded": "Screenshot added",
-  "ctxScreenshotFailed": "Couldn't take a screenshot. Allow screen recording for Kasama in your system settings.",
+  "ctxScreenshotFailed": "Couldn't take a screenshot. Allow screen recording for Casama in your system settings.",
   "watchedFolders": "Watched folders",
   "watchedFoldersHelp": "A new file in one of these folders can start a routine (for example, file new PDFs in Downloads). Only its name is shared; bots read the file only if they work on this computer.",
   "whyTitle": "Why am I seeing this?",
@@ -3198,7 +3198,7 @@
   "inviteRenewed": "The invite works for 7 more days. Send them the new link.",
   "inviteSentTo": "Sign in with {email} to accept.",
   "@inviteSentTo": {"placeholders": {"email": {"type": "String"}}},
-  "inviteShareText": "Join {workspace} on Kasama: {url}",
+  "inviteShareText": "Join {workspace} on Casama: {url}",
   "@inviteShareText": {"placeholders": {"workspace": {"type": "String"}, "url": {"type": "String"}}},
   "invitedBy": "{name} invited you to join",
   "@invitedBy": {"placeholders": {"name": {"type": "String"}}},
@@ -3257,6 +3257,33 @@
   "@yourTeamIsHereHelp": {"placeholders": {"domain": {"type": "String"}}},
   "inviteCodeCardHelp": "Easy to read out or type. Works for 48 hours. People enter it under Join with a link or code.",
   "inviteSomeoneNew": "Invite someone new to the workspace",
-  "oauthNeedsHttps": "{app} only signs in on a secure (https) address, and this Kasama server is at {address}. Serve Kasama over https to use sign-in.",
-  "@oauthNeedsHttps": {"placeholders": {"app": {"type": "String"}, "address": {"type": "String"}}}
+  "oauthNeedsHttps": "{app} only signs in on a secure (https) address, and this Casama server is at {address}. Serve Casama over https to use sign-in.",
+  "@oauthNeedsHttps": {"placeholders": {"app": {"type": "String"}, "address": {"type": "String"}}},
+  "aboutYou": "About you",
+  "aboutYouRow": "What your bots call you and know about you",
+  "aboutYouIntro": "Your bots read this so they can call you by name and answer the way you like. Only you can see it.",
+  "whatToCallYou": "What should bots call you?",
+  "pronounsOptional": "Pronouns (optional)",
+  "aboutMe": "About me",
+  "aboutMeHint": "Your work, the people in your life, what you're into. Anything that helps.",
+  "replyStyle": "How I like replies",
+  "replyStyleHint": "For example: short answers, no emoji, explain things like I'm new to them",
+  "learnAboutMe": "Learn about me from chats",
+  "learnAboutMeHelp": "Bots save facts about you here. Edit or delete them any time.",
+  "useInThisSpace": "Use what I've shared in {workspace}",
+  "@useInThisSpace": {"placeholders": {"workspace": {"type": "String"}}},
+  "useInThisSpaceHelp": "Your name and reply style are used everywhere. About me and learned facts stay in spaces where you're the only member, unless you turn this on.",
+  "learnedAboutYou": "What bots learned",
+  "noLearnedFacts": "Nothing yet. Facts bots learn about you in chat show up here.",
+  "addFact": "Add a fact",
+  "editFact": "Edit fact",
+  "deleteFactTitle": "Delete this fact?",
+  "deleteFactConfirm": "Your bots won't know it anymore.",
+  "importToProfile": "Import from ChatGPT or Claude",
+  "savedToProfile": "Saved to your profile",
+  "undo": "Undo",
+  "removedFromProfile": "Removed from your profile",
+  "factsImported": "Added {count, plural, =1{1 fact} other{{count} facts}}",
+  "@factsImported": {"placeholders": {"count": {"type": "int"}}},
+  "nameCardHelp": "Your bots will use it in every workspace. You can change it later in Settings → About you."
 }

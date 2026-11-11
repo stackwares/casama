@@ -1,12 +1,12 @@
+import { ComputerService, createSafeFetch } from "@casama/agent";
+import { contentKeys, createDb } from "@casama/db";
+import { createLogger, initObservability, shutdownObservability } from "@casama/observability";
+import { LocalProvider, SupervisorProvider, unavailableProvider } from "@casama/sandbox";
 import { serve } from "@hono/node-server";
-import { ComputerService, createSafeFetch } from "@kasama/agent";
-import { contentKeys, createDb } from "@kasama/db";
-import { createLogger, initObservability, shutdownObservability } from "@kasama/observability";
-import { LocalProvider, SupervisorProvider, unavailableProvider } from "@kasama/sandbox";
 import { sql } from "drizzle-orm";
 import { createApp } from "./api/app.ts";
 import { createTokenVerifier } from "./api/auth.ts";
-import { KASAMA_VERSION } from "./api/routes/admin.ts";
+import { CASAMA_VERSION } from "./api/routes/admin.ts";
 import { attachTerminal } from "./api/routes/computers.ts";
 import { attachStream, liveConfigFromEnv } from "./api/routes/live.ts";
 import { attachLocalConnect, DeviceRegistry, internalToken } from "./api/routes/local.ts";
@@ -15,9 +15,9 @@ import { pgRunEventHub } from "./api/run-event-hub.ts";
 import { dbosWorkflows } from "./api/workflows.ts";
 import {
   billingFromEnv,
+  casamaCloudProvider,
   connectFromEnv,
   inlineOrFile,
-  kasamaCloudProvider,
 } from "./billing/index.ts";
 import { configureContentKeys } from "./content-keys.ts";
 import { loadEnv } from "./env.ts";
@@ -35,13 +35,13 @@ const localOpts = {
   internalToken: internalToken(env),
 };
 const logger = createLogger(`server-${env.MODE}`, env.LOG_LEVEL);
-// Cloud Connect, self-hosted side: computers on Kasama Cloud (D-071).
+// Cloud Connect, self-hosted side: computers on Casama Cloud (D-071).
 const cloud =
-  env.KASAMA_CLOUD_URL && env.KASAMA_CLOUD_KEY
-    ? { url: env.KASAMA_CLOUD_URL, key: env.KASAMA_CLOUD_KEY }
+  env.CASAMA_CLOUD_URL && env.CASAMA_CLOUD_KEY
+    ? { url: env.CASAMA_CLOUD_URL, key: env.CASAMA_CLOUD_KEY }
     : undefined;
 initObservability({
-  service: `kasama-${env.MODE}`,
+  service: `casama-${env.MODE}`,
   environment: env.NODE_ENV,
   errorReporting: env.ERROR_REPORTING,
   sentryDsn: env.SENTRY_DSN,
@@ -90,7 +90,7 @@ if (env.MODE === "api") {
               : unavailableProvider(),
             {
               ...(env.LOCAL_COMPUTERS ? { local: new LocalProvider(localOpts) } : {}),
-              ...(cloud ? { "kasama-cloud": kasamaCloudProvider(cloud) } : {}),
+              ...(cloud ? { "casama-cloud": casamaCloudProvider(cloud) } : {}),
             },
           )
         : undefined,
@@ -112,7 +112,7 @@ if (env.MODE === "api") {
     // backends) can't reach private networks unless allowed (audit 2026-11: SSRF).
     apps: { fetch: createSafeFetch({ exemptCidrs: allowCidrs }) },
   };
-  // Kasama Cloud (D-094): free workspaces start computers only with a verified owner email.
+  // Casama Cloud (D-094): free workspaces start computers only with a verified owner email.
   if (deps.computers) deps.computers.requireVerifiedEmail = abuseControlsOn(env);
   const app = createApp(deps);
   const server = serve({ fetch: app.fetch, port: env.PORT }, (info) =>
@@ -138,7 +138,7 @@ if (env.MODE === "api") {
     egressExemptCidrs: allowCidrs,
     billing: handle ? billingFromEnv(env, handle.db, logger) : undefined,
     telemetry:
-      env.TELEMETRY === "on" ? { url: env.TELEMETRY_URL, version: KASAMA_VERSION } : undefined,
+      env.TELEMETRY === "on" ? { url: env.TELEMETRY_URL, version: CASAMA_VERSION } : undefined,
     cloud,
     databaseUrl: env.WORKER_DATABASE_URL ?? env.DATABASE_URL,
     apiDatabaseRole: env.WORKER_DATABASE_URL
@@ -147,8 +147,8 @@ if (env.MODE === "api") {
     pagesUrl: env.PAGES_URL,
     publicApiUrl: env.PUBLIC_API_URL,
     geminiLiveModel: env.GEMINI_LIVE_MODEL,
-    auditForwarding: await import("@kasama/ee")
-      .then((m) => m.verifyLicense(env.KASAMA_LICENSE_KEY))
+    auditForwarding: await import("@casama/ee")
+      .then((m) => m.verifyLicense(env.CASAMA_LICENSE_KEY))
       .then((l) => !!l && l.expiresAt > new Date() && l.features.includes("audit_forwarding"))
       .catch(() => false),
     aiGateway: env.AI_GATEWAY_URL
@@ -179,9 +179,9 @@ if (env.MODE === "api") {
       : undefined,
     logger,
     logLevel: env.LOG_LEVEL,
-    modelFixtures: env.KASAMA_MODEL_FIXTURES,
-    modelRecord: env.KASAMA_MODEL_RECORD,
-    maxOutputTokens: env.KASAMA_MAX_OUTPUT_TOKENS,
+    modelFixtures: env.CASAMA_MODEL_FIXTURES,
+    modelRecord: env.CASAMA_MODEL_RECORD,
+    maxOutputTokens: env.CASAMA_MAX_OUTPUT_TOKENS,
     embeddings: env.EMBEDDINGS,
     runConcurrency: env.RUN_CONCURRENCY,
     lazyToolsThreshold: env.LAZY_TOOLS_THRESHOLD,

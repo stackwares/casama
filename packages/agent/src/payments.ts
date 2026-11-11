@@ -8,7 +8,7 @@
  * cancelled after one use or after an hour. Its details reach checkout only through
  * {{card:<request>:field}} placeholders in tools that accept secrets; the model never sees them.
  */
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
@@ -149,7 +149,7 @@ export class StripeIssuingProvider implements PaymentProvider {
       ...BLOCKED_CATEGORIES.map(
         (c, i) => [`spending_controls[blocked_categories][${i}]`, c] as [string, string],
       ),
-      ["metadata[kasama_request]", o.requestId],
+      ["metadata[casama_request]", o.requestId],
       ["metadata[merchant]", o.merchant.slice(0, 200)],
     ]);
     return { id: r.id, last4: r.last4 };

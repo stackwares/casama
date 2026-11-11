@@ -2,8 +2,8 @@ import { once } from "node:events";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { fileURLToPath } from "node:url";
+import { RecordingPushSender } from "@casama/agent";
 import { DBOS } from "@dbos-inc/dbos-sdk";
-import { RecordingPushSender } from "@kasama/agent";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -437,15 +437,15 @@ describe("Phase 4 gate", () => {
     const bad = await h.request(`/hooks/custom/${created.id}`, {
       method: "POST",
       body,
-      headers: { "x-kasama-signature": "sha256=deadbeef" },
+      headers: { "x-casama-signature": "sha256=deadbeef" },
     });
     expect(bad.status).toBe(202);
     const good = await h.request(`/hooks/custom/${created.id}`, {
       method: "POST",
       body,
       headers: {
-        "x-kasama-signature": signBody(created.webhook_secret, body),
-        "x-kasama-event": "push",
+        "x-casama-signature": signBody(created.webhook_secret, body),
+        "x-casama-event": "push",
       },
     });
     expect(good.status).toBe(202);

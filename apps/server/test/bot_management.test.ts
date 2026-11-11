@@ -1,5 +1,5 @@
 /** Bots that manage bots (D-100): limits, revisions with the acting bot, archive, folders. */
-import { registerAutonomyTools, registerBotTools, ToolRegistry } from "@kasama/agent";
+import { registerAutonomyTools, registerBotTools, ToolRegistry } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 

@@ -2,16 +2,16 @@
 
 ## General
 
-### How is Kasama different from a chat assistant?
+### How is Casama different from a chat assistant?
 
-A chat assistant answers while you watch. A Kasama bot keeps its own memory and computer, works on
+A chat assistant answers while you watch. A Casama bot keeps its own memory and computer, works on
 schedules and triggers when you're not there, uses your tools through connections, and asks you
 before risky steps. You can run it yourself, on any model.
 
 ### Is it free?
 
 Self-hosting is free, with no paywall or limits; you pay only your model provider and your server.
-Kasama Cloud, the hosted service, has plans and credits.
+Casama Cloud, the hosted service, has plans and credits.
 
 ### Which models can I use?
 
@@ -58,14 +58,14 @@ A Linux server (or a Mac, for a trial) with Docker, and a domain if other people
 
 ### How do I upgrade?
 
-Re-run `./install.sh`, or `kasama selfhost upgrade`. Your settings and data are kept. See
+Re-run `./install.sh`, or `casama selfhost upgrade`. Your settings and data are kept. See
 [Operations](/self-hosting/operations).
 
-### Can I use Kasama Cloud computers from my own server?
+### Can I use Casama Cloud computers from my own server?
 
 Yes, with [Cloud Connect](/guide/cloud-connect).
 
-## Building on Kasama
+## Building on Casama
 
 ### Is there an API?
 
@@ -79,5 +79,5 @@ Yes: connect MCP servers, write [plugins](/develop/plugins) (skills plus tool se
 
 ### How do I contribute?
 
-Read the [contributing guide](https://github.com/stackwares/kasama/blob/main/CONTRIBUTING.md). Bug
+Read the [contributing guide](https://github.com/stackwares/casama/blob/main/CONTRIBUTING.md). Bug
 reports, docs fixes and code are all welcome.

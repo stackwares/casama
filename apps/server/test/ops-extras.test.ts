@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { CredentialResolver, loadSecrets } from "@kasama/agent";
+import { CredentialResolver, loadSecrets } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { standardWebhookSignature } from "../src/billing/dodo.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
@@ -121,10 +121,10 @@ describe("ops extras", () => {
       )
     ).id;
     const r = new CredentialResolver(h.handle.db, {
-      aiGateway: { url: "https://gateway.ai.cloudflare.com/v1/acct/kasama/", token: "cf-token" },
+      aiGateway: { url: "https://gateway.ai.cloudflare.com/v1/acct/casama/", token: "cf-token" },
     });
     expect(await r.resolve(orgId, { credential_id: own, model: "claude-x" })).toMatchObject({
-      baseUrl: "https://gateway.ai.cloudflare.com/v1/acct/kasama/anthropic/v1",
+      baseUrl: "https://gateway.ai.cloudflare.com/v1/acct/casama/anthropic/v1",
       headers: { "cf-aig-authorization": "Bearer cf-token" },
     });
     expect((await r.resolve(orgId, { credential_id: custom, model: "gpt-x" })).baseUrl).toBe(

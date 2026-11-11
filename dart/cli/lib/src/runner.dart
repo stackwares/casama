@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:args/command_runner.dart';
 import 'package:dio/dio.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:path/path.dart' as p;
 
 import 'commands_bots.dart';
@@ -17,8 +17,8 @@ const defaultApiUrl = 'http://localhost:8787';
 /// Runs the CLI and returns the process exit code.
 Future<int> runCli(List<String> args, {StringSink? out, StringSink? err, Directory? configDir}) async {
   final ctx = CliContext(out ?? stdout, err ?? stderr, configDirOverride: configDir);
-  final runner = CommandRunner<int>('kasama', 'Command-line client for Kasama.')
-    ..argParser.addOption('api', help: 'API base URL (or KASAMA_API_URL).')
+  final runner = CommandRunner<int>('casama', 'Command-line client for Casama.')
+    ..argParser.addOption('api', help: 'API base URL (or CASAMA_API_URL).')
     ..argParser.addFlag('json', negatable: false, help: 'Print JSON output for scripting.')
     ..argParser.addFlag('version', negatable: false, help: 'Print the CLI version.')
     ..addCommand(ConfigCommand(ctx))
@@ -41,7 +41,7 @@ Future<int> runCli(List<String> args, {StringSink? out, StringSink? err, Directo
   try {
     final top = runner.parse(args);
     if (top['version'] as bool) {
-      ctx.out.writeln('kasama $cliVersion');
+      ctx.out.writeln('casama $cliVersion');
       return 0;
     }
     ctx.json = top['json'] as bool;
@@ -77,7 +77,7 @@ class CliContext {
   final Directory? configDirOverride;
   bool json = false;
   String? apiOverride;
-  KasamaClient? _client;
+  CasamaClient? _client;
 
   Directory get dir => configDirOverride ?? configDir();
   Settings get settings => Settings(File(p.join(dir.path, 'config.json')));
@@ -85,17 +85,17 @@ class CliContext {
 
   String get apiUrl =>
       apiOverride ??
-      Platform.environment['KASAMA_API_URL'] ??
+      Platform.environment['CASAMA_API_URL'] ??
       settings.get('api_url') ??
       defaultApiUrl;
 
-  Future<KasamaClient> client() async =>
-      _client ??= await KasamaClient.connect(apiUrl, sessions: sessions);
+  Future<CasamaClient> client() async =>
+      _client ??= await CasamaClient.connect(apiUrl, sessions: sessions);
 
-  Future<KasamaClient> authedClient() async {
+  Future<CasamaClient> authedClient() async {
     final c = await client();
     if (await c.currentSession() == null) {
-      throw CliError('not_logged_in', 'Not logged in. Run `kasama login` first.');
+      throw CliError('not_logged_in', 'Not logged in. Run `casama login` first.');
     }
     return c;
   }
@@ -156,16 +156,16 @@ abstract class _CredentialsCommand extends KCommand {
   _CredentialsCommand(super.ctx) {
     argParser
       ..addOption('email', abbr: 'e', help: 'Email address.')
-      ..addOption('password', help: 'Password (or KASAMA_PASSWORD; prompted when omitted).');
+      ..addOption('password', help: 'Password (or CASAMA_PASSWORD; prompted when omitted).');
   }
   String get email {
-    final e = argResults!['email'] as String? ?? Platform.environment['KASAMA_EMAIL'];
+    final e = argResults!['email'] as String? ?? Platform.environment['CASAMA_EMAIL'];
     if (e == null || e.isEmpty) throw UsageException('--email is required', usage);
     return e;
   }
 
   String get password =>
-      argResults!['password'] as String? ?? readSecret('Password: ', env: 'KASAMA_PASSWORD');
+      argResults!['password'] as String? ?? readSecret('Password: ', env: 'CASAMA_PASSWORD');
 }
 
 class SignupCommand extends _CredentialsCommand {
@@ -180,7 +180,7 @@ class SignupCommand extends _CredentialsCommand {
     final session = await c.signUp(email, password);
     if (session == null) {
       return ctx.emit({'status': 'confirmation_sent'},
-          'Check your email to confirm your account, then run `kasama login`.');
+          'Check your email to confirm your account, then run `casama login`.');
     }
     return ctx.emit({'status': 'signed_in', 'user_id': session.userId},
         'Signed up and logged in as ${session.email}.');
@@ -191,7 +191,7 @@ class LoginCommand extends _CredentialsCommand {
   LoginCommand(super.ctx) {
     argParser
       ..addFlag('magic-link', negatable: false, help: 'Email a one-time code instead.')
-      ..addOption('code', help: 'Two-step sign-in code (or KASAMA_2FA_CODE; prompted when needed).');
+      ..addOption('code', help: 'Two-step sign-in code (or CASAMA_2FA_CODE; prompted when needed).');
   }
   @override
   String get name => 'login';
@@ -214,7 +214,7 @@ class LoginCommand extends _CredentialsCommand {
     final factors = await c.auth.verifiedTotpFactors(session.accessToken);
     if (factors.isNotEmpty) {
       final code = (argResults!['code'] as String?) ??
-          Platform.environment['KASAMA_2FA_CODE'] ??
+          Platform.environment['CASAMA_2FA_CODE'] ??
           (() {
             stderr.write('Two-step sign-in code: ');
             return stdin.readLineSync()?.trim() ?? '';
@@ -283,7 +283,7 @@ class OrgCommand extends Command<int> {
 }
 
 /// Resolves an organization by id or slug among the user's organizations.
-Future<OrganizationWithRole> resolveOrg(KasamaClient c, String ref) async {
+Future<OrganizationWithRole> resolveOrg(CasamaClient c, String ref) async {
   final orgs = (await c.workspaces.listOrgs()).data!.items;
   for (final o in orgs) {
     if (o.id == ref || o.slug == ref) return o;
@@ -300,7 +300,7 @@ class OrgCreateCommand extends KCommand {
   @override
   String get description => 'Create an organization; you become its owner.';
   @override
-  String get invocation => 'kasama org create <name> [--slug <slug>]';
+  String get invocation => 'casama org create <name> [--slug <slug>]';
   @override
   Future<int> run() async {
     final rest = argResults!.rest;
@@ -343,7 +343,7 @@ class OrgInviteCommand extends KCommand {
   @override
   String get description => 'Invite someone to an organization by email.';
   @override
-  String get invocation => 'kasama org invite <email> --org <slug> [--role member|admin]';
+  String get invocation => 'casama org invite <email> --org <slug> [--role member|admin]';
   @override
   Future<int> run() async {
     final rest = argResults!.rest;
@@ -361,7 +361,7 @@ class OrgInviteCommand extends KCommand {
     final human = StringBuffer('Invited ${invite.email} to ${org.name} as ${invite.role.value}.');
     if (invite.acceptToken != null) {
       human.write('\nNo email provider is configured. Share this command with them:\n'
-          '  kasama invite accept ${invite.acceptToken}');
+          '  casama invite accept ${invite.acceptToken}');
     }
     return ctx.emit(invite.toJson(), human.toString());
   }

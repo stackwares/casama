@@ -4,7 +4,7 @@ import {
   RecordingPushSender,
   registerSuggestionTools,
   ToolRegistry,
-} from "@kasama/agent";
+} from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { claimDueRoutines } from "../src/worker/routines.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";

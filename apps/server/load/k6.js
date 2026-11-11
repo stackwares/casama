@@ -1,13 +1,13 @@
 // k6 load test (SPEC "Testing: Load"): 200 bots waking at once (signed webhooks fired together),
 // then 100 concurrent chat streams (message + SSE until the run ends). Time to first token is read
 // from Postgres afterwards (load/report.ts), so it includes queueing in the worker.
-//   k6 run -e DATA=/tmp/kasama-load.json load/k6.js
+//   k6 run -e DATA=/tmp/casama-load.json load/k6.js
 import { check } from "k6";
 import crypto from "k6/crypto";
 import exec from "k6/execution";
 import http from "k6/http";
 
-const data = JSON.parse(open(__ENV.DATA || "/tmp/kasama-load.json"));
+const data = JSON.parse(open(__ENV.DATA || "/tmp/casama-load.json"));
 
 export const options = {
   scenarios: {
@@ -40,7 +40,7 @@ export function wake() {
   const body = JSON.stringify({ event: "load", n: i });
   const sig = `sha256=${crypto.hmac("sha256", w.secret, body, "hex")}`;
   const res = http.post(`${data.api}/hooks/custom/${w.routine_id}`, body, {
-    headers: { "content-type": "application/json", "x-kasama-signature": sig },
+    headers: { "content-type": "application/json", "x-casama-signature": sig },
   });
   check(res, { "webhook accepted": (r) => r.status === 202 });
 }

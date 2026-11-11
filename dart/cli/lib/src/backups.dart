@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as p;
 
-/// Encrypted backups and retention for `kasama selfhost backup` (D-147). Encryption uses age
+/// Encrypted backups and retention for `casama selfhost backup` (D-147). Encryption uses age
 /// (https://age-encryption.org): each file is encrypted to the given recipients (age1… public keys
 /// or ssh keys) and the plaintext removed; restoring decrypts with an identity file.
 class BackupError implements Exception {

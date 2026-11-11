@@ -1,5 +1,5 @@
-import type { Database } from "@kasama/db";
-import { DEFAULT_MODELS, DEFAULT_REASONING_EFFORT } from "@kasama/domain";
+import type { Database } from "@casama/db";
+import { DEFAULT_MODELS, DEFAULT_REASONING_EFFORT } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { ChatGptAuthError, type ChatGptTokens, refreshTokens, tokensFrom } from "./chatgpt-auth.ts";
 import { CHATGPT_API_URL } from "./gateway/chatgpt.ts";

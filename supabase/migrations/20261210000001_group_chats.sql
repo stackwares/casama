@@ -29,7 +29,7 @@ as $$
     where c.id = p_conversation and public.can_access_bot(c.bot_id)
       and not exists (select 1 from public.conversation_bots cb where cb.conversation_id = c.id and not public.can_access_bot(cb.bot_id)))
 $$;
-grant execute on function public.can_access_conversation(uuid) to authenticated, kasama_worker;
+grant execute on function public.can_access_conversation(uuid) to authenticated, casama_worker;
 
 -- Only the group's bots (not the conversation row), so a new conversation is visible as it's inserted.
 create or replace function public.group_bots_visible(p_conversation uuid)
@@ -38,7 +38,7 @@ language sql stable security definer set search_path = ''
 as $$
   select not exists (select 1 from public.conversation_bots cb where cb.conversation_id = p_conversation and not public.can_access_bot(cb.bot_id))
 $$;
-grant execute on function public.group_bots_visible(uuid) to authenticated, kasama_worker;
+grant execute on function public.group_bots_visible(uuid) to authenticated, casama_worker;
 
 drop policy conversations_select on public.conversations;
 create policy conversations_select on public.conversations for select to authenticated
@@ -84,4 +84,4 @@ as $$
          p.bot_id
   from path p order by p.depth desc
 $$;
-grant execute on function public.conversation_thread(uuid) to authenticated, kasama_worker;
+grant execute on function public.conversation_thread(uuid) to authenticated, casama_worker;

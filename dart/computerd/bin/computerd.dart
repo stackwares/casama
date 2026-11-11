@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:kasama_computerd/computerd.dart';
+import 'package:casama_computerd/computerd.dart';
 
 Future<void> main() async {
   final config = ComputerdConfig.fromEnvironment(Platform.environment);

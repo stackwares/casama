@@ -1,18 +1,18 @@
-# hello-kasama: an example plugin
+# hello-casama: an example plugin
 
-A small, working [Agent Plugins 1.0](https://agent-plugins.org) package for Kasama. Copy it to
+A small, working [Agent Plugins 1.0](https://agent-plugins.org) package for Casama. Copy it to
 start your own; the [plugins guide](../../docs-site/develop/plugins.md) explains every part.
 
 | File                           | What it shows                                                                                                       |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| `plugin.json`                  | The manifest, and a secret declared under Kasama's extension (`com.kasama`)                                         |
+| `plugin.json`                  | The manifest, and a secret declared under Casama's extension (`com.casama`)                                         |
 | `mcp.json`                     | A `stdio` server that runs on the bot's computer, using `${PLUGIN_ROOT}` and `${PLUGIN_DATA}`                       |
 | `server/notes.mjs`             | An MCP server in plain Node.js with no dependencies: three tools with risk annotations, notes kept in `PLUGIN_DATA` |
 | `skills/team-standup/SKILL.md` | A skill that uses the server's tools                                                                                |
 
 ## Try it
 
-Check it the way Kasama will, from the repository root:
+Check it the way Casama will, from the repository root:
 
 ```sh
 node packages/plugin-check/src/main.ts examples/hello-plugin
@@ -28,7 +28,7 @@ printf '%s\n' \
 ```
 
 Install it on a bot: bot settings → **Plugins** → **Add a plugin**, and paste
-`https://github.com/stackwares/kasama/tree/main/examples/hello-plugin`. Kasama asks for
+`https://github.com/stackwares/casama/tree/main/examples/hello-plugin`. Casama asks for
 `NOTES_SIGNATURE`, then the bot can write a stand-up and save it as a note.
 
 ## Make it yours
@@ -37,6 +37,6 @@ Install it on a bot: bot settings → **Plugins** → **Add a plugin**, and past
    later).
 2. Replace the server and skill with your own. For a bigger server, use the official SDK
    (`@modelcontextprotocol/sdk` or the Python `mcp` package) and bundle it into the plugin, since
-   Kasama doesn't run `npm install`.
+   Casama doesn't run `npm install`.
 3. Add the check to your repository's workflow:
-   `uses: stackwares/kasama/.github/actions/plugin-check@main`.
+   `uses: stackwares/casama/.github/actions/plugin-check@main`.

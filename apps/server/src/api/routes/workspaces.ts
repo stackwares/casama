@@ -1,8 +1,8 @@
 import { randomBytes } from "node:crypto";
+import { routes } from "@casama/contracts";
+import { type JwtClaims, pgErrorCode, pgErrorMessage, schema, withUserSession } from "@casama/db";
+import { withSpan } from "@casama/observability";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, pgErrorCode, pgErrorMessage, schema, withUserSession } from "@kasama/db";
-import { withSpan } from "@kasama/observability";
 import { eq, sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -100,7 +100,7 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
             ),
           );
           if (!row) throw new Error("create_organization returned nothing");
-          // Kasama Cloud: new workspaces start on the free plan with its included credits.
+          // Casama Cloud: new workspaces start on the free plan with its included credits.
           if (deps.billing?.enabled) row.plan = (await deps.billing.recompute(row.id)).planCode;
           return c.json(orgOut({ ...row, createdAt: row.created_at }), 201);
         } catch (err) {

@@ -67,7 +67,7 @@ export type GatewayEvent =
       usage: Usage;
       finishReason: string;
       model: string;
-      /** Set by adapters whose usage is billed elsewhere (a ChatGPT plan costs Kasama nothing). */
+      /** Set by adapters whose usage is billed elsewhere (a ChatGPT plan costs Casama nothing). */
       provider?: ProviderId;
     };
 

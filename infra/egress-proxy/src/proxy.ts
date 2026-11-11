@@ -41,7 +41,7 @@ export interface ProxyOptions {
   resolve?: (host: string) => Promise<string[]>;
   log?: (event: Record<string, unknown>) => void;
   /**
-   * Abuse controls (Kasama Cloud, D-094): refuse mail and mining ports and mining pools, and
+   * Abuse controls (Casama Cloud, D-094): refuse mail and mining ports and mining pools, and
    * report them (and rate-limit floods) through `report`.
    */
   abuse?: { report: (computer: string, kind: AbuseKind, target: string) => void };
@@ -167,7 +167,7 @@ export class EgressProxy {
     const target = req.url ?? "";
     if (!c) {
       socket.end(
-        'HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Basic realm="kasama"\r\n\r\n',
+        'HTTP/1.1 407 Proxy Authentication Required\r\nProxy-Authenticate: Basic realm="casama"\r\n\r\n',
       );
       return this.deny(null, target, "unauthenticated");
     }
@@ -176,7 +176,7 @@ export class EgressProxy {
     const [, host = "", port = "443"] = m;
     const abused = this.abuseCheck(c, host, Number(port));
     if (abused) {
-      socket.end(`HTTP/1.1 403 Forbidden\r\nX-Kasama-Egress: ${abused}\r\n\r\n`);
+      socket.end(`HTTP/1.1 403 Forbidden\r\nX-Casama-Egress: ${abused}\r\n\r\n`);
       return this.deny(c, target, abused);
     }
     if (!this.meter(c, 1, 0)) {
@@ -186,7 +186,7 @@ export class EgressProxy {
     }
     const verdict = await this.vet(c, host);
     if (!verdict.ok) {
-      socket.end(`HTTP/1.1 403 Forbidden\r\nX-Kasama-Egress: ${verdict.reason}\r\n\r\n`);
+      socket.end(`HTTP/1.1 403 Forbidden\r\nX-Casama-Egress: ${verdict.reason}\r\n\r\n`);
       return this.deny(c, target, verdict.reason);
     }
     const upstream = connect({ host: verdict.address, port: Number(port) }, () => {
@@ -211,7 +211,7 @@ export class EgressProxy {
   private async handleHttp(req: IncomingMessage, res: ServerResponse) {
     const c = this.authenticate(req);
     if (!c) {
-      res.writeHead(407, { "proxy-authenticate": 'Basic realm="kasama"' }).end();
+      res.writeHead(407, { "proxy-authenticate": 'Basic realm="casama"' }).end();
       return this.deny(null, req.url ?? "", "unauthenticated");
     }
     let url: URL;
@@ -224,7 +224,7 @@ export class EgressProxy {
     const abused = this.abuseCheck(c, url.hostname, Number(url.port || 80));
     if (abused) {
       res
-        .writeHead(403, { "x-kasama-egress": abused })
+        .writeHead(403, { "x-casama-egress": abused })
         .end(`Blocked by egress policy: ${abused}\n`);
       return this.deny(c, url.host, abused);
     }
@@ -236,7 +236,7 @@ export class EgressProxy {
     const verdict = await this.vet(c, url.hostname);
     if (!verdict.ok) {
       res
-        .writeHead(403, { "x-kasama-egress": verdict.reason })
+        .writeHead(403, { "x-casama-egress": verdict.reason })
         .end(`Blocked by egress policy: ${verdict.reason}\n`);
       return this.deny(c, url.host, verdict.reason);
     }

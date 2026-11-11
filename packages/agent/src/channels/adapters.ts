@@ -464,7 +464,7 @@ const imessage: ChannelAdapter = {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-kasama-internal": s.internal_token ?? "",
+          "x-casama-internal": s.internal_token ?? "",
         },
         body: JSON.stringify({ to: reply.to, text }),
       }),

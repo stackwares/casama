@@ -9,7 +9,7 @@ begin
   for f in select p.oid::regprocedure from pg_proc p join pg_namespace n on n.oid = p.pronamespace
            where n.nspname = 'vault' and p.proname like '\_crypto\_aead\_%' loop
     begin
-      execute format('grant execute on function %s to kasama_worker', f);
+      execute format('grant execute on function %s to casama_worker', f);
     exception when insufficient_privilege then
       raise notice 'skipped granting % (insufficient privilege)', f;
     end;

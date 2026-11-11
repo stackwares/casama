@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Kasama are listed here. The format follows
+All notable changes to Casama are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/). Until 1.0, minor versions may include breaking changes;
 they're called out under **Changed**.
@@ -21,6 +21,9 @@ The first public release. Highlights:
   group chats with several bots; pages.
 - Memory with optional external backends; knowledge sources (files, websites, GitHub, connections);
   a skill catalog, GitHub import and self-improving skills.
+- About you: one private profile every bot reads (what to call you, pronouns, how you like
+  replies, about me, and facts bots learn in chat), shared into team workspaces only when you
+  turn it on there.
 
 ### Voice
 
@@ -55,8 +58,8 @@ The first public release. Highlights:
 
 ### Self-hosting and developers
 
-- `install.sh` for a full self-hosted stack, `kasama selfhost` commands, encrypted backups, a Helm
+- `install.sh` for a full self-hosted stack, `casama selfhost` commands, encrypted backups, a Helm
   chart, deploy templates, monitoring and Cloud Connect.
-- An HTTP API with an OpenAPI reference, the `kasama` CLI, the Dart SDK, the Kasama MCP server
+- An HTTP API with an OpenAPI reference, the `casama` CLI, the Dart SDK, the Casama MCP server
   (local and hosted), bot templates, routines and skills as files with git sync, and a plugin
   checker.

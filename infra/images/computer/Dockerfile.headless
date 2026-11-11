@@ -1,6 +1,6 @@
 # Headless computer: Ubuntu 24.04, computerd, shell tools, Node.js, Python, Chromium, agent-browser.
 # Build from the repo root:
-#   docker build -f infra/images/computer/Dockerfile.headless -t kasama/computer-headless:dev .
+#   docker build -f infra/images/computer/Dockerfile.headless -t casama/computer-headless:dev .
 
 # --- computerd (Dart, compiled to one native binary) ---
 FROM dart:stable AS computerd
@@ -36,25 +36,25 @@ RUN npm install -g agent-browser@${AGENT_BROWSER_VERSION} playwright@${PLAYWRIGH
 
 # Unprivileged user; home is the only persistent, writable place (plus /tmp).
 RUN userdel -r ubuntu 2>/dev/null || true \
-    && useradd --create-home --uid 1000 --shell /bin/bash kasama \
-    && mkdir -p /home/kasama/workspace && chown -R kasama:kasama /home/kasama
+    && useradd --create-home --uid 1000 --shell /bin/bash casama \
+    && mkdir -p /home/casama/workspace && chown -R casama:casama /home/casama
 COPY --from=computerd /out/computerd /usr/local/bin/computerd
-COPY infra/images/computer/bashrc /etc/kasama-bashrc
-RUN echo '. /etc/kasama-bashrc' >> /etc/bash.bashrc
+COPY infra/images/computer/bashrc /etc/casama-bashrc
+RUN echo '. /etc/casama-bashrc' >> /etc/bash.bashrc
 
-ENV HOME=/home/kasama \
-    COMPUTERD_HOME=/home/kasama \
+ENV HOME=/home/casama \
+    COMPUTERD_HOME=/home/casama \
     AGENT_BROWSER_EXECUTABLE_PATH=/usr/local/bin/chrome \
-    AGENT_BROWSER_PROFILE=/home/kasama/.browser-profile \
+    AGENT_BROWSER_PROFILE=/home/casama/.browser-profile \
     AGENT_BROWSER_SOCKET_DIR=/tmp/agent-browser \
     AGENT_BROWSER_NO_VERSION_CHECK=1 \
     PIP_USER=1 \
-    NPM_CONFIG_PREFIX=/home/kasama/.npm-global \
-    PATH=/home/kasama/.npm-global/bin:/home/kasama/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    NPM_CONFIG_PREFIX=/home/casama/.npm-global \
+    PATH=/home/casama/.npm-global/bin:/home/casama/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-LABEL org.opencontainers.image.title="kasama-computer-headless" \
+LABEL org.opencontainers.image.title="casama-computer-headless" \
       org.opencontainers.image.licenses="Apache-2.0"
-USER kasama
-WORKDIR /home/kasama/workspace
+USER casama
+WORKDIR /home/casama/workspace
 EXPOSE 7070
 CMD ["computerd"]

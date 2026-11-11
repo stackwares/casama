@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../client"
 version=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)
-flutter build linux --release --dart-define=KASAMA_API_URL="${KASAMA_API_URL:-https://cloud.kasama.dev}"
+flutter build linux --release --dart-define=CASAMA_API_URL="${CASAMA_API_URL:-https://cloud.casama.ai}"
 mkdir -p ../dist
-tar -C build/linux/x64/release -czf "../dist/kasama-$version-linux-x64.tar.gz" bundle
-echo "../dist/kasama-$version-linux-x64.tar.gz"
+tar -C build/linux/x64/release -czf "../dist/casama-$version-linux-x64.tar.gz" bundle
+echo "../dist/casama-$version-linux-x64.tar.gz"

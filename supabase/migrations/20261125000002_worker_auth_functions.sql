@@ -1,6 +1,6 @@
 -- The worker never touches the auth schema directly (D-100 follow-up to D-095): Supabase doesn't
 -- let the migration role grant on auth.users, so the two things system jobs need go through
--- narrow security-definer functions only kasama_worker (and the API's postgres role) can call.
+-- narrow security-definer functions only casama_worker (and the API's postgres role) can call.
 
 -- Whether a workspace's owner has confirmed their email (free computers need it; D-094).
 create or replace function public.worker_owner_email_verified(p_org uuid)
@@ -24,5 +24,5 @@ $$;
 
 revoke all on function public.worker_owner_email_verified(uuid) from public, anon, authenticated;
 revoke all on function public.worker_purge_user(uuid) from public, anon, authenticated;
-grant execute on function public.worker_owner_email_verified(uuid) to kasama_worker;
-grant execute on function public.worker_purge_user(uuid) to kasama_worker;
+grant execute on function public.worker_owner_email_verified(uuid) to casama_worker;
+grant execute on function public.worker_purge_user(uuid) to casama_worker;

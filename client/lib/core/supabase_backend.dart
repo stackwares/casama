@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 
 import 'dart:async';
 
-import 'package:kasama_sdk/kasama_sdk.dart' hide AuthException;
+import 'package:casama_sdk/casama_sdk.dart' hide AuthException;
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -17,12 +17,12 @@ import 'chatgpt_connect.dart';
 
 const _terminal = {'run.completed', 'run.failed', 'run.cancelled'};
 
-/// Backend on Supabase (auth, reads, simple writes, Realtime) and the Kasama API (commands).
+/// Backend on Supabase (auth, reads, simple writes, Realtime) and the Casama API (commands).
 class SupabaseBackend implements Backend {
   SupabaseBackend(this.supabase, this.api, {this.config});
 
   final sb.SupabaseClient supabase;
-  final KasamaClient api;
+  final CasamaClient api;
 
   /// The server's public settings: saved ones at launch, replaced once the server's arrive (D-158).
   PublicConfig? config;
@@ -39,8 +39,8 @@ class SupabaseBackend implements Backend {
 
   /// Builds the API client so it always uses the current Supabase access token.
   /// Pass the [config] already loaded from this server, so it isn't fetched a second time.
-  static Future<KasamaClient> connectApi(String apiUrl, sb.SupabaseClient supabase, {PublicConfig? config}) {
-    return KasamaClient.connect(
+  static Future<CasamaClient> connectApi(String apiUrl, sb.SupabaseClient supabase, {PublicConfig? config}) {
+    return CasamaClient.connect(
       apiUrl,
       config: config,
       sessions: CallbackSessionStore(() async {
@@ -71,8 +71,8 @@ class SupabaseBackend implements Backend {
   String? get userId => supabase.auth.currentUser?.id;
 
   /// Where sign-in emails and Google, Apple and SSO send people back to: the app itself (the
-  /// kasama:// scheme, which Supabase picks up), or on the web the page they came from.
-  static const authRedirect = 'kasama://app/login-callback';
+  /// casama:// scheme, which Supabase picks up), or on the web the page they came from.
+  static const authRedirect = 'casama://app/login-callback';
   static String? get _authRedirect => kIsWeb ? null : authRedirect;
 
   @override
@@ -419,6 +419,79 @@ class SupabaseBackend implements Backend {
       'quiet_hours': value.hours?.toJson(),
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     });
+  }
+
+  // About you (D-169): through the API, which seals the text with the person's own key when a
+  // workspace of theirs encrypts (D-136).
+  static AboutYouView _about(AboutYou a) => AboutYouView(
+    displayName: a.displayName,
+    preferredName: a.preferredName,
+    pronouns: a.pronouns,
+    about: a.about,
+    replyStyle: a.replyStyle,
+    learn: a.learn,
+    nameAsked: a.nameAsked,
+  );
+
+  @override
+  Future<AboutYouView> aboutYou() async => _about((await api.aboutYou.getAboutYou()).data!);
+
+  @override
+  Future<void> saveAboutYou(AboutYouView value) async {
+    await api.aboutYou.updateAboutYou(
+      updateAboutYouRequest: UpdateAboutYouRequest(
+        preferredName: value.preferredName?.trim() ?? '',
+        pronouns: value.pronouns?.trim() ?? '',
+        about: value.about.trim(),
+        replyStyle: value.replyStyle.trim(),
+        learn: value.learn,
+      ),
+    );
+  }
+
+  @override
+  Future<void> markNameAsked() async {
+    await api.aboutYou.updateAboutYou(updateAboutYouRequest: UpdateAboutYouRequest(nameAsked: true));
+  }
+
+  @override
+  Future<List<UserFactView>> userFacts() async => [
+    for (final f in (await api.aboutYou.listUserFacts()).data!.items)
+      UserFactView(id: f.id, kind: f.kind.value, content: f.content, pinned: f.pinned, updatedAt: f.updatedAt),
+  ];
+
+  @override
+  Future<void> addUserFacts(List<({String kind, String content})> facts) async {
+    if (facts.isEmpty) return;
+    await api.aboutYou.addUserFacts(
+      addUserFactsRequest: AddUserFactsRequest(
+        items: [
+          for (final f in facts)
+            AddUserFactsRequestItemsInner(
+              kind: f.kind == 'preference' ? AddUserFactsRequestItemsInnerKindEnum.preference : AddUserFactsRequestItemsInnerKindEnum.fact,
+              content: f.content.trim().length > 500 ? f.content.trim().substring(0, 500) : f.content.trim(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Future<void> updateUserFact(String id, {String? content, bool? pinned}) async {
+    await api.aboutYou.updateUserFact(id: id, updateUserFactRequest: UpdateUserFactRequest(content: content?.trim(), pinned: pinned));
+  }
+
+  @override
+  Future<void> deleteUserFact(String id) async {
+    await api.aboutYou.deleteUserFact(id: id);
+  }
+
+  @override
+  Future<bool> profileSharedIn(String orgId) async => (await api.aboutYou.getProfileSpace(orgId: orgId)).data!.shared;
+
+  @override
+  Future<void> setProfileSharedIn(String orgId, bool share) async {
+    await api.aboutYou.setProfileSpace(orgId: orgId, setProfileSpaceRequest: SetProfileSpaceRequest(shared: share));
   }
 
   @override
@@ -1597,7 +1670,7 @@ class SupabaseBackend implements Backend {
       await supabase.auth.mfa.unenroll(f.id);
     }
     final n = all.where((f) => f.status == sb.FactorStatus.verified).length + 1;
-    final r = await supabase.auth.mfa.enroll(factorType: sb.FactorType.totp, issuer: config?.productName ?? 'Kasama', friendlyName: 'Authenticator $n · ${DateTime.now().millisecondsSinceEpoch}');
+    final r = await supabase.auth.mfa.enroll(factorType: sb.FactorType.totp, issuer: config?.productName ?? 'Casama', friendlyName: 'Authenticator $n · ${DateTime.now().millisecondsSinceEpoch}');
     final totp = r.totp!;
     return TwoStepEnrollment(factorId: r.id, secret: totp.secret, uri: totp.uri, qrSvg: totp.qrCode);
   }

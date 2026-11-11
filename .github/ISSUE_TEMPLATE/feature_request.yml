@@ -9,7 +9,7 @@ body:
     validations: { required: true }
   - type: textarea
     id: proposal
-    attributes: { label: Proposal, description: What would you like Kasama to do? }
+    attributes: { label: Proposal, description: What would you like Casama to do? }
   - type: textarea
     id: alternatives
     attributes:

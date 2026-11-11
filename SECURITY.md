@@ -1,19 +1,19 @@
 # Security Policy
 
-Kasama runs code for people on real computers, holds their secrets, and connects to their accounts,
+Casama runs code for people on real computers, holds their secrets, and connects to their accounts,
 so we take security reports seriously and appreciate them.
 
 ## Reporting a vulnerability
 
-Email **security@kasama.dev** (placeholder until launch), or use GitHub's
-[private vulnerability reporting](https://github.com/stackwares/kasama/security/advisories/new).
+Email **security@casama.ai** (placeholder until launch), or use GitHub's
+[private vulnerability reporting](https://github.com/stackwares/casama/security/advisories/new).
 Please don't open public issues or discussions for vulnerabilities.
 
 Include:
 
 - what the issue is and its impact,
 - steps to reproduce, or a proof of concept,
-- the affected version or commit, and whether it's self-hosted or Kasama Cloud.
+- the affected version or commit, and whether it's self-hosted or Casama Cloud.
 
 ## What to expect
 
@@ -38,7 +38,7 @@ We especially care about:
 
 Out of scope: findings that need a compromised device or server account, denial of service by
 volume, missing hardening headers without a demonstrated impact, and issues in third-party services
-Kasama connects to.
+Casama connects to.
 
 ## Safe harbor
 

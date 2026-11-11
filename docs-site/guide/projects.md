@@ -96,7 +96,7 @@ Tap **Approve the plan** to make the project active.
 
 ### How a project runs
 
-Once the plan is approved, Kasama checks every active project each minute. When nothing is already
+Once the plan is approved, Casama checks every active project each minute. When nothing is already
 running for it, it does the next thing:
 
 1. **Pause** if the project has reached its budget or passed its deadline. You get a note in the

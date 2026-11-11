@@ -1,13 +1,13 @@
 # Agent-to-agent (A2A)
 
-[A2A](https://a2a-protocol.org) is an open protocol for AI agents to hand each other tasks. Kasama
+[A2A](https://a2a-protocol.org) is an open protocol for AI agents to hand each other tasks. Casama
 speaks it both ways:
 
 - **Publish a bot** so outside agents (another company's assistant, your own agent framework, a
   script) can give it tasks.
 - **Call outside agents** from a bot, as a tool it uses like any other.
 
-Kasama implements A2A version 1.0 over its JSON-RPC binding: agent cards at
+Casama implements A2A version 1.0 over its JSON-RPC binding: agent cards at
 `/.well-known/agent-card.json`, the methods `SendMessage`, `GetTask`, `CancelTask` and `ListTasks`,
 and text messages. Streaming and push notifications aren't offered yet; the agent card says so.
 
@@ -22,7 +22,7 @@ Publishing is off until you turn it on, in two steps:
    settings, or calls the API:
 
    ```sh
-   curl -s -X PUT "https://kasama.example.com/v1/bots/$BOT/a2a" \
+   curl -s -X PUT "https://casama.example.com/v1/bots/$BOT/a2a" \
      -H "authorization: Bearer $TOKEN" \
      -H "content-type: application/json" \
      -d '{"published": true}'
@@ -32,7 +32,7 @@ Publishing is off until you turn it on, in two steps:
    {
      "workspace_enabled": true,
      "published": true,
-     "agent_card_url": "https://kasama.example.com/a2a/5d0c1e6a-8b7f-4e8a-a1d2-3c4b5a6f7e80/.well-known/agent-card.json"
+     "agent_card_url": "https://casama.example.com/a2a/5d0c1e6a-8b7f-4e8a-a1d2-3c4b5a6f7e80/.well-known/agent-card.json"
    }
    ```
 
@@ -46,7 +46,7 @@ Callers authenticate with a **workspace API key**, the same `ksk_...` keys the
 **Connect AI apps**, or with the API:
 
 ```sh
-curl -s -X POST "https://kasama.example.com/v1/orgs/$ORG/mcp-keys" \
+curl -s -X POST "https://casama.example.com/v1/orgs/$ORG/mcp-keys" \
   -H "authorization: Bearer $TOKEN" \
   -H "content-type: application/json" \
   -d '{"name": "Partner agent"}'
@@ -70,7 +70,7 @@ its own key so you can revoke one without breaking the others.
 A published bot's card is public (it holds nothing secret), so any A2A client can discover it:
 
 ```sh
-curl -s "https://kasama.example.com/a2a/$BOT/.well-known/agent-card.json"
+curl -s "https://casama.example.com/a2a/$BOT/.well-known/agent-card.json"
 ```
 
 ```json
@@ -80,7 +80,7 @@ curl -s "https://kasama.example.com/a2a/$BOT/.well-known/agent-card.json"
   "version": "1.0.0",
   "supportedInterfaces": [
     {
-      "url": "https://kasama.example.com/a2a/5d0c1e6a-8b7f-4e8a-a1d2-3c4b5a6f7e80",
+      "url": "https://casama.example.com/a2a/5d0c1e6a-8b7f-4e8a-a1d2-3c4b5a6f7e80",
       "protocolBinding": "JSONRPC",
       "protocolVersion": "1.0"
     }
@@ -98,7 +98,7 @@ curl -s "https://kasama.example.com/a2a/$BOT/.well-known/agent-card.json"
   ],
   "securitySchemes": {
     "workspaceKey": {
-      "httpAuthSecurityScheme": { "scheme": "Bearer", "bearerFormat": "Kasama workspace API key" }
+      "httpAuthSecurityScheme": { "scheme": "Bearer", "bearerFormat": "Casama workspace API key" }
     }
   },
   "securityRequirements": [{ "workspaceKey": [] }]
@@ -116,8 +116,8 @@ Every call is a JSON-RPC 2.0 `POST` to `/a2a/{bot id}` with the key as a bearer 
 ### SendMessage
 
 ```sh
-curl -s -X POST "https://kasama.example.com/a2a/$BOT" \
-  -H "authorization: Bearer $KASAMA_KEY" \
+curl -s -X POST "https://casama.example.com/a2a/$BOT" \
+  -H "authorization: Bearer $CASAMA_KEY" \
   -H "content-type: application/json" \
   -H "a2a-version: 1.0" \
   -d '{
@@ -179,8 +179,8 @@ curl -s -X POST "https://kasama.example.com/a2a/$BOT" \
 ### GetTask
 
 ```sh
-curl -s -X POST "https://kasama.example.com/a2a/$BOT" \
-  -H "authorization: Bearer $KASAMA_KEY" -H "content-type: application/json" \
+curl -s -X POST "https://casama.example.com/a2a/$BOT" \
+  -H "authorization: Bearer $CASAMA_KEY" -H "content-type: application/json" \
   -d '{"jsonrpc": "2.0", "id": 2, "method": "GetTask",
        "params": {"id": "b7a1c2d3-e4f5-4a6b-8c7d-9e0f1a2b3c4d"}}'
 ```
@@ -188,7 +188,7 @@ curl -s -X POST "https://kasama.example.com/a2a/$BOT" \
 The result is the task. The answer arrives as an artifact named `answer` and as the final status
 message, once the state is `TASK_STATE_COMPLETED`.
 
-| Kasama run status | Task state |
+| Casama run status | Task state |
 | --- | --- |
 | Queued | `TASK_STATE_SUBMITTED` |
 | Running, waiting for approval, waiting for a person to take over | `TASK_STATE_WORKING` |
@@ -197,14 +197,14 @@ message, once the state is `TASK_STATE_COMPLETED`.
 | Cancelled | `TASK_STATE_CANCELED` |
 
 While the bot waits for its owner to approve a step, the state stays `TASK_STATE_WORKING` with the
-status message "Waiting for the bot's owner to approve a step." Approvals happen in Kasama, not over
+status message "Waiting for the bot's owner to approve a step." Approvals happen in Casama, not over
 A2A.
 
 ### CancelTask
 
 ```sh
-curl -s -X POST "https://kasama.example.com/a2a/$BOT" \
-  -H "authorization: Bearer $KASAMA_KEY" -H "content-type: application/json" \
+curl -s -X POST "https://casama.example.com/a2a/$BOT" \
+  -H "authorization: Bearer $CASAMA_KEY" -H "content-type: application/json" \
   -d '{"jsonrpc": "2.0", "id": 3, "method": "CancelTask",
        "params": {"id": "b7a1c2d3-e4f5-4a6b-8c7d-9e0f1a2b3c4d"}}'
 ```
@@ -215,8 +215,8 @@ answers the error `-32002`.
 ### ListTasks
 
 ```sh
-curl -s -X POST "https://kasama.example.com/a2a/$BOT" \
-  -H "authorization: Bearer $KASAMA_KEY" -H "content-type: application/json" \
+curl -s -X POST "https://casama.example.com/a2a/$BOT" \
+  -H "authorization: Bearer $CASAMA_KEY" -H "content-type: application/json" \
   -d '{"jsonrpc": "2.0", "id": 4, "method": "ListTasks",
        "params": {"contextId": "f0e1d2c3-b4a5-4968-8776-655443322110", "pageSize": 20}}'
 ```
@@ -246,7 +246,7 @@ Errors come back as JSON-RPC errors:
 ## Call outside agents from a bot
 
 Any agent that publishes an A2A 1.0 agent card with a JSON-RPC interface can become a tool for
-your bots, including bots on another Kasama server.
+your bots, including bots on another Casama server.
 
 **In the app:** add a connection of the kind **AI agent (A2A)**, enter the agent's address or the
 URL of its agent card, and its access token if it needs one. Then attach the connection to the bots
@@ -255,7 +255,7 @@ that should use it.
 **With the API:** create an integration with `kind: "a2a"`, then attach it to a bot:
 
 ```sh
-curl -s -X POST "https://kasama.example.com/v1/integrations" \
+curl -s -X POST "https://casama.example.com/v1/integrations" \
   -H "authorization: Bearer $TOKEN" \
   -H "content-type: application/json" \
   -d '{
@@ -266,7 +266,7 @@ curl -s -X POST "https://kasama.example.com/v1/integrations" \
     "secret": "the-agent-access-token"
   }'
 
-curl -s -X POST "https://kasama.example.com/v1/bots/$BOT/integrations" \
+curl -s -X POST "https://casama.example.com/v1/bots/$BOT/integrations" \
   -H "authorization: Bearer $TOKEN" \
   -H "content-type: application/json" \
   -d '{"integration_id": "<id from the first response>"}'
@@ -275,10 +275,10 @@ curl -s -X POST "https://kasama.example.com/v1/bots/$BOT/integrations" \
 | Field | Meaning |
 | --- | --- |
 | `name` | Lowercase letters, digits and `_`, starting with a letter, up to 40 characters |
-| `config.url` | The agent's address (Kasama adds `/.well-known/agent-card.json`) or the full URL of its agent card (ending in `.json`) |
+| `config.url` | The agent's address (Casama adds `/.well-known/agent-card.json`) or the full URL of its agent card (ending in `.json`) |
 | `secret` | Optional. Sent as `Authorization: Bearer <secret>`. Stored in the vault, never returned. |
 
-Only owners and admins add integrations. Kasama reads the agent card right away to check the
+Only owners and admins add integrations. Casama reads the agent card right away to check the
 connection.
 
 ### What the bot gets
@@ -300,7 +300,7 @@ The tool is **medium risk**, so with the default autonomy the bot may ask before
 example after it has read untrusted content. You can change its risk like any connection's tool.
 See [Autonomy and approvals](/guide/autonomy).
 
-### Connect two Kasama servers
+### Connect two Casama servers
 
 To let a bot on one server use a bot on another:
 

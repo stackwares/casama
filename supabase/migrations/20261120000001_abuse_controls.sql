@@ -1,4 +1,4 @@
--- Kasama Cloud abuse controls (SPEC: Phase 8 launch items; D-094).
+-- Casama Cloud abuse controls (SPEC: Phase 8 launch items; D-094).
 
 -- A suspended workspace keeps its data, but its bots don't run and its computers don't start.
 alter table public.organizations add column suspended_at timestamptz;

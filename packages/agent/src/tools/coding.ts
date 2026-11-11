@@ -8,8 +8,8 @@
  *   comes from a named secret, in that process's environment only;
  * - cloud: Cursor's cloud agents API, polled until the agent finishes.
  */
-import type { Database } from "@kasama/db";
-import type { SandboxHandle } from "@kasama/sandbox";
+import type { Database } from "@casama/db";
+import type { SandboxHandle } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "../acting.ts";

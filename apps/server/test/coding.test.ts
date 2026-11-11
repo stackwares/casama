@@ -6,8 +6,8 @@ import {
   registerCodingTools,
   summarizeAgentOutput,
   ToolRegistry,
-} from "@kasama/agent";
-import type { ExecChunk, ExecOptions, SandboxHandle } from "@kasama/sandbox";
+} from "@casama/agent";
+import type { ExecChunk, ExecOptions, SandboxHandle } from "@casama/sandbox";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 

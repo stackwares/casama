@@ -5,15 +5,15 @@
  * make links open the app (the join landing page and the app-link association files).
  */
 import { randomBytes, randomInt } from "node:crypto";
-import type { OpenAPIHono } from "@hono/zod-openapi";
-import { PRODUCT_NAME, routes } from "@kasama/contracts";
+import { PRODUCT_NAME, routes } from "@casama/contracts";
 import {
   contentKeys,
   type JwtClaims,
   pgErrorCode,
   pgErrorMessage,
   withUserSession,
-} from "@kasama/db";
+} from "@casama/db";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -808,7 +808,7 @@ export function registerJoiningRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const row = parsed ? await lookup(parsed) : null;
     if (!row) limiter.miss(key);
     const server = (deps.env.PUBLIC_API_URL ?? new URL(c.req.url).origin).replace(/\/$/, "");
-    const openUrl = `kasama://app/join/${encodeURIComponent(token)}?server=${encodeURIComponent(server)}`;
+    const openUrl = `casama://app/join/${encodeURIComponent(token)}?server=${encodeURIComponent(server)}`;
     c.header(
       "content-security-policy",
       "default-src 'none'; style-src 'unsafe-inline'; img-src data:; frame-ancestors 'none'",

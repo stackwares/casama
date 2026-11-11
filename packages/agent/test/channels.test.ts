@@ -117,7 +117,7 @@ describe("chat app adapters", () => {
     expect(reply?.threadKey).toBe(m?.threadKey);
     const { calls, f } = recorder();
     await a.send(
-      { address: "bot@kasama.test", api_base: "http://resend.test" },
+      { address: "bot@casama.test", api_base: "http://resend.test" },
       { api_key: "re_1" },
       m!.reply,
       "Thanks",
@@ -125,7 +125,7 @@ describe("chat app adapters", () => {
     );
     expect(calls[0]?.url).toBe("http://resend.test/emails");
     expect(JSON.parse(calls[0]!.body)).toMatchObject({
-      from: "bot@kasama.test",
+      from: "bot@casama.test",
       to: ["lee@vendor.com"],
       subject: "Re: Invoice 12",
       headers: { "In-Reply-To": "<m1@vendor>" },

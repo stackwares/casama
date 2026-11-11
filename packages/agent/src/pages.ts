@@ -4,9 +4,9 @@
  * private to the person the bot was working for until shared. Sharing publicly is high risk.
  */
 import { createHash, randomBytes } from "node:crypto";
-import type { Database } from "@kasama/db";
-import { contentKeys } from "@kasama/db";
-import { isValidCron, isValidTimezone, nextRunAt, PAGE_AUTHORING_NOTE } from "@kasama/domain";
+import type { Database } from "@casama/db";
+import { contentKeys } from "@casama/db";
+import { isValidCron, isValidTimezone, nextRunAt, PAGE_AUTHORING_NOTE } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
@@ -82,7 +82,7 @@ export function registerPageTools(
 
   registry.register({
     name: "pages.publish",
-    description: `Publish a web page (a report, dashboard, plan or tracker) the person opens from Kasama, or replace an existing page's layout with page_id. ${PAGE_AUTHORING_NOTE} Pass the HTML, or path to an HTML file on your computer. New pages are private to the person you're working for; pages.share changes that. refresh_cron (with refresh_instructions) has you refresh its data on a schedule.`,
+    description: `Publish a web page (a report, dashboard, plan or tracker) the person opens from Casama, or replace an existing page's layout with page_id. ${PAGE_AUTHORING_NOTE} Pass the HTML, or path to an HTML file on your computer. New pages are private to the person you're working for; pages.share changes that. refresh_cron (with refresh_instructions) has you refresh its data on a schedule.`,
     risk: "low",
     riskFor: (a) => (a.visibility === "workspace" ? "medium" : "low"),
     category: "publish",
@@ -138,7 +138,7 @@ export function registerPageTools(
       if (args.refresh_cron)
         await linkRefresh(db, ctx, id, args.title, args.refresh_cron, args.refresh_instructions);
       return {
-        content: `Published "${args.title}" (page ${id}, version ${version}). The person can open it from Pages in Kasama.`,
+        content: `Published "${args.title}" (page ${id}, version ${version}). The person can open it from Pages in Casama.`,
         preview: args.title,
       };
     },

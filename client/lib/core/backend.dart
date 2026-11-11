@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 /// A message as shown in a conversation (final messages only; live text comes from run events).
 /// A file attached to a message, stored on the bot's computer ([path] is under its home folder).
@@ -194,7 +194,7 @@ class TwoStepEnrollment {
 }
 
 /// Everything the app reads and writes. Reads and simple edits go to Supabase under RLS;
-/// commands go to the Kasama API. Widget tests use a fake.
+/// commands go to the Casama API. Widget tests use a fake.
 /// Quiet hours (D-109): "HH:MM" local times; the window may cross midnight.
 class QuietHoursView {
   const QuietHoursView({required this.enabled, required this.start, required this.end});
@@ -203,6 +203,52 @@ class QuietHoursView {
   final String end;
   Map<String, Object?> toJson() => {'enabled': enabled, 'start': start, 'end': end};
   static QuietHoursView? fromJson(Object? j) => j is Map ? QuietHoursView(enabled: j['enabled'] == true, start: '${j['start'] ?? '22:00'}', end: '${j['end'] ?? '07:00'}') : null;
+}
+
+/// About you (D-169): what bots call the person and what the person shared about themselves.
+class AboutYouView {
+  const AboutYouView({this.displayName, this.preferredName, this.pronouns, this.about = '', this.replyStyle = '', this.learn = true, this.nameAsked = true});
+  final String? displayName;
+  final String? preferredName;
+  final String? pronouns;
+  final String about;
+  final String replyStyle;
+
+  /// Whether bots may save what they learn about the person in chat.
+  final bool learn;
+
+  /// The one-time "What should bots call you?" card was answered or dismissed.
+  final bool nameAsked;
+
+  /// The name bots use: the preferred name, else the first word of the sign-in name.
+  String get name {
+    final p = preferredName?.trim() ?? '';
+    if (p.isNotEmpty) return p;
+    final d = displayName?.trim() ?? '';
+    return d.isEmpty ? '' : d.split(RegExp(r'\s+')).first;
+  }
+
+  AboutYouView copyWith({String? preferredName, String? pronouns, String? about, String? replyStyle, bool? learn}) => AboutYouView(
+    displayName: displayName,
+    preferredName: preferredName ?? this.preferredName,
+    pronouns: pronouns ?? this.pronouns,
+    about: about ?? this.about,
+    replyStyle: replyStyle ?? this.replyStyle,
+    learn: learn ?? this.learn,
+    nameAsked: nameAsked,
+  );
+}
+
+/// A fact a bot learned about the person (About you, D-169); private to them.
+class UserFactView {
+  const UserFactView({required this.id, required this.kind, required this.content, this.pinned = false, required this.updatedAt});
+  final String id;
+
+  /// fact or preference.
+  final String kind;
+  final String content;
+  final bool pinned;
+  final DateTime updatedAt;
 }
 
 /// One person's quiet-hours choice for one bot: default, always or custom.
@@ -287,7 +333,7 @@ abstract class Backend {
   Future<Credential> addCredential(String orgId, ProviderId provider, String label, {String? apiKey, String? baseUrl});
   Future<CredentialTestResult> testCredential(String credentialId, {String? model});
 
-  /// Models the key can use, recommended first (live from the provider, or Kasama's short list).
+  /// Models the key can use, recommended first (live from the provider, or Casama's short list).
   Future<ModelOptionList> models(String credentialId);
   Future<Credential> updateCredential(String credentialId, {String? label, bool? fallbackOnLimit});
 
@@ -341,6 +387,19 @@ abstract class Backend {
   Future<void> setQuietHours(QuietHoursView hours);
   Future<BotQuietView> botQuiet(String botId);
   Future<void> setBotQuiet(String botId, BotQuietView value);
+  // About you (D-169)
+  Future<AboutYouView> aboutYou();
+  Future<void> saveAboutYou(AboutYouView value);
+  Future<void> markNameAsked();
+  Future<List<UserFactView>> userFacts();
+  Future<void> addUserFacts(List<({String kind, String content})> facts);
+  Future<void> updateUserFact(String id, {String? content, bool? pinned});
+  Future<void> deleteUserFact(String id);
+
+  /// Whether bots in this workspace use "About me" and learned facts (on by default only where the
+  /// person is the only member).
+  Future<bool> profileSharedIn(String orgId);
+  Future<void> setProfileSharedIn(String orgId, bool share);
   Future<List<BotRevision>> botRevisions(String botId);
 
   /// Puts back the settings from before [revision]; the current ones become a new revision.

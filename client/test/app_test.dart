@@ -1,28 +1,29 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
-import 'package:kasama_sdk/kasama_sdk.dart' show WelcomeChat;
-import 'package:kasama_app/features/computer/computer_screen.dart';
+import 'package:casama_sdk/casama_sdk.dart' show WelcomeChat;
+import 'package:casama_app/features/computer/computer_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:kasama_app/app.dart';
-import 'package:kasama_app/core/backend.dart';
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_app/features/auth/floating_mascots.dart';
-import 'package:kasama_app/features/auth/sign_in_screen.dart';
-import 'package:kasama_app/ui/mascot.dart';
-import 'package:kasama_app/features/chat/chat_controller.dart';
-import 'package:kasama_app/features/chat/chat_screen.dart';
-import 'package:kasama_app/features/chat/chat_detail.dart';
-import 'package:kasama_app/features/chat/widgets/chat_widgets.dart' show ToolGroupCard;
-import 'package:kasama_app/features/timeline/timeline_screen.dart';
-import 'package:kasama_app/l10n/generated/app_localizations.dart';
-import 'package:kasama_app/ui/floating_tab_chrome.dart';
+import 'package:casama_app/app.dart';
+import 'package:casama_app/core/backend.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/features/auth/floating_mascots.dart';
+import 'package:casama_app/features/auth/sign_in_screen.dart';
+import 'package:casama_app/ui/mascot.dart';
+import 'package:casama_app/features/chat/chat_controller.dart';
+import 'package:casama_app/features/chat/chat_screen.dart';
+import 'package:casama_app/features/chat/chat_detail.dart';
+import 'package:casama_app/features/chat/widgets/chat_widgets.dart' show ToolGroupCard;
+import 'package:casama_app/features/timeline/timeline_screen.dart';
+import 'package:casama_app/l10n/generated/app_localizations.dart';
+import 'package:casama_app/ui/floating_tab_chrome.dart';
 
 import 'fake_backend.dart';
-import 'package:kasama_app/core/local_cache.dart';
+import 'package:casama_app/core/local_cache.dart';
 
 Widget harness(FakeBackend backend, Widget child, {LocalCache cache = const NoCache(), List<dynamic> overrides = const []}) => ProviderScope(
   overrides: [backendProvider.overrideWithValue(backend), localCacheProvider.overrideWithValue(cache), ...overrides],
@@ -38,6 +39,8 @@ Future<void> setSize(WidgetTester tester, Size size) async {
 void main() {
   testWidgets('the sign-in screen shows the bots and one button that opens the ways in', (tester) async {
     await setSize(tester, const Size(390, 844));
+    // Apple sign-in shows on Apple platforms and the web.
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
     await tester.pumpWidget(harness(FakeBackend()..signedIn = false, const SignInScreen()));
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.byType(FloatingMascots), findsOneWidget);
@@ -53,6 +56,7 @@ void main() {
     await tester.tap(find.byKey(const Key('continueWithEmail')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('email')), findsOneWidget);
+    debugDefaultTargetPlatformOverride = null;
   });
 
   testWidgets('email sign-in sends a magic link first, with a password one tap away', (tester) async {
@@ -353,7 +357,7 @@ void main() {
 
   testWidgets('phone layout uses the floating tab bar and lists bots with cost', (tester) async {
     await setSize(tester, const Size(400, 800));
-    await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(FakeBackend())], child: const KasamaApp()));
+    await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(FakeBackend())], child: const CasamaApp()));
     await tester.pumpAndSettle();
     expect(find.byType(FloatingTabChrome), findsOneWidget);
     expect(find.text('Ada'), findsOneWidget);
@@ -362,7 +366,7 @@ void main() {
 
   testWidgets('desktop layout shows bots, chat and computer side by side', (tester) async {
     await setSize(tester, const Size(1600, 1000));
-    await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(FakeBackend())], child: const KasamaApp()));
+    await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(FakeBackend())], child: const CasamaApp()));
     await tester.pumpAndSettle();
     // The sidebar lists the bots; the content asks to pick one.
     expect(find.byKey(const Key('sidebar-bot-$botId')), findsOneWidget);
@@ -397,7 +401,7 @@ void main() {
   testWidgets('onboarding advances after creating a workspace', (tester) async {
     await setSize(tester, const Size(500, 1000));
     final backend = _NoWelcome()..hasOrg = false;
-    await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(backend)], child: const KasamaApp()));
+    await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(backend)], child: const CasamaApp()));
     for (var i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }

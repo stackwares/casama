@@ -21,7 +21,7 @@ export interface Workflows {
     orgId: string,
     model?: string,
   ): Promise<CredentialTestOutcome>;
-  /** The model picker's list for a key (live from the provider, or Kasama's short list). */
+  /** The model picker's list for a key (live from the provider, or Casama's short list). */
   listCredentialModels(credentialId: string, orgId: string): Promise<ModelListOutcome>;
   /** Revokes a ChatGPT sign-in at OpenAI before its credential is deleted (best effort). */
   revokeCredential(credentialId: string): Promise<{ ok: boolean; error?: string }>;

@@ -18,7 +18,7 @@ describe("enterprise features", () => {
     const { publicKey, privateKey } = await generateKeyPair("EdDSA", { extractable: true });
     const license = await new SignJWT({ features: ["audit_export", "sso"], seats: 10 })
       .setProtectedHeader({ alg: "EdDSA" })
-      .setIssuer("kasama-licensing")
+      .setIssuer("casama-licensing")
       .setSubject("Acme Corp")
       .setExpirationTime("30d")
       .sign(await importPKCS8(await exportPKCS8(privateKey), "EdDSA"));
@@ -33,8 +33,8 @@ describe("enterprise features", () => {
     const authUrl = `http://127.0.0.1:${(auth.address() as AddressInfo).port}`;
     licensed = await startHarness({
       env: {
-        KASAMA_LICENSE_KEY: license,
-        KASAMA_LICENSE_PUBLIC_KEY: await exportSPKI(publicKey),
+        CASAMA_LICENSE_KEY: license,
+        CASAMA_LICENSE_PUBLIC_KEY: await exportSPKI(publicKey),
         SUPABASE_URL: authUrl,
         SUPABASE_SERVICE_ROLE_KEY: "service-role-test-key",
       },
@@ -126,7 +126,7 @@ describe("enterprise features", () => {
         token: owner.token,
       }),
     );
-    expect(v.record).toMatch(/^kasama-verification=[0-9a-f]{32}$/);
+    expect(v.record).toMatch(/^casama-verification=[0-9a-f]{32}$/);
     (licensed.deps as { resolveTxt?: (d: string) => Promise<string[][]> }).resolveTxt = async (
       d,
     ) => (d === "acme.com" ? [[v.record]] : []);

@@ -1,8 +1,9 @@
 /** Pages (D-119): list, open (single-use view links to the pages origin), share, revert, delete. */
+
+import { hashPageToken, newPageToken, savePageVersion, setPageVisibility } from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { hashPageToken, newPageToken, savePageVersion, setPageVisibility } from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";

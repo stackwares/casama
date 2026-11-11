@@ -1,8 +1,9 @@
 /** Secret store settings (D-145): Vault by default, or the workspace's Infisical project (admins). */
+
+import { InfisicalSecretStore, secretStoreFor } from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { InfisicalSecretStore, secretStoreFor } from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";

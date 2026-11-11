@@ -5,8 +5,8 @@
  * spend work as usual. The heartbeat stops at the budget or deadline, waits for milestone
  * sign-offs, and never runs a paused, blocked, done or cancelled project.
  */
-import type { Database } from "@kasama/db";
-import { contentKeys } from "@kasama/db";
+import type { Database } from "@casama/db";
+import { contentKeys } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";

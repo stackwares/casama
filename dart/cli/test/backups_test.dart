@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:kasama_cli/kasama_cli.dart';
+import 'package:casama_cli/casama_cli.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -10,7 +10,7 @@ void main() {
   late Directory dir;
   late String age;
   setUp(() {
-    dir = Directory.systemTemp.createTempSync('kasama-backups');
+    dir = Directory.systemTemp.createTempSync('casama-backups');
     // Fake age: "encrypts" by prefixing a header and reversing nothing; decrypts by stripping it.
     age = p.join(dir.path, 'fake-age');
     File(age).writeAsStringSync(r'''#!/bin/sh

@@ -14,7 +14,7 @@ export function chromiumPdf(executable: string): PdfRenderer {
   const run = promisify(execFile);
   return {
     async render(html) {
-      const dir = await mkdtemp(join(tmpdir(), "kasama-pdf-"));
+      const dir = await mkdtemp(join(tmpdir(), "casama-pdf-"));
       try {
         const src = join(dir, "page.html");
         const out = join(dir, "page.pdf");

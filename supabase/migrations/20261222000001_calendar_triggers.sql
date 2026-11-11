@@ -22,4 +22,4 @@ returns text language sql stable security definer set search_path = '' as $$
   select lower(split_part(email, '@', 2)) from auth.users where id = p_user
 $$;
 revoke all on function public.worker_user_email_domain(uuid) from public, anon, authenticated;
-grant execute on function public.worker_user_email_domain(uuid) to kasama_worker;
+grant execute on function public.worker_user_email_domain(uuid) to casama_worker;

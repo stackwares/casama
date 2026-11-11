@@ -1,5 +1,5 @@
 {
-  "name": "@kasama/egress-proxy",
+  "name": "@casama/egress-proxy",
   "version": "0.0.0",
   "private": true,
   "type": "module",

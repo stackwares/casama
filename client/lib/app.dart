@@ -25,12 +25,12 @@ import 'theme/appearance.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'features/devices/device_sync.dart';
 
-class KasamaApp extends ConsumerWidget {
-  const KasamaApp({super.key});
+class CasamaApp extends ConsumerWidget {
+  const CasamaApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 402 from the server (plan limit, out of credits) opens the paywall (Kasama Cloud only).
+    // 402 from the server (plan limit, out of credits) opens the paywall (Casama Cloud only).
     onPaymentRequired ??= showPaywall;
     // Services kept running for the app's lifetime. Listened to rather than watched: none of them
     // changes what this widget builds, so a change in one mustn't rebuild the whole app.

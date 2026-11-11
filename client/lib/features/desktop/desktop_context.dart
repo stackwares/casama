@@ -42,7 +42,7 @@ class DesktopContextReader {
     }
   }
 
-  /// Reads what's in front (call it before Kasama's own window comes forward).
+  /// Reads what's in front (call it before Casama's own window comes forward).
   Future<DesktopContext> capture() async {
     switch (_platform) {
       case 'macos':
@@ -147,7 +147,7 @@ try{Add-Type -AssemblyName UIAutomationClient;$e=[System.Windows.Automation.Auto
 
   /// A full-screen screenshot (only when the person asks for one).
   Future<Uint8List?> screenshot() async {
-    final f = File('${Directory.systemTemp.path}/kasama-shot-${DateTime.now().microsecondsSinceEpoch}.png');
+    final f = File('${Directory.systemTemp.path}/casama-shot-${DateTime.now().microsecondsSinceEpoch}.png');
     try {
       final ok = switch (_platform) {
         'macos' => await _out('screencapture', ['-x', '-t', 'png', f.path]) != null || f.existsSync(),

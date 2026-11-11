@@ -231,6 +231,13 @@ describe("cross-tenant sweep (Phase 8 security review)", () => {
       "deleteDeviceSource",
       // Named places (D-151) are created in the caller's own list; device-triggers.test.ts checks isolation.
       "saveDevicePlace",
+      // About you (D-169) is the caller's own profile and facts; about-you.test.ts checks isolation.
+      "getAboutYou",
+      "updateAboutYou",
+      "listUserFacts",
+      "addUserFacts",
+      "updateUserFact",
+      "deleteUserFact",
     ]);
     for (const [path, ops] of Object.entries(doc.paths)) {
       if (!path.startsWith("/v1/")) continue;

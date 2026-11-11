@@ -7,7 +7,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createAdapter } from "@kasama/agent";
+import { createAdapter } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { internalToken } from "../src/api/routes/local.ts";
 import { computerdBinary, type FakeDevice, startFakeDevice } from "./fake-device.ts";
@@ -32,7 +32,7 @@ describe("local MCP servers", () => {
 
   beforeAll(async () => {
     computerdBinary();
-    home = mkdtempSync(join(tmpdir(), "kasama-local-mcp-"));
+    home = mkdtempSync(join(tmpdir(), "casama-local-mcp-"));
     h = await startHarness({ worker: { fixtures: FIXTURES }, local: true });
     owner = await h.user("mcp-owner@example.com");
     teammate = await h.user("mcp-teammate@example.com");

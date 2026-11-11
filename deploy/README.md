@@ -7,7 +7,7 @@ Platforms without a Docker socket (Render, Railway, DigitalOcean App Platform) r
 worker only**. They use a Supabase project for Postgres and Auth (Supabase Cloud's free tier or your
 own Supabase), and bots get computers from one of:
 
-- **Cloud Connect** to Kasama Cloud (`KASAMA_CLOUD_URL`, `KASAMA_CLOUD_KEY`), or
+- **Cloud Connect** to Casama Cloud (`CASAMA_CLOUD_URL`, `CASAMA_CLOUD_KEY`), or
 - the users' own machines through the desktop companion (on by default), or
 - a sandbox supervisor you run elsewhere with E2B or Daytona (`SUPERVISOR_URL`, `SUPERVISOR_TOKEN`).
 

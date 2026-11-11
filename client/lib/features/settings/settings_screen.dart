@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -29,6 +29,7 @@ import '../bots/bot_template.dart';
 import '../../ui/mascot.dart';
 import '../../ui/page.dart';
 import '../bots/model_picker.dart';
+import 'about_you_screen.dart';
 import 'model_keys_screen.dart';
 import 'theme_screen.dart';
 import '../../ui/app_card.dart';
@@ -71,7 +72,11 @@ class SettingsScreen extends ConsumerWidget {
           // Wide windows: the groups sit in two columns instead of one long, narrow list.
           final twoColumns = !pane && constraints.maxWidth >= kTwoColumnMinWidth;
           final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth, maxWidth: twoColumns ? kWidePageMaxWidth : kPageMaxWidth);
+          // About you (D-169): the name bots use, and the way into the profile.
+          final name = ref.watch(aboutYouProvider).value?.name ?? '';
           final profile = AppCard(
+                key: const Key('settingsAboutYou'),
+                onTap: () => open('/settings/about-you'),
                 padding: const EdgeInsets.all(AppSpace.md),
                 child: Row(
                   children: [
@@ -81,7 +86,7 @@ class SettingsScreen extends ConsumerWidget {
                       decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.16), shape: BoxShape.circle),
                       alignment: Alignment.center,
                       child: Text(
-                        email.isEmpty ? '?' : email.characters.first.toUpperCase(),
+                        name.isNotEmpty ? name.characters.first.toUpperCase() : (email.isEmpty ? '?' : email.characters.first.toUpperCase()),
                         style: context.textTheme.titleLarge?.copyWith(color: scheme.primary, fontWeight: FontWeight.w800),
                       ),
                     ),
@@ -91,19 +96,24 @@ class SettingsScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            email,
+                            name.isNotEmpty ? name : email,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            [org?.name ?? '', if (org != null) _roleLabel(context, org.role)].where((s) => s.isNotEmpty).join(' · '),
+                            [if (name.isNotEmpty) email, org?.name ?? '', if (org != null) _roleLabel(context, org.role)].where((s) => s.isNotEmpty).join(' · '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                           ),
+                          const SizedBox(height: 2),
+                          Text(l10n.aboutYouRow, style: context.textTheme.bodySmall?.copyWith(color: scheme.primary, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
+                    Icon(LucideIcons.chevronRight, color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
                   ],
                 ),
               ).appCardEntrance();

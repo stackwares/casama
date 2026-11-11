@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- Kasama's privacy manifest. No tracking, no tracking domains. What it collects serves the app
+<!-- Casama's privacy manifest. No tracking, no tracking domains. What it collects serves the app
      itself and is linked to the account; plugins and Flutter ship their own manifests too. Keep this
      in step with the App Store privacy labels set in App Store Connect. -->
 <plist version="1.0">

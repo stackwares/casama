@@ -1,4 +1,4 @@
-export { slugify } from "@kasama/domain";
+export { slugify } from "@casama/domain";
 
 import { createHash, randomBytes } from "node:crypto";
 

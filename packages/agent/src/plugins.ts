@@ -1,13 +1,13 @@
 /**
  * Plugins on the bot's computer (D-121): a plugin's stdio MCP servers run inside the computer,
- * started by computerd and bridged to the worker, so plugin code never runs on Kasama's servers.
+ * started by computerd and bridged to the worker, so plugin code never runs on Casama's servers.
  * Before the first call on a computer, the package files are written to
- * ~/.kasama/plugins/<plugin>/ (PLUGIN_ROOT) and computerd gets the server list.
+ * ~/.casama/plugins/<plugin>/ (PLUGIN_ROOT) and computerd gets the server list.
  */
 import { createHash } from "node:crypto";
-import type { Database } from "@kasama/db";
-import { expandPluginVars } from "@kasama/domain";
-import { collectExec, type McpServerSpec, type SandboxHandle } from "@kasama/sandbox";
+import type { Database } from "@casama/db";
+import { expandPluginVars } from "@casama/domain";
+import { collectExec, type McpServerSpec, type SandboxHandle } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 
 export interface ComputerMcpConfig {
@@ -23,12 +23,12 @@ export interface ComputerMcpConfig {
 const synced = new Map<string, string>();
 
 /** Where a plugin lives on the computer. */
-export const pluginRoot = (home: string, plugin: string) => `${home}/.kasama/plugins/${plugin}`;
-export const pluginData = (home: string, plugin: string) => `${home}/.kasama/plugin-data/${plugin}`;
+export const pluginRoot = (home: string, plugin: string) => `${home}/.casama/plugins/${plugin}`;
+export const pluginData = (home: string, plugin: string) => `${home}/.casama/plugin-data/${plugin}`;
 
 const homeOf = async (h: SandboxHandle) => {
   const r = await collectExec(h.exec('printf %s "$HOME"', { timeoutMs: 10_000 }));
-  return r.stdout.trim() || "/home/kasama";
+  return r.stdout.trim() || "/home/casama";
 };
 
 /**
@@ -65,7 +65,7 @@ export async function syncPluginComputer(db: Database, h: SandboxHandle, compute
   for (const [id, p] of plugins) {
     const root = pluginRoot(home, p.name);
     const marker = await h
-      .readFile(`${root}/.kasama-commit`)
+      .readFile(`${root}/.casama-commit`)
       .then((b) => new TextDecoder().decode(b))
       .catch(() => "");
     if (marker.trim() === p.commit) continue;
@@ -82,7 +82,7 @@ export async function syncPluginComputer(db: Database, h: SandboxHandle, compute
       .filter((f) => f.executable)
       .map((f) => `"${root}/${f.path.replaceAll('"', "")}"`);
     if (exe.length) await collectExec(h.exec(`chmod +x ${exe.join(" ")}`, { timeoutMs: 30_000 }));
-    await h.writeFile(`${root}/.kasama-commit`, new TextEncoder().encode(p.commit));
+    await h.writeFile(`${root}/.casama-commit`, new TextEncoder().encode(p.commit));
   }
   const servers: Record<string, McpServerSpec> = {};
   for (const r of rows) {

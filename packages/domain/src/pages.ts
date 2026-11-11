@@ -29,7 +29,7 @@ export const PAGE_HEADERS: Record<string, string> = {
 };
 
 /** The id of the JSON block a page's script reads its data from. */
-export const PAGE_DATA_ID = "kasama-data";
+export const PAGE_DATA_ID = "casama-data";
 
 /** How bots are told to build pages (in the pages.publish tool description). */
 export const PAGE_AUTHORING_NOTE = `One self-contained HTML document: inline <style> and <script> only (no external scripts, styles, fonts, images or requests; images as data: URLs). Read your data with JSON.parse(document.getElementById("${PAGE_DATA_ID}").textContent) so pages.update_data can change it without rewriting the layout. Use the CSS variables --k-bg, --k-fg, --k-muted, --k-accent, --k-surface and --k-font so the page follows light and dark mode. Make it work at phone width.`;
@@ -48,7 +48,7 @@ const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt
 
 const THEME = `:root{--k-bg:#fbf8fd;--k-fg:#1d1b20;--k-muted:#625b71;--k-accent:#6750a4;--k-surface:#f3edf7;--k-font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color-scheme:light dark}
 @media (prefers-color-scheme:dark){:root{--k-bg:#141218;--k-fg:#e6e0e9;--k-muted:#cac4d0;--k-accent:#d0bcff;--k-surface:#211f26}}
-#kasama-updated{font:12px var(--k-font);color:var(--k-muted);text-align:center;padding:24px 16px}`;
+#casama-updated{font:12px var(--k-font);color:var(--k-muted);text-align:center;padding:24px 16px}`;
 
 export interface RenderablePage {
   title: string;
@@ -59,8 +59,8 @@ export interface RenderablePage {
 
 /** The served document: the bot's HTML with the head and foot additions. */
 export function renderPage(p: RenderablePage) {
-  const head = `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><style id="kasama-theme">${THEME}</style><script type="application/json" id="${PAGE_DATA_ID}">${scriptJson(p.data)}</script>`;
-  const foot = `<div id="kasama-updated">Updated <time datetime="${p.updatedAt.toISOString()}">${escapeHtml(
+  const head = `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><style id="casama-theme">${THEME}</style><script type="application/json" id="${PAGE_DATA_ID}">${scriptJson(p.data)}</script>`;
+  const foot = `<div id="casama-updated">Updated <time datetime="${p.updatedAt.toISOString()}">${escapeHtml(
     p.updatedAt.toISOString().slice(0, 16).replace("T", " "),
   )} UTC</time></div>`;
   let html = p.html;

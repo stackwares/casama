@@ -73,7 +73,7 @@ class AppearancePreview extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    if (!compact) ...[const BotAvatar(name: 'Kasama', size: 26), const SizedBox(width: 8)],
+                    if (!compact) ...[const BotAvatar(name: 'Casama', size: 26), const SizedBox(width: 8)],
                     Flexible(child: bot(compact ? l10n.previewOnIt : l10n.previewDone)),
                   ],
                 ),

@@ -6,7 +6,7 @@
  * - When a run in such a conversation finishes, its reply goes back to the thread.
  * - `channel.send` (high risk) starts a new message to an allowed sender.
  */
-import { contentKeys, type Database } from "@kasama/db";
+import { contentKeys, type Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { ToolError, type ToolRegistry } from "../tools/registry.ts";
@@ -366,7 +366,7 @@ export async function pollIMessage(
       const res = await f(
         `${local.apiUrl.replace(/\/$/, "")}/internal/local/${c.config.computer_id}/http/imessage/new?since=${since}`,
         {
-          headers: { "x-kasama-internal": local.internalToken },
+          headers: { "x-casama-internal": local.internalToken },
         },
       );
       if (!res.ok) continue;

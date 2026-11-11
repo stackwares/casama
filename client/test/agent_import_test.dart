@@ -3,8 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_app/features/bots/agent_import.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/features/bots/agent_import.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';

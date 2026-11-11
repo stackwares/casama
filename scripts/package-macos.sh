@@ -2,14 +2,14 @@
 # Builds the macOS app (direct download) and a DMG. With SIGN_IDENTITY ("Developer ID Application:
 # ...") it signs with the hardened runtime; with NOTARY_PROFILE (xcrun notarytool store-credentials)
 # it notarizes and staples. Without them it produces an unsigned DMG for local testing.
-# Then it signs the DMG for Sparkle (the key in the login Keychain, account "kasama", or
+# Then it signs the DMG for Sparkle (the key in the login Keychain, account "casama", or
 # SPARKLE_KEY_FILE) and writes dist/appcast-macos.xml for scripts/publish-desktop-release.sh.
 set -euo pipefail
 cd "$(dirname "$0")/../client"
 version=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)
-flutter build macos --release --dart-define=KASAMA_API_URL="${KASAMA_API_URL:-https://cloud.kasama.dev}" --dart-define-from-file=config/firebase.json
-app="build/macos/Build/Products/Release/kasama_app.app"
-out="../dist/Kasama-$version-macos.dmg"
+flutter build macos --release --dart-define=CASAMA_API_URL="${CASAMA_API_URL:-https://cloud.casama.ai}" --dart-define-from-file=config/firebase.json
+app="build/macos/Build/Products/Release/casama_app.app"
+out="../dist/Casama-$version-macos.dmg"
 mkdir -p ../dist
 if [[ -n "${SIGN_IDENTITY:-}" ]]; then
   # Sign in with Apple is added only on this signed build. Release.entitlements is also what an
@@ -24,9 +24,9 @@ if [[ -n "${SIGN_IDENTITY:-}" ]]; then
 fi
 rm -f "$out"
 staging=$(mktemp -d)
-cp -R "$app" "$staging/Kasama.app"
+cp -R "$app" "$staging/Casama.app"
 ln -s /Applications "$staging/Applications"
-hdiutil create -volname "Kasama" -srcfolder "$staging" -ov -format UDZO "$out" >/dev/null
+hdiutil create -volname "Casama" -srcfolder "$staging" -ov -format UDZO "$out" >/dev/null
 rm -rf "$staging"
 if [[ -n "${SIGN_IDENTITY:-}" ]]; then codesign --sign "$SIGN_IDENTITY" --timestamp "$out"; fi
 if [[ -n "${NOTARY_PROFILE:-}" ]]; then
@@ -36,17 +36,17 @@ fi
 
 # Sparkle update feed (D-159): one item, the release just built, signed with the update key.
 build=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f2)
-repo="${KASAMA_RELEASES_REPO:-stackwares/kasama-releases}"
+repo="${CASAMA_RELEASES_REPO:-stackwares/casama-releases}"
 sign=(macos/Pods/Sparkle/bin/sign_update)
-if [[ -n "${SPARKLE_KEY_FILE:-}" ]]; then sign+=(--ed-key-file "$SPARKLE_KEY_FILE"); else sign+=(--account kasama); fi
+if [[ -n "${SPARKLE_KEY_FILE:-}" ]]; then sign+=(--ed-key-file "$SPARKLE_KEY_FILE"); else sign+=(--account casama); fi
 if attrs=$("${sign[@]}" "$out" 2>/dev/null); then
   cat > ../dist/appcast-macos.xml <<XML
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
   <channel>
-    <title>Kasama</title>
+    <title>Casama</title>
     <item>
-      <title>Kasama $version</title>
+      <title>Casama $version</title>
       <sparkle:releaseNotesLink>https://github.com/$repo/releases/tag/v$version</sparkle:releaseNotesLink>
       <pubDate>$(LC_ALL=C date -u '+%a, %d %b %Y %H:%M:%S +0000')</pubDate>
       <sparkle:version>$build</sparkle:version>
@@ -59,6 +59,6 @@ if attrs=$("${sign[@]}" "$out" 2>/dev/null); then
 XML
   echo "../dist/appcast-macos.xml"
 else
-  echo "No Sparkle signing key (login Keychain account \"kasama\" or SPARKLE_KEY_FILE): no update feed written." >&2
+  echo "No Sparkle signing key (login Keychain account \"casama\" or SPARKLE_KEY_FILE): no update feed written." >&2
 fi
 echo "$out"

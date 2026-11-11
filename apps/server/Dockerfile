@@ -1,5 +1,5 @@
 # One image, two modes: MODE=api or MODE=worker. Build from the repo root:
-#   docker build -f apps/server/Dockerfile -t kasama/server:local .
+#   docker build -f apps/server/Dockerfile -t casama/server:local .
 # Node runs the TypeScript sources directly (type stripping); there is no build step.
 FROM node:26-slim AS base
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH NODE_ENV=production
@@ -17,7 +17,7 @@ COPY packages/mcp/package.json packages/mcp/
 COPY packages/observability/package.json packages/observability/
 COPY packages/sandbox/package.json packages/sandbox/
 COPY ee/package.json ee/
-RUN pnpm install --frozen-lockfile --prod --filter @kasama/server...
+RUN pnpm install --frozen-lockfile --prod --filter @casama/server...
 
 FROM base AS runtime
 COPY --from=deps /app /app

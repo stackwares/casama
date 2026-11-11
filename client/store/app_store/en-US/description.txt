@@ -1,4 +1,4 @@
-Kasama gives you AI teammates that remember, work on real computers, and ask before risky steps.
+Casama gives you AI teammates that remember, work on real computers, and ask before risky steps.
 
 CHAT WITH BOTS THAT REMEMBER
 Each bot has a persona, skills and a memory that carries across conversations. Ask once, and it knows next time.
@@ -13,9 +13,9 @@ WORK THAT KEEPS GOING
 Schedule routines or trigger bots from webhooks. Results land in your inbox.
 
 ANY MODEL, YOUR SERVER
-Use your own keys for OpenRouter, OpenAI, Anthropic, Google or xAI, or a local model. Kasama is open source: connect the app to your own self-hosted server, or use Kasama Cloud.
+Use your own keys for OpenRouter, OpenAI, Anthropic, Google or xAI, or a local model. Casama is open source: connect the app to your own self-hosted server, or use Casama Cloud.
 
 ALSO
 Voice dictation, read-aloud and live calls; home-screen widget and Live Activities; share anything to a bot.
 
-Kasama Cloud subscriptions renew automatically unless cancelled at least 24 hours before the end of the period. Manage or cancel in your App Store account settings.
+Casama Cloud subscriptions renew automatically unless cancelled at least 24 hours before the end of the period. Manage or cancel in your App Store account settings.

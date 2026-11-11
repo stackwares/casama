@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/core/backend.dart';
-import 'package:kasama_app/features/bots/bot_history_screen.dart';
-import 'package:kasama_app/features/bots/bots_screen.dart';
-import 'package:kasama_app/features/home/home_shell.dart';
-import 'package:kasama_app/features/settings/settings_screen.dart';
+import 'package:casama_app/core/backend.dart';
+import 'package:casama_app/features/bots/bot_history_screen.dart';
+import 'package:casama_app/features/bots/bots_screen.dart';
+import 'package:casama_app/features/home/home_shell.dart';
+import 'package:casama_app/features/settings/settings_screen.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';

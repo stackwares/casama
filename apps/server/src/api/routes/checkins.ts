@@ -1,8 +1,9 @@
 /** Check-ins (D-114): per-bot settings, the "For you" feed, and accepting or dismissing suggestions. */
+
+import { applyCheckins } from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { contentKeys, type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { applyCheckins } from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { contentKeys, type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";

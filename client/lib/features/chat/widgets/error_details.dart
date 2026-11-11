@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -64,7 +64,7 @@ class ErrorDetails extends ConsumerWidget {
     ].whereType<String>();
     // Intentionally not translated: this report is pasted to support, who read English.
     return [
-      'Kasama run failed',
+      'Casama run failed',
       if (e.refId != null) 'Run: ${e.refId}',
       if (e.at != null) 'When: ${e.at!.toUtc().toIso8601String()}',
       if (e.errorCode != null) 'Code: ${e.errorCode}',
@@ -165,7 +165,7 @@ class ErrorDetails extends ConsumerWidget {
                       'at': entry.at?.toUtc().toIso8601String(),
                       'events': [for (final e in list) e.envelope.toJson()],
                     });
-                    final name = 'kasama-run-${(runId ?? 'error').substring(0, 8)}.json';
+                    final name = 'casama-run-${(runId ?? 'error').substring(0, 8)}.json';
                     shareFiles(
                       [XFile.fromData(utf8.encode(json), name: name, mimeType: 'application/json')],
                       names: [name],

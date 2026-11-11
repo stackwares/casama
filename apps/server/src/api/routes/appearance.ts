@@ -1,6 +1,7 @@
 /** Wallpaper photo search through the server (D-087), so the source's key never ships in the app. */
+
+import { routes } from "@casama/contracts";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { routes } from "@kasama/contracts";
 import { unsplashSource, type WallpaperSource } from "../../services/wallpapers.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";

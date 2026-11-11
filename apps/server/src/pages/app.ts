@@ -3,16 +3,16 @@
  * security policy. Signed-in viewers arrive with a single-use view link from the app, which turns
  * into a short page-scoped cookie; public pages use their revocable token.
  */
-import { hashPageToken, newPageToken } from "@kasama/agent";
-import { type Database, withUserSession } from "@kasama/db";
-import { PAGE_HEADERS, renderPage } from "@kasama/domain";
+import { hashPageToken, newPageToken } from "@casama/agent";
+import { type Database, withUserSession } from "@casama/db";
+import { PAGE_HEADERS, renderPage } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 import type { PdfRenderer } from "../services/pdf.ts";
 
 export const PAGE_SESSION_SECONDS = 30 * 60;
-const COOKIE = "kasama_page";
+const COOKIE = "casama_page";
 
 type PageRow = { id: string; title: string; html: string; data: unknown; updated_at: string };
 

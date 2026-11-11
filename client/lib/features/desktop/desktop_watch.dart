@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/backend.dart';
@@ -25,7 +25,7 @@ class FolderWatcher {
   FolderWatcher(this.backend);
   final Backend backend;
   final _subs = <StreamSubscription<FileSystemEvent>>[];
-  static const pref = 'kasama.watched_folders';
+  static const pref = 'casama.watched_folders';
 
   static Future<List<String>> folders() async => (await SharedPreferences.getInstance()).getStringList(pref) ?? const [];
   static Future<void> setFolders(List<String> f) async => (await SharedPreferences.getInstance()).setStringList(pref, f);
@@ -78,7 +78,7 @@ class ActivityTracker {
   final DateTime Function() now;
   final Duration every;
   Timer? _timer;
-  static const pref = 'kasama.activity';
+  static const pref = 'casama.activity';
 
   static String hourOf(DateTime t) => '${t.year.toString().padLeft(4, '0')}-${t.month.toString().padLeft(2, '0')}-${t.day.toString().padLeft(2, '0')}T${t.hour.toString().padLeft(2, '0')}';
 

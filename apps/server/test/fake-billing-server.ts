@@ -1,5 +1,5 @@
 /**
- * Local billing mock for trying Kasama Cloud billing end to end without accounts (D-070).
+ * Local billing mock for trying Casama Cloud billing end to end without accounts (D-070).
  * Starts fake Dodo / App Store / Google Play servers, writes an env file for a billing-enabled
  * API, and sets the plans' Dodo product ids. Opening a checkout URL "pays" it and delivers the
  * signed webhook to the API.
@@ -12,7 +12,7 @@ import postgres from "postgres";
 import { billingEnv, startFakeBilling } from "./fake-billing.ts";
 
 const apiUrl = process.argv[2] ?? "http://127.0.0.1:8788";
-const out = process.argv[3] ?? "/tmp/kasama-billing.env";
+const out = process.argv[3] ?? "/tmp/casama-billing.env";
 const f = await startFakeBilling({
   deliverTo: apiUrl,
   port: Number(process.env.FAKE_BILLING_PORT ?? 8799),

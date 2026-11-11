@@ -1,7 +1,7 @@
 # Teach by showing
 
 Instead of writing instructions, you can show a bot how to do a task. Do it yourself once on the
-bot's desktop computer while Kasama records each step, and the bot turns the recording into a
+bot's desktop computer while Casama records each step, and the bot turns the recording into a
 [skill](/guide/skills) it can reuse. You can also save the steps as a replay that runs without the
 model, which is faster and cheaper for tasks that don't change.
 
@@ -56,14 +56,14 @@ the recorded steps, or discard it.
 | Scroll | Grouped into one step, the same way as typing. |
 | Special keys and shortcuts | Their own step, such as `Tab` or `Ctrl+c`. |
 
-After each step, Kasama captures what the screen looks like: the accessibility snapshot of the
+After each step, Casama captures what the screen looks like: the accessibility snapshot of the
 desktop (or the bot's browser), the browser's address and a screenshot. Anything it can't capture
 is skipped.
 
 ## Privacy and secrets
 
 Live view normally keeps everything you do away from the bot. Teaching is the one exception, and
-Kasama makes it obvious:
+Casama makes it obvious:
 
 - Recording runs only while you hold control, and each step checks that again. If you lose control,
   recording stops.

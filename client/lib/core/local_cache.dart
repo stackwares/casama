@@ -54,7 +54,7 @@ class _CacheDb extends GeneratedDatabase {
 
 class DriftCache implements LocalCache {
   DriftCache(QueryExecutor executor) : _db = _CacheDb(executor);
-  DriftCache.open() : this(driftDatabase(name: 'kasama_cache'));
+  DriftCache.open() : this(driftDatabase(name: 'casama_cache'));
   final _CacheDb _db;
 
   @override

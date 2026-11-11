@@ -33,7 +33,7 @@ describe.skipIf(!enabled)("hosted providers against local control planes", () =>
   const planes: MockControlPlane[] = [];
   beforeAll(async () => {
     stack = await startSandboxStack();
-    dir = await mkdtemp(join(tmpdir(), "kasama-hosted-"));
+    dir = await mkdtemp(join(tmpdir(), "casama-hosted-"));
   }, 120_000);
   afterAll(async () => {
     for (const p of planes) await p.stop().catch(() => {});
@@ -59,7 +59,7 @@ describe.skipIf(!enabled)("hosted providers against local control planes", () =>
       {
         apiKey: plane.apiKey,
         apiUrl: plane.url,
-        templates: { headless: "kasama-headless", desktop: "kasama-desktop" },
+        templates: { headless: "casama-headless", desktop: "casama-desktop" },
         portUrl: (id, port) => plane.portUrl(id, port),
       },
       hostedOpts(),
@@ -80,7 +80,7 @@ describe.skipIf(!enabled)("hosted providers against local control planes", () =>
       {
         apiKey: plane.apiKey,
         apiUrl: plane.url,
-        snapshots: { headless: "kasama-headless", desktop: "kasama-desktop" },
+        snapshots: { headless: "casama-headless", desktop: "casama-desktop" },
       },
       hostedOpts(),
     );
@@ -105,7 +105,7 @@ describe.skipIf(!enabled)("hosted providers against local control planes", () =>
       {
         apiKey: plane.apiKey,
         apiUrl: plane.url,
-        templates: { headless: "kasama-headless", desktop: "kasama-desktop" },
+        templates: { headless: "casama-headless", desktop: "casama-desktop" },
         portUrl: (id, port) => plane.portUrl(id, port),
       },
       hostedOpts(),
@@ -124,8 +124,8 @@ describe.skipIf(!enabled)("hosted providers against local control planes", () =>
       {
         apiUrl: plane.url,
         token: plane.apiKey,
-        namespace: "kasama",
-        images: { headless: "kasama-headless", desktop: "kasama-desktop" },
+        namespace: "casama",
+        images: { headless: "casama-headless", desktop: "casama-desktop" },
       },
       hostedOpts(),
     );
@@ -150,7 +150,7 @@ describe.skipIf(!enabled)("hosted providers against local control planes", () =>
         apiUrl: plane.url,
         token: plane.apiKey,
         registry: "https://ghcr.io",
-        images: { headless: "kasama-headless", desktop: "kasama-desktop" },
+        images: { headless: "casama-headless", desktop: "casama-desktop" },
         portUrl: (id, port) => plane.portUrl(id, port),
       },
       hostedOpts(),
@@ -169,7 +169,7 @@ describe.skipIf(!enabled)("hosted providers against local control planes", () =>
       {
         apiKey: plane.apiKey,
         apiUrl: plane.url,
-        images: { headless: "kasama-headless", desktop: "kasama-desktop" },
+        images: { headless: "casama-headless", desktop: "casama-desktop" },
       },
       hostedOpts(),
     );
@@ -189,7 +189,7 @@ describe.skipIf(!enabled)("hosted providers against local control planes", () =>
         projectId: "proj_1",
         environmentId: "env_1",
         apiUrl: plane.url,
-        images: { headless: "kasama-headless", desktop: "kasama-desktop" },
+        images: { headless: "casama-headless", desktop: "casama-desktop" },
         domainScheme: "http",
       },
       hostedOpts(),

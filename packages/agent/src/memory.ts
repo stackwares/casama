@@ -1,4 +1,4 @@
-import { contentKeys, type Database } from "@kasama/db";
+import { contentKeys, type Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { type Embedder, toPgVector } from "./embeddings.ts";
 import {
@@ -106,8 +106,10 @@ export class MemoryService {
 }
 
 export const EXTRACTION_SYSTEM = `You extract lasting memories from a conversation between a user and their AI teammate.
-Return only JSON: {"memories":[{"kind":"fact"|"preference","content":"...","importance":0.0-1.0}]}.
+Return only JSON: {"memories":[{"kind":"fact"|"preference","about":"person"|"work","content":"...","importance":0.0-1.0}]}.
 Keep only durable facts about the user, their work, people and preferences that will matter in future conversations.
+"about" is "person" for facts about the user themselves (their job, family, places, tastes, how they like things written) and "work" for facts about projects, clients, tools and tasks.
+Never save health, religion, politics, sexuality or money troubles unless the user explicitly asks you to remember it.
 Write each memory as one standalone sentence. Skip small talk, one-off requests and anything already obvious. Return {"memories":[]} if nothing qualifies.`;
 
 export const COMPACTION_SYSTEM = `You summarize the earlier conversation between a user and their AI teammate.
@@ -115,6 +117,8 @@ Merge the previous summary with the new messages into one concise summary (at mo
 
 export interface ExtractedMemory {
   kind: "fact" | "preference";
+  /** About the person (their private profile, D-169) or about the work (the bot's memory). */
+  about: "person" | "work";
   content: string;
   importance: number;
 }
@@ -131,6 +135,7 @@ export function parseExtraction(text: string): ExtractedMemory[] {
       .filter((m): m is Record<string, unknown> => !!m && typeof m === "object")
       .map((m) => ({
         kind: m.kind === "preference" ? ("preference" as const) : ("fact" as const),
+        about: m.about === "person" ? ("person" as const) : ("work" as const),
         content: String(m.content ?? "").trim(),
         importance: Math.min(1, Math.max(0, Number(m.importance ?? 0.5) || 0.5)),
       }))

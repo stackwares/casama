@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 import '../../core/backend.dart';
 import '../../core/mobile_extras.dart';
@@ -131,7 +131,7 @@ class UiEntry extends ChatEntry {
   final List<Object?> messages;
 }
 
-enum NoticeKind { memory, skill, checkpoint, computer, failed, cancelled, userControl, botControl, modelFallback, info, routine }
+enum NoticeKind { memory, profileSaved, skill, checkpoint, computer, failed, cancelled, userControl, botControl, modelFallback, info, routine }
 
 class NoticeEntry extends ChatEntry {
   const NoticeEntry({required this.kind, required this.text, this.refId, this.errorCode, this.at});
@@ -495,6 +495,9 @@ class ChatController extends Notifier<ChatState> {
             refId: event.payload.computerId,
           ),
         );
+      // About you (D-169): a fact about the person went to their own profile; it can be undone.
+      case MemoryWrittenItem(:final event) when event.payload.scope == MemoryWrittenEventPayloadScopeEnum.profile:
+        entries.add(NoticeEntry(kind: NoticeKind.profileSaved, text: '', refId: event.payload.memoryId));
       case MemoryWrittenItem():
         entries.add(const NoticeEntry(kind: NoticeKind.memory, text: ''));
       case SkillLoadedItem(:final event):

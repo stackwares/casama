@@ -1,4 +1,4 @@
-import type { Problem } from "@kasama/contracts";
+import type { Problem } from "@casama/contracts";
 import type { Context } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
@@ -43,7 +43,7 @@ export function problemBody(
   errors?: Problem["errors"],
 ): Problem {
   return {
-    type: `https://kasama.dev/problems/${code}`,
+    type: `https://casama.ai/problems/${code}`,
     title: titles[status] ?? "Error",
     status,
     code,

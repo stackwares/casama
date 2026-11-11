@@ -130,7 +130,7 @@
             "callId": "r1",
             "name": "shell__exec",
             "args": {
-              "command": "rm -rf /tmp/kasama-old-files"
+              "command": "rm -rf /tmp/casama-old-files"
             }
           }
         },

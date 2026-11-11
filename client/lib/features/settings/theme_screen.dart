@@ -15,7 +15,7 @@ import 'appearance_preview.dart';
 String schemeFamilyLabel(BuildContext context, SchemeFamily f) {
   final l10n = context.l10n;
   return switch (f) {
-    SchemeFamily.brand => 'Kasama',
+    SchemeFamily.brand => 'Casama',
     SchemeFamily.purple => l10n.familyPurple,
     SchemeFamily.blue => l10n.familyBlue,
     SchemeFamily.teal => l10n.familyTeal,
@@ -26,7 +26,7 @@ String schemeFamilyLabel(BuildContext context, SchemeFamily f) {
   };
 }
 
-/// Settings → Color scheme: every FlexColorScheme scheme plus Kasama's own, with a live preview,
+/// Settings → Color scheme: every FlexColorScheme scheme plus Casama's own, with a live preview,
 /// search and color families. Picking one applies it right away.
 class ThemeScreen extends ConsumerStatefulWidget {
   const ThemeScreen({super.key});

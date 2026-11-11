@@ -5,7 +5,7 @@ export const Uuid = z.uuid();
 /** RFC 9457 problem details with a stable machine-readable code. */
 export const Problem = z
   .object({
-    type: z.string().openapi({ example: "https://kasama.dev/problems/not_found" }),
+    type: z.string().openapi({ example: "https://casama.ai/problems/not_found" }),
     title: z.string(),
     status: z.number().int(),
     code: z.string().openapi({ description: "Stable error code", example: "not_found" }),

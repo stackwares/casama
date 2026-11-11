@@ -23,7 +23,7 @@ select public.allow_worker('public.org_keys');
 -- Every server process reloads its key ring when keys or modes change.
 create or replace function public.org_keys_changed() returns trigger language plpgsql as $$
 begin
-  perform pg_notify('kasama_org_keys', coalesce(new.org_id, old.org_id)::text);
+  perform pg_notify('casama_org_keys', coalesce(new.org_id, old.org_id)::text);
   return null;
 end;
 $$;
@@ -32,7 +32,7 @@ for each row execute function public.org_keys_changed();
 create or replace function public.org_encryption_changed() returns trigger language plpgsql as $$
 begin
   if new.content_encryption is distinct from old.content_encryption then
-    perform pg_notify('kasama_org_keys', new.id::text);
+    perform pg_notify('casama_org_keys', new.id::text);
   end if;
   return null;
 end;
@@ -71,7 +71,7 @@ begin
   v_msg := case when v_sealed then v_msg || '{"sealed": true}'::jsonb else v_msg || jsonb_build_object('payload', new.payload) end;
   perform realtime.send(v_msg, 'run_event', 'run:' || new.run_id::text, true);
   perform realtime.send(v_msg, 'run_event', 'bot:' || new.bot_id::text, true);
-  perform pg_notify('kasama_run_events', new.run_id::text || ':' || new.seq::text);
+  perform pg_notify('casama_run_events', new.run_id::text || ':' || new.seq::text);
   return null;
 end;
 $$;

@@ -7,11 +7,11 @@
  *
  * Bots find services with `data.search` and buy with `data.call`, which always asks first; the
  * approval card shows the quoted price. A workspace's own Treg key is charged by Treg directly
- * (no markup). On Kasama Cloud, when resale is turned on, calls use Kasama's key and credits are
+ * (no markup). On Casama Cloud, when resale is turned on, calls use Casama's key and credits are
  * charged the cost plus 20% (`usage_ledger.kind = data_calls`).
  */
 import { createHash } from "node:crypto";
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { wrapUntrusted } from "./context.ts";
@@ -142,7 +142,7 @@ export class TregProvider implements DataProvider {
           ? { "x-treg-route-max-cost": opts.maxCostUsd.toFixed(4) }
           : {}),
         ...(opts.idempotencyKey ? { "idempotency-key": opts.idempotencyKey } : {}),
-        "x-treg-meta": "app=kasama",
+        "x-treg-meta": "app=casama",
       }),
       body: get ? undefined : JSON.stringify(params),
     });
@@ -178,12 +178,12 @@ export class TregProvider implements DataProvider {
   }
 }
 
-/** Kasama Cloud's resale markup: cost plus 20%. */
+/** Casama Cloud's resale markup: cost plus 20%. */
 export const DATA_MARKUP = 1.2;
 
 export interface DataAccess {
   provider: DataProvider;
-  /** Kasama's own key (resale): credits are charged cost × markup. Otherwise the workspace pays Treg. */
+  /** Casama's own key (resale): credits are charged cost × markup. Otherwise the workspace pays Treg. */
   resale: boolean;
 }
 
@@ -194,7 +194,7 @@ export function priceText(
   if (s.price_usd === null) return "price not listed (check the Treg catalog)";
   const p = s.price_usd * (resale ? DATA_MARKUP : 1);
   const per = s.price_type === "per_result" ? `per ${s.price_unit ?? "result"}` : "per call";
-  return `$${p.toFixed(p < 1 ? 4 : 2)} ${per}${resale ? " (includes Kasama's 20%)" : ""}`;
+  return `$${p.toFixed(p < 1 ? 4 : 2)} ${per}${resale ? " (includes Casama's 20%)" : ""}`;
 }
 
 export function registerDataTools(

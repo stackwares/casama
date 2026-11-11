@@ -5,12 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_app/features/bots/bots_screen.dart';
-import 'package:kasama_app/l10n/generated/app_localizations.dart';
-import 'package:kasama_app/ui/bot_avatar.dart';
-import 'package:kasama_app/ui/kasama_mark.dart';
-import 'package:kasama_app/ui/mascot.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/features/bots/bots_screen.dart';
+import 'package:casama_app/l10n/generated/app_localizations.dart';
+import 'package:casama_app/ui/bot_avatar.dart';
+import 'package:casama_app/ui/casama_mark.dart';
+import 'package:casama_app/ui/mascot.dart';
 
 import 'app_test.dart' show setSize;
 import 'fake_backend.dart';
@@ -58,8 +58,8 @@ void main() {
     expect(find.text('C'), findsOneWidget);
   });
 
-  testWidgets('the Kasama mark is one of the brand mascots', (tester) async {
-    await tester.pumpWidget(app(const KasamaMark(size: 64)));
+  testWidgets('the Casama mark is one of the brand mascots', (tester) async {
+    await tester.pumpWidget(app(const CasamaMark(size: 64)));
     final mascot = tester.widget<MascotImage>(find.byType(MascotImage)).mascot;
     expect(Mascot.brand, contains(mascot));
   });

@@ -1,29 +1,29 @@
-# Kasama self-host stack (SPEC "Self-host"): Supabase (Postgres, Auth, REST, Realtime, gateway),
-# the Kasama API and worker, the sandbox supervisor, egress proxy, TURN relay and Caddy.
+# Casama self-host stack (SPEC "Self-host"): Supabase (Postgres, Auth, REST, Realtime, gateway),
+# the Casama API and worker, the sandbox supervisor, egress proxy, TURN relay and Caddy.
 # Run ./install.sh from the repository root (it writes infra/compose/.env and starts this file).
 #   docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env up -d
 # Optional profiles: s3 (SeaweedFS object storage), monitoring (Prometheus, Grafana),
 # web (the Flutter web app), images (build-only computer images).
-name: kasama
+name: casama
 
-x-kasama: &kasama
-  image: kasama/server:${KASAMA_VERSION:-local}
+x-casama: &casama
+  image: casama/server:${CASAMA_VERSION:-local}
   build:
     context: ../..
     dockerfile: apps/server/Dockerfile
   restart: unless-stopped
   networks: [internal]
-  environment: &kasama-env
+  environment: &casama-env
     NODE_ENV: production
     DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
-    SUPABASE_URL: ${KASAMA_PUBLIC_URL}
+    SUPABASE_URL: ${CASAMA_PUBLIC_URL}
     SUPABASE_ANON_KEY: ${ANON_KEY}
     SUPABASE_JWT_SECRET: ${JWT_SECRET}
-    PUBLIC_APP_URL: ${KASAMA_PUBLIC_URL}
-    PUBLIC_API_URL: ${KASAMA_PUBLIC_URL}
+    PUBLIC_APP_URL: ${CASAMA_PUBLIC_URL}
+    PUBLIC_API_URL: ${CASAMA_PUBLIC_URL}
     # Pages (D-119) live on their own origin: a separate domain, or another port for trials.
-    PAGES_URL: ${KASAMA_PAGES_URL:-http://localhost:8790}
-    SUPERVISOR_URL: http://kasama-supervisor:8788
+    PAGES_URL: ${CASAMA_PAGES_URL:-http://localhost:8790}
+    SUPERVISOR_URL: http://casama-supervisor:8788
     SUPERVISOR_TOKEN: ${SUPERVISOR_TOKEN}
     INTERNAL_TOKEN: ${INTERNAL_TOKEN}
     API_INTERNAL_URL: http://api:8787
@@ -33,13 +33,13 @@ x-kasama: &kasama
     TELEMETRY: ${TELEMETRY:-off}
     INSTANCE_ADMIN_EMAILS: ${INSTANCE_ADMIN_EMAILS:-}
     RESEND_API_KEY: ${RESEND_API_KEY:-}
-    EMAIL_FROM: ${EMAIL_FROM:-Kasama <no-reply@localhost>}
+    EMAIL_FROM: ${EMAIL_FROM:-Casama <no-reply@localhost>}
     ERROR_REPORTING: ${ERROR_REPORTING:-auto}
     SENTRY_DSN: ${SENTRY_DSN:-}
     POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
-    KASAMA_CLOUD_URL: ${KASAMA_CLOUD_URL:-}
-    KASAMA_CLOUD_KEY: ${KASAMA_CLOUD_KEY:-}
-    KASAMA_LICENSE_KEY: ${KASAMA_LICENSE_KEY:-}
+    CASAMA_CLOUD_URL: ${CASAMA_CLOUD_URL:-}
+    CASAMA_CLOUD_KEY: ${CASAMA_CLOUD_KEY:-}
+    CASAMA_LICENSE_KEY: ${CASAMA_LICENSE_KEY:-}
     CHATGPT_SIGN_IN: ${CHATGPT_SIGN_IN:-auto}
     ABUSE_CONTROLS: ${ABUSE_CONTROLS:-auto}
     SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
@@ -122,13 +122,13 @@ services:
     environment:
       GOTRUE_API_HOST: 0.0.0.0
       GOTRUE_API_PORT: 9999
-      API_EXTERNAL_URL: ${KASAMA_PUBLIC_URL}
+      API_EXTERNAL_URL: ${CASAMA_PUBLIC_URL}
       GOTRUE_DB_DRIVER: postgres
       GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
-      GOTRUE_SITE_URL: ${KASAMA_PUBLIC_URL}
-      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-kasama://app/login-callback}
+      GOTRUE_SITE_URL: ${CASAMA_PUBLIC_URL}
+      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-casama://app/login-callback}
       GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
-      # Kasama's sign-up hook (abuse controls, D-094; the sign-up allowlist, D-145). Turn it on with
+      # Casama's sign-up hook (abuse controls, D-094; the sign-up allowlist, D-145). Turn it on with
       # SIGNUP_HOOK_ENABLED=true and the same AUTH_HOOK_SECRET ("v1,whsec_…") here and on the API.
       # Supabase Auth only calls https hooks (plain http only on localhost), so the hook goes through
       # the public address: install.sh sets SIGNUP_HOOK_URI to https://<domain>/hooks/auth/before-user-created.
@@ -147,16 +147,16 @@ services:
       GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
       # Continue with Apple and Google. Off until the credentials are set (see
       # docs-site/self-hosting/configuration.md). Apple's client id list is the Services ID first,
-      # then the app id com.kasama.app. The callback is the public /auth/v1/callback Kong serves;
+      # then the app id ai.casama.app. The callback is the public /auth/v1/callback Kong serves;
       # GoTrue's own default would be the site root, which Kong does not route.
       GOTRUE_EXTERNAL_APPLE_ENABLED: ${APPLE_AUTH_ENABLED:-false}
       GOTRUE_EXTERNAL_APPLE_CLIENT_ID: ${APPLE_AUTH_CLIENT_IDS:-}
       GOTRUE_EXTERNAL_APPLE_SECRET: ${APPLE_AUTH_SECRET:-}
-      GOTRUE_EXTERNAL_APPLE_REDIRECT_URI: ${KASAMA_PUBLIC_URL}/auth/v1/callback
+      GOTRUE_EXTERNAL_APPLE_REDIRECT_URI: ${CASAMA_PUBLIC_URL}/auth/v1/callback
       GOTRUE_EXTERNAL_GOOGLE_ENABLED: ${GOOGLE_AUTH_ENABLED:-false}
       GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${GOOGLE_AUTH_CLIENT_ID:-}
       GOTRUE_EXTERNAL_GOOGLE_SECRET: ${GOOGLE_AUTH_SECRET:-}
-      GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: ${KASAMA_PUBLIC_URL}/auth/v1/callback
+      GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: ${CASAMA_PUBLIC_URL}/auth/v1/callback
       GOTRUE_MAILER_AUTOCONFIRM: ${EMAIL_AUTOCONFIRM:-true}
       GOTRUE_SMTP_HOST: ${SMTP_HOST:-}
       GOTRUE_SMTP_PORT: ${SMTP_PORT:-587}
@@ -224,7 +224,7 @@ services:
     volumes:
       - ./selfhost/kong.yml:/home/kong/temp.yml:ro
 
-  # ---------------------------------------------------------------- Kasama
+  # ---------------------------------------------------------------- Casama
   migrate:
     image: public.ecr.aws/supabase/postgres:17.11.0.011
     networks: [internal]
@@ -239,21 +239,21 @@ services:
     restart: "no"
 
   api:
-    <<: *kasama
+    <<: *casama
     environment:
-      <<: *kasama-env
+      <<: *casama-env
       MODE: api
       PAGES_PORT: "8790"
     depends_on: { migrate: { condition: service_completed_successfully } }
 
   worker:
-    <<: *kasama
+    <<: *casama
     environment:
-      <<: *kasama-env
+      <<: *casama-env
       MODE: worker
       RUN_CONCURRENCY: ${RUN_CONCURRENCY:-20}
       # Least-privilege database role (D-095); empty falls back to DATABASE_URL.
-      WORKER_DATABASE_URL: ${WORKER_DB_PASSWORD:+postgres://kasama_worker:${WORKER_DB_PASSWORD}@db:5432/postgres}
+      WORKER_DATABASE_URL: ${WORKER_DB_PASSWORD:+postgres://casama_worker:${WORKER_DB_PASSWORD}@db:5432/postgres}
       # Push notifications: the Firebase service account JSON on one line (optional).
       FCM_SERVICE_ACCOUNT: ${FCM_SERVICE_ACCOUNT:-}
       APNS_KEY_P8: ${APNS_KEY_P8:-}
@@ -265,26 +265,26 @@ services:
 
   # The only service with Docker access. It joins each computer's private network to reach computerd.
   supervisor:
-    image: kasama/supervisor:${KASAMA_VERSION:-local}
+    image: casama/supervisor:${CASAMA_VERSION:-local}
     build:
       context: ../..
       dockerfile: apps/supervisor/Dockerfile
-    container_name: kasama-supervisor
+    container_name: casama-supervisor
     restart: unless-stopped
     networks: [internal]
     environment:
       SUPERVISOR_TOKEN: ${SUPERVISOR_TOKEN}
       COMPUTER_TOKEN_SECRET: ${COMPUTER_TOKEN_SECRET}
-      EGRESS_CONTAINER: kasama-egress
-      EGRESS_CONTROL_URL: http://kasama-egress:3129
+      EGRESS_CONTAINER: casama-egress
+      EGRESS_CONTROL_URL: http://casama-egress:3129
       EGRESS_CONTROL_TOKEN: ${EGRESS_CONTROL_TOKEN}
-      SUPERVISOR_CONTAINER: kasama-supervisor
-      COMPUTER_IMAGE_HEADLESS: kasama/computer-headless:${KASAMA_VERSION:-local}
-      COMPUTER_IMAGE_DESKTOP: kasama/computer-desktop:${KASAMA_VERSION:-local}
+      SUPERVISOR_CONTAINER: casama-supervisor
+      COMPUTER_IMAGE_HEADLESS: casama/computer-headless:${CASAMA_VERSION:-local}
+      COMPUTER_IMAGE_DESKTOP: casama/computer-desktop:${CASAMA_VERSION:-local}
       COMPUTER_MEMORY_MB: ${COMPUTER_MEMORY_MB:-2048}
       WARM_POOL_SIZE: ${WARM_POOL_SIZE:-0}
       OBJECT_STORE_DIR: /data/objects
-      TURN_CONTAINER: kasama-turn
+      TURN_CONTAINER: casama-turn
       TURN_SECRET: ${TURN_SECRET}
       TURN_PUBLIC_HOST: ${TURN_PUBLIC_HOST}
       SANDBOX_RUNTIME: ${SANDBOX_RUNTIME:-}
@@ -294,27 +294,27 @@ services:
 
   # The only route from computers to the internet; blocks private and metadata addresses.
   egress:
-    image: kasama/egress-proxy:${KASAMA_VERSION:-local}
+    image: casama/egress-proxy:${CASAMA_VERSION:-local}
     build:
       context: ../..
       dockerfile: infra/egress-proxy/Dockerfile
-    container_name: kasama-egress
+    container_name: casama-egress
     restart: unless-stopped
     networks: [internal, egress]
     environment:
       EGRESS_CONTROL_TOKEN: ${EGRESS_CONTROL_TOKEN}
-      # Abuse controls (D-094; Kasama Cloud): refuse mail and mining traffic and report it to the API.
+      # Abuse controls (D-094; Casama Cloud): refuse mail and mining traffic and report it to the API.
       EGRESS_ABUSE: ${EGRESS_ABUSE:-off}
       EGRESS_ABUSE_URL: http://api:8787/internal/abuse
       EGRESS_ABUSE_TOKEN: ${INTERNAL_TOKEN}
 
   # TURN relay for live view (D-055). Production also wants TLS on 5349 (turns:).
   turn:
-    image: kasama/turn:${KASAMA_VERSION:-local}
+    image: casama/turn:${CASAMA_VERSION:-local}
     build:
       context: ../..
       dockerfile: infra/turn/Dockerfile
-    container_name: kasama-turn
+    container_name: casama-turn
     restart: unless-stopped
     networks: [internal]
     environment:
@@ -329,8 +329,8 @@ services:
     networks: [internal]
     depends_on: [api, kong]
     environment:
-      KASAMA_SITE: ${KASAMA_SITE}
-      KASAMA_PAGES_SITE: ${KASAMA_PAGES_SITE:-:8790}
+      CASAMA_SITE: ${CASAMA_SITE}
+      CASAMA_PAGES_SITE: ${CASAMA_PAGES_SITE:-:8790}
     ports:
       - "${HTTP_PORT:-80}:80"
       - "${HTTPS_PORT:-443}:443"
@@ -341,7 +341,7 @@ services:
 
   # ---------------------------------------------------------------- optional
   web:
-    image: kasama/web:${KASAMA_VERSION:-local}
+    image: casama/web:${CASAMA_VERSION:-local}
     profiles: [web]
     build:
       context: ../..
@@ -351,12 +351,12 @@ services:
 
   s3:
     image: chrislusf/seaweedfs:4.53
-    container_name: kasama-s3
+    container_name: casama-s3
     profiles: [s3]
     entrypoint: ["/bin/sh", "-c"]
     command:
       - >-
-        printf '{"identities":[{"name":"kasama","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Read","Write","List","Admin"]}]}'
+        printf '{"identities":[{"name":"casama","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Read","Write","List","Admin"]}]}'
         "$$S3_ACCESS_KEY_ID" "$$S3_SECRET_ACCESS_KEY" > /tmp/s3.json
         && exec weed server -s3 -s3.config=/tmp/s3.json -dir=/data
     environment:
@@ -414,7 +414,7 @@ services:
     build:
       context: ../..
       dockerfile: infra/images/computer/Dockerfile.headless
-    image: kasama/computer-headless:${KASAMA_VERSION:-local}
+    image: casama/computer-headless:${CASAMA_VERSION:-local}
     profiles: [images]
 
   computer-desktop:
@@ -422,8 +422,8 @@ services:
       context: ../..
       dockerfile: infra/images/computer/Dockerfile.desktop
       args:
-        BASE: kasama/computer-headless:${KASAMA_VERSION:-local}
-    image: kasama/computer-desktop:${KASAMA_VERSION:-local}
+        BASE: casama/computer-headless:${CASAMA_VERSION:-local}
+    image: casama/computer-desktop:${CASAMA_VERSION:-local}
     profiles: [images]
 
 networks:

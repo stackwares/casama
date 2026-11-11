@@ -10,7 +10,7 @@
  * Twilio request shapes follow its public REST docs; tested against a local fake.
  */
 import { createHash, randomBytes } from "node:crypto";
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";

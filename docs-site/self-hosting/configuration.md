@@ -4,7 +4,7 @@ Every setting for a Compose install lives in one file: `infra/compose/.env`. The
 on the first run with generated secrets and a few defaults. This page lists every setting you can
 put there, grouped by topic, with its default and what it does.
 
-If you run Kasama with Helm or on a platform like Render or Railway, the same names apply as
+If you run Casama with Helm or on a platform like Render or Railway, the same names apply as
 environment variables on the API, worker and supervisor. See
 [Database and auth](#database-and-auth) for the ones Compose sets for you.
 
@@ -14,7 +14,7 @@ environment variables on the API, worker and supervisor. See
 2. Apply it:
 
    ```sh
-   kasama selfhost up
+   casama selfhost up
    ```
 
    Or, without the CLI:
@@ -23,12 +23,12 @@ environment variables on the API, worker and supervisor. See
    docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env up -d
    ```
 
-Compose recreates every service whose settings changed. All Kasama services read their settings
+Compose recreates every service whose settings changed. All Casama services read their settings
 only at start, so every change needs this step. `docker compose restart` is not enough: it restarts
 containers with their old settings.
 
 ::: tip Optional profiles
-`kasama selfhost up` doesn't name any Compose profiles. If you changed a setting for the web app or
+`casama selfhost up` doesn't name any Compose profiles. If you changed a setting for the web app or
 monitoring, add the profile: `docker compose ... --profile monitoring up -d`. Docker Compose also
 reads `COMPOSE_PROFILES` from the env file, so `COMPOSE_PROFILES=monitoring,web` in `.env` keeps
 them on for every command.
@@ -41,44 +41,44 @@ listed under [Advanced settings](#advanced-settings), with how to add them.
 
 | Name                     | Default                         | What it does                                                                                                                          |
 | ------------------------ | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `KASAMA_SITE`            | Set by the installer            | What Caddy serves: a domain (`kasama.example.com`, automatic HTTPS) or `:80` (plain HTTP, for `--local` or behind another proxy).      |
-| `KASAMA_PUBLIC_URL`      | Set by the installer            | The public address, for example `https://kasama.example.com`. Used as the API, app and Supabase address and for Auth redirects.       |
+| `CASAMA_SITE`            | Set by the installer            | What Caddy serves: a domain (`casama.example.com`, automatic HTTPS) or `:80` (plain HTTP, for `--local` or behind another proxy).      |
+| `CASAMA_PUBLIC_URL`      | Set by the installer            | The public address, for example `https://casama.example.com`. Used as the API, app and Supabase address and for Auth redirects.       |
 | `HTTP_PORT`              | `80`                            | Host port Caddy listens on for HTTP.                                                                                                  |
 | `HTTPS_PORT`             | `443`                           | Host port Caddy listens on for HTTPS.                                                                                                 |
-| `KASAMA_PAGES_SITE`      | `:8790`                         | What Caddy serves Pages on: a domain of its own (`pages.example.com`, automatic HTTPS) or a port.                                     |
-| `KASAMA_PAGES_URL`       | `http://localhost:8790`         | The public address of Pages, used in links to bots' pages. Set it to match `KASAMA_PAGES_SITE`.                                        |
+| `CASAMA_PAGES_SITE`      | `:8790`                         | What Caddy serves Pages on: a domain of its own (`pages.example.com`, automatic HTTPS) or a port.                                     |
+| `CASAMA_PAGES_URL`       | `http://localhost:8790`         | The public address of Pages, used in links to bots' pages. Set it to match `CASAMA_PAGES_SITE`.                                        |
 | `PAGES_PORT`             | `8790`                          | Host port Caddy publishes for Pages.                                                                                                  |
 | `CORS_ORIGINS`           | (empty)                         | Extra comma-separated web origins allowed to call the API from a browser. The public address is always allowed.                       |
 | `RATE_LIMIT_PER_MINUTE`  | `120`                           | Requests per minute on the API and webhooks, per signed-in user or else per IP address. Cloud Connect endpoints get ten times as much. |
 | `UPDATE_CHECK_URL`       | (empty: no update checks)       | Where the admin console checks for new releases, in the shape of GitHub's latest-release API.                                         |
-| `KASAMA_VERSION`         | `local`                         | The tag of the Kasama images Compose builds and runs.                                                                                 |
+| `CASAMA_VERSION`         | `local`                         | The tag of the Casama images Compose builds and runs.                                                                                 |
 
 **Pages on their own domain.** Bots' web pages are served from a separate origin so a page's
-scripts never share an origin with Kasama. On a public server, give them their own name:
+scripts never share an origin with Casama. On a public server, give them their own name:
 
 ```sh
-KASAMA_PAGES_SITE=pages.kasama.example.com
-KASAMA_PAGES_URL=https://pages.kasama.example.com
+CASAMA_PAGES_SITE=pages.casama.example.com
+CASAMA_PAGES_URL=https://pages.casama.example.com
 ```
 
 Point the name's DNS at the server; Caddy gets its certificate automatically.
 
 **Change the address after installing.** Re-running the installer doesn't change the address. Edit
-these together, then run `kasama selfhost up`:
+these together, then run `casama selfhost up`:
 
 ```sh
-KASAMA_SITE=kasama.example.com
-KASAMA_PUBLIC_URL=https://kasama.example.com
-TURN_PUBLIC_HOST=kasama.example.com
-SIGNUP_HOOK_URI=https://kasama.example.com/hooks/auth/before-user-created
+CASAMA_SITE=casama.example.com
+CASAMA_PUBLIC_URL=https://casama.example.com
+TURN_PUBLIC_HOST=casama.example.com
+SIGNUP_HOOK_URI=https://casama.example.com/hooks/auth/before-user-created
 ```
 
 ### Behind another proxy
 
 If a load balancer or another reverse proxy terminates TLS:
 
-1. Set `KASAMA_SITE=:80` so Caddy serves plain HTTP.
-2. Keep `KASAMA_PUBLIC_URL` on the public `https://` address.
+1. Set `CASAMA_SITE=:80` so Caddy serves plain HTTP.
+2. Keep `CASAMA_PUBLIC_URL` on the public `https://` address.
 3. Route your proxy to Caddy's HTTP port (`HTTP_PORT`), including WebSocket upgrades.
 4. Keep port 3478 (UDP and TCP) reachable directly for live view: an HTTP proxy can't carry TURN.
 
@@ -90,18 +90,18 @@ table says it's safe: several are baked into the database or into each other.
 | Name                     | What it is                                                                     | Safe to change?                                                        |
 | ------------------------ | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
 | `POSTGRES_PASSWORD`      | Password for Postgres and the Supabase service roles                           | No. Postgres keeps the password it was first started with.              |
-| `WORKER_DB_PASSWORD`     | Password for `kasama_worker`, the worker's least-privilege database role       | Yes. The `migrate` service sets it again at every start.                |
+| `WORKER_DB_PASSWORD`     | Password for `casama_worker`, the worker's least-privilege database role       | Yes. The `migrate` service sets it again at every start.                |
 | `JWT_SECRET`             | Signs Supabase tokens                                                          | No. `ANON_KEY` and `SERVICE_ROLE_KEY` are signed with it.               |
 | `ANON_KEY`               | Supabase anon key (a JWT)                                                      | No                                                                     |
 | `SERVICE_ROLE_KEY`       | Supabase service role key (a JWT)                                              | No                                                                     |
 | `SECRET_KEY_BASE`        | Supabase Realtime's secret                                                     | No                                                                     |
 | `REALTIME_ENC_KEY`       | Supabase Realtime's encryption key                                             | No                                                                     |
 | `SAML_PRIVATE_KEY`       | Supabase Auth's SAML signing key (RSA, PKCS#1, base64 DER)                     | No                                                                     |
-| `SUPERVISOR_TOKEN`       | The API and worker's token for the supervisor (16+ characters)                 | Yes, with a full `kasama selfhost up`                                   |
+| `SUPERVISOR_TOKEN`       | The API and worker's token for the supervisor (16+ characters)                 | Yes, with a full `casama selfhost up`                                   |
 | `COMPUTER_TOKEN_SECRET`  | Derives each computer's own tokens                                             | No. Existing computers would stop answering.                            |
-| `EGRESS_CONTROL_TOKEN`   | The supervisor's token for the egress proxy's control API                      | Yes, with a full `kasama selfhost up`                                   |
-| `INTERNAL_TOKEN`         | Shared secret for the API's internal endpoints (32+ characters)                | Yes, with a full `kasama selfhost up`                                   |
-| `TURN_SECRET`            | coturn's shared secret for short-lived live view credentials (16+ characters)   | Yes, with a full `kasama selfhost up`                                   |
+| `EGRESS_CONTROL_TOKEN`   | The supervisor's token for the egress proxy's control API                      | Yes, with a full `casama selfhost up`                                   |
+| `INTERNAL_TOKEN`         | Shared secret for the API's internal endpoints (32+ characters)                | Yes, with a full `casama selfhost up`                                   |
+| `TURN_SECRET`            | coturn's shared secret for short-lived live view credentials (16+ characters)   | Yes, with a full `casama selfhost up`                                   |
 | `METRICS_TOKEN`          | Bearer token for `/metrics` (16+ characters)                                   | Yes. Prometheus picks it up when it restarts.                           |
 | `GRAFANA_ADMIN_PASSWORD` | Grafana's `admin` password (monitoring profile)                                | Only before Grafana's first start; afterwards change it in Grafana.     |
 
@@ -116,40 +116,40 @@ Helm, a platform like Render, or a custom setup.
 | `PORT`                      | `8787`                        | The API's HTTP port.                                                                                          |
 | `NODE_ENV`                  | `development`                 | Set `production` in production (Compose does).                                                                |
 | `DATABASE_URL`              | Required                      | Postgres URL with full access, for the API.                                                                    |
-| `WORKER_DATABASE_URL`       | Falls back to `DATABASE_URL`  | The worker's least-privilege URL (`kasama_worker`). Compose builds it from `WORKER_DB_PASSWORD`.               |
-| `SUPABASE_URL`              | Required                      | Supabase's public address. Compose uses `KASAMA_PUBLIC_URL`, since Caddy routes `/auth/v1` and friends.        |
+| `WORKER_DATABASE_URL`       | Falls back to `DATABASE_URL`  | The worker's least-privilege URL (`casama_worker`). Compose builds it from `WORKER_DB_PASSWORD`.               |
+| `SUPABASE_URL`              | Required                      | Supabase's public address. Compose uses `CASAMA_PUBLIC_URL`, since Caddy routes `/auth/v1` and friends.        |
 | `SUPABASE_ANON_KEY`         | Required                      | Supabase anon key. The apps get it from the server.                                                            |
 | `SUPABASE_JWT_SECRET`       | (empty: verify with JWKS)     | Supabase's HS256 secret. When unset, tokens are checked against the project's JWKS.                           |
 | `SUPABASE_SERVICE_ROLE_KEY` | (empty)                       | Needed for SAML SSO administration.                                                                            |
 | `PUBLIC_APP_URL`            | `http://localhost:3000`       | The app's public address. Always allowed by CORS.                                                              |
 | `PUBLIC_API_URL`            | The request's origin          | The API's public address, used in OAuth redirects, phone call webhooks and live view.                          |
-| `PAGES_URL`                 | `http://localhost:8790`       | Public address of Pages. Compose sets it from `KASAMA_PAGES_URL`.                                              |
+| `PAGES_URL`                 | `http://localhost:8790`       | Public address of Pages. Compose sets it from `CASAMA_PAGES_URL`.                                              |
 | `PAGES_PORT`                | (unset: Pages not served)     | Port the API process serves Pages on. Compose uses `8790` inside the stack.                                    |
 | `API_INTERNAL_URL`          | `http://127.0.0.1:$PORT`      | How the worker reaches the API's internal endpoints.                                                           |
 | `INTERNAL_TOKEN`            | Derived from `DATABASE_URL`   | Shared secret for internal endpoints. Always set a random value; the server warns in production without one.  |
-| `SUPERVISOR_URL`            | (unset: no computers)         | The sandbox supervisor's address. Compose uses `http://kasama-supervisor:8788`.                               |
+| `SUPERVISOR_URL`            | (unset: no computers)         | The sandbox supervisor's address. Compose uses `http://casama-supervisor:8788`.                               |
 | `SUPERVISOR_TOKEN`          | (unset)                       | Token for the supervisor.                                                                                      |
 
 ## Invite links
 
 Invite links are `<PUBLIC_APP_URL>/join/<token>`. With the web app running, it shows the invite;
-without it, Caddy sends `/join/*` to a small page from the API with **Open in Kasama**. To have
+without it, Caddy sends `/join/*` to a small page from the API with **Open in Casama**. To have
 links open the installed apps directly, publish the app-link files:
 
 | Name                  | Default            | What it does                                                                                     |
 | --------------------- | ------------------ | ------------------------------------------------------------------------------------------------ |
-| `APPLE_APP_IDS`       | (empty: no file)   | iOS app ids (`TEAMID.com.kasama.app`, comma-separated) for `/.well-known/apple-app-site-association`. |
-| `ANDROID_APP_PACKAGE` | `com.kasama.app`   | Android package for `/.well-known/assetlinks.json`.                                              |
+| `APPLE_APP_IDS`       | (empty: no file)   | iOS app ids (`TEAMID.ai.casama.app`, comma-separated) for `/.well-known/apple-app-site-association`. |
+| `ANDROID_APP_PACKAGE` | `ai.casama.app`   | Android package for `/.well-known/assetlinks.json`.                                              |
 | `ANDROID_CERT_SHA256` | (empty: no file)   | SHA-256 fingerprints of the Android signing certificates, comma-separated.                       |
 | `APP_STORE_URL`       | (empty)            | App Store page linked from the invite page.                                                      |
 | `PLAY_STORE_URL`      | (empty)            | Google Play page linked from the invite page.                                                    |
 
 The apps only claim links for a domain built into them, so on your own domain links open the
-invite page, whose **Open in Kasama** button opens the app and points it at your server.
+invite page, whose **Open in Casama** button opens the app and points it at your server.
 
 ## Email
 
-Supabase Auth sends sign-in links, confirmations and password resets through SMTP. Kasama itself
+Supabase Auth sends sign-in links, confirmations and password resets through SMTP. Casama itself
 sends invites through Resend.
 
 | Name                | Default                        | What it does                                                                                          |
@@ -161,16 +161,16 @@ sends invites through Resend.
 | `SMTP_ADMIN_EMAIL`  | (empty)                        | The address Auth emails come from.                                                                    |
 | `EMAIL_AUTOCONFIRM` | `true`                         | Confirm new accounts without an email. Set `false` once SMTP works.                                   |
 | `RESEND_API_KEY`    | (empty)                        | Resend key for invite emails. Without it, an invite returns a code for the inviter to share.          |
-| `EMAIL_FROM`        | `Kasama <no-reply@localhost>`  | Sender for Kasama's own emails.                                                                       |
+| `EMAIL_FROM`        | `Casama <no-reply@localhost>`  | Sender for Casama's own emails.                                                                       |
 
 To turn on email confirmation and sign-in links:
 
 ```sh
 SMTP_HOST=smtp.example.com
 SMTP_PORT=587
-SMTP_USER=kasama@example.com
+SMTP_USER=casama@example.com
 SMTP_PASS=your-smtp-password
-SMTP_ADMIN_EMAIL=kasama@example.com
+SMTP_ADMIN_EMAIL=casama@example.com
 EMAIL_AUTOCONFIRM=false
 ```
 
@@ -181,12 +181,12 @@ EMAIL_AUTOCONFIRM=false
 | `INSTANCE_ADMIN_EMAILS`  | (empty: the first account)       | Comma-separated emails of instance owners, who get the admin console.                                                                    |
 | `DISABLE_SIGNUP`         | `false`                          | `true` turns off new sign-ups in Supabase Auth.                                                                                          |
 | `SIGNUP_ALLOWED_EMAILS`  | (empty: anyone)                  | Only these emails or domains can sign up, comma-separated: `ana@example.com,@example.org` (`example.org` also works for a domain).       |
-| `SIGNUP_HOOK_ENABLED`    | `false`                          | `true` makes Supabase Auth call Kasama's sign-up hook. Needed for the allowlist.                                                         |
+| `SIGNUP_HOOK_ENABLED`    | `false`                          | `true` makes Supabase Auth call Casama's sign-up hook. Needed for the allowlist.                                                         |
 | `AUTH_HOOK_SECRET`       | (empty)                          | The hook's signing secret, `v1,whsec_<base64>`. Shared by Auth and the API.                                                              |
 | `SIGNUP_HOOK_URI`        | Set by the installer             | Where Auth calls the hook: `https://<domain>/hooks/auth/before-user-created`. Empty for `--local`.                                       |
-| `ADDITIONAL_REDIRECT_URLS` | `kasama://app/login-callback`  | Redirect URLs Supabase Auth accepts after sign-in, comma-separated. Keep the default for the apps.                                       |
+| `ADDITIONAL_REDIRECT_URLS` | `casama://app/login-callback`  | Redirect URLs Supabase Auth accepts after sign-in, comma-separated. Keep the default for the apps.                                       |
 | `SAML_ENABLED`           | `true`                           | SAML SSO in Supabase Auth. Workspaces register their identity provider through the API (needs an enterprise license).                    |
-| `ABUSE_CONTROLS`         | `auto` (off when self-hosted)    | `auto`, `on` or `off`. Sign-up proofs, verified email before computers start, and suspension on egress abuse. Meant for Kasama Cloud.    |
+| `ABUSE_CONTROLS`         | `auto` (off when self-hosted)    | `auto`, `on` or `off`. Sign-up proofs, verified email before computers start, and suspension on egress abuse. Meant for Casama Cloud.    |
 | `EGRESS_ABUSE`           | `off`                            | `on` makes the egress proxy refuse mail and crypto-mining traffic from computers and report it.                                          |
 
 To limit sign-ups to your team (needs a `--domain` install, because Supabase Auth only calls https
@@ -206,7 +206,7 @@ hooks):
    AUTH_HOOK_SECRET=v1,whsec_...
    ```
 
-3. Run `kasama selfhost up`.
+3. Run `casama selfhost up`.
 
 The allowlist applies to every sign-in method, Google and Apple included. Others see "limited to
 approved email addresses". An allowlist without a hook secret refuses every sign-up rather than
@@ -221,13 +221,13 @@ Auth from starting, even with the hook turned off.
 
 The sign-in screen offers **Continue with Apple** and **Continue with Google**. A new server has
 both turned off, so people sign in with email until you set these. They are the accounts people
-use to enter Kasama. A Google client for Gmail, Calendar and Drive is a different setup, under
+use to enter Casama. A Google client for Gmail, Calendar and Drive is a different setup, under
 [Integrations](#integrations) below.
 
 | Name                     | Default | What it does                                                                                                                                                          |
 | ------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `APPLE_AUTH_ENABLED`     | `false` | `true` turns on Continue with Apple.                                                                                                                                  |
-| `APPLE_AUTH_CLIENT_IDS`  | (empty) | Comma-separated. The Services ID first, then the app id `com.kasama.app`. The first is the browser flow. The app id is the system sheet on iPhone and Mac.           |
+| `APPLE_AUTH_CLIENT_IDS`  | (empty) | Comma-separated. The Services ID first, then the app id `ai.casama.app`. The first is the browser flow. The app id is the system sheet on iPhone and Mac.           |
 | `APPLE_AUTH_SECRET`      | (empty) | Apple's client secret, a signed token. It expires within six months. Make a new one from the same key before it does, or browser sign-in starts failing.             |
 | `GOOGLE_AUTH_ENABLED`    | `false` | `true` turns on Continue with Google.                                                                                                                                 |
 | `GOOGLE_AUTH_CLIENT_ID`  | (empty) | The web client id from Google Cloud.                                                                                                                                  |
@@ -237,22 +237,22 @@ Apple and Google both send people back to `https://<your domain>/auth/v1/callbac
 exact address. On Apple it is the return URL of the Services ID. On Google it is an authorized
 redirect URI of the web client.
 
-1. In the Apple Developer account, turn on Sign in with Apple for the app id `com.kasama.app`.
+1. In the Apple Developer account, turn on Sign in with Apple for the app id `ai.casama.app`.
    Create a Services ID and a key. Put the Services ID first in `APPLE_AUTH_CLIENT_IDS`, then
-   `com.kasama.app`.
+   `ai.casama.app`.
 2. In Google Cloud, create a web OAuth client (not an iOS or Android client) and copy its id and
    secret.
-3. Add the values to `infra/compose/.env` and run `kasama selfhost up`.
+3. Add the values to `infra/compose/.env` and run `casama selfhost up`.
 
-iPhone and Mac use Apple's system sheet, so they need `com.kasama.app` in the client id list.
+iPhone and Mac use Apple's system sheet, so they need `ai.casama.app` in the client id list.
 Android, Windows, Linux and the web open the browser, which is what the secret is for. Keep
-`kasama://app/login-callback` in `ADDITIONAL_REDIRECT_URLS`. If the web app is served from another
+`casama://app/login-callback` in `ADDITIONAL_REDIRECT_URLS`. If the web app is served from another
 address, add that address too.
 
 ## Models and AI Gateway
 
 People add their own model keys in the app (Settings → Model keys) or with
-`kasama credential add`. Any OpenAI-compatible endpoint works, including a local Ollama. These
+`casama credential add`. Any OpenAI-compatible endpoint works, including a local Ollama. These
 settings change server-wide defaults.
 
 | Name                        | Default            | What it does                                                                                                                     |
@@ -274,7 +274,7 @@ the gateway, for caching, logs and rate limits. A credential with its own base U
 the address the worker container can reach. On Docker Desktop that's `host.docker.internal`:
 
 ```sh
-kasama credential add --provider openai_compatible --base-url http://host.docker.internal:11434/v1
+casama credential add --provider openai_compatible --base-url http://host.docker.internal:11434/v1
 ```
 
 On Linux, use the host's LAN address instead (for example `http://192.168.1.20:11434/v1`).
@@ -293,7 +293,7 @@ supervisor reads these settings:
 | `OBJECT_STORE`          | (filesystem)           | `s3` to use S3-compatible storage.                                   |
 | `OBJECT_STORE_DIR`      | `/data/objects`        | Folder for the filesystem store.                                     |
 | `S3_BUCKET`             | Required with `s3`     | Bucket name.                                                         |
-| `S3_ENDPOINT`           | (AWS)                  | Endpoint, for example `http://kasama-s3:8333` or `https://<account>.r2.cloudflarestorage.com`. |
+| `S3_ENDPOINT`           | (AWS)                  | Endpoint, for example `http://casama-s3:8333` or `https://<account>.r2.cloudflarestorage.com`. |
 | `S3_REGION`             | (empty)                | Region, for example `auto` for R2.                                   |
 | `S3_ACCESS_KEY_ID`      | (empty)                | Access key. The `s3` profile also creates SeaweedFS's user with it.  |
 | `S3_SECRET_ACCESS_KEY`  | (empty)                | Secret key.                                                          |
@@ -312,15 +312,15 @@ With SeaweedFS on the same host:
 
 ```sh
 # infra/compose/.env
-S3_ACCESS_KEY_ID=kasama
+S3_ACCESS_KEY_ID=casama
 S3_SECRET_ACCESS_KEY=a-long-random-secret
 ```
 
 ```yaml
 # infra/compose/docker-compose.yml, under services.supervisor.environment
 OBJECT_STORE: s3
-S3_ENDPOINT: http://kasama-s3:8333
-S3_BUCKET: kasama
+S3_ENDPOINT: http://casama-s3:8333
+S3_BUCKET: casama
 S3_CREATE_BUCKET: "true"
 S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
 S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
@@ -332,7 +332,7 @@ Then start it with the profile:
 docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env --profile s3 up -d
 ```
 
-`kasama selfhost backup` archives the `objects` volume only. With S3, back up the bucket with your
+`casama selfhost backup` archives the `objects` volume only. With S3, back up the bucket with your
 storage provider's tools.
 
 ## Computers and sandbox
@@ -361,7 +361,7 @@ link-local (cloud metadata), CGNAT, multicast and reserved addresses for compute
 ## Voice and phone calls
 
 Phone calls through a workspace's own Twilio account need a public `https://` address, because
-Twilio calls back to `PUBLIC_API_URL` (Compose sets it to `KASAMA_PUBLIC_URL`). See
+Twilio calls back to `PUBLIC_API_URL` (Compose sets it to `CASAMA_PUBLIC_URL`). See
 [Voice](/guide/voice).
 
 To ring iPhones for calls through PushKit, the worker needs an APNs token key for the app's bundle:
@@ -391,26 +391,26 @@ the in-app inbox still shows every notification.
 | `COMPOSIO_API_KEY`            | (empty)   | A server-wide Composio key that enables Composio's managed sign-in for inbox apps such as Gmail.                                                                |
 | `UNSPLASH_ACCESS_KEY`         | (empty)   | Wallpaper photo search in Appearance. Without it, the app offers its own patterns and photos.                                                                   |
 
-Register `https://kasama.example.com/oauth/callback` as the redirect URI in each OAuth app. See
+Register `https://casama.example.com/oauth/callback` as the redirect URI in each OAuth app. See
 [Connections](/guide/connections).
 
 ## Billing
 
-Billing is for Kasama Cloud. The bundled compose file sets `BILLING_ENABLED=false` for the API and
+Billing is for Casama Cloud. The bundled compose file sets `BILLING_ENABLED=false` for the API and
 worker, so there's no paywall and no usage limit, and none of the payment settings apply. Settings
 that switch on with billing (`ABUSE_CONTROLS=auto`, `HEALTH_REQUIRES_ENCRYPTION=auto`) stay off.
 
 ## Cloud Connect
 
-Cloud Connect lets your server run computers on Kasama Cloud and use its model credits, billed to a
-Kasama Cloud workspace. See [Cloud Connect](/guide/cloud-connect).
+Cloud Connect lets your server run computers on Casama Cloud and use its model credits, billed to a
+Casama Cloud workspace. See [Cloud Connect](/guide/cloud-connect).
 
 | Name                | Default   | What it does                                                                 |
 | ------------------- | --------- | ---------------------------------------------------------------------------- |
-| `KASAMA_CLOUD_URL`  | (empty)   | Kasama Cloud's address.                                                      |
-| `KASAMA_CLOUD_KEY`  | (empty)   | A Cloud Connect key (`kcc_...`) created by a Kasama Cloud workspace admin.   |
+| `CASAMA_CLOUD_URL`  | (empty)   | Casama Cloud's address.                                                      |
+| `CASAMA_CLOUD_KEY`  | (empty)   | A Cloud Connect key (`kcc_...`) created by a Casama Cloud workspace admin.   |
 
-With both set, the `kasama-cloud` computer provider is available. For model credits, a workspace
+With both set, the `casama-cloud` computer provider is available. For model credits, a workspace
 adds an OpenRouter credential whose base URL is `<cloud>/connect/v1/models` and whose key is the
 Cloud Connect key.
 
@@ -419,7 +419,7 @@ Cloud Connect key.
 | Name                           | Default                                   | What it does                                                                                                         |
 | ------------------------------ | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `TELEMETRY`                    | `off`                                     | `on` sends anonymous counts once a week (see below).                                                                 |
-| `TELEMETRY_URL`                | `https://telemetry.kasama.dev/v1/ping`    | Where telemetry goes.                                                                                                |
+| `TELEMETRY_URL`                | `https://telemetry.casama.ai/v1/ping`    | Where telemetry goes.                                                                                                |
 | `ERROR_REPORTING`              | `auto`                                    | `auto` (Sentry if `SENTRY_DSN` is set, else PostHog if `POSTHOG_API_KEY` is set, else nothing), `sentry`, `posthog` or `none`. |
 | `SENTRY_DSN`                   | (empty)                                   | A Sentry-protocol DSN: sentry.io, self-hosted Sentry or GlitchTip.                                                   |
 | `POSTHOG_API_KEY`              | (empty)                                   | PostHog project key for error reports.                                                                               |
@@ -430,7 +430,7 @@ Cloud Connect key.
 | `METRICS_TOKEN`                | Generated                                 | Bearer token for Prometheus metrics at `/metrics`. Without it, `/metrics` is off in production.                     |
 
 **Telemetry** is off unless you turn it on. With `TELEMETRY=on`, the worker sends once a week a
-random instance id, the Kasama version and two numbers: bots and users active in the last 7 days.
+random instance id, the Casama version and two numbers: bots and users active in the last 7 days.
 Nothing else: no names, emails, content, keys or addresses.
 
 **Error reports** are scrubbed before they leave: request bodies, headers, cookies and users are
@@ -440,7 +440,7 @@ dropped, and secret-looking values and emails are redacted.
 
 Bots' named secrets live in Supabase Vault in your database by default. A workspace admin can keep
 them in Infisical instead, under workspace settings → **Where secrets are kept**, with a machine
-identity's client id and secret. There's no server setting for it. Kasama's other credentials
+identity's client id and secret. There's no server setting for it. Casama's other credentials
 (model keys, connection tokens) stay in Vault either way.
 
 ## Encryption keys
@@ -469,11 +469,11 @@ Without the key, encrypted content can't be read. Keep a copy somewhere other th
 1. Generate a new key with `openssl rand -base64 32`.
 2. Move the current value to `CONTENT_ENCRYPTION_KEY_PREVIOUS` and put the new key in
    `CONTENT_ENCRYPTION_KEY`.
-3. Run `kasama selfhost up`.
+3. Run `casama selfhost up`.
 4. Wait at least an hour. The worker's hourly maintenance rewraps every workspace key that still
    uses the old server key. Owners can also rotate their workspace right away under workspace
    settings.
-5. Remove `CONTENT_ENCRYPTION_KEY_PREVIOUS` and run `kasama selfhost up` again.
+5. Remove `CONTENT_ENCRYPTION_KEY_PREVIOUS` and run `casama selfhost up` again.
 
 Rotation rewraps workspace keys; it doesn't rewrite rows. Search can't look inside sealed text:
 memory and knowledge search use embeddings only, which stay unencrypted.
@@ -482,7 +482,7 @@ memory and knowledge search use embeddings only, which stay unencrypted.
 
 | Name                 | Default   | What it does                                                                                     |
 | -------------------- | --------- | ------------------------------------------------------------------------------------------------ |
-| `KASAMA_LICENSE_KEY` | (empty)   | A Kasama Enterprise license key. Unlocks SAML SSO, audit log export and audit-log forwarding.    |
+| `CASAMA_LICENSE_KEY` | (empty)   | A Casama Enterprise license key. Unlocks SAML SSO, audit log export and audit-log forwarding.    |
 
 Everything outside the `ee/` folder works without a license. See
 [Audit-log forwarding](/self-hosting/operations#audit-log-forwarding).
@@ -502,17 +502,17 @@ events are kept for each workspace's retention setting (default 180 days). See
 The server and supervisor read these, but the bundled compose file doesn't pass them through. On
 Helm, set them with `extraEnv`; on a platform, as environment variables. With Compose, add them to
 the service's `environment:` in `infra/compose/docker-compose.yml`. The API and worker share the
-`x-kasama` block at the top:
+`x-casama` block at the top:
 
 ```yaml
-x-kasama: &kasama
+x-casama: &casama
   # ...
-  environment: &kasama-env
+  environment: &casama-env
     # ...
     LOG_LEVEL: ${LOG_LEVEL:-info}
 ```
 
-Then set the value in `.env` and run `kasama selfhost up`. Keep your edit when you upgrade: `git
+Then set the value in `.env` and run `casama selfhost up`. Keep your edit when you upgrade: `git
 pull` refuses to overwrite a changed file, so commit it on a local branch or re-apply it.
 
 **API and worker:**
@@ -528,7 +528,7 @@ pull` refuses to overwrite a changed file, so commit it on a local branch or re-
 | `TURN_PORT`                | `3478`              | The TURN port given to viewers.                                                               |
 | `TURN_TLS_PORT`            | (empty)             | Also offer a `turns:` address on this port. The bundled relay doesn't serve TLS.              |
 | `CONTENT_KMS_ENDPOINT`     | (AWS's)             | A custom KMS endpoint, for example a VPC endpoint.                                            |
-| `APNS_VOIP_TOPIC`          | `com.kasama.app.voip` | The app's VoIP push topic.                                                                  |
+| `APNS_VOIP_TOPIC`          | `ai.casama.app.voip` | The app's VoIP push topic.                                                                  |
 | `GEMINI_LIVE_MODEL`        | `gemini-3.8-live`   | The Gemini Live model for live and phone calls (used when a workspace has a Google AI key).   |
 
 **Supervisor:**

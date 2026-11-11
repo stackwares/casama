@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../features/voice/phone_calls.dart' show kasamaBackgroundMessage;
+import '../features/voice/phone_calls.dart' show casamaBackgroundMessage;
 import 'backend.dart';
 import 'providers.dart';
 import 'router.dart';
@@ -93,7 +93,7 @@ class PushRegistrar {
     try {
       if (Firebase.apps.isEmpty) await Firebase.initializeApp(options: PushConfig.options);
       // Phone calls (D-135): on Android a call push rings even when the app is closed.
-      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) FirebaseMessaging.onBackgroundMessage(kasamaBackgroundMessage);
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) FirebaseMessaging.onBackgroundMessage(casamaBackgroundMessage);
       final messaging = FirebaseMessaging.instance;
       final status = (await messaging.getNotificationSettings()).authorizationStatus;
       if (status == AuthorizationStatus.authorized || status == AuthorizationStatus.provisional) {

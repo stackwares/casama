@@ -1,5 +1,5 @@
 {
-  "name": "kasama",
+  "name": "casama",
   "private": true,
   "license": "Apache-2.0",
   "packageManager": "pnpm@12.18.0",
@@ -13,7 +13,7 @@
     "format": "biome format --write .",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "gen": "pnpm --filter @kasama/contracts gen && pnpm --filter @kasama/contracts gen:dart"
+    "gen": "pnpm --filter @casama/contracts gen && pnpm --filter @casama/contracts gen:dart"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.6",

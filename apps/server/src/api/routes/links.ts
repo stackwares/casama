@@ -1,20 +1,20 @@
 /**
- * Linked agents (D-143), the API side: invites, accepting (on this server, or on another Kasama
+ * Linked agents (D-143), the API side: invites, accepting (on this server, or on another Casama
  * server through a token handshake), listing, revoking, and each link's exchanges. Requests between
  * servers arrive at the A2A endpoint with the link's token (routes/a2a.ts).
  */
 import { createHash, randomBytes } from "node:crypto";
+import { hashLinkToken, newLinkToken } from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { hashLinkToken, newLinkToken } from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
 
 const hashCode = (c: string) => createHash("sha256").update(c).digest("hex");
-const INVITE_PREFIX = "kasama-link:";
+const INVITE_PREFIX = "casama-link:";
 
 type Row = {
   id: string;
@@ -126,7 +126,7 @@ export function registerLinkRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       );
       if (!/^[0-9a-f-]{36}$/.test(inv.l) || typeof inv.c !== "string") throw new Error();
     } catch {
-      throw new ApiError(400, "bad_invite", "That isn't a Kasama link invite");
+      throw new ApiError(400, "bad_invite", "That isn't a Casama link invite");
     }
     const [local] = await db.execute<{ bot_id: string }>(
       sql`select bot_id from public.bot_links where id = ${inv.l}::uuid`,
@@ -151,7 +151,7 @@ export function registerLinkRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       );
       return c.json(out((await one(mine?.id as string)) as Row), 201);
     }
-    // Another Kasama server: swap per-link tokens; requests then go over A2A.
+    // Another Casama server: swap per-link tokens; requests then go over A2A.
     const inbound = newLinkToken();
     const [mine] = await db.execute<{ id: string }>(sql`
       insert into public.bot_links (org_id, bot_id, owner_user_id, name, peer_link_id, peer_bot_name, remote_url, inbound_token_hash)
@@ -178,7 +178,7 @@ export function registerLinkRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         "invite_used",
         res
           ? "This invite was already used or has expired"
-          : "Couldn't reach your contact's Kasama server",
+          : "Couldn't reach your contact's Casama server",
       );
     }
     const r = (await res.json()) as { token: string; bot_id: string; bot_name: string };
@@ -189,7 +189,7 @@ export function registerLinkRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return c.json(out((await one(mine?.id as string)) as Row), 201);
   });
 
-  // Server to server: the other Kasama server accepts our invite.
+  // Server to server: the other Casama server accepts our invite.
   app.post("/links/:id/accept", async (c) => {
     const id = c.req.param("id");
     const b = (await c.req.json().catch(() => null)) as {

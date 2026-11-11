@@ -3,7 +3,7 @@ import { createHmac } from "node:crypto";
 import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { forwardAuditLogs } from "@kasama/ee";
+import { forwardAuditLogs } from "@casama/ee";
 import { exportPKCS8, exportSPKI, generateKeyPair, importPKCS8, SignJWT } from "jose";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
@@ -34,12 +34,12 @@ beforeAll(async () => {
   const { publicKey, privateKey } = await generateKeyPair("EdDSA", { extractable: true });
   const license = await new SignJWT({ features: ["audit_forwarding"], seats: 5 })
     .setProtectedHeader({ alg: "EdDSA" })
-    .setIssuer("kasama-licensing")
+    .setIssuer("casama-licensing")
     .setSubject("Acme")
     .setExpirationTime("30d")
     .sign(await importPKCS8(await exportPKCS8(privateKey), "EdDSA"));
   h = await startHarness({
-    env: { KASAMA_LICENSE_KEY: license, KASAMA_LICENSE_PUBLIC_KEY: await exportSPKI(publicKey) },
+    env: { CASAMA_LICENSE_KEY: license, CASAMA_LICENSE_PUBLIC_KEY: await exportSPKI(publicKey) },
   });
 }, 60_000);
 afterAll(async () => {
@@ -130,7 +130,7 @@ describe("audit-log forwarding", () => {
       "secret.created",
       "member.invited",
     ]);
-    const sig = hooks[1]!.headers["x-kasama-signature"] as string;
+    const sig = hooks[1]!.headers["x-casama-signature"] as string;
     const t = /t=(\d+)/.exec(sig)![1];
     expect(sig).toBe(
       `t=${t},v1=${createHmac("sha256", "whsec_audit").update(`${t}.${hooks[1]!.body}`).digest("hex")}`,

@@ -1,8 +1,8 @@
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { fileURLToPath } from "node:url";
+import { dockerAvailable, type SandboxStack, startSandboxStack } from "@casama/sandbox/testing";
 import { serve } from "@hono/node-server";
-import { dockerAvailable, type SandboxStack, startSandboxStack } from "@kasama/sandbox/testing";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
 import { attachTerminal } from "../src/api/routes/computers.ts";

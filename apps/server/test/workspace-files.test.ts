@@ -3,7 +3,7 @@ import { createHash, createHmac } from "node:crypto";
 import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { syncWorkspaceRepo } from "@kasama/agent";
+import { syncWorkspaceRepo } from "@casama/agent";
 import { strToU8, unzipSync, zipSync } from "fflate";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
@@ -67,7 +67,7 @@ beforeAll(async () => {
     const send = (v: unknown, s = 200) =>
       res.writeHead(s, { "content-type": "application/json" }).end(JSON.stringify(v));
     if (req.headers.authorization !== "Bearer ghp-test") return send({}, 401);
-    const u = new URL(req.url ?? "/", "http://x").pathname.replace("/repos/acme/kasama-config", "");
+    const u = new URL(req.url ?? "/", "http://x").pathname.replace("/repos/acme/casama-config", "");
     let m: RegExpExecArray | null;
     if ((m = /^\/git\/ref\/heads\/(.+)$/.exec(u)))
       return repo.refs.has(m[1] as string)
@@ -113,7 +113,7 @@ beforeAll(async () => {
     if (u === "/pulls" && req.method === "POST") {
       repo.pulls.push(body);
       return send(
-        { html_url: `https://github.com/acme/kasama-config/pull/${repo.pulls.length}` },
+        { html_url: `https://github.com/acme/casama-config/pull/${repo.pulls.length}` },
         201,
       );
     }
@@ -185,7 +185,7 @@ describe("routines and skills as files", () => {
     expect(Object.keys(files).sort()).toEqual([
       "ada/routines/morning-brief.md",
       "ada/skills/pr-labels/SKILL.md",
-      "kasama.json",
+      "casama.json",
     ]);
     const md = Buffer.from(files["ada/routines/morning-brief.md"] as Uint8Array).toString();
     expect(md).toContain('schedule: "0 7 * * *"');
@@ -224,24 +224,24 @@ describe("routines and skills as files", () => {
     expect((await routine())?.schedule_cron).toBe("30 7 * * 1-5");
   });
 
-  it("git sync pushes Kasama's files, then applies the repo's pushes", async () => {
+  it("git sync pushes Casama's files, then applies the repo's pushes", async () => {
     const st = await j(
       await h.request(`/v1/orgs/${orgId}/git-sync`, {
         method: "PUT",
         token: owner.token,
-        json: { repo: "acme/kasama-config", path: "kasama" },
+        json: { repo: "acme/casama-config", path: "casama" },
       }),
     );
     expect(st).toMatchObject({ configured: true, has_token: true, branch: "main" });
     expect(st.webhook_secret).toHaveLength(48);
     const first = await sync();
     expect(first.pushed.sort()).toContain("ada/routines/morning-brief.md");
-    expect(filesAt().get("kasama/ada/skills/pr-labels/SKILL.md")).toContain("Read the diff.");
+    expect(filesAt().get("casama/ada/skills/pr-labels/SKILL.md")).toContain("Read the diff.");
 
     // Someone edits the routine in the repo; the webhook makes it due.
     pushToRepo({
-      "kasama/ada/routines/morning-brief.md": (
-        filesAt().get("kasama/ada/routines/morning-brief.md") as string
+      "casama/ada/routines/morning-brief.md": (
+        filesAt().get("casama/ada/routines/morning-brief.md") as string
       ).replace("Send my brief.", "Send my brief, with the weather."),
     });
     const payload = JSON.stringify({ ref: "refs/heads/main" });
@@ -270,27 +270,27 @@ describe("routines and skills as files", () => {
     await h.tdb
       .admin`update public.skills set body_md = 'Read the diff and the tests.' where name = 'pr-labels'`;
     expect((await sync()).pushed).toEqual(["ada/skills/pr-labels/SKILL.md"]);
-    expect(filesAt().get("kasama/ada/skills/pr-labels/SKILL.md")).toContain("and the tests");
+    expect(filesAt().get("casama/ada/skills/pr-labels/SKILL.md")).toContain("and the tests");
   });
 
-  it("when both sides change a file, Kasama keeps its version and opens a pull request with it", async () => {
+  it("when both sides change a file, Casama keeps its version and opens a pull request with it", async () => {
     const before = repo.refs.get("main");
     await h.tdb
       .admin`update public.routines set instructions_md = 'App version.' where name = 'Morning brief'`;
     pushToRepo({
-      "kasama/ada/routines/morning-brief.md": (
-        filesAt().get("kasama/ada/routines/morning-brief.md") as string
+      "casama/ada/routines/morning-brief.md": (
+        filesAt().get("casama/ada/routines/morning-brief.md") as string
       ).replace(/\n\n[\s\S]*$/, "\n\nRepo version.\n"),
     });
     const r = await sync();
     expect(r.conflicts).toEqual(["ada/routines/morning-brief.md"]);
-    expect(r.pullRequest).toBe("https://github.com/acme/kasama-config/pull/1");
+    expect(r.pullRequest).toBe("https://github.com/acme/casama-config/pull/1");
     expect((await routine())?.instructions_md).toBe("App version.");
-    expect(filesAt().get("kasama/ada/routines/morning-brief.md")).toContain("Repo version.");
+    expect(filesAt().get("casama/ada/routines/morning-brief.md")).toContain("Repo version.");
     expect(repo.refs.get("main")).not.toBe(before);
     const pr = repo.pulls[0] as { head: string; base: string };
     expect(pr.base).toBe("main");
-    expect(filesAt(pr.head).get("kasama/ada/routines/morning-brief.md")).toContain("App version.");
+    expect(filesAt(pr.head).get("casama/ada/routines/morning-brief.md")).toContain("App version.");
     // Nothing more to do until someone merges or edits again.
     const quiet = await sync();
     expect([...quiet.pushed, ...quiet.pulled, ...quiet.conflicts]).toEqual([]);
@@ -298,8 +298,8 @@ describe("routines and skills as files", () => {
 
   it("a file deleted in the repo deletes the skill; a bad file is reported and left alone", async () => {
     pushToRepo({
-      "kasama/ada/skills/pr-labels/SKILL.md": null,
-      "kasama/ada/routines/weekly.md": "---\nname: Weekly review\nschedule: never\n---\nx",
+      "casama/ada/skills/pr-labels/SKILL.md": null,
+      "casama/ada/routines/weekly.md": "---\nname: Weekly review\nschedule: never\n---\nx",
     });
     const r = await sync();
     expect(r.pulled).toContain("ada/skills/pr-labels/SKILL.md");
@@ -313,6 +313,6 @@ describe("routines and skills as files", () => {
     expect(w?.schedule_cron).toBe("0 16 * * 5");
     const st = await j(await h.request(`/v1/orgs/${orgId}/git-sync`, { token: owner.token }));
     expect(st.last_error).toMatch(/valid cron/);
-    expect(st.open_pr_url).toBe("https://github.com/acme/kasama-config/pull/1");
+    expect(st.open_pr_url).toBe("https://github.com/acme/casama-config/pull/1");
   });
 });

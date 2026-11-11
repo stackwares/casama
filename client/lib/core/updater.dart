@@ -13,11 +13,11 @@ import 'distribution.dart';
 
 /// Where releases live: a public repo with only installers and update feeds (the source repo is
 /// private, so its release files aren't downloadable without signing in). Overridable per build.
-const kReleasesRepo = String.fromEnvironment('KASAMA_RELEASES_REPO', defaultValue: 'stackwares/kasama-releases');
+const kReleasesRepo = String.fromEnvironment('CASAMA_RELEASES_REPO', defaultValue: 'stackwares/casama-releases');
 
 /// The update feeds (appcasts), one per platform, attached to the latest release.
 const kUpdateFeedBase = String.fromEnvironment(
-  'KASAMA_UPDATE_FEED',
+  'CASAMA_UPDATE_FEED',
   defaultValue: 'https://github.com/$kReleasesRepo/releases/latest/download',
 );
 
@@ -29,7 +29,7 @@ bool get selfUpdating =>
 /// Linux installs come from packages; the app only says when a newer one is out.
 bool get updateNoticeOnly => !kIsWeb && defaultTargetPlatform == TargetPlatform.linux;
 
-const _mac = MethodChannel('kasama/mac');
+const _mac = MethodChannel('casama/mac');
 const _autoKey = 'updates.auto';
 const _checkEvery = 6 * 3600;
 

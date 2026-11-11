@@ -36,7 +36,7 @@ describe("safe fetch hands back Node's own Response", () => {
   it("accepts a Request object, as SDKs pass, and empty responses", async () => {
     const res = await f(new Request(`${base}/token`, { method: "PUT", body: "x" }));
     expect(res.headers.get("x-echo-method")).toBe("PUT");
-    expect((await res.json()).sent).toBe("x");
+    expect(((await res.json()) as { sent: string }).sent).toBe("x");
     const empty = await f(`${base}/empty`);
     expect(empty).toBeInstanceOf(Response);
     expect(empty.status).toBe(204);

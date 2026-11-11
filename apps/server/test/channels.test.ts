@@ -4,7 +4,7 @@ import { createHmac } from "node:crypto";
 import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { replyToChannel } from "@kasama/agent";
+import { replyToChannel } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
@@ -149,7 +149,7 @@ describe("chat apps", () => {
           bot_id: botId,
           kind: "email",
           name: "Inbox",
-          config: { address: "bot@kasama.test", api_base: api },
+          config: { address: "bot@casama.test", api_base: api },
           secrets: { api_key: "re_1", signing_secret: signing },
           allowed_senders: ["*@example.com"],
         },
@@ -226,7 +226,7 @@ describe("chat apps", () => {
     );
     const mail = calls.filter((c) => c.path === "/emails").at(-1);
     expect(JSON.parse(mail!.body)).toMatchObject({
-      from: "bot@kasama.test",
+      from: "bot@casama.test",
       to: ["ana@example.com"],
       subject: "Re: Question",
       text: "You're free after 3.",

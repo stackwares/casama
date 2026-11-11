@@ -3,8 +3,8 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:dio/dio.dart' show DioException, RequestOptions, Response;
 
-import 'package:kasama_app/core/backend.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_app/core/backend.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 const orgId = '11111111-1111-4111-8111-111111111111';
 const botId = '22222222-2222-4222-8222-222222222222';
@@ -510,7 +510,7 @@ class FakeBackend implements Backend {
   final shares = <bool>[];
   ({String credentialId, String model, bool memories, bool routines})? imported;
   BotTemplateFile template() => BotTemplateFile(
-    format: BotTemplateFileFormatEnum.kasamaPeriodBot,
+    format: BotTemplateFileFormatEnum.casamaPeriodBot,
     version: 1,
     name: 'Invoicer',
     personaMd: 'You chase unpaid invoices politely.',
@@ -553,6 +553,42 @@ class FakeBackend implements Backend {
   Future<BotQuietView> botQuiet(String botId) async => botQuiets[botId] ?? const BotQuietView(mode: 'default');
   @override
   Future<void> setBotQuiet(String botId, BotQuietView value) async => botQuiets[botId] = value;
+
+  // About you (D-169)
+  AboutYouView about = const AboutYouView(displayName: 'Test Person');
+  final facts = <UserFactView>[];
+  final profileShared = <String, bool>{};
+  var _factSeq = 0;
+  @override
+  Future<AboutYouView> aboutYou() async => about;
+  @override
+  Future<void> saveAboutYou(AboutYouView value) async => about = value;
+  var nameAskedMarked = false;
+  @override
+  Future<void> markNameAsked() async => nameAskedMarked = true;
+  @override
+  Future<List<UserFactView>> userFacts() async => [...facts];
+  @override
+  Future<void> addUserFacts(List<({String kind, String content})> list) async {
+    for (final f in list) {
+      facts.add(UserFactView(id: 'fact-${++_factSeq}', kind: f.kind, content: f.content, updatedAt: DateTime(2026, 11, 11)));
+    }
+  }
+
+  @override
+  Future<void> updateUserFact(String id, {String? content, bool? pinned}) async {
+    final i = facts.indexWhere((f) => f.id == id);
+    if (i < 0) return;
+    final f = facts[i];
+    facts[i] = UserFactView(id: f.id, kind: f.kind, content: content ?? f.content, pinned: pinned ?? f.pinned, updatedAt: f.updatedAt);
+  }
+
+  @override
+  Future<void> deleteUserFact(String id) async => facts.removeWhere((f) => f.id == id);
+  @override
+  Future<bool> profileSharedIn(String orgId) async => profileShared[orgId] ?? false;
+  @override
+  Future<void> setProfileSharedIn(String orgId, bool share) async => profileShared[orgId] = share;
   final edits = <(String, String)>[];
   final branchSwitches = <String>[];
   List<String> siblings = const [];
@@ -876,7 +912,7 @@ class FakeBackend implements Backend {
   Future<CreatedBotLink> createBotLink(String botId, String name) async {
     linkActions.add('invite:$name');
     linkList.add(_link('lk-${linkList.length + 1}', name, BotLinkStatusEnum.pending));
-    return CreatedBotLink.fromJson({...linkList.last.toJson(), 'invite': 'kasama-link:abc123'});
+    return CreatedBotLink.fromJson({...linkList.last.toJson(), 'invite': 'casama-link:abc123'});
   }
 
   @override
@@ -1053,12 +1089,13 @@ class FakeBackend implements Backend {
     return botAccess(botId);
   }
 
-  @override
-  Future<List<WorkspaceMember>> members(String orgId) async => [
+  List<WorkspaceMember> workspaceMembers = [
     WorkspaceMember(userId: 'me', email: 'me@acme.test', role: WorkspaceMemberRoleEnum.owner),
     WorkspaceMember(userId: 'u-ana', email: 'ana@acme.test', role: WorkspaceMemberRoleEnum.member),
     WorkspaceMember(userId: 'u-ben', email: 'ben@acme.test', role: WorkspaceMemberRoleEnum.member),
   ];
+  @override
+  Future<List<WorkspaceMember>> members(String orgId) async => workspaceMembers;
 
   // Welcome chat (D-129)
   var welcomeCalls = 0;
@@ -1354,7 +1391,7 @@ class FakeBackend implements Backend {
     id: 'imp-1',
     kind: AgentImportPlanKindEnum.openclaw,
     template: BotTemplateFile(
-      format: BotTemplateFileFormatEnum.kasamaPeriodBot,
+      format: BotTemplateFileFormatEnum.casamaPeriodBot,
       version: 1,
       name: 'Juno',
       description: 'Imported from OpenClaw',
@@ -2092,7 +2129,7 @@ class FakeBackend implements Backend {
   Future<TwoStepEnrollment> startTwoStep() async => const TwoStepEnrollment(
     factorId: 'f-new',
     secret: 'JBSWY3DPEHPK3PXP',
-    uri: 'otpauth://totp/Kasama:tester@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Kasama',
+    uri: 'otpauth://totp/Casama:tester@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Casama',
     qrSvg: '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>',
   );
   @override
@@ -2161,7 +2198,7 @@ class FakeBackend implements Backend {
         limits: const {'max_bots': 20, 'computer_hours': 100, 'monthly_credits_usd': 20},
         priceLabel: null,
         web: true,
-        storeProductIds: const {'app_store': 'dev.kasama.pro.monthly', 'google_play': 'kasama_pro:monthly'},
+        storeProductIds: const {'app_store': 'dev.casama.pro.monthly', 'google_play': 'casama_pro:monthly'},
       ),
     ],
     packs: [CreditPack(code: 'credits_10', name: r'$10 of credits', creditsUsd: 10, web: true)],

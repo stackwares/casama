@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -91,7 +91,7 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
     if (conv != null) context.go('/bots/$bot/chat?c=${conv.id}');
   }
 
-  /// Takes a screenshot of the screen (only when asked): Kasama's window steps aside first.
+  /// Takes a screenshot of the screen (only when asked): Casama's window steps aside first.
   Future<void> _screenshot() async {
     setState(() => _busy = true);
     final w = desktopContextSupported ? WindowManager.instance.getCurrent() : null;

@@ -694,8 +694,11 @@ class CodePanel extends StatelessWidget {
 
 /// A short note in the thread (memory saved, checkpoint, computer state, run ended), centered.
 class NoticeLine extends StatelessWidget {
-  const NoticeLine({super.key, required this.entry, this.onRestore, this.onDetails, this.plain = false});
+  const NoticeLine({super.key, required this.entry, this.onRestore, this.onDetails, this.onUndo, this.plain = false});
   final NoticeEntry entry;
+
+  /// "Saved to your profile" (D-169): takes the fact back out.
+  final void Function(String factId)? onUndo;
 
   /// Simple chats (D-162): a failure without a plain explanation reads as one sentence; the
   /// technical part stays in Details.
@@ -713,6 +716,7 @@ class NoticeLine extends StatelessWidget {
     final muted = scheme.onSurfaceVariant;
     final (icon, text, color) = switch (entry.kind) {
       NoticeKind.memory => (LucideIcons.brain, l10n.remembered, muted),
+      NoticeKind.profileSaved => (LucideIcons.userRound, l10n.savedToProfile, muted),
       NoticeKind.skill => (LucideIcons.bookOpen, l10n.skillLoaded(entry.text), muted),
       NoticeKind.checkpoint => (LucideIcons.rotateCcw, l10n.checkpointSaved(entry.text), muted),
       NoticeKind.computer => (LucideIcons.monitor, l10n.computerState(entry.text), muted),
@@ -725,7 +729,7 @@ class NoticeLine extends StatelessWidget {
       NoticeKind.routine => (LucideIcons.alarmClock, l10n.routineRan(entry.text), muted),
     };
     final failed = entry.kind == NoticeKind.failed;
-    final restorable = entry.kind == NoticeKind.checkpoint && entry.refId != null && onRestore != null;
+    final restorable = (entry.kind == NoticeKind.checkpoint && onRestore != null || entry.kind == NoticeKind.profileSaved && onUndo != null) && entry.refId != null;
     final details = failed && onDetails != null;
     return Center(
       child: Material(
@@ -749,7 +753,10 @@ class NoticeLine extends StatelessWidget {
             Flexible(
               child: Text(text, style: context.textTheme.labelMedium?.copyWith(color: color, height: 1.3)),
             ),
-            if (restorable) TextButton(onPressed: () => onRestore!(entry.refId!), child: Text(l10n.restore)),
+            if (restorable && entry.kind == NoticeKind.profileSaved)
+              TextButton(key: const Key('undoProfileFact'), onPressed: () => onUndo!(entry.refId!), child: Text(l10n.undo))
+            else if (restorable)
+              TextButton(onPressed: () => onRestore!(entry.refId!), child: Text(l10n.restore)),
             if (details) ...[
               const SizedBox(width: 6),
               Text(l10n.details, style: context.textTheme.labelMedium?.copyWith(color: color, fontWeight: FontWeight.w700)),

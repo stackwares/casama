@@ -3,7 +3,7 @@
  * screen tools wait; `computer.request_takeover` asks a person to step in and waits for them.
  * Every wait happens in the run loop (durable in the worker), never inside a tool step.
  */
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import type { EventBus } from "./events.ts";
 import type { NotificationService } from "./notifications.ts";

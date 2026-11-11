@@ -7,12 +7,14 @@ export interface ToolContext {
   runId: string;
   botId: string;
   orgId: string;
+  /** The person this run acts for, when there is one (About you, D-169). */
+  actingUserId?: string | null;
   /** Streams partial output (tool.output events). */
   output(chunk: string): Promise<void>;
   /** Emits an arbitrary run event (e.g. memory.written, skill.loaded). */
   emit(type: string, payload: Record<string, unknown>): Promise<void>;
   /** The bot's computer, started or restored on first use (tools that require a computer). */
-  computer?: () => Promise<import("@kasama/sandbox").SandboxHandle>;
+  computer?: () => Promise<import("@casama/sandbox").SandboxHandle>;
   /** Saves an undo point of the computer's home directory and records it on the timeline. */
   checkpoint?: (label: string) => Promise<{ checkpointId: string; label: string }>;
 }
@@ -40,9 +42,9 @@ export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
   /** No side effects: never needs approval. */
   readOnly?: boolean;
   /**
-   * Only changes the bot's own state inside Kasama (notes, schedule, board tasks, messages and cards
+   * Only changes the bot's own state inside Casama (notes, schedule, board tasks, messages and cards
    * for the person): never asks, even for bots that ask before everything (D-155). Anything that
-   * reaches outside Kasama or costs money must not set this.
+   * reaches outside Casama or costs money must not set this.
    */
   selfOnly?: boolean;
   /** Asks for approval under the default autonomy whatever its risk (for example media generation). */

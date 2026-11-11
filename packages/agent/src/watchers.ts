@@ -4,8 +4,8 @@
  * baseline; a later change (or the time arriving) starts a run for the bot with the change.
  */
 import { createHash } from "node:crypto";
-import type { Database } from "@kasama/db";
-import { contentKeys } from "@kasama/db";
+import type { Database } from "@casama/db";
+import { contentKeys } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
@@ -90,7 +90,7 @@ async function currentValue(d: WatcherDeps, w: WatcherRow, now: Date): Promise<s
       if (t.browser && d.browserText) text = await d.browserText(w.bot_id, url);
       if (text === null) {
         const res = await d.fetch(url, {
-          headers: { "user-agent": "KasamaWatcher/1.0" },
+          headers: { "user-agent": "CasamaWatcher/1.0" },
           signal: AbortSignal.timeout(15_000),
         });
         if (!res.ok) throw new Error(`The page answered ${res.status}.`);

@@ -1,5 +1,5 @@
 /**
- * The `local` provider (D-066): a bot's computer is the user's own machine running the Kasama
+ * The `local` provider (D-066): a bot's computer is the user's own machine running the Casama
  * desktop app, which embeds computerd and connects to the API over a WebSocket. The worker reaches
  * it through the API's internal tunnel endpoint; there is nothing to create, sleep or destroy.
  */
@@ -35,14 +35,14 @@ export class LocalProvider implements SandboxProvider {
   private offline(ref: string): never {
     throw new SandboxError(
       "device_offline",
-      `The computer ${ref} is offline. Open the Kasama app on it and turn on "Use this computer for bots".`,
+      `The computer ${ref} is offline. Open the Casama app on it and turn on "Use this computer for bots".`,
       409,
     );
   }
 
   async online(ref: string) {
     const res = await fetch(`${this.opts.apiUrl}/internal/local/${ref}/status`, {
-      headers: { "x-kasama-internal": this.opts.internalToken },
+      headers: { "x-casama-internal": this.opts.internalToken },
     }).catch(() => null);
     if (!res?.ok) return false;
     return ((await res.json()) as { online: boolean }).online;
@@ -70,9 +70,9 @@ export class LocalProvider implements SandboxProvider {
 
   handle(ref: string, activity?: Activity): SandboxHandle {
     const headers: Record<string, string> = {
-      "x-kasama-internal": this.opts.internalToken,
+      "x-casama-internal": this.opts.internalToken,
       ...(activity
-        ? { "x-kasama-activity": Buffer.from(JSON.stringify(activity)).toString("base64") }
+        ? { "x-casama-activity": Buffer.from(JSON.stringify(activity)).toString("base64") }
         : {}),
     };
     // The tunnel authenticates to the device's computerd itself; this token is unused there.

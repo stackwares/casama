@@ -4,16 +4,17 @@
  * import (D-110) then creates the bot. Files nothing maps to are kept for a day and copied to
  * ~/imported/ on the new bot's computer on request. Also: ChatGPT or Claude memory, pasted back.
  */
-import type { OpenAPIHono } from "@hono/zod-openapi";
-import { botComputerId } from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { contentKeys, type JwtClaims, withUserSession } from "@kasama/db";
+
+import { botComputerId } from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { contentKeys, type JwtClaims, withUserSession } from "@casama/db";
 import {
   AgentImportError,
   MEMORY_EXPORT_PROMPT,
   parseMemoryExport,
   planAgentImport,
-} from "@kasama/domain";
+} from "@casama/domain";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { unzipSync } from "fflate";
 import { ApiError } from "../errors.ts";
@@ -103,7 +104,7 @@ export function registerAgentImportRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
         id,
         kind: plan.kind,
         template: {
-          format: "kasama.bot" as const,
+          format: "casama.bot" as const,
           version: 1,
           name: plan.name,
           description:

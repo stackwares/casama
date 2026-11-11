@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:native_geofence/native_geofence.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,8 +22,8 @@ import '../../core/supabase_backend.dart';
 String maskCodes(String text) => text.replaceAllMapped(RegExp(r'\b(?=[A-Z0-9-]*\d)[A-Z0-9]{3,4}-?[A-Z0-9]{3,4}\b|\b\d{4,8}\b'), (_) => '••••');
 
 class DeviceEventQueue {
-  static const _pref = 'kasama.device_events';
-  static const _keyPref = 'kasama.device_key';
+  static const _pref = 'casama.aiice_events';
+  static const _keyPref = 'casama.aiice_key';
 
   static Future<List<Map<String, Object?>>> pending() async {
     final prefs = await SharedPreferences.getInstance();
@@ -83,7 +83,7 @@ Future<Backend?> backgroundBackend() async {
   try {
     final config = await ServerAddress.load();
     // The settings the app saved (D-158): a background wake may have little or no network.
-    final server = await ServerConfigCache.read(config.apiUrl) ?? (await KasamaClient.connect(config.apiUrl)).config;
+    final server = await ServerConfigCache.read(config.apiUrl) ?? (await CasamaClient.connect(config.apiUrl)).config;
     try {
       Supabase.instance.client;
     } catch (_) {

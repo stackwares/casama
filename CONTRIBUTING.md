@@ -1,11 +1,11 @@
-# Contributing to Kasama
+# Contributing to Casama
 
 Thanks for helping. Bug reports, docs fixes, tests and features are all welcome. This guide covers
 how to get set up, how the code is organized, the rules every change follows, and how to send it.
 
-- Found a bug? [Open an issue](https://github.com/stackwares/kasama/issues/new/choose) with steps to
+- Found a bug? [Open an issue](https://github.com/stackwares/casama/issues/new/choose) with steps to
   reproduce it.
-- Have an idea? Start a [discussion](https://github.com/stackwares/kasama/discussions) before writing
+- Have an idea? Start a [discussion](https://github.com/stackwares/casama/discussions) before writing
   a large change, so we can agree on the approach.
 - Found a security issue? Don't open an issue; follow [SECURITY.md](SECURITY.md).
 
@@ -32,14 +32,14 @@ Docker Desktop and Flutter.
 pnpm install
 supabase start                      # Postgres :54322, API :54321, Studio :54323
 cp .env.example .env                # fill in SUPABASE_ANON_KEY and friends from `supabase status`
-pnpm --filter @kasama/server dev    # the API on http://localhost:8787 (reference at /docs)
-pnpm --filter @kasama/server dev:worker   # the worker, in a second terminal
+pnpm --filter @casama/server dev    # the API on http://localhost:8787 (reference at /docs)
+pnpm --filter @casama/server dev:worker   # the worker, in a second terminal
 ```
 
 The server runs TypeScript directly on Node.js (type stripping), so there's no build step. Both
 commands restart on changes.
 
-**No model key?** Set `KASAMA_MODEL_FIXTURES=apps/server/test/fixtures/chat.json` in `.env` and the
+**No model key?** Set `CASAMA_MODEL_FIXTURES=apps/server/test/fixtures/chat.json` in `.env` and the
 worker replays recorded model responses.
 
 **Computers** need the supervisor, egress proxy, TURN relay and computer images. Run them next to
@@ -53,7 +53,7 @@ docker compose -f infra/compose/docker-compose.dev.yml up --build
 
 ```sh
 cd client
-flutter run -d macos --dart-define=KASAMA_API_URL=http://localhost:8787
+flutter run -d macos --dart-define=CASAMA_API_URL=http://localhost:8787
 ```
 
 Use `-d chrome`, an iOS simulator or an Android emulator instead of `macos` as you like. The app
@@ -63,18 +63,18 @@ reads the Supabase address and key from the API, so the API address is the only 
 
 ```sh
 cd dart/cli
-dart run bin/kasama.dart config --api-url http://localhost:8787
-dart run bin/kasama.dart signup --email you@example.com
-dart run bin/kasama.dart org create "My team" && dart run bin/kasama.dart org use my-team
-dart run bin/kasama.dart credential add --provider openrouter
-dart run bin/kasama.dart bot create Ada --credential <id>
-dart run bin/kasama.dart chat Ada "What can you do?"
+dart run bin/casama.dart config --api-url http://localhost:8787
+dart run bin/casama.dart signup --email you@example.com
+dart run bin/casama.dart org create "My team" && dart run bin/casama.dart org use my-team
+dart run bin/casama.dart credential add --provider openrouter
+dart run bin/casama.dart bot create Ada --credential <id>
+dart run bin/casama.dart chat Ada "What can you do?"
 ```
 
 ### Run the docs
 
 ```sh
-pnpm --filter @kasama/docs dev      # http://localhost:5173
+pnpm --filter @casama/docs dev      # http://localhost:5173
 ```
 
 ## How the code is organized
@@ -118,9 +118,9 @@ Run what applies to your change before you push:
 
 ```sh
 pnpm lint && pnpm typecheck && pnpm test          # TypeScript: lint, types, unit and API tests
-pnpm --filter @kasama/db test:pgtap                # row-level security tests
+pnpm --filter @casama/db test:pgtap                # row-level security tests
 pnpm gen && git diff --exit-code                   # generated code is up to date
-(cd dart && dart analyze && dart test cli kasama_sdk computerd)
+(cd dart && dart analyze && dart test cli casama_sdk computerd)
 (cd client && flutter analyze && flutter test)     # the app
 ```
 
@@ -135,13 +135,13 @@ CI runs all of these, plus Docker-based computer tests, a CLI end-to-end run and
 
 The public docs are in [`docs-site/`](docs-site/) (VitePress):
 
-- `guide/`: using Kasama, one page per feature area.
+- `guide/`: using Casama, one page per feature area.
 - `self-hosting/`: installing and running a server.
 - `develop/`: the API, CLI, SDK, plugins and file formats.
 
-Write for someone using Kasama, not for someone who built it: plain words, short sentences, the
+Write for someone using Casama, not for someone who built it: plain words, short sentences, the
 app's exact labels in **bold**, real commands, and no internal references (decision numbers, file
-paths of server internals). Check `pnpm --filter @kasama/docs build` passes; it fails on broken
+paths of server internals). Check `pnpm --filter @casama/docs build` passes; it fails on broken
 links. `docs/` holds project records for contributors: architecture, decisions, the audit and the
 launch checklist.
 
@@ -169,4 +169,4 @@ change or have the right to submit it under the project license.
 ## License
 
 By contributing, you agree that your contributions are licensed under Apache-2.0, or under the
-Kasama Enterprise License for changes inside `ee/`.
+Casama Enterprise License for changes inside `ee/`.

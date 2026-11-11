@@ -1,8 +1,8 @@
 /**
- * Hosted sandbox providers (E2B and Daytona, D-057). Both run Kasama's own computer image with
+ * Hosted sandbox providers (E2B and Daytona, D-057). Both run Casama's own computer image with
  * computerd inside, reached through the provider's authenticated port URL, so every file, exec,
  * checkpoint and live-view feature is the same code as on Docker. Sleep archives the home
- * directory to Kasama's object store and deletes the sandbox, like Docker.
+ * directory to Casama's object store and deletes the sandbox, like Docker.
  */
 import { createHmac, randomUUID } from "node:crypto";
 import { ComputerdClient } from "./computerd-client.ts";
@@ -101,8 +101,8 @@ export class HostedProvider implements SandboxProvider {
     const sb = await this.plane.create(spec, {
       ...spec.env,
       COMPUTERD_TOKEN: this.token(spec.ref),
-      KASAMA_COMPUTER: spec.ref,
-      KASAMA_PROFILE: spec.profile,
+      CASAMA_COMPUTER: spec.ref,
+      CASAMA_PROFILE: spec.profile,
     });
     await (await this.client(sb.id, spec.ref)).waitReady(90_000);
     return this.handle(sb.id, spec.ref);
@@ -212,7 +212,7 @@ export class HostedProvider implements SandboxProvider {
 
 export interface E2BOptions {
   apiKey: string;
-  /** A template built from Kasama's computer image (computerd as the start command). */
+  /** A template built from Casama's computer image (computerd as the start command). */
   templates: { headless: string; desktop: string };
   apiUrl?: string;
   domain?: string;
@@ -237,7 +237,7 @@ export function e2bControlPlane(o: E2BOptions): HostedControlPlane {
           body: JSON.stringify({
             templateID: spec.profile === "desktop" ? o.templates.desktop : o.templates.headless,
             timeout,
-            metadata: { kasama_ref: spec.ref, ...spec.labels },
+            metadata: { casama_ref: spec.ref, ...spec.labels },
             envVars: env,
           }),
         },
@@ -246,9 +246,9 @@ export function e2bControlPlane(o: E2BOptions): HostedControlPlane {
       return { id: r.sandboxID, running: true };
     },
     async find(ref) {
-      const q = encodeURIComponent(`kasama_ref=${ref}`);
+      const q = encodeURIComponent(`casama_ref=${ref}`);
       const list = await call<Listed[]>(`${api}/sandboxes?metadata=${q}`, { headers }, "e2b");
-      const hit = list.find((s) => s.metadata?.kasama_ref === ref);
+      const hit = list.find((s) => s.metadata?.casama_ref === ref);
       return hit ? { id: hit.sandboxID, running: (hit.state ?? "running") === "running" } : null;
     },
     async kill(id) {
@@ -279,7 +279,7 @@ export function e2bControlPlane(o: E2BOptions): HostedControlPlane {
 
 export interface DaytonaOptions {
   apiKey: string;
-  /** Daytona snapshots built from Kasama's computer image. */
+  /** Daytona snapshots built from Casama's computer image. */
   snapshots: { headless: string; desktop: string };
   apiUrl?: string;
   organizationId?: string;
@@ -304,7 +304,7 @@ export function daytonaControlPlane(o: DaytonaOptions): HostedControlPlane {
           body: JSON.stringify({
             snapshot: spec.profile === "desktop" ? o.snapshots.desktop : o.snapshots.headless,
             env,
-            labels: { kasama_ref: spec.ref, ...spec.labels },
+            labels: { casama_ref: spec.ref, ...spec.labels },
             public: false,
             autoStopInterval: 0,
             cpu: spec.size?.cpus,
@@ -323,9 +323,9 @@ export function daytonaControlPlane(o: DaytonaOptions): HostedControlPlane {
       throw new SandboxError("computer_start_timeout", "Daytona sandbox did not start");
     },
     async find(ref) {
-      const q = encodeURIComponent(JSON.stringify({ kasama_ref: ref }));
+      const q = encodeURIComponent(JSON.stringify({ casama_ref: ref }));
       const list = await call<Sandbox[]>(`${api}/sandbox?labels=${q}`, { headers }, "daytona");
-      const hit = list.find((s) => s.labels?.kasama_ref === ref && s.state !== "destroyed");
+      const hit = list.find((s) => s.labels?.casama_ref === ref && s.state !== "destroyed");
       return hit ? { id: hit.id, running: hit.state === "started" } : null;
     },
     async kill(id) {

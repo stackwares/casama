@@ -1,15 +1,15 @@
-# Kasama — Full Build Spec
+# Casama — Full Build Spec
 
 Nov 9, 2026 · @Oliver Martinez
 
 ## How to use this spec
 
-This doc is the single source of truth for building Kasama: build every phase in the build plan, in order, and do not mark a phase done until its acceptance criteria pass. Export it as `SPEC.md` at the repo root so the coding agent can read it.
+This doc is the single source of truth for building Casama: build every phase in the build plan, in order, and do not mark a phase done until its acceptance criteria pass. Export it as `SPEC.md` at the repo root so the coding agent can read it.
 
 **Rules for the coding agent**
 
 1. **Clean-room build.** Never open, copy, translate or paraphrase source code, docs or UI copy from Rakazo or any other existing agent platform. Build only from this spec and the public docs of the libraries named here.
-2. **No third-party brand names** in product UI, code identifiers or package names, except to name a service the user connects (a model provider, an app, or a sign-in button such as "Continue with ChatGPT"). "Kasama" is a working name: keep it in one config constant so it can change.
+2. **No third-party brand names** in product UI, code identifiers or package names, except to name a service the user connects (a model provider, an app, or a sign-in button such as "Continue with ChatGPT"). "Casama" is a working name: keep it in one config constant so it can change.
 3. **Contracts first.** The OpenAPI spec, the run event schema and the SQL migrations are the source of truth. Generate TypeScript types and the Dart client from them; never hand-write duplicates.
 4. **Database changes only through Supabase CLI migrations,** with row-level security enabled on every table in the same migration.
 5. **No secrets** in code, logs, prompts or test fixtures. Use environment variables and Supabase Vault.
@@ -27,7 +27,7 @@ This doc is the single source of truth for building Kasama: build every phase in
 
 ## Product overview
 
-Kasama is an open-source, self-hostable platform for persistent AI teammates. Each bot has its own chats, memory, routines and a sandboxed computer. Users talk to bots through Kasama's own clients (web, iOS, Android, macOS, Windows and Linux). External messaging channel adapters are specified for a later release but are not part of the v1 build (Phases 0–8).
+Casama is an open-source, self-hostable platform for persistent AI teammates. Each bot has its own chats, memory, routines and a sandboxed computer. Users talk to bots through Casama's own clients (web, iOS, Android, macOS, Windows and Linux). External messaging channel adapters are specified for a later release but are not part of the v1 build (Phases 0–8).
 
 **Goals**
 
@@ -42,7 +42,7 @@ Kasama is an open-source, self-hostable platform for persistent AI teammates. Ea
 **v1 scope (Phases 0–8)**
 
 - **Clients:** Flutter apps and the CLI only. No Telegram, SMS, email-inbox, Slack, WhatsApp or Messenger adapters in v1.
-- **Models:** bring-your-own API keys for every provider, plus **ChatGPT plan sign-in**, so people with an eligible ChatGPT plan run bots on it instead of an API key. It is on for self-hosted servers, and on Kasama Cloud only after OpenAI approves hosted use (see ChatGPT plan sign-in).
+- **Models:** bring-your-own API keys for every provider, plus **ChatGPT plan sign-in**, so people with an eligible ChatGPT plan run bots on it instead of an API key. It is on for self-hosted servers, and on Casama Cloud only after OpenAI approves hosted use (see ChatGPT plan sign-in).
 - **Integrations:** Remote MCP, OpenAPI tools, **Composio**, **Pipedream Connect**, and **image/video generation** (BYO provider keys).
 - **Sandbox providers:** Docker (default), E2B, Daytona, and the local desktop companion. Extra hosted providers are specified post-v1 (see Providers).
 - **Locale:** English only at launch. All UI strings in ARB files so more languages can ship later without code changes.
@@ -63,7 +63,7 @@ The full product is 40 features across 9 phases, built backend-first: Phases 0 t
 | ----------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------- |
 | Workspaces              | Organizations, members, roles (owner, admin, member), email invites                                  | A member sees only their organization's data (RLS test)                                           | 0       |
 | Auth                    | Email and password, magic link, Google, Apple                                                        | Auth works from the CLI in Phase 0; sign-in works on all 6 platforms in Phase 3                   | 0, 3    |
-| CLI                     | Dart `kasama` CLI: login, bots, chat, runs, computers                                                | A developer chats with a bot and watches its run from the terminal                                | 0 to 2  |
+| CLI                     | Dart `casama` CLI: login, bots, chat, runs, computers                                                | A developer chats with a bot and watches its run from the terminal                                | 0 to 2  |
 | Bots                    | Name, avatar, persona, model, autonomy level, budget                                                 | Settings persist; per-bot model override works                                                    | 1       |
 | Chat                    | Streaming chat, attachments, markdown, cancel, retry                                                 | First token shows within 1.5 s of the model starting; cancel stops within 2 s                     | 1       |
 | Memory                  | Facts, episode summaries, editable memory, hybrid search                                             | A fact told in chat A is recalled in chat B; the user can edit or delete it                       | 1       |
@@ -92,7 +92,7 @@ The full product is 40 features across 9 phases, built backend-first: Phases 0 t
 | Voice                   | Dictation, text-to-speech (BYO ElevenLabs, OpenAI, Cartesia, Fish Audio), live calls                 | Live-call reply starts within 1 s                                                                 | 6       |
 | Local computer          | Flutter desktop companion runs tools on the user's own machine                                       | Bot opens an app on the user's Mac behind a visible consent overlay                               | 6       |
 | Flutter extras          | Home-screen widgets, iOS Live Activities, share to bot, desktop hotkey and tray, owner admin console | Each works on its platforms in the release build                                                  | 6       |
-| Dart SDK                | `kasama_sdk` on pub.dev with typed events                                                            | An external sample app streams a run using only the published SDK                                 | 6       |
+| Dart SDK                | `casama_sdk` on pub.dev with typed events                                                            | An external sample app streams a run using only the published SDK                                 | 6       |
 | Plans and subscriptions | Dodo Payments on web and desktop; App Store and Google Play subscriptions on mobile                  | A purchase on any platform unlocks every platform; cancels and refunds remove access              | 7       |
 | Credits and quotas      | Prepaid and metered credits; plan limits drive quotas                                                | A run stops cleanly when credits or quota run out                                                 | 7       |
 | Cloud Connect           | Self-hosted instances use cloud computers and credits through an API key                             | A self-hosted bot runs on a cloud computer and the usage shows on the cloud bill                  | 7       |
@@ -169,7 +169,7 @@ The backend is TypeScript on Node.js 24 LTS with Supabase as the platform; the c
 One monorepo holds the server, supervisor, sandbox daemon, Flutter client, database migrations and infrastructure.
 
 ```
-kasama/
+casama/
   apps/
     server/              # one TypeScript codebase, MODE=api or MODE=worker
       src/api/           # Hono routes (OpenAPI), webhooks, WebSocket endpoints
@@ -178,20 +178,20 @@ kasama/
     supervisor/          # sandbox supervisor; the only service with Docker access
     www/                 # static marketing site and public docs
   dart/
-    cli/                 # kasama CLI, compiled per OS with dart compile exe
+    cli/                 # casama CLI, compiled per OS with dart compile exe
     computerd/           # daemon inside each computer: exec, files, input, screenshots, health
-    kasama_sdk/          # generated API client + typed run events (published to pub.dev)
+    casama_sdk/          # generated API client + typed run events (published to pub.dev)
   packages/
     contracts/           # OpenAPI spec, Zod schemas, run event schema, tool schemas
     domain/              # pure logic: policies, budgets, autonomy, context builder, entitlements
     db/                  # Drizzle schema (pulled from migrations), query helpers, RLS session helper
     agent/               # agent loop, tool registry, ModelGateway, memory service
-    sandbox/             # SandboxProvider interface + docker, e2b, daytona, local, kasama-cloud adapters
+    sandbox/             # SandboxProvider interface + docker, e2b, daytona, local, casama-cloud adapters
     channels/            # ChannelAdapter interface + email, sms, telegram, slack, whatsapp, messenger
     billing/             # BillingProvider interface + dodo, app_store, google_play adapters (Phase 7)
     observability/       # OpenTelemetry, Sentry, Langfuse setup
     evals/               # eval tasks, runner, scoring
-  client/                # Flutter app for all platforms (uses dart/kasama_sdk)
+  client/                # Flutter app for all platforms (uses dart/casama_sdk)
     lib/core/            # sdk wiring, supabase, theme, l10n, routing, event stream
     lib/features/        # auth, workspaces, bots, chat, computer, approvals, routines, memory,
                          # skills, integrations, channels, voice, usage, billing, settings,
@@ -220,7 +220,7 @@ Every tenant table carries `org_id`, has RLS enabled, and is created by a SQL mi
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | organizations      | name, slug, plan, region                                                                                                                                              | One per workspace                                                                                                         |
 | memberships        | org\_id, user\_id, role (owner, admin, member)                                                                                                                        | Drives every RLS policy                                                                                                   |
-| profiles           | user\_id, display\_name, preferred\_name, pronouns, avatar\_url, locale, timezone                                                                                   | Timezone used for routines; the rest is About you (D-169)                                                                 |
+| profiles           | user\_id, display\_name, preferred\_name, pronouns, avatar\_url, locale, timezone                                                                                     | Timezone used for routines; the rest is About you (D-169)                                                                 |
 | invites            | org\_id, email, role, token\_hash, expires\_at                                                                                                                        | Token stored hashed                                                                                                       |
 | bots               | name, avatar\_url, persona\_md, model\_policy jsonb, autonomy, visibility (private, team), default\_computer\_id, budget jsonb, status                                | model\_policy = primary, fallbacks, cheap model                                                                           |
 | conversations      | bot\_id, channel\_id, external\_thread\_id, title, summary, last\_message\_at                                                                                         | One per chat or external thread                                                                                           |
@@ -445,24 +445,24 @@ Tools are registered in one registry with a Zod schema, a risk level, a capabili
 
 People with an eligible ChatGPT plan can sign in with ChatGPT instead of adding an OpenAI API key, and their bots' model calls then count against the plan's limits. This uses OpenAI's "Sign in with ChatGPT" plan usage for open-source apps ([developers.openai.com/siwc](https://developers.openai.com/siwc)). Other subscription sign-ins (GitHub Copilot, SuperGrok, Claude plans) stay out until their terms clearly allow third-party apps.
 
-- **Where it is on:** `CHATGPT_SIGN_IN=auto` (the default) turns it on for self-hosted servers and off when billing is on; `on` and `off` override it. OpenAI's open-source route covers them, including an open-source app running on the user's own VM. Kasama Cloud ships with it `off` until OpenAI approves hosted use through its interest form. Eligible plans are whatever OpenAI allows (Go, Plus and Pro at the time of writing); other accounts get OpenAI's "not eligible" error, shown in plain words.
+- **Where it is on:** `CHATGPT_SIGN_IN=auto` (the default) turns it on for self-hosted servers and off when billing is on; `on` and `off` override it. OpenAI's open-source route covers them, including an open-source app running on the user's own VM. Casama Cloud ships with it `off` until OpenAI approves hosted use through its interest form. Eligible plans are whatever OpenAI allows (Go, Plus and Pro at the time of writing); other accounts get OpenAI's "not eligible" error, shown in plain words.
 - **Personal, never shared:** a `chatgpt` credential belongs to the person who signed in (`model_credentials.owner_user_id`), one per person in each workspace. Only runs on that person's behalf use it: messages they send, routines and webhooks they created, and subruns of those runs. Other members' runs skip it and move to the next model in the bot's chain, or fail with a clear "connect your own plan or key" error. Admins can see that it exists and remove it, but never use or read it.
-- **Sign-in (loopback only):** OpenAI accepts only `http://127.0.0.1:<port>/auth/callback` redirects (never `localhost`), so sign-in runs from the desktop app or the CLI (`kasama credential chatgpt`). Phones and the web app list connected plans and say "Connect from the desktop app or the CLI". Add phone sign-in if OpenAI adds device code to this flow.
+- **Sign-in (loopback only):** OpenAI accepts only `http://127.0.0.1:<port>/auth/callback` redirects (never `localhost`), so sign-in runs from the desktop app or the CLI (`casama credential chatgpt`). Phones and the web app list connected plans and say "Connect from the desktop app or the CLI". Add phone sign-in if OpenAI adds device code to this flow.
   1. The client picks a free port and calls `POST /v1/credentials/chatgpt/start`. The API stores a single-use flow (15 minutes, service role only, in `integration_oauth_flows`) with the state, nonce and PKCE verifier, and returns the authorize URL: `https://auth.openai.com/api/accounts/authorize` with `response_type=code`; the person's issued `client_id` if they registered before, otherwise `dynamic_agent_client` plus `agent_name_hint` set to the product-name constant; `ext_agent_host_id`; scopes `openid profile email offline_access resource.invoke chatgpt.tokens.use.direct`; `resource=https://api.openai.com/v1`; S256 PKCE; and `login_hint` for returning users.
   2. The client listens on `127.0.0.1`, opens the system browser, receives the code and state (plus the issued `client_id` on a first registration), answers the browser with a "You can close this tab" page, and posts them to `POST /v1/credentials/chatgpt/complete`.
   3. The API exchanges the code at `https://auth.openai.com/api/accounts/oauth/token` (form-encoded, with the verifier, redirect URI and resource; no client secret). It verifies the ID token against OpenAI's published keys (`iss`, `aud` equal to the issued client id, `exp`, `nonce`) and writes the access, refresh and ID tokens and the issued client id to Vault. Tokens never reach the client device, browser storage, logs or run events.
   4. If the person declined plan usage, the credential is saved with `status = plan_usage_off`, and the app offers "Try again" (asks for consent again) or "Add an API key" instead.
 - **Host id:** each server has one stable `ext_agent_host_id` (`urn:uuid:…`, generated once into `instance_settings`). It is never an email or a user id, and each self-hosted server is its own host.
 - **Refresh:** access tokens last 1 hour; refresh tokens last 30 days and rotate on every use. The worker refreshes within 5 minutes of expiry (not before `earliest_refresh_at`) under a Postgres advisory lock per credential, so parallel runs never race the rotating token, and writes the new pair to Vault in one transaction. The hourly maintenance job refreshes credentials unused for 20 days so routines keep working. Refresh errors (`invalid_grant`, `refresh_token_expired`, `refresh_token_reused` and the like) set `status = needs_reconnect` and notify the owner. Network errors never delete credentials.
-- **Model calls:** a `chatgpt` gateway adapter calls `POST https://api.openai.com/v1/responses` with the bearer token, `store: false` and `stream: true`. It sends the history in `input` (no `previous_response_id`), puts system text in `instructions` or developer messages, and drops the fields OpenAI rejects on this route (`temperature`, `top_p`, `max_output_tokens`, `metadata`, `user`, `truncation`, `background` and the rest of OpenAI's preview-limitations list). The model picker lists the `GET https://api.openai.com/v1/models` entries with `visibility == "list"`. Kasama's own function tools, images and files work. OpenAI's hosted tools, audio input and transcription do not, so voice, dictation and embeddings still need an API key (without one, memory recall uses full-text search, D-017).
+- **Model calls:** a `chatgpt` gateway adapter calls `POST https://api.openai.com/v1/responses` with the bearer token, `store: false` and `stream: true`. It sends the history in `input` (no `previous_response_id`), puts system text in `instructions` or developer messages, and drops the fields OpenAI rejects on this route (`temperature`, `top_p`, `max_output_tokens`, `metadata`, `user`, `truncation`, `background` and the rest of OpenAI's preview-limitations list). The model picker lists the `GET https://api.openai.com/v1/models` entries with `visibility == "list"`. Casama's own function tools, images and files work. OpenAI's hosted tools, audio input and transcription do not, so voice, dictation and embeddings still need an API key (without one, memory recall uses full-text search, D-017).
 - **Limits and errors** (the HTTP status, `error.code` and request id are kept on the run event and in logs):
   - `subscription_sharing_usage_limit_exceeded` (429, or `response.failed` mid-stream): never retried. The run stops with "Your ChatGPT plan limit is reached" and a "Manage usage" link to ChatGPT Settings → Usage, without guessing a reset time. The gateway moves to the bot's next model only if the owner turned on "Use my next model when my ChatGPT limit is reached". That setting is off by default because the next model may cost money, and the timeline says when it happens.
   - `subscription_sharing_user_not_eligible` (403): explain that the plan is not eligible, without looping back through sign-in.
   - `subscription_sharing_invalid_user` (401): set `needs_reconnect` and notify the owner.
   - `subscription_sharing_usage_unavailable` and `subscription_sharing_user_unavailable` (503): bounded backoff, then the normal failover rules.
-  - `subscription_sharing_unsupported_capability` (400): a Kasama bug. Report it with `error.param` and never resend the same body.
-- **Usage and billing:** plan-backed tokens go to `usage_ledger` with `cost_usd = 0` and `source = chatgpt_plan`, and Kasama Cloud never charges credits for them (computer time is still billed). The model picker, bot settings and run timeline show "Using ChatGPT plan". Plus plans share a five-hour limit across every app, so the routine editor warns that routines on a ChatGPT model draw from the same allowance.
-- **Disconnect:** revoke the refresh token at the `revocation_endpoint` listed in `https://auth.openai.com/.well-known/openid-configuration`, then delete the Vault secrets. OpenAI does not tell apps when someone disconnects inside ChatGPT, so Kasama detects it on the next failed call or refresh.
+  - `subscription_sharing_unsupported_capability` (400): a Casama bug. Report it with `error.param` and never resend the same body.
+- **Usage and billing:** plan-backed tokens go to `usage_ledger` with `cost_usd = 0` and `source = chatgpt_plan`, and Casama Cloud never charges credits for them (computer time is still billed). The model picker, bot settings and run timeline show "Using ChatGPT plan". Plus plans share a five-hour limit across every app, so the routine editor warns that routines on a ChatGPT model draw from the same allowance.
+- **Disconnect:** revoke the refresh token at the `revocation_endpoint` listed in `https://auth.openai.com/.well-known/openid-configuration`, then delete the Vault secrets. OpenAI does not tell apps when someone disconnects inside ChatGPT, so Casama detects it on the next failed call or refresh.
 - **Branding:** the button reads "Continue with ChatGPT" and follows OpenAI's approved branding. It appears in onboarding's model step and in Settings → Model keys.
 - **Tests:** a fake OpenAI auth and Responses server (like the fake billing server) covers sign-in, ID-token checks, refresh rotation under concurrency, a limit hit mid-stream, asking for consent again, and revocation. A live check with a real Plus account is a manual launch step.
 
@@ -630,7 +630,7 @@ One Flutter app ships to web, iOS, Android, macOS, Windows and Linux, organized 
 
 - **Feature-first folders** under `lib/features/<name>/` with `data/` (repositories), `application/` (Riverpod notifiers) and `presentation/` (widgets).
 - **Riverpod** with code generation for state; **go\_router** with deep links (`/bots/:id/chat`, `/computers/:id/live`, `/approvals/:id`) used by push notifications.
-- **Data:** `supabase_flutter` for reads and simple writes; the generated `kasama_sdk` client (openapi-generator, dart-dio) for commands; one `RunEventStream` service merges Realtime events with the catch-up endpoint and orders by `seq`.
+- **Data:** `supabase_flutter` for reads and simple writes; the generated `casama_sdk` client (openapi-generator, dart-dio) for commands; one `RunEventStream` service merges Realtime events with the catch-up endpoint and orders by `seq`.
 - **Offline cache:** `drift` stores conversations, messages and bots so chats open instantly; server data always wins on sync.
 - **Models:** `freezed` and `json_serializable`; event payloads come from the generated client.
 
@@ -638,7 +638,7 @@ One Flutter app ships to web, iOS, Android, macOS, Windows and Linux, organized 
 
 | Need                      | Package                                                     |
 | ------------------------- | ----------------------------------------------------------- |
-| Backend                   | supabase\_flutter, generated kasama\_sdk (dio)              |
+| Backend                   | supabase\_flutter, generated casama\_sdk (dio)              |
 | State, routing, models    | flutter\_riverpod, riverpod\_generator, go\_router, freezed |
 | Local cache               | drift                                                       |
 | Live view                 | flutter\_webrtc                                             |
@@ -678,9 +678,9 @@ Dart covers every client, not just the app: the CLI is the first test client for
 
 | Piece                   | What it is                                                                                                                                                                                                                         | Phase     |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| `kasama` CLI            | Dart, compiled per OS with `dart compile exe`. Commands: `login`, `org`, `bot`, `chat` (streams tokens and tool steps), `runs watch`, `memory`, `computer shell`, `computer files`. Later: `selfhost install`, `upgrade`, `backup` | 0 to 2, 8 |
+| `casama` CLI            | Dart, compiled per OS with `dart compile exe`. Commands: `login`, `org`, `bot`, `chat` (streams tokens and tool steps), `runs watch`, `memory`, `computer shell`, `computer files`. Later: `selfhost install`, `upgrade`, `backup` | 0 to 2, 8 |
 | `computerd`             | Dart daemon inside each computer: exec with streaming, files, mouse and keyboard input, screenshots, health. One small static binary, so the image needs no extra runtime for it                                                   | 2         |
-| `kasama_sdk`            | Generated API client, typed run events and a `RunEventStream` helper that merges Realtime with catch-up by `seq`. Used by the app, CLI and companion; published to pub.dev                                                         | 0, 6      |
+| `casama_sdk`            | Generated API client, typed run events and a `RunEventStream` helper that merges Realtime with catch-up by `seq`. Used by the app, CLI and companion; published to pub.dev                                                         | 0, 6      |
 | Home-screen widgets     | Bot status and a quick-ask button on iOS and Android (`home_widget`)                                                                                                                                                               | 6         |
 | iOS Live Activities     | A running bot's progress on the lock screen and Dynamic Island (`live_activities`)                                                                                                                                                 | 6         |
 | Share to bot            | Send links, text and files from any app to a chosen bot (`receive_sharing_intent`)                                                                                                                                                 | 6         |
@@ -688,7 +688,7 @@ Dart covers every client, not just the app: the CLI is the first test client for
 | Owner admin console     | Owner-only screens in the same app: users, providers, quotas, system health, update notices                                                                                                                                        | 6         |
 | Desktop companion       | Bot computer on the user's own machine (see Local computer companion)                                                                                                                                                              | 6         |
 
-**CLI rules:** every CLI command calls only public API endpoints through `kasama_sdk`, so the CLI doubles as an end-to-end test of the backend. Output supports `--json` for scripting. Release binaries for macOS, Linux and Windows on GitHub Releases, plus a Homebrew tap.
+**CLI rules:** every CLI command calls only public API endpoints through `casama_sdk`, so the CLI doubles as an end-to-end test of the backend. Output supports `--json` for scripting. Release binaries for macOS, Linux and Windows on GitHub Releases, plus a Homebrew tap.
 
 ## Security and privacy
 
@@ -792,13 +792,13 @@ Computer time and model tokens are the two costs that grow with users, so both a
 
 ## Monetization
 
-Self-hosting stays free; revenue comes from Kasama Cloud plans, usage credits and Cloud Connect, billed through Dodo Payments on web and desktop and through Apple and Google subscriptions on mobile. No Stripe. The full build is Phase 7; Phase 0 only adds `plans` and `entitlements` stubs with one default self-host plan, so billing later needs no data migration.
+Self-hosting stays free; revenue comes from Casama Cloud plans, usage credits and Cloud Connect, billed through Dodo Payments on web and desktop and through Apple and Google subscriptions on mobile. No Stripe. The full build is Phase 7; Phase 0 only adds `plans` and `entitlements` stubs with one default self-host plan, so billing later needs no data migration.
 
 ### Revenue streams
 
 | Stream             | Who pays                       | How                                                                                                                 |
 | ------------------ | ------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| Kasama Cloud plans | Hosted users                   | Monthly or yearly subscription with included computer hours and model credits                                       |
+| Casama Cloud plans | Hosted users                   | Monthly or yearly subscription with included computer hours and model credits                                       |
 | Usage credits      | Hosted and Cloud Connect users | Prepaid or metered credits for computer time, model tokens and phone numbers                                        |
 | Cloud Connect      | Self-hosters                   | An API key lets a self-hosted instance use cloud computers, model credits and channels, billed to its cloud account |
 | Enterprise license | Companies that self-host       | Commercial license for `ee/` features: SSO and SAML, advanced roles, audit export, priority support                 |
@@ -833,7 +833,7 @@ Plan names, prices and limits are open decisions; the system supports any number
 
 ## Open source and growth
 
-The aim is the shortest path from discovering Kasama to a working bot, plus public numbers that show growth to users and investors. Repo basics start in Phase 0; the public launch is Phase 8.
+The aim is the shortest path from discovering Casama to a working bot, plus public numbers that show growth to users and investors. Repo basics start in Phase 0; the public launch is Phase 8.
 
 ### License and governance
 
@@ -845,9 +845,9 @@ The aim is the shortest path from discovering Kasama to a working bot, plus publ
 ### Fast adoption
 
 - **Under 5 minutes to a first bot:** one-command install, one-click deploy templates (Railway, Render, DigitalOcean, Coolify) and a free hosted tier.
-- **README that sells:** one-line pitch, 60-second demo video, install command, screenshots, and what Kasama does that closed agent products don't (self-hosting, any model, your own computers).
+- **README that sells:** one-line pitch, 60-second demo video, install command, screenshots, and what Casama does that closed agent products don't (self-hosting, any model, your own computers).
 - **Try without paying:** local models through Ollama, or a ChatGPT plan the user already pays for, so a first bot needs no API key.
-- **Ecosystem hooks:** a community repo of skills and bot templates, a Kasama MCP server so people control their bots from AI coding tools, and public SDKs (Dart on pub.dev, TypeScript on npm).
+- **Ecosystem hooks:** a community repo of skills and bot templates, a Casama MCP server so people control their bots from AI coding tools, and public SDKs (Dart on pub.dev, TypeScript on npm).
 - **Docs site** with quick start, self-hosting, API reference generated from OpenAPI, and guides per use case.
 - **English-first docs and UI**; additional locales via ARB files when there is demand.
 
@@ -864,7 +864,7 @@ The aim is the shortest path from discovering Kasama to a working bot, plus publ
 
 ## Post-v1 roadmap
 
-After launch, Kasama builds these features to lead the open-source agent platforms instead of matching them. They come in four waves; build each wave in the order listed unless the product owner reorders it. Each row's acceptance criterion is the test that proves it works, and every item follows the v1 rules (contracts first, RLS and policy tests on every new table, ARB strings, tests in CI).
+After launch, Casama builds these features to lead the open-source agent platforms instead of matching them. They come in four waves; build each wave in the order listed unless the product owner reorders it. Each row's acceptance criterion is the test that proves it works, and every item follows the v1 rules (contracts first, RLS and policy tests on every new table, ARB strings, tests in CI).
 
 | Area                   | Feature                                                                                                                                                                                         | Acceptance criterion                                                                                                                                                                 | Wave |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- |
@@ -885,7 +885,7 @@ After launch, Kasama builds these features to lead the open-source agent platfor
 | Check-ins              | Opt-in morning brief, scans of connected accounts every few hours, and a "For you" feed of suggested actions                                                                                    | The 08:00 brief lists today's meetings and emails needing replies; accepting a suggestion runs it through approvals; a quiet scan sends no push                                      | 1    |
 | Action rules           | Per-action autonomy: allow, allow within limits, ask, or hand off, by tool, category or target                                                                                                  | Email to the user's domain sends without approval and external email waits; a bot cannot change its own rules                                                                        | 1    |
 | Watchers               | "Tell me when": wake a bot when a page changes, a reply arrives, a query result changes or a time passes                                                                                        | A page watcher fires within one check interval of a change, and unchanged checks use no model tokens                                                                                 | 1    |
-| Hosted MCP endpoint    | The existing `@kasama/mcp` tools (D-077) served over HTTP at `/mcp`, so AI apps connect by URL with no install                                                                                  | A remote MCP client connects by URL with OAuth, sends a task to a bot and gets the result; a high-risk step waits for approval                                                       | 1    |
+| Hosted MCP endpoint    | The existing `@casama/mcp` tools (D-077) served over HTTP at `/mcp`, so AI apps connect by URL with no install                                                                                  | A remote MCP client connects by URL with OAuth, sends a task to a bot and gets the result; a high-risk step waits for approval                                                       | 1    |
 | Group chats            | 2 to 10 bots in one chat, woken by `@Name` or `@everyone`                                                                                                                                       | `@everyone` gets a plan from the lead bot and work from each assigned bot; `@Name` wakes only that bot                                                                               | 2    |
 | Pages                  | Full-screen dashboards and reports with public links, PDF export and refresh by routine                                                                                                         | A public link shows the page signed out and returns 404 once revoked; a routine refreshes it                                                                                         | 2    |
 | Teach by showing       | Record a task on the bot's computer and turn it into a skill                                                                                                                                    | After one recorded demo, the bot completes the same form with new values; no typed password is stored                                                                                | 2    |
@@ -924,7 +924,7 @@ After launch, Kasama builds these features to lead the open-source agent platfor
 Bots think on the server, so today they reach only remote MCP servers by URL. MCP servers on the user's own machine (a local command, or a `127.0.0.1` address) need the desktop companion, which already holds a WebSocket to the API.
 
 - In the desktop app, under "Use this computer for bots", the user adds local MCP servers: a command with arguments and a working folder inside a shared folder (stdio), or a loopback address (only `127.0.0.1` or `::1`). Environment values for a server, such as tokens, stay in the app's secure storage on the device and never go to the server. A new companion capability, "Local tools (MCP)", is off until the user approves it, and each server is approved separately.
-- The companion starts stdio servers when a bot first needs them and stops them after 10 idle minutes, or forwards to the loopback address. MCP messages travel over the existing device WebSocket, and the worker uses an MCP transport over that tunnel. This works the same on Kasama Cloud and on self-hosted servers.
+- The companion starts stdio servers when a bot first needs them and stops them after 10 idle minutes, or forwards to the loopback address. MCP messages travel over the existing device WebSocket, and the worker uses an MCP transport over that tunnel. This works the same on Casama Cloud and on self-hosted servers.
 - Each server is an integration of kind `local_mcp` (config: device, computer, owner, server key, label, summary, timeout; nothing secret), registered by the app through `PUT /v1/local-devices/{id}/mcp-servers` and attached at first to the bots that computer allows. Only the computer's owner attaches it to other bots. Tools are listed like other integration tools (D-053) and marked with the device they run on. Each tool's approval level is set as in D-089 (read-only, makes changes, always asks), and the companion's rule that high-risk actions always ask still applies (D-096).
 - Calls show on the companion overlay with the bot and tool name, and Stop cancels the run and sends MCP cancellation. When the device is offline, its tools fail fast with a clear error. Tool output is untrusted content.
 - Long calls: a server can allow calls up to the run's wall time (default 30 minutes). MCP progress notifications appear on the run timeline while the run waits durably.
@@ -978,7 +978,7 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 
 - Skills use the open Agent Skills format (a folder with a `SKILL.md` file and front matter, plus optional files), so community skills work unchanged. Extra files live in object storage and sync to `~/skills/<name>/` on the computer when the skill loads.
 - Catalog: curated skills ship in the repo's `skills/` folder with each release. The app browses them with search and categories and installs a skill to the workspace or to one bot.
-- GitHub import: a repo or folder URL, public or private through the GitHub connection. Kasama pins the commit, shows the files before install and shows a diff before any update. Scripts in a skill run only on the computer.
+- GitHub import: a repo or folder URL, public or private through the GitHub connection. Casama pins the commit, shows the files before install and shows a diff before any update. Scripts in a skill run only on the computer.
 - Save as a skill: new tools `skills.create` and `skills.update` (medium risk; the approval card shows the text or the diff). "Save that as a skill" turns the method used in the conversation into one.
 - `/` picker: typing `/` in the composer lists skills; picking one attaches it to the message so the run loads it up front.
 
@@ -1034,7 +1034,7 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 
 ### Hosted MCP endpoint
 
-- `@kasama/mcp` (D-077) already gives local MCP clients the tools `list_workspaces`, `list_bots`, `ask_bot`, `get_run`, `list_approvals` and `decide_approval` over stdio. The API now also serves the same tools over Streamable HTTP at `/mcp`, sharing one tool implementation, so web and mobile AI apps that only take a URL can connect.
+- `@casama/mcp` (D-077) already gives local MCP clients the tools `list_workspaces`, `list_bots`, `ask_bot`, `get_run`, `list_approvals` and `decide_approval` over stdio. The API now also serves the same tools over Streamable HTTP at `/mcp`, sharing one tool implementation, so web and mobile AI apps that only take a URL can connect.
 - Auth is OAuth (the MCP authorization flow, with dynamic client registration) or a workspace API key. Runs keep the bot's approvals, rules and budgets, and `decide_approval` over MCP is off unless the workspace allows it. The docs give copy-paste client configs.
 
 ### Group chats
@@ -1048,7 +1048,7 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 - `pages` (org\_id, bot\_id, title, html, data jsonb, visibility private, workspace or public, public\_token\_hash, expires\_at, refresh\_routine\_id, version), plus `page_versions` holding the last 20.
 - A page is one self-contained HTML document the bot writes, with its data in a separate JSON block it can update without rewriting the layout. Tools: `pages.publish` (from HTML or a file on the computer), `pages.update_data`, and `pages.share` (high risk, because it can make data public).
 - Pages are web only (D-092): the same HTML serves the app, public links and PDF export, so anything a page shows can be shared. They are served from a separate origin with a strict content security policy (inline scripts and styles only, no network requests, no forms that post out).
-- The app never embeds a page in a WebView. It opens pages in the system's in-app browser (Safari View Controller on iOS, Chrome Custom Tabs on Android, via `url_launcher` `inAppBrowserView`), the default browser on macOS, Windows and Linux, and a new tab on the web. Because that browser has no Kasama session, opening a private or workspace page first asks the API for a single-use view link (60 s, bound to the page and the viewer) that the pages origin swaps for a short page-scoped cookie. A2UI stays the format for cards inside chat and is never used for pages.
+- The app never embeds a page in a WebView. It opens pages in the system's in-app browser (Safari View Controller on iOS, Chrome Custom Tabs on Android, via `url_launcher` `inAppBrowserView`), the default browser on macOS, Windows and Linux, and a new tab on the web. Because that browser has no Casama session, opening a private or workspace page first asks the API for a single-use view link (60 s, bound to the page and the viewer) that the pages origin swaps for a short page-scoped cookie. A2UI stays the format for cards inside chat and is never used for pages.
 - Public links use unguessable, revocable tokens, an optional expiry and `noindex`. PDF export renders the page with headless Chromium in the worker. A routine linked to a page refreshes it on schedule, and the page shows when it was last updated.
 
 ### Teach a task by showing it
@@ -1060,18 +1060,18 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 ### Plugins
 
 - Install packages in the Agent Plugins 1.0 format (`plugin.json` and `mcp.json`, validated against the published schemas at agent-plugins.org) from a GitHub repo, pinned to a commit.
-- A plugin can bring skills, remote MCP servers and stdio MCP servers. Stdio servers run inside the bot's computer, started by `computerd` and bridged to the worker, so plugin code never runs on Kasama's servers. With the desktop companion, a plugin can also be installed on the user's computer as local MCP servers.
+- A plugin can bring skills, remote MCP servers and stdio MCP servers. Stdio servers run inside the bot's computer, started by `computerd` and bridged to the worker, so plugin code never runs on Casama's servers. With the desktop companion, a plugin can also be installed on the user's computer as local MCP servers.
 - Before install, the app shows what the plugin adds: tools and their risk, network hosts, and the secrets it needs. Updates show a diff, and uninstall removes everything the plugin added. A paid marketplace stays a non-goal.
 
 ### Import an agent
 
 - Agent folders: upload a ZIP, or pick a folder in the desktop app, from OpenClaw or Hermes Agent. Importers built from each project's public docs map persona files, memory files, skills and schedules to a bot, memories, skills and routines, show the mapping for review, and put anything else in `~/imported/` on the bot's computer.
-- ChatGPT or Claude memory: the app shows a prompt to paste into that assistant, which answers with the user's saved memories in a fixed format. The user pastes the answer back, and Kasama turns it into facts and preferences, each with a checkbox.
+- ChatGPT or Claude memory: the app shows a prompt to paste into that assistant, which answers with the user's saved memories in a fixed format. The user pastes the answer back, and Casama turns it into facts and preferences, each with a checkbox.
 
 ### Routines and skills as files
 
 - Each routine and skill has a Markdown form with front matter (bot, schedule, timezone, trigger, enabled), with export and import in the app and the CLI.
-- Optional git sync per workspace through the GitHub connection: app changes commit to the repo, and a push to the repo updates Kasama after validation. When both sides changed, the app keeps its version and opens a pull request with the other.
+- Optional git sync per workspace through the GitHub connection: app changes commit to the repo, and a push to the repo updates Casama after validation. When both sides changed, the app keeps its version and opens a pull request with the other.
 
 ### Knowledge sources
 
@@ -1098,7 +1098,7 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 
 - First run (signed in, no invite): the app creates a personal workspace ("<first name>'s space") and a personal bot (named from the product-name constant, with a mascot avatar; renamable in chat) and opens its chat. Joining by invite link skips this. The three-step wizard stays behind "Set up manually".
 - The opening is scripted: normal bot messages with A2UI cards, stored like any message, with no model call. First "What should I call you?" (About you, D-169), then "What should I help with first?" (up to three of Email and calendar, Work projects, Coding, Research, Sales and customers, Personal errands, Something else with free text), then "Just me, my team or my business?". Both can be skipped, which gives a general intro.
-- Then a scripted intro written for the picks (ARB strings in Kasama's own words) and one main connection card, with "More apps" below it:
+- Then a scripted intro written for the picks (ARB strings in Casama's own words) and one main connection card, with "More apps" below it:
 
   | Pick                | Main connection                                                  | First value without a connection               |
   | ------------------- | ---------------------------------------------------------------- | ---------------------------------------------- |
@@ -1110,7 +1110,7 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
   | Personal errands    | Calendar                                                         | "What's one errand I can take off your plate?" |
   | Something else      | Chosen by the bot from the description once a model is available | Model-written                                  |
 
-- No model yet (self-hosted): before anything that needs the model, an inline card offers Continue with ChatGPT, a model key or a local model. Kasama Cloud's starter credits skip this card.
+- No model yet (self-hosted): before anything that needs the model, an inline card offers Continue with ChatGPT, a model key or a local model. Casama Cloud's starter credits skip this card.
 - First value: with email or calendar connected, a catch-up run (after an explicit consent line) reads the next 14 days of calendar and, only if inbox access was granted, the last 14 days of email. It posts "Here's what I noticed" (3–5 items), up to three one-tap task cards and a morning brief offer (check-ins). Without connections, the bot posts the first task card for the pick.
 - The setup interview (D-105) then runs in the same chat with two or three questions, followed by a "What I learned" card listing the memories saved (up to 10) to edit or delete. Then the chat is open.
 - The picks are saved as memories, shape the personal bot's instructions, choose which starter bots it suggests and set what check-ins cover. "My team" or "My business" adds an invite-link card and suggests shared bots.
@@ -1128,12 +1128,13 @@ Bots should know who they are talking to without the person filling in a form. E
 - **Where it applies:** the preferred name, pronouns and "How I like replies" go into every run that acts for the person, in every workspace. "About me" and learned facts apply only in personal spaces (where the person is the only member) unless they turn on "Use what I've shared about me" for a team space (`profile_spaces`); the default in team spaces is off. A space with a second member stops using them automatically.
 - **Whose profile:** the person the run acts for (the sender, the routine's creator or a parent run's person, D-095). Runs for nobody (linked agents) get no profile.
 - **Prompt:** a short "Who you're talking with" block after the skills index and date, so the cached prefix doesn't change. The personal bot's instructions no longer hold the person's name.
-- **Privacy:** About you is in the data export and is deleted with the account. Profile text is not covered by encryption at rest (it has no workspace key); the docs say so.
+- **Privacy:** About you is in the data export and is deleted with the account. Its text is sealed with the person's own key while they belong to a workspace that encrypts (Encryption at rest), so the app reads and writes it through the API.
+- **People who signed up earlier** get one "What should bots call you?" card above their bots. Personal bots made before this lose the name from their instructions. The People screen shows the name each member goes by and their pronouns.
 
 ### Google sign-in and permissions
 
-- Kasama Cloud uses its own Google OAuth app with only non-sensitive and sensitive scopes: sign-in (`openid`, `email`, `profile`), `calendar.events`, `gmail.send` and `drive.file` (files the user picks with Google's file picker). These need Google's free verification (a verified domain, a privacy policy on it and a demo video) and no yearly security assessment.
-- Reading the inbox needs a restricted scope (`gmail.modify`), requested only when the user turns on an inbox feature (incremental authorization). Until Kasama passes Google's restricted-scope verification and its yearly security assessment, Kasama Cloud provides inbox access through Composio's managed Google sign-in, shown as a separate, clearly explained step; Zapier's MCP server (one-click, D-089) also works. When verification passes, inbox access moves into Kasama's own app and users reconnect once.
+- Casama Cloud uses its own Google OAuth app with only non-sensitive and sensitive scopes: sign-in (`openid`, `email`, `profile`), `calendar.events`, `gmail.send` and `drive.file` (files the user picks with Google's file picker). These need Google's free verification (a verified domain, a privacy policy on it and a demo video) and no yearly security assessment.
+- Reading the inbox needs a restricted scope (`gmail.modify`), requested only when the user turns on an inbox feature (incremental authorization). Until Casama passes Google's restricted-scope verification and its yearly security assessment, Casama Cloud provides inbox access through Composio's managed Google sign-in, shown as a separate, clearly explained step; Zapier's MCP server (one-click, D-089) also works. When verification passes, inbox access moves into Casama's own app and users reconnect once.
 - Self-hosted servers use their own Google client, published to production rather than Testing (Testing ends sign-ins after 7 days); unverified apps work for up to 100 users, and Google's Gmail MCP server works with that client.
 - Forwarding mail to the bot's own address (Chat apps: email) needs no Google permission at all.
 
@@ -1173,7 +1174,7 @@ Bots should know who they are talking to without the person filling in a form. E
 ### Paid data services
 
 - A `DataProvider` interface with a Treg adapter (treg.to). Tools `data.{service}.{operation}` show the price in the approval card before the call.
-- Kasama Cloud charges the provider's cost plus 20% to credits (`usage_ledger.kind = data_calls`). Self-hosters use their own Treg key with no markup. Hosted resale waits for a written agreement with Treg.
+- Casama Cloud charges the provider's cost plus 20% to credits (`usage_ledger.kind = data_calls`). Self-hosters use their own Treg key with no markup. Hosted resale waits for a written agreement with Treg.
 
 ### More sandbox providers
 
@@ -1188,16 +1189,16 @@ Bots should know who they are talking to without the person filling in a form. E
 
 - Tool `voice.call(number, purpose, notes)` (high risk): the bot places an outbound call through a telephony provider (Twilio first) on the live-voice stack. It says at the start that it is an AI assistant calling for the user, works toward the stated purpose and hangs up when done.
 - The app shows a live transcript, and the user can listen in, take over or end the call. Recording is off by default and only allowed where consent rules permit.
-- Limits: business numbers by default, a daily call cap, never emergency numbers, and a number deny list on Kasama Cloud. Call minutes go to credits. Legal review comes before hosted launch.
+- Limits: business numbers by default, a daily call cap, never emergency numbers, and a number deny list on Casama Cloud. Call minutes go to credits. Legal review comes before hosted launch.
 
 ### Payments
 
-- A `PaymentProvider` interface; the first adapter issues single-use virtual cards (Stripe Issuing on Kasama Cloud; self-hosters bring their own issuing account). `payments.request(merchant, amount, currency, reason)` always needs approval with the amount shown. The card works once, for that merchant and amount plus a small tolerance, and expires after 1 h. The executor fills card details into checkout; the model never sees them.
+- A `PaymentProvider` interface; the first adapter issues single-use virtual cards (Stripe Issuing on Casama Cloud; self-hosters bring their own issuing account). `payments.request(merchant, amount, currency, reason)` always needs approval with the amount shown. The card works once, for that merchant and amount plus a small tolerance, and expires after 1 h. The executor fills card details into checkout; the model never sees them.
 - Hard bans no rule can relax: trading securities, buying crypto or gift cards, transfers between accounts and payments to individuals. Monthly spend caps per bot and workspace. Legal review (card issuing terms, money transmission) comes before hosted launch.
 
 ### Linked agents
 
-- A person links their bot with a trusted contact's bot; both approve and either can revoke. Links work across workspaces and, through A2A, across Kasama servers.
+- A person links their bot with a trusted contact's bot; both approve and either can revoke. Links work across workspaces and, through A2A, across Casama servers.
 - Linked bots exchange structured requests ("find a dinner slot for 4 next week"), each under its own owner's rules, sharing only what the request needs. Every exchange shows in both owners' timelines.
 
 ### Voice upgrades
@@ -1211,14 +1212,14 @@ Bots should know who they are talking to without the person filling in a form. E
 - Cloudflare AI Gateway as an optional base URL per provider, for caching, logs and rate limits.
 - One-click local server: the desktop app checks for Docker, runs the self-host stack on the same machine and connects to it.
 - A self-host sign-up allowlist (`SIGNUP_ALLOWED_EMAILS`, emails or domains) beside `DISABLE_SIGNUP`.
-- Encrypted backups (`kasama selfhost backup --encrypt`, using age) with retention limits.
+- Encrypted backups (`casama selfhost backup --encrypt`, using age) with retention limits.
 - Team computer layout: a `bots/<name>/` folder per bot and a `shared/` folder, plus a cap on simultaneous desktops per team computer.
 - A Helm chart for self-hosters on Kubernetes (separate from the Kubernetes sandbox provider).
 - Warm pool of computers (D-033), once first-command latency matters in practice.
 
 ### Device connections
 
-- Collected by the Kasama app on phones and by the desktop companion on computers. Every type is off until the user turns it on per device in Settings → Device connections; the system permission prompt appears only then.
+- Collected by the Casama app on phones and by the desktop companion on computers. Every type is off until the user turns it on per device in Settings → Device connections; the system permission prompt appears only then.
 - Access per bot: a bot that needs a type asks with a one-tap card, and a personal starter bot's setup interview asks for calendar, places and health. The owner revokes access from the card, the bot or Settings.
 - Owner only: the data belongs to a person, not the workspace, and is used only by runs acting for that person (the D-091 rule). Teammates' bots never see it.
 - Devices upload summaries in the background (health background delivery, geofences, Android WorkManager, companion timers) into `device_readings` (user\_id, device\_id, kind, period\_start, period\_end, summary jsonb, collected\_at). `device.read(kind, range)` returns summaries with their age and asks an online device for a fresh read (10 s timeout).
@@ -1244,7 +1245,7 @@ Bots should know who they are talking to without the person filling in a form. E
 - Read-only through the `health` package (Apple Health and Health Connect): sleep (stages, start and end), steps, active energy, workouts, resting heart rate, heart-rate variability and weight. Cycle tracking, blood glucose and blood pressure are separate switches, off by default. Data from watches and rings arrives through Health or Health Connect.
 - A daily summary each morning and a summary after each workout; trends against the user's own 30-day baseline are computed on the server without a model.
 - No medical claims: neutral wording ("lower than your usual"), and health tools carry a "not medical advice" rule.
-- Kasama Cloud stores health data only with encryption at rest on; self-hosted servers keep it on their own machine. Store requirements: purpose strings, a privacy policy, Google's Health Connect declaration, and never using the data for ads or training.
+- Casama Cloud stores health data only with encryption at rest on; self-hosted servers keep it on their own machine. Store requirements: purpose strings, a privacy policy, Google's Health Connect declaration, and never using the data for ads or training.
 
 ### Device triggers
 
@@ -1280,11 +1281,11 @@ A phase starts only when the previous gate passes; the full task lists and gate 
 - [x] Supabase migrations for organizations, memberships, profiles, invites, with RLS and pgTAP tests
 - [x] Billing-ready stubs: `plans` and `entitlements` tables with one default self-host plan
 - [x] Server skeleton: Hono with zod-openapi, `MODE=api` and `MODE=worker`, JWT middleware, `withUserSession`, problem-JSON errors, health checks, interactive API reference at `/docs`
-- [x] `packages/contracts`: OpenAPI generation and run event schema; generator for `dart/kasama_sdk`
+- [x] `packages/contracts`: OpenAPI generation and run event schema; generator for `dart/casama_sdk`
 - [x] DBOS wired into the worker with one test workflow
 - [x] Observability package: OpenTelemetry and Sentry
 - [x] Docker Compose stack for local development
-- [x] `kasama` CLI v0: `login`, `whoami`, `org create`, `org invite`
+- [x] `casama` CLI v0: `login`, `whoami`, `org create`, `org invite`
 
 **Gate:** a developer signs up and logs in from the CLI, creates a workspace and invites a member; the cross-org RLS test passes; CI is green.
 
@@ -1318,7 +1319,7 @@ A phase starts only when the previous gate passes; the full task lists and gate 
 
 ### Phase 3: MVP app (Flutter)
 
-- [x] App shell: theme, go\_router, l10n, adaptive layout, wired to `kasama_sdk`
+- [x] App shell: theme, go\_router, l10n, adaptive layout, wired to `casama_sdk`
 - [x] Auth screens (email, magic link, Google, Apple), create and join workspace, add a model key
 - [x] Bots list, streaming chat with tool cards, activity timeline
 - [x] Computer tab: screenshot view, terminal, file browser, checkpoint Restore
@@ -1358,7 +1359,7 @@ A phase starts only when the previous gate passes; the full task lists and gate 
 - [x] Voice: dictation, read aloud, live calls with tool forwarding
 - [x] Local computer companion on macOS, Windows and Linux
 - [x] Home-screen widgets, iOS Live Activities, share to bot, desktop hotkey and tray, owner admin console
-- [ ] Publish `kasama_sdk` to pub.dev; CLI release binaries and Homebrew tap
+- [ ] Publish `casama_sdk` to pub.dev; CLI release binaries and Homebrew tap
 
 **Gate:** a live call reply starts within 1 s; the companion completes a browser task on the user's Mac; an external sample app streams a run with the published SDK.
 
@@ -1370,7 +1371,7 @@ A phase starts only when the previous gate passes; the full task lists and gate 
 - [x] Google Play adapter: `in_app_purchase`, Play Developer API verification, real-time developer notifications
 - [x] Entitlement service feeding quotas; credit deductions from `usage_ledger`
 - [x] Plans, paywall and Restore Purchases screens; iOS shows in-app purchase only outside the US storefront
-- [x] Cloud Connect: API keys, `kasama-cloud` sandbox provider and model credit proxy for self-hosted instances
+- [x] Cloud Connect: API keys, `casama-cloud` sandbox provider and model credit proxy for self-hosted instances
 - [x] `BILLING_ENABLED=false` by default in self-host builds
 
 **Gate:** a Dodo purchase on web unlocks iOS and Android; an App Store purchase unlocks web; cancel and refund webhooks remove access; a self-hosted instance runs a bot on a cloud computer and the usage shows on its cloud bill.
@@ -1382,15 +1383,15 @@ A phase starts only when the previous gate passes; the full task lists and gate 
 - [x] Security review against the threat table; penetration test of sandbox isolation and RLS
 - [x] Data export, account deletion, retention settings
 - [x] Self-host installer, CLI `selfhost` commands, one-click deploy templates, docs site
-- [x] `ee/` features under the commercial license; opt-in telemetry; Kasama MCP server
+- [x] `ee/` features under the commercial license; opt-in telemetry; Casama MCP server
 - [ ] Marketing site, demo video, app store listings, signed desktop installers, Shorebird release flow
 - [x] ChatGPT plan sign-in (see Model gateway): desktop and CLI sign-in, the `chatgpt` gateway adapter, limit and reconnect handling, and the fake OpenAI test server; cloud stays off until OpenAI approves hosted use
 - [x] Two-step sign-in: TOTP through Supabase Auth on every platform, more than one factor allowed as backup, and a workspace setting that requires it for owners and admins (sensitive routes then need `aal2`); passkeys once Supabase Auth supports them
-- [x] Kasama Cloud abuse controls: a sign-up check on new email accounts (Supabase Auth's before-user-created hook accepts a Firebase App Check token, which needs no visible widget, or a solved proof-of-work puzzle on platforms without App Check), a verified email before a free-tier computer starts, outbound mail ports blocked, per-computer egress and CPU limits, crypto-mining and flood detection in the egress proxy that stops the computer and suspends the workspace, and Suspend in the owner console (stops computers and runs, keeps data, writes `audit_log`); self-hosted servers keep all of this off (D-094)
-- [x] Least-privilege `kasama_worker` database role for the worker and system jobs (D-016)
+- [x] Casama Cloud abuse controls: a sign-up check on new email accounts (Supabase Auth's before-user-created hook accepts a Firebase App Check token, which needs no visible widget, or a solved proof-of-work puzzle on platforms without App Check), a verified email before a free-tier computer starts, outbound mail ports blocked, per-computer egress and CPU limits, crypto-mining and flood detection in the egress proxy that stops the computer and suspends the workspace, and Suspend in the owner console (stops computers and runs, keeps data, writes `audit_log`); self-hosted servers keep all of this off (D-094)
+- [x] Least-privilege `casama_worker` database role for the worker and system jobs (D-016)
 - [ ] Public launch: Show HN, Product Hunt, r/selfhosted, r/LocalLLaMA
 
-**Gate:** load test p95 time to first token under 3 s; evals at or above baseline; security checklist closed; fresh VPS install under 15 minutes; a self-hosted bot replies on a ChatGPT plan; two-step sign-in works on all six platforms; a scripted sign-up without a sign-up proof fails on Kasama Cloud; apps approved in both stores; public launch done.
+**Gate:** load test p95 time to first token under 3 s; evals at or above baseline; security checklist closed; fresh VPS install under 15 minutes; a self-hosted bot replies on a ChatGPT plan; two-step sign-in works on all six platforms; a scripted sign-up without a sign-up proof fails on Casama Cloud; apps approved in both stores; public launch done.
 
 ### Post-v1 (specified, not part of Phases 0–8)
 
@@ -1410,16 +1411,16 @@ Eleven decisions have defaults the coding agent can build on now; confirm each b
 
 | Decision                      | Default in this spec                                                                          | Confirm by     |
 | ----------------------------- | --------------------------------------------------------------------------------------------- | -------------- |
-| Final product name and domain | "Kasama" as a working name in one config constant; check trademarks before launch             | Phase 8        |
+| Final product name and domain | "Casama" as a working name in one config constant; check trademarks before launch             | Phase 8        |
 | Who pays for model usage      | Bring-your-own model keys at launch; included credits later via Dodo Payments                 | Phase 7        |
 | Supabase hosting              | Supabase Cloud in your chosen region for hosted; self-hosted Supabase in Compose              | Phase 0        |
 | Media generation provider     | fal.ai first; additional `MediaProvider` adapters as needed                                   | Phase 4        |
 | WebRTC streamer               | Decided: Neko (D-054)                                                                         | Phase 5        |
-| Hosted ChatGPT plan usage     | Off on Kasama Cloud until OpenAI approves it through its interest form                        | Cloud launch   |
+| Hosted ChatGPT plan usage     | Off on Casama Cloud until OpenAI approves it through its interest form                        | Cloud launch   |
 | Name for workspaces in the UI | Keep "workspace"; switch to "space" if the product owner prefers                              | Post-v1 Wave 1 |
 | Page format                   | Self-contained HTML on a separate origin; A2UI stays for chat cards                           | Post-v1 Wave 2 |
 | Paid data resale              | Treg adapter; hosted resale only after a written agreement with Treg                          | Post-v1 Wave 3 |
-| Google inbox access           | Composio managed sign-in on Kasama Cloud until Kasama passes Google's restricted-scope review | Cloud launch   |
+| Google inbox access           | Composio managed sign-in on Casama Cloud until Casama passes Google's restricted-scope review | Cloud launch   |
 | Maps provider for leave-now   | Google Maps or Mapbox on the workspace's own key                                              | Post-v1 Wave 4 |
 
 | Risk                                                                                     | Impact                                           | Mitigation                                                                                                                                 |

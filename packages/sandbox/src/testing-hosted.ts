@@ -1,6 +1,6 @@
 /**
  * Local stand-ins for the E2B and Daytona control planes, for tests. Each "sandbox" is a local
- * container of Kasama's computer image; requests use the real REST shapes the adapters send
+ * container of Casama's computer image; requests use the real REST shapes the adapters send
  * (D-057), and every request is recorded so tests can check authentication headers.
  */
 import { execFile } from "node:child_process";
@@ -73,7 +73,7 @@ export async function startMockControlPlane(opts: {
       "--name",
       container,
       "--label",
-      "dev.kasama.test=1",
+      "dev.casama.test=1",
       ...(opts.network ? ["--network", opts.network] : []),
       "-p",
       "127.0.0.1::7070",
@@ -197,7 +197,7 @@ export async function startMockControlPlane(opts: {
           await start(
             src.alias,
             env,
-            { "user.kasama_ref": config["user.kasama_ref"] ?? "" },
+            { "user.casama_ref": config["user.casama_ref"] ?? "" },
             String(b.name),
           );
           return op();

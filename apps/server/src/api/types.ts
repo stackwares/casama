@@ -1,5 +1,5 @@
-import type { Database, JwtClaims } from "@kasama/db";
-import type { Logger } from "@kasama/observability";
+import type { Database, JwtClaims } from "@casama/db";
+import type { Logger } from "@casama/observability";
 import type { Env } from "../env.ts";
 import type { EmailSender } from "../services/email.ts";
 import type { TokenVerifier } from "./auth.ts";
@@ -14,7 +14,7 @@ export interface AppDeps {
   logger: Logger;
   workflows: Workflows;
   /** Computers (Phase 2); unset when no supervisor is configured. */
-  computers?: import("@kasama/agent").ComputerService;
+  computers?: import("@casama/agent").ComputerService;
   hub: RunEventHub;
   /** Connected desktop companions (Phase 6, D-066). */
   devices?: import("./routes/local.ts").DeviceRegistry;

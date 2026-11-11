@@ -3,7 +3,7 @@ import FlutterMacOS
 import ServiceManagement
 
 class MainFlutterWindow: NSWindow {
-  private static let frameName = "KasamaMainWindow"
+  private static let frameName = "CasamaMainWindow"
 
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
@@ -31,7 +31,7 @@ class MainFlutterWindow: NSWindow {
   }
 }
 
-// MARK: - Mac integration over the kasama/mac channel: the menu bar (File, Go, Settings…, Help)
+// MARK: - Mac integration over the casama/mac channel: the menu bar (File, Go, Settings…, Help)
 // sends its actions to Flutter; Flutter sets the dock badge and launch at login.
 
 final class MacBridge: NSObject {
@@ -39,7 +39,7 @@ final class MacBridge: NSObject {
   private var channel: FlutterMethodChannel?
 
   func attach(_ messenger: FlutterBinaryMessenger) {
-    let channel = FlutterMethodChannel(name: "kasama/mac", binaryMessenger: messenger)
+    let channel = FlutterMethodChannel(name: "casama/mac", binaryMessenger: messenger)
     channel.setMethodCallHandler { call, result in
       switch call.method {
       case "badge":
@@ -92,15 +92,15 @@ final class MacBridge: NSObject {
 
   private func installMenus() {
     guard let main = NSApp.mainMenu, main.items.first(where: { $0.submenu?.title == "File" }) == nil else { return }
-    // The template's "About APP_NAME", "Hide APP_NAME", "Quit APP_NAME" say Kasama.
+    // The template's "About APP_NAME", "Hide APP_NAME", "Quit APP_NAME" say Casama.
     for menuItem in main.items {
-      if menuItem.title.contains("APP_NAME") { menuItem.title = menuItem.title.replacingOccurrences(of: "APP_NAME", with: "Kasama") }
+      if menuItem.title.contains("APP_NAME") { menuItem.title = menuItem.title.replacingOccurrences(of: "APP_NAME", with: "Casama") }
       for sub in menuItem.submenu?.items ?? [] where sub.title.contains("APP_NAME") {
-        sub.title = sub.title.replacingOccurrences(of: "APP_NAME", with: "Kasama")
+        sub.title = sub.title.replacingOccurrences(of: "APP_NAME", with: "Casama")
       }
     }
     // Direct download only (the Mac App Store updates the app itself): Check for Updates….
-    if Bundle.main.object(forInfoDictionaryKey: "KasamaDistribution") as? String != "appstore",
+    if Bundle.main.object(forInfoDictionaryKey: "CasamaDistribution") as? String != "appstore",
        let appMenu = main.items.first?.submenu, appMenu.items.first(where: { $0.representedObject as? String == "checkUpdates" }) == nil {
       appMenu.insertItem(item("Check for Updates…", "", [], "checkUpdates"), at: 1)
     }
@@ -134,7 +134,7 @@ final class MacBridge: NSObject {
 
     if let help = main.items.first(where: { $0.submenu?.title == "Help" })?.submenu {
       help.removeAllItems()
-      help.addItem(item("Kasama Help", "?", [.command], "help"))
+      help.addItem(item("Casama Help", "?", [.command], "help"))
     }
   }
 }

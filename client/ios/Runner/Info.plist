@@ -8,18 +8,18 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.kasama.app</string>
+			<string>ai.casama.app</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>kasama</string>
+				<string>casama</string>
 			</array>
 		</dict>
 	</array>
 
 	<key>NSCameraUsageDescription</key>
-	<string>Kasama uses the camera when you take a photo to send to a bot.</string>
+	<string>Casama uses the camera when you take a photo to send to a bot.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Kasama opens your photo library when you choose a photo to send to a bot.</string>
+	<string>Casama opens your photo library when you choose a photo to send to a bot.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Your bots can answer questions about your schedule and add events, only when you turn on Calendar in Device connections.</string>
 	<key>NSCalendarsUsageDescription</key>
@@ -27,21 +27,21 @@
 	<key>NSContactsUsageDescription</key>
 	<string>Your bots can look up people you know, only when you turn on Contacts in Device connections.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Your bots can see daily summaries of your sleep, activity and workouts, only when you turn on Health in Device connections. Kasama never writes to Health and never uses it for ads.</string>
+	<string>Your bots can see daily summaries of your sleep, activity and workouts, only when you turn on Health in Device connections. Casama never writes to Health and never uses it for ads.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Kasama only reads Health data; it never writes to it.</string>
+	<string>Casama only reads Health data; it never writes to it.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Save named places (Home, Work) and tell your bots when it's time to leave, only when you turn on Places in Device connections.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Tell your bots when you arrive at or leave your named places, even when Kasama is closed. Only the place name and time are shared, never your route.</string>
+	<string>Tell your bots when you arrive at or leave your named places, even when Casama is closed. Only the place name and time are shared, never your route.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Kasama uses the microphone for dictation and voice calls with your bots.</string>
+	<string>Casama uses the microphone for dictation and voice calls with your bots.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Kasama App</string>
+	<string>Casama App</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -49,7 +49,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>kasama_app</string>
+	<string>casama_app</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

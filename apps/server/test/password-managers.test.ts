@@ -2,8 +2,8 @@
 import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { registerLoginTools, resolveLoginPlaceholders, ToolRegistry } from "@kasama/agent";
-import { parseTotp, totpCode } from "@kasama/domain";
+import { registerLoginTools, resolveLoginPlaceholders, ToolRegistry } from "@casama/agent";
+import { parseTotp, totpCode } from "@casama/domain";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 

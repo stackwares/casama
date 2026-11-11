@@ -1,7 +1,7 @@
-# Kasama app
+# Casama app
 
-The Flutter app for iOS, Android, macOS, Windows, Linux and the web. It talks to a Kasama server
-through the generated Dart SDK (`dart/kasama_sdk`) and Supabase (sign-in and live updates).
+The Flutter app for iOS, Android, macOS, Windows, Linux and the web. It talks to a Casama server
+through the generated Dart SDK (`dart/casama_sdk`) and Supabase (sign-in and live updates).
 
 ## Run it
 
@@ -9,7 +9,7 @@ Start a local server first (see [CONTRIBUTING.md](../CONTRIBUTING.md#development
 
 ```sh
 flutter pub get
-flutter run -d macos --dart-define=KASAMA_API_URL=http://localhost:8787
+flutter run -d macos --dart-define=CASAMA_API_URL=http://localhost:8787
 ```
 
 Any Flutter device works: `-d chrome`, an iOS simulator, an Android emulator, `-d windows` or
@@ -22,10 +22,10 @@ Pass these with `--dart-define=NAME=value`. All are optional.
 
 | Setting | What it does |
 | --- | --- |
-| `KASAMA_API_URL` | The default server address (default `http://localhost:8787`; empty on web means the page's own origin) |
-| `KASAMA_DISTRIBUTION` | `direct` (default; a signed download with every feature) or `appstore` (the sandboxed Mac App Store build, which turns off features that reach outside the app) |
-| `KASAMA_HELP_URL` | Where **Help** in the macOS menu bar points (default: the docs on GitHub) |
-| `KASAMA_SELFHOST_BUNDLE` | Where **Run Kasama on this computer** downloads the server from |
+| `CASAMA_API_URL` | The default server address (default `http://localhost:8787`; empty on web means the page's own origin) |
+| `CASAMA_DISTRIBUTION` | `direct` (default; a signed download with every feature) or `appstore` (the sandboxed Mac App Store build, which turns off features that reach outside the app) |
+| `CASAMA_HELP_URL` | Where **Help** in the macOS menu bar points (default: the docs on GitHub) |
+| `CASAMA_SELFHOST_BUNDLE` | Where **Run Casama on this computer** downloads the server from |
 | `SENTRY_DSN`, `POSTHOG_API_KEY`, `POSTHOG_HOST`, `ERROR_REPORTING` | Error reporting (off unless set) |
 | `FIREBASE_*` | Push notifications for official builds (see `config/firebase.json`) |
 

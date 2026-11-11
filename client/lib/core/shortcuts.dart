@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:quick_actions/quick_actions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,7 +17,7 @@ import 'router.dart';
 bool get _apple => !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS);
 bool get _android => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
-const _channel = MethodChannel('kasama/shortcuts');
+const _channel = MethodChannel('casama/shortcuts');
 
 /// The paths shortcuts open: `/quick-ask?bot=…&text=…` and `/run-routine/<routine>:<bot>`.
 String askPath({String? botId, String text = ''}) =>
@@ -60,7 +60,7 @@ final shortcutsProvider = Provider<void>((ref) {
     }
     if (_apple) {
       try {
-        await (await SharedPreferences.getInstance()).setString('kasama.shortcuts', shortcutsJson(bots, routines));
+        await (await SharedPreferences.getInstance()).setString('casama.shortcuts', shortcutsJson(bots, routines));
       } catch (_) {}
     }
     if (actions != null) {

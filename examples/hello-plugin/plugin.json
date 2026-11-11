@@ -1,14 +1,14 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "name": "hello-kasama",
+  "name": "hello-casama",
   "version": "1.0.0",
   "description": "A small example plugin: a stand-up skill and a notes server with one secret.",
-  "author": { "name": "Kasama" },
-  "repository": "https://github.com/stackwares/kasama",
+  "author": { "name": "Casama" },
+  "repository": "https://github.com/stackwares/casama",
   "license": "Apache-2.0",
   "keywords": ["example", "notes", "standup"],
   "extensions": {
-    "com.kasama": {
+    "com.casama": {
       "secrets": [
         {
           "name": "NOTES_SIGNATURE",

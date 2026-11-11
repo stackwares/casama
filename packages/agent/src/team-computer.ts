@@ -1,6 +1,6 @@
-import type { Database } from "@kasama/db";
-import { slugify } from "@kasama/domain";
-import type { ExecOptions, SandboxHandle } from "@kasama/sandbox";
+import type { Database } from "@casama/db";
+import { slugify } from "@casama/domain";
+import type { ExecOptions, SandboxHandle } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 
 /**
@@ -8,7 +8,7 @@ import { sql } from "drizzle-orm";
  * folder, `~/workspace/bots/<folder>`, and `~/workspace/shared` holds what the bots share. A cap
  * (`computers.max_desktops`) limits how many bots use the desktop at the same time.
  */
-export const WORKSPACE = "/home/kasama/workspace";
+export const WORKSPACE = "/home/casama/workspace";
 export const DESKTOP_LEASE_SECONDS = 120;
 
 /** "Research Bot!" → "research-bot" (the shared slug rule; "bot" when nothing is left). */

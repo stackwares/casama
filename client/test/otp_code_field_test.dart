@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/ui/otp_code_field.dart';
+import 'package:casama_app/ui/otp_code_field.dart';
 
 void main() {
   testWidgets(

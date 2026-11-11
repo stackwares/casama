@@ -1,18 +1,18 @@
 import 'dart:io';
 
 import 'package:args/command_runner.dart';
-import 'package:kasama_api/kasama_api.dart';
+import 'package:casama_api/casama_api.dart';
 import 'package:path/path.dart' as p;
 
 import 'backups.dart';
 import 'runner.dart';
 
-/// `kasama selfhost …`: install and operate a self-hosted stack (Phase 8, D-076). Wraps
+/// `casama selfhost …`: install and operate a self-hosted stack (Phase 8, D-076). Wraps
 /// install.sh and `docker compose` for the repository checkout given by --dir (or
-/// KASAMA_SELFHOST_DIR, or the current directory).
+/// CASAMA_SELFHOST_DIR, or the current directory).
 class SelfhostCommand extends KCommand {
   SelfhostCommand(super.ctx) {
-    argParser.addOption('dir', help: 'Kasama checkout with install.sh (or KASAMA_SELFHOST_DIR).');
+    argParser.addOption('dir', help: 'Casama checkout with install.sh (or CASAMA_SELFHOST_DIR).');
     addSubcommand(_Init(ctx));
     for (final c in [
       ('up', 'Start the stack.', ['up', '-d', '--remove-orphans']),
@@ -29,15 +29,15 @@ class SelfhostCommand extends KCommand {
   @override
   String get name => 'selfhost';
   @override
-  String get description => 'Install and run Kasama on your own server.';
+  String get description => 'Install and run Casama on your own server.';
 }
 
 Directory _dir(Command<int> c) {
   final given = c.parent?.argResults?['dir'] as String?;
-  final path = given ?? Platform.environment['KASAMA_SELFHOST_DIR'] ?? Directory.current.path;
+  final path = given ?? Platform.environment['CASAMA_SELFHOST_DIR'] ?? Directory.current.path;
   final d = Directory(path);
   if (!File(p.join(d.path, 'install.sh')).existsSync()) {
-    throw CliError('not_a_checkout', 'No install.sh in ${d.path}. Clone github.com/stackwares/kasama and pass --dir.');
+    throw CliError('not_a_checkout', 'No install.sh in ${d.path}. Clone github.com/stackwares/casama and pass --dir.');
   }
   return d;
 }
@@ -126,8 +126,8 @@ class _Upgrade extends KCommand {
 class _Backup extends KCommand {
   _Backup(super.ctx) {
     argParser
-      ..addOption('out', defaultsTo: 'kasama-backups', help: 'Folder for the backup files.')
-      ..addFlag('encrypt', negatable: false, help: 'Encrypt the backup with age (needs --recipient or KASAMA_BACKUP_RECIPIENTS).')
+      ..addOption('out', defaultsTo: 'casama-backups', help: 'Folder for the backup files.')
+      ..addFlag('encrypt', negatable: false, help: 'Encrypt the backup with age (needs --recipient or CASAMA_BACKUP_RECIPIENTS).')
       ..addMultiOption('recipient', help: 'An age public key (age1…) or ssh public key to encrypt to; repeat for more.')
       ..addOption('keep', help: 'Keep only this many newest backups in --out.')
       ..addOption('keep-days', help: 'Remove backups older than this many days (with --keep, a backup goes when outside both).');
@@ -167,7 +167,7 @@ class _Backup extends KCommand {
     await File(p.join(out.path, 'env')).setLastModified(DateTime.now());
     var encrypted = false;
     if (argResults!['encrypt'] as bool) {
-      final recipients = [...(argResults!['recipient'] as List<String>), ...(Platform.environment['KASAMA_BACKUP_RECIPIENTS'] ?? '').split(',').map((r) => r.trim()).where((r) => r.isNotEmpty)];
+      final recipients = [...(argResults!['recipient'] as List<String>), ...(Platform.environment['CASAMA_BACKUP_RECIPIENTS'] ?? '').split(',').map((r) => r.trim()).where((r) => r.isNotEmpty)];
       try {
         await encryptFolder(out, recipients);
       } on BackupError catch (e) {
@@ -189,7 +189,7 @@ class _Restore extends KCommand {
   @override
   String get description => 'Restore a backup folder made by `selfhost backup` (replaces current data).';
   @override
-  String get invocation => 'kasama selfhost restore <backup-folder> [--identity key.txt]';
+  String get invocation => 'casama selfhost restore <backup-folder> [--identity key.txt]';
   _Restore(super.ctx) {
     argParser.addOption('identity', help: 'The age identity file for an encrypted backup.');
   }
@@ -202,7 +202,7 @@ class _Restore extends KCommand {
     if (File(p.join(from.path, 'postgres.dump.age')).existsSync()) {
       final identity = argResults!['identity'] as String?;
       if (identity == null) throw CliError('identity_required', 'This backup is encrypted; pass --identity with your age key file.');
-      final tmp = Directory.systemTemp.createTempSync('kasama-restore');
+      final tmp = Directory.systemTemp.createTempSync('casama-restore');
       try {
         await decryptFolder(from, tmp, identity);
       } on BackupError catch (e) {
@@ -239,7 +239,7 @@ class _Restore extends KCommand {
   }
 }
 
-/// `kasama account export|delete` (Phase 8 privacy, D-072).
+/// `casama account export|delete` (Phase 8 privacy, D-072).
 class AccountCommand extends KCommand {
   AccountCommand(super.ctx) {
     addSubcommand(_Export(ctx));
@@ -253,7 +253,7 @@ class AccountCommand extends KCommand {
 
 class _Export extends KCommand {
   _Export(super.ctx) {
-    argParser.addOption('out', abbr: 'o', help: 'ZIP file to write (default kasama-export-<date>.zip).');
+    argParser.addOption('out', abbr: 'o', help: 'ZIP file to write (default casama-export-<date>.zip).');
   }
   @override
   String get name => 'export';
@@ -263,7 +263,7 @@ class _Export extends KCommand {
   Future<int> run() async {
     final c = await ctx.authedClient();
     final bytes = (await c.privacy.exportMyData()).data!;
-    final path = argResults!['out'] as String? ?? 'kasama-export-${DateTime.now().toIso8601String().substring(0, 10)}.zip';
+    final path = argResults!['out'] as String? ?? 'casama-export-${DateTime.now().toIso8601String().substring(0, 10)}.zip';
     File(path).writeAsBytesSync(bytes);
     return ctx.emit({'path': path, 'bytes': bytes.length}, 'Wrote $path (${(bytes.length / 1024).toStringAsFixed(1)} KB).');
   }

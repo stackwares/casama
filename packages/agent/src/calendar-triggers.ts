@@ -5,7 +5,7 @@
  * and video link. The worker reads upcoming events every 5 minutes through the connection's own
  * list-events tool and schedules one fire per routine and event.
  */
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { createAdapter, loadIntegration } from "./integrations.ts";
 

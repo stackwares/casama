@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/features/notifications/notifications_primer.dart';
-import 'package:kasama_app/l10n/generated/app_localizations.dart';
+import 'package:casama_app/features/notifications/notifications_primer.dart';
+import 'package:casama_app/l10n/generated/app_localizations.dart';
 
 void main() {
   testWidgets('the notifications page explains why, and its buttons turn on or put it off', (tester) async {

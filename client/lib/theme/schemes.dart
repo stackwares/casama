@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 /// Color families for filtering the theme picker, worked out from each scheme's primary color.
 enum SchemeFamily { brand, purple, blue, teal, green, warm, red, neutral }
 
-/// One color scheme the person can pick: Kasama's own, or one of FlexColorScheme's built-ins.
+/// One color scheme the person can pick: Casama's own, or one of FlexColorScheme's built-ins.
 class ThemeChoice {
   const ThemeChoice({required this.id, required this.data, required this.family});
 
-  /// Stored in preferences: `kasama` or a [FlexScheme] name.
+  /// Stored in preferences: `casama` or a [FlexScheme] name.
   final String id;
   final FlexSchemeData data;
   final SchemeFamily family;
@@ -18,11 +18,11 @@ class ThemeChoice {
   FlexSchemeColor colors(Brightness b) => b == Brightness.dark ? data.dark : data.light;
 }
 
-/// Kasama's brand scheme, from the app icon: plum and lilac for the cloud, the orb's sky blue and
+/// Casama's brand scheme, from the app icon: plum and lilac for the cloud, the orb's sky blue and
 /// cyan as secondary and tertiary.
-const kasamaScheme = FlexSchemeData(
-  name: 'Kasama',
-  description: 'Plum, lilac and sky, from the Kasama cloud.',
+const casamaScheme = FlexSchemeData(
+  name: 'Casama',
+  description: 'Plum, lilac and sky, from the Casama cloud.',
   light: FlexSchemeColor(
     primary: Color(0xFF7A3FA8),
     primaryContainer: Color(0xFFF1E2FC),
@@ -57,9 +57,9 @@ SchemeFamily _familyOf(Color c) {
   return SchemeFamily.purple;
 }
 
-/// Every scheme in the picker, Kasama first.
+/// Every scheme in the picker, Casama first.
 final List<ThemeChoice> themeChoices = [
-  const ThemeChoice(id: 'kasama', data: kasamaScheme, family: SchemeFamily.brand),
+  const ThemeChoice(id: 'casama', data: casamaScheme, family: SchemeFamily.brand),
   for (final s in FlexScheme.values)
     if (s != FlexScheme.custom && FlexColor.schemes[s] != null)
       ThemeChoice(id: s.name, data: FlexColor.schemes[s]!, family: _familyOf(FlexColor.schemes[s]!.light.primary)),

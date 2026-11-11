@@ -8,7 +8,7 @@ relevant.
 | | Memory | Knowledge |
 | --- | --- | --- |
 | What it holds | Short notes: facts, preferences, summaries of past work | Your documents, split into passages |
-| Where it comes from | The bot writes it as you chat | You add sources; Kasama reads them |
+| Where it comes from | The bot writes it as you chat | You add sources; Casama reads them |
 | How the bot uses it | The most relevant notes are in every run | The bot searches it when a question calls for it, and cites the source |
 | Where to manage it | **Memory** | **Bot settings** → **Knowledge** |
 
@@ -38,7 +38,7 @@ copy. Without embeddings, only exact duplicates are caught.
 ### How bots recall
 
 At the start of every run, the bot gets the 8 memories most relevant to your message, plus every
-pinned memory. Kasama finds them by meaning and by matching words together.
+pinned memory. Casama finds them by meaning and by matching words together.
 
 Matching by meaning needs embeddings, which use the workspace's first OpenAI API key. Without one,
 recall matches words only. ChatGPT plan sign-in doesn't provide embeddings.
@@ -58,9 +58,36 @@ You can't add a memory from this screen. To add one, tell the bot in chat, or im
 From the CLI:
 
 ```sh
-kasama memory list Ada
-kasama memory list Ada --search "timezone"
+casama memory list Ada
+casama memory list Ada --search "timezone"
 ```
+
+## About you
+
+Bot memory belongs to one bot. **About you** belongs to you, and every bot you use reads it, in
+every workspace. Open it from the card at the top of **Settings**.
+
+| Field | Where bots use it |
+| --- | --- |
+| **What should bots call you?** | Everywhere. Filled in from your sign-in name, and asked once in the welcome chat. |
+| **Pronouns** (optional) | Everywhere. |
+| **How I like replies** | Everywhere, for example "short answers, no emoji". |
+| **About me** | Only where it's shared (see below). |
+| **What bots learned** | Only where it's shared (see below). |
+
+When a bot learns something about you in chat (your job, family, places, tastes), it saves it to
+About you instead of its own memory, which other people using that bot can see. The chat shows
+**Saved to your profile** with **Undo**. Facts about the work, like projects, clients and tools,
+stay in the bot's memory. Bots don't save health, religion, politics, sexuality or money troubles
+unless you ask them to remember it. To stop bots saving facts about you, turn off **Learn about me
+from chats**. You can add, edit, pin and delete facts yourself, and **Import from ChatGPT or
+Claude** fills them from another assistant's memory.
+
+**Where it's shared:** About me and learned facts are used only in workspaces where you're the only
+member. In a team workspace they're off until you turn on **Use what I've shared in …** for that
+workspace, and they switch off by themselves when someone else joins one of your workspaces. Only
+you can see About you. It's in your data export and is deleted with your account. While you belong
+to a workspace with encryption at rest turned on, About you is encrypted with a key of your own.
 
 ## Import memories from ChatGPT or Claude
 
@@ -70,7 +97,7 @@ If ChatGPT or Claude already knows you, bring that over.
    (**Import memories from ChatGPT or Claude**).
 2. **Copy** the prompt into ChatGPT or Claude, then paste its answer under **Its answer** and
    select **Next**.
-3. Kasama turns the answer into facts and preferences. Untick anything that's wrong, then select
+3. Casama turns the answer into facts and preferences. Untick anything that's wrong, then select
    **Save**.
 
 Only people who manage the bot can import memories. See
@@ -78,17 +105,17 @@ Only people who manage the bot can import memories. See
 
 ## Where memory is kept
 
-By default, memory lives in your Kasama database. Workspace owners and admins can keep it in
+By default, memory lives in your Casama database. Workspace owners and admins can keep it in
 Honcho or Supermemory instead, with the workspace's
 own account. The memory screen, data export and account deletion work the same either way.
 
 1. Go to **Settings** → **Workspace settings** → **Where memory is kept**.
 2. Pick **Supermemory** or **Honcho** and paste the **API key**.
-3. Optional: for Honcho, a **Honcho workspace** (leave empty to use one made for this Kasama
+3. Optional: for Honcho, a **Honcho workspace** (leave empty to use one made for this Casama
    workspace). For a self-hosted Honcho or Supermemory, its **Server address**.
 4. Turn on **Copy current memories over** to bring every bot's memories along, pinned ones
    included.
-5. Select **Save**. Kasama checks the connection before saving.
+5. Select **Save**. Casama checks the connection before saving.
 
 To go back, open the same sheet and choose **Use built-in memory again**. Memories saved in the
 provider stay there, and built-in memories were never removed.
@@ -106,8 +133,8 @@ Give a bot documents to search and it answers from them and names the source.
 2. Choose what to add:
    - **Files**: select **Choose files** and pick PDF, Word (`.docx`), Markdown, HTML, CSV or text
      files, up to 50 at a time.
-   - **Website**: enter the **Website address**. Kasama reads up to 50 pages on the same site.
-   - **GitHub**: paste a **GitHub link** to a repository. Kasama reads up to 300 of its Markdown,
+   - **Website**: enter the **Website address**. Casama reads up to 50 pages on the same site.
+   - **GitHub**: paste a **GitHub link** to a repository. Casama reads up to 300 of its Markdown,
      text, HTML and CSV files.
 3. Workspace owners and admins can turn on **Share with every bot in the workspace**.
 4. Select **Add**.
@@ -116,7 +143,7 @@ Sources are read within about a minute. Each one shows **Waiting to be read**, *
 number of documents and passages, or **Couldn't read it**. Use **Sync now** to read a source again,
 or **Delete** to remove it.
 
-Website crawls follow the site's `robots.txt` and identify as `KasamaBot`. Private repositories use
+Website crawls follow the site's `robots.txt` and identify as `CasamaBot`. Private repositories use
 the workspace's `GITHUB_TOKEN` secret (allowed for `api.github.com`). See
 [Apps and connections](/guide/connections).
 

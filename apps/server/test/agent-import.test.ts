@@ -71,7 +71,7 @@ describe("import an agent", () => {
     expect(res.status).toBe(201);
     const plan = await j(res);
     expect(plan.kind).toBe("openclaw");
-    expect(plan.template).toMatchObject({ name: "Juno", format: "kasama.bot" });
+    expect(plan.template).toMatchObject({ name: "Juno", format: "casama.bot" });
     expect(plan.template.skills.map((s: { name: string }) => s.name)).toEqual(["triage"]);
     expect(plan.template.routines).toEqual([
       { name: "Brief", instructions_md: "Brief me", schedule_cron: "0 7 * * *" },

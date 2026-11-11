@@ -1,7 +1,7 @@
-# One public address for everything: the Kasama API and the Supabase gateway (Auth, REST,
-# Realtime), plus the web app when the `web` profile is on. KASAMA_SITE is a domain (automatic
+# One public address for everything: the Casama API and the Supabase gateway (Auth, REST,
+# Realtime), plus the web app when the `web` profile is on. CASAMA_SITE is a domain (automatic
 # HTTPS) or ":80" for plain HTTP behind another proxy or for local trials.
-{$KASAMA_SITE} {
+{$CASAMA_SITE} {
 	encode zstd gzip
 	@supabase path /auth/v1/* /rest/v1/* /realtime/v1/*
 	handle @supabase {
@@ -25,8 +25,8 @@
 		}
 		handle {
 			@root path /
-			respond @root "Kasama is running. Point the Kasama app or CLI at this address, or start the web app (compose profile: web)." 200
-			respond "Kasama isn't ready yet (or this part isn't running)." 502
+			respond @root "Casama is running. Point the Casama app or CLI at this address, or start the web app (compose profile: web)." 200
+			respond "Casama isn't ready yet (or this part isn't running)." 502
 		}
 	}
 	header {
@@ -37,9 +37,9 @@
 }
 
 # Pages (D-119): bots' web pages on their own origin, so a page's scripts never share an origin
-# with Kasama. KASAMA_PAGES_SITE is a domain of its own (pages.example.com, automatic HTTPS) or a
-# port (":8790", the default) for local trials; set KASAMA_PAGES_URL to match.
-{$KASAMA_PAGES_SITE} {
+# with Casama. CASAMA_PAGES_SITE is a domain of its own (pages.example.com, automatic HTTPS) or a
+# port (":8790", the default) for local trials; set CASAMA_PAGES_URL to match.
+{$CASAMA_PAGES_SITE} {
 	encode zstd gzip
 	reverse_proxy api:8790
 }

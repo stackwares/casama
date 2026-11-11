@@ -1,10 +1,10 @@
 /**
  * Secret store (SPEC: Ops extras; D-145). Bots' named secrets ({{secret:NAME}}) are kept in a
  * `SecretStore`: Supabase Vault by default, or the workspace's own Infisical project (universal-auth
- * machine identity), from Infisical's public API docs. Kasama keeps each secret's name, kind,
+ * machine identity), from Infisical's public API docs. Casama keeps each secret's name, kind,
  * allowed hosts and bots; with Infisical the value stays in Infisical and is read when a bot uses it.
  */
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 
 export interface SecretStore {

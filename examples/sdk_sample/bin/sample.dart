@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 /// A minimal external app: signs up (or in), makes a workspace, adds a model key, creates a bot
-/// and streams one run live from the Kasama API.
+/// and streams one run live from the Casama API.
 ///   dart run bin/sample.dart --api http://localhost:8787 --email you@example.com --password ... \
 ///     --key "$OPENROUTER_API_KEY" --message "Say hello"
 Future<void> main(List<String> argv) async {
@@ -17,7 +17,7 @@ Future<void> main(List<String> argv) async {
     ..addOption('message', defaultsTo: 'Hello from an external app!');
   final a = p.parse(argv);
 
-  final client = await KasamaClient.connect(a['api'] as String);
+  final client = await CasamaClient.connect(a['api'] as String);
   final email = a['email'] as String;
   final password = a['password'] as String;
   try {

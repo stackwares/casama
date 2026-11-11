@@ -3,8 +3,8 @@
  * conversation the bot asks a few questions as cards, then calls `setup.apply` with everything it
  * proposes; the approval card shows it all and nothing changes until the person approves.
  */
-import { contentKeys, type Database } from "@kasama/db";
-import { isValidCron, isValidTimezone, nextRunAt } from "@kasama/domain";
+import { contentKeys, type Database } from "@casama/db";
+import { isValidCron, isValidTimezone, nextRunAt } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { personForRun } from "../acting.ts";
@@ -51,7 +51,7 @@ export function registerSetupTools(registry: ToolRegistry, deps: { db: Database 
       const owner = { user_id: person.userId, timezone: person.timezone };
       const tz = owner?.timezone && isValidTimezone(owner.timezone) ? owner.timezone : "UTC";
       await db.transaction(async (tx) => {
-        await tx.execute(sql`select set_config('kasama.actor_bot', ${ctx.botId}, true)`);
+        await tx.execute(sql`select set_config('casama.actor_bot', ${ctx.botId}, true)`);
         await tx.execute(
           sql`update public.bots set persona_md = ${args.instructions}, setup_status = 'done' where id = ${ctx.botId}::uuid`,
         );

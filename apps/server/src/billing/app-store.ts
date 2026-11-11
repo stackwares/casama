@@ -78,7 +78,7 @@ export interface AppStoreOptions {
   bundleId: string;
   environment?: "production" | "sandbox";
   baseUrl?: string;
-  /** Trusted roots as PEM; defaults to Apple Root CA - G3 shipped with Kasama. */
+  /** Trusted roots as PEM; defaults to Apple Root CA - G3 shipped with Casama. */
   rootPems?: string[];
   fetch?: typeof fetch;
 }

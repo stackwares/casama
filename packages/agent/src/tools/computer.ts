@@ -1,4 +1,4 @@
-import { collectExec, type SandboxHandle } from "@kasama/sandbox";
+import { collectExec, type SandboxHandle } from "@casama/sandbox";
 import { z } from "zod";
 import { wrapUntrusted } from "../context.ts";
 import { type ToolContext, ToolError, type ToolRegistry } from "./registry.ts";
@@ -67,11 +67,11 @@ export function registerComputerTools(registry: ToolRegistry) {
     // Destructive commands that reach outside the workspace are high risk.
     riskFor: (args: { command: string }) =>
       isDestructive(args.command) &&
-      /(^|[\s'"=])(\/(?!home\/kasama\/workspace)|~\/(?!workspace)|\.\.\/)/.test(args.command)
+      /(^|[\s'"=])(\/(?!home\/casama\/workspace)|~\/(?!workspace)|\.\.\/)/.test(args.command)
         ? "high"
         : "low",
     description:
-      "Run a bash command in your computer (Ubuntu, home /home/kasama, working directory ~/workspace by default). Output streams to the user. Use for code, files, git, package installs and CLIs.",
+      "Run a bash command in your computer (Ubuntu, home /home/casama, working directory ~/workspace by default). Output streams to the user. Use for code, files, git, package installs and CLIs.",
     risk: "low",
     requires,
     schema: z.object({
@@ -352,7 +352,7 @@ export function registerComputerTools(registry: ToolRegistry) {
       // On a team computer relative paths are in the bot's folder (D-148).
       const h = await needComputer(ctx);
       const path = h.resolvePath?.(asked) ?? asked;
-      const full = path.startsWith("/") ? path : `/home/kasama/workspace/${path}`;
+      const full = path.startsWith("/") ? path : `/home/casama/workspace/${path}`;
       // agent-browser doesn't create folders, and the bot's screenshots folder may not exist yet.
       await collectExec(
         h.exec(`mkdir -p ${shq(full.slice(0, full.lastIndexOf("/")) || "/")}`, {
@@ -373,7 +373,7 @@ export function registerComputerTools(registry: ToolRegistry) {
     description:
       "Save an undo point of your computer's files before risky changes. The user can restore it from the timeline.",
     risk: "low",
-    // Only the bot's own state inside Kasama: never asks (D-155).
+    // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,
     requires,
     schema: z.object({ label: z.string().min(1).max(200) }),

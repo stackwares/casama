@@ -1,0 +1,17 @@
+name: casama_sdk
+description: Dart SDK for Casama, the self-hostable home for AI bots with their own computers. Typed API client, auth and live run event streams.
+version: 0.8.0
+homepage: https://github.com/stackwares/casama
+repository: https://github.com/stackwares/casama/tree/main/dart/casama_sdk
+issue_tracker: https://github.com/stackwares/casama/issues
+topics: [ai, agents, sdk, api-client]
+resolution: workspace
+environment:
+  sdk: ^3.13.0
+dependencies:
+  crypto: ^3.0.8
+  dio: ^5.11.1
+  http: ^1.6.0
+  casama_api: ^0.8.0
+dev_dependencies:
+  test: ^1.33.0

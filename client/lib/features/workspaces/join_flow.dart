@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -82,7 +82,7 @@ class JoinScreen extends ConsumerStatefulWidget {
   const JoinScreen({super.key, required this.invite, this.server});
   final String invite;
 
-  /// The server the link came from (kasama://app/join/…?server=…, or a pasted link's origin).
+  /// The server the link came from (casama://app/join/…?server=…, or a pasted link's origin).
   final String? server;
 
   @override

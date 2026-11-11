@@ -1,14 +1,14 @@
 /**
- * Live checks against a real model (D-064): skipped unless KASAMA_LIVE=1 and OPENROUTER_API_KEY is
- * set (scripts/live-check.sh loads it from ~/.config/kasama/openrouter.env). CI and the default test
+ * Live checks against a real model (D-064): skipped unless CASAMA_LIVE=1 and OPENROUTER_API_KEY is
+ * set (scripts/live-check.sh loads it from ~/.config/casama/openrouter.env). CI and the default test
  * run use recorded fixtures and need no key. Output tokens are capped and only a few calls are made.
  */
-import { dockerAvailable, type SandboxStack, startSandboxStack } from "@kasama/sandbox/testing";
+import { dockerAvailable, type SandboxStack, startSandboxStack } from "@casama/sandbox/testing";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
 const key = process.env.OPENROUTER_API_KEY ?? "";
-const enabled = process.env.KASAMA_LIVE === "1" && key.length > 0 && (await dockerAvailable());
+const enabled = process.env.CASAMA_LIVE === "1" && key.length > 0 && (await dockerAvailable());
 
 describe.skipIf(!enabled)("live model (GPT-6 Luna on OpenRouter)", () => {
   let stack: SandboxStack;
@@ -77,7 +77,7 @@ describe.skipIf(!enabled)("live model (GPT-6 Luna on OpenRouter)", () => {
         method: "POST",
         token: owner.token,
         json: {
-          text: "Use the shell.exec tool to run exactly: echo kasama-live-$((6*7)) . Then reply with only the command's output.",
+          text: "Use the shell.exec tool to run exactly: echo casama-live-$((6*7)) . Then reply with only the command's output.",
         },
       }),
     );
@@ -102,8 +102,8 @@ describe.skipIf(!enabled)("live model (GPT-6 Luna on OpenRouter)", () => {
     );
     expect(run.status).toBe("completed");
     expect(started?.payload.tool).toBe("shell.exec");
-    expect(output).toContain("kasama-live-42");
-    expect(JSON.stringify(final?.payload)).toContain("kasama-live-42");
+    expect(output).toContain("casama-live-42");
+    expect(JSON.stringify(final?.payload)).toContain("casama-live-42");
     // The key never appears in anything the run recorded.
     expect(JSON.stringify(events)).not.toContain(key);
   }, 240_000);

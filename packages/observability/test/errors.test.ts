@@ -53,7 +53,7 @@ describe("PostHog reporter", () => {
     await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
     const host = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
     const reporter = createErrorReporter({
-      service: "kasama-api",
+      service: "casama-api",
       posthogKey: "phc_test",
       posthogHost: host,
     });

@@ -1,6 +1,6 @@
 /** Linked agents (D-143): invites, both approve, structured requests, both timelines, revoke; across servers over A2A. */
 import { fileURLToPath } from "node:url";
-import { registerLinkTools, ToolRegistry } from "@kasama/agent";
+import { registerLinkTools, ToolRegistry } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
@@ -103,7 +103,7 @@ describe("linked agents", () => {
       }),
     );
     expect(inv.status).toBe("pending");
-    expect(inv.invite).toMatch(/^kasama-link:/);
+    expect(inv.invite).toMatch(/^casama-link:/);
     // Sam accepts with his bot; both sides are active.
     const accepted = await j(
       await one.request("/v1/links/accept", {
@@ -171,7 +171,7 @@ describe("linked agents", () => {
     ).toBe("revoked");
   }, 120_000);
 
-  it("across Kasama servers: the accept handshake swaps link tokens, and requests go over A2A", async () => {
+  it("across Casama servers: the accept handshake swaps link tokens, and requests go over A2A", async () => {
     const sam = await person(one, "sam2@example.com", "Ben");
     const ana = await person(two, "ana2@example.com", "Ava");
     // Sam (server one) invites; Ana (server two) accepts with her bot.

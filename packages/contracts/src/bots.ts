@@ -346,7 +346,7 @@ export const ModelOption = z
     featured: z
       .boolean()
       .optional()
-      .openapi({ description: "Recommended by Kasama; listed first" }),
+      .openapi({ description: "Recommended by Casama; listed first" }),
   })
   .openapi("ModelOption");
 
@@ -355,7 +355,7 @@ export const ModelOptionList = z
     items: z.array(ModelOption),
     source: z.enum(["live", "featured"]).openapi({
       description:
-        "live: the provider's own list; featured: Kasama's short list (provider unreachable or fixture mode)",
+        "live: the provider's own list; featured: Casama's short list (provider unreachable or fixture mode)",
     }),
     error: z.string().optional(),
   })

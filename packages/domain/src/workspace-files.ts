@@ -2,7 +2,7 @@
  * Routines and skills as files (D-124). A workspace's routines and skills as a folder of Markdown
  * files, for export, import and git sync:
  *
- *   kasama.json                         which folder is which bot
+ *   casama.json                         which folder is which bot
  *   <bot>/routines/<routine>.md         front matter (id, name, schedule, timezone, trigger,
  *                                        enabled, notify) + the instructions
  *   <bot>/skills/<name>/SKILL.md        a normal SKILL.md (+ id, enabled) and its files
@@ -12,7 +12,7 @@ import { isValidCron, isValidTimezone } from "./schedule.ts";
 import { parseFrontMatter, SKILL_NAME } from "./skill-format.ts";
 
 export const WORKSPACE_FOLDER = "workspace";
-export const INDEX_FILE = "kasama.json";
+export const INDEX_FILE = "casama.json";
 
 export interface RoutineFile {
   id?: string;
@@ -148,18 +148,18 @@ export function parseSkillFile(text: string, path: string): SkillFile {
 }
 
 export interface FolderIndex {
-  format: "kasama.files";
+  format: "casama.files";
   version: 1;
   /** Folder name → bot. */
   bots: Record<string, { id: string; name: string }>;
 }
 
-/** Reads kasama.json; without one, folders are matched to bots by name. */
+/** Reads casama.json; without one, folders are matched to bots by name. */
 export function parseIndex(text: string | undefined): FolderIndex | null {
   if (!text) return null;
   try {
     const j = JSON.parse(text) as FolderIndex;
-    return j && j.format === "kasama.files" && j.bots && typeof j.bots === "object" ? j : null;
+    return j && j.format === "casama.files" && j.bots && typeof j.bots === "object" ? j : null;
   } catch {
     return null;
   }

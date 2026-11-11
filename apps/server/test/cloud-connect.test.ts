@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { dockerAvailable, type SandboxStack, startSandboxStack } from "@kasama/sandbox/testing";
+import { dockerAvailable, type SandboxStack, startSandboxStack } from "@casama/sandbox/testing";
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { billingEnv, type FakeBilling, startFakeBilling } from "./fake-billing.ts";
@@ -9,7 +9,7 @@ const enabled = (await dockerAvailable()) && process.env.SKIP_DOCKER_TESTS !== "
 const FIXTURES = fileURLToPath(new URL("./fixtures/cloud.json", import.meta.url));
 
 /**
- * Phase 7 gate: a self-hosted instance runs a bot on a Kasama Cloud computer with a Cloud Connect
+ * Phase 7 gate: a self-hosted instance runs a bot on a Casama Cloud computer with a Cloud Connect
  * key, and the usage shows on the cloud workspace's bill. Two servers share one test database (as
  * separate workspaces): the "cloud" API with billing and a real sandbox supervisor, and the
  * "self-hosted" API and worker with no sandbox of their own.
@@ -57,7 +57,7 @@ describe.skipIf(!enabled)("Cloud Connect (Phase 7 gate)", () => {
 
     home = await startHarness({
       worker: { fixtures: FIXTURES },
-      env: { KASAMA_CLOUD_URL: cloud.serverUrl as string, KASAMA_CLOUD_KEY: key },
+      env: { CASAMA_CLOUD_URL: cloud.serverUrl as string, CASAMA_CLOUD_KEY: key },
       cloud: { url: cloud.serverUrl as string, key },
     });
     homeOwner = await home.user("selfhoster@example.com");
@@ -99,7 +99,7 @@ describe.skipIf(!enabled)("Cloud Connect (Phase 7 gate)", () => {
         kind: "private",
         owner_bot_id: botId,
         name: "Cloud box",
-        provider: "kasama-cloud",
+        provider: "casama-cloud",
       },
     });
     expect(comp.status).toBe(201);

@@ -2,13 +2,13 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { createKasamaMcpServer, KasamaApi } from "../../../packages/mcp/src/server.ts";
+import { CasamaApi, createCasamaMcpServer } from "../../../packages/mcp/src/server.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
 const FIXTURES = fileURLToPath(new URL("./fixtures/chat.json", import.meta.url));
 
-/** The Kasama MCP server (Phase 8, D-077) driven by a real MCP client over the test API. */
-describe("Kasama MCP server", () => {
+/** The Casama MCP server (Phase 8, D-077) driven by a real MCP client over the test API. */
+describe("Casama MCP server", () => {
   let h: Harness;
   let client: Client;
 
@@ -34,14 +34,14 @@ describe("Kasama MCP server", () => {
         model_policy: { primary: { credential_id: cred.id, model: "fixture-main" } },
       },
     });
-    const api = new KasamaApi({
-      apiUrl: "http://kasama.test",
+    const api = new CasamaApi({
+      apiUrl: "http://casama.test",
       token: u.token,
       fetch: (async (url: string, init?: RequestInit) =>
-        h.app.request(String(url).replace("http://kasama.test", ""), init)) as typeof fetch,
+        h.app.request(String(url).replace("http://casama.test", ""), init)) as typeof fetch,
     });
     const [a, b] = InMemoryTransport.createLinkedPair();
-    await createKasamaMcpServer(api, { pollMs: 100 }).connect(a);
+    await createCasamaMcpServer(api, { pollMs: 100 }).connect(a);
     client = new Client({ name: "test", version: "1.0.0" });
     await client.connect(b);
   }, 180_000);

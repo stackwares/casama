@@ -1,8 +1,9 @@
 /** Voice (Phase 6, D-065): dictation, read aloud, live-call sessions, tool forwarding, transcripts. */
+
+import { callGreeting, callNotAnswered, geminiLiveCost, VOICE_PRICES } from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { contentKeys, type JwtClaims, schema, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { callGreeting, callNotAnswered, geminiLiveCost, VOICE_PRICES } from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { contentKeys, type JwtClaims, schema, withUserSession } from "@kasama/db";
 import { eq, sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -219,7 +220,7 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
             status: "waiting_approval" as const,
             run_id: runId,
             output:
-              "This action needs the user's approval in the Kasama app. Tell them, and continue when they approve.",
+              "This action needs the user's approval in the Casama app. Tell them, and continue when they approve.",
             approval_id: a?.id ?? null,
           },
           200,

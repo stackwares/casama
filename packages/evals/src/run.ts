@@ -1,11 +1,11 @@
 /**
- * Eval runner (SPEC "Evals"). Runs tasks against a Kasama API, checks results automatically,
+ * Eval runner (SPEC "Evals"). Runs tasks against a Casama API, checks results automatically,
  * writes a report and compares it with the stored baseline.
  *
  *   node --env-file=.env packages/evals/src/run.ts --mode fixtures --subset quick
  *   OPENROUTER_API_KEY=... node packages/evals/src/run.ts --mode live --subset all
  *
- * Fixture mode needs a worker started with KASAMA_MODEL_FIXTURES=packages/evals/fixtures/quick.json
+ * Fixture mode needs a worker started with CASAMA_MODEL_FIXTURES=packages/evals/fixtures/quick.json
  * (deterministic, used in CI to check the harness and tools); live mode uses a real key and the
  * default model (GPT-6 Luna, medium effort) and measures model quality. Exit code 1 when the
  * success rate drops below the baseline for the same mode and subset.
@@ -17,7 +17,7 @@ import type { EvalReport, EvalRun, EvalTask, TaskResult } from "./types.ts";
 
 const { values: a } = parseArgs({
   options: {
-    api: { type: "string", default: process.env.KASAMA_API_URL ?? "http://127.0.0.1:8787" },
+    api: { type: "string", default: process.env.CASAMA_API_URL ?? "http://127.0.0.1:8787" },
     mode: { type: "string", default: "fixtures" },
     subset: { type: "string", default: "quick" },
     model: { type: "string" },

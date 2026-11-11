@@ -5,7 +5,7 @@ export type ProviderId =
   | "e2b"
   | "daytona"
   | "local"
-  | "kasama-cloud"
+  | "casama-cloud"
   // More hosted providers (D-139).
   | "novita"
   | "kubernetes"

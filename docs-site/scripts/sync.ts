@@ -14,7 +14,7 @@ writeFileSync(
   new URL("public/api/index.html", here),
   `<!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Kasama API reference</title></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Casama API reference</title></head>
 <body>
 <script id="api-reference" data-url="./openapi.json"></script>
 <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.76.0"></script>

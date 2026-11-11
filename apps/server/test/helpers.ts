@@ -1,12 +1,12 @@
 import type { Server } from "node:http";
 import { createServer as createNetServer } from "node:net";
+import { ComputerService } from "@casama/agent";
+import { contentKeys, createDb, type DbHandle, LocalKeyWrapper } from "@casama/db";
+import { createAuthUser, startTestDatabase, type TestDatabase } from "@casama/db/testing";
+import { createLogger } from "@casama/observability";
+import { LocalProvider, unavailableProvider } from "@casama/sandbox";
+import type { SandboxStack } from "@casama/sandbox/testing";
 import { serve } from "@hono/node-server";
-import { ComputerService } from "@kasama/agent";
-import { contentKeys, createDb, type DbHandle, LocalKeyWrapper } from "@kasama/db";
-import { createAuthUser, startTestDatabase, type TestDatabase } from "@kasama/db/testing";
-import { createLogger } from "@kasama/observability";
-import { LocalProvider, unavailableProvider } from "@kasama/sandbox";
-import type { SandboxStack } from "@kasama/sandbox/testing";
 import { SignJWT } from "jose";
 import { createApp } from "../src/api/app.ts";
 import { createTokenVerifier } from "../src/api/auth.ts";
@@ -15,7 +15,7 @@ import { attachTelephony } from "../src/api/routes/telephony.ts";
 import { pgRunEventHub, type RunEventHub } from "../src/api/run-event-hub.ts";
 import type { AppDeps } from "../src/api/types.ts";
 import { dbosWorkflows, type Workflows } from "../src/api/workflows.ts";
-import { billingFromEnv, kasamaCloudProvider } from "../src/billing/index.ts";
+import { billingFromEnv, casamaCloudProvider } from "../src/billing/index.ts";
 import { loadEnv } from "../src/env.ts";
 import type { EmailMessage, EmailSender } from "../src/services/email.ts";
 
@@ -67,7 +67,7 @@ export async function startHarness(
       /** Recorded model responses; omit only in live checks (real provider calls). */
       fixtures?: string;
       maxOutputTokens?: number;
-      push?: import("@kasama/agent").PushSender;
+      push?: import("@casama/agent").PushSender;
       egressExemptCidrs?: string[];
       providerBases?: {
         fal?: string;
@@ -138,13 +138,13 @@ export async function startHarness(
   if (opts.worker) {
     const { startWorker } = await import("../src/worker/index.ts");
     // The worker runs as its least-privilege role (D-095), so tests prove the grants are enough.
-    await tdb.admin.unsafe("alter role kasama_worker login password 'kasama-worker-test'");
+    await tdb.admin.unsafe("alter role casama_worker login password 'casama-worker-test'");
     // A non-superuser stand-in for the API's role (production's `postgres` on Supabase isn't one).
     if (opts.worker.apiDatabaseRole)
       await tdb.admin.unsafe(
         `do $$ begin create role "${opts.worker.apiDatabaseRole}" nologin; exception when duplicate_object then null; end $$`,
       );
-    const workerUrl = tdb.url.replace("postgres@", "kasama_worker:kasama-worker-test@");
+    const workerUrl = tdb.url.replace("postgres@", "casama_worker:casama-worker-test@");
     worker = await startWorker({
       databaseUrl: workerUrl,
       logger: createLogger("worker", "error"),
@@ -177,7 +177,7 @@ export async function startHarness(
     opts.sandbox || localOpts || opts.cloud
       ? new ComputerService(handle.db, opts.sandbox?.provider ?? unavailableProvider(), {
           ...(localOpts ? { local: new LocalProvider(localOpts) } : {}),
-          ...(opts.cloud ? { "kasama-cloud": kasamaCloudProvider(opts.cloud) } : {}),
+          ...(opts.cloud ? { "casama-cloud": casamaCloudProvider(opts.cloud) } : {}),
         })
       : undefined;
   const live = opts.sandbox

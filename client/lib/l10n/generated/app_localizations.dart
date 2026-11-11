@@ -97,7 +97,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Kasama'**
+  /// **'Casama'**
   String get appTitle;
 
   /// No description provided for @loading.
@@ -163,7 +163,7 @@ abstract class AppLocalizations {
   /// No description provided for @signInTitle.
   ///
   /// In en, this message translates to:
-  /// **'Sign in to Kasama'**
+  /// **'Sign in to Casama'**
   String get signInTitle;
 
   /// No description provided for @signUpTitle.
@@ -2107,7 +2107,7 @@ abstract class AppLocalizations {
   /// No description provided for @companionError.
   ///
   /// In en, this message translates to:
-  /// **'Cannot reach Kasama; retrying'**
+  /// **'Cannot reach Casama; retrying'**
   String get companionError;
 
   /// No description provided for @companionOff.
@@ -2299,14 +2299,14 @@ abstract class AppLocalizations {
   /// No description provided for @updateAvailable.
   ///
   /// In en, this message translates to:
-  /// **'Kasama {latest} is available (you run {current})'**
+  /// **'Casama {latest} is available (you run {current})'**
   String updateAvailable(String latest, String current);
 
-  /// No description provided for @kasamaVersion.
+  /// No description provided for @casamaVersion.
   ///
   /// In en, this message translates to:
-  /// **'Kasama {version}'**
-  String kasamaVersion(String version);
+  /// **'Casama {version}'**
+  String casamaVersion(String version);
 
   /// No description provided for @workspacesCount.
   ///
@@ -2347,19 +2347,19 @@ abstract class AppLocalizations {
   /// No description provided for @connectingToServer.
   ///
   /// In en, this message translates to:
-  /// **'Connecting to Kasama…'**
+  /// **'Connecting to Casama…'**
   String get connectingToServer;
 
   /// No description provided for @cannotReachServer.
   ///
   /// In en, this message translates to:
-  /// **'Can\'t reach your Kasama server'**
+  /// **'Can\'t reach your Casama server'**
   String get cannotReachServer;
 
   /// No description provided for @connectionFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t reach your Kasama server. Check your connection and try again.'**
+  /// **'Couldn\'t reach your Casama server. Check your connection and try again.'**
   String get connectionFailed;
 
   /// No description provided for @cannotReachServerHelp.
@@ -2395,7 +2395,7 @@ abstract class AppLocalizations {
   /// No description provided for @billingOffSelfHosted.
   ///
   /// In en, this message translates to:
-  /// **'Billing is off on this server. Self-hosted Kasama has no limits.'**
+  /// **'Billing is off on this server. Self-hosted Casama has no limits.'**
   String get billingOffSelfHosted;
 
   /// No description provided for @restorePurchases.
@@ -2545,7 +2545,7 @@ abstract class AppLocalizations {
   /// No description provided for @cloudConnectHelp.
   ///
   /// In en, this message translates to:
-  /// **'Let a self-hosted Kasama use cloud computers and model credits, billed to this workspace.'**
+  /// **'Let a self-hosted Casama use cloud computers and model credits, billed to this workspace.'**
   String get cloudConnectHelp;
 
   /// No description provided for @cloudConnectNewKey.
@@ -2563,7 +2563,7 @@ abstract class AppLocalizations {
   /// No description provided for @cloudConnectKeyOnce.
   ///
   /// In en, this message translates to:
-  /// **'Copy it now; it is shown only once. Set it on your server with KASAMA_CLOUD_URL.'**
+  /// **'Copy it now; it is shown only once. Set it on your server with CASAMA_CLOUD_URL.'**
   String get cloudConnectKeyOnce;
 
   /// No description provided for @copy.
@@ -2923,7 +2923,7 @@ abstract class AppLocalizations {
   /// No description provided for @importBotHelp.
   ///
   /// In en, this message translates to:
-  /// **'From a Kasama bot file someone shared'**
+  /// **'From a Casama bot file someone shared'**
   String get importBotHelp;
 
   /// No description provided for @importAgentHelp.
@@ -2959,13 +2959,13 @@ abstract class AppLocalizations {
   /// No description provided for @upToDate.
   ///
   /// In en, this message translates to:
-  /// **'Kasama is up to date'**
+  /// **'Casama is up to date'**
   String get upToDate;
 
   /// No description provided for @updateReady.
   ///
   /// In en, this message translates to:
-  /// **'Kasama {version} is available'**
+  /// **'Casama {version} is available'**
   String updateReady(String version);
 
   /// No description provided for @appVersion.
@@ -2983,7 +2983,7 @@ abstract class AppLocalizations {
   /// No description provided for @openAtLoginHelp.
   ///
   /// In en, this message translates to:
-  /// **'Start Kasama when you log in to this Mac, ready for the quick-ask shortcut.'**
+  /// **'Start Casama when you log in to this Mac, ready for the quick-ask shortcut.'**
   String get openAtLoginHelp;
 
   /// No description provided for @signInCta.
@@ -3931,7 +3931,7 @@ abstract class AppLocalizations {
   /// No description provided for @serverHelp.
   ///
   /// In en, this message translates to:
-  /// **'Use your own Kasama server. Enter the address you or your admin set up.'**
+  /// **'Use your own Casama server. Enter the address you or your admin set up.'**
   String get serverHelp;
 
   /// No description provided for @ssoHelp.
@@ -4183,13 +4183,13 @@ abstract class AppLocalizations {
   /// No description provided for @themeCodeHelp.
   ///
   /// In en, this message translates to:
-  /// **'Paste a code someone shared with you. It starts with kasama-theme:'**
+  /// **'Paste a code someone shared with you. It starts with casama-theme:'**
   String get themeCodeHelp;
 
   /// No description provided for @invalidThemeCode.
   ///
   /// In en, this message translates to:
-  /// **'That isn\'t a Kasama theme code.'**
+  /// **'That isn\'t a Casama theme code.'**
   String get invalidThemeCode;
 
   /// No description provided for @themeImported.
@@ -4459,7 +4459,7 @@ abstract class AppLocalizations {
   /// No description provided for @usageAskPrompt.
   ///
   /// In en, this message translates to:
-  /// **'Here is my Kasama usage for {period}. Help me understand where the money goes and how I could spend less. You can also check live numbers with your usage tool.\n\n{summary}'**
+  /// **'Here is my Casama usage for {period}. Help me understand where the money goes and how I could spend less. You can also check live numbers with your usage tool.\n\n{summary}'**
   String usageAskPrompt(String period, String summary);
 
   /// No description provided for @kindTokensIn.
@@ -4831,7 +4831,7 @@ abstract class AppLocalizations {
   /// No description provided for @adminSetupNeeded.
   ///
   /// In en, this message translates to:
-  /// **'One-click sign-in for {app} needs a one-time setup by whoever runs this Kasama server.'**
+  /// **'One-click sign-in for {app} needs a one-time setup by whoever runs this Casama server.'**
   String adminSetupNeeded(String app);
 
   /// No description provided for @connectThroughHub.
@@ -5125,7 +5125,7 @@ abstract class AppLocalizations {
   /// No description provided for @chatGptDesktopOnly.
   ///
   /// In en, this message translates to:
-  /// **'To connect your ChatGPT plan, open the desktop app, or run \"kasama credential chatgpt\" in the CLI.'**
+  /// **'To connect your ChatGPT plan, open the desktop app, or run \"casama credential chatgpt\" in the CLI.'**
   String get chatGptDesktopOnly;
 
   /// No description provided for @chatGptWaiting.
@@ -6013,7 +6013,7 @@ abstract class AppLocalizations {
   /// No description provided for @changedBySystem.
   ///
   /// In en, this message translates to:
-  /// **'Changed by Kasama'**
+  /// **'Changed by Casama'**
   String get changedBySystem;
 
   /// No description provided for @fieldName.
@@ -6511,7 +6511,7 @@ abstract class AppLocalizations {
   /// No description provided for @notABotTemplate.
   ///
   /// In en, this message translates to:
-  /// **'That file isn\'t a Kasama bot template.'**
+  /// **'That file isn\'t a Casama bot template.'**
   String get notABotTemplate;
 
   /// No description provided for @importBot.
@@ -7033,7 +7033,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectAiAppAsk.
   ///
   /// In en, this message translates to:
-  /// **'{app} wants to use Kasama'**
+  /// **'{app} wants to use Casama'**
   String connectAiAppAsk(String app);
 
   /// No description provided for @connectAiAppHelp.
@@ -7459,7 +7459,7 @@ abstract class AppLocalizations {
   /// No description provided for @pluginsHelp.
   ///
   /// In en, this message translates to:
-  /// **'Plugins are Agent Plugins 1.0 packages on GitHub. They can bring skills and MCP tools; their servers run on this bot\'s computer, never on Kasama\'s servers.'**
+  /// **'Plugins are Agent Plugins 1.0 packages on GitHub. They can bring skills and MCP tools; their servers run on this bot\'s computer, never on Casama\'s servers.'**
   String get pluginsHelp;
 
   /// No description provided for @addPlugin.
@@ -7783,7 +7783,7 @@ abstract class AppLocalizations {
   /// No description provided for @gitSyncHelp.
   ///
   /// In en, this message translates to:
-  /// **'Changes in Kasama are committed to the repository, and pushes to it update Kasama after they\'re checked. If a file changed in both places, Kasama keeps its version and opens a pull request. Needs a GITHUB_TOKEN secret allowed for api.github.com.'**
+  /// **'Changes in Casama are committed to the repository, and pushes to it update Casama after they\'re checked. If a file changed in both places, Casama keeps its version and opens a pull request. Needs a GITHUB_TOKEN secret allowed for api.github.com.'**
   String get gitSyncHelp;
 
   /// No description provided for @gitSyncNeedsToken.
@@ -8263,7 +8263,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectManagedHelp.
   ///
   /// In en, this message translates to:
-  /// **'Kasama reads your inbox through Composio\'s Google sign-in for now. You can disconnect any time.'**
+  /// **'Casama reads your inbox through Composio\'s Google sign-in for now. You can disconnect any time.'**
   String get connectManagedHelp;
 
   /// No description provided for @sharing.
@@ -8779,7 +8779,7 @@ abstract class AppLocalizations {
   /// No description provided for @encryptionKeyManaged.
   ///
   /// In en, this message translates to:
-  /// **'Kasama creates and keeps this workspace\'s key for you, wrapped with the server\'s own key. There\'s nothing to save or copy.'**
+  /// **'Casama creates and keeps this workspace\'s key for you, wrapped with the server\'s own key. There\'s nothing to save or copy.'**
   String get encryptionKeyManaged;
 
   /// No description provided for @encryptionRotateTitle.
@@ -8839,7 +8839,7 @@ abstract class AppLocalizations {
   /// No description provided for @memoryHonchoWorkspaceHelp.
   ///
   /// In en, this message translates to:
-  /// **'Leave empty to use one made for this Kasama workspace'**
+  /// **'Leave empty to use one made for this Casama workspace'**
   String get memoryHonchoWorkspaceHelp;
 
   /// No description provided for @memoryBaseUrl.
@@ -9181,7 +9181,7 @@ abstract class AppLocalizations {
   /// No description provided for @linksInviteHelp.
   ///
   /// In en, this message translates to:
-  /// **'Send it to your contact. They accept it in Kasama with one of their bots. It works once, for 7 days.'**
+  /// **'Send it to your contact. They accept it in Casama with one of their bots. It works once, for 7 days.'**
   String get linksInviteHelp;
 
   /// No description provided for @linksAccept.
@@ -9277,7 +9277,7 @@ abstract class AppLocalizations {
   /// No description provided for @wakeWordHelp.
   ///
   /// In en, this message translates to:
-  /// **'While Kasama is open, this device listens for your phrase and starts a live call with the bot you choose.'**
+  /// **'While Casama is open, this device listens for your phrase and starts a live call with the bot you choose.'**
   String get wakeWordHelp;
 
   /// No description provided for @wakeWordListen.
@@ -9295,7 +9295,7 @@ abstract class AppLocalizations {
   /// No description provided for @wakeWordPhraseHelp.
   ///
   /// In en, this message translates to:
-  /// **'Two or three words, like \"hey kasama\"'**
+  /// **'Two or three words, like \"hey casama\"'**
   String get wakeWordPhraseHelp;
 
   /// No description provided for @wakeWordBot.
@@ -9331,7 +9331,7 @@ abstract class AppLocalizations {
   /// No description provided for @secretStoreHelp.
   ///
   /// In en, this message translates to:
-  /// **'Keep bots\' named secrets in your own Infisical project. Kasama keeps only each secret\'s name and where it may be used.'**
+  /// **'Keep bots\' named secrets in your own Infisical project. Casama keeps only each secret\'s name and where it may be used.'**
   String get secretStoreHelp;
 
   /// No description provided for @secretStoreSite.
@@ -9379,13 +9379,13 @@ abstract class AppLocalizations {
   /// No description provided for @localServer.
   ///
   /// In en, this message translates to:
-  /// **'Run Kasama on this computer'**
+  /// **'Run Casama on this computer'**
   String get localServer;
 
   /// No description provided for @localServerHelp.
   ///
   /// In en, this message translates to:
-  /// **'Starts your own Kasama server here with Docker and connects to it. Only this computer can reach it.'**
+  /// **'Starts your own Casama server here with Docker and connects to it. Only this computer can reach it.'**
   String get localServerHelp;
 
   /// No description provided for @localServerIntro.
@@ -9541,7 +9541,7 @@ abstract class AppLocalizations {
   /// No description provided for @deviceConnectionsNone.
   ///
   /// In en, this message translates to:
-  /// **'This device can\'t share data yet. On your phone, open Kasama and turn on what you\'d like to share.'**
+  /// **'This device can\'t share data yet. On your phone, open Casama and turn on what you\'d like to share.'**
   String get deviceConnectionsNone;
 
   /// No description provided for @deviceKeepFor.
@@ -9583,7 +9583,7 @@ abstract class AppLocalizations {
   /// No description provided for @devicePermissionDenied.
   ///
   /// In en, this message translates to:
-  /// **'Kasama doesn\'t have permission. Allow it in the system settings, then try again.'**
+  /// **'Casama doesn\'t have permission. Allow it in the system settings, then try again.'**
   String get devicePermissionDenied;
 
   /// No description provided for @deviceOtherDevices.
@@ -9649,7 +9649,7 @@ abstract class AppLocalizations {
   /// No description provided for @placeNoLocation.
   ///
   /// In en, this message translates to:
-  /// **'Your location isn\'t available. Allow location for Kasama, then try again.'**
+  /// **'Your location isn\'t available. Allow location for Casama, then try again.'**
   String get placeNoLocation;
 
   /// No description provided for @placesHelp.
@@ -9703,7 +9703,7 @@ abstract class AppLocalizations {
   /// No description provided for @ctxScreenshotFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t take a screenshot. Allow screen recording for Kasama in your system settings.'**
+  /// **'Couldn\'t take a screenshot. Allow screen recording for Casama in your system settings.'**
   String get ctxScreenshotFailed;
 
   /// No description provided for @watchedFolders.
@@ -10135,7 +10135,7 @@ abstract class AppLocalizations {
   /// No description provided for @inviteShareText.
   ///
   /// In en, this message translates to:
-  /// **'Join {workspace} on Kasama: {url}'**
+  /// **'Join {workspace} on Casama: {url}'**
   String inviteShareText(String workspace, String url);
 
   /// No description provided for @invitedBy.
@@ -10405,8 +10405,158 @@ abstract class AppLocalizations {
   /// No description provided for @oauthNeedsHttps.
   ///
   /// In en, this message translates to:
-  /// **'{app} only signs in on a secure (https) address, and this Kasama server is at {address}. Serve Kasama over https to use sign-in.'**
+  /// **'{app} only signs in on a secure (https) address, and this Casama server is at {address}. Serve Casama over https to use sign-in.'**
   String oauthNeedsHttps(String app, String address);
+
+  /// No description provided for @aboutYou.
+  ///
+  /// In en, this message translates to:
+  /// **'About you'**
+  String get aboutYou;
+
+  /// No description provided for @aboutYouRow.
+  ///
+  /// In en, this message translates to:
+  /// **'What your bots call you and know about you'**
+  String get aboutYouRow;
+
+  /// No description provided for @aboutYouIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bots read this so they can call you by name and answer the way you like. Only you can see it.'**
+  String get aboutYouIntro;
+
+  /// No description provided for @whatToCallYou.
+  ///
+  /// In en, this message translates to:
+  /// **'What should bots call you?'**
+  String get whatToCallYou;
+
+  /// No description provided for @pronounsOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Pronouns (optional)'**
+  String get pronounsOptional;
+
+  /// No description provided for @aboutMe.
+  ///
+  /// In en, this message translates to:
+  /// **'About me'**
+  String get aboutMe;
+
+  /// No description provided for @aboutMeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your work, the people in your life, what you\'re into. Anything that helps.'**
+  String get aboutMeHint;
+
+  /// No description provided for @replyStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'How I like replies'**
+  String get replyStyle;
+
+  /// No description provided for @replyStyleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: short answers, no emoji, explain things like I\'m new to them'**
+  String get replyStyleHint;
+
+  /// No description provided for @learnAboutMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn about me from chats'**
+  String get learnAboutMe;
+
+  /// No description provided for @learnAboutMeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots save facts about you here. Edit or delete them any time.'**
+  String get learnAboutMeHelp;
+
+  /// No description provided for @useInThisSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'Use what I\'ve shared in {workspace}'**
+  String useInThisSpace(String workspace);
+
+  /// No description provided for @useInThisSpaceHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Your name and reply style are used everywhere. About me and learned facts stay in spaces where you\'re the only member, unless you turn this on.'**
+  String get useInThisSpaceHelp;
+
+  /// No description provided for @learnedAboutYou.
+  ///
+  /// In en, this message translates to:
+  /// **'What bots learned'**
+  String get learnedAboutYou;
+
+  /// No description provided for @noLearnedFacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing yet. Facts bots learn about you in chat show up here.'**
+  String get noLearnedFacts;
+
+  /// No description provided for @addFact.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a fact'**
+  String get addFact;
+
+  /// No description provided for @editFact.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit fact'**
+  String get editFact;
+
+  /// No description provided for @deleteFactTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this fact?'**
+  String get deleteFactTitle;
+
+  /// No description provided for @deleteFactConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bots won\'t know it anymore.'**
+  String get deleteFactConfirm;
+
+  /// No description provided for @importToProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from ChatGPT or Claude'**
+  String get importToProfile;
+
+  /// No description provided for @savedToProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to your profile'**
+  String get savedToProfile;
+
+  /// No description provided for @undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get undo;
+
+  /// No description provided for @removedFromProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from your profile'**
+  String get removedFromProfile;
+
+  /// No description provided for @factsImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {count, plural, =1{1 fact} other{{count} facts}}'**
+  String factsImported(int count);
+
+  /// No description provided for @nameCardHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bots will use it in every workspace. You can change it later in Settings → About you.'**
+  String get nameCardHelp;
 }
 
 class _AppLocalizationsDelegate

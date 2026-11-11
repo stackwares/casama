@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,7 +19,7 @@ import '../../theme/app_tokens.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/floating_tab_chrome.dart';
 import '../../ui/glass.dart';
-import '../../ui/kasama_mark.dart';
+import '../../ui/casama_mark.dart';
 import '../bots/bots_screen.dart';
 import '../computer/computer_screen.dart';
 import '../../ui/glow_button.dart';
@@ -330,7 +330,7 @@ class _Sidebar extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 18, 16, 18),
               child: Row(
                 children: [
-                  const KasamaMark(size: 34),
+                  const CasamaMark(size: 34),
                   const SizedBox(width: 8),
                   // The current workspace; tap to switch, create or join one (D-099).
                   const Expanded(child: WorkspaceSwitcher()),

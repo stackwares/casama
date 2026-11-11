@@ -1,51 +1,51 @@
 # Third-Party Notices
 
-Kasama depends on the following third-party software, each used under its own license.
+Casama depends on the following third-party software, each used under its own license.
 Update this file in the same pull request that adds or removes a dependency.
 
 ## Node.js packages
 
 | Package                                 | Used in                                               | License           |
 | --------------------------------------- | ----------------------------------------------------- | ----------------- |
-| @biomejs/biome                          | kasama (tooling)                                      | MIT OR Apache-2.0 |
-| @dbos-inc/dbos-sdk                      | @kasama/server (runtime)                              | MIT               |
-| @modelcontextprotocol/sdk               | @kasama/agent (runtime)                               | MIT               |
-| @hono/node-server                       | @kasama/server (runtime)                              | MIT               |
-| @hono/zod-openapi                       | @kasama/contracts (runtime), @kasama/server (runtime) | MIT               |
-| @openapitools/openapi-generator-cli     | @kasama/contracts (tooling)                           | Apache-2.0        |
-| @opentelemetry/api                      | @kasama/observability (runtime)                       | Apache-2.0        |
-| @opentelemetry/exporter-trace-otlp-http | @kasama/observability (runtime)                       | Apache-2.0        |
-| @opentelemetry/resources                | @kasama/observability (runtime)                       | Apache-2.0        |
-| @opentelemetry/sdk-node                 | @kasama/observability (runtime)                       | Apache-2.0        |
-| @opentelemetry/semantic-conventions     | @kasama/observability (runtime)                       | Apache-2.0        |
-| @scalar/hono-api-reference              | @kasama/server (runtime)                              | MIT               |
-| @sentry/node                            | @kasama/observability (runtime)                       | MIT               |
-| @types/node                             | kasama (tooling)                                      | MIT               |
-| cron-parser                             | @kasama/domain (runtime)                              | MIT               |
-| drizzle-kit                             | @kasama/db (tooling)                                  | MIT               |
-| drizzle-orm                             | @kasama/db (runtime), @kasama/server (runtime)        | Apache-2.0        |
-| hono                                    | @kasama/contracts (runtime), @kasama/server (runtime) | MIT               |
-| jose                                    | @kasama/server (runtime)                              | MIT               |
-| postgres                                | @kasama/db (runtime), @kasama/server (runtime)        | Unlicense         |
-| posthog-node                            | @kasama/observability (runtime)                       | MIT               |
-| turbo                                   | kasama (tooling)                                      | MIT               |
-| typescript                              | kasama (tooling)                                      | Apache-2.0        |
-| undici                                  | @kasama/agent (runtime)                               | MIT               |
-| werift                                  | @kasama/sandbox (tests)                               | MIT               |
-| vitest                                  | kasama (tooling)                                      | MIT               |
-| zod                                     | @kasama/contracts (runtime), @kasama/server (runtime) | MIT               |
+| @biomejs/biome                          | casama (tooling)                                      | MIT OR Apache-2.0 |
+| @dbos-inc/dbos-sdk                      | @casama/server (runtime)                              | MIT               |
+| @modelcontextprotocol/sdk               | @casama/agent (runtime)                               | MIT               |
+| @hono/node-server                       | @casama/server (runtime)                              | MIT               |
+| @hono/zod-openapi                       | @casama/contracts (runtime), @casama/server (runtime) | MIT               |
+| @openapitools/openapi-generator-cli     | @casama/contracts (tooling)                           | Apache-2.0        |
+| @opentelemetry/api                      | @casama/observability (runtime)                       | Apache-2.0        |
+| @opentelemetry/exporter-trace-otlp-http | @casama/observability (runtime)                       | Apache-2.0        |
+| @opentelemetry/resources                | @casama/observability (runtime)                       | Apache-2.0        |
+| @opentelemetry/sdk-node                 | @casama/observability (runtime)                       | Apache-2.0        |
+| @opentelemetry/semantic-conventions     | @casama/observability (runtime)                       | Apache-2.0        |
+| @scalar/hono-api-reference              | @casama/server (runtime)                              | MIT               |
+| @sentry/node                            | @casama/observability (runtime)                       | MIT               |
+| @types/node                             | casama (tooling)                                      | MIT               |
+| cron-parser                             | @casama/domain (runtime)                              | MIT               |
+| drizzle-kit                             | @casama/db (tooling)                                  | MIT               |
+| drizzle-orm                             | @casama/db (runtime), @casama/server (runtime)        | Apache-2.0        |
+| hono                                    | @casama/contracts (runtime), @casama/server (runtime) | MIT               |
+| jose                                    | @casama/server (runtime)                              | MIT               |
+| postgres                                | @casama/db (runtime), @casama/server (runtime)        | Unlicense         |
+| posthog-node                            | @casama/observability (runtime)                       | MIT               |
+| turbo                                   | casama (tooling)                                      | MIT               |
+| typescript                              | casama (tooling)                                      | Apache-2.0        |
+| undici                                  | @casama/agent (runtime)                               | MIT               |
+| werift                                  | @casama/sandbox (tests)                               | MIT               |
+| vitest                                  | casama (tooling)                                      | MIT               |
+| zod                                     | @casama/contracts (runtime), @casama/server (runtime) | MIT               |
 
 ## Dart packages
 
 | Package                                                               | Used in                            | License                       |
 | --------------------------------------------------------------------- | ---------------------------------- | ----------------------------- |
-| args                                                                  | kasama_cli                         | BSD-3-Clause                  |
-| dio                                                                   | kasama_api, kasama_sdk, kasama_cli | MIT                           |
-| http                                                                  | kasama_sdk                         | BSD-3-Clause                  |
-| path                                                                  | kasama_cli                         | BSD-3-Clause                  |
-| json_annotation, json_serializable                                    | kasama_api                         | BSD-3-Clause                  |
-| copy_with_extension, copy_with_extension_gen                          | kasama_api                         | MIT                           |
-| build_runner                                                          | kasama_api (tooling)               | BSD-3-Clause                  |
+| args                                                                  | casama_cli                         | BSD-3-Clause                  |
+| dio                                                                   | casama_api, casama_sdk, casama_cli | MIT                           |
+| http                                                                  | casama_sdk                         | BSD-3-Clause                  |
+| path                                                                  | casama_cli                         | BSD-3-Clause                  |
+| json_annotation, json_serializable                                    | casama_api                         | BSD-3-Clause                  |
+| copy_with_extension, copy_with_extension_gen                          | casama_api                         | MIT                           |
+| build_runner                                                          | casama_api (tooling)               | BSD-3-Clause                  |
 | test, lints                                                           | all Dart packages (tooling)        | BSD-3-Clause                  |
 | supabase_flutter                                                      | client                             | MIT                           |
 | flutter_riverpod                                                      | client                             | MIT                           |

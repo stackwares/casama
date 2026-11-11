@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/features/workspaces/workspace_files.dart';
+import 'package:casama_app/features/workspaces/workspace_files.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
@@ -35,16 +35,16 @@ void main() {
 
     await tester.tap(find.byKey(const Key('gitSync')));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('gitRepo')), 'acme/kasama-config');
-    await tester.enterText(find.byKey(const Key('gitPath')), 'kasama');
+    await tester.enterText(find.byKey(const Key('gitRepo')), 'acme/casama-config');
+    await tester.enterText(find.byKey(const Key('gitPath')), 'casama');
     await tester.pump();
     await tester.tap(find.byKey(const Key('saveGitSync')));
     await tester.pumpAndSettle();
-    expect(backend.fileActions.last, 'git:acme/kasama-config:main:kasama');
+    expect(backend.fileActions.last, 'git:acme/casama-config:main:casama');
     expect(find.textContaining('sec-1'), findsOneWidget);
     await tester.tap(find.text('Close'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('acme/kasama-config@main/kasama'), findsOneWidget);
+    expect(find.textContaining('acme/casama-config@main/casama'), findsOneWidget);
     await tester.tap(find.byKey(const Key('gitSyncNow')));
     await tester.pumpAndSettle();
     expect(backend.fileActions.last, 'run');

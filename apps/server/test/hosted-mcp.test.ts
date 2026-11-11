@@ -201,7 +201,7 @@ describe("hosted MCP", () => {
     const reply = textOf(
       await client.callTool({ name: "ask_bot", arguments: { bot: "Ada", message: "Say hello" } }),
     );
-    expect(reply).toContain("Hello from Kasama.");
+    expect(reply).toContain("Hello from Casama.");
     expect(reply).toContain("status: completed");
     await client.close();
   });

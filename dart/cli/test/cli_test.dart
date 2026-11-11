@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:kasama_cli/kasama_cli.dart';
+import 'package:casama_cli/casama_cli.dart';
 import 'package:test/test.dart';
 
 void main() {
   late Directory dir;
-  setUp(() => dir = Directory.systemTemp.createTempSync('kasama-cli-test'));
+  setUp(() => dir = Directory.systemTemp.createTempSync('casama-cli-test'));
   tearDown(() => dir.deleteSync(recursive: true));
 
   Future<(int, String, String)> run(List<String> args) async {

@@ -1,17 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:path/path.dart' as p;
 
-/// Config directory: $KASAMA_CONFIG_DIR, else ~/.config/kasama (APPDATA on Windows).
+/// Config directory: $CASAMA_CONFIG_DIR, else ~/.config/casama (APPDATA on Windows).
 Directory configDir() {
-  final override = Platform.environment['KASAMA_CONFIG_DIR'];
+  final override = Platform.environment['CASAMA_CONFIG_DIR'];
   if (override != null && override.isNotEmpty) return Directory(override);
   final home = Platform.isWindows
       ? Platform.environment['APPDATA'] ?? '.'
       : p.join(Platform.environment['HOME'] ?? '.', '.config');
-  return Directory(p.join(home, 'kasama'));
+  return Directory(p.join(home, 'casama'));
 }
 
 void _writePrivate(File file, String contents) {

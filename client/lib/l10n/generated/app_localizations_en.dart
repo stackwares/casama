@@ -10,7 +10,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Kasama';
+  String get appTitle => 'Casama';
 
   @override
   String get loading => 'Loading…';
@@ -43,7 +43,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get somethingWentWrong => 'Something went wrong';
 
   @override
-  String get signInTitle => 'Sign in to Kasama';
+  String get signInTitle => 'Sign in to Casama';
 
   @override
   String get signUpTitle => 'Create your account';
@@ -1161,7 +1161,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get companionOnline => 'On: bots you allow can use this computer';
 
   @override
-  String get companionError => 'Cannot reach Kasama; retrying';
+  String get companionError => 'Cannot reach Casama; retrying';
 
   @override
   String get companionOff => 'Off';
@@ -1262,12 +1262,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String updateAvailable(String latest, String current) {
-    return 'Kasama $latest is available (you run $current)';
+    return 'Casama $latest is available (you run $current)';
   }
 
   @override
-  String kasamaVersion(String version) {
-    return 'Kasama $version';
+  String casamaVersion(String version) {
+    return 'Casama $version';
   }
 
   @override
@@ -1319,14 +1319,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get connectingToServer => 'Connecting to Kasama…';
+  String get connectingToServer => 'Connecting to Casama…';
 
   @override
-  String get cannotReachServer => 'Can\'t reach your Kasama server';
+  String get cannotReachServer => 'Can\'t reach your Casama server';
 
   @override
   String get connectionFailed =>
-      'Couldn\'t reach your Kasama server. Check your connection and try again.';
+      'Couldn\'t reach your Casama server. Check your connection and try again.';
 
   @override
   String cannotReachServerHelp(String url) {
@@ -1347,7 +1347,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get billingOffSelfHosted =>
-      'Billing is off on this server. Self-hosted Kasama has no limits.';
+      'Billing is off on this server. Self-hosted Casama has no limits.';
 
   @override
   String get restorePurchases => 'Restore purchases';
@@ -1449,7 +1449,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudConnectHelp =>
-      'Let a self-hosted Kasama use cloud computers and model credits, billed to this workspace.';
+      'Let a self-hosted Casama use cloud computers and model credits, billed to this workspace.';
 
   @override
   String get cloudConnectNewKey => 'New Cloud Connect key';
@@ -1459,7 +1459,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudConnectKeyOnce =>
-      'Copy it now; it is shown only once. Set it on your server with KASAMA_CLOUD_URL.';
+      'Copy it now; it is shown only once. Set it on your server with CASAMA_CLOUD_URL.';
 
   @override
   String get copy => 'Copy';
@@ -1683,7 +1683,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Several bots in one chat; @mention who should answer';
 
   @override
-  String get importBotHelp => 'From a Kasama bot file someone shared';
+  String get importBotHelp => 'From a Casama bot file someone shared';
 
   @override
   String get importAgentHelp =>
@@ -1703,11 +1703,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Download new versions in the background and install them when you quit.';
 
   @override
-  String get upToDate => 'Kasama is up to date';
+  String get upToDate => 'Casama is up to date';
 
   @override
   String updateReady(String version) {
-    return 'Kasama $version is available';
+    return 'Casama $version is available';
   }
 
   @override
@@ -1720,7 +1720,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get openAtLoginHelp =>
-      'Start Kasama when you log in to this Mac, ready for the quick-ask shortcut.';
+      'Start Casama when you log in to this Mac, ready for the quick-ask shortcut.';
 
   @override
   String get signInCta => 'Sign in or create account';
@@ -2276,7 +2276,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get serverHelp =>
-      'Use your own Kasama server. Enter the address you or your admin set up.';
+      'Use your own Casama server. Enter the address you or your admin set up.';
 
   @override
   String get ssoHelp =>
@@ -2406,10 +2406,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeCodeHelp =>
-      'Paste a code someone shared with you. It starts with kasama-theme:';
+      'Paste a code someone shared with you. It starts with casama-theme:';
 
   @override
-  String get invalidThemeCode => 'That isn\'t a Kasama theme code.';
+  String get invalidThemeCode => 'That isn\'t a Casama theme code.';
 
   @override
   String themeImported(String name) {
@@ -2555,7 +2555,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String usageAskPrompt(String period, String summary) {
-    return 'Here is my Kasama usage for $period. Help me understand where the money goes and how I could spend less. You can also check live numbers with your usage tool.\n\n$summary';
+    return 'Here is my Casama usage for $period. Help me understand where the money goes and how I could spend less. You can also check live numbers with your usage tool.\n\n$summary';
   }
 
   @override
@@ -2768,7 +2768,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String adminSetupNeeded(String app) {
-    return 'One-click sign-in for $app needs a one-time setup by whoever runs this Kasama server.';
+    return 'One-click sign-in for $app needs a one-time setup by whoever runs this Casama server.';
   }
 
   @override
@@ -2948,7 +2948,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatGptDesktopOnly =>
-      'To connect your ChatGPT plan, open the desktop app, or run \"kasama credential chatgpt\" in the CLI.';
+      'To connect your ChatGPT plan, open the desktop app, or run \"casama credential chatgpt\" in the CLI.';
 
   @override
   String get chatGptWaiting =>
@@ -3447,7 +3447,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changedByPerson => 'Changed by a person';
 
   @override
-  String get changedBySystem => 'Changed by Kasama';
+  String get changedBySystem => 'Changed by Casama';
 
   @override
   String get fieldName => 'name';
@@ -3735,7 +3735,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveAsFile => 'Save as file';
 
   @override
-  String get notABotTemplate => 'That file isn\'t a Kasama bot template.';
+  String get notABotTemplate => 'That file isn\'t a Casama bot template.';
 
   @override
   String get importBot => 'Import a bot';
@@ -4037,7 +4037,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String connectAiAppAsk(String app) {
-    return '$app wants to use Kasama';
+    return '$app wants to use Casama';
   }
 
   @override
@@ -4315,7 +4315,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pluginsHelp =>
-      'Plugins are Agent Plugins 1.0 packages on GitHub. They can bring skills and MCP tools; their servers run on this bot\'s computer, never on Kasama\'s servers.';
+      'Plugins are Agent Plugins 1.0 packages on GitHub. They can bring skills and MCP tools; their servers run on this bot\'s computer, never on Casama\'s servers.';
 
   @override
   String get addPlugin => 'Add a plugin';
@@ -4557,7 +4557,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gitSyncHelp =>
-      'Changes in Kasama are committed to the repository, and pushes to it update Kasama after they\'re checked. If a file changed in both places, Kasama keeps its version and opens a pull request. Needs a GITHUB_TOKEN secret allowed for api.github.com.';
+      'Changes in Casama are committed to the repository, and pushes to it update Casama after they\'re checked. If a file changed in both places, Casama keeps its version and opens a pull request. Needs a GITHUB_TOKEN secret allowed for api.github.com.';
 
   @override
   String get gitSyncNeedsToken => 'Needs a GITHUB_TOKEN secret';
@@ -4861,7 +4861,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get connectManagedHelp =>
-      'Kasama reads your inbox through Composio\'s Google sign-in for now. You can disconnect any time.';
+      'Casama reads your inbox through Composio\'s Google sign-in for now. You can disconnect any time.';
 
   @override
   String get sharing => 'Sharing';
@@ -5167,7 +5167,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get encryptionKeyManaged =>
-      'Kasama creates and keeps this workspace\'s key for you, wrapped with the server\'s own key. There\'s nothing to save or copy.';
+      'Casama creates and keeps this workspace\'s key for you, wrapped with the server\'s own key. There\'s nothing to save or copy.';
 
   @override
   String get encryptionRotateTitle => 'Rotate the key?';
@@ -5203,7 +5203,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get memoryHonchoWorkspaceHelp =>
-      'Leave empty to use one made for this Kasama workspace';
+      'Leave empty to use one made for this Casama workspace';
 
   @override
   String get memoryBaseUrl => 'Server address (optional)';
@@ -5388,7 +5388,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get linksInviteHelp =>
-      'Send it to your contact. They accept it in Kasama with one of their bots. It works once, for 7 days.';
+      'Send it to your contact. They accept it in Casama with one of their bots. It works once, for 7 days.';
 
   @override
   String get linksAccept => 'Accept an invite';
@@ -5441,7 +5441,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wakeWordHelp =>
-      'While Kasama is open, this device listens for your phrase and starts a live call with the bot you choose.';
+      'While Casama is open, this device listens for your phrase and starts a live call with the bot you choose.';
 
   @override
   String get wakeWordListen => 'Listen for the wake word';
@@ -5450,7 +5450,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wakeWordPhrase => 'Phrase';
 
   @override
-  String get wakeWordPhraseHelp => 'Two or three words, like \"hey kasama\"';
+  String get wakeWordPhraseHelp => 'Two or three words, like \"hey casama\"';
 
   @override
   String get wakeWordBot => 'Call this bot';
@@ -5470,7 +5470,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get secretStoreHelp =>
-      'Keep bots\' named secrets in your own Infisical project. Kasama keeps only each secret\'s name and where it may be used.';
+      'Keep bots\' named secrets in your own Infisical project. Casama keeps only each secret\'s name and where it may be used.';
 
   @override
   String get secretStoreSite => 'Infisical address';
@@ -5494,11 +5494,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get secretStoreBack => 'Use this server\'s vault again';
 
   @override
-  String get localServer => 'Run Kasama on this computer';
+  String get localServer => 'Run Casama on this computer';
 
   @override
   String get localServerHelp =>
-      'Starts your own Kasama server here with Docker and connects to it. Only this computer can reach it.';
+      'Starts your own Casama server here with Docker and connects to it. Only this computer can reach it.';
 
   @override
   String get localServerIntro =>
@@ -5593,7 +5593,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceConnectionsNone =>
-      'This device can\'t share data yet. On your phone, open Kasama and turn on what you\'d like to share.';
+      'This device can\'t share data yet. On your phone, open Casama and turn on what you\'d like to share.';
 
   @override
   String get deviceKeepFor => 'Keep for';
@@ -5623,7 +5623,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get devicePermissionDenied =>
-      'Kasama doesn\'t have permission. Allow it in the system settings, then try again.';
+      'Casama doesn\'t have permission. Allow it in the system settings, then try again.';
 
   @override
   String get deviceOtherDevices => 'Your other devices';
@@ -5660,7 +5660,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get placeNoLocation =>
-      'Your location isn\'t available. Allow location for Kasama, then try again.';
+      'Your location isn\'t available. Allow location for Casama, then try again.';
 
   @override
   String get placesHelp =>
@@ -5692,7 +5692,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ctxScreenshotFailed =>
-      'Couldn\'t take a screenshot. Allow screen recording for Kasama in your system settings.';
+      'Couldn\'t take a screenshot. Allow screen recording for Casama in your system settings.';
 
   @override
   String get watchedFolders => 'Watched folders';
@@ -5944,7 +5944,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String inviteShareText(String workspace, String url) {
-    return 'Join $workspace on Kasama: $url';
+    return 'Join $workspace on Casama: $url';
   }
 
   @override
@@ -6127,6 +6127,98 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String oauthNeedsHttps(String app, String address) {
-    return '$app only signs in on a secure (https) address, and this Kasama server is at $address. Serve Kasama over https to use sign-in.';
+    return '$app only signs in on a secure (https) address, and this Casama server is at $address. Serve Casama over https to use sign-in.';
   }
+
+  @override
+  String get aboutYou => 'About you';
+
+  @override
+  String get aboutYouRow => 'What your bots call you and know about you';
+
+  @override
+  String get aboutYouIntro =>
+      'Your bots read this so they can call you by name and answer the way you like. Only you can see it.';
+
+  @override
+  String get whatToCallYou => 'What should bots call you?';
+
+  @override
+  String get pronounsOptional => 'Pronouns (optional)';
+
+  @override
+  String get aboutMe => 'About me';
+
+  @override
+  String get aboutMeHint =>
+      'Your work, the people in your life, what you\'re into. Anything that helps.';
+
+  @override
+  String get replyStyle => 'How I like replies';
+
+  @override
+  String get replyStyleHint =>
+      'For example: short answers, no emoji, explain things like I\'m new to them';
+
+  @override
+  String get learnAboutMe => 'Learn about me from chats';
+
+  @override
+  String get learnAboutMeHelp =>
+      'Bots save facts about you here. Edit or delete them any time.';
+
+  @override
+  String useInThisSpace(String workspace) {
+    return 'Use what I\'ve shared in $workspace';
+  }
+
+  @override
+  String get useInThisSpaceHelp =>
+      'Your name and reply style are used everywhere. About me and learned facts stay in spaces where you\'re the only member, unless you turn this on.';
+
+  @override
+  String get learnedAboutYou => 'What bots learned';
+
+  @override
+  String get noLearnedFacts =>
+      'Nothing yet. Facts bots learn about you in chat show up here.';
+
+  @override
+  String get addFact => 'Add a fact';
+
+  @override
+  String get editFact => 'Edit fact';
+
+  @override
+  String get deleteFactTitle => 'Delete this fact?';
+
+  @override
+  String get deleteFactConfirm => 'Your bots won\'t know it anymore.';
+
+  @override
+  String get importToProfile => 'Import from ChatGPT or Claude';
+
+  @override
+  String get savedToProfile => 'Saved to your profile';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String get removedFromProfile => 'Removed from your profile';
+
+  @override
+  String factsImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count facts',
+      one: '1 fact',
+    );
+    return 'Added $_temp0';
+  }
+
+  @override
+  String get nameCardHelp =>
+      'Your bots will use it in every workspace. You can change it later in Settings → About you.';
 }

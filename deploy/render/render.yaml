@@ -1,8 +1,8 @@
-# Render Blueprint: Kasama API and worker (computers via Cloud Connect, E2B/Daytona or the desktop
+# Render Blueprint: Casama API and worker (computers via Cloud Connect, E2B/Daytona or the desktop
 # companion; see deploy/README.md). Supabase provides Postgres and Auth.
 services:
   - type: web
-    name: kasama-api
+    name: casama-api
     runtime: docker
     dockerfilePath: apps/server/Dockerfile
     dockerContext: .
@@ -10,18 +10,18 @@ services:
     envVars:
       - { key: MODE, value: api }
       - { key: PORT, value: "8787" }
-      - { fromGroup: kasama }
+      - { fromGroup: casama }
   - type: worker
-    name: kasama-worker
+    name: casama-worker
     runtime: docker
     dockerfilePath: apps/server/Dockerfile
     dockerContext: .
     envVars:
       - { key: MODE, value: worker }
-      - { key: API_INTERNAL_URL, fromService: { type: web, name: kasama-api, property: hostport } }
-      - { fromGroup: kasama }
+      - { key: API_INTERNAL_URL, fromService: { type: web, name: casama-api, property: hostport } }
+      - { fromGroup: casama }
 envVarGroups:
-  - name: kasama
+  - name: casama
     envVars:
       - { key: NODE_ENV, value: production }
       - { key: DATABASE_URL, sync: false }
@@ -31,5 +31,5 @@ envVarGroups:
       - { key: PUBLIC_APP_URL, sync: false }
       - { key: INTERNAL_TOKEN, generateValue: true }
       - { key: METRICS_TOKEN, generateValue: true }
-      - { key: KASAMA_CLOUD_URL, sync: false }
-      - { key: KASAMA_CLOUD_KEY, sync: false }
+      - { key: CASAMA_CLOUD_URL, sync: false }
+      - { key: CASAMA_CLOUD_KEY, sync: false }

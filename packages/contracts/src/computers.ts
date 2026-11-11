@@ -69,7 +69,7 @@ export const CreateComputerRequest = z
         "docker",
         "e2b",
         "daytona",
-        "kasama-cloud",
+        "casama-cloud",
         "novita",
         "kubernetes",
         "incus",

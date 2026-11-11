@@ -36,25 +36,25 @@ jobs:
         env:
           SKIP_DOCKER_TESTS: "1"
       - name: pgTAP (RLS)
-        run: pnpm --filter @kasama/db test:pgtap
+        run: pnpm --filter @casama/db test:pgtap
       - name: Generated code is up to date (OpenAPI, Dart client, Drizzle schema)
         run: |
           pnpm gen
-          pnpm --filter @kasama/db pull
-          git diff --exit-code -- packages/contracts/openapi.json dart/kasama_api/lib dart/kasama_sdk/lib/src/generated packages/db/src/generated
+          pnpm --filter @casama/db pull
+          git diff --exit-code -- packages/contracts/openapi.json dart/casama_api/lib dart/casama_sdk/lib/src/generated packages/db/src/generated
       - name: Dart analyze and test
         working-directory: dart
         run: |
           dart pub get
           dart analyze
-          dart test cli kasama_sdk computerd
+          dart test cli casama_sdk computerd
       - name: Build sandbox images
         run: |
-          docker build -q -f infra/images/computer/Dockerfile.headless -t kasama/computer-headless:dev .
-          docker build -q -f apps/supervisor/Dockerfile -t kasama/supervisor:dev .
-          docker build -q -f infra/egress-proxy/Dockerfile -t kasama/egress-proxy:dev .
+          docker build -q -f infra/images/computer/Dockerfile.headless -t casama/computer-headless:dev .
+          docker build -q -f apps/supervisor/Dockerfile -t casama/supervisor:dev .
+          docker build -q -f infra/egress-proxy/Dockerfile -t casama/egress-proxy:dev .
       - name: Sandbox and computer tests (Docker)
-        run: pnpm --filter @kasama/sandbox --filter @kasama/server test
+        run: pnpm --filter @casama/sandbox --filter @casama/server test
       - name: Dart computerd tests
         working-directory: dart
         run: dart test computerd
@@ -100,4 +100,4 @@ jobs:
           context: .
           file: apps/server/Dockerfile
           push: false
-          tags: kasama/server:ci
+          tags: casama/server:ci

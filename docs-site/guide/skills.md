@@ -18,7 +18,7 @@ You can also make sure a bot uses a skill: type `/` in the message field and pic
 
 ## The skill format
 
-Kasama uses the open Agent Skills layout, so skills written for other apps that read it work here
+Casama uses the open Agent Skills layout, so skills written for other apps that read it work here
 too. A skill is a folder with a `SKILL.md` file and, optionally, other files:
 
 ```text
@@ -66,7 +66,7 @@ You can also teach a bot a skill by doing the task once while it watches. See
 
 ## Install from the catalog
 
-Kasama ships a small catalog of ready-made skills: meeting-notes, weekly-report, research-brief,
+Casama ships a small catalog of ready-made skills: meeting-notes, weekly-report, research-brief,
 csv-cleanup (with a cleaning script), code-review and trip-planner.
 
 1. Go to **Settings** → **Skills** and select **Skill catalog**.
@@ -83,7 +83,7 @@ install for that bot.
 3. Review `SKILL.md` and every file in the folder. Binary files are marked as such.
 4. Under **Install for**, choose **The whole workspace** or one bot, then select **Install**.
 
-Kasama installs exactly the commit you previewed, so a change pushed after your review never
+Casama installs exactly the commit you previewed, so a change pushed after your review never
 sneaks in. The skill is labeled with its repository.
 
 Private repositories need a workspace secret named `GITHUB_TOKEN` that is allowed for

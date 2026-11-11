@@ -114,7 +114,7 @@ describe("group chats", () => {
     expect(r[0]).toBe("Lead: Plan: @Writer write the launch copy. @Designer make the banner.");
     expect(r.slice(1).sort()).toEqual([
       "Designer: Banner done.",
-      "Writer: Copy done: Meet Kasama.",
+      "Writer: Copy done: Meet Casama.",
     ]);
     const [hops] = await h.tdb.admin<
       { max: number }[]

@@ -1,4 +1,4 @@
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 /// Web: no loopback listener, so sign-in happens in the desktop app or the CLI.
 bool get chatGptLoopbackSupported => false;

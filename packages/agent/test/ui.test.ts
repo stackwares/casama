@@ -1,4 +1,4 @@
-import { needsApproval } from "@kasama/domain";
+import { needsApproval } from "@casama/domain";
 import { describe, expect, it } from "vitest";
 import { failureMessage, partsText } from "../src/run.ts";
 import { ToolRegistry } from "../src/tools/registry.ts";

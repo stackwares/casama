@@ -6,7 +6,7 @@ stored encrypted, and each bot gets only the connections you give it.
 
 ## Connect an app
 
-Kasama ships with a catalog of apps that run their own hosted MCP servers, so you connect them
+Casama ships with a catalog of apps that run their own hosted MCP servers, so you connect them
 directly with no middleman. Owners and admins connect apps for the workspace.
 
 1. Open **Settings** → **Integrations**. The screen is called **Apps**.
@@ -15,7 +15,7 @@ directly with no middleman. Owners and admins connect apps for the workspace.
 4. Connect it one of these ways, depending on the app:
    - **Continue with** the app: one-click sign-in. Your browser opens the vendor's sign-in page.
      Approve access there and the sheet updates by itself.
-   - **API key**: follow the steps on the sheet, which link to the vendor's key page. Kasama tests
+   - **API key**: follow the steps on the sheet, which link to the vendor's key page. Casama tests
      the key when you save it.
    - No sign-in: some apps work as soon as you add them.
 5. Under **Which bots can use it?**, pick the bots, then tap **Done**.
@@ -45,7 +45,7 @@ and also take an optional API key.
 ### When an app says "Needs setup"
 
 Some vendors don't let apps register themselves for one-click sign-in. For those, whoever runs
-your Kasama server registers an OAuth client with the vendor once. The connect sheet says so and
+your Casama server registers an OAuth client with the vendor once. The connect sheet says so and
 shows the redirect address to register, which is `<your API address>/oauth/callback`.
 
 | App                                          | What the server needs                                     |
@@ -93,7 +93,7 @@ On a run's timeline, tools from a connection are named after it, such as `mcp.gi
 
 ## Google permissions
 
-Kasama uses Google's own MCP servers and asks for as little as it can:
+Casama uses Google's own MCP servers and asks for as little as it can:
 
 | Connection          | Google scopes                                               | What a bot can do                                  |
 | ------------------- | ----------------------------------------------------------- | -------------------------------------------------- |
@@ -117,7 +117,7 @@ for an AI-powered agent**, enable each product's API and MCP API (for example `g
 and `gmailmcp.googleapis.com`), and add your redirect address.
 :::
 
-On Kasama Cloud, Gmail connects through Composio's Google sign-in until Google's servers are
+On Casama Cloud, Gmail connects through Composio's Google sign-in until Google's servers are
 generally available.
 
 ## Composio and Pipedream
@@ -173,7 +173,7 @@ is sent only to the hosts you allow.
 4. Under **Allowed hosts**, list where it may go, comma-separated, such as `api.github.com`.
 5. Tap **Save**.
 
-Bots write `{{secret:GITHUB_TOKEN}}` in a request. Kasama fills in the real value only when the
+Bots write `{{secret:GITHUB_TOKEN}}` in a request. Casama fills in the real value only when the
 request goes to an allowed host or one of its subdomains, and refuses otherwise. Secrets can be
 used in `http.request` (headers or body) and typed into web pages with `browser.fill`. Filled
 values are scrubbed from tool output, so they never reach the model or the timeline.
@@ -209,7 +209,7 @@ Bots write `{{totp:NAME}}` and get the current code at the moment the tool runs,
 allowed hosts. The key itself never leaves the vault: `{{secret:NAME}}` on a sign-in code is
 refused. A bot can also ask for a sign-in code in the chat, with the same card.
 
-Kasama supports time-based codes: SHA-1, SHA-256 or SHA-512, 6 to 8 digits, with periods from 10
+Casama supports time-based codes: SHA-1, SHA-256 or SHA-512, 6 to 8 digits, with periods from 10
 to 300 seconds.
 
 ## Password managers
@@ -224,14 +224,14 @@ Bots can sign in with logins from 1Password or Bitwarden. They never see a passw
 3. Choose **Just me** or, as an admin, **For the whole workspace**.
 4. Under **Vaults bots may use**, tick the vaults or collections. Nothing is available until you do.
 
-Kasama checks the token before saving it, and never shows it again.
+Casama checks the token before saving it, and never shows it again.
 
 How bots use logins:
 
 - A bot lists logins by name, with each login's sites and whether it has one-time codes.
 - It writes `{{login:Name:username}}`, `{{login:Name:password}}` or `{{login:Name:otp}}` into
   `browser.fill`.
-- Kasama fills the value only when the page is on one of that login's own sites or their
+- Casama fills the value only when the page is on one of that login's own sites or their
   subdomains. Anywhere else it refuses and names the login's sites.
 - Filled values are scrubbed from output.
 
@@ -247,14 +247,14 @@ Bots can buy single calls to paid data APIs (places, emails, SEO and more) throu
 
 A bot searches the catalog, and each result shows its price. Buying a call asks first under the
 default autonomy, with the service and price on the approval card, such as "for $0.0040 per call".
-Treg charges your own account directly, with no Kasama markup, and each call shows in
+Treg charges your own account directly, with no Casama markup, and each call shows in
 [Usage](/guide/usage). A call can't cost much more than the approved price, and failed calls
 aren't charged.
 
 ## Plugins
 
 A plugin bundles skills and MCP tools in one install from GitHub. Open **Bot settings** →
-**Plugins** to add one. Plugin servers run on the bot's computer, never on Kasama's servers. To
+**Plugins** to add one. Plugin servers run on the bot's computer, never on Casama's servers. To
 build one, see [Building plugins](/develop/plugins).
 
 ## Limits
@@ -262,7 +262,7 @@ build one, see [Building plugins](/develop/plugins).
 - The Composio and Pipedream connections follow the providers' public API docs and haven't been
   checked against live accounts yet.
 - The Treg connection follows Treg's public guides and hasn't been checked against a live account
-  yet. Buying data calls through Kasama Cloud credits isn't offered.
+  yet. Buying data calls through Casama Cloud credits isn't offered.
 - Bitwarden Secrets Manager isn't supported. Use named secrets for key-value secrets.
 - In the app, a secret is available to every bot in the workspace. Limiting a secret to certain
   bots is possible through the API only.

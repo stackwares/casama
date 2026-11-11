@@ -24,7 +24,7 @@ export async function verifyLicense(
   try {
     const key = await importSPKI(publicKeyPem ?? readFileSync(PUBLIC_KEY, "utf8"), "EdDSA");
     const { payload } = await jwtVerify(token, key, {
-      issuer: "kasama-licensing",
+      issuer: "casama-licensing",
       algorithms: ["EdDSA"],
     });
     return {

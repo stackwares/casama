@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/features/groups/group_chats.dart';
+import 'package:casama_app/features/groups/group_chats.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';

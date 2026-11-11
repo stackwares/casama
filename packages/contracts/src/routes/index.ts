@@ -1,3 +1,4 @@
+import * as aboutYou from "./about-you.ts";
 import * as actionRules from "./action-rules.ts";
 import * as admin from "./admin.ts";
 import * as agentImport from "./agent-import.ts";
@@ -67,6 +68,7 @@ export const routes = {
   ...secretStore,
   ...deviceData,
   ...attention,
+  ...aboutYou,
   ...pages,
   ...passwordManagers,
   ...replays,
@@ -78,6 +80,7 @@ export const routes = {
   ...mcp,
 };
 export {
+  aboutYou,
   actionRules,
   admin,
   agentImport,

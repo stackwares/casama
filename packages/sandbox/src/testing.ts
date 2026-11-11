@@ -23,11 +23,11 @@ export interface SandboxStack {
 }
 
 export const TEST_IMAGES = {
-  headless: process.env.TEST_COMPUTER_IMAGE ?? "kasama/computer-headless:dev",
-  desktop: process.env.TEST_DESKTOP_IMAGE ?? "kasama/computer-desktop:dev",
-  turn: process.env.TEST_TURN_IMAGE ?? "kasama/turn:dev",
-  supervisor: process.env.TEST_SUPERVISOR_IMAGE ?? "kasama/supervisor:dev",
-  egress: process.env.TEST_EGRESS_IMAGE ?? "kasama/egress-proxy:dev",
+  headless: process.env.TEST_COMPUTER_IMAGE ?? "casama/computer-headless:dev",
+  desktop: process.env.TEST_DESKTOP_IMAGE ?? "casama/computer-desktop:dev",
+  turn: process.env.TEST_TURN_IMAGE ?? "casama/turn:dev",
+  supervisor: process.env.TEST_SUPERVISOR_IMAGE ?? "casama/supervisor:dev",
+  egress: process.env.TEST_EGRESS_IMAGE ?? "casama/egress-proxy:dev",
 };
 
 export async function dockerAvailable() {
@@ -50,7 +50,7 @@ export async function startSandboxStack(
   const sup = `${prefix}-sup`;
   const turnName = `${prefix}-turn`;
   const turnSecret = randomBytes(24).toString("hex");
-  await docker("network", "create", "--label", "dev.kasama.test=1", control);
+  await docker("network", "create", "--label", "dev.casama.test=1", control);
   await docker(
     "run",
     "-d",
@@ -59,7 +59,7 @@ export async function startSandboxStack(
     "--network",
     control,
     "--label",
-    "dev.kasama.test=1",
+    "dev.casama.test=1",
     "-e",
     `EGRESS_CONTROL_TOKEN=${egressToken}`,
     ...(opts.egressExemptCidrs ? ["-e", `EGRESS_EXEMPT_CIDRS=${opts.egressExemptCidrs}`] : []),
@@ -75,7 +75,7 @@ export async function startSandboxStack(
     "--network",
     control,
     "--label",
-    "dev.kasama.test=1",
+    "dev.casama.test=1",
     "-p",
     "127.0.0.1::3478/udp",
     "-p",
@@ -94,7 +94,7 @@ export async function startSandboxStack(
     "--network",
     control,
     "--label",
-    "dev.kasama.test=1",
+    "dev.casama.test=1",
     "-v",
     "/var/run/docker.sock:/var/run/docker.sock",
     "-p",

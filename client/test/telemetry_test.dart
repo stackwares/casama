@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/core/telemetry.dart';
+import 'package:casama_app/core/telemetry.dart';
 
 void main() {
   test('error payloads lose secrets and emails', () {

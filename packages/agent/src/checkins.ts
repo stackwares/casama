@@ -4,8 +4,8 @@
  * model, within a daily cap. Scans leave suggestions; a scan that finds nothing writes nothing and
  * sends nothing.
  */
-import type { Database } from "@kasama/db";
-import { isValidTimezone, nextRunAt } from "@kasama/domain";
+import type { Database } from "@casama/db";
+import { isValidTimezone, nextRunAt } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
@@ -102,7 +102,7 @@ export function registerSuggestionTools(
     description:
       "Suggest something for the person to do or approve, shown in their For you feed. Include the action you'd run if they accept (a tool name and its arguments), the sources, and the urgency. Only urgent suggestions send a notification.",
     risk: "low",
-    // Only the bot's own state inside Kasama: never asks (D-155).
+    // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,
     schema: z.object({
       title: z.string().min(1).max(200),

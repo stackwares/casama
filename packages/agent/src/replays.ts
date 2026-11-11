@@ -6,8 +6,8 @@
  * bot carries on from that step and can update the replay. Typed passwords are never stored:
  * replays use {{secret:NAME}}, filled only for the secret's allowed hosts.
  */
-import type { Database } from "@kasama/db";
-import { collectExec } from "@kasama/sandbox";
+import type { Database } from "@casama/db";
+import { collectExec } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { hasLoginPlaceholders, resolveLoginPlaceholders } from "./password-managers.ts";

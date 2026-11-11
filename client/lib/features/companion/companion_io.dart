@@ -5,7 +5,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:kasama_computerd/computerd.dart';
+import 'package:casama_computerd/computerd.dart';
 
 import 'companion.dart';
 import '../../core/distribution.dart';
@@ -16,11 +16,11 @@ LocalMcpStore createMcpStore() => _McpStore();
 
 class _McpStore implements LocalMcpStore {
   static const _secure = FlutterSecureStorage();
-  String _key(String orgId) => 'kasama.mcp.$orgId';
+  String _key(String orgId) => 'casama.mcp.$orgId';
 
   File _file(String orgId) {
     final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '.';
-    return File('$home/.config/kasama/devices/$orgId.mcp.json');
+    return File('$home/.config/casama/devices/$orgId.mcp.json');
   }
 
   @override
@@ -53,11 +53,11 @@ class _McpStore implements LocalMcpStore {
 
 class _TokenStore implements DeviceTokenStore {
   static const _secure = FlutterSecureStorage();
-  String _key(String orgId) => 'kasama.device.$orgId';
+  String _key(String orgId) => 'casama.aiice.$orgId';
 
   File _file(String orgId) {
     final home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'] ?? '.';
-    return File('$home/.config/kasama/devices/$orgId.token');
+    return File('$home/.config/casama/devices/$orgId.token');
   }
 
   @override
@@ -157,7 +157,7 @@ class IoCompanion implements Companion {
       // Apps launched from Finder get a minimal PATH; Homebrew holds agent-browser and agent-desktop.
       extraPath: const ['/opt/homebrew/bin', '/usr/local/bin'],
       // Its own agent-browser namespace: never touch the user's other browser sessions.
-      extraEnv: const {'AGENT_BROWSER_NAMESPACE': 'kasama', 'AGENT_BROWSER_SESSION': 'kasama-companion'},
+      extraEnv: const {'AGENT_BROWSER_NAMESPACE': 'casama', 'AGENT_BROWSER_SESSION': 'casama-companion'},
       // Local MCP servers (D-096): their environment never leaves this computer.
       mcpServers: {
         for (final s in settings.mcpServers)

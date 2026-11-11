@@ -1,0 +1,42 @@
+{{- if .Values.migrations.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-migrate-{{ .Release.Revision }}
+  labels: {{- include "casama.labels" . | nindent 4 }}
+  annotations: { "helm.sh/hook": "pre-install,pre-upgrade", "helm.sh/hook-weight": "-5", "helm.sh/hook-delete-policy": "before-hook-creation" }
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes: [{ name: migrations, emptyDir: {} }]
+      initContainers:
+        # The server image carries the migrations; copy them out for psql.
+        - name: copy
+          image: {{ include "casama.image" (dict "root" . "name" "server") }}
+          command: ["sh", "-c", "cp /app/supabase/migrations/*.sql /migrations/"]
+          volumeMounts: [{ name: migrations, mountPath: /migrations }]
+      containers:
+        - name: migrate
+          image: {{ .Values.migrations.postgresImage }}
+          env:
+            - { name: ADMIN_URL, valueFrom: { secretKeyRef: { name: {{ .Release.Name }}-database, key: adminUrl } } }
+          volumeMounts: [{ name: migrations, mountPath: /migrations }]
+          command:
+            - sh
+            - -ec
+            - |
+              PSQL="psql $ADMIN_URL -v ON_ERROR_STOP=1 -qtA"
+              $PSQL -c "create table if not exists public.casama_migrations (name text primary key, applied_at timestamptz not null default now())"
+              for f in $(ls /migrations/*.sql | sort); do
+                name=$(basename "$f")
+                if [ -z "$($PSQL -c "select 1 from public.casama_migrations where name = '$name'")" ]; then
+                  echo "applying $name"; $PSQL -1 -f "$f"; $PSQL -c "insert into public.casama_migrations (name) values ('$name')"
+                fi
+              done
+              echo "migrations up to date"
+{{- end }}

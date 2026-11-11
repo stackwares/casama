@@ -1,4 +1,4 @@
-import { type Database, withUserSession } from "@kasama/db";
+import { type Database, withUserSession } from "@casama/db";
 import { sql } from "drizzle-orm";
 import type { MiddlewareHandler } from "hono";
 import { ApiError } from "../errors.ts";

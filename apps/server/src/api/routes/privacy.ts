@@ -1,7 +1,8 @@
 /** Privacy (Phase 8, D-072): data export, account deletion, retention settings. */
+
+import { routes } from "@casama/contracts";
+import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { exportUserData, requestAccountDeletion } from "../../services/privacy.ts";
 import { ApiError } from "../errors.ts";
@@ -25,7 +26,7 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const day = new Date().toISOString().slice(0, 10);
     return c.body(zip, 200, {
       "content-type": "application/zip",
-      "content-disposition": `attachment; filename="kasama-export-${day}.zip"`,
+      "content-disposition": `attachment; filename="casama-export-${day}.zip"`,
       "cache-control": "no-store",
     }) as never;
   });
@@ -153,7 +154,7 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return c.json(await settings(id), 200);
   });
 
-  // Kasama Cloud receives opt-in telemetry pings (D-074): counts only, validated strictly.
+  // Casama Cloud receives opt-in telemetry pings (D-074): counts only, validated strictly.
   if (deps.billing?.enabled) {
     app.post("/telemetry/v1/ping", async (c) => {
       const b = (await c.req.json().catch(() => null)) as Record<string, unknown> | null;

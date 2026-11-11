@@ -1,8 +1,8 @@
 import { once } from "node:events";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
-import { createDb, type DbHandle } from "@kasama/db";
-import { createAuthUser, startTestDatabase, type TestDatabase } from "@kasama/db/testing";
+import { createDb, type DbHandle } from "@casama/db";
+import { createAuthUser, startTestDatabase, type TestDatabase } from "@casama/db/testing";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -157,7 +157,7 @@ async function startApi() {
       return json(res, 200, {
         web: {
           results: [
-            { title: "Kasama", url: "https://example.com/k", description: "Result <b>one</b>" },
+            { title: "Casama", url: "https://example.com/k", description: "Result <b>one</b>" },
           ],
         },
       });
@@ -324,7 +324,7 @@ describe("approvals", () => {
         ),
         turn(
           { lastRole: "user", lastUserIncludes: "search then call" },
-          call("s1", "web__search", { query: "kasama" }),
+          call("s1", "web__search", { query: "casama" }),
           finish(),
         ),
         turn(
@@ -667,7 +667,7 @@ describe("integrations", () => {
             { lastRole: "user", lastUserIncludes: "use every integration" },
             call("i1", "mcp__calc__add", { a: 2, b: 3 }),
             call("i2", "openapi__pets__getPet", { petId: "7" }),
-            call("i3", "composio__gh__github_star_repo", { repo: "kasama/kasama" }),
+            call("i3", "composio__gh__github_star_repo", { repo: "casama/casama" }),
             call("i4", "pipedream__pd__slack_send_message", { text: "hello" }),
             finish(),
           ),
@@ -694,7 +694,7 @@ describe("integrations", () => {
     expect(evs.filter((e) => e.type === "tool.failed")).toEqual([]);
     expect(completed[0]).toBe("5");
     expect(completed[1]).toContain("Rex");
-    expect(completed[2]).toContain("kasama/kasama");
+    expect(completed[2]).toContain("casama/casama");
     expect(completed[3]).toContain("hello");
     // Tool results reach the model wrapped as untrusted content.
     const last = gateway.requests.at(-1)?.messages.filter((m) => m.role === "tool") ?? [];
@@ -717,12 +717,12 @@ describe("search and notifications", () => {
           turn({ systemIncludes: "extract lasting memories" }, say('{"memories":[]}'), finish()),
           turn(
             { lastRole: "user", lastUserIncludes: "search and tell me" },
-            call("w1", "web__search", { query: "kasama" }),
+            call("w1", "web__search", { query: "casama" }),
             finish(),
           ),
           turn(
             { lastRole: "tool", lastToolName: "web.search" },
-            call("n1", "notify__user", { title: "Found it", message: "Kasama result one" }),
+            call("n1", "notify__user", { title: "Found it", message: "Casama result one" }),
             finish(),
           ),
           turn({ lastRole: "tool", lastToolName: "notify.user" }, say("Sent."), finish()),

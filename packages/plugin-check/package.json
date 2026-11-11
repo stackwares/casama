@@ -1,12 +1,12 @@
 {
-  "name": "@kasama/plugin-check",
+  "name": "@casama/plugin-check",
   "version": "0.1.0",
-  "description": "Check an Agent Plugins 1.0 package the way Kasama checks it at install.",
+  "description": "Check an Agent Plugins 1.0 package the way Casama checks it at install.",
   "private": true,
   "type": "module",
   "license": "Apache-2.0",
   "bin": {
-    "kasama-plugin-check": "./src/main.ts"
+    "casama-plugin-check": "./src/main.ts"
   },
   "exports": {
     ".": "./src/check.ts"

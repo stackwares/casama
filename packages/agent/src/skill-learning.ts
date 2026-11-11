@@ -7,8 +7,8 @@
  *   the bot propose an edit (shown as a diff).
  * - Proposals wait for the owner unless an action rule allows skills.create / skills.update.
  */
-import type { Database } from "@kasama/db";
-import { type ActionRule, resolveActionRule, SKILL_NAME } from "@kasama/domain";
+import type { Database } from "@casama/db";
+import { type ActionRule, resolveActionRule, SKILL_NAME } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { type Embedder, toPgVector } from "./embeddings.ts";
 

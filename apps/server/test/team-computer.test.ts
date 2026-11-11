@@ -1,10 +1,10 @@
 /** Team computer layout (D-148): a folder per bot next to shared/, and a cap on desktop users. */
 import type { AddressInfo } from "node:net";
 import { fileURLToPath } from "node:url";
+import { teamFolder } from "@casama/agent";
+import { type ExecChunk, type ExecOptions, SupervisorProvider } from "@casama/sandbox";
+import type { SandboxStack } from "@casama/sandbox/testing";
 import { serve } from "@hono/node-server";
-import { teamFolder } from "@kasama/agent";
-import { type ExecChunk, type ExecOptions, SupervisorProvider } from "@kasama/sandbox";
-import type { SandboxStack } from "@kasama/sandbox/testing";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createSupervisorApp } from "../../supervisor/src/app.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
@@ -155,7 +155,7 @@ describe("team computer layout", () => {
       evs.find((e) => e.type === "tool.completed" && e.payload.call_id === "w1")?.payload,
     ).toMatchObject({ artifact_path: "bots/researcher/notes.md" });
     expect(calls).toContain(
-      "exec mkdir -p /home/kasama/workspace/bots/researcher /home/kasama/workspace/shared @",
+      "exec mkdir -p /home/casama/workspace/bots/researcher /home/casama/workspace/shared @",
     );
     expect(calls).toContain("write bots/researcher/notes.md");
     expect(calls).toContain("list shared");

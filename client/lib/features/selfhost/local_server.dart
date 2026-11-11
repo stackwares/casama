@@ -15,7 +15,7 @@ import '../../core/distribution.dart';
 bool get localServerSupported => !kIsWeb && !isMacAppStoreBuild && (defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.linux || defaultTargetPlatform == TargetPlatform.windows);
 
 /// The self-host bundle (the repository archive with install.sh and infra/).
-const selfhostBundleUrl = String.fromEnvironment('KASAMA_SELFHOST_BUNDLE', defaultValue: 'https://github.com/kasama-dev/kasama/archive/refs/heads/main.tar.gz');
+const selfhostBundleUrl = String.fromEnvironment('CASAMA_SELFHOST_BUNDLE', defaultValue: 'https://github.com/casama-dev/casama/archive/refs/heads/main.tar.gz');
 
 enum LocalServerStep { checking, downloading, installing, starting, ready, failed }
 

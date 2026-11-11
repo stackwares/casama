@@ -4,16 +4,17 @@
  * app sent plus what the server captures from the computer afterwards (accessibility snapshot,
  * screenshot, browser address). Password fields and fields marked secret keep no text.
  */
-import type { OpenAPIHono } from "@hono/zod-openapi";
-import { activeUserLease, captureTeachContext } from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { contentKeys, type JwtClaims, pgErrorCode, withUserSession } from "@kasama/db";
+
+import { activeUserLease, captureTeachContext } from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { contentKeys, type JwtClaims, pgErrorCode, withUserSession } from "@casama/db";
 import {
   focusedIsPassword,
   nextSecretName,
   type TeachStepView,
   teachTranscript,
-} from "@kasama/domain";
+} from "@casama/domain";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";

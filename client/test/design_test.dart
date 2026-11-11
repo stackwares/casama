@@ -2,23 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
-import 'package:kasama_app/features/chat/chat_screen.dart';
-import 'package:kasama_app/features/chat/chat_detail.dart';
-import 'package:kasama_app/theme/fonts.dart';
-import 'package:kasama_app/features/settings/background_screen.dart';
-import 'package:kasama_app/features/settings/fonts_screen.dart';
-import 'package:kasama_app/features/settings/themes_screen.dart';
-import 'package:kasama_app/features/usage/usage_screen.dart';
-import 'package:kasama_app/features/settings/settings_screen.dart';
-import 'package:kasama_app/features/settings/theme_screen.dart';
-import 'package:kasama_app/l10n/generated/app_localizations.dart';
-import 'package:kasama_app/theme/app_theme.dart';
-import 'package:kasama_app/theme/appearance.dart';
-import 'package:kasama_app/theme/presets.dart';
-import 'package:kasama_app/theme/schemes.dart';
-import 'package:kasama_app/theme/wallpaper.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_sdk/casama_sdk.dart';
+import 'package:casama_app/features/chat/chat_screen.dart';
+import 'package:casama_app/features/chat/chat_detail.dart';
+import 'package:casama_app/theme/fonts.dart';
+import 'package:casama_app/features/settings/background_screen.dart';
+import 'package:casama_app/features/settings/fonts_screen.dart';
+import 'package:casama_app/features/settings/themes_screen.dart';
+import 'package:casama_app/features/usage/usage_screen.dart';
+import 'package:casama_app/features/settings/settings_screen.dart';
+import 'package:casama_app/features/settings/theme_screen.dart';
+import 'package:casama_app/l10n/generated/app_localizations.dart';
+import 'package:casama_app/theme/app_theme.dart';
+import 'package:casama_app/theme/appearance.dart';
+import 'package:casama_app/theme/presets.dart';
+import 'package:casama_app/theme/schemes.dart';
+import 'package:casama_app/theme/wallpaper.dart';
 
 import 'app_test.dart' show StepsShown;
 import 'fake_backend.dart';
@@ -77,8 +77,8 @@ void main() {
     await tester.pumpAndSettle();
     ThemeData theme() => Theme.of(tester.element(find.byType(SettingsScreen)));
     final lightSurface = theme().colorScheme.surface;
-    // Kasama's own scheme is the default: plum primary from the app icon.
-    expect(theme().colorScheme.primary, kasamaScheme.light.primary);
+    // Casama's own scheme is the default: plum primary from the app icon.
+    expect(theme().colorScheme.primary, casamaScheme.light.primary);
 
     await tester.tap(find.text('Dark'));
     await tester.pumpAndSettle();
@@ -88,12 +88,12 @@ void main() {
     // Picking another scheme recolors the app.
     await tester.pumpWidget(_app(FakeBackend(), const ThemeScreen()));
     await tester.pumpAndSettle();
-    final kasamaPrimary = Theme.of(tester.element(find.byType(ThemeScreen))).colorScheme.primary;
+    final casamaPrimary = Theme.of(tester.element(find.byType(ThemeScreen))).colorScheme.primary;
     await tester.enterText(find.byKey(const Key('themeSearch')), 'mandy');
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('scheme-mandyRed')));
     await tester.pumpAndSettle();
-    expect(Theme.of(tester.element(find.byType(ThemeScreen))).colorScheme.primary, isNot(kasamaPrimary));
+    expect(Theme.of(tester.element(find.byType(ThemeScreen))).colorScheme.primary, isNot(casamaPrimary));
 
     // The background pattern and its reach are carried by the theme.
     await tester.pumpWidget(_app(FakeBackend(), const BackgroundScreen()));
@@ -138,7 +138,7 @@ void main() {
       wallpaper: WallpaperSpec(pattern: WallpaperPattern.sea, palette: WallpaperPalette.ocean, photo: '/private/photo.jpg', photoBlur: 0.6),
     );
     final code = preset.toCode();
-    expect(code, startsWith('kasama-theme:'));
+    expect(code, startsWith('casama-theme:'));
     final back = ThemePreset.fromCode(code)!;
     expect(back.name, 'Night swim');
     expect(back.schemeId, 'blueWhale');
@@ -147,7 +147,7 @@ void main() {
     expect(back.wallpaper.photoBlur, 0.6);
     expect(back.wallpaper.photo, isNull);
     expect(ThemePreset.fromCode('hello'), isNull);
-    expect(ThemePreset.fromCode('kasama-theme:!!!'), isNull);
+    expect(ThemePreset.fromCode('casama-theme:!!!'), isNull);
   });
 
   testWidgets('fonts: picking a heading font applies it; reset goes back to the defaults', (tester) async {
@@ -214,7 +214,7 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('askAboutUsage')));
     await tester.tap(find.byKey(const Key('askAboutUsage')));
     await tester.pumpAndSettle();
-    expect(backend.sent.single, contains('Here is my Kasama usage for This month'));
+    expect(backend.sent.single, contains('Here is my Casama usage for This month'));
     expect(backend.sent.single, contains('Ada: \$0.0123'));
     expect(find.text('chat $convId'), findsOneWidget);
   });

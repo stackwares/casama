@@ -15,7 +15,7 @@ alter table public.org_telephony enable row level security;
 create policy org_telephony_select on public.org_telephony for select to authenticated using (public.has_role(org_id, 'admin'));
 select public.allow_worker('public.org_telephony');
 
--- Numbers bots may never call (Kasama Cloud keeps a list; self-hosters can add their own).
+-- Numbers bots may never call (Casama Cloud keeps a list; self-hosters can add their own).
 create table public.call_deny_list (
   prefix text primary key check (prefix ~ '^\+[0-9]{1,15}$'),
   reason text,

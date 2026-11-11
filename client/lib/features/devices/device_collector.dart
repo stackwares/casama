@@ -2,7 +2,7 @@ import 'package:device_calendar/device_calendar.dart' as dc;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:health/health.dart' as hc;
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 import 'health_summary.dart';
 

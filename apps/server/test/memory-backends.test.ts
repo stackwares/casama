@@ -2,7 +2,7 @@
 import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { builtinTools, memoryStoreFor, PostgresMemoryStore } from "@kasama/agent";
+import { builtinTools, memoryStoreFor, PostgresMemoryStore } from "@casama/agent";
 import { strFromU8, unzipSync } from "fflate";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { purgeDueAccounts } from "../src/services/privacy.ts";
@@ -207,7 +207,7 @@ describe("memory backends", () => {
     expect(await j(set)).toMatchObject({ provider: "supermemory", base_url: smUrl });
     expect(sm.auth.at(-1)).toBe("Bearer sm_secret_key");
     expect(sm.docs.map((d) => [d.content, d.containerTags[0], d.metadata.pinned])).toEqual([
-      ["Likes window seats", `kasama_bot_${botId}`, true],
+      ["Likes window seats", `casama_bot_${botId}`, true],
     ]);
 
     // The bot's memory tools go to Supermemory.
@@ -267,7 +267,7 @@ describe("memory backends", () => {
     await h.tdb
       .admin`insert into public.account_deletions (user_id, purge_after) values (${u.id}, now() - interval '1 minute')`;
     await purgeDueAccounts(h.handle.db);
-    expect(sm.bulkDeleted).toEqual([[`kasama_bot_${botId}`]]);
+    expect(sm.bulkDeleted).toEqual([[`casama_bot_${botId}`]]);
     expect(sm.docs).toHaveLength(0);
   });
 
@@ -316,7 +316,7 @@ describe("memory backends", () => {
       kind: "fact",
       content: "Deploys on Fridays are banned",
     });
-    expect(ho.sessions.has(`kasama-${botId}`)).toBe(true);
+    expect(ho.sessions.has(`casama-${botId}`)).toBe(true);
     expect(ho.msgs.find((m) => m.id === w.id)).toMatchObject({
       peer_id: `bot-${botId}`,
       metadata: { kind: "fact" },
@@ -332,7 +332,7 @@ describe("memory backends", () => {
     await store.delete(botId, w.id);
     expect(await store.list(botId)).toEqual([]);
     await store.deleteAll([botId]);
-    expect(ho.deletedSessions).toContain(`kasama-${botId}`);
+    expect(ho.deletedSessions).toContain(`casama-${botId}`);
 
     // Back to built-in memory.
     expect(

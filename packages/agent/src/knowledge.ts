@@ -5,8 +5,8 @@
  * the same hybrid search as memory and returns snippets with citations. Without an embedding key,
  * search is full-text only (D-017).
  */
-import type { Database } from "@kasama/db";
-import { contentKeys } from "@kasama/db";
+import type { Database } from "@casama/db";
+import { contentKeys } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { type Embedder, toPgVector } from "./embeddings.ts";
@@ -34,7 +34,7 @@ interface Doc extends ParsedDoc {
 // Websites
 // ---------------------------------------------------------------------------
 
-/** robots.txt rules for us: the group for "kasama" if any, else "*". */
+/** robots.txt rules for us: the group for "casama" if any, else "*". */
 export function robotsRules(txt: string) {
   const groups: Array<{ agents: string[]; rules: Array<{ allow: boolean; path: string }> }> = [];
   let cur: (typeof groups)[number] | null = null;
@@ -59,7 +59,7 @@ export function robotsRules(txt: string) {
     }
   }
   const group =
-    groups.find((g) => g.agents.some((a) => a.includes("kasama"))) ??
+    groups.find((g) => g.agents.some((a) => a.includes("casama"))) ??
     groups.find((g) => g.agents.includes("*"));
   const rules = group?.rules ?? [];
   return (path: string) => {
@@ -85,7 +85,7 @@ export function robotsRules(txt: string) {
 async function crawlWebsite(d: KnowledgeDeps, start: string, maxPages: number): Promise<Doc[]> {
   const origin = new URL(start).origin;
   const robots = await d
-    .fetch(`${origin}/robots.txt`, { headers: { "user-agent": "KasamaBot (knowledge sources)" } })
+    .fetch(`${origin}/robots.txt`, { headers: { "user-agent": "CasamaBot (knowledge sources)" } })
     .then(async (r) => (r.ok ? robotsRules(await r.text()) : () => true))
     .catch(() => () => true);
   const queue = [new URL(start).href.replace(/#.*$/, "")];
@@ -98,7 +98,7 @@ async function crawlWebsite(d: KnowledgeDeps, start: string, maxPages: number): 
     const res = await d
       .fetch(url, {
         headers: {
-          "user-agent": "KasamaBot (knowledge sources)",
+          "user-agent": "CasamaBot (knowledge sources)",
           accept: "text/html,text/plain,text/markdown",
         },
       })
@@ -144,7 +144,7 @@ async function readGitHub(
     const r = await d.fetch(`${api}/repos/${c.owner}/${c.repo}${p}`, {
       headers: {
         accept: "application/vnd.github+json",
-        "user-agent": "kasama-knowledge",
+        "user-agent": "casama-knowledge",
         ...(tok?.token ? { authorization: `Bearer ${tok.token}` } : {}),
       },
     });

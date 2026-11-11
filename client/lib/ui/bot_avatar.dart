@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 import '../theme/app_colors.dart';
 import 'mascot.dart';

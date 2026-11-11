@@ -1,12 +1,12 @@
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
-import { serve } from "@hono/node-server";
 import {
   type ComputerSpec,
   SandboxError,
   type SandboxProvider,
   type SnapshotRef,
-} from "@kasama/sandbox";
+} from "@casama/sandbox";
+import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { stream } from "hono/streaming";
 import { WebSocket, WebSocketServer } from "ws";
@@ -32,7 +32,7 @@ export function createSupervisorApp(
   const app = new Hono();
   /** Docker by default; E2B or Daytona when the caller names them (D-056). */
   const pick = (c: { req: { header(name: string): string | undefined } }): SandboxProvider => {
-    const id = c.req.header("x-kasama-provider");
+    const id = c.req.header("x-casama-provider");
     if (!id || id === "docker") return provider;
     const p = hosted[id];
     if (!p) throw new SandboxError("provider_unavailable", `Provider ${id} is not configured`, 400);
@@ -272,7 +272,7 @@ export function attachStreamProxy(
       return true;
     }
     const mode = url.searchParams.get("mode") === "control" ? "control" : "view";
-    const which = req.headers["x-kasama-provider"];
+    const which = req.headers["x-casama-provider"];
     const p = typeof which === "string" && which !== "docker" ? opts.hosted?.[which] : provider;
     const h = await p?.get(ref).catch(() => null);
     if (!h) {
@@ -361,7 +361,7 @@ export function attachTerminalProxy(
       socket.end("HTTP/1.1 401 Unauthorized\r\n\r\n");
       return;
     }
-    const which = req.headers["x-kasama-provider"];
+    const which = req.headers["x-casama-provider"];
     const p = typeof which === "string" && which !== "docker" ? hosted[which] : provider;
     const h = await p?.get(ref).catch(() => null);
     if (!h) {

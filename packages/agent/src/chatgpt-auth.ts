@@ -29,7 +29,7 @@ export interface ChatGptEndpoints {
   fetch?: typeof fetch;
 }
 
-/** What Kasama keeps in Vault for one ChatGPT credential (JSON). */
+/** What Casama keeps in Vault for one ChatGPT credential (JSON). */
 export interface ChatGptTokens {
   access_token: string;
   refresh_token: string;
@@ -53,7 +53,7 @@ export interface TokenResponse {
 }
 
 export class ChatGptAuthError extends Error {
-  /** invalid: sign in again; transient: try later; config: Kasama's setup is wrong. */
+  /** invalid: sign in again; transient: try later; config: Casama's setup is wrong. */
   readonly kind: "invalid" | "transient" | "config";
   readonly code?: string;
   readonly status?: number;

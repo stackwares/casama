@@ -345,7 +345,7 @@ const webhook = (kind: "github" | "custom") =>
     summary:
       kind === "github"
         ? "GitHub webhook for a routine (X-Hub-Signature-256)"
-        : "Custom webhook for a routine (X-Kasama-Signature: sha256=HMAC-SHA256 of the body)",
+        : "Custom webhook for a routine (X-Casama-Signature: sha256=HMAC-SHA256 of the body)",
     request: { params: z.object({ routine_id: Uuid }) },
     responses: {
       202: jsonResponse(

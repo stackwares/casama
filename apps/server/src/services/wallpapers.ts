@@ -3,7 +3,7 @@
  * stays on the server; the app gets photo URLs and attribution, and reports which photo was
  * chosen so the source's download count stays right (an Unsplash API requirement).
  */
-import type { WallpaperPhoto } from "@kasama/contracts";
+import type { WallpaperPhoto } from "@casama/contracts";
 import type { z } from "zod";
 
 type Photo = z.infer<typeof WallpaperPhoto>;
@@ -24,7 +24,7 @@ type UnsplashPhoto = {
   user: { name: string; links: { html: string } };
 };
 
-const UTM = "utm_source=kasama&utm_medium=referral";
+const UTM = "utm_source=casama&utm_medium=referral";
 const withUtm = (url: string) => `${url}${url.includes("?") ? "&" : "?"}${UTM}`;
 
 export function unsplashSource(opts: {

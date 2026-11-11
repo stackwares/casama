@@ -4,7 +4,7 @@ import 'bot_template.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
@@ -19,6 +19,7 @@ import '../../ui/bot_avatar.dart';
 import '../../ui/mascot.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
+import '../settings/name_card.dart';
 import '../settings/model_keys_screen.dart';
 import 'model_picker.dart';
 import 'template_picker.dart';
@@ -232,7 +233,8 @@ class BotsScreen extends ConsumerWidget {
           HeaderIconButton(key: const Key('createMenu'), icon: LucideIcons.plus, tooltip: context.l10n.createMenuTitle, onPressed: () => showCreateMenu(context, ref)),
         ],
       ),
-      body: const BotsList(),
+      // About you (D-169): the one-time name card for people who joined before it was asked.
+      body: const Column(children: [NameCard(), Expanded(child: BotsList())]),
     );
   }
 }

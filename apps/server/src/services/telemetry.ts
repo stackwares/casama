@@ -4,7 +4,7 @@
  * 7 days). Nothing else: no names, emails, content, IP-derived data or keys.
  */
 import { randomUUID } from "node:crypto";
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 
 export async function telemetryPayload(db: Database, version: string) {

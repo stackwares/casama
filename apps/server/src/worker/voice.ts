@@ -22,8 +22,8 @@ import {
   VOICE_CALL_TOOLS,
   VOICE_PRICES,
   type VoiceBases,
-} from "@kasama/agent";
-import type { Database } from "@kasama/db";
+} from "@casama/agent";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 
 export interface VoiceRuntime {
@@ -257,7 +257,7 @@ export async function voiceSession(
     bot.persona_md,
     phone
       ? ""
-      : "Use tools when needed; tell the user briefly what you are doing. Some actions may need their approval in the Kasama app. For anything that needs your computer, files, the browser, connected apps or several steps, use start_task: it runs in the chat and the result appears there.",
+      : "Use tools when needed; tell the user briefly what you are doing. Some actions may need their approval in the Casama app. For anything that needs your computer, files, the browser, connected apps or several steps, use start_task: it runs in the chat and the result appears there.",
     greeting,
   ]
     .filter(Boolean)

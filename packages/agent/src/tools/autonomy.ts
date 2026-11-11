@@ -1,12 +1,12 @@
-import type { Database } from "@kasama/db";
-import { contentKeys } from "@kasama/db";
+import type { Database } from "@casama/db";
+import { contentKeys } from "@casama/db";
 import {
   isValidCron,
   isValidTimezone,
   MAX_DELEGATION_DEPTH,
   nextRunAt,
   subagentBudget,
-} from "@kasama/domain";
+} from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf, personForRun } from "../acting.ts";
@@ -154,7 +154,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     description:
       "Send a push notification to the bot's owner (use sparingly: finished work, blockers, urgent findings).",
     risk: "low",
-    // Only the bot's own state inside Kasama: never asks (D-155).
+    // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,
     schema: z.object({ title: z.string().min(1).max(120), message: z.string().min(1).max(1000) }),
     async execute(args, ctx) {
@@ -201,7 +201,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     description:
       "Add a ticket to the board, optionally assigned to a bot by name (that bot starts on it right away).",
     risk: "low",
-    // Only the bot's own state inside Kasama: never asks (D-155).
+    // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,
     schema: z.object({
       title: z.string().min(1).max(300),
@@ -229,7 +229,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     description:
       "Update a ticket: status (todo, in_progress, in_review, blocked, done), a result, priority or the bot it's assigned to.",
     risk: "low",
-    // Only the bot's own state inside Kasama: never asks (D-155).
+    // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,
     schema: z.object({
       task_id: z.uuid(),
@@ -257,7 +257,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     name: "tasks.comment",
     description: "Post a comment on a ticket (progress, questions, results).",
     risk: "low",
-    // Only the bot's own state inside Kasama: never asks (D-155).
+    // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,
     schema: z.object({ task_id: z.uuid(), body: z.string().min(1).max(20_000) }),
     async execute(args, ctx) {
@@ -329,7 +329,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     description:
       "Schedule work for yourself later. For something that should happen once (a reminder, a follow-up), pass in_minutes or run_at; it runs a single time and switches itself off. Use schedule_cron (5-field cron in the user's timezone) only for work that repeats. Each run posts its reply in this chat and notifies the person, so a reminder or greeting needs no other way of sending.",
     risk: "medium",
-    // Only the bot's own state inside Kasama: never asks (D-155).
+    // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,
     schema: z.object({
       bot: BOT_ARG,
@@ -514,7 +514,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     description:
       "Change, pause (enabled: false) or resume one of your routines. Find its id with routines.list.",
     risk: "medium",
-    // Only the bot's own state inside Kasama: never asks (D-155).
+    // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,
     schema: z.object({
       bot: BOT_ARG,
@@ -572,7 +572,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     description:
       "Delete one of your routines for good (its past results stay). Find its id with routines.list.",
     risk: "medium",
-    // Only the bot's own state inside Kasama: never asks (D-155).
+    // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,
     schema: z.object({ routine_id: z.uuid(), bot: BOT_ARG }),
     async execute(args, ctx) {

@@ -12,7 +12,7 @@ import {
   SKILL_MAX_TOTAL_BYTES,
   SKILL_SAFE_PATH,
   SkillFormatError,
-} from "@kasama/domain";
+} from "@casama/domain";
 import { ApiError } from "../api/errors.ts";
 
 export const MAX_FILE_BYTES = SKILL_MAX_FILE_BYTES;
@@ -168,7 +168,7 @@ export class GitHubReader {
       {
         headers: {
           accept: "application/vnd.github+json",
-          "user-agent": "kasama-skills",
+          "user-agent": "casama-skills",
           ...(this.opts.token ? { authorization: `Bearer ${this.opts.token}` } : {}),
         },
       },

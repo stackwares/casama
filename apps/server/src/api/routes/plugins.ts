@@ -4,7 +4,7 @@
  * servers become computer_mcp connections that computerd runs inside the bot's computer. Every
  * piece points back at the plugin row, so uninstalling removes all of it.
  */
-import type { OpenAPIHono } from "@hono/zod-openapi";
+
 import {
   botComputerId,
   ComputerMcpAdapter,
@@ -13,9 +13,9 @@ import {
   forgetPluginSync,
   pluginRoot,
   syncPluginComputer,
-} from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, pgErrorCode, withUserSession } from "@kasama/db";
+} from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { type JwtClaims, pgErrorCode, withUserSession } from "@casama/db";
 import {
   type CheckedPlugin,
   checkPlugin,
@@ -23,7 +23,8 @@ import {
   PLUGIN_MAX_FILES,
   PluginError,
   type PluginServer,
-} from "@kasama/domain";
+} from "@casama/domain";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import {
   bundleFrom,

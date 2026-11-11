@@ -1,6 +1,6 @@
 # HTTP API
 
-Everything the Kasama apps do goes through one HTTP API, and you can call it too: from a shell
+Everything the Casama apps do goes through one HTTP API, and you can call it too: from a shell
 script, a backend service or your own app. This page covers what every request has in common
 (authentication, errors, rate limits, idempotency) and how to follow a bot's work live. For every
 endpoint and schema, see the [API reference](/api/).
@@ -10,11 +10,11 @@ generated from them. So the reference, the Dart client and the server can't drif
 
 ## Base URL and versioning
 
-Use your server's API address, for example `https://kasama.example.com`. Every route lives under
+Use your server's API address, for example `https://casama.example.com`. Every route lives under
 `/v1`:
 
 ```sh
-curl https://kasama.example.com/v1/config
+curl https://casama.example.com/v1/config
 ```
 
 | Path | What it is |
@@ -34,14 +34,14 @@ types can appear at any time, so ignore fields you don't know. The server's vers
 `GET /v1/config` needs no sign-in. It tells a client everything it needs besides the API address:
 
 ```sh
-curl -s https://kasama.example.com/v1/config
+curl -s https://casama.example.com/v1/config
 ```
 
 ```json
 {
-  "product_name": "Kasama",
+  "product_name": "Casama",
   "api_version": "0.8.0",
-  "supabase_url": "https://auth.kasama.example.com",
+  "supabase_url": "https://auth.casama.example.com",
   "supabase_anon_key": "eyJhbGciOi...",
   "billing_enabled": false,
   "default_models": { "openrouter": "...", "openai": "..." },
@@ -70,14 +70,14 @@ The API accepts a **Supabase access token** (a JWT) as a bearer token:
 Authorization: Bearer eyJhbGciOi...
 ```
 
-You get one by signing in to the Supabase Auth server named in `/v1/config`. Kasama doesn't run
+You get one by signing in to the Supabase Auth server named in `/v1/config`. Casama doesn't run
 its own sign-in endpoint; it verifies the token's signature and requires
 `aud=authenticated` and `role=authenticated`.
 
 ### Sign in with email and password
 
 ```sh
-API=https://kasama.example.com
+API=https://casama.example.com
 CONFIG=$(curl -s "$API/v1/config")
 SUPABASE_URL=$(echo "$CONFIG" | jq -r .supabase_url)
 ANON_KEY=$(echo "$CONFIG" | jq -r .supabase_anon_key)
@@ -89,7 +89,7 @@ curl -s "$SUPABASE_URL/auth/v1/token?grant_type=password" \
 ```
 
 The response holds `access_token`, `refresh_token` and `expires_in` (seconds). Send the access token
-to Kasama. Before it expires, trade the refresh token for a new pair:
+to Casama. Before it expires, trade the refresh token for a new pair:
 
 ```sh
 curl -s "$SUPABASE_URL/auth/v1/token?grant_type=refresh_token" \
@@ -128,7 +128,7 @@ type `application/problem+json` and a stable `code` you can match on:
 
 ```json
 {
-  "type": "https://kasama.dev/problems/validation_failed",
+  "type": "https://casama.ai/problems/validation_failed",
   "title": "Bad Request",
   "status": 400,
   "code": "validation_failed",
@@ -320,7 +320,7 @@ stored before they're sent, so nothing is lost and nothing is sent twice if you 
 The Dart SDK's `watchRun` does this for you, with backoff.
 
 ::: details Apps: Supabase Realtime
-The Kasama app gets live events through Supabase Realtime instead (private topic `run:<run id>`)
+The Casama app gets live events through Supabase Realtime instead (private topic `run:<run id>`)
 and fills any gaps from `GET /v1/runs/{id}/events?after_seq=`. SSE is the simpler choice for
 scripts and servers.
 :::
@@ -358,7 +358,7 @@ use.
 **1. Sign in.**
 
 ```sh
-API=https://kasama.example.com
+API=https://casama.example.com
 CONFIG=$(curl -s "$API/v1/config")
 SUPABASE_URL=$(echo "$CONFIG" | jq -r .supabase_url)
 ANON_KEY=$(echo "$CONFIG" | jq -r .supabase_anon_key)

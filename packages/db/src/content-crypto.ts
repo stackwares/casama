@@ -5,7 +5,7 @@
  * - text: `enc:v1:<keyId>:<base64(iv | ciphertext | tag)>`
  * - jsonb: `{"$enc": "enc:v1:..."}`
  * Reads are decrypted transparently by the database client (a postgres.js value transform) from a
- * key ring kept in memory and refreshed when keys change (LISTEN kasama_org_keys).
+ * key ring kept in memory and refreshed when keys change (LISTEN casama_org_keys).
  */
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from "node:crypto";
 import type postgres from "postgres";
@@ -169,6 +169,8 @@ export class KeyRing {
   private wrapper: KeyWrapper | null = null;
   private readonly keys = new Map<string, Buffer>();
   private readonly sealing = new Map<string, string>();
+  /** About you (D-169): people whose profile text is sealed, and with which key. */
+  private readonly userSealing = new Map<string, string>();
   private sql: postgres.Sql | null = null;
   private listening = false;
 
@@ -185,6 +187,7 @@ export class KeyRing {
   reset() {
     this.keys.clear();
     this.sealing.clear();
+    this.userSealing.clear();
   }
 
   /** Loads every workspace key; keeps loading when they change. */
@@ -194,7 +197,7 @@ export class KeyRing {
     if (!this.listening) {
       this.listening = true;
       await sql
-        .listen("kasama_org_keys", () => void this.refresh().catch(() => {}))
+        .listen("casama_org_keys", () => void this.refresh().catch(() => {}))
         .catch(() => {
           this.listening = false;
         });
@@ -208,6 +211,33 @@ export class KeyRing {
       from public.org_keys k join public.organizations o on o.id = k.org_id`;
     this.sealing.clear();
     for (const r of rows) await this.add(r);
+    // Per-person keys (D-169); absent before that migration.
+    const users = await this.sql<
+      Array<{ id: string; user_id: string; wrapped_key: string; wrapper: string }>
+    >`
+      select id, user_id, wrapped_key, wrapper from public.user_keys`.catch(() => []);
+    this.userSealing.clear();
+    for (const u of users) await this.addUser(u);
+  }
+
+  async addUser(r: { id: string; user_id: string; wrapped_key: string; wrapper: string }) {
+    if (!this.wrapper) throw new Error("Encryption at rest isn't configured on this server");
+    if (!this.keys.has(r.id))
+      this.keys.set(r.id, await this.wrapper.unwrap(r.wrapped_key, r.wrapper));
+    this.userSealing.set(r.user_id, r.id);
+  }
+
+  /** Whether this person's About you is sealed on write. */
+  sealsUser(userId: string | null | undefined) {
+    return !!userId && this.userSealing.has(userId);
+  }
+
+  /** About you text (D-169): ciphertext under the person's key when they have one, else unchanged. */
+  sealForUser<T extends string | null | undefined>(userId: string | null | undefined, text: T): T {
+    if (text === null || text === undefined || !userId || isSealed(text)) return text;
+    const id = this.userSealing.get(userId);
+    if (!id) return text;
+    return this.sealWith(id, text) as T;
   }
 
   async add(r: OrgKeyRow) {

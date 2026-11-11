@@ -5,12 +5,12 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:kasama_app/core/config.dart';
-import 'package:kasama_app/main.dart';
+import 'package:casama_app/core/config.dart';
+import 'package:casama_app/main.dart';
 
 import 'app_flow_test.dart' show tap, typeMessage, waitFor;
 
-const _key = String.fromEnvironment('KASAMA_LIVE_OPENROUTER_KEY');
+const _key = String.fromEnvironment('CASAMA_LIVE_OPENROUTER_KEY');
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -44,9 +44,9 @@ void main() {
     await tap(tester, find.byKey(const Key('createBot')));
 
     await waitFor(tester, find.byKey(const Key('messageInput')).hitTestable());
-    await typeMessage(tester, 'What is 6 times 7? Reply with only the digits followed by the word kasama, for example: 12 kasama');
+    await typeMessage(tester, 'What is 6 times 7? Reply with only the digits followed by the word casama, for example: 12 casama');
     await tap(tester, find.byKey(const Key('sendButton')));
-    await waitFor(tester, find.textContaining('42 kasama', findRichText: true), timeout: const Duration(seconds: 120));
+    await waitFor(tester, find.textContaining('42 casama', findRichText: true), timeout: const Duration(seconds: 120));
     await waitFor(tester, find.byKey(const Key('sendButton')), timeout: const Duration(seconds: 60));
   });
 }

@@ -1,5 +1,5 @@
 /** Regressions for the November 2026 audit fixes (docs/AUDIT-2026-11.md). */
-import { actingUserOf, messageMatches, personForRun, takeHeldForBrief } from "@kasama/agent";
+import { actingUserOf, messageMatches, personForRun, takeHeldForBrief } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { claimDueRoutines } from "../src/worker/routines.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
@@ -156,12 +156,12 @@ describe("routines post in the person's chat (D-155)", () => {
 describe("the API role can enqueue runs (audit 2026-11)", () => {
   it("the worker grants the API's database role access to DBOS's tables", async () => {
     const h2 = await startHarness({
-      worker: { fixtures: undefined as never, apiDatabaseRole: "kasama_api_probe" },
+      worker: { fixtures: undefined as never, apiDatabaseRole: "casama_api_probe" },
     });
     try {
       const [r] = await h2.tdb.admin<{ ok: boolean; usage: boolean }[]>`
-        select has_table_privilege('kasama_api_probe', 'dbos.workflow_status', 'insert') as ok,
-               has_schema_privilege('kasama_api_probe', 'dbos', 'usage') as usage`;
+        select has_table_privilege('casama_api_probe', 'dbos.workflow_status', 'insert') as ok,
+               has_schema_privilege('casama_api_probe', 'dbos', 'usage') as usage`;
       expect(r).toEqual({ ok: true, usage: true });
     } finally {
       await h2.stop();

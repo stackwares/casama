@@ -1,6 +1,6 @@
 /**
- * Checks an Agent Plugins 1.0 package before it's published, with the same code Kasama runs when
- * someone installs it (`checkPlugin` and the skill rules from @kasama/domain), plus a few tips for
+ * Checks an Agent Plugins 1.0 package before it's published, with the same code Casama runs when
+ * someone installs it (`checkPlugin` and the skill rules from @casama/domain), plus a few tips for
  * things that install fine but would fail at run time on the bot's computer.
  *
  * The domain files are imported by relative path, so this runs with plain Node 24 and nothing
@@ -32,11 +32,11 @@ export interface PluginFile {
 }
 
 export interface CheckResult {
-  /** False when Kasama would refuse to install the plugin. */
+  /** False when Casama would refuse to install the plugin. */
   ok: boolean;
-  /** Why Kasama would refuse it. */
+  /** Why Casama would refuse it. */
   errors: string[];
-  /** What Kasama would skip or ignore (it still installs). */
+  /** What Casama would skip or ignore (it still installs). */
   warnings: string[];
   /** Installs fine, but likely to fail or surprise on the bot's computer. */
   tips: string[];
@@ -68,15 +68,15 @@ export const IMAGE_PROGRAMS = new Set([
 const isText = (b: Buffer) => !b.subarray(0, 8000).includes(0);
 
 /**
- * Reads a plugin folder the way Kasama sees it on GitHub: in a git checkout, only the files git
+ * Reads a plugin folder the way Casama sees it on GitHub: in a git checkout, only the files git
  * tracks (with their executable bit); otherwise every file except .git. Symlinks are left out,
- * as Kasama leaves them out.
+ * as Casama leaves them out.
  */
 export function readPluginFolder(dir: string): {
   files: PluginFile[];
   symlinks: string[];
   fromGit: boolean;
-  /** In a git checkout: files not committed yet, which GitHub (and so Kasama) won't see. */
+  /** In a git checkout: files not committed yet, which GitHub (and so Casama) won't see. */
   untracked: string[];
 } {
   const symlinks: string[] = [];
@@ -159,15 +159,15 @@ export function checkFiles(
   const untracked = opts.untracked ?? [];
   if (untracked.length)
     tips.push(
-      `${untracked.length} file${untracked.length === 1 ? " isn't" : "s aren't"} committed (${untracked.slice(0, 3).join(", ")}${untracked.length > 3 ? ", …" : ""}); Kasama installs what's on GitHub, so commit and push them`,
+      `${untracked.length} file${untracked.length === 1 ? " isn't" : "s aren't"} committed (${untracked.slice(0, 3).join(", ")}${untracked.length > 3 ? ", …" : ""}); Casama installs what's on GitHub, so commit and push them`,
     );
   for (const s of opts.symlinks ?? [])
-    warnings.push(`Left out ${s}: Kasama doesn't install symlinks`);
+    warnings.push(`Left out ${s}: Casama doesn't install symlinks`);
   if (files.length > PLUGIN_MAX_FILES)
-    errors.push(`The plugin has ${files.length} files; Kasama installs up to ${PLUGIN_MAX_FILES}`);
+    errors.push(`The plugin has ${files.length} files; Casama installs up to ${PLUGIN_MAX_FILES}`);
   if (bytes > PLUGIN_MAX_BYTES)
     errors.push(
-      `The plugin is ${(bytes / 1024 / 1024).toFixed(1)} MB; Kasama installs up to ${PLUGIN_MAX_BYTES / 1024 / 1024} MB`,
+      `The plugin is ${(bytes / 1024 / 1024).toFixed(1)} MB; Casama installs up to ${PLUGIN_MAX_BYTES / 1024 / 1024} MB`,
     );
 
   const byPath = new Map(files.map((f) => [f.path, f]));
@@ -186,7 +186,7 @@ export function checkFiles(
   }
   warnings.push(...plugin.warnings);
 
-  // Skills: a broken one is skipped at install, like Kasama does.
+  // Skills: a broken one is skipped at install, like Casama does.
   const skills: CheckResult["skills"] = [];
   for (const s of plugin.skills) {
     const prefix = `${s.path}/`;
@@ -213,7 +213,7 @@ export function checkFiles(
     else {
       if (parsed.name !== s.name)
         tips.push(
-          `Skill folder ${s.name} is named "${parsed.name}" in its SKILL.md; Kasama uses the SKILL.md name`,
+          `Skill folder ${s.name} is named "${parsed.name}" in its SKILL.md; Casama uses the SKILL.md name`,
         );
       skills.push({ name: parsed.name, description: parsed.description });
     }
@@ -231,7 +231,7 @@ export function checkFiles(
         );
     } else if (!IMAGE_PROGRAMS.has(srv.command)) {
       tips.push(
-        `Server ${srv.key}: "${srv.command}" isn't in Kasama's default computer image (Node.js 24, Python 3, bash). Ship it inside the plugin and point at it with ./`,
+        `Server ${srv.key}: "${srv.command}" isn't in Casama's default computer image (Node.js 24, Python 3, bash). Ship it inside the plugin and point at it with ./`,
       );
     }
     for (const a of srv.args) {

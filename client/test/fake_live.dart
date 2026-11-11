@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:kasama_app/core/live.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_app/core/live.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 /// A live connection without WebRTC: records input, toggles host on request.
 class FakeLiveConnection implements LiveConnection {

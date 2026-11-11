@@ -3,8 +3,8 @@ import { randomBytes } from "node:crypto";
 import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { EventBus, MemoryService, sweepEncryption } from "@kasama/agent";
-import { AwsKmsKeyWrapper, contentKeys, LocalKeyWrapper } from "@kasama/db";
+import { EventBus, MemoryService, sweepEncryption } from "@casama/agent";
+import { AwsKmsKeyWrapper, contentKeys, LocalKeyWrapper } from "@casama/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
@@ -231,7 +231,7 @@ describe("encryption at rest", () => {
     }).listen(0, "127.0.0.1");
     await once(kms, "listening");
     const w = new AwsKmsKeyWrapper({
-      keyId: "alias/kasama",
+      keyId: "alias/casama",
       region: "us-east-1",
       accessKeyId: "AKIDEXAMPLE",
       secretAccessKey: "secret",
@@ -240,7 +240,7 @@ describe("encryption at rest", () => {
     const dek = randomBytes(32);
     const wrapped = await w.wrap(dek);
     expect((await w.unwrap(wrapped)).equals(dek)).toBe(true);
-    expect(w.id).toBe("kms:alias/kasama");
+    expect(w.id).toBe("kms:alias/casama");
     expect(seen.map((s) => s.target)).toEqual(["TrentService.Encrypt", "TrentService.Decrypt"]);
     expect(seen[0]!.auth).toMatch(
       /^AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE\/\d{8}\/us-east-1\/kms\/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=[0-9a-f]{64}$/,

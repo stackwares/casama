@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/core/desktop_window.dart';
+import 'package:casama_app/core/desktop_window.dart';
 
 void main() {
   test('the first window fits the sidebar, chat and computer panel, and leaves the dock or taskbar room', () {

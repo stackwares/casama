@@ -1,6 +1,6 @@
 /** Projects (D-113): plan, approve, sessions to done with no person between milestones; budget stop. */
 import { fileURLToPath } from "node:url";
-import { NotificationService, projectHeartbeat, RecordingPushSender } from "@kasama/agent";
+import { NotificationService, projectHeartbeat, RecordingPushSender } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 

@@ -35,7 +35,7 @@ const _floats = [
   _Float(Mascot.focused, 0.62, 0.05, 0.11, 3.9, speed: 2),
 ];
 
-/// The Kasama bots drifting around the sign-in screen: each bobs, sways and tilts on its own slow
+/// The Casama bots drifting around the sign-in screen: each bobs, sways and tilts on its own slow
 /// loop. Still when the system asks for reduced motion.
 class FloatingMascots extends StatefulWidget {
   const FloatingMascots({super.key});

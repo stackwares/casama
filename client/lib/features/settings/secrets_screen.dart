@@ -12,7 +12,7 @@ import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'totp_scan.dart';
 
 /// Named secrets bots reference as {{secret:NAME}}; each is only sent to its allowed hosts.

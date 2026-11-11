@@ -17,14 +17,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:kasama_app/core/backend.dart';
-import 'package:kasama_app/core/local_cache.dart';
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_app/features/chat/chat_screen.dart';
-import 'package:kasama_app/l10n/generated/app_localizations.dart';
-import 'package:kasama_app/theme/app_theme.dart';
-import 'package:kasama_app/theme/appearance.dart';
-import 'package:kasama_app/theme/wallpaper.dart';
+import 'package:casama_app/core/backend.dart';
+import 'package:casama_app/core/local_cache.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/features/chat/chat_screen.dart';
+import 'package:casama_app/l10n/generated/app_localizations.dart';
+import 'package:casama_app/theme/app_theme.dart';
+import 'package:casama_app/theme/appearance.dart';
+import 'package:casama_app/theme/wallpaper.dart';
 
 import '../test/fake_backend.dart';
 

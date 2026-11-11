@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_app/features/chat/local_actions.dart';
-import 'package:kasama_app/features/chat/widgets/bot_ui.dart';
-import 'package:kasama_app/features/welcome/welcome_screen.dart';
-import 'package:kasama_app/l10n/generated/app_localizations.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/features/chat/local_actions.dart';
+import 'package:casama_app/features/chat/widgets/bot_ui.dart';
+import 'package:casama_app/features/welcome/welcome_screen.dart';
+import 'package:casama_app/l10n/generated/app_localizations.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 import 'app_test.dart' show setSize;
 import 'fake_backend.dart';

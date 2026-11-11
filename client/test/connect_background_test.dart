@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_sdk/kasama_sdk.dart' show Integration;
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_app/features/integrations/connect_app_sheet.dart';
+import 'package:casama_sdk/casama_sdk.dart' show Integration;
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/features/integrations/connect_app_sheet.dart';
 
 import 'fake_backend.dart';
 

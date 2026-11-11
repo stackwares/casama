@@ -80,10 +80,24 @@ describe("welcome chat", () => {
     const [bot] = await h.tdb.admin<
       { name: string; avatar_url: string; visibility: string }[]
     >`select name, avatar_url, visibility from public.bots where id = ${w.bot_id}`;
-    expect(bot).toEqual({ name: "Kasama", avatar_url: "mascot:winky", visibility: "private" });
+    expect(bot).toEqual({ name: "Casama", avatar_url: "mascot:winky", visibility: "private" });
     const open = await last();
-    expect(open[0]?.text).toMatch(/^Hi! I'm Kasama/);
-    expect(components(open).find((c) => c.component === "ChoicePicker")).toBeTruthy();
+    expect(open[0]?.text).toMatch(/^Hi! I'm Casama/);
+    // About you (D-169): first, what to call them, with the given first name filled in.
+    expect(components(open).find((c) => c.component === "TextField")).toBeTruthy();
+    expect(JSON.stringify(open)).toContain('"name":"Ana"');
+    const [persona] = await h.tdb.admin<
+      { persona_md: string }[]
+    >`select persona_md from public.bots where id = ${w.bot_id}`;
+    expect(persona?.persona_md).not.toContain("Ana");
+    await act(open, "welcome.name", { name: "  Annie " }, "Annie");
+    const [profile] = await h.tdb.admin<
+      { preferred_name: string }[]
+    >`select preferred_name from public.profiles where user_id = ${ana.id}`;
+    expect(profile?.preferred_name).toBe("Annie");
+    const focus = await last();
+    expect(focus[0]?.text).toBe("Nice to meet you, Annie!");
+    expect(components(focus).find((c) => c.component === "ChoicePicker")).toBeTruthy();
     // Again: the same chat.
     expect(
       await j(await h.request("/v1/welcome", { method: "POST", token: ana.token, json: {} })),
@@ -117,7 +131,7 @@ describe("welcome chat", () => {
     >`select content from public.memories where bot_id = ${w.bot_id} order by created_at`;
     expect(mems.map((m) => m.content)).toEqual([
       "Wants help first with: Coding.",
-      "Uses Kasama with their team.",
+      "Uses Casama with their team.",
     ]);
     const [runs] = await h.tdb.admin<
       { n: number }[]
@@ -181,7 +195,7 @@ describe("welcome chat", () => {
       []) as Array<{ label: string; value: string }>;
     expect(options.map((o) => o.label)).toEqual([
       "Wants help first with: Coding.",
-      "Uses Kasama with their team.",
+      "Uses Casama with their team.",
       "Prefers TypeScript",
       "Reviews PRs in the morning",
     ]);

@@ -1,18 +1,18 @@
 # Dart SDK
 
-`kasama_sdk` is the Dart and Flutter library for Kasama. It gives you a typed client for the whole
+`casama_sdk` is the Dart and Flutter library for Casama. It gives you a typed client for the whole
 [HTTP API](/develop/api), sign-in with automatic token refresh, and `watchRun`, which streams a
 bot's run live and recovers from dropped connections. The [CLI](/develop/cli) is built on it.
 
-The typed client comes from a separate package, `kasama_api`, generated from the API's OpenAPI
-document. `kasama_sdk` re-exports it, so one import gives you everything.
+The typed client comes from a separate package, `casama_api`, generated from the API's OpenAPI
+document. `casama_sdk` re-exports it, so one import gives you everything.
 
 ## Install
 
 ```yaml
 # pubspec.yaml
 dependencies:
-  kasama_sdk: ^0.8.0
+  casama_sdk: ^0.8.0
 ```
 
 ```sh
@@ -28,40 +28,40 @@ To build against unreleased changes, point both packages at a clone with
 
 ```yaml
 dependency_overrides:
-  kasama_sdk:
-    path: ../kasama/dart/kasama_sdk
-  kasama_api:
-    path: ../kasama/dart/kasama_api
+  casama_sdk:
+    path: ../casama/dart/casama_sdk
+  casama_api:
+    path: ../casama/dart/casama_api
 ```
 :::
 
 ## Connect and sign in
 
 ```dart
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 Future<void> main() async {
-  final kasama = await KasamaClient.connect('https://kasama.example.com');
-  await kasama.signIn('ana@example.com', 'correct-horse-battery');
-  final me = (await kasama.workspaces.getMe()).data!;
+  final casama = await CasamaClient.connect('https://casama.example.com');
+  await casama.signIn('ana@example.com', 'correct-horse-battery');
+  final me = (await casama.workspaces.getMe()).data!;
   print('Signed in as ${me.email}');
 }
 ```
 
-`KasamaClient.connect` loads the server's [public configuration](/develop/api#public-configuration)
-(`kasama.config`), which says where to sign in. After that, every API call carries your access
+`CasamaClient.connect` loads the server's [public configuration](/develop/api#public-configuration)
+(`casama.config`), which says where to sign in. After that, every API call carries your access
 token, and the client refreshes it a minute before it expires.
 
 | Member | What it does |
 | --- | --- |
-| `KasamaClient.connect(url, {sessions, config})` | Connect to a server. Pass `config` if you already have it to save a request. |
+| `CasamaClient.connect(url, {sessions, config})` | Connect to a server. Pass `config` if you already have it to save a request. |
 | `signIn(email, password)` | Sign in with email and password; returns an `AuthSession` |
 | `signUp(email, password)` | Create an account. Returns `null` when the server sends a confirmation email first. Adds a sign-up proof when the server asks for one. |
 | `signOut()` | Forget the session |
 | `currentSession()` | The session, refreshed if it's about to expire, or `null` |
 | `config` | The server's `PublicConfig`: `productName`, `apiVersion`, `defaultModels`, `billingEnabled`, ... |
 | `auth` | The lower-level `AuthClient`: magic-link codes (`sendMagicLink`, `verifyEmailOtp`), two-step sign-in (`verifiedTotpFactors`, `verifyTotp`), `refresh` |
-| `api` | The generated `KasamaApi`, and `api.dio` for raw requests |
+| `api` | The generated `CasamaApi`, and `api.dio` for raw requests |
 
 ### Keep the session
 
@@ -87,7 +87,7 @@ class FileStore implements SessionStore {
   }
 }
 
-final kasama = await KasamaClient.connect(url, sessions: FileStore(File('session.json')));
+final casama = await CasamaClient.connect(url, sessions: FileStore(File('session.json')));
 ```
 
 The SDK also has `MemorySessionStore` (the default) and `CallbackSessionStore`, which reads the
@@ -102,10 +102,10 @@ The client has one property per API area, named after the reference's tags: `wor
 `.data`.
 
 ```dart
-final orgs = (await kasama.workspaces.listOrgs()).data!.items;
+final orgs = (await casama.workspaces.listOrgs()).data!.items;
 final org = orgs.firstWhere((o) => o.slug == 'acme');
 
-final bots = (await kasama.bots.listBots(orgId: org.id)).data!.items;
+final bots = (await casama.bots.listBots(orgId: org.id)).data!.items;
 for (final b in bots) {
   print('${b.name}: ${b.status.value}');
 }
@@ -114,7 +114,7 @@ for (final b in bots) {
 Create a bot with a model key:
 
 ```dart
-final key = (await kasama.credentials.createCredential(
+final key = (await casama.credentials.createCredential(
   createCredentialRequest: CreateCredentialRequest(
     orgId: org.id,
     provider: ProviderId.openrouter,
@@ -123,7 +123,7 @@ final key = (await kasama.credentials.createCredential(
   ),
 )).data!;
 
-final bot = (await kasama.bots.createBot(
+final bot = (await casama.bots.createBot(
   createBotRequest: CreateBotRequest(
     orgId: org.id,
     name: 'Invoicer',
@@ -131,7 +131,7 @@ final bot = (await kasama.bots.createBot(
     modelPolicy: ModelPolicy(
       primary: ModelChoice(
         credentialId: key.id,
-        model: kasama.config.defaultModels['openrouter']!,
+        model: casama.config.defaultModels['openrouter']!,
       ),
     ),
   ),
@@ -141,16 +141,16 @@ final bot = (await kasama.bots.createBot(
 ## Send a message and stream the run
 
 ```dart
-final conversation = (await kasama.chat.createConversation(
+final conversation = (await casama.chat.createConversation(
   createConversationRequest: CreateConversationRequest(botId: bot.id),
 )).data!;
 
-final sent = (await kasama.chat.sendMessage(
+final sent = (await casama.chat.sendMessage(
   id: conversation.id,
   sendMessageRequest: SendMessageRequest(text: 'Which invoices are overdue?'),
 )).data!;
 
-await for (final e in watchRun(kasama, sent.runId)) {
+await for (final e in watchRun(casama, sent.runId)) {
   switch (e) {
     case MessageDeltaItem(:final event):
       stdout.write(event.payload.text);
@@ -169,7 +169,7 @@ await for (final e in watchRun(kasama, sent.runId)) {
 ### `watchRun`
 
 ```dart
-Stream<RunEventItem> watchRun(KasamaClient client, String runId, {int afterSeq = 0, int maxRetries = 8})
+Stream<RunEventItem> watchRun(CasamaClient client, String runId, {int afterSeq = 0, int maxRetries = 8})
 ```
 
 - **Catch-up first.** It asks for events after `afterSeq`, so you get everything that already
@@ -224,11 +224,11 @@ When the bot needs a person to approve a step, you get an `ApprovalRequestedItem
 it, and the run carries on:
 
 ```dart
-await for (final e in watchRun(kasama, runId)) {
+await for (final e in watchRun(casama, runId)) {
   if (e is ApprovalRequestedItem) {
     final p = e.event.payload;
     final ok = await askUser('Allow ${p.tool} (${p.risk.value} risk)?');
-    await kasama.approvals.decideApproval(
+    await casama.approvals.decideApproval(
       id: p.approvalId,
       approvalDecisionRequest: ApprovalDecisionRequest(
         decision: ok
@@ -241,13 +241,13 @@ await for (final e in watchRun(kasama, runId)) {
 ```
 
 Set `alwaysAllow: true` to stop asking about that tool for that bot. Denying fails only that step.
-`kasama.approvals.listApprovals(orgId: org.id, status: 'pending')` lists everything waiting. See
+`casama.approvals.listApprovals(orgId: org.id, status: 'pending')` lists everything waiting. See
 [Autonomy and approvals](/guide/autonomy).
 
 ## Cancel a run
 
 ```dart
-await kasama.runs.cancelRun(id: runId);
+await casama.runs.cancelRun(id: runId);
 ```
 
 The run stops within about two seconds and `watchRun` ends with a `RunCancelledItem`.
@@ -259,7 +259,7 @@ API calls throw Dio's `DioException`. `problemOf` turns it into the API's
 
 ```dart
 try {
-  await kasama.runs.cancelRun(id: runId);
+  await casama.runs.cancelRun(id: runId);
 } on DioException catch (e) {
   final problem = problemOf(e);
   if (problem?.code == 'run_finished') {
@@ -286,24 +286,24 @@ Sign-in failures throw `AuthException`, with the auth server's `message` and `st
 | `terminalEndpoint(computerId, {cols, rows})` | The WebSocket URL and headers for an interactive terminal |
 | `transcribe(botId, audio, {mime, language})` | Turn a voice recording into text with the workspace's speech-to-text key |
 
-The `package:kasama_sdk/chatgpt_sign_in.dart` library has `signInWithChatGpt`, which connects a
-ChatGPT plan through the browser, as `kasama credential chatgpt` does.
+The `package:casama_sdk/chatgpt_sign_in.dart` library has `signInWithChatGpt`, which connects a
+ChatGPT plan through the browser, as `casama credential chatgpt` does.
 
 ## The sample app
 
-[`examples/sdk_sample`](https://github.com/stackwares/kasama/tree/main/examples/sdk_sample) is a
-small external program that depends on `kasama_sdk` the way your app would. It signs up (or in),
+[`examples/sdk_sample`](https://github.com/stackwares/casama/tree/main/examples/sdk_sample) is a
+small external program that depends on `casama_sdk` the way your app would. It signs up (or in),
 creates a workspace, adds an OpenRouter key, creates a bot, sends one message and streams the run:
 
 ```sh
 cd examples/sdk_sample
 dart pub get
-dart run bin/sample.dart --api https://kasama.example.com \
+dart run bin/sample.dart --api https://casama.example.com \
   --email ana@example.com --password correct-horse-battery \
   --key "$OPENROUTER_API_KEY" --message "Say hello"
 ```
 
-The package also has a shorter example in `dart/kasama_sdk/example/example.dart`: send a message to
+The package also has a shorter example in `dart/casama_sdk/example/example.dart`: send a message to
 an existing conversation and print the reply.
 
 ## Related

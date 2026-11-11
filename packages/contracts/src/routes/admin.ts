@@ -51,7 +51,7 @@ export const adminServices = get(
 export const adminUpdates = get(
   "adminUpdates",
   "/v1/admin/updates",
-  "Whether a newer Kasama release exists",
+  "Whether a newer Casama release exists",
   UpdateNotice,
 );
 

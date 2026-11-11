@@ -1,4 +1,4 @@
-import { FEATURED_MODELS, type ModelOption } from "@kasama/domain";
+import { FEATURED_MODELS, type ModelOption } from "@casama/domain";
 import type { ProviderId } from "./gateway/types.ts";
 
 export interface ModelListSource {
@@ -9,7 +9,7 @@ export interface ModelListSource {
 
 export interface ModelList {
   models: ModelOption[];
-  /** "live" when the provider answered, "featured" when Kasama's short list was used instead. */
+  /** "live" when the provider answered, "featured" when Casama's short list was used instead. */
   source: "live" | "featured";
   error?: string;
 }
@@ -127,7 +127,7 @@ export async function fetchProviderModels(
   }
 }
 
-/** Featured models first (in Kasama's order), then the rest of the provider's chat models. */
+/** Featured models first (in Casama's order), then the rest of the provider's chat models. */
 export function mergeModelList(provider: string, live: ModelOption[]): ModelOption[] {
   const featured = FEATURED_MODELS[provider] ?? [];
   const byId = new Map(live.map((m) => [m.id, m]));
@@ -139,7 +139,7 @@ export function mergeModelList(provider: string, live: ModelOption[]): ModelOpti
   return [...top, ...rest];
 }
 
-/** The picker's list for a key: live from the provider, or Kasama's short list if that fails. */
+/** The picker's list for a key: live from the provider, or Casama's short list if that fails. */
 export async function listModels(src: ModelListSource, f: Fetch = fetch): Promise<ModelList> {
   try {
     const live = await fetchProviderModels(src, f);

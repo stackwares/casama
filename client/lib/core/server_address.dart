@@ -9,10 +9,10 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'config.dart';
 
-/// Which Kasama server the app talks to (D-076): the build's default, a self-hosted address the
+/// Which Casama server the app talks to (D-076): the build's default, a self-hosted address the
 /// user entered, or (for the web app served by a self-hosted stack) the page's own origin.
 class ServerAddress {
-  static const _key = 'kasama.server_url';
+  static const _key = 'casama.server_url';
 
   static Future<AppConfig> load({AppConfig fallback = AppConfig.fromEnvironment}) async {
     try {
@@ -28,7 +28,7 @@ class ServerAddress {
 
   static Future<void> clear() async => (await SharedPreferences.getInstance()).remove(_key);
 
-  /// "kasama.example.com" -> "https://kasama.example.com"; strips trailing slashes.
+  /// "casama.example.com" -> "https://casama.example.com"; strips trailing slashes.
   static String normalize(String input) {
     var s = input.trim().replaceAll(RegExp(r'/+$'), '');
     if (!s.startsWith('http://') && !s.startsWith('https://')) {
@@ -93,7 +93,7 @@ class _ServerFormState extends State<_ServerForm> {
         autofocus: true,
         autocorrect: false,
         keyboardType: TextInputType.url,
-        decoration: InputDecoration(labelText: widget.label, hintText: 'https://kasama.example.com', prefixIcon: const Icon(LucideIcons.globe, size: 20)),
+        decoration: InputDecoration(labelText: widget.label, hintText: 'https://casama.example.com', prefixIcon: const Icon(LucideIcons.globe, size: 20)),
         onSubmitted: (v) => Navigator.pop(context, v),
       ),
     ],

@@ -359,7 +359,7 @@ describe("device connections", () => {
   });
 
   it("retention removes summaries older than the kind allows", async () => {
-    const { purgeDeviceData } = await import("@kasama/agent");
+    const { purgeDeviceData } = await import("@casama/agent");
     const old = new Date(Date.now() - 40 * 86_400_000).toISOString();
     await h.request(`/v1/device-sources/${KEY}/readings`, {
       method: "POST",

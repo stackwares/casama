@@ -1,8 +1,8 @@
-/** Google sign-in and permissions (D-130): no restricted scopes in Kasama's own app; inbox through Composio on Cloud. */
+/** Google sign-in and permissions (D-130): no restricted scopes in Casama's own app; inbox through Composio on Cloud. */
 import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { APP_CATALOG } from "@kasama/domain";
+import { APP_CATALOG } from "@casama/domain";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { catalogFor } from "../src/api/routes/apps.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
@@ -41,7 +41,7 @@ afterAll(async () => {
 });
 
 describe("Google permissions", () => {
-  it("Kasama's Google apps ask only for non-restricted scopes; Gmail (the inbox) is the exception", () => {
+  it("Casama's Google apps ask only for non-restricted scopes; Gmail (the inbox) is the exception", () => {
     const google = APP_CATALOG.filter((a) => a.category === "google");
     const scopes = google.filter((a) => !a.inbox).flatMap((a) => a.scopes ?? []);
     const restricted = [/gmail\./, /mail\.google\.com/, /^.*\/drive$/, /drive\.readonly/];
@@ -53,7 +53,7 @@ describe("Google permissions", () => {
     ]);
   });
 
-  it("on Kasama Cloud Gmail goes through Composio, or is hidden without a key; self-hosted keeps its own client", () => {
+  it("on Casama Cloud Gmail goes through Composio, or is hidden without a key; self-hosted keeps its own client", () => {
     const gmail = (o: { cloud: boolean; composio: boolean }) =>
       catalogFor(APP_CATALOG, o).find((a) => a.id === "gmail");
     expect(gmail({ cloud: true, composio: false })).toBeUndefined();

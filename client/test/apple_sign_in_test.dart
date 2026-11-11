@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/core/apple_sign_in.dart';
+import 'package:casama_app/core/apple_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 void main() {

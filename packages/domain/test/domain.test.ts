@@ -4,7 +4,7 @@ import { assignableRoles, roleAtLeast, SLUG_PATTERN, slugify } from "../src/inde
 describe("slugify", () => {
   it.each([
     ["Acme Team", "acme-team"],
-    ["  Kape't Kasama!! ", "kape-t-kasama"],
+    ["  Kape't Casama!! ", "kape-t-casama"],
     ["Pañuelo Café", "panuelo-cafe"],
     ["???", "org"],
     ["a".repeat(60), "a".repeat(40)],

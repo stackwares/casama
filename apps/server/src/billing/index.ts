@@ -1,7 +1,7 @@
 /** Builds billing from the environment; every provider is optional (D-070). */
 import { existsSync, readFileSync } from "node:fs";
-import type { Database } from "@kasama/db";
-import { SupervisorProvider } from "@kasama/sandbox";
+import type { Database } from "@casama/db";
+import { SupervisorProvider } from "@casama/sandbox";
 import type { Env } from "../env.ts";
 import { APPLE_ROOT_G3, AppStoreProvider } from "./app-store.ts";
 import { DodoProvider } from "./dodo.ts";
@@ -88,12 +88,12 @@ export function connectFromEnv(env: Env) {
   };
 }
 
-/** Self-hosted side: the `kasama-cloud` computer provider (D-071). */
-export function kasamaCloudProvider(cloud: { url: string; key: string }) {
+/** Self-hosted side: the `casama-cloud` computer provider (D-071). */
+export function casamaCloudProvider(cloud: { url: string; key: string }) {
   return new SupervisorProvider(
     `${cloud.url.replace(/\/$/, "")}/connect/v1/sandbox`,
     cloud.key,
-    "kasama-cloud",
+    "casama-cloud",
     { desktop: true, snapshots: true, liveStream: false },
   );
 }

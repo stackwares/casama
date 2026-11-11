@@ -77,7 +77,7 @@ describe("bot templates", () => {
   it("exports instructions, skills with files and routines; memories only when asked; never secrets", async () => {
     const t = await j(await h.request(`/v1/bots/${botId}/export`, { token: ada.token }));
     expect(t).toMatchObject({
-      format: "kasama.bot",
+      format: "casama.bot",
       version: 1,
       name: "Invoicer",
       avatar: "mascot:cool",

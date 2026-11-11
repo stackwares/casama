@@ -1,13 +1,13 @@
 /**
  * Linked agents (SPEC: Linked agents; D-143). `links.ask(contact, request)` sends a structured
  * request to a linked bot. On the same server it runs as the other bot under its own owner (their
- * approvals, rules and budgets); across Kasama servers it goes over A2A with the link's token.
+ * approvals, rules and budgets); across Casama servers it goes over A2A with the link's token.
  * The answering bot is told to share only what the request needs. Both sides record the exchange,
  * and the receiving owner is notified.
  */
 import { createHash, randomBytes } from "node:crypto";
-import type { Database } from "@kasama/db";
-import { contentKeys } from "@kasama/db";
+import type { Database } from "@casama/db";
+import { contentKeys } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { A2aClient } from "./a2a.ts";
@@ -137,7 +137,7 @@ export function registerLinkTools(registry: ToolRegistry, deps: LinkToolDeps) {
       };
 
       if (link.remote_url) {
-        // Another Kasama server: A2A with this link's token.
+        // Another Casama server: A2A with this link's token.
         if (!link.outbound_token || !link.peer_bot_id)
           throw new ToolError(
             "link_broken",

@@ -1,8 +1,9 @@
 /** Action rules (D-115): people manage them here; bots have no tool that changes them. */
+
+import { routes } from "@casama/contracts";
+import { type JwtClaims, pgErrorCode, withUserSession } from "@casama/db";
+import { type ActionRule, describeActionRule } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, pgErrorCode, withUserSession } from "@kasama/db";
-import { type ActionRule, describeActionRule } from "@kasama/domain";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";

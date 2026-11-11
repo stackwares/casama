@@ -1,6 +1,6 @@
 /** Teach a task by showing it (D-120): recording under control, secrets, drafting, saving. */
 import { fileURLToPath } from "node:url";
-import type { ExecChunk } from "@kasama/sandbox";
+import type { ExecChunk } from "@casama/sandbox";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 

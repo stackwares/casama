@@ -2,7 +2,7 @@
 
 Gate (SPEC Phase 8): load test p95 time to first token under 3 s; evals at or above baseline;
 security checklist closed; fresh VPS install under 15 minutes; a self-hosted bot replies on a ChatGPT
-plan; two-step sign-in works on all six platforms; a scripted sign-up fails on Kasama Cloud; apps
+plan; two-step sign-in works on all six platforms; a scripted sign-up fails on Casama Cloud; apps
 approved in both stores; public launch done. Status re-measured in the November 2026 audit
 (2026-11-11, development Mac, Docker Desktop, Apple silicon; see [AUDIT-2026-11.md](AUDIT-2026-11.md)).
 
@@ -15,19 +15,19 @@ approved in both stores; public launch done. Status re-measured in the November 
 | Apps approved in both stores              | **Not done (needs store setup and review; the accounts exist).** Listings prepared in `client/store/`, release builds succeed                                                                                                                                                                                                     | NEEDS-FROM-OLIVER                                                                                                                                                                  |
 | Self-hosted bot replies on a ChatGPT plan | **Pass against the fake OpenAI server** (D-091); a real plan needs Oliver's sign-in                                                                                                                                                                                                                                               | `apps/server/test/chatgpt.test.ts`                                                                                                                                                 |
 | Two-step sign-in on all six platforms     | **Pass in tests** (D-093): app tests and builds for all platforms; real-device checks pending                                                                                                                                                                                                                                     | `client/test`, `apps/server/test/two-step.test.ts`                                                                                                                                 |
-| Scripted sign-up fails on Kasama Cloud    | **Pass in tests** (D-094): proof-of-work and App Check sign-up hook                                                                                                                                                                                                                                                               | `apps/server/test/abuse.test.ts`                                                                                                                                                   |
+| Scripted sign-up fails on Casama Cloud    | **Pass in tests** (D-094): proof-of-work and App Check sign-up hook                                                                                                                                                                                                                                                               | `apps/server/test/abuse.test.ts`                                                                                                                                                   |
 | Public launch done                        | **Not done (outward action).** Drafts in [launch/](launch/)                                                                                                                                                                                                                                                                       | NEEDS-FROM-OLIVER                                                                                                                                                                  |
 
 ## Before announcing plugins
 
 - Publish computer images (and Daytona snapshots) built from a commit at or after `83abfa1` (Plugins, D-121). The image compiles computerd from the repository, so any image built from `main` now can run plugin servers; none has been published yet (publishing to GHCR is manual, `images.yml`). Until then, plugins with only skills and remote servers work, and `stdio` servers don't start.
 - The developer guide (`docs-site/develop/plugins.md`), the example (`examples/hello-plugin`) and the checker (`packages/plugin-check`, GitHub Action `.github/actions/plugin-check`) are ready (D-160).
-- The supervisor's default image names point at `ghcr.io/kasama-dev/…` while the repository is `stackwares/kasama`: confirm where images are published before launch.
+- The supervisor's default image names point at `ghcr.io/casama-dev/…` while the repository is `stackwares/casama`: confirm where images are published before launch.
 
 ## Also built for the launch
 
 - Dashboards and alerts: `/metrics` (Prometheus), Grafana dashboard and alert rules in `infra/monitoring/`, compose profile `monitoring`.
 - Privacy: data export, account deletion, retention settings (app, CLI, API).
-- Self-hosting: installer, `kasama selfhost` commands, deploy templates in `deploy/`, docs site in `docs-site/`.
-- `ee/` (commercial license draft): license keys, audit export, SAML SSO; opt-in telemetry; Kasama MCP server (`packages/mcp`).
+- Self-hosting: installer, `casama selfhost` commands, deploy templates in `deploy/`, docs site in `docs-site/`.
+- `ee/` (commercial license draft): license keys, audit export, SAML SSO; opt-in telemetry; Casama MCP server (`packages/mcp`).
 - Marketing page (`site/`), store listings, demo clip (`docs/media/demo-app-flow.mp4`), installer scripts (`scripts/package-*`), Shorebird config.

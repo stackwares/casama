@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/core/widgets.dart';
-import 'package:kasama_app/l10n/generated/app_localizations.dart';
+import 'package:casama_app/core/widgets.dart';
+import 'package:casama_app/l10n/generated/app_localizations.dart';
 
 void main() {
   testWidgets(
@@ -32,7 +32,7 @@ void main() {
       );
       expect(
         errorText(ctx, noAnswer),
-        "Couldn't reach your Kasama server. Check your connection and try again.",
+        "Couldn't reach your Casama server. Check your connection and try again.",
       );
       // A real answer keeps its own message.
       final answered = DioException(

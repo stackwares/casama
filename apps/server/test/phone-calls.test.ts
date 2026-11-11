@@ -10,7 +10,7 @@ import {
   RecordingPushSender,
   registerPhoneCallTools,
   ToolRegistry,
-} from "@kasama/agent";
+} from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
@@ -87,7 +87,7 @@ beforeAll(async () => {
       keyP8,
       keyId: "KEY123",
       teamId: "TEAM42",
-      topic: "com.kasama.app.voip",
+      topic: "ai.casama.app.voip",
       url: apnsUrl,
     }),
   });
@@ -109,7 +109,7 @@ describe("phone calls", () => {
     // APNs: a signed ES256 token, the VoIP push type and topic, the call in the payload.
     const sent = apnsSeen.find((s) => s.path === "/3/device/iphone-token")!;
     expect(sent.headers["apns-push-type"]).toBe("voip");
-    expect(sent.headers["apns-topic"]).toBe("com.kasama.app.voip");
+    expect(sent.headers["apns-topic"]).toBe("ai.casama.app.voip");
     const jwt = String(sent.headers.authorization).replace(/^bearer /, "");
     const [hd, pl, sig] = jwt.split(".");
     expect(JSON.parse(Buffer.from(hd!, "base64url").toString())).toEqual({

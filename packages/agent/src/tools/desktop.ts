@@ -1,4 +1,4 @@
-import { collectExec, type SandboxHandle } from "@kasama/sandbox";
+import { collectExec, type SandboxHandle } from "@casama/sandbox";
 import { z } from "zod";
 import { wrapUntrusted } from "../context.ts";
 import { TAKEOVER_TOOL } from "../takeover.ts";
@@ -152,7 +152,7 @@ export function registerDesktopTools(registry: ToolRegistry) {
         args.path ?? `screenshots/desktop-${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
       const path = h.resolvePath?.(asked) ?? asked;
       const png = await h.screenshot();
-      await h.writeFile(path.startsWith("/") ? path : `/home/kasama/workspace/${path}`, png);
+      await h.writeFile(path.startsWith("/") ? path : `/home/casama/workspace/${path}`, png);
       return {
         content: `Saved a desktop screenshot to ${path}.`,
         preview: `saved ${path}`,

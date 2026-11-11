@@ -1,15 +1,15 @@
 /**
  * Git sync for routines and skills (D-124). Each sync compares three versions of every file: what
- * was synced last time, what Kasama has now, and what the repo has now.
- * - Changed only in Kasama: committed to the branch.
- * - Changed only in the repo: checked and applied to Kasama (bad files are skipped and reported).
- * - Changed on both sides: Kasama keeps its version and opens a pull request with it, so the repo
+ * was synced last time, what Casama has now, and what the repo has now.
+ * - Changed only in Casama: committed to the branch.
+ * - Changed only in the repo: checked and applied to Casama (bad files are skipped and reported).
+ * - Changed on both sides: Casama keeps its version and opens a pull request with it, so the repo
  *   owner decides; merging it makes both sides agree again.
  * Uses the workspace's GITHUB_TOKEN secret (allowed for api.github.com).
  */
 import { createHash } from "node:crypto";
-import type { Database } from "@kasama/db";
-import { INDEX_FILE } from "@kasama/domain";
+import type { Database } from "@casama/db";
+import { INDEX_FILE } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { applyWorkspaceFiles, exportWorkspaceFiles } from "./workspace-files.ts";
 
@@ -42,7 +42,7 @@ class GitHub {
       headers: {
         accept: "application/vnd.github+json",
         authorization: `Bearer ${this.token}`,
-        "user-agent": "kasama-git-sync",
+        "user-agent": "casama-git-sync",
         ...(body ? { "content-type": "application/json" } : {}),
       },
       body: body ? JSON.stringify(body) : undefined,
@@ -131,7 +131,7 @@ export async function syncWorkspaceRepo(
       return bytes;
     };
 
-    // Kasama now.
+    // Casama now.
     const local = await exportWorkspaceFiles(db, orgId);
     const synced = cfg.synced ?? {};
     const paths = new Set([...local.keys(), ...remoteSha.keys(), ...Object.keys(synced)]);
@@ -153,17 +153,17 @@ export async function syncWorkspaceRepo(
       } else {
         const r = rSha ? await remoteBlob(p) : undefined;
         if ((l && r && same(l, r)) || (!l && !r)) continue;
-        // kasama.json changes on both sides are routine (a new bot); Kasama's index wins quietly.
+        // casama.json changes on both sides are routine (a new bot); Casama's index wins quietly.
         if (p === INDEX_FILE) push.set(p, l ?? null);
         else conflicts.set(p, l ?? null);
       }
     }
 
-    // Repo → Kasama.
+    // Repo → Casama.
     if (pull.size || pullDeleted.length) {
       const incoming = new Map(local);
       for (const [p, b] of pull) incoming.set(p, b);
-      // Only the changed files are applied; kasama.json comes along so folders map to bots.
+      // Only the changed files are applied; casama.json comes along so folders map to bots.
       const subset = new Map([...pull]);
       const idx = pull.get(INDEX_FILE) ?? local.get(INDEX_FILE);
       if (idx) subset.set(INDEX_FILE, idx);
@@ -175,7 +175,7 @@ export async function syncWorkspaceRepo(
       report.errors.push(...r.errors);
     }
 
-    // Kasama → repo.
+    // Casama → repo.
     let newHead = head;
     const pushable = [...push].filter(
       ([p]) => p !== INDEX_FILE || push.size > 1 || !remoteSha.has(p),
@@ -195,7 +195,7 @@ export async function syncWorkspaceRepo(
         ),
       });
       const c = await gh.call<{ sha: string }>("POST", "/git/commits", {
-        message: `Update routines and skills from Kasama\n\n${pushable.map(([p, b]) => `${b ? "update" : "delete"} ${p}`).join("\n")}`,
+        message: `Update routines and skills from Casama\n\n${pushable.map(([p, b]) => `${b ? "update" : "delete"} ${p}`).join("\n")}`,
         tree: t.sha,
         parents: [head],
       });
@@ -204,9 +204,9 @@ export async function syncWorkspaceRepo(
       report.pushed.push(...pushable.map(([p]) => p));
     }
 
-    // Both changed: a pull request with Kasama's version.
+    // Both changed: a pull request with Casama's version.
     if (conflicts.size) {
-      const branch = `kasama/sync-${now.toISOString().replace(/[-:]/g, "").slice(0, 15)}`;
+      const branch = `casama/sync-${now.toISOString().replace(/[-:]/g, "").slice(0, 15)}`;
       const base = await gh.call<{ tree: { sha: string } }>("GET", `/git/commits/${newHead}`);
       const t = await gh.call<{ sha: string }>("POST", "/git/trees", {
         base_tree: base.tree.sha,
@@ -222,16 +222,16 @@ export async function syncWorkspaceRepo(
         ),
       });
       const c = await gh.call<{ sha: string }>("POST", "/git/commits", {
-        message: "Kasama's version of files changed on both sides",
+        message: "Casama's version of files changed on both sides",
         tree: t.sha,
         parents: [newHead],
       });
       await gh.call("POST", "/git/refs", { ref: `refs/heads/${branch}`, sha: c.sha });
       const pr = await gh.call<{ html_url: string }>("POST", "/pulls", {
-        title: "Kasama: files changed in both places",
+        title: "Casama: files changed in both places",
         head: branch,
         base: cfg.branch,
-        body: `These files changed in Kasama and in this repository since the last sync. Kasama kept its version; this pull request has it.\n\n${[...conflicts.keys()].map((p) => `- \`${p}\``).join("\n")}\n\nMerge it to use Kasama's version, or close it and edit the files here again.`,
+        body: `These files changed in Casama and in this repository since the last sync. Casama kept its version; this pull request has it.\n\n${[...conflicts.keys()].map((p) => `- \`${p}\``).join("\n")}\n\nMerge it to use Casama's version, or close it and edit the files here again.`,
       });
       report.conflicts.push(...conflicts.keys());
       report.pullRequest = pr.html_url;
@@ -253,7 +253,7 @@ export async function syncWorkspaceRepo(
       else if (synced[p] && report.errors.some((e) => e.startsWith(`${p}:`)))
         next[p] = synced[p] as Synced[string];
     }
-    // A repo file Kasama refused stays "unsynced", so it's retried after it's fixed.
+    // A repo file Casama refused stays "unsynced", so it's retried after it's fixed.
     await db.execute(sql`
       update public.org_git_sync set synced = ${JSON.stringify(next)}::jsonb, last_commit = ${newHead}, checked_at = ${now.toISOString()}::timestamptz,
         last_synced_at = ${now.toISOString()}::timestamptz, last_error = ${report.errors.length ? report.errors.join("\n").slice(0, 2000) : null},

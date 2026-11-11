@@ -14,9 +14,9 @@ import 'router.dart';
 import 'updater.dart';
 
 /// Where Help in the menu bar goes (overridable per build until the docs site has its address).
-const kHelpUrl = String.fromEnvironment('KASAMA_HELP_URL', defaultValue: 'https://github.com/stackwares/kasama/tree/main/docs-site');
+const kHelpUrl = String.fromEnvironment('CASAMA_HELP_URL', defaultValue: 'https://github.com/stackwares/casama/tree/main/docs-site');
 
-const _channel = MethodChannel('kasama/mac');
+const _channel = MethodChannel('casama/mac');
 
 bool get _isMac => !kIsWeb && defaultTargetPlatform == TargetPlatform.macOS;
 

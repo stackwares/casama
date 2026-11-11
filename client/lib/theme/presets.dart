@@ -9,7 +9,7 @@ import 'fonts.dart';
 import 'wallpaper.dart';
 
 /// A whole look: color scheme, fonts and wallpaper (D-087). Built-in presets ship with the app;
-/// people save their own and share them as a `kasama-theme:` code, which is the format a theme
+/// people save their own and share them as a `casama-theme:` code, which is the format a theme
 /// gallery would exchange later.
 @immutable
 class ThemePreset {
@@ -31,7 +31,7 @@ class ThemePreset {
   final WallpaperSpec wallpaper;
   final bool builtIn;
 
-  static const codePrefix = 'kasama-theme:';
+  static const codePrefix = 'casama-theme:';
 
   factory ThemePreset.fromAppearance(Appearance a, {required String id, required String name}) =>
       ThemePreset(id: id, name: name, schemeId: a.schemeId, headingFont: a.headingFont, bodyFont: a.bodyFont, wallpaper: a.wallpaper);
@@ -52,7 +52,7 @@ class ThemePreset {
   factory ThemePreset.fromJson(Map<String, Object?> j) => ThemePreset(
     id: j['id'] as String? ?? 'theme-${DateTime.now().millisecondsSinceEpoch}',
     name: (j['name'] as String? ?? 'Theme').trim().characters(60),
-    schemeId: j['scheme'] as String? ?? 'kasama',
+    schemeId: j['scheme'] as String? ?? 'casama',
     headingFont: j['headingFont'] as String? ?? defaultHeadingFont,
     bodyFont: j['bodyFont'] as String? ?? defaultBodyFont,
     wallpaper: j['wallpaper'] is Map ? WallpaperSpec.fromJson((j['wallpaper']! as Map).cast<String, Object?>()) : const WallpaperSpec(),
@@ -87,10 +87,10 @@ extension on String {
 
 const builtInPresets = [
   ThemePreset(
-    id: 'kasama',
-    name: 'Kasama',
-    schemeId: 'kasama',
-    wallpaper: WallpaperSpec(pattern: WallpaperPattern.clouds, palette: WallpaperPalette.kasama),
+    id: 'casama',
+    name: 'Casama',
+    schemeId: 'casama',
+    wallpaper: WallpaperSpec(pattern: WallpaperPattern.clouds, palette: WallpaperPalette.casama),
     builtIn: true,
   ),
   ThemePreset(

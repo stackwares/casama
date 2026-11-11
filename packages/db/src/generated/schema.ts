@@ -39,7 +39,7 @@ export const memberships = pgTable("memberships", {
 	pgPolicy("memberships_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
 	pgPolicy("memberships_update", { as: "permissive", for: "update", to: ["authenticated"] }),
 	pgPolicy("memberships_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 ]);
 
 export const organizations = pgTable("organizations", {
@@ -71,7 +71,7 @@ export const organizations = pgTable("organizations", {
 	pgPolicy("organizations_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(id)` }),
 	pgPolicy("organizations_update", { as: "permissive", for: "update", to: ["authenticated"] }),
 	pgPolicy("organizations_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("organizations_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 120)`),
 	check("organizations_slug_check", sql`slug ~ '^[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])?$'::text`),
 	check("organizations_run_event_retention_days_check", sql`(run_event_retention_days >= 7) AND (run_event_retention_days <= 3650)`),
@@ -113,7 +113,7 @@ export const invites = pgTable("invites", {
 	pgPolicy("invites_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`has_role(org_id, 'admin'::org_role)` }),
 	pgPolicy("invites_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
 	pgPolicy("invites_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("invites_role_check", sql`role <> 'owner'::org_role`),
 ]);
 
@@ -137,7 +137,7 @@ export const profiles = pgTable("profiles", {
   WHERE ((theirs.user_id = profiles.user_id) AND is_member(theirs.org_id)))))` }),
 	pgPolicy("profiles_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
 	pgPolicy("profiles_update", { as: "permissive", for: "update", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("profiles_display_name_check", sql`char_length(display_name) <= 120`),
 	check("profiles_phone_number_check", sql`(phone_number IS NULL) OR (phone_number ~ '^\+[1-9][0-9]{7,14}$'::text)`),
 ]);
@@ -157,7 +157,7 @@ export const plans = pgTable("plans", {
 }, (table) => [
 	unique("plans_code_key").on(table.code),
 	pgPolicy("plans_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`active` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("plans_interval_check", sql`"interval" = ANY (ARRAY['none'::text, 'month'::text, 'year'::text])`),
 ]);
 
@@ -190,7 +190,7 @@ export const entitlements = pgTable("entitlements", {
 			name: "entitlements_subscription_fk"
 		}).onDelete("set null"),
 	pgPolicy("entitlements_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 ]);
 
 export const skills = pgTable("skills", {
@@ -233,7 +233,7 @@ export const skills = pgTable("skills", {
 		}).onDelete("cascade"),
 	pgPolicy("skills_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(is_member(org_id) AND ((bot_id IS NULL) OR can_access_bot(bot_id)))` }),
 	pgPolicy("skills_write", { as: "permissive", for: "all", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("skills_name_check", sql`name ~ '^[a-z0-9][a-z0-9_-]{0,62}$'::text`),
 	check("skills_description_check", sql`(char_length(description) >= 1) AND (char_length(description) <= 300)`),
 	check("skills_body_md_check", sql`char_length(body_md) <= 50000`),
@@ -319,7 +319,7 @@ export const runs = pgTable("runs", {
 		}).onDelete("set null"),
 	pgPolicy("runs_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
 	pgPolicy("runs_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("runs_status_check", sql`status = ANY (ARRAY['queued'::text, 'running'::text, 'waiting_approval'::text, 'waiting_takeover'::text, 'completed'::text, 'failed'::text, 'cancelled'::text])`),
 	check("runs_trace_id_check", sql`trace_id ~ '^[0-9a-f]{32}$'::text`),
 ]);
@@ -349,7 +349,7 @@ export const attachments = pgTable("attachments", {
    FROM (messages m
      JOIN conversations c ON ((c.id = m.conversation_id)))
   WHERE ((m.id = attachments.message_id) AND can_access_bot(c.bot_id))))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("attachments_size_check", sql`size >= 0`),
 ]);
 
@@ -396,7 +396,7 @@ export const bots = pgTable("bots", {
 	pgPolicy("bots_update", { as: "permissive", for: "update", to: ["authenticated"], using: sql`can_manage_bot(id)`, withCheck: sql`is_member(org_id)`  }),
 	pgPolicy("bots_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
 	pgPolicy("bots_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	pgPolicy("bots_select", { as: "permissive", for: "select", to: ["authenticated"] }),
 	check("bots_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 80)`),
 	check("bots_persona_md_check", sql`char_length(persona_md) <= 20000`),
@@ -451,7 +451,7 @@ export const conversations = pgTable("conversations", {
    FROM bots b
   WHERE ((b.id = conversations.bot_id) AND (b.org_id = conversations.org_id)))))`  }),
 	pgPolicy("conversations_update", { as: "permissive", for: "update", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	pgPolicy("conversations_select", { as: "permissive", for: "select", to: ["authenticated"] }),
 	pgPolicy("conversations_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
 	check("conversations_title_check", sql`char_length(title) <= 200`),
@@ -476,7 +476,7 @@ export const quotas = pgTable("quotas", {
 	unique("quotas_org_id_period_key").on(table.orgId, table.period),
 	pgPolicy("quotas_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
 	pgPolicy("quotas_write", { as: "permissive", for: "all", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("quotas_period_check", sql`period = ANY (ARRAY['day'::text, 'month'::text])`),
 ]);
 
@@ -499,7 +499,7 @@ export const auditLog = pgTable("audit_log", {
 			name: "audit_log_org_id_fkey"
 		}).onDelete("cascade"),
 	pgPolicy("audit_log_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`has_role(org_id, 'admin'::org_role)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("audit_log_actor_type_check", sql`actor_type = ANY (ARRAY['user'::text, 'bot'::text, 'system'::text])`),
 ]);
 
@@ -550,7 +550,7 @@ export const messages = pgTable("messages", {
 			foreignColumns: [bots.id],
 			name: "messages_bot_id_fkey"
 		}).onDelete("set null"),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	pgPolicy("messages_select", { as: "permissive", for: "select", to: ["authenticated"] }),
 	pgPolicy("messages_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
 	check("messages_role_check", sql`role = ANY (ARRAY['user'::text, 'assistant'::text, 'system'::text, 'tool'::text])`),
@@ -592,7 +592,7 @@ export const memories = pgTable("memories", {
 	pgPolicy("memories_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
 	pgPolicy("memories_update", { as: "permissive", for: "update", to: ["authenticated"] }),
 	pgPolicy("memories_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("memories_kind_check", sql`kind = ANY (ARRAY['fact'::text, 'episode'::text, 'summary'::text, 'preference'::text])`),
 	check("memories_importance_check", sql`(importance >= (0)::double precision) AND (importance <= (1)::double precision)`),
 	check("memories_content_check", sql`((char_length(content) >= 1) AND (char_length(content) <= 8000)) OR ((content ~~ 'enc:v1:%'::text) AND (char_length(content) <= 12000))`),
@@ -624,7 +624,7 @@ export const checkpoints = pgTable("checkpoints", {
 			name: "checkpoints_run_id_fkey"
 		}).onDelete("set null"),
 	pgPolicy("checkpoints_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_computer(computer_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("checkpoints_label_check", sql`(char_length(label) >= 1) AND (char_length(label) <= 200)`),
 ]);
 
@@ -654,7 +654,7 @@ export const computerLeases = pgTable("computer_leases", {
 			name: "computer_leases_computer_id_fkey"
 		}).onDelete("cascade"),
 	pgPolicy("computer_leases_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_computer(computer_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("computer_leases_mode_check", sql`mode = ANY (ARRAY['view'::text, 'control'::text])`),
 	check("computer_leases_holder_type_check", sql`holder_type = ANY (ARRAY['bot'::text, 'user'::text])`),
 	check("computer_leases_note_check", sql`char_length(note) <= 2000`),
@@ -693,12 +693,12 @@ export const computers = pgTable("computers", {
 			name: "computers_owner_bot_id_fkey"
 		}).onDelete("cascade"),
 	pgPolicy("computers_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(is_member(org_id) AND ((owner_bot_id IS NULL) OR can_access_bot(owner_bot_id)))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("computers_kind_check", sql`kind = ANY (ARRAY['private'::text, 'team'::text, 'local'::text])`),
 	check("computers_profile_check", sql`profile = ANY (ARRAY['headless'::text, 'desktop'::text])`),
 	check("computers_state_check", sql`state = ANY (ARRAY['provisioning'::text, 'starting'::text, 'running'::text, 'idle'::text, 'sleeping'::text, 'stopped'::text, 'error'::text])`),
 	check("computers_check", sql`((kind = 'private'::text) = (owner_bot_id IS NOT NULL)) OR (kind = 'local'::text)`),
-	check("computers_provider_check", sql`provider = ANY (ARRAY['docker'::text, 'e2b'::text, 'daytona'::text, 'local'::text, 'kasama-cloud'::text, 'novita'::text, 'kubernetes'::text, 'incus'::text, 'boat'::text, 'railway'::text])`),
+	check("computers_provider_check", sql`provider = ANY (ARRAY['docker'::text, 'e2b'::text, 'daytona'::text, 'local'::text, 'casama-cloud'::text, 'novita'::text, 'kubernetes'::text, 'incus'::text, 'boat'::text, 'railway'::text])`),
 	check("computers_max_desktops_check", sql`(max_desktops >= 1) AND (max_desktops <= 10)`),
 ]);
 
@@ -742,7 +742,7 @@ export const approvals = pgTable("approvals", {
 		}).onDelete("set null"),
 	unique("approvals_run_id_call_id_key").on(table.runId, table.callId),
 	pgPolicy("approvals_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("approvals_risk_check", sql`risk = ANY (ARRAY['low'::text, 'medium'::text, 'high'::text])`),
 	check("approvals_status_check", sql`status = ANY (ARRAY['pending'::text, 'approved'::text, 'denied'::text, 'expired'::text])`),
 ]);
@@ -773,7 +773,7 @@ export const toolGrants = pgTable("tool_grants", {
 	unique("tool_grants_bot_id_tool_name_key").on(table.botId, table.toolName),
 	pgPolicy("tool_grants_delete", { as: "permissive", for: "delete", to: ["authenticated"], using: sql`can_manage_bot(bot_id)` }),
 	pgPolicy("tool_grants_select", { as: "permissive", for: "select", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 ]);
 
 export const integrations = pgTable("integrations", {
@@ -811,7 +811,7 @@ export const integrations = pgTable("integrations", {
 	pgPolicy("integrations_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
 	pgPolicy("integrations_update", { as: "permissive", for: "update", to: ["authenticated"] }),
 	pgPolicy("integrations_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("integrations_name_check", sql`name ~ '^[a-z][a-z0-9_]{0,39}$'::text`),
 	check("integrations_status_check", sql`status = ANY (ARRAY['pending'::text, 'ok'::text, 'error'::text])`),
 	check("integrations_kind_check", sql`kind = ANY (ARRAY['mcp'::text, 'openapi'::text, 'composio'::text, 'pipedream'::text, 'local_mcp'::text, 'computer_mcp'::text, 'a2a'::text])`),
@@ -842,7 +842,7 @@ export const secrets = pgTable("secrets", {
 	unique("secrets_org_id_name_key").on(table.orgId, table.name),
 	pgPolicy("secrets_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
 	pgPolicy("secrets_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("secrets_name_check", sql`name ~ '^[A-Z][A-Z0-9_]{0,63}$'::text`),
 	check("secrets_kind_check", sql`kind = ANY (ARRAY['value'::text, 'totp'::text])`),
 	check("secrets_store_check", sql`store = ANY (ARRAY['vault'::text, 'infisical'::text])`),
@@ -874,7 +874,7 @@ export const botIntegrations = pgTable("bot_integrations", {
 	unique("bot_integrations_bot_id_integration_id_key").on(table.botId, table.integrationId),
 	pgPolicy("bot_integrations_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
 	pgPolicy("bot_integrations_write", { as: "permissive", for: "all", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 ]);
 
 export const routines = pgTable("routines", {
@@ -928,7 +928,7 @@ export const routines = pgTable("routines", {
 	pgPolicy("routines_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
 	pgPolicy("routines_update", { as: "permissive", for: "update", to: ["authenticated"] }),
 	pgPolicy("routines_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("routines_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 120)`),
 	check("routines_instructions_md_check", sql`(char_length(instructions_md) >= 1) AND (char_length(instructions_md) <= 20000)`),
 	check("routines_kind_check", sql`kind = ANY (ARRAY['task'::text, 'brief'::text, 'scan'::text])`),
@@ -945,7 +945,7 @@ export const creditPacks = pgTable("credit_packs", {
 }, (table) => [
 	unique("credit_packs_dodo_product_id_key").on(table.dodoProductId),
 	pgPolicy("credit_packs_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`active` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("credit_packs_credits_usd_check", sql`credits_usd > (0)::numeric`),
 ]);
 
@@ -976,7 +976,7 @@ export const subscriptions = pgTable("subscriptions", {
 		}).onDelete("cascade"),
 	unique("subscriptions_source_external_id_key").on(table.source, table.externalId),
 	pgPolicy("subscriptions_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("subscriptions_source_check", sql`source = ANY (ARRAY['dodo'::text, 'app_store'::text, 'google_play'::text])`),
 	check("subscriptions_status_check", sql`status = ANY (ARRAY['active'::text, 'trialing'::text, 'grace'::text, 'past_due'::text, 'on_hold'::text, 'paused'::text, 'cancelled'::text, 'expired'::text, 'refunded'::text, 'pending'::text])`),
 ]);
@@ -1000,7 +1000,7 @@ export const creditLedger = pgTable("credit_ledger", {
 			name: "credit_ledger_org_id_fkey"
 		}).onDelete("cascade"),
 	pgPolicy("credit_ledger_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("credit_ledger_reason_check", sql`reason = ANY (ARRAY['purchase'::text, 'usage'::text, 'grant'::text, 'refund'::text, 'adjustment'::text])`),
 ]);
 
@@ -1015,7 +1015,7 @@ export const billingEvents = pgTable("billing_events", {
 	error: text(),
 }, (table) => [
 	unique("billing_events_source_event_id_key").on(table.source, table.eventId),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	check("billing_events_source_check", sql`source = ANY (ARRAY['dodo'::text, 'app_store'::text, 'google_play'::text])`),
 ]);
 
@@ -1035,7 +1035,7 @@ export const devices = pgTable("devices", {
 		}).onDelete("cascade"),
 	unique("devices_fcm_token_key").on(table.fcmToken),
 	pgPolicy("devices_own", { as: "permissive", for: "all", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))`, withCheck: sql`(user_id = ( SELECT auth.uid() AS uid))`  }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("devices_platform_check", sql`platform = ANY (ARRAY['ios'::text, 'android'::text, 'web'::text, 'macos'::text, 'windows'::text, 'linux'::text])`),
 ]);
 
@@ -1081,7 +1081,7 @@ export const takeoverRequests = pgTable("takeover_requests", {
 			name: "takeover_requests_resolved_by_fkey"
 		}).onDelete("set null"),
 	pgPolicy("takeover_requests_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("takeover_requests_reason_check", sql`(char_length(reason) >= 1) AND (char_length(reason) <= 1000)`),
 	check("takeover_requests_status_check", sql`status = ANY (ARRAY['pending'::text, 'taken'::text, 'completed'::text, 'dismissed'::text, 'expired'::text])`),
 	check("takeover_requests_note_check", sql`char_length(note) <= 2000`),
@@ -1120,7 +1120,7 @@ export const localDevices = pgTable("local_devices", {
 		}).onDelete("set null"),
 	unique("local_devices_token_hash_key").on(table.tokenHash),
 	pgPolicy("local_devices_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`((user_id = ( SELECT auth.uid() AS uid)) OR has_role(org_id, 'admin'::org_role))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("local_devices_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 80)`),
 	check("local_devices_platform_check", sql`platform = ANY (ARRAY['macos'::text, 'windows'::text, 'linux'::text])`),
 ]);
@@ -1150,7 +1150,7 @@ export const cloudConnectKeys = pgTable("cloud_connect_keys", {
 		}).onDelete("set null"),
 	unique("cloud_connect_keys_key_hash_key").on(table.keyHash),
 	pgPolicy("cloud_connect_keys_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`has_role(org_id, 'admin'::org_role)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("cloud_connect_keys_instance_name_check", sql`(char_length(instance_name) >= 1) AND (char_length(instance_name) <= 80)`),
 ]);
 
@@ -1174,7 +1174,7 @@ export const cloudConnectComputers = pgTable("cloud_connect_computers", {
 			name: "cloud_connect_computers_key_id_fkey"
 		}).onDelete("set null"),
 	pgPolicy("cloud_connect_computers_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 ]);
 
 export const accountDeletions = pgTable("account_deletions", {
@@ -1184,7 +1184,7 @@ export const accountDeletions = pgTable("account_deletions", {
 	completedAt: timestamp("completed_at", { withTimezone: true, mode: 'string' }),
 	orgsDeleted: integer("orgs_deleted"),
 }, (table) => [
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 ]);
 
 export const instanceSettings = pgTable("instance_settings", {
@@ -1192,7 +1192,7 @@ export const instanceSettings = pgTable("instance_settings", {
 	value: jsonb().notNull(),
 	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 ]);
 
 export const integrationOauthFlows = pgTable("integration_oauth_flows", {
@@ -1227,7 +1227,7 @@ export const integrationOauthFlows = pgTable("integration_oauth_flows", {
 			name: "integration_oauth_flows_integration_id_fkey"
 		}).onDelete("cascade"),
 	unique("integration_oauth_flows_state_key").on(table.state),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	check("integration_oauth_flows_status_check", sql`status = ANY (ARRAY['pending'::text, 'connected'::text, 'error'::text])`),
 ]);
 
@@ -1240,7 +1240,7 @@ export const telemetryPings = pgTable("telemetry_pings", {
 	receivedAt: timestamp("received_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	index("telemetry_pings_instance_idx").using("btree", table.instanceId.asc().nullsLast().op("timestamptz_ops"), table.receivedAt.desc().nullsFirst().op("timestamptz_ops")),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 ]);
 
 export const abuseEvents = pgTable("abuse_events", {
@@ -1264,7 +1264,7 @@ export const abuseEvents = pgTable("abuse_events", {
 			foreignColumns: [computers.id],
 			name: "abuse_events_computer_id_fkey"
 		}).onDelete("set null"),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	check("abuse_events_kind_check", sql`kind = ANY (ARRAY['mining_pool'::text, 'blocked_port'::text, 'egress_flood'::text, 'signup_blocked'::text, 'suspended'::text, 'unsuspended'::text])`),
 ]);
 
@@ -1272,7 +1272,7 @@ export const usedSignupChallenges = pgTable("used_signup_challenges", {
 	challengeHash: text("challenge_hash").primaryKey().notNull(),
 	usedAt: timestamp("used_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 ]);
 
 export const usageLedger = pgTable("usage_ledger", {
@@ -1309,7 +1309,7 @@ export const usageLedger = pgTable("usage_ledger", {
 			name: "usage_ledger_run_id_fkey"
 		}).onDelete("set null"),
 	pgPolicy("usage_ledger_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("usage_ledger_source_check", sql`source = ANY (ARRAY['key'::text, 'chatgpt_plan'::text])`),
 	check("usage_ledger_kind_check", sql`kind = ANY (ARRAY['tokens_in'::text, 'tokens_out'::text, 'computer_seconds'::text, 'stream_seconds'::text, 'tts_chars'::text, 'stt_seconds'::text, 'voice_seconds'::text, 'media_images'::text, 'media_video_seconds'::text, 'search_queries'::text, 'data_calls'::text, 'phone_minutes'::text])`),
 ]);
@@ -1396,7 +1396,7 @@ export const tasks = pgTable("tasks", {
 	pgPolicy("tasks_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
 	pgPolicy("tasks_update", { as: "permissive", for: "update", to: ["authenticated"] }),
 	pgPolicy("tasks_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("tasks_title_check", sql`(char_length(title) >= 1) AND (char_length(title) <= 300)`),
 	check("tasks_status_check", sql`status = ANY (ARRAY['todo'::text, 'in_progress'::text, 'in_review'::text, 'blocked'::text, 'done'::text])`),
 	check("tasks_priority_check", sql`priority = ANY (ARRAY['urgent'::text, 'high'::text, 'medium'::text, 'low'::text, 'none'::text])`),
@@ -1439,7 +1439,7 @@ export const modelCredentials = pgTable("model_credentials", {
 		}).onDelete("cascade"),
 	pgPolicy("model_credentials_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
 	pgPolicy("model_credentials_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("model_credentials_label_check", sql`(char_length(label) >= 1) AND (char_length(label) <= 80)`),
 	check("model_credentials_status_check", sql`status = ANY (ARRAY['ok'::text, 'plan_usage_off'::text, 'needs_reconnect'::text])`),
 	check("model_credentials_chatgpt_owner", sql`(provider <> 'chatgpt'::text) OR (owner_user_id IS NOT NULL)`),
@@ -1476,7 +1476,7 @@ export const notifications = pgTable("notifications", {
 	pgPolicy("notifications_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
 	pgPolicy("notifications_update", { as: "permissive", for: "update", to: ["authenticated"] }),
 	pgPolicy("notifications_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("notifications_push_status_check", sql`push_status = ANY (ARRAY['sent'::text, 'deferred'::text, 'none'::text, 'held'::text, 'bundled'::text])`),
 	check("notifications_urgency_check", sql`urgency = ANY (ARRAY['low'::text, 'normal'::text, 'urgent'::text])`),
 	check("notifications_held_reason_check", sql`held_reason = ANY (ARRAY['focus'::text, 'meeting'::text, 'driving'::text, 'daily_cap'::text, 'low_urgency'::text])`),
@@ -1514,7 +1514,7 @@ export const botRevisions = pgTable("bot_revisions", {
 			name: "bot_revisions_changed_by_user_fkey"
 		}).onDelete("set null"),
 	pgPolicy("bot_revisions_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 ]);
 
 export const inviteLinks = pgTable("invite_links", {
@@ -1545,7 +1545,7 @@ export const inviteLinks = pgTable("invite_links", {
 	pgPolicy("invite_links_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`has_role(org_id, 'admin'::org_role)` }),
 	pgPolicy("invite_links_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
 	pgPolicy("invite_links_update", { as: "permissive", for: "update", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("invite_links_role_check", sql`role = ANY (ARRAY['admin'::org_role, 'member'::org_role])`),
 	check("invite_links_max_uses_check", sql`(max_uses IS NULL) OR ((max_uses >= 1) AND (max_uses <= 10000))`),
 ]);
@@ -1565,7 +1565,7 @@ export const botFolders = pgTable("bot_folders", {
 	unique("bot_folders_org_id_name_key").on(table.orgId, table.name),
 	pgPolicy("bot_folders_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
 	pgPolicy("bot_folders_write", { as: "permissive", for: "all", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("bot_folders_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 60)`),
 ]);
 
@@ -1620,7 +1620,7 @@ export const secretRequests = pgTable("secret_requests", {
 			name: "secret_requests_resolved_by_fkey"
 		}).onDelete("set null"),
 	pgPolicy("secret_requests_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("secret_requests_name_check", sql`name ~ '^[A-Z][A-Z0-9_]{0,63}$'::text`),
 	check("secret_requests_service_check", sql`(char_length(service) >= 1) AND (char_length(service) <= 80)`),
 	check("secret_requests_allowed_hosts_check", sql`(cardinality(allowed_hosts) >= 1) AND (cardinality(allowed_hosts) <= 10)`),
@@ -1663,7 +1663,7 @@ export const taskComments = pgTable("task_comments", {
 	pgPolicy("task_comments_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
 	pgPolicy("task_comments_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
 	pgPolicy("task_comments_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("task_comments_author_type_check", sql`author_type = ANY (ARRAY['user'::text, 'bot'::text])`),
 	check("task_comments_body_md_check", sql`((char_length(body_md) >= 1) AND (char_length(body_md) <= 20000)) OR ((body_md ~~ 'enc:v1:%'::text) AND (char_length(body_md) <= 28000))`),
 ]);
@@ -1694,7 +1694,7 @@ export const skillFiles = pgTable("skill_files", {
    FROM skills s
   WHERE ((s.id = skill_files.skill_id) AND is_member(s.org_id) AND ((s.bot_id IS NULL) OR can_access_bot(s.bot_id)))))` }),
 	pgPolicy("skill_files_write", { as: "permissive", for: "all", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("skill_files_path_check", sql`(path ~ '^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$'::text) AND (path !~ '(^|/)\.\.(/|$)'::text) AND (char_length(path) <= 300)`),
 	check("skill_files_content_check", sql`octet_length(content) <= 1048576`),
 ]);
@@ -1727,7 +1727,7 @@ export const botShares = pgTable("bot_shares", {
 		}).onDelete("set null"),
 	unique("bot_shares_token_hash_key").on(table.tokenHash),
 	pgPolicy("bot_shares_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 ]);
 
 export const projects = pgTable("projects", {
@@ -1770,7 +1770,7 @@ export const projects = pgTable("projects", {
 		}).onDelete("set null"),
 	unique("projects_org_id_slug_key").on(table.orgId, table.slug),
 	pgPolicy("projects_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("projects_slug_check", sql`slug ~ '^[a-z0-9][a-z0-9-]{0,62}$'::text`),
 	check("projects_title_check", sql`(char_length(title) >= 1) AND (char_length(title) <= 200)`),
 	check("projects_goal_md_check", sql`(char_length(goal_md) >= 1) AND (char_length(goal_md) <= 20000)`),
@@ -1807,7 +1807,7 @@ export const projectMilestones = pgTable("project_milestones", {
 			name: "project_milestones_org_id_fkey"
 		}).onDelete("cascade"),
 	unique("project_milestones_project_id_position_key").on(table.projectId, table.position),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	pgPolicy("project_milestones_select", { as: "permissive", for: "select", to: ["authenticated"] }),
 	check("project_milestones_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 120)`),
 	check("project_milestones_status_check", sql`status = ANY (ARRAY['open'::text, 'awaiting_signoff'::text, 'done'::text])`),
@@ -1839,7 +1839,7 @@ export const botCheckins = pgTable("bot_checkins", {
 			name: "bot_checkins_user_id_fkey"
 		}).onDelete("cascade"),
 	pgPolicy("bot_checkins_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("bot_checkins_brief_time_check", sql`brief_time ~ '^([01]\d|2[0-3]):[0-5]\d$'::text`),
 	check("bot_checkins_scan_every_hours_check", sql`(scan_every_hours >= 1) AND (scan_every_hours <= 24)`),
 	check("bot_checkins_daily_cap_usd_check", sql`daily_cap_usd > (0)::numeric`),
@@ -1883,7 +1883,7 @@ export const suggestions = pgTable("suggestions", {
 			name: "suggestions_run_id_fkey"
 		}).onDelete("set null"),
 	pgPolicy("suggestions_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("suggestions_title_check", sql`(char_length(title) >= 1) AND (char_length(title) <= 200)`),
 	check("suggestions_body_md_check", sql`char_length(body_md) <= 5000`),
 	check("suggestions_urgency_check", sql`urgency = ANY (ARRAY['low'::text, 'normal'::text, 'urgent'::text])`),
@@ -1919,7 +1919,7 @@ export const actionRules = pgTable("action_rules", {
 		}).onDelete("set null"),
 	pgPolicy("action_rules_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(is_member(org_id) AND ((bot_id IS NULL) OR can_access_bot(bot_id)))` }),
 	pgPolicy("action_rules_write", { as: "permissive", for: "all", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("action_rules_match_kind_check", sql`match_kind = ANY (ARRAY['tool'::text, 'group'::text, 'category'::text])`),
 	check("action_rules_match_value_check", sql`(char_length(match_value) >= 1) AND (char_length(match_value) <= 200)`),
 	check("action_rules_rule_check", sql`rule = ANY (ARRAY['allow'::text, 'allow_within_limits'::text, 'ask'::text, 'hand_off'::text])`),
@@ -1979,7 +1979,7 @@ export const watchers = pgTable("watchers", {
 	pgPolicy("watchers_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
 	pgPolicy("watchers_update", { as: "permissive", for: "update", to: ["authenticated"] }),
 	pgPolicy("watchers_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("watchers_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 120)`),
 	check("watchers_kind_check", sql`kind = ANY (ARRAY['page_change'::text, 'reply'::text, 'query'::text, 'time'::text])`),
 	check("watchers_condition_md_check", sql`char_length(condition_md) <= 2000`),
@@ -2019,7 +2019,7 @@ export const runDigests = pgTable("run_digests", {
 			name: "run_digests_bot_id_fkey"
 		}).onDelete("cascade"),
 	pgPolicy("run_digests_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("run_digests_status_check", sql`status = ANY (ARRAY['completed'::text, 'failed'::text, 'cancelled'::text])`),
 ]);
 
@@ -2063,7 +2063,7 @@ export const skillProposals = pgTable("skill_proposals", {
 			name: "skill_proposals_resolved_by_fkey"
 		}).onDelete("set null"),
 	pgPolicy("skill_proposals_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("skill_proposals_kind_check", sql`kind = ANY (ARRAY['new'::text, 'edit'::text])`),
 	check("skill_proposals_name_check", sql`name ~ '^[a-z0-9][a-z0-9_-]{0,62}$'::text`),
 	check("skill_proposals_description_check", sql`(char_length(description) >= 1) AND (char_length(description) <= 300)`),
@@ -2094,7 +2094,7 @@ export const skillRevisions = pgTable("skill_revisions", {
 	pgPolicy("skill_revisions_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(EXISTS ( SELECT 1
    FROM skills s
   WHERE (s.id = skill_revisions.skill_id)))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 ]);
 
 export const mcpClients = pgTable("mcp_clients", {
@@ -2103,7 +2103,7 @@ export const mcpClients = pgTable("mcp_clients", {
 	redirectUris: text("redirect_uris").array().notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	check("mcp_clients_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 200)`),
 	check("mcp_clients_redirect_uris_check", sql`(cardinality(redirect_uris) >= 1) AND (cardinality(redirect_uris) <= 10)`),
 ]);
@@ -2137,7 +2137,7 @@ export const mcpAuthRequests = pgTable("mcp_auth_requests", {
 			name: "mcp_auth_requests_org_id_fkey"
 		}).onDelete("cascade"),
 	unique("mcp_auth_requests_code_hash_key").on(table.codeHash),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	check("mcp_auth_requests_status_check", sql`status = ANY (ARRAY['pending'::text, 'approved'::text, 'denied'::text, 'used'::text])`),
 ]);
 
@@ -2173,7 +2173,7 @@ export const mcpTokens = pgTable("mcp_tokens", {
 		}).onDelete("cascade"),
 	unique("mcp_tokens_token_hash_key").on(table.tokenHash),
 	pgPolicy("mcp_tokens_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`((kind = 'api_key'::text) AND has_role(org_id, 'admin'::org_role))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("mcp_tokens_kind_check", sql`kind = ANY (ARRAY['access'::text, 'refresh'::text, 'api_key'::text])`),
 ]);
 
@@ -2228,7 +2228,7 @@ CASE
 END` }),
 	pgPolicy("pages_update", { as: "permissive", for: "update", to: ["authenticated"] }),
 	pgPolicy("pages_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("pages_title_check", sql`(char_length(title) >= 1) AND (char_length(title) <= 200)`),
 	check("pages_visibility_check", sql`visibility = ANY (ARRAY['private'::text, 'workspace'::text, 'public'::text])`),
 	check("pages_html_check", sql`(octet_length(html) <= 2000000) OR ((html ~~ 'enc:v1:%'::text) AND (octet_length(html) <= 2800000))`),
@@ -2252,7 +2252,7 @@ export const deviceSources = pgTable("device_sources", {
 		}).onDelete("cascade"),
 	unique("device_sources_user_id_device_key_key").on(table.userId, table.deviceKey),
 	pgPolicy("device_sources_own", { as: "permissive", for: "all", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))`, withCheck: sql`(user_id = ( SELECT auth.uid() AS uid))`  }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("device_sources_device_key_check", sql`device_key ~ '^[A-Za-z0-9_-]{8,100}$'::text`),
 	check("device_sources_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 80)`),
 	check("device_sources_platform_check", sql`platform = ANY (ARRAY['ios'::text, 'android'::text, 'macos'::text, 'windows'::text, 'linux'::text, 'web'::text])`),
@@ -2285,7 +2285,7 @@ export const deviceReadings = pgTable("device_readings", {
 	unique("device_readings_source_id_kind_external_id_key").on(table.sourceId, table.kind, table.externalId),
 	pgPolicy("device_readings_own", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
 	pgPolicy("device_readings_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("device_readings_kind_check", sql`kind = ANY (ARRAY['calendar'::text, 'reminders'::text, 'contacts'::text, 'places'::text, 'photos'::text, 'health'::text, 'notifications'::text, 'activity'::text])`),
 	check("device_readings_check", sql`period_end >= period_start`),
 	check("device_readings_external_id_check", sql`(char_length(external_id) >= 1) AND (char_length(external_id) <= 200)`),
@@ -2312,7 +2312,7 @@ export const pageViewTokens = pgTable("page_view_tokens", {
 			foreignColumns: [users.id],
 			name: "page_view_tokens_user_id_fkey"
 		}).onDelete("cascade"),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	check("page_view_tokens_kind_check", sql`kind = ANY (ARRAY['link'::text, 'session'::text])`),
 	check("page_view_tokens_format_check", sql`format = ANY (ARRAY['html'::text, 'pdf'::text])`),
 ]);
@@ -2349,7 +2349,7 @@ export const plugins = pgTable("plugins", {
 	unique("plugins_bot_id_name_key").on(table.botId, table.name),
 	pgPolicy("plugins_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
 	pgPolicy("plugins_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("plugins_version_check", sql`char_length(version) <= 64`),
 	check("plugins_name_check", sql`(name ~ '^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$'::text) AND (char_length(name) <= 64)`),
 	check("plugins_description_check", sql`char_length(description) <= 2000`),
@@ -2408,7 +2408,7 @@ export const teachSessions = pgTable("teach_sessions", {
 			name: "teach_sessions_skill_id_fkey"
 		}).onDelete("set null"),
 	pgPolicy("teach_sessions_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("teach_sessions_status_check", sql`status = ANY (ARRAY['recording'::text, 'drafting'::text, 'drafted'::text, 'saved'::text, 'cancelled'::text, 'failed'::text])`),
 ]);
 
@@ -2438,7 +2438,7 @@ export const agentImports = pgTable("agent_imports", {
 			name: "agent_imports_bot_id_fkey"
 		}).onDelete("set null"),
 	pgPolicy("agent_imports_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("agent_imports_kind_check", sql`kind = ANY (ARRAY['openclaw'::text, 'hermes'::text])`),
 ]);
 
@@ -2480,7 +2480,7 @@ CASE
     ELSE can_access_bot(bot_id)
 END` }),
 	pgPolicy("knowledge_sources_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("knowledge_sources_kind_check", sql`kind = ANY (ARRAY['upload'::text, 'website'::text, 'github'::text, 'connection'::text])`),
 	check("knowledge_sources_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 200)`),
 	check("knowledge_sources_status_check", sql`status = ANY (ARRAY['pending'::text, 'syncing'::text, 'ready'::text, 'error'::text])`),
@@ -2505,7 +2505,7 @@ export const knowledgeUploads = pgTable("knowledge_uploads", {
 			foreignColumns: [organizations.id],
 			name: "knowledge_uploads_org_id_fkey"
 		}).onDelete("cascade"),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	check("knowledge_uploads_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 300)`),
 	check("knowledge_uploads_content_check", sql`octet_length(content) <= 25000000`),
 ]);
@@ -2538,7 +2538,7 @@ export const orgGitSync = pgTable("org_git_sync", {
 			name: "org_git_sync_created_by_fkey"
 		}).onDelete("set null"),
 	pgPolicy("org_git_sync_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`has_role(org_id, 'admin'::org_role)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("org_git_sync_repo_check", sql`repo ~ '^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$'::text`),
 	check("org_git_sync_branch_check", sql`(char_length(branch) >= 1) AND (char_length(branch) <= 200)`),
 	check("org_git_sync_path_check", sql`char_length(path) <= 200`),
@@ -2570,7 +2570,7 @@ export const knowledgeChunks = pgTable("knowledge_chunks", {
 			foreignColumns: [knowledgeSources.id],
 			name: "knowledge_chunks_source_id_fkey"
 		}).onDelete("cascade"),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	pgPolicy("knowledge_chunks_select", { as: "permissive", for: "select", to: ["authenticated"] }),
 	check("knowledge_chunks_text_check", sql`((char_length(text) >= 1) AND (char_length(text) <= 8000)) OR ((text ~~ 'enc:v1:%'::text) AND (char_length(text) <= 12000))`),
 ]);
@@ -2610,7 +2610,7 @@ export const replays = pgTable("replays", {
 		}).onDelete("set null"),
 	unique("replays_bot_id_name_key").on(table.botId, table.name),
 	pgPolicy("replays_delete", { as: "permissive", for: "delete", to: ["authenticated"], using: sql`can_manage_bot(bot_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	pgPolicy("replays_select", { as: "permissive", for: "select", to: ["authenticated"] }),
 	check("replays_name_check", sql`name ~ '^[a-z0-9][a-z0-9_-]{0,62}$'::text`),
 	check("replays_description_check", sql`char_length(description) <= 300`),
@@ -2649,7 +2649,7 @@ export const passwordManagers = pgTable("password_managers", {
 		}).onDelete("set null"),
 	pgPolicy("password_managers_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(is_member(org_id) AND ((user_id IS NULL) OR (user_id = ( SELECT auth.uid() AS uid))))` }),
 	pgPolicy("password_managers_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("password_managers_provider_check", sql`provider = ANY (ARRAY['1password'::text, 'bitwarden'::text])`),
 	check("password_managers_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 100)`),
 	check("password_managers_url_check", sql`(char_length(url) >= 1) AND (char_length(url) <= 500)`),
@@ -2689,7 +2689,7 @@ export const botAccess = pgTable("bot_access", {
 			name: "bot_access_user_id_fkey"
 		}).onDelete("cascade"),
 	pgPolicy("bot_access_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("bot_access_access_check", sql`access = ANY (ARRAY['chat'::text, 'edit'::text, 'admin'::text])`),
 	check("bot_access_check", sql`(user_id IS NULL) <> (role IS NULL)`),
 ]);
@@ -2727,7 +2727,7 @@ export const channels = pgTable("channels", {
 		}).onDelete("set null"),
 	pgPolicy("channels_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
 	pgPolicy("channels_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("channels_kind_check", sql`kind = ANY (ARRAY['telegram'::text, 'email'::text, 'sms'::text, 'slack'::text, 'whatsapp'::text, 'messenger'::text, 'feishu'::text, 'imessage'::text])`),
 	check("channels_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 100)`),
 ]);
@@ -2758,7 +2758,7 @@ export const channelThreads = pgTable("channel_threads", {
 			name: "channel_threads_channel_id_fkey"
 		}).onDelete("cascade"),
 	unique("channel_threads_channel_id_thread_key_key").on(table.channelId, table.threadKey),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	check("channel_threads_thread_key_check", sql`(char_length(thread_key) >= 1) AND (char_length(thread_key) <= 500)`),
 ]);
 
@@ -2788,7 +2788,7 @@ export const channelEvents = pgTable("channel_events", {
 	pgPolicy("channel_events_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(EXISTS ( SELECT 1
    FROM channels c
   WHERE ((c.id = channel_events.channel_id) AND can_manage_bot(c.bot_id))))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("channel_events_direction_check", sql`direction = ANY (ARRAY['in'::text, 'out'::text])`),
 	check("channel_events_status_check", sql`status = ANY (ARRAY['accepted'::text, 'ignored'::text, 'routine'::text, 'sent'::text, 'failed'::text])`),
 	check("channel_events_preview_check", sql`char_length(preview) <= 300`),
@@ -2808,7 +2808,7 @@ export const orgKeys = pgTable("org_keys", {
 			name: "org_keys_org_id_fkey"
 		}).onDelete("cascade"),
 	unique("org_keys_org_id_key").on(table.orgId),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 ]);
 
 export const a2ATasks = pgTable("a2a_tasks", {
@@ -2849,7 +2849,7 @@ export const a2ATasks = pgTable("a2a_tasks", {
 			name: "a2a_tasks_run_id_fkey"
 		}).onDelete("set null"),
 	pgPolicy("a2a_tasks_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_bot(bot_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 ]);
 
 export const voipTokens = pgTable("voip_tokens", {
@@ -2867,7 +2867,7 @@ export const voipTokens = pgTable("voip_tokens", {
 		}).onDelete("cascade"),
 	unique("voip_tokens_token_key").on(table.token),
 	pgPolicy("voip_tokens_own", { as: "permissive", for: "all", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))`, withCheck: sql`(user_id = ( SELECT auth.uid() AS uid))`  }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("voip_tokens_token_check", sql`(char_length(token) >= 8) AND (char_length(token) <= 400)`),
 ]);
 
@@ -2913,7 +2913,7 @@ export const voiceCalls = pgTable("voice_calls", {
 			name: "voice_calls_conversation_id_fkey"
 		}).onDelete("set null"),
 	pgPolicy("voice_calls_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("voice_calls_reason_check", sql`(char_length(reason) >= 1) AND (char_length(reason) <= 500)`),
 	check("voice_calls_status_check", sql`status = ANY (ARRAY['ringing'::text, 'answered'::text, 'declined'::text, 'missed'::text, 'cancelled'::text])`),
 ]);
@@ -2938,7 +2938,7 @@ export const orgMemoryBackends = pgTable("org_memory_backends", {
 			name: "org_memory_backends_created_by_fkey"
 		}).onDelete("set null"),
 	pgPolicy("org_memory_backends_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`has_role(org_id, 'member'::org_role)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("org_memory_backends_provider_check", sql`provider = ANY (ARRAY['honcho'::text, 'supermemory'::text])`),
 	check("org_memory_backends_base_url_check", sql`(base_url IS NULL) OR (base_url ~ '^https?://'::text)`),
 	check("org_memory_backends_workspace_check", sql`(workspace IS NULL) OR ((char_length(workspace) >= 1) AND (char_length(workspace) <= 100))`),
@@ -2960,7 +2960,7 @@ export const orgTelephony = pgTable("org_telephony", {
 			name: "org_telephony_org_id_fkey"
 		}).onDelete("cascade"),
 	pgPolicy("org_telephony_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`has_role(org_id, 'admin'::org_role)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("org_telephony_provider_check", sql`provider = 'twilio'::text`),
 	check("org_telephony_account_sid_check", sql`account_sid ~ '^AC[0-9a-fA-F]{32}$'::text`),
 	check("org_telephony_from_number_check", sql`from_number ~ '^\+[1-9][0-9]{7,14}$'::text`),
@@ -2972,7 +2972,7 @@ export const callDenyList = pgTable("call_deny_list", {
 	reason: text(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	check("call_deny_list_prefix_check", sql`prefix ~ '^\+[0-9]{1,15}$'::text`),
 ]);
 
@@ -3020,7 +3020,7 @@ export const paymentRequests = pgTable("payment_requests", {
 		}).onDelete("cascade"),
 	unique("payment_requests_provider_card_id_key").on(table.providerCardId),
 	pgPolicy("payment_requests_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`((user_id = ( SELECT auth.uid() AS uid)) OR has_role(org_id, 'owner'::org_role))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("payment_requests_currency_check", sql`currency ~ '^[A-Z]{3}$'::text`),
 	check("payment_requests_merchant_check", sql`(char_length(merchant) >= 2) AND (char_length(merchant) <= 200)`),
 	check("payment_requests_amount_cents_check", sql`amount_cents > 0`),
@@ -3067,7 +3067,7 @@ export const outboundCalls = pgTable("outbound_calls", {
 			foreignColumns: [runs.id],
 			name: "outbound_calls_run_id_fkey"
 		}).onDelete("set null"),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	pgPolicy("outbound_calls_select", { as: "permissive", for: "select", to: ["authenticated"] }),
 	check("outbound_calls_notes_check", sql`char_length(notes) <= 4000`),
 	check("outbound_calls_purpose_check", sql`(char_length(purpose) >= 1) AND (char_length(purpose) <= 500)`),
@@ -3111,7 +3111,7 @@ export const botLinks = pgTable("bot_links", {
 		}).onDelete("cascade"),
 	unique("bot_links_inbound_token_hash_key").on(table.inboundTokenHash),
 	pgPolicy("bot_links_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`((owner_user_id = ( SELECT auth.uid() AS uid)) OR can_manage_bot(bot_id))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("bot_links_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 100)`),
 	check("bot_links_status_check", sql`status = ANY (ARRAY['pending'::text, 'active'::text, 'revoked'::text])`),
 	check("bot_links_remote_url_check", sql`(remote_url IS NULL) OR (remote_url ~ '^https?://'::text)`),
@@ -3133,7 +3133,7 @@ export const orgPayments = pgTable("org_payments", {
 			name: "org_payments_org_id_fkey"
 		}).onDelete("cascade"),
 	pgPolicy("org_payments_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`has_role(org_id, 'owner'::org_role)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("org_payments_provider_check", sql`provider = 'stripe'::text`),
 	check("org_payments_monthly_cap_usd_check", sql`monthly_cap_usd >= (0)::numeric`),
 	check("org_payments_bot_monthly_cap_usd_check", sql`bot_monthly_cap_usd >= (0)::numeric`),
@@ -3170,7 +3170,7 @@ export const linkExchanges = pgTable("link_exchanges", {
 	pgPolicy("link_exchanges_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(EXISTS ( SELECT 1
    FROM bot_links l
   WHERE ((l.id = link_exchanges.link_id) AND ((l.owner_user_id = ( SELECT auth.uid() AS uid)) OR can_manage_bot(l.bot_id)))))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("link_exchanges_direction_check", sql`direction = ANY (ARRAY['out'::text, 'in'::text])`),
 	check("link_exchanges_status_check", sql`status = ANY (ARRAY['working'::text, 'answered'::text, 'failed'::text])`),
 ]);
@@ -3192,7 +3192,7 @@ export const orgSecretStores = pgTable("org_secret_stores", {
 			name: "org_secret_stores_org_id_fkey"
 		}).onDelete("cascade"),
 	pgPolicy("org_secret_stores_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`has_role(org_id, 'admin'::org_role)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("org_secret_stores_secret_path_check", sql`secret_path ~ '^/'::text`),
 	check("org_secret_stores_provider_check", sql`provider = 'infisical'::text`),
 	check("org_secret_stores_site_url_check", sql`site_url ~ '^https?://'::text`),
@@ -3221,7 +3221,7 @@ export const auditForwarders = pgTable("audit_forwarders", {
 			foreignColumns: [organizations.id],
 			name: "audit_forwarders_org_id_fkey"
 		}).onDelete("cascade"),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	pgPolicy("audit_forwarders_select", { as: "permissive", for: "select", to: ["authenticated"] }),
 	check("audit_forwarders_kind_check", sql`kind = ANY (ARRAY['webhook'::text, 'otlp'::text, 's3'::text])`),
 ]);
@@ -3242,7 +3242,7 @@ export const devicePlaces = pgTable("device_places", {
 			name: "device_places_user_id_fkey"
 		}).onDelete("cascade"),
 	pgPolicy("device_places_own", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("device_places_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 60)`),
 	check("device_places_latitude_check", sql`(latitude >= ('-90'::integer)::double precision) AND (latitude <= (90)::double precision)`),
 	check("device_places_longitude_check", sql`(longitude >= ('-180'::integer)::double precision) AND (longitude <= (180)::double precision)`),
@@ -3275,7 +3275,7 @@ export const deviceRequests = pgTable("device_requests", {
 			name: "device_requests_source_id_fkey"
 		}).onDelete("cascade"),
 	pgPolicy("device_requests_own", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("device_requests_status_check", sql`status = ANY (ARRAY['pending'::text, 'done'::text, 'failed'::text, 'expired'::text])`),
 	check("device_requests_action_check", sql`action = ANY (ARRAY['read'::text, 'calendar.create'::text, 'reminders.create'::text, 'locate'::text])`),
 ]);
@@ -3292,7 +3292,7 @@ export const agentImportFiles = pgTable("agent_import_files", {
 			name: "agent_import_files_import_id_fkey"
 		}).onDelete("cascade"),
 	primaryKey({ columns: [table.importId, table.path], name: "agent_import_files_pkey"}),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	check("agent_import_files_path_check", sql`(char_length(path) >= 1) AND (char_length(path) <= 1000)`),
 ]);
 
@@ -3315,7 +3315,7 @@ export const deviceGrants = pgTable("device_grants", {
 	primaryKey({ columns: [table.userId, table.botId, table.kind], name: "device_grants_pkey"}),
 	pgPolicy("device_grants_own", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
 	pgPolicy("device_grants_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("device_grants_kind_check", sql`kind = ANY (ARRAY['calendar'::text, 'reminders'::text, 'contacts'::text, 'places'::text, 'photos'::text, 'health'::text, 'notifications'::text, 'activity'::text])`),
 ]);
 
@@ -3333,7 +3333,7 @@ export const deviceEventLog = pgTable("device_event_log", {
 		}).onDelete("cascade"),
 	primaryKey({ columns: [table.userId, table.eventId], name: "device_event_log_pkey"}),
 	pgPolicy("device_event_log_own", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("device_event_log_event_id_check", sql`(char_length(event_id) >= 1) AND (char_length(event_id) <= 200)`),
 ]);
 
@@ -3351,7 +3351,7 @@ export const ttsCache = pgTable("tts_cache", {
 			name: "tts_cache_message_id_fkey"
 		}).onDelete("cascade"),
 	primaryKey({ columns: [table.messageId, table.voiceKey], name: "tts_cache_pkey"}),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 ]);
 
 export const userBotSettings = pgTable("user_bot_settings", {
@@ -3373,7 +3373,7 @@ export const userBotSettings = pgTable("user_bot_settings", {
 		}).onDelete("cascade"),
 	primaryKey({ columns: [table.userId, table.botId], name: "user_bot_settings_pkey"}),
 	pgPolicy("user_bot_settings_own", { as: "permissive", for: "all", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))`, withCheck: sql`((user_id = ( SELECT auth.uid() AS uid)) AND can_access_bot(bot_id))`  }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("user_bot_settings_quiet_check", sql`quiet = ANY (ARRAY['default'::text, 'always'::text, 'custom'::text])`),
 ]);
 
@@ -3403,7 +3403,7 @@ export const conversationBots = pgTable("conversation_bots", {
 	primaryKey({ columns: [table.conversationId, table.botId], name: "conversation_bots_pkey"}),
 	pgPolicy("conversation_bots_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_access_conversation(conversation_id)` }),
 	pgPolicy("conversation_bots_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("conversation_bots_role_check", sql`role = ANY (ARRAY['lead'::text, 'member'::text])`),
 ]);
 
@@ -3429,7 +3429,7 @@ export const pluginFiles = pgTable("plugin_files", {
 	pgPolicy("plugin_files_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(EXISTS ( SELECT 1
    FROM plugins p
   WHERE ((p.id = plugin_files.plugin_id) AND can_access_bot(p.bot_id))))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("plugin_files_path_check", sql`(char_length(path) >= 1) AND (char_length(path) <= 500)`),
 	check("plugin_files_content_check", sql`octet_length(content) <= 5000000`),
 ]);
@@ -3458,7 +3458,7 @@ export const computerDesktopLeases = pgTable("computer_desktop_leases", {
 		}).onDelete("cascade"),
 	primaryKey({ columns: [table.computerId, table.botId], name: "computer_desktop_leases_pkey"}),
 	pgPolicy("computer_desktop_leases_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 ]);
 
 export const pageVersions = pgTable("page_versions", {
@@ -3481,7 +3481,7 @@ export const pageVersions = pgTable("page_versions", {
 		}).onDelete("cascade"),
 	primaryKey({ columns: [table.pageId, table.version], name: "page_versions_pkey"}),
 	pgPolicy("page_versions_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_view_page(page_id)` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 ]);
 
 export const idempotencyKeys = pgTable("idempotency_keys", {
@@ -3502,7 +3502,7 @@ export const idempotencyKeys = pgTable("idempotency_keys", {
 	primaryKey({ columns: [table.userId, table.key], name: "idempotency_keys_pkey"}),
 	pgPolicy("idempotency_keys_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
 	pgPolicy("idempotency_keys_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("idempotency_keys_key_check", sql`(char_length(key) >= 1) AND (char_length(key) <= 255)`),
 ]);
 
@@ -3522,7 +3522,7 @@ export const runEvents = pgTable("run_events", {
 			name: "run_events_run_id_fkey"
 		}).onDelete("cascade"),
 	primaryKey({ columns: [table.runId, table.seq], name: "run_events_pkey"}),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	pgPolicy("run_events_select", { as: "permissive", for: "select", to: ["authenticated"] }),
 	check("run_events_seq_check", sql`seq > 0`),
 ]);
@@ -3549,7 +3549,7 @@ export const calendarFires = pgTable("calendar_fires", {
 			name: "calendar_fires_org_id_fkey"
 		}).onDelete("cascade"),
 	primaryKey({ columns: [table.routineId, table.eventId], name: "calendar_fires_pkey"}),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	check("calendar_fires_event_id_check", sql`(char_length(event_id) >= 1) AND (char_length(event_id) <= 500)`),
 ]);
 
@@ -3587,7 +3587,7 @@ export const teachSteps = pgTable("teach_steps", {
 	pgPolicy("teach_steps_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(EXISTS ( SELECT 1
    FROM teach_sessions s
   WHERE ((s.id = teach_steps.session_id) AND (s.user_id = ( SELECT auth.uid() AS uid)))))` }),
-	pgPolicy("kasama_worker_all", { as: "permissive", for: "all", to: ["kasama_worker"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("teach_steps_kind_check", sql`kind = ANY (ARRAY['click'::text, 'type'::text, 'key'::text, 'scroll'::text])`),
 	check("teach_steps_text_check", sql`char_length(text) <= 2000`),
 	check("teach_steps_key_check", sql`char_length(key) <= 40`),

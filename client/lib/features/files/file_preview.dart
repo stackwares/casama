@@ -21,8 +21,8 @@ import '../../ui/glow_button.dart';
 
 /// Turns a file reference a bot wrote into a path for the files API (relative to the computer's
 /// workspace, `~/` for the rest of home, or absolute). Returns null for web links and anything
-/// that isn't a file. Handles `sandbox:/home/kasama/workspace/x`, `file:///home/kasama/x`,
-/// `/home/kasama/workspace/x`, `~/x`, `workspace/x` and plain `x.md`.
+/// that isn't a file. Handles `sandbox:/home/casama/workspace/x`, `file:///home/casama/x`,
+/// `/home/casama/workspace/x`, `~/x`, `workspace/x` and plain `x.md`.
 String? computerPathFromLink(String link) {
   var s = Uri.decodeFull(link.trim());
   if (s.isEmpty || s.startsWith('#')) return null;
@@ -32,7 +32,7 @@ String? computerPathFromLink(String link) {
     if (lower.startsWith(prefix)) s = s.substring(prefix.length);
   }
   if (RegExp(r'^[a-z][a-z0-9+.-]*:', caseSensitive: false).hasMatch(s)) return null;
-  const home = '/home/kasama/';
+  const home = '/home/casama/';
   if (s.startsWith(home)) {
     s = s.substring(home.length);
   } else if (s.startsWith('~/')) {
@@ -179,7 +179,7 @@ class FilePreview extends ConsumerWidget {
     final name = fileNameOf(path);
     if (_desktop) {
       final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/kasama/$name');
+      final file = File('${dir.path}/casama/$name');
       await file.parent.create(recursive: true);
       await file.writeAsBytes(bytes);
       final ok = await launchUrl(Uri.file(file.path));

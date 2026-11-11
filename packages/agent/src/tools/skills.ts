@@ -3,8 +3,8 @@
  * method used in a conversation as a skill for this bot; `skills.update` changes one of its own
  * skills. Both are medium risk: the approval card shows the text or the diff.
  */
-import type { Database } from "@kasama/db";
-import { lineDiff, SKILL_NAME } from "@kasama/domain";
+import type { Database } from "@casama/db";
+import { lineDiff, SKILL_NAME } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { ToolError, type ToolRegistry } from "./registry.ts";

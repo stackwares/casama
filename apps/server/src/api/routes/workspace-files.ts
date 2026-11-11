@@ -4,10 +4,10 @@
  * the repo's push webhook. Workspace admins only, since the files cover every bot.
  */
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { applyWorkspaceFiles, exportWorkspaceFiles } from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { applyWorkspaceFiles, exportWorkspaceFiles } from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { unzipSync, zipSync } from "fflate";
 import { ApiError } from "../errors.ts";
@@ -110,7 +110,7 @@ export function registerWorkspaceFileRoutes(app: OpenAPIHono<AppEnv>, deps: AppD
       top &&
       keys.every((k) => k.startsWith(`${top}/`)) &&
       !["workspace"].includes(top) &&
-      keys.some((k) => k === `${top}/kasama.json`)
+      keys.some((k) => k === `${top}/casama.json`)
     ) {
       for (const k of keys) {
         files.set(k.slice(top.length + 1), files.get(k) as Uint8Array);

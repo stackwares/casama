@@ -1,20 +1,20 @@
 ---
 layout: home
-title: Kasama
+title: Casama
 titleTemplate: AI teammates with their own computers
 hero:
-  name: Kasama
+  name: Casama
   text: AI teammates with their own computers
   tagline: Bots that remember, work on real computers, ask before risky steps, and run on your own server with any model.
   image:
     src: /logo.png
-    alt: Kasama
+    alt: Casama
   actions:
     - theme: brand
       text: Quick start
       link: /quick-start
     - theme: alt
-      text: What is Kasama?
+      text: What is Casama?
       link: /introduction
     - theme: alt
       text: Self-host

@@ -1,24 +1,24 @@
 # Cloud Connect
 
-Cloud Connect lets a self-hosted Kasama server use Kasama Cloud's computers and model credits,
-billed to a Kasama Cloud workspace. Use it when you want to run your own server but don't want to
+Cloud Connect lets a self-hosted Casama server use Casama Cloud's computers and model credits,
+billed to a Casama Cloud workspace. Use it when you want to run your own server but don't want to
 host sandboxes or manage model provider accounts yourself.
 
 ## How it works
 
-- You create a Cloud Connect key in a Kasama Cloud workspace, named after your server.
-- Your server uses that key to create computers on Kasama Cloud and to call models through Kasama
+- You create a Cloud Connect key in a Casama Cloud workspace, named after your server.
+- Your server uses that key to create computers on Casama Cloud and to call models through Casama
   Cloud.
 - Computer time and model calls show on the cloud workspace's bill, labelled with your server's
   name, and are paid from its credits.
 
 Everything else (your bots, chats, memory and data) stays on your server.
 
-## 1. Create a key in Kasama Cloud
+## 1. Create a key in Casama Cloud
 
 You need to be an owner or admin of the cloud workspace.
 
-1. In the Kasama Cloud app, open **Settings → Billing**.
+1. In the Casama Cloud app, open **Settings → Billing**.
 2. Under **Cloud Connect**, tap **New Cloud Connect key**.
 3. Enter a **Server name**, such as `home-server`, and tap **Create**.
 4. Copy the key. It starts with `kcc_` and is shown only once.
@@ -31,38 +31,38 @@ A key from the app can use both computers and models. Through the API you can li
 Add both values to your server's `.env` and restart the API and worker:
 
 ```sh
-KASAMA_CLOUD_URL=https://<Kasama Cloud API address>
-KASAMA_CLOUD_KEY=kcc_...
+CASAMA_CLOUD_URL=https://<Casama Cloud API address>
+CASAMA_CLOUD_KEY=kcc_...
 ```
 
-This adds a computer provider named `kasama-cloud`.
+This adds a computer provider named `casama-cloud`.
 
 ## 3. Use cloud computers
 
-Create a computer with the provider `kasama-cloud` through the API:
+Create a computer with the provider `casama-cloud` through the API:
 
 ```http
 POST /v1/computers
 Content-Type: application/json
 
-{ "org_id": "<workspace id>", "name": "Cloud computer", "kind": "team", "provider": "kasama-cloud" }
+{ "org_id": "<workspace id>", "name": "Cloud computer", "kind": "team", "provider": "casama-cloud" }
 ```
 
-The computer runs on Kasama Cloud, and bots use it like any other computer. If the server has no
-`KASAMA_CLOUD_KEY`, the request fails with `cloud_connect_off`. See [API](/develop/api) and
+The computer runs on Casama Cloud, and bots use it like any other computer. If the server has no
+`CASAMA_CLOUD_KEY`, the request fails with `cloud_connect_off`. See [API](/develop/api) and
 [Computers](/guide/computers).
 
 ## 4. Use model credits
 
-Add an OpenRouter model key that points at Kasama Cloud, with the Cloud Connect key as the API key:
+Add an OpenRouter model key that points at Casama Cloud, with the Cloud Connect key as the API key:
 
 ```sh
-kasama credential add --provider openrouter --label "Kasama Cloud" \
-  --base-url https://<Kasama Cloud API address>/connect/v1/models \
+casama credential add --provider openrouter --label "Casama Cloud" \
+  --base-url https://<Casama Cloud API address>/connect/v1/models \
   --key kcc_...
 ```
 
-Then pick that key and a model in a bot's settings. Model calls go to Kasama Cloud's upstream
+Then pick that key and a model in a bot's settings. Model calls go to Casama Cloud's upstream
 provider and are billed from the provider's reported cost.
 
 ## Billing
@@ -70,7 +70,7 @@ provider and are billed from the provider's reported cost.
 | What | How it's billed |
 | --- | --- |
 | Cloud computer time | From create or wake until sleep or delete, per hour |
-| Model calls | The provider's reported cost, with any Kasama Cloud markup |
+| Model calls | The provider's reported cost, with any Casama Cloud markup |
 
 Usage appears on the cloud workspace's **Billing** screen under **This month**, with your server's
 name, and is deducted from its credits. When the cloud workspace's credits reach zero, Cloud
@@ -79,7 +79,7 @@ Connect requests are refused until credits are added. See
 
 ## Revoke a key
 
-1. In Kasama Cloud, open **Settings → Billing**.
+1. In Casama Cloud, open **Settings → Billing**.
 2. Under **Cloud Connect**, tap the delete icon next to the server.
 3. Confirm **Revoke**.
 
@@ -89,7 +89,7 @@ That server stops using cloud computers and credits right away.
 
 - Live view and terminals for cloud computers aren't available through Cloud Connect yet. Bots can
   still use the computer.
-- The app has no option to pick the `kasama-cloud` provider when creating a computer. Use the API.
+- The app has no option to pick the `casama-cloud` provider when creating a computer. Use the API.
 - The app's model key form shows **Base URL** only for an OpenAI-compatible server, so add the
   OpenRouter key with the CLI or API.
 - A cloud computer belongs to the cloud workspace that first created it. Other cloud workspaces

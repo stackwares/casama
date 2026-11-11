@@ -10,7 +10,7 @@ export const DEFAULT_MODELS: Readonly<Record<string, string>> = {
 };
 export const DEFAULT_REASONING_EFFORT: ReasoningEffort = "medium";
 
-/** The default model for a provider, if Kasama has one (others need the user to pick). */
+/** The default model for a provider, if Casama has one (others need the user to pick). */
 export function defaultModelFor(
   provider: string,
   overrides: Partial<Record<string, string | undefined>> = {},

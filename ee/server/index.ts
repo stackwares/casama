@@ -5,7 +5,7 @@
 
 import { createHmac } from "node:crypto";
 import { resolveTxt } from "node:dns/promises";
-import { type Database, type JwtClaims, withUserSession } from "@kasama/db";
+import { type Database, type JwtClaims, withUserSession } from "@casama/db";
 import { sql } from "drizzle-orm";
 import type { Context, Hono } from "hono";
 import { type EeFeature, type License, verifyLicense } from "./license.ts";
@@ -29,7 +29,7 @@ export interface EeDeps {
 
 const problem = (c: Context, status: number, code: string, detail: string) =>
   c.json(
-    { type: `https://kasama.dev/problems/${code}`, title: code, status, code, detail },
+    { type: `https://casama.ai/problems/${code}`, title: code, status, code, detail },
     status as 400,
   );
 
@@ -48,7 +48,7 @@ export function registerEnterpriseRoutes(app: Hono, deps: EeDeps) {
           c,
           402,
           "license_required",
-          `This is an enterprise feature (${feature}). Add a Kasama Enterprise license key.`,
+          `This is an enterprise feature (${feature}). Add a Casama Enterprise license key.`,
         ),
       };
     const [r] = await withUserSession(deps.db, claims, (tx) =>
@@ -197,15 +197,15 @@ export function registerEnterpriseRoutes(app: Hono, deps: EeDeps) {
       )
     )[0]?.value;
 
-  // SSO domains must be proven (audit 2026-11): a TXT record kasama-verification=<code> on each
+  // SSO domains must be proven (audit 2026-11): a TXT record casama-verification=<code> on each
   // domain, where the code is tied to this workspace. Otherwise any admin could claim gmail.com.
   const verificationCode = (orgId: string, domain: string) =>
-    createHmac("sha256", deps.verificationSecret ?? "kasama-sso")
+    createHmac("sha256", deps.verificationSecret ?? "casama-sso")
       .update(`sso:${orgId}:${domain}`)
       .digest("hex")
       .slice(0, 32);
   const domainVerified = async (orgId: string, domain: string) => {
-    const want = `kasama-verification=${verificationCode(orgId, domain)}`;
+    const want = `casama-verification=${verificationCode(orgId, domain)}`;
     const records = await (deps.resolveTxt ?? resolveTxt)(domain).catch(() => [] as string[][]);
     return records.some((r) => r.join("") === want);
   };
@@ -219,7 +219,7 @@ export function registerEnterpriseRoutes(app: Hono, deps: EeDeps) {
     return c.json({
       domain,
       record_type: "TXT",
-      record: `kasama-verification=${verificationCode(orgId, domain)}`,
+      record: `casama-verification=${verificationCode(orgId, domain)}`,
     });
   });
 
@@ -267,7 +267,7 @@ export function registerEnterpriseRoutes(app: Hono, deps: EeDeps) {
         c,
         400,
         "domain_unverified",
-        `Add a TXT record to prove you own ${unverified.join(", ")}: ${unverified.map((d) => `${d} TXT "kasama-verification=${verificationCode(orgId, d)}"`).join("; ")}`,
+        `Add a TXT record to prove you own ${unverified.join(", ")}: ${unverified.map((d) => `${d} TXT "casama-verification=${verificationCode(orgId, d)}"`).join("; ")}`,
       );
     try {
       const existing = await ssoProviderId(orgId);

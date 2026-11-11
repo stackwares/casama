@@ -12,7 +12,7 @@ import {
   resolveCardPlaceholders,
   StripeIssuingProvider,
   ToolRegistry,
-} from "@kasama/agent";
+} from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 

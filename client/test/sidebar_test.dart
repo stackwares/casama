@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/app.dart';
-import 'package:kasama_app/core/backend.dart';
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_app/features/chat/chat_screen.dart';
-import 'package:kasama_app/features/groups/group_chats.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_app/app.dart';
+import 'package:casama_app/core/backend.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/features/chat/chat_screen.dart';
+import 'package:casama_app/features/groups/group_chats.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 import 'app_test.dart' show setSize;
 import 'fake_backend.dart';
@@ -18,7 +18,7 @@ void main() {
       ..groups.add(
         Conversation(id: 'g1', botId: botId, title: 'Every Bot', lastMessageAt: null, createdAt: DateTime(2026), kind: ConversationKindEnum.group, botIds: [botId]),
       );
-    await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(backend)], child: const KasamaApp()));
+    await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(backend)], child: const CasamaApp()));
     await tester.pumpAndSettle();
     // One pending approval for Ada; its approval notification isn't counted a second time.
     expect(find.descendant(of: find.byKey(const Key('sidebar-bot-$botId')), matching: find.text('1')), findsOneWidget);

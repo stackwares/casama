@@ -1,3 +1,4 @@
+export * from "./about-you.ts";
 export * from "./action-rules.ts";
 export * from "./admin.ts";
 export * from "./agent-import.ts";

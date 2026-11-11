@@ -74,7 +74,7 @@ class BotUiHost {
 
   final _processor = MessageProcessor<ComponentImplementation>(
     catalogs: [
-      kasamaUiCatalog(
+      casamaUiCatalog(
         // Links in bot UI open outside the app, and only web addresses.
         openUrl: (uri) async {
           if (uri.scheme == 'http' || uri.scheme == 'https') await launchUrl(uri, mode: LaunchMode.externalApplication);

@@ -6,8 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:kasama_app/core/config.dart';
-import 'package:kasama_app/main.dart';
+import 'package:casama_app/core/config.dart';
+import 'package:casama_app/main.dart';
 
 Future<void> waitFor(WidgetTester tester, Finder finder, {Duration timeout = const Duration(seconds: 45)}) async {
   final end = DateTime.now().add(timeout);

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -13,16 +13,16 @@
 		2F6E926AB8CFE5909963ABF6 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B370E26B455198A65289EFCC /* Pods_RunnerTests.framework */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
-		3EE93AAE3D4C5C30DFA08B1F /* KasamaWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 372577EE13E4ED7A2E3B937D /* KasamaWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		4FACE636C169E033D2FA0F60 /* KasamaWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8C7AB9C129CBE2C18D243C8 /* KasamaWidgets.swift */; };
-		642D0BC0E5AB24182260B747 /* KasamaShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 76C7FC166B712008621DD4ED /* KasamaShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3EE93AAE3D4C5C30DFA08B1F /* CasamaWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 372577EE13E4ED7A2E3B937D /* CasamaWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		4B5A0F1C2D3E4F5061728397 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4B5A0F1C2D3E4F5061728396 /* PrivacyInfo.xcprivacy */; };
+		4FACE636C169E033D2FA0F60 /* CasamaWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8C7AB9C129CBE2C18D243C8 /* CasamaWidgets.swift */; };
+		642D0BC0E5AB24182260B747 /* CasamaShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 76C7FC166B712008621DD4ED /* CasamaShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		67549F5A9D64FF0C1D459F1F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 91D49E8E843199AFD43488EE /* SwiftUI.framework */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
 		976AF40FA38C3EDC11B9F80D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DD3D9A9447A0EB3E60E2BC1E /* Foundation.framework */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
-		4B5A0F1C2D3E4F5061728397 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4B5A0F1C2D3E4F5061728396 /* PrivacyInfo.xcprivacy */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		B7712D2B6B12934FEF3152D7 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D968176B06B4195FE685FA1 /* ShareViewController.swift */; };
@@ -37,7 +37,7 @@
 			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 943080D35502074956D9E38E;
-			remoteInfo = KasamaShare;
+			remoteInfo = CasamaShare;
 		};
 		331C8085294A63A400263BE5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -51,7 +51,7 @@
 			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = CC44CC7078FD6E44AD9AEA2A;
-			remoteInfo = KasamaWidgets;
+			remoteInfo = CasamaWidgets;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -62,8 +62,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				3EE93AAE3D4C5C30DFA08B1F /* KasamaWidgets.appex in Embed Foundation Extensions */,
-				642D0BC0E5AB24182260B747 /* KasamaShare.appex in Embed Foundation Extensions */,
+				3EE93AAE3D4C5C30DFA08B1F /* CasamaWidgets.appex in Embed Foundation Extensions */,
+				642D0BC0E5AB24182260B747 /* CasamaShare.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -81,21 +81,22 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0DFECE249481560D952E7018 /* KasamaShare.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = KasamaShare.entitlements; sourceTree = "<group>"; };
+		0DFECE249481560D952E7018 /* CasamaShare.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = CasamaShare.entitlements; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		18D8EADAF95E91BC6578B716 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		1DCA788D2EED9B38E4AE72B4 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		372577EE13E4ED7A2E3B937D /* KasamaWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; name = KasamaWidgets.appex; path = KasamaWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		372577EE13E4ED7A2E3B937D /* CasamaWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CasamaWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
 		3E9BBAF50CAEAFD15BC20E14 /* ActivityKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ActivityKit.framework; path = System/Library/Frameworks/ActivityKit.framework; sourceTree = SDKROOT; };
+		4B5A0F1C2D3E4F5061728396 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		6ABE106B4A7061C9ABA5F792 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
-		6ECCE6E669A4EFA857CB2FF7 /* KasamaWidgets.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = KasamaWidgets.entitlements; sourceTree = "<group>"; };
+		6ECCE6E669A4EFA857CB2FF7 /* CasamaWidgets.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = CasamaWidgets.entitlements; sourceTree = "<group>"; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		76C7FC166B712008621DD4ED /* KasamaShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; name = KasamaShare.appex; path = KasamaShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		76C7FC166B712008621DD4ED /* CasamaShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CasamaShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
 		795EBC5CAF99A95484C5D890 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
@@ -108,12 +109,11 @@
 		97C146EE1CF9000F007C117D /* Runner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Runner.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		97C146FB1CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		4B5A0F1C2D3E4F5061728396 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B28329C64B6F9CCC1440CE45 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B370E26B455198A65289EFCC /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		C8C7AB9C129CBE2C18D243C8 /* KasamaWidgets.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KasamaWidgets.swift; sourceTree = "<group>"; };
+		C8C7AB9C129CBE2C18D243C8 /* CasamaWidgets.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CasamaWidgets.swift; sourceTree = "<group>"; };
 		CCF78A1DE05A9813A6255500 /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		DA739DDCE56B8D7CD594E1B3 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD3D9A9447A0EB3E60E2BC1E /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -171,15 +171,14 @@
 			path = RunnerTests;
 			sourceTree = "<group>";
 		};
-		331DC4F77160DA67BB173D78 /* KasamaWidgets */ = {
+		331DC4F77160DA67BB173D78 /* CasamaWidgets */ = {
 			isa = PBXGroup;
 			children = (
-				C8C7AB9C129CBE2C18D243C8 /* KasamaWidgets.swift */,
+				C8C7AB9C129CBE2C18D243C8 /* CasamaWidgets.swift */,
 				E78A7E61B67619C3B5B9EE10 /* Info.plist */,
-				6ECCE6E669A4EFA857CB2FF7 /* KasamaWidgets.entitlements */,
+				6ECCE6E669A4EFA857CB2FF7 /* CasamaWidgets.entitlements */,
 			);
-			name = KasamaWidgets;
-			path = KasamaWidgets;
+			path = CasamaWidgets;
 			sourceTree = "<group>";
 		};
 		4174F3E3AFAD86110A47821E /* Pods */ = {
@@ -192,7 +191,6 @@
 				795EBC5CAF99A95484C5D890 /* Pods-RunnerTests.release.xcconfig */,
 				8DE35B78AB9AD8A0AEB27C06 /* Pods-RunnerTests.profile.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -230,8 +228,8 @@
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
 				685500DAE0C5AC429AE4ADED /* Frameworks */,
-				331DC4F77160DA67BB173D78 /* KasamaWidgets */,
-				EC98C16743EDA5D468CE5A3A /* KasamaShare */,
+				331DC4F77160DA67BB173D78 /* CasamaWidgets */,
+				EC98C16743EDA5D468CE5A3A /* CasamaShare */,
 				4174F3E3AFAD86110A47821E /* Pods */,
 			);
 			sourceTree = "<group>";
@@ -241,8 +239,8 @@
 			children = (
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
-				372577EE13E4ED7A2E3B937D /* KasamaWidgets.appex */,
-				76C7FC166B712008621DD4ED /* KasamaShare.appex */,
+				372577EE13E4ED7A2E3B937D /* CasamaWidgets.appex */,
+				76C7FC166B712008621DD4ED /* CasamaShare.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -264,15 +262,14 @@
 			path = Runner;
 			sourceTree = "<group>";
 		};
-		EC98C16743EDA5D468CE5A3A /* KasamaShare */ = {
+		EC98C16743EDA5D468CE5A3A /* CasamaShare */ = {
 			isa = PBXGroup;
 			children = (
 				7D968176B06B4195FE685FA1 /* ShareViewController.swift */,
 				B28329C64B6F9CCC1440CE45 /* Info.plist */,
-				0DFECE249481560D952E7018 /* KasamaShare.entitlements */,
+				0DFECE249481560D952E7018 /* CasamaShare.entitlements */,
 			);
-			name = KasamaShare;
-			path = KasamaShare;
+			path = CasamaShare;
 			sourceTree = "<group>";
 		};
 		FAFC1F460D084820A41A60B0 /* iOS */ = {
@@ -305,9 +302,9 @@
 			productReference = 331C8081294A63A400263BE5 /* RunnerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		943080D35502074956D9E38E /* KasamaShare */ = {
+		943080D35502074956D9E38E /* CasamaShare */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 628152D4A5486C78B4F0214A /* Build configuration list for PBXNativeTarget "KasamaShare" */;
+			buildConfigurationList = 628152D4A5486C78B4F0214A /* Build configuration list for PBXNativeTarget "CasamaShare" */;
 			buildPhases = (
 				FE20391A2C57D9E8CC01761E /* Sources */,
 				5E0156A67507AEDDED065586 /* Frameworks */,
@@ -317,9 +314,9 @@
 			);
 			dependencies = (
 			);
-			name = KasamaShare;
-			productName = KasamaShare;
-			productReference = 76C7FC166B712008621DD4ED /* KasamaShare.appex */;
+			name = CasamaShare;
+			productName = CasamaShare;
+			productReference = 76C7FC166B712008621DD4ED /* CasamaShare.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 		97C146ED1CF9000F007C117D /* Runner */ = {
@@ -350,9 +347,9 @@
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
 		};
-		CC44CC7078FD6E44AD9AEA2A /* KasamaWidgets */ = {
+		CC44CC7078FD6E44AD9AEA2A /* CasamaWidgets */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A4CE32F9F8CDD8A26C4B2B4F /* Build configuration list for PBXNativeTarget "KasamaWidgets" */;
+			buildConfigurationList = A4CE32F9F8CDD8A26C4B2B4F /* Build configuration list for PBXNativeTarget "CasamaWidgets" */;
 			buildPhases = (
 				45F6FDDCF35543BB2D933B79 /* Sources */,
 				2C4C442CBD71964FE4993566 /* Frameworks */,
@@ -362,9 +359,9 @@
 			);
 			dependencies = (
 			);
-			name = KasamaWidgets;
-			productName = KasamaWidgets;
-			productReference = 372577EE13E4ED7A2E3B937D /* KasamaWidgets.appex */;
+			name = CasamaWidgets;
+			productName = CasamaWidgets;
+			productReference = 372577EE13E4ED7A2E3B937D /* CasamaWidgets.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -405,8 +402,8 @@
 			targets = (
 				97C146ED1CF9000F007C117D /* Runner */,
 				331C8080294A63A400263BE5 /* RunnerTests */,
-				CC44CC7078FD6E44AD9AEA2A /* KasamaWidgets */,
-				943080D35502074956D9E38E /* KasamaShare */,
+				CC44CC7078FD6E44AD9AEA2A /* CasamaWidgets */,
+				943080D35502074956D9E38E /* CasamaShare */,
 			);
 		};
 /* End PBXProject section */
@@ -555,7 +552,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4FACE636C169E033D2FA0F60 /* KasamaWidgets.swift in Sources */,
+				4FACE636C169E033D2FA0F60 /* CasamaWidgets.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -587,14 +584,14 @@
 		};
 		A1A3AAE59BC2A06E71DD0C1E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = KasamaShare;
-			target = 943080D35502074956D9E38E /* KasamaShare */;
+			name = CasamaShare;
+			target = 943080D35502074956D9E38E /* CasamaShare */;
 			targetProxy = 1C0CC733BF8C7D1399112BCF /* PBXContainerItemProxy */;
 		};
 		BB3476FB9F6527FF1AA3A9B4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = KasamaWidgets;
-			target = CC44CC7078FD6E44AD9AEA2A /* KasamaWidgets */;
+			name = CasamaWidgets;
+			target = CC44CC7078FD6E44AD9AEA2A /* CasamaWidgets */;
 			targetProxy = F251D70F4DC087BF8FCCEC92 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -683,11 +680,12 @@
 				DEVELOPMENT_TEAM = V8V5US964Z;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kasama.app;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.casama.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -704,7 +702,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kasama.app.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.casama.app.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -722,7 +720,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kasama.app.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.casama.app.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -738,7 +736,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.kasama.app.RunnerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.casama.app.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
@@ -750,11 +748,11 @@
 			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_ENTITLEMENTS = KasamaWidgets/KasamaWidgets.entitlements;
-				DEVELOPMENT_TEAM = V8V5US964Z;
+				CODE_SIGN_ENTITLEMENTS = CasamaWidgets/CasamaWidgets.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = V8V5US964Z;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = KasamaWidgets/Info.plist;
+				INFOPLIST_FILE = CasamaWidgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -762,7 +760,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = com.kasama.app.KasamaWidgets;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.casama.app.CasamaWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -777,11 +775,11 @@
 			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_ENTITLEMENTS = KasamaShare/KasamaShare.entitlements;
-				DEVELOPMENT_TEAM = V8V5US964Z;
+				CODE_SIGN_ENTITLEMENTS = CasamaShare/CasamaShare.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = V8V5US964Z;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = KasamaShare/Info.plist;
+				INFOPLIST_FILE = CasamaShare/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -789,7 +787,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = com.kasama.app.KasamaShare;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.casama.app.CasamaShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -922,11 +920,12 @@
 				DEVELOPMENT_TEAM = V8V5US964Z;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kasama.app;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.casama.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -946,11 +945,12 @@
 				DEVELOPMENT_TEAM = V8V5US964Z;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.kasama.app;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.casama.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -963,11 +963,11 @@
 			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_ENTITLEMENTS = KasamaWidgets/KasamaWidgets.entitlements;
-				DEVELOPMENT_TEAM = V8V5US964Z;
+				CODE_SIGN_ENTITLEMENTS = CasamaWidgets/CasamaWidgets.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = V8V5US964Z;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = KasamaWidgets/Info.plist;
+				INFOPLIST_FILE = CasamaWidgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -975,7 +975,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = com.kasama.app.KasamaWidgets;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.casama.app.CasamaWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -990,11 +990,11 @@
 			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_ENTITLEMENTS = KasamaShare/KasamaShare.entitlements;
-				DEVELOPMENT_TEAM = V8V5US964Z;
+				CODE_SIGN_ENTITLEMENTS = CasamaShare/CasamaShare.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = V8V5US964Z;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = KasamaShare/Info.plist;
+				INFOPLIST_FILE = CasamaShare/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1002,7 +1002,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = com.kasama.app.KasamaShare;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.casama.app.CasamaShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -1017,11 +1017,11 @@
 			baseConfigurationReference = 9740EEB21CF90195004384FC /* Debug.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_ENTITLEMENTS = KasamaWidgets/KasamaWidgets.entitlements;
-				DEVELOPMENT_TEAM = V8V5US964Z;
+				CODE_SIGN_ENTITLEMENTS = CasamaWidgets/CasamaWidgets.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = V8V5US964Z;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = KasamaWidgets/Info.plist;
+				INFOPLIST_FILE = CasamaWidgets/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1029,7 +1029,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = com.kasama.app.KasamaWidgets;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.casama.app.CasamaWidgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -1043,11 +1043,11 @@
 			baseConfigurationReference = 7AFA3C8E1D35360C0083082E /* Release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
-				CODE_SIGN_ENTITLEMENTS = KasamaShare/KasamaShare.entitlements;
-				DEVELOPMENT_TEAM = V8V5US964Z;
+				CODE_SIGN_ENTITLEMENTS = CasamaShare/CasamaShare.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = V8V5US964Z;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = KasamaShare/Info.plist;
+				INFOPLIST_FILE = CasamaShare/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1055,7 +1055,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
-				PRODUCT_BUNDLE_IDENTIFIER = com.kasama.app.KasamaShare;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.casama.app.CasamaShare;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -1078,7 +1078,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		628152D4A5486C78B4F0214A /* Build configuration list for PBXNativeTarget "KasamaShare" */ = {
+		628152D4A5486C78B4F0214A /* Build configuration list for PBXNativeTarget "CasamaShare" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				D0CBB8FB945894BACFF7507F /* Release */,
@@ -1108,7 +1108,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A4CE32F9F8CDD8A26C4B2B4F /* Build configuration list for PBXNativeTarget "KasamaWidgets" */ = {
+		A4CE32F9F8CDD8A26C4B2B4F /* Build configuration list for PBXNativeTarget "CasamaWidgets" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				3FE0993A03A1DD7602B116FE /* Release */,

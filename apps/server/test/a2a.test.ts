@@ -1,6 +1,6 @@
 /** Agent-to-agent (D-140): a published bot serves A2A v1.0; another bot calls it as an a2a integration. */
 import { fileURLToPath } from "node:url";
-import { A2aClient } from "@kasama/agent";
+import { A2aClient } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 

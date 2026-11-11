@@ -6,8 +6,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/features/companion/companion.dart';
-import 'package:kasama_app/features/companion/companion_io.dart';
+import 'package:casama_app/features/companion/companion.dart';
+import 'package:casama_app/features/companion/companion_io.dart';
 
 /// The real companion against a stand-in API: tunnel frames in, computerd answers out.
 void main() {

@@ -83,11 +83,11 @@ On desktop and Android, say a phrase to start a live call with a chosen bot.
 
 1. Open **Settings** → **Wake word**.
 2. Turn on **Listen for the wake word**.
-3. Set the **Phrase**: two or three words, such as "hey kasama".
+3. Set the **Phrase**: two or three words, such as "hey casama".
 4. Choose **Call this bot**.
 
 The first time, the app downloads an open-source on-device model, about 18 MB. Listening happens
-only on your device while Kasama is open. Nothing is sent anywhere until the call starts.
+only on your device while Casama is open. Nothing is sent anywhere until the call starts.
 
 ## When a bot calls you
 
@@ -117,7 +117,7 @@ If you self-host, phones need push credentials on the server:
 | iOS      | `APNS_KEY_P8` (the `.p8` key, inline or a file path), `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_VOIP_TOPIC` |
 | Android  | `FCM_SERVICE_ACCOUNT` (a Firebase service account, JSON text or a file path)                     |
 
-`APNS_VOIP_TOPIC` defaults to `com.kasama.app.voip`. Without these, desktop and web still ring
+`APNS_VOIP_TOPIC` defaults to `ai.casama.app.voip`. Without these, desktop and web still ring
 through the banner while the app is open. See [Configuration](/self-hosting/configuration).
 
 ## Let a bot call a business for you
@@ -132,7 +132,7 @@ Admins connect Twilio once:
 1. Open **Settings** → **Workspace settings** → **Phone calls**.
 2. Enter the **Account SID**, **Auth token** and the number **Calls come from**.
 3. Optionally change **Calls per day** (default 10) and turn on **Allow calling personal numbers**.
-4. Tap **Save**. Kasama checks the account before saving.
+4. Tap **Save**. Casama checks the account before saving.
 
 ### What happens on a call
 
@@ -154,7 +154,7 @@ While the call is live you can:
 
 - Numbers must be in international (E.164) format.
 - Emergency and short numbers are never called.
-- Numbers on the server's deny list are refused. Kasama Cloud keeps one.
+- Numbers on the server's deny list are refused. Casama Cloud keeps one.
 - Each workspace has a daily cap (default 10).
 - Business numbers only, by default. A number Twilio's lookup reports as personal is refused unless
   an admin turned on **Allow calling personal numbers**. Lookup mostly covers US numbers, so numbers
@@ -173,7 +173,7 @@ Each call's minutes, rounded up, are recorded in [Usage](/guide/usage). Twilio b
 - The wake word isn't available on iOS or on the web, and on Android it listens only while the app
   is open.
 - When a bot calls a business, you can follow the live transcript but can't listen to the audio yet.
-- Calls for you work only with your own Twilio account. Kasama-provided phone numbers aren't
+- Calls for you work only with your own Twilio account. Casama-provided phone numbers aren't
   offered.
 - The avatar is a 2D animation of the bot's picture. A lip-synced 3D avatar isn't built.
 - Provider connections follow each provider's public docs and have been tested against stand-ins,

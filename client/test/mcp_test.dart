@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/features/mcp/mcp_screens.dart';
-import 'package:kasama_app/features/workspaces/spaces.dart';
-import 'package:kasama_sdk/kasama_sdk.dart' show McpKey;
+import 'package:casama_app/features/mcp/mcp_screens.dart';
+import 'package:casama_app/features/workspaces/spaces.dart';
+import 'package:casama_sdk/casama_sdk.dart' show McpKey;
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
@@ -14,7 +14,7 @@ void main() {
     final backend = FakeBackend();
     await tester.pumpWidget(harness(backend, const McpConsentScreen(requestId: 'r1')));
     await tester.pumpAndSettle();
-    expect(find.text('Phone AI wants to use Kasama'), findsOneWidget);
+    expect(find.text('Phone AI wants to use Casama'), findsOneWidget);
     await tester.tap(find.byKey(const Key('mcpAllow')));
     await tester.pumpAndSettle();
     expect(backend.mcpActions, ['allow:$orgId']);

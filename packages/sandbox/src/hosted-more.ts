@@ -1,5 +1,5 @@
 /**
- * More hosted sandbox providers (D-139). Each is a `HostedControlPlane`: it starts Kasama's own
+ * More hosted sandbox providers (D-139). Each is a `HostedControlPlane`: it starts Casama's own
  * computer image (computerd inside) and tells `HostedProvider` how to reach computerd's port, so
  * files, exec, checkpoints, sleep and live view are the same code as on Docker, E2B and Daytona.
  * Request shapes come from each provider's public API docs; they are tested against local
@@ -76,7 +76,7 @@ export function kubernetesControlPlane(o: KubernetesOptions): HostedControlPlane
   const ips = new Map<string, string>();
   return {
     async create(spec, env) {
-      const name = `kasama-${shortRef(spec.ref)}-${Date.now().toString(36)}`;
+      const name = `casama-${shortRef(spec.ref)}-${Date.now().toString(36)}`;
       const cpus = spec.size?.cpus;
       const mem = spec.size?.memoryMb;
       await call(
@@ -88,7 +88,7 @@ export function kubernetesControlPlane(o: KubernetesOptions): HostedControlPlane
           body: JSON.stringify({
             apiVersion: "v1",
             kind: "Pod",
-            metadata: { name, labels: { app: "kasama-computer", kasama_ref: spec.ref } },
+            metadata: { name, labels: { app: "casama-computer", casama_ref: spec.ref } },
             spec: {
               restartPolicy: "Never",
               ...(o.runtimeClassName ? { runtimeClassName: o.runtimeClassName } : {}),
@@ -131,12 +131,12 @@ export function kubernetesControlPlane(o: KubernetesOptions): HostedControlPlane
     },
     async find(ref) {
       const list = await call<{ items: Pod[] }>(
-        `${pods}?labelSelector=${encodeURIComponent(`kasama_ref=${ref}`)}`,
+        `${pods}?labelSelector=${encodeURIComponent(`casama_ref=${ref}`)}`,
         { headers, fetch: f },
         "kubernetes",
       );
       const hit = list.items.find(
-        (p) => !p.metadata.deletionTimestamp && p.metadata.labels?.kasama_ref === ref,
+        (p) => !p.metadata.deletionTimestamp && p.metadata.labels?.casama_ref === ref,
       );
       if (hit?.status?.podIP) ips.set(hit.metadata.name, hit.status.podIP);
       return hit ? { id: hit.metadata.name, running: hit.status?.phase === "Running" } : null;
@@ -211,8 +211,8 @@ export function incusControlPlane(o: IncusOptions): HostedControlPlane {
   };
   return {
     async create(spec, env) {
-      const name = `kasama-${shortRef(spec.ref)}-${Date.now().toString(36)}`;
-      const config: Record<string, string> = { "user.kasama_ref": spec.ref };
+      const name = `casama-${shortRef(spec.ref)}-${Date.now().toString(36)}`;
+      const config: Record<string, string> = { "user.casama_ref": spec.ref };
       for (const [k, v] of Object.entries(env)) config[`environment.${k}`] = v;
       if (spec.size?.cpus) config["limits.cpu"] = String(spec.size.cpus);
       if (spec.size?.memoryMb) config["limits.memory"] = `${spec.size.memoryMb}MiB`;
@@ -239,9 +239,9 @@ export function incusControlPlane(o: IncusOptions): HostedControlPlane {
     },
     async find(ref) {
       const list = await req<{ metadata: IncusInstance[] }>(
-        `/1.0/instances?${qs(`recursion=1&filter=${encodeURIComponent(`config.user.kasama_ref eq ${ref}`)}`)}`,
+        `/1.0/instances?${qs(`recursion=1&filter=${encodeURIComponent(`config.user.casama_ref eq ${ref}`)}`)}`,
       );
-      const hit = (list.metadata ?? []).find((i) => i.config?.["user.kasama_ref"] === ref);
+      const hit = (list.metadata ?? []).find((i) => i.config?.["user.casama_ref"] === ref);
       return hit ? { id: hit.name, running: hit.status === "Running" } : null;
     },
     async kill(id) {
@@ -309,16 +309,16 @@ export function boatControlPlane(o: BoatOptions): HostedControlPlane {
       const setupScript = [
         "set -e",
         `docker pull ${sh(image)}`,
-        `docker run -d --name kasama-computer --restart unless-stopped -p 7070:7070 -p 8080:8080 ${envFlags} ${sh(image)}`,
+        `docker run -d --name casama-computer --restart unless-stopped -p 7070:7070 -p 8080:8080 ${envFlags} ${sh(image)}`,
       ].join("\n");
       const r = await call<{ sandbox: BoatSandbox }>(
         `${api}/sandboxes`,
         {
           method: "POST",
-          headers: { ...headers, "idempotency-key": `kasama-${spec.ref}-${Date.now()}` },
+          headers: { ...headers, "idempotency-key": `casama-${spec.ref}-${Date.now()}` },
           body: JSON.stringify({
-            name: `kasama-${shortRef(spec.ref)}`,
-            labels: { kasama_ref: spec.ref, ...spec.labels },
+            name: `casama-${shortRef(spec.ref)}`,
+            labels: { casama_ref: spec.ref, ...spec.labels },
             env,
             type: o.type ?? "default",
             ttlSeconds: o.ttlSeconds === undefined ? 3600 : o.ttlSeconds,
@@ -332,12 +332,12 @@ export function boatControlPlane(o: BoatOptions): HostedControlPlane {
     },
     async find(ref) {
       const r = await call<{ sandboxes?: BoatSandbox[]; data?: BoatSandbox[] }>(
-        `${api}/sandboxes?label=${encodeURIComponent(`kasama_ref=${ref}`)}`,
+        `${api}/sandboxes?label=${encodeURIComponent(`casama_ref=${ref}`)}`,
         { headers },
         "boat",
       );
       const hit = (r.sandboxes ?? r.data ?? []).find(
-        (s) => s.labels?.kasama_ref === ref && s.state !== "deleted",
+        (s) => s.labels?.casama_ref === ref && s.state !== "deleted",
       );
       return hit ? { id: hit.id, running: (hit.state ?? "running") === "running" } : null;
     },
@@ -367,7 +367,7 @@ export function boatControlPlane(o: BoatOptions): HostedControlPlane {
 
 // ---------------------------------------------------------------------------
 // Railway: a service per computer in one project, deployed from the computer image, with a
-// Railway domain for each port Kasama needs. GraphQL (backboard.railway.com/graphql/v2).
+// Railway domain for each port Casama needs. GraphQL (backboard.railway.com/graphql/v2).
 
 export interface RailwayOptions {
   /** An account or workspace token (Bearer), or a project token. */
@@ -403,7 +403,7 @@ export function railwayControlPlane(o: RailwayOptions): HostedControlPlane {
       );
     return r.data as T;
   };
-  const nameOf = (ref: string) => `kasama-${shortRef(ref)}`;
+  const nameOf = (ref: string) => `casama-${shortRef(ref)}`;
   return {
     async create(spec, env) {
       const r = await gql<{ serviceCreate: { id: string } }>(

@@ -3,7 +3,7 @@
  * loopback sign-in through the API, tokens kept in Vault, runs on the plan at cost 0, owner-only
  * use, plan limits, refresh rotation under concurrency, reconnect and revocation.
  */
-import { CredentialResolver } from "@kasama/agent";
+import { CredentialResolver } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type FakeOpenAI, startFakeOpenAI } from "./fake-openai.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
@@ -97,7 +97,7 @@ describe("sign-in", () => {
     });
     const q = fake.state.authorizeRequests[0];
     expect(q?.get("client_id")).toBe("dynamic_agent_client");
-    expect(q?.get("agent_name_hint")).toBe("Kasama");
+    expect(q?.get("agent_name_hint")).toBe("Casama");
     expect(q?.get("code_challenge_method")).toBe("S256");
     expect(q?.get("scope")).toContain("chatgpt.tokens.use.direct");
     expect(q?.get("resource")).toBe("https://api.openai.com/v1");

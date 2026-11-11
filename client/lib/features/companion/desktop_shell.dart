@@ -34,9 +34,9 @@ class DesktopShell {
       final tray = _tray;
       if (tray != null) {
         tray.icon = ImageAsset.fromAsset('assets/tray_icon.png');
-        tray.setTooltip('Kasama');
+        tray.setTooltip('Casama');
         final menu = Menu.create()!;
-        _statusItem = MenuItem.createWithLabelAndType('Kasama: no bot is using this computer', MenuItemType.normal);
+        _statusItem = MenuItem.createWithLabelAndType('Casama: no bot is using this computer', MenuItemType.normal);
         _statusItem?.isEnabled = false;
         if (_statusItem != null) menu.addItem(_statusItem!);
         menu.addSeparator();
@@ -48,7 +48,7 @@ class DesktopShell {
           menu.addItem(m);
         }
 
-        item('Open Kasama', _showWindow);
+        item('Open Casama', _showWindow);
         item('Quick ask…', openQuickAsk);
         tray.setContextMenu(menu);
         tray.setContextMenuTrigger(ContextMenuTrigger.clicked);
@@ -68,9 +68,9 @@ class DesktopShell {
 
   void _onActivity() {
     final a = ref.read(companionProvider).activity.value;
-    final label = a == null ? 'Kasama: no bot is using this computer' : '${a.bot}: ${a.summary.isEmpty ? a.tool : a.summary}';
+    final label = a == null ? 'Casama: no bot is using this computer' : '${a.bot}: ${a.summary.isEmpty ? a.tool : a.summary}';
     _statusItem?.label = label;
-    _tray?.setTooltip(a == null ? 'Kasama' : label);
+    _tray?.setTooltip(a == null ? 'Casama' : label);
     _tray?.setTitle(a == null ? null : '● ${a.bot}');
   }
 
@@ -81,7 +81,7 @@ class DesktopShell {
   }
 
   void openQuickAsk() {
-    // Read what's in front (selection, window, tab) before Kasama's window takes focus (D-152).
+    // Read what's in front (selection, window, tab) before Casama's window takes focus (D-152).
     unawaited(() async {
       final c = await ref.read(desktopContextReaderProvider).capture().timeout(const Duration(milliseconds: 2500), onTimeout: () => const DesktopContext()).catchError((_) => const DesktopContext());
       ref.read(pendingDesktopContextProvider.notifier).set(c.isEmpty ? null : c);

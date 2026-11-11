@@ -81,7 +81,7 @@ interface PlanError {
   param?: string;
 }
 
-/** Maps OpenAI's plan-usage errors to Kasama's (SPEC: Limits and errors). */
+/** Maps OpenAI's plan-usage errors to Casama's (SPEC: Limits and errors). */
 export function planError(
   status: number | undefined,
   err: PlanError,

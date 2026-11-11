@@ -1,7 +1,8 @@
 /** Bot sharing (D-131): a bot's visibility and access list (chat, edit, admin) by person or role. */
+
+import { routes } from "@casama/contracts";
+import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -99,8 +100,18 @@ export function registerBotSharingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
       tx.execute<{ ok: boolean }>(sql`select public.is_member(${id}::uuid) as ok`),
     );
     if (!m?.ok) throw new ApiError(404, "org_not_found", "Workspace not found");
-    const rows = await db.execute<{ user_id: string; email: string | null; role: "member" }>(sql`
-      select m.user_id, u.email, m.role from public.memberships m left join auth.users u on u.id = m.user_id
+    const rows = await db.execute<{
+      user_id: string;
+      email: string | null;
+      role: "member";
+      name: string | null;
+      pronouns: string | null;
+    }>(sql`
+      select m.user_id, u.email, m.role,
+             coalesce(nullif(btrim(p.preferred_name), ''), nullif(btrim(p.display_name), '')) as name,
+             nullif(btrim(p.pronouns), '') as pronouns
+      from public.memberships m left join auth.users u on u.id = m.user_id
+      left join public.profiles p on p.user_id = m.user_id
       where m.org_id = ${id}::uuid order by m.role, u.email`);
     return c.json({ items: [...rows] }, 200);
   });

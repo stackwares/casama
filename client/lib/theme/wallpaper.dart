@@ -127,8 +127,8 @@ enum WallpaperPattern {
 /// A soft four-color gradient behind the pattern. `theme` follows the chosen color scheme.
 enum WallpaperPalette {
   theme('Theme', []),
-  kasama(
-    'Kasama',
+  casama(
+    'Casama',
     [Color(0xFFEEE2FB), Color(0xFFFBE3EE), Color(0xFFDDE9FF), Color(0xFFDDF7F5)],
     dark: [Color(0xFF25102F), Color(0xFF34123A), Color(0xFF151F3F), Color(0xFF0F292E)],
   ),
@@ -663,11 +663,14 @@ class _RenderWallpaper extends RenderBox {
     }
     canvas.drawRect(base, Paint()..color = c[0]);
     final r = world.longestSide * 0.85;
-    // Three soft blobs on the base, like Telegram's gradient wallpapers.
+    // Three soft blobs on the base, like Telegram's gradient wallpapers. They are placed by the
+    // window but drawn over everything painted: a page cached mid-transition sits partly outside the
+    // window, and clipping the blobs to the window left that part bare base color, a dark strip that
+    // slid in with the page.
     for (final (color, at) in [(c[1], const Offset(0.85, 0.12)), (c[2], const Offset(0.15, 0.55)), (c[3], const Offset(0.7, 0.92))]) {
       final center = Offset(world.left + world.width * at.dx, world.top + world.height * at.dy);
       canvas.drawRect(
-        world,
+        base,
         Paint()..shader = RadialGradient(colors: [color, color.withValues(alpha: 0)]).createShader(Rect.fromCircle(center: center, radius: r)),
       );
     }

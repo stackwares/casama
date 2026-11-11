@@ -11,9 +11,9 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
+import { routes } from "@casama/contracts";
+import { type Database, type JwtClaims, schema, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { routes } from "@kasama/contracts";
-import { type Database, type JwtClaims, schema, withUserSession } from "@kasama/db";
 import { eq, sql } from "drizzle-orm";
 import type { Hono } from "hono";
 import { stream } from "hono/streaming";
@@ -36,7 +36,7 @@ export const hashDeviceToken = (t: string) => createHash("sha256").update(t).dig
 export function internalToken(env: { INTERNAL_TOKEN?: string; DATABASE_URL: string }) {
   return (
     env.INTERNAL_TOKEN ??
-    createHmac("sha256", env.DATABASE_URL).update("kasama-internal").digest("hex")
+    createHmac("sha256", env.DATABASE_URL).update("casama-internal").digest("hex")
   );
 }
 
@@ -362,7 +362,7 @@ export function registerInternalRoutes(app: Hono<AppEnv>, deps: AppDeps) {
     return a.length === b.length && timingSafeEqual(a, b);
   };
   app.use("/internal/*", async (c, next) => {
-    if (!ok(c.req.header("x-kasama-internal"))) return c.json({ code: "unauthorized" }, 401);
+    if (!ok(c.req.header("x-casama-internal"))) return c.json({ code: "unauthorized" }, 401);
     await next();
   });
   app.get("/internal/local/:computer/status", async (c) => {
@@ -385,7 +385,7 @@ export function registerInternalRoutes(app: Hono<AppEnv>, deps: AppDeps) {
       const v = c.req.header(h);
       if (v) headers[h] = v;
     }
-    const activityHeader = c.req.header("x-kasama-activity");
+    const activityHeader = c.req.header("x-casama-activity");
     let activity: unknown;
     try {
       activity = activityHeader

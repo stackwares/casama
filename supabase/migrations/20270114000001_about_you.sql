@@ -91,4 +91,4 @@ as $$
   );
 $$;
 revoke execute on function public.profile_shared_in(uuid, uuid) from public, anon;
-grant execute on function public.profile_shared_in(uuid, uuid) to authenticated, kasama_worker;
+grant execute on function public.profile_shared_in(uuid, uuid) to authenticated, casama_worker;

@@ -2,7 +2,7 @@
 
 Every routine and skill in a workspace can live as a Markdown file. Export them to a folder, edit
 them in any editor, review changes in pull requests, and import them back. Or connect a GitHub
-repository and let Kasama keep both sides in sync.
+repository and let Casama keep both sides in sync.
 
 Exporting, importing and git sync are for workspace owners and admins, because the files cover
 every bot in the workspace.
@@ -10,8 +10,8 @@ every bot in the workspace.
 ## The folder layout
 
 ```text
-kasama-files/
-├── kasama.json                     which folder is which bot
+casama-files/
+├── casama.json                     which folder is which bot
 ├── invoicer/                       one folder per bot
 │   ├── routines/
 │   │   └── weekly-chase.md         one file per routine
@@ -29,13 +29,13 @@ kasama-files/
 Bot folders are named after the bot (lowercase, with dashes). `workspace/` is reserved for skills
 the whole workspace shares.
 
-### kasama.json
+### casama.json
 
 The index that ties folders to bots:
 
 ```json
 {
-  "format": "kasama.files",
+  "format": "casama.files",
   "version": 1,
   "bots": {
     "invoicer": { "id": "5d0c1e6a-8b7f-4e8a-a1d2-3c4b5a6f7e80", "name": "Invoicer" }
@@ -43,9 +43,9 @@ The index that ties folders to bots:
 }
 ```
 
-On import, a folder matches a bot by the `id` in `kasama.json`. Without a match there (or without
-`kasama.json` at all), Kasama matches the folder name against the bot names. Renaming a bot in the
-app doesn't break the link, as long as `kasama.json` keeps its id.
+On import, a folder matches a bot by the `id` in `casama.json`. Without a match there (or without
+`casama.json` at all), Casama matches the folder name against the bot names. Renaming a bot in the
+app doesn't break the link, as long as `casama.json` keeps its id.
 
 ### Routine files
 
@@ -68,7 +68,7 @@ contacted.
 
 | Field | Required | Meaning |
 | --- | --- | --- |
-| `id` | no | The routine's id. Kasama writes it on export; leave it out for a new routine. |
+| `id` | no | The routine's id. Casama writes it on export; leave it out for a new routine. |
 | `name` | yes | Up to 120 characters |
 | `schedule` | for `schedule` triggers | A 5-field cron expression; `null` for other triggers |
 | `timezone` | no | An IANA time zone, such as `America/Chicago`. Defaults to `UTC`. |
@@ -89,7 +89,7 @@ other fields like any routine.
 
 `<bot>/skills/<name>/SKILL.md` for one bot's skill, or `workspace/skills/<name>/SKILL.md` for a
 skill every bot in the workspace has. It's a normal [Agent Skills](https://agentskills.io)
-`SKILL.md`, plus Kasama's `id` and `enabled`:
+`SKILL.md`, plus Casama's `id` and `enabled`:
 
 ```markdown
 ---
@@ -107,7 +107,7 @@ enabled: true
 | Field | Required | Meaning |
 | --- | --- | --- |
 | `name` | yes | Lowercase letters, digits, `-` and `_`, up to 63 characters. Must match the folder's name. |
-| `description` | yes | When to use the skill. Kasama keeps the first 300 characters. |
+| `description` | yes | When to use the skill. Casama keeps the first 300 characters. |
 | `id` | no | Written on export |
 | `enabled` | no | `true` (default) or `false` |
 
@@ -119,7 +119,7 @@ executable, so start scripts with their interpreter (`bash scripts/check.sh`,
 ### What's left out
 
 Export skips skills installed by [plugins](/develop/plugins) (change the plugin instead) and
-check-in routines, which Kasama manages for you. Archived bots aren't exported.
+check-in routines, which Casama manages for you. Archived bots aren't exported.
 
 ## Export
 
@@ -129,22 +129,22 @@ ZIP.
 **With the CLI:**
 
 ```sh
-kasama files export ./kasama-files --org acme
+casama files export ./casama-files --org acme
 ```
 
 **With the API:** `POST /v1/orgs/{id}/files/export` returns the same files both as one ZIP and
 one by one, base64-encoded:
 
 ```sh
-curl -s -X POST "https://kasama.example.com/v1/orgs/$ORG/files/export" \
-  -H "authorization: Bearer $TOKEN" | jq -r .zip_base64 | base64 --decode > kasama-files.zip
+curl -s -X POST "https://casama.example.com/v1/orgs/$ORG/files/export" \
+  -H "authorization: Bearer $TOKEN" | jq -r .zip_base64 | base64 --decode > casama-files.zip
 ```
 
 ```json
 {
   "zip_base64": "UEsDBBQ...",
   "count": 4,
-  "files": [{ "path": "kasama.json", "content_base64": "ewogICJmb3JtYXQi..." }]
+  "files": [{ "path": "casama.json", "content_base64": "ewogICJmb3JtYXQi..." }]
 }
 ```
 
@@ -156,8 +156,8 @@ ZIP, review the preview (new, changed and unchanged), then **Apply**.
 **With the CLI:**
 
 ```sh
-kasama files import ./kasama-files --dry-run
-kasama files import ./kasama-files
+casama files import ./casama-files --dry-run
+casama files import ./casama-files
 ```
 
 The CLI skips files and folders whose names start with `.`, such as `.git`.
@@ -165,8 +165,8 @@ The CLI skips files and folders whose names start with `.`, such as `.git`.
 **With the API:** `POST /v1/orgs/{id}/files/import` takes either a ZIP or a list of files:
 
 ```sh
-jq -n --arg zip "$(base64 < kasama-files.zip | tr -d '\n')" '{zip_base64: $zip, dry_run: true}' |
-curl -s -X POST "https://kasama.example.com/v1/orgs/$ORG/files/import" \
+jq -n --arg zip "$(base64 < casama-files.zip | tr -d '\n')" '{zip_base64: $zip, dry_run: true}' |
+curl -s -X POST "https://casama.example.com/v1/orgs/$ORG/files/import" \
   -H "authorization: Bearer $TOKEN" \
   -H "content-type: application/json" \
   -d @-
@@ -174,7 +174,7 @@ curl -s -X POST "https://kasama.example.com/v1/orgs/$ORG/files/import" \
 
 | Field | Meaning |
 | --- | --- |
-| `zip_base64` | A ZIP of the folder, base64-encoded. A ZIP whose files all sit in one top folder with `kasama.json` inside works too. |
+| `zip_base64` | A ZIP of the folder, base64-encoded. A ZIP whose files all sit in one top folder with `casama.json` inside works too. |
 | `files` | Instead of a ZIP: `[{ "path": "invoicer/routines/weekly-chase.md", "content_base64": "..." }]` |
 | `dry_run` | `true` to see what would change without changing anything |
 
@@ -206,7 +206,7 @@ curl -s -X POST "https://kasama.example.com/v1/orgs/$ORG/files/import" \
 ## Git sync
 
 Git sync keeps a workspace's routines and skills in a GitHub repository, both ways. Edit a routine
-in the app and Kasama commits the change; push a change to the repository and Kasama applies it.
+in the app and Casama commits the change; push a change to the repository and Casama applies it.
 
 ### Set it up
 
@@ -217,10 +217,10 @@ in the app and Kasama commits the change; push a change to the repository and Ka
    folder inside the repository. Or use the API:
 
    ```sh
-   curl -s -X PUT "https://kasama.example.com/v1/orgs/$ORG/git-sync" \
+   curl -s -X PUT "https://casama.example.com/v1/orgs/$ORG/git-sync" \
      -H "authorization: Bearer $TOKEN" \
      -H "content-type: application/json" \
-     -d '{"repo": "acme/kasama-config", "branch": "main", "path": "bots"}'
+     -d '{"repo": "acme/casama-config", "branch": "main", "path": "bots"}'
    ```
 
 3. **Add the webhook.** The first setup returns a `webhook_url` and a `webhook_secret`, shown only
@@ -233,16 +233,16 @@ within 10 minutes.
 
 ### How sync works
 
-Each sync compares three versions of every file: what was synced last time, what Kasama has now,
+Each sync compares three versions of every file: what was synced last time, what Casama has now,
 and what the branch has now.
 
 | Changed in | Result |
 | --- | --- |
-| Kasama only | Kasama commits the change to the branch |
-| The repository only | Kasama checks the file and applies it. A bad file is reported and retried once it's fixed. |
-| Both | Kasama keeps its version and opens a pull request with it on a `kasama/sync-...` branch. Merging it makes both sides agree. |
+| Casama only | Casama commits the change to the branch |
+| The repository only | Casama checks the file and applies it. A bad file is reported and retried once it's fixed. |
+| Both | Casama keeps its version and opens a pull request with it on a `casama/sync-...` branch. Merging it makes both sides agree. |
 
-- **When.** Changes in Kasama sync within about a minute. Kasama also checks the repository every
+- **When.** Changes in Casama sync within about a minute. Casama also checks the repository every
   10 minutes, and a push webhook makes it check on the next minute. **Sync now** in the app (or
   `POST /v1/orgs/{id}/git-sync/run`) does the same.
 - **Deletions.** Unlike import, git sync deletes a routine or skill when you remove its file from

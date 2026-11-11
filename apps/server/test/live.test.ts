@@ -1,9 +1,9 @@
 import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { fileURLToPath } from "node:url";
+import { dockerAvailable, type SandboxStack, startSandboxStack } from "@casama/sandbox/testing";
+import { connectLive, type LiveClient } from "@casama/sandbox/testing-stream";
 import { serve } from "@hono/node-server";
-import { dockerAvailable, type SandboxStack, startSandboxStack } from "@kasama/sandbox/testing";
-import { connectLive, type LiveClient } from "@kasama/sandbox/testing-stream";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { attachStream } from "../src/api/routes/live.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
@@ -176,7 +176,7 @@ describe.skipIf(!enabled)("live computer (Phase 5 gate)", () => {
     controller.move(400, 300);
     await sleep(500);
     const handle = await h.computers?.ensureRunning(computerId);
-    const { collectExec } = await import("@kasama/sandbox");
+    const { collectExec } = await import("@casama/sandbox");
     expect((await collectExec(handle!.exec("xdotool getmouselocation"))).stdout).toContain(
       "x:400 y:300",
     );
@@ -257,6 +257,6 @@ describe.skipIf(!enabled)("live computer (Phase 5 gate)", () => {
       { token: owner.token },
     );
     expect(file.status).toBe(200);
-    expect((await file.text()).trim()).toBe("Hello from Kasama");
+    expect((await file.text()).trim()).toBe("Hello from Casama");
   }, 180_000);
 });

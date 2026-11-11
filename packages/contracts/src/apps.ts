@@ -2,7 +2,7 @@ import { z } from "@hono/zod-openapi";
 import { Integration } from "./autonomy.ts";
 import { Uuid } from "./common.ts";
 
-/** A built-in app: a vendor's hosted MCP server Kasama connects to (D-089). */
+/** A built-in app: a vendor's hosted MCP server Casama connects to (D-089). */
 export const CatalogApp = z
   .object({
     id: z.string(),

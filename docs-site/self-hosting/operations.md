@@ -1,22 +1,22 @@
 # Operating your server
 
-This page covers day-to-day work on a running Kasama server: upgrades, backups, monitoring, logs,
+This page covers day-to-day work on a running Casama server: upgrades, backups, monitoring, logs,
 audit-log forwarding and scaling, plus the Kubernetes Helm chart. The commands use the
-[Kasama CLI](/develop/cli), which wraps `install.sh` and `docker compose` for your checkout.
+[Casama CLI](/develop/cli), which wraps `install.sh` and `docker compose` for your checkout.
 
 ## Everyday commands
 
-Run these from the checkout, or pass `--dir ~/kasama` (or set `KASAMA_SELFHOST_DIR`).
+Run these from the checkout, or pass `--dir ~/casama` (or set `CASAMA_SELFHOST_DIR`).
 
 | Task          | Command                                                                       |
 | ------------- | ----------------------------------------------------------------------------- |
-| Status        | `kasama selfhost status`                                                      |
-| Logs          | `kasama selfhost logs -f` (api and worker), or name services: `logs migrate supervisor` |
-| Start         | `kasama selfhost up`                                                          |
-| Stop          | `kasama selfhost down` (data is kept)                                         |
-| Upgrade       | `kasama selfhost upgrade`                                                     |
-| Back up       | `kasama selfhost backup --out /backups`                                       |
-| Restore       | `kasama selfhost restore /backups/<timestamp>`                                |
+| Status        | `casama selfhost status`                                                      |
+| Logs          | `casama selfhost logs -f` (api and worker), or name services: `logs migrate supervisor` |
+| Start         | `casama selfhost up`                                                          |
+| Stop          | `casama selfhost down` (data is kept)                                         |
+| Upgrade       | `casama selfhost upgrade`                                                     |
+| Back up       | `casama selfhost backup --out /backups`                                       |
+| Restore       | `casama selfhost restore /backups/<timestamp>`                                |
 
 Each one maps to plain Compose, if you prefer:
 
@@ -24,7 +24,7 @@ Each one maps to plain Compose, if you prefer:
 docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env ps
 ```
 
-`kasama selfhost down` stops the stack but leaves running bot computers alone, because the
+`casama selfhost down` stops the stack but leaves running bot computers alone, because the
 supervisor creates them outside Compose. After the next `up`, the worker archives and stops any that
 sat idle for 10 minutes.
 
@@ -38,22 +38,22 @@ passes `-v`.
 1. Back up first:
 
    ```sh
-   kasama selfhost backup --out /backups
+   casama selfhost backup --out /backups
    ```
 
 2. Upgrade:
 
    ```sh
-   kasama selfhost upgrade
+   casama selfhost upgrade
    ```
 
    This runs `git pull --ff-only` in the checkout, then `./install.sh`. The installer keeps
    `infra/compose/.env`, adds any settings the new release introduced, pulls and rebuilds the images,
    applies new database migrations and restarts the services that changed.
 
-3. Check the result with `kasama selfhost status` and the admin console.
+3. Check the result with `casama selfhost status` and the admin console.
 
-`kasama selfhost upgrade` runs the installer with no options. If you installed with
+`casama selfhost upgrade` runs the installer with no options. If you installed with
 `--with-desktop`, `--monitoring` or `--web`, upgrade by hand instead so those parts are rebuilt too:
 
 ```sh
@@ -71,7 +71,7 @@ docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env
 Notes:
 
 - Migrations run automatically in the one-shot `migrate` service at every start, once each, in
-  order. They're tracked in `public.kasama_migrations`.
+  order. They're tracked in `public.casama_migrations`.
 - Running computers keep the image they started with. They pick up the new image the next time
   they sleep and wake.
 - If `git pull --ff-only` fails, you have local changes to tracked files (for example an edited
@@ -80,7 +80,7 @@ Notes:
 ## Back up your server
 
 ```sh
-kasama selfhost backup --out /backups
+casama selfhost backup --out /backups
 ```
 
 Each run writes a timestamped folder, for example `/backups/2026-11-11T09-30-00`, with:
@@ -91,12 +91,12 @@ Each run writes a timestamped folder, for example `/backups/2026-11-11T09-30-00`
 | `objects.tar.gz`  | Computer archives and checkpoints from the `objects` volume     |
 | `env`             | A copy of `infra/compose/.env`, with every key                  |
 
-`--out` defaults to `kasama-backups` in the current directory. With S3 object storage, the archive
+`--out` defaults to `casama-backups` in the current directory. With S3 object storage, the archive
 only covers the local volume, so back up the bucket with your provider's tools.
 
 ### Encrypt backups and keep a set number
 
-Backups hold every key for your server, so encrypt them before they leave the machine. Kasama uses
+Backups hold every key for your server, so encrypt them before they leave the machine. Casama uses
 [age](https://age-encryption.org).
 
 1. Install age (`apt install age` or `brew install age`).
@@ -111,18 +111,18 @@ Backups hold every key for your server, so encrypt them before they leave the ma
 3. Back up with encryption and retention:
 
    ```sh
-   kasama selfhost backup --out /backups --encrypt --recipient age1... --keep 14 --keep-days 30
+   casama selfhost backup --out /backups --encrypt --recipient age1... --keep 14 --keep-days 30
    ```
 
 | Option                 | What it does                                                                                       |
 | ---------------------- | -------------------------------------------------------------------------------------------------- |
-| `--out <folder>`       | Where backup folders go (default `kasama-backups`).                                               |
+| `--out <folder>`       | Where backup folders go (default `casama-backups`).                                               |
 | `--encrypt`            | Encrypts each file with age (`postgres.dump.age` and so on) and removes the plaintext.             |
 | `--recipient <key>`    | An age public key (`age1...`) or SSH public key to encrypt to. Repeat for more.                    |
 | `--keep <n>`           | Keep only the newest n backups in `--out`.                                                         |
 | `--keep-days <n>`      | Remove backups older than n days. With `--keep` too, a backup goes only when it's outside both.    |
 
-`KASAMA_BACKUP_RECIPIENTS` (comma-separated) can stand in for `--recipient`. Retention only removes
+`CASAMA_BACKUP_RECIPIENTS` (comma-separated) can stand in for `--recipient`. Retention only removes
 the timestamped folders the CLI itself wrote.
 
 ### Schedule backups
@@ -131,7 +131,7 @@ Run the backup daily with cron and copy the folder off the machine. For example,
 a user who can run Docker:
 
 ```text
-30 3 * * * kasama selfhost backup --dir /opt/kasama --out /backups --encrypt --recipient age1... --keep 14 >> /var/log/kasama-backup.log 2>&1
+30 3 * * * casama selfhost backup --dir /opt/casama --out /backups --encrypt --recipient age1... --keep 14 >> /var/log/casama-backup.log 2>&1
 ```
 
 Then sync `/backups` to other storage with your usual tool.
@@ -141,9 +141,9 @@ Then sync `/backups` to other storage with your usual tool.
 `restore` replaces the current data with the backup.
 
 ```sh
-kasama selfhost restore /backups/2026-11-11T09-30-00
+casama selfhost restore /backups/2026-11-11T09-30-00
 # encrypted backup:
-kasama selfhost restore /backups/2026-11-11T09-30-00 --identity backup.key
+casama selfhost restore /backups/2026-11-11T09-30-00 --identity backup.key
 ```
 
 It stops the API and worker, restores the database with `pg_restore --clean`, unpacks the computer
@@ -156,7 +156,7 @@ objects Supabase owns; they're expected, and the data is restored.
 2. Copy the backup's `env` file to `infra/compose/.env` (decrypt it first with
    `age -d -i backup.key -o infra/compose/.env env.age` if it's encrypted).
 3. Run `./install.sh`. It keeps that `.env`, so the new stack uses the same keys.
-4. Run `kasama selfhost restore <backup-folder>`.
+4. Run `casama selfhost restore <backup-folder>`.
 
 ::: warning Test your restores
 The backup holds the database, computer archives and `.env`. It doesn't include the other Docker
@@ -184,11 +184,11 @@ The `monitoring` profile adds Prometheus, node-exporter and a Grafana dashboard.
 2. Grafana listens on `127.0.0.1:3001` on the server. From your computer, open an SSH tunnel:
 
    ```sh
-   ssh -L 3001:127.0.0.1:3001 you@kasama.example.com
+   ssh -L 3001:127.0.0.1:3001 you@casama.example.com
    ```
 
 3. Open `http://localhost:3001` and sign in as `admin` with `GRAFANA_ADMIN_PASSWORD` from
-   `infra/compose/.env`. The **Kasama overview** dashboard is already provisioned.
+   `infra/compose/.env`. The **Casama overview** dashboard is already provisioned.
 
 Prometheus keeps 30 days of data and isn't published on the host. It scrapes the API's `/metrics`
 inside the stack with `METRICS_TOKEN`, and node-exporter for host metrics. The config is in
@@ -202,15 +202,15 @@ each scrape.
 
 | Metric                                  | What it measures                                        |
 | --------------------------------------- | ------------------------------------------------------- |
-| `kasama_runs_15m`                       | Runs created in the last 15 minutes, by status          |
-| `kasama_run_failure_ratio_15m`          | Failed runs out of finished runs, last 15 minutes       |
-| `kasama_time_to_first_token_seconds`    | Run start to first model token, p50 and p95, last hour  |
-| `kasama_computer_start_seconds`         | Computer start or wake time, p50 and p95, last hour     |
-| `kasama_computers`                      | Computers by state                                      |
-| `kasama_cost_per_run_usd`               | Average cost of completed runs, last hour               |
-| `kasama_queue_depth`                    | Queued and running workflows, by queue                  |
-| `kasama_http_requests_total`            | API responses by status                                 |
-| `kasama_http_request_seconds_sum`, `_count` | Total API response time and responses timed         |
+| `casama_runs_15m`                       | Runs created in the last 15 minutes, by status          |
+| `casama_run_failure_ratio_15m`          | Failed runs out of finished runs, last 15 minutes       |
+| `casama_time_to_first_token_seconds`    | Run start to first model token, p50 and p95, last hour  |
+| `casama_computer_start_seconds`         | Computer start or wake time, p50 and p95, last hour     |
+| `casama_computers`                      | Computers by state                                      |
+| `casama_cost_per_run_usd`               | Average cost of completed runs, last hour               |
+| `casama_queue_depth`                    | Queued and running workflows, by queue                  |
+| `casama_http_requests_total`            | API responses by status                                 |
+| `casama_http_request_seconds_sum`, `_count` | Total API response time and responses timed         |
 
 ### Alerts
 
@@ -218,11 +218,11 @@ each scrape.
 
 | Alert                          | Fires when                                                         | Severity |
 | ------------------------------ | ------------------------------------------------------------------ | -------- |
-| `KasamaRunFailuresHigh`        | More than 5% of runs failed in 15 minutes (at least 20 finished), for 5 minutes | page     |
-| `KasamaSandboxMemoryHigh`      | A host is above 85% memory for 10 minutes                          | page     |
-| `KasamaTimeToFirstTokenSlow`   | p95 time to first token is above 3 seconds for 15 minutes          | warn     |
-| `KasamaQueueBacklog`           | More than 200 runs are waiting, for 10 minutes                     | warn     |
-| `KasamaApiDown`                | Prometheus can't scrape the API for 2 minutes                      | page     |
+| `CasamaRunFailuresHigh`        | More than 5% of runs failed in 15 minutes (at least 20 finished), for 5 minutes | page     |
+| `CasamaSandboxMemoryHigh`      | A host is above 85% memory for 10 minutes                          | page     |
+| `CasamaTimeToFirstTokenSlow`   | p95 time to first token is above 3 seconds for 15 minutes          | warn     |
+| `CasamaQueueBacklog`           | More than 200 runs are waiting, for 10 minutes                     | warn     |
+| `CasamaApiDown`                | Prometheus can't scrape the API for 2 minutes                      | page     |
 
 The stack doesn't include Alertmanager. Route alerts to email or chat with your own Alertmanager or
 with Grafana alerting.
@@ -245,10 +245,10 @@ The supervisor has its own `/healthz` on port 8788, inside the stack.
 ## Logs
 
 ```sh
-kasama selfhost logs -f                       # api and worker
-kasama selfhost logs migrate                  # database migrations
-kasama selfhost logs -f supervisor egress     # computers and their internet access
-kasama selfhost logs auth                     # Supabase Auth: sign-in and email
+casama selfhost logs -f                       # api and worker
+casama selfhost logs migrate                  # database migrations
+casama selfhost logs -f supervisor egress     # computers and their internet access
+casama selfhost logs auth                     # Supabase Auth: sign-in and email
 ```
 
 `logs` shows the last 200 lines of each service; `-f` follows. The API, worker, supervisor and
@@ -258,7 +258,7 @@ computer makes.
 To see bot computers, which run outside Compose:
 
 ```sh
-docker ps --filter name=kasama-c-
+docker ps --filter name=casama-c-
 ```
 
 Set the API and worker's detail with `LOG_LEVEL` (see
@@ -269,7 +269,7 @@ Langfuse or an OpenTelemetry collector (see
 ## Audit-log forwarding
 
 Audit-log forwarding streams each workspace's audit log to your own systems. It's an enterprise
-feature: it needs a `KASAMA_LICENSE_KEY` that includes `audit_forwarding`. Without one, the
+feature: it needs a `CASAMA_LICENSE_KEY` that includes `audit_forwarding`. Without one, the
 endpoints answer `402`.
 
 Workspace owners and admins manage forwarders through the API at
@@ -279,15 +279,15 @@ Each forwarder sends to one destination:
 | `kind`    | `config`                                                         | `secret`                                                         |
 | --------- | ---------------------------------------------------------------- | ---------------------------------------------------------------- |
 | `webhook` | `url`                                                            | Required: the signing secret                                     |
-| `otlp`    | `url` (Kasama posts to `<url>/v1/logs`)                          | Optional: JSON of extra headers, for example an auth token       |
-| `s3`      | `bucket`; optional `endpoint`, `region` (default `us-east-1`), `prefix` (default `kasama-audit`) | Required: `{"access_key_id":"...","secret_access_key":"..."}` |
+| `otlp`    | `url` (Casama posts to `<url>/v1/logs`)                          | Optional: JSON of extra headers, for example an auth token       |
+| `s3`      | `bucket`; optional `endpoint`, `region` (default `us-east-1`), `prefix` (default `casama-audit`) | Required: `{"access_key_id":"...","secret_access_key":"..."}` |
 
 For example, a signed webhook:
 
 ```sh
-curl -X POST https://kasama.example.com/v1/orgs/$ORG_ID/audit-forwarders \
+curl -X POST https://casama.example.com/v1/orgs/$ORG_ID/audit-forwarders \
   -H "authorization: Bearer $TOKEN" -H "content-type: application/json" \
-  -d '{"kind":"webhook","config":{"url":"https://siem.example.com/kasama"},"secret":"a-long-random-secret"}'
+  -d '{"kind":"webhook","config":{"url":"https://siem.example.com/casama"},"secret":"a-long-random-secret"}'
 ```
 
 `$TOKEN` is a signed-in admin's access token (see [API](/develop/api)). Add `"from":"start"` to send
@@ -296,9 +296,9 @@ the whole history instead of starting from now.
 How delivery works:
 
 - The worker runs a pass every minute and sends new rows in order, in batches of up to 500.
-- **Webhook:** JSON `{forwarder_id, events}` with an `X-Kasama-Signature: t=<unix>,v1=<hex>` header,
+- **Webhook:** JSON `{forwarder_id, events}` with an `X-Casama-Signature: t=<unix>,v1=<hex>` header,
   the HMAC-SHA256 of `<t>.<body>` with your secret.
-- **OTLP:** each row becomes a log record under `service.name=kasama`, scope `kasama.audit`.
+- **OTLP:** each row becomes a log record under `service.name=casama`, scope `casama.audit`.
 - **S3:** one JSON Lines object per batch at `<prefix>/<workspace>/YYYY/MM/DD/<ms>-<first id>.jsonl`,
   path-style, so AWS S3, R2 and MinIO work.
 - Delivery is at least once. A failed batch stays put (the forwarder's `last_error` says why) and
@@ -309,9 +309,9 @@ Secrets are stored in Supabase Vault.
 ## Scaling
 
 **Worker concurrency.** `RUN_CONCURRENCY` (default `20`) is how many runs one worker processes at
-once. Raise it on a bigger machine, then run `kasama selfhost up`. The worker opens up to
-`RUN_CONCURRENCY + 5` database connections. Watch `kasama_queue_depth` and the
-`KasamaQueueBacklog` alert to see when you need more.
+once. Raise it on a bigger machine, then run `casama selfhost up`. The worker opens up to
+`RUN_CONCURRENCY + 5` database connections. Watch `casama_queue_depth` and the
+`CasamaQueueBacklog` alert to see when you need more.
 
 **Computer size.** `COMPUTER_MEMORY_MB` (default `2048`) sets each new computer's memory. Each
 computer also gets 1 CPU, 512 processes, a 1 GB `/tmp` and 512 MB of shared memory. Plan host
@@ -350,8 +350,8 @@ attaches the proxy and the relay to each computer's network by container name.
 
 4. On both hosts, set `TURN_PUBLIC_HOST` to a name that points at the computer host, and open 3478
    (UDP and TCP) there.
-5. On the app host, the compose file sets `SUPERVISOR_URL: http://kasama-supervisor:8788` in the
-   shared `x-kasama` block. Change it to the computer host's private address
+5. On the app host, the compose file sets `SUPERVISOR_URL: http://casama-supervisor:8788` in the
+   shared `x-casama` block. Change it to the computer host's private address
    (`http://10.0.0.2:8788`), then stop and remove the local `supervisor`, `egress` and `turn`
    services.
 6. Connect the two hosts over a private network or WireGuard. The supervisor checks
@@ -364,7 +364,7 @@ get its memory alerts.
 
 ## Kubernetes with Helm
 
-`infra/helm/kasama` runs the API, worker, supervisor and, optionally, the web app on Kubernetes.
+`infra/helm/casama` runs the API, worker, supervisor and, optionally, the web app on Kubernetes.
 Computers run as pods in their own namespace through the supervisor's Kubernetes provider. The
 chart doesn't run Postgres or Supabase: point it at Supabase Cloud or your own Supabase (for
 example the Supabase Helm chart).
@@ -372,17 +372,17 @@ example the Supabase Helm chart).
 1. Install:
 
    ```sh
-   helm install kasama infra/helm/kasama -n kasama --create-namespace \
-     --set publicUrl=https://kasama.example.com \
-     --set pagesUrl=https://pages.kasama.example.com \
+   helm install casama infra/helm/casama -n casama --create-namespace \
+     --set publicUrl=https://casama.example.com \
+     --set pagesUrl=https://pages.casama.example.com \
      --set supabase.url=https://xyz.supabase.co \
      --set supabase.anonKey=... --set supabase.serviceRoleKey=... --set supabase.jwtSecret=... \
      --set database.url=postgres://postgres:...@db.xyz.supabase.co:5432/postgres \
-     --set ingress.apiHost=kasama.example.com --set ingress.pagesHost=pages.kasama.example.com
+     --set ingress.apiHost=casama.example.com --set ingress.pagesHost=pages.casama.example.com
    ```
 
 2. Point Supabase Auth's "before user created" hook at
-   `https://kasama.example.com/hooks/auth/before-user-created` if you want the sign-up allowlist.
+   `https://casama.example.com/hooks/auth/before-user-created` if you want the sign-up allowlist.
 3. Upgrade later with `helm upgrade` and the same values. Migrations run first.
 
 What the chart does:
@@ -404,11 +404,11 @@ What the chart does:
 
 | Value                      | Default                               | What it does                                                         |
 | -------------------------- | ------------------------------------- | -------------------------------------------------------------------- |
-| `image.registry`           | `ghcr.io/kasama-dev`                  | Where the `server`, `supervisor`, `computer-headless`, `computer-desktop` and `web` images come from. |
+| `image.registry`           | `ghcr.io/casama-dev`                  | Where the `server`, `supervisor`, `computer-headless`, `computer-desktop` and `web` images come from. |
 | `image.tag`                | `latest`                              | Image tag for all of them.                                           |
 | `image.pullSecrets`        | `[]`                                  | Pull secrets for a private registry.                                 |
-| `publicUrl`                | `https://kasama.example.com`          | The API's public address.                                            |
-| `pagesUrl`                 | `https://pages.kasama.example.com`    | Pages' public address.                                               |
+| `publicUrl`                | `https://casama.example.com`          | The API's public address.                                            |
+| `pagesUrl`                 | `https://pages.casama.example.com`    | Pages' public address.                                               |
 | `supabase.url`             | `https://your-project.supabase.co`    | Supabase address.                                                    |
 | `supabase.anonKey`         | Required                              | Supabase anon key.                                                   |
 | `supabase.serviceRoleKey`  | Required                              | Supabase service role key.                                           |
@@ -423,7 +423,7 @@ What the chart does:
 | `worker.replicas`          | `1`                                   | Worker replicas.                                                     |
 | `worker.runConcurrency`    | `20`                                  | `RUN_CONCURRENCY` for the worker.                                    |
 | `supervisor.enabled`       | `true`                                | Run the supervisor and computers.                                    |
-| `computers.namespace`      | `kasama-computers`                    | Namespace for computer pods.                                         |
+| `computers.namespace`      | `casama-computers`                    | Namespace for computer pods.                                         |
 | `computers.create`         | `true`                                | Create that namespace.                                               |
 | `computers.runtimeClass`   | (empty)                               | Runtime class for computer pods (gVisor, Kata).                      |
 | `computers.memoryMb`       | `2048`                                | Passed to the supervisor as `COMPUTER_MEMORY_MB`, which only the Docker provider reads. Computer pods get no limits from it. |
@@ -431,8 +431,8 @@ What the chart does:
 | `migrations.enabled`       | `true`                                | Run the migration Job.                                               |
 | `ingress.enabled`          | `true`                                | Create an Ingress.                                                   |
 | `ingress.className`        | (empty)                               | Ingress class.                                                       |
-| `ingress.apiHost`          | `kasama.example.com`                  | Host for the API (and the web app).                                  |
-| `ingress.pagesHost`        | `pages.kasama.example.com`            | Host for Pages.                                                      |
+| `ingress.apiHost`          | `casama.example.com`                  | Host for the API (and the web app).                                  |
+| `ingress.pagesHost`        | `pages.casama.example.com`            | Host for Pages.                                                      |
 | `ingress.tls`              | `[]`                                  | Ingress TLS blocks.                                                  |
 
 Each component also has a `resources` value.

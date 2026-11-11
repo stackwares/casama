@@ -1,6 +1,6 @@
 # Your own computer
 
-The Kasama desktop app for macOS, Windows and Linux can lend your machine to the bots you choose.
+The Casama desktop app for macOS, Windows and Linux can lend your machine to the bots you choose.
 They can run commands and edit files in folders you share, use their own browser, use desktop apps
 and reach MCP servers running on your machine. Use it when a bot needs your local files, apps or
 sign-ins rather than its sandboxed [computer](/guide/computers).
@@ -17,7 +17,7 @@ until you turn it on.
 5. Under **Bots allowed**, check each bot that may use this computer.
 
 The switch at the top turns the whole feature on or off without unpairing. Its status reads
-**On: bots you allow can use this computer**, **Connecting…**, **Cannot reach Kasama; retrying**
+**On: bots you allow can use this computer**, **Connecting…**, **Cannot reach Casama; retrying**
 or **Off**.
 
 Allowing a bot makes this computer that bot's computer, so its commands, files and browsing happen
@@ -85,7 +85,7 @@ How it works:
 - If your computer is offline, the bot gets a clear error and the server stays connected for next
   time.
 
-For hosted MCP servers and connecting AI apps to Kasama, see [MCP](/guide/mcp).
+For hosted MCP servers and connecting AI apps to Casama, see [MCP](/guide/mcp).
 
 ## Coding agents
 
@@ -99,14 +99,14 @@ Coding agents run as commands, so they need **Run commands** turned on. If it's 
 ## Desktop context in Quick ask
 
 Press Cmd+Shift+K on macOS or Ctrl+Shift+K on Windows and Linux to open **Quick ask** from
-anywhere. Just before Kasama's window comes forward, the app reads what you were looking at:
+anywhere. Just before Casama's window comes forward, the app reads what you were looking at:
 
 - the app and window title in front,
 - the text you had selected (**Selected text**),
 - the current browser tab's title and address.
 
 Each part appears as a chip you can switch off before sending. The parts you keep are added after
-your message. Tap **Add a screenshot** to include an image of your screen; Kasama's window steps
+your message. Tap **Add a screenshot** to include an image of your screen; Casama's window steps
 aside while it's taken, and the image is uploaded to the bot's computer like a chat attachment.
 
 Context is read only when you press the shortcut and used once. Missing tools or permissions mean
@@ -144,10 +144,10 @@ Two related features live under **Settings → Device connections**:
 iMessage has no bot API, so your own Mac does the work.
 
 1. On your Mac, in **Settings → Use this computer for bots**, turn on **Messages (iMessage)**.
-2. Give Kasama Full Disk Access in macOS System Settings, so it can read your Messages history.
+2. Give Casama Full Disk Access in macOS System Settings, so it can read your Messages history.
 3. Connect an iMessage chat app on the bot. See [Chat apps](/guide/chat-apps).
 
-Kasama checks for new messages every minute through your Mac and sends replies with AppleScript.
+Casama checks for new messages every minute through your Mac and sends replies with AppleScript.
 The first check only records where to start, so old messages are never answered. Only the Mac's
 owner can connect it, and only for a bot allowed on that Mac.
 

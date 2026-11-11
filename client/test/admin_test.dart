@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/features/admin/admin_screen.dart';
+import 'package:casama_app/features/admin/admin_screen.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
@@ -12,7 +12,7 @@ void main() {
     await tester.pumpWidget(harness(backend, const AdminScreen()));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('updateNotice')), findsOneWidget);
-    expect(find.text('Kasama 0.9.1 is available (you run 0.6.0)'), findsOneWidget);
+    expect(find.text('Casama 0.9.1 is available (you run 0.6.0)'), findsOneWidget);
     expect(find.text('12'), findsOneWidget);
 
     await tester.tap(find.widgetWithText(Tab, 'Workspaces'));

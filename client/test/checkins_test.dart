@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/features/inbox/inbox_screen.dart';
-import 'package:kasama_app/features/settings/settings_screen.dart';
+import 'package:casama_app/features/inbox/inbox_screen.dart';
+import 'package:casama_app/features/settings/settings_screen.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';

@@ -301,7 +301,7 @@ class _ImportFormState extends State<_ImportForm> {
           maxLines: 4,
           decoration: InputDecoration(
             labelText: l10n.themeCode,
-            hintText: 'kasama-theme:…',
+            hintText: 'casama-theme:…',
             errorText: text.isNotEmpty && preset == null ? l10n.invalidThemeCode : null,
             suffixIcon: IconButton(
               tooltip: MaterialLocalizations.of(context).pasteButtonLabel,

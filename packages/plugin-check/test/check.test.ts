@@ -66,7 +66,7 @@ describe("the example plugin", () => {
       const list = await rpc("tools/list");
       const byName = Object.fromEntries(list.result.tools.map((t: any) => [t.name, t]));
       expect(Object.keys(byName).sort()).toEqual(["list_notes", "read_note", "save_note"]);
-      // Risk in Kasama comes from these: read-only is low, the rest medium.
+      // Risk in Casama comes from these: read-only is low, the rest medium.
       expect(byName.list_notes.annotations.readOnlyHint).toBe(true);
       expect(byName.save_note.annotations.destructiveHint).toBe(false);
       await rpc("tools/call", {
@@ -93,7 +93,7 @@ describe("the example plugin", () => {
 });
 
 describe("checkFiles", () => {
-  it("refuses what Kasama refuses", () => {
+  it("refuses what Casama refuses", () => {
     expect(checkFiles([]).errors).toEqual(["No plugin.json at the plugin's root"]);
     expect(checkFiles([file("plugin.json", "{")]).errors).toEqual(["plugin.json isn't valid JSON"]);
     expect(checkFiles([manifest({ name: "Bad Name" })]).ok).toBe(false);
@@ -107,7 +107,7 @@ describe("checkFiles", () => {
           }),
         ),
       ]).errors[0],
-    ).toMatch(/Kasama reads 1.0.0/);
+    ).toMatch(/Casama reads 1.0.0/);
   });
 
   it("refuses plugins over the size limits", () => {
@@ -118,10 +118,10 @@ describe("checkFiles", () => {
     ).toMatch(/up to 10 MB/);
   });
 
-  it("reports what Kasama would skip", () => {
+  it("reports what Casama would skip", () => {
     const r = checkFiles([
       manifest({
-        extensions: { "com.kasama": { secrets: [{ name: "lower", server: "x" }] } },
+        extensions: { "com.casama": { secrets: [{ name: "lower", server: "x" }] } },
         colour: "red",
       }),
       mcp({
@@ -168,7 +168,7 @@ describe("checkFiles", () => {
     const tips = r.tips.join("\n");
     expect(tips).toMatch(/missing: \.\/bin\/server isn't in the plugin/);
     expect(tips).toMatch(/notExec: \.\/bin\/run isn't executable/);
-    expect(tips).toMatch(/"deno" isn't in Kasama's default computer image/);
+    expect(tips).toMatch(/"deno" isn't in Casama's default computer image/);
     expect(tips).toMatch(/gone: \$\{PLUGIN_ROOT\}\/dist\/index.js isn't in the plugin/);
     expect(tips).toMatch(/fetched: npx downloads packages/);
     expect(tips).toMatch(/Skill folder renamed is named "other"/);

@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/core/voice.dart';
-import 'package:kasama_app/features/voice/call_screen.dart';
+import 'package:casama_app/core/voice.dart';
+import 'package:casama_app/features/voice/call_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_test.dart' show setSize;

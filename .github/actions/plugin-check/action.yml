@@ -1,5 +1,5 @@
-name: Check a Kasama plugin
-description: Checks an Agent Plugins 1.0 package the way Kasama checks it at install.
+name: Check a Casama plugin
+description: Checks an Agent Plugins 1.0 package the way Casama checks it at install.
 branding:
   icon: check-circle
   color: purple
@@ -8,7 +8,7 @@ inputs:
     description: The plugin folder, relative to the repository root.
     default: "."
   strict:
-    description: Also fail when Kasama would skip or ignore something (a skill, a server, a field).
+    description: Also fail when Casama would skip or ignore something (a skill, a server, a field).
     default: "true"
 runs:
   using: composite
@@ -16,7 +16,7 @@ runs:
     - uses: actions/setup-node@v4
       with:
         node-version: 24
-    # The checker needs nothing installed: it runs from this action's own copy of the Kasama repo.
+    # The checker needs nothing installed: it runs from this action's own copy of the Casama repo.
     - shell: bash
       env:
         PLUGIN_PATH: ${{ inputs.path }}

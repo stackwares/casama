@@ -3,8 +3,8 @@
  * a person commenting on a bot's ticket, starts a run in the ticket's thread; when the run ends the
  * ticket moves on (review, done, or blocked) if the bot didn't move it itself.
  */
-import type { Database } from "@kasama/db";
-import { contentKeys } from "@kasama/db";
+import type { Database } from "@casama/db";
+import { contentKeys } from "@casama/db";
 import { sql } from "drizzle-orm";
 
 type TicketRow = {

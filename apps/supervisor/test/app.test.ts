@@ -1,4 +1,4 @@
-import { SandboxError } from "@kasama/sandbox";
+import { SandboxError } from "@casama/sandbox";
 import { describe, expect, it } from "vitest";
 import { createSupervisorApp } from "../src/app.ts";
 
@@ -58,10 +58,10 @@ describe("hosted provider routing", () => {
   const app = createSupervisorApp(fakeProvider, "supervisor-token-0123456789", { e2b });
   const auth = { authorization: "Bearer supervisor-token-0123456789" };
 
-  it("routes to the provider named in x-kasama-provider", async () => {
+  it("routes to the provider named in x-casama-provider", async () => {
     const res = await app.request("/computers", {
       method: "POST",
-      headers: { ...auth, "x-kasama-provider": "e2b", "content-type": "application/json" },
+      headers: { ...auth, "x-casama-provider": "e2b", "content-type": "application/json" },
       body: JSON.stringify({ ref: "r1", profile: "headless" }),
     });
     expect(res.status).toBe(201);
@@ -70,7 +70,7 @@ describe("hosted provider routing", () => {
 
   it("refuses providers that are not configured", async () => {
     const res = await app.request("/computers/r1", {
-      headers: { ...auth, "x-kasama-provider": "daytona" },
+      headers: { ...auth, "x-casama-provider": "daytona" },
     });
     expect(res.status).toBe(400);
     expect(((await res.json()) as { code: string }).code).toBe("provider_unavailable");

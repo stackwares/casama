@@ -22,11 +22,11 @@ insert into public.notifications (user_id, org_id, kind, payload) values
   ('a1000000-0000-0000-0000-00000000000a', 'b1000000-0000-0000-0000-00000000000a', 'routine_result', '{"approval_id": "e1000000-0000-0000-0000-00000000000a"}');
 
 update public.approvals set status = 'approved' where id = 'e1000000-0000-0000-0000-00000000000a';
-select isnt((select read_at from public.notifications where kind = 'approval_request' and payload ->> 'approval_id' = 'e1000000-0000-0000-0000-00000000000a'), null,
+select isnt((select read_at from public.notifications where user_id = 'a1000000-0000-0000-0000-00000000000a' and kind = 'approval_request' and payload ->> 'approval_id' = 'e1000000-0000-0000-0000-00000000000a'), null,
   'answering an approval marks its notification read');
-select is((select read_at from public.notifications where payload ->> 'approval_id' = 'e1000000-0000-0000-0000-00000000000b'), null,
+select is((select read_at from public.notifications where user_id = 'a1000000-0000-0000-0000-00000000000a' and payload ->> 'approval_id' = 'e1000000-0000-0000-0000-00000000000b'), null,
   'other approvals stay unread');
-select is((select read_at from public.notifications where kind = 'routine_result'), null, 'only that kind of notification');
+select is((select read_at from public.notifications where user_id = 'a1000000-0000-0000-0000-00000000000a' and kind = 'routine_result'), null, 'only that kind of notification');
 select throws_ok($$ select public.read_request_notifications('approval_request', 'approval_id', gen_random_uuid()) $$,
   '42501', null, 'the helper is not callable from outside') from (select set_config('role', 'authenticated', true)) s;
 reset role;

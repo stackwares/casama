@@ -5,7 +5,7 @@
  * at least once. Shapes follow the public OTLP/HTTP JSON and S3 (Signature Version 4) specs.
  */
 import { createHash, createHmac } from "node:crypto";
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 
 export type AuditRow = {
@@ -32,7 +32,7 @@ export type Forwarder = {
 
 const iso = (v: string | Date) => new Date(v).toISOString();
 
-/** Webhook: JSON body, with X-Kasama-Signature t=<unix>,v1=<hex HMAC-SHA256 of "t.body">. */
+/** Webhook: JSON body, with X-Casama-Signature t=<unix>,v1=<hex HMAC-SHA256 of "t.body">. */
 export function signAuditBatch(secret: string, body: string, t = Math.floor(Date.now() / 1000)) {
   return `t=${t},v1=${createHmac("sha256", secret).update(`${t}.${body}`).digest("hex")}`;
 }
@@ -47,13 +47,13 @@ export function otlpLogs(rows: AuditRow[]) {
       {
         resource: {
           attributes: [
-            attr("service.name", "kasama"),
-            attr("kasama.org_id", rows[0]?.org_id ?? ""),
+            attr("service.name", "casama"),
+            attr("casama.org_id", rows[0]?.org_id ?? ""),
           ],
         },
         scopeLogs: [
           {
-            scope: { name: "kasama.audit" },
+            scope: { name: "casama.audit" },
             logRecords: rows.map((r) => ({
               timeUnixNano: String(BigInt(new Date(r.created_at).getTime()) * 1_000_000n),
               severityText: "INFO",
@@ -136,8 +136,8 @@ export async function sendBatch(f: Forwarder, rows: AuditRow[], fetchFn: typeof 
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-kasama-signature": signAuditBatch(f.secret ?? "", body),
-        "x-kasama-batch": `${events[0]?.id}-${events.at(-1)?.id}`,
+        "x-casama-signature": signAuditBatch(f.secret ?? "", body),
+        "x-casama-batch": `${events[0]?.id}-${events.at(-1)?.id}`,
       },
       body,
     });
@@ -167,7 +167,7 @@ export async function sendBatch(f: Forwarder, rows: AuditRow[], fetchFn: typeof 
     secret_access_key?: string;
   };
   const first = new Date(rows[0]?.created_at ?? Date.now());
-  const key = `${(f.config.prefix ?? "kasama-audit").replace(/\/$/, "")}/${f.org_id}/${first.toISOString().slice(0, 10).replace(/-/g, "/")}/${first.getTime()}-${rows[0]?.id}.jsonl`;
+  const key = `${(f.config.prefix ?? "casama-audit").replace(/\/$/, "")}/${f.org_id}/${first.toISOString().slice(0, 10).replace(/-/g, "/")}/${first.getTime()}-${rows[0]?.id}.jsonl`;
   const res = await s3Put({
     endpoint: f.config.endpoint,
     region: f.config.region ?? "us-east-1",

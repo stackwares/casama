@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_callkit_incoming/entities/entities.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
@@ -34,7 +34,7 @@ class IncomingCall {
     final bot = d['bot_id'];
     if (id is! String || id.isEmpty || bot is! String || bot.isEmpty) return null;
     final conv = d['conversation_id'];
-    return IncomingCall(id: id, botId: bot, botName: d['bot_name'] as String? ?? 'Kasama', reason: d['reason'] as String? ?? '', conversationId: conv is String && conv.isNotEmpty ? conv : null);
+    return IncomingCall(id: id, botId: bot, botName: d['bot_name'] as String? ?? 'Casama', reason: d['reason'] as String? ?? '', conversationId: conv is String && conv.isNotEmpty ? conv : null);
   }
 
   Map<String, Object?> toData() => {'call_id': id, 'bot_id': botId, 'bot_name': botName, 'reason': reason, 'conversation_id': conversationId ?? ''};
@@ -80,7 +80,7 @@ class NativeCallSurface implements CallSurface {
     CallKitParams(
       id: call.id,
       nameCaller: call.botName,
-      appName: 'Kasama',
+      appName: 'Casama',
       handle: call.reason,
       type: 0,
       duration: 45000,
@@ -119,7 +119,7 @@ final callSurfaceProvider = Provider<CallSurface>(
 
 /// Android: a call push while the app is in the background or closed rings the calling screen.
 @pragma('vm:entry-point')
-Future<void> kasamaBackgroundMessage(RemoteMessage message) async {
+Future<void> casamaBackgroundMessage(RemoteMessage message) async {
   final call = message.data['kind'] == 'call' ? IncomingCall.fromData(message.data) : null;
   if (call != null) await NativeCallSurface().show(call);
 }

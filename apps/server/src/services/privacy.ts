@@ -2,9 +2,9 @@
  * Privacy (D-072): data export, account deletion with a grace period, and run event retention.
  * Exports run under the user's session, so they contain exactly what RLS lets the user see.
  */
-import type { ComputerService } from "@kasama/agent";
-import { memoryBackendConfig, storeFromConfig } from "@kasama/agent";
-import { type Database, type JwtClaims, withUserSession } from "@kasama/db";
+import type { ComputerService } from "@casama/agent";
+import { memoryBackendConfig, storeFromConfig } from "@casama/agent";
+import { type Database, type JwtClaims, withUserSession } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
 
@@ -63,6 +63,18 @@ export async function exportUserData(db: Database, claims: JwtClaims) {
       profile:
         (await q(sql`select * from public.profiles where user_id = ${claims.sub}::uuid`))[0] ??
         null,
+      // About you (D-169): what bots know about the person, across workspaces.
+      about_you: {
+        about:
+          (await q(sql`select * from public.user_about where user_id = ${claims.sub}::uuid`))[0] ??
+          null,
+        facts: await q(
+          sql`select id, kind, content, pinned, source_org_id, source_bot_id, created_at, updated_at from public.user_facts where user_id = ${claims.sub}::uuid order by created_at`,
+        ),
+        spaces: await q(
+          sql`select org_id, share_about, updated_at from public.profile_spaces where user_id = ${claims.sub}::uuid`,
+        ),
+      },
       push_devices: await q(sql`select * from public.devices where user_id = ${claims.sub}::uuid`),
       // Device connections (D-149): the person's own shared device data.
       device_sources: await q(
@@ -107,7 +119,7 @@ export async function exportUserData(db: Database, claims: JwtClaims) {
       }
     }
     files["README.txt"] = strToU8(
-      "Your Kasama data export. Each workspace you belong to has a folder of JSON files, limited to what your role can see.\nSecrets, model keys and device tokens are never exported (only their names).\n",
+      "Your Casama data export. Each workspace you belong to has a folder of JSON files, limited to what your role can see.\nSecrets, model keys and device tokens are never exported (only their names).\n",
     );
     return zipSync(files, { level: 6 });
   });

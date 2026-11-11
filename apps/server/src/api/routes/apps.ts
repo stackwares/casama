@@ -7,17 +7,17 @@
  * overrides, and guided Composio and Pipedream sign-ins.
  */
 import { randomBytes } from "node:crypto";
-import type { OpenAPIHono } from "@hono/zod-openapi";
 import {
   composioDirectory,
   loadIntegration,
   oauthSecretFrom,
   pipedreamDirectory,
   refreshIntegration,
-} from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { pgErrorCode, schema, withUserSession } from "@kasama/db";
-import { APP_CATALOG, appByIdOrNull, type CatalogApp } from "@kasama/domain";
+} from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { pgErrorCode, schema, withUserSession } from "@casama/db";
+import { APP_CATALOG, appByIdOrNull, type CatalogApp } from "@casama/domain";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import {
   discoverOAuthServerInfo,
   exchangeAuthorization,
@@ -81,7 +81,7 @@ export function oauthRedirectFor(apiBase: string): string {
   return `${u.origin}/oauth/callback`;
 }
 
-/** The catalog a server offers: on Kasama Cloud, inbox apps only through Composio, or not at all (D-130). */
+/** The catalog a server offers: on Casama Cloud, inbox apps only through Composio, or not at all (D-130). */
 export function catalogFor(
   catalog: CatalogApp[],
   o: { cloud: boolean; composio: boolean },
@@ -95,7 +95,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
   const { db, env } = deps;
   const fetchImpl = opts.fetch ?? fetch;
   const fullCatalog = opts.catalog ?? APP_CATALOG;
-  // Kasama Cloud's own Google app has no restricted scopes (D-130): inbox reading goes through
+  // Casama Cloud's own Google app has no restricted scopes (D-130): inbox reading goes through
   // Composio's managed sign-in, or isn't offered when no Composio key is configured.
   const cloud = env.BILLING_ENABLED;
   const catalog = catalogFor(fullCatalog, { cloud, composio: !!env.COMPOSIO_API_KEY });
@@ -230,11 +230,11 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
     );
   });
 
-  // Kasama's OAuth client metadata document (for servers that use CIMD instead of registration).
+  // Casama's OAuth client metadata document (for servers that use CIMD instead of registration).
   app.get("/oauth/client.json", (c) =>
     c.json({
       client_id: cimdUrl(c),
-      client_name: "Kasama",
+      client_name: "Casama",
       client_uri: env.PUBLIC_APP_URL,
       redirect_uris: [redirectUri(c)],
       grant_types: ["authorization_code", "refresh_token"],
@@ -267,7 +267,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
     const config: Record<string, unknown> = { url: a.url, app: a.id, auth: body.method };
 
     if (body.method === "managed") {
-      // Composio's managed sign-in on Kasama Cloud's own Composio account, one user per workspace.
+      // Composio's managed sign-in on Casama Cloud's own Composio account, one user per workspace.
       if (!env.COMPOSIO_API_KEY)
         throw new ApiError(400, "managed_unavailable", `${a.name} isn't available on this server`);
       const slug = a.id === "gmail_inbox" ? "gmail" : a.id;
@@ -365,7 +365,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
         client = await registerClient(info.authorizationServerUrl, {
           metadata,
           clientMetadata: {
-            client_name: "Kasama",
+            client_name: "Casama",
             client_uri: env.PUBLIC_APP_URL,
             redirect_uris: [redirectUri(c)],
             grant_types: ["authorization_code", "refresh_token"],
@@ -493,7 +493,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
     const a = flow ? findApp(flow.app_id) : null;
     if (!flow || !a)
       return c.html(
-        resultPage("This sign-in link has expired. Go back to Kasama and try again.", false),
+        resultPage("This sign-in link has expired. Go back to Casama and try again.", false),
         400,
       );
     const fail = async (message: string) => {
@@ -540,7 +540,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
           oauth = oauth - 'code_verifier' - 'client' where id = ${flow.id}::uuid`);
       return c.html(
         resultPage(
-          `${a.name} is connected. You can close this window and go back to Kasama.`,
+          `${a.name} is connected. You can close this window and go back to Casama.`,
           true,
         ),
       );
@@ -651,7 +651,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
 
   // Where Composio and Pipedream send people after signing in.
   app.get("/oauth/done", (c) =>
-    c.html(resultPage("You're signed in. You can close this window and go back to Kasama.", true)),
+    c.html(resultPage("You're signed in. You can close this window and go back to Casama.", true)),
   );
 }
 
@@ -662,7 +662,7 @@ function resultPage(message: string, ok: boolean) {
     (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]!,
   );
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Kasama</title><style>
+<title>Casama</title><style>
 :root{color-scheme:light dark}body{margin:0;min-height:100vh;display:grid;place-items:center;font:16px/1.5 system-ui,sans-serif;background:linear-gradient(160deg,#efe4fb,#dcebff);color:#1c1530}
 @media (prefers-color-scheme:dark){body{background:linear-gradient(160deg,#25102f,#151f3f);color:#f3eefc}}
 main{max-width:420px;margin:24px;padding:32px;border-radius:24px;background:rgba(255,255,255,.7);text-align:center;box-shadow:0 20px 60px rgba(60,20,120,.18)}

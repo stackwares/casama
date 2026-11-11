@@ -1,6 +1,6 @@
 name: Release CLI and SDK
 # On a cli-v* tag: native CLI binaries for macOS, Linux and Windows attached to a GitHub release,
-# plus the Homebrew formula. Publishing kasama_api and kasama_sdk to pub.dev is a separate,
+# plus the Homebrew formula. Publishing casama_api and casama_sdk to pub.dev is a separate,
 # manual job (it needs a pub.dev publisher and a maintainer's approval).
 on:
   push:
@@ -30,15 +30,15 @@ jobs:
           v=$(grep '^version:' dart/cli/pubspec.yaml | awk '{print $2}')
           cd dart && dart pub get && cd cli
           ext=""; [[ "${{ matrix.target }}" == windows-* ]] && ext=".exe"
-          mkdir -p ../../dist/pkg && dart compile exe bin/kasama.dart -o ../../dist/pkg/kasama$ext
+          mkdir -p ../../dist/pkg && dart compile exe bin/casama.dart -o ../../dist/pkg/casama$ext
           cd ../../dist
-          name="kasama-$v-${{ matrix.target }}"
-          if [[ -n "$ext" ]]; then (cd pkg && 7z a "../$name.zip" kasama.exe >/dev/null); sha256sum "$name.zip" > "$name.zip.sha256"
-          else tar -C pkg -czf "$name.tar.gz" kasama; shasum -a 256 "$name.tar.gz" > "$name.tar.gz.sha256"; fi
+          name="casama-$v-${{ matrix.target }}"
+          if [[ -n "$ext" ]]; then (cd pkg && 7z a "../$name.zip" casama.exe >/dev/null); sha256sum "$name.zip" > "$name.zip.sha256"
+          else tar -C pkg -czf "$name.tar.gz" casama; shasum -a 256 "$name.tar.gz" > "$name.tar.gz.sha256"; fi
       - uses: actions/upload-artifact@v4
         with:
           name: cli-${{ matrix.target }}
-          path: dist/kasama-*
+          path: dist/casama-*
 
   release:
     needs: build
@@ -52,5 +52,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           v=$(grep '^version:' dart/cli/pubspec.yaml | awk '{print $2}')
-          scripts/homebrew-formula.sh "$v" dist > dist/kasama.rb
-          gh release create "cli-v$v" dist/* --title "Kasama CLI $v" --notes "See CHANGELOG.md" --draft
+          scripts/homebrew-formula.sh "$v" dist > dist/casama.rb
+          gh release create "cli-v$v" dist/* --title "Casama CLI $v" --notes "See CHANGELOG.md" --draft

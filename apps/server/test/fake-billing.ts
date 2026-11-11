@@ -29,7 +29,7 @@ export interface TestPki {
 
 /** Root CA, intermediate (Apple WWDR marker) and leaf (App Store marker), EC P-256. */
 export function makeTestPki(cn = "Test"): TestPki {
-  const dir = mkdtempSync(join(tmpdir(), "kasama-pki-"));
+  const dir = mkdtempSync(join(tmpdir(), "casama-pki-"));
   const o = (...args: string[]) => execFileSync("openssl", args, { cwd: dir, stdio: "pipe" });
   try {
     for (const k of ["root", "int", "leaf"])
@@ -248,7 +248,7 @@ export async function startFakeBilling(
   const modelCalls: Array<Record<string, unknown>> = [];
 
   let url = "";
-  const bundleId = "com.kasama.app";
+  const bundleId = "ai.casama.app";
   const issuerId = randomUUID();
   const keyId = "TESTKEY123";
 
@@ -301,7 +301,7 @@ export async function startFakeBilling(
         }
         return send(
           200,
-          "<html><body><h1>Payment complete</h1><p>You can return to Kasama.</p></body></html>",
+          "<html><body><h1>Payment complete</h1><p>You can return to Casama.</p></body></html>",
           "text/html",
         );
       }
@@ -413,7 +413,7 @@ export async function startFakeBilling(
           return send(401, { error: { code: 401 } });
         const m = path.match(/applications\/([^/]+)\/purchases\/subscriptionsv2\/tokens\/([^/]+)$/);
         if (m) {
-          if (m[1] !== "com.kasama.app") return send(404, {});
+          if (m[1] !== "ai.casama.app") return send(404, {});
           const s = playSubs.get(decodeURIComponent(m[2] as string));
           return s ? send(200, s) : send(404, { error: { code: 404 } });
         }
@@ -570,9 +570,9 @@ export async function startFakeBilling(
       },
     },
     google: {
-      packageName: "com.kasama.app",
+      packageName: "ai.casama.app",
       serviceAccount: {
-        client_email: "play-billing@kasama-test.iam.gserviceaccount.com",
+        client_email: "play-billing@casama-test.iam.gserviceaccount.com",
         private_key: await exportPKCS8(googleKeys.privateKey),
         token_uri: `${url}/google/token`,
       },
@@ -602,7 +602,7 @@ export async function startFakeBilling(
             data: Buffer.from(
               JSON.stringify({
                 version: "1.0",
-                packageName: "com.kasama.app",
+                packageName: "ai.casama.app",
                 eventTimeMillis: String(Date.now()),
                 ...n,
               }),
@@ -610,7 +610,7 @@ export async function startFakeBilling(
             messageId: String(Math.floor(Math.random() * 1e15)),
             publishTime: new Date().toISOString(),
           },
-          subscription: "projects/kasama-test/subscriptions/play-rtdn",
+          subscription: "projects/casama-test/subscriptions/play-rtdn",
         });
       },
     },

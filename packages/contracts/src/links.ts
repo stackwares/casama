@@ -13,7 +13,7 @@ export const BotLink = z
     remote_url: z
       .string()
       .nullable()
-      .openapi({ description: "The other Kasama server, when the contact is on another one" }),
+      .openapi({ description: "The other Casama server, when the contact is on another one" }),
     exchanges: z.number().int(),
     created_at: ts,
     activated_at: ts.nullable(),

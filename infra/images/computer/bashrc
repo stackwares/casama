@@ -1,4 +1,4 @@
-# Kasama computer shell defaults
+# Casama computer shell defaults
 export PS1='\u@computer:\w\$ '
 # The egress proxy is the only way out; make common tools use it.
 if [ -n "$HTTPS_PROXY" ]; then

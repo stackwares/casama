@@ -4,7 +4,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_soloud/flutter_soloud.dart';
-import 'package:kasama_sdk/kasama_sdk.dart' show VoiceSession;
+import 'package:casama_sdk/casama_sdk.dart' show VoiceSession;
 import 'package:record/record.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 

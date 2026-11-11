@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Kasama API",
+    "title": "Casama API",
     "version": "0.8.0",
     "license": {
       "name": "Apache-2.0",
@@ -1501,6 +1501,13 @@
                   "summary",
                   "preference"
                 ]
+              },
+              "scope": {
+                "type": "string",
+                "enum": [
+                  "bot",
+                  "profile"
+                ]
               }
             },
             "required": [
@@ -2179,7 +2186,7 @@
         "properties": {
           "type": {
             "type": "string",
-            "example": "https://kasama.dev/problems/not_found"
+            "example": "https://casama.ai/problems/not_found"
           },
           "title": {
             "type": "string"
@@ -3956,7 +3963,7 @@
               "live",
               "featured"
             ],
-            "description": "live: the provider's own list; featured: Kasama's short list (provider unreachable or fixture mode)"
+            "description": "live: the provider's own list; featured: Casama's short list (provider unreachable or fixture mode)"
           },
           "error": {
             "type": "string"
@@ -3981,7 +3988,7 @@
           },
           "featured": {
             "type": "boolean",
-            "description": "Recommended by Kasama; listed first"
+            "description": "Recommended by Casama; listed first"
           }
         },
         "required": [
@@ -4605,7 +4612,7 @@
               "docker",
               "e2b",
               "daytona",
-              "kasama-cloud",
+              "casama-cloud",
               "novita",
               "kubernetes",
               "incus",
@@ -7516,7 +7523,7 @@
             "properties": {
               "key": {
                 "type": "string",
-                "description": "Shown once; set it as KASAMA_CLOUD_KEY"
+                "description": "Shown once; set it as CASAMA_CLOUD_KEY"
               }
             },
             "required": [
@@ -8844,7 +8851,7 @@
           "format": {
             "type": "string",
             "enum": [
-              "kasama.bot"
+              "casama.bot"
             ]
           },
           "version": {
@@ -10366,6 +10373,18 @@
               "admin",
               "member"
             ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pronouns": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -11129,7 +11148,7 @@
               "string",
               "null"
             ],
-            "description": "The other Kasama server, when the contact is on another one"
+            "description": "The other Casama server, when the contact is on another one"
           },
           "exchanges": {
             "type": "integer"
@@ -11868,6 +11887,218 @@
           "external_id",
           "summary"
         ]
+      },
+      "UserFactList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserFact"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "UserFact": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "preference"
+            ]
+          },
+          "content": {
+            "type": "string"
+          },
+          "pinned": {
+            "type": "boolean"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "content",
+          "pinned",
+          "updated_at"
+        ]
+      },
+      "AddUserFactsRequest": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "fact",
+                    "preference"
+                  ]
+                },
+                "content": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                }
+              },
+              "required": [
+                "content"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 200
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "DeletedUserFact": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      },
+      "AboutYou": {
+        "type": "object",
+        "properties": {
+          "display_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "preferred_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pronouns": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "about": {
+            "type": "string"
+          },
+          "reply_style": {
+            "type": "string"
+          },
+          "learn": {
+            "type": "boolean"
+          },
+          "name_asked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "display_name",
+          "preferred_name",
+          "pronouns",
+          "about",
+          "reply_style",
+          "learn",
+          "name_asked"
+        ]
+      },
+      "ProfileSpace": {
+        "type": "object",
+        "properties": {
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "shared": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "org_id",
+          "shared"
+        ]
+      },
+      "SetProfileSpaceRequest": {
+        "type": "object",
+        "properties": {
+          "shared": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "shared"
+        ]
+      },
+      "UpdateAboutYouRequest": {
+        "type": "object",
+        "properties": {
+          "preferred_name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 60
+          },
+          "pronouns": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 40
+          },
+          "about": {
+            "type": "string",
+            "maxLength": 1500
+          },
+          "reply_style": {
+            "type": "string",
+            "maxLength": 600
+          },
+          "learn": {
+            "type": "boolean"
+          },
+          "name_asked": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        }
+      },
+      "UpdateUserFactRequest": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "pinned": {
+            "type": "boolean"
+          }
+        }
       },
       "PageViewLink": {
         "type": "object",
@@ -20365,7 +20596,7 @@
         "tags": [
           "webhooks"
         ],
-        "summary": "Custom webhook for a routine (X-Kasama-Signature: sha256=HMAC-SHA256 of the body)",
+        "summary": "Custom webhook for a routine (X-Casama-Signature: sha256=HMAC-SHA256 of the body)",
         "parameters": [
           {
             "schema": {
@@ -22428,10 +22659,10 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Whether a newer Kasama release exists",
+        "summary": "Whether a newer Casama release exists",
         "responses": {
           "200": {
-            "description": "Whether a newer Kasama release exists",
+            "description": "Whether a newer Casama release exists",
             "content": {
               "application/json": {
                 "schema": {
@@ -27992,7 +28223,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Accept a contact's invite with one of your bots (works across Kasama servers)",
+        "summary": "Accept a contact's invite with one of your bots (works across Casama servers)",
         "requestBody": {
           "required": true,
           "content": {
@@ -29432,6 +29663,445 @@
                   "required": [
                     "ok"
                   ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/facts": {
+      "post": {
+        "operationId": "addUserFacts",
+        "tags": [
+          "about-you"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUserFactsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserFactList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listUserFacts",
+        "tags": [
+          "about-you"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Facts bots learned about you, pinned and newest first",
+        "responses": {
+          "200": {
+            "description": "Facts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserFactList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/facts/{id}": {
+      "delete": {
+        "operationId": "deleteUserFact",
+        "tags": [
+          "about-you"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedUserFact"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateUserFact",
+        "tags": [
+          "about-you"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserFactRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Fact",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserFact"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/about": {
+      "get": {
+        "operationId": "getAboutYou",
+        "tags": [
+          "about-you"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "What bots call you and what you shared about yourself",
+        "responses": {
+          "200": {
+            "description": "About you",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AboutYou"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateAboutYou",
+        "tags": [
+          "about-you"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAboutYouRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "About you",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AboutYou"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/profile-spaces/{org_id}": {
+      "get": {
+        "operationId": "getProfileSpace",
+        "tags": [
+          "about-you"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Whether bots in this workspace use About me and learned facts",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "org_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sharing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileSpace"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "setProfileSpace",
+        "tags": [
+          "about-you"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "org_id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetProfileSpaceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sharing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileSpace"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
                 }
               }
             }

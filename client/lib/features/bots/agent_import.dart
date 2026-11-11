@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
@@ -241,8 +241,10 @@ class _AgentImportReviewScreenState extends ConsumerState<AgentImportReviewScree
 
 /// ChatGPT or Claude memory: copy a prompt, paste the answer back, keep what's right.
 class MemoryImportSheet extends ConsumerStatefulWidget {
-  const MemoryImportSheet({super.key, required this.botId});
-  final String botId;
+  const MemoryImportSheet({super.key, this.botId});
+
+  /// The bot whose memory gets the items; without one they go to About you (D-169).
+  final String? botId;
 
   @override
   ConsumerState<MemoryImportSheet> createState() => _MemoryImportSheetState();
@@ -280,7 +282,12 @@ class _MemoryImportSheetState extends ConsumerState<MemoryImportSheet> {
       for (var i = 0; i < _items!.length; i++)
         if (_keep.contains(i)) _items![i],
     ];
-    final n = await runGuarded(context, () => backend.saveImportedMemories(widget.botId, keep));
+    final botId = widget.botId;
+    final n = await runGuarded(context, () async {
+      if (botId != null) return backend.saveImportedMemories(botId, keep);
+      await backend.addUserFacts([for (final m in keep) (kind: m.kind == ImportedMemoryItemKindEnum.preference ? 'preference' : 'fact', content: m.content)]);
+      return keep.length;
+    });
     if (!mounted) return;
     setState(() => _busy = false);
     if (n != null) Navigator.pop(context, n);

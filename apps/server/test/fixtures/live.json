@@ -131,7 +131,7 @@
             "name": "desktop__launch",
             "args": {
               "app": "mousepad",
-              "args": ["/home/kasama/workspace/note.txt"]
+              "args": ["/home/casama/workspace/note.txt"]
             }
           }
         },
@@ -158,7 +158,7 @@
             "callId": "m2",
             "name": "desktop__type",
             "args": {
-              "text": "Hello from Kasama"
+              "text": "Hello from Casama"
             }
           }
         },

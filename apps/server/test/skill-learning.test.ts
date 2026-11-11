@@ -1,5 +1,5 @@
 /** Self-improving skills (D-126): proposals from repeated work, edits after failures and corrections. */
-import { hashEmbedder, learnFromRun } from "@kasama/agent";
+import { hashEmbedder, learnFromRun } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 

@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import {
   type ActionRule,
   APPROVAL_TTL_MS,
@@ -12,11 +12,12 @@ import {
   RUN_DEFAULTS,
   resolveActionRule,
   toolCategory,
-} from "@kasama/domain";
-import type { Logger } from "@kasama/observability";
-import { collectExec, type SandboxHandle } from "@kasama/sandbox";
+} from "@casama/domain";
+import type { Logger } from "@casama/observability";
+import { collectExec, type SandboxHandle } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
+import { loadPerson, type PersonContext, savePersonFact } from "./about-you.ts";
 import { replyToChannel } from "./channels/service.ts";
 import type { ComputerService } from "./computers.ts";
 import { buildContext, offloadLargeResult } from "./context.ts";
@@ -82,8 +83,8 @@ function groupNote(group: RunInfo["group"], botId: string, currentText: string |
 const handOffMessage = (why: string) =>
   `${why} Don't do it yourself. Prepare everything up to that step, then ask the person to finish it: use computer.request_takeover if you're working on your computer, otherwise tell them exactly what to do.`;
 
-import { contentKeys } from "@kasama/db";
-import { endRunSpan, recordRunSpan, runTraceId, startRunChildSpan } from "@kasama/observability";
+import { contentKeys } from "@casama/db";
+import { endRunSpan, recordRunSpan, runTraceId, startRunChildSpan } from "@casama/observability";
 import { deviceDataOfRun } from "./attention.ts";
 import {
   DEFAULT_LAZY_THRESHOLD,
@@ -391,6 +392,13 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       const memory = await memoryOf(deps, db, info.orgId);
       return memory.recall(info.botId, info.current.text);
     });
+    // About you (D-169): who this run is for, filtered for this workspace.
+    const person = await step("person", () =>
+      loadPerson(db, info.actingUserId, info.orgId).catch((err) => {
+        log?.warn("profile not loaded", { run_id: runId, error: (err as Error).message });
+        return null;
+      }),
+    );
 
     // Integration tools (MCP, OpenAPI, Composio, Pipedream) allowed for this bot.
     const integrationSpecs = await step("integrations", () =>
@@ -569,6 +577,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         computer: !!deps.computers,
         teamFolder: folder ?? undefined,
         routine: info.routine ? { id: info.routine.id, name: info.routine.name } : undefined,
+        person,
       });
 
     let ctx = contextFor(info.summary);
@@ -901,7 +910,8 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         deps,
         info,
         finalMessage.text,
-        recalled.map((m) => m.content),
+        [...recalled.map((m) => m.content), ...(person?.facts ?? [])],
+        person,
         chainFor,
         bus,
       ).catch((err) => {
@@ -1048,7 +1058,7 @@ export function failureMessage(code: string, detail: string): string {
     chatgpt_not_eligible: "This ChatGPT plan can't be used in other apps. Add an API key instead.",
     chatgpt_unavailable: "ChatGPT plan usage is unavailable right now. Try again in a few minutes.",
     chatgpt_forbidden: "ChatGPT refused this request.",
-    chatgpt_unsupported_request: "ChatGPT refused a request Kasama sent. This is a Kasama bug.",
+    chatgpt_unsupported_request: "ChatGPT refused a request Casama sent. This is a Casama bug.",
   };
   const redacted = detail
     .replace(/\b(sk|pk|rk|key|tok|ghp|gho|xox[abp])[-_][A-Za-z0-9_-]{8,}/gi, "[redacted]")
@@ -1513,7 +1523,7 @@ async function modelStep(
     "gen_ai.operation.name": "chat",
     "gen_ai.request.model": model,
     "gen_ai.agent.id": info.botId,
-    "kasama.run.step": i,
+    "casama.run.step": i,
   });
   let failovers = 0;
   const lf = info.llmTracing ? deps.langfuse : undefined;
@@ -1577,7 +1587,7 @@ async function modelStep(
     if (!cancelled) {
       endRunSpan(
         span,
-        { "kasama.failover_attempts": failovers },
+        { "casama.failover_attempts": failovers },
         {
           type: (err instanceof ModelCallError ? err.code : undefined) ?? "model_error",
         },
@@ -1597,9 +1607,9 @@ async function modelStep(
     ...(usage.cachedInputTokens !== undefined
       ? { "gen_ai.usage.cache_read.input_tokens": usage.cachedInputTokens }
       : {}),
-    "kasama.cost_usd": costOf(model, usage),
-    "kasama.failover_attempts": failovers,
-    "kasama.tool_calls": toolCalls.length,
+    "casama.cost_usd": costOf(model, usage),
+    "casama.failover_attempts": failovers,
+    "casama.tool_calls": toolCalls.length,
   };
   if (cancelled) {
     endRunSpan(span, spanEnd, { type: "cancelled" });
@@ -1650,7 +1660,7 @@ async function toolStep(
   try {
     const parsed = registry.parse(call.name, call.args);
     span.setAttribute(
-      "kasama.tool.risk",
+      "casama.tool.risk",
       parsed.def.riskFor?.(parsed.args as never) ?? parsed.def.risk,
     );
     const def = parsed.def;
@@ -1770,6 +1780,7 @@ async function toolStep(
       runId: info.runId,
       botId: info.botId,
       orgId: info.orgId,
+      actingUserId: info.actingUserId,
       output: (chunk) =>
         bus
           .append(info.runId, "tool.output", { call_id: call.callId, chunk: redactor.text(chunk) })
@@ -1798,7 +1809,7 @@ async function toolStep(
     const sink = deps.computers
       ? {
           write: async (name: string, text: string) => {
-            const path = `/home/kasama/.kasama/outputs/${name}`;
+            const path = `/home/casama/.casama/outputs/${name}`;
             await (await getComputer()).handle.writeFile(path, new TextEncoder().encode(text));
             return path;
           },
@@ -1812,7 +1823,7 @@ async function toolStep(
       artifact_path: res.artifactPath ?? off.artifactPath,
       duration_ms: Date.now() - started,
     });
-    endRunSpan(span, { "kasama.tool.outcome": "ok" });
+    endRunSpan(span, { "casama.tool.outcome": "ok" });
     return { content, untrusted };
   } catch (err) {
     const code = err instanceof ToolError ? err.code : "tool_error";
@@ -1822,7 +1833,7 @@ async function toolStep(
       error_code: code,
       message,
     });
-    endRunSpan(span, { "kasama.tool.outcome": "error" }, { type: code });
+    endRunSpan(span, { "casama.tool.outcome": "error" }, { type: code });
     return { content: `Error (${code}): ${message}`, untrusted };
   }
 }
@@ -2055,6 +2066,7 @@ async function extractStep(
   info: RunInfo,
   finalText: string,
   known: string[],
+  person: PersonContext | null,
   chainFor: (
     c: Array<{ credential_id: string; model: string } | undefined>,
   ) => Promise<ResolvedModel[]>,
@@ -2080,6 +2092,26 @@ async function extractStep(
   const bus = await busFn();
   const memory = await memoryOf(deps, deps.db, info.orgId);
   for (const m of r.memories) {
+    // About you (D-169): facts about the person go to their own private profile, never to the
+    // bot's memory, which other members can read. With learning off they're dropped.
+    if (m.about === "person") {
+      if (!info.actingUserId || !person?.learn) continue;
+      const saved = await savePersonFact(deps.db, {
+        userId: info.actingUserId,
+        orgId: info.orgId,
+        botId: info.botId,
+        runId: info.runId,
+        kind: m.kind,
+        content: m.content,
+      });
+      if (saved.created)
+        await bus.append(info.runId, "memory.written", {
+          memory_id: saved.id,
+          kind: m.kind,
+          scope: "profile",
+        });
+      continue;
+    }
     const { id } = await memory.write({
       orgId: info.orgId,
       botId: info.botId,
@@ -2181,11 +2213,11 @@ async function setTerminal(db: Database, info: RunInfo, status: string, error: u
         "gen_ai.request.model": info.policy.primary?.model ?? "unknown",
         "gen_ai.usage.input_tokens": Number(r.tokens_in),
         "gen_ai.usage.output_tokens": Number(r.tokens_out),
-        "kasama.cost_usd": Number(r.cost_usd),
-        "kasama.run.id": info.runId,
-        "kasama.run.trigger": info.trigger,
-        "kasama.run.status": status,
-        "kasama.org.id": info.orgId,
+        "casama.cost_usd": Number(r.cost_usd),
+        "casama.run.id": info.runId,
+        "casama.run.trigger": info.trigger,
+        "casama.run.status": status,
+        "casama.org.id": info.orgId,
       },
       { start: new Date(r.started), end: new Date(r.ended) },
       status === "failed"

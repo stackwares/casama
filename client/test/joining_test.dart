@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/app.dart';
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_app/core/router.dart';
-import 'package:kasama_app/features/workspaces/join_flow.dart';
-import 'package:kasama_app/features/workspaces/people_screen.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_app/app.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/core/router.dart';
+import 'package:casama_app/features/workspaces/join_flow.dart';
+import 'package:casama_app/features/workspaces/people_screen.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
@@ -20,11 +20,11 @@ class _NoWelcome extends FakeBackend {
 }
 
 Future<ProviderContainer> _app(WidgetTester tester, FakeBackend backend) async {
-  await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(backend)], child: const KasamaApp()));
+  await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(backend)], child: const CasamaApp()));
   for (var i = 0; i < 5; i++) {
     await tester.pump(const Duration(milliseconds: 100));
   }
-  return ProviderScope.containerOf(tester.element(find.byType(KasamaApp)));
+  return ProviderScope.containerOf(tester.element(find.byType(CasamaApp)));
 }
 
 Future<void> _settle(WidgetTester tester) async {
@@ -38,10 +38,10 @@ void main() {
     expect(inviteFrom('https://app.example.com/join/kjoin_abcdefghijklmnopqrst'), 'kjoin_abcdefghijklmnopqrst');
     expect(inviteFrom('kinv_abcdefghijklmnopqrst'), 'kinv_abcdefghijklmnopqrst');
     expect(inviteFrom('7f3q 9xwd'), '7F3Q-9XWD');
-    expect(inviteFrom('https://kasama.example.com/join/7F3Q-9XWD'), '7F3Q-9XWD');
+    expect(inviteFrom('https://casama.example.com/join/7F3Q-9XWD'), '7F3Q-9XWD');
     expect(inviteFrom('o1li-abcd'), '0111-ABCD');
     expect(inviteFrom('hello'), isNull);
-    expect(inviteServerFrom('https://kasama.example.com/join/7F3Q-9XWD'), 'https://kasama.example.com');
+    expect(inviteServerFrom('https://casama.example.com/join/7F3Q-9XWD'), 'https://casama.example.com');
     expect(inviteServerFrom('7F3Q-9XWD'), isNull);
     expect(parseEmails('a@x.com, B@x.com\nb@x.com; nope'), ['a@x.com', 'b@x.com']);
   });

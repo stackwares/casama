@@ -1,15 +1,15 @@
 /**
  * Hosted MCP endpoint (SPEC: Post-v1 roadmap → Hosted MCP endpoint; D-117). The same tools as the
- * stdio `@kasama/mcp` server, over Streamable HTTP at /mcp. Callers bring an OAuth access token
+ * stdio `@casama/mcp` server, over Streamable HTTP at /mcp. Callers bring an OAuth access token
  * (from the small authorization server below: metadata, dynamic client registration, PKCE codes
- * approved in the app), a workspace API key, or a Kasama sign-in. Every call runs as that person,
+ * approved in the app), a workspace API key, or a Casama sign-in. Every call runs as that person,
  * so the bot's approvals, rules and budgets apply.
  */
 import { createHash, randomBytes } from "node:crypto";
+import { routes } from "@casama/contracts";
+import { type JwtClaims, withUserSession } from "@casama/db";
+import { CasamaApi, createCasamaMcpServer } from "@casama/mcp";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession } from "@kasama/db";
-import { createKasamaMcpServer, KasamaApi } from "@kasama/mcp";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
@@ -22,7 +22,7 @@ const ACCESS_TTL_S = 3600;
 const REFRESH_TTL_DAYS = 60;
 
 /** The in-process environment a tool call carries: who it acts as. Outside requests can't set it. */
-export type InProcessEnv = { kasamaClaims?: JwtClaims };
+export type InProcessEnv = { casamaClaims?: JwtClaims };
 
 const claimsOf = (c: { get(k: "claims"): JwtClaims | undefined }) => {
   const claims = c.get("claims");
@@ -37,7 +37,7 @@ export function registerMcpRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   // --- the endpoint --------------------------------------------------------------
 
-  /** Who a bearer token acts as, and in which workspace (null: a Kasama sign-in, all workspaces). */
+  /** Who a bearer token acts as, and in which workspace (null: a Casama sign-in, all workspaces). */
   const authorize = async (
     header: string | undefined,
   ): Promise<{ claims: JwtClaims; orgId: string | null } | null> => {
@@ -73,21 +73,21 @@ export function registerMcpRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       );
     }
     // Tool calls reach the API in-process, as this person (the API's own checks apply).
-    const api = new KasamaApi({
+    const api = new CasamaApi({
       apiUrl: "http://in-process",
       token: "in-process",
       fetch: (async (url: string | URL, init?: RequestInit) => {
         const u = new URL(String(url));
         return app.request(`${u.pathname}${u.search}`, init, {
-          kasamaClaims: who.claims,
+          casamaClaims: who.claims,
         } satisfies InProcessEnv);
       }) as typeof fetch,
     });
-    const server = createKasamaMcpServer(api, {
+    const server = createCasamaMcpServer(api, {
       pollMs: deps.env.NODE_ENV === "test" ? 100 : 1000,
       scopeOrgId: who.orgId ?? undefined,
       canDecideApprovals: async () => {
-        if (!who.orgId) return true; // a full Kasama sign-in decides like the app does
+        if (!who.orgId) return true; // a full Casama sign-in decides like the app does
         const [o] = await db.execute<{ ok: boolean }>(
           sql`select mcp_decide_approvals as ok from public.organizations where id = ${who.orgId}::uuid`,
         );
@@ -203,7 +203,7 @@ export function registerMcpRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const [r] = await db.execute<{ id: string }>(sql`
       insert into public.mcp_auth_requests (client_id, redirect_uri, code_challenge, state)
       values (${q.client_id}, ${q.redirect_uri}, ${q.code_challenge}, ${q.state ?? null}) returning id`);
-    // The person approves in the Kasama app, signed in, and picks the workspace.
+    // The person approves in the Casama app, signed in, and picks the workspace.
     return c.redirect(`${deps.env.PUBLIC_APP_URL.replace(/\/$/, "")}/oauth/consent/${r?.id}`, 302);
   });
 

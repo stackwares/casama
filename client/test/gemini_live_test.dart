@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/core/gemini_live.dart';
-import 'package:kasama_app/core/voice.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_app/core/gemini_live.dart';
+import 'package:casama_app/core/voice.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 String _audio(int bytes) => base64Encode(Uint8List(bytes));

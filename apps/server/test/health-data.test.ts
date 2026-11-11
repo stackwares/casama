@@ -1,7 +1,7 @@
 /** Health data (D-150): summaries only, extras off by default, trends without a model, encryption on Cloud. */
 import { randomBytes } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { contentKeys } from "@kasama/db";
+import { contentKeys } from "@casama/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 

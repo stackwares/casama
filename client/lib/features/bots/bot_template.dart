@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
@@ -43,7 +43,7 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
     setState(() => _busy = true);
     final t = await runGuarded(context, () => ref.read(backendProvider).exportBot(widget.bot.id, memories: _memories));
     if (t != null) {
-      final name = '${widget.bot.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-')}.kasama-bot.json';
+      final name = '${widget.bot.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-')}.casama-bot.json';
       try {
         await FilePicker.saveFile(
           fileName: name,
@@ -109,7 +109,7 @@ Future<void> importBotFromFile(BuildContext context) async {
   try {
     final json = jsonDecode(utf8.decode(await picked.first.readAsBytes()));
     final t = BotTemplateFile.fromJson(json as Map<String, dynamic>);
-    if (t.format != BotTemplateFileFormatEnum.kasamaPeriodBot) throw const FormatException();
+    if (t.format != BotTemplateFileFormatEnum.casamaPeriodBot) throw const FormatException();
     if (!context.mounted) return;
     await Navigator.of(context).push(MaterialPageRoute(builder: (_) => ImportBotScreen(template: t)));
   } catch (_) {

@@ -5,7 +5,7 @@
  * export and account deletion all go through this interface. Provider request shapes come from
  * their public API docs and are tested against local fakes only.
  */
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import type { Embedder } from "./embeddings.ts";
 import { type MemoryKind, type MemoryRow, MemoryService } from "./memory.ts";
@@ -58,7 +58,7 @@ export class PostgresMemoryStore implements MemoryStore {
     return r;
   }
   async update(botId: string, id: string, patch: { content?: string; pinned?: boolean }) {
-    const { contentKeys } = await import("@kasama/db");
+    const { contentKeys } = await import("@casama/db");
     const [m] = await this.db.execute<{ org_id: string }>(
       sql`select org_id from public.memories where id = ${id}::uuid and bot_id = ${botId}::uuid`,
     );
@@ -121,7 +121,7 @@ const kindOf = (k: unknown): MemoryKind =>
 
 // ------------------------------------------------------------------ Honcho
 /**
- * Honcho (honcho.dev, v2 API). Each bot's memory is one session (`kasama-<bot>`) in the workspace's
+ * Honcho (honcho.dev, v2 API). Each bot's memory is one session (`casama-<bot>`) in the workspace's
  * Honcho workspace; each memory is a message from the bot's peer, with kind, pinned and importance
  * in its metadata. Search uses Honcho's search with the session as a filter. Honcho keeps messages;
  * deleting one marks it deleted in metadata and hides it, and deleting all memory deletes the sessions.
@@ -144,7 +144,7 @@ export class HonchoMemoryStore implements MemoryStore {
   private req<T>(method: string, path: string, body?: unknown) {
     return call<T>(this.o.fetch, this.url(path), this.o.key, method, body);
   }
-  private session = (botId: string) => `kasama-${botId}`;
+  private session = (botId: string) => `casama-${botId}`;
   private peer = (botId: string) => `bot-${botId}`;
 
   private async ensure(botId: string) {
@@ -292,7 +292,7 @@ export class HonchoMemoryStore implements MemoryStore {
 // ------------------------------------------------------------------ Supermemory
 /**
  * Supermemory (supermemory.ai, v3 API). Each memory is a document tagged with the bot's container
- * tag (`kasama_bot_<bot>`), with kind, pinned and importance in its metadata.
+ * tag (`casama_bot_<bot>`), with kind, pinned and importance in its metadata.
  */
 export class SupermemoryStore implements MemoryStore {
   readonly provider = "supermemory" as const;
@@ -307,7 +307,7 @@ export class SupermemoryStore implements MemoryStore {
   private req<T>(method: string, path: string, body?: unknown) {
     return call<T>(this.o.fetch, `${this.o.base}${path}`, this.o.key, method, body);
   }
-  private tag = (botId: string) => `kasama_bot_${botId}`;
+  private tag = (botId: string) => `casama_bot_${botId}`;
   private toRow(
     botId: string,
     d: {
@@ -436,7 +436,7 @@ export function storeFromConfig(c: MemoryBackendConfig, orgId: string, f?: Fetch
     return new HonchoMemoryStore({
       key: c.key,
       base: c.base_url ?? undefined,
-      workspace: c.workspace || `kasama-${orgId}`,
+      workspace: c.workspace || `casama-${orgId}`,
       fetch: f,
     });
   return new SupermemoryStore({ key: c.key, base: c.base_url ?? undefined, fetch: f });

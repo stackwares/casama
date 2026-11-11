@@ -169,7 +169,7 @@ declare
 begin
   perform realtime.send(v_msg, 'run_event', 'run:' || new.run_id::text, true);
   perform realtime.send(v_msg, 'run_event', 'bot:' || new.bot_id::text, true);
-  perform pg_notify('kasama_run_events', new.run_id::text || ':' || new.seq::text);
+  perform pg_notify('casama_run_events', new.run_id::text || ':' || new.seq::text);
   return null;
 end;
 $$;
@@ -225,7 +225,7 @@ end;
 $$;
 
 -- Supabase enables RLS on realtime.messages itself (the table belongs to the Realtime admin role).
-create policy kasama_broadcast_read on realtime.messages
+create policy casama_broadcast_read on realtime.messages
   for select to authenticated
   using (realtime.messages.extension = 'broadcast' and public.realtime_topic_allowed((select realtime.topic())));
 

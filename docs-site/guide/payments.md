@@ -9,15 +9,15 @@ account, and the bot never sees the card number.
 Workspace owners connect payments once.
 
 1. In Stripe, make sure your account has Issuing.
-2. In Kasama, open **Settings** → **Workspace settings** → **Payments**.
+2. In Casama, open **Settings** → **Workspace settings** → **Payments**.
 3. Enter your **Stripe secret key (with Issuing)**.
 4. In Stripe, add a webhook pointing at the address shown under **Point a Stripe webhook here**,
    for the `issuing_authorization.request` and `issuing_authorization.created` events. Paste its
-   **Webhook signing secret** into Kasama.
+   **Webhook signing secret** into Casama.
 5. Fill in the cardholder details: **Name on cards**, email, address and country.
 6. Set the limits (see below), then tap **Save**.
 
-Kasama checks the key before saving, stores the key and signing secret encrypted, and creates the
+Casama checks the key before saving, stores the key and signing secret encrypted, and creates the
 cardholder in your Stripe account.
 
 ## Spending limits
@@ -36,10 +36,10 @@ been spent this month.
 1. The bot asks to pay, with the merchant, amount, currency and reason.
 2. You get an approval card showing the amount and merchant, such as "for $89.50". Approve or deny
    it.
-3. When you approve, Kasama issues a virtual card for that one purchase.
-4. The bot fills in the checkout form. It gets placeholders, not card details, and Kasama fills the
+3. When you approve, Casama issues a virtual card for that one purchase.
+4. The bot fills in the checkout form. It gets placeholders, not card details, and Casama fills the
    real number, expiry date and security code into the page.
-5. When the merchant charges the card, Stripe asks Kasama to approve it in real time. Kasama
+5. When the merchant charges the card, Stripe asks Casama to approve it in real time. Casama
    approves only the right charge, then cancels the card.
 
 ::: warning Payments always ask
@@ -58,7 +58,7 @@ Each card is:
   merchant's name appears in the charge's merchant name, the currency matches, the amount is within
   the 5%, and the card is still valid.
 
-Some purchases are never allowed, and no rule can relax this. Kasama refuses these before a card
+Some purchases are never allowed, and no rule can relax this. Casama refuses these before a card
 exists, based on the merchant and reason:
 
 - Securities, stocks and brokerages
@@ -72,7 +72,7 @@ stored-value and gift card loads, wires, financial institutions, cash disburseme
 
 ## Keeping card details private
 
-The bot only ever handles placeholders. Kasama fills them in only:
+The bot only ever handles placeholders. Casama fills them in only:
 
 - in tools that accept secrets, such as filling a web form or making an HTTP request,
 - for the card issued to that same run, while it's still valid.
@@ -87,7 +87,7 @@ merchant, status and reason. Statuses include issued, used, declined, expired an
 
 ## Limits
 
-- Payments work only with your own Stripe Issuing account. Kasama-issued cards on Kasama Cloud
+- Payments work only with your own Stripe Issuing account. Casama-issued cards on Casama Cloud
   aren't offered.
 - Only owners can set up payments and change the limits.
 - The per-bot limit applies to every bot. There's no setting to give one bot a different limit yet.

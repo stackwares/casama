@@ -1,9 +1,9 @@
 import { defineConfig } from "vitepress";
 
-const repo = "https://github.com/stackwares/kasama";
+const repo = "https://github.com/stackwares/casama";
 
 export default defineConfig({
-  title: "Kasama",
+  title: "Casama",
   description: "Self-hostable AI teammates with their own computers.",
   cleanUrls: true,
   lastUpdated: true,
@@ -26,14 +26,14 @@ export default defineConfig({
       { text: "Get started", link: "/quick-start" },
       { text: "Guides", link: "/guide/bots" },
       { text: "Self-hosting", link: "/self-hosting/" },
-      { text: "Build on Kasama", link: "/develop/api" },
+      { text: "Build on Casama", link: "/develop/api" },
       { text: "API", link: "/api/", target: "_self" },
     ],
     sidebar: [
       {
         text: "Get started",
         items: [
-          { text: "What is Kasama", link: "/introduction" },
+          { text: "What is Casama", link: "/introduction" },
           { text: "Quick start", link: "/quick-start" },
           { text: "FAQ", link: "/faq" },
         ],
@@ -106,7 +106,7 @@ export default defineConfig({
         ],
       },
       {
-        text: "Build on Kasama",
+        text: "Build on Casama",
         collapsed: false,
         items: [
           { text: "HTTP API", link: "/develop/api" },
@@ -130,7 +130,7 @@ export default defineConfig({
     },
     footer: {
       message:
-        'Apache-2.0, except <code>ee/</code> (Kasama Enterprise License). <a href="https://github.com/stackwares/kasama/blob/main/CONTRIBUTING.md">Contribute</a>',
+        'Apache-2.0, except <code>ee/</code> (Casama Enterprise License). <a href="https://github.com/stackwares/casama/blob/main/CONTRIBUTING.md">Contribute</a>',
     },
   },
 });

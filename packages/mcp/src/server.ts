@@ -1,8 +1,8 @@
 /**
- * Kasama MCP server (Phase 8, D-077): control your bots from AI coding tools. Tools: list
+ * Casama MCP server (Phase 8, D-077): control your bots from AI coding tools. Tools: list
  * workspaces and bots, ask a bot (waits for its reply), read runs, list and decide approvals.
- * Authentication reuses the CLI's login (`kasama login`), refreshing the session as needed, or a
- * token in KASAMA_TOKEN.
+ * Authentication reuses the CLI's login (`casama login`), refreshing the session as needed, or a
+ * token in CASAMA_TOKEN.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -14,19 +14,19 @@ export const VERSION = "0.8.0";
 
 type Session = { access_token: string; refresh_token?: string; expires_at?: number };
 
-export interface KasamaApiOptions {
+export interface CasamaApiOptions {
   apiUrl: string;
-  /** A fixed access token (KASAMA_TOKEN), or the CLI's session file. */
+  /** A fixed access token (CASAMA_TOKEN), or the CLI's session file. */
   token?: string;
   sessionFile?: string;
   fetch?: typeof fetch;
 }
 
-export class KasamaApi {
-  readonly opts: KasamaApiOptions;
+export class CasamaApi {
+  readonly opts: CasamaApiOptions;
   private session: Session | null = null;
 
-  constructor(opts: KasamaApiOptions) {
+  constructor(opts: CasamaApiOptions) {
     this.opts = { ...opts, apiUrl: opts.apiUrl.replace(/\/$/, "") };
   }
 
@@ -49,7 +49,7 @@ export class KasamaApi {
         headers: { apikey: cfg.supabase_anon_key, "content-type": "application/json" },
         body: JSON.stringify({ refresh_token: s.refresh_token }),
       });
-      if (!r.ok) throw new Error("The Kasama session expired. Run `kasama login` again.");
+      if (!r.ok) throw new Error("The Casama session expired. Run `casama login` again.");
       const next = (await r.json()) as Session & { user?: unknown };
       this.session = next;
       writeFileSync(file, JSON.stringify(next), { mode: 0o600 });
@@ -77,10 +77,10 @@ export class KasamaApi {
 
 export function defaultSessionFile() {
   const dir =
-    process.env.KASAMA_CONFIG_DIR ??
+    process.env.CASAMA_CONFIG_DIR ??
     (process.platform === "win32"
-      ? join(process.env.APPDATA ?? homedir(), "kasama")
-      : join(homedir(), ".config", "kasama"));
+      ? join(process.env.APPDATA ?? homedir(), "casama")
+      : join(homedir(), ".config", "casama"));
   return join(dir, "session.json");
 }
 
@@ -90,8 +90,8 @@ const json = (v: unknown) => text(JSON.stringify(v, null, 2));
 type Org = { id: string; name: string; slug: string; role: string };
 type Bot = { id: string; name: string; status: string; org_id: string };
 
-export function createKasamaMcpServer(
-  api: KasamaApi,
+export function createCasamaMcpServer(
+  api: CasamaApi,
   opts: {
     pollMs?: number;
     timeoutMs?: number;
@@ -101,7 +101,7 @@ export function createKasamaMcpServer(
     canDecideApprovals?: () => Promise<boolean>;
   } = {},
 ) {
-  const server = new McpServer({ name: "kasama", version: VERSION });
+  const server = new McpServer({ name: "casama", version: VERSION });
 
   const orgs = async () =>
     (await api.call<{ items: Org[] }>("/v1/orgs")).items.filter(
@@ -131,7 +131,7 @@ export function createKasamaMcpServer(
 
   server.registerTool(
     "list_workspaces",
-    { title: "List workspaces", description: "Kasama workspaces you belong to, with your role." },
+    { title: "List workspaces", description: "Casama workspaces you belong to, with your role." },
     async () =>
       json((await orgs()).map((o) => ({ id: o.id, name: o.name, slug: o.slug, role: o.role }))),
   );
@@ -153,7 +153,7 @@ export function createKasamaMcpServer(
     {
       title: "Ask a bot",
       description:
-        "Send a message to a Kasama bot and wait for its reply. The bot can use its own computer and tools; risky actions may wait for approval (see list_approvals). Pass conversation_id to continue a thread.",
+        "Send a message to a Casama bot and wait for its reply. The bot can use its own computer and tools; risky actions may wait for approval (see list_approvals). Pass conversation_id to continue a thread.",
       inputSchema: {
         bot: z.string().describe("Bot name or id"),
         message: z.string().min(1).max(20_000),
@@ -269,7 +269,7 @@ export function createKasamaMcpServer(
     async ({ approval_id, decision }) => {
       if (opts.canDecideApprovals && !(await opts.canDecideApprovals()))
         throw new Error(
-          "This workspace doesn't allow deciding approvals over MCP. Approve it in the Kasama app.",
+          "This workspace doesn't allow deciding approvals over MCP. Approve it in the Casama app.",
         );
       if (opts.scopeOrgId) {
         const pending = (

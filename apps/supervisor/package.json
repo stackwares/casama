@@ -1,5 +1,5 @@
 {
-  "name": "@kasama/supervisor",
+  "name": "@casama/supervisor",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^2.1.6",
-    "@kasama/sandbox": "workspace:*",
+    "@casama/sandbox": "workspace:*",
     "hono": "^4.13.17",
     "ws": "^8.22.1"
   },

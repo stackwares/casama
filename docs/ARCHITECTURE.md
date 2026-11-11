@@ -9,7 +9,7 @@ This is the as-built view. [SPEC.md](../SPEC.md) is the target; this file tracks
 ## Components today
 
 ```
-Dart CLI ──(kasama_sdk)──▶ API (Hono, MODE=api) ── enqueue (DBOSClient) ──▶ Worker (DBOS, MODE=worker)
+Dart CLI ──(casama_sdk)──▶ API (Hono, MODE=api) ── enqueue (DBOSClient) ──▶ Worker (DBOS, MODE=worker)
    ▲  SSE                    │ withUserSession(claims)                       │ agentRun: model + tool steps
    │                         ▼                                               ▼
    └──── LISTEN/NOTIFY ── Supabase Postgres (RLS on every table) ◀── append_run_event ──┘
@@ -32,7 +32,7 @@ Dart CLI ──(kasama_sdk)──▶ API (Hono, MODE=api) ── enqueue (DBOSCl
 - **packages/db**: the Drizzle schema pulled from the SQL migrations, `createDb`, and `withUserSession`.
 - **packages/domain**: pure logic (roles, slugs, budgets and run limits).
 - **packages/observability**: OpenTelemetry, Sentry and a JSON logger.
-- **dart/kasama_api**: the generated REST client. **dart/kasama_sdk**: auth, typed run events, `watchRun` (SSE with catch-up and reconnect) and `RunEventBuffer`. **dart/cli**: the `kasama` CLI.
+- **dart/casama_api**: the generated REST client. **dart/casama_sdk**: auth, typed run events, `watchRun` (SSE with catch-up and reconnect) and `RunEventBuffer`. **dart/cli**: the `casama` CLI.
 - **supabase/**: migrations (source of truth) and pgTAP tests.
 
 ## Request path for one chat message
@@ -62,7 +62,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 - **apps/supervisor**: the supervisor HTTP API and terminal WebSocket proxy.
 - **infra/egress-proxy**: the egress proxy with its control API.
 - **packages/agent/src/computers.ts**: `ComputerService` (which computer a bot uses, start or restore under an advisory lock, idle sleep, checkpoints with retention, usage seconds). **tools/computer.ts**: `shell.exec`, `files.*`, `browser.*`, `checkpoint.create`.
-- **API**: `/v1/computers` list, get, start, stop, restart, files (list, download, upload, delete), checkpoints (list, create, restore) and the terminal WebSocket. **CLI**: `kasama computer status|start|stop|shell|files|checkpoints|restore`.
+- **API**: `/v1/computers` list, get, start, stop, restart, files (list, download, upload, delete), checkpoints (list, create, restore) and the terminal WebSocket. **CLI**: `casama computer status|start|stop|shell|files|checkpoints|restore`.
 
 ## Flutter app (Phase 3)
 
@@ -104,7 +104,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 ## Billing and Cloud Connect (Phase 7)
 
 - **Billing** (D-070): `apps/server/src/billing` (`BillingProvider`, Dodo, App Store and Google Play adapters, `BillingService`), `/v1/billing/plans`, `/v1/orgs/{id}/billing` (summary, checkout, portal, purchases, usage), `/hooks/billing/{dodo,app_store,google_play}`, and the worker's `billingSettle` job (every minute). Tables: `subscriptions`, `credit_ledger`, `credit_packs`, `billing_events`, plus `entitlements.overrides` and `usage_ledger.billable`. App: Billing screen (plans, store purchases through `in_app_purchase`, Restore Purchases, web checkout and portal, usage, Cloud Connect keys) and a paywall on 402.
-- **Cloud Connect** (D-071): `/v1/orgs/{id}/cloud-connect/keys`, `/connect/v1/{whoami,sandbox/*,models/chat/completions}` on the cloud; the `kasama-cloud` provider on self-hosted servers. Tables: `cloud_connect_keys`, `cloud_connect_computers`.
+- **Cloud Connect** (D-071): `/v1/orgs/{id}/cloud-connect/keys`, `/connect/v1/{whoami,sandbox/*,models/chat/completions}` on the cloud; the `casama-cloud` provider on self-hosted servers. Tables: `cloud_connect_keys`, `cloud_connect_computers`.
 - Off by default (`BILLING_ENABLED=false`).
 
 ## ChatGPT plan sign-in (D-091)
@@ -112,19 +112,19 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 - **API** (`routes/chatgpt.ts`): `/v1/credentials/chatgpt/start|complete` (loopback sign-in; the server exchanges the code, verifies the ID token and writes the tokens to Vault), plus `PATCH/DELETE /v1/credentials/{id}` for every key. `CHATGPT_SIGN_IN` (auto: off when billing is on), reported as `chatgpt_sign_in` in `/v1/config`.
 - **Agent** (`chatgpt-auth.ts`, `gateway/chatgpt.ts`, `credentials.ts`): OAuth helpers, the Responses adapter with OpenAI's plan-usage constraints and error codes, owner-only resolution, refresh under an advisory lock. Runs know the person they act for (`actingUserId`); plan usage is recorded at cost 0 (`usage_ledger.source = 'chatgpt_plan'`); skipped plans emit `model.fallback`.
 - **Worker:** ChatGPT key test (model list), `revokeCredential`, idle refresh in the hourly maintenance job.
-- **Clients:** `kasama_sdk/chatgpt_sign_in.dart` (loopback listener) used by `kasama credential chatgpt` and the desktop app's "Continue with ChatGPT"; Model keys shows plans with status, reconnect, the next-model setting, Manage usage and Remove.
+- **Clients:** `casama_sdk/chatgpt_sign_in.dart` (loopback listener) used by `casama credential chatgpt` and the desktop app's "Continue with ChatGPT"; Model keys shows plans with status, reconnect, the next-model setting, Manage usage and Remove.
 
 ## Two-step sign-in (D-093)
 
-- Supabase Auth TOTP; `organizations.require_mfa`; `has_role` requires aal2 for owner and admin powers when it is on; `mfa_required` errors from the API. App: Settings → Two-step sign-in and the `/two-step` code screen. CLI: `kasama login --code`.
+- Supabase Auth TOTP; `organizations.require_mfa`; `has_role` requires aal2 for owner and admin powers when it is on; `mfa_required` errors from the API. App: Settings → Two-step sign-in and the `/two-step` code screen. CLI: `casama login --code`.
 
-## Kasama Cloud abuse controls (D-094)
+## Casama Cloud abuse controls (D-094)
 
 - `services/abuse.ts` and `routes/abuse.ts`: sign-up hook (App Check or proof of work), `/v1/signup/challenge`, `/internal/abuse` for egress reports, suspension; admin suspend/lift and `/v1/admin/abuse`. Egress proxy: mail and mining ports and pools refused and reported. `ComputerService.checkCanStart` (suspended, unverified free workspaces). App: sign-up proof, banner, owner console Abuse tab.
 
 ## Worker database role (D-095)
 
-- The worker connects as `kasama_worker` (`WORKER_DATABASE_URL`): explicit per-table policies, Vault read and update, two narrow `public.worker_*` functions instead of `auth.users`, its own `dbos` schema; no superuser or RLS bypass. New tables call `public.allow_worker`.
+- The worker connects as `casama_worker` (`WORKER_DATABASE_URL`): explicit per-table policies, Vault read and update, two narrow `public.worker_*` functions instead of `auth.users`, its own `dbos` schema; no superuser or RLS bypass. New tables call `public.allow_worker`.
 
 ## Local MCP servers (D-096)
 
@@ -144,12 +144,12 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 ## Bots that manage bots (D-100)
 
-- `packages/agent/src/tools/bots.ts`: `bots.list|create|update|archive` and `sidebar.organize`, capped at the acting bot's autonomy and budget; routine tools take `bot`. `bot_folders`, `bots.folder_id|sort_key|archived_at`, and `bot_revisions` (trigger `bots_record_revision`; the acting bot comes from `kasama.actor_bot`). App: sidebar folders, bot settings → Folder, Settings history (restore), Archive; Archived bots on the bot list.
+- `packages/agent/src/tools/bots.ts`: `bots.list|create|update|archive` and `sidebar.organize`, capped at the acting bot's autonomy and budget; routine tools take `bot`. `bot_folders`, `bots.folder_id|sort_key|archived_at`, and `bot_revisions` (trigger `bots_record_revision`; the acting bot comes from `casama.actor_bot`). App: sidebar folders, bot settings → Folder, Settings history (restore), Archive; Archived bots on the bot list.
 
 ## Ask for a secret (D-101)
 
 - `packages/agent/src/secret-requests.ts` (`secrets.request`, handled in the run loop like takeovers), `secret_requests`, `/v1/secrets/requests` (list, fulfill, decline), events `secret.requested`/`secret.resolved`, and the chat's protected `SecretPrompt` card.
-- Sign-in codes (D-102): `secrets.kind = totp`, `{{totp:NAME}}` resolved by `resolvePlaceholders` with `@kasama/domain` `totp.ts`; QR scanning in `client/lib/features/settings/totp_scan.dart`.
+- Sign-in codes (D-102): `secrets.kind = totp`, `{{totp:NAME}}` resolved by `resolvePlaceholders` with `@casama/domain` `totp.ts`; QR scanning in `client/lib/features/settings/totp_scan.dart`.
 
 ## Search (D-103)
 
@@ -177,7 +177,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 ## Quiet hours (D-109)
 
-- `profiles.quiet_hours`, `user_bot_settings`, `notifications.push_status`/`push_after`, `NotificationService.quietUntil`/`sendDeferred` (worker minute tick), `@kasama/domain` `quiet-hours.ts`, and the app's `features/notifications/quiet_hours.dart`.
+- `profiles.quiet_hours`, `user_bot_settings`, `notifications.push_status`/`push_after`, `NotificationService.quietUntil`/`sendDeferred` (worker minute tick), `@casama/domain` `quiet-hours.ts`, and the app's `features/notifications/quiet_hours.dart`.
 
 ## Bot templates (D-110)
 
@@ -185,7 +185,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 ## Shortcuts (D-111)
 
-- App Intents and `ShortcutBridge` in `client/ios/Runner/AppDelegate.swift` and `client/macos/Runner/AppDelegate.swift`, `client/lib/core/shortcuts.dart` (list sync, `kasama/shortcuts` channel, Android `quick_actions`), `/run-routine/<ref>`.
+- App Intents and `ShortcutBridge` in `client/ios/Runner/AppDelegate.swift` and `client/macos/Runner/AppDelegate.swift`, `client/lib/core/shortcuts.dart` (list sync, `casama/shortcuts` channel, Android `quick_actions`), `/run-routine/<ref>`.
 
 ## Offline cache (D-112)
 
@@ -209,7 +209,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 ## Hosted MCP endpoint (D-117)
 
-- `apps/server/src/api/routes/mcp.ts` (`/mcp` with `@kasama/mcp` tools over in-process API calls, the OAuth server, consent, API keys), `mcp_clients`/`mcp_auth_requests`/`mcp_tokens`, `organizations.mcp_decide_approvals`, `docs-site/guide/mcp.md`, and the app's consent screen and Connect AI apps section.
+- `apps/server/src/api/routes/mcp.ts` (`/mcp` with `@casama/mcp` tools over in-process API calls, the OAuth server, consent, API keys), `mcp_clients`/`mcp_auth_requests`/`mcp_tokens`, `organizations.mcp_decide_approvals`, `docs-site/guide/mcp.md`, and the app's consent screen and Connect AI apps section.
 
 ## Group chats (D-118)
 
@@ -229,11 +229,11 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 ## Import an agent (D-122)
 
-- `packages/domain/src/agent-import.ts` (OpenClaw and Hermes Agent folders → a `kasama.bot` template; ChatGPT/Claude memory prompt and parser), `agent_imports`/`agent_import_files`, `apps/server/src/api/routes/agent-import.ts`, and `client/lib/features/bots/agent_import.dart` (review screen, memory sheet).
+- `packages/domain/src/agent-import.ts` (OpenClaw and Hermes Agent folders → a `casama.bot` template; ChatGPT/Claude memory prompt and parser), `agent_imports`/`agent_import_files`, `apps/server/src/api/routes/agent-import.ts`, and `client/lib/features/bots/agent_import.dart` (review screen, memory sheet).
 
 ## Routines and skills as files (D-124)
 
-- `packages/domain/src/workspace-files.ts` (file formats), `packages/agent/src/workspace-files.ts` (export, apply) and `git-sync.ts` (`syncWorkspaceRepo`, `gitSyncTick` in the worker's minute tick), `org_git_sync` with change triggers, `apps/server/src/api/routes/workspace-files.ts` (export, import, git sync setup, `/hooks/git-sync/<org>`), `kasama files export|import`, and the workspace settings section.
+- `packages/domain/src/workspace-files.ts` (file formats), `packages/agent/src/workspace-files.ts` (export, apply) and `git-sync.ts` (`syncWorkspaceRepo`, `gitSyncTick` in the worker's minute tick), `org_git_sync` with change triggers, `apps/server/src/api/routes/workspace-files.ts` (export, import, git sync setup, `/hooks/git-sync/<org>`), `casama files export|import`, and the workspace settings section.
 
 ## Knowledge sources (D-125)
 
@@ -285,7 +285,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 ## Paid data services (D-138)
 
-- `packages/agent/src/data.ts` (`DataProvider`, `TregProvider`, `data.search`, `data.call`, `DATA_MARKUP`), registered in the worker with the workspace's `treg` key or Kasama's resale key (`TREG_RESALE`); `usage_ledger.kind = data_calls`; the price in approval summaries in `run.ts`.
+- `packages/agent/src/data.ts` (`DataProvider`, `TregProvider`, `data.search`, `data.call`, `DATA_MARKUP`), registered in the worker with the workspace's `treg` key or Casama's resale key (`TREG_RESALE`); `usage_ledger.kind = data_calls`; the price in approval summaries in `run.ts`.
 
 ## More sandbox providers (D-139)
 
@@ -315,8 +315,8 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - D-145: the sign-up allowlist in `routes/abuse.ts` (compose wires the hook); `AiGatewayConfig` in `CredentialResolver`; `packages/agent/src/secret-store.ts` (`SecretStore`, Vault and Infisical), `org_secret_stores`, `secrets.store`, `routes/secret-store.ts`, and "Where secrets are kept" in workspace settings.
 - D-146: `ee/server/audit-forward.ts` (webhook, OTLP and S3 senders and the cursor pass), `audit_forwarders`, the forwarder routes in `ee/server/index.ts`, and the worker's minute tick.
-- D-147: `dart/cli/lib/src/backups.dart` (age encryption and retention) and the backup and restore flags in `commands_selfhost.dart`; `infra/helm/kasama` and `scripts/check-helm.sh`; `DEFAULT_PROVIDER` in `apps/supervisor/src/main.ts`; `client/lib/features/selfhost/` (`LocalServerManager` and the sign-in sheet).
-- D-148: `packages/agent/src/team-computer.ts` (folder names, `inTeamFolder`, desktop leases), the wrapping and the `desktop_busy` check in `run.ts`, `computer_desktop_leases`, `computers.max_desktops`, `bots.team_folder`; the warm pool in `packages/sandbox/src/docker/provider.ts` (`fillPool`, claim by rename, `dev.kasama.pool` alias) and `WARM_POOL_SIZE` in the supervisor.
+- D-147: `dart/cli/lib/src/backups.dart` (age encryption and retention) and the backup and restore flags in `commands_selfhost.dart`; `infra/helm/casama` and `scripts/check-helm.sh`; `DEFAULT_PROVIDER` in `apps/supervisor/src/main.ts`; `client/lib/features/selfhost/` (`LocalServerManager` and the sign-in sheet).
+- D-148: `packages/agent/src/team-computer.ts` (folder names, `inTeamFolder`, desktop leases), the wrapping and the `desktop_busy` check in `run.ts`, `computer_desktop_leases`, `computers.max_desktops`, `bots.team_folder`; the warm pool in `packages/sandbox/src/docker/provider.ts` (`fillPool`, claim by rename, `dev.casama.pool` alias) and `WARM_POOL_SIZE` in the supervisor.
 
 ## Devices (Wave 4, D-149 onward)
 
@@ -329,10 +329,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 ## Production and launch (Phase 8)
 
 - **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).
-- **Enterprise** (D-073): `ee/` (`@kasama/ee`): license keys, `/v1/orgs/{id}/audit-log/export`, `/v1/orgs/{id}/sso`.
-- **Telemetry** (D-074): opt-in weekly ping; `/telemetry/v1/ping` on Kasama Cloud.
+- **Enterprise** (D-073): `ee/` (`@casama/ee`): license keys, `/v1/orgs/{id}/audit-log/export`, `/v1/orgs/{id}/sso`.
+- **Telemetry** (D-074): opt-in weekly ping; `/telemetry/v1/ping` on Casama Cloud.
 - **Metrics** (D-075): `/metrics`; `infra/monitoring/` (Prometheus, alerts, Grafana).
-- **Self-host** (D-076): `install.sh`, `infra/compose/docker-compose.yml`, `kasama selfhost`, `deploy/`, `docs-site/self-hosting/`.
+- **Self-host** (D-076): `install.sh`, `infra/compose/docker-compose.yml`, `casama selfhost`, `deploy/`, `docs-site/self-hosting/`.
 - **MCP server** (D-077): `packages/mcp`.
 - **Evals and load** (D-078): `packages/evals`, `apps/server/load`.
 - **Launch prep**: `site/`, `client/store/`, `docs/launch/`, `scripts/package-*`, `client/shorebird.yaml`; gate status in `docs/LAUNCH_CHECKLIST.md`, security in `docs/SECURITY_REVIEW.md`.
@@ -350,8 +350,8 @@ Everything hosted is optional, behind an interface, with a default that runs in 
 | Voice                     | Off                                                  | The workspace's own OpenAI, Deepgram, ElevenLabs, Cartesia or Fish Audio keys    | D-065               |
 | Live view relay           | coturn container                                     | any TURN service                                                                 | D-055               |
 | Default model             | GPT-6 Luna via the org's own key                     | any provider and model                                                           | D-064               |
-| Billing                   | Off: no paywall, no limits                           | Dodo Payments, App Store, Google Play (Kasama Cloud)                             | D-070               |
-| Cloud computers, credits  | Off                                                  | Cloud Connect key to a Kasama Cloud workspace                                    | D-071               |
+| Billing                   | Off: no paywall, no limits                           | Dodo Payments, App Store, Google Play (Casama Cloud)                             | D-070               |
+| Cloud computers, credits  | Off                                                  | Cloud Connect key to a Casama Cloud workspace                                    | D-071               |
 | Telemetry                 | Off                                                  | Weekly anonymous counts (`TELEMETRY=on`)                                         | D-074               |
 | Monitoring                | `/metrics` only                                      | Prometheus and Grafana (`--profile monitoring`)                                  | D-075               |
 | Enterprise features       | Off (Apache-2.0 features only)                       | License key for `ee/` (audit export, SAML SSO)                                   | D-073               |
@@ -362,15 +362,15 @@ Keys go into Supabase Vault through the API's server role and are never returned
 
 ## Code generation
 
-`pnpm gen` writes `packages/contracts/openapi.json`, regenerates `dart/kasama_api` and `dart/kasama_sdk/lib/src/generated/`. `pnpm --filter @kasama/db pull` regenerates the Drizzle schema. CI fails if any generated file is stale.
+`pnpm gen` writes `packages/contracts/openapi.json`, regenerates `dart/casama_api` and `dart/casama_sdk/lib/src/generated/`. `pnpm --filter @casama/db pull` regenerates the Drizzle schema. CI fails if any generated file is stale.
 
 ## Testing
 
-- `@kasama/db/testing` starts throwaway Postgres clusters from local binaries with a Supabase shim (roles, auth, Vault and Realtime stand-ins). CI also runs pgTAP on the real Supabase stack.
-- Model calls in tests replay recorded fixtures (`apps/server/test/fixtures/chat.json`, `packages/agent/test/run.test.ts`). Turns are matched by request content, so re-executed steps get the same answer. Set `KASAMA_MODEL_RECORD=file.jsonl` on a worker with real keys to record new fixtures.
+- `@casama/db/testing` starts throwaway Postgres clusters from local binaries with a Supabase shim (roles, auth, Vault and Realtime stand-ins). CI also runs pgTAP on the real Supabase stack.
+- Model calls in tests replay recorded fixtures (`apps/server/test/fixtures/chat.json`, `packages/agent/test/run.test.ts`). Turns are matched by request content, so re-executed steps get the same answer. Set `CASAMA_MODEL_RECORD=file.jsonl` on a worker with real keys to record new fixtures.
 - `apps/server/test/crash-resume.test.ts` kills a real worker process mid-run with SIGKILL and proves a new worker finishes it without repeating finished steps.
 - `scripts/e2e-cli.sh` runs the Phase 0 and Phase 1 gates through the real CLI.
-- `scripts/live-check.sh` runs the few live checks against a real model (key from `~/.config/kasama/openrouter.env`); everything else uses fixtures.
+- `scripts/live-check.sh` runs the few live checks against a real model (key from `~/.config/casama/openrouter.env`); everything else uses fixtures.
 - `apps/server/test/live.test.ts` is the Phase 5 gate (desktop computer, TURN relay and a werift WebRTC client); `packages/sandbox/test/live.test.ts` and `hosted.test.ts` cover the streamer and the E2B/Daytona adapters; `client/integration_test/live_flow_test.dart` runs the live view in the real app.
 - `apps/server/test/autonomy.test.ts` is the Phase 4 gate (fixtures in `test/fixtures/autonomy.json`, a local MCP server and a fal.ai mock).
 
@@ -384,7 +384,7 @@ Keys go into Supabase Vault through the API's server role and are never returned
 | 3 MVP app               | Built                  | Same end-to-end flow passes on macOS, iOS Simulator, Android emulator and web against real local Supabase. The tester gate (10 testers for a week) needs store accounts and people                                                                                                                                                                                                                                                                                                                                                                                                           |
 | 4 Autonomy              | Built                  | Gate verified locally: high-risk calls wait for approval and resume or fail the step on deny/expiry; scheduled routines fire in America/Chicago and notify; signed webhooks start runs and unsigned ones do not; MCP tools work end to end; media generation needs confirmation; subagents stop at their budget. App end-to-end adds a routine run and its notification on macOS, iOS Simulator and Android emulator. Composio, Pipedream, fal.ai, Brave/Tavily and FCM tested against mocks only                                                                                            |
 | 5 Live computer         | Built                  | Gate verified locally: live view through the API and TURN relay (data-channel RTT 1–3 ms, first frame about 2.4 s including streamer start) in a WebRTC test client and in the app on macOS and the iOS Simulator; take control and hand back mid-run resumes the bot with the user's note; request_takeover waits for a person; the same live flow works on E2B and the contract suite passes on E2B and Daytona (local control-plane mocks); a bot completes a task in Mousepad. 4G latency, real E2B/Daytona accounts and gVisor not verified                                             |
-| 6 Reach and extras      | Built                  | Gate verified locally: the desktop companion completed a browser task on this Mac (agent-browser read a page served on the machine, through the tunnel, in the real app); an external app streamed a run with kasama_sdk; live-call plumbing measured against a mock provider (session mint about 30 ms, forwarded tool call about 200 ms). The "reply within 1 s" part is the realtime provider's latency and needs an OpenAI key. Widgets, Live Activities and the iOS share extension build; deep links verified on the Android emulator; release APK starts normally; publishing pending |
+| 6 Reach and extras      | Built                  | Gate verified locally: the desktop companion completed a browser task on this Mac (agent-browser read a page served on the machine, through the tunnel, in the real app); an external app streamed a run with casama_sdk; live-call plumbing measured against a mock provider (session mint about 30 ms, forwarded tool call about 200 ms). The "reply within 1 s" part is the realtime provider's latency and needs an OpenAI key. Widgets, Live Activities and the iOS share extension build; deep links verified on the Android emulator; release APK starts normally; publishing pending |
 | 7 Monetization          | Built                  | Gate verified locally against provider fakes: a Dodo web purchase unlocked the plan in the app on the iOS Simulator, the Android emulator and macOS (same workspace entitlement); an App Store purchase unlocked the web API; Dodo cancel and refund, App Store refund and expiry, and Play voided-purchase notifications removed access; a self-hosted instance ran a bot's command on a cloud computer through Cloud Connect and the time showed on the cloud bill. One live model call through the Cloud Connect proxy to OpenRouter. Real Dodo, Apple and Google accounts not used       |
 | 8 Production and launch | Built (launch pending) | Locally verified: k6 load test (200 bots woken at once, 100 concurrent chat streams) p95 time to first token 0.14 s and 0.82 s with recorded models; evals quick subset 100% (fixtures) and a 3-task live run 100%; security review with a cross-tenant sweep of all API routes and sandbox penetration checks (one memory-limit bug fixed); fresh self-host install in 2 min 47 s with a cold build, then a bot ran a command on a computer. Store approval and the public launch need Oliver                                                                                               |
 

@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
+import { ModelCallError, type ModelGateway } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { ModelCallError, type ModelGateway } from "@kasama/agent";
 import { testCredential } from "../src/worker/workflows.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
@@ -130,7 +130,7 @@ describe("model keys", () => {
     expect(list.items[0]).toMatchObject({ id: credentialId, last_test_ok: true });
   });
 
-  it("lists models for the picker, recommended first (fixture mode: Kasama's short list)", async () => {
+  it("lists models for the picker, recommended first (fixture mode: Casama's short list)", async () => {
     const res = await call(`/v1/credentials/${credentialId}/models`, { token: owner.token });
     expect(res.status).toBe(200);
     const body = await j(res);

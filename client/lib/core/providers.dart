@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 import 'backend.dart';
 import 'local_cache.dart';
@@ -80,7 +80,7 @@ final organizationsProvider = AsyncNotifierProvider<OrganizationsNotifier, List<
 
 /// The selected workspace id (defaults to the first one), remembered on this device (D-099).
 class SelectedOrg extends Notifier<String?> {
-  static const _key = 'kasama.selected_org';
+  static const _key = 'casama.selected_org';
 
   @override
   String? build() {
@@ -102,7 +102,7 @@ class SelectedOrg extends Notifier<String?> {
 /// An invite opened before signing in; shown again right after (D-099, D-167). Kept on the device
 /// so it survives the app restarting during sign-up (a confirmation email opened later).
 class PendingJoinToken extends Notifier<String?> {
-  static const _key = 'kasama.pending_join';
+  static const _key = 'casama.pending_join';
 
   @override
   String? build() {

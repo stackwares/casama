@@ -14,7 +14,7 @@ describe("system", () => {
     expect(await j(ready)).toEqual({ status: "ok", checks: { database: "ok" } });
     const cfg = await j(await h.request("/v1/config"));
     expect(cfg).toMatchObject({
-      product_name: "Kasama",
+      product_name: "Casama",
       supabase_anon_key: "anon",
       billing_enabled: false,
       wallpapers_enabled: false,

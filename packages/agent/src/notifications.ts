@@ -1,6 +1,6 @@
 import { createSign } from "node:crypto";
-import type { Database } from "@kasama/db";
-import { type QuietHours, quietUntil } from "@kasama/domain";
+import type { Database } from "@casama/db";
+import { type QuietHours, quietUntil } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { attentionHold, type HoldReason, type Why } from "./attention.ts";
 

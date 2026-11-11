@@ -37,6 +37,18 @@ describe("buildContext", () => {
     expect(a.messages.at(-1)).toEqual(base.current);
   });
 
+  it("puts the person's profile after the date, leaving the cached prefix alone (D-169)", () => {
+    const plain = buildContext(base);
+    const withPerson = buildContext({
+      ...base,
+      person: { name: "Sam", replyStyle: "Short.", facts: ["Has two kids."], learn: true },
+    });
+    expect(withPerson.system.slice(0, 3)).toEqual(plain.system.slice(0, 3));
+    expect(withPerson.system[3]).toContain("You're talking with Sam. Call them Sam.");
+    expect(withPerson.system[3]).toContain("- Has two kids.");
+    expect(withPerson.system[4]).toContain("Likes teal");
+  });
+
   it("compacts old turns past 70% of the window and never starts on a tool result", () => {
     const big = "x".repeat(4000); // ~1000 tokens
     const history: ChatMessage[] = [];
@@ -67,9 +79,9 @@ describe("helpers", () => {
     const text = "y".repeat(40_000);
     const out = await offloadLargeResult(text, {
       name: "out.txt",
-      sink: { write: async (n) => `/workspace/.kasama/${n}` },
+      sink: { write: async (n) => `/workspace/.casama/${n}` },
     });
-    expect(out.artifactPath).toBe("/workspace/.kasama/out.txt");
+    expect(out.artifactPath).toBe("/workspace/.casama/out.txt");
     expect(out.content.length).toBeLessThan(3000);
     const noSink = await offloadLargeResult(text, { name: "x" });
     expect(noSink.content).toContain("characters omitted");

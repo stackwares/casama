@@ -1,0 +1,7 @@
+apiVersion: v2
+name: casama
+description: Casama (the API, worker, sandbox supervisor and web app) on Kubernetes, with computers as pods. Bring your own Supabase.
+type: application
+version: 0.1.0
+appVersion: "latest"
+keywords: [casama, ai, agents]

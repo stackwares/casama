@@ -1,6 +1,6 @@
 -- Linked agents (SPEC: Linked agents; D-143): a person links their bot with a trusted contact's
 -- bot. Both approve (one invites, the other accepts) and either can revoke. On the same server a
--- link is two rows pointing at each other; across Kasama servers each side keeps one row and the
+-- link is two rows pointing at each other; across Casama servers each side keeps one row and the
 -- bots talk over A2A with per-link tokens.
 create table public.bot_links (
   id uuid primary key default gen_random_uuid(),
@@ -11,7 +11,7 @@ create table public.bot_links (
   status text not null default 'pending' check (status in ('pending', 'active', 'revoked')),
   invite_code_hash text,
   invite_expires_at timestamptz,
-  -- The other side: a row here (same server), or a bot on another Kasama server.
+  -- The other side: a row here (same server), or a bot on another Casama server.
   peer_link_id uuid,
   peer_bot_id text,
   peer_bot_name text,

@@ -3,8 +3,8 @@
  * create, change and archive bots, organize the sidebar and change its own settings. It can never
  * give any bot (itself included) more autonomy or budget than it has.
  */
-import type { Database } from "@kasama/db";
-import { templateById } from "@kasama/domain";
+import type { Database } from "@casama/db";
+import { templateById } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "../acting.ts";
@@ -64,7 +64,7 @@ export function registerBotTools(registry: ToolRegistry, deps: { db: Database })
   /** Changes made in this transaction are recorded as made by this bot (bot_revisions). */
   const asBot = <T>(botId: string, fn: (tx: Database) => Promise<T>) =>
     db.transaction(async (tx) => {
-      await tx.execute(sql`select set_config('kasama.actor_bot', ${botId}, true)`);
+      await tx.execute(sql`select set_config('casama.actor_bot', ${botId}, true)`);
       return fn(tx as unknown as Database);
     });
   const audit = (ctx: ToolContext, action: string, target: string, meta: object) =>
@@ -234,7 +234,7 @@ export function registerBotTools(registry: ToolRegistry, deps: { db: Database })
     description:
       "Organize the bots in the sidebar into folders, in order. Bots you don't mention keep their place; an empty folder list leaves folders alone.",
     risk: "low",
-    // Only the bot's own state inside Kasama: never asks (D-155).
+    // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,
     schema: z.object({
       folders: z

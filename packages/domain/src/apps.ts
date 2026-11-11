@@ -14,7 +14,7 @@ export type AppCategory =
   | "data"
   | "automation";
 
-/** managed: a sign-in run by a provider Kasama Cloud uses (Composio), for access its own app lacks. */
+/** managed: a sign-in run by a provider Casama Cloud uses (Composio), for access its own app lacks. */
 export type AppAuth = "oauth" | "api_key" | "none" | "managed";
 
 export interface AppApiKeyHelp {
@@ -43,7 +43,7 @@ export interface CatalogApp {
   auth: AppAuth[];
   apiKey?: AppApiKeyHelp;
   /**
-   * How Kasama gets an OAuth client: "dcr" registers itself automatically; "cimd" uses Kasama's
+   * How Casama gets an OAuth client: "dcr" registers itself automatically; "cimd" uses Casama's
    * client metadata document (needs a public https API); "preregistered" needs a client the server
    * admin created with the vendor (MCP_OAUTH_CLIENTS, or GOOGLE_OAUTH_CLIENT_ID for Google).
    */
@@ -56,7 +56,7 @@ export interface CatalogApp {
   capabilities: string[];
   popular?: boolean;
   /**
-   * Reads the inbox (a restricted Google scope, D-130). Kasama Cloud offers it only through
+   * Reads the inbox (a restricted Google scope, D-130). Casama Cloud offers it only through
    * Composio's managed sign-in until Google's restricted-scope review passes.
    */
   inbox?: boolean;
@@ -308,7 +308,7 @@ export const APP_CATALOG: CatalogApp[] = [
         "Copy the token and paste it here.",
       ],
     },
-    note: "A monday.com admin may need to approve Kasama the first time.",
+    note: "A monday.com admin may need to approve Casama the first time.",
     capabilities: ["Create and update items", "Read boards", "Post updates"],
   },
   {
@@ -325,7 +325,7 @@ export const APP_CATALOG: CatalogApp[] = [
   },
   // --------------------------------------------------------------- google
   // Google's own MCP servers (Developer Preview), one per product, all signed in with the server's
-  // Google client (GOOGLE_OAUTH_CLIENT_ID). Scopes are Kasama's choice, never the full list a
+  // Google client (GOOGLE_OAUTH_CLIENT_ID). Scopes are Casama's choice, never the full list a
   // server announces (Gmail's includes full mailbox access).
   {
     id: "gmail",

@@ -42,7 +42,7 @@ export const acceptBotLink = createRoute({
   path: "/v1/links/accept",
   tags,
   security,
-  summary: "Accept a contact's invite with one of your bots (works across Kasama servers)",
+  summary: "Accept a contact's invite with one of your bots (works across Casama servers)",
   request: { body: jsonBody(AcceptBotLinkRequest) },
   responses: {
     201: jsonResponse("Link", BotLink),

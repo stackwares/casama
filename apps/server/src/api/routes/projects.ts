@@ -1,14 +1,15 @@
 /** Projects (D-113): create, view, approve the plan, sign off milestones, pause and resume. */
-import type { OpenAPIHono } from "@hono/zod-openapi";
+
 import {
   createProject,
   type ProjectRow,
   planningMessage,
   projectSpend,
   startProjectRun,
-} from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { type Database, type JwtClaims, withUserSession } from "@kasama/db";
+} from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { type Database, type JwtClaims, withUserSession } from "@casama/db";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";

@@ -24,7 +24,7 @@ beforeAll(async () => {
   h = await startHarness({
     env: {
       PUBLIC_APP_URL: "https://app.example.com",
-      APPLE_APP_IDS: "TEAM123.com.kasama.app",
+      APPLE_APP_IDS: "TEAM123.ai.casama.app",
       ANDROID_CERT_SHA256: "AA:BB",
     },
   });
@@ -353,17 +353,17 @@ describe("web", () => {
     const html = await res.text();
     expect(html).toContain("Acme &lt;Team&gt;");
     expect(html).not.toContain("Acme <Team>");
-    expect(html).toContain(`kasama://app/join/${link.token}?server=`);
+    expect(html).toContain(`casama://app/join/${link.token}?server=`);
     expect(res.headers.get("content-security-policy")).toContain("default-src 'none'");
     expect((await h.request("/join/kjoin_nothing_here_at_all_123")).status).toBe(404);
   });
 
   it("publishes app-link files when configured", async () => {
     const aasa = await j(await h.request("/.well-known/apple-app-site-association"));
-    expect(aasa.applinks.details[0].appIDs).toEqual(["TEAM123.com.kasama.app"]);
+    expect(aasa.applinks.details[0].appIDs).toEqual(["TEAM123.ai.casama.app"]);
     const links = await j(await h.request("/.well-known/assetlinks.json"));
     expect(links[0].target).toMatchObject({
-      package_name: "com.kasama.app",
+      package_name: "ai.casama.app",
       sha256_cert_fingerprints: ["AA:BB"],
     });
   });

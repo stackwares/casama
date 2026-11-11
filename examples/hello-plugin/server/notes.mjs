@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // A minimal MCP server over stdio, with no dependencies: newline-delimited JSON-RPC 2.0.
-// Kasama runs it inside the bot's computer. It keeps notes as Markdown files in NOTES_DIR (under
+// Casama runs it inside the bot's computer. It keeps notes as Markdown files in NOTES_DIR (under
 // PLUGIN_DATA, which survives plugin updates) and signs each one with the NOTES_SIGNATURE secret.
 //
 // A real plugin would usually use the official SDK (@modelcontextprotocol/sdk) and ship it bundled
@@ -38,7 +38,7 @@ const tools = [
       properties: { title: { type: "string" }, body: { type: "string" } },
       required: ["title", "body"],
     },
-    // Not read-only and not destructive: Kasama treats it as medium risk.
+    // Not read-only and not destructive: Casama treats it as medium risk.
     annotations: { title: "Save a note", readOnlyHint: false, destructiveHint: false },
   },
 ];
@@ -79,7 +79,7 @@ function handle(msg) {
       return {
         protocolVersion: params?.protocolVersion ?? "2025-06-18",
         capabilities: { tools: {} },
-        serverInfo: { name: "hello-kasama-notes", version: "1.0.0" },
+        serverInfo: { name: "hello-casama-notes", version: "1.0.0" },
       };
     case "ping":
       return {};

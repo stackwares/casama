@@ -14,8 +14,8 @@ class AppDelegate: FlutterAppDelegate {
 }
 
 // MARK: - Shortcuts (D-111): "Ask a bot" and "Run a routine" for Siri, Spotlight and Shortcuts.
-// The app keeps its bots and routines in shared preferences (flutter.kasama.shortcuts); an intent
-// hands a path to Flutter over the kasama/shortcuts channel, queued until Flutter is ready.
+// The app keeps its bots and routines in shared preferences (flutter.casama.shortcuts); an intent
+// hands a path to Flutter over the casama/shortcuts channel, queued until Flutter is ready.
 
 final class ShortcutBridge {
   static let shared = ShortcutBridge()
@@ -23,7 +23,7 @@ final class ShortcutBridge {
   private var pending: String?
 
   func attach(_ messenger: FlutterBinaryMessenger) {
-    let channel = FlutterMethodChannel(name: "kasama/shortcuts", binaryMessenger: messenger)
+    let channel = FlutterMethodChannel(name: "casama/shortcuts", binaryMessenger: messenger)
     channel.setMethodCallHandler { [weak self] call, result in
       if call.method == "ready" {
         result(self?.pending)
@@ -52,7 +52,7 @@ struct ShortcutItem: Codable {
 
 enum ShortcutStore {
   static func items(_ key: String) -> [ShortcutItem] {
-    guard let raw = UserDefaults.standard.string(forKey: "flutter.kasama.shortcuts"),
+    guard let raw = UserDefaults.standard.string(forKey: "flutter.casama.shortcuts"),
           let data = raw.data(using: .utf8),
           let all = try? JSONDecoder().decode([String: [ShortcutItem]].self, from: data) else { return [] }
     return all[key] ?? []
@@ -101,7 +101,7 @@ struct RoutineQuery: EntityQuery {
 @available(iOS 16.0, macOS 13.0, *)
 struct AskBotIntent: AppIntent {
   static var title: LocalizedStringResource = "Ask a bot"
-  static var description = IntentDescription("Opens Kasama with a question for one of your bots.")
+  static var description = IntentDescription("Opens Casama with a question for one of your bots.")
   static var openAppWhenRun = true
   @Parameter(title: "Bot") var bot: BotEntity?
   @Parameter(title: "Question") var question: String?
@@ -133,7 +133,7 @@ struct RunRoutineIntent: AppIntent {
 }
 
 @available(iOS 16.0, macOS 13.0, *)
-struct KasamaShortcuts: AppShortcutsProvider {
+struct CasamaShortcuts: AppShortcutsProvider {
   static var appShortcuts: [AppShortcut] {
     AppShortcut(intent: AskBotIntent(), phrases: ["Ask \(.applicationName)", "Ask a bot in \(.applicationName)"], shortTitle: "Ask a bot", systemImageName: "bubble.left")
     AppShortcut(intent: RunRoutineIntent(), phrases: ["Run a routine in \(.applicationName)"], shortTitle: "Run a routine", systemImageName: "clock")

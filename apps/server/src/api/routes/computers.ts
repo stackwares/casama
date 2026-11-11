@@ -1,10 +1,10 @@
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
+import type { ComputerRow, ComputerService } from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { type JwtClaims, schema, withUserSession } from "@casama/db";
+import { SandboxError } from "@casama/sandbox";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import type { ComputerRow, ComputerService } from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, schema, withUserSession } from "@kasama/db";
-import { SandboxError } from "@kasama/sandbox";
 import { desc, eq, sql } from "drizzle-orm";
 import { WebSocket, WebSocketServer } from "ws";
 import { enforceLimit } from "../../billing/limits.ts";
@@ -242,15 +242,15 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     } catch (err) {
       if (!(err instanceof SandboxError) || err.status !== 501) throw err;
       // Headless: capture the bot's browser page instead, if a browser is open.
-      const { collectExec } = await import("@kasama/sandbox");
+      const { collectExec } = await import("@casama/sandbox");
       const r = await collectExec(
-        h.exec("agent-browser screenshot /tmp/kasama-screen.png >/dev/null 2>&1 && echo ok", {
+        h.exec("agent-browser screenshot /tmp/casama-screen.png >/dev/null 2>&1 && echo ok", {
           timeoutMs: 20_000,
         }),
       );
       if (!r.stdout.includes("ok"))
         throw new ApiError(409, "nothing_to_show", "No desktop or open browser page to capture");
-      png = await sandbox(() => h.readFile("/tmp/kasama-screen.png"));
+      png = await sandbox(() => h.readFile("/tmp/casama-screen.png"));
     }
     return c.body(Buffer.from(png), 200, {
       "content-type": "image/png",
@@ -294,11 +294,11 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     }
     await canManage(claims, body.org_id, owner);
     await enforceLimit(db, body.org_id, "max_computers");
-    if (body.provider === "kasama-cloud" && !deps.env.KASAMA_CLOUD_KEY)
+    if (body.provider === "casama-cloud" && !deps.env.CASAMA_CLOUD_KEY)
       throw new ApiError(
         409,
         "cloud_connect_off",
-        "Cloud computers need a Cloud Connect key (KASAMA_CLOUD_URL and KASAMA_CLOUD_KEY)",
+        "Cloud computers need a Cloud Connect key (CASAMA_CLOUD_URL and CASAMA_CLOUD_KEY)",
       );
     const inserted = await db
       .insert(computers)

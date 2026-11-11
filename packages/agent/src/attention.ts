@@ -4,7 +4,7 @@
  * meeting, or once a bot has sent 5 non-urgent pushes in a day. Quiet hours (D-109) still defer
  * the push separately.
  */
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 
 export type HoldReason = "focus" | "meeting" | "driving" | "daily_cap" | "low_urgency";

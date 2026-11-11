@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kasama_app/core/billing.dart';
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_app/core/widgets.dart';
-import 'package:kasama_app/features/billing/billing_screen.dart';
-import 'package:kasama_app/l10n/generated/app_localizations.dart';
+import 'package:casama_app/core/billing.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/core/widgets.dart';
+import 'package:casama_app/features/billing/billing_screen.dart';
+import 'package:casama_app/l10n/generated/app_localizations.dart';
 
 import 'app_test.dart' show setSize;
 import 'fake_backend.dart';
@@ -43,7 +43,7 @@ class FakeStore implements StorePurchases {
   @override
   Future<void> restore({required String orgId}) async {
     restoredWith = orgId;
-    _purchases.add(StorePurchase(source: source!, productId: 'kasama_pro', purchaseToken: 'restored-token', restored: true));
+    _purchases.add(StorePurchase(source: source!, productId: 'casama_pro', purchaseToken: 'restored-token', restored: true));
   }
 
   @override
@@ -92,7 +92,7 @@ void main() {
   testWidgets('self-hosted servers show no paywall', (tester) async {
     await tester.pumpWidget(app(FakeBackend()));
     await tester.pumpAndSettle();
-    expect(find.text('Billing is off on this server. Self-hosted Kasama has no limits.'), findsOneWidget);
+    expect(find.text('Billing is off on this server. Self-hosted Casama has no limits.'), findsOneWidget);
     expect(find.byKey(const Key('plan-pro')), findsNothing);
   });
 
@@ -121,7 +121,7 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Create'));
     await tester.pumpAndSettle();
-    expect(find.text('KASAMA_CLOUD_KEY=kcc_secret_shown_once'), findsOneWidget);
+    expect(find.text('CASAMA_CLOUD_KEY=kcc_secret_shown_once'), findsOneWidget);
     await tester.tap(find.text('Close'));
     await tester.pumpAndSettle();
     expect(find.text('kcc_abcd…wxyz'), findsOneWidget);
@@ -139,9 +139,9 @@ void main() {
     expect(find.text(r'Subscribe for $9.99'), findsOneWidget);
     await tester.tap(find.byKey(const Key('buyStore-pro')));
     await tester.pumpAndSettle();
-    expect(store.bought, ['dev.kasama.pro.monthly@$orgId']);
-    expect(backend.verified, ['app_store:dev.kasama.pro.monthly:2000000123']);
-    expect(store.completed, ['dev.kasama.pro.monthly']);
+    expect(store.bought, ['dev.casama.pro.monthly@$orgId']);
+    expect(backend.verified, ['app_store:dev.casama.pro.monthly:2000000123']);
+    expect(store.completed, ['dev.casama.pro.monthly']);
     expect(find.text('Billed through the App Store'), findsOneWidget);
     expect(find.descendant(of: find.byKey(const Key('currentPlan')), matching: find.text('Pro')), findsOneWidget);
   });
@@ -166,7 +166,7 @@ void main() {
     await tester.tap(find.byKey(const Key('restorePurchases')));
     await tester.pumpAndSettle();
     expect(store.restoredWith, orgId);
-    expect(backend.verified, ['google_play:kasama_pro:restored-token']);
+    expect(backend.verified, ['google_play:casama_pro:restored-token']);
     expect(find.text('Billed through Google Play'), findsOneWidget);
   });
 

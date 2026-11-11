@@ -2,7 +2,7 @@
 
 **Title:** Open-source agent platform where local models get their own sandboxed computer
 
-Kasama runs persistent bots (memory, skills, routines) that use a sandboxed Linux computer as their
+Casama runs persistent bots (memory, skills, routines) that use a sandboxed Linux computer as their
 tool environment. It works with any OpenAI-compatible endpoint, so Ollama, vLLM or LM Studio models
 can drive the shell, files and a headless browser. There's a fallback chain per bot (e.g. local
 first, hosted when the local model fails) and a cheap model setting for memory extraction and titles.

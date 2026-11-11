@@ -28,7 +28,7 @@ jobs:
           file: ${{ matrix.file }}
           platforms: linux/amd64,linux/arm64
           push: false
-          tags: kasama/${{ matrix.name }}:ci
+          tags: casama/${{ matrix.name }}:ci
 
   # The desktop image builds on the headless one (Neko is compiled in it, D-054).
   desktop:
@@ -41,11 +41,11 @@ jobs:
           context: .
           file: infra/images/computer/Dockerfile.headless
           load: true
-          tags: kasama/computer-headless:ci
+          tags: casama/computer-headless:ci
       - uses: docker/build-push-action@v7
         with:
           context: .
           file: infra/images/computer/Dockerfile.desktop
-          build-args: BASE=kasama/computer-headless:ci
+          build-args: BASE=casama/computer-headless:ci
           push: false
-          tags: kasama/computer-desktop:ci
+          tags: casama/computer-desktop:ci

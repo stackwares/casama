@@ -8,10 +8,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:kasama_app/core/server_address.dart';
-import 'package:kasama_app/features/selfhost/local_server.dart';
-import 'package:kasama_app/features/selfhost/local_server_sheet.dart';
-import 'package:kasama_app/l10n/generated/app_localizations.dart';
+import 'package:casama_app/core/server_address.dart';
+import 'package:casama_app/features/selfhost/local_server.dart';
+import 'package:casama_app/features/selfhost/local_server_sheet.dart';
+import 'package:casama_app/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FakeProcess implements Process {
@@ -47,12 +47,12 @@ class FakeRunner implements ProcessRunner {
   @override
   Future<Process> start(String exe, List<String> args, {String? cwd}) async {
     calls.add('$exe ${args.join(' ')} @${cwd!.split('/').last}');
-    return FakeProcess(['Starting the stack', 'Kasama is running'], installCode);
+    return FakeProcess(['Starting the stack', 'Casama is running'], installCode);
   }
 }
 
 List<int> bundle() {
-  final a = Archive()..addFile(ArchiveFile('kasama-main/install.sh', 9, utf8.encode('#!/bin/sh')));
+  final a = Archive()..addFile(ArchiveFile('casama-main/install.sh', 9, utf8.encode('#!/bin/sh')));
   return GZipEncoder().encode(TarEncoder().encode(a));
 }
 
@@ -73,7 +73,7 @@ void main() {
       runner: _Hook(r, () => installed = true),
       client: client,
       home: () async => tmp,
-      bundleUrl: 'https://example.test/kasama.tar.gz',
+      bundleUrl: 'https://example.test/casama.tar.gz',
       healthTimeout: const Duration(seconds: 5),
     );
   }
@@ -83,9 +83,9 @@ void main() {
     final steps = await manager(r).start().toList();
     expect(steps.map((s) => s.step).toSet(), containsAll([LocalServerStep.checking, LocalServerStep.downloading, LocalServerStep.installing, LocalServerStep.ready]));
     expect(steps.last.detail, 'http://localhost:8080');
-    expect(r.calls, contains('bash install.sh --local --http-port 8080 @kasama-main'));
-    expect(steps.where((s) => s.step == LocalServerStep.installing).map((s) => s.detail), contains('Kasama is running'));
-    expect(File('${tmp.path}/kasama-main/install.sh').existsSync(), isTrue);
+    expect(r.calls, contains('bash install.sh --local --http-port 8080 @casama-main'));
+    expect(steps.where((s) => s.step == LocalServerStep.installing).map((s) => s.detail), contains('Casama is running'));
+    expect(File('${tmp.path}/casama-main/install.sh').existsSync(), isTrue);
   });
 
   test('says what to do when Docker is missing, and reconnects when a server already runs', () async {
@@ -128,7 +128,7 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    expect(find.text('Run Kasama on this computer'), findsWidgets);
+    expect(find.text('Run Casama on this computer'), findsWidgets);
     await tester.runAsync(() async {
       await tester.tap(find.byKey(const Key('startLocalServer')));
       for (var i = 0; i < 20 && switched == null; i++) {
@@ -137,7 +137,7 @@ void main() {
     });
     await tester.pumpAndSettle();
     expect(switched, 'http://localhost:8080');
-    expect((await SharedPreferences.getInstance()).getString('kasama.server_url'), 'http://localhost:8080');
+    expect((await SharedPreferences.getInstance()).getString('casama.server_url'), 'http://localhost:8080');
     expect(find.byType(LocalServerSheet), findsNothing);
   });
 }

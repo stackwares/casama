@@ -3,14 +3,14 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/core/backend.dart';
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_app/features/chat/chat_controller.dart';
-import 'package:kasama_app/features/chat/chat_screen.dart';
-import 'package:kasama_app/features/files/file_preview.dart';
-import 'package:kasama_app/features/integrations/integrations_screen.dart';
-import 'package:kasama_app/l10n/generated/app_localizations.dart';
-import 'package:kasama_app/theme/app_theme.dart';
+import 'package:casama_app/core/backend.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/features/chat/chat_controller.dart';
+import 'package:casama_app/features/chat/chat_screen.dart';
+import 'package:casama_app/features/files/file_preview.dart';
+import 'package:casama_app/features/integrations/integrations_screen.dart';
+import 'package:casama_app/l10n/generated/app_localizations.dart';
+import 'package:casama_app/theme/app_theme.dart';
 
 import 'fake_backend.dart';
 
@@ -26,10 +26,10 @@ Widget _app(FakeBackend backend, Widget child) => ProviderScope(
 
 void main() {
   test('file links a bot writes resolve to paths on its computer', () {
-    expect(computerPathFromLink('sandbox:/home/kasama/workspace/chief_one_page_intro.txt'), 'chief_one_page_intro.txt');
+    expect(computerPathFromLink('sandbox:/home/casama/workspace/chief_one_page_intro.txt'), 'chief_one_page_intro.txt');
     expect(computerPathFromLink('workspace/reports/q3.md'), 'reports/q3.md');
-    expect(computerPathFromLink('/home/kasama/workspace/a b.pdf'), 'a b.pdf');
-    expect(computerPathFromLink('file:///home/kasama/notes.txt'), '~/notes.txt');
+    expect(computerPathFromLink('/home/casama/workspace/a b.pdf'), 'a b.pdf');
+    expect(computerPathFromLink('file:///home/casama/notes.txt'), '~/notes.txt');
     expect(computerPathFromLink('~/workspace/x.csv'), 'x.csv');
     expect(computerPathFromLink('~/.config/app.json'), '~/.config/app.json');
     expect(computerPathFromLink('report.md'), 'report.md');
@@ -63,7 +63,7 @@ void main() {
         ChatMessageView(
           id: '2',
           role: 'assistant',
-          text: 'Done. See [summary.md](sandbox:/home/kasama/workspace/summary.md).',
+          text: 'Done. See [summary.md](sandbox:/home/casama/workspace/summary.md).',
           createdAt: DateTime(2026, 1, 1, 10, 1),
         ),
       ];

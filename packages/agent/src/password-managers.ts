@@ -8,8 +8,8 @@
  * the destination is one of the item's own URLs; the model sees [login:Name], never the values.
  * One-time codes come from the item's TOTP seed (the sign-in codes flow, D-102).
  */
-import type { Database } from "@kasama/db";
-import { parseTotp, totpCode } from "@kasama/domain";
+import type { Database } from "@casama/db";
+import { parseTotp, totpCode } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";

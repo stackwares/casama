@@ -4,7 +4,7 @@
  * belongs to the workspace, so buying on one platform unlocks every platform.
  */
 import { randomUUID } from "node:crypto";
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import {
   BillingError,

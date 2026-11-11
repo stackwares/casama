@@ -14,7 +14,7 @@ import {
   S3ObjectStore,
   type SandboxProvider,
   tlsFetch,
-} from "@kasama/sandbox";
+} from "@casama/sandbox";
 import { startSupervisor } from "./app.ts";
 
 const env = process.env;
@@ -50,28 +50,28 @@ const provider: SandboxProvider | undefined =
         docker: new DockerApi(env.DOCKER_SOCKET ?? "/var/run/docker.sock"),
         store,
         images: {
-          headless: env.COMPUTER_IMAGE_HEADLESS ?? "ghcr.io/kasama-dev/computer-headless:latest",
-          desktop: env.COMPUTER_IMAGE_DESKTOP ?? "ghcr.io/kasama-dev/computer-desktop:latest",
+          headless: env.COMPUTER_IMAGE_HEADLESS ?? "ghcr.io/casama-dev/computer-headless:latest",
+          desktop: env.COMPUTER_IMAGE_DESKTOP ?? "ghcr.io/casama-dev/computer-desktop:latest",
         },
         runtime: env.SANDBOX_RUNTIME || undefined,
         tokenSecret: need("COMPUTER_TOKEN_SECRET"),
         egress: {
-          containerName: env.EGRESS_CONTAINER ?? "kasama-egress",
+          containerName: env.EGRESS_CONTAINER ?? "casama-egress",
           proxyPort: Number(env.EGRESS_PROXY_PORT ?? 3128),
           control: egressControl(
-            env.EGRESS_CONTROL_URL ?? "http://kasama-egress:3129",
+            env.EGRESS_CONTROL_URL ?? "http://casama-egress:3129",
             need("EGRESS_CONTROL_TOKEN"),
           ),
         },
         supervisorContainer: env.SUPERVISOR_CONTAINER,
         turn: env.TURN_SECRET
           ? {
-              containerName: env.TURN_CONTAINER ?? "kasama-turn",
+              containerName: env.TURN_CONTAINER ?? "casama-turn",
               secret: env.TURN_SECRET,
               port: env.TURN_PORT ? Number(env.TURN_PORT) : undefined,
             }
           : undefined,
-        namePrefix: env.NAME_PREFIX ?? "kasama",
+        namePrefix: env.NAME_PREFIX ?? "casama",
         defaults: {
           cpus: env.COMPUTER_CPUS ? Number(env.COMPUTER_CPUS) : undefined,
           memoryMb: env.COMPUTER_MEMORY_MB ? Number(env.COMPUTER_MEMORY_MB) : undefined,
@@ -96,8 +96,8 @@ if (env.E2B_API_KEY)
       apiKey: env.E2B_API_KEY,
       apiUrl: env.E2B_API_URL,
       templates: {
-        headless: env.E2B_TEMPLATE_HEADLESS ?? "kasama-computer-headless",
-        desktop: env.E2B_TEMPLATE_DESKTOP ?? "kasama-computer-desktop",
+        headless: env.E2B_TEMPLATE_HEADLESS ?? "casama-computer-headless",
+        desktop: env.E2B_TEMPLATE_DESKTOP ?? "casama-computer-desktop",
       },
     },
     hostedOpts,
@@ -109,8 +109,8 @@ if (env.DAYTONA_API_KEY)
       apiUrl: env.DAYTONA_API_URL,
       organizationId: env.DAYTONA_ORGANIZATION_ID,
       snapshots: {
-        headless: env.DAYTONA_SNAPSHOT_HEADLESS ?? "kasama-computer-headless",
-        desktop: env.DAYTONA_SNAPSHOT_DESKTOP ?? "kasama-computer-desktop",
+        headless: env.DAYTONA_SNAPSHOT_HEADLESS ?? "casama-computer-headless",
+        desktop: env.DAYTONA_SNAPSHOT_DESKTOP ?? "casama-computer-desktop",
       },
     },
     hostedOpts,
@@ -123,15 +123,15 @@ if (env.NOVITA_API_KEY)
       apiKey: env.NOVITA_API_KEY,
       apiUrl: env.NOVITA_API_URL,
       templates: {
-        headless: env.NOVITA_TEMPLATE_HEADLESS ?? "kasama-computer-headless",
-        desktop: env.NOVITA_TEMPLATE_DESKTOP ?? "kasama-computer-desktop",
+        headless: env.NOVITA_TEMPLATE_HEADLESS ?? "casama-computer-headless",
+        desktop: env.NOVITA_TEMPLATE_DESKTOP ?? "casama-computer-desktop",
       },
     },
     hostedOpts,
   );
 const images = {
-  headless: env.HOSTED_IMAGE_HEADLESS ?? "ghcr.io/kasama-dev/computer-headless:latest",
-  desktop: env.HOSTED_IMAGE_DESKTOP ?? "ghcr.io/kasama-dev/computer-desktop:latest",
+  headless: env.HOSTED_IMAGE_HEADLESS ?? "ghcr.io/casama-dev/computer-headless:latest",
+  desktop: env.HOSTED_IMAGE_DESKTOP ?? "ghcr.io/casama-dev/computer-desktop:latest",
 };
 if (env.K8S_NAMESPACE) {
   // In a cluster: the pod's service account and CA; outside: K8S_API_URL, K8S_TOKEN and K8S_CA_FILE.

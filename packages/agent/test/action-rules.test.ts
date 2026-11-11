@@ -1,6 +1,6 @@
 /** Action rules in a run (D-115): email to the user's domain sends, external email waits, hand-offs. */
-import { createDb, type DbHandle } from "@kasama/db";
-import { createAuthUser, startTestDatabase, type TestDatabase } from "@kasama/db/testing";
+import { createDb, type DbHandle } from "@casama/db";
+import { createAuthUser, startTestDatabase, type TestDatabase } from "@casama/db/testing";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
 import {

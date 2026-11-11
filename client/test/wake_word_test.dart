@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_app/core/router.dart';
-import 'package:kasama_app/features/voice/wake_word.dart';
-import 'package:kasama_app/features/voice/wake_word_sheet.dart';
-import 'package:kasama_app/l10n/generated/app_localizations.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/core/router.dart';
+import 'package:casama_app/features/voice/wake_word.dart';
+import 'package:casama_app/features/voice/wake_word_sheet.dart';
+import 'package:casama_app/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_test.dart' show setSize;
@@ -38,9 +38,9 @@ class FakeWakeEngine implements WakeWordEngine {
 /// Wake word (D-144).
 void main() {
   test('the phrase as keyword-model tokens, every shortest spelling', () {
-    final vocab = {'▁HE', 'Y', '▁S', 'I', 'RI', 'IR', '▁K', 'AS', 'A', 'MA', '▁', 'K'};
+    final vocab = {'▁HE', 'Y', '▁S', 'I', 'RI', 'IR', '▁C', 'AS', 'A', 'MA', '▁', 'C'};
     expect(keywordLines('Hey Siri', vocab), ['▁HE Y ▁S I RI @WAKE', '▁HE Y ▁S IR I @WAKE']);
-    expect(keywordLines('hey kasama', vocab), ['▁HE Y ▁K AS A MA @WAKE']);
+    expect(keywordLines('hey casama', vocab), ['▁HE Y ▁C AS A MA @WAKE']);
     expect(keywordLines('hey zed', vocab), isEmpty);
   });
 
@@ -59,12 +59,12 @@ void main() {
     ));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('wakeWordOn')));
-    await tester.enterText(find.byKey(const Key('wakePhrase')), 'Hey Kasama');
+    await tester.enterText(find.byKey(const Key('wakePhrase')), 'Hey Casama');
     await tester.pump();
     await tester.tap(find.byKey(const Key('saveWakeWord')));
     await tester.pumpAndSettle();
     expect(engine.prepared, 1);
-    expect(engine.phrase, 'hey kasama');
+    expect(engine.phrase, 'hey casama');
     expect((await SharedPreferences.getInstance()).getBool('wake.enabled'), isTrue);
 
     engine.heard.add(null);

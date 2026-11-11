@@ -26,7 +26,7 @@ bool get wakeWordSupported =>
         defaultTargetPlatform == TargetPlatform.linux);
 
 class WakeWordSettings {
-  const WakeWordSettings({this.enabled = false, this.phrase = 'hey kasama', this.botId});
+  const WakeWordSettings({this.enabled = false, this.phrase = 'hey casama', this.botId});
   final bool enabled;
   final String phrase;
   final String? botId;
@@ -222,7 +222,7 @@ class WakeWordController extends Notifier<WakeWordSettings> {
   Future<void> _load() async {
     try {
       final p = await SharedPreferences.getInstance();
-      state = WakeWordSettings(enabled: p.getBool('wake.enabled') ?? false, phrase: p.getString('wake.phrase') ?? 'hey kasama', botId: p.getString('wake.bot'));
+      state = WakeWordSettings(enabled: p.getBool('wake.enabled') ?? false, phrase: p.getString('wake.phrase') ?? 'hey casama', botId: p.getString('wake.bot'));
       if (state.enabled) await _startListening();
     } catch (_) {}
   }

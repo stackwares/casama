@@ -78,7 +78,7 @@ earlier days), in plain words: "lower than your usual", "about your usual" or "h
 usual". Bots never give medical advice.
 
 ::: warning Health data and encryption
-On Kasama Cloud, health data is stored only when encryption at rest is on for a workspace you own.
+On Casama Cloud, health data is stored only when encryption at rest is on for a workspace you own.
 Otherwise the upload is refused with "Health data needs encryption at rest". Self-hosted servers
 decide with `HEALTH_REQUIRES_ENCRYPTION` (`auto`, `on` or `off`; `auto` requires it when billing
 is on). See [Privacy and data](/guide/privacy).

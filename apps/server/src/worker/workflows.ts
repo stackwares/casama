@@ -1,4 +1,3 @@
-import { DBOS } from "@dbos-inc/dbos-sdk";
 import {
   type ChatGptConfig,
   type ComputerService,
@@ -25,9 +24,10 @@ import {
   runAgent,
   safeFetch,
   sweepEncryption,
-} from "@kasama/agent";
-import type { Database } from "@kasama/db";
-import { DEFAULT_MODELS } from "@kasama/domain";
+} from "@casama/agent";
+import type { Database } from "@casama/db";
+import { DEFAULT_MODELS } from "@casama/domain";
+import { DBOS } from "@dbos-inc/dbos-sdk";
 import { sql } from "drizzle-orm";
 import {
   claimDueRoutines,
@@ -62,12 +62,12 @@ let runtime:
       voice?: VoiceRuntime;
       billing?: import("../billing/service.ts").BillingService;
       telemetry?: { url: string; version: string };
-      /** Fixture mode: the model picker uses Kasama's short list instead of calling providers. */
+      /** Fixture mode: the model picker uses Casama's short list instead of calling providers. */
       offlineModels?: boolean;
       /** ChatGPT plan sign-in endpoints (tests point them at a fake OpenAI). */
       chatgpt?: ChatGptConfig;
       /** iOS call rings (D-135). */
-      voip?: import("@kasama/agent").VoipSender;
+      voip?: import("@casama/agent").VoipSender;
       /** Audit-log forwarding is licensed (D-146). */
       auditForwarding?: boolean;
       /** Leave-now device triggers (D-151): maps key and fetch. */
@@ -170,7 +170,7 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
     if (rt().auditForwarding)
       await DBOS.runStep(
         () =>
-          import("@kasama/ee")
+          import("@casama/ee")
             .then((m) => m.forwardAuditLogs(rt().db, { fetch: rt().fetch }))
             .catch(() => 0),
         { name: "audit-forward" },
@@ -684,7 +684,7 @@ export const computersIdleWorkflow = DBOS.registerWorkflow(
   { name: "computersIdle" },
 );
 
-/** Every minute on Kasama Cloud: usage becomes credit deductions; expired plans fall back (D-070). */
+/** Every minute on Casama Cloud: usage becomes credit deductions; expired plans fall back (D-070). */
 export const billingSettleWorkflow = DBOS.registerWorkflow(
   async (_scheduledAt: Date, _context: unknown) => {
     const billing = rt().billing;

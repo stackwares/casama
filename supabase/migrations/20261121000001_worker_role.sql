@@ -6,26 +6,26 @@
 
 do $$
 begin
-  if not exists (select 1 from pg_roles where rolname = 'kasama_worker') then
-    create role kasama_worker nologin noinherit;
+  if not exists (select 1 from pg_roles where rolname = 'casama_worker') then
+    create role casama_worker nologin noinherit;
   end if;
   -- Postgres 16+: handing objects to the role (below) needs SET ROLE on it when not a superuser.
   if not (select rolsuper from pg_roles where rolname = current_user) then
-    execute format('grant kasama_worker to %I with inherit false, set true', current_user);
+    execute format('grant casama_worker to %I with inherit false, set true', current_user);
   end if;
 end $$;
 
 -- DBOS runs `create schema if not exists dbos` at start, which needs CREATE on the database.
 do $$ begin
-  execute format('grant connect, create on database %I to kasama_worker', current_database());
+  execute format('grant connect, create on database %I to casama_worker', current_database());
 end $$;
-grant usage on schema public to kasama_worker;
-grant select, insert, update, delete on all tables in schema public to kasama_worker;
-grant usage, select on all sequences in schema public to kasama_worker;
-grant execute on all functions in schema public to kasama_worker;
-alter default privileges in schema public grant select, insert, update, delete on tables to kasama_worker;
-alter default privileges in schema public grant usage, select on sequences to kasama_worker;
-alter default privileges in schema public grant execute on functions to kasama_worker;
+grant usage on schema public to casama_worker;
+grant select, insert, update, delete on all tables in schema public to casama_worker;
+grant usage, select on all sequences in schema public to casama_worker;
+grant execute on all functions in schema public to casama_worker;
+alter default privileges in schema public grant select, insert, update, delete on tables to casama_worker;
+alter default privileges in schema public grant usage, select on sequences to casama_worker;
+alter default privileges in schema public grant execute on functions to casama_worker;
 
 -- One policy per table for this role. New tables add theirs with public.allow_worker(table);
 -- a test fails when a table with RLS lacks it.
@@ -38,9 +38,9 @@ begin
   if not exists (
     select 1 from pg_policies
     where schemaname = 'public' and tablename = (select relname from pg_class where oid = p_table)
-      and policyname = 'kasama_worker_all'
+      and policyname = 'casama_worker_all'
   ) then
-    execute format('create policy kasama_worker_all on %s for all to kasama_worker using (true) with check (true)', p_table);
+    execute format('create policy casama_worker_all on %s for all to casama_worker using (true) with check (true)', p_table);
   end if;
 end;
 $$;
@@ -56,18 +56,18 @@ begin
 end $$;
 
 -- Extensions (pgvector types and functions for memory search).
-grant usage on schema extensions to kasama_worker;
+grant usage on schema extensions to casama_worker;
 
 -- Vault: read model keys and secrets, write refreshed tokens (never delete).
-grant usage on schema vault to kasama_worker;
-grant select on vault.decrypted_secrets to kasama_worker;
+grant usage on schema vault to casama_worker;
+grant select on vault.decrypted_secrets to casama_worker;
 -- By name: the argument lists differ between Vault versions (newer ones add a key id).
 do $$
 declare f regprocedure;
 begin
   for f in select p.oid::regprocedure from pg_proc p join pg_namespace n on n.oid = p.pronamespace
            where n.nspname = 'vault' and p.proname in ('create_secret', 'update_secret') loop
-    execute format('grant execute on function %s to kasama_worker', f);
+    execute format('grant execute on function %s to casama_worker', f);
   end loop;
 end $$;
 
@@ -75,11 +75,11 @@ end $$;
 
 -- DBOS keeps its system tables in its own schema, owned by the worker.
 create schema if not exists dbos;
-alter schema dbos owner to kasama_worker;
+alter schema dbos owner to casama_worker;
 do $$
 declare t record;
 begin
   for t in select tablename from pg_tables where schemaname = 'dbos' loop
-    execute format('alter table dbos.%I owner to kasama_worker', t.tablename);
+    execute format('alter table dbos.%I owner to casama_worker', t.tablename);
   end loop;
 end $$;

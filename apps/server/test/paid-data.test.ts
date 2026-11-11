@@ -3,7 +3,7 @@ import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { fileURLToPath } from "node:url";
-import { registerDataTools, ToolRegistry, TregProvider } from "@kasama/agent";
+import { registerDataTools, ToolRegistry, TregProvider } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
@@ -216,12 +216,12 @@ describe("paid data", () => {
     expect(u!.meta).toMatchObject({ call_id: "call_123", provider_cost_usd: 0.004 });
   }, 60_000);
 
-  it("resale on Kasama Cloud charges credits cost plus 20%; Treg refusals are explained", async () => {
+  it("resale on Casama Cloud charges credits cost plus 20%; Treg refusals are explained", async () => {
     const reg = new ToolRegistry();
     registerDataTools(reg, {
       db: h.handle.db,
       dataFor: async () => ({
-        provider: new TregProvider({ key: "kasama_resale", base: tregUrl }),
+        provider: new TregProvider({ key: "casama_resale", base: tregUrl }),
         resale: true,
       }),
     });
@@ -240,7 +240,7 @@ describe("paid data", () => {
     } as never;
     const found = await reg.get("data.search")!.execute({ query: "email" } as never, ctx);
     expect(found.content).toContain(
-      "hunter.email-finder (data.hunter.email-finder): Email finder. $0.0240 per call (includes Kasama's 20%)",
+      "hunter.email-finder (data.hunter.email-finder): Email finder. $0.0240 per call (includes Casama's 20%)",
     );
     await reg
       .get("data.call")!

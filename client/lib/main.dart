@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -27,7 +27,7 @@ import 'ui/glow_button.dart';
 /// moved to another Supabase project since, [onServerMoved] reconnects.
 Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config, {VoidCallback? onServerMoved}) async {
   final saved = await ServerConfigCache.read(config.apiUrl);
-  final server = saved ?? (await KasamaClient.connect(config.apiUrl)).config;
+  final server = saved ?? (await CasamaClient.connect(config.apiUrl)).config;
   if (saved == null) unawaited(ServerConfigCache.write(config.apiUrl, server));
   await Supabase.initialize(url: server.supabaseUrl, publishableKey: server.supabaseAnonKey);
   final supabase = Supabase.instance.client;
@@ -36,13 +36,13 @@ Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config, {VoidCallback? onS
   if (saved != null) unawaited(_refreshServerConfig(config.apiUrl, api, backend, saved, onServerMoved));
   final app = ProviderScope(
     overrides: [backendProvider.overrideWithValue(backend), localCacheProvider.overrideWithValue(openLocalCache())],
-    child: const KasamaApp(),
+    child: const CasamaApp(),
   );
   return (app as Widget, backend);
 }
 
 /// Replaces the saved server settings with the server's; offline, the saved ones stay.
-Future<void> _refreshServerConfig(String apiUrl, KasamaClient api, SupabaseBackend backend, PublicConfig saved, VoidCallback? onServerMoved) async {
+Future<void> _refreshServerConfig(String apiUrl, CasamaClient api, SupabaseBackend backend, PublicConfig saved, VoidCallback? onServerMoved) async {
   try {
     final fresh = (await api.system.getConfig()).data;
     if (fresh == null) return;

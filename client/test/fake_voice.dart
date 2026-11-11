@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:kasama_app/core/voice.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_app/core/voice.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 class FakeDictation implements Dictation {
   var started = 0;

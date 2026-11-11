@@ -82,4 +82,4 @@ begin
    order by 8 desc limit v_n);
 end;
 $$;
-grant execute on function public.search_workspace(uuid, text, int) to authenticated, kasama_worker;
+grant execute on function public.search_workspace(uuid, text, int) to authenticated, casama_worker;

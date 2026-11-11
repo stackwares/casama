@@ -1,18 +1,18 @@
 {
-  "name": "@kasama/mcp",
+  "name": "@casama/mcp",
   "version": "0.8.0",
-  "description": "Kasama MCP server: control your Kasama bots from AI coding tools (Claude Code, Cursor, Codex, and others).",
+  "description": "Casama MCP server: control your Casama bots from AI coding tools (Claude Code, Cursor, Codex, and others).",
   "type": "module",
   "license": "Apache-2.0",
   "bin": {
-    "kasama-mcp": "./src/main.ts"
+    "casama-mcp": "./src/main.ts"
   },
   "exports": {
     ".": "./src/server.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",

@@ -1,11 +1,11 @@
 # Webhooks
 
-Webhooks let other services start work in Kasama. The main kind is a **routine webhook**: a
+Webhooks let other services start work in Casama. The main kind is a **routine webhook**: a
 routine whose trigger is an HTTP request instead of a schedule. GitHub can call it on a push or a
 new issue, or your own system can call it when something happens, and the bot gets the request's
 body as context.
 
-This page is about webhooks coming **into** Kasama. Every one is checked with an HMAC signature, so
+This page is about webhooks coming **into** Casama. Every one is checked with an HMAC signature, so
 only senders who know the secret can trigger anything.
 
 ## Routine webhooks
@@ -14,8 +14,8 @@ There are two kinds:
 
 | Trigger | URL | Signature header |
 | --- | --- | --- |
-| `github` | `https://kasama.example.com/hooks/github/<routine id>` | `X-Hub-Signature-256` (sent by GitHub) |
-| `webhook` | `https://kasama.example.com/hooks/custom/<routine id>` | `X-Kasama-Signature` (you compute it) |
+| `github` | `https://casama.example.com/hooks/github/<routine id>` | `X-Hub-Signature-256` (sent by GitHub) |
+| `webhook` | `https://casama.example.com/hooks/custom/<routine id>` | `X-Casama-Signature` (you compute it) |
 
 Both use the same signature: `sha256=` followed by the hex HMAC-SHA256 of the raw request body,
 keyed with the routine's secret.
@@ -26,7 +26,7 @@ In the app, create a routine and pick a webhook or GitHub trigger (see [Routines
 Or use the API:
 
 ```sh
-curl -s -X POST "https://kasama.example.com/v1/bots/$BOT/routines" \
+curl -s -X POST "https://casama.example.com/v1/bots/$BOT/routines" \
   -H "authorization: Bearer $TOKEN" \
   -H "content-type: application/json" \
   -d '{
@@ -42,13 +42,13 @@ The response is the routine, plus two fields shown **only this once**:
 {
   "id": "8c3e5f0a-2b1d-4c6e-9f7a-1d2c3b4a5e6f",
   "name": "Triage new orders",
-  "webhook_url": "https://kasama.example.com/hooks/custom/8c3e5f0a-2b1d-4c6e-9f7a-1d2c3b4a5e6f",
+  "webhook_url": "https://casama.example.com/hooks/custom/8c3e5f0a-2b1d-4c6e-9f7a-1d2c3b4a5e6f",
   "webhook_secret": "4b1f0c9e8d7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a",
   "...": "..."
 }
 ```
 
-Store the secret somewhere safe. Kasama keeps it in its vault and never shows it again. If you
+Store the secret somewhere safe. Casama keeps it in its vault and never shows it again. If you
 lose it, create a new routine.
 
 For a GitHub routine, set `"trigger": "github"` and optionally `"events"`: the GitHub event names
@@ -71,18 +71,18 @@ In the repository (or organization), open **Settings → Webhooks → Add webhoo
 | Events | The ones you listed in `events`, or the ones you want |
 
 GitHub signs each delivery with `X-Hub-Signature-256` and names the event in `X-GitHub-Event`.
-Kasama checks both.
+Casama checks both.
 
 ### Your own service
 
-Send a `POST` with any body (JSON is typical) and the signature in `X-Kasama-Signature`. You can
-also name the event in `X-Kasama-Event`: the bot sees it, and if the routine has `events`, only
+Send a `POST` with any body (JSON is typical) and the signature in `X-Casama-Signature`. You can
+also name the event in `X-Casama-Event`: the bot sees it, and if the routine has `events`, only
 those event names start a run.
 
 **Shell (OpenSSL):**
 
 ```sh
-URL=https://kasama.example.com/hooks/custom/8c3e5f0a-2b1d-4c6e-9f7a-1d2c3b4a5e6f
+URL=https://casama.example.com/hooks/custom/8c3e5f0a-2b1d-4c6e-9f7a-1d2c3b4a5e6f
 SECRET=4b1f0c9e8d7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a
 BODY='{"order_id": 1042, "customer": "Ana Cruz", "total": "129.00"}'
 
@@ -90,8 +90,8 @@ SIG="sha256=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$SECRET" -hex | 
 
 curl -s -X POST "$URL" \
   -H "content-type: application/json" \
-  -H "x-kasama-signature: $SIG" \
-  -H "x-kasama-event: order.created" \
+  -H "x-casama-signature: $SIG" \
+  -H "x-casama-event: order.created" \
   --data-binary "$BODY"
 ```
 
@@ -100,8 +100,8 @@ curl -s -X POST "$URL" \
 ```js
 import { createHmac } from "node:crypto";
 
-const url = "https://kasama.example.com/hooks/custom/8c3e5f0a-2b1d-4c6e-9f7a-1d2c3b4a5e6f";
-const secret = process.env.KASAMA_WEBHOOK_SECRET;
+const url = "https://casama.example.com/hooks/custom/8c3e5f0a-2b1d-4c6e-9f7a-1d2c3b4a5e6f";
+const secret = process.env.CASAMA_WEBHOOK_SECRET;
 const body = JSON.stringify({ order_id: 1042, customer: "Ana Cruz", total: "129.00" });
 
 const signature = `sha256=${createHmac("sha256", secret).update(body).digest("hex")}`;
@@ -110,8 +110,8 @@ const res = await fetch(url, {
   method: "POST",
   headers: {
     "content-type": "application/json",
-    "x-kasama-signature": signature,
-    "x-kasama-event": "order.created",
+    "x-casama-signature": signature,
+    "x-casama-event": "order.created",
   },
   body,
 });
@@ -127,8 +127,8 @@ import json
 import os
 import urllib.request
 
-url = "https://kasama.example.com/hooks/custom/8c3e5f0a-2b1d-4c6e-9f7a-1d2c3b4a5e6f"
-secret = os.environ["KASAMA_WEBHOOK_SECRET"].encode()
+url = "https://casama.example.com/hooks/custom/8c3e5f0a-2b1d-4c6e-9f7a-1d2c3b4a5e6f"
+secret = os.environ["CASAMA_WEBHOOK_SECRET"].encode()
 body = json.dumps({"order_id": 1042, "customer": "Ana Cruz", "total": "129.00"}).encode()
 
 signature = "sha256=" + hmac.new(secret, body, hashlib.sha256).hexdigest()
@@ -139,8 +139,8 @@ req = urllib.request.Request(
     method="POST",
     headers={
         "content-type": "application/json",
-        "x-kasama-signature": signature,
-        "x-kasama-event": "order.created",
+        "x-casama-signature": signature,
+        "x-casama-event": "order.created",
     },
 )
 print(urllib.request.urlopen(req).status)  # 202
@@ -151,14 +151,14 @@ signature won't match.
 
 ### What happens
 
-1. Kasama answers **202** `{"accepted": true}` right away, before it checks anything. It answers the
+1. Casama answers **202** `{"accepted": true}` right away, before it checks anything. It answers the
    same way for a bad signature or a routine that doesn't exist, so nobody can probe which
    routines exist.
 2. The worker checks the signature with a constant-time comparison. The request is dropped
    silently if the signature is wrong, the routine is turned off or has another trigger, or the
    event isn't one the routine accepts.
 3. Otherwise the bot starts a run. It sees the routine's instructions, then the event: an
-   `Event: <name>` line (from `X-GitHub-Event` or `X-Kasama-Event`) and the body, up to its first
+   `Event: <name>` line (from `X-GitHub-Event` or `X-Casama-Event`) and the body, up to its first
    50,000 characters. The body is marked as untrusted outside content, so the bot treats it as
    data, not as instructions from you.
 4. Like any routine run, it happens in the routine's conversation: by default the latest chat
@@ -169,12 +169,12 @@ bot's chat. If nothing shows up, check the secret and that you signed the raw bo
 
 ### Retries and duplicates
 
-Kasama doesn't deduplicate deliveries: each request with a valid signature starts its own run. A
+Casama doesn't deduplicate deliveries: each request with a valid signature starts its own run. A
 202 tells GitHub and most senders that the delivery succeeded, so they won't retry it. If your own
 sender retries on network errors, expect an occasional second run, or make the instructions safe to
 repeat (for example "skip orders you've already confirmed").
 
-Kasama answers something other than 202 only when:
+Casama answers something other than 202 only when:
 
 | Status | When | What to do |
 | --- | --- | --- |
@@ -184,14 +184,14 @@ Kasama answers something other than 202 only when:
 ## Git sync webhook
 
 [Git sync](/develop/workspace-files#git-sync) keeps a workspace's routines and skills in a GitHub
-repository. Kasama checks the repository every 10 minutes anyway; a push webhook makes it pick up
+repository. Casama checks the repository every 10 minutes anyway; a push webhook makes it pick up
 changes within a minute.
 
-When an admin first sets up git sync, Kasama shows a webhook URL and secret, once:
+When an admin first sets up git sync, Casama shows a webhook URL and secret, once:
 
 | Field | Value |
 | --- | --- |
-| Payload URL | `https://kasama.example.com/hooks/git-sync/<workspace id>` |
+| Payload URL | `https://casama.example.com/hooks/git-sync/<workspace id>` |
 | Content type | `application/json` |
 | Secret | The secret shown at setup |
 | Events | Just the push event |
@@ -202,7 +202,7 @@ isn't set up or is off). GitHub's delivery log shows which.
 
 ## Other inbound webhooks
 
-Some features receive webhooks from a provider you connect. Kasama shows the URL when you set the
+Some features receive webhooks from a provider you connect. Casama shows the URL when you set the
 feature up, and checks each provider's own signature:
 
 | Feature | URL | Checked with |

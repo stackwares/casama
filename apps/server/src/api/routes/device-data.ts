@@ -3,9 +3,10 @@
  * kinds the user turned on, uploads summaries, answers fresh-read and write requests, and manages
  * which bots may read which kinds. Everything here is the signed-in person's own data.
  */
+
+import { ActivitySummary, HealthSummary, routes } from "@casama/contracts";
+import { contentKeys, type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { ActivitySummary, HealthSummary, routes } from "@kasama/contracts";
-import { contentKeys, type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { type DeviceEvent, fireDeviceEvent, maskCodes } from "../../worker/device-triggers.ts";
 import { ApiError } from "../errors.ts";
@@ -46,7 +47,7 @@ export function registerDeviceDataRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
       throw new ApiError(404, "device_not_found", "This device isn't registered; save it first");
     return s;
   };
-  // Health (D-150): sealed with the content key of a workspace the person owns; on Kasama Cloud
+  // Health (D-150): sealed with the content key of a workspace the person owns; on Casama Cloud
   // it isn't stored at all without one.
   const healthNeedsKey =
     deps.env.HEALTH_REQUIRES_ENCRYPTION === "on" ||

@@ -7,7 +7,7 @@ export const EnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().default(8787),
   DATABASE_URL: z.string().min(1),
-  /** The worker's least-privilege role (kasama_worker, D-095); unset: the worker uses DATABASE_URL. */
+  /** The worker's least-privilege role (casama_worker, D-095); unset: the worker uses DATABASE_URL. */
   WORKER_DATABASE_URL: z.string().min(1).optional(),
   SUPABASE_URL: z.url(),
   SUPABASE_ANON_KEY: z.string().min(1),
@@ -20,7 +20,7 @@ export const EnvSchema = z.object({
    * fingerprints for assetlinks.json. Unset: invite links open the join page or the web app.
    */
   APPLE_APP_IDS: z.string().optional(),
-  ANDROID_APP_PACKAGE: z.string().default("com.kasama.app"),
+  ANDROID_APP_PACKAGE: z.string().default("ai.casama.app"),
   ANDROID_CERT_SHA256: z.string().optional(),
   /** Store pages shown on the invite join page. */
   APP_STORE_URL: z.url().optional(),
@@ -29,17 +29,17 @@ export const EnvSchema = z.object({
   CORS_ORIGINS: z.string().default(""),
   /**
    * ChatGPT plan sign-in (SPEC: ChatGPT plan sign-in). auto: on for self-hosted servers, off when
-   * billing is on (Kasama Cloud needs OpenAI's approval for hosted use first).
+   * billing is on (Casama Cloud needs OpenAI's approval for hosted use first).
    */
   CHATGPT_SIGN_IN: z.enum(["auto", "on", "off"]).default("auto"),
   /**
-   * Kasama Cloud abuse controls (D-094): sign-up proofs, a verified email before a free computer
+   * Casama Cloud abuse controls (D-094): sign-up proofs, a verified email before a free computer
    * starts, and automatic suspension on egress abuse. auto: on when billing is on.
    */
   ABUSE_CONTROLS: z.enum(["auto", "on", "off"]).default("auto"),
   /**
    * Health data (D-150) is stored only sealed with a workspace content key the person owns (encryption
-   * at rest). auto: required when billing is on (Kasama Cloud); self-hosted keeps it on its own machine.
+   * at rest). auto: required when billing is on (Casama Cloud); self-hosted keeps it on its own machine.
    */
   HEALTH_REQUIRES_ENCRYPTION: z.enum(["auto", "on", "off"]).default("auto"),
   /**
@@ -63,7 +63,7 @@ export const EnvSchema = z.object({
   /** Optional wallpaper photo search (D-087). Unset: the app offers its own patterns and photos. */
   UNSPLASH_ACCESS_KEY: z.string().optional(),
   UNSPLASH_API_URL: z.url().default("https://api.unsplash.com"),
-  /** Kasama Cloud only (D-070). Self-hosted servers keep it off: no paywall, unlimited use. */
+  /** Casama Cloud only (D-070). Self-hosted servers keep it off: no paywall, unlimited use. */
   BILLING_ENABLED: bool.default(false),
   /** Dodo Payments (web, desktop, credit packs). */
   DODO_API_KEY: z.string().optional(),
@@ -74,13 +74,13 @@ export const EnvSchema = z.object({
   APP_STORE_ISSUER_ID: z.string().optional(),
   APP_STORE_KEY_ID: z.string().optional(),
   APP_STORE_PRIVATE_KEY: z.string().optional(),
-  APP_STORE_BUNDLE_ID: z.string().default("com.kasama.app"),
+  APP_STORE_BUNDLE_ID: z.string().default("ai.casama.app"),
   APP_STORE_ENVIRONMENT: z.enum(["production", "sandbox"]).default("production"),
   APP_STORE_API_URL: z.url().optional(),
   /** Extra trusted roots (PEM text, or PEM paths comma-separated); Apple Root CA - G3 is built in. */
   APP_STORE_ROOT_CA: z.string().optional(),
   /** Google Play Developer API (Android). The service account is JSON text or a path. */
-  GOOGLE_PLAY_PACKAGE_NAME: z.string().default("com.kasama.app"),
+  GOOGLE_PLAY_PACKAGE_NAME: z.string().default("ai.casama.app"),
   GOOGLE_PLAY_SERVICE_ACCOUNT: z.string().optional(),
   GOOGLE_PLAY_API_URL: z.url().optional(),
   /** RTDN push auth: a secret ?token= on the push URL and/or the push subscription's OIDC audience. */
@@ -93,17 +93,17 @@ export const EnvSchema = z.object({
   CLOUD_MODEL_UPSTREAM_KEY: z.string().optional(),
   CLOUD_MODEL_MARKUP: z.coerce.number().positive().default(1),
   CLOUD_COMPUTER_USD_PER_HOUR: z.coerce.number().nonnegative().default(0.05),
-  /** Cloud Connect, self-hosted side: use Kasama Cloud computers with this key. Unset = off. */
-  KASAMA_CLOUD_URL: z.url().optional(),
+  /** Cloud Connect, self-hosted side: use Casama Cloud computers with this key. Unset = off. */
+  CASAMA_CLOUD_URL: z.url().optional(),
   /** GitHub API base for skill imports (tests point it at a fake). */
   GITHUB_API_URL: z.url().optional(),
-  KASAMA_CLOUD_KEY: z.string().optional(),
+  CASAMA_CLOUD_KEY: z.string().optional(),
   /**
    * Push notifications: a Firebase service account (JSON text, or a path to the JSON file) for the
    * Firebase project the apps are built with. Unset: no push; the in-app inbox still works.
    */
   FCM_SERVICE_ACCOUNT: z.string().optional(),
-  /** Paid data resale (D-138, Kasama Cloud only, after a written agreement with Treg): Kasama's Treg key and the switch. */
+  /** Paid data resale (D-138, Casama Cloud only, after a written agreement with Treg): Casama's Treg key and the switch. */
   TREG_API_KEY: z.string().optional(),
   TREG_RESALE: z.enum(["on", "off"]).default("off"),
   TREG_API_URL: z.url().optional(),
@@ -134,10 +134,10 @@ export const EnvSchema = z.object({
   APNS_KEY_P8: z.string().optional(),
   APNS_KEY_ID: z.string().optional(),
   APNS_TEAM_ID: z.string().optional(),
-  APNS_VOIP_TOPIC: z.string().default("com.kasama.app.voip"),
+  APNS_VOIP_TOPIC: z.string().default("ai.casama.app.voip"),
   APNS_URL: z.url().optional(),
   RESEND_API_KEY: z.string().optional(),
-  EMAIL_FROM: z.string().default("Kasama <no-reply@localhost>"),
+  EMAIL_FROM: z.string().default("Casama <no-reply@localhost>"),
   RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(120),
   /** Error reporting (D-063): auto = Sentry if SENTRY_DSN, else PostHog if POSTHOG_API_KEY. */
   ERROR_REPORTING: z.enum(["auto", "sentry", "posthog", "none"]).default("auto"),
@@ -154,9 +154,9 @@ export const EnvSchema = z.object({
   TRACE_URL_TEMPLATE: z.string().includes("{trace_id}").optional(),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
   /** Worker: replay recorded model responses (comma-separated fixture files) instead of calling providers. */
-  KASAMA_MODEL_FIXTURES: z.string().optional(),
+  CASAMA_MODEL_FIXTURES: z.string().optional(),
   /** Worker: append real model exchanges to this file as fixture turns. */
-  KASAMA_MODEL_RECORD: z.string().optional(),
+  CASAMA_MODEL_RECORD: z.string().optional(),
   /** Worker: memory embeddings. auto = the org's OpenAI key when present, else full-text search only. */
   EMBEDDINGS: z.enum(["auto", "none", "hash"]).default("auto"),
   /** Default models (D-064): Muse Ember on OpenRouter, GPT-6 Luna on OpenAI, unless overridden. */
@@ -166,7 +166,7 @@ export const EnvSchema = z.object({
     .enum(["none", "low", "medium", "high", "xhigh", "max"])
     .default("medium"),
   /** Worker: cap on output tokens per model call (live checks use a small cap). */
-  KASAMA_MAX_OUTPUT_TOKENS: z.coerce.number().int().positive().optional(),
+  CASAMA_MAX_OUTPUT_TOKENS: z.coerce.number().int().positive().optional(),
   RUN_CONCURRENCY: z.coerce.number().int().positive().default(20),
   /** Lazy tool loading (D-106): bots with more tools than this load the rest on demand; 0 = off. */
   LAZY_TOOLS_THRESHOLD: z.coerce.number().int().min(0).default(30),
@@ -192,11 +192,11 @@ export const EnvSchema = z.object({
   ACCOUNT_DELETION_GRACE_DAYS: z.coerce.number().int().min(0).max(30).default(7),
   /** Opt-in anonymous telemetry (D-074): off unless set to "on". */
   TELEMETRY: z.enum(["on", "off"]).default("off"),
-  TELEMETRY_URL: z.url().default("https://telemetry.kasama.dev/v1/ping"),
+  TELEMETRY_URL: z.url().default("https://telemetry.casama.ai/v1/ping"),
   /** Enterprise features in ee/ (D-073): a signed license key. */
-  KASAMA_LICENSE_KEY: z.string().optional(),
+  CASAMA_LICENSE_KEY: z.string().optional(),
   /** Tests only (ignored unless NODE_ENV=test): another license public key. */
-  KASAMA_LICENSE_PUBLIC_KEY: z.string().optional(),
+  CASAMA_LICENSE_PUBLIC_KEY: z.string().optional(),
   /** Supabase service role key: SSO provider admin (ee). */
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   /** Prometheus metrics at /metrics (D-075); protect with a bearer token in production. */
@@ -222,8 +222,8 @@ export const EnvSchema = z.object({
   PAGES_URL: z.url().default("http://localhost:8790"),
   PAGES_PORT: z.coerce.number().int().optional(),
   /**
-   * Kasama Cloud's Composio key (D-130): inbox reading through Composio's managed Google sign-in
-   * until Google's restricted-scope review passes. Unset: that option is hidden on Kasama Cloud.
+   * Casama Cloud's Composio key (D-130): inbox reading through Composio's managed Google sign-in
+   * until Google's restricted-scope review passes. Unset: that option is hidden on Casama Cloud.
    */
   COMPOSIO_API_KEY: z.string().optional(),
   COMPOSIO_API_URL: z.url().optional(),

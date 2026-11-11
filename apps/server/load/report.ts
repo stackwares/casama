@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 import postgres from "postgres";
 
-const data = JSON.parse(readFileSync(process.argv[2] ?? "/tmp/kasama-load.json", "utf8")) as {
+const data = JSON.parse(readFileSync(process.argv[2] ?? "/tmp/casama-load.json", "utf8")) as {
   org_id: string;
 };
 const sql = postgres(process.env.DATABASE_URL as string, { max: 1 });

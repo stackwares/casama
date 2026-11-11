@@ -1,6 +1,6 @@
 # Notifications and attention
 
-Bots tell you when they need a decision, when work is done, and when they notice something. Kasama
+Bots tell you when they need a decision, when work is done, and when they notice something. Casama
 decides how loudly to tell you: a push notification now, a push later, or a quiet note in your
 inbox that waits for your next brief. Use this page to set quiet hours, choose which bots may
 interrupt you, and understand why a message did or didn't buzz your phone.
@@ -51,7 +51,7 @@ arrive when the window ends.
 3. Set **From** and **Until**. The window can cross midnight, for example 22:00 to 07:00.
 4. Tap **Save**.
 
-When quiet hours end, Kasama sends the pushes that waited, except ones you already read in the
+When quiet hours end, Casama sends the pushes that waited, except ones you already read in the
 app.
 
 ### Choose per bot
@@ -95,7 +95,7 @@ moment: routine results, suggestions from check-ins and similar. Each has an urg
 A normal-urgency proactive message doesn't push while any of these is true. It goes to your
 inbox and waits for your next brief instead.
 
-| You're busy when | How Kasama knows |
+| You're busy when | How Casama knows |
 | --- | --- |
 | Focus is on | The latest Focus event from your devices in the last 12 hours is "on" |
 | You're driving | The latest driving event in the last 3 hours is "on" |

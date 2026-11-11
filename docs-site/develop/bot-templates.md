@@ -2,8 +2,8 @@
 
 A bot template is one JSON file that describes a bot people can import: its instructions, skills,
 routines and the services it works with. It never carries keys, secrets or chats, so it's safe to
-share in public. Files use the extension `.kasama-bot.json`, and the format is called
-`kasama.bot`, version 1.
+share in public. Files use the extension `.casama-bot.json`, and the format is called
+`casama.bot`, version 1.
 
 ## Where templates come from
 
@@ -14,15 +14,15 @@ share in public. Files use the extension `.kasama-bot.json`, and the format is c
 - **Write one by hand.** It's plain JSON; the full example below is a good start.
 
 ```sh
-curl -s "https://kasama.example.com/v1/bots/$BOT/export" \
-  -H "authorization: Bearer $TOKEN" > invoicer.kasama-bot.json
+curl -s "https://casama.example.com/v1/bots/$BOT/export" \
+  -H "authorization: Bearer $TOKEN" > invoicer.casama-bot.json
 ```
 
 ## A full example
 
 ```json
 {
-  "format": "kasama.bot",
+  "format": "casama.bot",
   "version": 1,
   "name": "Invoicer",
   "description": "Chases unpaid invoices politely.",
@@ -69,7 +69,7 @@ curl -s "https://kasama.example.com/v1/bots/$BOT/export" \
 
 | Field | Type | Required | Rules |
 | --- | --- | --- | --- |
-| `format` | string | yes | Always `"kasama.bot"` |
+| `format` | string | yes | Always `"casama.bot"` |
 | `version` | integer | yes | Always `1` |
 | `name` | string | yes | 1 to 80 characters |
 | `description` | string | no | Up to 300 characters. A one-line summary for people browsing templates. |
@@ -121,7 +121,7 @@ Each file:
 | `executable` | boolean | no | Keep the executable bit (default `false`) |
 
 A skill's files can total up to 5 MB. Scripts in a skill only ever run on the bot's own sandboxed
-computer, never on the Kasama server.
+computer, never on the Casama server.
 
 ### Routines
 
@@ -158,7 +158,7 @@ An export includes up to 200 memories, pinned and most important first.
 
 ## Never in a template
 
-Kasama never writes these into a template, and import doesn't read them:
+Casama never writes these into a template, and import doesn't read them:
 
 - model keys, secrets, OAuth tokens or any other credential
 - the model choice (the person importing picks a key and model)
@@ -171,18 +171,18 @@ Kasama never writes these into a template, and import doesn't read them:
 ## Import a template
 
 In the app, open **Bots → Import a bot** and pick the file, or open a share link
-(`https://<your app>/import/<token>`). Kasama previews the instructions, skills, routines,
+(`https://<your app>/import/<token>`). Casama previews the instructions, skills, routines,
 connections and memory count, and you choose a model key and model, and whether to bring the
 routines and memories.
 
 From the API, `POST /v1/bots/import`:
 
 ```sh
-jq -n --slurpfile t invoicer.kasama-bot.json \
+jq -n --slurpfile t invoicer.casama-bot.json \
   --arg org "$ORG" --arg key "$CREDENTIAL" --arg model "$MODEL" \
   '{org_id: $org, template: $t[0], credential_id: $key, model: $model,
     include_routines: true, include_memories: false}' |
-curl -s -X POST "https://kasama.example.com/v1/bots/import" \
+curl -s -X POST "https://casama.example.com/v1/bots/import" \
   -H "authorization: Bearer $TOKEN" \
   -H "content-type: application/json" \
   -d @-
@@ -233,7 +233,7 @@ Importing always creates a new bot; it never changes an existing one.
 returns a link:
 
 ```sh
-curl -s -X POST "https://kasama.example.com/v1/bots/$BOT/share" \
+curl -s -X POST "https://casama.example.com/v1/bots/$BOT/share" \
   -H "authorization: Bearer $TOKEN" \
   -H "content-type: application/json" \
   -d '{"include_memories": false, "expires_in_days": 30}'
@@ -242,13 +242,13 @@ curl -s -X POST "https://kasama.example.com/v1/bots/$BOT/share" \
 ```json
 {
   "token": "q3V9...",
-  "url": "https://app.kasama.example.com/import/q3V9...",
+  "url": "https://app.casama.example.com/import/q3V9...",
   "expires_at": "2026-12-11T15:00:00.000Z"
 }
 ```
 
 `expires_in_days` is 1 to 365 (default 30), or `null` for a link that doesn't expire. Anyone signed
-in to the same Kasama server, in any workspace, can open the link to preview and import the
+in to the same Casama server, in any workspace, can open the link to preview and import the
 snapshot; `GET /v1/bot-shares/{token}` returns it. The snapshot doesn't change when you edit the
 bot later: share again for a fresh one.
 

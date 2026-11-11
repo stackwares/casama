@@ -137,5 +137,5 @@ export const CreateConnectKeyRequest = z
   .openapi("CreateConnectKeyRequest");
 
 export const CreatedConnectKey = ConnectKey.extend({
-  key: z.string().openapi({ description: "Shown once; set it as KASAMA_CLOUD_KEY" }),
+  key: z.string().openapi({ description: "Shown once; set it as CASAMA_CLOUD_KEY" }),
 }).openapi("CreatedConnectKey");

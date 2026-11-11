@@ -63,7 +63,7 @@ describe.skipIf(!enabled)("warm pool", () => {
           "whoami && pwd && curl -s -o /dev/null -w '%{http_code}' --max-time 8 https://example.com",
         ),
       );
-      expect(who.stdout).toMatch(/^kasama\n.*\/workspace\n200$/);
+      expect(who.stdout).toMatch(/^casama\n.*\/workspace\n200$/);
       await h.writeFile("note.txt", new TextEncoder().encode("kept"));
       expect(await stack.provider.list?.()).toContain(ref);
       expect(await stack.provider.list?.()).not.toContain(pool);

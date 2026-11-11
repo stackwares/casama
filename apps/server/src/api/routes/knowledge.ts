@@ -1,7 +1,8 @@
 /** Knowledge sources (D-125): add, list, resync and delete; the worker reads and indexes them. */
+
+import { routes } from "@casama/contracts";
+import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { parseGitHubUrl } from "../../services/skills.ts";
 import { ApiError } from "../errors.ts";

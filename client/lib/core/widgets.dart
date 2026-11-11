@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
@@ -176,7 +176,7 @@ class EmptyState extends StatelessWidget {
 
 /// Runs an async action with a progress state and error snackbar.
 /// Called instead of the error snackbar when the server answers 402 Payment Required (plan limit or
-/// out of credits, Kasama Cloud only). The app sets it to the paywall at startup.
+/// out of credits, Casama Cloud only). The app sets it to the paywall at startup.
 Future<void> Function(BuildContext context, String message)? onPaymentRequired;
 
 Future<T?> runGuarded<T>(BuildContext context, Future<T> Function() action) async {

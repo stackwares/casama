@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/app.dart';
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_app/features/settings/model_keys_screen.dart';
-import 'package:kasama_app/features/settings/settings_screen.dart';
+import 'package:casama_app/app.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/features/settings/model_keys_screen.dart';
+import 'package:casama_app/features/settings/settings_screen.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
@@ -27,7 +27,7 @@ void main() {
 
   testWidgets('on wide windows a settings page opens beside the settings list, the open row highlighted', (tester) async {
     await setSize(tester, const Size(1600, 1000));
-    await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(FakeBackend())], child: const KasamaApp()));
+    await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(FakeBackend())], child: const CasamaApp()));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('sidebar-nav-/settings')));
     await tester.pumpAndSettle();

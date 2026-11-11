@@ -2,9 +2,9 @@
  * Teach a task by showing it (SPEC: Post-v1 roadmap → Teach a task; D-120): capturing each step's
  * context from the computer, and the drafting run's teach.save_draft tool.
  */
-import type { Database } from "@kasama/db";
-import { SKILL_NAME } from "@kasama/domain";
-import { collectExec, type SandboxHandle } from "@kasama/sandbox";
+import type { Database } from "@casama/db";
+import { SKILL_NAME } from "@casama/domain";
+import { collectExec, type SandboxHandle } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";

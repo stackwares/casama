@@ -104,6 +104,8 @@ export const runEventPayloads = {
     /** A uuid in the built-in store; a provider's id with a memory backend (D-137). */
     memory_id: z.string().min(1),
     kind: z.enum(["fact", "episode", "summary", "preference"]),
+    /** "profile": saved to the person's own About you instead of the bot's memory (D-169). */
+    scope: z.enum(["bot", "profile"]).optional(),
   }),
   "skill.loaded": z.object({ skill_id: id, name: z.string() }),
   usage: z.object({

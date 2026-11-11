@@ -1,4 +1,4 @@
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../api/errors.ts";
 

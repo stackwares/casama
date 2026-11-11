@@ -220,7 +220,7 @@ describe("voice (Phase 6)", () => {
     expect(tool.status).toBe("completed");
     expect(toolMs).toBeLessThan(1000);
 
-    // Under "always ask", a tool with side effects outside Kasama waits for approval instead of running.
+    // Under "always ask", a tool with side effects outside Casama waits for approval instead of running.
     await h.handle.db.execute(
       sql`update public.bots set autonomy = 'ask_always' where id = ${botId}::uuid`,
     );
@@ -239,7 +239,7 @@ describe("voice (Phase 6)", () => {
     );
     expect(gated.status).toBe("waiting_approval");
     expect(gated.approval_id).toBeTruthy();
-    // A message to the person themselves only touches Kasama, so it never asks (D-155).
+    // A message to the person themselves only touches Casama, so it never asks (D-155).
     const own = await j(
       await h.request("/v1/voice/tool", {
         method: "POST",

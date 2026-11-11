@@ -8,17 +8,17 @@
 alter table public.plans add column sort integer not null default 0;
 alter table public.plans add column price_label text;
 
--- Placeholder Kasama Cloud plans; names, prices and limits are open decisions (SPEC "Monetization").
+-- Placeholder Casama Cloud plans; names, prices and limits are open decisions (SPEC "Monetization").
 -- Product ids are set per deployment (docs/NEEDS-FROM-OLIVER.md).
 insert into public.plans (code, name, interval, limits, store_product_ids, sort, price_label) values
   ('free', 'Free', 'none',
    '{"credit_gate": true, "monthly_credits_usd": 1, "max_bots": 2, "max_computers": 1, "computer_hours": 5, "seats": 1}', '{}', 0, null),
   ('pro', 'Pro', 'month',
    '{"credit_gate": true, "monthly_credits_usd": 20, "max_bots": 20, "max_computers": 5, "computer_hours": 100, "seats": 5}',
-   '{"app_store": "dev.kasama.pro.monthly", "google_play": "kasama_pro:monthly"}', 1, null),
+   '{"app_store": "dev.casama.pro.monthly", "google_play": "casama_pro:monthly"}', 1, null),
   ('pro_yearly', 'Pro (yearly)', 'year',
    '{"credit_gate": true, "monthly_credits_usd": 20, "max_bots": 20, "max_computers": 5, "computer_hours": 100, "seats": 5}',
-   '{"app_store": "dev.kasama.pro.yearly", "google_play": "kasama_pro:yearly"}', 2, null);
+   '{"app_store": "dev.casama.pro.yearly", "google_play": "casama_pro:yearly"}', 2, null);
 
 create table public.credit_packs (
   code text primary key,
@@ -30,7 +30,7 @@ create table public.credit_packs (
   created_at timestamptz not null default now()
 );
 insert into public.credit_packs (code, name, credits_usd, store_product_ids) values
-  ('credits_10', '$10 of credits', 10, '{"app_store": "dev.kasama.credits.10", "google_play": "kasama_credits_10"}');
+  ('credits_10', '$10 of credits', 10, '{"app_store": "dev.casama.credits.10", "google_play": "casama_credits_10"}');
 
 -- ---------------------------------------------------------------------------
 -- Subscriptions (one row per store subscription; purchases belong to the workspace)

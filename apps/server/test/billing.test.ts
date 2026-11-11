@@ -50,7 +50,7 @@ describe("billing off (self-hosted default)", () => {
   });
 });
 
-describe("billing on (Kasama Cloud, Phase 7 gate)", () => {
+describe("billing on (Casama Cloud, Phase 7 gate)", () => {
   let f: FakeBilling;
   let h: Harness;
   let owner: { id: string; token: string };
@@ -236,13 +236,13 @@ describe("billing on (Kasama Cloud, Phase 7 gate)", () => {
 
   it("an App Store purchase unlocks the workspace on the web; refunds and expiry remove it", async () => {
     const orgId = await newOrg("iPhone buyer");
-    const sub = f.apple.add({ productId: "com.kasama.pro.monthly", appAccountToken: orgId });
+    const sub = f.apple.add({ productId: "ai.casama.pro.monthly", appAccountToken: orgId });
     const res = await h.request(`/v1/orgs/${orgId}/billing/purchases`, {
       method: "POST",
       token: owner.token,
       json: {
         source: "app_store",
-        product_id: "com.kasama.pro.monthly",
+        product_id: "ai.casama.pro.monthly",
         transaction_id: sub.transactionId,
       },
     });
@@ -281,13 +281,13 @@ describe("billing on (Kasama Cloud, Phase 7 gate)", () => {
 
     // Expiry.
     const org2 = await newOrg("Expires");
-    const s2 = f.apple.add({ productId: "com.kasama.pro.yearly", appAccountToken: org2 });
+    const s2 = f.apple.add({ productId: "ai.casama.pro.yearly", appAccountToken: org2 });
     await h.request(`/v1/orgs/${org2}/billing/purchases`, {
       method: "POST",
       token: owner.token,
       json: {
         source: "app_store",
-        product_id: "com.kasama.pro.yearly",
+        product_id: "ai.casama.pro.yearly",
         transaction_id: s2.transactionId,
       },
     });
@@ -304,13 +304,13 @@ describe("billing on (Kasama Cloud, Phase 7 gate)", () => {
   it("a store purchase cannot be claimed by another workspace (Restore Purchases is safe)", async () => {
     const mine = await newOrg("Mine");
     const theirs = await newOrg("Theirs");
-    const sub = f.apple.add({ productId: "com.kasama.pro.monthly", appAccountToken: mine });
+    const sub = f.apple.add({ productId: "ai.casama.pro.monthly", appAccountToken: mine });
     const claim = await h.request(`/v1/orgs/${theirs}/billing/purchases`, {
       method: "POST",
       token: owner.token,
       json: {
         source: "app_store",
-        product_id: "com.kasama.pro.monthly",
+        product_id: "ai.casama.pro.monthly",
         transaction_id: sub.transactionId,
       },
     });
@@ -322,7 +322,7 @@ describe("billing on (Kasama Cloud, Phase 7 gate)", () => {
         token: owner.token,
         json: {
           source: "app_store",
-          product_id: "com.kasama.pro.monthly",
+          product_id: "ai.casama.pro.monthly",
           transaction_id: sub.transactionId,
         },
       });
@@ -333,13 +333,13 @@ describe("billing on (Kasama Cloud, Phase 7 gate)", () => {
 
   it("Google Play purchases are verified and acknowledged; RTDN refunds remove access", async () => {
     const orgId = await newOrg("Android buyer");
-    f.google.add("play-token-1", { productId: "kasama_pro", basePlanId: "monthly", orgId });
+    f.google.add("play-token-1", { productId: "casama_pro", basePlanId: "monthly", orgId });
     const res = await h.request(`/v1/orgs/${orgId}/billing/purchases`, {
       method: "POST",
       token: owner.token,
       json: {
         source: "google_play",
-        product_id: "kasama_pro:monthly",
+        product_id: "casama_pro:monthly",
         purchase_token: "play-token-1",
       },
     });
@@ -366,7 +366,7 @@ describe("billing on (Kasama Cloud, Phase 7 gate)", () => {
         version: "1.0",
         notificationType: 3,
         purchaseToken: "play-token-1",
-        subscriptionId: "kasama_pro",
+        subscriptionId: "casama_pro",
       },
     });
     expect((await hook("google_play", cancel, {}, `?token=${f.google.rtdnToken}`)).status).toBe(

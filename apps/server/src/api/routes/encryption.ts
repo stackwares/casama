@@ -1,8 +1,9 @@
 /** Encryption at rest (D-136): status, on and off, key rotation. Owners only. */
+
+import { encryptionStatus, rotateEncryptionKey, setEncryption } from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { encryptionStatus, rotateEncryptionKey, setEncryption } from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession } from "@kasama/db";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";

@@ -2,7 +2,7 @@
  * Encryption at rest (D-136): turning it on and off for a workspace, key rotation, and the sweep that
  * seals existing rows (and any row a write path missed) or opens them again when it's turned off.
  */
-import { contentKeys, type Database, isSealed } from "@kasama/db";
+import { contentKeys, type Database, isSealed } from "@casama/db";
 import { sql } from "drizzle-orm";
 
 /** Covered columns: table, column, json or text, and the row key. */
@@ -161,6 +161,66 @@ export async function sweepEncryption(
       );
       await db.execute(sql`delete from public.org_keys where org_id = ${o.id}::uuid`);
     }
+  }
+  return changed + (await sweepUserProfiles(db, batch));
+}
+
+/** About you text sealed with the person's own key (D-169). */
+export const USER_SEALED_COLUMNS = [
+  { table: "user_about", column: "about", key: "user_id" },
+  { table: "user_about", column: "reply_style", key: "user_id" },
+  { table: "user_facts", column: "content", key: "id" },
+] as const;
+
+/**
+ * About you (D-169): a person's profile text is sealed with their own key while they belong to a
+ * workspace that encrypts. This pass makes keys for people who now need one and seals their rows,
+ * and for people who no longer do, opens their rows and then drops the key.
+ */
+export async function sweepUserProfiles(db: Database, batch = 500) {
+  if (!contentKeys.configured) return 0;
+  const missing = await db.execute<{ user_id: string }>(sql`
+    select u.user_id from (
+      select user_id from public.user_about where about <> '' or reply_style <> ''
+      union select user_id from public.user_facts
+    ) u
+    where public.user_seals_profile(u.user_id)
+      and not exists (select 1 from public.user_keys k where k.user_id = u.user_id)
+    limit 100`);
+  for (const m of missing) {
+    const nk = await contentKeys.newKey();
+    await db.execute(sql`
+      insert into public.user_keys (user_id, wrapped_key, wrapper) values (${m.user_id}::uuid, ${nk.wrapped}, ${nk.wrapper})
+      on conflict (user_id) do nothing`);
+  }
+  if (missing.length) await contentKeys.refresh();
+  const keyed = await db.execute<{ user_id: string; seal: boolean }>(
+    sql`select user_id, public.user_seals_profile(user_id) as seal from public.user_keys`,
+  );
+  let changed = 0;
+  for (const u of keyed) {
+    if (u.seal && !contentKeys.sealsUser(u.user_id)) await contentKeys.refresh();
+    let left = 0;
+    for (const c of USER_SEALED_COLUMNS) {
+      const col = sql.raw(`"${c.column}"`);
+      const t = sql.raw(`public.${c.table}`);
+      const sealed = sql`${col} like 'enc:v1:%'`;
+      const rows = await db.execute<{ k: string; value: string }>(sql`
+        select ${sql.raw(`"${c.key}"`)} as k, ${col} as value from ${t}
+        where user_id = ${u.user_id}::uuid and ${col} <> '' and ${u.seal ? sql`not ${sealed}` : sealed} limit ${batch}`);
+      for (const r of rows) {
+        // Values read through this client are already opened; one this process can't open stays.
+        if (isSealed(r.value)) continue;
+        const value = u.seal ? contentKeys.sealForUser(u.user_id, r.value) : r.value;
+        await db.execute(
+          sql`update ${t} set ${col} = ${value} where ${sql.raw(`"${c.key}"`)} = ${r.k}::uuid`,
+        );
+        changed++;
+      }
+      left += rows.length;
+    }
+    if (!u.seal && left === 0)
+      await db.execute(sql`delete from public.user_keys where user_id = ${u.user_id}::uuid`);
   }
   return changed;
 }

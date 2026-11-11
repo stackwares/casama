@@ -40,7 +40,7 @@ function storeContract(name: string, make: () => ObjectStore) {
 describe("object stores", () => {
   let dir: string;
   beforeAll(async () => {
-    dir = await mkdtemp(join(tmpdir(), "kasama-store-"));
+    dir = await mkdtemp(join(tmpdir(), "casama-store-"));
   });
   afterAll(async () => rm(dir, { recursive: true, force: true }));
   storeContract("filesystem", () => new FsObjectStore(dir));
@@ -51,15 +51,15 @@ describe.skipIf(!enabled)("object stores on S3", () => {
   const name = `kseaweed-${randomBytes(3).toString("hex")}`;
   let endpoint = "";
   let cfgDir = "";
-  const creds = { accessKeyId: "kasama-test", secretAccessKey: randomBytes(16).toString("hex") };
+  const creds = { accessKeyId: "casama-test", secretAccessKey: randomBytes(16).toString("hex") };
   beforeAll(async () => {
-    cfgDir = await mkdtemp(join(tmpdir(), "kasama-s3cfg-"));
+    cfgDir = await mkdtemp(join(tmpdir(), "casama-s3cfg-"));
     await writeFile(
       join(cfgDir, "s3.json"),
       JSON.stringify({
         identities: [
           {
-            name: "kasama",
+            name: "casama",
             credentials: [{ accessKey: creds.accessKeyId, secretKey: creds.secretAccessKey }],
             actions: ["Read", "Write", "List", "Admin"],
           },
@@ -72,15 +72,15 @@ describe.skipIf(!enabled)("object stores on S3", () => {
       "--name",
       name,
       "--label",
-      "dev.kasama.test=1",
+      "dev.casama.test=1",
       "-p",
       "127.0.0.1::8333",
       "-v",
-      `${cfgDir}:/etc/kasama:ro`,
+      `${cfgDir}:/etc/casama:ro`,
       SEAWEED,
       "server",
       "-s3",
-      "-s3.config=/etc/kasama/s3.json",
+      "-s3.config=/etc/casama/s3.json",
       "-dir=/data",
     ]);
     const port = (await run("docker", ["port", name, "8333/tcp"])).stdout
@@ -97,7 +97,7 @@ describe.skipIf(!enabled)("object stores on S3", () => {
     });
     for (let i = 0; ; i++) {
       try {
-        await s3.send(new CreateBucketCommand({ Bucket: "kasama" }));
+        await s3.send(new CreateBucketCommand({ Bucket: "casama" }));
         break;
       } catch (err) {
         if (i > 60) throw err;
@@ -114,7 +114,7 @@ describe.skipIf(!enabled)("object stores on S3", () => {
     "s3 (SeaweedFS)",
     () =>
       new S3ObjectStore({
-        bucket: "kasama",
+        bucket: "casama",
         endpoint,
         region: "us-east-1",
         prefix: "t/",
@@ -124,7 +124,7 @@ describe.skipIf(!enabled)("object stores on S3", () => {
 
   it("creates a missing bucket once", async () => {
     const store = new S3ObjectStore({
-      bucket: "kasama-new",
+      bucket: "casama-new",
       endpoint,
       region: "us-east-1",
       ...creds,
@@ -136,7 +136,7 @@ describe.skipIf(!enabled)("object stores on S3", () => {
 
   it("rejects requests without valid credentials", async () => {
     const bad = new S3ObjectStore({
-      bucket: "kasama",
+      bucket: "casama",
       endpoint,
       region: "us-east-1",
       accessKeyId: "nope",

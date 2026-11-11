@@ -1,7 +1,8 @@
-import type { Database } from "@kasama/db";
-import { collectExec } from "@kasama/sandbox";
+import type { Database } from "@casama/db";
+import { collectExec } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
+import { savePersonFact } from "../about-you.ts";
 import type { MemoryStore } from "../memory-store.ts";
 import { ToolError, ToolRegistry } from "./registry.ts";
 import { registerUiTools } from "./ui.ts";
@@ -96,18 +97,48 @@ export function builtinTools(deps: {
   registry.register({
     name: "memory.write",
     description:
-      "Save a lasting fact or preference to long-term memory. Near-duplicates are updated instead of added. Use one standalone sentence.",
+      'Save a lasting fact or preference to long-term memory. Near-duplicates are updated instead of added. Use one standalone sentence. about: "person" saves a fact about the person you\'re helping (their job, family, places, tastes, how they like replies) to their private profile, which every bot they use reads; "work" (default) saves it to your own memory. Never save health, religion, politics, sexuality or money troubles unless they ask you to remember it.',
     risk: "low",
-    // Only the bot's own state inside Kasama: never asks (D-155).
+    // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,
     schema: z.object({
       content: z.string().min(1).max(1000),
       kind: z.enum(["fact", "preference"]).optional(),
       importance: z.number().min(0).max(1).optional(),
+      about: z.enum(["person", "work"]).optional(),
     }),
     async execute(args, ctx) {
-      const memory = await deps.memory(ctx.orgId);
       const kind = args.kind ?? "fact";
+      if (args.about === "person") {
+        const userId = ctx.actingUserId;
+        if (!userId)
+          throw new ToolError(
+            "no_person",
+            "This run isn't for a person, so there's no profile to save to.",
+          );
+        const [about] = await deps.db.execute<{ learn: boolean }>(
+          sql`select learn from public.user_about where user_id = ${userId}::uuid`,
+        );
+        if (about && !about.learn)
+          return {
+            content: "Not saved: this person turned off learning about them.",
+            preview: "not saved",
+          };
+        const { id, created } = await savePersonFact(deps.db, {
+          userId,
+          orgId: ctx.orgId,
+          botId: ctx.botId,
+          runId: ctx.runId,
+          kind,
+          content: args.content,
+        });
+        if (created) await ctx.emit("memory.written", { memory_id: id, kind, scope: "profile" });
+        return {
+          content: created ? "Saved to their profile." : "Already in their profile.",
+          preview: created ? "saved to profile" : "already saved",
+        };
+      }
+      const memory = await deps.memory(ctx.orgId);
       const { id, created } = await memory.write({
         orgId: ctx.orgId,
         botId: ctx.botId,
@@ -129,7 +160,7 @@ export function builtinTools(deps: {
     readOnly: true,
     description: "Load the full instructions of one skill from the skills index by name.",
     risk: "low",
-    // Only the bot's own state inside Kasama: never asks (D-155).
+    // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,
     schema: z.object({ name: z.string().min(1).max(63) }),
     async execute(args, ctx) {

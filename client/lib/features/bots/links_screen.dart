@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
@@ -154,7 +154,7 @@ class _AcceptSheetState extends State<_AcceptSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final ok = _invite.text.trim().startsWith('kasama-link:') && _name.text.trim().isNotEmpty;
+    final ok = _invite.text.trim().startsWith('casama-link:') && _name.text.trim().isNotEmpty;
     return FormSheet(
       icon: LucideIcons.ticket,
       title: l10n.linksAccept,

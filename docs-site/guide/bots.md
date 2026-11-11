@@ -26,7 +26,7 @@ in place.
    [Personas and starter bots](#personas-and-starter-bots)), or leave it on **Blank**.
 3. Enter a **Bot name**. If you leave it empty, the bot is named Chief.
 4. Pick an **Icon**: a cloud mascot or **Initials**.
-5. Choose a **Model key** and a **Model**. Kasama preselects the default model for the key's
+5. Choose a **Model key** and a **Model**. Casama preselects the default model for the key's
    provider, if it has one.
 6. Write or edit the **Instructions**.
 7. Select **Create**. The bot's chat opens.
@@ -34,11 +34,11 @@ in place.
 New bots start with **Ask for risky actions** autonomy (unless a persona sets another level), are
 visible to everyone in the workspace, and get a budget of $1 per run and $10 per day.
 
-From the CLI, `kasama bot create` takes the same choices plus a few the app doesn't show:
+From the CLI, `casama bot create` takes the same choices plus a few the app doesn't show:
 
 ```sh
-kasama credential list
-kasama bot create "Ada" --credential <key-id> \
+casama credential list
+casama bot create "Ada" --credential <key-id> \
   --fallback anthropic/claude-sonnet-5.5 \
   --cheap-model google/gemini-3.8-flash \
   --run-budget 2 --daily-budget 20 --private
@@ -56,7 +56,7 @@ and are never shown again after you save them.
 2. Under **Add key**, pick a **Provider**, give the key a **Label** and paste the **API key**.
    For your own server, also enter its **Base URL**, for example `http://localhost:11434/v1`.
 3. Select **Add key**.
-4. To check it, open the key's **More** menu and choose **Test key**. Kasama makes a one-token
+4. To check it, open the key's **More** menu and choose **Test key**. Casama makes a one-token
    call and shows **Key works** with the model and the time it took.
 
 Each key shows **Working**, **Failing** or **Not tested**. **Remove** deletes a key; bots that use
@@ -78,7 +78,7 @@ The same screen also takes keys that give bots other abilities but can't run a b
 (images), Brave Search and Tavily (web search), Treg (paid data), Google Maps and Mapbox (travel
 times), and Deepgram, ElevenLabs, Cartesia and Fish Audio (voice).
 
-From the CLI: `kasama credential add --provider openrouter --label Default`.
+From the CLI: `casama credential add --provider openrouter --label Default`.
 
 ## Connect a ChatGPT plan
 
@@ -89,11 +89,11 @@ calls count toward your plan's limits, and only you can use it.
 2. Go to **Settings** → **Model keys** and select **Continue with ChatGPT**.
 3. Sign in to ChatGPT in your browser and allow plan usage. The key appears as **ChatGPT plan**.
 
-From the CLI, run `kasama credential chatgpt` instead. Phones and the web app can't start the
+From the CLI, run `casama credential chatgpt` instead. Phones and the web app can't start the
 sign-in, because OpenAI only returns to an address on the same computer; they point you to the
 desktop app or the CLI.
 
-How a ChatGPT plan works in Kasama:
+How a ChatGPT plan works in Casama:
 
 - **Only you can use it.** A run uses your plan only when it acts for you: a message you sent, a
   routine you created, or work started from one of those. In anyone else's runs the bot moves on to
@@ -129,14 +129,14 @@ select **Save changes**.
 
 ### The default model
 
-Wherever Kasama suggests a model, it uses:
+Wherever Casama suggests a model, it uses:
 
 | Key | Default model | Model id |
 | --- | --- | --- |
 | OpenRouter | Muse Ember | `meta/muse-ember` |
 | OpenAI | GPT-6 Luna | `gpt-6-luna` |
 
-Other providers have no default, so you pick a model. Kasama never replaces a model you chose. A
+Other providers have no default, so you pick a model. Casama never replaces a model you chose. A
 server admin can change the suggestions with `DEFAULT_MODEL_OPENROUTER` and `DEFAULT_MODEL_OPENAI`.
 
 These built-in defaults run at **medium** reasoning effort unless the bot sets another. Through the
@@ -152,7 +152,7 @@ Each bot has a primary model, up to five fallback models in order, and an option
 - **The cheap model** handles internal steps: memory extraction, conversation summaries and titles.
   Without one, the primary model does them.
 
-Set fallbacks and the cheap model with `kasama bot create` or the API (`model_policy`).
+Set fallbacks and the cheap model with `casama bot create` or the API (`model_policy`).
 
 ## Personas and starter bots
 
@@ -180,8 +180,8 @@ The Coordinator plans bigger jobs, splits them into tickets and hands them to ot
 
 ## Your first bot: the welcome chat
 
-When you sign in for the first time and don't belong to a workspace yet, Kasama creates a
-workspace called "&lt;your first name&gt;'s space" and a private bot named Kasama, and opens a chat
+When you sign in for the first time and don't belong to a workspace yet, Casama creates a
+workspace called "&lt;your first name&gt;'s space" and a private bot named Casama, and opens a chat
 with it. People who join by invite skip this. To set things up by hand instead, choose
 **Set up manually**.
 
@@ -279,9 +279,9 @@ allowed. Server admins can change the threshold with `LAZY_TOOLS_THRESHOLD` (`0`
 ## Limits
 
 - The app has no fields for budgets, fallback models, the cheap model or reasoning effort. Set them
-  with `kasama bot create` when you create the bot, or through the API. A bot can also change
+  with `casama bot create` when you create the bot, or through the API. A bot can also change
   another bot's budget with its `bots.update` tool, but never above its own.
-- ChatGPT sign-in works only from the desktop app or the CLI. Hosted Kasama needs OpenAI's approval
+- ChatGPT sign-in works only from the desktop app or the CLI. Hosted Casama needs OpenAI's approval
   before it can offer it.
 
 ## Related

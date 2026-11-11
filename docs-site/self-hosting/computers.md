@@ -3,7 +3,7 @@
 Every bot can have its own Linux computer: a shell, files, a browser and, with the desktop image, a
 screen you can watch live. The sandbox supervisor creates these computers through a **provider**.
 The default provider runs them as Docker containers on your server. You can also run them on E2B,
-Daytona, Novita, Kubernetes, Incus, Boat or Railway, on Kasama Cloud through Cloud Connect, or on
+Daytona, Novita, Kubernetes, Incus, Boat or Railway, on Casama Cloud through Cloud Connect, or on
 people's own machines through the desktop companion.
 
 This page covers each provider's setup and settings, the computer images, the egress proxy, the
@@ -18,9 +18,9 @@ inside it:
 
 - **Docker** runs on the supervisor's own Docker host. It's set up when it's the default provider.
 - **Hosted providers** (E2B, Daytona, Novita, Kubernetes, Incus, Boat, Railway) are turned on by
-  their settings on the supervisor. Each starts Kasama's own computer image with `computerd` inside,
+  their settings on the supervisor. Each starts Casama's own computer image with `computerd` inside,
   so files, commands, checkpoints, sleep and wake, and live view work the same everywhere.
-- **Kasama Cloud** (`kasama-cloud`) is set up on the API and worker, not the supervisor. See
+- **Casama Cloud** (`casama-cloud`) is set up on the API and worker, not the supervisor. See
   [Cloud Connect computers](#cloud-connect-computers).
 - **People's own machines** (`local`) connect through the desktop companion. It's on by default
   (`LOCAL_COMPUTERS`). See [Companion](/guide/companion).
@@ -35,7 +35,7 @@ The bundled compose file passes only the Docker settings to the `supervisor` ser
 hosted provider, add its settings to `services.supervisor.environment` in
 `infra/compose/docker-compose.yml` (see
 [Advanced settings](/self-hosting/configuration#advanced-settings)), then run
-`kasama selfhost up`.
+`casama selfhost up`.
 :::
 
 To send every new computer to a hosted provider, set its settings and `DEFAULT_PROVIDER`, for
@@ -52,8 +52,8 @@ The supervisor refuses to start if `DEFAULT_PROVIDER` names a provider that isn'
 
 ## Docker
 
-The default. Each computer is a container named `kasama-c-<id>` with its own volume for
-`/home/kasama` and its own internal Docker network. The supervisor joins that network to reach
+The default. Each computer is a container named `casama-c-<id>` with its own volume for
+`/home/casama` and its own internal Docker network. The supervisor joins that network to reach
 `computerd`, the egress proxy joins it to give the computer internet access, and the TURN relay
 joins desktop computers' networks for live view.
 
@@ -69,56 +69,56 @@ Every container runs with:
 With gVisor (`runsc`), each computer gets a user-space kernel between it and the host. The installer
 sets `SANDBOX_RUNTIME=runsc` on the first run when `docker info` lists `runsc`. To add it later,
 install gVisor, register it with Docker, set `SANDBOX_RUNTIME=runsc` in `infra/compose/.env` and run
-`kasama selfhost up`. Computers pick it up the next time they start.
+`casama selfhost up`. Computers pick it up the next time they start.
 
 ### Docker settings
 
 | Name                      | Compose default                         | What it does                                                                 |
 | ------------------------- | --------------------------------------- | ---------------------------------------------------------------------------- |
 | `SANDBOX_RUNTIME`         | Set by the installer                    | Docker runtime for computers (`runsc` for gVisor). Empty: Docker's default.  |
-| `COMPUTER_IMAGE_HEADLESS` | `kasama/computer-headless:local`        | Image for headless computers.                                                |
-| `COMPUTER_IMAGE_DESKTOP`  | `kasama/computer-desktop:local`         | Image for desktop computers.                                                 |
+| `COMPUTER_IMAGE_HEADLESS` | `casama/computer-headless:local`        | Image for headless computers.                                                |
+| `COMPUTER_IMAGE_DESKTOP`  | `casama/computer-desktop:local`         | Image for desktop computers.                                                 |
 | `COMPUTER_MEMORY_MB`      | `2048`                                  | Memory for each new computer.                                                |
 | `COMPUTER_CPUS`           | `1` (not passed by Compose)             | CPUs for each new computer.                                                  |
 | `WARM_POOL_SIZE`          | `0`                                     | Started headless computers kept waiting. See [Scaling](/self-hosting/operations#scaling). |
 | `DOCKER_SOCKET`           | `/var/run/docker.sock`                  | The Docker socket the supervisor uses.                                       |
-| `EGRESS_CONTAINER`        | `kasama-egress`                         | Container name of the egress proxy.                                          |
-| `EGRESS_CONTROL_URL`      | `http://kasama-egress:3129`             | The egress proxy's control API.                                              |
+| `EGRESS_CONTAINER`        | `casama-egress`                         | Container name of the egress proxy.                                          |
+| `EGRESS_CONTROL_URL`      | `http://casama-egress:3129`             | The egress proxy's control API.                                              |
 | `EGRESS_CONTROL_TOKEN`    | Generated                               | Token for the control API.                                                   |
-| `TURN_CONTAINER`          | `kasama-turn`                           | Container name of the TURN relay.                                            |
-| `SUPERVISOR_CONTAINER`    | `kasama-supervisor`                     | The supervisor's own container name, so it can join computer networks.       |
+| `TURN_CONTAINER`          | `casama-turn`                           | Container name of the TURN relay.                                            |
+| `SUPERVISOR_CONTAINER`    | `casama-supervisor`                     | The supervisor's own container name, so it can join computer networks.       |
 | `COMPUTER_TOKEN_SECRET`   | Generated                               | Derives each computer's tokens. Don't change it on a running server.         |
 
 Compose names the egress proxy, TURN relay and supervisor containers explicitly, so you can't run
-two Kasama stacks on one Docker host.
+two Casama stacks on one Docker host.
 
 ## E2B
 
-Runs computers as E2B sandboxes from templates built from Kasama's images.
+Runs computers as E2B sandboxes from templates built from Casama's images.
 
 1. Build E2B templates from the headless image (and the desktop image for live view), with
-   `computerd` as the start command. Name them `kasama-computer-headless` and
-   `kasama-computer-desktop`, or set the names below.
-2. Add the settings to the supervisor and run `kasama selfhost up`.
+   `computerd` as the start command. Name them `casama-computer-headless` and
+   `casama-computer-desktop`, or set the names below.
+2. Add the settings to the supervisor and run `casama selfhost up`.
 
 | Name                    | Default                     | What it does                    |
 | ----------------------- | --------------------------- | ------------------------------- |
 | `E2B_API_KEY`           | (empty)                     | Turns the provider on.          |
 | `E2B_API_URL`           | `https://api.e2b.app`       | E2B API address.                |
-| `E2B_TEMPLATE_HEADLESS` | `kasama-computer-headless`  | Template for headless computers. |
-| `E2B_TEMPLATE_DESKTOP`  | `kasama-computer-desktop`   | Template for desktop computers.  |
+| `E2B_TEMPLATE_HEADLESS` | `casama-computer-headless`  | Template for headless computers. |
+| `E2B_TEMPLATE_DESKTOP`  | `casama-computer-desktop`   | Template for desktop computers.  |
 
 ## Daytona
 
-Runs computers from Daytona snapshots built from Kasama's images.
+Runs computers from Daytona snapshots built from Casama's images.
 
 | Name                         | Default                         | What it does                     |
 | ---------------------------- | ------------------------------- | -------------------------------- |
 | `DAYTONA_API_KEY`            | (empty)                         | Turns the provider on.           |
 | `DAYTONA_API_URL`            | `https://app.daytona.io/api`    | Daytona API address.             |
 | `DAYTONA_ORGANIZATION_ID`    | (empty)                         | Your Daytona organization.       |
-| `DAYTONA_SNAPSHOT_HEADLESS`  | `kasama-computer-headless`      | Snapshot for headless computers. |
-| `DAYTONA_SNAPSHOT_DESKTOP`   | `kasama-computer-desktop`       | Snapshot for desktop computers.  |
+| `DAYTONA_SNAPSHOT_HEADLESS`  | `casama-computer-headless`      | Snapshot for headless computers. |
+| `DAYTONA_SNAPSHOT_DESKTOP`   | `casama-computer-desktop`       | Snapshot for desktop computers.  |
 
 ## Novita
 
@@ -128,8 +128,8 @@ Novita Agent Sandbox is E2B-compatible: build templates from the images as for E
 | -------------------------- | ---------------------------------- | -------------------------------- |
 | `NOVITA_API_KEY`           | (empty)                            | Turns the provider on.           |
 | `NOVITA_API_URL`           | `https://api.sandbox.novita.ai`    | Novita API address.              |
-| `NOVITA_TEMPLATE_HEADLESS` | `kasama-computer-headless`         | Template for headless computers. |
-| `NOVITA_TEMPLATE_DESKTOP`  | `kasama-computer-desktop`          | Template for desktop computers.  |
+| `NOVITA_TEMPLATE_HEADLESS` | `casama-computer-headless`         | Template for headless computers. |
+| `NOVITA_TEMPLATE_DESKTOP`  | `casama-computer-desktop`          | Template for desktop computers.  |
 
 ## Image-based providers
 
@@ -138,8 +138,8 @@ two settings:
 
 | Name                    | Default                                          | What it does                    |
 | ----------------------- | ------------------------------------------------ | ------------------------------- |
-| `HOSTED_IMAGE_HEADLESS` | `ghcr.io/kasama-dev/computer-headless:latest`    | Image for headless computers.   |
-| `HOSTED_IMAGE_DESKTOP`  | `ghcr.io/kasama-dev/computer-desktop:latest`     | Image for desktop computers.    |
+| `HOSTED_IMAGE_HEADLESS` | `ghcr.io/casama-dev/computer-headless:latest`    | Image for headless computers.   |
+| `HOSTED_IMAGE_DESKTOP`  | `ghcr.io/casama-dev/computer-desktop:latest`     | Image for desktop computers.    |
 
 If you build your own images, push them to a registry these providers can pull from and set both.
 
@@ -210,15 +210,15 @@ A Railway service per computer, in one project and environment, with a Railway d
 
 ## Cloud Connect computers
 
-With `KASAMA_CLOUD_URL` and `KASAMA_CLOUD_KEY` set on the API and worker, computers created with the
-`kasama-cloud` provider run on Kasama Cloud, and their time is billed to the Kasama Cloud workspace
+With `CASAMA_CLOUD_URL` and `CASAMA_CLOUD_KEY` set on the API and worker, computers created with the
+`casama-cloud` provider run on Casama Cloud, and their time is billed to the Casama Cloud workspace
 that made the key. Live view and terminals aren't available for them. See
 [Cloud Connect](/guide/cloud-connect) and
 [Configuration](/self-hosting/configuration#cloud-connect).
 
 ## Images
 
-Kasama has two computer images, both built from `infra/images/computer/`:
+Casama has two computer images, both built from `infra/images/computer/`:
 
 | Image                       | Contents                                                                                   |
 | --------------------------- | ------------------------------------------------------------------------------------------ |
@@ -232,13 +232,13 @@ The installer always builds the headless image. Build the desktop image with
 COMPOSE_PROFILES=images docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env build computer-desktop
 ```
 
-Compose tags them `kasama/computer-headless:${KASAMA_VERSION}` and
-`kasama/computer-desktop:${KASAMA_VERSION}` (default tag `local`). To build them outside Compose:
+Compose tags them `casama/computer-headless:${CASAMA_VERSION}` and
+`casama/computer-desktop:${CASAMA_VERSION}` (default tag `local`). To build them outside Compose:
 
 ```sh
-docker build -f infra/images/computer/Dockerfile.headless -t kasama/computer-headless:dev .
+docker build -f infra/images/computer/Dockerfile.headless -t casama/computer-headless:dev .
 docker build -f infra/images/computer/Dockerfile.desktop \
-  --build-arg BASE=kasama/computer-headless:dev -t kasama/computer-desktop:dev .
+  --build-arg BASE=casama/computer-headless:dev -t casama/computer-desktop:dev .
 ```
 
 Both build on x86-64 and ARM64. `computerd` listens on port 7070; the headless image starts it

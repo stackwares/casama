@@ -3,8 +3,8 @@ import { once } from "node:events";
 import { createServer, type IncomingMessage, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { fileURLToPath } from "node:url";
-import { ComputerMcpAdapter, computerMcpFor, forgetPluginSync } from "@kasama/agent";
-import type { ExecChunk, McpServerSpec } from "@kasama/sandbox";
+import { ComputerMcpAdapter, computerMcpFor, forgetPluginSync } from "@casama/agent";
+import type { ExecChunk, McpServerSpec } from "@casama/sandbox";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -25,7 +25,7 @@ const manifest = (version: string, secrets: unknown[]) =>
     name: "weather",
     version,
     description: "Forecasts and maps",
-    extensions: { "com.kasama": { secrets } },
+    extensions: { "com.casama": { secrets } },
   });
 const mcp = (remote: string, extra: Record<string, unknown> = {}) =>
   JSON.stringify({
@@ -97,7 +97,7 @@ const handle = {
   ref: "fake-computer",
   async *exec(cmd: string): AsyncIterable<ExecChunk> {
     computer.commands.push(cmd);
-    yield { type: "stdout", data: cmd.startsWith("printf") ? "/home/kasama" : "" };
+    yield { type: "stdout", data: cmd.startsWith("printf") ? "/home/casama" : "" };
     yield { type: "exit", code: 0, timedOut: false, killed: false, truncated: false };
   },
   readFile: async (p: string) => {
@@ -262,21 +262,21 @@ describe("plugins", () => {
     // The package went to the computer, with the secret only in the server's environment.
     const spec = Object.values(computer.servers)[0] as McpServerSpec;
     expect(spec).toMatchObject({
-      command: "/home/kasama/.kasama/plugins/weather/bin/forecast",
-      args: ["--data", "/home/kasama/.kasama/plugin-data/weather/cache"],
-      cwd: "/home/kasama/.kasama/plugins/weather",
+      command: "/home/casama/.casama/plugins/weather/bin/forecast",
+      args: ["--data", "/home/casama/.casama/plugin-data/weather/cache"],
+      cwd: "/home/casama/.casama/plugins/weather",
     });
     expect(spec.env).toMatchObject({
       WEATHER_API_KEY: "wk-123",
-      PLUGIN_ROOT: "/home/kasama/.kasama/plugins/weather",
+      PLUGIN_ROOT: "/home/casama/.casama/plugins/weather",
     });
     expect(
       new TextDecoder().decode(
-        computer.files.get("/home/kasama/.kasama/plugins/weather/bin/forecast"),
+        computer.files.get("/home/casama/.casama/plugins/weather/bin/forecast"),
       ),
     ).toContain("exec node");
     expect(
-      computer.files.has("/home/kasama/.kasama/plugins/weather/skills/plan-trip/SKILL.md"),
+      computer.files.has("/home/casama/.casama/plugins/weather/skills/plan-trip/SKILL.md"),
     ).toBe(false);
     expect(
       computer.commands.some((c) => c.startsWith("chmod +x") && c.includes("bin/forecast")),

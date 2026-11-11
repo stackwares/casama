@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:kasama_app/core/providers.dart';
-import 'package:kasama_app/features/desktop/desktop_context.dart';
-import 'package:kasama_app/features/desktop/desktop_watch.dart';
-import 'package:kasama_app/features/quick_ask/quick_ask_screen.dart';
-import 'package:kasama_app/l10n/generated/app_localizations.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/features/desktop/desktop_context.dart';
+import 'package:casama_app/features/desktop/desktop_watch.dart';
+import 'package:casama_app/features/quick_ask/quick_ask_screen.dart';
+import 'package:casama_app/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_test.dart' show setSize;

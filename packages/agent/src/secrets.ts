@@ -1,5 +1,5 @@
-import type { Database } from "@kasama/db";
-import { parseTotp, TotpError, totpCode } from "@kasama/domain";
+import type { Database } from "@casama/db";
+import { parseTotp, TotpError, totpCode } from "@casama/domain";
 import { sql } from "drizzle-orm";
 
 export interface NamedSecret {

@@ -1,5 +1,5 @@
 /** Encryption at rest (D-136): which key wraps workspace data keys on this server. */
-import { AwsKmsKeyWrapper, contentKeys, type KeyWrapper, LocalKeyWrapper } from "@kasama/db";
+import { AwsKmsKeyWrapper, contentKeys, type KeyWrapper, LocalKeyWrapper } from "@casama/db";
 import type { Env } from "./env.ts";
 
 export function contentKeyWrapper(env: Env): KeyWrapper | null {

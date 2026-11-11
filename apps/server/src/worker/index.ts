@@ -1,5 +1,4 @@
 import { readFileSync } from "node:fs";
-import { DBOS, DBOSClient } from "@dbos-inc/dbos-sdk";
 import {
   AiSdkGateway,
   ApnsVoipSender,
@@ -53,12 +52,13 @@ import {
   TregProvider,
   TwilioClient,
   type VoipSender,
-} from "@kasama/agent";
-import { contentKeys, createDb, type Database } from "@kasama/db";
-import type { Logger } from "@kasama/observability";
-import { LocalProvider, SupervisorProvider, unavailableProvider } from "@kasama/sandbox";
+} from "@casama/agent";
+import { contentKeys, createDb, type Database } from "@casama/db";
+import type { Logger } from "@casama/observability";
+import { LocalProvider, SupervisorProvider, unavailableProvider } from "@casama/sandbox";
+import { DBOS, DBOSClient } from "@dbos-inc/dbos-sdk";
 import { sql } from "drizzle-orm";
-import { kasamaCloudProvider } from "../billing/index.ts";
+import { casamaCloudProvider } from "../billing/index.ts";
 import {
   billingSettleWorkflow,
   computersIdleWorkflow,
@@ -129,14 +129,14 @@ export interface WorkerOptions {
   /** Audit-log forwarding (D-146): on when the enterprise license includes it. */
   auditForwarding?: boolean;
   /** Cloudflare AI Gateway for model calls (D-145). */
-  aiGateway?: import("@kasama/agent").AiGatewayConfig;
-  /** Paid data resale on Kasama Cloud (D-138): Kasama's Treg key, used only when resale is on. */
+  aiGateway?: import("@casama/agent").AiGatewayConfig;
+  /** Paid data resale on Casama Cloud (D-138): Casama's Treg key, used only when resale is on. */
   dataResale?: { tregKey: string; tregUrl?: string };
-  /** Billing (Kasama Cloud only); settles usage into credits every minute. */
+  /** Billing (Casama Cloud only); settles usage into credits every minute. */
   billing?: import("../billing/service.ts").BillingService;
   /** Opt-in anonymous telemetry (D-074); unset = off. */
   telemetry?: { url: string; version: string };
-  /** Cloud Connect (self-hosted side): the `kasama-cloud` computer provider. */
+  /** Cloud Connect (self-hosted side): the `casama-cloud` computer provider. */
   cloud?: { url: string; key: string };
   /** Realtime voice model (default gpt-realtime-2.1). */
   realtimeModel?: string;
@@ -144,7 +144,7 @@ export interface WorkerOptions {
   geminiLiveModel?: string;
   /** ChatGPT plan sign-in endpoints; defaults are OpenAI's (tests point them at a fake). */
   chatgpt?: { authUrl?: string; apiUrl?: string };
-  /** Kasama Cloud abuse controls (D-094): free workspaces need a verified owner email for computers. */
+  /** Casama Cloud abuse controls (D-094): free workspaces need a verified owner email for computers. */
   requireVerifiedEmail?: boolean;
 }
 
@@ -206,7 +206,7 @@ export async function startWorker(opts: WorkerOptions) {
   // Bot computers: the sandbox supervisor, plus personal computers through the API (D-066).
   const extra = {
     ...(opts.local ? { local: new LocalProvider(opts.local) } : {}),
-    ...(opts.cloud ? { "kasama-cloud": kasamaCloudProvider(opts.cloud) } : {}),
+    ...(opts.cloud ? { "casama-cloud": casamaCloudProvider(opts.cloud) } : {}),
   };
   const computers =
     opts.supervisor || Object.keys(extra).length
@@ -381,7 +381,7 @@ export async function startWorker(opts: WorkerOptions) {
   registerDeviceTools(tools, { db, waitMs: opts.deviceWaitMs });
   // Desktop context (D-152): file search on the person's own computer.
   registerDesktopContextTools(tools, { db });
-  // Paid data (D-138): the workspace's own Treg key, else Kasama's resale key when it's on.
+  // Paid data (D-138): the workspace's own Treg key, else Casama's resale key when it's on.
   registerDataTools(tools, {
     db,
     dataFor: async (orgId) => {
@@ -475,7 +475,7 @@ export async function startWorker(opts: WorkerOptions) {
   });
 
   DBOS.setConfig({
-    name: "kasama",
+    name: "casama",
     systemDatabaseUrl: opts.databaseUrl,
     systemDatabaseSchemaName: "dbos",
     logLevel: opts.logLevel ?? "info",

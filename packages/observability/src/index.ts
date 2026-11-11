@@ -169,7 +169,7 @@ export async function shutdownObservability() {
   await Promise.allSettled([sdk?.shutdown(), reporter?.close()]);
 }
 
-export const tracer = () => trace.getTracer("kasama");
+export const tracer = () => trace.getTracer("casama");
 
 /** Runs fn inside a span; records exceptions and sets error status. */
 export async function withSpan<T>(

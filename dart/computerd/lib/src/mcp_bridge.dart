@@ -75,7 +75,7 @@ class _StdioUpstream implements _Upstream {
     process.stderr.drain<void>();
     process.exitCode.then((_) {
       _alive = false;
-      if (!_incoming.isClosed) _incoming.add({'_kasama_exit': true});
+      if (!_incoming.isClosed) _incoming.add({'_casama_exit': true});
     });
   }
 
@@ -235,19 +235,19 @@ class McpBridge {
     // Initialize once; later callers get this result from the cache.
     final init = {
       'jsonrpc': '2.0',
-      'id': 'kasama-init',
+      'id': 'casama-init',
       'method': 'initialize',
       'params': {
         'protocolVersion': _protocolVersion,
         'capabilities': <String, dynamic>{},
-        'clientInfo': {'name': 'kasama-companion', 'version': '1'},
+        'clientInfo': {'name': 'casama-companion', 'version': '1'},
       },
     };
     final stream = await s.upstream!.exchange([init]);
     final reply = await stream
-        .firstWhere((m) => m['id'] == 'kasama-init' || m['_kasama_exit'] == true)
+        .firstWhere((m) => m['id'] == 'casama-init' || m['_casama_exit'] == true)
         .timeout(const Duration(seconds: 30), onTimeout: () => throw McpBridgeError(504, 'mcp_init_timeout', '${srv.key} did not answer initialize'));
-    if (reply['_kasama_exit'] == true || reply['result'] is! Map) {
+    if (reply['_casama_exit'] == true || reply['result'] is! Map) {
       await s.upstream!.close();
       throw McpBridgeError(502, 'mcp_init_failed', '${srv.key} failed to start: ${reply['error'] ?? 'it exited'}');
     }
@@ -354,13 +354,13 @@ class McpBridge {
       final stream = await s.upstream!.exchange(outgoing);
       sub = stream.listen(
         (m) {
-          if (m['_kasama_exit'] == true) return finishWithErrors('The local MCP server exited');
+          if (m['_casama_exit'] == true) return finishWithErrors('The local MCP server exited');
           final id = m['id'];
           final method = m['method'] as String?;
           if (method != null && id != null) {
             // A request from the server (sampling and the like): not supported here.
             if (s.upstream is _StdioUpstream) {
-              (s.upstream as _StdioUpstream).write({'jsonrpc': '2.0', 'id': id, 'error': {'code': -32601, 'message': 'Not supported by Kasama'}});
+              (s.upstream as _StdioUpstream).write({'jsonrpc': '2.0', 'id': id, 'error': {'code': -32601, 'message': 'Not supported by Casama'}});
             }
             return;
           }
@@ -385,7 +385,7 @@ class McpBridge {
         if (done.isCompleted) return;
         for (final id in waiting) {
           s.upstream?.exchange([
-            {'jsonrpc': '2.0', 'method': 'notifications/cancelled', 'params': {'requestId': id, 'reason': 'Cancelled by Kasama'}},
+            {'jsonrpc': '2.0', 'method': 'notifications/cancelled', 'params': {'requestId': id, 'reason': 'Cancelled by Casama'}},
           ]);
         }
         waiting.clear();

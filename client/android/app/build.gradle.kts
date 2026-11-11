@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.kasama.app"
+    namespace = "ai.casama.app"
     // Some plugins (receive_sharing_intent, permission_handler) need API 37 to compile against.
     compileSdk = 37
     ndkVersion = flutter.ndkVersion
@@ -17,7 +17,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.kasama.app"
+        applicationId = "ai.casama.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 26

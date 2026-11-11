@@ -8,7 +8,6 @@
  */
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
-import type { OpenAPIHono } from "@hono/zod-openapi";
 import {
   addGeminiUsage,
   base64ToPcm16,
@@ -22,9 +21,10 @@ import {
   resamplePcm16,
   TwilioClient,
   twilioSignature,
-} from "@kasama/agent";
-import { routes } from "@kasama/contracts";
-import { type JwtClaims, withUserSession } from "@kasama/db";
+} from "@casama/agent";
+import { routes } from "@casama/contracts";
+import { type JwtClaims, withUserSession } from "@casama/db";
+import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { WebSocket, WebSocketServer } from "ws";
 import { ApiError } from "../errors.ts";

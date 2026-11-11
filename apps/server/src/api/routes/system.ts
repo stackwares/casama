@@ -1,6 +1,6 @@
+import { API_VERSION, PRODUCT_NAME, routes } from "@casama/contracts";
+import { DEFAULT_MODELS, defaultModelFor } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { API_VERSION, PRODUCT_NAME, routes } from "@kasama/contracts";
-import { DEFAULT_MODELS, defaultModelFor } from "@kasama/domain";
 import { modelOverrides } from "../../env.ts";
 import { abuseControlsOn, signupProofKinds } from "../../services/abuse.ts";
 import type { AppDeps, AppEnv } from "../types.ts";

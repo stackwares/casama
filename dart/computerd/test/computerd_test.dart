@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
-import 'package:kasama_computerd/computerd.dart';
+import 'package:casama_computerd/computerd.dart';
 import 'package:test/test.dart';
 
 const token = 'test-token-0123456789abcdef';
@@ -126,7 +126,7 @@ void main() {
     final restore = await http.post(base.resolve('/restore'), headers: auth, body: archive.bodyBytes);
     expect(restore.statusCode, 200, reason: restore.body);
     expect((await http.get(base.resolve('/files?path=workspace/report.md'), headers: auth)).body, 'mine');
-    expect(home.listSync().where((e) => e.path.contains('.kasama-restore-')), isEmpty);
+    expect(home.listSync().where((e) => e.path.contains('.casama-restore-')), isEmpty);
   });
 
   test('terminal runs an interactive shell over WebSocket', () async {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
@@ -179,7 +179,7 @@ class _Overview extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: AppSpace.md),
-                FormNote(l10n.kasamaVersion(o.version), icon: LucideIcons.badgeCheck),
+                FormNote(l10n.casamaVersion(o.version), icon: LucideIcons.badgeCheck),
               ],
             );
           },

@@ -1,4 +1,4 @@
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 /// One reading from Apple Health or Health Connect, reduced to what a summary needs (D-150).
 typedef HealthPoint = ({String type, DateTime from, DateTime to, num value, String? activity, num? energy, num? distance});

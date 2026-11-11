@@ -8,7 +8,7 @@
  */
 import { createPrivateKey, createSign } from "node:crypto";
 import { connect } from "node:http2";
-import type { Database } from "@kasama/db";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
@@ -227,7 +227,7 @@ export function registerPhoneCallTools(registry: ToolRegistry, deps: PhoneCallDe
       await ringCall(deps, user, {
         call_id: call!.id,
         bot_id: ctx.botId,
-        bot_name: b?.name ?? "Kasama",
+        bot_name: b?.name ?? "Casama",
         reason: args.reason,
         conversation_id: b?.conversation_id ?? null,
       });

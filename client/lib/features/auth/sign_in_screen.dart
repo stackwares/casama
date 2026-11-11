@@ -56,7 +56,7 @@ class SignInScreen extends ConsumerWidget {
                     children: [
                       const Spacer(flex: 5),
                       Text(
-                        'Kasama',
+                        'Casama',
                         textAlign: TextAlign.center,
                         style: context.textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.w700,
@@ -615,7 +615,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
                                 ),
                               ),
                             const SizedBox(height: AppSpace.xs),
-                            // Self-hosted servers: point the app at your own Kasama (D-076).
+                            // Self-hosted servers: point the app at your own Casama (D-076).
                             Center(
                               child: ActionChip(
                                 key: const Key('changeServer'),

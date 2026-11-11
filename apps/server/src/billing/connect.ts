@@ -1,5 +1,5 @@
 /**
- * Cloud Connect (D-071): a self-hosted instance uses Kasama Cloud computers and model credits with
+ * Cloud Connect (D-071): a self-hosted instance uses Casama Cloud computers and model credits with
  * an API key, billed to the cloud workspace. Served by the cloud API only (BILLING_ENABLED):
  *
  *   /connect/v1/whoami                    key, workspace and credit balance
@@ -9,8 +9,8 @@
  * Computers are metered on the proxy (running time); model calls by the upstream's reported usage.
  */
 import { createHash, randomBytes } from "node:crypto";
-import { costOf } from "@kasama/agent";
-import type { Database } from "@kasama/db";
+import { costOf } from "@casama/agent";
+import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import type { Context, Hono } from "hono";
 import type { BillingService } from "./service.ts";

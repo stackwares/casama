@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/core/updater.dart';
+import 'package:casama_app/core/updater.dart';
 
 void main() {
   test('a release is newer only when its version is higher', () {
@@ -12,6 +12,6 @@ void main() {
   });
 
   test('updates come from the public releases repo, one feed per platform', () {
-    expect(kUpdateFeedBase, 'https://github.com/stackwares/kasama-releases/releases/latest/download');
+    expect(kUpdateFeedBase, 'https://github.com/stackwares/casama-releases/releases/latest/download');
   });
 }

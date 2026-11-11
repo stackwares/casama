@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/features/settings/model_keys_screen.dart';
-import 'package:kasama_sdk/kasama_sdk.dart';
+import 'package:casama_app/features/settings/model_keys_screen.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
@@ -26,7 +26,7 @@ void main() {
     await tester.pumpWidget(harness(backend, const ModelKeysScreen()));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('continueWithChatGpt')), findsNothing);
-    expect(find.textContaining('kasama credential chatgpt'), findsOneWidget);
+    expect(find.textContaining('casama credential chatgpt'), findsOneWidget);
   });
 
   testWidgets('servers with ChatGPT sign-in off show only API keys', (tester) async {

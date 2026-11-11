@@ -59,7 +59,7 @@ export class ForcedIdGenerator {
 
 export const forcedIds = new ForcedIdGenerator();
 
-const tracer = () => trace.getTracer("kasama.runs");
+const tracer = () => trace.getTracer("casama.runs");
 
 /** The context whose parent is the run span (remote, so it works across processes and replays). */
 function runContext(runId: string) {

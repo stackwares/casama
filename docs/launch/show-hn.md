@@ -1,6 +1,6 @@
-# Show HN: Kasama – self-hostable AI teammates with their own computers
+# Show HN: Casama – self-hostable AI teammates with their own computers
 
-Hi HN, I built Kasama, an open-source (Apache-2.0) home for AI bots that keep working for you.
+Hi HN, I built Casama, an open-source (Apache-2.0) home for AI bots that keep working for you.
 
 Each bot has memory, a persona and a sandboxed Linux computer (shell, files, browser, optional
 desktop). You chat from iOS, Android, desktop, web or a CLI; watch the bot's computer live and take
@@ -21,5 +21,5 @@ Some details HN might care about:
   addresses; no capabilities, read-only root, non-root user, gVisor on Linux.
 - An MCP server lets you drive your bots from Claude Code or Cursor.
 
-Repo: https://github.com/stackwares/kasama · Docs: https://docs.kasama.dev
+Repo: https://github.com/stackwares/casama · Docs: https://docs.casama.ai
 I'd love feedback on the self-hosting experience and on what bots should be allowed to do alone.

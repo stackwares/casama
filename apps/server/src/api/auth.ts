@@ -1,4 +1,4 @@
-import type { JwtClaims } from "@kasama/db";
+import type { JwtClaims } from "@casama/db";
 import { createRemoteJWKSet, decodeProtectedHeader, type JWTPayload, jwtVerify } from "jose";
 
 export type TokenVerifier = (token: string) => Promise<JwtClaims>;

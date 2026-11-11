@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * kasama-plugin-check [folder] [--json] [--strict]
+ * casama-plugin-check [folder] [--json] [--strict]
  *
- * Checks a plugin folder the way Kasama checks it at install. Exits 1 when Kasama would refuse
+ * Checks a plugin folder the way Casama checks it at install. Exits 1 when Casama would refuse
  * it; with --strict, also when anything would be skipped or ignored (for CI).
  */
 import { existsSync } from "node:fs";
@@ -11,13 +11,13 @@ import { checkPluginFolder } from "./check.ts";
 
 const args = process.argv.slice(2);
 if (args.includes("--help") || args.includes("-h")) {
-  console.log(`Usage: kasama-plugin-check [folder] [--json] [--strict]
+  console.log(`Usage: casama-plugin-check [folder] [--json] [--strict]
 
-Checks an Agent Plugins 1.0 package (plugin.json, mcp.json, skills/) the way Kasama checks it
+Checks an Agent Plugins 1.0 package (plugin.json, mcp.json, skills/) the way Casama checks it
 when someone installs it from GitHub.
 
   --json    print the result as JSON
-  --strict  also fail when Kasama would skip or ignore something`);
+  --strict  also fail when Casama would skip or ignore something`);
   process.exit(0);
 }
 const dir = resolve(args.find((a) => !a.startsWith("--")) ?? ".");
@@ -94,8 +94,8 @@ if (p) {
   );
   list("Network hosts", p.hosts, "•");
 }
-list(red("Kasama would refuse it"), r.errors, red("✗"));
-list(yellow("Kasama would skip or ignore"), r.warnings, yellow("!"));
+list(red("Casama would refuse it"), r.errors, red("✗"));
+list(yellow("Casama would skip or ignore"), r.warnings, yellow("!"));
 list("Tips", r.tips, "→");
 console.log(
   `\n${

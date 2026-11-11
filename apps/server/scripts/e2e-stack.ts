@@ -1,17 +1,17 @@
 /**
  * Local end-to-end stack without Docker: throwaway Postgres, a minimal stand-in for the
  * Supabase Auth endpoints the CLI uses (signup, password and refresh grants), and the real API.
- * Prints KASAMA_API_URL=<url> once ready. CI runs the same CLI tests against `supabase start`.
+ * Prints CASAMA_API_URL=<url> once ready. CI runs the same CLI tests against `supabase start`.
  */
 import { randomBytes, randomUUID } from "node:crypto";
 import { createServer } from "node:http";
 import { fileURLToPath } from "node:url";
+import { ComputerService } from "@casama/agent";
+import { createDb } from "@casama/db";
+import { startTestDatabase } from "@casama/db/testing";
+import { createLogger } from "@casama/observability";
+import { startSandboxStack } from "@casama/sandbox/testing";
 import { serve } from "@hono/node-server";
-import { ComputerService } from "@kasama/agent";
-import { createDb } from "@kasama/db";
-import { startTestDatabase } from "@kasama/db/testing";
-import { createLogger } from "@kasama/observability";
-import { startSandboxStack } from "@kasama/sandbox/testing";
 import { SignJWT } from "jose";
 import { createApp } from "../src/api/app.ts";
 import { createTokenVerifier } from "../src/api/auth.ts";
@@ -117,7 +117,7 @@ const deps = {
 };
 const app = createApp(deps);
 const server = serve({ fetch: app.fetch, port: 0 }, (info) => {
-  console.log(`KASAMA_API_URL=http://127.0.0.1:${info.port}`);
+  console.log(`CASAMA_API_URL=http://127.0.0.1:${info.port}`);
 });
 attachTerminal(server as unknown as import("node:http").Server, deps);
 

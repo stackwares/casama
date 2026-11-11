@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kasama_app/core/config.dart';
-import 'package:kasama_app/main.dart';
+import 'package:casama_app/core/config.dart';
+import 'package:casama_app/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -14,10 +14,10 @@ void main() {
       return const MaterialApp(home: Text('app ready'));
     }
 
-    await tester.pumpWidget(StartupGate(config: const AppConfig(apiUrl: 'http://kasama.invalid'), connect: connect));
+    await tester.pumpWidget(StartupGate(config: const AppConfig(apiUrl: 'http://casama.invalid'), connect: connect));
     await tester.pumpAndSettle();
-    expect(find.text("Can't reach your Kasama server"), findsOneWidget);
-    expect(find.textContaining('http://kasama.invalid'), findsOneWidget);
+    expect(find.text("Can't reach your Casama server"), findsOneWidget);
+    expect(find.textContaining('http://casama.invalid'), findsOneWidget);
     await tester.tap(find.byKey(const Key('startupRetry')));
     await tester.pumpAndSettle();
     expect(find.text('app ready'), findsOneWidget);

@@ -69,9 +69,9 @@ export interface DockerProviderOptions {
   warmPool?: number;
 }
 
-const LABEL = "dev.kasama.computer";
+const LABEL = "dev.casama.computer";
 /** On a pooled container: the pool ref its network, volume, tokens and egress identity use. */
-const POOL_LABEL = "dev.kasama.pool";
+const POOL_LABEL = "dev.casama.pool";
 
 export class DockerProvider implements SandboxProvider {
   readonly id = "docker" as const;
@@ -89,7 +89,7 @@ export class DockerProvider implements SandboxProvider {
   private names(ref: string) {
     if (!/^[a-zA-Z0-9-]{1,64}$/.test(ref))
       throw new SandboxError("bad_ref", "computer ref must be alphanumeric");
-    const p = this.opts.namePrefix ?? "kasama";
+    const p = this.opts.namePrefix ?? "casama";
     // A claimed pool member keeps the network and volume it was created with.
     const k = this.aliases.get(ref) ?? ref;
     return { container: `${p}-c-${ref}`, network: `${p}-n-${k}`, volume: `${p}-h-${k}` };
@@ -135,7 +135,7 @@ export class DockerProvider implements SandboxProvider {
 
   async create(spec: ComputerSpec): Promise<SandboxHandle> {
     const d = this.opts.docker;
-    const p = this.opts.namePrefix ?? "kasama";
+    const p = this.opts.namePrefix ?? "casama";
     const existing = this.learn(
       spec.ref,
       await d.inspectOrNull<ContainerInspect>(`/containers/${p}-c-${spec.ref}/json`),
@@ -167,7 +167,7 @@ export class DockerProvider implements SandboxProvider {
     const items = await this.opts.docker.call<
       Array<{ Names: string[]; State: string; Labels: Record<string, string> }>
     >("GET", `/containers/json?all=true&filters=${filters}`);
-    const prefix = `/${this.opts.namePrefix ?? "kasama"}-c-pool-`;
+    const prefix = `/${this.opts.namePrefix ?? "casama"}-c-pool-`;
     return items
       .filter((c) => c.Names.some((x) => x.startsWith(prefix)))
       .map((c) => ({ pool: c.Labels[POOL_LABEL] as string, running: c.State === "running" }));
@@ -175,7 +175,7 @@ export class DockerProvider implements SandboxProvider {
 
   /** Takes a started pool member for [ref]: renames its container and remembers the alias. */
   private async claim(ref: string): Promise<boolean> {
-    const p = this.opts.namePrefix ?? "kasama";
+    const p = this.opts.namePrefix ?? "casama";
     for (const m of (await this.poolMembers()).filter((x) => x.running)) {
       const renamed = await this.opts.docker
         .call("POST", `/containers/${p}-c-${m.pool}/rename?name=${p}-c-${ref}`, undefined, [204])
@@ -258,7 +258,7 @@ export class DockerProvider implements SandboxProvider {
       AGENT_BROWSER_PROXY: `http://${proxyHost}`,
       AGENT_BROWSER_PROXY_USERNAME: spec.ref,
       AGENT_BROWSER_PROXY_PASSWORD: egressToken,
-      KASAMA_COMPUTER: spec.ref,
+      CASAMA_COMPUTER: spec.ref,
     };
 
     await d.call("POST", `/containers/create?name=${n.container}`, {
@@ -268,7 +268,7 @@ export class DockerProvider implements SandboxProvider {
       Env: Object.entries(env).map(([k, v]) => `${k}=${v}`),
       Labels: {
         [LABEL]: spec.ref,
-        "dev.kasama.profile": spec.profile,
+        "dev.casama.profile": spec.profile,
         ...spec.labels,
         ...extraLabels,
       },
@@ -277,7 +277,7 @@ export class DockerProvider implements SandboxProvider {
         Runtime: this.opts.runtime,
         Init: true,
         ReadonlyRootfs: true,
-        Mounts: [{ Type: "volume", Source: n.volume, Target: "/home/kasama" }],
+        Mounts: [{ Type: "volume", Source: n.volume, Target: "/home/casama" }],
         Tmpfs: { "/tmp": `rw,nosuid,nodev,size=${def.tmpMb}m` },
         ShmSize: def.shmMb * 1024 * 1024,
         NanoCpus: Math.round(cpus * 1e9),
@@ -357,7 +357,7 @@ export class DockerProvider implements SandboxProvider {
       Array<{ Labels: Record<string, string>; State: string; Names: string[] }>
     >("GET", `/containers/json?filters=${filters}`);
     // The ref comes from the name: a claimed pool member's label still says its pool ref.
-    const prefix = `/${this.opts.namePrefix ?? "kasama"}-c-`;
+    const prefix = `/${this.opts.namePrefix ?? "casama"}-c-`;
     return items
       .flatMap((c) => c.Names.filter((x) => x.startsWith(prefix)).slice(0, 1))
       .map((x) => x.slice(prefix.length))

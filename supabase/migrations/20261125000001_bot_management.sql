@@ -44,7 +44,7 @@ language plpgsql security definer set search_path = ''
 as $$
 declare
   v_fields text[] := '{}';
-  v_actor_bot uuid := nullif(current_setting('kasama.actor_bot', true), '')::uuid;
+  v_actor_bot uuid := nullif(current_setting('casama.actor_bot', true), '')::uuid;
   v_actor_user uuid := nullif(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub', '')::uuid;
 begin
   if new.name is distinct from old.name then v_fields := array_append(v_fields, 'name'); end if;
