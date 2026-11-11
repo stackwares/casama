@@ -27,3 +27,7 @@ live-check*.log
 *service-account*.json
 GoogleService-Info.plist
 google-services.json
+
+# Local caches
+__pycache__/
+.wrangler/

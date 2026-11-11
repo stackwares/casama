@@ -16,6 +16,8 @@ describe("pages", () => {
       updatedAt: new Date("2026-11-10T09:30:00Z"),
     });
     expect(html.match(/casama-data/g)).toHaveLength(1);
+    expect(html).toContain(`<meta http-equiv="Content-Security-Policy" content="${PAGE_CSP}">`);
+    expect(html.indexOf("Content-Security-Policy")).toBeLessThan(html.indexOf("<title>"));
     expect(html).toContain('<meta name="robots" content="noindex,nofollow">');
     expect(html).toContain(
       'Updated <time datetime="2026-11-10T09:30:00.000Z">2026-11-10 09:30 UTC</time></div></body>',

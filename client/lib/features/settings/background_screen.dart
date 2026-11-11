@@ -53,10 +53,11 @@ class BackgroundScreen extends ConsumerWidget {
             separatorBuilder: (_, _) => const SizedBox(width: AppSpace.xs),
             itemBuilder: (context, i) {
               final p = WallpaperPattern.values[i];
-              return RevealWhenSelected(selected: spec.pattern == p, child: _Swatch(
+              final selected = spec.pattern == p && spec.doodles == null;
+              return RevealWhenSelected(selected: selected, child: _Swatch(
                 key: Key('pattern-${p.name}'),
                 label: p.label,
-                selected: spec.pattern == p,
+                selected: selected,
                 onTap: () => set(
                   spec.copyWith(
                     pattern: p,
@@ -85,7 +86,7 @@ class BackgroundScreen extends ConsumerWidget {
                 label: c == WallpaperPalette.theme
                     ? l10n.backgroundThemeColors
                     : c.label,
-                selected: spec.palette == c,
+                selected: spec.palette == c && spec.mesh == null,
                 width: 76,
                 height: 64,
                 onTap: () => set(spec.copyWith(palette: c)),

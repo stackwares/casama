@@ -15,11 +15,12 @@ import '../../ui/revealable.dart';
 
 /// Password managers (D-128): 1Password or Bitwarden, for the workspace or just you, and the
 /// vaults bots may use. Bots never see passwords.
-final passwordManagersProvider = FutureProvider.autoDispose<List<PasswordManager>>((ref) async {
-  final org = ref.watch(currentOrgProvider);
-  if (org == null) return const [];
-  return ref.watch(backendProvider).passwordManagers(org.id);
-});
+final passwordManagersProvider =
+    FutureProvider.autoDispose<List<PasswordManager>>((ref) async {
+      final org = ref.watch(currentOrgProvider);
+      if (org == null) return const [];
+      return ref.watch(backendProvider).passwordManagers(org.id);
+    });
 
 class PasswordManagersScreen extends ConsumerWidget {
   const PasswordManagersScreen({super.key});
@@ -31,20 +32,43 @@ class PasswordManagersScreen extends ConsumerWidget {
     Future<void> add() async {
       final org = ref.read(currentOrgProvider);
       if (org == null) return;
-      final pm = await showAdaptiveSheet<PasswordManager>(context: context, builder: (_) => _Connect(orgId: org.id));
+      final pm = await showAdaptiveSheet<PasswordManager>(
+        context: context,
+        builder: (_) => _Connect(orgId: org.id),
+      );
       ref.invalidate(passwordManagersProvider);
-      if (pm != null && context.mounted) await showAdaptiveSheet<void>(context: context, builder: (_) => _Vaults(manager: pm));
+      if (pm != null && context.mounted) {
+        await showAdaptiveSheet<void>(
+          context: context,
+          builder: (_) => _Vaults(manager: pm),
+        );
+      }
       ref.invalidate(passwordManagersProvider);
     }
 
     return SubPage(
       title: l10n.passwordManagers,
-      actions: [IconButton(key: const Key('addPasswordManager'), tooltip: l10n.connectPasswordManager, icon: const Icon(LucideIcons.plus), onPressed: add)],
+      actions: [
+        IconButton(
+          key: const Key('addPasswordManager'),
+          tooltip: l10n.connectPasswordManager,
+          icon: const Icon(LucideIcons.plus),
+          onPressed: add,
+        ),
+      ],
       body: AsyncView(
         value: ref.watch(passwordManagersProvider),
         onRetry: () => ref.invalidate(passwordManagersProvider),
         data: (items) => items.isEmpty
-            ? EmptyState(icon: LucideIcons.keyRound, title: l10n.noPasswordManagers, message: l10n.passwordManagersHelp, action: FilledButton(onPressed: add, child: Text(l10n.connectPasswordManager)))
+            ? EmptyState(
+                icon: LucideIcons.keyRound,
+                title: l10n.noPasswordManagers,
+                message: l10n.passwordManagersHelp,
+                action: FilledButton(
+                  onPressed: add,
+                  child: Text(l10n.connectPasswordManager),
+                ),
+              )
             : PageColumn(
                 children: [
                   FormNote(l10n.passwordManagersHelp, icon: LucideIcons.lock),
@@ -57,13 +81,22 @@ class PasswordManagersScreen extends ConsumerWidget {
                           icon: LucideIcons.keyRound,
                           title: m.name,
                           subtitle: [
-                            m.provider == PasswordManagerProviderEnum.n1password ? '1Password' : 'Bitwarden',
-                            m.scope == PasswordManagerScopeEnum.workspace ? l10n.pmWorkspace : l10n.pmJustMe,
-                            m.allowedVaults.isEmpty ? l10n.pmNoVaults : l10n.pmVaults(m.allowedVaults.length),
+                            m.provider == PasswordManagerProviderEnum.n1password
+                                ? '1Password'
+                                : 'Bitwarden',
+                            m.scope == PasswordManagerScopeEnum.workspace
+                                ? l10n.pmWorkspace
+                                : l10n.pmJustMe,
+                            m.allowedVaults.isEmpty
+                                ? l10n.pmNoVaults
+                                : l10n.pmVaults(m.allowedVaults.length),
                             if (m.lastError != null) m.lastError!,
                           ].join(' · '),
                           onTap: () async {
-                            await showAdaptiveSheet<void>(context: context, builder: (_) => _Vaults(manager: m));
+                            await showAdaptiveSheet<void>(
+                              context: context,
+                              builder: (_) => _Vaults(manager: m),
+                            );
                             ref.invalidate(passwordManagersProvider);
                           },
                           trailing: IconButton(
@@ -71,7 +104,10 @@ class PasswordManagersScreen extends ConsumerWidget {
                             tooltip: l10n.delete,
                             icon: const Icon(LucideIcons.trash2, size: 18),
                             onPressed: () async {
-                              await runGuarded(context, () => backend.deletePasswordManager(m.id));
+                              await runGuarded(
+                                context,
+                                () => backend.deletePasswordManager(m.id),
+                              );
                               ref.invalidate(passwordManagersProvider);
                             },
                           ),
@@ -114,8 +150,12 @@ class _ConnectState extends ConsumerState<_Connect> {
     final l10n = context.l10n;
     final role = ref.watch(currentOrgProvider)?.role.value;
     final admin = role == 'owner' || role == 'admin';
-    final onePw = _provider == CreatePasswordManagerRequestProviderEnum.n1password;
-    final valid = _name.text.trim().isNotEmpty && Uri.tryParse(_url.text.trim())?.hasScheme == true && (!onePw || _token.text.isNotEmpty);
+    final onePw =
+        _provider == CreatePasswordManagerRequestProviderEnum.n1password;
+    final valid =
+        _name.text.trim().isNotEmpty &&
+        Uri.tryParse(_url.text.trim())?.hasScheme == true &&
+        (!onePw || _token.text.isNotEmpty);
     VoidCallback? submit;
     return FormSheet(
       icon: LucideIcons.keyRound,
@@ -130,14 +170,20 @@ class _ConnectState extends ConsumerState<_Connect> {
               setState(() => _busy = true);
               final pm = await runGuarded(
                 context,
-                () => ref.read(backendProvider).connectPasswordManager(CreatePasswordManagerRequest(
-                      orgId: widget.orgId,
-                      scope: _workspace ? CreatePasswordManagerRequestScopeEnum.workspace : CreatePasswordManagerRequestScopeEnum.personal,
-                      provider: _provider,
-                      name: _name.text.trim(),
-                      url: _url.text.trim(),
-                      token: _token.text,
-                    )),
+                () => ref
+                    .read(backendProvider)
+                    .connectPasswordManager(
+                      CreatePasswordManagerRequest(
+                        orgId: widget.orgId,
+                        scope: _workspace
+                            ? CreatePasswordManagerRequestScopeEnum.workspace
+                            : CreatePasswordManagerRequestScopeEnum.personal,
+                        provider: _provider,
+                        name: _name.text.trim(),
+                        url: _url.text.trim(),
+                        token: _token.text,
+                      ),
+                    ),
               );
               if (!mounted) return;
               setState(() => _busy = false);
@@ -147,16 +193,56 @@ class _ConnectState extends ConsumerState<_Connect> {
       children: [
         SegmentedButton<CreatePasswordManagerRequestProviderEnum>(
           segments: const [
-            ButtonSegment(value: CreatePasswordManagerRequestProviderEnum.n1password, label: Text('1Password')),
-            ButtonSegment(value: CreatePasswordManagerRequestProviderEnum.bitwarden, label: Text('Bitwarden')),
+            ButtonSegment(
+              value: CreatePasswordManagerRequestProviderEnum.n1password,
+              label: Text('1Password'),
+            ),
+            ButtonSegment(
+              value: CreatePasswordManagerRequestProviderEnum.bitwarden,
+              label: Text('Bitwarden'),
+            ),
           ],
           selected: {_provider},
           onSelectionChanged: (v) => setState(() => _provider = v.first),
         ),
-        TextField(key: const Key('pmName'), controller: _name, textInputAction: TextInputAction.next, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: l10n.botNameLabel)),
-        TextField(key: const Key('pmUrl'), controller: _url, textInputAction: TextInputAction.next, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: onePw ? l10n.pmConnectUrl : l10n.pmBwUrl)),
-        Revealable(builder: (context, hidden, toggle) => TextField(key: const Key('pmToken'), controller: _token, textInputAction: TextInputAction.done, onSubmitted: (_) => submit?.call(), obscureText: hidden, onChanged: (_) => setState(() {}), decoration: InputDecoration(labelText: onePw ? l10n.pmConnectToken : l10n.pmBwToken, suffixIcon: toggle))),
-        if (admin) SwitchListTile(key: const Key('pmWorkspace'), contentPadding: EdgeInsets.zero, title: Text(l10n.pmForWorkspace), value: _workspace, onChanged: hapticOnChanged((v) => setState(() => _workspace = v))),
+        TextField(
+          key: const Key('pmName'),
+          controller: _name,
+          textInputAction: TextInputAction.next,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(labelText: l10n.botNameLabel),
+        ),
+        TextField(
+          key: const Key('pmUrl'),
+          controller: _url,
+          textInputAction: TextInputAction.next,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(
+            labelText: onePw ? l10n.pmConnectUrl : l10n.pmBwUrl,
+          ),
+        ),
+        Revealable(
+          builder: (context, hidden, toggle) => TextField(
+            key: const Key('pmToken'),
+            controller: _token,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => submit?.call(),
+            obscureText: hidden,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              labelText: onePw ? l10n.pmConnectToken : l10n.pmBwToken,
+              suffixIcon: toggle,
+            ),
+          ),
+        ),
+        if (admin)
+          SwitchListTile(
+            key: const Key('pmWorkspace'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.pmForWorkspace),
+            value: _workspace,
+            onChanged: hapticOnChanged((v) => setState(() => _workspace = v)),
+          ),
       ],
     );
   }
@@ -171,7 +257,9 @@ class _Vaults extends ConsumerStatefulWidget {
 }
 
 class _VaultsState extends ConsumerState<_Vaults> {
-  late final Future<List<PasswordManagerVault>> _vaults = ref.read(backendProvider).passwordManagerVaults(widget.manager.id);
+  late final Future<List<PasswordManagerVault>> _vaults = ref
+      .read(backendProvider)
+      .passwordManagerVaults(widget.manager.id);
   late final _chosen = widget.manager.allowedVaults.toSet();
 
   @override
@@ -186,20 +274,33 @@ class _VaultsState extends ConsumerState<_Vaults> {
         submitLabel: l10n.save,
         submitKey: const Key('saveVaults'),
         onSubmit: () async {
-          await runGuarded(context, () => ref.read(backendProvider).setPasswordManagerVaults(widget.manager.id, _chosen.toList()));
+          await runGuarded(
+            context,
+            () => ref
+                .read(backendProvider)
+                .setPasswordManagerVaults(widget.manager.id, _chosen.toList()),
+          );
           if (context.mounted) Navigator.pop(context);
         },
         children: [
           if (snap.hasError) Text(errorText(context, snap.error!)),
-          if (!snap.hasData && !snap.hasError) const Center(child: CircularProgressIndicator()),
+          if (!snap.hasData && !snap.hasError)
+            const SkeletonList(count: 3, padding: EdgeInsets.zero),
           for (final v in snap.data ?? const <PasswordManagerVault>[])
             CheckboxListTile(
               key: Key('vault-${v.id}'),
               contentPadding: EdgeInsets.zero,
               title: Text(v.name),
-              subtitle: v.logins == null ? null : Text(l10n.pmLogins(v.logins!)),
+              subtitle: v.logins == null
+                  ? null
+                  : Text(l10n.pmLogins(v.logins!)),
               value: _chosen.contains(v.id),
-              onChanged: hapticOnChanged((on) => setState(() => on == true ? _chosen.add(v.id) : _chosen.remove(v.id)), haptic: HapticsHelper.soft),
+              onChanged: hapticOnChanged(
+                (on) => setState(
+                  () => on == true ? _chosen.add(v.id) : _chosen.remove(v.id),
+                ),
+                haptic: HapticsHelper.soft,
+              ),
             ),
         ],
       ),

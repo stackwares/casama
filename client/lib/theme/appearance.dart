@@ -18,6 +18,7 @@ class Appearance {
     this.headingFont = defaultHeadingFont,
     this.bodyFont = defaultBodyFont,
     this.wallpaper = const WallpaperSpec(),
+    this.fewerEffects = false,
   });
   final ThemeMode mode;
 
@@ -29,6 +30,10 @@ class Appearance {
   final String bodyFont;
   final WallpaperSpec wallpaper;
 
+  /// No decorative motion: no celebration bursts, no bouncing tabs, no wiggling or animated bots
+  /// (see [Effects]). The Plain themes turn it on.
+  final bool fewerEffects;
+
   ThemeChoice get scheme => themeChoiceById(schemeId);
 
   Appearance copyWith({
@@ -37,12 +42,14 @@ class Appearance {
     String? headingFont,
     String? bodyFont,
     WallpaperSpec? wallpaper,
+    bool? fewerEffects,
   }) => Appearance(
     mode: mode ?? this.mode,
     schemeId: schemeId ?? this.schemeId,
     headingFont: headingFont ?? this.headingFont,
     bodyFont: bodyFont ?? this.bodyFont,
     wallpaper: wallpaper ?? this.wallpaper,
+    fewerEffects: fewerEffects ?? this.fewerEffects,
   );
 }
 
@@ -52,6 +59,7 @@ class AppearanceNotifier extends Notifier<Appearance> {
   static const _headingKey = 'appearance.font.heading';
   static const _bodyKey = 'appearance.font.body';
   static const _wallpaperKey = 'appearance.wallpaper';
+  static const _fewerEffectsKey = 'appearance.fewerEffects';
   static const _galleryKey = 'appearance.gallerySchemes';
   // Before wallpapers were saved as one JSON value.
   static const _patternKey = 'appearance.wallpaper.pattern';
@@ -88,6 +96,7 @@ class AppearanceNotifier extends Notifier<Appearance> {
         headingFont: p.getString(_headingKey) ?? defaultHeadingFont,
         bodyFont: p.getString(_bodyKey) ?? defaultBodyFont,
         wallpaper: _loadWallpaper(p),
+        fewerEffects: p.getBool(_fewerEffectsKey) ?? false,
       );
     } catch (_) {
       return null;
@@ -115,12 +124,20 @@ class AppearanceNotifier extends Notifier<Appearance> {
       final dark = value['dark'];
       final name = value['name'];
       if (light is! String || dark is! String || name is! String) continue;
-      final choice = galleryChoiceFromSeeds(
-        id: '${entry.key}',
-        name: name,
-        light: light,
-        dark: dark,
-      );
+      // Exact colors when they were saved (full gallery schemes keep theirs), else the seeds.
+      final choice =
+          galleryChoiceFromColors(
+            id: '${entry.key}',
+            name: name,
+            light: value['lightColors'],
+            dark: value['darkColors'],
+          ) ??
+          galleryChoiceFromSeeds(
+            id: '${entry.key}',
+            name: name,
+            light: light,
+            dark: dark,
+          );
       gallerySchemeChoices[choice.id] = choice;
     }
   }
@@ -131,6 +148,8 @@ class AppearanceNotifier extends Notifier<Appearance> {
         'name': entry.value.name,
         'light': hexFromColor(entry.value.data.light.primary),
         'dark': hexFromColor(entry.value.data.dark.primary),
+        'lightColors': schemeColorsToJson(entry.value.data.light),
+        'darkColors': schemeColorsToJson(entry.value.data.dark),
       },
   });
 
@@ -162,6 +181,11 @@ class AppearanceNotifier extends Notifier<Appearance> {
     await _save((p) => p.setString(_modeKey, mode.name));
   }
 
+  Future<void> setFewerEffects(bool on) async {
+    state = state.copyWith(fewerEffects: on);
+    await _save((p) => p.setBool(_fewerEffectsKey, on));
+  }
+
   Future<void> setScheme(String id) async {
     state = state.copyWith(schemeId: id);
     await _save((p) => p.setString(_schemeKey, id));
@@ -190,7 +214,7 @@ class AppearanceNotifier extends Notifier<Appearance> {
     });
   }
 
-  /// Everything but light/dark at once, from a preset or a saved theme. The look changes in one
+  /// A whole look at once, from a preset or a saved theme (light/dark only when the theme sets it). The look changes in one
   /// step, then it's saved. [gallery] is registered first when the scheme comes from the gallery.
   Future<void> apply({
     required String schemeId,
@@ -198,6 +222,8 @@ class AppearanceNotifier extends Notifier<Appearance> {
     required String headingFont,
     required String bodyFont,
     required WallpaperSpec wallpaper,
+    ThemeMode? mode,
+    bool? fewerEffects,
   }) async {
     if (gallery != null) gallerySchemeChoices[gallery.id] = gallery;
     state = state.copyWith(
@@ -205,8 +231,12 @@ class AppearanceNotifier extends Notifier<Appearance> {
       headingFont: headingFont,
       bodyFont: bodyFont,
       wallpaper: wallpaper,
+      mode: mode,
+      fewerEffects: fewerEffects,
     );
     await _save((p) async {
+      if (mode != null) await p.setString(_modeKey, mode.name);
+      if (fewerEffects != null) await p.setBool(_fewerEffectsKey, fewerEffects);
       await p.setString(_schemeKey, state.schemeId);
       await p.setString(_headingKey, headingFont);
       await p.setString(_bodyKey, bodyFont);

@@ -135,7 +135,8 @@ Homebrew's), or use `TEST_DATABASE_URL`. On macOS, set `LC_ALL=en_US.UTF-8` or P
 start. Tests use recorded model fixtures; nothing calls a real model unless you run
 `scripts/live-check.sh` with your own key.
 
-CI runs all of these, plus Docker-based computer tests, a CLI end-to-end run and a web build.
+CI runs all of these, plus Docker-based computer tests, a CLI end-to-end run and a Wasm web build
+(`scripts/build-web.sh`). That script is the only release build of the web app.
 
 ## Documentation
 

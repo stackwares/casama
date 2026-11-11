@@ -7220,14 +7220,28 @@
             ],
             "description": "server: through this server's Composio account (one click). own: people use their own Composio, Pipedream or Zapier accounts."
           },
+          "google": {
+            "type": "string",
+            "enum": [
+              "composio",
+              "direct"
+            ],
+            "description": "Google's apps. composio: through this server's Composio account whenever it has one (the default; Google's own MCP servers need Developer Preview enrollment, D-166). direct: Google's own MCP servers with GOOGLE_OAUTH_CLIENT_ID. Casama Cloud always uses Composio."
+          },
           "composio_key": {
             "type": "boolean",
             "description": "Whether this server has a Composio key (COMPOSIO_API_KEY)."
+          },
+          "google_direct_available": {
+            "type": "boolean",
+            "description": "Whether Google's own servers can be chosen: this server has a Google client (GOOGLE_OAUTH_CLIENT_ID) and isn't Casama Cloud."
           }
         },
         "required": [
           "composio",
-          "composio_key"
+          "google",
+          "composio_key",
+          "google_direct_available"
         ]
       },
       "AdminOrgList": {
@@ -7469,11 +7483,15 @@
               "server",
               "own"
             ]
+          },
+          "google": {
+            "type": "string",
+            "enum": [
+              "composio",
+              "direct"
+            ]
           }
-        },
-        "required": [
-          "composio"
-        ]
+        }
       },
       "SetOrgLimitsRequest": {
         "type": "object",
@@ -8382,6 +8400,9 @@
           },
           "oauth_available": {
             "type": "boolean"
+          },
+          "composio": {
+            "type": "string"
           }
         },
         "required": [

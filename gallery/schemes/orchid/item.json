@@ -1,0 +1,14 @@
+{
+  "name": "Orchid",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "purple",
+    "pink"
+  ],
+  "featured": false,
+  "version": 1
+}

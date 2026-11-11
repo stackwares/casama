@@ -1,0 +1,13 @@
+# Copied into build/web. Cloudflare (Workers static assets or Pages) and Netlify read it; other
+# hosts need the same headers set by hand (D-196).
+#
+# Cross-origin isolation lets the WebAssembly build run its renderer on several threads.
+# credentialless (not require-corp) so images from other sites still load, just without cookies.
+# Every sign-in on web is a redirect or a new tab that the app polls, so same-origin is safe.
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: credentialless
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Frame-Options: DENY

@@ -1,6 +1,7 @@
 import 'bot_history_screen.dart';
 import 'agent_import.dart';
 import 'bot_template.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -29,6 +30,7 @@ import 'model_picker.dart';
 import 'template_picker.dart';
 import '../../ui/glow_button.dart';
 import '../workspaces/spaces.dart';
+import '../../ui/celebration.dart';
 
 String botStatusLabel(BuildContext context, BotStatusEnum s) => switch (s) {
   BotStatusEnum.working => context.l10n.botStatusWorking,
@@ -48,7 +50,12 @@ class BotsList extends ConsumerWidget {
     final bots = ref.watch(botsProvider);
     final archived = ref.watch(archivedBotsProvider).value ?? const <Bot>[];
     final usage = ref.watch(usageTodayProvider).value;
-    double costFor(String botId) => (usage?.byBot.where((b) => b.botId == botId).fold<num>(0, (n, b) => n + b.costUsd) ?? 0).toDouble();
+    double costFor(String botId) =>
+        (usage?.byBot
+                    .where((b) => b.botId == botId)
+                    .fold<num>(0, (n, b) => n + b.costUsd) ??
+                0)
+            .toDouble();
 
     return AsyncView(
       value: bots,
@@ -62,7 +69,11 @@ class BotsList extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 spacing: AppSpace.sm,
                 children: [
-                  GlowButton.icon(onPressed: () => showCreateBot(context, ref), icon: const Icon(LucideIcons.plus), label: Text(l10n.newBot)),
+                  GlowButton.icon(
+                    onPressed: () => showCreateBot(context, ref),
+                    icon: const Icon(LucideIcons.plus),
+                    label: Text(l10n.newBot),
+                  ),
                   if (archived.isNotEmpty)
                     TextButton.icon(
                       key: const Key('archivedBots'),
@@ -107,17 +118,36 @@ class BotsList extends ConsumerWidget {
                 builder: (context, constraints) {
                   final side = pageSide(constraints.maxWidth);
                   return ListView.separated(
-                    padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xl + MediaQuery.paddingOf(context).bottom),
-                    itemCount: items.length + 1,
-                    separatorBuilder: (_, _) => const SizedBox(height: AppSpace.xs),
-                    itemBuilder: (context, i) => i == items.length
-                        ? _GroupChatsSection(bots: items)
-                        : _BotCard(
-                      key: Key('bot-${items[i].id}'),
-                      bot: items[i],
-                      cost: costFor(items[i].id),
-                      selected: items[i].id == selectedBotId,
-                    ).appListItemEntrance(i),
+                    padding: EdgeInsets.fromLTRB(
+                      side,
+                      AppSpace.xs,
+                      side,
+                      AppSpace.xl + MediaQuery.paddingOf(context).bottom,
+                    ),
+                    itemCount: items.length + 1 + (archived.isNotEmpty ? 1 : 0),
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: AppSpace.xs),
+                    itemBuilder: (context, i) {
+                      if (i == items.length) {
+                        return _GroupChatsSection(bots: items);
+                      }
+                      if (i > items.length) {
+                        return TextButton.icon(
+                          key: const Key('archivedBots'),
+                          icon: const Icon(LucideIcons.archive, size: 18),
+                          label: Text(
+                            '${l10n.archivedBots} (${archived.length})',
+                          ),
+                          onPressed: () => showArchivedBots(context),
+                        );
+                      }
+                      return _BotCard(
+                        key: Key('bot-${items[i].id}'),
+                        bot: items[i],
+                        cost: costFor(items[i].id),
+                        selected: items[i].id == selectedBotId,
+                      ).appListItemEntrance(i);
+                    },
                   );
                 },
               ),
@@ -127,7 +157,12 @@ class BotsList extends ConsumerWidget {
 }
 
 class _BotCard extends StatelessWidget {
-  const _BotCard({super.key, required this.bot, required this.cost, required this.selected});
+  const _BotCard({
+    super.key,
+    required this.bot,
+    required this.cost,
+    required this.selected,
+  });
   final Bot bot;
   final double cost;
   final bool selected;
@@ -149,7 +184,14 @@ class _BotCard extends StatelessWidget {
       borderColor: selected ? scheme.primary.withValues(alpha: 0.5) : null,
       child: Row(
         children: [
-          BotAvatar(name: bot.name, avatar: bot.avatarUrl, size: 46, animate: true, status: bot.status, ringColor: scheme.surfaceContainerLow),
+          BotAvatar(
+            name: bot.name,
+            avatar: bot.avatarUrl,
+            size: 46,
+            animate: true,
+            status: bot.status,
+            ringColor: scheme.surfaceContainerLow,
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -159,19 +201,31 @@ class _BotCard extends StatelessWidget {
                   bot.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.2),
+                  style: context.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.2,
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Row(
                   children: [
-                    StatusLabel(text: botStatusLabel(context, bot.status), color: statusColor, pill: bot.status != BotStatusEnum.idle),
+                    StatusLabel(
+                      text: botStatusLabel(context, bot.status),
+                      color: statusColor,
+                      pill: bot.status != BotStatusEnum.idle,
+                    ),
                     const SizedBox(width: AppSpace.xs),
                     Flexible(
                       child: Text(
-                        l10n.costToday(formatUsd(cost, context.l10n.localeName)),
+                        l10n.costToday(
+                          formatUsd(cost, context.l10n.localeName),
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant, fontFeatures: AppText.tabular),
+                        style: context.textTheme.labelMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontFeatures: AppText.tabular,
+                        ),
                       ),
                     ),
                   ],
@@ -184,8 +238,16 @@ class _BotCard extends StatelessWidget {
             builder: (context, ref, _) {
               final count = ref.watch(botBadgeProvider(bot.id));
               final working = bot.status == BotStatusEnum.working;
-              if (count == 0 && !working) return Icon(LucideIcons.chevronRight, color: scheme.onSurfaceVariant.withValues(alpha: 0.7));
-              return Padding(padding: const EdgeInsets.only(right: AppSpace.xs), child: BotActivity(count: count, working: working));
+              if (count == 0 && !working) {
+                return Icon(
+                  LucideIcons.chevronRight,
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                );
+              }
+              return Padding(
+                padding: const EdgeInsets.only(right: AppSpace.xs),
+                child: BotActivity(count: count, working: working),
+              );
             },
           ),
         ],
@@ -203,26 +265,47 @@ class _GroupChatsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
-    final groups = ref.watch(groupChatsProvider).value ?? const <Conversation>[];
-    if (groups.isEmpty) return const SizedBox.shrink();
+    final groups =
+        ref.watch(groupChatsProvider).value ?? const <Conversation>[];
+    if (groups.isEmpty && bots.length < 2) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionHeader(title: l10n.groupChats),
+        SectionHeader(
+          title: l10n.groupChats,
+          trailing: IconButton(
+            key: const Key('newGroupChatList'),
+            tooltip: l10n.newGroupChat,
+            visualDensity: VisualDensity.compact,
+            iconSize: 18,
+            icon: const Icon(LucideIcons.plus),
+            onPressed: () => showNewGroupChat(context, ref),
+          ),
+        ),
         if (groups.isNotEmpty)
           GroupedCard(
             children: [
               for (final g in groups)
                 Builder(
                   builder: (context) {
-                    final members = [for (final id in g.botIds) ?bots.where((b) => b.id == id).firstOrNull];
+                    final members = [
+                      for (final id in g.botIds)
+                        ?bots.where((b) => b.id == id).firstOrNull,
+                    ];
                     return GroupedTile(
                       key: Key('group-${g.id}'),
                       icon: LucideIcons.users,
-                      leading: GroupAvatar(bots: members, size: 36, ringColor: scheme.surfaceContainerLow),
+                      leading: GroupAvatar(
+                        bots: members,
+                        size: 36,
+                        ringColor: scheme.surfaceContainerLow,
+                      ),
                       title: groupTitle(g, bots),
                       subtitle: l10n.groupBotCount(g.botIds.length),
-                      trailing: members.any((b) => b.status == BotStatusEnum.working) ? const BotActivity(count: 0, working: true) : null,
+                      trailing:
+                          members.any((b) => b.status == BotStatusEnum.working)
+                          ? const BotActivity(count: 0, working: true)
+                          : null,
                       onTap: () => context.go('/groups/${g.id}'),
                     );
                   },
@@ -242,104 +325,52 @@ class BotsScreen extends ConsumerWidget {
     final org = ref.watch(currentOrgProvider);
     // Phones: the person's avatar (Settings) on the left, the workspace under the title (tap to
     // switch), and "+" on the right. Tablets have both in the rail already (D-176).
-    final phone = AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
+    final phone =
+        AppBreakpoints.of(MediaQuery.sizeOf(context).width) ==
+        WindowSize.compact;
     // Tapping Chats again scrolls this list to the top (TabReselect); so does the iOS status bar.
     return PrimaryScrollController(
       controller: TabReselect.chats,
       child: Scaffold(
-      appBar: ShellHeader(
-        title: context.l10n.navChats,
-        subtitle: org?.name,
-        leading: phone ? const Padding(padding: EdgeInsets.only(left: 12), child: Center(child: MeButton())) : null,
-        titleTrailing: org == null ? null : Icon(LucideIcons.chevronsUpDown, size: 16, color: context.colorScheme.onSurfaceVariant),
-        onTitleTap: () => showSpacesSheet(context, ref),
-        actions: [
-          HeaderIconButton(key: const Key('createMenu'), icon: LucideIcons.plus, tooltip: context.l10n.createMenuTitle, onPressed: () => showCreateMenu(context, ref)),
-        ],
+        appBar: ShellHeader(
+          title: context.l10n.navChats,
+          subtitle: org?.name,
+          leading: phone
+              ? const Padding(
+                  padding: EdgeInsets.only(left: 12),
+                  child: Center(child: MeButton()),
+                )
+              : null,
+          titleTrailing: org == null
+              ? null
+              : Icon(
+                  LucideIcons.chevronsUpDown,
+                  size: 16,
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+          onTitleTap: () => showSpacesSheet(context, ref),
+          actions: [
+            HeaderIconButton(
+              key: const Key('createMenu'),
+              icon: LucideIcons.plus,
+              tooltip: context.l10n.newBot,
+              onPressed: () => showCreateBot(context, ref),
+            ),
+          ],
+        ),
+        // About you (D-169): the one-time name card for people who joined before it was asked.
+        body: const BotsList(),
       ),
-      // About you (D-169): the one-time name card for people who joined before it was asked.
-      body: const BotsList(),
-    ),
     );
   }
 }
 
-/// The "+" menu: everything that adds to the chat list, so the list itself stays just chats.
-/// New bot leads; a group chat, importing a bot file or an agent folder, and archived bots follow.
-Future<void> showCreateMenu(BuildContext context, WidgetRef ref) async {
-  final l10n = context.l10n;
-  final archived = ref.read(archivedBotsProvider).value ?? const <Bot>[];
-  final bots = ref.read(botsProvider).value ?? const <Bot>[];
-  final picked = await showAdaptiveSheet<String>(
-    context: context,
-    dialogMaxWidth: 440,
-    builder: (sheet) {
-      Widget row(String id, IconData icon, String title, String subtitle, {bool primary = false}) => GroupedTile(
-        key: Key('create-$id'),
-        icon: icon,
-        iconColor: primary ? null : sheet.colorScheme.onSurfaceVariant,
-        title: title,
-        subtitle: subtitle,
-        showChevron: false,
-        onTap: () => Navigator.of(sheet).pop(id),
-      );
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpace.md, 0, AppSpace.md, AppSpace.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SheetTitle(l10n.createMenuTitle),
-            GroupedCard(
-              children: [
-                row('bot', LucideIcons.bot, l10n.newBot, l10n.createBotHelp, primary: true),
-                if (bots.length >= 2) row('group', LucideIcons.usersRound, l10n.newGroupChat, l10n.createGroupHelp),
-              ],
-            ),
-            if (archived.isNotEmpty) ...[
-              const SizedBox(height: AppSpace.sm),
-              GroupedCard(
-                children: [
-                  row('archived', LucideIcons.archive, '${l10n.archivedBots} (${archived.length})', l10n.archivedBotsHelp),
-                ],
-              ),
-            ],
-            const SizedBox(height: AppSpace.xs),
-            AdvancedSection(
-              id: 'chats.create',
-              compact: true,
-              children: [
-                const SizedBox(height: AppSpace.xs),
-                GroupedCard(
-                  children: [
-                    row('importBot', LucideIcons.fileDown, l10n.importBot, l10n.importBotHelp),
-                    row('importAgent', LucideIcons.folderInput, l10n.importAgent, l10n.importAgentHelp),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    },
-  );
-  if (!context.mounted) return;
-  switch (picked) {
-    case 'bot':
-      await showCreateBot(context, ref);
-    case 'group':
-      await showNewGroupChat(context, ref);
-    case 'importBot':
-      await importBotFromFile(context);
-    case 'importAgent':
-      await importAgentFolder(context, ref);
-    case 'archived':
-      await showArchivedBots(context);
-  }
-}
-
 Future<void> showCreateBot(BuildContext context, WidgetRef ref) async {
-  await showAdaptiveSheet<void>(context: context, contentPadsBottom: true, builder: (_) => const CreateBotSheet());
+  await showAdaptiveSheet<void>(
+    context: context,
+    contentPadsBottom: true,
+    builder: (_) => const CreateBotSheet(),
+  );
 }
 
 class CreateBotSheet extends ConsumerStatefulWidget {
@@ -390,17 +421,24 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
   /// A template fills in its name until the user types their own; a blank bot starts empty and is
   /// named Chief (shown as the placeholder) if the field is left empty.
   void _setAutoName(String? name) {
-    if (_name.text.trim().isEmpty || _name.text == _autoName) _name.text = name ?? '';
+    if (_name.text.trim().isEmpty || _name.text == _autoName) {
+      _name.text = name ?? '';
+    }
     _autoName = name;
   }
 
-  String _finalName(BuildContext context) => _name.text.trim().isEmpty ? context.l10n.defaultBotName : _name.text.trim();
+  String _finalName(BuildContext context) => _name.text.trim().isEmpty
+      ? context.l10n.defaultBotName
+      : _name.text.trim();
 
   /// Suggests the server's default model for the chosen key until the user picks one.
   void _fillDefaultModel(List<Credential> keys) {
     if (_modelPicked) return;
     for (final k in keys) {
-      if (k.id == _credentialId) _model = ref.read(backendProvider).defaultModelFor(k.provider.value) ?? '';
+      if (k.id == _credentialId) {
+        _model =
+            ref.read(backendProvider).defaultModelFor(k.provider.value) ?? '';
+      }
     }
   }
 
@@ -408,7 +446,9 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final keysAsync = ref.watch(credentialsProvider);
-    final keys = (keysAsync.value ?? const <Credential>[]).where((k) => _chatProviders.contains(k.provider)).toList();
+    final keys = (keysAsync.value ?? const <Credential>[])
+        .where((k) => _chatProviders.contains(k.provider))
+        .toList();
     if (_credentialId == null || !keys.any((k) => k.id == _credentialId)) {
       _credentialId = keys.isEmpty ? null : keys.first.id;
       _fillDefaultModel(keys);
@@ -421,12 +461,21 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
         key: ValueKey('key-$_credentialId-${keys.length}'),
         initialValue: _credentialId,
         decoration: InputDecoration(labelText: l10n.modelKey),
-        items: [for (final k in keys) DropdownMenuItem(value: k.id, child: Text('${k.label} · ${providerLabel(k.provider)}'))],
-        onChanged: hapticOnChanged((v) => setState(() {
-          _credentialId = v;
-          _modelPicked = false;
-          _fillDefaultModel(keys);
-        }), haptic: HapticsHelper.selection),
+        items: [
+          for (final k in keys)
+            DropdownMenuItem(
+              value: k.id,
+              child: Text('${k.label} · ${providerLabel(k.provider)}'),
+            ),
+        ],
+        onChanged: hapticOnChanged(
+          (v) => setState(() {
+            _credentialId = v;
+            _modelPicked = false;
+            _fillDefaultModel(keys);
+          }),
+          haptic: HapticsHelper.selection,
+        ),
       ),
       const SizedBox(height: 8),
       ModelPickerField(
@@ -440,7 +489,14 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
     ];
     return SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-      padding: widget.embedded ? EdgeInsets.zero : EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.lg, BottomPadding.of(context, minimum: AppSpace.md)),
+      padding: widget.embedded
+          ? EdgeInsets.zero
+          : EdgeInsets.fromLTRB(
+              AppSpace.lg,
+              0,
+              AppSpace.lg,
+              BottomPadding.of(context, minimum: AppSpace.md),
+            ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -450,15 +506,31 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
               children: [
                 AnimatedSwitcher(
                   duration: AppMotion.of(context, AppMotion.fast),
-                  child: BotAvatar(key: ValueKey('${_finalName(context)}|$_avatar'), name: _finalName(context), avatar: _avatar, size: 52),
+                  child: BotAvatar(
+                    key: ValueKey('${_finalName(context)}|$_avatar'),
+                    name: _finalName(context),
+                    avatar: _avatar,
+                    size: 52,
+                  ),
                 ),
                 const SizedBox(width: AppSpace.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(l10n.newBot, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3)),
-                      Text(l10n.newBotSubtitle, style: context.textTheme.bodyMedium?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+                      Text(
+                        l10n.newBot,
+                        style: context.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      Text(
+                        l10n.newBotSubtitle,
+                        style: context.textTheme.bodyMedium?.copyWith(
+                          color: context.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -471,7 +543,9 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
               _templateId = t?.id;
               _setAutoName(t?.name);
               // The persona's instructions and mascot fill in, unless the user wrote their own.
-              if (_persona.text.trim().isEmpty || _persona.text == _autoPersona) _persona.text = t?.persona ?? '';
+              if (_persona.text.trim().isEmpty || _persona.text == _autoPersona) {
+                _persona.text = t?.persona ?? '';
+              }
               _autoPersona = t?.persona;
               if (t?.mascot != null) _avatar = 'mascot:${t!.mascot}';
             }),
@@ -479,11 +553,19 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
           const SizedBox(height: 8),
           TextField(
             controller: _name,
-            decoration: InputDecoration(labelText: l10n.botName, hintText: l10n.defaultBotName),
+            decoration: InputDecoration(
+              labelText: l10n.botName,
+              hintText: l10n.defaultBotName,
+            ),
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: AppSpace.sm),
-          Text(l10n.botIcon, style: context.textTheme.labelLarge?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+          Text(
+            l10n.botIcon,
+            style: context.textTheme.labelLarge?.copyWith(
+              color: context.colorScheme.onSurfaceVariant,
+            ),
+          ),
           const SizedBox(height: AppSpace.xs),
           MascotPicker(
             value: _avatar,
@@ -494,7 +576,10 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
           const SizedBox(height: AppSpace.sm),
           // A missing key is a required step, so it's asked for in plain sight.
           if (needsKey) ...[
-            Text(l10n.addModelKeyFirst, style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              l10n.addModelKeyFirst,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
             const SizedBox(height: 8),
             AddKeyForm(onAdded: () => ref.invalidate(credentialsProvider)),
             const SizedBox(height: 8),
@@ -505,16 +590,30 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
           TextField(
             key: const Key('botInstructions'),
             controller: _persona,
-            decoration: InputDecoration(labelText: l10n.persona, hintText: l10n.personaHint, alignLabelWithHint: true),
+            decoration: InputDecoration(
+              labelText: l10n.persona,
+              hintText: l10n.personaHint,
+              alignLabelWithHint: true,
+            ),
             minLines: 3,
             maxLines: 8,
           ),
           // The key and model already picked for you, folded until asked for (D-182).
-          if (!needsKey && !_modelInSight) AdvancedSection(id: 'bot.create', summary: l10n.createBotAdvancedSummary, children: [const SizedBox(height: AppSpace.xs), ...keyFields]),
+          if (!needsKey && !_modelInSight)
+            AdvancedSection(
+              id: 'bot.create',
+              summary: l10n.createBotAdvancedSummary,
+              children: [
+                const SizedBox(height: AppSpace.xs),
+                ...keyFields,
+              ],
+            ),
           const SizedBox(height: 12),
           const SizedBox(height: AppSpace.xs),
           GlowButton(
-            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(50),
+            ),
             onPressed: _busy || _credentialId == null || _model.isEmpty
                 ? null
                 : () async {
@@ -538,6 +637,8 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
                     setState(() => _busy = false);
                     if (bot != null) {
                       ref.invalidate(botsProvider);
+                      // The new bot itself pops up to say hi.
+                      showCelebration(context, l10n.celebrateNewBot(bot.name), mascot: Mascot.fromAvatar(bot.avatarUrl));
                       final router = GoRouter.of(context);
                       if (!widget.embedded) Navigator.of(context).pop();
                       router.go('/bots/${bot.id}/chat');

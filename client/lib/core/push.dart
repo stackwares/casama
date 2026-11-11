@@ -10,6 +10,7 @@ import '../features/voice/phone_calls.dart' show casamaBackgroundMessage;
 import 'backend.dart';
 import 'providers.dart';
 import 'router.dart';
+import 'web_notification_prompt_web.dart' if (dart.library.io) 'web_notification_prompt_stub.dart';
 
 /// Firebase settings come from --dart-define (official builds: `--dart-define-from-file=config/firebase.json`,
 /// the public client identifiers of the `kasama-ai` project). Self-hosters building their own apps
@@ -43,6 +44,20 @@ class PushConfig {
 
   static bool get enabled => projectId.isNotEmpty && senderId.isNotEmpty && _keys.$1.isNotEmpty && _keys.$2.isNotEmpty;
 
+  /// Address of `web/firebase-messaging-sw.js` for this build. Root-absolute so a
+  /// registration from `/chat/…` still loads the worker at the site root.
+  static String? get messagingServiceWorkerPath {
+    if (!kIsWeb || !enabled) return null;
+    final (apiKey, appId) = _keys;
+    return firebaseMessagingServiceWorkerPath(
+      apiKey: apiKey,
+      appId: appId,
+      senderId: senderId,
+      projectId: projectId,
+      authDomain: _webAuthDomain,
+    );
+  }
+
   static FirebaseOptions get options => FirebaseOptions(
     apiKey: _keys.$1,
     appId: _keys.$2,
@@ -51,6 +66,25 @@ class PushConfig {
     iosBundleId: _iosBundleId.isEmpty ? null : _iosBundleId,
     authDomain: kIsWeb && _webAuthDomain.isNotEmpty ? _webAuthDomain : null,
   );
+}
+
+/// `web/firebase-messaging-sw.js` plus the public Firebase app, for [PushConfig.messagingServiceWorkerPath].
+String firebaseMessagingServiceWorkerPath({
+  required String apiKey,
+  required String appId,
+  required String senderId,
+  required String projectId,
+  String authDomain = '',
+}) {
+  final query = <String, String>{
+    'apiKey': apiKey,
+    'appId': appId,
+    'messagingSenderId': senderId,
+    'projectId': projectId,
+    if (authDomain.isNotEmpty) 'authDomain': authDomain,
+  };
+  final qs = query.entries.map((e) => '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}').join('&');
+  return '/firebase-messaging-sw.js?$qs';
 }
 
 String _platform() {
@@ -80,6 +114,10 @@ class PushRegistrar {
   /// snoozed): the system prompt comes from its button, with the reason in view.
   final needsAsk = ValueNotifier(false);
 
+  /// Chrome has already blocked this site, so the page explains the address-bar setting
+  /// instead of expecting a prompt that will not appear.
+  final webBlocked = ValueNotifier(false);
+
   static const _askedKey = 'push.asked';
   static const _snoozedKey = 'push.snoozedUntil';
 
@@ -100,12 +138,19 @@ class PushRegistrar {
         await _register(messaging);
         return;
       }
-      // Never asked here (Android reports "denied" until it asks): our page first, unless snoozed.
       final prefs = await SharedPreferences.getInstance();
       final snoozed = DateTime.tryParse(prefs.getString(_snoozedKey) ?? '');
-      if (prefs.getBool(_askedKey) != true && (snoozed == null || snoozed.isBefore(DateTime.now()))) {
+      final snoozeOver = snoozed == null || snoozed.isBefore(DateTime.now());
+      // On the web, Chrome's answer is the only "asked". A Turn on click that never
+      // produced a prompt used to set the flag and then hide the page for good.
+      // A Block from Chrome cannot be asked again from the page. Say so, unless they snoozed it.
+      if (kIsWeb && status == AuthorizationStatus.denied && snoozeOver) {
+        webBlocked.value = true;
         needsAsk.value = true;
+        return;
       }
+      final unanswered = kIsWeb ? status == AuthorizationStatus.notDetermined : prefs.getBool(_askedKey) != true;
+      if (unanswered && snoozeOver) needsAsk.value = true;
     } catch (e) {
       // Push is best effort; the in-app inbox still has every notification.
       debugPrint('push registration failed: $e');
@@ -113,7 +158,31 @@ class PushRegistrar {
   }
 
   /// "Turn on": the system prompt, then this device's push registration.
+  ///
+  /// On the web the prompt has to start inside the click (see [bindNotificationButton]).
+  /// This waits for that answer. A dismissed prompt leaves the page up so Turn on
+  /// can be tried again; Block remembers the choice.
   Future<bool> enable() async {
+    if (kIsWeb) {
+      try {
+        final status = await takeWebNotificationPermission();
+        if (status != 'granted') {
+          if (status == 'denied') {
+            webBlocked.value = true;
+            (await SharedPreferences.getInstance()).setBool(_askedKey, true).ignore();
+          }
+          return false;
+        }
+        webBlocked.value = false;
+        needsAsk.value = false;
+        (await SharedPreferences.getInstance()).setBool(_askedKey, true).ignore();
+        await _register(FirebaseMessaging.instance);
+        return true;
+      } catch (e) {
+        debugPrint('push registration failed: $e');
+        return false;
+      }
+    }
     needsAsk.value = false;
     try {
       (await SharedPreferences.getInstance()).setBool(_askedKey, true).ignore();
@@ -141,7 +210,10 @@ class PushRegistrar {
       // The worker sends with FCM HTTP v1 `message.token`, so register the classic token
       // (firebase_messaging 17 deprecates it in favour of installation-ID direct send; see DECISIONS D-051).
       // ignore: deprecated_member_use
-      final token = await messaging.getToken(vapidKey: kIsWeb ? PushConfig.vapidKey : null);
+      final token = await messaging.getToken(
+        vapidKey: kIsWeb ? PushConfig.vapidKey : null,
+        serviceWorkerScriptPath: PushConfig.messagingServiceWorkerPath,
+      );
       if (token != null) await _backend.registerDevice(_platform(), token);
       // ignore: deprecated_member_use
       _subs.add(messaging.onTokenRefresh.listen((t) => _backend.registerDevice(_platform(), t)));
@@ -163,6 +235,7 @@ class PushRegistrar {
 
   void dispose() {
     needsAsk.dispose();
+    webBlocked.dispose();
     for (final s in _subs) {
       unawaited(s.cancel());
     }

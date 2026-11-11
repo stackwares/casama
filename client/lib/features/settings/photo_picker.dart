@@ -125,7 +125,7 @@ class _PhotoPickerState extends ConsumerState<PhotoPicker> {
                   );
                 }
                 if (!snap.hasData) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const SkeletonGrid(count: 8, tileHeight: 120);
                 }
                 final items = snap.data!;
                 if (items.isEmpty) {
@@ -138,8 +138,11 @@ class _PhotoPickerState extends ConsumerState<PhotoPicker> {
                 }
                 return LayoutBuilder(
                   builder: (context, c) => GridView.builder(
-                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                    padding: EdgeInsets.only(bottom: BottomPadding.of(context, minimum: AppSpace.lg)),
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: EdgeInsets.only(
+                      bottom: BottomPadding.of(context, minimum: AppSpace.lg),
+                    ),
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: (c.maxWidth / 160).floor().clamp(2, 5),
                       mainAxisSpacing: AppSpace.xs,
@@ -161,7 +164,8 @@ class _PhotoPickerState extends ConsumerState<PhotoPicker> {
                               children: [
                                 SmoothNetworkImage(
                                   p.thumbUrl,
-                                  placeholderColor: _hex(p.color) ?? scheme.surfaceContainer,
+                                  placeholderColor:
+                                      _hex(p.color) ?? scheme.surfaceContainer,
                                 ),
                                 Align(
                                   alignment: Alignment.bottomLeft,

@@ -13,6 +13,9 @@ import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../../ui/bot_loader.dart';
+import '../../ui/mascot.dart';
+import '../../ui/celebration.dart';
 
 /// The draft skill from a teach recording (D-120): wait for the bot's draft, edit it, save it,
 /// and try it right away.
@@ -80,7 +83,7 @@ class _TeachDraftScreenState extends ConsumerState<TeachDraftScreen> {
     if (!mounted) return;
     setState(() => _busy = false);
     if (r == null) return;
-    showSuccess(context, context.l10n.teachSaved(_name.text.trim()));
+    showCelebration(context, context.l10n.teachSaved(_name.text.trim()));
     final router = GoRouter.maybeOf(context);
     if (r.conversationId != null) {
       router?.go('/bots/${s.botId}/chat?c=${r.conversationId}');
@@ -117,7 +120,7 @@ class _TeachDraftScreenState extends ConsumerState<TeachDraftScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(),
+            const BotLoader(mascot: Mascot.thinker),
             const SizedBox(height: AppSpace.md),
             Text(l10n.teachDrafting, key: const Key('teachDrafting')),
             if (s != null) Text(l10n.teachSteps(s.steps.length), style: Theme.of(context).textTheme.bodySmall),

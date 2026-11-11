@@ -100,8 +100,8 @@ class ComputerPanel extends ConsumerStatefulWidget {
   });
   final Computer computer;
 
-  /// In the side panel next to the chat (large screens): desktop computers show the live view
-  /// right here, with a button to open it full screen.
+  /// In the side panel next to the chat (large screens): a desktop's live view plays here once
+  /// the person starts, wakes, or opens it, with a button to open it full screen.
   final bool embedded;
 
   @override
@@ -114,6 +114,9 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
   Timer? _poll;
   late final AppLifecycleListener _lifecycle;
   String? _action; // 'start' | 'sleep' while a button's request runs
+  // The side panel does not open the live stream just because the computer is already on (a bot
+  // may have started it). It opens after this person wakes it or asks to watch.
+  var _watchLive = false;
   // The tab that's open, by name, so it keeps its place when Terminal and Checkpoints come and go.
   var _tab = 'screen';
   var _tabIds = const <String>[];
@@ -128,8 +131,21 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
   @override
   void didUpdateWidget(ComputerPanel old) {
     super.didUpdateWidget(old);
+    if (old.computer.id != widget.computer.id) {
+      _watchLive = false;
+    } else if (_watchLive &&
+        _computerAwake(old.computer.state) &&
+        !_computerAwake(widget.computer.state) &&
+        _action != 'start' &&
+        !computerWaking(widget.computer.state)) {
+      // It went to sleep on its own. A later wake (often a bot) should not reopen the stream.
+      _watchLive = false;
+    }
     if (old.computer.state != widget.computer.state) _schedule();
   }
+
+  bool _computerAwake(ComputerState s) =>
+      s == ComputerState.running || s == ComputerState.idle;
 
   void _schedule() {
     _poll?.cancel();
@@ -150,12 +166,13 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
     super.dispose();
   }
 
-  Future<void> _run(String action, Future<void> Function() call) async {
+  Future<T?> _run<T>(String action, Future<T> Function() call) async {
     setState(() => _action = action);
-    await runGuarded(context, call);
-    if (!mounted) return;
+    final result = await runGuarded(context, call);
+    if (!mounted) return null;
     setState(() => _action = null);
     _refresh();
+    return result;
   }
 
   @override
@@ -294,12 +311,15 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                             key: const Key('computerSleep'),
                             onPressed: _action != null
                                 ? null
-                                : () => _run(
-                                    'sleep',
-                                    () => ref
-                                        .read(backendProvider)
-                                        .stopComputer(computer.id),
-                                  ),
+                                : () {
+                                    setState(() => _watchLive = false);
+                                    _run(
+                                      'sleep',
+                                      () => ref
+                                          .read(backendProvider)
+                                          .stopComputer(computer.id),
+                                    );
+                                  },
                             icon: const Icon(LucideIcons.moon, size: 18),
                             label: Text(l10n.computerSleep),
                           )
@@ -309,12 +329,17 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                             // Already waking: the button shows progress instead of starting it twice.
                             onPressed: waking || _action != null
                                 ? null
-                                : () => _run(
-                                    'start',
-                                    () => ref
-                                        .read(backendProvider)
-                                        .startComputer(computer.id),
-                                  ),
+                                : () async {
+                                    final started = await _run(
+                                      'start',
+                                      () => ref
+                                          .read(backendProvider)
+                                          .startComputer(computer.id),
+                                    );
+                                    if (started != null && mounted) {
+                                      setState(() => _watchLive = true);
+                                    }
+                                  },
                             icon: waking
                                 ? const SizedBox(
                                     width: 16,
@@ -347,33 +372,37 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                     Expanded(
                       child: Align(
                         alignment: AlignmentDirectional.centerStart,
-                        child: EdgeFade(child: TabBar(
-                          isScrollable: true,
-                          tabAlignment: TabAlignment.start,
-                          padding: const EdgeInsetsDirectional.only(start: AppSpace.sm),
-                          onTap: (_) => HapticsHelper.light(),
-                          tabs: [
-                            for (final t in tabIds)
-                              switch (t) {
-                                'terminal' => _IconTab(
-                                  icon: LucideIcons.squareTerminal,
-                                  text: l10n.terminal,
-                                ),
-                                'files' => _IconTab(
-                                  icon: LucideIcons.folder,
-                                  text: l10n.files,
-                                ),
-                                'checkpoints' => _IconTab(
-                                  icon: LucideIcons.history,
-                                  text: l10n.checkpoints,
-                                ),
-                                _ => _IconTab(
-                                  icon: LucideIcons.monitor,
-                                  text: l10n.screen,
-                                ),
-                              },
-                          ],
-                        )),
+                        child: EdgeFade(
+                          child: TabBar(
+                            isScrollable: true,
+                            tabAlignment: TabAlignment.start,
+                            padding: const EdgeInsetsDirectional.only(
+                              start: AppSpace.sm,
+                            ),
+                            onTap: (_) => HapticsHelper.light(),
+                            tabs: [
+                              for (final t in tabIds)
+                                switch (t) {
+                                  'terminal' => _IconTab(
+                                    icon: LucideIcons.squareTerminal,
+                                    text: l10n.terminal,
+                                  ),
+                                  'files' => _IconTab(
+                                    icon: LucideIcons.folder,
+                                    text: l10n.files,
+                                  ),
+                                  'checkpoints' => _IconTab(
+                                    icon: LucideIcons.history,
+                                    text: l10n.checkpoints,
+                                  ),
+                                  _ => _IconTab(
+                                    icon: LucideIcons.monitor,
+                                    text: l10n.screen,
+                                  ),
+                                },
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                     _AdvancedTabsToggle(open: advanced),
@@ -398,7 +427,12 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                           _ =>
                             computer.profile == ComputerProfileEnum.desktop
                                 ? (widget.embedded
-                                      ? _InlineLive(computer: computer)
+                                      ? _InlineLive(
+                                          computer: computer,
+                                          watching: _watchLive,
+                                          onWatch: () =>
+                                              setState(() => _watchLive = true),
+                                        )
                                       : _LiveEntry(computer: computer))
                                 : Column(
                                     children: [
@@ -552,11 +586,20 @@ class _LiveEntry extends ConsumerWidget {
   }
 }
 
-/// The live view inside the side panel. Asleep, it offers to wake the computer here; while the
-/// full-screen view is open it steps aside, so there is one stream, not two.
+/// The live view inside the side panel. It stays closed until [watching] (this person woke the
+/// computer or asked to watch). Asleep, it offers to wake the computer here; while the full-screen
+/// view is open it steps aside, so there is one stream, not two.
 class _InlineLive extends ConsumerStatefulWidget {
-  const _InlineLive({required this.computer});
+  const _InlineLive({
+    required this.computer,
+    required this.watching,
+    required this.onWatch,
+  });
   final Computer computer;
+
+  /// This person started, woke, or opened the live view during this visit to the panel.
+  final bool watching;
+  final VoidCallback onWatch;
 
   @override
   ConsumerState<_InlineLive> createState() => _InlineLiveState();
@@ -576,12 +619,13 @@ class _InlineLiveState extends ConsumerState<_InlineLive> {
 
   Future<void> _wake() async {
     setState(() => _waking = true);
-    await runGuarded(
+    final started = await runGuarded(
       context,
       () => ref.read(backendProvider).startComputer(widget.computer.id),
     );
     if (!mounted) return;
     setState(() => _waking = false);
+    if (started != null) widget.onWatch();
     ref.invalidate(computersProvider);
   }
 
@@ -599,6 +643,19 @@ class _InlineLiveState extends ConsumerState<_InlineLive> {
           onPressed: () => Navigator.of(context).maybePop(),
           icon: const Icon(LucideIcons.minimize2, size: 18),
           label: Text(l10n.liveMinimize),
+        ),
+      );
+    }
+    // Already on, but this person has not asked to watch: leave the stream closed.
+    if (awake && !widget.watching) {
+      return EmptyState(
+        icon: LucideIcons.monitorPlay,
+        message: l10n.liveViewHelp,
+        action: GlowButton.icon(
+          key: const Key('openLiveView'),
+          onPressed: widget.onWatch,
+          icon: const Icon(LucideIcons.play),
+          label: Text(l10n.openLiveView),
         ),
       );
     }
@@ -796,7 +853,9 @@ class _TerminalTabState extends ConsumerState<TerminalTab>
       },
     );
     _presence?.dispose();
-    _presence = PresenceBeat(() => channel.sink.add(jsonEncode({'event': 'presence'})));
+    _presence = PresenceBeat(
+      () => channel.sink.add(jsonEncode({'event': 'presence'})),
+    );
     setState(() {
       _channel = channel;
       _connected = true;
@@ -945,37 +1004,41 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                   Expanded(
                     child: LayoutBuilder(
                       // Starts at the left; long paths scroll so the current folder stays visible.
-                      builder: (context, bar) => EdgeFade(child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        reverse: true,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(minWidth: bar.maxWidth),
-                          child: Row(
-                            children: [
-                              _Crumb(
-                                icon: LucideIcons.house,
-                                label: 'workspace',
-                                onTap: crumbs.isEmpty ? null : () => _open(''),
-                              ),
-                              for (var i = 0; i < crumbs.length; i++) ...[
-                                Icon(
-                                  LucideIcons.chevronRight,
-                                  size: 18,
-                                  color: scheme.onSurfaceVariant,
-                                ),
+                      builder: (context, bar) => EdgeFade(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          reverse: true,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(minWidth: bar.maxWidth),
+                            child: Row(
+                              children: [
                                 _Crumb(
-                                  label: crumbs[i],
-                                  onTap: i == crumbs.length - 1
+                                  icon: LucideIcons.house,
+                                  label: 'workspace',
+                                  onTap: crumbs.isEmpty
                                       ? null
-                                      : () => _open(
-                                          crumbs.sublist(0, i + 1).join('/'),
-                                        ),
+                                      : () => _open(''),
                                 ),
+                                for (var i = 0; i < crumbs.length; i++) ...[
+                                  Icon(
+                                    LucideIcons.chevronRight,
+                                    size: 18,
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                  _Crumb(
+                                    label: crumbs[i],
+                                    onTap: i == crumbs.length - 1
+                                        ? null
+                                        : () => _open(
+                                            crumbs.sublist(0, i + 1).join('/'),
+                                          ),
+                                  ),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
                         ),
-                      )),
+                      ),
                     ),
                   ),
                   IconButton(
@@ -1002,9 +1065,7 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                       message: errorText(context, snap.error!),
                     );
                   }
-                  if (!snap.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+                  if (!snap.hasData) return const SkeletonList();
                   final items = [...snap.data!]
                     ..sort((a, b) {
                       final ad = a.type.name == 'dir',
@@ -1050,7 +1111,10 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                               GroupedTile(
                                 icon: fileIconFor(e.name),
                                 title: e.name,
-                                subtitle: formatBytes(e.size, context.l10n.localeName),
+                                subtitle: formatBytes(
+                                  e.size,
+                                  context.l10n.localeName,
+                                ),
                                 onTap: () => showComputerFile(
                                   context,
                                   computerId: widget.computerId,
@@ -1200,9 +1264,7 @@ class _CheckpointsTabState extends ConsumerState<CheckpointsTab> {
             ),
           );
         }
-        if (!snap.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
+        if (!snap.hasData) return const SkeletonList();
         final items = snap.data!;
         if (items.isEmpty) {
           return EmptyState(

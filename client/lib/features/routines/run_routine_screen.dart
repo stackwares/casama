@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/bot_loader.dart';
 
 /// Opened by the "Run a routine" shortcut (D-111): starts the routine now, then opens the bot's
 /// chat where its results arrive. [reference] is `"<routine id>:<bot id>"`.
@@ -46,7 +47,7 @@ class _RunRoutineScreenState extends ConsumerState<RunRoutineScreen> {
         child: Padding(
           padding: const EdgeInsets.all(AppSpace.xl),
           child: _error == null
-              ? Column(mainAxisSize: MainAxisSize.min, spacing: AppSpace.md, children: [const CircularProgressIndicator(), Text(l10n.startingRoutine)])
+              ? Column(mainAxisSize: MainAxisSize.min, spacing: AppSpace.md, children: [const BotLoader(), Text(l10n.startingRoutine)])
               : Column(
                   mainAxisSize: MainAxisSize.min,
                   spacing: AppSpace.md,

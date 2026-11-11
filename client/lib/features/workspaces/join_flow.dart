@@ -32,27 +32,47 @@ const _codeAlphabet = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 /// or a code as XXXX-XXXX (typed loosely: spaces, lower case, O for 0). Null: not an invite.
 String? inviteFrom(String input) {
   final raw = input.trim();
-  final token = RegExp(r'(kjoin_[A-Za-z0-9_-]{16,}|kinv_[A-Za-z0-9_-]{16,})').firstMatch(raw);
+  final token = RegExp(r'(kjoin_[A-Za-z0-9_-]{16,}|kinv_[A-Za-z0-9_-]{16,})')
+      .firstMatch(raw);
   if (token != null) return token.group(1);
-  final last = raw.replaceAll(RegExp(r'[?#].*$'), '').replaceAll(RegExp(r'/+$'), '').split('/').last;
-  final code = last.toUpperCase().replaceAll(RegExp(r'[^0-9A-Z]'), '').replaceAll('O', '0').replaceAll(RegExp('[IL]'), '1').replaceAll('U', 'V');
-  if (code.length != 8 || code.split('').any((c) => !_codeAlphabet.contains(c))) return null;
+  final last = raw
+      .replaceAll(RegExp(r'[?#].*$'), '')
+      .replaceAll(RegExp(r'/+$'), '')
+      .split('/')
+      .last;
+  final code = last
+      .toUpperCase()
+      .replaceAll(RegExp(r'[^0-9A-Z]'), '')
+      .replaceAll('O', '0')
+      .replaceAll(RegExp('[IL]'), '1')
+      .replaceAll('U', 'V');
+  if (code.length != 8 || code.split('').any((c) => !_codeAlphabet.contains(c))) {
+    return null;
+  }
   return '${code.substring(0, 4)}-${code.substring(4)}';
 }
 
 /// The server a pasted link points at (its origin), when it's a web address.
 String? inviteServerFrom(String input) {
   final uri = Uri.tryParse(input.trim());
-  if (uri == null || !(uri.scheme == 'https' || uri.scheme == 'http') || uri.host.isEmpty) return null;
+  if (uri == null ||
+      !(uri.scheme == 'https' || uri.scheme == 'http') ||
+      uri.host.isEmpty) {
+    return null;
+  }
   return uri.origin;
 }
 
 /// The in-app path that previews an invite.
-String joinPath(String invite, {String? server}) =>
-    Uri(path: '/join/${Uri.encodeComponent(invite)}', queryParameters: server == null ? null : {'server': server}).toString();
+String joinPath(String invite, {String? server}) => Uri(
+  path: '/join/${Uri.encodeComponent(invite)}',
+  queryParameters: server == null ? null : {'server': server},
+).toString();
 
 /// Workspaces open to the signed-in person's verified email domain.
-final joinableWorkspacesProvider = FutureProvider<List<JoinableWorkspace>>((ref) async {
+final joinableWorkspacesProvider = FutureProvider<List<JoinableWorkspace>>((
+  ref,
+) async {
   if (ref.watch(signedInProvider).value != true) return const [];
   ref.watch(organizationsProvider.select((o) => o.value?.length));
   try {
@@ -72,10 +92,11 @@ class _Flag extends Notifier<bool> {
 }
 
 // No automatic retries: a wrong invite should say so at once, not spin while retrying.
-final _previewProvider = FutureProvider.autoDispose.family<InvitePreview, String>(
-  (ref, invite) => ref.watch(backendProvider).previewInvite(invite),
-  retry: (_, _) => null,
-);
+final _previewProvider = FutureProvider.autoDispose
+    .family<InvitePreview, String>(
+      (ref, invite) => ref.watch(backendProvider).previewInvite(invite),
+      retry: (_, _) => null,
+    );
 
 // --- /join/<invite> -----------------------------------------------------------------------------
 
@@ -102,7 +123,9 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && ref.read(signedInProvider).value == true) ref.read(pendingJoinTokenProvider.notifier).set(null);
+      if (mounted && ref.read(signedInProvider).value == true) {
+        ref.read(pendingJoinTokenProvider.notifier).set(null);
+      }
     });
   }
 
@@ -117,7 +140,10 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
 
   Future<void> _join() async {
     setState(() => _busy = true);
-    final result = await runGuarded(context, () => ref.read(backendProvider).joinWithInvite(_invite));
+    final result = await runGuarded(
+      context,
+      () => ref.read(backendProvider).joinWithInvite(_invite),
+    );
     if (!mounted) return;
     setState(() => _busy = false);
     if (result == null) return;
@@ -128,7 +154,9 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
       case JoinResultStatusEnum.joined:
       case JoinResultStatusEnum.member:
         ref.invalidate(organizationsProvider);
-        if (org != null) ref.read(selectedOrgIdProvider.notifier).select(org.id);
+        if (org != null) {
+          ref.read(selectedOrgIdProvider.notifier).select(org.id);
+        }
         if (result.status == JoinResultStatusEnum.joined && org != null) {
           context.go('/joined/${org.id}');
         } else {
@@ -155,18 +183,30 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
         leading: const Icon(LucideIcons.mailCheck, size: 48),
         title: l10n.joinRequestSent,
         message: l10n.joinRequestSentHelp(_requestedFor!),
-        actions: [FilledButton(key: const Key('joinDone'), onPressed: () => context.go('/bots'), child: Text(l10n.doneLabel))],
+        actions: [
+          FilledButton(
+            key: const Key('joinDone'),
+            onPressed: () => context.go('/bots'),
+            child: Text(l10n.doneLabel),
+          ),
+        ],
       );
     } else {
       body = preview.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SkeletonDetail(),
         error: (e, _) {
           final other = _otherServer;
           return _JoinCard(
             key: const Key('joinInvalid'),
-            leading: Icon(LucideIcons.unlink, size: 48, color: context.colorScheme.onSurfaceVariant),
+            leading: Icon(
+              LucideIcons.unlink,
+              size: 48,
+              color: context.colorScheme.onSurfaceVariant,
+            ),
             title: l10n.inviteInvalid,
-            message: other == null ? l10n.inviteInvalidHelp : l10n.inviteOtherServer(Uri.parse(other).host),
+            message: other == null
+                ? l10n.inviteInvalidHelp
+                : l10n.inviteOtherServer(Uri.parse(other).host),
             actions: [
               if (other != null && onChangeServer != null)
                 FilledButton(
@@ -196,12 +236,21 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
           }
           return _JoinCard(
             key: const Key('joinPreview'),
-            leading: SpaceAvatar(name: ws.name, icon: ws.icon, color: ws.color, size: 72),
-            eyebrow: p.inviterName.isUsable ? l10n.invitedBy(p.inviterName!) : l10n.invitedToJoin,
+            leading: SpaceAvatar(
+              name: ws.name,
+              icon: ws.icon,
+              color: ws.color,
+              size: 72,
+            ),
+            eyebrow: p.inviterName.isUsable
+                ? l10n.invitedBy(p.inviterName!)
+                : l10n.invitedToJoin,
             title: ws.name,
             message: [
               l10n.memberCount(ws.memberCount),
-              p.role == InvitePreviewRoleEnum.admin ? l10n.joinAsAdmin : l10n.joinAsMember,
+              p.role == InvitePreviewRoleEnum.admin
+                  ? l10n.joinAsAdmin
+                  : l10n.joinAsMember,
             ].join(' · '),
             notes: [
               if (member) l10n.alreadyMember,
@@ -218,12 +267,23 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
                           _join();
                           return;
                         }
-                        ref.read(pendingJoinTokenProvider.notifier).set(_invite);
+                        ref
+                            .read(pendingJoinTokenProvider.notifier)
+                            .set(_invite);
                         context.go('/sign-in');
                       },
-                child: _busy ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2)) : Text(label),
+                child: _busy
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(label),
               ),
-              TextButton(key: const Key('joinNotNow'), onPressed: _leave, child: Text(l10n.notNow)),
+              TextButton(
+                key: const Key('joinNotNow'),
+                onPressed: _leave,
+                child: Text(l10n.notNow),
+              ),
             ],
           );
         },
@@ -235,7 +295,15 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
 
 /// The centered card the join screens share.
 class _JoinCard extends StatelessWidget {
-  const _JoinCard({super.key, required this.leading, required this.title, this.eyebrow, this.message, this.notes = const [], required this.actions});
+  const _JoinCard({
+    super.key,
+    required this.leading,
+    required this.title,
+    this.eyebrow,
+    this.message,
+    this.notes = const [],
+    required this.actions,
+  });
   final Widget leading;
   final String? eyebrow;
   final String title;
@@ -247,34 +315,70 @@ class _JoinCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final muted = context.colorScheme.onSurfaceVariant;
     final statusBar = MediaQuery.paddingOf(context).top;
-    return ProgressiveFade(child: Center(
-      child: SingleChildScrollView(
-        // Starts under the status bar (the pages leave the top of their SafeArea to it), so the card dissolves there as it scrolls up.
-        padding: EdgeInsets.fromLTRB(AppSpace.gutter, AppSpace.gutter + statusBar, AppSpace.gutter, BottomPadding.of(context, minimum: AppSpace.gutter)),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 440),
-          child: AppCard(
-            padding: const EdgeInsets.fromLTRB(AppSpace.xl, AppSpace.xxl, AppSpace.xl, AppSpace.xl),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(child: leading),
-                const SizedBox(height: AppSpace.md),
-                if (eyebrow != null) Text(eyebrow!, textAlign: TextAlign.center, style: context.textTheme.bodyMedium?.copyWith(color: muted)),
-                Text(title, textAlign: TextAlign.center, style: context.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800)),
-                if (message != null) ...[
-                  const SizedBox(height: AppSpace.xs),
-                  Text(message!, textAlign: TextAlign.center, style: context.textTheme.bodyMedium?.copyWith(color: muted)),
+    return ProgressiveFade(
+      child: Center(
+        child: SingleChildScrollView(
+          // Starts under the status bar (the pages leave the top of their SafeArea to it), so the card dissolves there as it scrolls up.
+          padding: EdgeInsets.fromLTRB(
+            AppSpace.gutter,
+            AppSpace.gutter + statusBar,
+            AppSpace.gutter,
+            BottomPadding.of(context, minimum: AppSpace.gutter),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: AppCard(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.xl,
+                AppSpace.xxl,
+                AppSpace.xl,
+                AppSpace.xl,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(child: leading),
+                  const SizedBox(height: AppSpace.md),
+                  if (eyebrow != null)
+                    Text(
+                      eyebrow!,
+                      textAlign: TextAlign.center,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: muted,
+                      ),
+                    ),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: context.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  if (message != null) ...[
+                    const SizedBox(height: AppSpace.xs),
+                    Text(
+                      message!,
+                      textAlign: TextAlign.center,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: muted,
+                      ),
+                    ),
+                  ],
+                  for (final n in notes) ...[
+                    const SizedBox(height: AppSpace.sm),
+                    FormNote(n),
+                  ],
+                  const SizedBox(height: AppSpace.xl),
+                  ...actions.expand(
+                    (a) => [a, const SizedBox(height: AppSpace.xs)],
+                  ),
                 ],
-                for (final n in notes) ...[const SizedBox(height: AppSpace.sm), FormNote(n)],
-                const SizedBox(height: AppSpace.xl),
-                ...actions.expand((a) => [a, const SizedBox(height: AppSpace.xs)]),
-              ],
+              ),
             ),
           ),
         ),
       ),
-    ));
+    );
   }
 }
 
@@ -303,10 +407,14 @@ class _JoinedScreenState extends ConsumerState<JoinedScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final orgs = ref.watch(organizationsProvider).value ?? const <OrganizationWithRole>[];
+    final orgs =
+        ref.watch(organizationsProvider).value ??
+        const <OrganizationWithRole>[];
     final org = orgs.where((o) => o.id == widget.orgId).firstOrNull;
     final current = ref.watch(currentOrgProvider);
-    final bots = current?.id == widget.orgId ? (ref.watch(botsProvider).value ?? const <Bot>[]) : const <Bot>[];
+    final bots = current?.id == widget.orgId
+        ? (ref.watch(botsProvider).value ?? const <Bot>[])
+        : const <Bot>[];
     final name = org?.name ?? '';
     return Scaffold(
       body: SafeArea(
@@ -314,7 +422,12 @@ class _JoinedScreenState extends ConsumerState<JoinedScreen> {
         bottom: false,
         child: _JoinCard(
           key: const Key('joinedWelcome'),
-          leading: SpaceAvatar(name: name, icon: org?.icon, color: org?.color, size: 72),
+          leading: SpaceAvatar(
+            name: name,
+            icon: org?.icon,
+            color: org?.color,
+            size: 72,
+          ),
           title: l10n.welcomeToWorkspace(name),
           message: bots.isEmpty ? l10n.joinedNoBots : l10n.joinedBotsHelp,
           actions: [
@@ -325,7 +438,11 @@ class _JoinedScreenState extends ConsumerState<JoinedScreen> {
                     GroupedTile(
                       key: Key('joinedBot-${b.id}'),
                       icon: LucideIcons.bot,
-                      leading: BotAvatar(name: b.name, avatar: b.avatarUrl, size: 36),
+                      leading: BotAvatar(
+                        name: b.name,
+                        avatar: b.avatarUrl,
+                        size: 36,
+                      ),
                       title: b.name,
                       showChevron: true,
                       onTap: () => context.go('/bots/${b.id}/chat'),
@@ -333,7 +450,11 @@ class _JoinedScreenState extends ConsumerState<JoinedScreen> {
                 ],
               ),
             const SizedBox(height: AppSpace.xs),
-            FilledButton(key: const Key('joinedStart'), onPressed: () => context.go('/bots'), child: Text(l10n.getStarted)),
+            FilledButton(
+              key: const Key('joinedStart'),
+              onPressed: () => context.go('/bots'),
+              child: Text(l10n.getStarted),
+            ),
           ],
         ),
       ),
@@ -356,16 +477,24 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final list = ref.watch(joinableWorkspacesProvider).value ?? const <JoinableWorkspace>[];
+    final list =
+        ref.watch(joinableWorkspacesProvider).value ??
+        const <JoinableWorkspace>[];
     return Scaffold(
       body: SafeArea(
         top: false,
         bottom: false,
         child: _JoinCard(
           key: const Key('joinTeam'),
-          leading: Icon(LucideIcons.usersRound, size: 48, color: context.colorScheme.primary),
+          leading: Icon(
+            LucideIcons.usersRound,
+            size: 48,
+            color: context.colorScheme.primary,
+          ),
           title: l10n.yourTeamIsHere,
-          message: list.isEmpty ? null : l10n.yourTeamIsHereHelp(list.first.domain),
+          message: list.isEmpty
+              ? null
+              : l10n.yourTeamIsHereHelp(list.first.domain),
           actions: [
             GroupedCard(
               children: [
@@ -373,7 +502,12 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
                   GroupedTile(
                     key: Key('joinable-${w.id}'),
                     icon: LucideIcons.boxes,
-                    leading: SpaceAvatar(name: w.name, icon: w.icon, color: w.color, size: 36),
+                    leading: SpaceAvatar(
+                      name: w.name,
+                      icon: w.icon,
+                      color: w.color,
+                      size: 36,
+                    ),
                     title: w.name,
                     subtitle: l10n.memberCount(w.memberCount),
                     trailing: FilledButton.tonal(
@@ -401,7 +535,10 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
 
   Future<void> _joinDomain(JoinableWorkspace w) async {
     setState(() => _busy = w.id);
-    final org = await runGuarded(context, () => ref.read(backendProvider).joinByDomain(w.id));
+    final org = await runGuarded(
+      context,
+      () => ref.read(backendProvider).joinByDomain(w.id),
+    );
     if (!mounted) return;
     setState(() => _busy = null);
     if (org == null) return;
@@ -419,7 +556,9 @@ class JoinableWorkspacesSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final list = ref.watch(joinableWorkspacesProvider).value ?? const <JoinableWorkspace>[];
+    final list =
+        ref.watch(joinableWorkspacesProvider).value ??
+        const <JoinableWorkspace>[];
     if (list.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -431,13 +570,20 @@ class JoinableWorkspacesSection extends ConsumerWidget {
               GroupedTile(
                 key: Key('joinable-${w.id}'),
                 icon: LucideIcons.boxes,
-                leading: SpaceAvatar(name: w.name, icon: w.icon, color: w.color),
+                leading: SpaceAvatar(
+                  name: w.name,
+                  icon: w.icon,
+                  color: w.color,
+                ),
                 title: w.name,
                 subtitle: l10n.openToDomain(w.domain),
                 trailing: TextButton(
                   key: Key('joinDomain-${w.id}'),
                   onPressed: () async {
-                    final org = await runGuarded(context, () => ref.read(backendProvider).joinByDomain(w.id));
+                    final org = await runGuarded(
+                      context,
+                      () => ref.read(backendProvider).joinByDomain(w.id),
+                    );
                     if (org == null || !context.mounted) return;
                     ref.invalidate(organizationsProvider);
                     ref.read(selectedOrgIdProvider.notifier).select(org.id);
@@ -457,11 +603,20 @@ class JoinableWorkspacesSection extends ConsumerWidget {
 // --- joining from inside the app ------------------------------------------------------------------
 
 /// Phones scan an invite's QR code.
-bool get canScanInvite => !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android);
+bool get canScanInvite =>
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.android);
 
 /// Fills the field from the clipboard by itself only where reading it shows no system prompt
 /// (Android, Windows, Linux); iOS, macOS and the web read it when Paste is tapped.
-bool get _quietClipboard => !kIsWeb && const {TargetPlatform.android, TargetPlatform.windows, TargetPlatform.linux}.contains(defaultTargetPlatform);
+bool get _quietClipboard =>
+    !kIsWeb &&
+    const {
+      TargetPlatform.android,
+      TargetPlatform.windows,
+      TargetPlatform.linux,
+    }.contains(defaultTargetPlatform);
 
 /// "Join with a link or code": paste, type or scan; opens the preview.
 class JoinSpaceSheet extends ConsumerStatefulWidget {
@@ -495,7 +650,9 @@ class _JoinSpaceSheetState extends ConsumerState<JoinSpaceSheet> {
     try {
       final text = (await Clipboard.getData(Clipboard.kTextPlain))?.text ?? '';
       if (!mounted || text.isEmpty) return;
-      if (onlyInvites && (inviteFrom(text) == null || _field.text.isNotEmpty)) return;
+      if (onlyInvites && (inviteFrom(text) == null || _field.text.isNotEmpty)) {
+        return;
+      }
       _field.text = text.trim();
     } catch (_) {}
   }
@@ -533,7 +690,12 @@ class _JoinSpaceSheetState extends ConsumerState<JoinSpaceSheet> {
             suffixIcon: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                IconButton(key: const Key('pasteInvite'), tooltip: l10n.pasteLabel, icon: const Icon(LucideIcons.clipboardPaste, size: 20), onPressed: _paste),
+                IconButton(
+                  key: const Key('pasteInvite'),
+                  tooltip: l10n.pasteLabel,
+                  icon: const Icon(LucideIcons.clipboardPaste, size: 20),
+                  onPressed: _paste,
+                ),
                 if (canScanInvite)
                   IconButton(
                     key: const Key('scanInvite'),
@@ -541,7 +703,13 @@ class _JoinSpaceSheetState extends ConsumerState<JoinSpaceSheet> {
                     icon: const Icon(LucideIcons.scanQrCode, size: 20),
                     onPressed: () async {
                       unfocusBeforeModal();
-                      final v = await Navigator.of(context).push<String>(MaterialPageRoute(fullscreenDialog: true, settings: const RouteSettings(name: '/scan/invite'), builder: (_) => const _ScanInvitePage()));
+                      final v = await Navigator.of(context).push<String>(
+                        MaterialPageRoute(
+                          fullscreenDialog: true,
+                          settings: const RouteSettings(name: '/scan/invite'),
+                          builder: (_) => const _ScanInvitePage(),
+                        ),
+                      );
                       if (v != null && mounted) _open(v);
                     },
                   ),
@@ -588,28 +756,58 @@ class _ScanInvitePageState extends State<_ScanInvitePage> {
 // --- showing an invite ------------------------------------------------------------------------------
 
 /// The invite link as a QR code, for someone in the room or moving from a computer to a phone.
-Future<void> showInviteQr(BuildContext context, {required String url, required String workspace}) => showAdaptiveSheet<void>(
+Future<void> showInviteQr(
+  BuildContext context, {
+  required String url,
+  required String workspace,
+}) => showAdaptiveSheet<void>(
   context: context,
   contentPadsBottom: true,
   builder: (c) {
     final l10n = c.l10n;
     return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg, AppSpace.lg, BottomPadding.of(c, minimum: AppSpace.lg)),
+      padding: EdgeInsets.fromLTRB(
+        AppSpace.lg,
+        AppSpace.lg,
+        AppSpace.lg,
+        BottomPadding.of(c, minimum: AppSpace.lg),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(l10n.scanToJoin(workspace), textAlign: TextAlign.center, style: c.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+          Text(
+            l10n.scanToJoin(workspace),
+            textAlign: TextAlign.center,
+            style: c.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
           const SizedBox(height: AppSpace.md),
           Container(
             key: const Key('inviteQr'),
             padding: const EdgeInsets.all(AppSpace.md),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.card)),
-            child: QrImageView(data: url, size: 220, backgroundColor: Colors.white),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(AppRadius.card),
+            ),
+            child: QrImageView(
+              data: url,
+              size: 220,
+              backgroundColor: Colors.white,
+            ),
           ),
           const SizedBox(height: AppSpace.md),
-          SelectableText(url, textAlign: TextAlign.center, style: c.textTheme.bodySmall),
+          SelectableText(
+            url,
+            textAlign: TextAlign.center,
+            style: c.textTheme.bodySmall,
+          ),
           const SizedBox(height: AppSpace.md),
-          FilledButton.tonalIcon(onPressed: () => Navigator.pop(c), icon: const Icon(LucideIcons.check, size: 18), label: Text(l10n.doneLabel)),
+          FilledButton.tonalIcon(
+            onPressed: () => Navigator.pop(c),
+            icon: const Icon(LucideIcons.check, size: 18),
+            label: Text(l10n.doneLabel),
+          ),
         ],
       ),
     );
@@ -628,5 +826,11 @@ Future<void> copyInvite(BuildContext context, String text) async {
 }
 
 /// The platform share sheet with a short invitation and the link.
-Future<void> shareInvite(BuildContext context, {required String url, required String workspace}) =>
-    shareText(context.l10n.inviteShareText(workspace, url), origin: shareOrigin(context));
+Future<void> shareInvite(
+  BuildContext context, {
+  required String url,
+  required String workspace,
+}) => shareText(
+  context.l10n.inviteShareText(workspace, url),
+  origin: shareOrigin(context),
+);

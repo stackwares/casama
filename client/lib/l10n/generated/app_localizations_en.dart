@@ -1348,6 +1348,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get micPermissionNeeded => 'Allow microphone access to dictate.';
 
   @override
+  String get dictationEmpty => 'No speech came through. Try again.';
+
+  @override
   String get startCall => 'Start a voice call';
 
   @override
@@ -2238,6 +2241,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationsPrimerBody =>
       'Your bots tell you when they need a decision from you, or when their work is ready.';
+
+  @override
+  String get notificationsPrimerBlockedBody =>
+      'Chrome is blocking notifications for this site. Allow them from the lock in the address bar, then tap Turn on again.';
 
   @override
   String get notificationsTurnOn => 'Turn on';
@@ -7395,6 +7402,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get galleryImage => 'Image';
 
   @override
+  String get galleryMeshGradient => 'a mesh gradient';
+
+  @override
+  String get galleryOwnDoodles => 'Own doodles';
+
+  @override
   String get galleryLightAndDark => 'Light and dark';
 
   @override
@@ -7415,4 +7428,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get galleryBehindChats => 'Behind your chats';
+
+  @override
+  String celebrateNewBot(String name) {
+    return 'Say hi to $name!';
+  }
+
+  @override
+  String celebrateNewSpace(String name) {
+    return '$name is ready!';
+  }
+
+  @override
+  String get celebrateJoined => 'You\'re in! Welcome to the space.';
+
+  @override
+  String celebrateNewRoutine(String name) {
+    return '$name is all set.';
+  }
+
+  @override
+  String get fewerEffects => 'Fewer effects';
+
+  @override
+  String get fewerEffectsHelp =>
+      'No celebrations, bouncing tabs or animated bots. The Plain themes turn this on.';
 }

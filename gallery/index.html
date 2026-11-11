@@ -8,21 +8,25 @@
 <link rel="canonical" href="https://gallery.casama.ai/">
 <meta property="og:title" content="Casama Gallery">
 <meta property="og:description" content="Themes, color schemes, wallpapers and skills for Casama, free and open source.">
-<meta name="theme-color" content="#f6f4ef" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#121412" media="(prefers-color-scheme: dark)">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<meta name="theme-color" content="#fcf3fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1e1a22" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="assets/casama-winky-animated.svg">
 <link rel="stylesheet" href="gallery.css">
 <link rel="stylesheet" href="app.css">
+<script>
+  document.documentElement.setAttribute("data-theme", matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+</script>
 </head>
 <body>
+<div class="wallpaper" aria-hidden="true"><div class="wallpaper-pattern"></div></div>
 <a class="skip" href="#content">Skip to the gallery</a>
 <header class="bar">
   <div class="wrap bar-inner">
-    <a class="logo" href="https://casama.ai" aria-label="Casama home">casama</a>
+    <a class="logo" href="https://casama.ai" aria-label="Casama home"><img src="assets/casama-winky-animated.svg" alt="" width="34" height="34"><span>casama</span></a>
     <span class="crumb" aria-hidden="true">/</span>
     <a class="crumb-page" href="/">Gallery</a>
     <nav class="bar-nav" aria-label="Gallery">
+      <a href="make.html">Make a look</a>
       <a href="#contribute">Contribute</a>
       <a href="https://github.com/stackwares/casama-gallery">GitHub</a>
       <a class="btn primary" href="https://casama.ai">Get Casama</a>
@@ -81,7 +85,7 @@
 
 <footer class="foot">
   <div class="wrap foot-inner">
-    <p class="foot-name">casama gallery</p>
+    <p class="foot-name">casama</p>
     <p class="small">Made in the open by Casama and its contributors. Every item lists its author and license. Developers: the whole catalog is <a href="index.json">index.json</a>. Pattern glyphs are <a href="https://lucide.dev">Lucide</a> icons (ISC).</p>
     <p class="small"><a href="https://casama.ai/privacy">Privacy</a> · <a href="https://casama.ai/terms">Terms</a> · <a href="https://github.com/stackwares/casama-gallery/issues/new">Report an item</a></p>
   </div>

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:casama_api/casama_api.dart';
@@ -137,11 +138,12 @@ class CasamaClient {
 
   /// Dictation: sends a recording and returns its text (uses the org's own speech-to-text key).
   Future<Transcription> transcribe(String botId, List<int> audio, {required String mime, String? language}) async {
+    final bytes = audio is Uint8List ? audio : Uint8List.fromList(audio);
     final res = await api.dio.post<Map<String, dynamic>>(
       '/v1/voice/transcribe',
       queryParameters: {'bot_id': botId, 'language': ?language},
-      data: Stream.fromIterable([audio]),
-      options: Options(headers: {...await _authHeader(), 'content-type': mime, 'content-length': audio.length}),
+      data: bytes,
+      options: Options(contentType: mime, headers: await _authHeader()),
     );
     return Transcription.fromJson(res.data!);
   }

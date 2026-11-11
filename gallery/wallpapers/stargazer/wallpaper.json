@@ -1,0 +1,7 @@
+{
+  "kind": "pattern",
+  "pattern": "space",
+  "palette": "lavender",
+  "intensity": 0.5,
+  "glyphs": ["moon", "star", "sparkles", "telescope", "orbit", "cloud-moon"]
+}

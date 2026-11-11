@@ -433,7 +433,7 @@ export function firstTaskMessage(s: WelcomeState) {
   return [
     card(
       column(
-        ["q", "in", "go"],
+        ["q", "in", "row"],
         [
           text("q", `## ${t.label}`),
           {
@@ -443,7 +443,9 @@ export function firstTaskMessage(s: WelcomeState) {
             value: { "@path": "/form/text" },
             variant: "longText",
           },
+          { id: "row", component: "Row", children: ["go", "skip"] },
           ...button("go", "Go", "welcome.task", { text: { "@path": "/form/text" } }, "primary"),
+          ...button("skip", "Skip", "welcome.task", { skip: true }, "borderless"),
         ],
       ),
       { form: { text: "" } },
@@ -805,10 +807,15 @@ export async function handleWelcomeAction(
       s.step = "first_value";
       return modelTurn(CATCHUP_TEXT);
     case "welcome.task": {
+      // Skipped: no first task, straight on to the setup offer (what a finished first task leads to).
+      if (ctx.skip) {
+        s.step = "offer_setup";
+        return scripted(setupOfferMessage());
+      }
       const t = typeof ctx.text === "string" ? ctx.text.trim() : "";
       if (!t)
         return scripted([
-          { type: "text", text: "Type what you'd like first, then tap Go." },
+          { type: "text", text: "Type what you'd like first and tap Go, or tap Skip." },
           ...firstTaskMessage(s),
         ]);
       // Nothing would answer without a model; keep the task card for after one is added.

@@ -8,7 +8,11 @@ part of 'set_connection_settings_request.dart';
 
 abstract class _$SetConnectionSettingsRequestCWProxy {
   SetConnectionSettingsRequest composio(
-    SetConnectionSettingsRequestComposioEnum composio,
+    SetConnectionSettingsRequestComposioEnum? composio,
+  );
+
+  SetConnectionSettingsRequest google(
+    SetConnectionSettingsRequestGoogleEnum? google,
   );
 
   /// Creates a new instance with the provided field values.
@@ -20,7 +24,8 @@ abstract class _$SetConnectionSettingsRequestCWProxy {
   /// SetConnectionSettingsRequest(...).copyWith(id: 12, name: "My name")
   /// ```
   SetConnectionSettingsRequest call({
-    SetConnectionSettingsRequestComposioEnum composio,
+    SetConnectionSettingsRequestComposioEnum? composio,
+    SetConnectionSettingsRequestGoogleEnum? google,
   });
 }
 
@@ -34,8 +39,13 @@ class _$SetConnectionSettingsRequestCWProxyImpl
 
   @override
   SetConnectionSettingsRequest composio(
-    SetConnectionSettingsRequestComposioEnum composio,
+    SetConnectionSettingsRequestComposioEnum? composio,
   ) => call(composio: composio);
+
+  @override
+  SetConnectionSettingsRequest google(
+    SetConnectionSettingsRequestGoogleEnum? google,
+  ) => call(google: google);
 
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
@@ -48,12 +58,17 @@ class _$SetConnectionSettingsRequestCWProxyImpl
   @override
   SetConnectionSettingsRequest call({
     Object? composio = const $CopyWithPlaceholder(),
+    Object? google = const $CopyWithPlaceholder(),
   }) {
     return SetConnectionSettingsRequest(
-      composio: composio == const $CopyWithPlaceholder() || composio == null
+      composio: composio == const $CopyWithPlaceholder()
           ? _value.composio
           // ignore: cast_nullable_to_non_nullable
-          : composio as SetConnectionSettingsRequestComposioEnum,
+          : composio as SetConnectionSettingsRequestComposioEnum?,
+      google: google == const $CopyWithPlaceholder()
+          ? _value.google
+          // ignore: cast_nullable_to_non_nullable
+          : google as SetConnectionSettingsRequestGoogleEnum?,
     );
   }
 }
@@ -74,11 +89,20 @@ extension $SetConnectionSettingsRequestCopyWith
 SetConnectionSettingsRequest _$SetConnectionSettingsRequestFromJson(
   Map<String, dynamic> json,
 ) => $checkedCreate('SetConnectionSettingsRequest', json, ($checkedConvert) {
-  $checkKeys(json, requiredKeys: const ['composio']);
   final val = SetConnectionSettingsRequest(
     composio: $checkedConvert(
       'composio',
-      (v) => $enumDecode(_$SetConnectionSettingsRequestComposioEnumEnumMap, v),
+      (v) => $enumDecodeNullable(
+        _$SetConnectionSettingsRequestComposioEnumEnumMap,
+        v,
+      ),
+    ),
+    google: $checkedConvert(
+      'google',
+      (v) => $enumDecodeNullable(
+        _$SetConnectionSettingsRequestGoogleEnumEnumMap,
+        v,
+      ),
     ),
   );
   return val;
@@ -88,10 +112,16 @@ Map<String, dynamic> _$SetConnectionSettingsRequestToJson(
   SetConnectionSettingsRequest instance,
 ) => <String, dynamic>{
   'composio':
-      _$SetConnectionSettingsRequestComposioEnumEnumMap[instance.composio]!,
+      ?_$SetConnectionSettingsRequestComposioEnumEnumMap[instance.composio],
+  'google': ?_$SetConnectionSettingsRequestGoogleEnumEnumMap[instance.google],
 };
 
 const _$SetConnectionSettingsRequestComposioEnumEnumMap = {
   SetConnectionSettingsRequestComposioEnum.server: 'server',
   SetConnectionSettingsRequestComposioEnum.own: 'own',
+};
+
+const _$SetConnectionSettingsRequestGoogleEnumEnumMap = {
+  SetConnectionSettingsRequestGoogleEnum.composio: 'composio',
+  SetConnectionSettingsRequestGoogleEnum.direct: 'direct',
 };

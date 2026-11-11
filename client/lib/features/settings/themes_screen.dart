@@ -12,6 +12,7 @@ import '../../theme/app_theme.dart';
 import '../../theme/app_tokens.dart';
 import '../../theme/appearance.dart';
 import '../../theme/presets.dart';
+import '../../theme/wallpaper.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
@@ -232,7 +233,13 @@ class _PresetTile extends StatelessWidget {
       bodyFont: preset.bodyFont,
       wallpaper: preset.wallpaper,
     );
-    final theme = dark ? AppTheme.dark(look) : AppTheme.light(look);
+    // A theme that is light or dark (Plain Light, Plain Dark) always shows itself that way.
+    final previewDark = switch (preset.mode) {
+      ThemeMode.light => false,
+      ThemeMode.dark => true,
+      _ => dark,
+    };
+    final theme = previewDark ? AppTheme.dark(look) : AppTheme.light(look);
     return Semantics(
       button: true,
       selected: selected,
@@ -258,7 +265,9 @@ class _PresetTile extends StatelessWidget {
                 Expanded(
                   child: Theme(
                     data: theme,
-                    child: const AppearancePreview(
+                    // Its own wallpaper, passed in: otherwise the page's wallpaper shows through.
+                    child: AppearancePreview(
+                      wallpaper: theme.extension<WallpaperTheme>(),
                       compact: true,
                       height: double.infinity,
                     ),

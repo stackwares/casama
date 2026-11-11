@@ -23,6 +23,13 @@ tunnel to your machine (see [CONTRIBUTING.md](../CONTRIBUTING.md#run-the-app)):
 flutter run -d <device-id> --dart-define=CASAMA_API_URL=https://api-dev.casama.ai
 ```
 
+## Release web build
+
+A release build, deploy or publish of the web app goes through
+[`scripts/build-web.sh`](../scripts/build-web.sh) at the repo root. That script compiles WebAssembly
+and stops if the Wasm output is missing. The self-host image uses the same script. `flutter run`
+stays on the debug compiler so hot reload keeps working.
+
 ## Build settings
 
 Pass these with `--dart-define=NAME=value`. All are optional.

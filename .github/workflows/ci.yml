@@ -84,7 +84,8 @@ jobs:
           flutter gen-l10n
           flutter analyze
           flutter test
-          flutter build web --release
+      - name: Release web build (Wasm)
+        run: scripts/build-web.sh
 
   supabase:
     name: RLS tests on the real Supabase stack

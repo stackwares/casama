@@ -91,14 +91,26 @@ export const ConnectionSettings = z
       description:
         "server: through this server's Composio account (one click). own: people use their own Composio, Pipedream or Zapier accounts.",
     }),
+    google: z.enum(["composio", "direct"]).openapi({
+      description:
+        "Google's apps. composio: through this server's Composio account whenever it has one (the default; Google's own MCP servers need Developer Preview enrollment, D-166). direct: Google's own MCP servers with GOOGLE_OAUTH_CLIENT_ID. Casama Cloud always uses Composio.",
+    }),
     composio_key: z
       .boolean()
       .openapi({ description: "Whether this server has a Composio key (COMPOSIO_API_KEY)." }),
+    google_direct_available: z.boolean().openapi({
+      description:
+        "Whether Google's own servers can be chosen: this server has a Google client (GOOGLE_OAUTH_CLIENT_ID) and isn't Casama Cloud.",
+    }),
   })
   .openapi("ConnectionSettings");
 
+/** Either field may be left out to keep its current value. */
 export const SetConnectionSettingsRequest = z
-  .object({ composio: z.enum(["server", "own"]) })
+  .object({
+    composio: z.enum(["server", "own"]).optional(),
+    google: z.enum(["composio", "direct"]).optional(),
+  })
   .openapi("SetConnectionSettingsRequest");
 
 const modelId = z.string().trim().min(1).max(200);

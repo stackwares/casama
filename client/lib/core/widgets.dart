@@ -7,8 +7,13 @@ import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../l10n/generated/app_localizations.dart';
 import '../ui/bottom_padding.dart';
+import '../ui/mascot.dart';
+import '../ui/skeleton.dart';
+
+export '../ui/skeleton.dart';
 import 'date_format.dart';
 import 'haptics.dart';
+import '../ui/effects.dart';
 
 extension L10nContext on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this);
@@ -45,7 +50,8 @@ String errorText(BuildContext context, Object error) {
   if (error is DioException) {
     // No answer at all (offline, server restarting, blocked): the library's text is for developers
     // (a browser even reports it as a CORS problem), so say it plainly.
-    final noAnswer = error.response == null &&
+    final noAnswer =
+        error.response == null &&
         const {
           DioExceptionType.connectionError,
           DioExceptionType.connectionTimeout,
@@ -63,7 +69,8 @@ String errorText(BuildContext context, Object error) {
 
 void showError(BuildContext context, Object error) {
   HapticsHelper.error();
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorText(context, error))));
+  ScaffoldMessenger.of(context)
+      .showSnackBar(SnackBar(content: Text(errorText(context, error))));
 }
 
 void showMessage(BuildContext context, String message) {
@@ -92,22 +99,26 @@ void showFailure(BuildContext context, String message) {
 
 /// Renders an AsyncValue with loading, error (with retry) and data states.
 class AsyncView<T> extends StatelessWidget {
-  const AsyncView({super.key, required this.value, required this.data, this.onRetry});
+  const AsyncView({
+    super.key,
+    required this.value,
+    required this.data,
+    this.onRetry,
+    this.loading,
+  });
 
   final AsyncValue<T> value;
   final Widget Function(T data) data;
   final VoidCallback? onRetry;
 
+  /// Shown while [value] is loading. A list of rows, unless the screen has another shape.
+  final Widget? loading;
+
   @override
   Widget build(BuildContext context) {
     return value.when(
       data: data,
-      loading: () => Center(
-        child: Semantics(
-          label: context.l10n.loading,
-          child: const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5, strokeCap: StrokeCap.round)),
-        ),
-      ),
+      loading: () => loading ?? const SkeletonList(),
       error: (e, _) => EmptyState(
         icon: LucideIcons.cloudOff,
         title: context.l10n.somethingWentWrong,
@@ -115,7 +126,11 @@ class AsyncView<T> extends StatelessWidget {
         isError: true,
         action: onRetry == null
             ? null
-            : FilledButton.tonalIcon(onPressed: onRetry, icon: const Icon(LucideIcons.rotateCw, size: 18), label: Text(context.l10n.retry)),
+            : FilledButton.tonalIcon(
+                onPressed: onRetry,
+                icon: const Icon(LucideIcons.rotateCw, size: 18),
+                label: Text(context.l10n.retry),
+              ),
       ),
     );
   }
@@ -135,20 +150,59 @@ class InlineError extends StatelessWidget {
         Icon(LucideIcons.cloudOff, size: 16, color: scheme.error),
         const SizedBox(width: 6),
         Expanded(
-          child: Text(errorText(context, error), style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.error, height: 1.35)),
+          child: Text(
+            errorText(context, error),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: scheme.error, height: 1.35),
+          ),
         ),
-        if (onRetry != null) TextButton(onPressed: onRetry, child: Text(context.l10n.retry)),
+        if (onRetry != null)
+          TextButton(onPressed: onRetry, child: Text(context.l10n.retry)),
       ],
     );
   }
 }
 
-/// Centered empty or error state: a soft circle with the icon (or an [illustration]), a title, a
-/// muted line and an action.
+/// Centered empty or error state: a cloud bot holding the icon as a badge (or an [illustration]),
+/// a title, a muted line and an action. The bot's mood follows the icon: dozing when there's
+/// nothing yet, thinking when a search or filter finds nothing, shy on an error, starry when
+/// everything is done.
 class EmptyState extends StatelessWidget {
-  const EmptyState({super.key, this.icon, this.illustration, required this.message, this.title, this.action, this.isError = false})
-    : assert(icon != null || illustration != null);
+  const EmptyState({
+    super.key,
+    this.icon,
+    this.illustration,
+    required this.message,
+    this.title,
+    this.action,
+    this.isError = false,
+    this.mascot,
+  }) : assert(icon != null || illustration != null);
   final IconData? icon;
+
+  /// The bot to show, instead of the one picked from [icon] and [isError].
+  final Mascot? mascot;
+
+  static final _done = {LucideIcons.circleCheck, LucideIcons.circleCheckBig};
+  static final _noMatch = {LucideIcons.searchX, LucideIcons.funnelX, LucideIcons.listFilter};
+  static final _trouble = {
+    LucideIcons.triangleAlert,
+    LucideIcons.circleAlert,
+    LucideIcons.cloudOff,
+    LucideIcons.phoneOff,
+    LucideIcons.unplug,
+    LucideIcons.monitorOff,
+    LucideIcons.lock,
+  };
+
+  /// The bot for this state.
+  static Mascot moodFor(IconData? icon, {bool isError = false}) {
+    if (isError || _trouble.contains(icon)) return Mascot.shy;
+    if (_done.contains(icon)) return Mascot.starry;
+    if (_noMatch.contains(icon)) return Mascot.thinker;
+    // Nothing here yet, or a computer that's asleep.
+    return Mascot.sleepy;
+  }
 
   /// Shown instead of the icon circle (the animated blank bot on "no bots yet").
   final Widget? illustration;
@@ -169,29 +223,39 @@ class EmptyState extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 380),
           child: Padding(
-            padding: EdgeInsets.fromLTRB(32, 24, 32, BottomPadding.of(context, minimum: 24)),
+            padding: EdgeInsets.fromLTRB(
+              32,
+              24,
+              32,
+              BottomPadding.of(context, minimum: 24),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 illustration ??
-                    Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(color: accent.withValues(alpha: 0.12), shape: BoxShape.circle),
-                      child: Icon(icon, size: 32, color: accent),
+                    _BotWithBadge(
+                      mascot: mascot ?? moodFor(icon, isError: isError),
+                      icon: icon!,
+                      accent: accent,
                     ),
-                SizedBox(height: illustration == null ? 20 : 12),
+                const SizedBox(height: 12),
                 Text(
                   title ?? message,
                   textAlign: TextAlign.center,
-                  style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.2),
+                  style: text.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.2,
+                  ),
                 ),
                 if (title != null) ...[
                   const SizedBox(height: 8),
                   Text(
                     message,
                     textAlign: TextAlign.center,
-                    style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4),
+                    style: text.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      height: 1.4,
+                    ),
                   ),
                 ],
                 if (action != null) ...[const SizedBox(height: 24), action!],
@@ -204,12 +268,63 @@ class EmptyState extends StatelessWidget {
   }
 }
 
+/// A cloud bot with the state's icon in a small badge at its side.
+class _BotWithBadge extends StatelessWidget {
+  const _BotWithBadge({required this.mascot, required this.icon, required this.accent});
+  final Mascot mascot;
+  final IconData icon;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: 132,
+      height: 112,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          // A soft halo, so the bot reads on any wallpaper.
+          Container(
+            width: 104,
+            height: 104,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(colors: [accent.withValues(alpha: 0.16), accent.withValues(alpha: 0)]),
+            ),
+          ),
+          MascotImage(mascot, size: 104, animate: Effects.decorative(context)),
+          PositionedDirectional(
+            end: 8,
+            bottom: 4,
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: Color.alphaBlend(accent.withValues(alpha: 0.14), scheme.surface),
+                shape: BoxShape.circle,
+                border: Border.all(color: scheme.surface, width: 3),
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 8, offset: const Offset(0, 2))],
+              ),
+              child: Icon(icon, size: 18, color: accent),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Runs an async action with a progress state and error snackbar.
 /// Called instead of the error snackbar when the server answers 402 Payment Required (plan limit or
 /// out of credits, Casama Cloud only). The app sets it to the paywall at startup.
 Future<void> Function(BuildContext context, String message)? onPaymentRequired;
 
-Future<T?> runGuarded<T>(BuildContext context, Future<T> Function() action) async {
+Future<T?> runGuarded<T>(
+  BuildContext context,
+  Future<T> Function() action,
+) async {
   try {
     return await action();
   } catch (e) {

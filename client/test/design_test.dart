@@ -139,7 +139,7 @@ void main() {
       ThemeData theme() =>
           Theme.of(tester.element(find.byType(SettingsScreen)));
       final lightSurface = theme().colorScheme.surface;
-      // Casama's own scheme is the default: plum primary from the app icon.
+      // Casama's own scheme is the default: orchid primary from the app icon.
       expect(theme().colorScheme.primary, casamaScheme.light.primary);
 
       await tester.tap(find.text('Dark'));

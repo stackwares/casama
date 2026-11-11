@@ -6,6 +6,7 @@ import {
   A2UI_BASIC_CATALOG,
   checkComponents,
   ensureSubmit,
+  ensureWayOut,
   normalizeBindings,
   registerUiTools,
   surfaceMessages,
@@ -190,5 +191,75 @@ describe("ui.show cards always have a way to answer", () => {
     expect(ensureSubmit(withButton)).toBe(withButton);
     const plain = [{ id: "root", component: "Text", text: "Done." }];
     expect(ensureSubmit(plain)).toBe(plain);
+  });
+});
+
+describe("ensureWayOut", () => {
+  const field = {
+    id: "in",
+    component: "TextField",
+    label: "Task",
+    value: { "@path": "/form/text" },
+  };
+  const go = {
+    id: "go",
+    component: "Button",
+    child: "go_t",
+    variant: "primary",
+    action: { event: { name: "go", context: { text: { "@path": "/form/text" } } } },
+  };
+  const goText = { id: "go_t", component: "Text", text: "Go" };
+
+  it("puts a Skip beside a lone button in a column", () => {
+    const shown = ensureWayOut([
+      { id: "root", component: "Column", children: ["in", "go"] },
+      field,
+      go,
+      goText,
+    ]);
+    expect(() => checkComponents(shown)).not.toThrow();
+    const root = shown.find((c) => c.id === "root") as { children: string[] };
+    const row = shown.find((c) => c.id === root.children[1]) as {
+      component: string;
+      children: string[];
+    };
+    expect(row.component).toBe("Row");
+    expect(row.children[0]).toBe("go");
+    const skip = shown.find((c) => c.id === row.children[1]);
+    expect(skip).toMatchObject({ component: "Button", action: { event: { name: "skip" } } });
+  });
+
+  it("adds Skip after a lone button already in a row", () => {
+    const shown = ensureWayOut([
+      { id: "root", component: "Column", children: ["in", "row"] },
+      { id: "row", component: "Row", children: ["go"] },
+      field,
+      go,
+      goText,
+      { id: "skip", component: "Text", text: "taken" },
+    ]);
+    expect(() => checkComponents(shown)).not.toThrow();
+    expect(shown.find((c) => c.id === "row")).toMatchObject({ children: ["go", "skip_2"] });
+  });
+
+  it("leaves cards with two or more buttons, or none, alone", () => {
+    const two = [
+      { id: "root", component: "Row", children: ["go", "no"] },
+      go,
+      goText,
+      { ...go, id: "no", child: "no_t" },
+      { id: "no_t", component: "Text", text: "No" },
+    ];
+    expect(ensureWayOut(two)).toBe(two);
+    const none = [{ id: "root", component: "Text", text: "Done." }];
+    expect(ensureWayOut(none)).toBe(none);
+  });
+
+  it("gives the Send that ensureSubmit adds a Skip too", () => {
+    const shown = ensureWayOut(
+      ensureSubmit([{ id: "root", component: "Column", children: ["in"] }, field]),
+    );
+    expect(() => checkComponents(shown)).not.toThrow();
+    expect(shown.filter((c) => c.component === "Button")).toHaveLength(2);
   });
 });

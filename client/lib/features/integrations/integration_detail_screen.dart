@@ -26,10 +26,12 @@ class IntegrationDetailScreen extends ConsumerStatefulWidget {
   final String integrationId;
 
   @override
-  ConsumerState<IntegrationDetailScreen> createState() => _IntegrationDetailScreenState();
+  ConsumerState<IntegrationDetailScreen> createState() =>
+      _IntegrationDetailScreenState();
 }
 
-class _IntegrationDetailScreenState extends ConsumerState<IntegrationDetailScreen> {
+class _IntegrationDetailScreenState
+    extends ConsumerState<IntegrationDetailScreen> {
   var _testing = false;
   final _risks = <String, String>{};
   var _risksLoaded = false;
@@ -37,7 +39,10 @@ class _IntegrationDetailScreenState extends ConsumerState<IntegrationDetailScree
   Future<void> _test(Integration i) async {
     final l10n = context.l10n;
     setState(() => _testing = true);
-    final r = await runGuarded(context, () => ref.read(backendProvider).testIntegration(i.id));
+    final r = await runGuarded(
+      context,
+      () => ref.read(backendProvider).testIntegration(i.id),
+    );
     if (!mounted) return;
     setState(() => _testing = false);
     ref.invalidate(integrationsProvider);
@@ -60,19 +65,28 @@ class _IntegrationDetailScreenState extends ConsumerState<IntegrationDetailScree
       confirmKey: const Key('confirmDisconnect'),
     );
     if (!ok || !mounted) return;
-    await runGuarded(context, () => ref.read(backendProvider).deleteIntegration(i.id));
+    await runGuarded(
+      context,
+      () => ref.read(backendProvider).deleteIntegration(i.id),
+    );
     ref.invalidate(integrationsProvider);
     if (mounted) await Navigator.of(context).maybePop();
   }
 
   Future<void> _setRisk(Integration i, String tool, String risk) async {
     setState(() => _risks[tool] = risk);
-    await runGuarded(context, () => ref.read(backendProvider).setToolRisks(i.id, Map.of(_risks)));
+    await runGuarded(
+      context,
+      () => ref.read(backendProvider).setToolRisks(i.id, Map.of(_risks)),
+    );
     ref.invalidate(integrationsProvider);
   }
 
   Future<void> _setBot(Integration i, String botId, bool on) async {
-    await runGuarded(context, () => ref.read(backendProvider).setBotIntegration(botId, i.id, on));
+    await runGuarded(
+      context,
+      () => ref.read(backendProvider).setBotIntegration(botId, i.id, on),
+    );
     ref.invalidate(integrationsProvider);
     ref.invalidate(botIntegrationIdsProvider(botId));
   }
@@ -86,27 +100,57 @@ class _IntegrationDetailScreenState extends ConsumerState<IntegrationDetailScree
       if (x.id == widget.integrationId) i = x;
     }
     if (i == null) {
-      return SubPage(title: l10n.appsTitle, body: list.isLoading ? const Center(child: CircularProgressIndicator()) : EmptyState(icon: LucideIcons.unplug, title: l10n.noIntegrationsTitle, message: ''));
+      return SubPage(
+        title: l10n.appsTitle,
+        body: list.isLoading
+            ? const SkeletonDetail()
+            : EmptyState(
+                icon: LucideIcons.unplug,
+                title: l10n.noIntegrationsTitle,
+                message: '',
+              ),
+      );
     }
     final integration = i;
     final app = catalogAppFor(ref, integration);
     final name = app?.name ?? integration.name;
     if (!_risksLoaded) {
-      _risks.addAll({for (final e in (integration.riskOverrides ?? const <String, Risk>{}).entries) e.key: e.value.value});
+      _risks.addAll({
+        for (final e
+            in (integration.riskOverrides ?? const <String, Risk>{}).entries)
+          e.key: e.value.value,
+      });
       _risksLoaded = true;
     }
-    final isProvider = integration.kind == IntegrationKind.composio || integration.kind == IntegrationKind.pipedream;
+    final isProvider =
+        integration.kind == IntegrationKind.composio ||
+        integration.kind == IntegrationKind.pipedream;
     return SubPage(
       title: name,
       body: PageColumn(
         children: [
-          _Hero(integration: integration, app: app, testing: _testing, onTest: () => _test(integration), onReconnect: app == null ? null : () => showConnectApp(context, app, reconnect: integration)),
+          _Hero(
+            integration: integration,
+            app: app,
+            testing: _testing,
+            onTest: () => _test(integration),
+            onReconnect: app == null
+                ? null
+                : () => showConnectApp(context, app, reconnect: integration),
+          ),
           if (isProvider) ...[
-            SectionHeader(title: l10n.providerAppsTitle(integrationKindLabel(context, integration.kind))),
+            SectionHeader(
+              title: l10n.providerAppsTitle(
+                integrationKindLabel(context, integration.kind),
+              ),
+            ),
             ProviderAccountsCard(integration: integration),
           ],
           SectionHeader(title: l10n.botsWithAccess),
-          _BotAccess(integration: integration, onChanged: (b, v) => _setBot(integration, b, v)),
+          _BotAccess(
+            integration: integration,
+            onChanged: (b, v) => _setBot(integration, b, v),
+          ),
           // How freely each tool may run: folded, the defaults suit most people (D-182).
           if (integration.tools.isNotEmpty)
             AdvancedSection(
@@ -133,7 +177,9 @@ class _IntegrationDetailScreenState extends ConsumerState<IntegrationDetailScree
           Center(
             child: TextButton.icon(
               key: const Key('disconnectIntegration'),
-              style: TextButton.styleFrom(foregroundColor: context.colorScheme.error),
+              style: TextButton.styleFrom(
+                foregroundColor: context.colorScheme.error,
+              ),
               onPressed: () => _disconnect(integration, name),
               icon: const Icon(LucideIcons.unplug, size: 18),
               label: Text(l10n.disconnect),
@@ -146,7 +192,13 @@ class _IntegrationDetailScreenState extends ConsumerState<IntegrationDetailScree
 }
 
 class _Hero extends StatelessWidget {
-  const _Hero({required this.integration, required this.app, required this.testing, required this.onTest, this.onReconnect});
+  const _Hero({
+    required this.integration,
+    required this.app,
+    required this.testing,
+    required this.onTest,
+    this.onReconnect,
+  });
   final Integration integration;
   final CatalogApp? app;
   final bool testing;
@@ -163,8 +215,14 @@ class _Hero extends StatelessWidget {
     final failing = i.status == IntegrationStatusEnum.error;
     final (status, statusColor) = switch (i.status) {
       IntegrationStatusEnum.ok => (l10n.statusReady, colors.positive),
-      IntegrationStatusEnum.error => (l10n.statusNeedsAttention, colors.negative),
-      IntegrationStatusEnum.pending => (l10n.statusChecking, scheme.onSurfaceVariant),
+      IntegrationStatusEnum.error => (
+        l10n.statusNeedsAttention,
+        colors.negative,
+      ),
+      IntegrationStatusEnum.pending => (
+        l10n.statusChecking,
+        scheme.onSurfaceVariant,
+      ),
     };
     final signedIn = switch (i.auth) {
       IntegrationAuthEnum.oauth => l10n.signedInOAuth,
@@ -181,8 +239,15 @@ class _Hero extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color.alphaBlend(brand.withValues(alpha: context.isDark ? 0.26 : 0.12), context.isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest),
-            context.isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
+            Color.alphaBlend(
+              brand.withValues(alpha: context.isDark ? 0.26 : 0.12),
+              context.isDark
+                  ? scheme.surfaceContainer
+                  : scheme.surfaceContainerLowest,
+            ),
+            context.isDark
+                ? scheme.surfaceContainer
+                : scheme.surfaceContainerLowest,
           ],
         ),
       ),
@@ -197,14 +262,26 @@ class _Hero extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(app?.name ?? i.name, style: context.textTheme.headlineSmall),
+                    Text(
+                      app?.name ?? i.name,
+                      style: context.textTheme.headlineSmall,
+                    ),
                     const SizedBox(height: 4),
                     Wrap(
                       spacing: AppSpace.xs,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        StatusLabel(text: status, color: statusColor, pill: true),
-                        Text(signedIn, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                        StatusLabel(
+                          text: status,
+                          color: statusColor,
+                          pill: true,
+                        ),
+                        Text(
+                          signedIn,
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -216,13 +293,25 @@ class _Hero extends StatelessWidget {
             const SizedBox(height: AppSpace.md),
             Container(
               padding: const EdgeInsets.all(AppSpace.sm),
-              decoration: BoxDecoration(color: scheme.errorContainer.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(AppRadius.row)),
+              decoration: BoxDecoration(
+                color: scheme.errorContainer.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(AppRadius.row),
+              ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(LucideIcons.triangleAlert, size: 16, color: scheme.error),
+                  Icon(
+                    LucideIcons.triangleAlert,
+                    size: 16,
+                    color: scheme.error,
+                  ),
                   const SizedBox(width: AppSpace.xs),
-                  Expanded(child: SelectableText(i.error!, style: context.textTheme.bodySmall)),
+                  Expanded(
+                    child: SelectableText(
+                      i.error!,
+                      style: context.textTheme.bodySmall,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -232,7 +321,10 @@ class _Hero extends StatelessWidget {
             spacing: AppSpace.sm,
             runSpacing: AppSpace.xs,
             children: [
-              if (onReconnect != null && (failing || i.auth == IntegrationAuthEnum.oauth || i.auth == IntegrationAuthEnum.apiKey))
+              if (onReconnect != null &&
+                  (failing ||
+                      i.auth == IntegrationAuthEnum.oauth ||
+                      i.auth == IntegrationAuthEnum.apiKey))
                 (failing ? FilledButton.icon : OutlinedButton.icon)(
                   key: const Key('reconnectIntegration'),
                   onPressed: onReconnect,
@@ -243,7 +335,11 @@ class _Hero extends StatelessWidget {
                 key: Key('testIntegration-${i.id}'),
                 onPressed: testing ? null : onTest,
                 icon: testing
-                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(LucideIcons.activity, size: 16),
                 label: Text(l10n.testConnection),
               ),
@@ -271,10 +367,18 @@ class _BotAccess extends ConsumerWidget {
           GroupedTile(
             key: Key('access-${b.id}'),
             icon: LucideIcons.bot,
-            leading: BotAvatar(name: b.name, avatar: b.avatarUrl, size: 32, animate: false),
+            leading: BotAvatar(
+              name: b.name,
+              avatar: b.avatarUrl,
+              size: 32,
+              animate: false,
+            ),
             title: b.name,
             onTap: () => onChanged(b.id, !on.contains(b.id)),
-            trailing: Switch(value: on.contains(b.id), onChanged: hapticOnChanged((v) => onChanged(b.id, v))),
+            trailing: Switch(
+              value: on.contains(b.id),
+              onChanged: hapticOnChanged((v) => onChanged(b.id, v)),
+            ),
           ),
       ],
     );
@@ -283,14 +387,25 @@ class _BotAccess extends ConsumerWidget {
 
 /// A tool with a plain-language name and how freely it may run.
 class _ToolRow extends StatelessWidget {
-  const _ToolRow({super.key, required this.tool, required this.risk, required this.onChanged});
+  const _ToolRow({
+    super.key,
+    required this.tool,
+    required this.risk,
+    required this.onChanged,
+  });
   final IntegrationToolsInner tool;
   final String risk;
   final ValueChanged<String> onChanged;
 
   static String humanize(String name) {
-    final words = name.replaceAll(RegExp(r'[_\-.]+'), ' ').replaceAllMapped(RegExp(r'([a-z])([A-Z])'), (m) => '${m[1]} ${m[2]}').trim().toLowerCase();
-    return words.isEmpty ? name : '${words[0].toUpperCase()}${words.substring(1)}';
+    final words = name
+        .replaceAll(RegExp(r'[_\-.]+'), ' ')
+        .replaceAllMapped(RegExp(r'([a-z])([A-Z])'), (m) => '${m[1]} ${m[2]}')
+        .trim()
+        .toLowerCase();
+    return words.isEmpty
+        ? name
+        : '${words[0].toUpperCase()}${words.substring(1)}';
   }
 
   @override
@@ -304,13 +419,19 @@ class _ToolRow extends StatelessWidget {
       _ => (l10n.toolRiskMedium, colors.warning, LucideIcons.pencil),
     };
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpace.md,
+        vertical: AppSpace.sm,
+      ),
       child: Row(
         children: [
           Container(
             width: 32,
             height: 32,
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.icon)),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppRadius.icon),
+            ),
             child: Icon(icon, size: 16, color: color),
           ),
           const SizedBox(width: AppSpace.sm),
@@ -318,9 +439,23 @@ class _ToolRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(humanize(tool.name), style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-                if (tool.description.isNotEmpty && tool.description.toLowerCase() != humanize(tool.name).toLowerCase())
-                  Text(tool.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                Text(
+                  humanize(tool.name),
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (tool.description.isNotEmpty &&
+                    tool.description.toLowerCase() !=
+                        humanize(tool.name).toLowerCase())
+                  Text(
+                    tool.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -337,11 +472,20 @@ class _ToolRow extends StatelessWidget {
             ],
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(AppRadius.pill)),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+              ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(label, style: context.textTheme.labelMedium?.copyWith(color: color, fontWeight: FontWeight.w700)),
+                  Text(
+                    label,
+                    style: context.textTheme.labelMedium?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(width: 2),
                   Icon(LucideIcons.chevronDown, size: 14, color: color),
                 ],

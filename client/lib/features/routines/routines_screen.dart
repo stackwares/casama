@@ -23,6 +23,7 @@ import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
 import '../bots/channels_screen.dart' show channelKindName;
 import 'cron_words.dart';
+import '../../ui/celebration.dart';
 
 /// A bot's routines: one-time, repeating (cron in a timezone), or webhook-triggered.
 class RoutinesScreen extends ConsumerWidget {
@@ -70,6 +71,8 @@ class RoutinesScreen extends ConsumerWidget {
     );
     if (created == null || !context.mounted) return;
     ref.invalidate(routinesProvider(botId));
+    // A webhook routine opens its address next instead; that's the moment there.
+    if (!created.webhookUrl.isUsable) showCelebration(context, context.l10n.celebrateNewRoutine(created.name));
     if (created.webhookUrl.isUsable) {
       final l10n = context.l10n;
       await showAdaptiveSheet<void>(

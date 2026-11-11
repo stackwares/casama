@@ -1,7 +1,8 @@
 /**
  * Pages (D-092, D-119): how a bot's page is turned into the document the pages origin serves. The
  * bot's HTML stays as written; the data block, theme variables, `noindex` and the "updated" line
- * are added around it, and the origin sends a strict content security policy with it.
+ * are added around it. The same content security policy is sent as a header and written into the
+ * document, so a local print (which never sees the header) still cannot reach the network.
  */
 
 /** Inline scripts and styles only: no network requests, no forms that post out, no framing. */
@@ -59,7 +60,9 @@ export interface RenderablePage {
 
 /** The served document: the bot's HTML with the head and foot additions. */
 export function renderPage(p: RenderablePage) {
-  const head = `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><style id="casama-theme">${THEME}</style><script type="application/json" id="${PAGE_DATA_ID}">${scriptJson(p.data)}</script>`;
+  // First in <head>, before anything the bot wrote. A later policy of the bot's own still applies
+  // as well: a browser enforces every policy, so this one keeps blocking the network.
+  const head = `<meta http-equiv="Content-Security-Policy" content="${PAGE_CSP}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><style id="casama-theme">${THEME}</style><script type="application/json" id="${PAGE_DATA_ID}">${scriptJson(p.data)}</script>`;
   const foot = `<div id="casama-updated">Updated <time datetime="${p.updatedAt.toISOString()}">${escapeHtml(
     p.updatedAt.toISOString().slice(0, 16).replace("T", " "),
   )} UTC</time></div>`;

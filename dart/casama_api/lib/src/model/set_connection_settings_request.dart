@@ -20,18 +20,32 @@ class SetConnectionSettingsRequest {
   /// Returns a new [SetConnectionSettingsRequest] instance.
   SetConnectionSettingsRequest({
 
-    required  this.composio,
+     this.composio,
+
+     this.google,
   });
 
   @JsonKey(
     
     name: r'composio',
-    required: true,
+    required: false,
     includeIfNull: false,
   )
 
 
-  final SetConnectionSettingsRequestComposioEnum composio;
+  final SetConnectionSettingsRequestComposioEnum? composio;
+
+
+
+  @JsonKey(
+    
+    name: r'google',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final SetConnectionSettingsRequestGoogleEnum? google;
 
 
 
@@ -39,11 +53,13 @@ class SetConnectionSettingsRequest {
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is SetConnectionSettingsRequest &&
-      other.composio == composio;
+      other.composio == composio &&
+      other.google == google;
 
     @override
     int get hashCode =>
-        composio.hashCode;
+        composio.hashCode +
+        google.hashCode;
 
   factory SetConnectionSettingsRequest.fromJson(Map<String, dynamic> json) => _$SetConnectionSettingsRequestFromJson(json);
 
@@ -64,6 +80,22 @@ server(r'server'),
 own(r'own');
 
 const SetConnectionSettingsRequestComposioEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
+
+
+enum SetConnectionSettingsRequestGoogleEnum {
+@JsonValue(r'composio')
+composio(r'composio'),
+@JsonValue(r'direct')
+direct(r'direct');
+
+const SetConnectionSettingsRequestGoogleEnum(this.value);
 
 final String value;
 

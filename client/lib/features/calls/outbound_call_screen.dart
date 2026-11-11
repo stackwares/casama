@@ -10,6 +10,7 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/page.dart';
+import '../../ui/bot_loader.dart';
 
 /// Calls for you (D-141): a call a bot placed, with its live transcript; end it or take it over.
 class OutboundCallScreen extends ConsumerStatefulWidget {
@@ -98,7 +99,7 @@ class _OutboundCallScreenState extends ConsumerState<OutboundCallScreen> {
       title: c == null ? l10n.outCall : c.number.formattedPhoneNumber,
       subtitle: status,
       body: c == null
-          ? (_error != null ? EmptyState(icon: LucideIcons.phoneOff, title: l10n.outCall, message: '$_error') : const Center(child: CircularProgressIndicator()))
+          ? (_error != null ? EmptyState(icon: LucideIcons.phoneOff, title: l10n.outCall, message: '$_error') : const Center(child: BotLoader()))
           : PageColumn(
               children: [
                 Text(c.purpose, style: Theme.of(context).textTheme.titleMedium),

@@ -18,9 +18,10 @@ import '../../ui/page.dart';
 
 /// A bot's settings history (D-100): every change, who made it (a person or a bot), and a way to
 /// put the earlier settings back.
-final botRevisionsProvider = FutureProvider.autoDispose.family<List<BotRevision>, String>(
-  (ref, botId) => ref.watch(backendProvider).botRevisions(botId),
-);
+final botRevisionsProvider = FutureProvider.autoDispose
+    .family<List<BotRevision>, String>(
+      (ref, botId) => ref.watch(backendProvider).botRevisions(botId),
+    );
 
 String fieldLabel(BuildContext context, String field) {
   final l10n = context.l10n;
@@ -51,12 +52,22 @@ class BotHistoryScreen extends ConsumerWidget {
       subtitle: bot?.name,
       children: [
         revisions.when(
-          loading: () => const Padding(padding: EdgeInsets.all(AppSpace.xl), child: Center(child: CircularProgressIndicator())),
-          error: (e, _) => Padding(padding: const EdgeInsets.all(AppSpace.lg), child: Text(errorText(context, e))),
+          loading: () => const SkeletonList(count: 4, padding: EdgeInsets.zero),
+          error: (e, _) => Padding(
+            padding: const EdgeInsets.all(AppSpace.lg),
+            child: Text(errorText(context, e)),
+          ),
           data: (items) => items.isEmpty
               ? Padding(
                   padding: const EdgeInsets.all(AppSpace.xl),
-                  child: Center(child: Text(l10n.noHistory, style: TextStyle(color: context.colorScheme.onSurfaceVariant))),
+                  child: Center(
+                    child: Text(
+                      l10n.noHistory,
+                      style: TextStyle(
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
                 )
               : Column(
                   spacing: AppSpace.xs,
@@ -65,7 +76,11 @@ class BotHistoryScreen extends ConsumerWidget {
                       _RevisionCard(
                         key: Key('revision-${r.id}'),
                         revision: r,
-                        actor: r.changedByBot == null ? null : bots.where((b) => b.id == r.changedByBot).firstOrNull,
+                        actor: r.changedByBot == null
+                            ? null
+                            : bots
+                                  .where((b) => b.id == r.changedByBot)
+                                  .firstOrNull,
                         onRestore: () => _restore(context, ref, r),
                       ),
                   ],
@@ -75,12 +90,18 @@ class BotHistoryScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _restore(BuildContext context, WidgetRef ref, BotRevision r) async {
+  Future<void> _restore(
+    BuildContext context,
+    WidgetRef ref,
+    BotRevision r,
+  ) async {
     final l10n = context.l10n;
     final ok = await showConfirm(
       context: context,
       title: l10n.restoreSettings,
-      message: l10n.restoreSettingsBody(r.changedFields.map((f) => fieldLabel(context, f)).join(', ')),
+      message: l10n.restoreSettingsBody(
+        r.changedFields.map((f) => fieldLabel(context, f)).join(', '),
+      ),
       confirmLabel: l10n.restore,
       icon: LucideIcons.history,
       confirmKey: const Key('confirmRestore'),
@@ -100,7 +121,12 @@ class BotHistoryScreen extends ConsumerWidget {
 }
 
 class _RevisionCard extends StatelessWidget {
-  const _RevisionCard({super.key, required this.revision, required this.actor, required this.onRestore});
+  const _RevisionCard({
+    super.key,
+    required this.revision,
+    required this.actor,
+    required this.onRestore,
+  });
   final BotRevision revision;
   final Bot? actor;
   final VoidCallback onRestore;
@@ -108,7 +134,9 @@ class _RevisionCard extends StatelessWidget {
   String _value(Object? v) {
     if (v == null) return kMissingValue;
     if (v is String) return v.orPlaceholder();
-    if (v is Map && v['primary'] is Map) return ((v['primary'] as Map)['model']?.toString()).orPlaceholder();
+    if (v is Map && v['primary'] is Map) {
+      return ((v['primary'] as Map)['model']?.toString()).orPlaceholder();
+    }
     return jsonEncode(v);
   }
 
@@ -119,10 +147,10 @@ class _RevisionCard extends StatelessWidget {
     final who = actor != null
         ? l10n.changedByBot(actor!.name)
         : revision.changedByBot != null
-            ? l10n.changedByBot('a bot')
-            : revision.changedByUser != null
-                ? l10n.changedByPerson
-                : l10n.changedBySystem;
+        ? l10n.changedByBot('a bot')
+        : revision.changedByUser != null
+        ? l10n.changedByPerson
+        : l10n.changedBySystem;
     return AppCard(
       padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.sm, 14),
       child: Column(
@@ -134,22 +162,41 @@ class _RevisionCard extends StatelessWidget {
               if (actor != null)
                 Padding(
                   padding: const EdgeInsetsDirectional.only(end: AppSpace.sm),
-                  child: BotAvatar(name: actor!.name, avatar: actor!.avatarUrl, size: 28),
+                  child: BotAvatar(
+                    name: actor!.name,
+                    avatar: actor!.avatarUrl,
+                    size: 28,
+                  ),
                 )
               else
                 Padding(
                   padding: const EdgeInsetsDirectional.only(end: AppSpace.sm),
-                  child: Icon(revision.changedByUser != null ? LucideIcons.user : LucideIcons.settings, size: 20, color: scheme.onSurfaceVariant),
+                  child: Icon(
+                    revision.changedByUser != null
+                        ? LucideIcons.user
+                        : LucideIcons.settings,
+                    size: 20,
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      revision.changedFields.map((f) => fieldLabel(context, f)).join(', '),
-                      style: context.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+                      revision.changedFields
+                          .map((f) => fieldLabel(context, f))
+                          .join(', '),
+                      style: context.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                    Text('$who · ${relativeTime(revision.createdAt, context)}', style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                    Text(
+                      '$who · ${relativeTime(revision.createdAt, context)}',
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -166,7 +213,10 @@ class _RevisionCard extends StatelessWidget {
               '${fieldLabel(context, f)}: ${_value(revision.snapshot[f])}',
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.35),
+              style: context.textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+                height: 1.35,
+              ),
             ),
           Divider(height: 1, color: context.appColors.hairline),
         ],
@@ -177,9 +227,9 @@ class _RevisionCard extends StatelessWidget {
 
 /// Archived bots, each with a way to bring it back.
 Future<void> showArchivedBots(BuildContext context) => showAdaptiveSheet<void>(
-      context: context,
-      builder: (_) => const _ArchivedBots(),
-    );
+  context: context,
+  builder: (_) => const _ArchivedBots(),
+);
 
 class _ArchivedBots extends ConsumerWidget {
   const _ArchivedBots();
@@ -206,7 +256,10 @@ class _ArchivedBots extends ConsumerWidget {
               trailing: TextButton(
                 key: Key('unarchive-${b.id}'),
                 onPressed: () async {
-                  await runGuarded(context, () => ref.read(backendProvider).setBotArchived(b.id, false));
+                  await runGuarded(
+                    context,
+                    () => ref.read(backendProvider).setBotArchived(b.id, false),
+                  );
                   ref
                     ..invalidate(botsProvider)
                     ..invalidate(archivedBotsProvider);
@@ -215,9 +268,12 @@ class _ArchivedBots extends ConsumerWidget {
               ),
             ),
           if (archived.hasError)
-            InlineError(error: archived.error!, onRetry: () => ref.invalidate(archivedBotsProvider))
+            InlineError(
+              error: archived.error!,
+              onRetry: () => ref.invalidate(archivedBotsProvider),
+            )
           else if (archived.isLoading && !archived.hasValue)
-            const Center(child: CircularProgressIndicator())
+            const SkeletonList(count: 3, padding: EdgeInsets.zero)
           else if (items.isEmpty)
             Text(l10n.noBots),
         ],

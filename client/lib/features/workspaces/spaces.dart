@@ -27,6 +27,7 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/revealable.dart';
+import '../../ui/celebration.dart';
 
 /// Icons a workspace can have (D-099).
 const spaceIcons = <String, IconData>{
@@ -297,6 +298,7 @@ class _NewSpaceSheetState extends ConsumerState<NewSpaceSheet> {
           return o;
         });
         if (org == null || !context.mounted) return;
+        showCelebration(context, context.l10n.celebrateNewSpace(org.name));
         ref.invalidate(organizationsProvider);
         ref.read(selectedOrgIdProvider.notifier).select(org.id);
         Navigator.pop(context);

@@ -14,6 +14,7 @@ import {
   extractTarget,
   isCredentialChange,
   lockCloudPolicy,
+  useSharedKeyForMissing,
   needsApproval,
   parseMentions,
   RUN_DEFAULTS,
@@ -335,16 +336,41 @@ export function partsText(content: unknown): string {
  * gives a final answer or a limit is hit; then save the message, extract memories and finish.
  * Every side effect happens inside a step, so a crash resumes at the last finished step.
  */
+/** A deleted model key is replaced with the server's shared key, and the bot remembers that. */
+async function adoptSharedKey(db: Database, info: RunInfo, credentials: RunDeps["credentials"]) {
+  const shared = credentials.platformChoice();
+  if (!shared) return;
+  const ids = [
+    ...new Set(
+      policyChoices(info.policy)
+        .map((c) => c.credential_id)
+        .filter((id) => id !== PLATFORM_OPENROUTER_CREDENTIAL_ID),
+    ),
+  ];
+  const live = new Set<string>();
+  if (ids.length) {
+    const rows = await db.execute<{ id: string }>(sql`
+      select id from public.model_credentials
+      where org_id = ${info.orgId}::uuid and id = any(${`{${ids.join(",")}}`}::uuid[])`);
+    for (const row of rows) live.add(row.id);
+  }
+  const repaired = useSharedKeyForMissing(info.policy, live, shared);
+  if (!repaired.changed) return;
+  info.policy = repaired.policy;
+  await db.execute(sql`
+    update public.bots set model_policy = ${JSON.stringify(repaired.policy)}::jsonb
+    where id = ${info.botId}::uuid`);
+}
+
 export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: string }> {
   const { step, db } = deps;
   const log = deps.logger;
 
-  const info = await step("load", () => loadRun(db, runId));
-  // A workspace with no key of its own still runs on Casama Cloud's shared model.
-  if (info && !info.policy.primary) {
-    const platform = deps.credentials.platformChoice();
-    if (platform) info.policy = { ...info.policy, primary: platform };
-  }
+  const info = await step("load", async () => {
+    const loaded = await loadRun(db, runId);
+    if (loaded) await adoptSharedKey(db, loaded, deps.credentials);
+    return loaded;
+  });
   // Casama Cloud picks every model. A change in the admin console applies on the next run (D-188).
   const assigned = deps.billCloudModels && deps.cloudModels ? await deps.cloudModels() : null;
   const cloudLocked = assigned?.chat || deps.cloudLockedModel || CLOUD_LOCKED_MODEL;

@@ -1,0 +1,724 @@
+/* ==========================================================================
+   Casama — Shared Design System aligned with the Casama Client App
+   - Color scheme: casamaScheme (Plum #7A3FA8 / Lilac #D9B6F7, Sky #3B78DB, Cyan #0E8F9A)
+   - Wallpaper: 4-color radial gradient + 260x260 Lucide doodle pattern tile (Clouds default)
+   - Typography: Libre Baskerville (headings), Lato (body), JetBrains Mono (code),
+                 plus Fraunces & Figtree for built-in theme presets
+   - Tokens: AppRadius.card (18px), AppRadius.tile (14px), Stadium/Pill buttons (999px)
+   ========================================================================== */
+
+@font-face {
+  font-family: "Libre Baskerville";
+  src: url("/assets/fonts/LibreBaskerville-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Libre Baskerville";
+  src: url("/assets/fonts/LibreBaskerville-Bold.ttf") format("truetype");
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Lato";
+  src: url("/assets/fonts/Lato-Regular.ttf") format("truetype");
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Lato";
+  src: url("/assets/fonts/Lato-Bold.ttf") format("truetype");
+  font-weight: 600 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Lato";
+  src: url("/assets/fonts/Lato-Black.ttf") format("truetype");
+  font-weight: 800 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("/assets/fonts/Fraunces-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("/assets/fonts/Fraunces-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Figtree";
+  src: url("/assets/fonts/Figtree-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Figtree";
+  src: url("/assets/fonts/Figtree-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Figtree";
+  src: url("/assets/fonts/Figtree-SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Figtree";
+  src: url("/assets/fonts/Figtree-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Google Sans";
+  src: url("/assets/fonts/GoogleSans-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Google Sans";
+  src: url("/assets/fonts/GoogleSans-Medium.ttf") format("truetype");
+  font-weight: 500 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Google Sans";
+  src: url("/assets/fonts/GoogleSans-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/assets/fonts/JetBrainsMono-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/assets/fonts/JetBrainsMono-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Client App Default Fonts (client/lib/theme/fonts.dart) */
+  --font-display: "Libre Baskerville", Georgia, "Times New Roman", serif;
+  --font-sans: "Lato", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Casama Brand Scheme — Light (client/lib/theme/schemes.dart & gallery.js) */
+  --bg: #fcf3fb;
+  --bg-alt: #f5eaf7;
+  --card: rgba(252, 250, 253, 0.86);
+  --card-solid: #fcfafd;
+  --card-raised: #f1e8f1;
+  --card-high: #ebe2eb;
+  --ink: #1e1a20;
+  --ink-soft: #332c38;
+  --muted: #4c4452;
+  --line: #e2d6e8;
+  --line-strong: #cfc2d4;
+
+  /* Primary (Plum), Secondary (Orb Sky Blue), Tertiary (Orb Cyan) */
+  --accent: #7a3fa8;
+  --accent-hover: #683292;
+  --accent-ink: #ffffff;
+  --accent-soft: rgba(122, 63, 168, 0.11);
+  --accent-border: rgba(122, 63, 168, 0.28);
+  --primary-container: #f1e2fc;
+  --on-primary-container: #2e004e;
+
+  --secondary: #3b78db;
+  --secondary-container: #dce8ff;
+  --on-secondary-container: #0c2b5e;
+
+  --tertiary: #0e8f9a;
+  --tertiary-container: #ccf6f4;
+  --on-tertiary-container: #053b40;
+
+  /* AppColors Semantic Tokens (client/lib/theme/app_colors.dart) */
+  --positive: #1e8e5a;
+  --negative: #d93b3b;
+  --warning: #b86e00;
+  --info: #2f6fe4;
+  --working: #1fa463;
+  --waiting: #d08700;
+  --idle: #a0a5ae;
+  --amber: #b86e00;
+  --amber-soft: rgba(184, 110, 0, 0.12);
+  --amber-border: rgba(184, 110, 0, 0.30);
+  --plum: #7a3fa8;
+  --plum-soft: rgba(122, 63, 168, 0.12);
+  --sky: #3b78db;
+  --sky-soft: rgba(59, 120, 219, 0.12);
+  --lilac-soft: var(--accent-soft);
+  --lilac-ink: var(--accent);
+  --amber-ink: var(--warning);
+
+  /* Casama Wallpaper 4-Color Palette — Light (WallpaperPalette.casama) */
+  --wall-c0: #eee2fb;
+  --wall-c1: #fbe3ee;
+  --wall-c2: #dde9ff;
+  --wall-c3: #ddf7f5;
+
+  /* Terminal / Code Surface */
+  --term-bg: #19151c;
+  --term-card: #231d28;
+  --term-line: #362d3d;
+  --term-ink: #f2eaf7;
+  --term-muted: #b5a8bf;
+  --term-accent: #d9b6f7;
+  --terminal-bg: var(--term-bg);
+  --terminal-surface: var(--term-card);
+  --terminal-line: var(--term-line);
+  --terminal-ink: var(--term-ink);
+  --terminal-muted: var(--term-muted);
+  --terminal-accent: var(--term-accent);
+
+  /* Client App Radii (client/lib/theme/app_tokens.dart) */
+  --shadow-sm: 0 2px 8px rgba(30, 26, 32, 0.05), 0 1px 2px rgba(30, 26, 32, 0.04);
+  --shadow-md: 0 14px 34px -8px rgba(46, 16, 78, 0.10), 0 4px 12px -2px rgba(30, 26, 32, 0.05);
+  --shadow-lg: 0 28px 64px -14px rgba(46, 16, 78, 0.16), 0 8px 22px -6px rgba(30, 26, 32, 0.08);
+  --radius-sm: 12px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1e1a22;
+    --bg-alt: #25102f;
+    --card: rgba(28, 23, 33, 0.84);
+    --card-solid: #19151c;
+    --card-raised: #2b252e;
+    --card-high: #343037;
+    --ink: #e9e0e8;
+    --ink-soft: #d9ced8;
+    --muted: #cfc2d4;
+    --line: #38303f;
+    --line-strong: #4c4452;
+
+    --accent: #d9b6f7;
+    --accent-hover: #e5ccfb;
+    --accent-ink: #25102f;
+    --accent-soft: rgba(217, 182, 247, 0.14);
+    --accent-border: rgba(217, 182, 247, 0.32);
+    --primary-container: #5a1f6e;
+    --on-primary-container: #f2daff;
+
+    --secondary: #9dc3ff;
+    --secondary-container: #1f3f73;
+    --on-secondary-container: #dce8ff;
+
+    --tertiary: #7feae4;
+    --tertiary-container: #0b4b50;
+    --on-tertiary-container: #ccf6f4;
+
+    --positive: #5fd49a;
+    --negative: #ff7a7a;
+    --warning: #f0a84a;
+    --info: #6e9bff;
+    --working: #5fd49a;
+    --waiting: #f0a84a;
+    --idle: #6b7079;
+    --amber: #f0a84a;
+    --amber-soft: rgba(240, 168, 74, 0.14);
+    --amber-border: rgba(240, 168, 74, 0.34);
+    --plum: #d9b6f7;
+    --plum-soft: rgba(217, 182, 247, 0.15);
+    --sky: #9dc3ff;
+    --sky-soft: rgba(157, 195, 255, 0.14);
+
+    /* Casama Wallpaper 4-Color Palette — Dark (WallpaperPalette.casama) */
+    --wall-c0: #25102f;
+    --wall-c1: #34123a;
+    --wall-c2: #151f3f;
+    --wall-c3: #0f292e;
+
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.32);
+    --shadow-md: 0 16px 38px -8px rgba(0, 0, 0, 0.50);
+    --shadow-lg: 0 28px 68px -12px rgba(0, 0, 0, 0.68);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #1e1a22;
+  --bg-alt: #25102f;
+  --card: rgba(28, 23, 33, 0.84);
+  --card-solid: #19151c;
+  --card-raised: #2b252e;
+  --card-high: #343037;
+  --ink: #e9e0e8;
+  --ink-soft: #d9ced8;
+  --muted: #cfc2d4;
+  --line: #38303f;
+  --line-strong: #4c4452;
+
+  --accent: #d9b6f7;
+  --accent-hover: #e5ccfb;
+  --accent-ink: #25102f;
+  --accent-soft: rgba(217, 182, 247, 0.14);
+  --accent-border: rgba(217, 182, 247, 0.32);
+  --primary-container: #5a1f6e;
+  --on-primary-container: #f2daff;
+
+  --secondary: #9dc3ff;
+  --secondary-container: #1f3f73;
+  --on-secondary-container: #dce8ff;
+
+  --tertiary: #7feae4;
+  --tertiary-container: #0b4b50;
+  --on-tertiary-container: #ccf6f4;
+
+  --positive: #5fd49a;
+  --negative: #ff7a7a;
+  --warning: #f0a84a;
+  --info: #6e9bff;
+  --working: #5fd49a;
+  --waiting: #f0a84a;
+  --idle: #6b7079;
+  --amber: #f0a84a;
+  --amber-soft: rgba(240, 168, 74, 0.14);
+  --amber-border: rgba(240, 168, 74, 0.34);
+  --plum: #d9b6f7;
+  --plum-soft: rgba(217, 182, 247, 0.15);
+  --sky: #9dc3ff;
+  --sky-soft: rgba(157, 195, 255, 0.14);
+
+  --wall-c0: #25102f;
+  --wall-c1: #34123a;
+  --wall-c2: #151f3f;
+  --wall-c3: #0f292e;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.32);
+  --shadow-md: 0 16px 38px -8px rgba(0, 0, 0, 0.50);
+  --shadow-lg: 0 28px 68px -12px rgba(0, 0, 0, 0.68);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16.5px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  position: relative;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+/* ==========================================================================
+   Casama Full-Page Wallpaper Layer (matches client/lib/theme/wallpaper.dart)
+   ========================================================================== */
+.casama-wallpaper {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background-color: var(--wall-c0);
+  background-image:
+    radial-gradient(circle 75vmax at 85% 12%, var(--wall-c1), transparent),
+    radial-gradient(circle 75vmax at 15% 55%, var(--wall-c2), transparent),
+    radial-gradient(circle 75vmax at 70% 92%, var(--wall-c3), transparent);
+  transition: background-color 0.35s ease;
+}
+
+.casama-wallpaper-pattern {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+  background-size: 260px 260px;
+  transition: opacity 0.3s ease;
+}
+
+body > :not(.casama-wallpaper) {
+  position: relative;
+  z-index: 1;
+}
+
+a {
+  color: inherit;
+  text-decoration-color: var(--line-strong);
+  text-underline-offset: 3px;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+h1, h2, h3, .serif {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+code, pre, .mono {
+  font-family: var(--font-mono);
+}
+
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ==========================================================================
+   Sticky Top Navigation Bar (App-style translucent bar + CasamaMark)
+   ========================================================================== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  height: 68px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 21px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--primary-container);
+  border: 1px solid var(--accent-border);
+  overflow: hidden;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.brand:hover .brand-mark {
+  transform: scale(1.07) rotate(-4deg);
+}
+
+.brand-mark img {
+  width: 34px;
+  height: 34px;
+  display: block;
+}
+
+.brand-badge {
+  font: 600 11px/1 var(--font-mono);
+  letter-spacing: 0.03em;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-pill);
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.site-nav a {
+  padding: 7px 10px;
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.site-nav a:hover {
+  color: var(--ink);
+  background: var(--accent-soft);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.theme-toggle {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line-strong);
+  background: var(--card);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+}
+
+.theme-toggle svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* ==========================================================================
+   Buttons (Stadium / Pill shape from client/lib/theme/app_theme.dart)
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  border: 1px solid var(--line-strong);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  border-color: var(--accent);
+  background: var(--card-solid);
+  transform: translateY(-1px);
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: transparent;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 34%, transparent);
+}
+
+.btn.primary:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 44%, transparent);
+}
+
+.btn.ink-pill {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: transparent;
+}
+
+.btn.ink-pill:hover {
+  opacity: 0.92;
+}
+
+.btn.sm {
+  padding: 8px 15px;
+  font-size: 13.5px;
+}
+
+.btn svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Section Headers & Pills
+   ========================================================================== */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 13px;
+  border-radius: var(--radius-pill);
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  border: 1px solid var(--accent-border);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.eyebrow .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.section {
+  padding: 84px 0;
+  border-top: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+  position: relative;
+}
+
+.section-head {
+  max-width: 700px;
+  margin-bottom: 44px;
+}
+
+.section-head h2 {
+  font-size: clamp(28px, 3.8vw, 44px);
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  margin: 14px 0 14px;
+}
+
+.section-head p {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   Site Footer
+   ========================================================================== */
+.site-footer {
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--card-solid) 78%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 64px 0 48px;
+  color: var(--muted);
+  font-size: 14.5px;
+}
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(3, 1fr);
+  gap: 36px;
+  padding-bottom: 44px;
+  border-bottom: 1px solid var(--line);
+}
+
+.footer-brand p {
+  margin: 12px 0 18px;
+  max-width: 34ch;
+  line-height: 1.55;
+}
+
+.footer-col h3 {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink);
+  margin: 0 0 14px;
+}
+
+.footer-col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 9px;
+}
+
+.footer-col a {
+  text-decoration: none;
+  color: var(--muted);
+}
+
+.footer-col a:hover {
+  color: var(--accent);
+}
+
+.footer-bottom {
+  padding-top: 26px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  font-size: 13.5px;
+}
+
+@media (max-width: 1040px) {
+  .brand-badge { display: none; }
+}
+
+@media (max-width: 900px) {
+  .site-nav {
+    display: none;
+  }
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .section {
+    padding: 60px 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+  }
+  .header-actions .btn.hide-mobile {
+    display: none;
+  }
+}

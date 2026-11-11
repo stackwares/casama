@@ -6,6 +6,11 @@
  * - "own": people use their own accounts (Composio, Pipedream or Zapier over MCP), even when the
  *   server has a Composio key.
  *
+ * And for Google's apps (D-166): "composio" (the default) sends them through the server's Composio
+ * account whenever it has one, because Google's own MCP servers refuse tool calls until the Cloud
+ * project is enrolled in Workspace Developer Preview. "direct" uses Google's servers with the
+ * server's own Google client, for self-hosters who have enrolled. Casama Cloud always uses Composio.
+ *
  * Stored in instance_settings (key "connections") and read with a short cache, so a change
  * reaches every API process within seconds without a restart.
  */
@@ -13,13 +18,15 @@ import { sql } from "drizzle-orm";
 import type { AppDeps } from "../api/types.ts";
 
 export type ComposioMode = "server" | "own";
+export type GoogleMode = "composio" | "direct";
 export interface ConnectionSettings {
   composio: ComposioMode;
+  google: GoogleMode;
 }
 
 const KEY = "connections";
 const TTL_MS = 10_000;
-const DEFAULTS: ConnectionSettings = { composio: "server" };
+const DEFAULTS: ConnectionSettings = { composio: "server", google: "composio" };
 
 let cached: { at: number; value: ConnectionSettings } | null = null;
 
@@ -29,8 +36,10 @@ export async function getConnectionSettings(db: AppDeps["db"]): Promise<Connecti
     sql`select value from public.instance_settings where key = ${KEY}`,
   );
   const mode = row?.value?.composio;
+  const google = row?.value?.google;
   const value: ConnectionSettings = {
     composio: mode === "own" || mode === "server" ? mode : DEFAULTS.composio,
+    google: google === "direct" || google === "composio" ? google : DEFAULTS.google,
   };
   cached = { at: Date.now(), value };
   return value;

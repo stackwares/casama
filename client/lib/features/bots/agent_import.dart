@@ -19,6 +19,7 @@ import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/page.dart';
 import 'model_picker.dart';
+import '../../ui/celebration.dart';
 
 /// Import an agent (D-122): an OpenClaw or Hermes Agent folder becomes a bot after a review step.
 Future<void> importAgentFolder(BuildContext context, WidgetRef ref, {Future<Map<String, Uint8List>?> Function()? pickFolder, Future<Uint8List?> Function()? pickZip}) async {
@@ -146,7 +147,7 @@ class _AgentImportReviewScreenState extends ConsumerState<AgentImportReviewScree
     }
     if (!mounted) return;
     setState(() => _busy = false);
-    showSuccess(context, message);
+    showCelebration(context, message);
     GoRouter.maybeOf(context)?.go('/bots/${r.botId}/chat');
   }
 

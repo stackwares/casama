@@ -45,6 +45,17 @@ void main() {
     await tester.tap(find.byKey(const Key('connectionsServer')));
     await tester.pumpAndSettle();
     expect(backend.connectionSettings.composio.value, 'server');
+    // Google's apps: Composio by default, Google's own servers on request (D-166).
+    expect(backend.connectionSettings.google.value, 'composio');
+    await tester.ensureVisible(find.byKey(const Key('connectionsGoogleDirect')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('connectionsGoogleDirect')));
+    await tester.pumpAndSettle();
+    expect(backend.connectionSettings.google.value, 'direct');
+    expect(backend.connectionSettings.composio.value, 'server');
+    await tester.tap(find.byKey(const Key('connectionsGoogleComposio')));
+    await tester.pumpAndSettle();
+    expect(backend.connectionSettings.google.value, 'composio');
   });
 
   testWidgets('the owner suspends a workspace, lifts it, and reviews abuse', (tester) async {

@@ -22,6 +22,10 @@ export const GalleryItem = z
     category: z.string().optional(),
     icon: z.string().optional().openapi({ description: "A skill's Lucide icon name." }),
     description: z.string().optional().openapi({ description: "A skill's one-line description." }),
+    requires: z.array(z.string()).optional().openapi({
+      description:
+        "Features the look needs from the app (doodles, mesh, scheme-colors). Apps hide items that need something they can't draw.",
+    }),
     document: z.record(z.string(), z.unknown()).optional().openapi({
       description:
         "A theme, scheme or wallpaper document, so a list can draw previews without fetching each item.",

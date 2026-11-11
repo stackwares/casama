@@ -16,11 +16,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 ENV PATH=/opt/flutter/bin:$PATH
 RUN flutter config --no-analytics --enable-web && flutter precache --web
 WORKDIR /src
+# scripts/build-web.sh is the only release web compile, and it requires Wasm (D-196).
+COPY scripts/build-web.sh scripts/build-web.sh
 COPY dart dart
 COPY client client
 WORKDIR /src/client
-RUN flutter pub get && flutter build web --release --dart-define=CASAMA_API_URL=
+RUN bash /src/scripts/build-web.sh --dart-define=CASAMA_API_URL=
 
 FROM caddy:2.10.2-alpine
 COPY --from=build /src/client/build/web /srv
-RUN printf ':80 {\n\troot * /srv\n\ttry_files {path} /index.html\n\tfile_server\n\theader Content-Security-Policy "default-src '"'"'self'"'"'; script-src '"'"'self'"'"' '"'"'wasm-unsafe-eval'"'"'; style-src '"'"'self'"'"' '"'"'unsafe-inline'"'"'; img-src '"'"'self'"'"' data: blob: https:; connect-src '"'"'self'"'"' wss: https:; font-src '"'"'self'"'"' data:; media-src '"'"'self'"'"' blob:; frame-ancestors '"'"'none'"'"'"\n}\n' > /etc/caddy/Caddyfile
+RUN printf ':80 {\n\troot * /srv\n\ttry_files {path} /index.html\n\tfile_server\n\theader Cross-Origin-Opener-Policy "same-origin"\n\theader Cross-Origin-Embedder-Policy "credentialless"\n\theader Content-Security-Policy "default-src '"'"'self'"'"'; script-src '"'"'self'"'"' '"'"'wasm-unsafe-eval'"'"' https://www.gstatic.com; worker-src '"'"'self'"'"' blob:; style-src '"'"'self'"'"' '"'"'unsafe-inline'"'"'; img-src '"'"'self'"'"' data: blob: https:; connect-src '"'"'self'"'"' wss: https:; font-src '"'"'self'"'"' data:; media-src '"'"'self'"'"' blob:; frame-ancestors '"'"'none'"'"'"\n}\n' > /etc/caddy/Caddyfile

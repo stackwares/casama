@@ -22,12 +22,16 @@ import '../../ui/glow_button.dart';
 import '../../ui/page.dart';
 import '../routines/cron_words.dart';
 import 'model_picker.dart';
+import '../../ui/celebration.dart';
 
 /// Share a bot as a template (D-110): a file or a link with its instructions, skills, routines and
 /// suggested connections. Never secrets; memories only when chosen. Importing previews first.
 
 Future<void> showShareBot(BuildContext context, Bot bot) =>
-    showAdaptiveSheet<void>(context: context, builder: (_) => _ShareSheet(bot: bot));
+    showAdaptiveSheet<void>(
+      context: context,
+      builder: (_) => _ShareSheet(bot: bot),
+    );
 
 class _ShareSheet extends ConsumerStatefulWidget {
   const _ShareSheet({required this.bot});
@@ -44,13 +48,21 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
 
   Future<void> _saveFile() async {
     setState(() => _busy = true);
-    final t = await runGuarded(context, () => ref.read(backendProvider).exportBot(widget.bot.id, memories: _memories));
+    final t = await runGuarded(
+      context,
+      () => ref
+          .read(backendProvider)
+          .exportBot(widget.bot.id, memories: _memories),
+    );
     if (t != null) {
-      final name = '${widget.bot.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-')}.casama-bot.json';
+      final name =
+          '${widget.bot.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-')}.casama-bot.json';
       try {
         await FilePicker.saveFile(
           fileName: name,
-          bytes: Uint8List.fromList(utf8.encode(const JsonEncoder.withIndent('  ').convert(t.toJson()))),
+          bytes: Uint8List.fromList(
+            utf8.encode(const JsonEncoder.withIndent('  ').convert(t.toJson())),
+          ),
           mimeType: 'application/json',
         );
       } catch (_) {}
@@ -60,7 +72,12 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
 
   Future<void> _makeLink() async {
     setState(() => _busy = true);
-    final link = await runGuarded(context, () => ref.read(backendProvider).createBotShare(widget.bot.id, memories: _memories));
+    final link = await runGuarded(
+      context,
+      () => ref
+          .read(backendProvider)
+          .createBotShare(widget.bot.id, memories: _memories),
+    );
     if (!mounted) return;
     setState(() {
       _busy = false;
@@ -91,7 +108,10 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
           title: Text(l10n.includeMemories),
           subtitle: Text(l10n.includeMemoriesHelp),
           value: _memories,
-          onChanged: hapticOnChanged((v) => setState(() => _memories = v ?? false), haptic: HapticsHelper.soft),
+          onChanged: hapticOnChanged(
+            (v) => setState(() => _memories = v ?? false),
+            haptic: HapticsHelper.soft,
+          ),
         ),
         OutlinedButton.icon(
           key: const Key('saveTemplateFile'),
@@ -99,7 +119,12 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
           icon: const Icon(LucideIcons.download, size: 18),
           label: Text(l10n.saveAsFile),
         ),
-        if (_link != null) SelectableText(_link!, key: const Key('shareLink'), style: AppText.mono.copyWith(fontSize: 12)),
+        if (_link != null)
+          SelectableText(
+            _link!,
+            key: const Key('shareLink'),
+            style: AppText.mono.copyWith(fontSize: 12),
+          ),
       ],
     );
   }
@@ -112,9 +137,16 @@ Future<void> importBotFromFile(BuildContext context) async {
   try {
     final json = jsonDecode(utf8.decode(await picked.first.readAsBytes()));
     final t = BotTemplateFile.fromJson(json as Map<String, dynamic>);
-    if (t.format != BotTemplateFileFormatEnum.casamaPeriodBot) throw const FormatException();
+    if (t.format != BotTemplateFileFormatEnum.casamaPeriodBot) {
+      throw const FormatException();
+    }
     if (!context.mounted) return;
-    await Navigator.of(context).push(MaterialPageRoute(settings: const RouteSettings(name: '/import/file'), builder: (_) => ImportBotScreen(template: t)));
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        settings: const RouteSettings(name: '/import/file'),
+        builder: (_) => ImportBotScreen(template: t),
+      ),
+    );
   } catch (_) {
     if (context.mounted) showWarning(context, context.l10n.notABotTemplate);
   }
@@ -131,8 +163,9 @@ class ImportBotScreen extends ConsumerStatefulWidget {
 }
 
 class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
-  late final Future<BotTemplateFile> _template =
-      widget.template != null ? Future.value(widget.template) : ref.read(backendProvider).getBotShare(widget.token!);
+  late final Future<BotTemplateFile> _template = widget.template != null
+      ? Future.value(widget.template)
+      : ref.read(backendProvider).getBotShare(widget.token!);
   String? _credentialId;
   String _model = '';
   var _memories = true;
@@ -145,16 +178,30 @@ class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
     setState(() => _busy = true);
     final r = await runGuarded(
       context,
-      () => ref.read(backendProvider).importBot(org.id, t, credentialId: _credentialId!, model: _model, memories: _memories, routines: _routines),
+      () => ref
+          .read(backendProvider)
+          .importBot(
+            org.id,
+            t,
+            credentialId: _credentialId!,
+            model: _model,
+            memories: _memories,
+            routines: _routines,
+          ),
     );
     if (!mounted) return;
     setState(() => _busy = false);
     if (r == null) return;
     ref.invalidate(botsProvider);
     final l10n = context.l10n;
-    showSuccess(
+    showCelebration(
       context,
-      r.connectionsToAdd.isEmpty ? l10n.botImported(t.name) : l10n.botImportedConnect(t.name, r.connectionsToAdd.map((c) => c.name).join(', ')),
+      r.connectionsToAdd.isEmpty
+          ? l10n.botImported(t.name)
+          : l10n.botImportedConnect(
+              t.name,
+              r.connectionsToAdd.map((c) => c.name).join(', '),
+            ),
     );
     GoRouter.maybeOf(context)?.go('/bots/${r.botId}/chat');
   }
@@ -166,7 +213,10 @@ class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
     _credentialId ??= keys.firstOrNull?.id;
     if (_model.isEmpty) {
       final key = keys.where((k) => k.id == _credentialId).firstOrNull;
-      if (key != null) _model = ref.read(backendProvider).defaultModelFor(key.provider.value) ?? '';
+      if (key != null) {
+        _model =
+            ref.read(backendProvider).defaultModelFor(key.provider.value) ?? '';
+      }
     }
     return FutureBuilder<BotTemplateFile>(
       future: _template,
@@ -175,8 +225,12 @@ class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
         return SubPage(
           title: l10n.importBot,
           children: [
-            if (snap.hasError) FormNote(errorText(context, snap.error!), icon: LucideIcons.triangleAlert),
-            if (t == null && !snap.hasError) const Center(child: Padding(padding: EdgeInsets.all(AppSpace.xl), child: CircularProgressIndicator())),
+            if (snap.hasError)
+              FormNote(
+                errorText(context, snap.error!),
+                icon: LucideIcons.triangleAlert,
+              ),
+            if (t == null && !snap.hasError) const SkeletonDetail(),
             if (t != null) ...[
               AppCard(
                 key: const Key('importPreview'),
@@ -185,35 +239,76 @@ class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   spacing: AppSpace.sm,
                   children: [
-                    Row(children: [
-                      BotAvatar(name: t.name, avatar: t.avatar, size: 48),
-                      const SizedBox(width: AppSpace.md),
-                      Expanded(child: Text(t.name, style: context.textTheme.titleLarge)),
-                    ]),
+                    Row(
+                      children: [
+                        BotAvatar(name: t.name, avatar: t.avatar, size: 48),
+                        const SizedBox(width: AppSpace.md),
+                        Expanded(
+                          child: Text(
+                            t.name,
+                            style: context.textTheme.titleLarge,
+                          ),
+                        ),
+                      ],
+                    ),
                     if (t.description.isUsable) Text(t.description!),
-                    Text(t.personaMd, maxLines: 8, overflow: TextOverflow.ellipsis, style: TextStyle(color: context.colorScheme.onSurfaceVariant)),
+                    Text(
+                      t.personaMd,
+                      maxLines: 8,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
               SectionHeader(title: l10n.whatComesWithIt),
               GroupedCard(
                 children: [
-                  for (final k in t.skills ?? const <BotTemplateFileSkillsInner>[])
-                    GroupedTile(icon: LucideIcons.bookOpen, title: k.name, subtitle: k.description),
-                  for (final r in t.routines ?? const <BotTemplateFileRoutinesInner>[])
-                    GroupedTile(icon: LucideIcons.clock, title: r.name, subtitle: scheduleWords(context, r.scheduleCron)),
-                  for (final c in t.connections ?? const <BotTemplateFileConnectionsInner>[])
-                    GroupedTile(icon: LucideIcons.plug, title: c.name, subtitle: l10n.connectAfterImport),
+                  for (final k
+                      in t.skills ?? const <BotTemplateFileSkillsInner>[])
+                    GroupedTile(
+                      icon: LucideIcons.bookOpen,
+                      title: k.name,
+                      subtitle: k.description,
+                    ),
+                  for (final r
+                      in t.routines ?? const <BotTemplateFileRoutinesInner>[])
+                    GroupedTile(
+                      icon: LucideIcons.clock,
+                      title: r.name,
+                      subtitle: scheduleWords(context, r.scheduleCron),
+                    ),
+                  for (final c
+                      in t.connections ??
+                          const <BotTemplateFileConnectionsInner>[])
+                    GroupedTile(
+                      icon: LucideIcons.plug,
+                      title: c.name,
+                      subtitle: l10n.connectAfterImport,
+                    ),
                 ],
               ),
               if ((t.routines ?? const []).isNotEmpty)
-                SwitchListTile(key: const Key('importRoutines'), title: Text(l10n.importRoutines), value: _routines, onChanged: hapticOnChanged((v) => setState(() => _routines = v))),
+                SwitchListTile(
+                  key: const Key('importRoutines'),
+                  title: Text(l10n.importRoutines),
+                  value: _routines,
+                  onChanged: hapticOnChanged(
+                    (v) => setState(() => _routines = v),
+                  ),
+                ),
               if ((t.memories ?? const []).isNotEmpty)
                 SwitchListTile(
                   key: const Key('importMemories'),
-                  title: Text(l10n.importMemories((t.memories ?? const []).length)),
+                  title: Text(
+                    l10n.importMemories((t.memories ?? const []).length),
+                  ),
                   value: _memories,
-                  onChanged: hapticOnChanged((v) => setState(() => _memories = v)),
+                  onChanged: hapticOnChanged(
+                    (v) => setState(() => _memories = v),
+                  ),
                 ),
               SectionHeader(title: l10n.thinking0),
               DropdownButtonFormField<String>(
@@ -221,18 +316,30 @@ class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
                 initialValue: _credentialId,
                 isExpanded: true,
                 decoration: InputDecoration(labelText: l10n.modelKey),
-                items: [for (final k in keys) DropdownMenuItem(value: k.id, child: Text(k.label))],
-                onChanged: hapticOnChanged((v) => setState(() {
-                  _credentialId = v;
-                  _model = '';
-                }), haptic: HapticsHelper.selection),
+                items: [
+                  for (final k in keys)
+                    DropdownMenuItem(value: k.id, child: Text(k.label)),
+                ],
+                onChanged: hapticOnChanged(
+                  (v) => setState(() {
+                    _credentialId = v;
+                    _model = '';
+                  }),
+                  haptic: HapticsHelper.selection,
+                ),
               ),
               const SizedBox(height: AppSpace.sm),
-              ModelPickerField(credentialId: _credentialId, value: _model, onChanged: (m) => setState(() => _model = m)),
+              ModelPickerField(
+                credentialId: _credentialId,
+                value: _model,
+                onChanged: (m) => setState(() => _model = m),
+              ),
               const SizedBox(height: AppSpace.lg),
               GlowButton.icon(
                 key: const Key('importBot'),
-                onPressed: _busy || _credentialId == null || _model.isEmpty ? null : () => _import(t),
+                onPressed: _busy || _credentialId == null || _model.isEmpty
+                    ? null
+                    : () => _import(t),
                 icon: const Icon(LucideIcons.download, size: 18),
                 label: Text(l10n.importBot),
               ),

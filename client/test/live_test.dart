@@ -210,6 +210,14 @@ void main() {
     ));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
+    // Already running: the panel waits until the person opens the live view.
+    expect(find.byKey(const Key('liveSurface')), findsNothing);
+    expect(live.session, isNull);
+    expect(find.byKey(const Key('openLiveView')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('openLiveView')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
     // Inline: the stream is open in the panel, with control and a full-screen button.
     expect(find.byKey(const Key('liveSurface')), findsOneWidget);
     expect(find.byKey(const Key('takeControl')), findsOneWidget);

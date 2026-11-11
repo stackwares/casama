@@ -28,6 +28,7 @@ import 'theme/appearance.dart';
 import 'ui/text_scale.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'features/devices/device_sync.dart';
+import 'ui/effects.dart';
 
 class CasamaApp extends ConsumerWidget {
   const CasamaApp({super.key});
@@ -70,7 +71,9 @@ class CasamaApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       // Scrollbars on vertical lists on every platform, phones included.
       scrollBehavior: const AppScrollBehavior(),
-      builder: (context, child) => RouteTitle(
+      builder: (context, child) => Effects(
+        fewer: appearance.fewerEffects,
+        child: RouteTitle(
         router: router,
         child: limitTextScale(
           context,
@@ -80,6 +83,7 @@ class CasamaApp extends ConsumerWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }
@@ -105,7 +109,12 @@ class _FirstRunSteps extends ConsumerWidget {
           if (name)
             const Positioned.fill(child: NameStep())
           else if (ask && signInDone)
-            Positioned.fill(child: NotificationsPrimer(onEnable: push.enable, onLater: push.snooze)),
+            Positioned.fill(
+              child: ValueListenableBuilder<bool>(
+                valueListenable: push.webBlocked,
+                builder: (context, blocked, _) => NotificationsPrimer(onEnable: push.enable, onLater: push.snooze, blocked: blocked),
+              ),
+            ),
         ],
       ),
     );

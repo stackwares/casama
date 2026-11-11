@@ -8,6 +8,7 @@ import { sql } from "drizzle-orm";
 import { suspendOrg, unsuspendOrg } from "../../services/abuse.ts";
 import { getCloudModels, setCloudModels } from "../../services/cloud-models.ts";
 import {
+  type ConnectionSettings,
   getConnectionSettings,
   setConnectionSettings,
 } from "../../services/connection-settings.ts";
@@ -45,10 +46,16 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       );
   };
 
+  const connectionsOut = (settings: ConnectionSettings) => ({
+    ...settings,
+    composio_key: !!env.COMPOSIO_API_KEY,
+    google_direct_available: !!env.GOOGLE_OAUTH_CLIENT_ID && !env.BILLING_ENABLED,
+  });
+
   app.openapi(routes.adminConnectionSettings, async (c) => {
     await requireOwner(requireClaims(c.get("claims")));
     const settings = await getConnectionSettings(db);
-    return c.json({ ...settings, composio_key: !!env.COMPOSIO_API_KEY }, 200);
+    return c.json(connectionsOut(settings), 200);
   });
 
   app.openapi(routes.adminCloudModels, async (c) => {
@@ -70,9 +77,22 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.setAdminConnectionSettings, async (c) => {
     await requireOwner(requireClaims(c.get("claims")));
     const body = c.req.valid("json");
-    const settings = await setConnectionSettings(db, { composio: body.composio });
-    deps.logger.info("connection settings changed", { composio: settings.composio });
-    return c.json({ ...settings, composio_key: !!env.COMPOSIO_API_KEY }, 200);
+    if (body.google === "direct" && env.BILLING_ENABLED)
+      throw new ApiError(
+        400,
+        "validation_failed",
+        "Casama Cloud connects Google's apps through Composio (Developer Preview terms bar public apps)",
+      );
+    const current = await getConnectionSettings(db);
+    const settings = await setConnectionSettings(db, {
+      composio: body.composio ?? current.composio,
+      google: body.google ?? current.google,
+    });
+    deps.logger.info("connection settings changed", {
+      composio: settings.composio,
+      google: settings.google,
+    });
+    return c.json(connectionsOut(settings), 200);
   });
 
   app.openapi(routes.adminOverview, async (c) => {

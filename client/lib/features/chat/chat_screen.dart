@@ -364,28 +364,61 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Future<void> _toggleDictation() async {
     final dictation = ref.read(dictationProvider);
     if (!_recording) {
-      final ok = await dictation.start();
-      if (!mounted) return;
-      if (!ok) {
-        showWarning(context, context.l10n.micPermissionNeeded);
-        return;
+      try {
+        final ok = await dictation.start();
+        if (!mounted) return;
+        if (!ok) {
+          showWarning(context, context.l10n.micPermissionNeeded);
+          return;
+        }
+        setState(() => _recording = true);
+      } catch (e) {
+        if (mounted) showError(context, e);
       }
-      setState(() => _recording = true);
       return;
     }
     setState(() {
       _recording = false;
       _transcribing = true;
     });
-    final clip = await dictation.stop();
-    if (clip != null && mounted) {
-      final text = await runGuarded(context, () => ref.read(backendProvider).transcribe(widget.botId, clip.$1, clip.$2));
-      if (text != null && text.isNotEmpty) {
-        _input.text = _input.text.isEmpty ? text : '${_input.text} $text';
-        _input.selection = TextSelection.collapsed(offset: _input.text.length);
+    try {
+      final clip = await dictation.stop();
+      if (!mounted) return;
+      if (clip == null) {
+        showWarning(context, context.l10n.dictationEmpty);
+        return;
       }
+      final text = await runGuarded(context, () => ref.read(backendProvider).transcribe(widget.botId, clip.$1, clip.$2));
+      if (!mounted || text == null) return;
+      final spoken = text.trim();
+      if (spoken.isEmpty) {
+        showWarning(context, context.l10n.dictationEmpty);
+        return;
+      }
+      _typeDictation(spoken);
+    } catch (e) {
+      if (mounted) showError(context, e);
+    } finally {
+      if (mounted) setState(() => _transcribing = false);
     }
-    if (mounted) setState(() => _transcribing = false);
+  }
+
+  /// Puts [spoken] in the message box. iOS and Android's keyboard writes the previous value back
+  /// over a programmatic edit, so the transcript is applied again after that echo.
+  void _typeDictation(String spoken) {
+    final next = _input.text.isEmpty ? spoken : '${_input.text} $spoken';
+    final value = TextEditingValue(text: next, selection: TextSelection.collapsed(offset: next.length));
+    void apply() {
+      if (!mounted || _input.text.contains(spoken)) return;
+      _input.value = value;
+    }
+
+    _input.value = value;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      apply();
+      WidgetsBinding.instance.addPostFrameCallback((_) => apply());
+    });
+    Future<void>.delayed(const Duration(milliseconds: 150), apply);
   }
 
   Future<void> _speak(String messageId) async {
@@ -424,7 +457,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Wallpaper(
       force: true,
-      child: Scaffold(
+      // The iOS status-bar tap scrolls this list back to its start; reversed, that's the latest
+      // message. Nothing else inherits it, so lists inside messages keep their own scrolling.
+      child: PrimaryScrollController(
+        controller: _scroll,
+        automaticallyInheritForPlatforms: const <TargetPlatform>{},
+        child: Scaffold(
         appBar: ShellHeader(
         title: name,
         subtitle: status,
@@ -485,8 +523,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             final background = Theme.of(context).scaffoldBackgroundColor;
             final Widget thread;
             if (chat.loading || (_opening && chat.empty)) {
-              thread = const Center(
-                child: SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 2.5, strokeCap: StrokeCap.round)),
+              // Placeholder bubbles where the thread will be, so opening a chat never flashes the
+              // starter cards or a spinner.
+              thread = Padding(
+                padding: EdgeInsets.fromLTRB(side, AppSpace.lg, side, 0),
+                child: const Align(alignment: Alignment.topCenter, child: SkeletonMessages()),
               );
             } else if (chat.empty && bot?.setupStatus == BotSetupStatusEnum.pending) {
               thread = _SetupCard(bot: bot!, side: side);
@@ -672,6 +713,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ),
       ),
       ),
+      ),
     );
   }
 
@@ -738,6 +780,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // A shown card is its own row; its ui.show step would only repeat it (the timeline keeps it).
     final entries = [for (final e in chat.entries) if (!(e is ToolEntry && e.tool == 'ui.show')) e];
     var lastSide = '';
+    var lastHeader = -1;
     final freshFrom = entries.length - 1;
 
     final allBots = ref.read(botsProvider).value ?? const <Bot>[];
@@ -746,6 +789,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       final speaker = widget.group && fromBot != null ? allBots.where((b) => b.id == fromBot).firstOrNull : null;
       final side = speaker == null ? 'bot' : 'bot:${speaker.id}';
       if (lastSide != side) {
+        lastHeader = rows.length;
         rows.add(
           _Row(
             ValueKey('hdr-$key'),
@@ -947,6 +991,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (chat.running && !waitingOnPerson && !replying && (!toolRunning || !showSteps)) {
       botSide('working', chat.activeBotId);
       rows.add(_Row(const ValueKey('working'), rows.last.header ? 0 : AppSpace.md, () => WorkingIndicator(status: workingStatus() ?? context.l10n.thinking)));
+    }
+    // The bot whose turn is running wiggles its avatar while it thinks.
+    if (chat.running && lastSide.startsWith('bot') && lastHeader >= 0) {
+      final h = rows[lastHeader];
+      final (who, face) = h.inputs! as (String, String?);
+      rows[lastHeader] = _Row(h.key, h.gap, () => BotTurnHeader(name: who, avatar: face, working: true), header: true, inputs: (who, face, true));
     }
     return rows;
   }

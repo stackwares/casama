@@ -33,6 +33,8 @@ abstract class _$CatalogAppCWProxy {
 
   CatalogApp oauthAvailable(bool oauthAvailable);
 
+  CatalogApp composio(String? composio);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CatalogApp(...).copyWith.fieldName(value)`.
@@ -55,6 +57,7 @@ abstract class _$CatalogAppCWProxy {
     bool popular,
     String? note,
     bool oauthAvailable,
+    String? composio,
   });
 }
 
@@ -107,6 +110,9 @@ class _$CatalogAppCWProxyImpl implements _$CatalogAppCWProxy {
   CatalogApp oauthAvailable(bool oauthAvailable) =>
       call(oauthAvailable: oauthAvailable);
 
+  @override
+  CatalogApp composio(String? composio) => call(composio: composio);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CatalogApp(...).copyWith.fieldName(value)`.
@@ -130,6 +136,7 @@ class _$CatalogAppCWProxyImpl implements _$CatalogAppCWProxy {
     Object? popular = const $CopyWithPlaceholder(),
     Object? note = const $CopyWithPlaceholder(),
     Object? oauthAvailable = const $CopyWithPlaceholder(),
+    Object? composio = const $CopyWithPlaceholder(),
   }) {
     return CatalogApp(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -188,6 +195,10 @@ class _$CatalogAppCWProxyImpl implements _$CatalogAppCWProxy {
           ? _value.oauthAvailable
           // ignore: cast_nullable_to_non_nullable
           : oauthAvailable as bool,
+      composio: composio == const $CopyWithPlaceholder()
+          ? _value.composio
+          // ignore: cast_nullable_to_non_nullable
+          : composio as String?,
     );
   }
 }
@@ -253,6 +264,7 @@ CatalogApp _$CatalogAppFromJson(Map<String, dynamic> json) => $checkedCreate(
       popular: $checkedConvert('popular', (v) => v as bool),
       note: $checkedConvert('note', (v) => v as String?),
       oauthAvailable: $checkedConvert('oauth_available', (v) => v as bool),
+      composio: $checkedConvert('composio', (v) => v as String?),
     );
     return val;
   },
@@ -275,6 +287,7 @@ Map<String, dynamic> _$CatalogAppToJson(
   'popular': instance.popular,
   'note': ?instance.note,
   'oauth_available': instance.oauthAvailable,
+  'composio': ?instance.composio,
 };
 
 const _$CatalogAppCategoryEnumEnumMap = {

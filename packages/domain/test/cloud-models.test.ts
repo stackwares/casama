@@ -6,6 +6,7 @@ import {
   cloudOpenRouterCharge,
   lockCloudPolicy,
   PLATFORM_OPENROUTER_CREDENTIAL_ID,
+  useSharedKeyForMissing,
 } from "../src/index.ts";
 
 describe("Casama Cloud models", () => {
@@ -29,6 +30,30 @@ describe("Casama Cloud models", () => {
     expect(cloudModelAllowed({ billing: false, plan: "selfhost" }, "some/unknown-model")).toBe(
       false,
     );
+  });
+
+  it("moves a deleted key onto Casama's shared key and leaves a live key alone", () => {
+    const own = "11111111-1111-4111-8111-111111111111";
+    const gone = "22222222-2222-4222-8222-222222222222";
+    const shared = { credential_id: PLATFORM_OPENROUTER_CREDENTIAL_ID, model: CLOUD_LOCKED_MODEL };
+    const repaired = useSharedKeyForMissing(
+      {
+        primary: { credential_id: gone, model: "openai/gpt-6-luna" },
+        cheap: { credential_id: own, model: "claude-haiku-5-5" },
+      },
+      new Set([own]),
+      shared,
+    );
+    expect(repaired.changed).toBe(true);
+    expect(repaired.policy.primary).toEqual(shared);
+    expect(repaired.policy.cheap?.credential_id).toBe(own);
+    const kept = useSharedKeyForMissing(
+      { primary: { credential_id: own, model: "openai/gpt-6-luna" } },
+      new Set([own]),
+      shared,
+    );
+    expect(kept.changed).toBe(false);
+    expect(kept.policy.primary?.model).toBe("openai/gpt-6-luna");
   });
 
   it("rewrites Casama's key to that model and leaves a workspace key alone", () => {

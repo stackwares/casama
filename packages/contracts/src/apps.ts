@@ -35,6 +35,8 @@ export const CatalogApp = z
     note: z.string().optional(),
     /** Whether one-click sign-in works on this server (some vendors need a client the admin sets up). */
     oauth_available: z.boolean(),
+    /** Composio's toolkit slug for this app, so apps connected through a Composio hub can be matched to it. */
+    composio: z.string().optional(),
   })
   .openapi("CatalogApp");
 

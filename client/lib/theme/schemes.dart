@@ -1,6 +1,11 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 
+import 'looks.g.dart';
+
+/// Casama's brand scheme is data: `client/looks/schemes/casama.json`, generated into `looks.g.dart`.
+export 'looks.g.dart' show casamaScheme;
+
 /// Color families for filtering the theme picker, worked out from each scheme's primary color.
 enum SchemeFamily { brand, purple, blue, teal, green, warm, red, neutral }
 
@@ -22,33 +27,6 @@ class ThemeChoice {
   FlexSchemeColor colors(Brightness b) =>
       b == Brightness.dark ? data.dark : data.light;
 }
-
-/// Casama's brand scheme, from the app icon: plum and lilac for the cloud, the orb's sky blue and
-/// cyan as secondary and tertiary.
-const casamaScheme = FlexSchemeData(
-  name: 'Casama',
-  description: 'Plum, lilac and sky, from the Casama cloud.',
-  light: FlexSchemeColor(
-    primary: Color(0xFF7A3FA8),
-    primaryContainer: Color(0xFFF1E2FC),
-    secondary: Color(0xFF3B78DB),
-    secondaryContainer: Color(0xFFDCE8FF),
-    tertiary: Color(0xFF0E8F9A),
-    tertiaryContainer: Color(0xFFCCF6F4),
-    appBarColor: Color(0xFFF1E2FC),
-    error: Color(0xFFBA1A1A),
-  ),
-  dark: FlexSchemeColor(
-    primary: Color(0xFFD9B6F7),
-    primaryContainer: Color(0xFF5A1F6E),
-    secondary: Color(0xFF9DC3FF),
-    secondaryContainer: Color(0xFF1F3F73),
-    tertiary: Color(0xFF7FEAE4),
-    tertiaryContainer: Color(0xFF0B4B50),
-    appBarColor: Color(0xFF2A1035),
-    error: Color(0xFFFFB4AB),
-  ),
-);
 
 SchemeFamily _familyOf(Color c) {
   final hsl = HSLColor.fromColor(c);
@@ -97,6 +75,78 @@ ThemeChoice galleryChoiceFromSeeds({
         primary: colorFromHex(dark),
         brightness: Brightness.dark,
       ),
+    ),
+  );
+}
+
+/// The six colors a full scheme gives for each of light and dark (gallery README, "Full color
+/// schemes"), plus an optional `appBar`.
+const schemeColorKeys = [
+  'primary',
+  'primaryContainer',
+  'secondary',
+  'secondaryContainer',
+  'tertiary',
+  'tertiaryContainer',
+];
+
+final _hex = RegExp(r'^#[0-9A-Fa-f]{6}$');
+
+/// One mode's exact colors, or null unless all six (and `appBar`, when given) are #RRGGBB.
+FlexSchemeColor? schemeColorsFromJson(Object? raw, Brightness brightness) {
+  if (raw is! Map) return null;
+  Color? read(String key) {
+    final v = raw[key];
+    return v is String && _hex.hasMatch(v) ? colorFromHex(v) : null;
+  }
+
+  final c = [for (final k in schemeColorKeys) read(k)];
+  if (c.any((x) => x == null)) return null;
+  final appBar = read('appBar');
+  if (raw['appBar'] != null && appBar == null) return null;
+  return FlexSchemeColor(
+    primary: c[0]!,
+    primaryContainer: c[1]!,
+    secondary: c[2]!,
+    secondaryContainer: c[3]!,
+    tertiary: c[4]!,
+    tertiaryContainer: c[5]!,
+    appBarColor: appBar ?? c[1],
+    error: brightness == Brightness.light
+        ? const Color(0xFFBA1A1A)
+        : const Color(0xFFFFB4AB),
+  );
+}
+
+/// [colors] in the format [schemeColorsFromJson] reads.
+Map<String, String> schemeColorsToJson(FlexSchemeColor colors) => {
+  'primary': hexFromColor(colors.primary),
+  'primaryContainer': hexFromColor(colors.primaryContainer),
+  'secondary': hexFromColor(colors.secondary),
+  'secondaryContainer': hexFromColor(colors.secondaryContainer),
+  'tertiary': hexFromColor(colors.tertiary),
+  'tertiaryContainer': hexFromColor(colors.tertiaryContainer),
+  'appBar': hexFromColor(colors.appBarColor ?? colors.primaryContainer),
+};
+
+/// A scheme with the exact colors a gallery item gives, or null when they're incomplete.
+ThemeChoice? galleryChoiceFromColors({
+  required String id,
+  required String name,
+  required Object? light,
+  required Object? dark,
+}) {
+  final l = schemeColorsFromJson(light, Brightness.light);
+  final d = schemeColorsFromJson(dark, Brightness.dark);
+  if (l == null || d == null) return null;
+  return ThemeChoice(
+    id: id,
+    family: _familyOf(l.primary),
+    data: FlexSchemeData(
+      name: name,
+      description: 'From the gallery',
+      light: l,
+      dark: d,
     ),
   );
 }

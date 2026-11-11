@@ -2260,6 +2260,12 @@ abstract class AppLocalizations {
   /// **'Allow microphone access to dictate.'**
   String get micPermissionNeeded;
 
+  /// No description provided for @dictationEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No speech came through. Try again.'**
+  String get dictationEmpty;
+
   /// No description provided for @startCall.
   ///
   /// In en, this message translates to:
@@ -3411,6 +3417,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your bots tell you when they need a decision from you, or when their work is ready.'**
   String get notificationsPrimerBody;
+
+  /// No description provided for @notificationsPrimerBlockedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Chrome is blocking notifications for this site. Allow them from the lock in the address bar, then tap Turn on again.'**
+  String get notificationsPrimerBlockedBody;
 
   /// No description provided for @notificationsTurnOn.
   ///
@@ -11758,6 +11770,18 @@ abstract class AppLocalizations {
   /// **'Image'**
   String get galleryImage;
 
+  /// No description provided for @galleryMeshGradient.
+  ///
+  /// In en, this message translates to:
+  /// **'a mesh gradient'**
+  String get galleryMeshGradient;
+
+  /// No description provided for @galleryOwnDoodles.
+  ///
+  /// In en, this message translates to:
+  /// **'Own doodles'**
+  String get galleryOwnDoodles;
+
   /// No description provided for @galleryLightAndDark.
   ///
   /// In en, this message translates to:
@@ -11799,6 +11823,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Behind your chats'**
   String get galleryBehindChats;
+
+  /// No description provided for @celebrateNewBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Say hi to {name}!'**
+  String celebrateNewBot(String name);
+
+  /// No description provided for @celebrateNewSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is ready!'**
+  String celebrateNewSpace(String name);
+
+  /// No description provided for @celebrateJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re in! Welcome to the space.'**
+  String get celebrateJoined;
+
+  /// No description provided for @celebrateNewRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is all set.'**
+  String celebrateNewRoutine(String name);
+
+  /// No description provided for @fewerEffects.
+  ///
+  /// In en, this message translates to:
+  /// **'Fewer effects'**
+  String get fewerEffects;
+
+  /// No description provided for @fewerEffectsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'No celebrations, bouncing tabs or animated bots. The Plain themes turn this on.'**
+  String get fewerEffectsHelp;
 }
 
 class _AppLocalizationsDelegate

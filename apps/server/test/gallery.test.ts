@@ -83,6 +83,23 @@ describe("gallery", () => {
     expect(item.license).toBe("CC0-1.0");
   });
 
+  it("carries what a look needs, with glyphs turned into doodles", async () => {
+    const list = await j(await h.request("/v1/gallery?type=wallpaper", { token: owner.token }));
+    const stargazer = list.items.find((i: { id: string }) => i.id === "stargazer");
+    expect(stargazer.requires).toEqual(["doodles"]);
+    expect(stargazer.document.doodles).toHaveLength(stargazer.document.glyphs.length);
+    const scribbles = list.items.find((i: { id: string }) => i.id === "scribbles");
+    expect(scribbles.requires).toEqual(["doodles", "mesh"]);
+    const item = await j(
+      await h.request("/v1/gallery/wallpaper/stargazer", { token: owner.token }),
+    );
+    expect(item.document.doodles[0][0][0]).toBe("path");
+    const schemes = await j(await h.request("/v1/gallery?type=scheme", { token: owner.token }));
+    expect(schemes.items.find((i: { id: string }) => i.id === "orchid").requires).toEqual([
+      "scheme-colors",
+    ]);
+  });
+
   it("lists skills with their description and icon", async () => {
     const list = await j(await h.request("/v1/gallery?type=skill", { token: owner.token }));
     const brief = list.items.find((i: { id: string }) => i.id === "research-brief");

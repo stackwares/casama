@@ -6,45 +6,62 @@
 <title>Privacy Policy | Casama</title>
 <meta name="description" content="How Casama Cloud and the Casama apps collect, use, share and protect your data, and the rights you have over it.">
 <link rel="canonical" href="https://casama.ai/privacy">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; font-src 'self'">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="stylesheet" href="/site.css">
 <style>
-  :root { --bg:#f6f4ef; --ink:#1d1f1c; --muted:#5c625b; --line:#dcd8cf; --accent:#0f6b5c; --accent-ink:#fff; --card:#fffdf8; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#121412; --ink:#ecebe6; --muted:#a3a8a0; --line:#2a2e2a; --accent:#5cc4ae; --accent-ink:#0b1210; --card:#181b18; } }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font: 17px/1.6 ui-sans-serif, -apple-system, "Segoe UI", Inter, system-ui, sans-serif; }
-  a { color: inherit; }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
-  header.top { display:flex; justify-content:space-between; align-items:center; padding: 22px 0; }
-  .logo { font-weight: 700; letter-spacing: -0.02em; font-size: 20px; text-decoration:none; }
-  nav a { margin-left: 22px; text-decoration: none; color: var(--muted); font-size: 15px; }
-  main { max-width: 70ch; margin: 0 auto; padding: 32px 0 72px; overflow-wrap: break-word; }
-  h1 { font-size: clamp(34px, 5vw, 52px); line-height: 1.05; letter-spacing: -0.03em; margin: 0 0 14px; font-weight: 700; }
-  .meta { color: var(--muted); font-size: 15px; margin: 0 0 28px; }
+  main { max-width: 72ch; margin: 0 auto; padding: 48px 24px 80px; overflow-wrap: break-word; }
+  h1 { font-size: clamp(34px, 5vw, 52px); line-height: 1.05; letter-spacing: -0.03em; margin: 0 0 10px; }
+  .meta { color: var(--muted); font: 500 13.5px/1.4 var(--font-mono); margin: 0 0 28px; }
   h2 { font-size: clamp(22px, 2.6vw, 28px); letter-spacing: -0.02em; line-height: 1.2; margin: 48px 0 12px; padding-top: 28px; border-top: 1px solid var(--line); }
-  h3 { font-size: 18px; margin: 26px 0 6px; }
+  h3 { font-size: 18px; margin: 26px 0 6px; font-weight: 700; }
   p, ul, ol { margin: 0 0 14px; }
   ul, ol { padding-left: 22px; }
   li { margin-bottom: 6px; }
   main a { color: var(--accent); text-underline-offset: 2px; }
-  .summary { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px 24px; margin: 0 0 8px; }
+  .summary { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px 26px; margin: 0 0 8px; box-shadow: var(--shadow-sm); }
   .summary ul { margin: 0; }
-  .toc { columns: 2; column-gap: 28px; font-size: 15px; padding-left: 20px; }
+  .toc { columns: 2; column-gap: 28px; font-size: 15px; padding-left: 20px; background: var(--card-raised); border: 1px solid var(--line); border-radius: 12px; padding: 18px 24px 18px 38px; }
   .toc li { break-inside: avoid; }
-  .table-scroll { overflow-x: auto; margin: 0 0 14px; }
-  table { width: 100%; border-collapse: collapse; font-size: 15.5px; }
-  th, td { text-align: left; padding: 10px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--muted); font-weight: 500; font-size: 14px; }
-  code { font: 0.9em ui-monospace, SFMono-Regular, Menlo, monospace; }
-  footer { padding: 40px 0 60px; color: var(--muted); font-size: 14px; border-top:1px solid var(--line); }
-  footer a { margin-right: 16px; }
-  @media (max-width: 820px) { nav a:not(.gh) { display:none; } .toc { columns: 1; } main { padding-top: 12px; } }
+  .table-scroll { overflow-x: auto; margin: 0 0 14px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  th { color: var(--muted); font: 600 12px/1.2 var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; background: var(--card-raised); }
+  code { font: 0.9em var(--font-mono); }
+  @media (max-width: 820px) { .toc { columns: 1; } main { padding-top: 28px; } }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <a class="logo" href="/">casama</a>
-    <nav><a href="https://docs.casama.ai">Docs</a><a href="/#self-host">Self-host</a><a href="/#cloud">Cloud</a><a class="gh" href="https://github.com/stackwares/casama">GitHub</a></nav>
+  <div class="casama-wallpaper" aria-hidden="true">
+    <div class="casama-wallpaper-pattern" id="site-wallpaper-pattern"></div>
+  </div>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/">
+        <span class="brand-mark">
+          <img src="/assets/bots/casama-brand-animated.svg" alt="" width="30" height="30">
+        </span>
+        <span>casama</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="/#teammates">Teammates</a>
+        <a href="/#features">Capabilities</a>
+        <a href="/#self-host">Self-host</a>
+        <a href="https://gallery.casama.ai">Gallery</a>
+        <a href="https://docs.casama.ai">Docs</a>
+      </nav>
+      <div class="header-actions">
+        <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Toggle color theme" title="Toggle color theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+          </svg>
+        </button>
+        <a class="btn sm hide-mobile" href="https://app.casama.ai">Open web app</a>
+        <a class="btn sm primary" href="https://docs.casama.ai/quick-start">Get started</a>
+      </div>
+    </div>
   </header>
 
   <main>
@@ -83,7 +100,7 @@
     </ol>
 
     <h2 id="who">1. Who we are and what this covers</h2>
-    <p>Casama is made by Stackwares, based in the Philippines ("we", "us"). We are the personal information controller for the data described here.</p>
+    <p>Casama is made by Anna May A Valdez, operating as Stackwares, of Block 4, Lot 3 and 6, Carmela Executive Village 2, Zone 12-A (Poblacion), Talisay City, Negros Occidental 6115, Philippines ("we", "us"). We are the personal information controller for the data described here.</p>
     <p>This policy covers:</p>
     <ul>
       <li><strong>Casama Cloud</strong>, the hosted service we run;</li>
@@ -127,8 +144,8 @@
       <li>Signals that protect sign-up and our computers from abuse, such as a sign-up check token and blocked network attempts from a bot's computer.</li>
     </ul>
 
-    <h3>Error reports</h3>
-    <p>If error reporting is turned on in an app build or on our servers, crash and error reports are sent to an error reporting service. Before they leave, they are scrubbed of message text, prompts, secrets and email addresses. They are not used for tracking.</p>
+    <h3>Error reports and screen analytics</h3>
+    <p>Official Casama apps, and Casama Cloud's servers, send crash and error reports to Sentry. Official apps also send PostHog the name of each screen you open, as a route template such as a settings page, with the ids taken out, and whether the app opened or moved to the background. Reports and screen names are scrubbed of message text, prompts, secrets and email addresses before they leave. PostHog is not used to build a profile of you, and the apps do not record your screen. An app you build yourself sends none of this unless you turn it on, and then it goes to your own project.</p>
 
     <h3>When you contact us</h3>
     <p>Your email address and whatever you write to us.</p>
@@ -148,7 +165,7 @@
     <p>We don't sell or rent your personal information. We don't use it for advertising. We don't train AI models on your content.</p>
 
     <h2 id="models">4. AI models and what they see</h2>
-    <p>To answer you, a bot sends the conversation and relevant context (such as memories, skills, tool results, your profile, and device data you allowed) to an AI model provider.</p>
+    <p>To answer you, a bot sends the conversation and relevant context (such as memories, skills, tool results, your profile, and device data you allowed) to an AI model provider. Health summaries are part of that context unless you have marked Health as <strong>Private models only</strong>.</p>
     <ul>
       <li><strong>Your own key.</strong> If you add a key for OpenAI, Anthropic, Google, xAI, OpenRouter or another provider, or sign in with a ChatGPT plan, requests go to that provider under your account and their terms and privacy policy.</li>
       <li><strong>Casama credits.</strong> If you use credits we provide, requests go through our account with a model provider or router, such as OpenRouter. We send only what the request needs.</li>
@@ -189,7 +206,7 @@
     </table>
     </div>
     <p>By default, daily summaries are kept for a year, and places and notifications for 90 days. You can shorten this for each kind, or choose "live only" so nothing is stored. Turning a kind off deletes what it stored. Forgetting a device deletes everything it shared.</p>
-    <p><strong>Health data.</strong> On Casama Cloud, health data is stored only in encrypted form, and only once you have turned on encryption for a workspace you own. We never use health data for advertising or marketing, never sell it, and never use it to train AI models. Bots don't give medical advice.</p>
+    <p><strong>Health data.</strong> On Casama Cloud, health data is stored only in encrypted form, and only once you have turned on encryption for a workspace you own. A bot can send the summaries you allowed to the AI model you picked for it. Mark Health <strong>Private models only</strong> and only a model on your own machine or private network can read them. The model provider's own policy then applies to what it receives. We never use health data for advertising or marketing, never sell it, and never use it to train AI models. Bots don't give medical advice.</p>
 
     <h2 id="share">6. Who we share it with</h2>
     <p>We share data only with service providers that help us run Casama, with services you choose to connect, or when the law requires it. Providers may use it only to provide their service to us or to you.</p>
@@ -209,7 +226,8 @@
         <tr><td>Dodo Payments</td><td>Payments on the web and desktop, as merchant of record (they handle checkout, tax and refunds)</td><td>When you buy on the web or desktop</td></tr>
         <tr><td>Composio, Pipedream</td><td>Connecting apps such as GitHub, Slack or Google through their sign-in</td><td>Only when you connect an app through them</td></tr>
         <tr><td>Sandbox providers (such as E2B or Daytona)</td><td>Running bots' cloud computers when our own machines are full</td><td>Only if we use them for your computer</td></tr>
-        <tr><td>Error reporting (Sentry or PostHog)</td><td>Crash and error reports, scrubbed as described above</td><td>Only if turned on</td></tr>
+        <tr><td>Sentry</td><td>Crash and error reports, scrubbed as described above</td><td>Official apps and Casama Cloud</td></tr>
+        <tr><td>PostHog</td><td>Screen names, and whether the app opened or moved to the background. No profile and no screen recording</td><td>Official apps</td></tr>
         <tr><td>Apps and services you connect</td><td>Whatever you ask your bots to do with them (for example Gmail, Slack, Twilio, Stripe, chat apps, memory services, maps)</td><td>Only when you connect them</td></tr>
       </tbody>
     </table>
@@ -233,6 +251,7 @@
       <li><strong>Run history:</strong> 180 days by default. Workspace owners and admins can change this from 30 to 730 days in the app, or 7 to 3,650 days through the API. Older run events are deleted automatically every day.</li>
       <li><strong>Device data:</strong> as described in <a href="#device">Device data and health</a>.</li>
       <li><strong>Billing records:</strong> as long as tax and accounting laws require.</li>
+      <li><strong>Backups:</strong> Casama Cloud keeps encrypted backup copies for 14 days, then deletes them.</li>
     </ul>
     <h3>When you delete your account</h3>
     <ul>
@@ -241,7 +260,7 @@
       <li><strong>Shared workspaces</strong> with another owner keep their data. Only your membership is removed.</li>
     </ul>
     <p>A workspace where you are the only owner is deleted with your account, even if other people use it. Make someone else an owner first if it should stay.</p>
-    <p>Copies in our backups are removed as those backups expire.</p>
+    <p>After your account is purged, backup copies of that data are deleted on the same 14-day cycle.</p>
 
     <h2 id="rights">9. Your rights and choices</h2>
     <p>Wherever you live, you can:</p>
@@ -282,13 +301,21 @@
     <p>The official apps may still use Apple or Google services (such as push notifications) when connected to a self-hosted server, as described above.</p>
 
     <h2 id="google">14. Google user data</h2>
-    <p>When you connect a Google account (for example Gmail, Google Calendar or Google Drive), Casama uses the data only to do what you ask your bots to do, shown in the app. Casama's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. We don't use Google user data for advertising, don't sell it, and don't use it to train AI models. People can't read it unless you ask us to for support, it's needed for security, or the law requires it. You can disconnect a Google account at any time from the connection's page, which deletes its stored token.</p>
+    <p>When you connect a Google app, Casama uses the data only to do what you ask your bots to do. On Casama Cloud the connection goes through Composio, and Composio's consent screen is the one you approve. A self-hosted server can use its own Google client, which asks only for the access below. Casama uses Google data for:</p>
+    <ul>
+      <li><strong>Gmail.</strong> Search and read mail, create drafts, and change labels. Bots do not send mail. You send drafts from Gmail.</li>
+      <li><strong>Google Calendar.</strong> See your calendars and events, create and change events, and check when you are free.</li>
+      <li><strong>Google Drive.</strong> Only files you pick, or files the bot creates.</li>
+      <li><strong>Google Docs, Sheets and Slides.</strong> Read and edit those documents.</li>
+      <li><strong>Google Contacts.</strong> Look up your contacts and your organization's directory. This connection is read only.</li>
+    </ul>
+    <p>Casama's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. We don't use Google user data for advertising, don't sell it, and don't use it to train AI models. People can't read it unless you ask us to for support, it's needed for security, or the law requires it. You can disconnect a Google account at any time from the connection's page, which deletes its stored token.</p>
 
     <h2 id="changes">15. Changes to this policy</h2>
     <p>We may update this policy as Casama changes. We will post the new version here with a new effective date. If a change is significant, we will tell you in the app or by email before it takes effect.</p>
 
     <h2 id="contact">16. Contact us</h2>
-    <p>Stackwares, Philippines.</p>
+    <p>Anna May A Valdez, operating as Stackwares<br>Block 4, Lot 3 and 6, Carmela Executive Village 2, Zone 12-A (Poblacion)<br>Talisay City, Negros Occidental 6115<br>Philippines</p>
     <ul>
       <li>Privacy questions, data requests and our data protection officer: <a href="mailto:privacy@casama.ai">privacy@casama.ai</a></li>
       <li>Help with the apps or your account: <a href="mailto:support@casama.ai">support@casama.ai</a></li>
@@ -298,7 +325,12 @@
     </ul>
   </main>
 
-  <footer><a href="/">Home</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="https://docs.casama.ai">Docs</a><br><br>&copy; 2026 Stackwares. Casama is open source (Apache-2.0; enterprise features in <code>ee/</code> under a commercial license).</footer>
-</div>
+  <footer class="site-footer">
+    <div class="wrap footer-bottom" style="border-top: 0; padding-top: 0;">
+      <span><a href="/">Home</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://docs.casama.ai">Docs</a> · <a href="https://gallery.casama.ai">Gallery</a> · <a href="https://github.com/stackwares/casama">GitHub</a></span>
+      <span>&copy; 2026 Stackwares. Casama is open source (<code>Apache-2.0</code>; enterprise features in <code>ee/</code> under a commercial license).</span>
+    </div>
+  </footer>
+  <script src="/site.js"></script>
 </body>
 </html>

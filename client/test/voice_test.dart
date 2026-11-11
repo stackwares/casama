@@ -52,6 +52,36 @@ void main() {
     expect(tester.widget<TextField>(find.byKey(const Key('messageInput'))).controller!.text, 'water the plants');
   });
 
+  testWidgets('stopping with no recording leaves the box empty', (tester) async {
+    await setSize(tester, const Size(500, 900));
+    final backend = FakeBackend();
+    final dictation = FakeDictation()..clip = null;
+    await tester.pumpWidget(voiceHarness(backend, dictation: dictation, home: const ChatScreen(botId: botId, conversationId: convId)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('dictateButton')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('dictateButton')));
+    await tester.pumpAndSettle();
+    expect(backend.transcribed, isEmpty);
+    expect(tester.widget<TextField>(find.byKey(const Key('messageInput'))).controller!.text, isEmpty);
+    expect(find.text('No speech came through. Try again.'), findsOneWidget);
+  });
+
+  testWidgets('a blank transcript is not typed into the box', (tester) async {
+    await setSize(tester, const Size(500, 900));
+    final backend = FakeBackend()..transcript = '   ';
+    final dictation = FakeDictation();
+    await tester.pumpWidget(voiceHarness(backend, dictation: dictation, home: const ChatScreen(botId: botId, conversationId: convId)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('dictateButton')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('dictateButton')));
+    await tester.pumpAndSettle();
+    expect(backend.transcribed, ['audio/wav']);
+    expect(tester.widget<TextField>(find.byKey(const Key('messageInput'))).controller!.text, isEmpty);
+    expect(find.text('No speech came through. Try again.'), findsOneWidget);
+  });
+
   testWidgets('bot messages can be read aloud', (tester) async {
     await setSize(tester, const Size(500, 900));
     final backend = FakeBackend()

@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/web_notification_prompt_web.dart' if (dart.library.io) '../../core/web_notification_prompt_stub.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
@@ -8,9 +10,12 @@ import '../../ui/mascot.dart';
 /// "Turn on notifications", shown once after sign-in before the system prompt: a bot, the reason
 /// in one line, and the system prompt behind "Turn on". "Not now" asks again in a week.
 class NotificationsPrimer extends StatelessWidget {
-  const NotificationsPrimer({super.key, required this.onEnable, required this.onLater});
+  const NotificationsPrimer({super.key, required this.onEnable, required this.onLater, this.blocked = false});
   final VoidCallback onEnable;
   final VoidCallback onLater;
+
+  /// Chrome already refused, so Turn on cannot show the prompt until the site setting changes.
+  final bool blocked;
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +59,7 @@ class NotificationsPrimer extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpace.sm),
                   Text(
-                    l10n.notificationsPrimerBody,
+                    blocked ? l10n.notificationsPrimerBlockedBody : l10n.notificationsPrimerBody,
                     textAlign: TextAlign.center,
                     style: context.textTheme.titleMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4, fontWeight: FontWeight.w400),
                   ),
@@ -62,16 +67,26 @@ class NotificationsPrimer extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     height: 56,
-                    child: FilledButton(
-                      key: const Key('notificationsTurnOn'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: scheme.onSurface,
-                        foregroundColor: scheme.surface,
-                        shape: const StadiumBorder(),
-                        textStyle: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      onPressed: onEnable,
-                      child: Text(l10n.notificationsTurnOn),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: kIsWeb ? ExcludeSemantics(child: IgnorePointer(child: _turnOnButton(context, scheme))) : _turnOnButton(context, scheme),
+                        ),
+                        // A real browser button, so Chrome's prompt opens on this click.
+                        if (kIsWeb)
+                          Positioned.fill(
+                            child: HtmlElementView.fromTagName(
+                              tagName: 'button',
+                              onElementCreated: (element) => bindNotificationButton(
+                                element,
+                                label: l10n.notificationsTurnOn,
+                                background: _css(scheme.onSurface),
+                                foreground: _css(scheme.surface),
+                                onPressed: onEnable,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: AppSpace.xs),
@@ -88,4 +103,21 @@ class NotificationsPrimer extends StatelessWidget {
       ),
     );
   }
+
+  Widget _turnOnButton(BuildContext context, ColorScheme scheme) => FilledButton(
+    key: const Key('notificationsTurnOn'),
+    style: FilledButton.styleFrom(
+      backgroundColor: scheme.onSurface,
+      foregroundColor: scheme.surface,
+      shape: const StadiumBorder(),
+      textStyle: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+    ),
+    onPressed: onEnable,
+    child: Text(context.l10n.notificationsTurnOn),
+  );
+}
+
+String _css(Color color) {
+  final rgb = color.toARGB32() & 0xFFFFFF;
+  return '#${rgb.toRadixString(16).padLeft(6, '0')}';
 }

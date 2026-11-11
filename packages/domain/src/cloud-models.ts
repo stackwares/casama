@@ -32,6 +32,39 @@ export function cloudModelDailyCap(plan: string | null | undefined): number {
 type CloudChoice = { credential_id: string; model: string };
 
 /**
+ * A bot whose key was deleted still has that id stored. When the server has its shared key,
+ * those choices move onto it so chat keeps working. A key that still exists is left alone.
+ */
+export function useSharedKeyForMissing<
+  T extends { primary?: CloudChoice; fallbacks?: CloudChoice[]; cheap?: CloudChoice },
+>(policy: T, liveCredentialIds: ReadonlySet<string>, shared: CloudChoice | null): {
+  policy: T;
+  changed: boolean;
+} {
+  if (!shared) return { policy, changed: false };
+  const live = (c: CloudChoice | undefined) =>
+    !c || c.credential_id === shared.credential_id || liveCredentialIds.has(c.credential_id);
+  let changed = false;
+  const keep = (c: CloudChoice | undefined): CloudChoice | undefined => {
+    if (!c || live(c)) return c;
+    changed = true;
+    return { credential_id: shared.credential_id, model: shared.model };
+  };
+  const primary = policy.primary ? keep(policy.primary) : undefined;
+  const hadNoPrimary = !policy.primary;
+  const nextPrimary = primary ?? shared;
+  if (hadNoPrimary) changed = true;
+  const fallbacks = policy.fallbacks?.flatMap((c) => {
+    const kept = keep(c);
+    return kept ? [kept] : [];
+  });
+  return {
+    policy: { ...policy, primary: nextPrimary, cheap: keep(policy.cheap), fallbacks },
+    changed,
+  };
+}
+
+/**
  * Every choice that uses the server's shared key runs [model] (the deployment's model) at the
  * server's reasoning level, on Casama Cloud and on self-hosted servers alike. A workspace's own
  * key is left as the user set it.

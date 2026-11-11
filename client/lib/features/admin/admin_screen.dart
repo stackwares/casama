@@ -557,11 +557,22 @@ class _ConnectionSettingsCard extends ConsumerWidget {
     final settings = ref.watch(_connectionSettingsProvider).value;
     if (settings == null) return const SizedBox.shrink();
     final server = settings.composio == ConnectionSettingsComposioEnum.server && settings.composioKey;
-    Future<void> choose(bool serverComposio) async {
-      await runGuarded(context, () => ref.read(backendProvider).setAdminConnectionSettings(serverComposio: serverComposio));
+    Future<void> save({bool? serverComposio, bool? googleDirect}) async {
+      await runGuarded(
+        context,
+        () => ref
+            .read(backendProvider)
+            .setAdminConnectionSettings(serverComposio: serverComposio, googleDirect: googleDirect),
+      );
       ref.invalidate(_connectionSettingsProvider);
       ref.invalidate(appCatalogProvider);
     }
+
+    Future<void> choose(bool serverComposio) => save(serverComposio: serverComposio);
+    // Google's own servers vs Composio (D-166): a real choice only with both a Google client and
+    // the server's Composio account in use, and never on Casama Cloud.
+    final googleChoice = settings.googleDirectAvailable && server;
+    final googleDirect = settings.google == ConnectionSettingsGoogleEnum.direct;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -587,6 +598,29 @@ class _ConnectionSettingsCard extends ConsumerWidget {
             ),
           ],
         ),
+        if (googleChoice) ...[
+          SectionHeader(title: l10n.connectionsGoogleTitle),
+          GroupedCard(
+            children: [
+              GroupedTile(
+                key: const Key('connectionsGoogleComposio'),
+                icon: !googleDirect ? LucideIcons.circleCheck : LucideIcons.circle,
+                iconColor: !googleDirect ? context.colorScheme.primary : null,
+                title: l10n.connectionsGoogleComposio,
+                subtitle: l10n.connectionsGoogleComposioHelp,
+                onTap: googleDirect ? () => save(googleDirect: false) : null,
+              ),
+              GroupedTile(
+                key: const Key('connectionsGoogleDirect'),
+                icon: googleDirect ? LucideIcons.circleCheck : LucideIcons.circle,
+                iconColor: googleDirect ? context.colorScheme.primary : null,
+                title: l10n.connectionsGoogleDirect,
+                subtitle: l10n.connectionsGoogleDirectHelp,
+                onTap: !googleDirect ? () => save(googleDirect: true) : null,
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

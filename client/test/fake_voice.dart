@@ -7,6 +7,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 
 class FakeDictation implements Dictation {
   var started = 0;
+  (Uint8List, String)? clip = (Uint8List.fromList([1, 2]), 'audio/wav');
   @override
   Future<bool> start() async {
     started++;
@@ -14,7 +15,7 @@ class FakeDictation implements Dictation {
   }
 
   @override
-  Future<(Uint8List, String)?> stop() async => (Uint8List.fromList([1, 2]), 'audio/wav');
+  Future<(Uint8List, String)?> stop() async => clip;
   @override
   Future<void> cancel() async {}
 }

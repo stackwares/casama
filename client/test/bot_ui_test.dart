@@ -107,5 +107,7 @@ void main() {
     expect(uiActionSummary(next), 'Done, next');
     const empty = BotUiAction(surfaceId: 's', name: 'welcome.task', context: {'text': ''}, sourceComponentId: 'go', label: 'Go');
     expect(uiActionSummary(empty), 'Go');
+    const skip = BotUiAction(surfaceId: 's', name: 'welcome.task', context: {'skip': true}, sourceComponentId: 'skip', label: 'Skip');
+    expect(uiActionSummary(skip), 'Skip');
   });
 }

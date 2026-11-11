@@ -24,6 +24,10 @@ export interface GalleryRecord {
   version: number;
   sha256: string;
   category?: string;
+  /** Features the look needs from the app (doodles, mesh, scheme-colors). */
+  requires?: string[];
+  /** The look's document as the index carries it, with `glyphs` resolved into `doodles`. */
+  document?: Record<string, unknown>;
   files: string[];
 }
 
@@ -142,6 +146,8 @@ export async function galleryItem(
       throw new ApiError(502, "gallery_unavailable", "The gallery didn't return this skill.");
     return { item, document: null, skillMd: await res.text() };
   }
+  // The index's copy has `glyphs` already turned into doodles; the file on disk doesn't.
+  if (item.document) return { item, document: item.document, skillMd: null };
   const docName =
     type === "theme" ? "theme.json" : type === "scheme" ? "scheme.json" : "wallpaper.json";
   const docPath = item.files.find((f) => f.endsWith(`/${docName}`));

@@ -1138,8 +1138,11 @@ abstract class Backend {
 
   /// How apps without their own sign-in connect (D-173): the server's Composio account or people's own.
   Future<ConnectionSettings> adminConnectionSettings();
+  /// Leave a choice null to keep it. [googleDirect]: Google's apps use Google's own MCP servers
+  /// instead of the server's Composio account (D-166; self-hosted only).
   Future<ConnectionSettings> setAdminConnectionSettings({
-    required bool serverComposio,
+    bool? serverComposio,
+    bool? googleDirect,
   });
 
   /// The models Casama Cloud runs. The instance owner can change them without a restart (D-188).

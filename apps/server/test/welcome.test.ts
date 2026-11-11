@@ -157,6 +157,24 @@ describe("welcome chat", () => {
     expect(runs?.n).toBe(0);
   });
 
+  it("the first task card can be skipped, straight to the setup offer, without a model", async () => {
+    await h.tdb
+      .admin`update public.conversations set welcome = jsonb_set(welcome, '{step}', '"first_value"') where id = ${w.conversation_id}`;
+    await act(await last(), "welcome.nocatchup", {}, "Not now");
+    const task = await last();
+    expect(actions(task).map((a) => a.name)).toEqual(["welcome.task", "welcome.task"]);
+    await act(task, "welcome.task", { skip: true }, "Skip");
+    const offer = await last();
+    expect(offer[0]?.text).toContain("a few quick questions");
+    const [conv] = await h.tdb.admin<
+      { step: string }[]
+    >`select welcome ->> 'step' as step from public.conversations where id = ${w.conversation_id}`;
+    expect(conv?.step).toBe("offer_setup");
+    // Back to where the model card left it, for the next test.
+    await h.tdb
+      .admin`update public.conversations set welcome = jsonb_set(welcome, '{step}', '"model"') where id = ${w.conversation_id}`;
+  });
+
   it("with a key added, the first task runs on the model, then the setup interview and 'What I learned'", async () => {
     await h.request("/v1/credentials", {
       method: "POST",

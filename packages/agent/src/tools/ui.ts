@@ -60,7 +60,7 @@ Give a flat list of components; the one with id "root" is the top. Containers na
 - DateTimeInput: {value: {"@path": "/form/when"}, enableDate?: true, enableTime?: true, label?}
 - Image: {url, description?}. Icon: {name}, e.g. "check", "info", "event", "mail".
 
-Inputs keep their values at their data path; bind with {"@path": "/form/x"} (note the @). A Button's action sends an event to you; put the values you need in its context with paths, e.g. {"event": {"name": "submit", "context": {"plan": {"@path": "/form/plan"}, "note": {"@path": "/form/note"}}}}. For simple choices make one Button per option with a literal context, e.g. {"event": {"name": "choose", "context": {"plan": "pro"}}}. Inputs alone send nothing: every UI with inputs needs a Button that sends them (one is added if you leave it out).
+Inputs keep their values at their data path; bind with {"@path": "/form/x"} (note the @). A Button's action sends an event to you; put the values you need in its context with paths, e.g. {"event": {"name": "submit", "context": {"plan": {"@path": "/form/plan"}, "note": {"@path": "/form/note"}}}}. For simple choices make one Button per option with a literal context, e.g. {"event": {"name": "choose", "context": {"plan": "pro"}}}. Inputs alone send nothing: every UI with inputs needs a Button that sends them (one is added if you leave it out). Always leave the person a way out: next to a single Go/Send/Confirm button, add a borderless "Skip" or "Not now" (a Skip is added if a UI has only one button).
 
 After calling this, end your turn: the person's choice arrives as their next message.`;
 
@@ -174,6 +174,56 @@ export function ensureSubmit(components: Array<Record<string, unknown>>) {
   ];
 }
 
+/**
+ * A card whose only button is "Go" leaves the person no way to say no but typing. When a UI has
+ * exactly one button with an action, add a borderless Skip beside it; its "skip" event reaches
+ * the bot as the person's answer, like any other button.
+ */
+export function ensureWayOut(components: Array<Record<string, unknown>>) {
+  const buttons = components.filter((c) => c.component === "Button" && c.action);
+  const only = buttons.length === 1 ? buttons[0] : undefined;
+  if (!only) return components;
+  const onlyId = String(only.id);
+  const parent = components.find(
+    (c) => Array.isArray(c.children) && (c.children as unknown[]).includes(onlyId),
+  );
+  if (!parent) return components; // A lone button as the root, or under a Card: leave it be.
+  const ids = new Set(components.map((c) => String(c.id)));
+  const fresh = (base: string) => {
+    let id = base;
+    for (let n = 2; ids.has(id); n++) id = `${base}_${n}`;
+    ids.add(id);
+    return id;
+  };
+  const skip = fresh("skip");
+  const label = fresh("skip_text");
+  const added = [
+    {
+      id: skip,
+      component: "Button",
+      child: label,
+      variant: "borderless",
+      action: { event: { name: "skip" } },
+    },
+    { id: label, component: "Text", text: "Skip" },
+  ];
+  const children = parent.children as string[];
+  // Already in a row: Skip goes after it. In a column: the button and Skip share a new row.
+  if (parent.component === "Row") {
+    const at = children.indexOf(onlyId);
+    const next = [...children.slice(0, at + 1), skip, ...children.slice(at + 1)];
+    return [...components.map((c) => (c === parent ? { ...c, children: next } : c)), ...added];
+  }
+  const row = fresh("actions");
+  return [
+    ...components.map((c) =>
+      c === parent ? { ...c, children: children.map((x) => (x === onlyId ? row : x)) } : c,
+    ),
+    { id: row, component: "Row", children: [onlyId, skip] },
+    ...added,
+  ];
+}
+
 /** How a shown card's tool result starts; the run loop ends the turn after one (one card at a time). */
 export const UI_SHOWN_RESULT = "Showing the UI (";
 
@@ -190,7 +240,7 @@ export function registerUiTools(registry: ToolRegistry) {
     async execute(args, ctx) {
       const components = normalizeBindings(args.components) as Array<Record<string, unknown>>;
       checkComponents(components);
-      const shown = ensureSubmit(components);
+      const shown = ensureWayOut(ensureSubmit(components));
       const surfaceId = `ui_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
       await ctx.emit("ui.shown", {
         surface_id: surfaceId,

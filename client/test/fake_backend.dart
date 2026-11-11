@@ -3238,7 +3238,9 @@ class FakeBackend implements Backend {
   );
   var connectionSettings = ConnectionSettings(
     composio: ConnectionSettingsComposioEnum.server,
+    google: ConnectionSettingsGoogleEnum.composio,
     composioKey: true,
+    googleDirectAvailable: true,
   );
   @override
   Future<ConnectionSettings> adminConnectionSettings() async =>
@@ -3262,12 +3264,21 @@ class FakeBackend implements Backend {
       cloudModels = models;
   @override
   Future<ConnectionSettings> setAdminConnectionSettings({
-    required bool serverComposio,
+    bool? serverComposio,
+    bool? googleDirect,
   }) async => connectionSettings = ConnectionSettings(
-    composio: serverComposio
+    composio: serverComposio == null
+        ? connectionSettings.composio
+        : serverComposio
         ? ConnectionSettingsComposioEnum.server
         : ConnectionSettingsComposioEnum.own,
+    google: googleDirect == null
+        ? connectionSettings.google
+        : googleDirect
+        ? ConnectionSettingsGoogleEnum.direct
+        : ConnectionSettingsGoogleEnum.composio,
     composioKey: connectionSettings.composioKey,
+    googleDirectAvailable: connectionSettings.googleDirectAvailable,
   );
 
   // --- Phase 8: privacy and SSO --------------------------------------------
@@ -3710,6 +3721,7 @@ class FakeBackend implements Backend {
   // --- Phase 6: voice -------------------------------------------------------
 
   final transcribed = <String>[];
+  String transcript = 'water the plants';
   final spoken = <String>[];
   final voiceTools = <String>[];
   List<(String, String)>? savedTurns;
@@ -3719,7 +3731,7 @@ class FakeBackend implements Backend {
   @override
   Future<String> transcribe(String botId, Uint8List audio, String mime) async {
     transcribed.add(mime);
-    return 'water the plants';
+    return transcript;
   }
 
   @override

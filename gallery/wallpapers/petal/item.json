@@ -1,0 +1,14 @@
+{
+  "name": "Petal",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "pink",
+    "calm"
+  ],
+  "featured": true,
+  "version": 1
+}

@@ -10,6 +10,7 @@ import '../../core/widgets.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/mascot.dart';
 import '../settings/name_step.dart';
+import '../../ui/bot_loader.dart';
 
 /// Welcome chat (D-129): a new person gets a personal space and bot, and lands in its chat. No
 /// form; the old wizard is behind "Set up manually".
@@ -82,10 +83,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             mainAxisSize: MainAxisSize.min,
             spacing: AppSpace.md,
             children: [
-              const MascotImage(Mascot.winky, size: 96),
+              // Bobbing while the space gets ready; shy if it didn't work.
+              if (_error == null) const BotLoader(mascot: Mascot.winky) else const MascotImage(Mascot.shy, size: 96),
               if (_error == null) ...[
                 Text(l10n.welcomeGettingReady, key: const Key('welcomeLoading'), style: Theme.of(context).textTheme.titleMedium),
-                const CircularProgressIndicator(),
               ] else ...[
                 Text(errorText(context, _error!), textAlign: TextAlign.center),
                 FilledButton(onPressed: _start, child: Text(l10n.tryAgain)),

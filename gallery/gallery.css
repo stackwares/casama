@@ -25,12 +25,10 @@
   position: absolute;
   inset: 0;
 }
+/* The mesh, drawn small and stretched smoothly (gallery.js). */
 .cg-wall {
-  background-color: var(--c0);
-  background-image:
-    radial-gradient(circle var(--r) at 85% 12%, var(--c1), transparent),
-    radial-gradient(circle var(--r) at 15% 55%, var(--c2), transparent),
-    radial-gradient(circle var(--r) at 70% 92%, var(--c3), transparent);
+  width: 100%;
+  height: 100%;
 }
 .cg-photo img {
   width: 100%;

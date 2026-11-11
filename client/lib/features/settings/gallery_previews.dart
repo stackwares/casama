@@ -6,8 +6,10 @@ import '../../core/backend.dart';
 import '../../core/widgets.dart';
 import '../../theme/appearance.dart';
 import '../../theme/fonts.dart';
+import '../../theme/mesh_gradient.dart';
 import '../../theme/schemes.dart';
 import '../../theme/wallpaper.dart';
+import '../../ui/smooth_network_image.dart';
 
 /// Gallery previews (D-184): every look is drawn as a small Casama chat in its own colors, fonts
 /// and background, from the document the gallery list already carries.
@@ -25,7 +27,15 @@ Map<String, Object?>? _map(Object? v) =>
 String gallerySchemeId(GalleryItem item) =>
     item.type == 'theme' ? 'gallery:theme-${item.id}' : 'gallery:${item.id}';
 
+/// A full scheme's exact colors when all six are there, else the scheme built from its seeds.
 ThemeChoice? _fromSeeds(String id, String name, Map<String, Object?>? doc) {
+  final exact = galleryChoiceFromColors(
+    id: id,
+    name: name,
+    light: doc?['light'],
+    dark: doc?['dark'],
+  );
+  if (exact != null) return exact;
   final light = _map(doc?['light'])?['seed'];
   final dark = _map(doc?['dark'])?['seed'];
   if (light is! String || dark is! String) return null;
@@ -70,13 +80,21 @@ WallpaperSpec? galleryWallpaperOf(GalleryItem item, {bool thumb = false}) {
       photoCreditUrl: item.authorUrl,
     );
   }
+  // A mesh wallpaper (or a theme's wallpaper with a mesh) also names a built-in palette, which is
+  // what older app versions draw instead.
+  final mesh = WallpaperMesh.fromJson(raw['mesh']);
   final pattern = WallpaperPattern.values.asNameMap()[raw['pattern']];
-  final palette = WallpaperPalette.values.asNameMap()[raw['palette']];
+  final palette =
+      WallpaperPalette.values.asNameMap()[raw['palette']] ??
+      (mesh != null ? WallpaperPalette.theme : null);
   if (pattern == null || palette == null) return null;
   final intensity = raw['intensity'];
   return WallpaperSpec(
     pattern: pattern,
     palette: palette,
+    mesh: mesh,
+    // The index carries a wallpaper's drawings resolved (Lucide `glyphs` become `doodles`).
+    doodles: Doodle.listFromJson(raw['doodles']),
     intensity: intensity is num ? intensity.toDouble().clamp(0, 1) : 0.5,
   );
 }
@@ -388,19 +406,13 @@ class GalleryWallpaperPreview extends StatelessWidget {
     final colors = galleryColorScheme(scheme, brightness);
     final thumb = galleryThumbOf(item);
     if (thumb != null) {
-      return ColoredBox(
-        color: colors.surfaceContainerHigh,
-        child: Image.network(
-          thumb,
-          fit: BoxFit.cover,
-          gaplessPlayback: true,
-          errorBuilder: (_, _, _) => Center(
-            child: Icon(
-              LucideIcons.imageOff,
-              color: colors.onSurfaceVariant,
-              size: 20,
-            ),
-          ),
+      return SmoothNetworkImage(
+        thumb,
+        placeholderColor: colors.surfaceContainerHigh,
+        error: Icon(
+          LucideIcons.imageOff,
+          color: colors.onSurfaceVariant,
+          size: 20,
         ),
       );
     }

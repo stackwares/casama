@@ -10,6 +10,10 @@
   var CATEGORY = { work: "Work", writing: "Writing", research: "Research", data: "Data", money: "Money", build: "Build", life: "Life" };
 
   var state = { items: null, failed: false, type: null, q: "", dark: matchMedia("(prefers-color-scheme: dark)").matches, open: null };
+  function applyChrome() {
+    document.documentElement.setAttribute("data-theme", state.dark ? "dark" : "light");
+  }
+  applyChrome();
   var $ = function (id) { return document.getElementById(id); };
   var content = $("content");
   var dialog = $("detail");
@@ -379,6 +383,7 @@
     b.setAttribute("aria-pressed", String((b.dataset.mode === "dark") === state.dark));
     b.addEventListener("click", function () {
       state.dark = b.dataset.mode === "dark";
+      applyChrome();
       document.querySelectorAll(".toolbar .seg button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
       render();
     });

@@ -24,22 +24,29 @@ enum ProviderKind { composio, pipedream }
 
 extension on ProviderKind {
   String get label => this == ProviderKind.composio ? 'Composio' : 'Pipedream';
-  String get keyUrl => this == ProviderKind.composio ? 'https://platform.composio.dev' : 'https://pipedream.com/settings/api';
-  IconData get icon => this == ProviderKind.composio ? LucideIcons.blocks : LucideIcons.cable;
+  String get keyUrl => this == ProviderKind.composio
+      ? 'https://platform.composio.dev'
+      : 'https://pipedream.com/settings/api';
+  IconData get icon =>
+      this == ProviderKind.composio ? LucideIcons.blocks : LucideIcons.cable;
 }
 
 /// Sets up Composio or Pipedream in two steps: a key (with a link to get one free), then the apps
 /// to sign in to. If one already exists, goes straight to its page.
 Future<void> showProviderSetup(BuildContext context, ProviderKind kind) async {
   final container = ProviderScope.containerOf(context, listen: false);
-  final existing = (container.read(integrationsProvider).value ?? const <Integration>[])
-      .where((i) => i.kind.value == kind.name)
-      .firstOrNull;
+  final existing =
+      (container.read(integrationsProvider).value ?? const <Integration>[])
+          .where((i) => i.kind.value == kind.name)
+          .firstOrNull;
   if (existing != null) {
     await context.push('/settings/integrations/${existing.id}');
     return;
   }
-  final created = await showAdaptiveSheet<Integration>(context: context, builder: (_) => _ProviderKeyForm(kind: kind));
+  final created = await showAdaptiveSheet<Integration>(
+    context: context,
+    builder: (_) => _ProviderKeyForm(kind: kind),
+  );
   if (created == null || !context.mounted) return;
   await context.push('/settings/integrations/${created.id}');
   if (context.mounted) await showProviderAppPicker(context, created);
@@ -68,7 +75,10 @@ class _ProviderKeyFormState extends ConsumerState<_ProviderKeyForm> {
   }
 
   bool get _pipedream => widget.kind == ProviderKind.pipedream;
-  bool get _valid => _key.text.trim().length >= 8 && (!_pipedream || (_project.text.trim().isNotEmpty && _client.text.trim().isNotEmpty));
+  bool get _valid =>
+      _key.text.trim().length >= 8 &&
+      (!_pipedream ||
+          (_project.text.trim().isNotEmpty && _client.text.trim().isNotEmpty));
 
   Future<void> _save() async {
     setState(() => _busy = true);
@@ -79,7 +89,13 @@ class _ProviderKeyFormState extends ConsumerState<_ProviderKeyForm> {
         org.id,
         kind: widget.kind.name,
         name: widget.kind.name,
-        config: _pipedream ? {'project_id': _project.text.trim(), 'client_id': _client.text.trim(), 'apps': <String>[]} : {'toolkits': <String>[]},
+        config: _pipedream
+            ? {
+                'project_id': _project.text.trim(),
+                'client_id': _client.text.trim(),
+                'apps': <String>[],
+              }
+            : {'toolkits': <String>[]},
         secret: _key.text.trim(),
       );
       // Checks the key works; an empty app list is fine at this point.
@@ -98,44 +114,53 @@ class _ProviderKeyFormState extends ConsumerState<_ProviderKeyForm> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final k = widget.kind;
-    Widget field(TextEditingController c, String label, IconData icon, {bool secret = false, Key? key, bool last = false}) => Revealable(
-          builder: (context, hidden, toggle) => TextField(
-            key: key,
-            controller: c,
-            // Next moves down the form; Done on the last field connects.
-            textInputAction: last ? TextInputAction.done : TextInputAction.next,
-            onSubmitted: last
-                ? (_) {
-                    if (_valid) _save();
-                  }
-                : null,
-            obscureText: secret && hidden,
-            autocorrect: false,
-            enableSuggestions: false,
-            decoration: InputDecoration(
-              labelText: label,
-              prefixIcon: Icon(icon, size: 20),
-              // Show (for keys and secrets) next to paste.
-              suffixIcon: FieldSuffix(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (secret) toggle,
-                    IconButton(
-                      tooltip: l10n.pasteLabel,
-                      icon: const Icon(LucideIcons.clipboardPaste, size: 18),
-                      onPressed: () async {
-                        final d = await Clipboard.getData(Clipboard.kTextPlain);
-                        if (d?.text != null) setState(() => c.text = d!.text!.trim());
-                      },
-                    ),
-                  ],
+    Widget field(
+      TextEditingController c,
+      String label,
+      IconData icon, {
+      bool secret = false,
+      Key? key,
+      bool last = false,
+    }) => Revealable(
+      builder: (context, hidden, toggle) => TextField(
+        key: key,
+        controller: c,
+        // Next moves down the form; Done on the last field connects.
+        textInputAction: last ? TextInputAction.done : TextInputAction.next,
+        onSubmitted: last
+            ? (_) {
+                if (_valid) _save();
+              }
+            : null,
+        obscureText: secret && hidden,
+        autocorrect: false,
+        enableSuggestions: false,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, size: 20),
+          // Show (for keys and secrets) next to paste.
+          suffixIcon: FieldSuffix(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (secret) toggle,
+                IconButton(
+                  tooltip: l10n.pasteLabel,
+                  icon: const Icon(LucideIcons.clipboardPaste, size: 18),
+                  onPressed: () async {
+                    final d = await Clipboard.getData(Clipboard.kTextPlain);
+                    if (d?.text != null) {
+                      setState(() => c.text = d!.text!.trim());
+                    }
+                  },
                 ),
-              ),
+              ],
             ),
-            onChanged: (_) => setState(() {}),
           ),
-        );
+        ),
+        onChanged: (_) => setState(() {}),
+      ),
+    );
     return FormSheet(
       icon: k.icon,
       title: l10n.providerSetupTitle(k.label),
@@ -147,16 +172,34 @@ class _ProviderKeyFormState extends ConsumerState<_ProviderKeyForm> {
       children: [
         OutlinedButton.icon(
           key: const Key('getProviderKey'),
-          onPressed: () => launchUrl(Uri.parse(k.keyUrl), mode: LaunchMode.externalApplication, webOnlyWindowName: '_blank'),
+          onPressed: () => launchUrl(
+            Uri.parse(k.keyUrl),
+            mode: LaunchMode.externalApplication,
+            webOnlyWindowName: '_blank',
+          ),
           icon: const Icon(LucideIcons.externalLink, size: 16),
           label: Text('${l10n.getFreeKey} · ${k.label}'),
         ),
         if (_pipedream) ...[
           field(_project, l10n.projectId, LucideIcons.folder),
           field(_client, l10n.pipedreamClientId, LucideIcons.idCard),
-          field(_key, l10n.pipedreamClientSecret, LucideIcons.keyRound, secret: true, key: const Key('providerKey'), last: true),
+          field(
+            _key,
+            l10n.pipedreamClientSecret,
+            LucideIcons.keyRound,
+            secret: true,
+            key: const Key('providerKey'),
+            last: true,
+          ),
         ] else
-          field(_key, l10n.apiKey, LucideIcons.keyRound, secret: true, key: const Key('providerKey'), last: true),
+          field(
+            _key,
+            l10n.apiKey,
+            LucideIcons.keyRound,
+            secret: true,
+            key: const Key('providerKey'),
+            last: true,
+          ),
         FormNote(l10n.storedEncrypted, icon: LucideIcons.shieldCheck),
       ],
     );
@@ -164,8 +207,15 @@ class _ProviderKeyFormState extends ConsumerState<_ProviderKeyForm> {
 }
 
 /// Picks an app from Composio's or Pipedream's directory and opens its sign-in page.
-Future<void> showProviderAppPicker(BuildContext context, Integration integration) =>
-    showAdaptiveSheet<void>(context: context, heightFactor: 0.88, contentPadsBottom: true, builder: (_) => _ProviderAppPicker(integration: integration));
+Future<void> showProviderAppPicker(
+  BuildContext context,
+  Integration integration,
+) => showAdaptiveSheet<void>(
+  context: context,
+  heightFactor: 0.88,
+  contentPadsBottom: true,
+  builder: (_) => _ProviderAppPicker(integration: integration),
+);
 
 class _ProviderAppPicker extends ConsumerStatefulWidget {
   const _ProviderAppPicker({required this.integration});
@@ -181,7 +231,9 @@ class _ProviderAppPickerState extends ConsumerState<_ProviderAppPicker> {
   late Future<List<ProviderApp>> _apps = _load();
   String? _opening;
 
-  Future<List<ProviderApp>> _load() => ref.read(backendProvider).providerApps(widget.integration.id, query: _search.text);
+  Future<List<ProviderApp>> _load() => ref
+      .read(backendProvider)
+      .providerApps(widget.integration.id, query: _search.text);
 
   @override
   void dispose() {
@@ -192,11 +244,20 @@ class _ProviderAppPickerState extends ConsumerState<_ProviderAppPicker> {
 
   Future<void> _connect(ProviderApp app) async {
     setState(() => _opening = app.slug);
-    final url = await runGuarded(context, () => ref.read(backendProvider).connectProviderApp(widget.integration.id, app.slug));
+    final url = await runGuarded(
+      context,
+      () => ref
+          .read(backendProvider)
+          .connectProviderApp(widget.integration.id, app.slug),
+    );
     if (!mounted) return;
     setState(() => _opening = null);
     if (url == null) return;
-    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication, webOnlyWindowName: '_blank');
+    await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+      webOnlyWindowName: '_blank',
+    );
     ref.invalidate(providerAccountsProvider(widget.integration.id));
     ref.invalidate(integrationsProvider);
     if (mounted) Navigator.of(context).pop();
@@ -206,9 +267,16 @@ class _ProviderAppPickerState extends ConsumerState<_ProviderAppPicker> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
-    final label = widget.integration.kind == IntegrationKind.composio ? 'Composio' : 'Pipedream';
+    final label = widget.integration.kind == IntegrationKind.composio
+        ? 'Composio'
+        : 'Pipedream';
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.md, AppSpace.lg, 0),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.lg,
+        AppSpace.md,
+        AppSpace.lg,
+        0,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -217,10 +285,16 @@ class _ProviderAppPickerState extends ConsumerState<_ProviderAppPicker> {
           TextField(
             key: const Key('providerAppSearch'),
             controller: _search,
-            decoration: InputDecoration(hintText: l10n.searchProviderApps(label), prefixIcon: const Icon(LucideIcons.search, size: 20)),
+            decoration: InputDecoration(
+              hintText: l10n.searchProviderApps(label),
+              prefixIcon: const Icon(LucideIcons.search, size: 20),
+            ),
             onChanged: (_) {
               _debounce?.cancel();
-              _debounce = Timer(const Duration(milliseconds: 350), () => setState(() => _apps = _load()));
+              _debounce = Timer(
+                const Duration(milliseconds: 350),
+                () => setState(() => _apps = _load()),
+              );
             },
           ),
           const SizedBox(height: AppSpace.sm),
@@ -228,28 +302,66 @@ class _ProviderAppPickerState extends ConsumerState<_ProviderAppPicker> {
             child: FutureBuilder<List<ProviderApp>>(
               future: _apps,
               builder: (context, snap) {
-                if (snap.hasError) return Center(child: FormNote(errorText(context, snap.error!), icon: LucideIcons.triangleAlert));
-                if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+                if (snap.hasError) {
+                  return Center(
+                    child: FormNote(
+                      errorText(context, snap.error!),
+                      icon: LucideIcons.triangleAlert,
+                    ),
+                  );
+                }
+                if (!snap.hasData) {
+                  return const SkeletonList(padding: EdgeInsets.zero);
+                }
                 final items = snap.data!;
-                if (items.isEmpty) return Center(child: Text(l10n.noThemesFound, style: context.textTheme.bodyMedium));
+                if (items.isEmpty) {
+                  return Center(
+                    child: Text(
+                      l10n.noThemesFound,
+                      style: context.textTheme.bodyMedium,
+                    ),
+                  );
+                }
                 return ListView.separated(
-                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: EdgeInsets.only(bottom: BottomPadding.of(context, minimum: AppSpace.lg)),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: EdgeInsets.only(
+                    bottom: BottomPadding.of(context, minimum: AppSpace.lg),
+                  ),
                   itemCount: items.length,
-                  separatorBuilder: (_, _) => Divider(height: 1, color: context.appColors.hairline),
+                  separatorBuilder: (_, _) =>
+                      Divider(height: 1, color: context.appColors.hairline),
                   itemBuilder: (_, i) {
                     final a = items[i];
                     return ListTile(
                       key: Key('providerApp-${a.slug}'),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
-                      leading: AppLogo(name: a.name, imageUrl: a.logo, size: 40),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppSpace.xs,
+                      ),
+                      leading: AppLogo(
+                        name: a.name,
+                        imageUrl: a.logo,
+                        size: 40,
+                      ),
                       title: Text(a.name),
                       subtitle: a.description.isEmpty
                           ? null
-                          : Text(a.description, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: scheme.onSurfaceVariant)),
+                          : Text(
+                              a.description,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(color: scheme.onSurfaceVariant),
+                            ),
                       trailing: _opening == a.slug
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                          : FilledButton.tonal(onPressed: () => _connect(a), child: Text(l10n.connect)),
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : FilledButton.tonal(
+                              onPressed: () => _connect(a),
+                              child: Text(l10n.connect),
+                            ),
                       onTap: () => _connect(a),
                     );
                   },
@@ -263,9 +375,11 @@ class _ProviderAppPickerState extends ConsumerState<_ProviderAppPicker> {
   }
 }
 
-final providerAccountsProvider = FutureProvider.family<List<ProviderAccount>, String>(
-  (ref, integrationId) => ref.watch(backendProvider).providerAccounts(integrationId),
-);
+final providerAccountsProvider =
+    FutureProvider.family<List<ProviderAccount>, String>(
+      (ref, integrationId) =>
+          ref.watch(backendProvider).providerAccounts(integrationId),
+    );
 
 /// The apps signed in through Composio or Pipedream, and a button to add one.
 class ProviderAccountsCard extends ConsumerWidget {
@@ -281,8 +395,9 @@ class ProviderAccountsCard extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         accounts.when(
-          loading: () => const Padding(padding: EdgeInsets.all(AppSpace.md), child: Center(child: CircularProgressIndicator())),
-          error: (e, _) => FormNote(errorText(context, e), icon: LucideIcons.triangleAlert),
+          loading: () => const SkeletonList(count: 3, padding: EdgeInsets.zero),
+          error: (e, _) =>
+              FormNote(errorText(context, e), icon: LucideIcons.triangleAlert),
           data: (items) => items.isEmpty
               ? FormNote(l10n.noProviderAccounts)
               : GroupedCard(
@@ -294,12 +409,16 @@ class ProviderAccountsCard extends ConsumerWidget {
                         title: a.app,
                         trailing: StatusLabel(
                           text: switch (a.status) {
-                            ProviderAccountStatusEnum.connected => l10n.accountConnected,
-                            ProviderAccountStatusEnum.pending => l10n.accountPending,
-                            ProviderAccountStatusEnum.error => l10n.accountError,
+                            ProviderAccountStatusEnum.connected =>
+                              l10n.accountConnected,
+                            ProviderAccountStatusEnum.pending =>
+                              l10n.accountPending,
+                            ProviderAccountStatusEnum.error =>
+                              l10n.accountError,
                           },
                           color: switch (a.status) {
-                            ProviderAccountStatusEnum.connected => colors.positive,
+                            ProviderAccountStatusEnum.connected =>
+                              colors.positive,
                             ProviderAccountStatusEnum.pending => colors.warning,
                             ProviderAccountStatusEnum.error => colors.negative,
                           },

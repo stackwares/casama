@@ -1,114 +1,2617 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Casama: AI teammates with their own computers</title>
-<meta name="description" content="Self-hostable AI bots that remember, work on real computers and ask before risky steps. Any model, your server, Apache-2.0.">
-<link rel="canonical" href="https://casama.ai/">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'">
-<style>
-  :root { --bg:#f6f4ef; --ink:#1d1f1c; --muted:#5c625b; --line:#dcd8cf; --accent:#0f6b5c; --accent-ink:#fff; --card:#fffdf8; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#121412; --ink:#ecebe6; --muted:#a3a8a0; --line:#2a2e2a; --accent:#5cc4ae; --accent-ink:#0b1210; --card:#181b18; } }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font: 17px/1.55 ui-sans-serif, -apple-system, "Segoe UI", Inter, system-ui, sans-serif; }
-  a { color: inherit; }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
-  header.top { display:flex; justify-content:space-between; align-items:center; padding: 22px 0; }
-  .logo { font-weight: 700; letter-spacing: -0.02em; font-size: 20px; text-decoration:none; }
-  nav a { margin-left: 22px; text-decoration: none; color: var(--muted); font-size: 15px; }
-  .hero { display:grid; grid-template-columns: 1.15fr 0.85fr; gap: 56px; align-items:center; padding: 56px 0 72px; }
-  h1 { font-size: clamp(38px, 5.4vw, 64px); line-height: 1.02; letter-spacing: -0.035em; margin: 0 0 22px; font-weight: 700; }
-  .lede { font-size: 20px; color: var(--muted); max-width: 34ch; margin: 0 0 30px; }
-  .cmd { display:flex; align-items:center; gap: 12px; background: var(--card); border:1px solid var(--line); border-radius: 12px; padding: 12px 14px; font: 14.5px ui-monospace, SFMono-Regular, Menlo, monospace; max-width: 520px; overflow-x:auto; white-space: nowrap; }
-  .cmd span { color: var(--muted); }
-  .ctas { display:flex; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
-  .btn { display:inline-block; padding: 12px 18px; border-radius: 10px; text-decoration:none; font-weight: 600; font-size: 15px; border:1px solid var(--line); }
-  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
-  .phone { justify-self: center; width: min(320px, 100%); border-radius: 36px; border: 1px solid var(--line); overflow: hidden; background: var(--card); box-shadow: 0 30px 60px -30px rgba(0,0,0,.35); }
-  .phone video, .phone img { display:block; width:100%; height:auto; }
-  section { padding: 64px 0; border-top: 1px solid var(--line); }
-  h2 { font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0 0 28px; max-width: 24ch; line-height: 1.15; }
-  .grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
-  .grid h3 { font-size: 18px; margin: 0 0 8px; }
-  .grid p { margin: 0; color: var(--muted); font-size: 16px; }
-  table { width: 100%; border-collapse: collapse; font-size: 16px; }
-  th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--muted); font-weight: 500; font-size: 14px; }
-  td.yes { color: var(--accent); font-weight: 600; }
-  .split { display:grid; grid-template-columns: 1fr 1fr; gap: 28px; }
-  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 26px; }
-  .panel h3 { margin: 0 0 6px; }
-  .panel p { color: var(--muted); margin: 0 0 14px; }
-  .panel ul { margin: 0; padding-left: 18px; color: var(--muted); }
-  footer { padding: 40px 0 60px; color: var(--muted); font-size: 14px; border-top:1px solid var(--line); }
-  @media (max-width: 820px) { .hero, .split { grid-template-columns: 1fr; } .grid { grid-template-columns: 1fr; } nav a:not(.gh) { display:none; } .hero { padding-top: 24px; } }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; font-src 'self'; media-src 'self'">
+  <title>Casama — AI teammates with their own computers, on your own server</title>
+  <meta name="description" content="Open-source AI bots that remember across chats, work on real sandboxed Linux computers, run routines while you're away, and ask before risky steps. Self-host in 15 minutes or use Casama Cloud.">
+  <link rel="canonical" href="https://casama.ai/">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/favicon.png">
+
+  <!-- Open Graph / Social -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Casama">
+  <meta property="og:url" content="https://casama.ai/">
+  <meta property="og:title" content="Casama — AI teammates with their own computers, on your own server">
+  <meta property="og:description" content="Bots that remember across chats, work on real Linux computers, keep going while you're away, and ask before risky steps. Apache-2.0 open source.">
+  <meta property="og:image" content="https://casama.ai/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Casama — AI teammates with their own computers">
+  <meta name="twitter:description" content="Open-source AI bots with real Linux computers, durable runs, memories, routines, and explicit approval gates. Self-host in 15 minutes.">
+  <meta name="twitter:image" content="https://casama.ai/og-image.png">
+
+  <link rel="stylesheet" href="/site.css">
+  <style>
+    /* ==========================================================================
+       Homepage — Hero, Interactive Showcases, Bento, Architecture & Matrix
+       ========================================================================== */
+
+    /* Hero */
+    .hero {
+      padding: 64px 0 80px;
+      position: relative;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+      gap: 52px;
+      align-items: center;
+    }
+
+    .hero-grid > * {
+      min-width: 0;
+    }
+
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 13px 6px 10px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-sm);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-soft);
+      margin-bottom: 22px;
+      text-decoration: none;
+      transition: border-color 150ms ease;
+    }
+
+    .hero-pill:hover {
+      border-color: var(--accent);
+    }
+
+    .hero-pill-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    .hero-pill code {
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .hero h1 {
+      font-size: clamp(40px, 5.2vw, 66px);
+      line-height: 1.03;
+      margin: 0 0 22px;
+      letter-spacing: -0.032em;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .hero-tagline {
+      margin: -6px 0 14px;
+      font-size: 17px;
+      color: var(--ink-soft);
+      transition: opacity 220ms ease;
+    }
+
+    .hero-lede {
+      font-size: clamp(18px, 1.8vw, 20.5px);
+      line-height: 1.56;
+      color: var(--muted);
+      margin: 0 0 28px;
+      max-width: 54ch;
+    }
+
+    /* Interactive Terminal Install Box */
+    .install-card {
+      background: var(--terminal-bg);
+      color: var(--terminal-ink);
+      border: 1px solid var(--terminal-line);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .install-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 14px;
+      background: var(--terminal-surface);
+      border-bottom: 1px solid var(--terminal-line);
+      flex-wrap: wrap;
+    }
+
+    .install-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .install-dots span {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #39403a;
+    }
+
+    .install-dots span:nth-child(1) { background: #e56b6f; }
+    .install-dots span:nth-child(2) { background: #e8b86d; }
+    .install-dots span:nth-child(3) { background: #5cc4ae; }
+
+    .install-tabs {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .install-tab {
+      appearance: none;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--terminal-muted);
+      font: 500 12px/1 var(--font-mono);
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: color 130ms ease, background-color 130ms ease, border-color 130ms ease;
+    }
+
+    .install-tab:hover {
+      color: var(--terminal-ink);
+    }
+
+    .install-tab.active {
+      color: var(--terminal-accent);
+      background: rgba(102, 217, 194, 0.11);
+      border-color: rgba(102, 217, 194, 0.26);
+    }
+
+    .install-body {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 15px 16px;
+    }
+
+    .install-cmd-line {
+      margin: 0;
+      min-width: 0;
+      font: 400 13.5px/1.55 var(--font-mono);
+      color: var(--terminal-ink);
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: thin;
+    }
+
+    .install-cmd-line::before {
+      content: "$ ";
+      color: var(--terminal-accent);
+      user-select: none;
+    }
+
+    .copy-btn {
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 11px;
+      border-radius: 7px;
+      border: 1px solid var(--terminal-line);
+      background: var(--terminal-surface);
+      color: var(--terminal-ink);
+      font: 500 12px/1 var(--font-mono);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
+    }
+
+    .copy-btn:hover {
+      border-color: var(--terminal-accent);
+      color: var(--terminal-accent);
+    }
+
+    .copy-btn.copied {
+      border-color: var(--terminal-accent);
+      background: rgba(102, 217, 194, 0.14);
+      color: var(--terminal-accent);
+    }
+
+    .copy-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .install-foot {
+      padding: 8px 16px 11px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 12.5px;
+      color: var(--terminal-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .hero-platforms {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 14px;
+      font-size: 13.5px;
+      color: var(--muted);
+    }
+
+    .hero-platforms strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .platform-dot {
+      color: var(--line-strong);
+    }
+
+    /* Hero Stage (Right Column) */
+    .hero-stage {
+      position: relative;
+      display: grid;
+      place-items: center;
+      padding: 16px 12px;
+    }
+
+    .stage-backdrop {
+      position: absolute;
+      inset: 16px 0;
+      border-radius: var(--radius-xl);
+      background:
+        radial-gradient(circle at 20% 20%, var(--lilac-soft), transparent 55%),
+        radial-gradient(circle at 80% 75%, var(--accent-soft), transparent 60%),
+        var(--card-raised);
+      border: 1px solid var(--line);
+      z-index: 0;
+    }
+
+    .stage-composition {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr;
+      place-items: center;
+    }
+
+    .phone-frame {
+      width: min(306px, 84vw);
+      background: #121412;
+      padding: 10px;
+      border-radius: 34px;
+      border: 1px solid var(--line-strong);
+      box-shadow: var(--shadow-lg);
+      position: relative;
+    }
+
+    .phone-frame video {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 24px;
+      background: #171a17;
+    }
+
+    /* Floating telemetry cards on the hero stage */
+    .stage-float {
+      position: absolute;
+      background: var(--card);
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.4;
+      max-width: 245px;
+    }
+
+    .stage-float.top-left {
+      top: 18px;
+      left: -14px;
+    }
+
+    .stage-float.bottom-right {
+      bottom: 22px;
+      right: -14px;
+    }
+
+    .float-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 5px;
+    }
+
+    .float-head img {
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font: 500 11px/1 var(--font-mono);
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--accent-border);
+    }
+
+    .live-pill.warn {
+      background: var(--amber-soft);
+      color: var(--amber-ink);
+      border-color: var(--amber-border);
+    }
+
+    .float-mono {
+      font: 400 11.5px/1.45 var(--font-mono);
+      color: var(--muted);
+      background: var(--card-raised);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 5px 8px;
+      margin-top: 6px;
+    }
+
+    /* Proof Strip */
+    .proof-strip {
+      margin-top: 56px;
+      padding: 20px 24px;
+      border-radius: var(--radius-lg);
+      background: var(--card);
+      border: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .proof-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      padding-right: 16px;
+      border-right: 1px solid var(--line);
+    }
+
+    .proof-item:last-child {
+      border-right: 0;
+      padding-right: 0;
+    }
+
+    .proof-metric {
+      font: 600 22px/1.15 var(--font-display);
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+
+    .proof-label {
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    /* ==========================================================================
+       Section 1: Interactive "Meet Your Teammates" Showcase
+       ========================================================================== */
+    .teammates-shell {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .bot-roster {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bot-tab {
+      appearance: none;
+      width: 100%;
+      text-align: left;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+      cursor: pointer;
+      transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+      color: var(--ink);
+      font-family: var(--font-sans);
+    }
+
+    .bot-tab:hover {
+      border-color: var(--line-strong);
+      background: var(--card-raised);
+    }
+
+    .bot-tab.active,
+    .bot-tab.is-active {
+      border-color: var(--accent);
+      background: var(--card);
+      box-shadow: 0 0 0 1px var(--accent), var(--shadow-sm);
+    }
+
+    .mascot-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 22px;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .mascot-spotlight {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 18px 16px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .mascot-spotlight img {
+      width: 156px;
+      height: 156px;
+    }
+
+    .mascot-spotlight h3 {
+      margin: 4px 0 6px;
+      font-size: 22px;
+    }
+
+    .mascot-spotlight p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .mascot-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .mascot-card {
+      appearance: none;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 8px 6px 10px;
+      cursor: pointer;
+      color: var(--ink);
+      font: 600 13px/1.2 var(--font-sans);
+      text-align: center;
+    }
+
+    .mascot-card img {
+      width: 72px;
+      height: 72px;
+      display: block;
+      margin: 0 auto 4px;
+    }
+
+    .mascot-card.is-active,
+    .mascot-card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+      background: var(--card);
+    }
+
+    .bot-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 13px;
+      background: var(--lilac-soft);
+      border: 1px solid color-mix(in srgb, var(--lilac-ink) 16%, transparent);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .bot-avatar img {
+      width: 40px;
+      height: 40px;
+      display: block;
+    }
+
+    .bot-tab-meta {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .bot-tab-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 3px;
+    }
+
+    .bot-role-tag {
+      font: 500 11px/1 var(--font-mono);
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 3px 7px;
+      border-radius: 999px;
+    }
+
+    .bot-tab-desc {
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.42;
+      margin: 0;
+    }
+
+    /* Bot Workspace Inspector Panel */
+    .bot-stage {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bot-stage-header {
+      padding: 16px 22px;
+      background: var(--card-raised);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .bot-stage-id {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .bot-stage-id img {
+      width: 36px;
+      height: 36px;
+    }
+
+    .bot-stage-id h3 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .bot-stage-id p {
+      margin: 2px 0 0;
+      font: 400 12px/1.3 var(--font-mono);
+      color: var(--muted);
+    }
+
+    .bot-specs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .spec-chip {
+      font: 500 11.5px/1 var(--font-mono);
+      padding: 5px 9px;
+      border-radius: 6px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
+    }
+
+    .bot-stage-body {
+      padding: 22px;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 20px;
+      flex: 1;
+    }
+
+    .run-stream {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .stream-label {
+      font: 500 11.5px/1 var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .chat-bubble {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--card-raised);
+      border: 1px solid var(--line);
+      font-size: 14.5px;
+      line-height: 1.5;
+    }
+
+    .chat-bubble.bot {
+      background: var(--card);
+      border-color: var(--accent-border);
+    }
+
+    .chat-bubble-who {
+      font: 600 12px/1 var(--font-mono);
+      color: var(--muted);
+      margin-bottom: 5px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .step-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 9px;
+      background: var(--card-raised);
+      border: 1px solid var(--line);
+      font: 400 12.5px/1.35 var(--font-mono);
+    }
+
+    .step-item-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .step-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .step-status.gate {
+      background: var(--amber-ink);
+    }
+
+    .step-cost {
+      color: var(--muted);
+      font-size: 11.5px;
+      flex-shrink: 0;
+    }
+
+    /* Computer Desk Window inside Bot Stage */
+    .desk-window {
+      background: var(--terminal-bg);
+      color: var(--terminal-ink);
+      border: 1px solid var(--terminal-line);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      font: 400 12.5px/1.55 var(--font-mono);
+    }
+
+    .desk-window-bar {
+      padding: 9px 13px;
+      background: var(--terminal-surface);
+      border-bottom: 1px solid var(--terminal-line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11.5px;
+      color: var(--terminal-muted);
+    }
+
+    .desk-window-body {
+      padding: 14px;
+      margin: 0;
+      overflow-x: auto;
+      flex: 1;
+      white-space: pre-wrap;
+    }
+
+    .desk-window-body .t-dim { color: var(--terminal-muted); }
+    .desk-window-body .t-acc { color: var(--terminal-accent); }
+    .desk-window-body .t-ok { color: #6ee7b7; }
+    .desk-window-body .t-warn { color: #fcd34d; }
+
+    .desk-window-foot {
+      padding: 9px 13px;
+      background: var(--terminal-surface);
+      border-top: 1px solid var(--terminal-line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11.5px;
+      color: var(--terminal-muted);
+    }
+
+    /* ==========================================================================
+       Section 2: Architectural Bento ("Not a chat window. A colleague with a desk.")
+       ========================================================================== */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 20px;
+    }
+
+    .bento-card {
+      grid-column: span 4;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .bento-card.span-7 { grid-column: span 7; }
+    .bento-card.span-5 { grid-column: span 5; }
+    .bento-card.span-6 { grid-column: span 6; }
+
+    .bento-kicker {
+      font: 500 12px/1 var(--font-mono);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .bento-card h3 {
+      font-family: var(--font-display);
+      font-size: 24px;
+      line-height: 1.18;
+      margin: 0 0 10px;
+      letter-spacing: -0.02em;
+    }
+
+    .bento-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15.5px;
+      line-height: 1.56;
+    }
+
+    /* Visual artifacts inside Bento Cards */
+    .bento-artifact {
+      background: var(--card-raised);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 13px;
+    }
+
+    .computer-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mini-pane {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 11px 12px;
+    }
+
+    .mini-pane-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font: 600 11.5px/1 var(--font-mono);
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+
+    .mini-pane p {
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+
+    /* Interactive Approval Widget inside Autonomy Bento */
+    .approval-widget {
+      background: var(--card);
+      border: 1px solid var(--amber-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .approval-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .approval-cmd {
+      font: 400 12px/1.45 var(--font-mono);
+      padding: 7px 10px;
+      background: var(--terminal-bg);
+      color: var(--terminal-ink);
+      border-radius: 7px;
+      margin-bottom: 10px;
+      overflow-x: auto;
+    }
+
+    .approval-outcome {
+      font: 500 12px/1.4 var(--font-mono);
+      margin-bottom: 10px;
+    }
+
+    .approval-outcome.pending { color: var(--amber-ink); }
+    .approval-outcome.approved { color: var(--accent); }
+    .approval-outcome.restored { color: var(--ink-soft); }
+
+    .approval-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip-btn {
+      appearance: none;
+      font: 600 12px/1 var(--font-sans);
+      padding: 7px 12px;
+      border-radius: 7px;
+      border: 1px solid var(--line-strong);
+      background: var(--card-raised);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .chip-btn.approve {
+      background: var(--accent);
+      color: var(--accent-ink);
+      border-color: transparent;
+    }
+
+    /* Memory & Skills Pills */
+    .memory-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .memory-pill {
+      font: 400 12px/1.2 var(--font-mono);
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
+    }
+
+    .memory-pill strong {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* Connected Apps Vault Strip */
+    .apps-icon-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .app-tile {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 8px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .app-tile img {
+      width: 20px;
+      height: 20px;
+      display: block;
+    }
+
+    .vault-rule {
+      font: 400 11.5px/1.4 var(--font-mono);
+      color: var(--muted);
+      padding: 7px 10px;
+      border-radius: 7px;
+      background: var(--card);
+      border: 1px dashed var(--line-strong);
+    }
+
+    /* ==========================================================================
+       Section 3: Interactive Look & Gallery Showcase
+       ========================================================================== */
+    .gallery-showcase {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      padding: 36px;
+      display: grid;
+      grid-template-columns: 1fr 1.05fr;
+      gap: 36px;
+      align-items: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .swatch-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 22px 0 24px;
+    }
+
+    .look-swatch {
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 13px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--card-raised);
+      color: var(--ink);
+      font: 600 13.5px/1 var(--font-sans);
+      cursor: pointer;
+      transition: border-color 140ms ease, transform 120ms ease;
+    }
+
+    .look-swatch:hover {
+      border-color: var(--line-strong);
+    }
+
+    .look-swatch.active,
+    .look-swatch.is-active,
+    .pattern-swatch.is-active {
+      border-color: var(--accent);
+      background: var(--card);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .pattern-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: -8px 0 22px;
+    }
+
+    .pattern-swatch {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--card-raised);
+      color: var(--ink-soft);
+      border-radius: 999px;
+      padding: 6px 11px;
+      font: 600 12.5px/1 var(--font-sans);
+      cursor: pointer;
+    }
+
+    .swatch-dots {
+      display: inline-flex;
+    }
+
+    .swatch-dots span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      margin-left: -3px;
+    }
+
+    .swatch-dots span:first-child {
+      margin-left: 0;
+    }
+
+    /* Live Mini Theme Stage */
+    .mini-gallery-stage {
+      --mg-card: var(--gp-card, #fcfafd);
+      --mg-ink: var(--gp-ink, #1e1a20);
+      --mg-primary: var(--gp-accent, #7a3fa8);
+      --mg-bubble: var(--gp-pc, #f1e2fc);
+      --mg-line: color-mix(in srgb, var(--mg-primary) 22%, transparent);
+      position: relative;
+      overflow: hidden;
+      color: var(--mg-ink);
+      border: 1px solid var(--line-strong);
+      border-radius: 20px;
+      padding: 20px;
+      min-height: 280px;
+      background-color: var(--gp-c0, #eee2fb);
+      background-image:
+        radial-gradient(circle 90% at 85% 12%, var(--gp-c1, #fbe3ee), transparent),
+        radial-gradient(circle 90% at 15% 55%, var(--gp-c2, #dde9ff), transparent),
+        radial-gradient(circle 90% at 70% 92%, var(--gp-c3, #ddf7f5), transparent);
+      box-shadow: var(--shadow-md);
+    }
+
+    .mini-gallery-pattern {
+      position: absolute;
+      inset: 0;
+      background-repeat: repeat;
+      background-size: 180px 180px;
+      pointer-events: none;
+    }
+
+    .mg-window {
+      position: relative;
+      z-index: 1;
+      background: color-mix(in srgb, var(--mg-card) 90%, transparent);
+      border: 1px solid var(--mg-line);
+      border-radius: 14px;
+      padding: 16px;
+      backdrop-filter: blur(8px);
+    }
+
+    .mg-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--mg-line);
+      margin-bottom: 14px;
+      font-size: 13.5px;
+      font-weight: 700;
+    }
+
+    .mg-tag {
+      font: 500 11px/1 var(--font-mono);
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--mg-bubble);
+      color: var(--mg-ink);
+    }
+
+    .mg-msg-user {
+      margin-left: auto;
+      max-width: 78%;
+      background: var(--mg-primary);
+      color: #ffffff;
+      padding: 10px 13px;
+      border-radius: 14px 14px 4px 14px;
+      font-size: 13.5px;
+      margin-bottom: 10px;
+    }
+
+    .mg-msg-bot {
+      max-width: 86%;
+      background: var(--mg-bubble);
+      color: var(--mg-ink);
+      padding: 10px 13px;
+      border-radius: 14px 14px 14px 4px;
+      font-size: 13.5px;
+    }
+
+    .mg-foot {
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--mg-muted);
+    }
+
+    /* ==========================================================================
+       Section 4: Architecture & Security Diagram
+       ========================================================================== */
+    .arch-diagram {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .arch-layers {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .arch-box {
+      background: var(--card-raised);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .arch-box.highlight {
+      border-color: var(--accent-border);
+      background: color-mix(in srgb, var(--accent-soft) 45%, var(--card));
+    }
+
+    .arch-step {
+      font: 500 11.5px/1 var(--font-mono);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .arch-box h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .arch-box p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .arch-tags {
+      margin-top: auto;
+      padding-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .arch-tags code {
+      font-size: 11.5px;
+      padding: 3px 7px;
+      border-radius: 5px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
+    }
+
+    .security-pillars {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .pillar-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .pillar-card h4 {
+      margin: 0 0 6px;
+      font-size: 15.5px;
+      font-weight: 700;
+    }
+
+    .pillar-card p {
+      margin: 0;
+      font-size: 13.8px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ==========================================================================
+       Section 5: Comparison Matrix
+       ========================================================================== */
+    .matrix-wrap {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      overflow-x: auto;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 680px;
+      font-size: 15px;
+    }
+
+    .matrix-table th,
+    .matrix-table td {
+      text-align: left;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    .matrix-table tbody tr:last-child th,
+    .matrix-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .matrix-table thead th {
+      font: 600 12.5px/1.2 var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      background: var(--card-raised);
+    }
+
+    .matrix-table thead th.casama-col {
+      color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .matrix-table tbody th {
+      font-weight: 600;
+      color: var(--ink);
+      width: 26%;
+    }
+
+    .matrix-table td.casama-col {
+      background: color-mix(in srgb, var(--accent-soft) 35%, transparent);
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .matrix-table td.other-col {
+      color: var(--muted);
+    }
+
+    .check-badge {
+      display: inline-block;
+      font: 600 11.5px/1 var(--font-mono);
+      color: var(--accent);
+      margin-right: 6px;
+    }
+
+    /* ==========================================================================
+       Section 6: Three Ways to Run Casama
+       ========================================================================== */
+    .deploy-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .deploy-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .deploy-card.featured {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent), var(--shadow-md);
+    }
+
+    .deploy-tag {
+      align-self: flex-start;
+      font: 500 11.5px/1 var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: var(--card-raised);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .deploy-card.featured .deploy-tag {
+      background: var(--accent-soft);
+      border-color: var(--accent-border);
+      color: var(--accent);
+    }
+
+    .deploy-card h3 {
+      font-family: var(--font-display);
+      font-size: 26px;
+      margin: 0 0 6px;
+    }
+
+    .deploy-price {
+      font: 600 14.5px/1.3 var(--font-mono);
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .deploy-card p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .deploy-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 24px;
+      display: grid;
+      gap: 9px;
+      font-size: 14.5px;
+      color: var(--ink-soft);
+      flex: 1;
+    }
+
+    .deploy-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+    }
+
+    .deploy-list li::before {
+      content: "✓";
+      color: var(--accent);
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 1040px) {
+      .hero-grid,
+      .teammates-shell,
+      .gallery-showcase,
+      .mascot-layout {
+        grid-template-columns: 1fr;
+      }
+      .stage-float.top-left {
+        left: 8px;
+      }
+      .stage-float.bottom-right {
+        right: 8px;
+      }
+      .proof-strip {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .proof-item:nth-child(2) {
+        border-right: 0;
+      }
+      .bento-card,
+      .bento-card.span-7,
+      .bento-card.span-5,
+      .bento-card.span-6 {
+        grid-column: span 6;
+      }
+      .arch-layers,
+      .deploy-grid {
+        grid-template-columns: 1fr;
+      }
+      .security-pillars {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 720px) {
+      .hero {
+        padding: 36px 0 56px;
+      }
+      .bot-stage-body,
+      .computer-split,
+      .proof-strip,
+      .security-pillars {
+        grid-template-columns: 1fr;
+      }
+      .proof-item {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 12px;
+      }
+      .proof-item:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+      .bento-card,
+      .bento-card.span-7,
+      .bento-card.span-5,
+      .bento-card.span-6 {
+        grid-column: span 12;
+      }
+      .apps-icon-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .stage-float {
+        position: static;
+        max-width: none;
+        width: 100%;
+        margin-top: 10px;
+      }
+      .gallery-showcase {
+        padding: 24px;
+      }
+      .mascot-layout,
+      .mascot-grid {
+        grid-template-columns: 1fr;
+      }
+      .mascot-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Casama",
+    "applicationCategory": "DeveloperApplication, ProductivityApplication",
+    "operatingSystem": "Linux, macOS, Windows, iOS, Android, Web",
+    "license": "https://www.apache.org/licenses/LICENSE-2.0",
+    "url": "https://casama.ai/",
+    "description": "Open-source AI teammates with their own computers, durable runs, persistent memory, scheduled routines, and explicit approval gates.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <a class="logo" href="/">casama</a>
-    <nav><a href="https://docs.casama.ai">Docs</a><a href="#self-host">Self-host</a><a href="#cloud">Cloud</a><a class="gh" href="https://github.com/stackwares/casama">GitHub</a></nav>
+  <div class="casama-wallpaper" aria-hidden="true">
+    <div class="casama-wallpaper-pattern" id="site-wallpaper-pattern"></div>
+  </div>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- Sticky Architectural Header -->
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/">
+        <span class="brand-mark">
+          <img src="/assets/bots/casama-brand-animated.svg" alt="" width="30" height="30">
+        </span>
+        <span>casama</span>
+        <span class="brand-badge">Apache-2.0</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Primary">
+        <a href="#teammates">Teammates</a>
+        <a href="#features">Capabilities</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#compare">Compare</a>
+        <a href="#self-host">Self-host</a>
+        <a href="https://gallery.casama.ai">Gallery</a>
+        <a href="https://docs.casama.ai">Docs</a>
+      </nav>
+
+      <div class="header-actions">
+        <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Toggle color theme" title="Toggle color theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+          </svg>
+        </button>
+        <a class="btn sm ghost hide-mobile" href="https://github.com/stackwares/casama">
+          <img src="/assets/apps/github.svg" alt="" width="16" height="16">
+          <span>GitHub</span>
+        </a>
+        <a class="btn sm hide-mobile" href="https://app.casama.ai">Open web app</a>
+        <a class="btn sm primary" href="https://docs.casama.ai/quick-start">Get started</a>
+      </div>
+    </div>
   </header>
 
-  <div class="hero">
-    <div>
-      <h1>AI teammates with their own computers.</h1>
-      <p class="lede">Bots that remember, work on real computers, and ask before risky steps. On your server, with any model.</p>
-      <div class="cmd"><span>$</span> git clone https://github.com/stackwares/casama &amp;&amp; ./casama/install.sh</div>
-      <div class="ctas">
-        <a class="btn primary" href="https://docs.casama.ai/quick-start">Get started</a>
-        <a class="btn" href="https://github.com/stackwares/casama">Star on GitHub</a>
+  <main id="main">
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-grid">
+          <div>
+            <a class="hero-pill" href="https://docs.casama.ai/self-hosting/">
+              <span class="hero-pill-dot" aria-hidden="true"></span>
+              <span>Open source · Self-host in 15 min ·</span>
+              <code>./install.sh</code>
+            </a>
+
+            <h1>AI teammates with their own <em>computers</em>.</h1>
+
+            <p class="hero-tagline" id="rotating-welcome-tagline">Teammates that keep working after you close the app.</p>
+
+            <p class="hero-lede">
+              Bots that remember across chats, work inside real Linux computers, keep going while you're away, and ask before risky steps. Run the entire stack on your server with any model—or use Casama Cloud.
+            </p>
+
+            <!-- Interactive Install Terminal -->
+            <div class="install-card" role="region" aria-label="Quick install command">
+              <div class="install-bar">
+                <div class="install-dots" aria-hidden="true">
+                  <span></span><span></span><span></span>
+                </div>
+                <div class="install-tabs" role="tablist" aria-label="Install mode">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected="true"
+                    class="install-tab active"
+                    data-install-cmd="git clone https://github.com/stackwares/casama && ./casama/install.sh --local"
+                    data-install-note="Starts Postgres, API, durable worker, sandbox supervisor, and web app on localhost.">
+                    Try on this machine
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected="false"
+                    class="install-tab"
+                    data-install-cmd="git clone https://github.com/stackwares/casama && ./casama/install.sh --domain casama.example.com"
+                    data-install-note="Provisions automatic HTTPS via Caddy, hardened sandboxes, and daily backups.">
+                    Your own domain
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected="false"
+                    class="install-tab"
+                    data-install-cmd="brew install stackwares/tap/casama && casama login"
+                    data-install-note="Chat with bots, inspect runs, and manage self-hosted servers from your terminal.">
+                    Homebrew CLI
+                  </button>
+                </div>
+              </div>
+
+              <div class="install-body">
+                <pre class="install-cmd-line"><code id="install-code">git clone https://github.com/stackwares/casama &amp;&amp; ./casama/install.sh --local</code></pre>
+                <button type="button" id="copy-install-btn" class="copy-btn" aria-label="Copy install command">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span id="copy-install-label">Copy</span>
+                </button>
+              </div>
+
+              <div class="install-foot">
+                <span id="install-note">Starts Postgres, API, durable worker, sandbox supervisor, and web app on localhost.</span>
+                <a href="https://docs.casama.ai/self-hosting/" style="color: var(--terminal-accent); text-decoration: none;">Self-hosting guide →</a>
+              </div>
+            </div>
+
+            <div class="hero-actions">
+              <a class="btn lg primary" href="https://docs.casama.ai/quick-start">Quick start guide →</a>
+              <a class="btn lg" href="https://app.casama.ai">Open Casama Cloud</a>
+              <a class="btn lg ghost" href="https://github.com/stackwares/casama">
+                <img src="/assets/apps/github.svg" alt="" width="18" height="18">
+                <span>View source</span>
+              </a>
+            </div>
+
+            <div class="hero-platforms">
+              <strong>Everywhere you work:</strong>
+              <span>iOS</span><span class="platform-dot">·</span>
+              <span>Android</span><span class="platform-dot">·</span>
+              <span>macOS</span><span class="platform-dot">·</span>
+              <span>Windows</span><span class="platform-dot">·</span>
+              <span>Linux</span><span class="platform-dot">·</span>
+              <span>Web</span><span class="platform-dot">·</span>
+              <span>CLI &amp; MCP</span>
+            </div>
+          </div>
+
+          <!-- Right Column: Multi-Layered Product Stage -->
+          <div class="hero-stage">
+            <div class="stage-backdrop" aria-hidden="true"></div>
+            <div class="stage-composition">
+              <div class="phone-frame">
+                <video
+                  src="/assets/demo-app-flow.mp4"
+                  poster="/assets/chat-recall.png"
+                  autoplay
+                  loop
+                  muted
+                  playsinline
+                  controls
+                  preload="metadata"
+                  width="430"
+                  height="932"
+                  aria-label="Casama app demo: chat with memory recall, live bot computer, and approval card">
+                </video>
+              </div>
+
+              <div class="stage-float top-left">
+                <div class="float-head">
+                  <img src="/assets/bots/casama-focused-animated.svg" alt="" width="26" height="26">
+                  <span>Ada's Computer</span>
+                  <span class="live-pill">gVisor</span>
+                </div>
+                <div style="color: var(--muted); font-size: 12.5px;">Isolated Linux desktop · sleeps when idle · watch or take over live</div>
+                <div class="float-mono">ubuntu@ada-desk:~/repo$ npx vitest run<br>✓ 42 passed (1.4s)</div>
+              </div>
+
+              <div class="stage-float bottom-right">
+                <div class="float-head">
+                  <span>Approval Gate</span>
+                  <span class="live-pill warn">High risk</span>
+                </div>
+                <div style="color: var(--muted); font-size: 12.5px;">Filesystem checkpoint saved before shell step</div>
+                <div class="float-mono">Ask before: git push origin main</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Engineering Proof Strip -->
+        <div class="proof-strip" aria-label="Platform highlights">
+          <div class="proof-item">
+            <span class="proof-metric">&lt; 15 min</span>
+            <span class="proof-label">Clean VPS or local Docker install with automatic TLS, Postgres RLS, and sandboxed computers</span>
+          </div>
+          <div class="proof-item">
+            <span class="proof-metric">Any model</span>
+            <span class="proof-label">Anthropic, OpenAI (or your ChatGPT plan), Gemini, xAI, OpenRouter, or local Ollama on your GPU</span>
+          </div>
+          <div class="proof-item">
+            <span class="proof-metric">Durable runs</span>
+            <span class="proof-label">Backed by DBOS workflows—restart the server mid-task and runs resume from the last finished step</span>
+          </div>
+          <div class="proof-item">
+            <span class="proof-metric">6 native apps</span>
+            <span class="proof-label">iOS, Android, macOS, Windows, Linux, and Web—plus Telegram, Slack, WhatsApp, Email, and Voice</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Teammate Inspector -->
+    <section class="section-block" id="teammates">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>Meet your teammates</p>
+            <h2>The same clouds you see in the app.</h2>
+          </div>
+          <p>
+            Every bot wears one of these animated mascots. Winky, Giggly, Thinker, and Wow also stand in for the Casama mark. Pick a face, then see a teammate that wears it.
+          </p>
+        </div>
+
+        <div class="mascot-layout">
+          <div class="mascot-spotlight">
+            <img id="active-mascot-spotlight-img" src="/assets/bots/casama-winky-animated.svg" alt="" width="156" height="156">
+            <h3 id="active-mascot-spotlight-name">Winky</h3>
+            <p id="active-mascot-spotlight-desc">A wink for the welcome screen. One of the four faces that stand in for Casama.</p>
+          </div>
+          <div class="mascot-grid" role="list">
+            <button type="button" class="mascot-card is-active" data-mascot-card data-mascot-svg="/assets/bots/casama-winky-animated.svg" data-mascot-title="Winky" data-mascot-bio="A wink for the welcome screen. One of the four faces that stand in for Casama."><img src="/assets/bots/casama-winky-animated.svg" alt="" width="72" height="72"><span>Winky</span></button>
+            <button type="button" class="mascot-card" data-mascot-card data-mascot-svg="/assets/bots/casama-giggly-animated.svg" data-mascot-title="Giggly" data-mascot-bio="Laughs in a loop. Another face the app uses as the Casama mark."><img src="/assets/bots/casama-giggly-animated.svg" alt="" width="72" height="72"><span>Giggly</span></button>
+            <button type="button" class="mascot-card" data-mascot-card data-mascot-svg="/assets/bots/casama-thinker-animated.svg" data-mascot-title="Thinker" data-mascot-bio="The pondering cloud. Milo wears this one while he reads your files." data-linked-bot="milo"><img src="/assets/bots/casama-thinker-animated.svg" alt="" width="72" height="72"><span>Thinker</span></button>
+            <button type="button" class="mascot-card" data-mascot-card data-mascot-svg="/assets/bots/casama-wow-animated.svg" data-mascot-title="Wow" data-mascot-bio="Eyes wide. The fourth brand face, used whenever the mark appears."><img src="/assets/bots/casama-wow-animated.svg" alt="" width="72" height="72"><span>Wow</span></button>
+            <button type="button" class="mascot-card" data-mascot-card data-mascot-svg="/assets/bots/casama-focused-animated.svg" data-mascot-title="Focused" data-mascot-bio="Locked in on the work. Ada wears this while she runs tests and opens pull requests." data-linked-bot="ada"><img src="/assets/bots/casama-focused-animated.svg" alt="" width="72" height="72"><span>Focused</span></button>
+            <button type="button" class="mascot-card" data-mascot-card data-mascot-svg="/assets/bots/casama-cool-animated.svg" data-mascot-title="Cool" data-mascot-bio="Unbothered. Sora wears this on call, correlating traces before she asks to roll back." data-linked-bot="sora"><img src="/assets/bots/casama-cool-animated.svg" alt="" width="72" height="72"><span>Cool</span></button>
+            <button type="button" class="mascot-card" data-mascot-card data-mascot-svg="/assets/bots/casama-starry-animated.svg" data-mascot-title="Starry" data-mascot-bio="Night-shift calm. Juno wears this while she drafts mail and preps the next meeting." data-linked-bot="juno"><img src="/assets/bots/casama-starry-animated.svg" alt="" width="72" height="72"><span>Starry</span></button>
+            <button type="button" class="mascot-card" data-mascot-card data-mascot-svg="/assets/bots/casama-sleepy-animated.svg" data-mascot-title="Sleepy" data-mascot-bio="Dozing until a routine or a message wakes the bot up."><img src="/assets/bots/casama-sleepy-animated.svg" alt="" width="72" height="72"><span>Sleepy</span></button>
+            <button type="button" class="mascot-card" data-mascot-card data-mascot-svg="/assets/bots/casama-lovey-animated.svg" data-mascot-title="Lovey" data-mascot-bio="Hearts on the cloud. A face people pick when a bot should feel warm."><img src="/assets/bots/casama-lovey-animated.svg" alt="" width="72" height="72"><span>Lovey</span></button>
+            <button type="button" class="mascot-card" data-mascot-card data-mascot-svg="/assets/bots/casama-shy-animated.svg" data-mascot-title="Shy" data-mascot-bio="Peeks out, then tucks back in. Quiet until you ask it to speak up."><img src="/assets/bots/casama-shy-animated.svg" alt="" width="72" height="72"><span>Shy</span></button>
+          </div>
+        </div>
+
+        <div class="teammates-shell">
+          <!-- Left: Selectable Bot Tabs -->
+          <div class="bot-roster" role="tablist" aria-label="Example Casama bots">
+            <button
+              type="button"
+              role="tab"
+              id="tab-ada"
+              aria-controls="panel-ada"
+              aria-selected="true"
+              tabindex="0"
+              class="bot-tab active"
+              data-bot-target="ada">
+              <span class="bot-avatar">
+                <img src="/assets/bots/casama-focused-animated.svg" alt="" width="40" height="40">
+              </span>
+              <span class="bot-tab-meta">
+                <span class="bot-tab-title">
+                  <span>Ada</span>
+                  <span class="bot-role-tag">Engineering</span>
+                </span>
+                <p class="bot-tab-desc">Clones repos, runs tests in a Debian sandbox, delegates to Claude Code or Codex, and opens PRs.</p>
+              </span>
+            </button>
+
+            <button
+              type="button"
+              role="tab"
+              id="tab-milo"
+              aria-controls="panel-milo"
+              aria-selected="false"
+              tabindex="-1"
+              class="bot-tab"
+              data-bot-target="milo">
+              <span class="bot-avatar">
+                <img src="/assets/bots/casama-thinker-animated.svg" alt="" width="40" height="40">
+              </span>
+              <span class="bot-tab-meta">
+                <span class="bot-tab-title">
+                  <span>Milo</span>
+                  <span class="bot-role-tag">Morning Brief</span>
+                </span>
+                <p class="bot-tab-desc">Wakes at 07:30, reads your indexed PDFs, Drive folders, and calendar, and delivers a cited brief.</p>
+              </span>
+            </button>
+
+            <button
+              type="button"
+              role="tab"
+              id="tab-sora"
+              aria-controls="panel-sora"
+              aria-selected="false"
+              tabindex="-1"
+              class="bot-tab"
+              data-bot-target="sora">
+              <span class="bot-avatar">
+                <img src="/assets/bots/casama-cool-animated.svg" alt="" width="40" height="40">
+              </span>
+              <span class="bot-tab-meta">
+                <span class="bot-tab-title">
+                  <span>Sora</span>
+                  <span class="bot-role-tag">On-Call &amp; Ops</span>
+                </span>
+                <p class="bot-tab-desc">Triggers on Sentry webhooks, correlates stack traces with recent commits, and asks before rollback.</p>
+              </span>
+            </button>
+
+            <button
+              type="button"
+              role="tab"
+              id="tab-juno"
+              aria-controls="panel-juno"
+              aria-selected="false"
+              tabindex="-1"
+              class="bot-tab"
+              data-bot-target="juno">
+              <span class="bot-avatar">
+                <img src="/assets/bots/casama-starry-animated.svg" alt="" width="40" height="40">
+              </span>
+              <span class="bot-tab-meta">
+                <span class="bot-tab-title">
+                  <span>Juno</span>
+                  <span class="bot-role-tag">Chief of Staff</span>
+                </span>
+                <p class="bot-tab-desc">Prepares Gmail drafts (never sends without you), preps meeting notes, and respects quiet hours.</p>
+              </span>
+            </button>
+          </div>
+
+          <!-- Right: Bot Inspector Panels -->
+          <div class="bot-stage">
+            <!-- Panel 1: Ada -->
+            <div role="tabpanel" id="panel-ada" aria-labelledby="tab-ada" data-bot-panel="ada">
+              <div class="bot-stage-header">
+                <div class="bot-stage-id">
+                  <img src="/assets/bots/casama-focused-animated.svg" alt="" width="36" height="36">
+                  <div>
+                    <h3>Ada · Staff Engineer</h3>
+                    <p>Model: claude-sonnet-4 · Fallback: gpt-5 · Budget cap: $2.50 / run</p>
+                  </div>
+                </div>
+                <div class="bot-specs">
+                  <span class="spec-chip">GitHub</span>
+                  <span class="spec-chip">Linear</span>
+                  <span class="spec-chip">Debian 12 Computer</span>
+                  <span class="spec-chip">Low-risk auto</span>
+                </div>
+              </div>
+              <div class="bot-stage-body">
+                <div class="run-stream">
+                  <div class="stream-label">Durable Run Timeline · Ticket ENG-204</div>
+                  <div class="chat-bubble">
+                    <div class="chat-bubble-who"><span>You · Assigned on Ticket Board</span><span>14:02</span></div>
+                    Reproduce the timezone offset bug in invoice exports, add a regression test, and open a PR.
+                  </div>
+                  <ul class="step-list">
+                    <li class="step-item">
+                      <span class="step-item-left"><span class="step-status"></span><span>memory.recall → "Use Vitest, never mock Postgres RLS"</span></span>
+                      <span class="step-cost">120 ms</span>
+                    </li>
+                    <li class="step-item">
+                      <span class="step-item-left"><span class="step-status"></span><span>computer.exec → vitest run test/invoice-tz.test.ts</span></span>
+                      <span class="step-cost">2.1 s</span>
+                    </li>
+                    <li class="step-item">
+                      <span class="step-item-left"><span class="step-status gate"></span><span>github.create_pull_request → Approved by rule</span></span>
+                      <span class="step-cost">$0.019</span>
+                    </li>
+                  </ul>
+                  <div class="chat-bubble bot">
+                    <div class="chat-bubble-who"><span>Ada</span><span>Completed · 3 steps · $0.019</span></div>
+                    Fixed the UTC boundary truncation in <code>billing-period.ts</code> and opened <strong>PR #418</strong> with 4 passing tests.
+                  </div>
+                </div>
+
+                <div class="desk-window">
+                  <div class="desk-window-bar">
+                    <span>ada-computer · /workspace/casama</span>
+                    <span class="t-acc">● Live terminal</span>
+                  </div>
+                  <pre class="desk-window-body"><span class="t-dim">$ git diff --stat</span>
+ packages/domain/src/billing-period.ts | 14 <span class="t-ok">+++++++++</span>-----
+ packages/domain/test/billing.test.ts  | 28 <span class="t-ok">++++++++++++++++++++++++++++</span>
+
+<span class="t-dim">$ npx vitest run packages/domain/test/billing.test.ts</span>
+ <span class="t-ok">✓</span> packages/domain/test/billing.test.ts (9 tests) 142ms
+   <span class="t-ok">✓</span> preserves Asia/Manila &amp; Europe/Berlin month boundaries
+
+<span class="t-dim">[checkpoint #19 saved · egress proxy: github.com allowed]</span></pre>
+                  <div class="desk-window-foot">
+                    <span>gVisor sandbox · non-root · read-only /</span>
+                    <span>Idle sleep: 15m</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 2: Milo -->
+            <div role="tabpanel" id="panel-milo" aria-labelledby="tab-milo" data-bot-panel="milo" hidden>
+              <div class="bot-stage-header">
+                <div class="bot-stage-id">
+                  <img src="/assets/bots/casama-thinker-animated.svg" alt="" width="36" height="36">
+                  <div>
+                    <h3>Milo · Research &amp; Morning Brief</h3>
+                    <p>Routine: Weekdays 07:30 · Sources: Drive, Notion, Web, Calendar</p>
+                  </div>
+                </div>
+                <div class="bot-specs">
+                  <span class="spec-chip">Google Drive</span>
+                  <span class="spec-chip">Calendar</span>
+                  <span class="spec-chip">Knowledge Citations</span>
+                  <span class="spec-chip">Page Watcher</span>
+                </div>
+              </div>
+              <div class="bot-stage-body">
+                <div class="run-stream">
+                  <div class="stream-label">Scheduled Routine · 07:30 Morning Brief</div>
+                  <ul class="step-list">
+                    <li class="step-item">
+                      <span class="step-item-left"><span class="step-status"></span><span>calendar.list_events → 3 external meetings today</span></span>
+                      <span class="step-cost">180 ms</span>
+                    </li>
+                    <li class="step-item">
+                      <span class="step-item-left"><span class="step-status"></span><span>knowledge.search → "Q4 partner terms PDF" (p. 4, 11)</span></span>
+                      <span class="step-cost">310 ms</span>
+                    </li>
+                    <li class="step-item">
+                      <span class="step-item-left"><span class="step-status"></span><span>pages.publish → Updated "Thursday Executive Brief"</span></span>
+                      <span class="step-cost">$0.011</span>
+                    </li>
+                  </ul>
+                  <div class="chat-bubble bot">
+                    <div class="chat-bubble-who"><span>Milo · Delivered to Inbox</span><span>07:31 · $0.011</span></div>
+                    Good morning! Your 10:00 call with Northwind covers SLA tiers—I cited clauses 4.2 and 7.1 from <code>Partner-MSA-v3.pdf</code> (page 4) and attached a one-page comparison.
+                  </div>
+                </div>
+
+                <div class="desk-window">
+                  <div class="desk-window-bar">
+                    <span>milo-computer · Knowledge &amp; Citations</span>
+                    <span class="t-acc">● Indexed sources</span>
+                  </div>
+                  <pre class="desk-window-body"><span class="t-acc">SOURCE MATCH #1 (score 0.94)</span>
+File: Drive / Legal / Partner-MSA-v3.pdf (Page 4)
+"Partner uptime commitment is 99.95% monthly, with
+service credits capped at 15% of monthly fees."
+
+<span class="t-acc">REMEMBERED ABOUT YOU</span>
+• Prefers bulleted briefs under 180 words
+• Highlight contract deltas before external calls
+• Attention rule: hold non-urgent pings until 07:30</pre>
+                  <div class="desk-window-foot">
+                    <span>Zero tokens used on unchanged watcher checks</span>
+                    <span>PDF export ready</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 3: Sora -->
+            <div role="tabpanel" id="panel-sora" aria-labelledby="tab-sora" data-bot-panel="sora" hidden>
+              <div class="bot-stage-header">
+                <div class="bot-stage-id">
+                  <img src="/assets/bots/casama-cool-animated.svg" alt="" width="36" height="36">
+                  <div>
+                    <h3>Sora · On-Call &amp; Incident Response</h3>
+                    <p>Trigger: Incoming Webhook (/webhooks/sentry) · High-risk: Ask first</p>
+                  </div>
+                </div>
+                <div class="bot-specs">
+                  <span class="spec-chip">Sentry</span>
+                  <span class="spec-chip">Slack</span>
+                  <span class="spec-chip">GitHub</span>
+                  <span class="spec-chip">Approval Gate</span>
+                </div>
+              </div>
+              <div class="bot-stage-body">
+                <div class="run-stream">
+                  <div class="stream-label">Webhook Wake · Sentry Issue #8821</div>
+                  <ul class="step-list">
+                    <li class="step-item">
+                      <span class="step-item-left"><span class="step-status"></span><span>sentry.get_event → TypeError in webhook-signature.ts</span></span>
+                      <span class="step-cost">140 ms</span>
+                    </li>
+                    <li class="step-item">
+                      <span class="step-item-left"><span class="step-status"></span><span>git.blame → Introduced in commit a49c12e (22m ago)</span></span>
+                      <span class="step-cost">410 ms</span>
+                    </li>
+                    <li class="step-item">
+                      <span class="step-item-left"><span class="step-status gate"></span><span>Waiting for your approval: Revert commit a49c12e</span></span>
+                      <span class="step-cost">Paused</span>
+                    </li>
+                  </ul>
+                  <div class="chat-bubble bot">
+                    <div class="chat-bubble-who"><span>Sora · Push notification sent</span><span>02:14 · $0.008</span></div>
+                    Spike in 500s on <code>/webhooks/stripe</code> traces to commit <code>a49c12e</code> (missing null check on header). I prepared the revert PR and paused for your approval.
+                  </div>
+                </div>
+
+                <div class="desk-window">
+                  <div class="desk-window-bar">
+                    <span>sora-computer · Secret Vault &amp; Egress Proxy</span>
+                    <span class="t-warn">● Awaiting approval</span>
+                  </div>
+                  <pre class="desk-window-body"><span class="t-dim"># Secret injection at boundary (D-052):</span>
+Authorization: Bearer {{secret:SENTRY_READ_TOKEN}}
+<span class="t-ok">✓ Value injected by proxy for sentry.io only</span>
+<span class="t-ok">✓ Never visible in prompt, logs, or run events</span>
+
+<span class="t-warn">ACTION RULE MATCH:</span>
+Tool: github.merge_pull_request (target: main)
+Policy: Ask owner on phone + Slack (#incidents)</pre>
+                  <div class="desk-window-foot">
+                    <span>Private IPs (10.0.0.0/8, 169.254.169.254) blocked</span>
+                    <span>Run traced via OTel</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel 4: Juno -->
+            <div role="tabpanel" id="panel-juno" aria-labelledby="tab-juno" data-bot-panel="juno" hidden>
+              <div class="bot-stage-header">
+                <div class="bot-stage-id">
+                  <img src="/assets/bots/casama-starry-animated.svg" alt="" width="36" height="36">
+                  <div>
+                    <h3>Juno · Personal Chief of Staff</h3>
+                    <p>Connected: Gmail (Drafts only), Calendar, Contacts, Health Summary</p>
+                  </div>
+                </div>
+                <div class="bot-specs">
+                  <span class="spec-chip">Gmail Drafts</span>
+                  <span class="spec-chip">Google Calendar</span>
+                  <span class="spec-chip">Private-Model Health</span>
+                  <span class="spec-chip">Attention Rules</span>
+                </div>
+              </div>
+              <div class="bot-stage-body">
+                <div class="run-stream">
+                  <div class="stream-label">Calendar Trigger · 15 min before External Call</div>
+                  <ul class="step-list">
+                    <li class="step-item">
+                      <span class="step-item-left"><span class="step-status"></span><span>gmail.search_threads → Last 3 threads with Maya Lin</span></span>
+                      <span class="step-cost">220 ms</span>
+                    </li>
+                    <li class="step-item">
+                      <span class="step-item-left"><span class="step-status"></span><span>gmail.create_draft → Saved reply draft in Gmail</span></span>
+                      <span class="step-cost">190 ms</span>
+                    </li>
+                    <li class="step-item">
+                      <span class="step-item-left"><span class="step-status"></span><span>calendar.find_free_slots → Tue 14:00 or Thu 10:30</span></span>
+                      <span class="step-cost">$0.006</span>
+                    </li>
+                  </ul>
+                  <div class="chat-bubble bot">
+                    <div class="chat-bubble-who"><span>Juno</span><span>09:45 · $0.006</span></div>
+                    Saved a draft reply to Maya in your Gmail with Tuesday 14:00 and Thursday 10:30 open. <em>(Bots create drafts; only you press Send in Gmail.)</em>
+                  </div>
+                </div>
+
+                <div class="desk-window">
+                  <div class="desk-window-bar">
+                    <span>juno-policy · Privacy &amp; Attention Guardrails</span>
+                    <span class="t-ok">● Enforced</span>
+                  </div>
+                  <pre class="desk-window-body"><span class="t-ok">✓ Gmail scope:</span> Read, labels, and create drafts only.
+  Sending mail from a bot is disabled by design.
+
+<span class="t-ok">✓ Attention state:</span> In calendar meeting (09:00–09:45)
+  Non-urgent suggestions held for your next brief.
+
+<span class="t-ok">✓ Health summaries:</span> Encrypted at rest; routed only
+  to models marked "Private models only" (local Ollama).</pre>
+                  <div class="desk-window-foot">
+                    <span>Full workspace ZIP export or 1-click purge anytime</span>
+                    <span>RLS verified</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Architectural Bento ("Not a chat window. A colleague with a desk.") -->
+    <section class="section-block" id="features">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>Capabilities</p>
+            <h2>Not a chat window. A colleague with a desk.</h2>
+          </div>
+          <p>
+            Most AI tools trap a smart model inside a text box. Casama gives every bot a real computer, long-term memory, a schedule, and guardrails you control.
+          </p>
+        </div>
+
+        <div class="bento-grid">
+          <!-- Card 1: A Real Computer Each (Span 7) -->
+          <article class="bento-card span-7" id="computers">
+            <div>
+              <div class="bento-kicker">01 · Isolated Computers &amp; Desktop Companion</div>
+              <h3>A real computer for every bot—or lend a folder on yours</h3>
+              <p>
+                Each bot gets a sandboxed Linux computer with a shell, files, code tools, and a Chromium browser. Watch the screen live, take over mouse and keyboard whenever a site needs a human, or let the computer sleep automatically when idle. Want a bot to work on local files? Pair the <strong>Desktop Companion</strong> and grant access only to the folders you pick.
+              </p>
+            </div>
+
+            <div class="bento-artifact">
+              <div class="computer-split">
+                <div class="mini-pane">
+                  <div class="mini-pane-head">
+                    <span>Sandboxed Cloud / Docker Computer</span>
+                    <span class="live-pill">gVisor</span>
+                  </div>
+                  <p>Read-only root, zero Linux capabilities, non-root user, egress proxy blocking private IPs, and automatic snapshots before risky shell commands.</p>
+                </div>
+                <div class="mini-pane">
+                  <div class="mini-pane-head">
+                    <span>Your Mac, Windows, or Linux</span>
+                    <span class="live-pill">Companion</span>
+                  </div>
+                  <p>Run local stdio MCP servers, hand coding tasks to Claude Code, Codex, or Cursor on your machine, and attach the front window with a global hotkey.</p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 2: You Stay in Charge / Interactive Approval Demo (Span 5) -->
+          <article class="bento-card span-5" id="autonomy">
+            <div>
+              <div class="bento-kicker">02 · Autonomy, Approvals &amp; Spend Caps</div>
+              <h3>Asks before it acts</h3>
+              <p>
+                Set autonomy per bot and per action rule: allow, allow within limits, ask first, or hand off. Before a high-risk command runs, Casama snapshots the computer so you can roll back in one click.
+              </p>
+            </div>
+
+            <div class="bento-artifact">
+              <div class="approval-widget" aria-live="polite">
+                <div class="approval-top">
+                  <strong style="font-size: 13px;">Interactive demo · High-risk shell step</strong>
+                  <span class="live-pill warn">Ask first</span>
+                </div>
+                <div class="approval-cmd">$ rm -rf ./build/cache &amp;&amp; ./deploy-prod.sh</div>
+                <div id="approval-demo-status" class="approval-outcome pending">
+                  Paused before running destructive command · Checkpoint #14 saved
+                </div>
+                <div class="approval-actions">
+                  <button type="button" id="demo-approve-btn" class="chip-btn approve">Approve step</button>
+                  <button type="button" id="demo-rollback-btn" class="chip-btn">Deny &amp; restore checkpoint</button>
+                  <button type="button" id="demo-reset-btn" class="chip-btn" hidden>Reset demo</button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 3: Remembers & Learns Skills (Span 4) -->
+          <article class="bento-card">
+            <div>
+              <div class="bento-kicker">03 · Memory, Knowledge &amp; Skills</div>
+              <h3>Remembers across chats and learns by watching</h3>
+              <p>
+                Bots recall facts, preferences, and past runs across every conversation—with a personal profile ("About you") that never leaks into team spaces unless you share it. Upload PDFs, Drive folders, or Notion pages for cited answers, or record a task once on the bot's computer to turn it into a reusable <code>SKILL.md</code>.
+              </p>
+            </div>
+            <div class="bento-artifact">
+              <div class="memory-list">
+                <span class="memory-pill"><strong>fact</strong> Stack uses Postgres 17 + RLS</span>
+                <span class="memory-pill"><strong>pref</strong> Concise diffs, no fluff</span>
+                <span class="memory-pill"><strong>skill</strong> /weekly-release-notes</span>
+                <span class="memory-pill"><strong>cited</strong> SOC2-Policy.pdf (p. 12)</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 4: Works While You're Away (Span 4) -->
+          <article class="bento-card">
+            <div>
+              <div class="bento-kicker">04 · Routines, Watchers &amp; Projects</div>
+              <h3>Works while you're away</h3>
+              <p>
+                Schedule routines on a cron timer, trigger them from webhooks, emails, or calendar events, or set a <strong>"Tell me when"</strong> watcher that checks a page or query at zero model tokens until something changes. For multi-day goals, create a <strong>Project</strong> with milestones and a budget—the lead bot works in sessions until it's done.
+              </p>
+            </div>
+            <div class="bento-artifact">
+              <div class="memory-list">
+                <span class="memory-pill"><strong>07:30</strong> Morning brief</span>
+                <span class="memory-pill"><strong>webhook</strong> /github-pr</span>
+                <span class="memory-pill"><strong>watcher</strong> Pricing page diff</span>
+                <span class="memory-pill"><strong>calendar</strong> -15m external call</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 5: Any Model, Your Keys (Span 4) -->
+          <article class="bento-card">
+            <div>
+              <div class="bento-kicker">05 · Model Router &amp; BYOK</div>
+              <h3>Bring any model—cloud, subscription, or local</h3>
+              <p>
+                Plug in keys for Anthropic, OpenAI, Google Gemini, xAI, or OpenRouter; sign in with your existing ChatGPT plan on a self-hosted server; or point at local Ollama on your own GPU. Set primary and fallback models per bot and inspect exact token and computer costs on every step.
+              </p>
+            </div>
+            <div class="bento-artifact">
+              <div class="memory-list">
+                <span class="memory-pill"><strong>Primary</strong> Claude Sonnet 4</span>
+                <span class="memory-pill"><strong>Fallback</strong> GPT-5 / Gemini 2.5</span>
+                <span class="memory-pill"><strong>Private</strong> Ollama (Llama / Qwen)</span>
+                <span class="memory-pill"><strong>Plan</strong> ChatGPT sign-in</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 6: Connected Tools & Secret Vault (Span 6) -->
+          <article class="bento-card span-6">
+            <div>
+              <div class="bento-kicker">06 · Connections, MCP &amp; Password Managers</div>
+              <h3>Connected to your tools without exposing secrets</h3>
+              <p>
+                Connect GitHub, Linear, Slack, Notion, Gmail, Google Calendar, Drive, Stripe, Sentry, 1Password, Bitwarden, or any MCP server. Credentials live in an encrypted vault and are injected by the proxy only for matching hosts—never placed in prompts, logs, or model context.
+              </p>
+            </div>
+
+            <div class="bento-artifact">
+              <div class="apps-icon-grid" aria-label="Integrated apps">
+                <div class="app-tile"><img src="/assets/apps/github.svg" alt="" width="20" height="20"><span>GitHub</span></div>
+                <div class="app-tile"><img src="/assets/apps/linear.svg" alt="" width="20" height="20"><span>Linear</span></div>
+                <div class="app-tile"><img src="/assets/apps/slack.svg" alt="" width="20" height="20"><span>Slack</span></div>
+                <div class="app-tile"><img src="/assets/apps/notion.svg" alt="" width="20" height="20"><span>Notion</span></div>
+                <div class="app-tile"><img src="/assets/apps/gmail.svg" alt="" width="20" height="20"><span>Gmail</span></div>
+                <div class="app-tile"><img src="/assets/apps/google_calendar.svg" alt="" width="20" height="20"><span>Calendar</span></div>
+                <div class="app-tile"><img src="/assets/apps/google_drive.svg" alt="" width="20" height="20"><span>Drive</span></div>
+                <div class="app-tile"><img src="/assets/apps/figma.svg" alt="" width="20" height="20"><span>Figma</span></div>
+                <div class="app-tile"><img src="/assets/apps/sentry.svg" alt="" width="20" height="20"><span>Sentry</span></div>
+                <div class="app-tile"><img src="/assets/apps/stripe.svg" alt="" width="20" height="20"><span>Stripe</span></div>
+                <div class="app-tile"><img src="/assets/apps/cloudflare.svg" alt="" width="20" height="20"><span>Cloudflare</span></div>
+                <div class="app-tile"><img src="/assets/apps/mcp.svg" alt="" width="20" height="20"><span>MCP</span></div>
+              </div>
+              <div class="vault-rule">
+                Proxy substitution: <code>{{secret:GITHUB_TOKEN}}</code> → injected only on <code>api.github.com</code>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 7: Everywhere You Are & Developer First (Span 6) -->
+          <article class="bento-card span-6">
+            <div>
+              <div class="bento-kicker">07 · Native Apps, Voice Calls &amp; Developer APIs</div>
+              <h3>Talk from any device, chat app, phone call, or IDE</h3>
+              <p>
+                Use the native apps on iOS, Android, macOS, Windows, Linux, and the Web. Group-chat with <code>@everyone</code> across multiple bots, answer a live voice call from your lock screen, bridge bots to Telegram, Slack, WhatsApp, or Email, or drive Casama from Claude Code and Cursor over <code>@casama/mcp</code>.
+              </p>
+            </div>
+
+            <div class="bento-artifact">
+              <div class="computer-split">
+                <div class="mini-pane">
+                  <div class="mini-pane-head">
+                    <span>Voice &amp; Chat Channels</span>
+                    <span class="live-pill">Live</span>
+                  </div>
+                  <p>Wake word, mid-sentence interrupt, incoming phone-call screen on iOS &amp; Android, plus Telegram, Slack, WhatsApp, SMS, and Email triggers.</p>
+                </div>
+                <div class="mini-pane">
+                  <div class="mini-pane-head">
+                    <span>CLI, SDK &amp; Hosted MCP</span>
+                    <span class="live-pill">Builders</span>
+                  </div>
+                  <p><code>casama</code> CLI, typed OpenAPI &amp; Dart SDK (<code>casama_sdk</code>), Agent-to-Agent (A2A) endpoints, and Agent Plugins 1.0 from GitHub.</p>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Interactive Look & Gallery Preview -->
+    <section class="section-block" id="gallery">
+      <div class="wrap">
+        <div class="gallery-showcase">
+          <div>
+            <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>Open-Source Gallery</p>
+            <h2 class="serif-heading" style="font-size: clamp(28px, 3.4vw, 40px); line-height: 1.1; margin: 0 0 14px;">
+              Make the workspace yours.
+            </h2>
+            <p style="color: var(--muted); margin: 0; font-size: 16.5px; line-height: 1.58;">
+              These are the looks that ship in the app: Casama clouds by default, plus Editorial, Ocean, Forest, Sakura, Sunset, Cosmos, and Graphite. Pick one and the page changes with it. Community themes still live on <strong>gallery.casama.ai</strong>.
+            </p>
+
+            <div class="swatch-row" role="group" aria-label="App theme presets">
+              <button type="button" class="look-swatch is-active" aria-pressed="true" data-gallery-theme="casama"><span class="swatch-dots"><span style="background:#7a3fa8"></span><span style="background:#eee2fb"></span></span><span>Casama</span></button>
+              <button type="button" class="look-swatch" aria-pressed="false" data-gallery-theme="editorial"><span class="swatch-dots"><span style="background:#7c4a2d"></span><span style="background:#ffe3d3"></span></span><span>Editorial</span></button>
+              <button type="button" class="look-swatch" aria-pressed="false" data-gallery-theme="ocean"><span class="swatch-dots"><span style="background:#175e96"></span><span style="background:#d4eaff"></span></span><span>Ocean</span></button>
+              <button type="button" class="look-swatch" aria-pressed="false" data-gallery-theme="forest"><span class="swatch-dots"><span style="background:#1d6b42"></span><span style="background:#ddedd2"></span></span><span>Forest</span></button>
+              <button type="button" class="look-swatch" aria-pressed="false" data-gallery-theme="sakura"><span class="swatch-dots"><span style="background:#b33668"></span><span style="background:#ffddeb"></span></span><span>Sakura</span></button>
+              <button type="button" class="look-swatch" aria-pressed="false" data-gallery-theme="sunset"><span class="swatch-dots"><span style="background:#bf5215"></span><span style="background:#ffd9bf"></span></span><span>Sunset</span></button>
+              <button type="button" class="look-swatch" aria-pressed="false" data-gallery-theme="cosmos"><span class="swatch-dots"><span style="background:#5138a8"></span><span style="background:#e7deff"></span></span><span>Cosmos</span></button>
+              <button type="button" class="look-swatch" aria-pressed="false" data-gallery-theme="graphite"><span class="swatch-dots"><span style="background:#363b44"></span><span style="background:#e9ebef"></span></span><span>Graphite</span></button>
+            </div>
+            <div class="pattern-row" role="group" aria-label="Wallpaper patterns">
+              <button type="button" class="pattern-swatch is-active" data-wallpaper-pattern="clouds">Clouds</button>
+              <button type="button" class="pattern-swatch" data-wallpaper-pattern="doodles">Doodles</button>
+              <button type="button" class="pattern-swatch" data-wallpaper-pattern="treats">Treats</button>
+              <button type="button" class="pattern-swatch" data-wallpaper-pattern="garden">Garden</button>
+              <button type="button" class="pattern-swatch" data-wallpaper-pattern="space">Space</button>
+              <button type="button" class="pattern-swatch" data-wallpaper-pattern="pets">Pets</button>
+              <button type="button" class="pattern-swatch" data-wallpaper-pattern="sea">Seaside</button>
+              <button type="button" class="pattern-swatch" data-wallpaper-pattern="tech">Tech</button>
+              <button type="button" class="pattern-swatch" data-wallpaper-pattern="none">Plain</button>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+              <a id="mini-gallery-link" class="btn primary" href="https://gallery.casama.ai/#theme/casama">Open in Gallery →</a>
+              <a class="btn" href="https://gallery.casama.ai">Browse all themes &amp; skills</a>
+            </div>
+          </div>
+
+          <div id="mini-gallery-stage" class="mini-gallery-stage" data-look="casama">
+            <div class="mini-gallery-pattern" id="mini-gallery-pattern" aria-hidden="true"></div>
+            <div class="mg-window">
+              <div class="mg-top">
+                <span style="display: inline-flex; align-items: center; gap: 8px;">
+                  <img src="/assets/bots/casama-winky-animated.svg" alt="" width="24" height="24">
+                  <span>Ada · Workspace Preview</span>
+                </span>
+                <span id="mini-gallery-name" class="mg-tag">Casama</span>
+              </div>
+              <div class="mg-msg-user">
+                Summarize the 3 slowest SQL queries from staging and draft an index migration.
+              </div>
+              <div class="mg-msg-bot">
+                Found 2 sequential scans on <code>run_events</code> and <code>memories</code>. I tested a composite index in my sandbox—query time dropped from 184 ms to 4.2 ms. Ready to open a PR?
+              </div>
+              <div class="mg-foot">
+                <span>Theme + Scheme + Wallpaper + Skills</span>
+                <span>gallery.casama.ai</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Architecture & Security -->
+    <section class="section-block" id="architecture">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>System Architecture</p>
+            <h2>Engineered like infrastructure, not a weekend wrapper.</h2>
+          </div>
+          <p>
+            Every boundary in Casama—from database rows to container syscalls and outbound network packets—is isolated and verified in CI.
+          </p>
+        </div>
+
+        <div class="arch-diagram" role="region" aria-label="Casama system architecture">
+          <div class="arch-layers">
+            <div class="arch-box">
+              <span class="arch-step">Layer 1 · Surfaces</span>
+              <h3>Apps, Channels &amp; MCP</h3>
+              <p>Native Flutter apps on 6 platforms, web app, CLI, voice calls, chat bridges (Telegram, Slack, WhatsApp, Email), and remote HTTP / stdio MCP clients.</p>
+              <div class="arch-tags">
+                <code>Passkeys + 2FA</code>
+                <code>SSE Stream</code>
+                <code>@casama/mcp</code>
+              </div>
+            </div>
+
+            <div class="arch-box highlight">
+              <span class="arch-step">Layer 2 · Control Plane</span>
+              <h3>API Server &amp; DBOS Durable Worker</h3>
+              <p>Fastify OpenAPI control plane paired with DBOS durable workflows. Model calls, tool executions, approvals, and budget checks are persisted step by step.</p>
+              <div class="arch-tags">
+                <code>DBOS Workflows</code>
+                <code>Model Router</code>
+                <code>OpenTelemetry</code>
+              </div>
+            </div>
+
+            <div class="arch-box">
+              <span class="arch-step">Layer 3 · Isolation Boundary</span>
+              <h3>Postgres RLS + Sandboxed Computers</h3>
+              <p>Every table enforces Postgres Row-Level Security. Bot computers run behind a sandbox supervisor and egress proxy that injects secrets and blocks private networks.</p>
+              <div class="arch-tags">
+                <code>Postgres RLS</code>
+                <code>gVisor / Docker</code>
+                <code>Egress Proxy</code>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="security-pillars">
+          <div class="pillar-card">
+            <h4>Row-Level Security everywhere</h4>
+            <p>Every workspace table has a mandatory Postgres RLS policy and an automated cross-tenant test proving Workspace A can never read Workspace B.</p>
+          </div>
+          <div class="pillar-card">
+            <h4>Hardened Linux sandboxes</h4>
+            <p>Computers run non-root with a read-only root filesystem, dropped Linux capabilities, PID/memory limits, and gVisor (<code>runsc</code>) on Linux hosts.</p>
+          </div>
+          <div class="pillar-card">
+            <h4>Zero-leak secret proxy</h4>
+            <p>API keys and 1Password/Bitwarden credentials are substituted at the network boundary for allowed domains only—never visible to the LLM.</p>
+          </div>
+          <div class="pillar-card">
+            <h4>Encryption &amp; full ownership</h4>
+            <p>Optional encryption at rest before Postgres (local key or AWS KMS), configurable retention windows, and one-click full workspace ZIP export.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: Comparison Matrix -->
+    <section class="section-block" id="compare">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>How Casama compares</p>
+            <h2>What closed agent products don't give you.</h2>
+          </div>
+          <p>
+            Closed cloud agents lock your data, models, and computers inside a black box. Bare agent frameworks leave you building auth, sandboxes, and apps from scratch.
+          </p>
+        </div>
+
+        <div class="matrix-wrap">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th scope="col">Capability</th>
+                <th scope="col" class="casama-col">Casama</th>
+                <th scope="col">Closed cloud agents</th>
+                <th scope="col">DIY frameworks &amp; scripts</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Run on your own server</th>
+                <td class="casama-col"><span class="check-badge">✓</span>One command (<code>./install.sh</code>) on any Linux VPS or Mac</td>
+                <td class="other-col">No — vendor cloud only</td>
+                <td class="other-col">Possible, but you wire DB, auth, and queues</td>
+              </tr>
+              <tr>
+                <th scope="row">Choice of AI models</th>
+                <td class="casama-col"><span class="check-badge">✓</span>Any provider, your ChatGPT plan, or local Ollama with auto-fallback</td>
+                <td class="other-col">Locked to one provider's model &amp; markup</td>
+                <td class="other-col">Bring your own keys, manual routing</td>
+              </tr>
+              <tr>
+                <th scope="row">Real computer per bot</th>
+                <td class="casama-col"><span class="check-badge">✓</span>Isolated Linux desktop + live screen takeover + Desktop Companion</td>
+                <td class="other-col">Ephemeral container or browser-only</td>
+                <td class="other-col">Often runs unsandboxed on your host</td>
+              </tr>
+              <tr>
+                <th scope="row">Safety &amp; approvals</th>
+                <td class="casama-col"><span class="check-badge">✓</span>Per-action rules, filesystem checkpoints, and hard spend caps</td>
+                <td class="other-col">Coarse prompts, no instant rollback</td>
+                <td class="other-col">None by default</td>
+              </tr>
+              <tr>
+                <th scope="row">Durable background runs</th>
+                <td class="casama-col"><span class="check-badge">✓</span>DBOS workflows survive restarts; cron, webhook, calendar &amp; watcher triggers</td>
+                <td class="other-col">Opaque timeouts and session drops</td>
+                <td class="other-col">In-memory loops lost on crash</td>
+              </tr>
+              <tr>
+                <th scope="row">Apps &amp; voice included</th>
+                <td class="casama-col"><span class="check-badge">✓</span>iOS, Android, macOS, Windows, Linux, Web, CLI, MCP, and live voice calls</td>
+                <td class="other-col">Web tab or single mobile app</td>
+                <td class="other-col">Terminal or basic localhost web UI</td>
+              </tr>
+              <tr>
+                <th scope="row">License &amp; data portability</th>
+                <td class="casama-col"><span class="check-badge">✓</span>Apache-2.0 open source, full workspace ZIP export, zero lock-in</td>
+                <td class="other-col">Proprietary, opaque retention</td>
+                <td class="other-col">Open source</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6: Three Ways to Run Casama -->
+    <section class="section-block" id="self-host">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>Deployment &amp; Pricing</p>
+            <h2>Your server, our cloud, or a hybrid of both.</h2>
+          </div>
+          <p>
+            Start free on your own machine in 15 minutes, connect burst cloud capacity only when you want it, or let us run the whole stack for you on Casama Cloud.
+          </p>
+        </div>
+
+        <div class="deploy-grid">
+          <!-- Tier 1: Self-Hosted -->
+          <article class="deploy-card">
+            <span class="deploy-tag">Open Source · Apache-2.0</span>
+            <h3>Self-hosted</h3>
+            <div class="deploy-price">$0 forever · Unlimited users &amp; bots</div>
+            <p>Run the complete Casama stack in Docker on a single VPS, homelab server, or laptop. Nothing phones home unless you turn it on.</p>
+            <ul class="deploy-list">
+              <li>One-command installer with automatic Caddy HTTPS</li>
+              <li>Use your own API keys, local Ollama, or ChatGPT plan</li>
+              <li>Sandboxed local Docker/gVisor bot computers</li>
+              <li>Built-in encrypted backups &amp; Prometheus/Grafana metrics</li>
+              <li>Connect the official iOS, Android, desktop &amp; web apps</li>
+            </ul>
+            <a class="btn" href="https://docs.casama.ai/self-hosting/">Read self-hosting guide →</a>
+          </article>
+
+          <!-- Tier 2: Cloud Connect (Hybrid) -->
+          <article class="deploy-card">
+            <span class="deploy-tag">Hybrid</span>
+            <h3>Cloud Connect</h3>
+            <div class="deploy-price">Self-hosted data · Pay-as-you-go burst</div>
+            <p>Keep your database, chats, memories, and secrets on your own server while renting burst cloud computers or model credits when needed.</p>
+            <ul class="deploy-list">
+              <li>Your Postgres database never leaves your server</li>
+              <li>Burst to cloud Linux computers when local RAM is full</li>
+              <li>Optional model routing without managing 6 provider accounts</li>
+              <li>Spend caps enforced both locally and on cloud credits</li>
+              <li>Disconnect or switch back to 100% local anytime</li>
+            </ul>
+            <a class="btn" href="https://docs.casama.ai/guide/cloud-connect">Explore Cloud Connect →</a>
+          </article>
+
+          <!-- Tier 3: Casama Cloud -->
+          <article class="deploy-card featured" id="cloud">
+            <span class="deploy-tag">Managed Service</span>
+            <h3>Casama Cloud</h3>
+            <div class="deploy-price">Zero setup · Free trial day included</div>
+            <p>Sign in and start working with your bots in seconds. We run the servers, database, model routing, and isolated cloud computers for you.</p>
+            <ul class="deploy-list">
+              <li>Instant workspace on Web, iOS, Android, macOS, Windows &amp; Linux</li>
+              <li>Managed cloud computers that wake in seconds and sleep when idle</li>
+              <li>One-click OAuth for GitHub, Slack, Google, Notion &amp; Linear</li>
+              <li>Use included credits or bring your own provider API keys</li>
+              <li>Full workspace ZIP export if you ever move to self-hosted</li>
+            </ul>
+            <a class="btn primary" href="https://app.casama.ai">Open Casama Web →</a>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Editorial Footer -->
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="brand" href="/">
+            <span class="brand-mark">
+              <img src="/assets/bots/casama-brand-animated.svg" alt="" width="30" height="30">
+            </span>
+            <span>casama</span>
+          </a>
+          <p>
+            AI teammates with their own computers, durable runs, persistent memory, and explicit approval gates. Open source under the Apache-2.0 license.
+          </p>
+          <a class="btn sm" href="https://github.com/stackwares/casama">
+            <img src="/assets/apps/github.svg" alt="" width="15" height="15">
+            <span>Star on GitHub</span>
+          </a>
+        </div>
+
+        <div class="footer-col">
+          <h3>Product</h3>
+          <ul>
+            <li><a href="https://app.casama.ai">Casama Web App</a></li>
+            <li><a href="#teammates">Meet the Bots</a></li>
+            <li><a href="#computers">Bot Computers</a></li>
+            <li><a href="#autonomy">Autonomy &amp; Approvals</a></li>
+            <li><a href="https://gallery.casama.ai">Themes &amp; Skills Gallery</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h3>Developers</h3>
+          <ul>
+            <li><a href="https://docs.casama.ai/quick-start">Quick Start</a></li>
+            <li><a href="https://docs.casama.ai/self-hosting/">Self-Hosting Guide</a></li>
+            <li><a href="https://docs.casama.ai/develop/cli">CLI Reference</a></li>
+            <li><a href="https://docs.casama.ai/develop/mcp">MCP Server (<code>@casama/mcp</code>)</a></li>
+            <li><a href="https://docs.casama.ai/develop/api">HTTP API &amp; Dart SDK</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h3>Company &amp; Legal</h3>
+          <ul>
+            <li><a href="https://github.com/stackwares/casama">GitHub Repository</a></li>
+            <li><a href="/privacy">Privacy Policy</a></li>
+            <li><a href="/terms">Terms of Service</a></li>
+            <li><a href="mailto:support@casama.ai">support@casama.ai</a></li>
+            <li><a href="mailto:security@casama.ai">security@casama.ai</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 Stackwares. Released under the <code>Apache-2.0</code> license (except <code>ee/</code>).</span>
+        <span>Built for people who want capable AI teammates without surrendering their keys or servers.</span>
       </div>
     </div>
-    <div class="phone">
-      <video src="assets/demo-app-flow.mp4" poster="assets/chat-recall.png" autoplay muted loop playsinline aria-label="Signing up, creating a bot, and the bot recalling a fact from an earlier chat"></video>
-    </div>
-  </div>
+  </footer>
 
-  <section>
-    <h2>Not a chat window. A colleague with a desk.</h2>
-    <div class="grid">
-      <div><h3>Remembers</h3><p>Facts, preferences and past work carry across conversations. Skills and personas make each bot good at its job.</p></div>
-      <div><h3>Works on a real computer</h3><p>A sandboxed Linux machine with shell, files and a browser. Watch live and take control whenever you like.</p></div>
-      <div><h3>Keeps going without you</h3><p>Schedules and webhooks start work while you sleep. Results land in your inbox with what it did and what it cost.</p></div>
-      <div><h3>Asks before it acts</h3><p>Autonomy levels, approvals for risky steps, checkpoints before destructive commands, budgets per run and per day.</p></div>
-      <div><h3>Any model</h3><p>OpenRouter, OpenAI, Anthropic, Google, xAI, or a local model through Ollama. Fallbacks when a provider is down.</p></div>
-      <div><h3>Everywhere you are</h3><p>Apps for iPhone, Android, Mac, Windows, Linux and the web, a CLI, a Dart SDK, and an MCP server for coding tools.</p></div>
-    </div>
-  </section>
-
-  <section>
-    <h2>What closed agent products don't give you</h2>
-    <table>
-      <thead><tr><th></th><th>Casama</th><th>Typical hosted agent</th></tr></thead>
-      <tbody>
-        <tr><td>Run it on your own server</td><td class="yes">Yes, one script</td><td>No</td></tr>
-        <tr><td>Choose any model, including local</td><td class="yes">Yes</td><td>Their models</td></tr>
-        <tr><td>Use your own machine as the bot's computer</td><td class="yes">Yes, folders you choose</td><td>No</td></tr>
-        <tr><td>Source code</td><td class="yes">Apache-2.0</td><td>Closed</td></tr>
-        <tr><td>Your data, exportable, deletable</td><td class="yes">ZIP export, account deletion</td><td>Varies</td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section id="self-host">
-    <div class="split">
-      <div class="panel">
-        <h3>Self-hosted</h3>
-        <p>Free, no limits, no paywall. Everything runs in Docker on one machine.</p>
-        <ul><li>Install in about 15 minutes</li><li>Backups, upgrades and monitoring built in</li><li>Optional Cloud Connect for cloud computers and model credits</li></ul>
-      </div>
-      <div class="panel" id="cloud">
-        <h3>Casama Cloud</h3>
-        <p>We run it for you. Plans with included computer hours and credits.</p>
-        <ul><li>Same apps, nothing to install</li><li>Pay on the web or in the app stores</li><li>Coming soon</li></ul>
-      </div>
-    </div>
-  </section>
-
-  <footer>Casama is open source (Apache-2.0; enterprise features in <code>ee/</code> under a commercial license). <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://github.com/stackwares/casama/blob/main/SECURITY.md">Security</a>.</footer>
-</div>
+  <script src="/site.js"></script>
 </body>
 </html>

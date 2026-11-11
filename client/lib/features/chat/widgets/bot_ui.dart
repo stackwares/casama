@@ -34,12 +34,13 @@ class BotUiAction {
 }
 
 /// The text of the message an action sends: the chosen values as they read on screen, or the
-/// button's label, or (with neither) the action's name.
+/// button's label (also when the values are only flags), or (with neither) the action's name.
 String uiActionSummary(BotUiAction a) {
   String one(Object? v) => a.optionLabels['$v'] ?? '$v';
   String show(Object? v) => v is List ? v.map(one).join(', ') : one(v);
   final values = a.context.entries.where((e) => e.value != null && '${e.value}'.isNotEmpty && !(e.value is List && (e.value as List).isEmpty)).toList();
-  if (values.isEmpty) return a.label ?? a.name;
+  // Flags like {skip: true} read as the button that sent them ("Skip"), not "true".
+  if (values.isEmpty || (a.label != null && values.every((e) => e.value is bool))) return a.label ?? a.name;
   if (values.length == 1) return show(values.single.value);
   return values.map((e) => '${e.key}: ${show(e.value)}').join('\n');
 }

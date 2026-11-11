@@ -59,7 +59,9 @@ class ComputerPanelOpen extends Notifier<bool> {
   void toggle() => state = !state;
 }
 
-final computerPanelProvider = NotifierProvider<ComputerPanelOpen, bool>(ComputerPanelOpen.new);
+final computerPanelProvider = NotifierProvider<ComputerPanelOpen, bool>(
+  ComputerPanelOpen.new,
+);
 
 /// From this content width a settings page opens beside the settings list.
 const double _settingsSplitWidth = 1000;
@@ -91,7 +93,9 @@ class ComputerPanelWidth extends Notifier<double> {
   }
 }
 
-final computerPanelWidthProvider = NotifierProvider<ComputerPanelWidth, double>(ComputerPanelWidth.new);
+final computerPanelWidthProvider = NotifierProvider<ComputerPanelWidth, double>(
+  ComputerPanelWidth.new,
+);
 
 /// True while the panel's edge is being dragged, so the open/close animation doesn't lag the drag.
 class _PanelDragging extends Notifier<bool> {
@@ -100,7 +104,9 @@ class _PanelDragging extends Notifier<bool> {
   void set(bool v) => state = v;
 }
 
-final _panelDraggingProvider = NotifierProvider<_PanelDragging, bool>(_PanelDragging.new);
+final _panelDraggingProvider = NotifierProvider<_PanelDragging, bool>(
+  _PanelDragging.new,
+);
 
 class _Dest {
   const _Dest(this.path, this.icon, this.selectedIcon, this.label);
@@ -117,13 +123,25 @@ class HomeShell extends ConsumerWidget {
 
   /// The selected place, or -1 on screens outside them (settings, search, the computer).
   int get _index {
-    if (location.startsWith('/inbox') || location.startsWith('/approvals') || location == '/pages') return 1;
-    if (location.startsWith('/tasks') || location.startsWith('/projects')) return 2;
-    if (location == '/' || location.startsWith('/bots') || location.startsWith('/groups') || location.startsWith('/quick-ask')) return 0;
+    if (location.startsWith('/inbox') ||
+        location.startsWith('/approvals') ||
+        location == '/pages') {
+      return 1;
+    }
+    if (location.startsWith('/tasks') || location.startsWith('/projects')) {
+      return 2;
+    }
+    if (location == '/' ||
+        location.startsWith('/bots') ||
+        location.startsWith('/groups') ||
+        location.startsWith('/quick-ask')) {
+      return 0;
+    }
     return -1;
   }
 
-  String? get _botId => RegExp(r'^/bots/([^/]+)').firstMatch(location)?.group(1);
+  String? get _botId =>
+      RegExp(r'^/bots/([^/]+)').firstMatch(location)?.group(1);
 
   /// Screens opened from a tab (a chat, settings, the computer, search): on phones they take the
   /// whole screen, with a back button.
@@ -141,9 +159,19 @@ class HomeShell extends ConsumerWidget {
   List<_Dest> _destinations(BuildContext context) {
     final l10n = context.l10n;
     return [
-      _Dest('/bots', LucideIcons.messagesSquare, LucideIcons.messagesSquare, l10n.navChats),
+      _Dest(
+        '/bots',
+        LucideIcons.messagesSquare,
+        LucideIcons.messagesSquare,
+        l10n.navChats,
+      ),
       _Dest('/inbox', LucideIcons.inbox, LucideIcons.inbox, l10n.inbox),
-      _Dest('/tasks', LucideIcons.listTodo, LucideIcons.listTodo, l10n.navTasks),
+      _Dest(
+        '/tasks',
+        LucideIcons.listTodo,
+        LucideIcons.listTodo,
+        l10n.navTasks,
+      ),
     ];
   }
 
@@ -170,7 +198,9 @@ class HomeShell extends ConsumerWidget {
     }
     final size = layoutFor(MediaQuery.sizeOf(context).width);
     final badge = ref.watch(inboxBadgeProvider);
-    final inner = ref.watch(currentOrgProvider)?.suspended == true ? _SuspendedBanner(child: this.child) : this.child;
+    final inner = ref.watch(currentOrgProvider)?.suspended == true
+        ? _SuspendedBanner(child: this.child)
+        : this.child;
     final child = IncomingCallBanner(child: inner);
     // The wake word listens while the app is open (D-144).
     if (wakeWordSupported) ref.watch(wakeWordProvider);
@@ -183,18 +213,29 @@ class HomeShell extends ConsumerWidget {
       }
       context.go(dests[i].path);
     }
+
     final shell = _buildShell(context, ref, size, badge, child, dests, go);
     if (size == LayoutSize.phone) return shell;
     return CallbackShortcuts(
       bindings: {
-        const SingleActivator(LogicalKeyboardKey.keyK, meta: true): () => showWorkspaceSearch(context),
-        const SingleActivator(LogicalKeyboardKey.keyK, control: true): () => showWorkspaceSearch(context),
+        const SingleActivator(LogicalKeyboardKey.keyK, meta: true): () =>
+            showWorkspaceSearch(context),
+        const SingleActivator(LogicalKeyboardKey.keyK, control: true): () =>
+            showWorkspaceSearch(context),
       },
       child: Focus(autofocus: true, skipTraversal: true, child: shell),
     );
   }
 
-  Widget _buildShell(BuildContext context, WidgetRef ref, LayoutSize size, int badge, Widget child, List<_Dest> dests, void Function(int) go) {
+  Widget _buildShell(
+    BuildContext context,
+    WidgetRef ref,
+    LayoutSize size,
+    int badge,
+    Widget child,
+    List<_Dest> dests,
+    void Function(int) go,
+  ) {
     if (size == LayoutSize.phone) {
       final showBar = !_isDetail;
       final media = MediaQuery.of(context);
@@ -206,7 +247,13 @@ class HomeShell extends ConsumerWidget {
             Positioned.fill(
               // Tab screens scroll under the floating bar; their lists end above it.
               child: MediaQuery(
-                data: showBar ? media.copyWith(padding: media.padding.copyWith(bottom: FloatingTabChrome.bottomInset(context))) : media,
+                data: showBar
+                    ? media.copyWith(
+                        padding: media.padding.copyWith(
+                          bottom: FloatingTabChrome.bottomInset(context),
+                        ),
+                      )
+                    : media,
                 child: child,
               ),
             ),
@@ -218,14 +265,30 @@ class HomeShell extends ConsumerWidget {
                 ignoring: !showBar,
                 child: AnimatedSlide(
                   offset: showBar ? Offset.zero : const Offset(0, 1.4),
-                  duration: AppMotion.of(context, const Duration(milliseconds: 280)),
+                  duration: AppMotion.of(
+                    context,
+                    const Duration(milliseconds: 280),
+                  ),
                   curve: AppMotion.curve,
                   child: FloatingTabChrome(
                     currentIndex: _index,
                     onDestinationSelected: go,
-                    destinations: [for (final d in dests) FloatingTabDestination(icon: d.icon, selectedIcon: d.selectedIcon, label: d.label, badge: d.path == '/inbox' ? badge : 0)],
+                    destinations: [
+                      for (final d in dests)
+                        FloatingTabDestination(
+                          icon: d.icon,
+                          selectedIcon: d.selectedIcon,
+                          label: d.label,
+                          badge: d.path == '/inbox' ? badge : 0,
+                        ),
+                    ],
                     // Search floats beside the tabs and opens over them (Cmd/Ctrl+K on larger windows, D-103).
-                    action: FloatingTabAction(key: const Key('tabSearch'), icon: LucideIcons.search, label: context.l10n.search, onPressed: () => showWorkspaceSearch(context)),
+                    action: FloatingTabAction(
+                      key: const Key('tabSearch'),
+                      icon: LucideIcons.search,
+                      label: context.l10n.search,
+                      onPressed: () => showWorkspaceSearch(context),
+                    ),
                   ),
                 ),
               ),
@@ -243,10 +306,20 @@ class HomeShell extends ConsumerWidget {
         body: Row(
           children: [
             _NavSurface(
-              child: _Rail(dests: dests, index: _index, badge: badge, onSelected: go, settingsOpen: location.startsWith('/settings')),
+              child: _Rail(
+                dests: dests,
+                index: _index,
+                badge: badge,
+                onSelected: go,
+                settingsOpen: location.startsWith('/settings'),
+              ),
             ),
             Expanded(
-              child: MediaQuery.removePadding(context: context, removeLeft: true, child: child),
+              child: MediaQuery.removePadding(
+                context: context,
+                removeLeft: true,
+                child: child,
+              ),
             ),
           ],
         ),
@@ -257,18 +330,32 @@ class HomeShell extends ConsumerWidget {
     final panelOpen = ref.watch(computerPanelProvider);
     final Widget content;
     // Only the bare Bots page asks to pick a bot; group chats and Pages live under the same tab.
-    if (_index == 0 && _botId == null && (location == '/bots' || location == '/')) {
-      content = _SelectBotPlaceholder(onCreate: () => showCreateBot(context, ref));
-    } else if (location.startsWith('/settings/') && MediaQuery.sizeOf(context).width - _Sidebar.width >= _settingsSplitWidth) {
+    if (_index == 0 &&
+        _botId == null &&
+        (location == '/bots' || location == '/')) {
+      content = _SelectBotPlaceholder(
+        onCreate: () => showCreateBot(context, ref),
+      );
+    } else if (location.startsWith('/settings/') &&
+        MediaQuery.sizeOf(context).width - _Sidebar.width >=
+            _settingsSplitWidth) {
       // Wide windows: a settings page opens beside the settings list (like System Settings), so
       // moving between pages is one click and the page doesn't float in a sea of empty space.
       content = Row(
         children: [
           SizedBox(
             width: _settingsListWidth,
-            child: SettingsScreen(key: const Key('settingsPane'), pane: true, current: location),
+            child: SettingsScreen(
+              key: const Key('settingsPane'),
+              pane: true,
+              current: location,
+            ),
           ),
-          VerticalDivider(width: 1, thickness: 1, color: context.appColors.hairline),
+          VerticalDivider(
+            width: 1,
+            thickness: 1,
+            color: context.appColors.hairline,
+          ),
           Expanded(child: child),
         ],
       );
@@ -280,19 +367,33 @@ class HomeShell extends ConsumerWidget {
       body: Row(
         children: [
           _NavSurface(
-            child: _Sidebar(dests: dests, index: _index, badge: badge, selectedBotId: _botId, onSelected: go),
+            child: _Sidebar(
+              dests: dests,
+              index: _index,
+              badge: badge,
+              selectedBotId: _botId,
+              onSelected: go,
+            ),
           ),
           Expanded(
-            child: MediaQuery.removePadding(context: context, removeLeft: true, child: content),
+            child: MediaQuery.removePadding(
+              context: context,
+              removeLeft: true,
+              child: content,
+            ),
           ),
           if (inChat)
             AnimatedSize(
-              duration: ref.watch(_panelDraggingProvider) ? Duration.zero : AppMotion.of(context, const Duration(milliseconds: 260)),
+              duration: ref.watch(_panelDraggingProvider)
+                  ? Duration.zero
+                  : AppMotion.of(context, const Duration(milliseconds: 260)),
               curve: AppMotion.curve,
               alignment: Alignment.centerLeft,
               child: panelOpen
                   // Frosted, so the computer reads as its own pane over the chat's wallpaper.
-                  ? _ResizablePanel(child: ComputerScreen(botId: _botId, embedded: true))
+                  ? _ResizablePanel(
+                      child: ComputerScreen(botId: _botId, embedded: true),
+                    )
                   : const SizedBox(width: 0, height: double.infinity),
             ),
         ],
@@ -315,7 +416,13 @@ class _NavSurface extends StatelessWidget {
 }
 
 class _Rail extends StatelessWidget {
-  const _Rail({required this.dests, required this.index, required this.badge, required this.onSelected, required this.settingsOpen});
+  const _Rail({
+    required this.dests,
+    required this.index,
+    required this.badge,
+    required this.onSelected,
+    required this.settingsOpen,
+  });
   final List<_Dest> dests;
   final int index;
   final int badge;
@@ -334,9 +441,18 @@ class _Rail extends StatelessWidget {
       indicatorColor: scheme.primary.withValues(alpha: 0.16),
       selectedIconTheme: IconThemeData(color: scheme.primary),
       unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
-      selectedLabelTextStyle: tt.labelMedium?.copyWith(color: scheme.primary, fontWeight: FontWeight.w700),
-      unselectedLabelTextStyle: tt.labelMedium?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w500),
-      leading: const Padding(padding: EdgeInsets.only(top: 12, bottom: 20), child: WorkspaceSwitcher(compact: true)),
+      selectedLabelTextStyle: tt.labelMedium?.copyWith(
+        color: scheme.primary,
+        fontWeight: FontWeight.w700,
+      ),
+      unselectedLabelTextStyle: tt.labelMedium?.copyWith(
+        color: scheme.onSurfaceVariant,
+        fontWeight: FontWeight.w500,
+      ),
+      leading: const Padding(
+        padding: EdgeInsets.only(top: 12, bottom: 20),
+        child: WorkspaceSwitcher(compact: true),
+      ),
       // Search under the places; the person's avatar (Settings) at the bottom, as in the sidebar.
       trailingAtBottom: true,
       trailing: Padding(
@@ -354,7 +470,10 @@ class _Rail extends StatelessWidget {
             DecoratedBox(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: settingsOpen ? scheme.primary : Colors.transparent, width: 2),
+                border: Border.all(
+                  color: settingsOpen ? scheme.primary : Colors.transparent,
+                  width: 2,
+                ),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(2),
@@ -362,7 +481,10 @@ class _Rail extends StatelessWidget {
                   key: const Key('railMe'),
                   customBorder: const CircleBorder(),
                   onTap: () => context.go('/settings'),
-                  child: Tooltip(message: context.l10n.settings, child: const MeAvatar(size: 36)),
+                  child: Tooltip(
+                    message: context.l10n.settings,
+                    child: const MeAvatar(size: 36),
+                  ),
                 ),
               ),
             ),
@@ -372,8 +494,22 @@ class _Rail extends StatelessWidget {
       destinations: [
         for (final d in dests)
           NavigationRailDestination(
-            icon: Badge(isLabelVisible: d.path == '/inbox' && badge > 0, label: Text('$badge', style: const TextStyle(fontFeatures: AppText.tabular)), child: Icon(d.icon)),
-            selectedIcon: Badge(isLabelVisible: d.path == '/inbox' && badge > 0, label: Text('$badge', style: const TextStyle(fontFeatures: AppText.tabular)), child: Icon(d.selectedIcon)),
+            icon: Badge(
+              isLabelVisible: d.path == '/inbox' && badge > 0,
+              label: Text(
+                '$badge',
+                style: const TextStyle(fontFeatures: AppText.tabular),
+              ),
+              child: Icon(d.icon),
+            ),
+            selectedIcon: Badge(
+              isLabelVisible: d.path == '/inbox' && badge > 0,
+              label: Text(
+                '$badge',
+                style: const TextStyle(fontFeatures: AppText.tabular),
+              ),
+              child: Icon(d.selectedIcon),
+            ),
             label: Text(d.label),
           ),
       ],
@@ -383,7 +519,13 @@ class _Rail extends StatelessWidget {
 
 /// Wide windows: the mark and workspace, the main sections, the bots, and who is signed in.
 class _Sidebar extends ConsumerWidget {
-  const _Sidebar({required this.dests, required this.index, required this.badge, required this.selectedBotId, required this.onSelected});
+  const _Sidebar({
+    required this.dests,
+    required this.index,
+    required this.badge,
+    required this.selectedBotId,
+    required this.onSelected,
+  });
   final List<_Dest> dests;
   final int index;
   final int badge;
@@ -397,7 +539,8 @@ class _Sidebar extends ConsumerWidget {
     final l10n = context.l10n;
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
     final folders = ref.watch(botFoldersProvider).value ?? const <BotFolder>[];
-    final groups = ref.watch(groupChatsProvider).value ?? const <Conversation>[];
+    final groups =
+        ref.watch(groupChatsProvider).value ?? const <Conversation>[];
     final location = GoRouter.maybeOf(context)?.state.uri.path ?? '';
     final scheme = context.colorScheme;
     return SafeArea(
@@ -426,7 +569,11 @@ class _Sidebar extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       l10n.bots,
-                      style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700, letterSpacing: 0.2),
+                      style: context.textTheme.labelMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -437,7 +584,14 @@ class _Sidebar extends ConsumerWidget {
                     icon: const Icon(LucideIcons.search),
                     onPressed: () => showWorkspaceSearch(context),
                   ),
-                  IconButton(key: const Key('createMenu'), tooltip: l10n.createMenuTitle, visualDensity: VisualDensity.compact, iconSize: 20, icon: const Icon(LucideIcons.plus), onPressed: () => showCreateMenu(context, ref)),
+                  IconButton(
+                    key: const Key('createMenu'),
+                    tooltip: l10n.newBot,
+                    visualDensity: VisualDensity.compact,
+                    iconSize: 20,
+                    icon: const Icon(LucideIcons.plus),
+                    onPressed: () => showCreateBot(context, ref),
+                  ),
                 ],
               ),
             ),
@@ -447,20 +601,30 @@ class _Sidebar extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: 12),
                 children: [
                   // Bots outside folders first, then each folder in order (D-100).
-                  for (final (folder, group) in groupBotsByFolder(bots, folders)) ...[
+                  for (final (folder, group) in groupBotsByFolder(
+                    bots,
+                    folders,
+                  )) ...[
                     if (folder != null)
                       Padding(
                         key: Key('sidebar-folder-${folder.id}'),
                         padding: const EdgeInsets.fromLTRB(24, 10, 12, 2),
                         child: Row(
                           children: [
-                            Icon(LucideIcons.folder, size: 14, color: scheme.onSurfaceVariant),
+                            Icon(
+                              LucideIcons.folder,
+                              size: 14,
+                              color: scheme.onSurfaceVariant,
+                            ),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
                                 folder.name,
                                 overflow: TextOverflow.ellipsis,
-                                style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700),
+                                style: context.textTheme.labelSmall?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           ],
@@ -470,11 +634,22 @@ class _Sidebar extends ConsumerWidget {
                       _SidebarItem(
                         key: Key('sidebar-bot-${b.id}'),
                         height: 48,
-                        leading: BotAvatar(name: b.name, avatar: b.avatarUrl, size: 30, status: b.status, ringColor: scheme.surfaceContainerLow),
+                        leading: BotAvatar(
+                          name: b.name,
+                          avatar: b.avatarUrl,
+                          size: 30,
+                          status: b.status,
+                          ringColor: scheme.surfaceContainerLow,
+                        ),
                         label: b.name,
-                        subtitle: b.status == BotStatusEnum.idle ? null : botStatusLabel(context, b.status),
+                        subtitle: b.status == BotStatusEnum.idle
+                            ? null
+                            : botStatusLabel(context, b.status),
                         selected: b.id == selectedBotId,
-                        trailing: BotActivity(count: ref.watch(botBadgeProvider(b.id)), working: b.status == BotStatusEnum.working),
+                        trailing: BotActivity(
+                          count: ref.watch(botBadgeProvider(b.id)),
+                          working: b.status == BotStatusEnum.working,
+                        ),
                         onTap: () => context.go('/bots/${b.id}/chat'),
                       ),
                   ],
@@ -493,15 +668,26 @@ class _Sidebar extends ConsumerWidget {
                   for (final g in groups)
                     Builder(
                       builder: (context) {
-                        final members = [for (final id in g.botIds) ?bots.where((b) => b.id == id).firstOrNull];
+                        final members = [
+                          for (final id in g.botIds)
+                            ?bots.where((b) => b.id == id).firstOrNull,
+                        ];
                         return _SidebarItem(
                           key: Key('sidebar-group-${g.id}'),
                           height: 48,
-                          leading: GroupAvatar(bots: members, ringColor: scheme.surfaceContainerLow),
+                          leading: GroupAvatar(
+                            bots: members,
+                            ringColor: scheme.surfaceContainerLow,
+                          ),
                           label: groupTitle(g, bots),
                           subtitle: l10n.groupBotCount(g.botIds.length),
                           selected: location == '/groups/${g.id}',
-                          trailing: BotActivity(count: 0, working: members.any((b) => b.status == BotStatusEnum.working)),
+                          trailing: BotActivity(
+                            count: 0,
+                            working: members.any(
+                              (b) => b.status == BotStatusEnum.working,
+                            ),
+                          ),
                           onTap: () => context.go('/groups/${g.id}'),
                         );
                       },
@@ -516,10 +702,18 @@ class _Sidebar extends ConsumerWidget {
               if (dests[i].path != '/bots')
                 _SidebarItem(
                   key: Key('sidebar-nav-${dests[i].path}'),
-                  leading: Icon(i == index ? dests[i].selectedIcon : dests[i].icon, size: 21, color: i == index ? scheme.primary : scheme.onSurfaceVariant),
+                  leading: Icon(
+                    i == index ? dests[i].selectedIcon : dests[i].icon,
+                    size: 21,
+                    color: i == index
+                        ? scheme.primary
+                        : scheme.onSurfaceVariant,
+                  ),
                   label: dests[i].label,
                   selected: i == index,
-                  trailing: dests[i].path == '/inbox' && badge > 0 ? CountPill(badge) : null,
+                  trailing: dests[i].path == '/inbox' && badge > 0
+                      ? CountPill(badge)
+                      : null,
                   onTap: () => onSelected(i),
                 ),
             _SidebarItem(
@@ -540,7 +734,16 @@ class _Sidebar extends ConsumerWidget {
 }
 
 class _SidebarItem extends StatelessWidget {
-  const _SidebarItem({super.key, required this.leading, required this.label, required this.selected, required this.onTap, this.trailing, this.subtitle, this.height = 44});
+  const _SidebarItem({
+    super.key,
+    required this.leading,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.trailing,
+    this.subtitle,
+    this.height = 44,
+  });
 
   final Widget leading;
   final String label;
@@ -563,7 +766,12 @@ class _SidebarItem extends StatelessWidget {
         child: AnimatedContainer(
           duration: AppMotion.of(context, AppMotion.fast),
           curve: Curves.easeOut,
-          decoration: BoxDecoration(color: selected ? scheme.primary.withValues(alpha: 0.14) : Colors.transparent, borderRadius: radius),
+          decoration: BoxDecoration(
+            color: selected
+                ? scheme.primary.withValues(alpha: 0.14)
+                : Colors.transparent,
+            borderRadius: radius,
+          ),
           child: Material(
             type: MaterialType.transparency,
             child: InkWell(
@@ -586,9 +794,25 @@ class _SidebarItem extends StatelessWidget {
                               label,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: tt.bodyLarge?.copyWith(color: selected ? scheme.primary : scheme.onSurface, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, height: 1.2),
+                              style: tt.bodyLarge?.copyWith(
+                                color: selected
+                                    ? scheme.primary
+                                    : scheme.onSurface,
+                                fontWeight: selected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                height: 1.2,
+                              ),
                             ),
-                            if (subtitle != null) Text(subtitle!, maxLines: 1, style: tt.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.2)),
+                            if (subtitle != null)
+                              Text(
+                                subtitle!,
+                                maxLines: 1,
+                                style: tt.bodySmall?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                  height: 1.2,
+                                ),
+                              ),
                           ],
                         ),
                       ),
@@ -619,7 +843,11 @@ class _SectionHeader extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: context.textTheme.labelMedium?.copyWith(color: context.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w700, letterSpacing: 0.2),
+            style: context.textTheme.labelMedium?.copyWith(
+              color: context.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
+            ),
           ),
         ),
         ?action,
@@ -641,7 +869,11 @@ class _SelectBotPlaceholder extends ConsumerWidget {
       illustration: hasBots ? null : const BlankBotImage(size: 132),
       title: hasBots ? l10n.selectBot : l10n.noBots,
       message: l10n.selectBotHelp,
-      action: GlowButton.icon(onPressed: onCreate, icon: const Icon(LucideIcons.plus), label: Text(l10n.newBot)),
+      action: GlowButton.icon(
+        onPressed: onCreate,
+        icon: const Icon(LucideIcons.plus),
+        label: Text(l10n.newBot),
+      ),
     );
   }
 }
@@ -670,12 +902,16 @@ class _ResizablePanelState extends ConsumerState<_ResizablePanel> {
 
   double _max(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
-    return (w * 0.6).clamp(ComputerPanelWidth.min, (w - 280 - 420).clamp(ComputerPanelWidth.min, double.infinity));
+    return (w * 0.6).clamp(
+      ComputerPanelWidth.min,
+      (w - 280 - 420).clamp(ComputerPanelWidth.min, double.infinity),
+    );
   }
 
   void _down(PointerDownEvent e, double width) {
     // A double click on the edge (two clicks, no dragging) puts the default width back.
-    if (_lastClick != null && DateTime.now().difference(_lastClick!) < kDoubleTapTimeout) {
+    if (_lastClick != null &&
+        DateTime.now().difference(_lastClick!) < kDoubleTapTimeout) {
       _lastClick = null;
       ref.read(computerPanelWidthProvider.notifier)
         ..set(ComputerPanelWidth.defaultWidth)
@@ -692,7 +928,14 @@ class _ResizablePanelState extends ConsumerState<_ResizablePanel> {
   void _move(PointerMoveEvent e, double max) {
     if (!_dragging) return;
     if ((e.position.dx - _startX).abs() > 3) _moved = true;
-    ref.read(computerPanelWidthProvider.notifier).set((_startWidth - (e.position.dx - _startX)).clamp(ComputerPanelWidth.min, max));
+    ref
+        .read(computerPanelWidthProvider.notifier)
+        .set(
+          (_startWidth - (e.position.dx - _startX)).clamp(
+            ComputerPanelWidth.min,
+            max,
+          ),
+        );
   }
 
   void _up() {
@@ -707,11 +950,18 @@ class _ResizablePanelState extends ConsumerState<_ResizablePanel> {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     final max = _max(context);
-    final width = ref.watch(computerPanelWidthProvider).clamp(ComputerPanelWidth.min, max);
+    final width = ref
+        .watch(computerPanelWidthProvider)
+        .clamp(ComputerPanelWidth.min, max);
     final active = _hover || _dragging;
     return Glass(
       border: Border(
-        left: BorderSide(color: active ? scheme.primary.withValues(alpha: 0.6) : context.appColors.hairline, width: active ? 2 : 1),
+        left: BorderSide(
+          color: active
+              ? scheme.primary.withValues(alpha: 0.6)
+              : context.appColors.hairline,
+          width: active ? 2 : 1,
+        ),
       ),
       child: SizedBox(
         width: width,
@@ -741,7 +991,10 @@ class _ResizablePanelState extends ConsumerState<_ResizablePanel> {
                       child: Container(
                         width: 4,
                         height: 44,
-                        decoration: BoxDecoration(color: scheme.primary, borderRadius: BorderRadius.circular(2)),
+                        decoration: BoxDecoration(
+                          color: scheme.primary,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
                     ),
                   ),
@@ -771,7 +1024,10 @@ class _SuspendedBanner extends StatelessWidget {
           child: SafeArea(
             bottom: false,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpace.lg, vertical: AppSpace.sm),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpace.lg,
+                vertical: AppSpace.sm,
+              ),
               child: Row(
                 children: [
                   Icon(LucideIcons.ban, size: 18, color: colors.negative),
@@ -789,13 +1045,22 @@ class _SuspendedBanner extends StatelessWidget {
 }
 
 /// Bots without a folder first (folder null), then each folder in order with its bots in order.
-List<(BotFolder?, List<Bot>)> groupBotsByFolder(List<Bot> bots, List<BotFolder> folders) {
+List<(BotFolder?, List<Bot>)> groupBotsByFolder(
+  List<Bot> bots,
+  List<BotFolder> folders,
+) {
   int byKey(Bot a, Bot b) => a.sortKey.compareTo(b.sortKey);
   final known = {for (final f in folders) f.id};
   final out = <(BotFolder?, List<Bot>)>[];
-  final loose = bots.where((b) => b.folderId == null || !known.contains(b.folderId)).toList()..sort(byKey);
+  final loose =
+      bots
+          .where((b) => b.folderId == null || !known.contains(b.folderId))
+          .toList()
+        ..sort(byKey);
   if (loose.isNotEmpty) out.add((null, loose));
-  for (final f in [...folders]..sort((a, b) => a.sortKey.compareTo(b.sortKey))) {
+  for (final f in [
+    ...folders,
+  ]..sort((a, b) => a.sortKey.compareTo(b.sortKey))) {
     final group = bots.where((b) => b.folderId == f.id).toList()..sort(byKey);
     if (group.isNotEmpty) out.add((f, group));
   }

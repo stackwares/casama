@@ -63,6 +63,24 @@ describe("Google permissions", () => {
     expect(gmail({ cloud: false, composio: false })?.auth).toEqual(["oauth"]);
   });
 
+  it("Google's apps go through Composio even with a Google client, unless the owner picks Google's servers (D-166)", () => {
+    const google = (o: { cloud: boolean; googleDirect?: boolean }) =>
+      catalogFor(APP_CATALOG, { ...o, composio: true, hasClient: () => true }).find(
+        (a) => a.id === "gmail",
+      )?.auth;
+    expect(google({ cloud: false })).toEqual(["managed"]);
+    expect(google({ cloud: false, googleDirect: true })).toEqual(["oauth"]);
+    // Casama Cloud ignores the choice: Developer Preview terms bar public apps.
+    expect(google({ cloud: true, googleDirect: true })).toEqual(["managed"]);
+    // Choosing Google's servers doesn't change other apps.
+    const slack = catalogFor(APP_CATALOG, {
+      cloud: false,
+      composio: true,
+      googleDirect: true,
+    }).find((a) => a.id === "slack")?.auth;
+    expect(slack).toEqual(["managed"]);
+  });
+
   it("apps whose own sign-in isn't set up connect through Composio when the server has a key (D-172)", async () => {
     const view = catalogFor(APP_CATALOG, { cloud: false, composio: true, hasClient: () => false });
     expect(view.find((a) => a.id === "slack")?.auth).toEqual(["managed"]);
@@ -96,8 +114,9 @@ describe("Google permissions", () => {
       (await j(await h.request("/v1/apps", { token: owner.token }))).apps.find(
         (a: { id: string }) => a.id === "slack",
       ).auth;
-    expect(await j(await h.request("/v1/admin/connections", { token: owner.token }))).toEqual({
+    expect(await j(await h.request("/v1/admin/connections", { token: owner.token }))).toMatchObject({
       composio: "server",
+      google: "composio",
       composio_key: true,
     });
     expect(await slackAuth()).toEqual(["managed"]);
@@ -112,7 +131,7 @@ describe("Google permissions", () => {
       token: owner.token,
       json: { composio: "own" },
     });
-    expect(await j(own)).toMatchObject({ composio: "own" });
+    expect(await j(own)).toMatchObject({ composio: "own", google: "composio" });
     // People's own accounts: Slack's sheet offers the hubs, and the server account is refused.
     expect(await slackAuth()).toEqual(["oauth"]);
     expect(
@@ -130,6 +149,18 @@ describe("Google permissions", () => {
       json: { composio: "server" },
     });
     expect(await slackAuth()).toEqual(["managed"]);
+    // Google's servers instead of Composio for Google's apps; leaving composio out keeps it.
+    const direct = await h.request("/v1/admin/connections", {
+      method: "PUT",
+      token: owner.token,
+      json: { google: "direct" },
+    });
+    expect(await j(direct)).toMatchObject({ composio: "server", google: "direct" });
+    await h.request("/v1/admin/connections", {
+      method: "PUT",
+      token: owner.token,
+      json: { google: "composio" },
+    });
   });
 
   it("connecting Slack through Composio asks Composio for its Slack sign-in", async () => {

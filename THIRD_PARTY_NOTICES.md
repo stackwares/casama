@@ -89,6 +89,7 @@ Update this file in the same pull request that adds or removes a dependency.
 | pgTAP                                  | database tests                 | PostgreSQL License                             |
 | Supabase (self-hosted services)        | platform                       | Apache-2.0 / MIT (per component)               |
 | OpenAPI Generator (dart-dio templates) | code generation                | Apache-2.0                                     |
+| Lucide icon data (lucide-static 1.63.0) | gallery doodle `glyphs` (`gallery/assets/lucide`) | ISC                                     |
 
 ## Fonts
 

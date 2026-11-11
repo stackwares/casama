@@ -15,7 +15,10 @@ import {
   checkWallpaperDocument,
   type GalleryType,
   galleryHash,
+  galleryIndexDocument,
+  galleryRequires,
   LOOK_LICENSES,
+  type LucideNodes,
   parseGalleryMeta,
   SKILL_LICENSES,
 } from "../packages/domain/src/gallery.ts";
@@ -23,6 +26,10 @@ import { parseSkillMd } from "../packages/domain/src/skill-format.ts";
 
 const root = fileURLToPath(new URL("../gallery", import.meta.url));
 const checkOnly = process.argv.includes("--check");
+// Lucide's icons, so wallpapers can name them as `glyphs` (resolved into doodles in the index).
+const lucide = JSON.parse(
+  readFileSync(join(root, "assets/lucide/icon-nodes.json"), "utf8"),
+) as LucideNodes;
 
 const folders: { dir: string; type: GalleryType }[] = [
   { dir: "themes", type: "theme" },
@@ -82,6 +89,7 @@ for (const { dir, type } of folders) {
     // What a gallery card needs to draw its preview, so a list needs no request per item.
     let document: unknown;
     let description: string | undefined;
+    let requires: string[] = [];
     if (type === "theme" || type === "scheme" || type === "wallpaper") {
       const name =
         type === "theme" ? "theme.json" : type === "scheme" ? "scheme.json" : "wallpaper.json";
@@ -99,15 +107,17 @@ for (const { dir, type } of folders) {
       }
       const found =
         type === "theme"
-          ? checkThemeDocument(json)
+          ? checkThemeDocument(json, { lucide })
           : type === "scheme"
             ? checkSchemeDocument(json)
             : checkWallpaperDocument(
                 json,
                 files.map((f) => ({ path: f.relative, bytes: f.bytes.byteLength })),
+                { lucide },
               );
       for (const e of found) errors.push(`${where}: ${e}`);
-      document = json;
+      document = galleryIndexDocument(type, json, lucide);
+      requires = galleryRequires(type, json);
     } else {
       const skill = files.find((f) => f.relative === "SKILL.md");
       if (!skill) errors.push(`${where}: missing SKILL.md`);
@@ -138,6 +148,7 @@ for (const { dir, type } of folders) {
       ...(parsed.meta.category ? { category: parsed.meta.category } : {}),
       ...(parsed.meta.icon ? { icon: parsed.meta.icon } : {}),
       ...(description ? { description } : {}),
+      ...(requires.length ? { requires } : {}),
       ...(document !== undefined ? { document } : {}),
       files: files.map((f) => `${dir}/${id}/${f.relative}`).sort(),
     });

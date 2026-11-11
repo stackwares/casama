@@ -84,6 +84,15 @@ class ChatComposer extends StatelessWidget {
       builder: (context, _) {
         final canSend = (controller.text.trim().isNotEmpty || hasAttachments) && !uploading;
         final focused = focusNode.hasFocus;
+        // The mic and send buttons are 40pt inside 7pt of padding, but on phones Material pads
+        // each to a 48pt tap target, so the row is 62pt there and 54pt on desktop. The line is
+        // the font's own size, padded equally so the hint and the text share the buttons' center.
+        final textStyle = (context.textTheme.bodyLarge ?? const TextStyle(fontSize: 16)).copyWith(
+          height: 1,
+          leadingDistribution: TextLeadingDistribution.even,
+        );
+        final buttonBox = Theme.of(context).materialTapTargetSize == MaterialTapTargetSize.padded ? 48.0 : 40.0;
+        final vertical = (buttonBox + 14 - (textStyle.fontSize ?? 16)) / 2;
         // Frosted over the wallpaper; the border lights up with focus.
         return Glass(
           borderRadius: BorderRadius.circular(26),
@@ -127,28 +136,18 @@ class ChatComposer extends StatelessWidget {
                           textCapitalization: TextCapitalization.sentences,
                           keyboardType: TextInputType.multiline,
                           textInputAction: TextInputAction.newline,
-                          // A fixed line box (22pt) with even leading: 16 + 22 + 16 matches the 54pt row.
-                          style: context.textTheme.bodyLarge?.copyWith(height: 22 / 16, leadingDistribution: TextLeadingDistribution.even),
-                          strutStyle: const StrutStyle(
-                            fontSize: 16,
-                            height: 22 / 16,
-                            leadingDistribution: TextLeadingDistribution.even,
-                            forceStrutHeight: true,
-                          ),
+                          style: textStyle,
                           decoration: InputDecoration(
                             hintText: recording ? l10n.listening : hint,
                             hintMaxLines: 1,
-                            hintStyle: context.textTheme.bodyLarge?.copyWith(
-                              height: 22 / 16,
-                              leadingDistribution: TextLeadingDistribution.even,
-                              color: recording ? context.appColors.negative : scheme.onSurfaceVariant,
-                            ),
+                            hintStyle: textStyle.copyWith(color: recording ? context.appColors.negative : scheme.onSurfaceVariant),
                             border: InputBorder.none,
                             enabledBorder: InputBorder.none,
                             focusedBorder: InputBorder.none,
                             filled: false,
-                            isDense: true,
-                            contentPadding: EdgeInsets.fromLTRB(attachButton == null ? AppSpace.lg : AppSpace.xs, 16, AppSpace.xs, 16),
+                            isCollapsed: true,
+                            visualDensity: VisualDensity.standard,
+                            contentPadding: EdgeInsets.fromLTRB(attachButton == null ? AppSpace.lg : AppSpace.xs, vertical, AppSpace.xs, vertical),
                           ),
                         ),
                       ),

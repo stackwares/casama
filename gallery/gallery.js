@@ -16,25 +16,87 @@
   var PATTERNS = DATA.patterns;
   var SVG = "http://www.w3.org/2000/svg";
 
-  // Wallpaper palettes, as the app draws them (client/lib/theme/wallpaper.dart).
+  // Wallpaper meshes, as the app draws them (client/lib/theme/wallpaper.dart): nine colors row by
+  // row from the top left, with their night versions and where they sit.
   var PALETTES = {
-    casama: { light: ["#EEE2FB", "#FBE3EE", "#DDE9FF", "#DDF7F5"], dark: ["#25102F", "#34123A", "#151F3F", "#0F292E"] },
-    lavender: { light: ["#E7DEFF", "#F3E6FF", "#DCD3FF", "#FBEFFF"] },
-    cotton: { light: ["#FFDDEB", "#E1E4FF", "#FFE9F2", "#DCEFFF"] },
-    peach: { light: ["#FFE3D3", "#FFD6DF", "#FFF0D4", "#FFE2EA"] },
-    sunset: { light: ["#FFD9BF", "#FFC9D6", "#F2D3FF", "#FFE6C2"] },
-    mint: { light: ["#D5F5E7", "#E3FAF3", "#CDEFDE", "#EDFBEF"] },
-    ocean: { light: ["#D4EAFF", "#CFF1F8", "#DDE3FF", "#C9E8FF"] },
-    forest: { light: ["#DDEDD2", "#CFE8D7", "#ECF2D0", "#D6ECE3"] },
-    graphite: { light: ["#E9EBEF", "#E1E4EA", "#EEF0F3", "#DDE1E7"] },
+    casama: {
+      light: ["#F1DBFF", "#FED3EA", "#F9E3F7", "#E5D1FE", "#F8E1F9", "#FFCFE0", "#DDDEFF", "#F5CAF6", "#EAE3FF"],
+      dark: ["#351C43", "#3F102E", "#3F253D", "#28103E", "#3D223F", "#3E0A24", "#221E47", "#310B34", "#31234A"],
+      points: [[0,0],[0.62,0],[1,0],[0,0.38],[0.4,0.58],[1,0.46],[0,1],[0.55,1],[1,1]],
+    },
+    lavender: {
+      light: ["#E7E4FE", "#E6DAFE", "#F6E9FD", "#D7DBFF", "#EBE6FE", "#EFDCFE", "#E4EBFE", "#DED8FF", "#F6DFFB"],
+      dark: ["#2C254A", "#2C1A45", "#3D2B45", "#1C1A48", "#302847", "#331D42", "#242E4C", "#241844", "#3A2040"],
+      points: [[0,0],[0.4,0],[1,0],[0,0.55],[0.62,0.42],[1,0.6],[0,1],[0.45,1],[1,1]],
+    },
+    cotton: {
+      light: ["#FFD9E6", "#EEE7FE", "#C9E5FF", "#FDE7FA", "#E9E6FF", "#FFDAE1", "#C2E7FE", "#FEDDEE", "#E7EFFE"],
+      dark: ["#45142B", "#34284A", "#012743", "#432841", "#2E2848", "#471423", "#00293C", "#451A34", "#26324E"],
+      points: [[0,0],[0.55,0],[1,0],[0,0.45],[0.35,0.4],[1,0.62],[0,1],[0.65,1],[1,1]],
+    },
+    peach: {
+      light: ["#FFE1D1", "#FED6D2", "#FFEBD5", "#FEDADE", "#FFE5DA", "#FEDEC4", "#FBE9CA", "#FED7CD", "#FEDEE7"],
+      dark: ["#4A1923", "#3F102E", "#4E2620", "#3D173B", "#49212B", "#481418", "#4B2314", "#411127", "#3C1E43"],
+      points: [[0,0],[0.45,0],[1,0],[0,0.6],[0.58,0.55],[1,0.35],[0,1],[0.4,1],[1,1]],
+    },
+    sunset: {
+      light: ["#FED4B9", "#FEC8C7", "#FFD3E6", "#FEDFB6", "#FEDBD5", "#F0C7F9", "#FECEBE", "#FFD0D9", "#E3D6FE"],
+      dark: ["#420910", "#340424", "#341541", "#491501", "#45142B", "#191140", "#3C0519", "#370E35", "#0D1E4A"],
+      points: [[0,0],[0.6,0],[1,0],[0,0.4],[0.45,0.62],[1,0.52],[0,1],[0.5,1],[1,1]],
+    },
+    mint: {
+      light: ["#CDF6E3", "#BAF2E6", "#DCF7E1", "#B7F0DB", "#D5F4E2", "#C2F3F2", "#DFF7DA", "#BBF2E2", "#C9F5F7"],
+      dark: ["#013927", "#023029", "#193C22", "#012D21", "#0B3925", "#003434", "#203B1A", "#023127", "#01373A"],
+      points: [[0,0],[0.38,0],[1,0],[0,0.5],[0.6,0.45],[1,0.58],[0,1],[0.6,1],[1,1]],
+    },
+    ocean: {
+      light: ["#CCE9FE", "#B4ECFA", "#DFEDFE", "#BDF4F6", "#CEF0FE", "#C6E1FF", "#B9EAFF", "#C2F3F2", "#D9E5FE"],
+      dark: ["#002C45", "#002B33", "#19304E", "#023336", "#003343", "#002342", "#012A37", "#003434", "#16264D"],
+      points: [[0,0],[0.58,0],[1,0],[0,0.62],[0.42,0.48],[1,0.4],[0,1],[0.48,1],[1,1]],
+    },
+    forest: {
+      light: ["#DAF0CF", "#C3EED0", "#EAF0CA", "#C3F1DC", "#D9F0D3", "#D8E9BE", "#EFEDCB", "#C8ECCE", "#C6F3E6"],
+      dark: ["#03361C", "#012D24", "#1F3710", "#01302C", "#013620", "#032F09", "#28350B", "#002D21", "#003434"],
+      points: [[0,0],[0.5,0],[1,0],[0,0.42],[0.62,0.6],[1,0.55],[0,1],[0.38,1],[1,1]],
+    },
+    graphite: {
+      light: ["#E4E8ED", "#DDE2E9", "#F1EEEA", "#DFE6EB", "#EAEDF1", "#DEE1EA", "#EFEAE6", "#E0E5EB", "#E3E9EC"],
+      dark: ["#252D36", "#1F2630", "#383229", "#202A32", "#2A323A", "#212530", "#372D26", "#222933", "#222E34"],
+      points: [[0,0],[0.5,0],[1,0],[0,0.5],[0.5,0.5],[1,0.5],[0,1],[0.5,1],[1,1]],
+    },
+    northern: {
+      light: ["#A5E9CA", "#A6EDF0", "#DBCAFE", "#C9EDC1", "#B7F0FE", "#F1C6FB", "#9DEDE2", "#BFD0FF", "#FECEE8"],
+      dark: ["#002216", "#02282A", "#1F0A38", "#082E00", "#002E38", "#2C0933", "#012521", "#090F3C", "#3C0B2B"],
+      points: [[0,0],[0.35,0],[1,0],[0,0.58],[0.55,0.38],[1,0.65],[0,1],[0.62,1],[1,1]],
+    },
+    twilight: {
+      light: ["#CBD0FE", "#F3CAFC", "#FFD6D7", "#DECEFE", "#FFD3E6", "#FEDDCB", "#B7D2FE", "#F8C4F2", "#FEDAB2"],
+      dark: ["#130F3D", "#2F0C37", "#460D17", "#220D3C", "#40112B", "#441B01", "#00123B", "#2F072D", "#361F00"],
+      points: [[0,0],[0.62,0],[1,0],[0,0.35],[0.38,0.55],[1,0.5],[0,1],[0.42,1],[1,1]],
+    },
+    berry: {
+      light: ["#FEBAD9", "#F0C7F9", "#FED5DA", "#FEC2EF", "#FFD3EA", "#D9C6FE", "#FFD1D3", "#F7BFF1", "#D9D5FE"],
+      dark: ["#2E001B", "#2C0933", "#43101C", "#31062A", "#3E122E", "#1D0736", "#420914", "#2C042A", "#201443"],
+      points: [[0,0],[0.45,0],[1,0],[0,0.48],[0.65,0.52],[1,0.38],[0,1],[0.55,1],[1,1]],
+    },
+    citrus: {
+      light: ["#FEEBA6", "#FEDFBB", "#E4F4B8", "#FFDDC7", "#FFEDC0", "#CCF6C3", "#FFE4B8", "#FED8C8", "#F3EFB0"],
+      dark: ["#03392B", "#023309", "#023737", "#1C2F00", "#013E2A", "#01323C", "#02361C", "#212900", "#013831"],
+      points: [[0,0],[0.55,0],[1,0],[0,0.62],[0.4,0.42],[1,0.48],[0,1],[0.6,1],[1,1]],
+    },
+    reef: {
+      light: ["#A0E6EA", "#ADEEDB", "#C1DEFE", "#C0EED4", "#BAF0F6", "#9FDFFE", "#A9EEE4", "#C5D8FE", "#C6EDCD"],
+      dark: ["#012022", "#002921", "#001F3D", "#012E1B", "#022F33", "#001B27", "#012825", "#071742", "#002F10"],
+      points: [[0,0],[0.4,0],[1,0],[0,0.4],[0.58,0.62],[1,0.58],[0,1],[0.45,1],[1,1]],
+    },
   };
   var PATTERN_LABELS = { none: "Plain", clouds: "Clouds", doodles: "Doodles", treats: "Treats", garden: "Garden", space: "Space", pets: "Pets", sea: "Seaside", tech: "Tech" };
-  var PALETTE_LABELS = { theme: "Theme", casama: "Casama", lavender: "Lavender", cotton: "Cotton candy", peach: "Peach", sunset: "Sunset", mint: "Mint", ocean: "Ocean", forest: "Forest", graphite: "Graphite" };
+  var PALETTE_LABELS = { theme: "Theme", casama: "Casama", lavender: "Lavender", cotton: "Cotton candy", peach: "Peach", sunset: "Sunset", mint: "Mint", ocean: "Ocean", forest: "Forest", graphite: "Graphite", northern: "Northern", twilight: "Twilight", berry: "Berry", citrus: "Citrus", reef: "Reef" };
 
   // The app's own scheme, exactly as it renders (light and dark).
   var CASAMA = {
-    light: { p: "#7a3fa8", onP: "#ffffff", pc: "#f2daff", onPc: "#2e004e", s: "#3b78db", onS: "#ffffff", t: "#0e8f9a", onT: "#ffffff", surf: "#fcf3fb", onSurf: "#1e1a20", high: "#ebe2eb", lowest: "#fcfafd", cont: "#f1e8f1", outline: "#cfc2d4", onSurfVar: "#4c4452" },
-    dark: { p: "#d9b6f7", onP: "#000000", pc: "#563a70", onPc: "#f2daff", s: "#9dc3ff", onS: "#000000", t: "#7feae4", onT: "#000000", surf: "#1e1a22", onSurf: "#e9e0e8", high: "#343037", lowest: "#19151c", cont: "#2b252e", outline: "#4c4452", onSurfVar: "#cfc2d4" },
+    light: { p: "#9c3a9e", onP: "#ffffff", pc: "#ffd6f8", onPc: "#330834", s: "#b8407f", onS: "#ffffff", t: "#5562cf", onT: "#ffffff", surf: "#fdf3f8", onSurf: "#201a1e", high: "#e9dbe4", lowest: "#fdfafd", cont: "#f5e7ef", outline: "#d1c3cc", onSurfVar: "#4e444b" },
+    dark: { p: "#f2b0ec", onP: "#000000", pc: "#643663", onPc: "#ffd6f8", s: "#ffb1d4", onS: "#000000", t: "#bdc2ff", onT: "#000000", surf: "#211920", onSurf: "#ebdfe6", high: "#433940", lowest: "#1d151b", cont: "#2e252c", outline: "#4e444b", onSurfVar: "#d1c3cc" },
   };
   var DEFAULT_LOOK = { scheme: null, headingFont: "Libre Baskerville", bodyFont: "Lato", wallpaper: { kind: "pattern", pattern: "clouds", palette: "theme", intensity: 0.5 } };
 
@@ -77,10 +139,30 @@
     return lum(h) > 0.32 ? "#000000" : "#ffffff";
   }
 
-  /** The scheme the app builds from a gallery seed (an approximation of its tonal palettes). */
+  var SCHEME_COLORS = ["primary", "primaryContainer", "secondary", "secondaryContainer", "tertiary", "tertiaryContainer"];
+  var HEX6 = /^#[0-9A-Fa-f]{6}$/;
+  /** True when a light or dark scheme half gives all six exact colors (a full color scheme). */
+  function hasExactColors(mode) {
+    return !!mode && SCHEME_COLORS.every(function (k) { return typeof mode[k] === "string" && HEX6.test(mode[k]); });
+  }
+
+  /** The scheme the app builds from a gallery seed (an approximation of its tonal palettes), or
+   *  a full color scheme's exact colors with surfaces derived from its primary. */
   function scheme(seeds, dark) {
     if (!seeds || !seeds.light || !seeds.dark) return CASAMA[dark ? "dark" : "light"];
-    var p = (dark ? seeds.dark : seeds.light).seed;
+    var mode = dark ? seeds.dark : seeds.light;
+    if (hasExactColors(mode)) {
+      var base = scheme({ light: { seed: seeds.light.primary || seeds.light.seed }, dark: { seed: seeds.dark.primary || seeds.dark.seed } }, dark);
+      var ex = {};
+      Object.keys(base).forEach(function (k) { ex[k] = base[k]; });
+      ex.p = mode.primary; ex.onP = on(mode.primary);
+      ex.pc = mode.primaryContainer; ex.onPc = on(mode.primaryContainer);
+      ex.s = mode.secondary; ex.onS = on(mode.secondary);
+      ex.t = mode.tertiary; ex.onT = on(mode.tertiary);
+      if (typeof mode.appBar === "string" && HEX6.test(mode.appBar)) ex.appBar = mode.appBar;
+      return ex;
+    }
+    var p = mode.seed;
     var hsl = toHsl(p), h = hsl[0], s = hsl[1], l = hsl[2];
     if (!dark) {
       var pc = fromHsl(h, Math.max(s, 60) + 20, 90);
@@ -102,14 +184,112 @@
     };
   }
 
-  function palette(name, c, dark) {
-    if (name === "theme" || !PALETTES[name]) {
-      var to = dark ? "#0C0B11" : "#ffffff", k = dark ? 0 : 0.04;
-      return [mix(c.p, to, 0.84 + k), mix(c.t, to, 0.82 + k), mix(c.s, to, 0.84 + k), mix(c.p, to, 0.9 + k)];
+  var EVEN_POINTS = [[0, 0], [0.5, 0], [1, 0], [0, 0.5], [0.5, 0.5], [1, 0.5], [0, 1], [0.5, 1], [1, 1]];
+
+  /** The mesh a wallpaper draws: its own (from the gallery), a built-in palette, or the scheme's. */
+  function meshOf(wall, c, dark) {
+    var own = wall.mesh;
+    if (own && Array.isArray(own.light) && own.light.length === 9 && Array.isArray(own.dark) && own.dark.length === 9)
+      return { colors: dark ? own.dark : own.light, points: Array.isArray(own.points) && own.points.length === 9 ? own.points : EVEN_POINTS };
+    var pal = PALETTES[wall.palette];
+    if (pal) return { colors: dark ? pal.dark : pal.light, points: pal.points };
+    var to = dark ? "#0C0B11" : "#ffffff", k = dark ? -0.04 : -0.05;
+    var m = function (x, t) { return mix(x, to, t + k); };
+    return {
+      colors: [m(c.p, 0.84), m(c.t, 0.84), m(c.s, 0.88), m(c.s, 0.85), m(c.p, 0.88), m(c.t, 0.86), m(c.t, 0.85), m(c.s, 0.86), m(c.p, 0.83)],
+      points: EVEN_POINTS,
+    };
+  }
+
+  // ---------------------------------------------------------------- mesh gradients
+  // The app's mesh: Catmull-Rom across the 3×3 grid, colors in OKLab. Drawn into a small canvas
+  // that the browser stretches smoothly; a soft gradient loses nothing at low resolution.
+  function toLinear(v) { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+  function fromLinear(x) { x = Math.min(1, Math.max(0, x)); return Math.round(255 * (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055)); }
+  function toLab(hex) {
+    var n = parseInt(hex.slice(1), 16), r = toLinear((n >> 16) & 255), g = toLinear((n >> 8) & 255), b = toLinear(n & 255);
+    var l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+    var m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+    var s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+    return [0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s, 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s];
+  }
+  function fromLab(c) {
+    var l = Math.pow(c[0] + 0.3963377774 * c[1] + 0.2158037573 * c[2], 3);
+    var m = Math.pow(c[0] - 0.1055613458 * c[1] - 0.0638541728 * c[2], 3);
+    var s = Math.pow(c[0] - 0.0894841775 * c[1] - 1.291485548 * c[2], 3);
+    return [fromLinear(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s), fromLinear(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s), fromLinear(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s)];
+  }
+  function catmullRom(p0, p1, p2, p3, t) {
+    return 0.5 * (2 * p1 + (p2 - p0) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (3 * p1 - p0 - 3 * p2 + p3) * t * t * t);
+  }
+  /** The 3×3 grid of vectors at (u, v); ghost points outside mirror the edge, as in the app. */
+  function sample(g, u, v) {
+    var ci = Math.min(1, Math.floor(u * 2)), ri = Math.min(1, Math.floor(v * 2)), tx = u * 2 - ci, ty = v * 2 - ri;
+    function at(r, c) {
+      var rr = Math.max(0, Math.min(2, r)), cc = Math.max(0, Math.min(2, c));
+      if (r === rr && c === cc) return g[r][c];
+      var edge = g[rr][cc], inner = g[r === rr ? rr : 1][c === cc ? cc : 1];
+      return edge.map(function (e, i) { return 2 * e - inner[i]; });
     }
-    var pal = PALETTES[name];
-    if (!dark) return pal.light;
-    return pal.dark || pal.light.map(function (x) { return mix(x, "#0C0B11", 0.86); });
+    var out = [];
+    for (var i = 0; i < g[0][0].length; i++) {
+      var rows = [];
+      for (var r = -1; r <= 2; r++) rows.push(catmullRom(at(ri + r, ci - 1)[i], at(ri + r, ci)[i], at(ri + r, ci + 1)[i], at(ri + r, ci + 2)[i], tx));
+      out.push(catmullRom(rows[0], rows[1], rows[2], rows[3], ty));
+    }
+    return out;
+  }
+  function grid(list) { return [list.slice(0, 3), list.slice(3, 6), list.slice(6, 9)]; }
+
+  var meshCache = {};
+  /** A small canvas of the mesh. Warped points are resolved by searching each pixel's (u, v). */
+  function meshCanvas(mesh) {
+    var W = 48, H = 72;
+    var key = mesh.colors.join() + "|" + JSON.stringify(mesh.points);
+    var canvas = document.createElement("canvas");
+    canvas.width = W;
+    canvas.height = H;
+    var ctx = canvas.getContext("2d");
+    var data = meshCache[key];
+    if (!data) {
+      var colors = grid(mesh.colors.map(toLab)), points = grid(mesh.points);
+      // Lay the mesh out on a fine (u, v) grid, then fill pixels from its quads, as the app's
+      // triangles do.
+      var N = 24, V = [];
+      for (var r = 0; r <= N; r++) {
+        V.push([]);
+        for (var c = 0; c <= N; c++) {
+          var p = sample(points, c / N, r / N);
+          V[r].push({ x: p[0] * W, y: p[1] * H, c: fromLab(sample(colors, c / N, r / N)) });
+        }
+      }
+      data = ctx.createImageData(W, H);
+      var d = data.data;
+      var tri = function (a, b, e) {
+        var den = (b.y - e.y) * (a.x - e.x) + (e.x - b.x) * (a.y - e.y);
+        if (Math.abs(den) < 1e-9) return;
+        var x0 = Math.max(0, Math.floor(Math.min(a.x, b.x, e.x))), x1 = Math.min(W - 1, Math.ceil(Math.max(a.x, b.x, e.x)));
+        var y0 = Math.max(0, Math.floor(Math.min(a.y, b.y, e.y))), y1 = Math.min(H - 1, Math.ceil(Math.max(a.y, b.y, e.y)));
+        for (var y = y0; y <= y1; y++) for (var x = x0; x <= x1; x++) {
+          var px = x + 0.5, py = y + 0.5;
+          var l1 = ((b.y - e.y) * (px - e.x) + (e.x - b.x) * (py - e.y)) / den;
+          var l2 = ((e.y - a.y) * (px - e.x) + (a.x - e.x) * (py - e.y)) / den;
+          var l3 = 1 - l1 - l2;
+          if (l1 < -1e-6 || l2 < -1e-6 || l3 < -1e-6) continue;
+          var i = 4 * (y * W + x);
+          for (var k = 0; k < 3; k++) d[i + k] = l1 * a.c[k] + l2 * b.c[k] + l3 * e.c[k];
+          d[i + 3] = 255;
+        }
+      };
+      for (var rr = 0; rr < N; rr++) for (var cc = 0; cc < N; cc++) {
+        var q00 = V[rr][cc], q01 = V[rr][cc + 1], q10 = V[rr + 1][cc], q11 = V[rr + 1][cc + 1];
+        tri(q00, q01, q11);
+        tri(q00, q11, q10);
+      }
+      meshCache[key] = data;
+    }
+    ctx.putImageData(data, 0, 0);
+    return canvas;
   }
 
   // ---------------------------------------------------------------- icons
@@ -135,10 +315,26 @@
     return svg;
   }
 
-  function nodeMarkup(name) {
-    return (ICONS[name] || []).map(function (node) {
-      return "<" + node[0] + " " + Object.keys(node[1]).map(function (k) { return k + "='" + node[1][k] + "'"; }).join(" ") + "/>";
+  var DOODLE_TAGS = { path: 1, circle: 1, ellipse: 1, rect: 1, line: 1, polyline: 1, polygon: 1 };
+  function attr(v) { return String(v).replace(/[&'<>"]/g, ""); }
+  /** SVG markup for a list of Lucide-format nodes ([tag, attributes]); unknown tags are skipped. */
+  function nodesMarkup(nodes) {
+    return (Array.isArray(nodes) ? nodes : []).map(function (node) {
+      if (!Array.isArray(node) || !DOODLE_TAGS[node[0]] || !node[1] || typeof node[1] !== "object") return "";
+      return "<" + node[0] + " " + Object.keys(node[1]).filter(function (k) { return /^[a-z][a-z0-9]*$/i.test(k) && k !== "key"; })
+        .map(function (k) { return k + "='" + attr(node[1][k]) + "'"; }).join(" ") + "/>";
     }).join("");
+  }
+
+  /** The doodles a wallpaper brings: its own `doodles`, or `glyphs` drawn from the icons here. */
+  function doodlesOf(wall) {
+    if (!wall) return null;
+    if (Array.isArray(wall.doodles) && wall.doodles.length) return wall.doodles.slice(0, 24);
+    if (Array.isArray(wall.glyphs) && wall.glyphs.length) {
+      var found = wall.glyphs.map(function (g) { return ICONS[g]; }).filter(Boolean);
+      return found.length ? found.slice(0, 24) : null;
+    }
+    return null;
   }
 
   // A seeded random like the app's, so a pattern draws the same way every time.
@@ -151,13 +347,14 @@
     };
   }
   var patternCache = {};
-  /** The repeating tile of a pattern: 4 × 4 glyphs on a 260-unit square, as in the app. */
-  function patternTile(name, ink, alpha) {
-    var key = name + ink + alpha;
+  /** The repeating tile of a pattern: 4 × 4 glyphs on a 260-unit square, as in the app. With
+   *  [doodles], those drawings (Lucide-format node lists) replace the built-in pattern's glyphs. */
+  function patternTile(name, ink, alpha, doodles) {
+    var key = (doodles ? JSON.stringify(doodles) : name) + ink + alpha;
     if (patternCache[key]) return patternCache[key];
-    var glyphs = PATTERNS[name] || [];
+    var glyphs = doodles || (PATTERNS[name] || []).map(function (g) { return ICONS[g]; });
     var order = Object.keys(PATTERNS);
-    var rand = rng(order.indexOf(name) * 7919 + 17);
+    var rand = rng(doodles ? glyphs.length * 7919 + 17 : order.indexOf(name) * 7919 + 17);
     var cells = 4, tile = 260, cell = tile / cells, out = [];
     for (var row = 0; row < cells; row++) {
       for (var col = 0; col < cells; col++) {
@@ -170,7 +367,7 @@
           [0, -tile, tile].forEach(function (dy) {
             var px = x + dx, py = y + dy;
             if (px < -size || px > tile + size || py < -size || py > tile + size) return;
-            out.push("<g transform='translate(" + px.toFixed(1) + " " + py.toFixed(1) + ") rotate(" + angle.toFixed(1) + ") scale(" + (size / 24).toFixed(3) + ") translate(-12 -12)'>" + nodeMarkup(glyph) + "</g>");
+            out.push("<g transform='translate(" + px.toFixed(1) + " " + py.toFixed(1) + ") rotate(" + angle.toFixed(1) + ") scale(" + (size / 24).toFixed(3) + ") translate(-12 -12)'>" + nodesMarkup(glyph) + "</g>");
           });
         });
       }
@@ -254,15 +451,16 @@
       if (!opts.sharp) screen.appendChild(el("div", "cg-dim"));
       return;
     }
-    var colors = palette(wall.palette || "theme", c, dark);
-    var layer = el("div", "cg-wall");
-    setVars(layer, { "--c0": colors[0], "--c1": colors[1], "--c2": colors[2], "--c3": colors[3], "--r": opts.portrait ? "113cqw" : "85cqw" });
+    var layer = meshCanvas(meshOf(wall, c, dark));
+    layer.className = "cg-wall";
+    layer.setAttribute("aria-hidden", "true");
     screen.appendChild(layer);
     var intensity = typeof wall.intensity === "number" ? wall.intensity : 0.5;
-    if (wall.pattern && wall.pattern !== "none" && intensity > 0) {
+    var own = doodlesOf(wall);
+    if ((own || (wall.pattern && wall.pattern !== "none")) && intensity > 0) {
       var ink = dark ? mix(c.p, "#ffffff", 0.35) : mix(c.p, "#000000", 0.25);
       var pattern = el("div", "cg-pattern");
-      pattern.style.backgroundImage = patternTile(wall.pattern, ink, (dark ? 0.16 : 0.22) * intensity);
+      pattern.style.backgroundImage = patternTile(wall.pattern, ink, (dark ? 0.16 : 0.22) * intensity, own);
       pattern.style.backgroundSize = opts.portrait ? "calc(100cqw * 260 / 390)" : "calc(var(--u) * 260)";
       screen.appendChild(pattern);
     }
@@ -360,7 +558,9 @@
   function describeWallpaper(doc) {
     if (!doc) return "";
     if (doc.kind === "image") return "Image";
-    return (PATTERN_LABELS[doc.pattern] || doc.pattern) + " on " + (PALETTE_LABELS[doc.palette] || doc.palette);
+    var pat = doodlesOf(doc) ? "Own doodles" : PATTERN_LABELS[doc.pattern] || doc.pattern;
+    if (doc.mesh) return pat + " on a mesh gradient";
+    return pat + " on " + (PALETTE_LABELS[doc.palette] || doc.palette);
   }
 
   window.CasamaGallery = {
@@ -374,6 +574,17 @@
     preview: preview,
     ensureFonts: ensureFonts,
     describeWallpaper: describeWallpaper,
+    // For the look editor (make.js).
+    PALETTES: PALETTES,
+    PALETTE_LABELS: PALETTE_LABELS,
+    PATTERNS: PATTERNS,
+    PATTERN_LABELS: PATTERN_LABELS,
+    FALLBACK_PALETTES: ["theme", "casama", "lavender", "cotton", "peach", "sunset", "mint", "ocean", "forest", "graphite"],
+    SCHEME_COLORS: SCHEME_COLORS,
+    nodesMarkup: nodesMarkup,
+    luminance: lum,
+    contrast: function (a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); },
+    mix: mix,
     appLink: function (item) { return "https://casama.ai/gallery/" + item.type + "/" + item.id; },
     sourceLink: function (item) { return "https://github.com/stackwares/casama-gallery/tree/main/" + item.type + "s/" + item.id; },
   };

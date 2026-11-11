@@ -16,8 +16,10 @@ import '../../theme/fonts.dart';
 import '../../theme/presets.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
+import '../../ui/edge_fade.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/page.dart';
+import '../../ui/reveal_when_selected.dart';
 import '../../ui/segmented.dart';
 import '../../ui/shell_header.dart';
 import '../skills/skill_visuals.dart';
@@ -268,39 +270,42 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
   ) {
     final l10n = context.l10n;
     final muted = context.colorScheme.onSurfaceVariant;
-    return SingleChildScrollView(
+    return EdgeFade(child: SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: EdgeInsets.symmetric(horizontal: side),
       child: Row(
         children: [
           for (final type in [null, ..._types]) ...[
             if (type != null) const SizedBox(width: AppSpace.xs),
-            ChoiceChip(
-              key: Key('galleryType-${type ?? 'all'}'),
-              showCheckmark: false,
+            RevealWhenSelected(
               selected: _type == type,
-              onSelected: (_) => _showType(type),
-              label: Text.rich(
-                TextSpan(
-                  text: type == null ? l10n.galleryAll : _typeLabel(l10n, type),
-                  children: [
-                    if (matches != null)
-                      TextSpan(
-                        text:
-                            '  ${type == null ? matches.length : matches.where((i) => i.type == type).length}',
-                        style: TextStyle(
-                          color: muted,
-                          fontFeatures: AppText.tabular,
+              child: ChoiceChip(
+                key: Key('galleryType-${type ?? 'all'}'),
+                showCheckmark: false,
+                selected: _type == type,
+                onSelected: (_) => _showType(type),
+                label: Text.rich(
+                  TextSpan(
+                    text: type == null ? l10n.galleryAll : _typeLabel(l10n, type),
+                    children: [
+                      if (matches != null)
+                        TextSpan(
+                          text:
+                              '  ${type == null ? matches.length : matches.where((i) => i.type == type).length}',
+                          style: TextStyle(
+                            color: muted,
+                            fontFeatures: AppText.tabular,
+                          ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
           ],
         ],
       ),
-    );
+    ));
   }
 
   /// Everything at once: the featured looks, then one row of each kind with "See all".
@@ -396,7 +401,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     return out;
   }
 
-  Widget _shelf(List<Widget> cards, double side) => SingleChildScrollView(
+  Widget _shelf(List<Widget> cards, double side) => EdgeFade(child: SingleChildScrollView(
     scrollDirection: Axis.horizontal,
     padding: EdgeInsets.symmetric(horizontal: side),
     child: Row(
@@ -408,7 +413,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
         ],
       ],
     ),
-  );
+  ));
 
   Widget _grid(
     BuildContext context,
@@ -754,7 +759,10 @@ class _LookCard extends ConsumerWidget {
 String _wallpaperLine(AppLocalizations l10n, GalleryItem item) {
   final spec = galleryWallpaperOf(item);
   if (spec == null || spec.photo != null) return l10n.galleryImage;
-  return l10n.galleryPatternOn(spec.pattern.label, spec.palette.label);
+  return l10n.galleryPatternOn(
+    spec.doodles != null ? l10n.galleryOwnDoodles : spec.pattern.label,
+    spec.mesh != null ? l10n.galleryMeshGradient : spec.palette.label,
+  );
 }
 
 /// A wallpaper on its own, phone-shaped.

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -25,6 +26,7 @@ import 'chat_markdown.dart';
 import 'message_actions.dart';
 import '../../../ui/glow_button.dart';
 import '../../devices/device_labels.dart';
+import '../../../ui/effects.dart';
 
 // ---------------------------------------------------------------------------------------------
 // Messages
@@ -164,9 +166,12 @@ class UserBubble extends StatelessWidget {
 
 /// The bot's name and mark, once at the start of each of its turns.
 class BotTurnHeader extends StatelessWidget {
-  const BotTurnHeader({super.key, required this.name, this.avatar});
+  const BotTurnHeader({super.key, required this.name, this.avatar, this.working = false});
   final String name;
   final String? avatar;
+
+  /// The bot is on this turn right now: its avatar wiggles and plays while it thinks.
+  final bool working;
 
   @override
   Widget build(BuildContext context) {
@@ -174,7 +179,10 @@ class BotTurnHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpace.xs),
       child: Row(
         children: [
-          BotAvatar(name: name, avatar: avatar, size: 24),
+          if (working)
+            _ThinkingWiggle(child: BotAvatar(name: name, avatar: avatar, size: 24, animate: Effects.decorative(context)))
+          else
+            BotAvatar(name: name, avatar: avatar, size: 24),
           const SizedBox(width: AppSpace.xs),
           Flexible(
             child: Text(
@@ -190,6 +198,51 @@ class BotTurnHeader extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Rocks its child side to side with a little hop, like a bot mulling something over. Its own layer,
+/// so the chat around it doesn't repaint. Still with reduced motion.
+class _ThinkingWiggle extends StatefulWidget {
+  const _ThinkingWiggle({required this.child});
+  final Widget child;
+
+  @override
+  State<_ThinkingWiggle> createState() => _ThinkingWiggleState();
+}
+
+class _ThinkingWiggleState extends State<_ThinkingWiggle> with SingleTickerProviderStateMixin {
+  late final _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1600));
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!Effects.decorative(context)) {
+      _controller.reset();
+    } else if (!_controller.isAnimating) {
+      _controller.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => RepaintBoundary(
+    child: AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final a = _controller.value * 2 * math.pi;
+        return Transform.translate(
+          offset: Offset(0, -(math.sin(a * 2).abs()) * 2),
+          child: Transform.rotate(angle: math.sin(a) * 0.14, child: child),
+        );
+      },
+      child: widget.child,
+    ),
+  );
 }
 
 /// The bot's reply in a bubble that reads on any wallpaper. Copy, read aloud, select and share

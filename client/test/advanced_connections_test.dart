@@ -82,6 +82,39 @@ void main() {
     }
   });
 
+  testWidgets('apps: apps signed in through Composio are listed one by one, and marked in Browse', (tester) async {
+    await setSize(tester, const Size(600, 1000));
+    final backend = FakeBackend();
+    backend.catalog.add(FakeBackend.catalogApp('gmail', 'Gmail', [CatalogAppAuthEnum.managed], popular: false).copyWith(composio: 'gmail'));
+    final hub = await backend.createIntegration(orgId, kind: 'composio', name: 'apps', config: {'toolkits': <String>[]});
+    backend.providerConnects.addAll(['gmail', 'linear_app']);
+    await tester.pumpWidget(harness(backend, const IntegrationsScreen()));
+    await tester.pumpAndSettle();
+    // Each app gets its own row; the hub's own card is replaced by them.
+    expect(find.text('Connected · 2'), findsOneWidget);
+    expect(find.byKey(Key('hubApp-${hub.id}-gmail')), findsOneWidget);
+    expect(find.byKey(Key('hubApp-${hub.id}-linear_app')), findsOneWidget);
+    expect(find.text('Linear App'), findsOneWidget);
+    expect(find.byKey(Key('integration-${hub.id}')), findsNothing);
+    expect(find.textContaining('Through Composio'), findsNWidgets(2));
+    // Browse shows Gmail as connected.
+    await tester.tap(find.text('Browse'));
+    await tester.pumpAndSettle();
+    final gmail = find.ancestor(of: find.text('Gmail'), matching: find.byType(InkWell)).first;
+    await tester.scrollUntilVisible(gmail, 300, scrollable: _page);
+    expect(find.descendant(of: gmail, matching: find.text('Connected')), findsOneWidget);
+  });
+
+  testWidgets('apps: a Composio connection with no apps yet still shows its own card', (tester) async {
+    await setSize(tester, const Size(600, 1000));
+    final backend = FakeBackend();
+    final hub = await backend.createIntegration(orgId, kind: 'composio', name: 'apps', config: {'toolkits': <String>[]});
+    await tester.pumpWidget(harness(backend, const IntegrationsScreen()));
+    await tester.pumpAndSettle();
+    expect(find.byKey(Key('integration-${hub.id}')), findsOneWidget);
+    expect(find.text('Connected · 1'), findsOneWidget);
+  });
+
   testWidgets("apps: a bot's list doesn't label connections MCP or OpenAPI", (tester) async {
     await setSize(tester, const Size(600, 1000));
     final backend = FakeBackend();

@@ -1,8 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
+import 'effects.dart';
 
 /// Floating bottom tab bar for phones: a slim stadium-shaped pill on a neutral surface with a
 /// hairline border. The selected tab sits on an accent-tinted indicator that glides between slots.
@@ -147,14 +150,8 @@ class _PillBar extends StatelessWidget {
           padding: const EdgeInsets.all(6),
           child: Stack(children: [
             if (currentIndex >= 0)
-              AnimatedPositionedDirectional(
-                duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 380),
-                curve: Curves.easeOutBack,
-                start: currentIndex * slotWidth,
-                top: 0,
-                bottom: 0,
-                width: slotWidth,
-                child: DecoratedBox(decoration: ShapeDecoration(shape: const StadiumBorder(), color: scheme.primary.withValues(alpha: 0.16))),
+              Positioned.fill(
+                child: _StretchyPill(index: currentIndex, slotWidth: slotWidth, color: scheme.primary.withValues(alpha: 0.16)),
               ),
             Row(mainAxisSize: MainAxisSize.min, children: [
               for (var i = 0; i < destinations.length; i++)
@@ -211,12 +208,15 @@ class _TabButton extends StatelessWidget {
                   scale: selected ? 1 : 0.92,
                   duration: duration,
                   curve: Curves.easeOutBack,
-                  child: Badge(
+                  child: _Jelly(
+                    selected: selected,
+                    child: Badge(
                     isLabelVisible: spec.badge > 0,
                     label: Text(spec.badge > 99 ? '99+' : '${spec.badge}', style: const TextStyle(fontFeatures: AppText.tabular)),
                     backgroundColor: scheme.primary,
                     textColor: scheme.onPrimary,
                     child: Icon(selected ? spec.selectedIcon : spec.icon, size: 22, color: tint),
+                  ),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -239,4 +239,124 @@ class _TabButton extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The selected tab's soft pill. Moving to another tab, its leading edge runs ahead and the
+/// trailing edge catches up, so it stretches like a blob (a touch flatter while stretched) and
+/// settles with a small overshoot. Jumps with reduced motion.
+class _StretchyPill extends StatefulWidget {
+  const _StretchyPill({required this.index, required this.slotWidth, required this.color});
+  final int index;
+  final double slotWidth;
+  final Color color;
+
+  @override
+  State<_StretchyPill> createState() => _StretchyPillState();
+}
+
+class _StretchyPillState extends State<_StretchyPill> with SingleTickerProviderStateMixin {
+  late final _move = AnimationController(vsync: this, duration: const Duration(milliseconds: 460), value: 1);
+  late double _from = widget.index.toDouble();
+  late double _to = widget.index.toDouble();
+
+  static const _lead = Cubic(0.2, 0.9, 0.3, 1.15);
+  static const _lag = Cubic(0.6, 0.0, 0.25, 1.1);
+
+  @override
+  void didUpdateWidget(_StretchyPill old) {
+    super.didUpdateWidget(old);
+    if (old.index == widget.index) return;
+    // From wherever it is now, so a quick second tap doesn't snap back first.
+    _from = _edges().$1 / widget.slotWidth;
+    _to = widget.index.toDouble();
+    if (!Effects.decorative(context)) {
+      _move.value = 1;
+    } else {
+      _move.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _move.dispose();
+    super.dispose();
+  }
+
+  /// The pill's start and end, from the start of the bar.
+  (double, double) _edges() {
+    final t = _move.value;
+    final w = widget.slotWidth;
+    final forward = _to >= _from;
+    final a = forward ? _lag.transform(t) : _lead.transform(t);
+    final b = forward ? _lead.transform(t) : _lag.transform(t);
+    final start = (_from + (_to - _from) * a) * w;
+    final end = (_from + (_to - _from) * b) * w + w;
+    return (start, math.max(end, start + w * 0.6));
+  }
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, box) => AnimatedBuilder(
+    animation: _move,
+    builder: (context, _) {
+      // The overshoot squeezes against the bar's ends instead of running past them.
+      final (rawStart, rawEnd) = _edges();
+      final start = math.max(0.0, rawStart);
+      final end = math.min(box.maxWidth, rawEnd);
+      final stretch = ((end - start) / widget.slotWidth - 1).clamp(0.0, 1.0);
+      final squish = stretch * 4;
+      return Stack(children: [
+        PositionedDirectional(
+          start: start,
+          width: end - start,
+          top: squish,
+          bottom: squish,
+          child: DecoratedBox(decoration: ShapeDecoration(shape: const StadiumBorder(), color: widget.color)),
+        ),
+      ]);
+    },
+  ),
+  );
+}
+
+/// A quick squash-and-stretch wobble when a tab becomes the selected one.
+class _Jelly extends StatefulWidget {
+  const _Jelly({required this.selected, required this.child});
+  final bool selected;
+  final Widget child;
+
+  @override
+  State<_Jelly> createState() => _JellyState();
+}
+
+class _JellyState extends State<_Jelly> with SingleTickerProviderStateMixin {
+  late final _wobble = AnimationController(vsync: this, duration: const Duration(milliseconds: 560));
+
+  @override
+  void didUpdateWidget(_Jelly old) {
+    super.didUpdateWidget(old);
+    if (!old.selected && widget.selected && Effects.decorative(context)) _wobble.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _wobble.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: _wobble,
+    builder: (context, child) {
+      if (!_wobble.isAnimating) return child!;
+      final t = _wobble.value;
+      final k = math.sin(t * math.pi * 3) * 0.2 * (1 - t);
+      return Transform(
+        alignment: Alignment.bottomCenter,
+        transform: Matrix4.diagonal3Values(1 + k, 1 - k, 1),
+        child: child,
+      );
+    },
+    child: widget.child,
+  );
 }

@@ -85,14 +85,21 @@ export function oauthRedirectFor(apiBase: string): string {
 /**
  * The catalog a server offers (D-172, like other agent apps do): an app whose own sign-in needs a
  * client this server doesn't have connects through Composio's sign-in on the server's Composio
- * account instead, when there is one. On Casama Cloud, Google's apps (Developer Preview, D-166)
- * always go through Composio, or aren't offered without it.
+ * account instead, when there is one. Google's apps (Developer Preview, D-166) go through Composio
+ * whenever the server has it, even with a Google client, unless the owner chose Google's servers
+ * (`googleDirect`, self-hosted only). On Casama Cloud they aren't offered without Composio.
  */
 export function catalogFor(
   catalog: CatalogApp[],
-  o: { cloud: boolean; composio: boolean; hasClient?: (id: string) => boolean },
+  o: {
+    cloud: boolean;
+    composio: boolean;
+    hasClient?: (id: string) => boolean;
+    googleDirect?: boolean;
+  },
 ): CatalogApp[] {
   const hasClient = o.hasClient ?? (() => false);
+  const googleViaComposio = o.cloud || !o.googleDirect;
   return catalog
     .filter((a) => !(o.cloud && a.category === "google" && !o.composio))
     .map((a) => {
@@ -101,7 +108,8 @@ export function catalogFor(
       const viaComposio =
         o.composio &&
         !!a.composio &&
-        ((o.cloud && a.category === "google") || (a.auth.includes("oauth") && !ownSignIn));
+        ((googleViaComposio && a.category === "google") ||
+          (a.auth.includes("oauth") && !ownSignIn));
       if (!viaComposio) return a;
       return {
         ...a,
@@ -127,6 +135,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
       cloud,
       composio: await serverComposio(),
       hasClient: (id) => !!clients[id],
+      googleDirect: (await getConnectionSettings(db)).google === "direct",
     });
   const findApp = async (id: string) =>
     (await currentCatalog()).find((a) => a.id === id) ?? appByIdOrNull(id);
@@ -253,6 +262,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
           popular: a.popular ?? false,
           ...(a.note ? { note: a.note } : {}),
           oauth_available: oauthAvailable(a, c),
+          ...(a.composio ? { composio: a.composio } : {}),
         })),
       },
       200,

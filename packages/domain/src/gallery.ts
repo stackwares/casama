@@ -68,7 +68,8 @@ export const WALLPAPER_PATTERNS = [
   "tech",
 ] as const;
 
-export const WALLPAPER_PALETTES = [
+/** Palettes every app version draws; a mesh names one of these as its fallback. */
+export const WALLPAPER_FALLBACK_PALETTES = [
   "theme",
   "casama",
   "lavender",
@@ -80,6 +81,20 @@ export const WALLPAPER_PALETTES = [
   "forest",
   "graphite",
 ] as const;
+
+/** Every built-in palette. The last five arrived with mesh gradients (D-200), so older apps skip items that name them. */
+export const WALLPAPER_PALETTES = [
+  ...WALLPAPER_FALLBACK_PALETTES,
+  "northern",
+  "twilight",
+  "berry",
+  "citrus",
+  "reef",
+] as const;
+
+/** Mesh colors stay this light (light) or dark (night) so text on transparent headers reads. */
+export const MESH_MIN_LIGHT_LUMINANCE = 0.55;
+export const MESH_MAX_DARK_LUMINANCE = 0.05;
 
 const HEX = /^#[0-9A-Fa-f]{6}$/;
 const ID = /^[a-z0-9][a-z0-9-]{0,62}$/;
@@ -232,18 +247,316 @@ function checkSeeds(label: string, raw: unknown, errors: string[]): SeedColors |
   return;
 }
 
+/** The six colors a full scheme gives together, per brightness; `appBar` may join them. */
+export const SCHEME_COLOR_KEYS = [
+  "primary",
+  "primaryContainer",
+  "secondary",
+  "secondaryContainer",
+  "tertiary",
+  "tertiaryContainer",
+] as const;
+
+/** Whether a scheme's light or dark side gives exact colors next to its seeds. */
+function hasSchemeColors(raw: unknown): boolean {
+  return (
+    isRecord(raw) &&
+    (SCHEME_COLOR_KEYS.some((k) => raw[k] !== undefined) || raw.appBar !== undefined)
+  );
+}
+
+/**
+ * A full scheme's exact colors on one side (`light` or `dark`), next to its seeds: all six of
+ * {@link SCHEME_COLOR_KEYS} or none, `appBar` optional. Accents need 4.5:1 on `background`, and
+ * `onBackground` needs 4.5:1 on each container.
+ */
+export function checkSchemeColors(label: string, raw: unknown, errors: string[]): void {
+  if (!isRecord(raw) || !hasSchemeColors(raw)) return;
+  const given = SCHEME_COLOR_KEYS.filter((k) => raw[k] !== undefined);
+  if (given.length !== SCHEME_COLOR_KEYS.length) {
+    errors.push(`${label} must give all of ${SCHEME_COLOR_KEYS.join(", ")} or none`);
+    return;
+  }
+  let valid = true;
+  for (const key of [...SCHEME_COLOR_KEYS, ...(raw.appBar !== undefined ? ["appBar"] : [])]) {
+    const value = raw[key];
+    if (typeof value !== "string" || !HEX.test(value)) {
+      errors.push(`${label}.${key} must be a #RRGGBB color`);
+      valid = false;
+    }
+  }
+  const background = raw.background;
+  const onBackground = raw.onBackground;
+  if (!valid || typeof background !== "string" || !HEX.test(background)) return;
+  if (typeof onBackground !== "string" || !HEX.test(onBackground)) return;
+  for (const key of ["primary", "secondary", "tertiary"] as const) {
+    if (contrastRatio(raw[key] as string, background) < 4.5)
+      errors.push(`${label}.${key} on background is below WCAG AA (4.5:1)`);
+  }
+  for (const key of ["primaryContainer", "secondaryContainer", "tertiaryContainer"] as const) {
+    if (contrastRatio(onBackground, raw[key] as string) < 4.5)
+      errors.push(`${label} text on ${key} is below WCAG AA (4.5:1)`);
+  }
+}
+
+/** Lucide's icon nodes by name, as `assets/lucide/icon-nodes.json` holds them. */
+export type LucideNodes = Record<string, [string, Record<string, unknown>][]>;
+
+/** One element of a doodle, in Lucide's node format. */
+export type DoodleElement = [string, Record<string, string | number>];
+
+const DOODLE_POSITION = [-2, 26] as const;
+const DOODLE_SIZE = [0, 26] as const;
+/** Each tag's attributes: required, optional, and which are sizes rather than positions. */
+const DOODLE_TAGS: Record<string, { required: string[]; optional: string[]; sizes: string[] }> = {
+  path: { required: ["d"], optional: [], sizes: [] },
+  circle: { required: ["cx", "cy", "r"], optional: [], sizes: ["r"] },
+  ellipse: { required: ["cx", "cy", "rx", "ry"], optional: [], sizes: ["rx", "ry"] },
+  rect: {
+    required: ["x", "y", "width", "height"],
+    optional: ["rx", "ry"],
+    sizes: ["width", "height", "rx", "ry"],
+  },
+  line: { required: ["x1", "y1", "x2", "y2"], optional: [], sizes: [] },
+  polyline: { required: ["points"], optional: [], sizes: [] },
+  polygon: { required: ["points"], optional: [], sizes: [] },
+};
+const PATH_DATA = /^[MmLlHhVvCcSsQqTtAaZz0-9eE.,+\-\s]+$/;
+const NUMBER = /^\s*[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?\s*$/;
+
+function numberOf(v: unknown): number | undefined {
+  if (typeof v === "number") return Number.isFinite(v) ? v : undefined;
+  if (typeof v === "string" && NUMBER.test(v)) return Number(v);
+  return;
+}
+
+/**
+ * A wallpaper's own doodles: 1 to 24, each 1 to 16 elements on a 24 × 24 grid, drawn as strokes.
+ * Tags and attributes are a fixed list; numbers may be numbers or numeric strings.
+ */
+export function checkDoodles(raw: unknown, errors: string[]): void {
+  if (!Array.isArray(raw) || raw.length < 1 || raw.length > 24) {
+    errors.push("doodles must be 1 to 24 drawings");
+    return;
+  }
+  raw.forEach((doodle, i) => {
+    const at = `doodles[${i}]`;
+    if (!Array.isArray(doodle) || doodle.length < 1 || doodle.length > 16) {
+      errors.push(`${at} must be 1 to 16 elements`);
+      return;
+    }
+    doodle.forEach((element, j) => {
+      const where = `${at}[${j}]`;
+      if (!Array.isArray(element) || element.length !== 2 || !isRecord(element[1])) {
+        errors.push(`${where} must be [tag, attributes]`);
+        return;
+      }
+      const [tag, attrs] = element as [unknown, Record<string, unknown>];
+      const spec = typeof tag === "string" ? DOODLE_TAGS[tag] : undefined;
+      if (!spec) {
+        errors.push(`${where} tag must be one of ${Object.keys(DOODLE_TAGS).join(", ")}`);
+        return;
+      }
+      for (const key of Object.keys(attrs)) {
+        if (!spec.required.includes(key) && !spec.optional.includes(key))
+          errors.push(`${where} ${tag} can't have ${key}`);
+      }
+      for (const key of spec.required) {
+        if (attrs[key] === undefined) errors.push(`${where} ${tag} needs ${key}`);
+      }
+      for (const key of [...spec.required, ...spec.optional]) {
+        const value = attrs[key];
+        if (value === undefined) continue;
+        if (key === "d") {
+          if (typeof value !== "string" || value.length > 1500 || !PATH_DATA.test(value))
+            errors.push(`${where} d must be at most 1500 characters of path commands and numbers`);
+          continue;
+        }
+        if (key === "points") {
+          const numbers =
+            typeof value === "string" && /^[0-9eE.,+\-\s]+$/.test(value)
+              ? value
+                  .trim()
+                  .split(/[\s,]+/)
+                  .map(numberOf)
+              : [];
+          if (
+            numbers.length < 2 ||
+            numbers.length % 2 !== 0 ||
+            numbers.some((n) => n === undefined || n < DOODLE_POSITION[0] || n > DOODLE_POSITION[1])
+          )
+            errors.push(`${where} points must be an even count of numbers between -2 and 26`);
+          continue;
+        }
+        const n = numberOf(value);
+        const [lo, hi] = spec.sizes.includes(key) ? DOODLE_SIZE : DOODLE_POSITION;
+        if (n === undefined || n < lo || n > hi)
+          errors.push(`${where} ${key} must be a number between ${lo} and ${hi}`);
+      }
+    });
+  });
+}
+
+/** Lucide icons by name as doodles, without Lucide's `key` attributes. */
+export function resolveGlyphs(names: string[], lucide: LucideNodes): DoodleElement[][] {
+  return names.map((name) =>
+    (lucide[name] ?? []).map(([tag, attrs]) => {
+      const { key: _key, ...rest } = attrs;
+      return [tag, rest as Record<string, string | number>];
+    }),
+  );
+}
+
+function checkGlyphs(raw: unknown, errors: string[], lucide?: LucideNodes) {
+  if (!Array.isArray(raw) || raw.length < 1 || raw.length > 24) {
+    errors.push("glyphs must be 1 to 24 Lucide icon names");
+    return;
+  }
+  raw.forEach((name, i) => {
+    if (typeof name !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(name))
+      errors.push(`glyphs[${i}] must be a Lucide icon name`);
+    else if (lucide && !Object.hasOwn(lucide, name))
+      errors.push(`glyphs[${i}] ${name} isn't a Lucide icon`);
+  });
+}
+
+/** What a look needs from the app: newer apps hide items that need something they can't draw. */
+export const GALLERY_REQUIREMENTS = ["doodles", "mesh", "scheme-colors"] as const;
+export type GalleryRequirement = (typeof GALLERY_REQUIREMENTS)[number];
+
+/** The features a theme, scheme or wallpaper document uses, sorted. */
+export function galleryRequires(type: GalleryType, raw: unknown): GalleryRequirement[] {
+  if (!isRecord(raw)) return [];
+  const found = new Set<GalleryRequirement>();
+  const wallpaper = (w: unknown) => {
+    if (!isRecord(w)) return;
+    if (w.mesh !== undefined) found.add("mesh");
+    if (w.doodles !== undefined || w.glyphs !== undefined) found.add("doodles");
+  };
+  const scheme = (sc: unknown) => {
+    if (isRecord(sc) && (hasSchemeColors(sc.light) || hasSchemeColors(sc.dark)))
+      found.add("scheme-colors");
+  };
+  if (type === "wallpaper") wallpaper(raw);
+  if (type === "scheme") scheme(raw);
+  if (type === "theme") {
+    wallpaper(raw.wallpaper);
+    scheme(raw.scheme);
+  }
+  return GALLERY_REQUIREMENTS.filter((r) => found.has(r));
+}
+
+/**
+ * The document as index.json carries it: a wallpaper's `glyphs` (its own, or a theme's) resolved
+ * into `doodles`, so apps need no copy of Lucide. Other documents are returned as they are.
+ */
+export function galleryIndexDocument(
+  type: GalleryType,
+  raw: unknown,
+  lucide: LucideNodes,
+): unknown {
+  if (!isRecord(raw)) return raw;
+  const withDoodles = (w: Record<string, unknown>) =>
+    Array.isArray(w.glyphs) && w.doodles === undefined
+      ? { ...w, doodles: resolveGlyphs(w.glyphs as string[], lucide) }
+      : w;
+  if (type === "wallpaper") return withDoodles(raw);
+  if (type === "theme" && isRecord(raw.wallpaper))
+    return { ...raw, wallpaper: withDoodles(raw.wallpaper) };
+  return raw;
+}
+
+/** Options for the document checks: Lucide's nodes, so `glyphs` names can be checked. */
+export interface GalleryCheckOptions {
+  lucide?: LucideNodes;
+}
+
 export function checkSchemeDocument(raw: unknown): string[] {
   const errors: string[] = [];
   if (!isRecord(raw)) return ["scheme.json must be an object"];
   checkSeeds("light", raw.light, errors);
   checkSeeds("dark", raw.dark, errors);
+  checkSchemeColors("light", raw.light, errors);
+  checkSchemeColors("dark", raw.dark, errors);
   return errors;
 }
 
-function checkWallpaperFields(raw: unknown, errors: string[]) {
+/**
+ * A mesh gradient: `light` and `dark` are nine #RRGGBB colors each, row by row from the top left;
+ * `points` (optional) are nine [x, y] fractions of the window. Corners sit at the corners and edge
+ * points on their edge; the app pins them there anyway.
+ */
+function checkMesh(raw: unknown, errors: string[]) {
+  if (!isRecord(raw)) {
+    errors.push("mesh must be an object with light, dark and optional points");
+    return;
+  }
+  for (const key of ["light", "dark"] as const) {
+    const colors = raw[key];
+    if (!Array.isArray(colors) || colors.length !== 9) {
+      errors.push(`mesh.${key} must be nine #RRGGBB colors`);
+      continue;
+    }
+    colors.forEach((c, i) => {
+      if (typeof c !== "string" || !HEX.test(c)) {
+        errors.push(`mesh.${key}[${i}] must be a #RRGGBB color`);
+        return;
+      }
+      const lum = luminance(c);
+      if (key === "light" && lum < MESH_MIN_LIGHT_LUMINANCE)
+        errors.push(
+          `mesh.light[${i}] ${c} is too dark for text on top (luminance under ${MESH_MIN_LIGHT_LUMINANCE})`,
+        );
+      if (key === "dark" && lum > MESH_MAX_DARK_LUMINANCE)
+        errors.push(
+          `mesh.dark[${i}] ${c} is too light for text on top (luminance over ${MESH_MAX_DARK_LUMINANCE})`,
+        );
+    });
+  }
+  const points = raw.points;
+  if (points === undefined) return;
+  if (!Array.isArray(points) || points.length !== 9) {
+    errors.push("mesh.points must be nine [x, y] pairs");
+    return;
+  }
+  points.forEach((p, i) => {
+    if (
+      !Array.isArray(p) ||
+      p.length !== 2 ||
+      !p.every((v) => typeof v === "number" && Number.isFinite(v) && v >= 0 && v <= 1)
+    ) {
+      errors.push(`mesh.points[${i}] must be [x, y] between 0 and 1`);
+      return;
+    }
+    const [x, y] = p as [number, number];
+    const col = i % 3;
+    const row = Math.floor(i / 3);
+    if ((col !== 1 && x !== col / 2) || (row !== 1 && y !== row / 2))
+      errors.push(`mesh.points[${i}] must stay on its corner or edge`);
+    if ((col === 1 && (x < 0.2 || x > 0.8)) || (row === 1 && (y < 0.2 || y > 0.8)))
+      errors.push(`mesh.points[${i}] must stay between 0.2 and 0.8 inside the window`);
+  });
+}
+
+function checkWallpaperFields(raw: unknown, errors: string[], options: GalleryCheckOptions = {}) {
   if (!isRecord(raw)) {
     errors.push("wallpaper must be an object");
     return;
+  }
+  if (raw.glyphs !== undefined && raw.doodles !== undefined)
+    errors.push("wallpaper has glyphs and doodles; give one");
+  else if (raw.glyphs !== undefined) checkGlyphs(raw.glyphs, errors, options.lucide);
+  else if (raw.doodles !== undefined) checkDoodles(raw.doodles, errors);
+  if (raw.mesh !== undefined) {
+    checkMesh(raw.mesh, errors);
+    // Older apps ignore the mesh and draw the palette, so it must be one they know.
+    if (
+      typeof raw.palette === "string" &&
+      !WALLPAPER_FALLBACK_PALETTES.includes(raw.palette as never)
+    )
+      errors.push(
+        `with a mesh, wallpaper.palette is the fallback and must be one of ${WALLPAPER_FALLBACK_PALETTES.join(", ")}`,
+      );
   }
   if (typeof raw.pattern !== "string" || !WALLPAPER_PATTERNS.includes(raw.pattern as never))
     errors.push(`wallpaper.pattern must be one of ${WALLPAPER_PATTERNS.join(", ")}`);
@@ -253,7 +566,7 @@ function checkWallpaperFields(raw: unknown, errors: string[]) {
     errors.push("wallpaper.intensity must be between 0 and 1");
 }
 
-export function checkThemeDocument(raw: unknown): string[] {
+export function checkThemeDocument(raw: unknown, options: GalleryCheckOptions = {}): string[] {
   const errors: string[] = [];
   if (!isRecord(raw)) return ["theme.json must be an object"];
   if (raw.v !== 2) errors.push("theme.json v must be 2");
@@ -264,6 +577,8 @@ export function checkThemeDocument(raw: unknown): string[] {
     else {
       checkSeeds("scheme.light", raw.scheme.light, errors);
       checkSeeds("scheme.dark", raw.scheme.dark, errors);
+      checkSchemeColors("scheme.light", raw.scheme.light, errors);
+      checkSchemeColors("scheme.dark", raw.scheme.dark, errors);
     }
   }
   for (const key of ["headingFont", "bodyFont"] as const) {
@@ -271,18 +586,25 @@ export function checkThemeDocument(raw: unknown): string[] {
     if (typeof font !== "string" || !GALLERY_FONTS.includes(font as never))
       errors.push(`${key} must be one of the app's fonts`);
   }
-  checkWallpaperFields(raw.wallpaper, errors);
+  checkWallpaperFields(raw.wallpaper, errors, options);
   return errors;
 }
 
 export function checkWallpaperDocument(
   raw: unknown,
   files: { path: string; bytes: number }[],
+  options: GalleryCheckOptions = {},
 ): string[] {
   const errors: string[] = [];
   if (!isRecord(raw)) return ["wallpaper.json must be an object"];
   if (raw.kind === "pattern") {
-    checkWallpaperFields(raw, errors);
+    if (raw.mesh !== undefined) errors.push('a wallpaper with a mesh is kind "mesh"');
+    checkWallpaperFields(raw, errors, options);
+    return errors;
+  }
+  if (raw.kind === "mesh") {
+    if (raw.mesh === undefined) errors.push("a mesh wallpaper needs a mesh");
+    checkWallpaperFields(raw, errors, options);
     return errors;
   }
   if (raw.kind === "image") {
@@ -307,7 +629,7 @@ export function checkWallpaperDocument(
     }
     return errors;
   }
-  errors.push('wallpaper kind must be "pattern" or "image"');
+  errors.push('wallpaper kind must be "pattern", "mesh" or "image"');
   return errors;
 }
 

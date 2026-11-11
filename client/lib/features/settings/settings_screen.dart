@@ -416,6 +416,15 @@ class _AppearanceCard extends ConsumerWidget {
             subtitle: [...builtInPresets, ...ref.watch(savedThemesProvider)].where((p) => p.matches(appearance)).firstOrNull?.name ?? l10n.currentLook,
             route: '/settings/themes',
           ),
+          SwitchListTile(
+            key: const Key('fewerEffects'),
+            contentPadding: const EdgeInsets.only(right: AppSpace.xxs),
+            secondary: SizedBox(width: 44, child: Icon(LucideIcons.wandSparkles, size: 22, color: scheme.primary)),
+            title: Text(l10n.fewerEffects, style: context.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+            subtitle: Text(l10n.fewerEffectsHelp),
+            value: appearance.fewerEffects,
+            onChanged: hapticOnChanged(notifier.setFewerEffects),
+          ),
         ],
       ),
     );

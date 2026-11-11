@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,9 +8,11 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 import 'package:casama_sdk/casama_sdk.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import 'call_audio.dart';
+import 'dictation_bytes_web.dart' if (dart.library.io) 'dictation_bytes_io.dart';
 import 'gemini_live.dart';
 
 /// Records a short clip for dictation.
@@ -25,65 +26,46 @@ abstract class Dictation {
 
 class RecordDictation implements Dictation {
   final _rec = AudioRecorder();
-  final _chunks = <int>[];
-  StreamSubscription<Uint8List>? _sub;
 
-  // Web records Opus in WebM; native platforms stream 16 kHz mono PCM, uploaded as WAV
-  // (both formats are accepted by OpenAI and Deepgram).
-  static const _webConfig = RecordConfig(encoder: AudioEncoder.opus, numChannels: 1);
-  // Streaming takes raw PCM on every native platform; WAV is only for recording to a file.
-  static const _nativeConfig = RecordConfig(encoder: AudioEncoder.pcm16bits, numChannels: 1, sampleRate: 16000);
+  // AAC in an m4a file: the format both phone recorders actually fill. A 16 kHz WAV often
+  // comes back header-only, and Bluetooth A2DP on iOS can leave the mic silent.
+  static const _nativeConfig = RecordConfig(
+    encoder: AudioEncoder.aacLc,
+    numChannels: 1,
+    sampleRate: 44100,
+    bitRate: 64000,
+    androidConfig: AndroidRecordConfig(audioSource: AndroidAudioSource.mic, manageBluetooth: false),
+    iosConfig: IosRecordConfig(categoryOptions: [IosAudioCategoryOption.defaultToSpeaker, IosAudioCategoryOption.allowBluetooth]),
+  );
 
   @override
   Future<bool> start() async {
     if (!await _rec.hasPermission()) return false;
-    _chunks.clear();
     try {
-      final stream = await _rec.startStream(kIsWeb ? _webConfig : _nativeConfig);
-      _sub = stream.listen(_chunks.addAll);
+      await beginDictationCapture(() async {
+        final path = '${(await getTemporaryDirectory()).path}/casama-dictation.m4a';
+        await _rec.start(_nativeConfig, path: path);
+      });
       return true;
-    } catch (e) {
-      debugPrint('dictation failed to start: $e');
-      return false;
+    } catch (e, st) {
+      debugPrint('dictation failed to start: $e\n$st');
+      try {
+        await cancel();
+      } catch (_) {}
+      rethrow;
     }
   }
 
   @override
   Future<(Uint8List, String)?> stop() async {
-    await _rec.stop();
-    await _sub?.cancel();
-    if (_chunks.isEmpty) return null;
-    final data = Uint8List.fromList(_chunks);
-    return kIsWeb ? (data, 'audio/webm') : (_wav(data, 16000), 'audio/wav');
+    final clip = await endDictationCapture(_rec.stop);
+    if (clip == null) return null;
+    debugPrint('dictation clip ${clip.$1.length} bytes ${clip.$2}');
+    return clip;
   }
 
   @override
-  Future<void> cancel() async {
-    await _rec.cancel();
-    await _sub?.cancel();
-    _chunks.clear();
-  }
-
-  /// Wraps 16-bit mono PCM in a WAV header.
-  static Uint8List _wav(Uint8List pcm, int rate) {
-    final b = BytesBuilder();
-    void u32(int v) => b.add([v & 255, (v >> 8) & 255, (v >> 16) & 255, (v >> 24) & 255]);
-    void u16(int v) => b.add([v & 255, (v >> 8) & 255]);
-    b.add(ascii.encode('RIFF'));
-    u32(36 + pcm.length);
-    b.add(ascii.encode('WAVEfmt '));
-    u32(16);
-    u16(1);
-    u16(1);
-    u32(rate);
-    u32(rate * 2);
-    u16(2);
-    u16(16);
-    b.add(ascii.encode('data'));
-    u32(pcm.length);
-    b.add(pcm);
-    return b.toBytes();
-  }
+  Future<void> cancel() => cancelDictationCapture(_rec.cancel);
 }
 
 /// Plays read-aloud audio.

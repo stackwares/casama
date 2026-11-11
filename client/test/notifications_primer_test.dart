@@ -13,8 +13,19 @@ void main() {
     ));
     await tester.pump();
     expect(find.text('Turn on notifications'), findsOneWidget);
+    expect(find.text('Chrome is blocking notifications for this site. Allow them from the lock in the address bar, then tap Turn on again.'), findsNothing);
     await tester.tap(find.byKey(const Key('notificationsTurnOn')));
     await tester.tap(find.byKey(const Key('notificationsNotNow')));
     expect((on, later), (1, 1));
+  });
+
+  testWidgets('a blocked site explains that Chrome will not ask again', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: NotificationsPrimer(onEnable: () {}, onLater: () {}, blocked: true),
+    ));
+    await tester.pump();
+    expect(find.text('Chrome is blocking notifications for this site. Allow them from the lock in the address bar, then tap Turn on again.'), findsOneWidget);
   });
 }

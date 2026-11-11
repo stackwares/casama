@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Make a Look · Casama Gallery</title>
+<meta name="description" content="Make a theme, color scheme or wallpaper for Casama, see it in the app's own preview, and propose it to the gallery.">
+<link rel="canonical" href="https://gallery.casama.ai/make.html">
+<meta name="theme-color" content="#fcf3fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1e1a22" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="assets/casama-winky-animated.svg">
+<link rel="stylesheet" href="gallery.css">
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="make.css">
+<script>
+  document.documentElement.setAttribute("data-theme", matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+</script>
+</head>
+<body>
+<div class="wallpaper" aria-hidden="true"><div class="wallpaper-pattern"></div></div>
+<a class="skip" href="#maker">Skip to the editor</a>
+<header class="bar">
+  <div class="wrap bar-inner">
+    <a class="logo" href="https://casama.ai" aria-label="Casama home"><img src="assets/casama-winky-animated.svg" alt="" width="34" height="34"><span>casama</span></a>
+    <span class="crumb" aria-hidden="true">/</span>
+    <a class="crumb-page" href="./">Gallery</a>
+    <span class="crumb mk-here" aria-hidden="true">/</span>
+    <span class="crumb-page mk-here">Make a look</span>
+    <nav class="bar-nav" aria-label="Gallery">
+      <a href="https://github.com/stackwares/casama-gallery">GitHub</a>
+      <a class="btn primary" href="https://casama.ai">Get Casama</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="maker" tabindex="-1">
+  <div class="title-row">
+    <h1>Make a look</h1>
+    <p class="sub">Pick colors, a background and doodles, see them the way Casama draws them, then propose your files to the gallery. Nothing leaves this page until you open the pull request yourself.</p>
+  </div>
+
+  <div class="mk-kind seg" role="group" aria-label="What you're making" id="kind">
+    <button type="button" data-kind="theme" aria-pressed="true">Theme</button>
+    <button type="button" data-kind="scheme" aria-pressed="false">Color scheme</button>
+    <button type="button" data-kind="wallpaper" aria-pressed="false">Wallpaper</button>
+  </div>
+
+  <div class="mk-layout">
+    <form class="mk-form" id="form" novalidate autocomplete="off">
+      <section class="mk-card" id="sec-item" aria-labelledby="h-item">
+        <h2 id="h-item">About it</h2>
+        <div class="mk-row2">
+          <label class="mk-field">Name<input id="f-name" maxlength="60" placeholder="Orchid night"></label>
+          <label class="mk-field">Folder id<input id="f-id" maxlength="63" placeholder="orchid-night" spellcheck="false"></label>
+        </div>
+        <div class="mk-row2">
+          <label class="mk-field">Your name<input id="f-author" maxlength="80"></label>
+          <label class="mk-field">Your link (optional)<input id="f-url" type="url" placeholder="https://"></label>
+        </div>
+        <div class="mk-row2">
+          <label class="mk-field">License
+            <select id="f-license"><option value="CC0-1.0">CC0 1.0 (no rights reserved)</option><option value="CC-BY-4.0">CC BY 4.0 (credit me)</option></select>
+          </label>
+          <label class="mk-field">Tags (up to 8, comma separated)<input id="f-tags" placeholder="purple, calm" spellcheck="false"></label>
+        </div>
+      </section>
+
+      <section class="mk-card" id="sec-scheme" aria-labelledby="h-scheme">
+        <h2 id="h-scheme">Colors</h2>
+        <p class="mk-hint">Casama builds the whole scheme from the seed. Turn on exact colors to choose the main ones yourself; the seeds stay for older app versions.</p>
+        <label class="mk-check"><input type="checkbox" id="f-exact"> Exact colors</label>
+        <div class="mk-modes" id="scheme-modes"></div>
+      </section>
+
+      <section class="mk-card" id="sec-fonts" aria-labelledby="h-fonts">
+        <h2 id="h-fonts">Fonts</h2>
+        <div class="mk-row2">
+          <label class="mk-field">Headings<select id="f-heading"></select></label>
+          <label class="mk-field">Text<select id="f-body"></select></label>
+        </div>
+      </section>
+
+      <section class="mk-card" id="sec-wall" aria-labelledby="h-wall">
+        <h2 id="h-wall">Background</h2>
+        <div class="seg mk-seg" role="group" aria-label="Background" id="bg-mode">
+          <button type="button" data-bg="palette" aria-pressed="true">Built-in colors</button>
+          <button type="button" data-bg="mesh" aria-pressed="false">Your own mesh</button>
+        </div>
+        <div id="bg-palette">
+          <label class="mk-field">Colors<select id="f-palette"></select></label>
+        </div>
+        <div id="bg-mesh" hidden>
+          <p class="mk-hint">Nine colors on a 3 × 3 grid, for light and dark. Drag the dots on the preview to bend it. Light colors stay light and dark ones dark, so text on top reads.</p>
+          <label class="mk-field">Start from<select id="f-mesh-start"></select></label>
+          <div class="mk-row2 mk-meshes">
+            <div><h3>Light</h3><div class="mk-grid9" id="mesh-light"></div></div>
+            <div><h3>Dark</h3><div class="mk-grid9" id="mesh-dark"></div></div>
+          </div>
+          <label class="mk-field">Older apps show<select id="f-fallback-palette"></select></label>
+        </div>
+
+        <h3 class="mk-sub">Doodles</h3>
+        <div class="seg mk-seg" role="group" aria-label="Doodles" id="pat-mode">
+          <button type="button" data-pat="builtin" aria-pressed="true">Built-in</button>
+          <button type="button" data-pat="glyphs" aria-pressed="false">Pick your own</button>
+          <button type="button" data-pat="none" aria-pressed="false">None</button>
+        </div>
+        <div id="pat-builtin"><label class="mk-field">Pattern<select id="f-pattern"></select></label></div>
+        <div id="pat-glyphs" hidden>
+          <label class="mk-field">Find Lucide icons<input id="f-glyph-q" type="search" placeholder="cloud, star, cat…" spellcheck="false"></label>
+          <div class="mk-icons" id="glyph-results" role="listbox" aria-label="Icons" aria-multiselectable="true"></div>
+          <p class="mk-hint" id="glyph-count"></p>
+          <div class="mk-chips" id="glyph-picked"></div>
+          <label class="mk-field">Older apps show<select id="f-fallback-pattern"></select></label>
+        </div>
+        <label class="mk-field" id="intensity-row">Doodle strength <output id="o-intensity">50%</output>
+          <input type="range" id="f-intensity" min="0" max="1" step="0.05" value="0.5">
+        </label>
+      </section>
+
+      <section class="mk-card" aria-labelledby="h-files">
+        <h2 id="h-files">Your files</h2>
+        <ul class="mk-errors" id="errors" aria-live="polite"></ul>
+        <div id="files"></div>
+        <p class="small">To propose it: open each link below (GitHub offers to fork the gallery for you), commit the file, then open one pull request with both files. Or download them and run <code>node check.mjs</code> in your copy first.</p>
+      </section>
+    </form>
+
+    <aside class="mk-preview" aria-label="Preview">
+      <div class="mk-preview-inner">
+        <div class="mk-preview-head">
+          <h2>Preview</h2>
+        </div>
+        <div class="mk-previews" id="preview"></div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <p class="foot-name">casama</p>
+    <p class="small">Previews are drawn the way the app draws them. Doodles are <a href="https://lucide.dev">Lucide</a> icons (ISC).</p>
+  </div>
+</footer>
+
+<script src="gallery.js"></script>
+<script src="make.js"></script>
+</body>
+</html>

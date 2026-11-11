@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' show ThemeMode, immutable;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,6 +21,8 @@ class ThemePreset {
     this.bodyFont = defaultBodyFont,
     this.wallpaper = const WallpaperSpec(),
     this.builtIn = false,
+    this.mode,
+    this.fewerEffects = false,
   });
 
   final String id;
@@ -31,13 +33,20 @@ class ThemePreset {
   final WallpaperSpec wallpaper;
   final bool builtIn;
 
+  /// Light or dark, for a theme that is one (Plain Light, Plain Dark); null leaves it as it is.
+  final ThemeMode? mode;
+
+  /// Whether it turns decorative motion off (see [Appearance.fewerEffects]).
+  final bool fewerEffects;
+
   static const codePrefix = 'casama-theme:';
 
   factory ThemePreset.fromAppearance(Appearance a, {required String id, required String name}) =>
-      ThemePreset(id: id, name: name, schemeId: a.schemeId, headingFont: a.headingFont, bodyFont: a.bodyFont, wallpaper: a.wallpaper);
+      ThemePreset(id: id, name: name, schemeId: a.schemeId, headingFont: a.headingFont, bodyFont: a.bodyFont, wallpaper: a.wallpaper, fewerEffects: a.fewerEffects);
 
   /// Whether [a] currently looks like this preset.
-  bool matches(Appearance a) => a.schemeId == schemeId && a.headingFont == headingFont && a.bodyFont == bodyFont && a.wallpaper == wallpaper;
+  bool matches(Appearance a) =>
+      a.schemeId == schemeId && a.headingFont == headingFont && a.bodyFont == bodyFont && a.wallpaper == wallpaper && (mode == null || a.mode == mode);
 
   Map<String, Object?> toJson() => {
     'v': 1,
@@ -47,6 +56,8 @@ class ThemePreset {
     'headingFont': headingFont,
     'bodyFont': bodyFont,
     'wallpaper': _shareableWallpaper.toJson(),
+    if (mode != null) 'mode': mode!.name,
+    if (fewerEffects) 'fewerEffects': true,
   };
 
   factory ThemePreset.fromJson(Map<String, Object?> j) => ThemePreset(
@@ -56,6 +67,8 @@ class ThemePreset {
     headingFont: j['headingFont'] as String? ?? defaultHeadingFont,
     bodyFont: j['bodyFont'] as String? ?? defaultBodyFont,
     wallpaper: j['wallpaper'] is Map ? WallpaperSpec.fromJson((j['wallpaper']! as Map).cast<String, Object?>()) : const WallpaperSpec(),
+    mode: ThemeMode.values.asNameMap()[j['mode']],
+    fewerEffects: j['fewerEffects'] == true,
   );
 
   /// Local photos (files, data URIs) stay on this device; a shared theme only carries web photos.
@@ -85,7 +98,44 @@ extension on String {
   String characters(int max) => length <= max ? this : substring(0, max);
 }
 
+// The Plain themes: a flat surface with no pattern, neutral grays with one quiet accent, one clean
+// sans-serif, and no decorative motion.
+const _plainWallpaper = WallpaperSpec(pattern: WallpaperPattern.none, palette: WallpaperPalette.flat);
+
 const builtInPresets = [
+  ThemePreset(
+    id: 'plain',
+    name: 'Plain',
+    schemeId: 'shadNeutral',
+    headingFont: 'Google Sans',
+    bodyFont: 'Google Sans',
+    wallpaper: _plainWallpaper,
+    mode: ThemeMode.system,
+    fewerEffects: true,
+    builtIn: true,
+  ),
+  ThemePreset(
+    id: 'plainLight',
+    name: 'Plain Light',
+    schemeId: 'shadNeutral',
+    headingFont: 'Google Sans',
+    bodyFont: 'Google Sans',
+    wallpaper: _plainWallpaper,
+    mode: ThemeMode.light,
+    fewerEffects: true,
+    builtIn: true,
+  ),
+  ThemePreset(
+    id: 'plainDark',
+    name: 'Plain Dark',
+    schemeId: 'shadNeutral',
+    headingFont: 'Google Sans',
+    bodyFont: 'Google Sans',
+    wallpaper: _plainWallpaper,
+    mode: ThemeMode.dark,
+    fewerEffects: true,
+    builtIn: true,
+  ),
   ThemePreset(
     id: 'casama',
     name: 'Casama',
@@ -195,5 +245,12 @@ class SavedThemesNotifier extends Notifier<List<ThemePreset>> {
 final savedThemesProvider = NotifierProvider<SavedThemesNotifier, List<ThemePreset>>(SavedThemesNotifier.new);
 
 extension ApplyPreset on AppearanceNotifier {
-  Future<void> applyPreset(ThemePreset p) => apply(schemeId: p.schemeId, headingFont: p.headingFont, bodyFont: p.bodyFont, wallpaper: p.wallpaper);
+  Future<void> applyPreset(ThemePreset p) => apply(
+    schemeId: p.schemeId,
+    headingFont: p.headingFont,
+    bodyFont: p.bodyFont,
+    wallpaper: p.wallpaper,
+    mode: p.mode,
+    fewerEffects: p.fewerEffects,
+  );
 }
