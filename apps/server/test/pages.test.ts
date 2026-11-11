@@ -283,7 +283,10 @@ describe("pages", () => {
     const r = await tool("pages.publish", { title: "Bit", html: "<p>Hi</p>" });
     const id = /page ([0-9a-f-]{36})/.exec(r.content)![1] as string;
     const body = await (await open(await viewLink(id, owner.token))).text();
-    expect(body).toMatch(/^<!doctype html><html><head><meta charset/);
+    // The content security policy comes first, so it also applies to a local print.
+    expect(body).toMatch(
+      /^<!doctype html><html><head><meta http-equiv="Content-Security-Policy"[^>]*><meta charset/,
+    );
     const [other] = await h.tdb.admin<
       { id: string }[]
     >`insert into public.bots (org_id, name, model_policy, created_by) select org_id, 'Other', model_policy, created_by from public.bots where id = ${botId} returning id`;
