@@ -115,8 +115,8 @@ class _BytesSource extends StreamAudioSource {
   Future<StreamAudioResponse> request([int? start, int? end]) async {
     final s = start ?? 0;
     final e = end ?? bytes.length;
-    // ignore: experimental_member_use
     final wav = bytes.length >= 4 && bytes[0] == 0x52 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x46;
+    // ignore: experimental_member_use
     return StreamAudioResponse(sourceLength: bytes.length, contentLength: e - s, offset: s, stream: Stream.value(bytes.sublist(s, e)), contentType: wav ? 'audio/wav' : 'audio/mpeg');
   }
 }

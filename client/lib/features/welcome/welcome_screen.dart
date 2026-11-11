@@ -47,7 +47,8 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       // the chat first sends the route straight back here, and this page then stays on the spinner.
       // Reload the list before leaving. Doing it in the same frame as the navigation built the
       // shell twice, so the bot list waits until the chat is on screen.
-      await ref.refresh(organizationsProvider.future);
+      ref.invalidate(organizationsProvider);
+      await ref.read(organizationsProvider.future);
       if (!mounted) return;
       final entering = ModalRoute.of(context)?.animation;
       if (entering != null && entering.status != AnimationStatus.completed) {

@@ -124,16 +124,18 @@ class _PhotoPickerState extends ConsumerState<PhotoPicker> {
                     ),
                   );
                 }
-                if (!snap.hasData)
+                if (!snap.hasData) {
                   return const Center(child: CircularProgressIndicator());
+                }
                 final items = snap.data!;
-                if (items.isEmpty)
+                if (items.isEmpty) {
                   return Center(
                     child: Text(
                       l10n.noPhotos,
                       style: context.textTheme.bodyMedium,
                     ),
                   );
+                }
                 return LayoutBuilder(
                   builder: (context, c) => GridView.builder(
                     keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,

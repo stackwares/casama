@@ -146,8 +146,9 @@ class _CallScreenState extends ConsumerState<CallScreen>
     unawaited(
       SharedPreferences.getInstance()
           .then((p) {
-            if (mounted && p.getBool('voice.captions') == false)
+            if (mounted && p.getBool('voice.captions') == false) {
               setState(() => _captions = false);
+            }
           })
           .catchError((_) {}),
     );
@@ -155,10 +156,12 @@ class _CallScreenState extends ConsumerState<CallScreen>
 
   OrbPhase get _phase {
     final call = _call;
-    if (_error != null || call?.state.value == CallState.failed)
+    if (_error != null || call?.state.value == CallState.failed) {
       return OrbPhase.failed;
-    if (call == null || call.state.value == CallState.connecting)
+    }
+    if (call == null || call.state.value == CallState.connecting) {
       return OrbPhase.connecting;
+    }
     if (_muted) return OrbPhase.muted;
     if (_toolsBusy) return OrbPhase.thinking;
     if (call.speaking.value) return OrbPhase.speaking;
@@ -288,11 +291,13 @@ class _CallScreenState extends ConsumerState<CallScreen>
     if (routes == null) return;
     try {
       final r = await routes.current();
-      if (mounted)
+      if (mounted) {
         setState(() => _route = r ?? const CallRoute(CallRouteKind.speaker));
+      }
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() => _route = const CallRoute(CallRouteKind.speaker));
+      }
     }
   }
 

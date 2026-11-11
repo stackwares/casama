@@ -23,8 +23,9 @@ class SupabaseBackend implements Backend {
   SupabaseBackend(this.supabase, this.api, {this.config}) {
     // A reset link or code signs in with a passwordRecovery event: ask for a new password.
     supabase.auth.onAuthStateChange.listen((e) {
-      if (e.event == sb.AuthChangeEvent.passwordRecovery)
+      if (e.event == sb.AuthChangeEvent.passwordRecovery) {
         _setNewPasswordNeeded(true);
+      }
       if (e.event == sb.AuthChangeEvent.signedOut) _setNewPasswordNeeded(false);
     });
   }
@@ -135,8 +136,9 @@ class SupabaseBackend implements Backend {
     // build has no Sign in with Apple entitlement), the browser flow still works.
     if (provider == 'apple' &&
         nativeAppleSignIn &&
-        await _signInWithAppleNative())
+        await _signInWithAppleNative()) {
       return;
+    }
     final opened = await supabase.auth.signInWithOAuth(
       provider == 'apple' ? sb.OAuthProvider.apple : sb.OAuthProvider.google,
       redirectTo: _authRedirect,
@@ -147,8 +149,9 @@ class SupabaseBackend implements Backend {
           ? LaunchMode.inAppWebView
           : LaunchMode.platformDefault,
     );
-    if (opened && !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS)
+    if (opened && !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       _closeSheetOnSignIn();
+    }
   }
 
   /// The casama:// link back signs the person in, but the in-app page stays up blank, so close it
@@ -187,10 +190,11 @@ class SupabaseBackend implements Backend {
       return false;
     }
     final idToken = credential.identityToken;
-    if (idToken == null)
+    if (idToken == null) {
       throw const sb.AuthException(
         'Apple did not return a sign-in token. Try again.',
       );
+    }
     await supabase.auth.signInWithIdToken(
       provider: sb.OAuthProvider.apple,
       idToken: idToken,
@@ -277,8 +281,9 @@ class SupabaseBackend implements Backend {
         sb.UserAttributes(password: password, nonce: code?.trim()),
       );
     } on sb.AuthException catch (e) {
-      if (e.code == sb.ErrorCode.reauthenticationNeeded.code)
+      if (e.code == sb.ErrorCode.reauthenticationNeeded.code) {
         throw const ReauthenticationNeeded();
+      }
       rethrow;
     }
     _setNewPasswordNeeded(false);
@@ -1087,8 +1092,9 @@ class SupabaseBackend implements Backend {
   static String? _uiAction(Object? content) {
     if (content is! List) return null;
     for (final p in content.whereType<Map>()) {
-      if (p['type'] == 'ui_action' && p['surface_id'] is String)
+      if (p['type'] == 'ui_action' && p['surface_id'] is String) {
         return p['surface_id'] as String;
+      }
     }
     return null;
   }
@@ -1284,8 +1290,9 @@ class SupabaseBackend implements Backend {
               },
             )
             .subscribe((status, _) {
-              if (status == sb.RealtimeSubscribeStatus.subscribed)
+              if (status == sb.RealtimeSubscribeStatus.subscribed) {
                 unawaited(catchUp());
+              }
             });
         unawaited(catchUp());
         // Safety net when Realtime is unavailable or a broadcast was missed.

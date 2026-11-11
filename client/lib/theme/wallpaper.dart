@@ -378,8 +378,9 @@ class WallpaperTheme extends ThemeExtension<WallpaperTheme> {
         other.spec != spec ||
         other.ink != ink ||
         other.surface != surface ||
-        other.colors.length != colors.length)
+        other.colors.length != colors.length) {
       return false;
+    }
     for (var i = 0; i < colors.length; i++) {
       if (other.colors[i] != colors[i]) return false;
     }
@@ -459,8 +460,9 @@ class _WallpaperState extends State<Wallpaper> {
 
   void _settled(AnimationStatus s) {
     if ((s == AnimationStatus.completed || s == AnimationStatus.dismissed) &&
-        mounted)
+        mounted) {
       setState(() => _epoch++);
+    }
   }
 
   @override
@@ -469,8 +471,9 @@ class _WallpaperState extends State<Wallpaper> {
     final route = ModalRoute.of(context);
     final now = [?route?.animation, ?route?.secondaryAnimation];
     if (now.length == _watched.length &&
-        now.indexed.every((e) => identical(e.$2, _watched[e.$1])))
+        now.indexed.every((e) => identical(e.$2, _watched[e.$1]))) {
       return;
+    }
     for (final a in _watched) {
       a.removeStatusListener(_settled);
     }
@@ -905,8 +908,9 @@ class _RenderWallpaper extends RenderBox {
         cached.sigma == sigma &&
         cached.width == width &&
         cached.height == height &&
-        cached.photo.isCloneOf(photo))
+        cached.photo.isCloneOf(photo)) {
       return cached.image;
+    }
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     final src =
@@ -1003,8 +1007,9 @@ class _RenderWallpaper extends RenderBox {
             if (px < -size ||
                 px > _tile + size ||
                 py < -size ||
-                py > _tile + size)
+                py > _tile + size) {
               continue;
+            }
             canvas.save();
             canvas.translate(px, py);
             canvas.rotate(angle);

@@ -46,8 +46,9 @@ class ThemesScreen extends ConsumerWidget {
     if (preset == null || !context.mounted) return;
     await ref.read(savedThemesProvider.notifier).add(preset);
     await ref.read(appearanceProvider.notifier).applyPreset(preset);
-    if (context.mounted)
+    if (context.mounted) {
       showSuccess(context, context.l10n.themeImported(preset.name));
+    }
   }
 
   Future<void> _share(
@@ -102,10 +103,11 @@ class ThemesScreen extends ConsumerWidget {
                         confirmLabel: l10n.delete,
                         destructive: true,
                       );
-                      if (ok)
+                      if (ok) {
                         await ref
                             .read(savedThemesProvider.notifier)
                             .remove(p.id);
+                      }
                     },
             );
           },
@@ -429,8 +431,9 @@ class _ImportFormState extends State<_ImportForm> {
               icon: const Icon(LucideIcons.clipboardPaste, size: 20),
               onPressed: () async {
                 final data = await Clipboard.getData(Clipboard.kTextPlain);
-                if (data?.text != null)
+                if (data?.text != null) {
                   setState(() => _code.text = data!.text!);
+                }
               },
             ),
           ),

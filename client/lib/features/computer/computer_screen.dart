@@ -70,11 +70,12 @@ class ComputerScreen extends ConsumerWidget {
           botId ?? '',
           defaultComputerId: defaultComputerId,
         );
-        if (c == null)
+        if (c == null) {
           return EmptyState(
             icon: LucideIcons.laptop,
             message: l10n.somethingWentWrong,
           );
+        }
         return ComputerPanel(computer: c, embedded: embedded);
       },
     );
@@ -994,14 +995,16 @@ class _FilesTabState extends ConsumerState<FilesTab> {
               child: FutureBuilder<List<ComputerFileEntry>>(
                 future: _entries,
                 builder: (context, snap) {
-                  if (snap.hasError)
+                  if (snap.hasError) {
                     return EmptyState(
                       icon: LucideIcons.circleAlert,
                       isError: true,
                       message: errorText(context, snap.error!),
                     );
-                  if (!snap.hasData)
+                  }
+                  if (!snap.hasData) {
                     return const Center(child: CircularProgressIndicator());
+                  }
                   final items = [...snap.data!]
                     ..sort((a, b) {
                       final ad = a.type.name == 'dir',
@@ -1062,11 +1065,12 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                                       color: scheme.onSurfaceVariant,
                                     ),
                                     onSelected: (v) async {
-                                      if (v == 'download')
+                                      if (v == 'download') {
                                         await _download(
                                           e,
                                           origin: shareOrigin(anchor),
                                         );
+                                      }
                                       if (v == 'delete') await _delete(e);
                                     },
                                     itemBuilder: (_) => [
@@ -1196,8 +1200,9 @@ class _CheckpointsTabState extends ConsumerState<CheckpointsTab> {
             ),
           );
         }
-        if (!snap.hasData)
+        if (!snap.hasData) {
           return const Center(child: CircularProgressIndicator());
+        }
         final items = snap.data!;
         if (items.isEmpty) {
           return EmptyState(

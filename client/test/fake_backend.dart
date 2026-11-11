@@ -313,12 +313,13 @@ class FakeBackend implements Backend {
   @override
   Future<JoinResult> joinWithInvite(String invite) async {
     joined.add(invite);
-    if (invite.contains('gate'))
+    if (invite.contains('gate')) {
       return JoinResult(
         status: JoinResultStatusEnum.requested,
         organization: null,
         workspaceName: 'Friends',
       );
+    }
     if (!extraOrgs.any((o) => o.id == friendsOrg.id)) extraOrgs.add(friendsOrg);
     return JoinResult(
       status: JoinResultStatusEnum.joined,
@@ -1223,8 +1224,9 @@ class FakeBackend implements Backend {
     for (final r in readings) {
       uploadedReadings.add((key, r, requestId));
     }
-    if (requestId != null)
+    if (requestId != null) {
       pendingDeviceRequests.removeWhere((r) => r.id == requestId);
+    }
     return readings.length;
   }
 
@@ -1252,7 +1254,7 @@ class FakeBackend implements Backend {
     bool allowed,
   ) async {
     grants.removeWhere((g) => g.botId == botId && g.kind == kind);
-    if (allowed)
+    if (allowed) {
       grants.add(
         DeviceGrant(
           botId: botId,
@@ -1261,6 +1263,7 @@ class FakeBackend implements Backend {
           createdAt: DateTime(2026),
         ),
       );
+    }
     return deviceGrants(botId: botId);
   }
 
@@ -2951,8 +2954,9 @@ class FakeBackend implements Backend {
 
   @override
   Future<ConnectFlowStatus> connectStatus(String flowId) async {
-    if (pendingPolls-- > 0)
+    if (pendingPolls-- > 0) {
       return ConnectFlowStatus(status: ConnectFlowStatusStatusEnum.pending);
+    }
     return ConnectFlowStatus(
       status: ConnectFlowStatusStatusEnum.connected,
       integration: _connected(flowId.replaceFirst('flow-', ''), 'oauth'),
@@ -3334,12 +3338,13 @@ class FakeBackend implements Backend {
   @override
   Future<void> renameTwoStep(String factorId, String name) async {
     final i = twoStep.indexWhere((f) => f.id == factorId);
-    if (i >= 0)
+    if (i >= 0) {
       twoStep[i] = TwoStepFactor(
         id: factorId,
         name: '$name · 1',
         createdAt: twoStep[i].createdAt,
       );
+    }
   }
 
   @override
@@ -3390,12 +3395,13 @@ class FakeBackend implements Backend {
   @override
   Future<void> renamePasskey(String id, String name) async {
     final i = passkeyList.indexWhere((p) => p.id == id);
-    if (i >= 0)
+    if (i >= 0) {
       passkeyList[i] = PasskeyInfo(
         id: id,
         name: name,
         createdAt: passkeyList[i].createdAt,
       );
+    }
   }
 
   @override
@@ -3438,8 +3444,9 @@ class FakeBackend implements Backend {
   var reauthCodesSent = 0;
   @override
   Future<void> setPassword(String password, {String? code}) async {
-    if (reauthCode != null && code != reauthCode)
+    if (reauthCode != null && code != reauthCode) {
       throw const ReauthenticationNeeded();
+    }
     this.password = password;
     _setNewPasswordNeeded(false);
   }

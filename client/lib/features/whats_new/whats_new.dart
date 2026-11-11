@@ -19,7 +19,7 @@ import '../settings/name_step.dart';
 /// What changed for people in each version, newest first, in plain words: what someone will notice,
 /// not how it was built (CHANGELOG.md is the developers' record). When pubspec.yaml's version goes
 /// up, add that version at the top with three to five lines, each a string in app_en.arb named
-/// whatsNew<version><Topic>. test/whats_new_test.dart fails until the current version has lines.
+/// `whatsNew<version><Topic>`. test/whats_new_test.dart fails until the current version has lines.
 Map<String, List<String>> whatsNewByVersion(AppLocalizations l10n) => {
   '0.8.0': [l10n.whatsNew080Calls, l10n.whatsNew080Looks, l10n.whatsNew080AboutYou, l10n.whatsNew080SignIn],
 };

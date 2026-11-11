@@ -110,8 +110,9 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
         ref.watch(modelOptionsProvider(choice.credentialId)).value?.items ??
         const <ModelOption>[];
     for (final o in options) {
-      if (o.id == choice.model)
+      if (o.id == choice.model) {
         return o.name.contains(': ') ? o.name.split(': ').last : o.name;
+      }
     }
     return choice.model.split('/').last;
   }
@@ -121,8 +122,9 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     final bot = ref.watch(botProvider(widget.botId));
-    if (bot == null)
+    if (bot == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     _name ??= TextEditingController(text: bot.name);
     _persona ??= TextEditingController(text: bot.personaMd);
     _autonomy ??= bot.autonomy.value;
@@ -379,12 +381,13 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
                 onChanged: hapticOnChanged((v) => setState(() {
                   _credentialId = v;
                   for (final k in keys) {
-                    if (k.id == v)
+                    if (k.id == v) {
                       _model =
                           ref
                               .read(backendProvider)
                               .defaultModelFor(k.provider.value) ??
                           _model;
+                    }
                   }
                 }), haptic: HapticsHelper.selection),
               ),

@@ -147,18 +147,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Invite links (D-167): the preview works signed out ("Sign in to join" keeps the invite and
       // brings people back to it after signing in).
       final joining = loc.startsWith('/join/') || loc.startsWith('/invites/');
-      if (signedIn.value != true)
+      if (signedIn.value != true) {
         return loc == '/sign-in' || joining ? null : '/sign-in';
+      }
       final pendingJoin = ref.read(pendingJoinTokenProvider);
-      if (pendingJoin != null && !loc.startsWith('/join/'))
+      if (pendingJoin != null && !loc.startsWith('/join/')) {
         return joinPath(pendingJoin);
+      }
       // Two-step sign-in (D-093): the code comes before anything else.
       final codeNeeded = ref.read(backendProvider).twoStepCodeNeeded;
       if (codeNeeded) return loc == '/two-step' ? null : '/two-step';
       if (loc == '/two-step') return '/bots';
       // Back from a reset link or code: a new password before anything else.
-      if (ref.read(backendProvider).newPasswordNeeded)
+      if (ref.read(backendProvider).newPasswordNeeded) {
         return loc == '/new-password' ? null : '/new-password';
+      }
       if (loc == '/new-password') return '/bots';
       if (joining || loc.startsWith('/joined/')) return null;
       final orgs = ref.read(organizationsProvider);
@@ -166,8 +169,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Workspaces that couldn't load (offline with none saved) don't mean there are none: never
       // start the welcome flow, which would make a new one, over a failed request (D-158). An
       // error can carry an earlier empty list (from before sign-in finished), so look at the list.
-      if (orgs.hasError && (orgs.value ?? const []).isEmpty)
+      if (orgs.hasError && (orgs.value ?? const []).isEmpty) {
         return loc == '/sign-in' ? '/bots' : null;
+      }
       final hasOrg = (orgs.value ?? const []).isNotEmpty;
       final bots = ref.read(botsProvider).value;
       // New people land in the welcome chat (D-129); the wizard stays at /onboarding. Those whose
@@ -179,13 +183,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         final joinable = ref.read(joinableWorkspacesProvider);
         if (joinable.isLoading) return null;
         if ((joinable.value ?? const []).isNotEmpty &&
-            !ref.read(skipJoinTeamProvider))
+            !ref.read(skipJoinTeamProvider)) {
           return '/join-team';
+        }
         return '/welcome';
       }
       if (hasOrg && loc == '/join-team') return '/bots';
-      if (hasOrg && loc == '/onboarding' && (bots?.isNotEmpty ?? false))
+      if (hasOrg && loc == '/onboarding' && (bots?.isNotEmpty ?? false)) {
         return '/bots';
+      }
       if (loc == '/sign-in') return hasOrg ? '/bots' : '/welcome';
       return null;
     },

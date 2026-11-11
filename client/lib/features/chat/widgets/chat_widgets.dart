@@ -209,8 +209,9 @@ class AssistantMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (entry.text.isEmpty && entry.streaming)
+    if (entry.text.isEmpty && entry.streaming) {
       return WorkingIndicator(status: status ?? context.l10n.thinking);
+    }
     final scheme = context.colorScheme;
     final bubble = DecoratedBox(
       decoration: BoxDecoration(
@@ -508,27 +509,33 @@ class AttachmentTile extends ConsumerWidget {
 /// What the bot is doing while a step runs, in everyday words ("Searching the web…"), for the
 /// working line. No tool names, commands or queries (D-162).
 String toolActivity(AppLocalizations l10n, String tool) {
-  if (tool == 'tools.load' || tool.startsWith('skills'))
+  if (tool == 'tools.load' || tool.startsWith('skills')) {
     return l10n.activityReady;
-  if (tool.startsWith('web') || tool.contains('search'))
+  }
+  if (tool.startsWith('web') || tool.contains('search')) {
     return l10n.activitySearching;
+  }
   if (tool.startsWith('browser')) return l10n.activityBrowsing;
   if (tool.startsWith('files')) return l10n.activityFiles;
   if (tool.startsWith('media')) return l10n.activityImage;
-  if (tool.startsWith('memory') || tool.startsWith('knowledge'))
+  if (tool.startsWith('memory') || tool.startsWith('knowledge')) {
     return l10n.activityMemory;
-  if (tool.startsWith('routines') || tool.startsWith('tasks'))
+  }
+  if (tool.startsWith('routines') || tool.startsWith('tasks')) {
     return l10n.activityScheduling;
+  }
   if (tool.startsWith('shell') ||
       tool.startsWith('desktop') ||
       tool.startsWith('computer') ||
-      tool.startsWith('checkpoint'))
+      tool.startsWith('checkpoint')) {
     return l10n.activityComputer;
+  }
   if (tool.startsWith('http') ||
       tool.contains('.') &&
           !tool.startsWith('ui.') &&
-          !tool.startsWith('notify'))
+          !tool.startsWith('notify')) {
     return l10n.activityApps;
+  }
   return l10n.activityWorking;
 }
 
@@ -850,13 +857,15 @@ class _ToolDetails extends StatelessWidget {
 /// The file a tool step made or read, as a files API path (null when it isn't about a file).
 String? _toolFile(ToolEntry t) {
   final artifact = t.artifactPath;
-  if (artifact != null && artifact.isNotEmpty)
+  if (artifact != null && artifact.isNotEmpty) {
     return computerPathFromLink(artifact);
+  }
   if (!t.tool.startsWith('files.') ||
       t.tool == 'files.list' ||
       t.tool == 'files.search' ||
-      t.tool == 'files.delete')
+      t.tool == 'files.delete') {
     return null;
+  }
   final p = t.args['path'];
   return p is String && p.isNotEmpty ? computerPathFromLink(p) : null;
 }
@@ -1474,8 +1483,9 @@ class _DeviceAccessPromptState extends ConsumerState<DeviceAccessPrompt> {
           .read(backendProvider)
           .deviceGrants(botId: widget.entry.botId)
           .then((g) {
-            if (mounted && g.any((x) => x.kind == widget.entry.kind))
+            if (mounted && g.any((x) => x.kind == widget.entry.kind)) {
               setState(() => _allowed ??= true);
+            }
           })
           .catchError((_) {}),
     );

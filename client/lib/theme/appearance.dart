@@ -211,8 +211,9 @@ class AppearanceNotifier extends Notifier<Appearance> {
       await p.setString(_headingKey, headingFont);
       await p.setString(_bodyKey, bodyFont);
       await p.setString(_wallpaperKey, jsonEncode(wallpaper.toJson()));
-      if (gallerySchemeChoices.isNotEmpty)
+      if (gallerySchemeChoices.isNotEmpty) {
         await p.setString(_galleryKey, _galleryJson());
+      }
     });
   }
 }
