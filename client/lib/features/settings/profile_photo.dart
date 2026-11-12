@@ -12,7 +12,7 @@ import '../../core/haptics.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
-import '../../ui/adaptive_modal.dart';
+import '../../ui/form_sheet.dart';
 import '../../ui/person_avatar.dart';
 import 'about_you_screen.dart';
 
@@ -45,49 +45,19 @@ class _ProfilePhotoEditorState extends ConsumerState<ProfilePhotoEditor> {
   Future<void> _open() async {
     final l10n = context.l10n;
     final about = ref.read(aboutYouProvider).value;
-    final action = await showAdaptiveSheet<_PhotoAction>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_hasCamera)
-              ListTile(
-                key: const Key('photoCamera'),
-                leading: const Icon(LucideIcons.camera),
-                title: Text(l10n.photoTake),
-                onTap: () => Navigator.pop(context, _PhotoAction.camera),
-              ),
-            ListTile(
-              key: const Key('photoGallery'),
-              leading: const Icon(LucideIcons.image),
-              title: Text(l10n.photoChoose),
-              onTap: () => Navigator.pop(context, _PhotoAction.gallery),
-            ),
-            if (about?.providerPhoto ?? false)
-              ListTile(
-                key: const Key('photoGoogle'),
-                leading: const Icon(LucideIcons.circleUser),
-                title: Text(l10n.photoUseGoogle),
-                onTap: () => Navigator.pop(context, _PhotoAction.google),
-              ),
-            if (about?.photoId != null)
-              ListTile(
-                key: const Key('photoRemove'),
-                leading: Icon(
-                  LucideIcons.trash2,
-                  color: context.colorScheme.error,
-                ),
-                title: Text(
-                  l10n.photoRemove,
-                  style: TextStyle(color: context.colorScheme.error),
-                ),
-                onTap: () => Navigator.pop(context, _PhotoAction.remove),
-              ),
-          ],
-        ),
-      ),
-    );
+    final action = (await showChoiceSheet<_PhotoAction>(
+      context,
+      icon: LucideIcons.camera,
+      title: l10n.photoChange,
+      choices: [
+        if (_hasCamera) Choice(key: const Key('photoCamera'), value: _PhotoAction.camera, icon: LucideIcons.camera, label: l10n.photoTake),
+        Choice(key: const Key('photoGallery'), value: _PhotoAction.gallery, icon: LucideIcons.image, label: l10n.photoChoose),
+        if (about?.providerPhoto ?? false)
+          Choice(key: const Key('photoGoogle'), value: _PhotoAction.google, icon: LucideIcons.circleUser, label: l10n.photoUseGoogle),
+        if (about?.photoId != null)
+          Choice(key: const Key('photoRemove'), value: _PhotoAction.remove, icon: LucideIcons.trash2, label: l10n.photoRemove, destructive: true),
+      ],
+    ))?.value;
     if (action == null || !mounted) return;
     final backend = ref.read(backendProvider);
     switch (action) {

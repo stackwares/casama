@@ -18,7 +18,7 @@ import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
-import '../../ui/spring_sheet.dart';
+import '../../ui/form_sheet.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -330,39 +330,16 @@ class _CallScreenState extends ConsumerState<CallScreen>
           ? const CallRoute(CallRouteKind.earpiece)
           : const CallRoute(CallRouteKind.speaker);
     } else {
-      pick = await showSpringBottomSheet<CallRoute>(
-        context: context,
-        builder: (context) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpace.lg,
-                  0,
-                  AppSpace.lg,
-                  AppSpace.sm,
-                ),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    l10n.callAudioOutput,
-                    style: context.textTheme.titleMedium,
-                  ),
-                ),
-              ),
-              for (final r in available)
-                ListTile(
-                  key: Key('callRoute-${r.kind.name}-${r.id}'),
-                  leading: Icon(_routeIcon(r.kind)),
-                  title: Text(_routeName(context, r)),
-                  trailing: r == _route ? const Icon(LucideIcons.check) : null,
-                  onTap: () => Navigator.pop(context, r),
-                ),
-            ],
-          ),
-        ),
-      );
+      pick = (await showChoiceSheet<CallRoute>(
+        context,
+        icon: LucideIcons.volume2,
+        title: l10n.callAudioOutput,
+        selected: _route,
+        choices: [
+          for (final r in available)
+            Choice(key: Key('callRoute-${r.kind.name}-${r.id}'), value: r, icon: _routeIcon(r.kind), label: _routeName(context, r)),
+        ],
+      ))?.value;
     }
     if (pick == null || !mounted) return;
     setState(() => _route = pick);

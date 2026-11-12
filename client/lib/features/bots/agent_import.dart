@@ -13,7 +13,6 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../core/haptics.dart';
 import '../../theme/app_tokens.dart';
-import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
@@ -28,21 +27,17 @@ Future<void> importAgentFolder(BuildContext context, WidgetRef ref, {Future<Map<
   final org = ref.read(currentOrgProvider);
   if (org == null || !context.mounted) return;
   final desktop = !kIsWeb && (defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.windows || defaultTargetPlatform == TargetPlatform.linux);
-  final how = await showAdaptiveSheet<String>(
-    context: context,
-    builder: (c) => FormSheet(
-      icon: LucideIcons.folderInput,
-      title: l10n.importAgent,
-      subtitle: l10n.importAgentHelp,
-      submitLabel: l10n.cancel,
-      onSubmit: () => Navigator.pop(c),
-      children: [
-        if (desktop || pickFolder != null)
-          ListTile(key: const Key('importAgentFolder'), leading: const Icon(LucideIcons.folderOpen), title: Text(l10n.importAgentPickFolder), onTap: () => Navigator.pop(c, 'folder')),
-        ListTile(key: const Key('importAgentZip'), leading: const Icon(LucideIcons.fileArchive), title: Text(l10n.importAgentPickZip), onTap: () => Navigator.pop(c, 'zip')),
-      ],
-    ),
-  );
+  final how = (await showChoiceSheet<String>(
+    context,
+    icon: LucideIcons.folderInput,
+    title: l10n.importAgent,
+    subtitle: l10n.importAgentHelp,
+    choices: [
+      if (desktop || pickFolder != null)
+        Choice(key: const Key('importAgentFolder'), value: 'folder', icon: LucideIcons.folderOpen, label: l10n.importAgentPickFolder),
+      Choice(key: const Key('importAgentZip'), value: 'zip', icon: LucideIcons.fileArchive, label: l10n.importAgentPickZip),
+    ],
+  ))?.value;
   if (how == null || !context.mounted) return;
   final backend = ref.read(backendProvider);
   final plan = await runGuarded(context, () async {

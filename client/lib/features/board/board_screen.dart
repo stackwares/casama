@@ -100,11 +100,22 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
 
   /// Phones: a long press offers the other statuses, since columns don't fit to drag between.
   Future<void> _moveSheet(Task t, List<Task> items) async {
-    final to = await showAdaptiveSheet<TaskStatus>(
-      context: context,
-      contentPadsBottom: true,
-      builder: (_) => _MoveSheet(task: t),
-    );
+    final to = (await showChoiceSheet<TaskStatus>(
+      context,
+      icon: LucideIcons.arrowRightLeft,
+      title: context.l10n.moveTo,
+      subtitle: t.title,
+      choices: [
+        for (final s in BoardScreen.statuses)
+          if (s != t.status)
+            Choice(
+              key: Key('moveTo-${s.value}'),
+              value: s,
+              label: statusLabel(context, s),
+              leading: SizedBox(width: 32, child: Icon(LucideIcons.circleDot, size: 18, color: _statusColor(context, s))),
+            ),
+      ],
+    ))?.value;
     if (to == null || !mounted) return;
     await _move(t, to, items.where((x) => x.status == to).toList());
   }
@@ -483,42 +494,6 @@ class _StatusHeader extends StatelessWidget {
               padding: EdgeInsets.zero,
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-/// "Move to": the statuses a ticket isn't in.
-class _MoveSheet extends StatelessWidget {
-  const _MoveSheet({required this.task});
-  final Task task;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.only(bottom: BottomPadding.of(context)),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SheetTitle(context.l10n.moveTo, subtitle: task.title),
-          for (final s in BoardScreen.statuses)
-            if (s != task.status)
-              ListTile(
-                key: Key('moveTo-${s.value}'),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppSpace.lg,
-                ),
-                leading: Icon(
-                  LucideIcons.circleDot,
-                  size: 18,
-                  color: _statusColor(context, s),
-                ),
-                title: Text(statusLabel(context, s)),
-                onTap: () => Navigator.pop(context, s),
-              ),
-          const SizedBox(height: AppSpace.sm),
         ],
       ),
     );

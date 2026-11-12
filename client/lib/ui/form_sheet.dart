@@ -353,28 +353,44 @@ class _TextPromptState extends State<_TextPrompt> {
 
 /// One option in [showChoiceSheet].
 class Choice<T> {
-  const Choice({required this.value, required this.label, this.subtitle, this.icon});
+  const Choice({required this.value, required this.label, this.subtitle, this.icon, this.leading, this.trailing, this.destructive = false, this.key});
   final T value;
   final String label;
   final String? subtitle;
+
+  /// A tinted icon tile; [leading] (an avatar, a coloured dot) replaces it.
   final IconData? icon;
+  final Widget? leading;
+
+  /// Shown before the check (a count badge).
+  final Widget? trailing;
+  final bool destructive;
+  final Key? key;
 }
 
-/// Picks one of a few options in an adaptive sheet (a dialog on larger windows), with the current
-/// one checked. Returns the chosen [Choice], or null when dismissed (so a null value can be chosen).
+const _noSelection = Object();
+
+/// Picks one of a few options in an adaptive sheet (a dialog on larger windows): the same header
+/// as [FormSheet] forms, then the options as one grouped card. With [selected], that option is
+/// checked (a setting); without it, the sheet only asks (which bot, which source). Returns the
+/// chosen [Choice], or null when dismissed (so a null value can be chosen). No Cancel button: a
+/// flick down, a tap outside or Escape closes it, like other pickers.
 Future<Choice<T>?> showChoiceSheet<T>(
   BuildContext context, {
   required String title,
   required List<Choice<T>> choices,
-  required T selected,
+  Object? selected = _noSelection,
   String? subtitle,
   IconData? icon,
 }) {
+  final asks = identical(selected, _noSelection);
   return showAdaptiveSheet<Choice<T>>(
     context: context,
     contentPadsBottom: true,
+    dialogMaxWidth: 480,
     builder: (context) {
       final scheme = context.colorScheme;
+      final iconTiles = choices.any((c) => c.icon != null || c.leading != null);
       return SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: EdgeInsets.fromLTRB(AppSpace.xl, 0, AppSpace.xl, BottomPadding.of(context, minimum: AppSpace.lg)),
@@ -414,17 +430,31 @@ Future<Choice<T>?> showChoiceSheet<T>(
             ),
             const SizedBox(height: AppSpace.lg),
             GroupedCard(
+              dividerIndent: iconTiles ? 60 : AppSpace.md + AppSpace.sm,
               children: [
                 for (final c in choices)
                   GroupedTile(
+                    key: c.key,
                     icon: c.icon ?? LucideIcons.circle,
+                    leading: c.leading ?? (iconTiles ? null : const SizedBox.shrink()),
                     title: c.label,
                     subtitle: c.subtitle,
+                    destructive: c.destructive,
+                    showChevron: false,
                     onTap: () {
                       HapticsHelper.selection();
                       Navigator.of(context).pop(c);
                     },
-                    trailing: c.value == selected ? Icon(LucideIcons.check, color: scheme.primary) : const SizedBox(width: 24),
+                    trailing: asks && c.trailing == null
+                        ? null
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            spacing: AppSpace.xs,
+                            children: [
+                              ?c.trailing,
+                              if (!asks) c.value == selected ? Icon(LucideIcons.check, color: scheme.primary) : const SizedBox(width: 24),
+                            ],
+                          ),
                   ),
               ],
             ),

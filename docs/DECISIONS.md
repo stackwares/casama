@@ -2393,3 +2393,10 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 - **Upright phone:** when there's room under the screen, a line says to turn the phone for a bigger screen.
 - **The privacy note** ("While you're in control, the bot is paused…") shows once, over the top of the screen, for 6 seconds after taking control. It doesn't take taps. A toast at the bottom would cover the dock just as the person reaches for it.
 - **Checked:** phone (upright, sideways, 320 pt), tablet, light and dark, rendered from widget tests. `live_test.dart` covers the hint, the side bars and the ⋯ menu; `teach_test.dart` opens Teach a Task from ⋯.
+
+## D-221 One picker for every "pick one of these" sheet
+
+- **Problem** (Oliver, on "Which bot should learn this?": "they don't look right… also check other UIs like this"): sheets that ask the person to pick one thing were each built differently. Teach a Task and Import Agent used a form sheet with Cancel as its main button, so Cancel showed twice, over plain text rows. Profile photo, Ask which bot, Move to and the call's audio output were bare list rows (some without a title). Desktop users at once was a stock `SimpleDialog`.
+- **Decision:** all of them use `showChoiceSheet` (`ui/form_sheet.dart`), the picker the bot profile and quiet hours already used: the same header as forms (icon tile, title, a line of help), then the options as one grouped card of rows, a bottom sheet on phones and a dialog on larger windows. No Cancel button; a flick down, a tap outside or Escape closes it, like other pickers.
+- **What the picker gained:** per-option keys, a `leading` widget (bot avatars, status dots), a `trailing` widget, destructive rows (Remove Photo in red), and asking without a current choice (`selected` left out: no checks, for "which bot" or "which source"). Settings pass `selected` and the current option is checked, as before, including a null value ("no folder").
+- **Not changed:** the persona gallery and the model picker, which are full pickers with search and previews of their own.

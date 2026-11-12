@@ -77,24 +77,16 @@ class _ComputerCard extends ConsumerWidget {
           await runGuarded(context, () => backend.updateComputer(c.id, profile: desktop ? 'headless' : 'desktop'));
         case 'desktops':
           // Team computers (D-148): how many bots may use the desktop at the same time.
-          final n = await showDialog<int>(
-            context: context,
-            builder: (ctx) => SimpleDialog(
-              title: Text(l10n.desktopUsers),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-                  child: Text(l10n.desktopUsersHelp, style: context.textTheme.bodySmall),
-                ),
-                for (final v in const [1, 2, 3, 4, 5])
-                  SimpleDialogOption(
-                    key: Key('desktops-$v'),
-                    onPressed: () => Navigator.pop(ctx, v),
-                    child: Row(children: [Expanded(child: Text(l10n.desktopUsersCount(v))), if (v == c.maxDesktops) const Icon(LucideIcons.check, size: 18)]),
-                  ),
-              ],
-            ),
-          );
+          final n = (await showChoiceSheet<int>(
+            context,
+            icon: LucideIcons.users,
+            title: l10n.desktopUsers,
+            subtitle: l10n.desktopUsersHelp,
+            selected: c.maxDesktops,
+            choices: [
+              for (final v in const [1, 2, 3, 4, 5]) Choice(key: Key('desktops-$v'), value: v, label: l10n.desktopUsersCount(v)),
+            ],
+          ))?.value;
           if (n == null || n == c.maxDesktops || !context.mounted) return;
           await runGuarded(context, () => backend.updateComputer(c.id, maxDesktops: n));
         case 'rename':

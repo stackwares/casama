@@ -16,7 +16,6 @@ import '../../core/share.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
-import '../../ui/adaptive_modal.dart';
 import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
@@ -540,29 +539,15 @@ Future<void> askBotAbout(BuildContext context, String text) async {
   if (!context.mounted || bots.isEmpty) return;
   final bot = bots.length == 1
       ? bots.single
-      : await showAdaptiveSheet<Bot>(
-          context: context,
-          builder: (sheet) => SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg, AppSpace.lg, AppSpace.sm),
-                  child: Text(sheet.l10n.askWhichBot, style: sheet.textTheme.titleLarge),
-                ),
-                for (final b in bots)
-                  ListTile(
-                    key: Key('askBot-${b.id}'),
-                    leading: BotAvatar(name: b.name, avatar: b.avatarUrl, size: 36, animate: false),
-                    title: Text(b.name),
-                    onTap: () => Navigator.of(sheet).pop(b),
-                  ),
-                const SizedBox(height: AppSpace.md),
-              ],
-            ),
-          ),
-        );
+      : (await showChoiceSheet<Bot>(
+          context,
+          icon: LucideIcons.messageCircleQuestionMark,
+          title: context.l10n.askWhichBot,
+          choices: [
+            for (final b in bots)
+              Choice(key: Key('askBot-${b.id}'), value: b, label: b.name, leading: BotAvatar(name: b.name, avatar: b.avatarUrl, size: 32, animate: false)),
+          ],
+        ))?.value;
   if (bot == null || !context.mounted) return;
   final backend = container.read(backendProvider);
   final conv = await runGuarded(context, () async {

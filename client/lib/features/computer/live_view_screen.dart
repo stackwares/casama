@@ -27,6 +27,7 @@ import '../teach/teach_recorder.dart';
 import '../../core/analytics.dart';
 import '../../core/haptics.dart';
 import '../../ui/page.dart';
+import '../../ui/bot_avatar.dart';
 
 /// Watch a computer's desktop live and take control (deep link: /computer/live?c=&takeover=).
 class LiveViewScreen extends ConsumerStatefulWidget {
@@ -357,16 +358,15 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     if (botId == null) {
       final bots = await ref.read(botsProvider.future).catchError((Object _) => const <Bot>[]);
       if (!mounted) return;
-      botId = await showAdaptiveSheet<String>(
-        context: context,
-        builder: (c) => FormSheet(
-          icon: LucideIcons.graduationCap,
-          title: l10n.teachWhichBot,
-          submitLabel: l10n.cancel,
-          onSubmit: () => Navigator.pop(c),
-          children: [for (final b in bots) ListTile(key: Key('teachBot-${b.id}'), title: Text(b.name), onTap: () => Navigator.pop(c, b.id))],
-        ),
-      );
+      botId = (await showChoiceSheet<String>(
+        context,
+        icon: LucideIcons.graduationCap,
+        title: l10n.teachWhichBot,
+        choices: [
+          for (final b in bots)
+            Choice(key: Key('teachBot-${b.id}'), value: b.id, label: b.name, leading: BotAvatar(name: b.name, avatar: b.avatarUrl, size: 32, animate: false)),
+        ],
+      ))?.value;
       if (botId == null || !mounted) return;
     }
     final s = await runGuarded(context, () => ref.read(backendProvider).startTeach(widget.computerId, botId!));
