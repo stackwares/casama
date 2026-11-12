@@ -2640,6 +2640,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeAttachment => 'Remove';
 
   @override
+  String get editPhoto => 'Edit photo';
+
+  @override
+  String get retryUpload => 'Try again';
+
+  @override
+  String get uploadingAttachments => 'Uploading…';
+
+  @override
+  String get messageNotSent =>
+      'Your files didn\'t upload, so the message wasn\'t sent. It\'s back in the box.';
+
+  @override
   String get noComputerForFiles => 'This bot has no computer to keep files on.';
 
   @override

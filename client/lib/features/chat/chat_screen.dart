@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -10,6 +12,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
 import '../../core/display_text.dart';
+import '../../core/local_cache.dart';
+import '../../core/media_cache.dart';
 import '../../core/providers.dart';
 import '../../core/voice.dart';
 import '../../core/widgets.dart';
@@ -32,6 +36,7 @@ import '../home/home_shell.dart';
 import 'chat_controller.dart';
 import 'chat_detail.dart';
 import 'local_actions.dart';
+import 'photo_editor.dart';
 import 'widgets/bot_ui.dart';
 import 'widgets/app_tiles.dart';
 import 'widgets/chat_widgets.dart';
@@ -91,6 +96,56 @@ class ChatScreen extends ConsumerStatefulWidget {
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _input = TextEditingController();
+
+  /// What the person was typing stays on the device per chat, so leaving and coming back (or a
+  /// restart) keeps it. Bound to [_draftConversation] once the chat has opened.
+  late final LocalCache _cache = ref.read(localCacheProvider);
+  String? _draftKey;
+  String? _draftConversation;
+  Timer? _draftSave;
+
+  static String _draftKeyFor(String botId, String? conversationId) => 'draft:$botId:${conversationId ?? 'new'}';
+
+  void _saveDraftSoon() {
+    if (_draftKey == null) return;
+    _draftSave?.cancel();
+    _draftSave = Timer(const Duration(milliseconds: 400), _saveDraft);
+  }
+
+  void _saveDraft() {
+    _draftSave?.cancel();
+    final key = _draftKey;
+    if (key == null) return;
+    final text = _input.text;
+    unawaited(cacheWrite(_cache, key, text.trim().isEmpty ? null : text));
+  }
+
+  /// Points the draft at [conversationId]: the old chat's text is saved and the new chat's comes
+  /// back. A new chat that just got its id on the first send keeps what is in the box.
+  Future<void> _bindDraft(String? conversationId) async {
+    final key = _draftKeyFor(widget.botId, conversationId);
+    if (key == _draftKey) return;
+    final wasBound = _draftKey != null;
+    final becameReal = wasBound && _draftConversation == null && conversationId != null && _draftKey == _draftKeyFor(widget.botId, null);
+    if (becameReal) {
+      unawaited(cacheWrite(_cache, _draftKey!, null));
+      _draftKey = key;
+      _draftConversation = conversationId;
+      _saveDraft();
+      return;
+    }
+    if (wasBound) _saveDraft();
+    _draftKey = key;
+    _draftConversation = conversationId;
+    final saved = await cacheRead(_cache, key);
+    if (!mounted || _draftKey != key) return;
+    final text = saved is String ? saved : '';
+    // On first open, what was typed while the chat loaded wins over an older draft.
+    if (!wasBound && _input.text.isNotEmpty) return;
+    if (_input.text == text) return;
+    _input.value = TextEditingValue(text: text, selection: TextSelection.collapsed(offset: text.length));
+  }
+
   // Group chats: @-mention suggestions for what's typed in [_input].
   late final _mentions = MentionController(_input);
 
@@ -112,8 +167,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   var _dragging = false;
 
   static const _maxFileBytes = 25 * 1024 * 1024;
-
-  bool get _uploading => _pending.any((p) => p.ref == null && !p.failed);
 
   /// File links found in each reply (by entry: a changed reply is a new entry).
   final _sharedFiles = Expando<List<AttachmentRef>>();
@@ -152,18 +205,56 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       }
       final stamp = DateTime.now().toIso8601String().replaceAll(RegExp(r'[^0-9]'), '').substring(0, 14);
       final safe = name.replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '_');
-      final item = _Pending(name: name, bytes: bytes, mime: (mime == null || mime.isEmpty) ? mimeFor(name) : mime, apiPath: 'uploads/$stamp-$safe');
+      final item = _Pending(name: name, bytes: bytes, mime: (mime == null || mime.isEmpty) ? mimeFor(name) : mime, apiPath: 'uploads/$stamp-$safe', computerId: computerId);
       setState(() => _pending.add(item));
-      try {
-        await ref.read(backendProvider).uploadFile(computerId, item.apiPath, bytes);
-        if (!mounted) return;
-        setState(() => item.ref = AttachmentRef(path: 'workspace/${item.apiPath}', name: name, mimeType: item.mime, size: bytes.length));
-      } catch (_) {
-        if (!mounted) return;
-        setState(() => item.failed = true);
-        showFailure(context, context.l10n.uploadFailed(name));
-      }
+      _upload(item);
     }
+  }
+
+  /// Uploads [item] in the background; [_Pending.upload] says how it went. Starting again (a
+  /// retry, or an edited photo under a new name) makes any earlier try not count.
+  void _upload(_Pending item) {
+    final try_ = ++item.attempt;
+    item
+      ..failed = false
+      ..ref = null;
+    // The chat shows the picture from the device right away, and never downloads it back.
+    unawaited(MediaCache.write(MediaCache.keyFor(item.computerId, item.apiPath), item.bytes));
+    final backend = ref.read(backendProvider);
+    item.upload = () async {
+      try {
+        await backend.uploadFile(item.computerId, item.apiPath, item.bytes);
+        if (try_ != item.attempt) return false;
+        item.ref = item.plannedRef;
+        if (mounted) setState(() {});
+        return true;
+      } catch (_) {
+        if (try_ != item.attempt) return false;
+        item.failed = true;
+        if (mounted) {
+          setState(() {});
+          showFailure(context, context.l10n.uploadFailed(item.name));
+        }
+        return false;
+      }
+    }();
+  }
+
+  /// Crop, rotate or draw on a photo before sending; the edited one replaces it.
+  Future<void> _editPending(_Pending item) async {
+    final edited = await editPhoto(context, item.bytes);
+    if (edited == null || !mounted || !_pending.contains(item)) return;
+    final stamp = DateTime.now().toIso8601String().replaceAll(RegExp(r'[^0-9]'), '').substring(0, 14);
+    final base = item.name.contains('.') ? item.name.substring(0, item.name.lastIndexOf('.')) : item.name;
+    final name = '$base.jpg';
+    setState(() {
+      item
+        ..name = name
+        ..bytes = edited
+        ..mime = 'image/jpeg'
+        ..apiPath = 'uploads/$stamp-${name.replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '_')}';
+    });
+    _upload(item);
   }
 
   Future<void> _pickFiles() async {
@@ -173,13 +264,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _pickPhotos() async {
-    final images = await ImagePicker().pickMultiImage(imageQuality: 90, maxWidth: 2560);
+    // 2048 px is more than vision models look at, and keeps a phone photo well under 1 MB.
+    final images = await ImagePicker().pickMultiImage(imageQuality: 85, maxWidth: 2048, maxHeight: 2048);
     if (images.isEmpty) return;
     await _addFiles([for (final x in images) (x.name, await x.readAsBytes(), x.mimeType)]);
   }
 
   Future<void> _takePhoto() async {
-    final x = await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 90, maxWidth: 2560);
+    final x = await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 85, maxWidth: 2048, maxHeight: 2048);
     if (x == null) return;
     await _addFiles([(x.name, await x.readAsBytes(), x.mimeType)]);
   }
@@ -193,6 +285,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void initState() {
     super.initState();
     _scroll.addListener(_onScroll);
+    _input.addListener(_saveDraftSoon);
+    // The chat's id changes without a reopen when the first send creates it or New chat clears it.
+    ref.listenManual(chatControllerProvider(widget.botId).select((s) => s.conversationId), (_, next) {
+      if (!_opening && _draftKey != null) _bindDraft(next);
+    });
     // What this chat shows (a routine's result, a reply) is read once the chat is open, including
     // notifications that arrive while it is.
     ref.listenManual(notificationsProvider, (_, next) {
@@ -217,6 +314,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         await c.open(widget.conversationId);
       } finally {
         if (mounted && _opening) setState(() => _opening = false);
+        if (mounted) unawaited(_bindDraft(ref.read(chatControllerProvider(widget.botId)).conversationId));
       }
     });
   }
@@ -225,6 +323,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void didUpdateWidget(ChatScreen old) {
     super.didUpdateWidget(old);
     if (old.botId != widget.botId || old.conversationId != widget.conversationId || old.focusMessageId != widget.focusMessageId) {
+      // Keep what was typed in the chat being left before the next one opens.
+      _saveDraft();
       _rowCache.clear();
       _stickToBottom = true;
       _opening = true;
@@ -235,6 +335,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           await c.open(widget.conversationId);
         } finally {
           if (mounted && _opening) setState(() => _opening = false);
+          if (mounted) unawaited(_bindDraft(ref.read(chatControllerProvider(widget.botId)).conversationId));
         }
       });
     }
@@ -252,6 +353,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   void dispose() {
+    _saveDraft();
     _botUi.dispose();
     _mentions.dispose();
     _input.dispose();
@@ -333,25 +435,42 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Future<void> _send([String? text]) async {
     final message = text ?? _input.text;
-    final attachments = text == null
-        ? [
-            for (final p in _pending)
-              if (p.ref != null) p.ref!,
-          ]
-        : const <AttachmentRef>[];
+    // Files that failed stay out until retried; the rest go with the message, finished or not.
+    final items = text == null ? [for (final p in _pending) if (!p.failed) p] : const <_Pending>[];
+    final attachments = [for (final p in items) p.plannedRef];
     if (message.trim().isEmpty && attachments.isEmpty) return;
-    if (_uploading && text == null) return;
+    final inFlight = [for (final p in items) if (p.ref == null) p];
+    // The message shows at once and is delivered when its files are up (no waiting at Send).
+    final uploads = inFlight.isEmpty ? null : Future.wait([for (final p in inFlight) p.upload!]).then((r) => r.every((ok) => ok));
     final skills = text == null ? [..._pickedSkills] : const <String>[];
     if (text == null) {
       _input.clear();
       setState(() {
-        _pending.clear();
+        _pending.removeWhere(items.contains);
         _pickedSkills.clear();
       });
     }
     _stickToBottom = true;
     if (_touchFirst) FocusManager.instance.primaryFocus?.unfocus();
-    await runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).send(message, attachments: attachments, skills: skills));
+    var notSent = false;
+    await runGuarded(context, () async {
+      try {
+        await ref.read(chatControllerProvider(widget.botId).notifier).send(message, attachments: attachments, skills: skills, uploads: uploads);
+      } on UploadsFailed {
+        notSent = true;
+      }
+    });
+    if (notSent) {
+      // Nothing is lost: the words and files come back to the box, failed ones marked to retry.
+      if (!mounted) return;
+      setState(() {
+        if (_input.text.trim().isEmpty) _input.text = message;
+        _pending.insertAll(0, [for (final p in items) if (!_pending.contains(p)) p]);
+        _pickedSkills.addAll([for (final s in skills) if (!_pickedSkills.contains(s)) s]);
+      });
+      showFailure(context, context.l10n.messageNotSent);
+      return;
+    }
     if (!_touchFirst && mounted) _focus.requestFocus();
   }
 
@@ -694,8 +813,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           transcribing: _transcribing,
                           onDictate: _toggleDictation,
                           attachButton: _AttachButton(onFiles: _pickFiles, onPhotos: _pickPhotos, onCamera: _takePhoto),
-                          hasAttachments: _pending.any((p) => p.ref != null),
-                          uploading: _uploading,
+                          hasAttachments: _pending.any((p) => !p.failed),
                           attachments: _pending.isEmpty
                               ? null
                               : SizedBox(
@@ -704,7 +822,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                     scrollDirection: Axis.horizontal,
                                     itemCount: _pending.length,
                                     separatorBuilder: (_, _) => const SizedBox(width: AppSpace.xs),
-                                    itemBuilder: (context, i) => _PendingChip(item: _pending[i], onRemove: () => setState(() => _pending.removeAt(i))),
+                                    itemBuilder: (context, i) {
+                                      final item = _pending[i];
+                                      return _PendingChip(
+                                        item: item,
+                                        onRemove: () => setState(() => _pending.remove(item)),
+                                        onEdit: item.isEditablePhoto ? () => _editPending(item) : null,
+                                        onRetry: item.failed ? () => setState(() => _upload(item)) : null,
+                                      );
+                                    },
                                   )),
                                 ),
                         ),
@@ -829,6 +955,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               () => UserBubble(
                 text: e.text,
                 attachments: e.attachments,
+                uploading: e.uploading,
                 siblingIndex: e.siblingIndex,
                 siblingCount: e.siblingCount,
                 onEdit: chat.running || e.id.startsWith('local-') ? null : () => _editMessage(e),
@@ -1037,19 +1164,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
 /// A file chosen for the next message: uploading until [ref] is set.
 class _Pending {
-  _Pending({required this.name, required this.bytes, required this.mime, required this.apiPath});
-  final String name;
-  final Uint8List bytes;
-  final String mime;
-  final String apiPath;
+  _Pending({required this.name, required this.bytes, required this.mime, required this.apiPath, required this.computerId});
+  String name;
+  Uint8List bytes;
+  String mime;
+  String apiPath;
+  final String computerId;
+
+  /// Set once the upload finished.
   AttachmentRef? ref;
   var failed = false;
+
+  /// The current upload: true when it is on the computer.
+  Future<bool>? upload;
+  var attempt = 0;
+
+  /// What the message will point at, known before the upload ends.
+  AttachmentRef get plannedRef => AttachmentRef(path: 'workspace/$apiPath', name: name, mimeType: mime, size: bytes.length);
+
+  bool get isEditablePhoto => mime.startsWith('image/') && mime != 'image/heic' && mime != 'image/gif' && mime != 'image/svg+xml';
 }
 
 class _PendingChip extends StatelessWidget {
-  const _PendingChip({required this.item, required this.onRemove});
+  const _PendingChip({required this.item, required this.onRemove, this.onEdit, this.onRetry});
   final _Pending item;
   final VoidCallback onRemove;
+
+  /// Opens the photo editor (photos only).
+  final VoidCallback? onEdit;
+
+  /// Uploads a failed file again.
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -1070,7 +1215,10 @@ class _PendingChip extends StatelessWidget {
           ),
           clipBehavior: Clip.antiAlias,
           child: image
-              ? Image(image: CoverMemoryImage.sized(item.bytes, const Size.square(64), MediaQuery.devicePixelRatioOf(context)), fit: BoxFit.cover, gaplessPlayback: true)
+              ? GestureDetector(
+                  onTap: onEdit,
+                  child: Image(image: CoverMemoryImage.sized(item.bytes, const Size.square(64), MediaQuery.devicePixelRatioOf(context)), fit: BoxFit.cover, gaplessPlayback: true),
+                )
               : Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Row(
@@ -1096,12 +1244,49 @@ class _PendingChip extends StatelessWidget {
                   ),
                 ),
         ),
+        // Uploading shows as a small ring in the corner, not a veil: the photo can still be
+        // edited and the message sent meanwhile.
         if (uploading)
+          const Positioned(
+            left: 6,
+            top: 6,
+            child: SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, strokeCap: StrokeCap.round)),
+          ),
+        if (onRetry != null)
           Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(color: scheme.surface.withValues(alpha: 0.55), borderRadius: BorderRadius.circular(AppRadius.row)),
-              alignment: Alignment.center,
-              child: const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5, strokeCap: StrokeCap.round)),
+            child: Material(
+              color: scheme.surface.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(AppRadius.row),
+              child: InkWell(
+                key: Key('retry-${item.name}'),
+                borderRadius: BorderRadius.circular(AppRadius.row),
+                onTap: onRetry,
+                child: Tooltip(
+                  message: context.l10n.retryUpload,
+                  child: Icon(LucideIcons.rotateCw, size: 20, color: scheme.error),
+                ),
+              ),
+            ),
+          )
+        else if (onEdit != null)
+          Positioned(
+            right: 4,
+            bottom: 4,
+            child: Material(
+              color: Colors.black.withValues(alpha: 0.55),
+              shape: const CircleBorder(),
+              child: InkWell(
+                key: Key('edit-${item.name}'),
+                customBorder: const CircleBorder(),
+                onTap: onEdit,
+                child: Tooltip(
+                  message: context.l10n.editPhoto,
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(LucideIcons.pencil, size: 12, color: Colors.white),
+                  ),
+                ),
+              ),
             ),
           ),
         Positioned(

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/media_cache.dart';
+
 /// A person in a circle: their profile photo (D-202) when they have one, else the first letter
 /// of [label] on an accent tint. Falls back to the letter while the photo loads or if it can't.
 class PersonAvatar extends StatelessWidget {
@@ -42,8 +44,8 @@ class PersonAvatar extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: url == null
           ? initial
-          : Image.network(
-              url,
+          : Image(
+              image: cachedNetworkImage(url),
               key: ValueKey(url),
               fit: BoxFit.cover,
               width: size,

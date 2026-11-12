@@ -42,9 +42,13 @@ class UserBubble extends StatelessWidget {
     this.siblingIndex = 1,
     this.siblingCount = 1,
     this.onBranch,
+    this.uploading = false,
   });
   final String text;
   final List<AttachmentRef> attachments;
+
+  /// Sent while its files upload: a quiet note says so until they are up.
+  final bool uploading;
 
   /// Edit and resend, and the arrows between edited versions (D-108).
   final VoidCallback? onEdit;
@@ -86,7 +90,28 @@ class UserBubble extends StatelessWidget {
             ],
           )
         : null;
-    if (attachments.isEmpty && branches == null) return _bubble(context);
+    final note = uploading
+        ? Padding(
+            key: const Key('uploadingNote'),
+            padding: const EdgeInsets.only(top: 4, right: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 10,
+                  height: 10,
+                  child: CircularProgressIndicator(strokeWidth: 1.5, color: context.colorScheme.onSurfaceVariant),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  context.l10n.uploadingAttachments,
+                  style: context.textTheme.labelSmall?.copyWith(color: context.colorScheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+          )
+        : null;
+    if (attachments.isEmpty && branches == null && note == null) return _bubble(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -96,6 +121,7 @@ class UserBubble extends StatelessWidget {
           if (attachments.isNotEmpty) const SizedBox(height: 6),
           _bubble(context),
         ],
+        ?note,
         ?branches,
       ],
     );

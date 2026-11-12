@@ -4048,6 +4048,30 @@ abstract class AppLocalizations {
   /// **'Remove'**
   String get removeAttachment;
 
+  /// No description provided for @editPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit photo'**
+  String get editPhoto;
+
+  /// No description provided for @retryUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get retryUpload;
+
+  /// No description provided for @uploadingAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading…'**
+  String get uploadingAttachments;
+
+  /// No description provided for @messageNotSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Your files didn\'t upload, so the message wasn\'t sent. It\'s back in the box.'**
+  String get messageNotSent;
+
   /// No description provided for @noComputerForFiles.
   ///
   /// In en, this message translates to:

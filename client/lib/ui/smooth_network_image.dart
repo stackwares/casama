@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/app_tokens.dart';
+import '../core/media_cache.dart';
 import 'skeleton.dart';
 
 /// A picture from the web that eases in: a plain tone holds its place while it loads, it fades in
@@ -35,7 +36,7 @@ class SmoothNetworkImage extends StatelessWidget {
     final duration = AppMotion.of(context, AppMotion.duration);
     return SizedBox.expand(
       child: Image(
-        image: ResizeImage.resizeIfNeeded(decodeWidth, null, NetworkImage(url)),
+        image: ResizeImage.resizeIfNeeded(decodeWidth, null, cachedNetworkImage(url)),
         fit: fit,
         frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
           // Pictures already in memory (scrolling back, reopening a screen) show at once.

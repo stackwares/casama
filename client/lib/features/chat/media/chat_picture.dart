@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../theme/app_tokens.dart';
+import '../../../core/media_cache.dart';
 import '../../../ui/effects.dart';
 import '../../../ui/skeleton.dart';
 import 'media_kind.dart';
@@ -104,7 +105,7 @@ class _ChatPictureState extends State<ChatPicture> {
     if (bytes != null) {
       unawaited(_inspectRaster(bytes));
     } else if (_natural == null && widget.url != null) {
-      final stream = NetworkImage(
+      final stream = cachedNetworkImage(
         widget.url!,
         headers: widget.headers,
       ).resolve(ImageConfiguration.empty);
@@ -263,7 +264,7 @@ class _ChatPictureState extends State<ChatPicture> {
         : ResizeImage.resizeIfNeeded(
             cacheWidth,
             null,
-            NetworkImage(widget.url!, headers: widget.headers),
+            cachedNetworkImage(widget.url!, headers: widget.headers),
           );
     return Image(
       image: provider,

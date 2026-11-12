@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/number_format.dart';
+import '../../core/media_cache.dart';
 import '../../core/providers.dart';
 import '../../core/share.dart';
 import '../../core/widgets.dart';
@@ -155,9 +156,12 @@ String formatBytes(int n, String locale) {
 /// A file's bytes by (computer id, files API path) from a bot's computer, or a chat media file
 /// by its `media:<id>` path (the computer id is ignored then).
 final computerFileProvider = FutureProvider.autoDispose.family<Uint8List, (String, String)>(
-  (ref, key) => key.$2.startsWith('media:')
-      ? ref.watch(backendProvider).chatMedia(key.$2.substring('media:'.length))
-      : ref.watch(backendProvider).downloadFile(key.$1, key.$2),
+  (ref, key) {
+    final backend = ref.watch(backendProvider);
+    Future<Uint8List> fetch() => key.$2.startsWith('media:') ? backend.chatMedia(key.$2.substring('media:'.length)) : backend.downloadFile(key.$1, key.$2);
+    // Chat media and files sent into a chat never change, so they are kept on the device.
+    return MediaCache.cacheable(key.$2) ? MediaCache.getOrFetch(MediaCache.keyFor(key.$1, key.$2), fetch) : fetch();
+  },
 );
 
 /// Opens a file a chat shows: chat media (`media:<id>`) right here, anything else on the bot's

@@ -4,6 +4,7 @@ import '../l10n/generated/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
 import 'motion.dart';
+import 'page.dart';
 
 /// The theme's own placeholder colors: bones are the surface with a breath of the accent, and
 /// the shimmer is a lighter wash of the same tone, so loading looks like the theme (neutral on
@@ -65,6 +66,44 @@ class SkeletonScope extends StatelessWidget {
   }
 }
 
+/// A bone that takes a share of the width it is given, so a placeholder line reads like text at
+/// any screen size instead of a short stub.
+class _Line extends StatelessWidget {
+  const _Line(this.widthFactor, {this.height = 12, this.center = false});
+
+  final double widthFactor;
+  final double height;
+  final bool center;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: center ? Alignment.center : AlignmentDirectional.centerStart,
+      child: FractionallySizedBox(
+        widthFactor: widthFactor,
+        child: SkeletonBone(height: height),
+      ),
+    );
+  }
+}
+
+/// The page column a skeleton stands in for: centered, no wider than the page it will become.
+class _PageWidth extends StatelessWidget {
+  const _PageWidth({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: kPageMaxWidth),
+        child: child,
+      ),
+    );
+  }
+}
+
 /// Rows of an avatar and two lines, for a list that has not arrived yet.
 class SkeletonList extends StatelessWidget {
   const SkeletonList({super.key, this.count = 6, this.padding});
@@ -72,77 +111,92 @@ class SkeletonList extends StatelessWidget {
   final int count;
   final EdgeInsetsGeometry? padding;
 
+  // Varied line lengths, so the rows read as different items rather than one stamped row.
+  static const _titles = [0.58, 0.42, 0.66, 0.5, 0.62, 0.38];
+  static const _subtitles = [0.86, 0.7, 0.78, 0.92, 0.64, 0.8];
+
   @override
   Widget build(BuildContext context) {
-    return SkeletonScope(
-      child: Padding(
-        padding:
-            padding ??
-            const EdgeInsets.fromLTRB(
-              AppSpace.gutter,
-              AppSpace.md,
-              AppSpace.gutter,
-              0,
-            ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (var i = 0; i < count; i++) ...[
-              if (i > 0) const SizedBox(height: AppSpace.md),
-              const Row(
-                children: [
-                  SkeletonBone(width: 46, height: 46, radius: 23),
-                  SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SkeletonBone(width: 148, height: 14),
-                        SizedBox(height: 8),
-                        SkeletonBone(width: 96, height: 10),
-                      ],
-                    ),
-                  ),
-                ],
+    final rows = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < count; i++) ...[
+          if (i > 0) const SizedBox(height: AppSpace.lg),
+          Row(
+            children: [
+              const SkeletonBone(width: 44, height: 44, radius: 22),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _Line(_titles[i % _titles.length], height: 14),
+                    const SizedBox(height: 10),
+                    _Line(_subtitles[i % _subtitles.length], height: 10),
+                  ],
+                ),
               ),
             ],
-          ],
+          ),
+        ],
+      ],
+    );
+    // A caller that passes its own padding is placing the rows inside something (a card, a
+    // sheet) that already has its width; the default is a whole page, so it takes the page column.
+    if (padding != null) {
+      return SkeletonScope(child: Padding(padding: padding!, child: rows));
+    }
+    return SkeletonScope(
+      child: _PageWidth(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpace.gutter,
+            AppSpace.lg,
+            AppSpace.gutter,
+            0,
+          ),
+          child: rows,
         ),
       ),
     );
   }
 }
 
-/// A title, a few lines and a card, for a page that is one thing.
+/// An avatar, a title, a few lines and a card, for a page that is one thing.
 class SkeletonDetail extends StatelessWidget {
   const SkeletonDetail({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const SkeletonScope(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          AppSpace.gutter,
-          AppSpace.xl,
-          AppSpace.gutter,
-          0,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(child: SkeletonBone(width: 72, height: 72, radius: 36)),
-            SizedBox(height: AppSpace.lg),
-            SkeletonBone(width: 180, height: 18),
-            SizedBox(height: AppSpace.md),
-            SkeletonBone(height: 12),
-            SizedBox(height: 8),
-            SkeletonBone(width: 240, height: 12),
-            SizedBox(height: 8),
-            SkeletonBone(width: 160, height: 12),
-            SizedBox(height: AppSpace.lg),
-            SkeletonBone(height: 120, radius: AppRadius.card),
-          ],
+      child: _PageWidth(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            AppSpace.gutter,
+            AppSpace.xxl,
+            AppSpace.gutter,
+            0,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SkeletonBone(width: 88, height: 88, radius: 44),
+              SizedBox(height: AppSpace.lg),
+              _Line(0.5, height: 20, center: true),
+              SizedBox(height: AppSpace.sm),
+              _Line(0.34, height: 12, center: true),
+              SizedBox(height: AppSpace.xxl),
+              _Line(1, height: 12),
+              SizedBox(height: 10),
+              _Line(0.92, height: 12),
+              SizedBox(height: 10),
+              _Line(0.64, height: 12),
+              SizedBox(height: AppSpace.xl),
+              SkeletonBone(height: 140, radius: AppRadius.card),
+              SizedBox(height: AppSpace.md),
+              SkeletonBone(height: 72, radius: AppRadius.card),
+            ],
+          ),
         ),
       ),
     );

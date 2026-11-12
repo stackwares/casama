@@ -25,8 +25,12 @@ class MessageEntry extends ChatEntry {
     this.siblingIndex = 1,
     this.siblingCount = 1,
     this.botId,
+    this.uploading = false,
   });
   final String id;
+
+  /// Sent before its files finished uploading: shown at once, delivered when they are up.
+  final bool uploading;
 
   /// The bot that wrote it, in group chats (D-118).
   final String? botId;
@@ -38,7 +42,7 @@ class MessageEntry extends ChatEntry {
   /// Edited versions of a message are siblings; arrows switch between them (D-108).
   final int siblingIndex;
   final int siblingCount;
-  MessageEntry copyWith({String? text, bool? streaming, List<AttachmentRef>? attachments}) => MessageEntry(
+  MessageEntry copyWith({String? text, bool? streaming, List<AttachmentRef>? attachments, bool? uploading}) => MessageEntry(
         id: id,
         role: role,
         text: text ?? this.text,
@@ -47,7 +51,13 @@ class MessageEntry extends ChatEntry {
         siblingIndex: siblingIndex,
         siblingCount: siblingCount,
         botId: botId,
+        uploading: uploading ?? this.uploading,
       );
+}
+
+/// A message's files did not upload, so it was not sent.
+class UploadsFailed implements Exception {
+  const UploadsFailed();
 }
 
 class ToolEntry extends ChatEntry {
@@ -418,25 +428,54 @@ class ChatController extends Notifier<ChatState> {
     state = const ChatState();
   }
 
-  Future<void> send(String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction, List<String> skills = const []}) async {
+  /// Messages go out in the order they were sent: each waits until the one before it has started
+  /// sending (which may mean waiting for that one's files).
+  Future<void> _sendQueue = Future.value();
+
+  /// Sends a message. [uploads], when given, completes once the [attachments] are on the
+  /// computer (true) or one of them failed (false): the message shows right away and is delivered
+  /// when they are up; if they fail it is taken back and [UploadsFailed] is thrown.
+  Future<void> send(String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction, List<String> skills = const [], Future<bool>? uploads}) async {
     final trimmed = text.trim();
     if (trimmed.isEmpty && attachments.isEmpty && uiAction == null) return;
     // While the bot works, a plain message joins its run (it decides what to do with it); group
     // chats and card answers wait for the run to end.
     if (state.running && (group || uiAction != null)) return;
-    var conversationId = state.conversationId;
-    if (conversationId == null) {
-      conversationId = (await _backend.createConversation(botId)).id;
-      state = state.copyWith(conversationId: conversationId);
-      ref.invalidate(conversationsProvider(botId));
+    final turn = Completer<void>();
+    final before = _sendQueue;
+    _sendQueue = turn.future;
+    final SendMessageResponse sent;
+    try {
+      var conversationId = state.conversationId;
+      if (conversationId == null) {
+        await before;
+        conversationId = state.conversationId ?? (await _backend.createConversation(botId)).id;
+        state = state.copyWith(conversationId: conversationId);
+        ref.invalidate(conversationsProvider(botId));
+      }
+      final optimistic = MessageEntry(id: 'local-${DateTime.now().microsecondsSinceEpoch}', role: 'user', text: trimmed, attachments: attachments, uploading: uploads != null);
+      state = state.copyWith(
+        entries: [...state.entries, optimistic],
+        lastUserText: trimmed,
+        answeredUi: uiAction == null ? null : {...state.answeredUi, '${uiAction['surface_id']}'},
+      );
+      await before;
+      if (uploads != null) {
+        final ready = await uploads;
+        final i = state.entries.indexWhere((x) => x is MessageEntry && x.id == optimistic.id);
+        if (!ready) {
+          if (i >= 0) state = state.copyWith(entries: [...state.entries]..removeAt(i));
+          throw const UploadsFailed();
+        }
+        if (i >= 0) state = state.copyWith(entries: [...state.entries]..[i] = optimistic.copyWith(uploading: false));
+      }
+      final sending = _backend.send(conversationId, trimmed, attachments: attachments, uiAction: uiAction, skills: skills);
+      // The request is on its way; the next message may go.
+      turn.complete();
+      sent = await sending;
+    } finally {
+      if (!turn.isCompleted) turn.complete();
     }
-    final optimistic = MessageEntry(id: 'local-${DateTime.now().microsecondsSinceEpoch}', role: 'user', text: trimmed, attachments: attachments);
-    state = state.copyWith(
-      entries: [...state.entries, optimistic],
-      lastUserText: trimmed,
-      answeredUi: uiAction == null ? null : {...state.answeredUi, '${uiAction['surface_id']}'},
-    );
-    final sent = await _backend.send(conversationId, trimmed, attachments: attachments, uiAction: uiAction, skills: skills);
     // Joined the run already on screen: keep following it.
     if (sent.joined == true && state.activeRunId == sent.runId) return;
     unawaited(ref.read(runActivitiesProvider).started(sent.runId, ref.read(botProvider(botId))?.name ?? ''));

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show ProviderListenable;
 
 import 'core/local_cache.dart';
+import 'core/media_cache.dart';
 import 'core/providers.dart';
 import 'core/shortcuts.dart';
 import 'core/widgets.dart';
@@ -58,6 +59,7 @@ class CasamaApp extends ConsumerWidget {
     ref.listen(signedInProvider, (prev, next) {
       if (prev?.value == true && next.value == false) {
         unawaited(cacheClear(ref.read(localCacheProvider)));
+        unawaited(MediaCache.clear());
         // Signed out (or the session ended): say so, then start a new anonymous identity.
         unawaited(() async {
           await Analytics.capture('signed_out');

@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/backend.dart';
+import '../../../core/media_cache.dart';
 import '../../../core/widgets.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
@@ -47,7 +48,7 @@ class ChatMarkdownImage extends StatelessWidget {
         url: src,
         semanticLabel: alt,
         fallback: chip,
-        onTap: () => showImageViewer(context, NetworkImage(src)),
+        onTap: () => showImageViewer(context, cachedNetworkImage(src)),
       );
     }
     final path = computerPathFromLink(src);
