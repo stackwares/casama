@@ -442,6 +442,7 @@ class ModelKeysScreen extends ConsumerWidget {
         AsyncView(
           value: keys,
           onRetry: () => ref.invalidate(credentialsProvider),
+          loading: const _KeysSkeleton(),
           data: (items) {
             final ordered = cloud
                 ? items.where((k) => cloudKeyProviders.contains(k.provider)).toList()
@@ -470,6 +471,36 @@ class ModelKeysScreen extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The keys card before it loads: [_KeyRow]-shaped rows with a status pill and a menu button.
+class _KeysSkeleton extends StatelessWidget {
+  const _KeysSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonScope(
+      child: SkeletonGroupedCard(
+        rows: [
+          for (final (t, st) in const [(0.5, 0.7), (0.36, 0.56)])
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SkeletonRow(padding: EdgeInsets.zero, trailing: SkeletonTrailing.none, titleWidth: t, subtitleWidth: st),
+                  ),
+                  const SizedBox(width: AppSpace.xs),
+                  const SkeletonBone(width: 64, height: 22, radius: AppRadius.pill),
+                  const SizedBox(width: AppSpace.xs),
+                  const SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 18, height: 6, radius: 3))),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

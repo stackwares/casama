@@ -97,6 +97,7 @@ class ChannelsScreen extends ConsumerWidget {
       body: AsyncView(
         value: ref.watch(channelsProvider(botId)),
         onRetry: () => ref.invalidate(channelsProvider(botId)),
+        loading: const _ChannelsSkeleton(),
         data: (items) => items.isEmpty
             ? EmptyState(
                 icon: LucideIcons.messagesSquare,
@@ -353,7 +354,7 @@ class _ChannelDetailState extends ConsumerState<_ChannelDetail> {
         ref
             .watch(channelEventsProvider(c.id))
             .when(
-              loading: () => const LinearProgressIndicator(),
+              loading: () => const _ChannelEventsSkeleton(),
               error: (e, _) => Text('$e'),
               data: (events) => events.isEmpty
                   ? FormNote(l10n.chatAppsNoActivity)
@@ -389,6 +390,83 @@ class _ChannelDetailState extends ConsumerState<_ChannelDetail> {
           },
         ),
       ],
+    );
+  }
+}
+
+/// The page while chat apps load: the help note over a card of app rows, each with its on/off
+/// switch, in the real rows' sizes.
+class _ChannelsSkeleton extends StatelessWidget {
+  const _ChannelsSkeleton();
+
+  static const _titles = [0.4, 0.52, 0.34];
+  static const _subtitles = [0.7, 0.62, 0.76];
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return SkeletonPage(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(padding: EdgeInsets.only(top: 1), child: SkeletonBone(width: 16, height: 16, radius: 4)),
+            const SizedBox(width: 6),
+            Expanded(child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.35), lines: 2, widthFactor: 0.8)),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        SkeletonGroupedCard(
+          rows: [
+            for (var i = 0; i < _titles.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SkeletonRow(trailing: SkeletonTrailing.none, padding: EdgeInsets.zero, titleWidth: _titles[i], subtitleWidth: _subtitles[i]),
+                    ),
+                    const SizedBox(width: AppSpace.xs),
+                    // The Switch with its tap target.
+                    const SizedBox(height: 48, child: Center(child: SkeletonBone(width: 52, height: 32, radius: AppRadius.pill))),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// A chat app's activity while it loads: rows shaped like its event tiles.
+class _ChannelEventsSkeleton extends StatelessWidget {
+  const _ChannelEventsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return SkeletonScope(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final (title, subtitle) in const [(0.7, 0.3), (0.56, 0.24), (0.64, 0.28)])
+            SizedBox(
+              // A dense two-line ListTile.
+              height: 60,
+              child: SkeletonRow(
+                leadingSize: 18,
+                trailing: SkeletonTrailing.none,
+                padding: EdgeInsets.zero,
+                gap: 16,
+                titleStyle: text.bodyMedium,
+                subtitleStyle: text.bodySmall,
+                titleWidth: title,
+                subtitleWidth: subtitle,
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

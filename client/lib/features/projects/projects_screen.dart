@@ -19,7 +19,8 @@ import '../chat/widgets/chat_markdown.dart';
 
 /// Projects (D-113): a goal the lead bot plans and works in sessions until it's met.
 
-final projectsProvider = FutureProvider.autoDispose<List<Project>>((ref) async {
+// Kept when Tasks closes, so it opens with what it showed; Tasks refreshes it as it opens.
+final projectsProvider = FutureProvider<List<Project>>((ref) async {
   final org = ref.watch(currentOrgProvider);
   if (org == null) return const [];
   return ref.watch(backendProvider).projects(org.id);
@@ -55,6 +56,7 @@ class ProjectsScreen extends ConsumerWidget {
       body: AsyncView(
         value: ref.watch(projectsProvider),
         onRetry: () => ref.invalidate(projectsProvider),
+        loading: const SkeletonPage(children: [SkeletonGroupedCard(count: 5)]),
         data: (items) => items.isEmpty
             ? EmptyState(
                 icon: LucideIcons.target,
@@ -195,6 +197,7 @@ class ProjectScreen extends ConsumerWidget {
     return AsyncView(
       value: ref.watch(projectProvider(projectId)),
       onRetry: () => ref.invalidate(projectProvider(projectId)),
+      loading: const SubPage(title: '', body: _ProjectSkeleton()),
       data: (p) {
         final tickets = ref.watch(projectTasksProvider(projectId)).value ?? const <Task>[];
         final budget = p.budgetUsd;
@@ -300,6 +303,27 @@ class ProjectScreen extends ConsumerWidget {
           ],
         );
       },
+    );
+  }
+}
+
+/// A project still loading: the pause button, the goal card, then the milestones and tickets
+/// cards, in the order the page shows them.
+class _ProjectSkeleton extends StatelessWidget {
+  const _ProjectSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonPage(
+      children: [
+        const Align(alignment: AlignmentDirectional.centerStart, child: SkeletonBone(width: 112, height: 44, radius: AppRadius.pill)),
+        const SkeletonSectionHeader(width: 56),
+        SkeletonCard(child: SkeletonText(style: context.textTheme.bodyMedium, lines: 3, widthFactor: 0.8)),
+        const SkeletonSectionHeader(width: 88),
+        const SkeletonGroupedCard(count: 3),
+        const SkeletonSectionHeader(width: 64),
+        const SkeletonGroupedCard(count: 3),
+      ],
     );
   }
 }

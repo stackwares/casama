@@ -103,7 +103,7 @@ class _IntegrationDetailScreenState
       return SubPage(
         title: l10n.appsTitle,
         body: list.isLoading
-            ? const SkeletonDetail()
+            ? const _IntegrationDetailSkeleton()
             : EmptyState(
                 icon: LucideIcons.unplug,
                 title: l10n.noIntegrationsTitle,
@@ -187,6 +187,124 @@ class _IntegrationDetailScreenState
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A connection's page still loading: the hero (logo, name, status, buttons), then the bots
+/// with access as switch rows.
+class _IntegrationDetailSkeleton extends StatelessWidget {
+  const _IntegrationDetailSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    final pill = text.labelMedium?.copyWith(fontWeight: FontWeight.w600, height: 1.15);
+    return SkeletonPage(
+      children: [
+        // _Hero.
+        Container(
+          padding: const EdgeInsets.all(AppSpace.lg),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: context.appColors.hairline),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const SkeletonBone(width: 64, height: 64, radius: 64 * 0.28),
+                  const SizedBox(width: AppSpace.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SkeletonText(style: text.headlineSmall, widthFactor: 0.5),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 60,
+                              child: Stack(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 4),
+                                    child: SkeletonText(style: pill, width: 0),
+                                  ),
+                                  const Positioned.fill(
+                                    child: SkeletonBone(height: double.infinity, radius: AppRadius.pill),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: AppSpace.xs),
+                            Expanded(child: SkeletonText(style: text.bodySmall, widthFactor: 0.5)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpace.md),
+              // The Reconnect and Test buttons, each in a 48-point tap target.
+              const SizedBox(
+                height: 48,
+                child: Row(
+                  children: [
+                    SkeletonBone(width: 124, height: 40, radius: AppRadius.pill),
+                    SizedBox(width: AppSpace.sm),
+                    SkeletonBone(width: 148, height: 40, radius: AppRadius.pill),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SkeletonSectionHeader(width: 120),
+        const SkeletonGroupedCard(
+          rows: [
+            _SwitchRowSkeleton(titleWidth: 0.34),
+            _SwitchRowSkeleton(titleWidth: 0.46),
+            _SwitchRowSkeleton(titleWidth: 0.28),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// A [GroupedTile] with a bot avatar and a [Switch], still loading. The switch keeps a 48-point
+/// tap target, so the row is taller than a plain one.
+class _SwitchRowSkeleton extends StatelessWidget {
+  const _SwitchRowSkeleton({required this.titleWidth});
+  final double titleWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: SkeletonRow(
+            leading: SkeletonLeading.avatar,
+            leadingSize: 32,
+            trailing: SkeletonTrailing.none,
+            subtitle: false,
+            titleWidth: titleWidth,
+            padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.md, 12, 0, 12),
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsetsDirectional.fromSTEB(AppSpace.xs, 12, AppSpace.md, 12),
+          child: SizedBox(
+            height: 48,
+            child: Center(
+              child: SkeletonBone(width: 52, height: 32, radius: AppRadius.pill),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -125,7 +125,23 @@ class _PhotoPickerState extends ConsumerState<PhotoPicker> {
                   );
                 }
                 if (!snap.hasData) {
-                  return const SkeletonGrid(count: 8, tileHeight: 120);
+                  // The photo grid's own columns, spacing and tile shape.
+                  return SkeletonScope(
+                    child: LayoutBuilder(
+                      builder: (context, c) => GridView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: (c.maxWidth / 160).floor().clamp(2, 5),
+                          mainAxisSpacing: AppSpace.xs,
+                          crossAxisSpacing: AppSpace.xs,
+                          childAspectRatio: 0.72,
+                        ),
+                        itemCount: 15,
+                        itemBuilder: (_, _) =>
+                            const SkeletonBone(height: double.infinity, radius: 14),
+                      ),
+                    ),
+                  );
                 }
                 final items = snap.data!;
                 if (items.isEmpty) {

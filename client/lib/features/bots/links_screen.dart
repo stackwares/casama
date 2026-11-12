@@ -73,6 +73,7 @@ class LinksScreen extends ConsumerWidget {
       body: AsyncView(
         value: ref.watch(botLinksProvider(botId)),
         onRetry: () => ref.invalidate(botLinksProvider(botId)),
+        loading: const _LinksSkeleton(),
         data: (items) => items.isEmpty
             ? EmptyState(
                 icon: LucideIcons.link,
@@ -207,7 +208,9 @@ class _LinkSheet extends ConsumerWidget {
         SectionHeader(title: l10n.linksExchanges),
         if (exchanges.hasError)
           InlineError(error: exchanges.error!, onRetry: () => ref.invalidate(linkExchangesProvider(link.id)))
-        else if (exchanges.hasValue && ex.isEmpty)
+        else if (!exchanges.hasValue)
+          const _ExchangesSkeleton()
+        else if (ex.isEmpty)
           FormNote(l10n.linksNoExchanges),
         for (final e in ex)
           ListTile(
@@ -240,6 +243,63 @@ class _LinkSheet extends ConsumerWidget {
             },
           ),
       ],
+    );
+  }
+}
+
+/// The page while links load: the help note over a card of link rows that open their details,
+/// in the real rows' sizes.
+class _LinksSkeleton extends StatelessWidget {
+  const _LinksSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return SkeletonPage(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(padding: EdgeInsets.only(top: 1), child: SkeletonBone(width: 16, height: 16, radius: 4)),
+            const SizedBox(width: 6),
+            Expanded(child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.35), lines: 2, widthFactor: 0.8)),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        const SkeletonGroupedCard(),
+      ],
+    );
+  }
+}
+
+/// A link's exchanges while they load: rows shaped like its exchange tiles.
+class _ExchangesSkeleton extends StatelessWidget {
+  const _ExchangesSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return SkeletonScope(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final (title, subtitle) in const [(0.72, 0.5), (0.58, 0.64)])
+            SizedBox(
+              // A two-line ListTile.
+              height: 72,
+              child: SkeletonRow(
+                leadingSize: 18,
+                trailing: SkeletonTrailing.none,
+                padding: EdgeInsets.zero,
+                gap: 16,
+                titleStyle: text.bodyLarge,
+                subtitleStyle: text.bodyMedium,
+                titleWidth: title,
+                subtitleWidth: subtitle,
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

@@ -52,6 +52,12 @@ class CompanionScreen extends ConsumerWidget {
           : AsyncView(
               value: value,
               onRetry: () => ref.invalidate(companionControllerProvider),
+              loading: _CompanionSkeleton(
+                capabilities: [
+                  ...capabilityKeys,
+                  if (defaultTargetPlatform == TargetPlatform.macOS) 'messages',
+                ].where((c) => !expertCapabilityKeys.contains(c)).length,
+              ),
               data: (device) {
                 if (device == null) {
                   return EmptyState(
@@ -244,6 +250,102 @@ List<String> splitCommand(String line) {
 }
 
 /// Local MCP servers on this computer (D-096).
+/// The companion page still loading: the status card with its switch, then the capabilities
+/// card of switch rows and its note.
+class _CompanionSkeleton extends StatelessWidget {
+  const _CompanionSkeleton({required this.capabilities});
+  final int capabilities;
+
+  static const _titles = [0.34, 0.26, 0.42, 0.3];
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    final pill = text.labelMedium?.copyWith(fontWeight: FontWeight.w600, height: 1.15);
+    const switchBone = SizedBox(
+      height: 48,
+      child: Center(child: SkeletonBone(width: 52, height: 32, radius: AppRadius.pill)),
+    );
+    return SkeletonPage(
+      children: [
+        SkeletonCard(
+          padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.md, AppSpace.sm, AppSpace.md),
+          child: Row(
+            children: [
+              const SkeletonBone(width: 48, height: 48, radius: 14),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SkeletonText(style: text.titleSmall?.copyWith(fontWeight: FontWeight.w700), widthFactor: 0.5),
+                    const SizedBox(height: 4),
+                    // The status pill: its text line plus 4 points above and below.
+                    SizedBox(
+                      width: 64,
+                      child: Stack(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: SkeletonText(style: pill, width: 0),
+                          ),
+                          const Positioned.fill(
+                            child: SkeletonBone(height: double.infinity, radius: AppRadius.pill),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              switchBone,
+            ],
+          ),
+        ),
+        const SkeletonSectionHeader(width: 112),
+        SkeletonGroupedCard(
+          rows: [
+            for (var i = 0; i < capabilities; i++)
+              Row(
+                children: [
+                  Expanded(
+                    child: SkeletonRow(
+                      trailing: SkeletonTrailing.none,
+                      subtitle: false,
+                      titleWidth: _titles[i % _titles.length],
+                      padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.md, 12, 0, 12),
+                    ),
+                  ),
+                  // The Switch keeps a 48-point tap target.
+                  const Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(AppSpace.xs, 12, AppSpace.md, 12),
+                    child: switchBone,
+                  ),
+                ],
+              ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 1),
+                child: SkeletonBone(width: 16, height: 16, radius: 8),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.35), widthFactor: 0.8, lines: 2),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _LocalMcpSection extends ConsumerStatefulWidget {
   const _LocalMcpSection({required this.device, required this.enabled});
   final LocalDevice device;

@@ -4316,6 +4316,8 @@ class FakeBackend implements Backend {
   @override
   String chatMediaUrl(String id) => 'http://localhost:8787/v1/media/$id';
   @override
+  String chatMediaPosterUrl(String id) => 'http://localhost:8787/v1/media/$id/poster';
+  @override
   Map<String, String> get authHeaders => const {'Authorization': 'Bearer test'};
 
   @override

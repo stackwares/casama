@@ -39,7 +39,7 @@ export async function enforceLimit(
     throw new ApiError(
       402,
       "plan_limit",
-      `Your plan allows ${limit} ${what}. Upgrade in Billing to add more.`,
+      `Your plan allows ${limit} ${what}. Upgrade to add more.`,
     );
   }
 }

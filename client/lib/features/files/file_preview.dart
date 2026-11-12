@@ -17,6 +17,7 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../chat/media/media_kind.dart';
 import '../chat/media/preview_body.dart';
 import '../../ui/glow_button.dart';
 
@@ -345,11 +346,62 @@ class FilePreview extends ConsumerWidget {
           child: AsyncView(
             value: data,
             onRetry: () => ref.invalidate(computerFileProvider((computerId, path))),
+            loading: _PreviewSkeleton(name: name),
             data: (bytes) => _Body(name: name, bytes: bytes, computerId: computerId, path: path, onOpen: () => _open(context, bytes)),
           ),
         ),
       ],
     );
+  }
+}
+
+/// The preview still downloading, in the shape the file will take: a picture, video or page
+/// as a block in the middle, a sound as a player bar, text as lines (code in its box).
+class _PreviewSkeleton extends StatelessWidget {
+  const _PreviewSkeleton({required this.name});
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final mime = mimeFor(name);
+    final kind = mediaKindOf(name, mime);
+    final Widget child;
+    if (kind == MediaKind.audio) {
+      child = const Center(child: SkeletonBone(width: 320, height: 56, radius: AppRadius.pill));
+    } else if (kind != MediaKind.other) {
+      child = const Center(
+        child: Padding(
+          padding: EdgeInsets.all(AppSpace.lg),
+          child: FractionallySizedBox(
+            widthFactor: 0.8,
+            child: AspectRatio(aspectRatio: 4 / 3, child: SkeletonBone(height: double.infinity, radius: AppRadius.tile)),
+          ),
+        ),
+      );
+    } else if (mime == 'text/markdown') {
+      child = Padding(
+        padding: const EdgeInsets.all(AppSpace.lg),
+        child: SkeletonText(style: context.textTheme.bodyMedium, lines: 8, widthFactor: 0.7),
+      );
+    } else if (mime.startsWith('text/') || mime == 'application/json') {
+      child = Padding(
+        padding: const EdgeInsets.all(AppSpace.md),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: context.appColors.codeBackground,
+            borderRadius: BorderRadius.circular(AppRadius.row),
+            border: Border.all(color: context.appColors.hairline),
+          ),
+          child: const Padding(
+            padding: EdgeInsets.all(AppSpace.md),
+            child: SkeletonText(style: AppText.mono, lines: 10, widthFactor: 0.6),
+          ),
+        ),
+      );
+    } else {
+      child = const Center(child: SkeletonBone(width: 64, height: 64, radius: AppRadius.tile));
+    }
+    return SkeletonScope(child: Align(alignment: Alignment.topCenter, child: child));
   }
 }
 

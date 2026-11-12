@@ -28,6 +28,7 @@ import '../../ui/bottom_padding.dart';
 import '../groups/empty_group.dart';
 import 'delete_chat.dart';
 import '../groups/group_chats.dart';
+import '../billing/paywall.dart';
 import '../../ui/edge_fade.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/adaptive_modal.dart';
@@ -45,6 +46,8 @@ import 'photo_editor.dart';
 import 'widgets/bot_ui.dart';
 import 'widgets/app_tiles.dart';
 import 'widgets/chat_widgets.dart';
+import 'widgets/mentions.dart';
+import 'read_aloud.dart';
 import 'widgets/composer.dart';
 import 'widgets/error_details.dart';
 import 'widgets/shared_files.dart';
@@ -82,6 +85,95 @@ bool get _touchFirst => !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS 
 List<(String, String)> _suggestions(BuildContext context) {
   final l10n = context.l10n;
   return [('🔎', l10n.suggestResearch), ('🗂️', l10n.suggestFiles), ('🌐', l10n.suggestWebsite), ('🧰', l10n.suggestCapabilities)];
+}
+
+/// The thread while it opens: your message on the right and the bot's turns (its avatar and name
+/// over a reply bubble) on the left, in the real bubbles' shapes, insets, line heights and gaps.
+class ChatThreadSkeleton extends StatelessWidget {
+  const ChatThreadSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final text = context.textTheme;
+    final dark = context.isDark;
+    Widget header() => Padding(
+      padding: const EdgeInsets.only(bottom: AppSpace.xs),
+      child: Row(
+        children: [
+          const SkeletonBone(width: 24, height: 24, radius: 12),
+          const SizedBox(width: AppSpace.xs),
+          SizedBox(width: 72, child: SkeletonText(style: text.labelLarge?.copyWith(fontWeight: FontWeight.w700), widthFactor: 1)),
+        ],
+      ),
+    );
+    // AssistantMessage's bubble.
+    Widget reply(double widthFactor, int lines) => LayoutBuilder(
+      builder: (context, c) => Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Container(
+          width: c.maxWidth * widthFactor,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.sm),
+          decoration: BoxDecoration(
+            color: dark ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
+            borderRadius: const BorderRadiusDirectional.only(
+              topStart: Radius.circular(6),
+              topEnd: Radius.circular(20),
+              bottomStart: Radius.circular(20),
+              bottomEnd: Radius.circular(20),
+            ),
+            border: Border.all(color: context.appColors.hairline),
+          ),
+          child: SkeletonText(style: text.bodyLarge?.copyWith(height: 1.55), lines: lines, widthFactor: 0.9),
+        ),
+      ),
+    );
+    // UserBubble's bubble.
+    Widget mine(double widthFactor) => LayoutBuilder(
+      builder: (context, c) => Align(
+        alignment: AlignmentDirectional.centerEnd,
+        child: Container(
+          width: (c.maxWidth * 0.85).clamp(0.0, 560.0) * widthFactor,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 11),
+          decoration: BoxDecoration(
+            color: Color.alphaBlend(
+              scheme.primary.withValues(alpha: dark ? 0.3 : 0.16),
+              dark ? scheme.surfaceContainerHigh : scheme.surfaceContainerLowest,
+            ),
+            borderRadius: const BorderRadiusDirectional.only(
+              topStart: Radius.circular(20),
+              topEnd: Radius.circular(20),
+              bottomStart: Radius.circular(20),
+              bottomEnd: Radius.circular(6),
+            ),
+          ),
+          child: SkeletonText(style: text.bodyLarge?.copyWith(height: 1.4), widthFactor: 0.8),
+        ),
+      ),
+    );
+    return SkeletonScope(
+      child: ClipRect(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              mine(0.6),
+              const SizedBox(height: AppSpace.xl),
+              header(),
+              reply(0.9, 3),
+              const SizedBox(height: AppSpace.xl),
+              mine(0.42),
+              const SizedBox(height: AppSpace.xl),
+              header(),
+              reply(0.72, 2),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -157,6 +249,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   // Group chats: @-mention suggestions for what's typed in [_input].
   late final _mentions = MentionController(_input);
+
+  /// Read aloud (the player above the composer); a reply read from this chat stops when it closes.
+  late final ReadAloudController _readAloud;
 
   /// Interactive UIs bots show in this chat (D-086); what the person does goes back as a message.
   late final _botUi = BotUiHost(onAction: _onUiAction);
@@ -304,6 +399,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _readAloud = ref.read(readAloudProvider.notifier);
     _scroll.addListener(_onScroll);
     _input.addListener(_saveDraftSoon);
     // The chat's id changes without a reopen when the first send creates it or New chat clears it.
@@ -373,6 +469,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   void dispose() {
+    unawaited(_readAloud.stop(chatKey: widget.botId));
     _listening?.cancel();
     if (_recording) _recorder?.cancel();
     _saveDraft();
@@ -787,10 +884,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     Future<void>.delayed(const Duration(milliseconds: 150), apply);
   }
 
-  Future<void> _speak(String messageId) async {
+  /// In a group chat, the messages' @mentions of its bots show as pills that open their profiles.
+  Widget _withMentions(Widget thread) {
+    if (!widget.group) return thread;
+    final ids = ref.watch(groupChatsProvider).value?.where((g) => g.id == widget.conversationId).firstOrNull?.botIds ?? const <String>[];
+    final bots = ref.watch(botsProvider).value ?? const <Bot>[];
+    return MentionScope(
+      bots: [for (final b in bots) if (ids.contains(b.id)) b],
+      onOpen: (bot) => context.push('/bots/${bot.id}/settings'),
+      child: thread,
+    );
+  }
+
+  /// Reads [m] aloud in its bot's voice, or stops when it's the one being read.
+  Future<void> _speak(MessageEntry m) async {
+    if (ref.read(readAloudProvider)?.messageId == m.id) return _readAloud.stop();
     Analytics.feature('read_aloud');
-    final audio = await runGuarded(context, () => ref.read(backendProvider).speech(messageId));
-    if (audio != null) await ref.read(speechPlayerProvider).play(audio);
+    final bots = ref.read(botsProvider).value ?? const <Bot>[];
+    final speaker = bots.where((b) => b.id == (m.botId ?? widget.botId)).firstOrNull ?? bots.where((b) => b.id == widget.botId).firstOrNull;
+    final backend = ref.read(backendProvider);
+    await runGuarded(
+      context,
+      () => _readAloud.toggle(
+        chatKey: widget.botId,
+        messageId: m.id,
+        name: speaker?.name ?? '',
+        avatar: speaker?.avatarUrl,
+        text: m.text,
+        fetch: () => backend.speech(m.id),
+      ),
+    );
   }
 
   @override
@@ -898,8 +1021,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               // Placeholder bubbles where the thread will be, so opening a chat never flashes the
               // starter cards or a spinner.
               thread = Padding(
-                padding: EdgeInsets.fromLTRB(side, AppSpace.lg, side, 0),
-                child: const Align(alignment: Alignment.topCenter, child: SkeletonMessages()),
+                padding: EdgeInsets.fromLTRB(side, AppSpace.md, side, 0),
+                child: const ChatThreadSkeleton(),
               );
             } else if (chat.empty && widget.group) {
               final g = ref.watch(groupChatsProvider).value?.where((c) => c.id == widget.conversationId).firstOrNull;
@@ -979,7 +1102,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: NotificationListener<ScrollMetricsNotification>(onNotification: _onThreadMetrics, child: thread),
+                        child: NotificationListener<ScrollMetricsNotification>(onNotification: _onThreadMetrics, child: _withMentions(thread)),
                       ),
                       // The thread fades out above the composer instead of being cut.
                       Positioned(
@@ -1041,6 +1164,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        ReadAloudBar(chatKey: widget.botId, onShowMessage: (id) => setState(() => _focusPending = id)),
                         if (widget.group)
                           MentionPicker(
                             botIds: ref.watch(groupChatsProvider).value?.where((g) => g.id == widget.conversationId).firstOrNull?.botIds.toList() ?? const [],
@@ -1232,7 +1356,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             _Row(
               ValueKey(m.id),
               rows.last.header ? 0 : AppSpace.sm,
-              () => AssistantMessage(entry: m, status: workingStatus(), onSpeak: !m.streaming ? () => _speak(m.id) : null),
+              () => AssistantMessage(entry: m, status: workingStatus(), onSpeak: !m.streaming ? () => _speak(m) : null),
               // The status only shows while the reply is still empty.
               inputs: (m, m.text.isEmpty && m.streaming ? workingStatus() : null),
             ),
@@ -1366,9 +1490,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         FilledButton.tonalIcon(
                           key: const Key('noticeFix'),
                           onPressed: () {
-                            // Out of credits sends the person to the plans page: the paywall funnel's start (F6).
+                            // Out of credits opens the paywall: the paywall funnel's start (F6).
                             if (fix.route == '/settings/billing') {
-                              Analytics.log('paywall_view', {'source': 'credits_depleted', 'paywall_kind': 'regular'});
+                              openPaywall(context, source: 'credits_depleted');
+                              return;
                             }
                             context.push(fix.route);
                           },
@@ -1906,6 +2031,41 @@ bool _computerInUse(ChatState c) {
   return false;
 }
 
+/// The chats list while it loads: rows shaped like its chat tiles (icon, title, time), with the
+/// list's insets and gaps. Doesn't scroll; what runs past the sheet is clipped.
+class _ConversationsSkeleton extends StatelessWidget {
+  const _ConversationsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final title = context.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500);
+    return SkeletonScope(
+      child: ListView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
+        children: [
+          for (final (i, w) in const [0.52, 0.4, 0.6, 0.34, 0.48, 0.44].indexed) ...[
+            if (i > 0) const SizedBox(height: 2),
+            SizedBox(
+              // A one-line ListTile.
+              height: 56,
+              child: SkeletonRow(
+                leadingSize: 20,
+                trailing: SkeletonTrailing.meta,
+                subtitle: false,
+                padding: const EdgeInsetsDirectional.only(start: 16, end: 24),
+                gap: 16,
+                titleStyle: title,
+                titleWidth: w,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _ConversationsSheet extends ConsumerWidget {
   const _ConversationsSheet({required this.botId, required this.currentId, required this.onNew, required this.onOpen, required this.onDelete});
   final String botId;
@@ -1932,6 +2092,7 @@ class _ConversationsSheet extends ConsumerWidget {
           child: AsyncView(
             value: convos,
             onRetry: () => ref.invalidate(conversationsProvider(botId)),
+            loading: const _ConversationsSkeleton(),
             data: (items) => items.isEmpty
                 ? EmptyState(icon: LucideIcons.messagesSquare, message: l10n.noConversations)
                 : ListView.separated(

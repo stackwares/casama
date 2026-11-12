@@ -56,8 +56,8 @@ class PeopleScreen extends ConsumerWidget {
     final org = ref.watch(currentOrgProvider);
     if (org == null) return const SizedBox.shrink();
     final admin = org.role != OrgRole.member;
-    final members =
-        ref.watch(_membersProvider(org.id)).value ?? const <WorkspaceMember>[];
+    final membersValue = ref.watch(_membersProvider(org.id));
+    final members = membersValue.value ?? const <WorkspaceMember>[];
     return SubPage(
       title: l10n.people,
       subtitle: admin ? l10n.peopleHelp : null,
@@ -76,35 +76,38 @@ class PeopleScreen extends ConsumerWidget {
               ? null
               : members.length.humanizedCount(context.l10n.localeName),
         ),
-        GroupedCard(
-          children: [
-            for (final m in members)
-              GroupedTile(
-                key: Key('member-${m.userId}'),
-                icon: LucideIcons.user,
-                // Their profile photo (D-202), else their initial.
-                leading: PersonAvatar(
-                  label: m.name.orPlaceholder(m.email.orPlaceholder('?')),
-                  photoUrl: m.photoId == null
-                      ? null
-                      : ref.watch(backendProvider).photoUrl(m.photoId!),
-                  size: 36,
-                ),
-                // About you (D-169): the name they go by and their pronouns, then the email.
-                title: [
-                  m.name.orPlaceholder(m.email.orPlaceholder(m.userId)),
-                  if (m.pronouns.isUsable) '(${m.pronouns})',
-                ].join(' '),
-                subtitle: m.name != null ? m.email : null,
-                trailing: Text(
-                  _roleLabel(context, m.role.value),
-                  style: context.textTheme.bodySmall?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant,
+        if (membersValue.isLoading && !membersValue.hasValue)
+          const _MembersSkeleton()
+        else
+          GroupedCard(
+            children: [
+              for (final m in members)
+                GroupedTile(
+                  key: Key('member-${m.userId}'),
+                  icon: LucideIcons.user,
+                  // Their profile photo (D-202), else their initial.
+                  leading: PersonAvatar(
+                    label: m.name.orPlaceholder(m.email.orPlaceholder('?')),
+                    photoUrl: m.photoId == null
+                        ? null
+                        : ref.watch(backendProvider).photoUrl(m.photoId!),
+                    size: 36,
+                  ),
+                  // About you (D-169): the name they go by and their pronouns, then the email.
+                  title: [
+                    m.name.orPlaceholder(m.email.orPlaceholder(m.userId)),
+                    if (m.pronouns.isUsable) '(${m.pronouns})',
+                  ].join(' '),
+                  subtitle: m.name != null ? m.email : null,
+                  trailing: Text(
+                    _roleLabel(context, m.role.value),
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: context.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
-              ),
-          ],
-        ),
+            ],
+          ),
         // A code to type, joining by email domain and custom links fold away (D-182).
         if (admin)
           AdvancedSection(
@@ -206,7 +209,7 @@ class _InviteLinkCard extends ConsumerWidget {
     return AppCard(
       padding: const EdgeInsets.all(AppSpace.lg),
       child: link.when(
-        loading: () => const SkeletonList(count: 2, padding: EdgeInsets.zero),
+        loading: () => const _InviteLinkSkeleton(),
         error: (e, _) => Text(errorText(context, e)),
         data: (l) {
           final approval = l.requiresApproval ?? false;
@@ -271,6 +274,79 @@ class _InviteLinkCard extends ConsumerWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// The members card before it loads: rows with a photo, name and email, and the role.
+class _MembersSkeleton extends StatelessWidget {
+  const _MembersSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SkeletonScope(
+      child: SkeletonGroupedCard(
+        count: 3,
+        row: SkeletonRow(
+          leading: SkeletonLeading.avatar,
+          leadingSize: 36,
+          trailing: SkeletonTrailing.meta,
+        ),
+      ),
+    );
+  }
+}
+
+/// The invite link card's content before it loads: title, help, the link box with its buttons,
+/// the approval switch and the reset button. The card around it is already there.
+class _InviteLinkSkeleton extends StatelessWidget {
+  const _InviteLinkSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonScope(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpace.sm,
+        children: [
+          SkeletonText(style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800), widthFactor: 0.35),
+          SkeletonText(style: text.bodyMedium, lines: 2, widthFactor: 0.8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.sm),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.tile),
+              border: Border.all(color: context.appColors.hairline),
+            ),
+            child: const SkeletonText(style: AppText.mono, widthFactor: 0.85),
+          ),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                spacing: AppSpace.xs,
+                children: [
+                  Expanded(child: SkeletonBone(height: 44, radius: AppRadius.pill)),
+                  Expanded(child: SkeletonBone(height: 44, radius: AppRadius.pill)),
+                ],
+              ),
+              SizedBox(height: AppSpace.xxs),
+              SizedBox(height: 48, child: Center(child: SkeletonBone(width: 80, height: 12))),
+            ],
+          ),
+          SkeletonRow(
+            leading: SkeletonLeading.none,
+            trailing: SkeletonTrailing.toggle,
+            padding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
+            titleStyle: text.bodyLarge,
+            subtitleStyle: text.bodyMedium,
+          ),
+          const Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: SizedBox(height: 48, width: 110, child: Center(child: SkeletonBone(width: 90, height: 12))),
+          ),
+        ],
       ),
     );
   }

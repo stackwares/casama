@@ -264,3 +264,374 @@ class SkeletonGrid extends StatelessWidget {
     );
   }
 }
+
+// ---------------------------------------------------------------------------------------------
+// Building blocks for skeletons that match the screen they stand in for. A screen composes these
+// in the same order, widths and paddings as its real layout, so nothing jumps when data arrives.
+// ---------------------------------------------------------------------------------------------
+
+/// One line of text that hasn't arrived: exactly as tall as a line in [style] (an invisible line
+/// of the real style sets the height), with a bone about as tall as its letters.
+class SkeletonText extends StatelessWidget {
+  const SkeletonText({
+    super.key,
+    this.style,
+    this.widthFactor = 0.6,
+    this.width,
+    this.center = false,
+    this.lines = 1,
+  });
+
+  /// The real text's style; null is the body text.
+  final TextStyle? style;
+
+  /// Share of the available width, unless [width] is given.
+  final double widthFactor;
+  final double? width;
+  final bool center;
+
+  /// Lines of a paragraph; the last one runs shorter.
+  final int lines;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = style ?? Theme.of(context).textTheme.bodyMedium!;
+    Widget line(double factor) {
+      final bone = LayoutBuilder(
+        builder: (context, c) => SkeletonBone(
+          height: (s.fontSize ?? 14) * 0.72,
+          radius: 4,
+          width: width ?? (c.maxWidth.isFinite ? c.maxWidth * factor : 120),
+        ),
+      );
+      return Stack(
+        alignment: center ? Alignment.center : AlignmentDirectional.centerStart,
+        children: [
+          ExcludeSemantics(
+            child: Text(
+              ' ',
+              style: s.copyWith(color: Colors.transparent),
+              maxLines: 1,
+            ),
+          ),
+          Positioned.fill(
+            child: Align(
+              alignment: center
+                  ? Alignment.center
+                  : AlignmentDirectional.centerStart,
+              child: bone,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (lines <= 1) return SizedBox(width: double.infinity, child: line(widthFactor));
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < lines; i++)
+          line(i == lines - 1 ? widthFactor * 0.7 : 0.94 - (i % 2) * 0.06),
+      ],
+    );
+  }
+}
+
+/// A page of skeleton sections with [PageColumn]'s width, gutters and top inset, under one
+/// shimmer. It doesn't scroll; what runs past the bottom is clipped.
+class SkeletonPage extends StatelessWidget {
+  const SkeletonPage({
+    super.key,
+    required this.children,
+    this.maxWidth = kPageMaxWidth,
+    this.top = AppSpace.xs,
+  });
+
+  final List<Widget> children;
+  final double maxWidth;
+  final double top;
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonScope(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final side =
+              AppSpace.gutter +
+              AppBreakpoints.centeringInset(
+                constraints.maxWidth,
+                maxWidth: maxWidth,
+              );
+          return ClipRect(
+            child: SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(side, top, side, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < children.length; i++) ...[
+                    // Cards one after another get PageColumn's gap.
+                    if (i > 0 &&
+                        _isSkeletonCard(children[i - 1]) &&
+                        _isSkeletonCard(children[i]))
+                      const SizedBox(height: AppSpace.md),
+                    children[i],
+                  ],
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+bool _isSkeletonCard(Widget w) => w is SkeletonGroupedCard || w is SkeletonCard;
+
+/// A [SectionHeader] still loading: same padding and line height.
+class SkeletonSectionHeader extends StatelessWidget {
+  const SkeletonSectionHeader({
+    super.key,
+    this.width = 96,
+    this.padding = const EdgeInsets.fromLTRB(
+      AppSpace.xxs,
+      AppSpace.lg,
+      AppSpace.xxs,
+      AppSpace.xs,
+    ),
+  });
+
+  final double width;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = context.textTheme.titleSmall?.copyWith(
+      fontWeight: FontWeight.w700,
+      fontSize: 15,
+    );
+    return Padding(
+      padding: padding,
+      child: SkeletonText(style: style, width: width),
+    );
+  }
+}
+
+/// What sits at a skeleton row's leading edge.
+enum SkeletonLeading {
+  /// [GroupedTile]'s 32-point tinted icon tile.
+  icon,
+
+  /// A round avatar.
+  avatar,
+
+  /// A rounded-square logo or thumbnail.
+  square,
+
+  none,
+}
+
+/// What sits at a skeleton row's trailing edge.
+enum SkeletonTrailing { none, chevron, toggle, button, meta }
+
+/// One row in a list: a leading mark, a title and an optional subtitle, and a trailing control.
+/// Defaults match [GroupedTile].
+class SkeletonRow extends StatelessWidget {
+  const SkeletonRow({
+    super.key,
+    this.leading = SkeletonLeading.icon,
+    this.leadingSize,
+    this.trailing = SkeletonTrailing.chevron,
+    this.subtitle = true,
+    this.subtitleLines = 1,
+    this.titleStyle,
+    this.subtitleStyle,
+    this.titleWidth = 0.5,
+    this.subtitleWidth = 0.78,
+    this.padding = const EdgeInsets.symmetric(
+      horizontal: AppSpace.md,
+      vertical: 12,
+    ),
+    this.gap = AppSpace.sm,
+  });
+
+  final SkeletonLeading leading;
+  final double? leadingSize;
+  final SkeletonTrailing trailing;
+  final bool subtitle;
+  final int subtitleLines;
+  final TextStyle? titleStyle;
+  final TextStyle? subtitleStyle;
+  final double titleWidth;
+  final double subtitleWidth;
+  final EdgeInsetsGeometry padding;
+  final double gap;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    final size =
+        leadingSize ?? (leading == SkeletonLeading.icon ? 32.0 : 40.0);
+    final lead = switch (leading) {
+      SkeletonLeading.icon => SkeletonBone(
+        width: size,
+        height: size,
+        radius: AppRadius.icon,
+      ),
+      SkeletonLeading.avatar => SkeletonBone(
+        width: size,
+        height: size,
+        radius: size / 2,
+      ),
+      SkeletonLeading.square => SkeletonBone(
+        width: size,
+        height: size,
+        radius: size * 0.28,
+      ),
+      SkeletonLeading.none => null,
+    };
+    final trail = switch (trailing) {
+      SkeletonTrailing.chevron => const SizedBox(
+        width: 24,
+        height: 24,
+        child: Center(child: SkeletonBone(width: 8, height: 12, radius: 3)),
+      ),
+      SkeletonTrailing.toggle => const SkeletonBone(
+        width: 52,
+        height: 32,
+        radius: AppRadius.pill,
+      ),
+      SkeletonTrailing.button => const SkeletonBone(
+        width: 72,
+        height: 32,
+        radius: AppRadius.pill,
+      ),
+      SkeletonTrailing.meta => const SkeletonBone(width: 36, height: 10),
+      SkeletonTrailing.none => null,
+    };
+    return Padding(
+      padding: padding,
+      child: Row(
+        children: [
+          if (lead != null) ...[lead, SizedBox(width: gap)],
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SkeletonText(
+                  style:
+                      titleStyle ??
+                      text.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                  widthFactor: titleWidth,
+                ),
+                if (subtitle)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 1),
+                    child: SkeletonText(
+                      style:
+                          subtitleStyle ?? text.bodySmall?.copyWith(height: 1.3),
+                      widthFactor: subtitleWidth,
+                      lines: subtitleLines,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (trail != null) ...[const SizedBox(width: AppSpace.xs), trail],
+        ],
+      ),
+    );
+  }
+}
+
+/// A [GroupedCard] still loading: the same card with [rows] (default: [GroupedTile]-shaped rows)
+/// and its inset dividers.
+class SkeletonGroupedCard extends StatelessWidget {
+  const SkeletonGroupedCard({
+    super.key,
+    this.count = 3,
+    this.rows,
+    this.row = const SkeletonRow(),
+    this.dividerIndent = 60,
+  });
+
+  /// Rows when [rows] isn't given, each a copy of [row] with varied line lengths.
+  final int count;
+  final SkeletonRow row;
+  final List<Widget>? rows;
+  final double dividerIndent;
+
+  static const _titles = [0.46, 0.34, 0.58, 0.4, 0.52, 0.3];
+  static const _subtitles = [0.72, 0.6, 0.84, 0.66, 0.78, 0.56];
+
+  @override
+  Widget build(BuildContext context) {
+    final items =
+        rows ??
+        [
+          for (var i = 0; i < count; i++)
+            SkeletonRow(
+              leading: row.leading,
+              leadingSize: row.leadingSize,
+              trailing: row.trailing,
+              subtitle: row.subtitle,
+              subtitleLines: row.subtitleLines,
+              titleStyle: row.titleStyle,
+              subtitleStyle: row.subtitleStyle,
+              titleWidth: _titles[i % _titles.length],
+              subtitleWidth: _subtitles[i % _subtitles.length],
+              padding: row.padding,
+              gap: row.gap,
+            ),
+        ];
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            if (i > 0) Divider(indent: dividerIndent),
+            items[i],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// An [AppCard] still loading: the card's own surface, border and radius around skeleton content,
+/// or a fixed [height] of empty card.
+class SkeletonCard extends StatelessWidget {
+  const SkeletonCard({
+    super.key,
+    this.child,
+    this.height,
+    this.padding = const EdgeInsets.all(AppSpace.md),
+    this.radius = AppRadius.card,
+  });
+
+  final Widget? child;
+  final double? height;
+  final EdgeInsetsGeometry padding;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: height,
+      child: Card(
+        color: context.colorScheme.surfaceContainerLow,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius),
+          side: BorderSide(color: context.appColors.hairline),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Padding(padding: padding, child: child ?? const SizedBox.shrink()),
+      ),
+    );
+  }
+}

@@ -28,6 +28,7 @@ import 'core/route_title.dart';
 import 'core/theme.dart';
 import 'ui/app_scroll_behavior.dart';
 import 'theme/appearance.dart';
+import 'theme/wallpaper.dart';
 import 'ui/text_scale.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'features/devices/device_sync.dart';
@@ -90,8 +91,11 @@ class CasamaApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       // Scrollbars on vertical lists on every platform, phones included.
       scrollBehavior: const AppScrollBehavior(),
+      // The wallpaper, painted once behind every navigator: pages are see-through over it, so it
+      // stays still while they change and never blacks out or reloads between them.
       builder: (context, child) => Effects(
         fewer: appearance.fewerEffects,
+        child: Wallpaper(
         child: RouteTitle(
         router: router,
         child: limitTextScale(
@@ -103,6 +107,7 @@ class CasamaApp extends ConsumerWidget {
             ),
           ),
         ),
+      ),
       ),
       ),
     );

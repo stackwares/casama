@@ -741,11 +741,11 @@
     {
       "name": "paywall_view",
       "by": ["client"],
-      "description": "The paywall or plans were opened from a limit.",
+      "description": "The paywall was opened: from a limit, from running out of credits, or from Billing.",
       "properties": {
         "source": {
           "type": "string",
-          "values": ["limit", "credits_depleted"]
+          "values": ["limit", "credits_depleted", "settings"]
         },
         "paywall_kind": {
           "type": "string",
@@ -757,11 +757,11 @@
     {
       "name": "paywall_dismiss",
       "by": ["client"],
-      "description": "The paywall was closed without going on.",
+      "description": "The paywall was closed without upgrading.",
       "properties": {
         "source": {
           "type": "string",
-          "values": ["limit"]
+          "values": ["limit", "credits_depleted", "settings"]
         }
       },
       "funnels": ["F6"]

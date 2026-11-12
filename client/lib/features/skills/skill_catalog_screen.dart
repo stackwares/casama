@@ -94,6 +94,7 @@ class _SkillCatalogScreenState extends ConsumerState<SkillCatalogScreen> {
       body: AsyncView(
         value: catalog,
         onRetry: () => ref.invalidate(skillCatalogProvider),
+        loading: const _CatalogSkeleton(),
         data: (cat) => PageColumn(
           maxWidth: kWidePageMaxWidth,
           children: _browse(context, cat),
@@ -295,6 +296,81 @@ class _SkillGrid extends StatelessWidget {
       );
     },
   );
+}
+
+/// The catalog still loading: the search field, the category chips, then category sections of
+/// skill tiles in the same grid.
+class _CatalogSkeleton extends StatelessWidget {
+  const _CatalogSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SkeletonPage(
+      maxWidth: kWidePageMaxWidth,
+      children: [
+        SkeletonBone(height: 52, radius: 14),
+        SizedBox(height: AppSpace.sm),
+        SizedBox(
+          height: 38,
+          child: Row(
+            spacing: AppSpace.xs,
+            children: [
+              SkeletonBone(width: 48, height: 32, radius: 8),
+              SkeletonBone(width: 96, height: 32, radius: 8),
+              SkeletonBone(width: 84, height: 32, radius: 8),
+              SkeletonBone(width: 104, height: 32, radius: 8),
+            ],
+          ),
+        ),
+        SkeletonSectionHeader(width: 110),
+        _SkillGridSkeleton(count: 4),
+        SkeletonSectionHeader(width: 90),
+        _SkillGridSkeleton(count: 4),
+      ],
+    );
+  }
+}
+
+/// A [_SkillGrid] of [_SkillTile]s still loading: icon tile, title, two lines and Install.
+class _SkillGridSkeleton extends StatelessWidget {
+  const _SkillGridSkeleton({required this.count});
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final text = context.textTheme;
+    final tile = DecoratedBox(
+      decoration: BoxDecoration(
+        color: context.isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: context.appColors.hairline),
+      ),
+      child: Padding(
+        padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.md, AppSpace.sm, AppSpace.xs, AppSpace.sm),
+        child: Row(
+          children: [
+            const SkeletonBone(width: 48, height: 48, radius: AppRadius.icon + 2),
+            const SizedBox(width: AppSpace.md),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SkeletonText(style: text.titleSmall, widthFactor: 0.5),
+                  const SizedBox(height: 2),
+                  SkeletonText(style: text.bodySmall?.copyWith(height: 1.3), lines: 2, widthFactor: 0.8),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpace.xs),
+            const SizedBox(width: 72, height: 40, child: Center(child: SkeletonBone(width: 44, height: 12))),
+          ],
+        ),
+      ),
+    );
+    return _SkillGrid(children: [for (var i = 0; i < count; i++) tile]);
+  }
 }
 
 class _SkillTile extends StatelessWidget {

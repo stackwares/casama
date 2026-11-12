@@ -186,6 +186,7 @@ class _ModelSheetState extends ConsumerState<_ModelSheet> {
             value: async,
             onRetry: () =>
                 ref.invalidate(modelOptionsProvider(widget.credentialId)),
+            loading: const _ModelListSkeleton(),
             data: (list) {
               final featured = list.items
                   .where((m) => m.featured == true && shown(m))
@@ -248,4 +249,43 @@ class _Header extends StatelessWidget {
           ?.copyWith(color: Theme.of(context).colorScheme.primary),
     ),
   );
+}
+
+/// The model list while it loads: the recommended header over model rows, in the real header's
+/// and rows' sizes. Doesn't scroll; what runs past the sheet is clipped.
+class _ModelListSkeleton extends StatelessWidget {
+  const _ModelListSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return SkeletonScope(
+      child: ClipRect(
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: SkeletonText(style: text.labelLarge, width: 120),
+              ),
+              for (final w in const [0.46, 0.38, 0.52, 0.34, 0.44, 0.4])
+                SizedBox(
+                  // A one-line ListTile.
+                  height: 56,
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(start: 16, end: 24),
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: SkeletonText(style: text.bodyLarge, widthFactor: w),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -234,7 +234,7 @@ class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
                 errorText(context, snap.error!),
                 icon: LucideIcons.triangleAlert,
               ),
-            if (t == null && !snap.hasError) const SkeletonDetail(),
+            if (t == null && !snap.hasError) const _ImportPreviewSkeleton(),
             if (t != null) ...[
               AppCard(
                 key: const Key('importPreview'),
@@ -353,6 +353,44 @@ class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
           ],
         );
       },
+    );
+  }
+}
+
+/// The import preview while the template loads: the bot's card (avatar, name, description and
+/// instructions), then the header over a card of what comes with it, in the real sizes.
+class _ImportPreviewSkeleton extends StatelessWidget {
+  const _ImportPreviewSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonScope(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SkeletonCard(
+            padding: const EdgeInsets.all(AppSpace.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: AppSpace.sm,
+              children: [
+                Row(
+                  children: [
+                    const SkeletonBone(width: 48, height: 48, radius: 24),
+                    const SizedBox(width: AppSpace.md),
+                    Expanded(child: SkeletonText(style: text.titleLarge, widthFactor: 0.5)),
+                  ],
+                ),
+                const SkeletonText(widthFactor: 0.8),
+                const SkeletonText(lines: 4, widthFactor: 0.9),
+              ],
+            ),
+          ),
+          const SkeletonSectionHeader(width: 140),
+          const SkeletonGroupedCard(row: SkeletonRow(trailing: SkeletonTrailing.none)),
+        ],
+      ),
     );
   }
 }

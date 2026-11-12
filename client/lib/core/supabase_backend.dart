@@ -3800,6 +3800,9 @@ class SupabaseBackend implements Backend {
       '${api.baseUrl.replaceAll(RegExp(r'/+$'), '')}/v1/media/$id';
 
   @override
+  String chatMediaPosterUrl(String id) => '${chatMediaUrl(id)}/poster';
+
+  @override
   Map<String, String> get authHeaders {
     final token = supabase.auth.currentSession?.accessToken;
     return {if (token != null) 'Authorization': 'Bearer $token'};

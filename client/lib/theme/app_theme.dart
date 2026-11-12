@@ -7,6 +7,7 @@ import 'app_colors.dart';
 import 'app_tokens.dart';
 import 'appearance.dart';
 import 'fonts.dart';
+import 'page_transitions.dart';
 import 'wallpaper.dart';
 
 const _subThemes = FlexSubThemesData(
@@ -85,17 +86,19 @@ abstract final class AppTheme {
     appearance,
   );
 
-  /// Every page route paints the wallpaper under its content (see [WallpaperPageTransitionsBuilder]).
-  /// The web and desktop are click and open, so pages there switch with no transition; Android and iOS
-  /// keep their own, except in a browser.
+  /// Pages are see-through over the one wallpaper the app paints behind every navigator. Android
+  /// pages fade through each other along a shared axis, so two pages never show at once; iOS keeps
+  /// its slide and swipe back, with each page painting the wallpaper so it covers the one under it.
+  /// The web and desktop are click and open, so pages there switch with no transition, as do phones
+  /// in a browser.
   static const _pageTransitions = PageTransitionsTheme(
     builders: {
-      TargetPlatform.android: kIsWeb ? _NoPageTransitionsBuilder() : WallpaperPageTransitionsBuilder(FadeForwardsPageTransitionsBuilder()),
-      TargetPlatform.iOS: kIsWeb ? _NoPageTransitionsBuilder() : WallpaperPageTransitionsBuilder(CupertinoPageTransitionsBuilder()),
-      TargetPlatform.macOS: _NoPageTransitionsBuilder(),
-      TargetPlatform.windows: _NoPageTransitionsBuilder(),
-      TargetPlatform.linux: _NoPageTransitionsBuilder(),
-      TargetPlatform.fuchsia: _NoPageTransitionsBuilder(),
+      TargetPlatform.android: kIsWeb ? InstantPageTransitionsBuilder() : SharedAxisPageTransitionsBuilder(),
+      TargetPlatform.iOS: kIsWeb ? InstantPageTransitionsBuilder() : OpaquePageTransitionsBuilder(CupertinoPageTransitionsBuilder()),
+      TargetPlatform.macOS: InstantPageTransitionsBuilder(),
+      TargetPlatform.windows: InstantPageTransitionsBuilder(),
+      TargetPlatform.linux: InstantPageTransitionsBuilder(),
+      TargetPlatform.fuchsia: InstantPageTransitionsBuilder(),
     },
   );
 
@@ -291,25 +294,4 @@ abstract final class AppTheme {
       labelSmall: sans(theme.labelSmall, 0.2, FontWeight.w500),
     );
   }
-}
-
-/// The web and desktop: the page appears at once, with no transition, still over the wallpaper that
-/// [WallpaperPageTransitionsBuilder] paints under every other page.
-class _NoPageTransitionsBuilder extends PageTransitionsBuilder {
-  const _NoPageTransitionsBuilder();
-
-  @override
-  Duration get transitionDuration => Duration.zero;
-
-  @override
-  Duration get reverseTransitionDuration => Duration.zero;
-
-  @override
-  Widget buildTransitions<T>(
-    PageRoute<T> route,
-    BuildContext context,
-    Animation<double> animation,
-    Animation<double> secondaryAnimation,
-    Widget child,
-  ) => Wallpaper(child: child);
 }

@@ -64,6 +64,7 @@ import '../features/workspaces/people_screen.dart';
 import '../features/referrals/invite_friends.dart';
 import '../features/workspaces/spaces.dart';
 import 'providers.dart';
+import '../theme/page_transitions.dart';
 import 'telemetry.dart';
 import '../features/devices/device_connections_screen.dart';
 
@@ -78,9 +79,9 @@ String _screenName(GoRouterState state) {
   return '/${template.take(depth).join('/')}';
 }
 
-/// Every route is a [MaterialPage], so pages slide or fade the way each platform expects and the
-/// theme's page transitions paint the wallpaper under each one. (go_router's own fallback here is
-/// a page with no transition at all.)
+/// Every route is a [MaterialPage], so pages move the way the theme's page transitions say for
+/// each platform, over the wallpaper the app paints behind every navigator. (go_router's own
+/// fallback here is a page with no transition at all.)
 GoRouterPageBuilder _page(
   Widget Function(BuildContext context, GoRouterState state) build,
 ) =>
@@ -95,28 +96,24 @@ GoRouterPageBuilder _page(
 bool _switchesInstantly(BuildContext context) =>
     kIsWeb || const {TargetPlatform.macOS, TargetPlatform.windows, TargetPlatform.linux}.contains(Theme.of(context).platform);
 
-/// The tab pages (Chats, Inbox, Tasks). They paint no wallpaper of their own: the shell's page
-/// already paints one behind every tab, and the shell's screens are see-through. Switching tabs
-/// only crossfades the content over that one wallpaper, so it never flickers, shifts or reloads
-/// its photo the way two page wallpapers blending into each other did. Pages opened from a tab
-/// (a chat, settings) stay [MaterialPage]s with their own wallpaper, so they cover the tab while
-/// they slide in.
+/// The tab pages (Chats, Inbox, Tasks). Like every page they are see-through over the one
+/// wallpaper, which stays still while tabs switch. They fade through each other: the tab you leave
+/// is gone before the one you open appears, so the two lists never show on top of each other.
+/// Pages opened from a tab (a chat, settings) use the theme's page transitions; the tab under them
+/// moves aside the same way a page would (the theme's delegated transition).
 GoRouterPageBuilder _tab(
   Widget Function(BuildContext context, GoRouterState state) build,
 ) => (context, state) {
   final duration = MediaQuery.disableAnimationsOf(context) || _switchesInstantly(context)
       ? Duration.zero
-      : const Duration(milliseconds: 180);
+      : tabSwitchDuration;
   return CustomTransitionPage<void>(
     key: state.pageKey,
     name: state.name ?? _screenName(state),
     arguments: state.extra,
     transitionDuration: duration,
     reverseTransitionDuration: duration,
-    transitionsBuilder: (_, animation, _, child) => FadeTransition(
-      opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-      child: child,
-    ),
+    transitionsBuilder: (_, animation, secondaryAnimation, child) => fadeThrough(animation, secondaryAnimation, child),
     child: build(context, state),
   );
 };

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:casama_app/core/backend.dart';
+import 'package:casama_app/core/media_cache.dart';
 import 'package:casama_app/features/chat/media/chat_pdf.dart';
 import 'package:casama_app/features/chat/media/chat_video.dart';
 import 'package:casama_app/features/chat/media/computer_thumbnail.dart';
@@ -33,7 +34,72 @@ Widget _inChat(Widget child) => Scaffold(
 
 /// Thumbnails of videos and PDFs on a bot's computer (D-226).
 void main() {
-  setUp(ComputerThumbnails.reset);
+  setUp(() async {
+    ComputerThumbnails.reset();
+    await MediaCache.clear();
+  });
+
+  testWidgets('a card built again shows its thumbnail on its first frame', (
+    tester,
+  ) async {
+    final backend = FakeBackend()
+      ..thumbnails['clips/trip.mp4'] = ComputerThumbnail(
+        bytes: _png,
+        duration: const Duration(seconds: 75),
+      );
+    Widget card() => harness(
+      backend,
+      _inChat(
+        ChatVideo(
+          attachment: _file('workspace/clips/trip.mp4', 'video/mp4'),
+          computerId: 'computer-1',
+        ),
+      ),
+    );
+    await tester.pumpWidget(card());
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump();
+    expect(find.byKey(const Key('videoThumbnail')), findsOneWidget);
+
+    // Scrolled away and back: no wait, no second request, no loading sweep.
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpWidget(card());
+    expect(find.byKey(const Key('videoThumbnail')), findsOneWidget);
+    expect(find.byKey(const Key('videoPosterLoading')), findsNothing);
+    expect(find.text('1:15'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(backend.thumbnailRequests, ['clips/trip.mp4']);
+  });
+
+  testWidgets('a video kept with the chat shows the server\'s poster, not a player', (
+    tester,
+  ) async {
+    final backend = FakeBackend();
+    await tester.pumpWidget(
+      harness(
+        backend,
+        _inChat(
+          ChatVideo(
+            attachment: const AttachmentRef(
+              path: 'media:0f8fad5b-d9cb-469f-a165-70867728950e',
+              name: 'clip.mp4',
+              mimeType: 'video/mp4',
+              size: 1000,
+              width: 1280,
+              height: 720,
+            ),
+          ),
+        ),
+      ),
+    );
+    final image = tester.widget<Image>(find.byKey(const Key('videoThumbnail')));
+    expect(
+      (image.image as NetworkImage).url,
+      'http://localhost:8787/v1/media/0f8fad5b-d9cb-469f-a165-70867728950e/poster',
+    );
+    // A soft sweep while it loads.
+    expect(find.byKey(const Key('videoPosterLoading')), findsOneWidget);
+  });
 
   testWidgets(
     'a video on the computer shows its thumbnail and length as the poster',

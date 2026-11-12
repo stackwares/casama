@@ -83,6 +83,7 @@ class _DeviceConnectionsScreenState extends ConsumerState<DeviceConnectionsScree
       body: AsyncView(
         value: ref.watch(_deviceStateProvider),
         onRetry: () => ref.invalidate(_deviceStateProvider),
+        loading: _DeviceConnectionsSkeleton(kinds: supported.length),
         data: (st) {
           final others = st.sources.where((s) => s.deviceKey != st.key).toList();
           final onKinds = [for (final k in DeviceKind.values.where(supported.contains)) if (st.mine?.kinds[k.value] != null) k];
@@ -159,6 +160,57 @@ class _DeviceConnectionsScreenState extends ConsumerState<DeviceConnectionsScree
           );
         },
       ),
+    );
+  }
+}
+
+/// Device connections still loading: the privacy note, then one switch card per kind this
+/// device supports.
+class _DeviceConnectionsSkeleton extends StatelessWidget {
+  const _DeviceConnectionsSkeleton({required this.kinds});
+  final int kinds;
+
+  static const _titles = [0.3, 0.42, 0.26, 0.36, 0.48, 0.32];
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonPage(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 1),
+              child: SkeletonBone(width: 16, height: 16, radius: 8),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.35), widthFactor: 0.8, lines: 2),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        for (var i = 0; i < kinds; i++) ...[
+          // _KindCard: a one-line SwitchListTile (56 points) with an icon, inside the card's padding.
+          SkeletonCard(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.xs),
+            child: SizedBox(
+              height: 56,
+              child: Row(
+                children: [
+                  const SkeletonBone(width: 24, height: 24, radius: 6),
+                  const SizedBox(width: 16),
+                  Expanded(child: SkeletonText(style: text.bodyLarge, widthFactor: _titles[i % _titles.length])),
+                  const SizedBox(width: 16),
+                  const SkeletonBone(width: 52, height: 32, radius: AppRadius.pill),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpace.sm),
+        ],
+      ],
     );
   }
 }

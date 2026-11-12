@@ -1,5 +1,6 @@
-// The web and desktop are click and open: pages and tabs switch there with no transition, and pages still
-// paint the wallpaper. Android and iOS keep their own transitions.
+// The web and desktop are click and open: pages and tabs switch there with no transition, over the
+// wallpaper the app paints behind every navigator. Android and iOS have their own transitions
+// (page_motion_test.dart).
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,7 +23,7 @@ void main() {
       expect(builders[platform]!.reverseTransitionDuration, Duration.zero, reason: '$platform');
     }
     for (final platform in const [TargetPlatform.android, TargetPlatform.iOS]) {
-      expect(builders[platform], isA<WallpaperPageTransitionsBuilder>(), reason: '$platform');
+      expect(builders[platform]!.transitionDuration, greaterThan(Duration.zero), reason: '$platform');
     }
   });
 
@@ -30,6 +31,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.light().copyWith(platform: TargetPlatform.macOS),
+        builder: (context, child) => Wallpaper(child: child!),
         home: Builder(
           builder: (context) => TextButton(
             onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const Text('second page'))),
@@ -42,6 +44,7 @@ void main() {
     await tester.pump();
     final second = find.text('second page');
     expect(ModalRoute.of(tester.element(second))!.animation!.status, AnimationStatus.completed);
+    // Only the app's wallpaper: the page paints none of its own.
     expect(find.ancestor(of: second, matching: find.byType(Wallpaper)), findsOneWidget);
     Navigator.of(tester.element(second)).pop();
     await tester.pump();

@@ -62,6 +62,22 @@ void main() {
     expect(GoRouter.of(tester.element(find.byType(FloatingTabChrome))).state.uri.path, '/tasks');
   });
 
+  testWidgets('on phones only the three tabs show the tab bar; pages opened from them hide it', (tester) async {
+    await _pumpApp(tester, const Size(400, 860));
+    final router = GoRouter.of(tester.element(find.byType(FloatingTabChrome)));
+    Offset slide() => tester.widget<AnimatedSlide>(find.ancestor(of: find.byType(FloatingTabChrome), matching: find.byType(AnimatedSlide))).offset;
+    for (final path in ['/bots', '/inbox', '/tasks']) {
+      router.go(path);
+      await tester.pumpAndSettle();
+      expect(slide(), Offset.zero, reason: path);
+    }
+    for (final path in ['/password-managers', '/settings', '/search', '/pages', '/computer']) {
+      router.go(path);
+      await tester.pumpAndSettle();
+      expect(slide(), isNot(Offset.zero), reason: path);
+    }
+  });
+
   testWidgets('on phones the avatar opens Settings full screen, and back returns to the chats', (tester) async {
     await _pumpApp(tester, const Size(400, 860));
     expect(find.text('Chats'), findsWidgets);

@@ -17,6 +17,7 @@ import 'package:casama_app/l10n/generated/app_localizations.dart';
 import 'app_test.dart' show setSize;
 import 'fake_backend.dart';
 import 'fake_voice.dart';
+import 'package:casama_app/features/chat/read_aloud.dart';
 
 Widget voiceHarness(FakeBackend backend, {FakeDictation? dictation, FakeDeviceDictation? device, FakePlayer? player, FakeCallConnector? calls, required Widget home}) {
   final router = GoRouter(routes: [
@@ -302,9 +303,73 @@ void main() {
     await tester.longPress(find.text('Water the fern.'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('speak-msg-1')));
-    await tester.pumpAndSettle();
+    // The player keeps moving while it talks, so time steps on rather than settling.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
     expect(backend.spoken, ['msg-1']);
     expect(player.played, [3]);
+
+    // A player docks above the composer: who's talking, what, and how long is left.
+    expect(find.byKey(const Key('readAloudBar')), findsOneWidget);
+    expect(find.text('Reading aloud'), findsOneWidget);
+    expect(find.text('Water the fern.'), findsNWidgets(2));
+    player.report(const Duration(seconds: 10));
+    await tester.pump();
+    expect(find.textContaining('0:30 left'), findsOneWidget);
+
+    // Speed carries on to the next reply; pause and resume.
+    await tester.tap(find.byKey(const Key('readAloudSpeed')));
+    await tester.pump();
+    expect(find.text('1.25×'), findsOneWidget);
+    expect(player.speeds.last, 1.25);
+    await tester.tap(find.byKey(const Key('readAloudPlayPause')));
+    await tester.pump();
+    expect(player.paused, isTrue);
+    expect(find.text('Paused'), findsOneWidget);
+
+    // Scrubbing jumps; the far end of the line is the end of the reply.
+    final line = tester.getRect(find.byKey(const Key('readAloudScrubber')));
+    await tester.tapAt(Offset(line.left + line.width * 0.5, line.center.dy));
+    await tester.pump();
+    expect(player.seekedTo, const Duration(seconds: 20));
+
+    // Stop: the player leaves.
+    await tester.tap(find.byKey(const Key('readAloudStop')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump();
+    expect(find.byKey(const Key('readAloudBar')), findsNothing);
+    expect(player.stopped, greaterThan(0));
+
+    // Again: the speech was kept, so it starts at once without asking the server.
+    await tester.longPress(find.text('Water the fern.'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('speak-msg-1')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(backend.spoken, ['msg-1']);
+    expect(player.played, [3, 3]);
+    expect(player.speeds.last, 1.25);
+
+    // The message menu offers to stop the one being read.
+    await tester.longPress(find.text('Water the fern.').first);
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.text('Stop reading'), findsOneWidget);
+    await tester.tapAt(Offset.zero);
+    await tester.pump(const Duration(milliseconds: 400));
+
+    // Played to the end, it goes by itself.
+    player.report(const Duration(seconds: 40), completed: true);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump();
+    expect(find.byKey(const Key('readAloudBar')), findsNothing);
+  });
+
+  test('the player shows a reply\'s opening as plain words', () {
+    expect(plainExcerpt('## Plan\n\n**Water** the [fern](https://x.y) and `prune`.\n\n- Monday'), 'Plan Water the fern and prune. Monday');
+    expect(plainExcerpt('```dart\nprint(1);\n```\nDone'), 'Done');
+    expect(plainExcerpt('a' * 200).length, 141);
   });
 
   testWidgets('a live call forwards tool calls, shows reply latency and saves the transcript', (tester) async {

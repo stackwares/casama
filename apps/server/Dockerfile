@@ -20,6 +20,8 @@ COPY ee/package.json ee/
 RUN pnpm install --frozen-lockfile --prod --filter @casama/server...
 
 FROM base AS runtime
+# ffmpeg makes the posters chat video cards show (GET /v1/media/{id}/poster).
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
 COPY --from=deps /app /app
 COPY packages/agent/src packages/agent/src
 COPY packages/contracts/src packages/contracts/src

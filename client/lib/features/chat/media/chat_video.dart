@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../core/backend.dart';
+import '../../../core/media_cache.dart';
 import '../../../core/providers.dart';
 import '../../../core/widgets.dart';
 import '../../../theme/app_tokens.dart';
@@ -17,12 +18,17 @@ import '../../files/file_preview.dart';
 import 'computer_thumbnail.dart';
 import 'media_kind.dart';
 
-/// A video in a chat. A still card (its first frame, a play button, the length) until it's tapped;
+/// A video in a chat. A still card (a poster, a play button, the length) until it's tapped;
 /// then it plays right there with play/pause, a scrubber, mute and full screen. Never plays by
-/// itself. Videos kept with the chat load their first frame up front; videos on the bot's computer
-/// show a thumbnail the computer makes (D-226) when it's awake, else a dark tile.
-/// Where the official player has no implementation (Windows, Linux) the card opens the system's
-/// player instead.
+/// itself.
+///
+/// The poster is a picture, never a player: videos kept with the chat use the server's JPEG still
+/// (`/v1/media/{id}/poster`), kept on the device like any chat picture, so a chat opened again
+/// shows its clips on the first frame. Videos on the bot's computer use the thumbnail the
+/// computer makes (D-226): from memory at once, from the device's cache right after, and from the
+/// computer only for cards that stay on screen. A server that can't make posters falls back to
+/// loading the player for its first frame. Where the official player has no implementation
+/// (Windows, Linux) the card opens the system's player instead.
 class ChatVideo extends ConsumerStatefulWidget {
   const ChatVideo({
     super.key,
@@ -44,15 +50,24 @@ class ChatVideo extends ConsumerStatefulWidget {
 class _ChatVideoState extends ConsumerState<ChatVideo> {
   VideoPlayerController? _controller;
 
-  /// Loaded but not started: its first frame is the poster, and play starts it.
+  /// Loaded but not started: its first frame is the poster, and play starts it. Only when the
+  /// server has no poster for the clip.
   VideoPlayerController? _ready;
   var _loading = false;
 
-  /// A computer file's thumbnail (D-226): the poster until it plays.
+  /// The poster: the server's still, or a computer file's thumbnail (D-226).
   Timer? _thumbTimer;
   ImageProvider? _thumb;
   Duration? _thumbDuration;
   double? _thumbAspect;
+
+  /// Nothing more is coming: the card keeps its plain look (no shimmer).
+  var _settled = false;
+
+  /// A poster already in Flutter's image cache answers during initState, before setState is
+  /// allowed.
+  var _started = false;
+  void _update(VoidCallback change) => _started ? setState(change) : change();
 
   AttachmentRef get _a => widget.attachment;
 
@@ -65,53 +80,94 @@ class _ChatVideoState extends ConsumerState<ChatVideo> {
   @override
   void initState() {
     super.initState();
-    // Streams from the API with range requests, so this reads little more than the first frame.
-    // Not on the web, where the player can't send the sign-in header.
-    if (_a.mediaId != null &&
-        mediaPluginsAvailable &&
-        inlineVideoSupported &&
-        !kIsWeb) {
-      unawaited(_preload());
-    } else if (_computerPath != null) {
-      // Only cards that stay on screen ask: a chat scrolled past quickly requests nothing.
-      _thumbTimer = Timer(
-        const Duration(milliseconds: 250),
-        () => unawaited(_loadThumbnail()),
+    final backend = ref.read(backendProvider);
+    if (_a.mediaId case final id?) {
+      _thumb = cachedNetworkImage(
+        backend.chatMediaPosterUrl(id),
+        headers: backend.authHeaders,
       );
+      _measure(_thumb!);
+    } else if (_computerPath case final path?) {
+      final kept = ComputerThumbnails.peek(widget.computerId!, path);
+      if (kept != null) {
+        _show(kept);
+      } else {
+        unawaited(_loadThumbnail(cachedOnly: true));
+        // Only cards that stay on screen ask the computer: a chat scrolled past quickly
+        // requests nothing.
+        _thumbTimer = Timer(
+          const Duration(milliseconds: 250),
+          () => unawaited(_loadThumbnail()),
+        );
+      }
+    } else {
+      _settled = true;
     }
+    _started = true;
   }
 
-  Future<void> _loadThumbnail() async {
+  void _show(ComputerThumbnail t) {
+    _thumb = MemoryImage(t.bytes);
+    _thumbDuration = t.duration;
+    _settled = true;
+    _measure(_thumb!);
+  }
+
+  Future<void> _loadThumbnail({bool cachedOnly = false}) async {
     final path = _computerPath;
-    if (!mounted || path == null) return;
+    if (!mounted || path == null || _thumb != null) return;
     final t = await ComputerThumbnails.load(
       ref.read(backendProvider),
       widget.computerId!,
       path,
+      cachedOnly: cachedOnly,
     );
-    if (t == null || !mounted || _controller != null) return;
-    final image = MemoryImage(t.bytes);
-    setState(() {
-      _thumb = image;
-      _thumbDuration = t.duration;
-    });
-    // Its shape, for videos whose size the chat doesn't know.
-    if (_a.width == null || _a.height == null) {
-      final stream = image.resolve(ImageConfiguration.empty);
-      late final ImageStreamListener listener;
-      listener = ImageStreamListener(
-        (info, _) {
-          stream.removeListener(listener);
-          final w = info.image.width, h = info.image.height;
-          if (mounted && w > 0 && h > 0) {
-            setState(() => _thumbAspect = w / h);
-          }
-        },
-        onError: (_, _) => stream.removeListener(listener),
-      );
-      stream.addListener(listener);
+    if (!mounted || _controller != null || _thumb != null) return;
+    if (t == null) {
+      if (!cachedOnly) setState(() => _settled = true);
+      return;
     }
+    _thumbTimer?.cancel();
+    setState(() => _show(t));
   }
+
+  /// Its shape, for videos whose size the chat doesn't know; and for chat media, whether the
+  /// server had a poster at all (else the player draws the first frame).
+  void _measure(ImageProvider image) {
+    final known = _a.width != null && _a.height != null;
+    if (known && _a.mediaId == null) return;
+    final stream = image.resolve(ImageConfiguration.empty);
+    late final ImageStreamListener listener;
+    listener = ImageStreamListener(
+      (info, _) {
+        stream.removeListener(listener);
+        final w = info.image.width, h = info.image.height;
+        if (!mounted) return;
+        _update(() {
+          _settled = true;
+          if (!known && w > 0 && h > 0) _thumbAspect = w / h;
+        });
+      },
+      onError: (_, _) {
+        stream.removeListener(listener);
+        if (!mounted || _a.mediaId == null) return;
+        _update(() {
+          _thumb = null;
+          _settled = !_canPreload;
+        });
+        if (_canPreload) unawaited(_preload());
+      },
+    );
+    stream.addListener(listener);
+  }
+
+  /// Streams from the API with range requests, so this reads little more than the first frame.
+  /// Not on the web, where the player can't send the sign-in header.
+  bool get _canPreload =>
+      _a.mediaId != null &&
+      mediaPluginsAvailable &&
+      inlineVideoSupported &&
+      !kIsWeb;
 
   Future<void> _preload() async {
     final backend = ref.read(backendProvider);
@@ -125,13 +181,17 @@ class _ChatVideoState extends ConsumerState<ChatVideo> {
       await c.seekTo(Duration.zero);
     } catch (_) {
       await c.dispose();
+      if (mounted) setState(() => _settled = true);
       return;
     }
     if (!mounted || _controller != null) {
       await c.dispose();
       return;
     }
-    setState(() => _ready = c);
+    setState(() {
+      _ready = c;
+      _settled = true;
+    });
   }
 
   @override
@@ -236,6 +296,7 @@ class _ChatVideoState extends ConsumerState<ChatVideo> {
                     image: _thumb,
                     duration: _thumbDuration,
                     loading: _loading,
+                    waiting: !_settled,
                     systemPlayer: !inlineVideoSupported,
                     onPlay: () => runGuarded(context, _play),
                   )
@@ -258,6 +319,7 @@ class _Poster extends StatelessWidget {
     this.image,
     this.duration,
     required this.loading,
+    this.waiting = false,
     required this.systemPlayer,
     required this.onPlay,
   });
@@ -272,6 +334,9 @@ class _Poster extends StatelessWidget {
   /// The video's length from the computer, when the chat doesn't have it.
   final Duration? duration;
   final bool loading;
+
+  /// Its picture is still coming: a soft light sweeps the card so it reads as loading.
+  final bool waiting;
   final bool systemPlayer;
   final VoidCallback onPlay;
 
@@ -305,6 +370,8 @@ class _Poster extends StatelessWidget {
           ),
           child: Stack(
             children: [
+              // Under the picture, which covers it as it fades in.
+              if (waiting) const Positioned.fill(child: _Sweep()),
               if (frame case final f?)
                 Positioned.fill(child: VideoPlayer(f))
               else if (image case final i?)
@@ -409,6 +476,62 @@ class _Poster extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A slow band of light across a dark card whose picture is on its way. Still when the system
+/// asks for less motion.
+class _Sweep extends StatefulWidget {
+  const _Sweep();
+
+  @override
+  State<_Sweep> createState() => _SweepState();
+}
+
+class _SweepState extends State<_Sweep> with SingleTickerProviderStateMixin {
+  late final _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _c.stop();
+    } else if (!_c.isAnimating) {
+      _c.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => RepaintBoundary(
+    child: AnimatedBuilder(
+      animation: _c,
+      builder: (context, _) {
+        final t = Curves.easeInOut.transform(_c.value) * 3 - 1.5;
+        return DecoratedBox(
+          key: const Key('videoPosterLoading'),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment(t - 1, -0.3),
+              end: Alignment(t + 1, 0.3),
+              colors: [
+                Colors.white.withValues(alpha: 0),
+                Colors.white.withValues(alpha: 0.07),
+                Colors.white.withValues(alpha: 0),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
 }
 
 class _Chip extends StatelessWidget {

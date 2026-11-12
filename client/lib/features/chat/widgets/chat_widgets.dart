@@ -20,8 +20,10 @@ import '../../../ui/tool_words.dart';
 import '../../../ui/bot_avatar.dart';
 import '../../../ui/motion.dart';
 import '../chat_controller.dart';
+import '../read_aloud.dart';
 import '../media/attachment_view.dart';
 import 'chat_markdown.dart';
+import 'mentions.dart';
 import 'message_actions.dart';
 import 'shared_files.dart';
 import '../../../ui/action_buttons.dart';
@@ -209,9 +211,17 @@ class UserBubble extends StatelessWidget {
                   horizontal: AppSpace.md,
                   vertical: 11,
                 ),
-                child: Text(
-                  text,
-                  style: context.textTheme.bodyLarge?.copyWith(height: 1.4),
+                child: Builder(
+                  builder: (context) {
+                    final style = context.textTheme.bodyLarge?.copyWith(height: 1.4);
+                    // In a group chat, @mentions of its bots stand out (D-118).
+                    final mentions = MentionScope.maybeOf(context);
+                    if (mentions == null) return Text(text, style: style);
+                    return Text.rich(
+                      TextSpan(children: mentionSpans(mentions, text, style)),
+                      style: style,
+                    );
+                  },
                 ),
               ),
             ),
@@ -334,7 +344,10 @@ class AssistantMessage extends StatelessWidget {
       );
     }
     final scheme = context.colorScheme;
-    final bubble = DecoratedBox(
+    // While it's read aloud the bubble lights up in the accent, like the player above the composer.
+    Widget bubble(bool reading) => AnimatedContainer(
+      duration: AppMotion.of(context, AppMotion.duration),
+      curve: AppMotion.curve,
       decoration: BoxDecoration(
         color: context.isDark
             ? scheme.surfaceContainer
@@ -345,12 +358,20 @@ class AssistantMessage extends StatelessWidget {
           bottomStart: Radius.circular(20),
           bottomEnd: Radius.circular(20),
         ),
-        border: Border.all(color: context.appColors.hairline),
+        border: Border.all(
+          color: reading
+              ? scheme.primary.withValues(alpha: 0.6)
+              : context.appColors.hairline,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
+          ),
+          BoxShadow(
+            color: scheme.primary.withValues(alpha: reading ? 0.2 : 0),
+            blurRadius: 18,
           ),
         ],
       ),
@@ -376,18 +397,26 @@ class AssistantMessage extends StatelessWidget {
         ),
       ),
     );
-    final message = Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: entry.streaming
-          ? bubble
-          : MessageActions(
-              text: entry.text,
-              markdown: true,
-              onSpeak: onSpeak,
-              speakKey: Key('speak-${entry.id}'),
-              child: bubble,
-            ),
-    );
+    final message = entry.streaming
+        ? Align(alignment: AlignmentDirectional.centerStart, child: bubble(false))
+        : Consumer(
+            builder: (context, ref, _) {
+              final reading = ref.watch(
+                readAloudProvider.select((s) => s?.messageId == entry.id),
+              );
+              return Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: MessageActions(
+                  text: entry.text,
+                  markdown: true,
+                  onSpeak: onSpeak,
+                  speakKey: Key('speak-${entry.id}'),
+                  speaking: reading,
+                  child: bubble(reading),
+                ),
+              );
+            },
+          );
     if (media.isEmpty || entry.streaming) return message;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

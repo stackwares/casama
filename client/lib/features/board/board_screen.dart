@@ -14,7 +14,6 @@ import '../../theme/app_tokens.dart';
 import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/edge_fade.dart';
-import '../../ui/reveal_when_selected.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
@@ -83,6 +82,13 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
   var _owner = _Owner.all;
   TaskPriority? _priority;
   String? _project;
+
+  @override
+  void initState() {
+    super.initState();
+    // The projects filter keeps what it showed last time while it reloads.
+    refreshKeptOnOpen(context, [projectsProvider]);
+  }
 
   bool _keep(Task t, String? me, String? project) {
     if (_owner == _Owner.mine && t.assigneeUserId != me) return false;
@@ -183,44 +189,29 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
         body: AsyncView(
           value: ref.watch(tasksProvider),
           onRetry: () => ref.invalidate(tasksProvider),
+          loading: _BoardSkeleton(compact: compact),
           data: (items) {
             final shown = items.where((t) => _keep(t, me, project)).toList();
             final filters = [
-              for (final (o, label) in [
-                (_Owner.all, l10n.filterAll),
-                (_Owner.mine, l10n.filterMine),
-                (_Owner.bots, l10n.filterBots),
-              ])
-                RevealWhenSelected(
-                  selected: _owner == o,
-                  child: ChoiceChip(
-                    key: Key('filter-${o.name}'),
-                    label: Text(label),
-                    selected: _owner == o,
-                    onSelected: (_) => setState(() => _owner = o),
-                  ),
-                ),
-              DropdownButton<TaskPriority?>(
-                key: const Key('filterPriority'),
-                value: _priority,
-                hint: Text(l10n.priority),
-                underline: const SizedBox.shrink(),
-                items: [
-                  DropdownMenuItem<TaskPriority?>(
-                    value: null,
-                    child: Text(l10n.priority),
-                  ),
-                  for (final p in TaskPriority.values)
-                    DropdownMenuItem(
-                      value: p,
-                      child: Text(priorityLabel(context, p)),
-                    ),
-                ],
-                onChanged: hapticOnChanged(
-                  (p) => setState(() => _priority = p),
-                  haptic: HapticsHelper.selection,
-                ),
+              _OwnerSegments(
+                value: _owner,
+                onChanged: (o) => setState(() => _owner = o),
               ),
+              _PriorityFilter(
+                selected: _priority,
+                onChanged: (p) => setState(() => _priority = p),
+              ),
+              if (_owner != _Owner.all || _priority != null || project != null)
+                IconButton(
+                  key: const Key('clearFilterRow'),
+                  tooltip: l10n.clearFilters,
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(LucideIcons.x, size: 18),
+                  onPressed: () {
+                    HapticsHelper.selection();
+                    _clearFilters();
+                  },
+                ),
             ];
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -322,6 +313,156 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
   }
 }
 
+/// The tickets still loading: the filter chips, then on phones a list of status sections with
+/// ticket cards, and on wider windows the board's columns.
+class _BoardSkeleton extends StatelessWidget {
+  const _BoardSkeleton({required this.compact});
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    const chips = [
+      SkeletonBone(width: 52, height: 32, radius: 8),
+      SkeletonBone(width: 64, height: 32, radius: 8),
+      SkeletonBone(width: 56, height: 32, radius: 8),
+      SkeletonBone(width: 76, height: 14),
+    ];
+    if (compact) {
+      return SkeletonScope(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(AppSpace.gutter, 0, AppSpace.gutter, AppSpace.xs),
+              child: SizedBox(height: 48, child: Row(spacing: AppSpace.xs, children: chips)),
+            ),
+            Expanded(
+              child: ClipRect(
+                child: SingleChildScrollView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.gutter),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const _StatusHeaderSkeleton(first: true),
+                      for (var i = 0; i < 2; i++) _TicketCardSkeleton(titleWidth: 0.7 - i * 0.18),
+                      const _StatusHeaderSkeleton(first: false),
+                      for (var i = 0; i < 3; i++) _TicketCardSkeleton(titleWidth: 0.5 + i * 0.12),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return SkeletonScope(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(AppSpace.lg, 0, AppSpace.lg, AppSpace.sm),
+            child: SizedBox(height: 48, child: Row(spacing: AppSpace.sm, children: chips)),
+          ),
+          Expanded(
+            child: ClipRect(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(AppSpace.md, 0, AppSpace.md, BottomPadding.of(context, minimum: AppSpace.md)),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var c = 0; c < BoardScreen.statuses.length; c++)
+                      Container(
+                        width: 280,
+                        margin: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
+                        padding: const EdgeInsets.all(AppSpace.sm),
+                        decoration: BoxDecoration(
+                          color: context.colorScheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(AppSpace.xs, AppSpace.xs, AppSpace.xs, AppSpace.sm),
+                              child: Row(
+                                children: [
+                                  const SkeletonBone(width: 14, height: 14, radius: 7),
+                                  const SizedBox(width: 6),
+                                  Expanded(child: SkeletonText(style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700), widthFactor: 0.45)),
+                                  const SkeletonBone(width: 12, height: 10),
+                                ],
+                              ),
+                            ),
+                            for (var i = 0; i < 3 - c % 3; i++) _TicketCardSkeleton(titleWidth: 0.55 + ((c + i) % 3) * 0.12),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A [_StatusHeader] still loading: the status dot and the section title.
+class _StatusHeaderSkeleton extends StatelessWidget {
+  const _StatusHeaderSkeleton({required this.first});
+  final bool first;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(AppSpace.xxs, first ? AppSpace.xs : AppSpace.md, AppSpace.xxs, AppSpace.xs),
+      child: const Row(
+        children: [
+          SkeletonBone(width: 14, height: 14, radius: 7),
+          SizedBox(width: 6),
+          Expanded(child: SkeletonSectionHeader(width: 88, padding: EdgeInsets.zero)),
+        ],
+      ),
+    );
+  }
+}
+
+/// A ticket [_Card] still loading: the title and a row of pills.
+class _TicketCardSkeleton extends StatelessWidget {
+  const _TicketCardSkeleton({this.titleWidth = 0.6});
+  final double titleWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppSpace.sm),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpace.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          spacing: 6,
+          children: [
+            SkeletonText(style: context.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600), widthFactor: titleWidth),
+            const Row(
+              spacing: 6,
+              children: [
+                SkeletonBone(width: 56, height: 22, radius: AppRadius.pill),
+                SkeletonBone(width: 72, height: 22, radius: AppRadius.pill),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// The project filter in the header: all projects or one, and the way to manage them.
 class _ProjectFilter extends ConsumerWidget {
   const _ProjectFilter({required this.selected, required this.onChanged});
@@ -333,16 +474,11 @@ class _ProjectFilter extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final scheme = context.colorScheme;
     final projects = ref.watch(projectsProvider).value ?? const <Project>[];
     final current = projects.where((p) => p.id == selected).firstOrNull;
     final compact =
         AppBreakpoints.of(MediaQuery.sizeOf(context).width) ==
         WindowSize.compact;
-    final fill = context.isDark
-        ? scheme.surfaceContainer
-        : scheme.surfaceContainerLowest;
-    final on = current != null;
     Widget check(bool selected) =>
         Icon(selected ? LucideIcons.check : null, size: 18);
     return MenuAnchor(
@@ -379,49 +515,227 @@ class _ProjectFilter extends ConsumerWidget {
           ),
         ),
       ],
-      builder: (context, controller, _) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 3),
-        child: Tooltip(
-          message: l10n.filterByProject,
-          child: TextButton(
-            key: const Key('projectFilter'),
-            onPressed: () =>
-                controller.isOpen ? controller.close() : controller.open(),
-            style: TextButton.styleFrom(
-              minimumSize: const Size(0, 36),
-              maximumSize: Size(compact ? 168 : 260, 36),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: const EdgeInsets.only(left: 14, right: 10),
-              shape: const StadiumBorder(),
-              backgroundColor: on
-                  ? scheme.primary.withValues(alpha: 0.14)
-                  : fill,
-              foregroundColor: on ? scheme.primary : scheme.onSurface,
-              side: BorderSide(
-                color: on
-                    ? scheme.primary.withValues(alpha: 0.4)
-                    : context.appColors.hairline,
-              ),
-              textStyle: context.textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+      builder: (context, controller, _) => _FilterPill(
+        pillKey: const Key('projectFilter'),
+        tooltip: l10n.filterByProject,
+        label: current?.title ?? l10n.allProjects,
+        active: current != null,
+        maxWidth: compact ? 168 : 260,
+        onPressed: () =>
+            controller.isOpen ? controller.close() : controller.open(),
+      ),
+    );
+  }
+}
+
+/// The priority filter, a pill like the project one.
+class _PriorityFilter extends StatelessWidget {
+  const _PriorityFilter({required this.selected, required this.onChanged});
+
+  /// The priority shown, or null for any.
+  final TaskPriority? selected;
+  final ValueChanged<TaskPriority?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    void pick(TaskPriority? p) {
+      HapticsHelper.selection();
+      onChanged(p);
+    }
+
+    Widget check(bool on) => Icon(on ? LucideIcons.check : null, size: 18);
+    return MenuAnchor(
+      alignmentOffset: const Offset(0, 6),
+      menuChildren: [
+        MenuItemButton(
+          key: const Key('priorityFilter-any'),
+          leadingIcon: check(selected == null),
+          onPressed: () => pick(null),
+          child: Text(l10n.anyPriority),
+        ),
+        for (final p in TaskPriority.values)
+          MenuItemButton(
+            key: Key('priorityFilter-${p.name}'),
+            leadingIcon: check(p == selected),
+            trailingIcon: Icon(
+              LucideIcons.flag,
+              size: 16,
+              color: _priorityColor(context, p),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    current?.title ?? l10n.allProjects,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(LucideIcons.chevronDown, size: 16),
-              ],
+            onPressed: () => pick(p),
+            child: Padding(
+              padding: const EdgeInsets.only(right: AppSpace.md),
+              child: Text(priorityLabel(context, p)),
             ),
           ),
+      ],
+      builder: (context, controller, _) => _FilterPill(
+        pillKey: const Key('filterPriority'),
+        tooltip: l10n.priority,
+        icon: LucideIcons.flag,
+        iconColor: selected == null ? null : _priorityColor(context, selected!),
+        label: selected == null ? l10n.priority : priorityLabel(context, selected!),
+        active: selected != null,
+        onPressed: () =>
+            controller.isOpen ? controller.close() : controller.open(),
+      ),
+    );
+  }
+}
+
+Color _priorityColor(BuildContext context, TaskPriority p) {
+  final colors = context.appColors;
+  return switch (p) {
+    TaskPriority.urgent => colors.negative,
+    TaskPriority.high => colors.waiting,
+    TaskPriority.medium => context.colorScheme.primary,
+    TaskPriority.low || TaskPriority.none =>
+      context.colorScheme.onSurfaceVariant,
+  };
+}
+
+/// The look every filter on Tasks shares: a 36-high pill with a chevron, tinted while it narrows
+/// the tickets.
+class _FilterPill extends StatelessWidget {
+  const _FilterPill({
+    required this.pillKey,
+    required this.label,
+    required this.active,
+    required this.onPressed,
+    this.tooltip,
+    this.icon,
+    this.iconColor,
+    this.maxWidth = 260,
+  });
+
+  final Key pillKey;
+  final String label;
+  final bool active;
+  final VoidCallback onPressed;
+  final String? tooltip;
+  final IconData? icon;
+  final Color? iconColor;
+  final double maxWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final fill = context.isDark
+        ? scheme.surfaceContainer
+        : scheme.surfaceContainerLowest;
+    final button = TextButton(
+      key: pillKey,
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        minimumSize: const Size(0, 36),
+        maximumSize: Size(maxWidth, 36),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        padding: EdgeInsets.only(left: icon == null ? 14 : 12, right: 10),
+        shape: const StadiumBorder(),
+        backgroundColor: active ? scheme.primary.withValues(alpha: 0.14) : fill,
+        foregroundColor: active ? scheme.primary : scheme.onSurface,
+        side: BorderSide(
+          color: active
+              ? scheme.primary.withValues(alpha: 0.4)
+              : context.appColors.hairline,
         ),
+        textStyle: context.textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 16, color: iconColor),
+            const SizedBox(width: 6),
+          ],
+          Flexible(
+            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
+          const SizedBox(width: 4),
+          const Icon(LucideIcons.chevronDown, size: 16),
+        ],
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 3),
+      child: tooltip == null ? button : Tooltip(message: tooltip!, child: button),
+    );
+  }
+}
+
+/// All, Mine or Bots as one segmented pill, the same height and outline as the filter pills.
+class _OwnerSegments extends StatelessWidget {
+  const _OwnerSegments({required this.value, required this.onChanged});
+
+  final _Owner value;
+  final ValueChanged<_Owner> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final fill = context.isDark
+        ? scheme.surfaceContainer
+        : scheme.surfaceContainerLowest;
+    final style = context.textTheme.labelLarge?.copyWith(
+      fontWeight: FontWeight.w600,
+    );
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.all(3),
+      decoration: ShapeDecoration(
+        color: fill,
+        shape: StadiumBorder(side: BorderSide(color: context.appColors.hairline)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final (o, label) in [
+            (_Owner.all, l10n.filterAll),
+            (_Owner.mine, l10n.filterMine),
+            (_Owner.bots, l10n.filterBots),
+          ])
+            Semantics(
+              button: true,
+              selected: value == o,
+              child: Material(
+                type: MaterialType.transparency,
+                child: InkWell(
+                  key: Key('filter-${o.name}'),
+                  customBorder: const StadiumBorder(),
+                  onTap: () {
+                    if (value == o) return;
+                    HapticsHelper.selection();
+                    onChanged(o);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOut,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    alignment: Alignment.center,
+                    decoration: ShapeDecoration(
+                      shape: const StadiumBorder(),
+                      color: value == o
+                          ? scheme.primary.withValues(alpha: 0.16)
+                          : Colors.transparent,
+                    ),
+                    child: AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 180),
+                      style: style!.copyWith(
+                        color: value == o
+                            ? scheme.primary
+                            : scheme.onSurfaceVariant,
+                      ),
+                      child: Text(label),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -837,10 +1151,7 @@ class _TicketSheetState extends ConsumerState<TicketSheet> {
         ?.where((t) => t.id == widget.taskId)
         .firstOrNull;
     if (task == null) {
-      return const SizedBox(
-        height: 200,
-        child: SkeletonList(count: 2, padding: EdgeInsets.zero),
-      );
+      return const _TicketSheetSkeleton();
     }
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
     final comments =
@@ -1026,6 +1337,50 @@ class _TicketSheetState extends ConsumerState<TicketSheet> {
             label: Text(l10n.deleteTicket),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A [TicketSheet] still loading: the title, details, the status, priority and assignee fields,
+/// the review switch and the comments header.
+class _TicketSheetSkeleton extends StatelessWidget {
+  const _TicketSheetSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonScope(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg, AppSpace.lg, BottomPadding.of(context, minimum: AppSpace.lg)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          spacing: AppSpace.md,
+          children: [
+            SkeletonText(style: text.titleLarge?.copyWith(fontWeight: FontWeight.w700), widthFactor: 0.6),
+            SkeletonText(style: text.bodyMedium, lines: 2, widthFactor: 0.8),
+            const Wrap(
+              spacing: AppSpace.md,
+              runSpacing: AppSpace.sm,
+              children: [
+                SkeletonBone(width: 220, height: 56, radius: 12),
+                SkeletonBone(width: 220, height: 56, radius: 12),
+                SkeletonBone(width: 220, height: 56, radius: 12),
+              ],
+            ),
+            SizedBox(
+              height: 56,
+              child: Row(
+                children: [
+                  Expanded(child: SkeletonText(style: text.bodyLarge, widthFactor: 0.4)),
+                  const SkeletonBone(width: 52, height: 32, radius: AppRadius.pill),
+                ],
+              ),
+            ),
+            const SkeletonSectionHeader(width: 88),
+          ],
+        ),
       ),
     );
   }

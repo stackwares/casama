@@ -25,8 +25,10 @@ import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
+import '../../ui/mascot.dart';
+import 'paywall.dart';
 
-final _plansProvider = FutureProvider<PlanCatalog>((ref) => ref.watch(backendProvider).plans());
+final planCatalogProvider = FutureProvider<PlanCatalog>((ref) => ref.watch(backendProvider).plans());
 final _usageProvider = FutureProvider<BillingUsage?>((ref) async {
   final org = ref.watch(currentOrgProvider);
   return org == null ? null : ref.watch(backendProvider).billingUsage(org.id);
@@ -35,12 +37,12 @@ final _connectKeysProvider = FutureProvider<List<ConnectKey>>((ref) async {
   final org = ref.watch(currentOrgProvider);
   return org == null ? const [] : ref.watch(backendProvider).connectKeys(org.id);
 });
-final _storefrontProvider = FutureProvider<String?>((ref) => ref.watch(storeProvider).storefront());
-final _storeProductsProvider = FutureProvider<Map<String, StoreProduct>>((ref) async {
+final storefrontProvider = FutureProvider<String?>((ref) => ref.watch(storeProvider).storefront());
+final storeProductsProvider = FutureProvider<Map<String, StoreProduct>>((ref) async {
   final store = ref.watch(storeProvider);
   final source = store.source;
   if (source == null) return const {};
-  final catalog = await ref.watch(_plansProvider.future);
+  final catalog = await ref.watch(planCatalogProvider.future);
   final ids = {for (final p in catalog.plans) ?p.storeProductIds[source]};
   return {for (final p in await store.products(ids)) p.id: p};
 });
@@ -54,22 +56,9 @@ final openUrlProvider = Provider<Future<void> Function(String url)>(
       (url) async => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
 );
 
-/// Shown when the server answers 402 (plan limit or out of credits).
-Future<void> showPaywall(BuildContext context, String message) async {
-  final l10n = context.l10n;
-  unawaited(Analytics.capture('paywall_view', properties: {'source': 'limit', 'paywall_kind': 'regular'}));
-  final go = await showConfirm(
-    context: context,
-    icon: LucideIcons.gem,
-    title: l10n.upgradeTitle,
-    message: message,
-    confirmLabel: l10n.seePlans,
-    cancelLabel: l10n.notNow,
-    confirmKey: const Key('paywallSeePlans'),
-  );
-  if (go != true) unawaited(Analytics.capture('paywall_dismiss', properties: {'source': 'limit'}));
-  if (go == true && context.mounted) await context.push('/settings/billing');
-}
+/// Shown when the server answers 402 (plan limit or out of credits): the full-screen paywall, over
+/// any sheet or dialog that was open (D-236).
+Future<void> showPaywall(BuildContext context, String message) => openPaywall(context, reason: message);
 
 class BillingScreen extends ConsumerStatefulWidget {
   const BillingScreen({super.key});
@@ -156,18 +145,20 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
       body: AsyncView(
         value: billing,
         onRetry: () => ref.invalidate(billingProvider),
+        loading: const _BillingSkeleton(),
         data: (b) {
           if (b == null || !b.enabled) {
             return EmptyState(icon: LucideIcons.infinity, title: l10n.billingOffTitle, message: l10n.billingOffSelfHosted);
           }
           final org = ref.watch(currentOrgProvider);
           final isAdmin = org != null && org.role != OrgRole.member;
-          final channels = purchaseChannels(platform: ref.watch(platformProvider), isWeb: kIsWeb, storefront: ref.watch(_storefrontProvider).value);
+          final channels = purchaseChannels(platform: ref.watch(platformProvider), isWeb: kIsWeb, storefront: ref.watch(storefrontProvider).value);
           return AbsorbPointer(
             absorbing: _busy,
             child: PageColumn(
               children: [
                 _CurrentPlan(summary: b, onManage: isAdmin && b.source_.value != 'default' ? () => _manage(b) : null).appCardEntrance(),
+                if (isAdmin && b.planCode == 'free') const _UpgradeBanner().appCardEntrance(),
                 if (isAdmin) ..._plans(context, b, channels),
                 if (isAdmin && channels.contains(PurchaseChannel.web)) ..._packs(context),
                 if (isAdmin && (channels.contains(PurchaseChannel.appStore) || channels.contains(PurchaseChannel.googlePlay)))
@@ -201,8 +192,8 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   List<Widget> _plans(BuildContext context, BillingSummary b, List<PurchaseChannel> channels) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
-    final catalog = ref.watch(_plansProvider).value;
-    final products = ref.watch(_storeProductsProvider).value ?? const {};
+    final catalog = ref.watch(planCatalogProvider).value;
+    final products = ref.watch(storeProductsProvider).value ?? const {};
     final source = ref.watch(storeProvider).source;
     if (catalog == null) return const [];
     return [
@@ -260,7 +251,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
 
   List<Widget> _packs(BuildContext context) {
     final l10n = context.l10n;
-    final packs = ref.watch(_plansProvider).value?.packs.where((p) => p.web).toList() ?? const [];
+    final packs = ref.watch(planCatalogProvider).value?.packs.where((p) => p.web).toList() ?? const [];
     if (packs.isEmpty) return const [];
     return [
       SectionHeader(title: l10n.credits),
@@ -288,6 +279,157 @@ String _limitsText(BuildContext context, Map<String, num> limits) {
     if (limits['computer_hours'] != null) l10n.limitComputerHours(limits['computer_hours']!.toInt()),
     if (limits['monthly_credits_usd'] != null) l10n.limitCredits(limits['monthly_credits_usd']!.humanizedCurrency(context.l10n.localeName, 'USD', decimalDigits: 0)),
   ].join(' · ');
+}
+
+/// On the free plan, the way to the paywall: the bots asking to come along.
+class _UpgradeBanner extends StatelessWidget {
+  const _UpgradeBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpace.sm),
+      child: Material(
+        key: const Key('openPaywall'),
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        clipBehavior: Clip.antiAlias,
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [scheme.primary, Color.lerp(scheme.primary, scheme.tertiary, 0.6)!],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: InkWell(
+            onTap: () => openPaywall(context, source: 'settings'),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.sm, AppSpace.md, AppSpace.sm),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 92,
+                    height: 56,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        const Positioned(left: 0, top: 10, child: MascotImage(Mascot.giggly, size: 40, animate: false)),
+                        const Positioned(left: 50, top: 10, child: MascotImage(Mascot.lovey, size: 40, animate: false)),
+                        const Positioned(left: 20, top: -2, child: MascotImage(Mascot.starry, size: 54)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpace.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l10n.upgradeToPro, style: context.textTheme.titleMedium?.copyWith(color: scheme.onPrimary, fontWeight: FontWeight.w900)),
+                        Text(l10n.upgradeToProBody, style: context.textTheme.bodySmall?.copyWith(color: scheme.onPrimary.withValues(alpha: 0.85))),
+                      ],
+                    ),
+                  ),
+                  Icon(LucideIcons.chevronRight, color: scheme.onPrimary),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The billing page before it loads: the current plan card, two plan cards and the usage row.
+class _BillingSkeleton extends StatelessWidget {
+  const _BillingSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    final muted = text.bodySmall?.copyWith(height: 1.4);
+    Widget plan(double name, double limits) => Padding(
+      padding: const EdgeInsets.only(bottom: AppSpace.xs),
+      child: SkeletonCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const SkeletonBone(width: 20, height: 20, radius: 6),
+                const SizedBox(width: AppSpace.xs),
+                Expanded(child: SkeletonText(style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800), widthFactor: name)),
+              ],
+            ),
+            const SizedBox(height: 6),
+            SkeletonText(style: muted, widthFactor: limits),
+            const SizedBox(height: AppSpace.sm),
+            const Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: SkeletonBone(width: 150, height: 44, radius: AppRadius.pill),
+            ),
+          ],
+        ),
+      ),
+    );
+    return SkeletonPage(
+      children: [
+        SkeletonCard(
+          padding: const EdgeInsets.all(AppSpace.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SkeletonBone(width: 48, height: 48, radius: 14),
+                  const SizedBox(width: AppSpace.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SkeletonText(style: text.labelMedium, widthFactor: 0.3),
+                        SkeletonText(style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w800), widthFactor: 0.45),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpace.md),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(color: context.colorScheme.surfaceContainer, borderRadius: BorderRadius.circular(AppRadius.row)),
+                child: Row(
+                  children: [
+                    const SkeletonBone(width: 20, height: 20, radius: 6),
+                    const SizedBox(width: AppSpace.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SkeletonText(style: text.titleSmall?.copyWith(fontWeight: FontWeight.w700), widthFactor: 0.4),
+                          SkeletonText(style: muted, widthFactor: 0.75),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SkeletonSectionHeader(width: 60),
+        plan(0.3, 0.7),
+        plan(0.36, 0.8),
+        const Padding(
+          padding: EdgeInsets.only(top: AppSpace.lg),
+          child: SkeletonGroupedCard(count: 1),
+        ),
+      ],
+    );
+  }
 }
 
 class _CurrentPlan extends StatelessWidget {

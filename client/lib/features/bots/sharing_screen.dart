@@ -125,7 +125,7 @@ class _SharingScreenState extends ConsumerState<SharingScreen> {
       title: l10n.sharing,
       subtitle: ref.watch(botProvider(widget.botId))?.name,
       body: a == null
-          ? const SkeletonDetail()
+          ? const _SharingSkeleton()
           : PageColumn(
               children: [
                 FormNote(l10n.sharingHelp, icon: LucideIcons.users),
@@ -271,6 +271,63 @@ class _SharingScreenState extends ConsumerState<SharingScreen> {
                 ],
               ],
             ),
+    );
+  }
+}
+
+/// The page while access loads: the help note, the private switch in its card, then the people
+/// header over a card of people rows, in the real rows' sizes.
+class _SharingSkeleton extends StatelessWidget {
+  const _SharingSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    // ListTile's own insets.
+    const tilePadding = EdgeInsetsDirectional.only(start: 16, end: 24);
+    Widget person(double title) => ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 56),
+      child: SkeletonRow(
+        leadingSize: 18,
+        trailing: SkeletonTrailing.meta,
+        subtitle: false,
+        padding: tilePadding,
+        gap: 16,
+        titleStyle: text.bodyLarge,
+        titleWidth: title,
+      ),
+    );
+    return SkeletonPage(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(padding: EdgeInsets.only(top: 1), child: SkeletonBone(width: 16, height: 16, radius: 4)),
+            const SizedBox(width: 6),
+            Expanded(child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.35), lines: 2, widthFactor: 0.8)),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        SkeletonGroupedCard(
+          rows: [
+            ConstrainedBox(
+              // A two-line SwitchListTile.
+              constraints: const BoxConstraints(minHeight: 72),
+              child: SkeletonRow(
+                leading: SkeletonLeading.none,
+                trailing: SkeletonTrailing.toggle,
+                padding: tilePadding,
+                titleStyle: text.bodyLarge,
+                subtitleStyle: text.bodyMedium,
+                titleWidth: 0.4,
+                subtitleWidth: 0.7,
+              ),
+            ),
+          ],
+        ),
+        const SkeletonSectionHeader(width: 64),
+        SkeletonGroupedCard(rows: [person(0.5), person(0.38), person(0.44)]),
+      ],
     );
   }
 }

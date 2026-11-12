@@ -429,6 +429,49 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
   }
 }
 
+/// One workspace setting still loading: a grouped card holding a [GroupedTile] row, or a
+/// three-line [SwitchListTile] for [threeLineSwitch].
+class _SettingSkeleton extends StatelessWidget {
+  const _SettingSkeleton({this.threeLineSwitch = false});
+  final bool threeLineSwitch;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonScope(
+      child: threeLineSwitch
+          ? SkeletonGroupedCard(
+              rows: [
+                // A three-line ListTile: 88 points, 16-point sides, the switch beside the text.
+                SizedBox(
+                  height: 88,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              SkeletonText(style: text.bodyLarge, widthFactor: 0.4),
+                              SkeletonText(style: text.bodyMedium, widthFactor: 0.8, lines: 2),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        const SkeletonBone(width: 52, height: 32, radius: AppRadius.pill),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : const SkeletonGroupedCard(count: 1),
+    );
+  }
+}
+
 final _botToBotProvider = FutureProvider.autoDispose.family<bool, String>((ref, orgId) => ref.watch(backendProvider).allowBotToBot(orgId));
 
 /// Bot-to-bot switch (D-133): whether bots may @mention, message and delegate to each other.
@@ -467,8 +510,9 @@ class EncryptionSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final s = ref.watch(_encryptionProvider(orgId)).value;
-    if (s == null) return const SizedBox.shrink();
+    final loadState = ref.watch(_encryptionProvider(orgId));
+    final s = loadState.value;
+    if (s == null) return loadState.isLoading ? const _SettingSkeleton(threeLineSwitch: true) : const SizedBox.shrink();
     final on = s.mode == EncryptionStatusModeEnum.on_ || s.mode == EncryptionStatusModeEnum.encrypting;
     final status = switch (s.mode) {
       EncryptionStatusModeEnum.encrypting => l10n.encryptionEncrypting,
@@ -541,8 +585,9 @@ class MemoryBackendSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final b = ref.watch(_memoryBackendProvider(orgId)).value;
-    if (b == null) return const SizedBox.shrink();
+    final loadState = ref.watch(_memoryBackendProvider(orgId));
+    final b = loadState.value;
+    if (b == null) return loadState.isLoading ? const _SettingSkeleton() : const SizedBox.shrink();
     final name = switch (b.provider) {
       MemoryBackendProviderEnum.honcho => 'Honcho',
       MemoryBackendProviderEnum.supermemory => 'Supermemory',
@@ -723,8 +768,9 @@ class PhoneCallsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final t = ref.watch(_telephonyProvider(orgId)).value;
-    if (t == null) return const SizedBox.shrink();
+    final loadState = ref.watch(_telephonyProvider(orgId));
+    final t = loadState.value;
+    if (t == null) return loadState.isLoading ? const _SettingSkeleton() : const SizedBox.shrink();
     return GroupedCard(
       children: [
         GroupedTile(
@@ -860,8 +906,9 @@ class PaymentsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final p = ref.watch(_paymentsProvider(orgId)).value;
-    if (p == null) return const SizedBox.shrink();
+    final loadState = ref.watch(_paymentsProvider(orgId));
+    final p = loadState.value;
+    if (p == null) return loadState.isLoading ? const _SettingSkeleton() : const SizedBox.shrink();
     final recent = p.connected ? (ref.watch(_paymentRequestsProvider(orgId)).value ?? const <PaymentRequest>[]) : const <PaymentRequest>[];
     return GroupedCard(
       children: [
@@ -1006,8 +1053,9 @@ class SecretStoreSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final s = ref.watch(_secretStoreProvider(orgId)).value;
-    if (s == null) return const SizedBox.shrink();
+    final loadState = ref.watch(_secretStoreProvider(orgId));
+    final s = loadState.value;
+    if (s == null) return loadState.isLoading ? const _SettingSkeleton() : const SizedBox.shrink();
     final infisical = s.provider == SecretStoreSettingsProviderEnum.infisical;
     return GroupedCard(
       children: [

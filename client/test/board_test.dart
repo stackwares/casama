@@ -79,6 +79,24 @@ void main() {
     expect(find.byKey(const Key('ticket-t1')), findsOneWidget);
   });
 
+  testWidgets('filters by priority, and the clear button resets every filter', (tester) async {
+    await setSize(tester, const Size(1500, 900));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const BoardScreen()));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('clearFilterRow')), findsNothing);
+    await tester.tap(find.byKey(const Key('filterPriority')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('priorityFilter-urgent')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('ticket-t1')), findsNothing);
+    expect(find.descendant(of: find.byKey(const Key('filterPriority')), matching: find.text('Urgent')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('clearFilterRow')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('ticket-t1')), findsOneWidget);
+    expect(find.byKey(const Key('clearFilterRow')), findsNothing);
+  });
+
   testWidgets('the project filter in the header lists projects and the way to manage them', (tester) async {
     await setSize(tester, const Size(1500, 900));
     final backend = FakeBackend();

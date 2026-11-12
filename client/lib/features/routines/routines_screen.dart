@@ -46,6 +46,9 @@ class RoutinesScreen extends ConsumerWidget {
       body: AsyncView(
         value: ref.watch(routinesProvider(botId)),
         onRetry: () => ref.invalidate(routinesProvider(botId)),
+        loading: SkeletonPage(
+          children: [for (var i = 0; i < 4; i++) Padding(padding: EdgeInsets.only(top: i == 0 ? 0 : AppSpace.xs), child: _RoutineCardSkeleton(titleWidth: 0.4 + (i % 3) * 0.1))],
+        ),
         data: (items) => items.isEmpty
             ? EmptyState(
                 icon: LucideIcons.clock,
@@ -129,6 +132,43 @@ class RoutinesScreen extends ConsumerWidget {
 String _formatWhen(BuildContext context, DateTime t) {
   final local = t.toLocal();
   return '${local.formattedWeekdayDate(context)} · ${local.formattedTime(context)}';
+}
+
+/// A [_RoutineCard] still loading: the trigger tile, name, schedule and next-run pill, the switch
+/// and the menu button.
+class _RoutineCardSkeleton extends StatelessWidget {
+  const _RoutineCardSkeleton({required this.titleWidth});
+  final double titleWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonCard(
+      padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.xs, 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SkeletonBone(width: 38, height: 38, radius: AppRadius.icon),
+          const SizedBox(width: AppSpace.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SkeletonText(style: text.titleSmall?.copyWith(fontWeight: FontWeight.w700), widthFactor: titleWidth),
+                const SizedBox(height: 2),
+                SkeletonText(style: text.bodySmall, widthFactor: 0.7),
+                const SizedBox(height: 6),
+                const Align(alignment: AlignmentDirectional.centerStart, child: SkeletonBone(width: 150, height: 22, radius: AppRadius.pill)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 60, height: 48, child: Center(child: SkeletonBone(width: 52, height: 32, radius: AppRadius.pill))),
+          const SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 4, height: 16, radius: 2))),
+        ],
+      ),
+    );
+  }
 }
 
 class _RoutineCard extends ConsumerWidget {

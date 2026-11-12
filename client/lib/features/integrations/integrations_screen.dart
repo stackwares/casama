@@ -44,6 +44,18 @@ IconData integrationKindIcon(IntegrationKind kind) => switch (kind) {
   IntegrationKind.localMcp => LucideIcons.laptop,
 };
 
+/// Category chips in the order people look for them: everyday apps first, developer tools last.
+const appCategoryOrder = [
+  CatalogAppCategoryEnum.google,
+  CatalogAppCategoryEnum.productivity,
+  CatalogAppCategoryEnum.data,
+  CatalogAppCategoryEnum.automation,
+  CatalogAppCategoryEnum.design,
+  CatalogAppCategoryEnum.sales,
+  CatalogAppCategoryEnum.payments,
+  CatalogAppCategoryEnum.developer,
+];
+
 String appCategoryLabel(BuildContext context, CatalogAppCategoryEnum c) {
   final l10n = context.l10n;
   return switch (c) {
@@ -211,6 +223,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
       body: AsyncView(
         value: connections,
         onRetry: () => ref.invalidate(integrationsProvider),
+        loading: const _IntegrationsSkeleton(),
         // A catalog: wide windows show more apps per row rather than one narrow column.
         data: (items) {
           // A hub with signed-in apps is listed as those apps, not as one "Composio" card.
@@ -249,9 +262,7 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
                 // Spread into the page, so each part gets the page's side padding and the sideways
                 // lists can reach the edges (PageBleed).
                 ...catalog.when<List<Widget>>(
-                  loading: () => const [
-                    SkeletonGrid(count: 6, tileHeight: 100),
-                  ],
+                  loading: () => const [_CatalogSkeleton()],
                   error: (e, _) => [
                     FormNote(
                       errorText(context, e),
@@ -320,7 +331,12 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
         if (h.status == ProviderAccountStatusEnum.connected) ?h.app?.id,
     };
     final categories = [
-      for (final c in CatalogAppCategoryEnum.values)
+      for (final c in [
+        ...appCategoryOrder,
+        // A category added later still shows, after the known ones.
+        for (final c in CatalogAppCategoryEnum.values)
+          if (!appCategoryOrder.contains(c)) c,
+      ])
         if (cat.apps.any((a) => a.category == c)) c,
     ];
     final shown = [
@@ -1222,6 +1238,7 @@ class BotIntegrationsScreen extends ConsumerWidget {
       body: AsyncView(
         value: ref.watch(integrationsProvider),
         onRetry: () => ref.invalidate(integrationsProvider),
+        loading: const _BotIntegrationsSkeleton(),
         data: (items) => items.isEmpty
             ? EmptyState(
                 icon: LucideIcons.puzzle,
@@ -1264,6 +1281,247 @@ class BotIntegrationsScreen extends ConsumerWidget {
                 ],
               ),
       ),
+    );
+  }
+}
+
+/// The Apps page still loading: the Connected / Browse switch, then connection cards, in the
+/// same readable column as the Connected tab.
+class _IntegrationsSkeleton extends StatelessWidget {
+  const _IntegrationsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SkeletonPage(
+      maxWidth: kWidePageMaxWidth,
+      children: [
+        _Readable(child: SkeletonBone(height: 40, radius: 9)),
+        SizedBox(height: AppSpace.md),
+        _Readable(
+          child: Column(
+            children: [
+              _ConnectionTileSkeleton(titleWidth: 0.34),
+              SizedBox(height: AppSpace.sm),
+              _ConnectionTileSkeleton(titleWidth: 0.46),
+              SizedBox(height: AppSpace.sm),
+              _ConnectionTileSkeleton(titleWidth: 0.28),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// A [_ConnectionTile] still loading: the 48-point logo, the name with its status pill, the
+/// detail line and the chevron.
+class _ConnectionTileSkeleton extends StatelessWidget {
+  const _ConnectionTileSkeleton({required this.titleWidth});
+  final double titleWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    final pill = text.labelMedium?.copyWith(fontWeight: FontWeight.w600, height: 1.15);
+    return SkeletonCard(
+      child: Row(
+        children: [
+          const SkeletonBone(width: 48, height: 48, radius: 48 * 0.28),
+          const SizedBox(width: AppSpace.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: SkeletonText(style: text.titleSmall, widthFactor: titleWidth * 1.6)),
+                    const SizedBox(width: AppSpace.xs),
+                    // The status pill: its text line plus 4 points above and below.
+                    SizedBox(
+                      width: 56,
+                      child: Stack(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: SkeletonText(style: pill, width: 0),
+                          ),
+                          const Positioned.fill(
+                            child: SkeletonBone(height: double.infinity, radius: AppRadius.pill),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                SkeletonText(style: text.bodySmall, widthFactor: 0.6),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpace.xs),
+          const SkeletonBone(width: 8, height: 12, radius: 3),
+        ],
+      ),
+    );
+  }
+}
+
+/// The Browse tab while the catalog loads: the search field, the category chips, a section
+/// header and the app grid with the same columns and tile height as the real one.
+class _CatalogSkeleton extends StatelessWidget {
+  const _CatalogSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonScope(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SkeletonBone(height: 52, radius: 14),
+          const SizedBox(height: AppSpace.sm),
+          SizedBox(
+            height: 38,
+            child: ClipRect(
+              child: OverflowBox(
+                alignment: AlignmentDirectional.centerStart,
+                maxWidth: double.infinity,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final w in const [52.0, 92.0, 76.0, 104.0, 84.0, 96.0]) ...[
+                      SkeletonBone(width: w, height: 32, radius: 8),
+                      const SizedBox(width: AppSpace.xs),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SkeletonSectionHeader(width: 72),
+          LayoutBuilder(
+            builder: (context, c) {
+              final columns = c.maxWidth > 1120
+                  ? 4
+                  : (c.maxWidth > 820 ? 3 : (c.maxWidth > 560 ? 2 : 1));
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
+                  mainAxisSpacing: AppSpace.sm,
+                  crossAxisSpacing: AppSpace.sm,
+                  mainAxisExtent: 100,
+                ),
+                itemCount: columns == 1 ? 5 : columns * 3,
+                itemBuilder: (_, i) => _AppTileSkeleton(index: i),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// An [_AppTile] still loading: the logo, name, description and sign-in line, and the chevron.
+class _AppTileSkeleton extends StatelessWidget {
+  const _AppTileSkeleton({required this.index});
+  final int index;
+
+  static const _names = [0.36, 0.5, 0.3, 0.44, 0.4];
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonCard(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.md),
+      child: Row(
+        children: [
+          const SkeletonBone(width: 48, height: 48, radius: 48 * 0.28),
+          const SizedBox(width: AppSpace.md),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonText(style: text.titleSmall, widthFactor: _names[index % _names.length]),
+                const SizedBox(height: 2),
+                SkeletonText(style: text.bodySmall, widthFactor: 0.8),
+                const SizedBox(height: 4),
+                SkeletonText(
+                  style: text.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+                  widthFactor: 0.28,
+                ),
+              ],
+            ),
+          ),
+          const SkeletonBone(width: 8, height: 12, radius: 3),
+        ],
+      ),
+    );
+  }
+}
+
+/// A bot's integrations still loading: the help note, then a grouped card of logo rows with a
+/// switch each.
+class _BotIntegrationsSkeleton extends StatelessWidget {
+  const _BotIntegrationsSkeleton();
+
+  static const _titles = [0.38, 0.5, 0.3, 0.44];
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonPage(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 1),
+              child: SkeletonBone(width: 16, height: 16, radius: 8),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: SkeletonText(
+                style: context.textTheme.bodySmall?.copyWith(height: 1.35),
+                widthFactor: 0.8,
+                lines: 2,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        SkeletonGroupedCard(
+          rows: [
+            for (final w in _titles)
+              Row(
+                children: [
+                  Expanded(
+                    child: SkeletonRow(
+                      leading: SkeletonLeading.square,
+                      leadingSize: 36,
+                      trailing: SkeletonTrailing.none,
+                      titleWidth: w,
+                      subtitleWidth: 0.26,
+                      padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.md, 12, 0, 12),
+                    ),
+                  ),
+                  // The Switch keeps a 48-point tap target.
+                  const Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(AppSpace.xs, 12, AppSpace.md, 12),
+                    child: SizedBox(
+                      height: 48,
+                      child: Center(
+                        child: SkeletonBone(width: 52, height: 32, radius: AppRadius.pill),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

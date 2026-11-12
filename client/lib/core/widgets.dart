@@ -49,6 +49,7 @@ String _authErrorText(BuildContext context, sb.AuthException e) {
 /// A readable message for an error from the API, Supabase or the network.
 String errorText(BuildContext context, Object error) {
   if (error is sb.AuthException) return _authErrorText(context, error);
+  if (error is sb.PostgrestException && error.code == 'PT402') return error.message;
   final problem = problemOf(error);
   if (problem != null) return problem.detail ?? problem.title;
   if (error is DioException) {
@@ -185,7 +186,9 @@ void showFailure(BuildContext context, String message) {
   showToast(context, message, kind: ToastKind.error, copyText: message);
 }
 
-/// Renders an AsyncValue with loading, error (with retry) and data states.
+/// Renders an AsyncValue with loading, error (with retry) and data states. Moving between them
+/// fades through (the skeleton fades out, then the list fades in) rather than cutting; new data in
+/// the same state just rebuilds.
 class AsyncView<T> extends StatelessWidget {
   const AsyncView({
     super.key,
@@ -202,12 +205,32 @@ class AsyncView<T> extends StatelessWidget {
   /// Shown while [value] is loading. A list of rows, unless the screen has another shape.
   final Widget? loading;
 
+  static const _switchIn = Interval(0.3, 1, curve: Curves.easeOut);
+  static const _switchOut = Interval(0.6, 1);
+
   @override
   Widget build(BuildContext context) {
-    return value.when(
-      data: data,
-      loading: () => loading ?? const SkeletonList(),
-      error: (e, _) => EmptyState(
+    final (state, child) = value.when(
+      data: (v) => ('data', data(v)),
+      loading: () => ('loading', loading ?? const SkeletonList()),
+      error: (e, _) => ('error', _error(context, e)),
+    );
+    return AnimatedSwitcher(
+      duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 220),
+      switchInCurve: _switchIn,
+      switchOutCurve: _switchOut,
+      // Each state is laid out and painted exactly as it would be on its own.
+      layoutBuilder: (current, previous) => Stack(
+        fit: StackFit.passthrough,
+        alignment: Alignment.topCenter,
+        clipBehavior: Clip.none,
+        children: [...previous, ?current],
+      ),
+      child: KeyedSubtree(key: ValueKey(state), child: child),
+    );
+  }
+
+  Widget _error(BuildContext context, Object e) => EmptyState(
         icon: LucideIcons.cloudOff,
         title: context.l10n.somethingWentWrong,
         message: errorText(context, e),
@@ -219,9 +242,7 @@ class AsyncView<T> extends StatelessWidget {
                 icon: const Icon(LucideIcons.rotateCw, size: 18),
                 label: Text(context.l10n.retry),
               ),
-      ),
-    );
-  }
+      );
 }
 
 /// A one-line load failure with a retry, for lists inside sheets and forms where a full [AsyncView] would not fit.
@@ -418,7 +439,12 @@ Future<T?> runGuarded<T>(
   } catch (e, st) {
     if (!context.mounted) return null;
     final paywall = onPaymentRequired;
-    if (paywall != null && e is DioException && e.response?.statusCode == 402) {
+    // A 402 from the server, or a plan limit the database enforces (SQLSTATE PT402, such as
+    // unarchiving a bot past the plan's bot limit).
+    final paymentRequired =
+        (e is DioException && e.response?.statusCode == 402) ||
+        (e is sb.PostgrestException && e.code == 'PT402');
+    if (paywall != null && paymentRequired) {
       await paywall(context, errorText(context, e));
     } else {
       showError(context, e, st);

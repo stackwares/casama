@@ -69,9 +69,35 @@ class RecordDictation implements Dictation {
 }
 
 /// Plays read-aloud audio.
+/// Where read-aloud playback is (see [SpeechPlayer.playback]).
+@immutable
+class SpeechPlayback {
+  const SpeechPlayback({
+    required this.playing,
+    required this.position,
+    this.duration,
+    this.completed = false,
+  });
+  final bool playing;
+  final Duration position;
+  final Duration? duration;
+
+  /// It played to the end.
+  final bool completed;
+}
+
+/// Plays a reply read aloud: one clip at a time, with pause, seeking and speed.
 abstract class SpeechPlayer {
+  /// Starts [mp3] from the beginning, replacing whatever was playing.
   Future<void> play(Uint8List mp3);
   Future<void> stop();
+  Future<void> pause();
+  Future<void> resume();
+  Future<void> seek(Duration position);
+  Future<void> setSpeed(double speed);
+
+  /// Changes while something plays: position, length, paused or not, and the end.
+  Stream<SpeechPlayback> get playback;
 }
 
 class JustAudioPlayer implements SpeechPlayer {
@@ -85,6 +111,52 @@ class JustAudioPlayer implements SpeechPlayer {
 
   @override
   Future<void> stop() => _player.stop();
+
+  @override
+  Future<void> pause() => _player.pause();
+
+  @override
+  Future<void> resume() async {
+    if (_player.processingState == ProcessingState.completed) await _player.seek(Duration.zero);
+    unawaited(_player.play());
+  }
+
+  @override
+  Future<void> seek(Duration position) => _player.seek(position);
+
+  @override
+  Future<void> setSpeed(double speed) => _player.setSpeed(speed);
+
+  @override
+  Stream<SpeechPlayback> get playback {
+    SpeechPlayback now() => SpeechPlayback(
+      playing: _player.playing && _player.processingState != ProcessingState.completed,
+      position: _player.position,
+      duration: _player.duration,
+      completed: _player.processingState == ProcessingState.completed,
+    );
+    late final StreamController<SpeechPlayback> out;
+    final subs = <StreamSubscription<Object?>>[];
+    out = StreamController<SpeechPlayback>(
+      onListen: () {
+        void emit(Object? _) {
+          if (!out.isClosed) out.add(now());
+        }
+
+        subs
+          ..add(_player.playerStateStream.listen(emit))
+          ..add(_player.positionStream.listen(emit))
+          ..add(_player.durationStream.listen(emit));
+      },
+      onCancel: () async {
+        for (final s in subs) {
+          await s.cancel();
+        }
+        await out.close();
+      },
+    );
+    return out.stream;
+  }
 }
 
 // ignore: experimental_member_use

@@ -143,18 +143,12 @@ class HomeShell extends ConsumerWidget {
   String? get _botId =>
       RegExp(r'^/bots/([^/]+)').firstMatch(location)?.group(1);
 
-  /// Screens opened from a tab (a chat, settings, the computer, search): on phones they take the
-  /// whole screen, with a back button.
-  bool get _isDetail =>
-      _botId != null ||
-      location.startsWith('/groups/') ||
-      location == '/pages' ||
-      location.startsWith('/projects') ||
-      location.startsWith('/computer') ||
-      location.startsWith('/settings') ||
-      location == '/search' ||
-      location.startsWith('/approvals/') ||
-      location.startsWith('/quick-ask');
+  /// The tab screens themselves. Only these show the tab bar on phones; everything opened from
+  /// them (a chat, settings, the computer, search, password managers…) takes the whole screen,
+  /// with a back button.
+  static const _tabRoots = {'/', '/bots', '/inbox', '/tasks'};
+
+  bool get _isDetail => !_tabRoots.contains(location);
 
   List<_Dest> _destinations(BuildContext context) {
     final l10n = context.l10n;

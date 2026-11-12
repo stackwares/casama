@@ -328,6 +328,8 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
               icon: LucideIcons.logOut,
               title: l10n.signOutEverywhere,
               subtitle: l10n.signOutEverywhereHelp,
+              destructive: true,
+              showChevron: false,
               onTap: _signOutEverywhere,
             ),
           ],

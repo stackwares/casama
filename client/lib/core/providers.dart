@@ -2,13 +2,30 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dart:async';
 
+import 'package:flutter/widgets.dart' show BuildContext;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show ProviderBase;
 import 'package:casama_sdk/casama_sdk.dart';
 
 import 'app_marks.dart';
 import 'backend.dart';
 import 'local_cache.dart';
 import 'number_format.dart';
+
+/// For a screen whose lists are kept after it closes: reloads [providers] just after it opens, if
+/// they were loaded before. What it showed last time stays up while they reload, so it never opens
+/// on skeletons. (Lists loading for the first time load as the screen builds.) Call from initState.
+void refreshKeptOnOpen(BuildContext context, List<ProviderBase<Object?>> providers) {
+  final container = ProviderScope.containerOf(context, listen: false);
+  final loaded = [for (final p in providers) if (container.read(p.exists)) p];
+  if (loaded.isEmpty) return;
+  // After this build: reloading during it would rebuild other widgets in the middle of it.
+  scheduleMicrotask(() {
+    for (final p in loaded) {
+      container.invalidate(p);
+    }
+  });
+}
 
 /// The backend; overridden in main() and in tests.
 final backendProvider = Provider<Backend>((ref) => throw UnimplementedError('backendProvider must be overridden'));

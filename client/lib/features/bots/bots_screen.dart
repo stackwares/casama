@@ -10,6 +10,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
+import '../../core/plain_text.dart';
 import '../../core/date_format.dart';
 import '../groups/group_chats.dart';
 import '../../ui/bot_activity.dart';
@@ -43,15 +44,15 @@ String botStatusLabel(BuildContext context, BotStatusEnum s) => switch (s) {
   _ => context.l10n.botStatusIdle,
 };
 
-/// One line for a chat list row: the bot's last message ("You: …" when it was yours), or a
-/// word for a lone attachment. Null when the bot has no messages yet.
+/// The preview for a chat list row: the bot's last message as plain words ("You: …" when it was
+/// yours), or a word for a lone attachment. Null when the bot has no messages yet.
 String? lastMessagePreview(BuildContext context, Bot bot) {
   final m = bot.lastMessage;
   if (m == null) return null;
   final l10n = context.l10n;
   final mime = m.fileMime ?? '';
   final text = m.text.isNotEmpty
-      ? m.text
+      ? plainPreview(m.text)
       : mime.startsWith('image/')
       ? l10n.chatPreviewPhoto
       : mime.startsWith('video/')
@@ -62,6 +63,14 @@ String? lastMessagePreview(BuildContext context, Bot bot) {
   if (text.isEmpty) return null;
   return m.from == BotLastMessageFromEnum.you ? l10n.chatPreviewYou(text) : text;
 }
+
+/// How many lines a bot's preview gets on the chats list, given how many chats (bots and group
+/// chats) it shows: three while there is just one, two for a few, then one so more fit.
+int chatPreviewLines(int chats) => chats <= 1
+    ? 3
+    : chats <= 3
+    ? 2
+    : 1;
 
 /// When a chat list row last had a message: the time today, "Yesterday", the weekday this
 /// week, then the date.
@@ -101,12 +110,15 @@ class BotsList extends ConsumerWidget {
     final l10n = context.l10n;
     final bots = ref.watch(botsProvider);
     final archived = ref.watch(archivedBotsProvider).value ?? const <Bot>[];
+    final groups = ref.watch(groupChatsProvider).value ?? const <Conversation>[];
 
     return AsyncView(
       value: bots,
       onRetry: () => ref.invalidate(botsProvider),
+      loading: const _BotsListSkeleton(),
       data: (all) {
         final items = byRecentChat(all);
+        final previewLines = chatPreviewLines(items.length + groups.length);
         return items.isEmpty
           ? EmptyState(
               illustration: const BlankBotImage(size: 132),
@@ -191,6 +203,7 @@ class BotsList extends ConsumerWidget {
                         key: Key('bot-${items[i].id}'),
                         bot: items[i],
                         selected: items[i].id == selectedBotId,
+                        previewLines: previewLines,
                       ).appListItemEntrance(i);
                     },
                   );
@@ -207,9 +220,13 @@ class _BotCard extends StatelessWidget {
     super.key,
     required this.bot,
     required this.selected,
+    this.previewLines = 1,
   });
   final Bot bot;
   final bool selected;
+
+  /// Lines the last-message preview may take (see [chatPreviewLines]).
+  final int previewLines;
 
   @override
   Widget build(BuildContext context) {
@@ -228,6 +245,10 @@ class _BotCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.sm, 14),
       borderColor: selected ? scheme.primary.withValues(alpha: 0.5) : null,
       child: Row(
+        // A longer preview grows the row downwards; the avatar stays by the name.
+        crossAxisAlignment: previewLines > 1
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
         children: [
           BotAvatar(
             name: bot.name,
@@ -269,55 +290,122 @@ class _BotCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 3),
-                // What it's doing when that matters, then its last message.
-                Row(
-                  children: [
-                    if (bot.status != BotStatusEnum.idle) ...[
-                      StatusLabel(
-                        text: botStatusLabel(context, bot.status),
-                        color: statusColor,
-                        pill: true,
-                      ),
-                      const SizedBox(width: AppSpace.xs),
-                    ],
-                    Flexible(
-                      child: Text(
-                        preview ?? l10n.chatPreviewNone,
-                        key: Key('bot-preview-${bot.id}'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.textTheme.bodyMedium?.copyWith(
-                          color: scheme.onSurfaceVariant.withValues(
-                            alpha: preview == null ? 0.7 : 1,
+                // What it's doing when that matters, then its last message, which wraps
+                // under the pill.
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      if (bot.status != BotStatusEnum.idle)
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: AppSpace.xs),
+                            child: StatusLabel(
+                              text: botStatusLabel(context, bot.status),
+                              color: statusColor,
+                              pill: true,
+                            ),
                           ),
-                          height: 1.25,
                         ),
-                      ),
+                      TextSpan(text: preview ?? l10n.chatPreviewNone),
+                    ],
+                  ),
+                  key: Key('bot-preview-${bot.id}'),
+                  maxLines: previewLines,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant.withValues(
+                      alpha: preview == null ? 0.7 : 1,
                     ),
-                  ],
+                    height: 1.25,
+                  ),
                 ),
               ],
             ),
           ),
           // What's waiting from this bot, or that it is working; otherwise the chevron.
-          Consumer(
-            builder: (context, ref, _) {
-              final count = ref.watch(botBadgeProvider(bot.id));
-              final working = bot.status == BotStatusEnum.working;
-              if (count == 0 && !working) {
-                return Icon(
-                  LucideIcons.chevronRight,
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                );
-              }
-              return Padding(
-                padding: const EdgeInsets.only(right: AppSpace.xs),
-                child: BotActivity(count: count, working: working),
-              );
-            },
+          // Centred on the avatar, however tall the preview makes the row.
+          SizedBox(
+            height: 46,
+            child: Center(
+              child: Consumer(
+                builder: (context, ref, _) {
+                  final count = ref.watch(botBadgeProvider(bot.id));
+                  final working = bot.status == BotStatusEnum.working;
+                  if (count == 0 && !working) {
+                    return Icon(
+                      LucideIcons.chevronRight,
+                      color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    );
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.only(right: AppSpace.xs),
+                    child: BotActivity(count: count, working: working),
+                  );
+                },
+              ),
+            ),
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The chats list while bots load: cards shaped like [_BotCard] (avatar, name and time, a line
+/// of the last message, the chevron), with the list's gaps.
+class _BotsListSkeleton extends StatelessWidget {
+  const _BotsListSkeleton();
+
+  static const _names = [0.42, 0.3, 0.5, 0.36, 0.46, 0.34];
+  static const _previews = [0.86, 0.7, 0.78, 0.92, 0.64, 0.8];
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonPage(
+      children: [
+        for (var i = 0; i < _names.length; i++) ...[
+          if (i > 0) const SizedBox(height: AppSpace.xs),
+          SkeletonCard(
+            padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.sm, 14),
+            child: Row(
+              children: [
+                // BotAvatar's rounded square (radius is 0.32 of its size).
+                const SkeletonBone(width: 46, height: 46, radius: 46 * 0.32),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SkeletonText(
+                              style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.2),
+                              widthFactor: _names[i],
+                            ),
+                          ),
+                          const SizedBox(width: AppSpace.xs),
+                          SizedBox(width: 34, child: SkeletonText(style: text.labelSmall, widthFactor: 1)),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      SkeletonText(style: text.bodyMedium?.copyWith(height: 1.25), widthFactor: _previews[i]),
+                    ],
+                  ),
+                ),
+                // The chevron, centred on the avatar.
+                const SizedBox(
+                  width: 24,
+                  height: 46,
+                  child: Center(child: SkeletonBone(width: 8, height: 12, radius: 3)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

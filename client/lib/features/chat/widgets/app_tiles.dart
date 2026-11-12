@@ -22,7 +22,7 @@ const _enoughApps = 2;
 /// apps (D-204). An app the workspace already connected but this bot doesn't have yet is offered
 /// as "add to this bot" (no new sign-in); one it already has is left out, and so is one connected
 /// only through a hub such as Composio. Only apps that connect in one click on this server are
-/// offered to connect. More opens the bot's apps, where a second account or any other app is added.
+/// offered to connect. More opens the apps catalog directly, where a second account or any other app is added.
 class ConnectAppTiles extends ConsumerWidget {
   const ConnectAppTiles({super.key, required this.botId, required this.botName});
   final String botId;
@@ -76,7 +76,17 @@ class ConnectAppTiles extends ConsumerWidget {
           alignment: WrapAlignment.center,
           spacing: AppSpace.sm,
           runSpacing: AppSpace.sm,
-          children: [...tiles, _MoreTile(onTap: () => context.push('/bots/$botId/integrations'))],
+          children: [
+            ...tiles,
+            _MoreTile(
+              onTap: () async {
+                await context.push('/settings/integrations');
+                ref
+                  ..invalidate(integrationsProvider)
+                  ..invalidate(botIntegrationIdsProvider(botId));
+              },
+            ),
+          ],
         ),
       ],
     );

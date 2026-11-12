@@ -261,7 +261,9 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
         ),
         if (looks.isLoading) ...[
           SectionHeader(title: l10n.appearanceFromGallery),
-          const _CardGrid(children: [_CardSkeleton(), _CardSkeleton()]),
+          const SkeletonScope(
+            child: _CardGrid(children: [_CardSkeleton(), _CardSkeleton()]),
+          ),
         ] else if (looks.hasError) ...[
           SectionHeader(title: l10n.appearanceFromGallery),
           InlineError(
@@ -640,41 +642,66 @@ class ThemeCard extends StatelessWidget {
   }
 }
 
-/// A card's shape while the gallery loads.
+/// A [ThemeCard] while the gallery loads: the same surface, preview, name and line, dots and menu.
 class _CardSkeleton extends StatelessWidget {
   const _CardSkeleton();
 
   @override
   Widget build(BuildContext context) {
-    final fill = context.colorScheme.surfaceContainerHigh;
-    return AppCard(
-      padding: const EdgeInsets.all(7),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AspectRatio(
-            aspectRatio: 4 / 3,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: fill,
-                borderRadius: BorderRadius.circular(AppRadius.tile - 2),
+    final scheme = context.colorScheme;
+    final text = context.textTheme;
+    // The card's menu button, as tall as the real one at this density.
+    final menu = 48 + Theme.of(context).visualDensity.baseSizeAdjustment.dy;
+    return Material(
+      color: context.isDark
+          ? scheme.surfaceContainer
+          : scheme.surfaceContainerLowest,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        side: BorderSide(color: context.appColors.hairline),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(7),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const AspectRatio(
+              aspectRatio: 4 / 3,
+              child: SkeletonBone(radius: AppRadius.tile - 2),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(5, 8, 0, 0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SkeletonText(
+                          style: text.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                          ),
+                          widthFactor: 0.7,
+                        ),
+                        SkeletonText(style: text.labelSmall, widthFactor: 0.5),
+                      ],
+                    ),
+                  ),
+                  const SkeletonBone(width: 26, height: 12),
+                  SizedBox(
+                    width: menu,
+                    height: menu,
+                    child: const Center(
+                      child: SkeletonBone(width: 16, height: 5, radius: 3),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-          FractionallySizedBox(
-            alignment: Alignment.centerLeft,
-            widthFactor: 0.6,
-            child: Container(
-              height: 12,
-              decoration: BoxDecoration(
-                color: fill,
-                borderRadius: BorderRadius.circular(6),
-              ),
-            ),
-          ),
-          const SizedBox(height: 18),
-        ],
+          ],
+        ),
       ),
     );
   }

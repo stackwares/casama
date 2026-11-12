@@ -14,7 +14,8 @@ import '../chat/widgets/chat_markdown.dart';
 import '../../ui/action_buttons.dart';
 
 /// Self-improving skills (D-126): skills and edits bots proposed, waiting for the owner.
-final skillProposalsProvider = FutureProvider.autoDispose<List<SkillProposal>>((ref) async {
+// Kept when the Inbox closes, so it opens with what it showed; the Inbox refreshes it as it opens.
+final skillProposalsProvider = FutureProvider<List<SkillProposal>>((ref) async {
   final org = ref.watch(currentOrgProvider);
   if (org == null) return const [];
   return ref.watch(backendProvider).skillProposals(org.id);
@@ -154,7 +155,23 @@ class SkillStatsSheet extends ConsumerWidget {
           onSubmit: () async => Navigator.pop(context),
           children: [
             if (s == null)
-              AsyncView<SkillStats>(value: stats, onRetry: () => ref.invalidate(skillStatsProvider(skillId)), data: (_) => const SizedBox.shrink())
+              AsyncView<SkillStats>(
+                value: stats,
+                onRetry: () => ref.invalidate(skillStatsProvider(skillId)),
+                // The stats line and the last failure, as the sheet shows them.
+                loading: SkeletonScope(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: AppSpace.md,
+                    children: [
+                      SkeletonText(style: context.textTheme.bodyMedium, lines: 2, widthFactor: 0.8),
+                      SkeletonText(style: context.textTheme.bodyMedium, widthFactor: 0.5),
+                    ],
+                  ),
+                ),
+                data: (_) => const SizedBox.shrink(),
+              )
             else ...[
               Text(
                 key: const Key('skillStatsLine'),

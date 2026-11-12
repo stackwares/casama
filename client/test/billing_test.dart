@@ -9,6 +9,8 @@ import 'package:casama_app/core/billing.dart';
 import 'package:casama_app/core/providers.dart';
 import 'package:casama_app/core/widgets.dart';
 import 'package:casama_app/features/billing/billing_screen.dart';
+import 'package:casama_app/features/billing/paywall.dart';
+import 'package:casama_app/ui/adaptive_modal.dart';
 import 'package:casama_app/l10n/generated/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -205,9 +207,10 @@ void main() {
     expect(find.text('Billed through Google Play'), findsOneWidget);
   });
 
-  testWidgets('a 402 from the server opens the paywall, which leads to the plans', (tester) async {
-    await setSize(tester, const Size(900, 1800));
+  testWidgets('a 402 inside a sheet opens the paywall on top of it, and closing it goes back to the sheet', (tester) async {
+    await setSize(tester, const Size(400, 900));
     final backend = FakeBackend()..billingEnabled = true;
+    final opened = <String>[];
     onPaymentRequired = showPaywall;
     addTearDown(() => onPaymentRequired = null);
     final router = GoRouter(routes: [
@@ -216,38 +219,98 @@ void main() {
         builder: (context, _) => Scaffold(
           body: Builder(
             builder: (context) => TextButton(
-              onPressed: () => runGuarded(context, () async {
-                final req = RequestOptions(path: '/v1/bots');
-                throw DioException(
-                  requestOptions: req,
-                  response: Response(
-                    requestOptions: req,
-                    statusCode: 402,
-                    data: {'type': 'about:blank', 'title': 'Payment Required', 'status': 402, 'code': 'plan_limit', 'detail': 'Your plan allows 2 bots. Upgrade in Billing to add more.'},
-                  ),
-                );
-              }),
-              child: const Text('Add bot'),
+              onPressed: () => showAdaptiveSheet<void>(
+                context: context,
+                builder: (sheet) => TextButton(
+                  onPressed: () => runGuarded(sheet, () async {
+                    final req = RequestOptions(path: '/v1/bots');
+                    throw DioException(
+                      requestOptions: req,
+                      response: Response(
+                        requestOptions: req,
+                        statusCode: 402,
+                        data: {'type': 'about:blank', 'title': 'Payment Required', 'status': 402, 'code': 'plan_limit', 'detail': 'Your plan allows 2 bots. Upgrade to add more.'},
+                      ),
+                    );
+                  }),
+                  child: const Text('Create'),
+                ),
+              ),
+              child: const Text('New bot'),
             ),
           ),
         ),
       ),
-      GoRoute(path: '/settings/billing', builder: (_, _) => const BillingScreen()),
     ]);
     await tester.pumpWidget(ProviderScope(
-      overrides: [backendProvider.overrideWithValue(backend), platformProvider.overrideWithValue(TargetPlatform.macOS)],
+      overrides: [
+        backendProvider.overrideWithValue(backend),
+        platformProvider.overrideWithValue(TargetPlatform.macOS),
+        openUrlProvider.overrideWithValue((url) async => opened.add(url)),
+      ],
       child: MaterialApp.router(
         routerConfig: router,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
       ),
     ));
-    await tester.tap(find.text('Add bot'));
+    await tester.tap(find.text('New bot'));
     await tester.pumpAndSettle();
-    expect(find.text('Upgrade Your Plan'), findsOneWidget);
-    expect(find.text('Your plan allows 2 bots. Upgrade in Billing to add more.'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('paywallSeePlans')));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('plan-pro')), findsOneWidget);
+    await tester.tap(find.text('Create'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    // The paywall is in front: its button takes the tap, not the sheet behind it.
+    expect(find.byType(PaywallScreen), findsOneWidget);
+    expect(find.text('Your plan allows 2 bots. Upgrade to add more.'), findsOneWidget);
+    expect(find.text('Grow your crew with Pro'), findsOneWidget);
+    expect(find.text('Create').hitTestable(), findsNothing);
+    await tester.tap(find.byKey(const Key('paywallBuy')).hitTestable());
+    await tester.pump(const Duration(seconds: 1));
+    expect(backend.checkouts, ['pro']);
+    expect(opened, ['https://checkout.example.com/pro']);
+    // Closing it leaves the sheet as it was.
+    await tester.tap(find.byKey(const Key('paywallClose')));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.byType(PaywallScreen), findsNothing);
+    expect(find.text('Create').hitTestable(), findsOneWidget);
+  });
+
+  testWidgets('the paywall closes and celebrates once the plan turns paid', (tester) async {
+    await setSize(tester, const Size(400, 900));
+    final backend = FakeBackend()..billingEnabled = true;
+    final store = FakeStore('google_play', country: 'USA');
+    bool? upgraded;
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        backendProvider.overrideWithValue(backend),
+        storeProvider.overrideWithValue(store),
+        platformProvider.overrideWithValue(TargetPlatform.android),
+      ],
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Consumer(
+          builder: (context, ref, _) {
+            ref.watch(billingProvider);
+            return TextButton(onPressed: () async => upgraded = await openPaywall(context), child: const Text('Open'));
+          },
+        ),
+      ),
+    ));
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('Open'));
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+    expect(find.text(r'Subscribe for $9.49'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('paywallBuy')));
+    for (var i = 0; i < 5; i++) {
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+    expect(backend.verified, ['google_play:casama_pro:monthly:play-token']);
+    expect(find.byType(PaywallScreen), findsNothing);
+    expect(upgraded, isTrue);
+    await tester.pump(const Duration(seconds: 5));
   });
 }

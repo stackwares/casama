@@ -80,6 +80,7 @@ class _PasskeysScreenState extends ConsumerState<PasskeysScreen> {
         AsyncView(
           value: items,
           onRetry: () => ref.invalidate(passkeysProvider),
+          loading: const _PasskeysSkeleton(),
           data: (list) => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             spacing: AppSpace.md,
@@ -125,6 +126,42 @@ class _PasskeysScreenState extends ConsumerState<PasskeysScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The passkeys before they load: two passkey rows with rename and remove, and the add button.
+class _PasskeysSkeleton extends StatelessWidget {
+  const _PasskeysSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonScope(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpace.md,
+        children: [
+          SkeletonGroupedCard(
+            rows: [
+              for (final (t, st) in const [(0.5, 0.6), (0.38, 0.5)])
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: SkeletonRow(padding: EdgeInsets.zero, trailing: SkeletonTrailing.none, titleWidth: t, subtitleWidth: st),
+                      ),
+                      const SizedBox(width: AppSpace.xs),
+                      const SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 18, height: 18, radius: 5))),
+                      const SizedBox(width: 72, height: 40, child: Center(child: SkeletonBone(width: 52, height: 11))),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SkeletonBone(height: 48, radius: AppRadius.pill),
+        ],
+      ),
     );
   }
 }

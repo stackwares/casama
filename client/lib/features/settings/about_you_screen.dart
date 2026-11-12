@@ -130,7 +130,12 @@ class _AboutYouScreenState extends ConsumerState<AboutYouScreen> {
     if (v == null) {
       return SubPage(
         title: l10n.aboutYou,
-        body: AsyncView(value: about, onRetry: () => ref.invalidate(aboutYouProvider), data: (_) => const SizedBox.shrink()),
+        body: AsyncView(
+          value: about,
+          onRetry: () => ref.invalidate(aboutYouProvider),
+          loading: const _AboutYouSkeleton(),
+          data: (_) => const SizedBox.shrink(),
+        ),
       );
     }
     final learn = _loaded?.learn ?? true;
@@ -223,6 +228,7 @@ class _AboutYouScreenState extends ConsumerState<AboutYouScreen> {
         AsyncView(
           value: facts,
           onRetry: () => ref.invalidate(userFactsProvider),
+          loading: const SkeletonScope(child: _FactsSkeleton()),
           data: (items) => items.isEmpty
               ? FormNote(l10n.noLearnedFacts, icon: LucideIcons.brain)
               : GroupedCard(
@@ -242,6 +248,98 @@ class _AboutYouScreenState extends ConsumerState<AboutYouScreen> {
                   ],
                 ),
         ),
+      ],
+    );
+  }
+}
+
+/// The About you page before it loads: photo, note, the profile form, the two switches and the facts.
+class _AboutYouSkeleton extends StatelessWidget {
+  const _AboutYouSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    final switchRow = SkeletonRow(
+      leading: SkeletonLeading.square,
+      leadingSize: 24,
+      gap: AppSpace.md,
+      trailing: SkeletonTrailing.toggle,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.xs),
+      titleStyle: text.bodyLarge,
+      subtitleStyle: text.bodyMedium,
+      subtitleLines: 2,
+    );
+    return SkeletonPage(
+      children: [
+        const Center(
+          child: SizedBox(
+            width: 104,
+            height: 104,
+            child: Center(child: SkeletonBone(width: 96, height: 96, radius: 48)),
+          ),
+        ),
+        const SizedBox(height: AppSpace.md),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(padding: EdgeInsets.only(top: 1), child: SkeletonBone(width: 16, height: 16, radius: 4)),
+            const SizedBox(width: 6),
+            Expanded(child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.35), lines: 2, widthFactor: 0.8)),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        const SkeletonCard(
+          padding: EdgeInsets.all(AppSpace.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: AppSpace.md,
+            children: [
+              SkeletonBone(height: 52, radius: 14),
+              SkeletonBone(height: 52, radius: 14),
+              SkeletonBone(height: 96, radius: 14),
+              SkeletonBone(height: 120, radius: 14),
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: SkeletonBone(width: 88, height: 44, radius: AppRadius.pill),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpace.lg),
+        SkeletonGroupedCard(count: 2, row: switchRow),
+        const SkeletonSectionHeader(width: 140),
+        const _FactsSkeleton(),
+      ],
+    );
+  }
+}
+
+/// The learned-facts card before it loads: [_FactRow]-shaped rows.
+class _FactsSkeleton extends StatelessWidget {
+  const _FactsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final style = context.textTheme.bodyMedium?.copyWith(height: 1.4);
+    return SkeletonGroupedCard(
+      dividerIndent: AppSpace.md,
+      rows: [
+        for (final w in const [0.72, 0.54, 0.8, 0.62])
+          SizedBox(
+            height: 56,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(start: AppSpace.md, end: AppSpace.xs),
+              child: Row(
+                children: [
+                  const SkeletonBone(width: 18, height: 18, radius: 5),
+                  const SizedBox(width: AppSpace.md),
+                  Expanded(child: SkeletonText(style: style, widthFactor: w)),
+                  const SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 4, height: 16, radius: 2))),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }

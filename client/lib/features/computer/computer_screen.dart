@@ -12,6 +12,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:xterm/xterm.dart';
 
+import 'computer_details.dart';
 import 'computer_manage.dart';
 import 'live_view_screen.dart';
 
@@ -84,6 +85,7 @@ class ComputerScreen extends ConsumerWidget {
     final body = AsyncView(
       value: computers,
       onRetry: () => ref.invalidate(computersProvider),
+      loading: const _ComputerSkeleton(),
       data: (list) {
         final c = computerId != null
             ? list.where((x) => x.id == computerId).firstOrNull
@@ -106,6 +108,167 @@ class ComputerScreen extends ConsumerWidget {
       // Opened from a chat or Settings, not a tab (D-176): phones always get a way back.
       appBar: ShellHeader(title: l10n.computerTitle, phoneFallback: '/bots'),
       body: body,
+    );
+  }
+}
+
+/// The computer panel still loading: the header card, the tabs and the screen stage, in the
+/// same centered column as [ComputerPanel].
+class _ComputerSkeleton extends StatelessWidget {
+  const _ComputerSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonScope(
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: kPageMaxWidth),
+          child: ClipRect(
+            child: SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // _ComputerHeader.
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpace.md,
+                      AppSpace.xs,
+                      AppSpace.md,
+                      AppSpace.sm,
+                    ),
+                    child: SkeletonCard(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            children: [
+                              const SkeletonBone(
+                                width: 46,
+                                height: 46,
+                                radius: AppRadius.tile,
+                              ),
+                              const SizedBox(width: AppSpace.sm),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SkeletonText(
+                                      style: text.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                        height: 1.2,
+                                      ),
+                                      widthFactor: 0.55,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    SkeletonText(
+                                      style: text.labelMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        height: 1.15,
+                                      ),
+                                      widthFactor: 0.7,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: AppSpace.xs),
+                              const SkeletonBone(
+                                width: 96,
+                                height: 38,
+                                radius: AppRadius.pill,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpace.sm),
+                          Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: context.appColors.hairline,
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              const SkeletonBone(width: 14, height: 14, radius: 7),
+                              const SizedBox(width: AppSpace.xs),
+                              Expanded(
+                                child: SkeletonText(
+                                  style: text.bodySmall,
+                                  widthFactor: 0.6,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // _ComputerTabs with the Advanced toggle beside them.
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: AppSpace.md),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: SkeletonBone(height: 46, radius: AppRadius.pill),
+                        ),
+                        SizedBox(width: AppSpace.xs),
+                        SkeletonBone(width: 46, height: 46, radius: 23),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpace.xs),
+                  // _ScreenStage: the monitor, its stand, the help line and the button.
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 560),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpace.md,
+                          AppSpace.lg,
+                          AppSpace.md,
+                          AppSpace.xl,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const AspectRatio(
+                              aspectRatio: 16 / 10,
+                              child: SkeletonBone(
+                                height: double.infinity,
+                                radius: AppRadius.card,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const SkeletonBone(
+                              width: 64,
+                              height: 5,
+                              radius: AppRadius.pill,
+                            ),
+                            const SizedBox(height: AppSpace.xl),
+                            SkeletonText(
+                              style: text.bodyMedium?.copyWith(height: 1.45),
+                              widthFactor: 0.7,
+                              center: true,
+                            ),
+                            const SizedBox(height: AppSpace.lg),
+                            const SkeletonBone(
+                              width: 180,
+                              height: 48,
+                              radius: AppRadius.pill,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -143,7 +306,7 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
   // The side panel does not open the live stream just because the computer is already on (a bot
   // may have started it). It opens after this person wakes it or asks to watch.
   var _watchLive = false;
-  // The tab that's open, by name, so it keeps its place when the Terminal comes and goes.
+  // The tab that's open, by name, so it keeps its place when Terminal and Checkpoints come and go.
   late var _tab = widget.initialTab ?? 'screen';
   var _tabIds = const <String>[];
 
@@ -261,228 +424,79 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
           constraints: const BoxConstraints(maxWidth: kPageMaxWidth),
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpace.md,
-                  AppSpace.sm,
-                  AppSpace.md,
-                  AppSpace.sm,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color:
-                            (running
-                                    ? context.appColors.working
-                                    : context.colorScheme.onSurfaceVariant)
-                                .withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(AppRadius.icon),
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        computer.profile == ComputerProfileEnum.desktop
-                            ? LucideIcons.monitor
-                            : LucideIcons.squareTerminal,
-                        size: 20,
-                        color: running
-                            ? context.appColors.working
-                            : context.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpace.sm),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            computer.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              Flexible(
-                                child: StatusLabel(
-                                  key: const Key('computerState'),
-                                  text: resetting
-                                      ? resetStatusText(context, computer.operation!)
-                                      : _action == 'start'
-                                      ? l10n.stateStarting
-                                      : _action == 'sleep'
-                                      ? l10n.computerGoingToSleep
-                                      : computerStatusLabel(
-                                          context,
-                                          computer,
-                                        ),
-                                  color: failed
-                                      ? context.appColors.negative
-                                      : (running || waking || resetting
-                                            ? context.appColors.working
-                                            : context
-                                                  .colorScheme
-                                                  .onSurfaceVariant),
-                                  pill: true,
-                                ),
-                              ),
-                              if (waking || _action == 'sleep' || resetting) ...[
-                                const SizedBox(width: 6),
-                                SizedBox(
-                                  width: 12,
-                                  height: 12,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 1.6,
-                                    color: context.appColors.working,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                          if (failed && computer.error != null)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                computer.error!,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: context.textTheme.bodySmall?.copyWith(
-                                  color: context.appColors.negative,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    // A personal computer is on while the desktop app is connected (D-218).
-                    // No Sleep or Wake while a reset runs (D-240).
-                    if (!personal && !resetting)
-                    Wrap(
-                      spacing: 8,
-                      children: [
-                        if (running)
-                          OutlinedButton.icon(
-                            key: const Key('computerSleep'),
-                            onPressed: _action != null
-                                ? null
-                                : () {
-                                    setState(() => _watchLive = false);
-                                    _run(
-                                      'sleep',
-                                      () => ref
-                                          .read(backendProvider)
-                                          .stopComputer(computer.id),
-                                    );
-                                  },
-                            icon: const Icon(LucideIcons.moon, size: 18),
-                            label: Text(l10n.computerSleep),
-                          )
-                        else
-                          FilledButton.tonalIcon(
-                            key: const Key('computerStart'),
-                            // Already waking: the button shows progress instead of starting it twice.
-                            onPressed: waking || _action != null
-                                ? null
-                                : () async {
-                                    final started = await _run(
-                                      'start',
-                                      () => ref
-                                          .read(backendProvider)
-                                          .startComputer(computer.id),
-                                    );
-                                    if (started != null && mounted) {
-                                      setState(() => _watchLive = true);
-                                    }
-                                  },
-                            icon: waking
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : Icon(
-                                    failed
-                                        ? LucideIcons.rotateCw
-                                        : LucideIcons.power,
-                                    size: 18,
-                                  ),
-                            label: Text(
-                              waking
-                                  ? l10n.stateStarting
-                                  : (failed ? l10n.retry : l10n.computerWake),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              // CPU, memory and disk while it's on; a tap opens Manage (D-240).
-              if (!personal && running && !resetting)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(AppSpace.md, 0, AppSpace.md, AppSpace.sm),
-                  child: Builder(
-                    builder: (tabContext) => ComputerVitalsStrip(
-                      computerId: computer.id,
-                      onTap: () {
-                        final i = _tabIds.indexOf('manage');
-                        if (i >= 0) {
-                          DefaultTabController.of(tabContext).animateTo(i);
-                        }
-                      },
-                    ),
-                  ),
-                ),
-              Padding(
-                padding: const EdgeInsetsDirectional.only(end: AppSpace.sm),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: EdgeFade(
-                          child: TabBar(
-                            isScrollable: true,
-                            tabAlignment: TabAlignment.start,
-                            padding: const EdgeInsetsDirectional.only(
-                              start: AppSpace.sm,
-                            ),
-                            onTap: (_) => HapticsHelper.light(),
-                            tabs: [
-                              for (final t in tabIds)
-                                switch (t) {
-                                  'terminal' => _IconTab(
-                                    icon: LucideIcons.squareTerminal,
-                                    text: l10n.terminal,
-                                  ),
-                                  'files' => _IconTab(
-                                    icon: LucideIcons.folder,
-                                    text: l10n.files,
-                                  ),
-                                  'manage' => _IconTab(
-                                    icon: LucideIcons.settings2,
-                                    text: l10n.manageTab,
-                                  ),
-                                  _ => _IconTab(
-                                    icon: LucideIcons.monitor,
-                                    text: l10n.screen,
-                                  ),
-                                },
-                            ],
-                          ),
+              _ComputerHeader(
+                computer: computer,
+                statusText: resetting
+                    ? resetStatusText(context, computer.operation!)
+                    : _action == 'start'
+                    ? l10n.stateStarting
+                    : _action == 'sleep'
+                    ? l10n.computerGoingToSleep
+                    : computerStatusLabel(context, computer),
+                running: running,
+                busy: waking || _action == 'sleep' || resetting,
+                failed: failed,
+                // CPU, memory and disk while it's on; a tap opens Manage (D-240).
+                footer: personal || !running || resetting
+                    ? null
+                    : Builder(
+                        builder: (tabContext) => ComputerVitalsStrip(
+                          computerId: computer.id,
+                          onTap: () {
+                            final i = _tabIds.indexOf('manage');
+                            if (i >= 0) {
+                              DefaultTabController.of(tabContext).animateTo(i);
+                            }
+                          },
                         ),
                       ),
-                    ),
-                    if (!personal) _AdvancedTabsToggle(open: advanced),
-                  ],
-                ),
+                // A personal computer is on while the desktop app is connected (D-218).
+                action: personal || resetting
+                    ? null
+                    : running
+                    ? _HeaderAction(
+                        key: const Key('computerSleep'),
+                        icon: LucideIcons.moon,
+                        label: l10n.computerSleep,
+                        onPressed: _action != null
+                            ? null
+                            : () {
+                                setState(() => _watchLive = false);
+                                _run(
+                                  'sleep',
+                                  () => ref
+                                      .read(backendProvider)
+                                      .stopComputer(computer.id),
+                                );
+                              },
+                      )
+                    : _HeaderAction(
+                        key: const Key('computerStart'),
+                        filled: true,
+                        busy: waking,
+                        icon: failed ? LucideIcons.rotateCw : LucideIcons.power,
+                        label: waking
+                            ? l10n.stateStarting
+                            : (failed ? l10n.retry : l10n.computerWake),
+                        // Already waking: the button shows progress instead of starting it twice.
+                        onPressed: waking || _action != null
+                            ? null
+                            : () async {
+                                final started = await _run(
+                                  'start',
+                                  () => ref
+                                      .read(backendProvider)
+                                      .startComputer(computer.id),
+                                );
+                                if (started != null && mounted) {
+                                  setState(() => _watchLive = true);
+                                }
+                              },
+                      ),
+              ),
+              _ComputerTabs(
+                tabIds: tabIds,
+                advanced: personal ? null : advanced,
               ),
               const SizedBox(height: AppSpace.xs),
               Expanded(
@@ -552,11 +566,429 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
   }
 }
 
-/// The [AdvancedSection] id whose open state shows the Terminal tab (D-182).
+/// The [AdvancedSection] id whose open state shows the Terminal and Checkpoints tabs (D-182).
 const computerTabsAdvancedId = 'computer.tabs';
 
-/// At the end of the tab row: shows or hides the Terminal, remembered on this device
-/// like any Advanced section (D-182).
+/// The computer at a glance: what it is, whether it's on, what it runs on, and the one thing to
+/// do about it (wake or sleep), in a single card.
+class _ComputerHeader extends StatelessWidget {
+  const _ComputerHeader({
+    required this.computer,
+    required this.statusText,
+    required this.running,
+    required this.busy,
+    required this.failed,
+    this.action,
+    this.footer,
+  });
+  final Computer computer;
+  final String statusText;
+
+  /// Under the details: the live vitals (D-240).
+  final Widget? footer;
+  final bool running;
+
+  /// Waking or going to sleep: a small spinner next to the state.
+  final bool busy;
+  final bool failed;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final colors = context.appColors;
+    final muted = scheme.onSurfaceVariant;
+    final tone = failed
+        ? colors.negative
+        : (running || busy ? colors.working : muted);
+    final personal = isPersonalComputer(computer);
+    final desktop = computer.profile == ComputerProfileEnum.desktop;
+    final system = computerSystemLine(context, computer, thisDevice: false);
+    final activity = computerActivityLine(context, computer);
+    // When it was last used matters more than its specs, so it leads (the specs may truncate).
+    final details = [?activity, if (system.isNotEmpty) system].join(' · ');
+    final error = failed ? computer.error : null;
+    // With large text on a narrow screen the button goes under the name, so the state line
+    // never gets squeezed.
+    final stacked =
+        MediaQuery.textScalerOf(context).scale(100) > 115 &&
+        MediaQuery.sizeOf(context).width < 420;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.md,
+        AppSpace.xs,
+        AppSpace.md,
+        AppSpace.sm,
+      ),
+      child: AppCard(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                _DeviceTile(
+                  icon: personal
+                      ? LucideIcons.laptop
+                      : (desktop
+                            ? LucideIcons.monitor
+                            : LucideIcons.squareTerminal),
+                  tone: tone,
+                  lit: running || busy || failed,
+                ),
+                const SizedBox(width: AppSpace.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        computer.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          if (busy)
+                            SizedBox(
+                              width: 10,
+                              height: 10,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.6,
+                                color: tone,
+                              ),
+                            )
+                          else
+                            _StatusDot(color: tone, lit: running || failed),
+                          const SizedBox(width: 7),
+                          Flexible(
+                            child: StatusLabel(
+                              key: const Key('computerState'),
+                              text: statusText,
+                              color: tone,
+                            ),
+                          ),
+                          if (!personal) ...[
+                            Text(
+                              '  ·  ',
+                              style: context.textTheme.labelMedium?.copyWith(
+                                color: muted.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            Flexible(
+                              child: Text(
+                                desktop
+                                    ? l10n.profileDesktop
+                                    : l10n.profileHeadless,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: context.textTheme.labelMedium?.copyWith(
+                                  color: muted,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (action != null && !stacked) ...[
+                  const SizedBox(width: AppSpace.xs),
+                  action!,
+                ],
+              ],
+            ),
+            if (action != null && stacked) ...[
+              const SizedBox(height: AppSpace.sm),
+              action!,
+            ],
+            if (error != null) ...[
+              const SizedBox(height: AppSpace.sm),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: colors.negative.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppRadius.row),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpace.sm,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        LucideIcons.circleAlert,
+                        size: 16,
+                        color: colors.negative,
+                      ),
+                      const SizedBox(width: AppSpace.xs),
+                      Expanded(
+                        child: Text(
+                          error,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: colors.negative,
+                            height: 1.35,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ] else if (details.isNotEmpty) ...[
+              const SizedBox(height: AppSpace.sm),
+              Divider(height: 1, thickness: 1, color: colors.hairline),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Icon(
+                    activity != null
+                        ? LucideIcons.clock
+                        : LucideIcons.cpu,
+                    size: 14,
+                    color: muted,
+                  ),
+                  const SizedBox(width: AppSpace.xs),
+                  Expanded(
+                    child: Text(
+                      details,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: muted,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            ?footer,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The machine's icon in a soft tile that takes the state's color, glowing while it's on.
+class _DeviceTile extends StatelessWidget {
+  const _DeviceTile({required this.icon, required this.tone, required this.lit});
+  final IconData icon;
+  final Color tone;
+  final bool lit;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: AppMotion.duration,
+      curve: AppMotion.curve,
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        color: tone.withValues(alpha: lit ? 0.16 : 0.1),
+        borderRadius: BorderRadius.circular(AppRadius.tile),
+        border: Border.all(color: tone.withValues(alpha: lit ? 0.35 : 0.14)),
+        boxShadow: [
+          if (lit)
+            BoxShadow(
+              color: tone.withValues(alpha: 0.22),
+              blurRadius: 16,
+              spreadRadius: -2,
+            ),
+        ],
+      ),
+      alignment: Alignment.center,
+      child: Icon(icon, size: 22, color: tone),
+    );
+  }
+}
+
+/// A small state dot; a soft halo while the computer is on.
+class _StatusDot extends StatelessWidget {
+  const _StatusDot({required this.color, required this.lit});
+  final Color color;
+  final bool lit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        boxShadow: [
+          if (lit)
+            BoxShadow(
+              color: color.withValues(alpha: 0.55),
+              blurRadius: 6,
+              spreadRadius: 1,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Wake or Sleep: compact, so it sits beside the name instead of crowding it.
+class _HeaderAction extends StatelessWidget {
+  const _HeaderAction({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+    this.filled = false,
+    this.busy = false,
+  });
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final bool filled;
+  final bool busy;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = ButtonStyle(
+      visualDensity: VisualDensity.compact,
+      minimumSize: const WidgetStatePropertyAll(Size(0, 38)),
+      padding: const WidgetStatePropertyAll(
+        EdgeInsetsDirectional.fromSTEB(12, 0, 14, 0),
+      ),
+      textStyle: WidgetStatePropertyAll(
+        context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+      ),
+    );
+    final iconWidget = busy
+        ? const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : Icon(icon, size: 17);
+    return filled
+        ? FilledButton.tonalIcon(
+            style: style,
+            onPressed: onPressed,
+            icon: iconWidget,
+            label: Text(label),
+          )
+        : OutlinedButton.icon(
+            style: style,
+            onPressed: onPressed,
+            icon: iconWidget,
+            label: Text(label),
+          );
+  }
+}
+
+/// Screen, Files, Manage (and Terminal with Advanced) as one segmented control that always
+/// fits the width, so nothing scrolls or clips on a phone. [advanced] null: no toggle.
+class _ComputerTabs extends StatelessWidget {
+  const _ComputerTabs({required this.tabIds, required this.advanced});
+  final List<String> tabIds;
+  final bool? advanced;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final track = scheme.onSurface.withValues(
+      alpha: context.isDark ? 0.07 : 0.05,
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.md),
+      child: Row(
+        children: [
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Icons join the labels when every segment has room for both.
+                final segment = constraints.maxWidth / tabIds.length;
+                final icons = segment >= 116;
+                // Four segments on a phone: one smaller size for all, so no label shrinks alone.
+                final base = segment < 96
+                    ? context.textTheme.labelMedium
+                    : context.textTheme.labelLarge;
+                return Container(
+                  height: 46,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: track,
+                    borderRadius: BorderRadius.circular(AppRadius.pill),
+                    border: Border.all(color: context.appColors.hairline),
+                  ),
+                  child: TabBar(
+                    tabAlignment: TabAlignment.fill,
+                    dividerHeight: 0,
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    indicator: BoxDecoration(
+                      color: scheme.primary.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                      border: Border.all(
+                        color: scheme.primary.withValues(alpha: 0.35),
+                      ),
+                    ),
+                    labelColor: scheme.primary,
+                    unselectedLabelColor: scheme.onSurfaceVariant,
+                    labelStyle: base?.copyWith(fontWeight: FontWeight.w700),
+                    unselectedLabelStyle: base?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                    labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                    splashBorderRadius: BorderRadius.circular(AppRadius.pill),
+                    onTap: (_) => HapticsHelper.light(),
+                    tabs: [
+                      for (final t in tabIds)
+                        switch (t) {
+                          'terminal' => _IconTab(
+                            icon: LucideIcons.squareTerminal,
+                            text: l10n.terminal,
+                            showIcon: icons,
+                          ),
+                          'files' => _IconTab(
+                            icon: LucideIcons.folder,
+                            text: l10n.files,
+                            showIcon: icons,
+                          ),
+                          'manage' => _IconTab(
+                            icon: LucideIcons.settings2,
+                            text: l10n.manageTab,
+                            showIcon: icons,
+                          ),
+                          _ => _IconTab(
+                            icon: LucideIcons.monitor,
+                            text: l10n.screen,
+                            showIcon: icons,
+                          ),
+                        },
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          if (advanced != null) ...[
+            const SizedBox(width: AppSpace.xs),
+            _AdvancedTabsToggle(open: advanced!),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Beside the tabs: shows or hides the Terminal, remembered on this device like any
+/// Advanced section (D-182).
 class _AdvancedTabsToggle extends ConsumerWidget {
   const _AdvancedTabsToggle({required this.open});
   final bool open;
@@ -565,24 +997,45 @@ class _AdvancedTabsToggle extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
-    final color = open ? scheme.primary : scheme.onSurfaceVariant;
-    return Tooltip(
-      message: open
-          ? l10n.computerAdvancedTabsHide
-          : l10n.computerAdvancedTabsShow,
-      child: Semantics(
-        toggled: open,
-        child: TextButton.icon(
-          key: const Key('advanced-$computerTabsAdvancedId'),
-          style: TextButton.styleFrom(
-            foregroundColor: color,
-            visualDensity: VisualDensity.compact,
+    final label = open
+        ? l10n.computerAdvancedTabsHide
+        : l10n.computerAdvancedTabsShow;
+    return Semantics(
+      toggled: open,
+      label: l10n.advanced,
+      child: Tooltip(
+        message: label,
+        child: AnimatedContainer(
+          duration: AppMotion.fast,
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: open
+                ? scheme.primary.withValues(alpha: 0.2)
+                : scheme.onSurface.withValues(
+                    alpha: context.isDark ? 0.07 : 0.05,
+                  ),
+            border: Border.all(
+              color: open
+                  ? scheme.primary.withValues(alpha: 0.35)
+                  : context.appColors.hairline,
+            ),
           ),
-          onPressed: () => ref
-              .read(advancedOpenProvider.notifier)
-              .set(computerTabsAdvancedId, !open),
-          icon: Icon(LucideIcons.slidersHorizontal, size: 16, color: color),
-          label: Text(l10n.advanced),
+          child: IconButton(
+            key: const Key('advanced-$computerTabsAdvancedId'),
+            onPressed: () {
+              HapticsHelper.light();
+              ref
+                  .read(advancedOpenProvider.notifier)
+                  .set(computerTabsAdvancedId, !open);
+            },
+            icon: Icon(
+              LucideIcons.slidersHorizontal,
+              size: 18,
+              color: open ? scheme.primary : scheme.onSurfaceVariant,
+            ),
+          ),
         ),
       ),
     );
@@ -623,27 +1076,264 @@ class _TabWatchState extends State<_TabWatch> {
   Widget build(BuildContext context) => widget.child;
 }
 
-/// A pill tab with a leading icon.
+/// A segment's label, with its icon where there is room.
 class _IconTab extends StatelessWidget {
-  const _IconTab({required this.icon, required this.text});
+  const _IconTab({
+    required this.icon,
+    required this.text,
+    required this.showIcon,
+  });
   final IconData icon;
   final String text;
+  final bool showIcon;
 
   @override
   Widget build(BuildContext context) {
-    // Phones keep all four tabs in view; the icons come back where there is room.
-    final roomy =
-        AppBreakpoints.of(MediaQuery.sizeOf(context).width) !=
-        WindowSize.compact;
     return Tab(
-      height: 40,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (roomy) ...[Icon(icon, size: 18), const SizedBox(width: 6)],
-          Text(text),
-        ],
+      height: 36,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (showIcon) ...[Icon(icon, size: 16), const SizedBox(width: 6)],
+            Text(text, maxLines: 1),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+/// A desktop computer's Screen tab before the live view opens: a monitor showing a fresh
+/// screenshot while the computer is on (so you see what the bot is doing at a glance), dark and
+/// asleep otherwise. Tapping the monitor does what [action] does.
+class _ScreenStage extends ConsumerStatefulWidget {
+  const _ScreenStage({
+    required this.computer,
+    required this.message,
+    required this.action,
+    this.onTapScreen,
+    this.waking = false,
+  });
+  final Computer computer;
+  final String message;
+  final Widget action;
+  final VoidCallback? onTapScreen;
+  final bool waking;
+
+  @override
+  ConsumerState<_ScreenStage> createState() => _ScreenStageState();
+}
+
+class _ScreenStageState extends ConsumerState<_ScreenStage> {
+  Uint8List? _shot;
+  Timer? _timer;
+
+  bool get _awake =>
+      widget.computer.state == ComputerState.running ||
+      widget.computer.state == ComputerState.idle;
+
+  @override
+  void initState() {
+    super.initState();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(_ScreenStage old) {
+    super.didUpdateWidget(old);
+    final wasAwake =
+        old.computer.state == ComputerState.running ||
+        old.computer.state == ComputerState.idle;
+    if (old.computer.id != widget.computer.id || wasAwake != _awake) _sync();
+  }
+
+  // Screenshots only while it's on: asking never wakes it, and a sleeping screen is dark anyway.
+  void _sync() {
+    _timer?.cancel();
+    _timer = null;
+    if (!_awake) {
+      _shot = null;
+      return;
+    }
+    _load();
+    _timer = Timer.periodic(const Duration(seconds: 10), (_) => _load());
+  }
+
+  Future<void> _load() async {
+    final id = widget.computer.id;
+    final png = await ref.read(backendProvider).screenshot(id);
+    if (!mounted || png == null || !_awake || widget.computer.id != id) return;
+    setState(() => _shot = png);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final colors = context.appColors;
+    final awake = _awake;
+    final shot = _shot;
+    // The screen itself is always dark, like a real monitor, in either theme.
+    const glass = Color(0xFF0D0E13);
+    final monitor = AspectRatio(
+      aspectRatio: 16 / 10,
+      child: Material(
+        color: glass,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          side: BorderSide(
+            color: awake
+                ? scheme.primary.withValues(alpha: 0.35)
+                : colors.hairline,
+            width: 1.5,
+          ),
+        ),
+        child: InkWell(
+          onTap: widget.onTapScreen,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              AnimatedSwitcher(
+                duration: AppMotion.duration,
+                child: shot != null
+                    ? Image.memory(
+                        shot,
+                        key: const ValueKey('shot'),
+                        fit: BoxFit.cover,
+                        gaplessPlayback: true,
+                      )
+                    : DecoratedBox(
+                        key: ValueKey(awake),
+                        decoration: BoxDecoration(
+                          gradient: RadialGradient(
+                            center: const Alignment(0, -0.4),
+                            radius: 1.1,
+                            colors: [
+                              scheme.primary.withValues(
+                                alpha: awake ? 0.3 : 0.1,
+                              ),
+                              glass,
+                            ],
+                          ),
+                        ),
+                      ),
+              ),
+              if (shot != null)
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0x26000000), Color(0x8C000000)],
+                    ),
+                  ),
+                ),
+              Center(child: _disc(context, awake)),
+            ],
+          ),
+        ),
+      ),
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          // Near the top on phones (the tabs above lead into it); centered where it's tall.
+          child: Align(
+            alignment: constraints.maxHeight > 900
+                ? Alignment.center
+                : Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpace.md,
+                  AppSpace.lg,
+                  AppSpace.md,
+                  AppSpace.xl,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    monitor,
+                    const SizedBox(height: 8),
+                    // The stand, so it reads as a computer at a glance.
+                    Container(
+                      width: 64,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: colors.hairline,
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpace.xl),
+                    Text(
+                      widget.message,
+                      textAlign: TextAlign.center,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.45,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpace.lg),
+                    widget.action,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Play while it's on; a moon (or progress while it wakes) while it sleeps.
+  Widget _disc(BuildContext context, bool awake) {
+    final scheme = context.colorScheme;
+    if (awake) {
+      return Container(
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          color: scheme.primary,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: scheme.primary.withValues(alpha: 0.5),
+              blurRadius: 24,
+            ),
+          ],
+        ),
+        child: Icon(LucideIcons.play, size: 28, color: scheme.onPrimary),
+      );
+    }
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      alignment: Alignment.center,
+      child: widget.waking
+          ? const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white70,
+              ),
+            )
+          : const Icon(LucideIcons.moon, size: 24, color: Colors.white70),
     );
   }
 }
@@ -659,16 +1349,20 @@ class _LiveEntry extends ConsumerWidget {
     final awake =
         computer.state == ComputerState.running ||
         computer.state == ComputerState.idle;
-    return EmptyState(
-      icon: awake ? LucideIcons.monitorPlay : LucideIcons.moon,
+    Future<void> open() async {
+      await GoRouter.of(context).push('/computer/live?c=${computer.id}');
+      // The live view may have woken it up.
+      ref.invalidate(computersProvider);
+    }
+
+    return _ScreenStage(
+      computer: computer,
+      waking: computerWaking(computer.state),
       message: awake ? l10n.liveViewHelp : l10n.liveViewWakesHelp,
+      onTapScreen: open,
       action: GlowButton.icon(
         key: const Key('openLiveView'),
-        onPressed: () async {
-          await GoRouter.of(context).push('/computer/live?c=${computer.id}');
-          // The live view may have woken it up.
-          ref.invalidate(computersProvider);
-        },
+        onPressed: open,
         icon: Icon(awake ? LucideIcons.play : LucideIcons.sunrise),
         label: Text(awake ? l10n.openLiveView : l10n.wakeAndWatch),
       ),
@@ -738,9 +1432,10 @@ class _InlineLiveState extends ConsumerState<_InlineLive> {
     }
     // Already on, but this person has not asked to watch: leave the stream closed.
     if (awake && !widget.watching) {
-      return EmptyState(
-        icon: LucideIcons.monitorPlay,
+      return _ScreenStage(
+        computer: c,
         message: l10n.liveViewHelp,
+        onTapScreen: widget.onWatch,
         action: GlowButton.icon(
           key: const Key('openLiveView'),
           onPressed: widget.onWatch,
@@ -751,9 +1446,11 @@ class _InlineLiveState extends ConsumerState<_InlineLive> {
     }
     if (!awake) {
       final waking = _waking || computerWaking(c.state);
-      return EmptyState(
-        icon: LucideIcons.moon,
+      return _ScreenStage(
+        computer: c,
+        waking: waking,
         message: l10n.liveViewWakesHelp,
+        onTapScreen: waking ? null : _wake,
         action: GlowButton.icon(
           key: const Key('openLiveView'),
           onPressed: waking ? null : _wake,
@@ -1159,7 +1856,7 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                       message: errorText(context, snap.error!),
                     );
                   }
-                  if (!snap.hasData) return const SkeletonList();
+                  if (!snap.hasData) return _FilesSkeleton(side: side);
                   final items = [...snap.data!]
                     ..sort((a, b) {
                       final ad = a.type.name == 'dir',
@@ -1272,6 +1969,81 @@ class _FilesTabState extends ConsumerState<FilesTab> {
           ],
         );
       },
+    );
+  }
+}
+
+/// A folder still loading: one grouped card of rows, folders first (no subtitle, a chevron)
+/// then files (a size line and a menu button), inside the same side padding as the list.
+class _FilesSkeleton extends StatelessWidget {
+  const _FilesSkeleton({required this.side});
+  final double side;
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonScope(
+      child: ClipRect(
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.symmetric(horizontal: side),
+          child: const SkeletonGroupedCard(
+            rows: [
+              SkeletonRow(subtitle: false, titleWidth: 0.32),
+              SkeletonRow(subtitle: false, titleWidth: 0.24),
+              _FileRowSkeleton(titleWidth: 0.46, subtitleWidth: 0.18),
+              _FileRowSkeleton(titleWidth: 0.38, subtitleWidth: 0.14),
+              _FileRowSkeleton(titleWidth: 0.52, subtitleWidth: 0.16),
+              _FileRowSkeleton(titleWidth: 0.3, subtitleWidth: 0.12),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A file row still loading: a [GroupedTile] whose trailing is a 48-point menu button.
+class _FileRowSkeleton extends StatelessWidget {
+  const _FileRowSkeleton({required this.titleWidth, required this.subtitleWidth});
+  final double titleWidth;
+  final double subtitleWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+      child: Row(
+        children: [
+          const SkeletonBone(width: 32, height: 32, radius: AppRadius.icon),
+          const SizedBox(width: AppSpace.sm),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SkeletonText(
+                  style: text.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                  widthFactor: titleWidth,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 1),
+                  child: SkeletonText(
+                    style: text.bodySmall?.copyWith(height: 1.3),
+                    widthFactor: subtitleWidth,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpace.xs),
+          const SizedBox(
+            width: 48,
+            height: 48,
+            child: Center(child: SkeletonBone(width: 4, height: 16, radius: 2)),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { PLATFORM_OPENROUTER_CREDENTIAL_ID } from "@casama/agent";
+import { withUserSession } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { billingEnv, type FakeBilling, makeTestPki, startFakeBilling } from "./fake-billing.ts";
@@ -123,6 +124,43 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
     });
     expect(third.status).toBe(402);
     expect((await j(third)).code).toBe("plan_limit");
+
+    // Archive one, add another, then bring the archived one back: the limit still holds (the app
+    // unarchives straight through PostgREST, so the database enforces it).
+    const asOwner = <T>(fn: Parameters<typeof withUserSession<T>>[2]) =>
+      withUserSession(h.handle.db, { sub: owner.id }, fn);
+    const [one] = await h.handle.db.execute<{ id: string }>(
+      sql`select id from public.bots where org_id = ${orgId}::uuid and name = 'One'`,
+    );
+    await asOwner((tx) =>
+      tx.execute(sql`update public.bots set archived_at = now() where id = ${one?.id}::uuid`),
+    );
+    expect(
+      (
+        await h.request("/v1/bots", {
+          method: "POST",
+          token: owner.token,
+          json: { org_id: orgId, name: "Three" },
+        })
+      ).status,
+    ).toBe(201);
+    const restore = asOwner((tx) =>
+      tx.execute(sql`update public.bots set archived_at = null where id = ${one?.id}::uuid`),
+    );
+    await expect(restore).rejects.toMatchObject({ cause: { code: "PT402" } });
+    await expect(
+      asOwner((tx) =>
+        tx.execute(
+          sql`insert into public.bots (org_id, created_by, name) values (${orgId}::uuid, ${owner.id}::uuid, 'Direct')`,
+        ),
+      ),
+    ).rejects.toMatchObject({ cause: { code: "PT402" } });
+    // Archiving and renaming are never blocked.
+    await asOwner((tx) =>
+      tx.execute(
+        sql`update public.bots set name = 'Two!' where org_id = ${orgId}::uuid and name = 'Two'`,
+      ),
+    );
     const plans = await j(await h.request("/v1/billing/plans", { token: owner.token }));
     expect(plans.plans.map((p: { code: string }) => p.code)).toEqual(["free", "pro", "pro_yearly"]);
     expect(plans.plans.find((p: { code: string }) => p.code === "pro").web).toBe(true);

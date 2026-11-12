@@ -41,6 +41,7 @@ class PluginsScreen extends ConsumerWidget {
       body: AsyncView(
         value: ref.watch(pluginsProvider(botId)),
         onRetry: () => ref.invalidate(pluginsProvider(botId)),
+        loading: const _PluginsSkeleton(),
         data: (items) => items.isEmpty
             ? EmptyState(
                 icon: LucideIcons.puzzle,
@@ -345,6 +346,51 @@ class _UpdatePluginState extends ConsumerState<_UpdatePlugin> {
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(labelText: e.key, suffixIcon: toggle),
           )),
+      ],
+    );
+  }
+}
+
+/// The page while plugins load: the help note, then two plugin cards, each its header row with
+/// the menu button over rows for what it added, in the real rows' sizes.
+class _PluginsSkeleton extends StatelessWidget {
+  const _PluginsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    Widget card() => SkeletonGroupedCard(
+      rows: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(child: SkeletonRow(trailing: SkeletonTrailing.none, padding: EdgeInsets.zero, titleWidth: 0.44, subtitleWidth: 0.82)),
+              SizedBox(width: AppSpace.xs),
+              // The menu button's tap target.
+              SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 18, height: 6, radius: 3))),
+            ],
+          ),
+        ),
+        const SkeletonRow(trailing: SkeletonTrailing.none, titleWidth: 0.36, subtitleWidth: 0.3),
+        const SkeletonRow(trailing: SkeletonTrailing.none, titleWidth: 0.3, subtitleWidth: 0.7),
+      ],
+    );
+    return SkeletonPage(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(padding: EdgeInsets.only(top: 1), child: SkeletonBone(width: 16, height: 16, radius: 4)),
+            const SizedBox(width: 6),
+            Expanded(child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.35), lines: 2, widthFactor: 0.8)),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        card(),
+        const SizedBox(height: AppSpace.md),
+        card(),
+        const SizedBox(height: AppSpace.md),
       ],
     );
   }

@@ -141,6 +141,7 @@ class _TwoStepSettingsScreenState extends ConsumerState<TwoStepSettingsScreen> {
         AsyncView(
           value: factors,
           onRetry: () => ref.invalidate(twoStepFactorsProvider),
+          loading: const _FactorsSkeleton(),
           data: (items) => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             spacing: AppSpace.md,
@@ -278,6 +279,46 @@ class _TwoStepSettingsScreenState extends ConsumerState<TwoStepSettingsScreen> {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// The authenticators before they load: one app row with rename and remove, and the add button.
+class _FactorsSkeleton extends StatelessWidget {
+  const _FactorsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SkeletonScope(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpace.md,
+        children: [
+          SkeletonGroupedCard(
+            rows: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SkeletonRow(
+                        padding: EdgeInsets.zero,
+                        trailing: SkeletonTrailing.none,
+                        subtitle: false,
+                        titleWidth: 0.6,
+                      ),
+                    ),
+                    SizedBox(width: AppSpace.xs),
+                    SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 18, height: 18, radius: 5))),
+                    SizedBox(width: 72, height: 40, child: Center(child: SkeletonBone(width: 52, height: 11))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SkeletonBone(height: 48, radius: AppRadius.pill),
+        ],
+      ),
     );
   }
 }

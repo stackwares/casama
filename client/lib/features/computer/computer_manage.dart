@@ -27,8 +27,9 @@ import '../chat/chat_screen.dart' show confirmRestore;
 /// 8.1 GB, 512 MB, 12 KB.
 String formatStorage(int bytes, String locale) {
   const k = 1024.0;
-  if (bytes < k * k)
+  if (bytes < k * k) {
     return '${(bytes / k).humanizedCount(locale, decimalDigits: 0)} KB';
+  }
   if (bytes < k * k * k) {
     return '${(bytes / (k * k)).humanizedCount(locale, decimalDigits: bytes < 10 * k * k ? 1 : 0)} MB';
   }
@@ -40,8 +41,9 @@ bool resetRunning(Computer c) {
   final op = c.operation;
   if (op == null) return false;
   if (op.step == ComputerOperationStepEnum.done ||
-      op.step == ComputerOperationStepEnum.failed)
+      op.step == ComputerOperationStepEnum.failed) {
     return false;
+  }
   return DateTime.now().difference(op.startedAt.toLocal()) <
       const Duration(minutes: 20);
 }
@@ -506,11 +508,12 @@ class _ManageTabState extends ConsumerState<ManageTab> {
             'clean',
             () => ref.read(backendProvider).cleanComputerStorage(_c.id),
           );
-          if (r != null && mounted)
+          if (r != null && mounted) {
             showSuccess(
               context,
               l10n.storageFreed(formatStorage(r.freedBytes, l10n.localeName)),
             );
+          }
         },
       ),
       _ProcessesSection(
@@ -534,8 +537,9 @@ class _ManageTabState extends ConsumerState<ManageTab> {
             await ref.read(backendProvider).stopComputerProcess(_c.id, p.pid);
             return true;
           });
-          if (done == true && mounted)
+          if (done == true && mounted) {
             showSuccess(context, l10n.processStopped(name));
+          }
         },
       ),
       _UsedBy(bots: _bots!),
@@ -564,8 +568,9 @@ class _ManageTabState extends ConsumerState<ManageTab> {
             () =>
                 ref.read(backendProvider).createCheckpoint(_c.id, label.trim()),
           );
-          if (cp != null && mounted)
+          if (cp != null && mounted) {
             showSuccess(context, l10n.restorePointSaved);
+          }
         },
       ),
       _History(
@@ -1427,11 +1432,12 @@ class _UsageSection extends StatelessWidget {
             future: usage,
             builder: (context, snap) {
               final u = snap.data;
-              if (u == null)
+              if (u == null) {
                 return const SizedBox(
                   height: 92,
                   child: Center(child: CircularProgressIndicator.adaptive()),
                 );
+              }
               if (u.seconds == 0) {
                 return Row(
                   children: [

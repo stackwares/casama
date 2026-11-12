@@ -56,6 +56,13 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   late var _filter = widget.initialFilter;
 
   @override
+  void initState() {
+    super.initState();
+    // What the Inbox showed last time stays while it reloads, so opening it never flashes empty.
+    refreshKeptOnOpen(context, [forYouProvider, skillProposalsProvider, pagesProvider(null)]);
+  }
+
+  @override
   void didUpdateWidget(InboxScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.initialFilter != widget.initialFilter) _filter = widget.initialFilter;
@@ -171,6 +178,7 @@ class _InboxFeed extends ConsumerWidget {
     return AsyncView(
       value: state,
       onRetry: refresh,
+      loading: _InboxSkeleton(filter: filter),
       data: (_) {
         final pending = approvals.value ?? const <Approval>[];
         final suggestions = forYou.value?.suggestions ?? const <Suggestion>[];
@@ -329,6 +337,132 @@ class _PageUpdateRow extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The inbox feed still loading, in the filter's shape: approval cards under Needs you, then a
+/// card of update rows (All); approval cards alone (Needs you); brief cards (Briefs).
+class _InboxSkeleton extends StatelessWidget {
+  const _InboxSkeleton({required this.filter});
+  final InboxFilter filter;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget gapped(Widget w) => Padding(padding: const EdgeInsets.only(bottom: AppSpace.sm), child: w);
+    return SkeletonPage(
+      children: switch (filter) {
+        InboxFilter.needsYou => [gapped(const _ApprovalCardSkeleton()), gapped(const _ApprovalCardSkeleton())],
+        InboxFilter.briefs => [gapped(const _BriefCardSkeleton()), gapped(const _BriefCardSkeleton())],
+        _ => [
+          const SkeletonSectionHeader(width: 84, padding: EdgeInsets.fromLTRB(AppSpace.xxs, AppSpace.xs, AppSpace.xxs, AppSpace.xs)),
+          gapped(const _ApprovalCardSkeleton()),
+          const SkeletonSectionHeader(width: 72),
+          gapped(
+            SkeletonGroupedCard(
+              count: 3,
+              row: SkeletonRow(
+                leadingSize: 36,
+                trailing: SkeletonTrailing.meta,
+                subtitleLines: 2,
+                padding: const EdgeInsets.fromLTRB(AppSpace.md, 12, AppSpace.md, 12),
+                titleStyle: context.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                subtitleStyle: context.textTheme.bodySmall?.copyWith(height: 1.35),
+              ),
+            ),
+          ),
+        ],
+      },
+    );
+  }
+}
+
+/// An [ApprovalCard] still loading: avatar and request, the risk pill, the arguments box and
+/// the buttons.
+class _ApprovalCardSkeleton extends StatelessWidget {
+  const _ApprovalCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SkeletonBone(width: 36, height: 36, radius: 18),
+              const SizedBox(width: AppSpace.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SkeletonText(style: text.titleSmall?.copyWith(fontWeight: FontWeight.w700, height: 1.3), widthFactor: 0.72),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const SkeletonBone(width: 64, height: 22, radius: AppRadius.pill),
+                        const SizedBox(width: AppSpace.xs),
+                        Expanded(child: SkeletonText(style: text.bodySmall, widthFactor: 0.6)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpace.sm),
+          const SkeletonBone(height: 96, radius: 10),
+          const SizedBox(height: AppSpace.sm),
+          const Row(
+            spacing: AppSpace.xs,
+            children: [
+              Expanded(child: SkeletonBone(height: 44, radius: AppRadius.pill)),
+              Expanded(child: SkeletonBone(height: 44, radius: AppRadius.pill)),
+            ],
+          ),
+          const SizedBox(height: AppSpace.xxs),
+          const SizedBox(
+            height: 40,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              spacing: AppSpace.md,
+              children: [SkeletonBone(width: 88, height: 12), SkeletonBone(width: 72, height: 12)],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A [BriefCard] still loading: the bot's avatar and heading, then a few lines of the brief.
+class _BriefCardSkeleton extends StatelessWidget {
+  const _BriefCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        spacing: AppSpace.sm,
+        children: [
+          Row(
+            children: [
+              const SkeletonBone(width: 28, height: 28, radius: 14),
+              const SizedBox(width: AppSpace.sm),
+              Expanded(child: SkeletonText(style: text.titleSmall, widthFactor: 0.5)),
+              const SkeletonBone(width: 36, height: 10),
+            ],
+          ),
+          SkeletonText(style: text.bodyMedium, lines: 4, widthFactor: 0.8),
+        ],
       ),
     );
   }
@@ -504,6 +638,7 @@ class ApprovalScreen extends ConsumerWidget {
       body: AsyncView(
         value: ref.watch(approvalsProvider),
         onRetry: () => ref.invalidate(approvalsProvider),
+        loading: const SkeletonPage(children: [_ApprovalCardSkeleton()]),
         data: (items) {
           final match = items.where((a) => a.id == approvalId);
           if (match.isEmpty) {

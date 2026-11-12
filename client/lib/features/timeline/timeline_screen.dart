@@ -38,6 +38,9 @@ class ActivityScreen extends ConsumerWidget {
       body: AsyncView(
         value: runs,
         onRetry: () => ref.invalidate(runsProvider(botId)),
+        loading: SkeletonPage(
+          children: [for (var i = 0; i < 6; i++) Padding(padding: EdgeInsets.only(top: i == 0 ? 0 : AppSpace.xs), child: _RunCardSkeleton(titleWidth: 0.3 + (i % 3) * 0.1))],
+        ),
         data: (items) => items.isEmpty
             ? EmptyState(icon: LucideIcons.activity, title: l10n.noRuns, message: l10n.noRunsHelp)
             : RefreshIndicator(
@@ -138,6 +141,95 @@ class _RunCard extends StatelessWidget {
   }
 }
 
+/// A [_RunCard] still loading: the trigger tile, trigger and status pill, the time, the cost.
+class _RunCardSkeleton extends StatelessWidget {
+  const _RunCardSkeleton({required this.titleWidth});
+  final double titleWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonCard(
+      padding: const EdgeInsets.fromLTRB(AppSpace.md, 12, AppSpace.sm, 12),
+      child: Row(
+        children: [
+          const SkeletonBone(width: 40, height: 40, radius: AppRadius.icon + 2),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Flexible(child: SizedBox(width: titleWidth * 240, child: SkeletonText(style: text.titleSmall?.copyWith(fontWeight: FontWeight.w700), widthFactor: 1))),
+                    const SizedBox(width: AppSpace.xs),
+                    const SkeletonBone(width: 84, height: 22, radius: AppRadius.pill),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                SkeletonText(style: text.bodySmall, widthFactor: 0.3),
+              ],
+            ),
+          ),
+          SizedBox(width: 44, child: SkeletonText(style: text.labelLarge, widthFactor: 1)),
+          const SizedBox(width: 24, height: 24, child: Center(child: SkeletonBone(width: 8, height: 12, radius: 3))),
+        ],
+      ),
+    );
+  }
+}
+
+/// A [TimelineTile] still loading: the dot on its rail, the event type and time, a summary.
+class _TimelineTileSkeleton extends StatelessWidget {
+  const _TimelineTileSkeleton({required this.first, required this.lines});
+  final bool first;
+  final int lines;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    final rail = context.appColors.hairline;
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 32,
+            child: Column(
+              children: [
+                Container(width: 2, height: 10, color: first ? Colors.transparent : rail),
+                const SkeletonBone(width: 28, height: 28, radius: 14),
+                Expanded(child: Container(width: 2, color: rail)),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpace.sm),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 12, bottom: AppSpace.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: SkeletonText(style: AppText.mono.copyWith(fontSize: 13, fontWeight: FontWeight.w700), widthFactor: 0.4)),
+                      SizedBox(width: 72, child: SkeletonText(style: text.labelSmall, widthFactor: 1)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  SkeletonText(style: text.bodySmall?.copyWith(height: 1.4), lines: lines, widthFactor: 0.8),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 enum EventFilter { all, tools, messages, system }
 
 bool matchesFilter(EventFilter f, String type) => switch (f) {
@@ -195,6 +287,9 @@ class _RunTimelineScreenState extends ConsumerState<RunTimelineScreen> {
                 child: AsyncView(
                   value: events,
                   onRetry: () => ref.invalidate(runEventsProvider(widget.runId)),
+                  loading: SkeletonPage(
+                    children: [for (var i = 0; i < 7; i++) _TimelineTileSkeleton(first: i == 0, lines: 1 + i % 2)],
+                  ),
                   data: (items) {
                     final shown = items
                         .where(

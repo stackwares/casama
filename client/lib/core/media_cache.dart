@@ -68,6 +68,11 @@ class MediaCache {
     }
   }
 
+  /// What's in memory now, without waiting: a card built again (scrolled back to) shows its
+  /// picture on its first frame. The same bytes object each time, so a MemoryImage of it hits
+  /// Flutter's image cache too.
+  static Uint8List? peek(String key) => _memory[key];
+
   /// [fresh]: skip a disk copy older than the maxAge it was written with.
   static Future<Uint8List?> read(String key, {bool fresh = false}) async {
     final hit = _memory.remove(key);

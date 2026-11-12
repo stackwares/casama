@@ -19,7 +19,6 @@ import 'package:casama_app/theme/wallpaper.dart';
 import 'package:casama_app/ui/cover_image.dart';
 import 'package:casama_app/ui/motion.dart';
 import 'package:casama_app/ui/shell_header.dart';
-import 'package:casama_app/ui/skeleton.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 
 import 'fake_backend.dart';
@@ -398,7 +397,7 @@ void main() {
 
       await tester.pumpWidget(buildChat());
       // Frame 1: before open() microtask completes, empty-state starter cards must not flash.
-      expect(find.byType(SkeletonMessages), findsOneWidget);
+      expect(find.byType(ChatThreadSkeleton), findsOneWidget);
       expect(find.textContaining('Research'), findsNothing);
 
       // Next frame: messages arrive and the bottom of the history is immediately visible on Frame 1
@@ -410,7 +409,7 @@ void main() {
       // Re-opening the chat keeps existing messages on screen without flashing a spinner.
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpWidget(buildChat());
-      expect(find.byType(SkeletonMessages), findsNothing);
+      expect(find.byType(ChatThreadSkeleton), findsNothing);
       expect(find.textContaining('History line 20'), findsOneWidget);
     },
   );

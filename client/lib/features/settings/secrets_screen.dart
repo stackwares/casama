@@ -46,6 +46,7 @@ class SecretsScreen extends ConsumerWidget {
       body: AsyncView(
         value: ref.watch(secretsProvider),
         onRetry: () => ref.invalidate(secretsProvider),
+        loading: const _SecretsSkeleton(),
         data: (items) => items.isEmpty
             ? EmptyState(icon: LucideIcons.lock, title: l10n.noSecrets, message: l10n.secretsHelp, action: add)
             : PageColumn(
@@ -86,6 +87,47 @@ class SecretsScreen extends ConsumerWidget {
                 ],
               ),
       ),
+    );
+  }
+}
+
+/// The secrets page before it loads: the help note over a card of secret rows with a delete button.
+class _SecretsSkeleton extends StatelessWidget {
+  const _SecretsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonPage(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(padding: EdgeInsets.only(top: 1), child: SkeletonBone(width: 16, height: 16, radius: 4)),
+            const SizedBox(width: 6),
+            Expanded(
+              child: SkeletonText(style: context.textTheme.bodySmall?.copyWith(height: 1.35), lines: 2, widthFactor: 0.7),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        SkeletonGroupedCard(
+          rows: [
+            for (final (t, st) in const [(0.42, 0.7), (0.3, 0.84), (0.5, 0.62)])
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SkeletonRow(padding: EdgeInsets.zero, trailing: SkeletonTrailing.none, titleWidth: t, subtitleWidth: st),
+                    ),
+                    const SizedBox(width: AppSpace.xs),
+                    const SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 18, height: 18, radius: 5))),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

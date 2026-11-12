@@ -21,6 +21,9 @@ import '../../ui/page.dart';
 /// system's in-app browser (Safari View Controller, Chrome Custom Tabs), the default browser on
 /// desktop, or a new tab on the web, through a single-use view link.
 final pagesProvider = FutureProvider.autoDispose.family<List<BotPage>, String?>((ref, botId) async {
+  // Every bot's pages show in the Inbox: kept when it closes, so it opens with what it showed (it
+  // refreshes them as it opens).
+  if (botId == null) ref.keepAlive();
   final org = ref.watch(currentOrgProvider);
   if (org == null) return const [];
   return ref.watch(backendProvider).pages(org.id, botId: botId);
@@ -99,6 +102,7 @@ class PagesList extends ConsumerWidget {
     return AsyncView(
         value: ref.watch(pagesProvider(botId)),
         onRetry: () => ref.invalidate(pagesProvider(botId)),
+        loading: const _PagesSkeleton(),
         data: (items) => items.isEmpty
             ? EmptyState(icon: LucideIcons.fileText, title: l10n.noPages, message: l10n.pagesHelp)
             : PageColumn(
@@ -152,6 +156,61 @@ class PagesList extends ConsumerWidget {
                   ),
                 ],
               ),
+    );
+  }
+}
+
+/// The pages list still loading: the help note, then a card of page rows with their menu button.
+class _PagesSkeleton extends StatelessWidget {
+  const _PagesSkeleton();
+
+  static const _titles = [0.5, 0.38, 0.6, 0.44];
+  static const _subtitles = [0.82, 0.7, 0.9, 0.66];
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return SkeletonPage(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(padding: EdgeInsets.only(top: 1), child: SkeletonBone(width: 16, height: 16, radius: 8)),
+            const SizedBox(width: 6),
+            Expanded(child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.35), lines: 2, widthFactor: 0.8)),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        SkeletonGroupedCard(
+          rows: [
+            for (var i = 0; i < _titles.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+                child: Row(
+                  children: [
+                    const SkeletonBone(width: 32, height: 32, radius: AppRadius.icon),
+                    const SizedBox(width: AppSpace.sm),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SkeletonText(style: text.bodyLarge?.copyWith(fontWeight: FontWeight.w600), widthFactor: _titles[i]),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 1),
+                            child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.3), widthFactor: _subtitles[i]),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AppSpace.xs),
+                    const SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 18, height: 6, radius: 3))),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

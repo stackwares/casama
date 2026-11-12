@@ -14,7 +14,8 @@ import '../chat/widgets/chat_markdown.dart';
 
 /// The "For you" feed (D-114): the latest morning briefs, pending suggestions and approvals,
 /// shown in the Inbox.
-final forYouProvider = FutureProvider.autoDispose<ForYou>((ref) async {
+// Kept when the Inbox closes, so it opens with what it showed; the Inbox refreshes it as it opens.
+final forYouProvider = FutureProvider<ForYou>((ref) async {
   final org = ref.watch(currentOrgProvider);
   if (org == null) return ForYou(briefs: const [], suggestions: const [], approvals: const []);
   return ref.watch(backendProvider).forYou(org.id);

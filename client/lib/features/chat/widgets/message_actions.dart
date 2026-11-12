@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/share.dart';
 import '../../../core/widgets.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
 import '../../../ui/bottom_padding.dart';
@@ -20,7 +21,7 @@ bool get _pointerFirst =>
 /// Mouse: hovering shows a row of buttons under the message (its space is kept, so nothing moves),
 /// text selects by dragging, and right-click adds the same actions to the text menu.
 class MessageActions extends StatefulWidget {
-  const MessageActions({super.key, required this.text, required this.child, this.markdown = false, this.onSpeak, this.speakKey, this.onEdit, this.alignEnd = false});
+  const MessageActions({super.key, required this.text, required this.child, this.markdown = false, this.onSpeak, this.speakKey, this.speaking = false, this.onEdit, this.alignEnd = false});
   final String text;
   final Widget child;
 
@@ -31,6 +32,9 @@ class MessageActions extends StatefulWidget {
   final bool markdown;
   final VoidCallback? onSpeak;
   final Key? speakKey;
+
+  /// This message is being read aloud: the action stops it.
+  final bool speaking;
 
   /// Your messages sit on the right, so their hover buttons line up on the right too.
   final bool alignEnd;
@@ -50,6 +54,8 @@ class _MessageActionsState extends State<MessageActions> with SingleTickerProvid
   VoidCallback? get onEdit => widget.onEdit;
   VoidCallback? get onSpeak => widget.onSpeak;
   Key? get speakKey => widget.speakKey;
+  IconData get _speakIcon => widget.speaking ? LucideIcons.volumeX : LucideIcons.volume2;
+  String _speakLabel(AppLocalizations l10n) => widget.speaking ? l10n.stopReading : l10n.readAloud;
   Widget get child => widget.child;
 
   @override
@@ -103,7 +109,7 @@ class _MessageActionsState extends State<MessageActions> with SingleTickerProvid
       items: [
         item('copy', LucideIcons.copy, l10n.copyMessage, key: const Key('msgCopy')),
         if (onEdit != null) item('edit', LucideIcons.pencil, l10n.editMessage, key: const Key('msgEdit')),
-        if (onSpeak != null) item('speak', LucideIcons.volume2, l10n.readAloud, key: speakKey),
+        if (onSpeak != null) item('speak', _speakIcon, _speakLabel(l10n), key: speakKey),
         item('select', LucideIcons.textCursorInput, l10n.selectText, key: const Key('msgSelect')),
         item('share', LucideIcons.share, l10n.shareMessage, key: const Key('msgShare')),
       ],
@@ -149,7 +155,7 @@ class _MessageActionsState extends State<MessageActions> with SingleTickerProvid
               ),
             if (onSpeak != null)
               ContextMenuButtonItem(
-                label: l10n.readAloud,
+                label: _speakLabel(l10n),
                 onPressed: () {
                   ContextMenuController.removeAny();
                   onSpeak!();
@@ -225,7 +231,7 @@ class _MessageActionsState extends State<MessageActions> with SingleTickerProvid
             children: [
               button(LucideIcons.copy, l10n.copyMessage, () => _copy(context), key: const Key('hoverCopy')),
               if (onEdit != null) button(LucideIcons.pencil, l10n.editMessage, onEdit!, key: const Key('hoverEdit')),
-              if (onSpeak != null) button(LucideIcons.volume2, l10n.readAloud, onSpeak!, key: const Key('hoverSpeak')),
+              if (onSpeak != null) button(_speakIcon, _speakLabel(l10n), onSpeak!, key: const Key('hoverSpeak')),
               button(LucideIcons.share, l10n.shareMessage, () => shareText(text, origin: shareOrigin(context)), key: const Key('hoverShare')),
             ],
           ),

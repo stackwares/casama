@@ -122,6 +122,7 @@ class _Overview extends ConsumerWidget {
     return AsyncView(
       value: ref.watch(adminOverviewProvider),
       onRetry: () => ref.invalidate(adminOverviewProvider),
+      loading: const _OverviewSkeleton(),
       data: (o) {
         if (o == null) return EmptyState(icon: LucideIcons.lock, message: l10n.notInstanceOwner);
         final u = updates.value;
@@ -197,6 +198,61 @@ class _Overview extends ConsumerWidget {
   }
 }
 
+/// The overview before it loads: the grid of stat tiles in the same columns, and the version line.
+class _OverviewSkeleton extends StatelessWidget {
+  const _OverviewSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    final stat = SkeletonCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: SkeletonBone(width: 32, height: 32, radius: AppRadius.icon),
+          ),
+          const SizedBox(height: AppSpace.sm),
+          SkeletonText(style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w800, height: 1.1), widthFactor: 0.4),
+          const SizedBox(height: 2),
+          SkeletonText(style: text.bodySmall, widthFactor: 0.6),
+        ],
+      ),
+    );
+    return SkeletonPage(
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 440 ? 3 : 2;
+            const count = 8;
+            return Column(
+              spacing: AppSpace.sm,
+              children: [
+                for (var r = 0; r < count; r += columns)
+                  Row(
+                    spacing: AppSpace.sm,
+                    children: [
+                      for (var c = r; c < r + columns; c++) Expanded(child: c < count ? stat : const SizedBox()),
+                    ],
+                  ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: AppSpace.md),
+        Row(
+          children: [
+            const SkeletonBone(width: 16, height: 16, radius: 4),
+            const SizedBox(width: 6),
+            Expanded(child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.35), widthFactor: 0.4)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 class _Users extends ConsumerWidget {
   const _Users();
 
@@ -205,6 +261,11 @@ class _Users extends ConsumerWidget {
     final users = ref.watch(_adminUsersProvider);
     return AsyncView(
       value: users,
+      loading: const SkeletonPage(
+        children: [
+          SkeletonGroupedCard(count: 6, row: SkeletonRow(trailing: SkeletonTrailing.none)),
+        ],
+      ),
       data: (items) => PageColumn(
         children: [
           GroupedCard(
@@ -281,6 +342,7 @@ class _OrgsState extends ConsumerState<_Orgs> {
     return AsyncView<List<AdminOrg>>(
       value: ref.watch(_adminOrgsProvider),
       onRetry: () => ref.invalidate(_adminOrgsProvider),
+      loading: const _OrgsSkeleton(),
       data: (orgs) {
         if (orgs.isEmpty) return EmptyState(icon: LucideIcons.boxes, message: l10n.adminNoWorkspaces);
         return PageColumn(
@@ -317,6 +379,37 @@ class _OrgsState extends ConsumerState<_Orgs> {
           ],
         );
       },
+    );
+  }
+}
+
+/// The workspaces before they load: workspace rows with the quota and suspend buttons.
+class _OrgsSkeleton extends StatelessWidget {
+  const _OrgsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonPage(
+      children: [
+        SkeletonGroupedCard(
+          rows: [
+            for (final (t, st) in const [(0.44, 0.8), (0.3, 0.7), (0.52, 0.86), (0.36, 0.64)])
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SkeletonRow(padding: EdgeInsets.zero, trailing: SkeletonTrailing.none, titleWidth: t, subtitleWidth: st),
+                    ),
+                    const SizedBox(width: AppSpace.xs),
+                    for (var i = 0; i < 2; i++)
+                      const SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 20, height: 20, radius: 5))),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -386,6 +479,7 @@ class _Services extends ConsumerWidget {
     final services = ref.watch(_adminServicesProvider);
     return AsyncView(
       value: services,
+      loading: const _ServicesSkeleton(),
       data: (items) => PageColumn(
         children: [
           const _CloudModelsCard(),
@@ -414,6 +508,36 @@ class _Services extends ConsumerWidget {
   }
 }
 
+/// The services before they load: the gap above the list, then service rows with a status pill.
+class _ServicesSkeleton extends StatelessWidget {
+  const _ServicesSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonPage(
+      children: [
+        const SizedBox(height: AppSpace.lg),
+        SkeletonGroupedCard(
+          rows: [
+            for (final (t, st) in const [(0.34, 0.6), (0.46, 0.72), (0.28, 0.5), (0.4, 0.66), (0.5, 0.56)])
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SkeletonRow(padding: EdgeInsets.zero, trailing: SkeletonTrailing.none, titleWidth: t, subtitleWidth: st),
+                    ),
+                    const SizedBox(width: AppSpace.xs),
+                    const SkeletonBone(width: 44, height: 22, radius: AppRadius.pill),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
 
 /// The models Casama Cloud runs (D-188). A save reaches every server within a few seconds.
 class _CloudModelsCard extends ConsumerWidget {
@@ -650,6 +774,11 @@ class _Abuse extends ConsumerWidget {
     return AsyncView<List<AbuseEvent>>(
       value: ref.watch(_adminAbuseProvider),
       onRetry: () => ref.invalidate(_adminAbuseProvider),
+      loading: const SkeletonPage(
+        children: [
+          SkeletonGroupedCard(count: 5, row: SkeletonRow(trailing: SkeletonTrailing.none)),
+        ],
+      ),
       data: (items) {
         return PageColumn(
           children: [

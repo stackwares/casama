@@ -52,7 +52,7 @@ class BotHistoryScreen extends ConsumerWidget {
       subtitle: bot?.name,
       children: [
         revisions.when(
-          loading: () => const SkeletonList(count: 4, padding: EdgeInsets.zero),
+          loading: () => const _RevisionsSkeleton(),
           error: (e, _) => Padding(
             padding: const EdgeInsets.all(AppSpace.lg),
             child: Text(errorText(context, e)),
@@ -273,9 +273,89 @@ class _ArchivedBots extends ConsumerWidget {
               onRetry: () => ref.invalidate(archivedBotsProvider),
             )
           else if (archived.isLoading && !archived.hasValue)
-            const SkeletonList(count: 3, padding: EdgeInsets.zero)
+            const _ArchivedSkeleton()
           else if (items.isEmpty)
             Text(l10n.noBots),
+        ],
+      ),
+    );
+  }
+}
+
+/// The history while it loads: revision cards with who changed what, the Restore button and a
+/// line of what it was, in the real cards' sizes and gaps.
+class _RevisionsSkeleton extends StatelessWidget {
+  const _RevisionsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonScope(
+      child: Column(
+        spacing: AppSpace.xs,
+        children: [
+          for (final (title, detail) in const [(0.4, 0.7), (0.56, 0.52), (0.32, 0.8), (0.48, 0.6)])
+            SkeletonCard(
+              padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.sm, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: AppSpace.sm,
+                children: [
+                  Row(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsetsDirectional.only(end: AppSpace.sm),
+                        child: SkeletonBone(width: 20, height: 20, radius: 10),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SkeletonText(style: text.bodyLarge?.copyWith(fontWeight: FontWeight.w700), widthFactor: title),
+                            SkeletonText(style: text.bodySmall, widthFactor: 0.6),
+                          ],
+                        ),
+                      ),
+                      // The Restore button.
+                      const SizedBox(width: 96, height: 40, child: Center(child: SkeletonBone(width: 80, height: 14))),
+                    ],
+                  ),
+                  SkeletonText(style: text.bodySmall?.copyWith(height: 1.35), widthFactor: detail),
+                  const SizedBox(height: 1),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Archived bots while they load: rows of an avatar, a name and the Unarchive button.
+class _ArchivedSkeleton extends StatelessWidget {
+  const _ArchivedSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonScope(
+      child: Column(
+        spacing: AppSpace.sm,
+        children: [
+          for (final w in const [0.5, 0.36, 0.44])
+            SizedBox(
+              // A one-line ListTile.
+              height: 56,
+              child: SkeletonRow(
+                leading: SkeletonLeading.avatar,
+                leadingSize: 36,
+                trailing: SkeletonTrailing.button,
+                subtitle: false,
+                padding: EdgeInsets.zero,
+                gap: 16,
+                titleStyle: context.textTheme.bodyLarge,
+                titleWidth: w,
+              ),
+            ),
         ],
       ),
     );

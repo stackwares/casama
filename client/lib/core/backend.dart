@@ -1501,6 +1501,9 @@ abstract class Backend {
   /// Where a chat media file is served (needs [authHeaders]); supports range requests.
   String chatMediaUrl(String id);
 
+  /// A chat video's poster, a JPEG still (needs [authHeaders]); 404 when the server can't make one.
+  String chatMediaPosterUrl(String id);
+
   /// The current sign-in, for players and images that load straight from the API.
   Map<String, String> get authHeaders;
   Future<void> uploadFile(String computerId, String path, Uint8List bytes);

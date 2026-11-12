@@ -75,6 +75,7 @@ class SkillsScreen extends ConsumerWidget {
       body: AsyncView(
         value: skills,
         onRetry: () => ref.invalidate(skillsProvider),
+        loading: const _SkillsSkeleton(),
         data: (items) => items.isEmpty
             ? EmptyState(
                 icon: LucideIcons.bookOpen,
@@ -188,6 +189,63 @@ class SkillsScreen extends ConsumerWidget {
               ),
       ),
       ),
+    );
+  }
+}
+
+/// The skills list still loading: the help note, then a card of skill rows with their stats
+/// button and switch.
+class _SkillsSkeleton extends StatelessWidget {
+  const _SkillsSkeleton();
+
+  static const _titles = [0.42, 0.56, 0.34, 0.5, 0.46];
+  static const _subtitles = [0.78, 0.64, 0.86, 0.7, 0.6];
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonPage(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(padding: EdgeInsets.only(top: 1), child: SkeletonBone(width: 16, height: 16, radius: 8)),
+            const SizedBox(width: 6),
+            Expanded(child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.35), lines: 2, widthFactor: 0.8)),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        SkeletonGroupedCard(
+          rows: [
+            for (var i = 0; i < _titles.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+                child: Row(
+                  children: [
+                    const SkeletonBone(width: 32, height: 32, radius: AppRadius.icon),
+                    const SizedBox(width: AppSpace.sm),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SkeletonText(style: text.bodyLarge?.copyWith(fontWeight: FontWeight.w600), widthFactor: _titles[i]),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 1),
+                            child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.3), widthFactor: _subtitles[i]),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AppSpace.xs),
+                    const SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 18, height: 18, radius: 4))),
+                    const SizedBox(width: 60, height: 48, child: Center(child: SkeletonBone(width: 52, height: 32, radius: AppRadius.pill))),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

@@ -15,7 +15,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/page.dart';
-import '../workspaces/join_flow.dart' show JoinCard;
+import '../workspaces/join_flow.dart' show JoinCard, JoinCardSkeleton;
 
 /// Invite friends (D-211): your invite code and link, what it has earned you, and who invited you.
 /// Null when it couldn't load; `enabled` is false on servers without it (self-hosted).
@@ -157,7 +157,7 @@ class _InviteFriendsScreenState extends ConsumerState<InviteFriendsScreen> {
     return SubPage(
       title: l10n.inviteFriends,
       body: referral.when(
-        loading: () => const SkeletonDetail(),
+        loading: () => const _InviteFriendsSkeleton(),
         error: (_, _) => Center(child: Text(l10n.inviteFriendsUnavailable)),
         data: (r) {
           if (r == null || !r.enabled || r.code == null || r.link == null) {
@@ -420,6 +420,57 @@ class _InviteFriendsScreenState extends ConsumerState<InviteFriendsScreen> {
   }
 }
 
+/// The invite page before it loads: the hero card with code and buttons, then progress and how it works.
+class _InviteFriendsSkeleton extends StatelessWidget {
+  const _InviteFriendsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonPage(
+      children: [
+        SkeletonCard(
+          padding: const EdgeInsets.all(AppSpace.lg),
+          child: Column(
+            children: [
+              const SkeletonBone(width: 44, height: 44, radius: 12),
+              const SizedBox(height: AppSpace.sm),
+              SkeletonText(style: text.titleLarge?.copyWith(fontWeight: FontWeight.w800), widthFactor: 0.6, center: true),
+              const SizedBox(height: AppSpace.xs),
+              SkeletonText(style: text.bodyMedium, lines: 2, widthFactor: 0.8, center: true),
+              const SizedBox(height: AppSpace.lg),
+              // The code box: headline digits with the copy icon, in its tinted frame.
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.lg, vertical: AppSpace.sm),
+                decoration: BoxDecoration(
+                  borderRadius: AppRadius.tileAll,
+                  border: Border.all(color: context.appColors.hairline),
+                ),
+                child: SizedBox(
+                  width: 170,
+                  child: SkeletonText(style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w800), widthFactor: 1),
+                ),
+              ),
+              const SizedBox(height: AppSpace.lg),
+              const Row(
+                children: [
+                  Expanded(child: SkeletonBone(height: 44, radius: AppRadius.pill)),
+                  SizedBox(width: AppSpace.sm),
+                  Expanded(child: SkeletonBone(height: 44, radius: AppRadius.pill)),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SkeletonSectionHeader(width: 90),
+        const SkeletonGroupedCard(count: 2, row: SkeletonRow(trailing: SkeletonTrailing.meta, subtitle: false)),
+        const SkeletonSectionHeader(width: 120),
+        const SkeletonGroupedCard(count: 3, row: SkeletonRow(trailing: SkeletonTrailing.none, subtitle: false)),
+      ],
+    );
+  }
+}
+
 // --- casama.ai/i/<code> -------------------------------------------------------------------------
 
 final _referralPreviewProvider = FutureProvider.autoDispose
@@ -472,7 +523,7 @@ class _InviteLinkScreenState extends ConsumerState<InviteLinkScreen> {
     final signedIn = ref.watch(signedInProvider).value == true;
     final preview = ref.watch(_referralPreviewProvider(widget.code));
     final body = preview.when(
-      loading: () => const SkeletonDetail(),
+      loading: () => const JoinCardSkeleton(leadingSize: 56, leadingRadius: 14),
       error: (_, _) => JoinCard(
         key: const Key('referralInvalid'),
         leading: Icon(

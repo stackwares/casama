@@ -17,6 +17,7 @@ import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/mascot.dart';
+import '../../ui/motion.dart';
 import '../../ui/page.dart';
 import '../chat/delete_chat.dart';
 import '../notifications/checkins_sheet.dart';
@@ -123,7 +124,7 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     final bot = ref.watch(botProvider(widget.botId));
-    if (bot == null) return const Scaffold(body: SkeletonDetail());
+    if (bot == null) return SubPage(title: l10n.botProfile, body: const _BotProfileSkeleton());
     _name ??= TextEditingController(text: bot.name);
     _persona ??= TextEditingController(text: bot.personaMd);
     _autonomy ??= bot.autonomy.value;
@@ -195,73 +196,38 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
       ],
       children: [
         // Who it is.
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpace.md,
-            AppSpace.md,
-            AppSpace.md,
-            AppSpace.lg,
-          ),
-          child: Column(
-            children: [
-              BotAvatar(
-                name: name,
-                avatar: _avatar,
-                size: 72,
-                status: bot.status,
-                ringColor: Theme.of(context).scaffoldBackgroundColor,
-              ),
-              const SizedBox(height: AppSpace.sm),
-              Text(
-                name,
-                key: const Key('botProfileName'),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: context.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                [
-                  botStatusLabel(context, bot.status),
-                  if (model.isNotEmpty) model,
-                ].join(' · '),
-                key: const Key('botProfileStatus'),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
+        _BotHero(
+          name: name,
+          avatar: _avatar,
+          status: bot.status,
+          model: model,
         ),
         _BotTiles(
           tiles: [
             _BotTile(
               key: const Key('botTile-computer'),
+              accent: _Accent.sky,
               icon: LucideIcons.monitor,
               label: l10n.botComputer,
               onTap: () => context.push('/computer?bot=${bot.id}'),
             ),
             _BotTile(
               key: const Key('botTile-memory'),
+              accent: _Accent.pink,
               icon: LucideIcons.brain,
               label: l10n.memory,
               onTap: () => context.push('/bots/${bot.id}/memory'),
             ),
             _BotTile(
               key: const Key('botTile-routines'),
+              accent: _Accent.amber,
               icon: LucideIcons.clock,
               label: l10n.routines,
               onTap: () => context.push('/bots/${bot.id}/routines'),
             ),
             _BotTile(
               key: const Key('botTile-apps'),
+              accent: _Accent.green,
               icon: LucideIcons.puzzle,
               label: l10n.appsTitle,
               onTap: () => context.push('/bots/${bot.id}/integrations'),
@@ -758,12 +724,184 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
 }
 
 /// Four big shortcuts: one row when there's room, two by two on phones.
+/// The top of the profile: the bot on a soft glow in its own color, its name, and a pill saying what
+/// it's up to, with its model beside it when the model is the user's choice.
+class _BotHero extends StatelessWidget {
+  const _BotHero({
+    required this.name,
+    required this.avatar,
+    required this.status,
+    required this.model,
+  });
+  final String name;
+  final String? avatar;
+  final BotStatusEnum status;
+  final String model;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final colors = context.appColors;
+    final glow = botPalette(name).first;
+    final dot = switch (status) {
+      BotStatusEnum.working => colors.working,
+      BotStatusEnum.waiting => colors.waiting,
+      BotStatusEnum.disabled => scheme.outline,
+      _ => scheme.onSurfaceVariant,
+    };
+    final chipStyle = context.textTheme.labelMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+      color: scheme.onSurface,
+    );
+    Widget chip({Key? key, required Widget lead, required String text}) =>
+        Container(
+          padding: const EdgeInsets.fromLTRB(10, 5, 12, 5),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHigh.withValues(alpha: 0.7),
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            border: Border.all(color: colors.hairline),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            spacing: 6,
+            children: [
+              lead,
+              Flexible(
+                child: Text(
+                  text,
+                  key: key,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: chipStyle,
+                ),
+              ),
+            ],
+          ),
+        );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.md,
+        AppSpace.xs,
+        AppSpace.md,
+        AppSpace.xl,
+      ),
+      child: Column(
+        children: [
+          SizedBox(
+            width: 176,
+            height: 150,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                IgnorePointer(
+                  child: Container(
+                    width: 176,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        colors: [
+                          glow.withValues(alpha: context.isDark ? 0.32 : 0.2),
+                          glow.withValues(alpha: 0),
+                        ],
+                        stops: const [0.0, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
+                BotAvatar(
+                  name: name,
+                  avatar: avatar,
+                  size: 112,
+                  ringColor: Theme.of(context).scaffoldBackgroundColor,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpace.xs),
+          Text(
+            name,
+            key: const Key('botProfileName'),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: context.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.4,
+            ),
+          ),
+          const SizedBox(height: AppSpace.sm),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: AppSpace.xs,
+            runSpacing: AppSpace.xs,
+            children: [
+              chip(
+                key: const Key('botProfileStatus'),
+                lead: _StatusDot(
+                  color: dot,
+                  pulse: status == BotStatusEnum.working,
+                ),
+                text: botStatusLabel(context, status),
+              ),
+              if (model.isNotEmpty)
+                chip(
+                  key: const Key('botProfileModel'),
+                  lead: Icon(
+                    LucideIcons.sparkles,
+                    size: 13,
+                    color: scheme.primary,
+                  ),
+                  text: model,
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusDot extends StatelessWidget {
+  const _StatusDot({required this.color, required this.pulse});
+  final Color color;
+  final bool pulse;
+
+  @override
+  Widget build(BuildContext context) {
+    final dot = Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 6),
+        ],
+      ),
+    );
+    return pulse ? Pulse(child: dot) : dot;
+  }
+}
+
+/// A shortcut's hue, so each of the four reads at a glance.
+enum _Accent {
+  sky(Color(0xFF38BDF8), Color(0xFF0284C7)),
+  pink(Color(0xFFF472B6), Color(0xFFDB2777)),
+  amber(Color(0xFFFBBF24), Color(0xFFD97706)),
+  green(Color(0xFF34D399), Color(0xFF059669));
+
+  const _Accent(this.dark, this.light);
+  final Color dark;
+  final Color light;
+  Color of(BuildContext context) => context.isDark ? dark : light;
+}
+
 class _BotTiles extends StatelessWidget {
   const _BotTiles({required this.tiles});
   final List<Widget> tiles;
 
   /// The narrowest a tile gets in a single row before the tiles wrap to two by two.
-  static const _minTileWidth = 104.0;
+  static const _minTileWidth = 68.0;
 
   @override
   Widget build(BuildContext context) {
@@ -796,35 +934,44 @@ class _BotTile extends StatelessWidget {
     super.key,
     required this.icon,
     required this.label,
+    required this.accent,
     required this.onTap,
   });
   final IconData icon;
   final String label;
+  final _Accent accent;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
+    final color = accent.of(context);
     return AppCard(
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpace.xs,
-        vertical: AppSpace.md,
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.xxs,
+        AppSpace.sm,
+        AppSpace.xxs,
+        AppSpace.sm,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
-              color: scheme.primary.withValues(
-                alpha: context.isDark ? 0.2 : 0.12,
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  color.withValues(alpha: context.isDark ? 0.3 : 0.18),
+                  color.withValues(alpha: context.isDark ? 0.14 : 0.08),
+                ],
               ),
-              borderRadius: BorderRadius.circular(AppRadius.tile),
             ),
             alignment: Alignment.center,
-            child: Icon(icon, size: 22, color: scheme.primary),
+            child: Icon(icon, size: 20, color: color),
           ),
           const SizedBox(height: AppSpace.xs),
           Text(
@@ -832,8 +979,8 @@ class _BotTile extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: context.textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w700,
+            style: context.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -906,6 +1053,94 @@ class _FolderTile extends ConsumerWidget {
           ..invalidate(botsProvider)
           ..invalidate(botFoldersProvider);
       },
+    );
+  }
+}
+
+/// The profile while the bot loads: the hero (avatar on its glow, name, status pill), the four
+/// shortcut tiles and the Profile section's card, in the real sizes.
+class _BotProfileSkeleton extends StatelessWidget {
+  const _BotProfileSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    final tile = SkeletonCard(
+      padding: const EdgeInsets.fromLTRB(AppSpace.xxs, AppSpace.sm, AppSpace.xxs, AppSpace.sm),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SkeletonBone(width: 40, height: 40, radius: 20),
+          const SizedBox(height: AppSpace.xs),
+          SkeletonText(style: text.labelMedium?.copyWith(fontWeight: FontWeight.w600), widthFactor: 0.6, center: true),
+        ],
+      ),
+    );
+    // A text field's outline.
+    Widget field(double height) => SkeletonBone(height: height, radius: AppRadius.tile);
+    return SkeletonPage(
+      children: [
+        // _BotHero.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.xs, AppSpace.md, AppSpace.xl),
+          child: Column(
+            children: [
+              const SizedBox(width: 176, height: 150, child: Center(child: SkeletonBone(width: 112, height: 112, radius: 56))),
+              const SizedBox(height: AppSpace.xs),
+              SkeletonText(style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.4), width: 160, center: true),
+              const SizedBox(height: AppSpace.sm),
+              const SkeletonBone(width: 92, height: 28, radius: AppRadius.pill),
+            ],
+          ),
+        ),
+        // _BotTiles: one row when there's room, two by two otherwise.
+        LayoutBuilder(
+          builder: (context, constraints) {
+            const gap = AppSpace.xs;
+            Widget row() => Row(spacing: gap, children: [Expanded(child: tile), Expanded(child: tile)]);
+            if (constraints.maxWidth >= 4 * _BotTiles._minTileWidth + 3 * gap) {
+              return Row(spacing: gap, children: [for (var i = 0; i < 4; i++) Expanded(child: tile)]);
+            }
+            return Column(spacing: gap, children: [row(), row()]);
+          },
+        ),
+        const SkeletonSectionHeader(width: 72),
+        SkeletonCard(
+          padding: const EdgeInsets.all(AppSpace.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: AppSpace.md,
+            children: [
+              field(56),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: AppSpace.sm,
+                children: [
+                  SkeletonText(style: text.labelLarge, width: 64),
+                  // The mascot picker's row of faces.
+                  SizedBox(
+                    height: 60,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) => Row(
+                        spacing: 8,
+                        children: [
+                          for (var i = 0; i < ((constraints.maxWidth + 8) / 60).floor(); i++)
+                            const SkeletonBone(width: 52, height: 52, radius: 26),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              field(128),
+              const Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: SizedBox(height: 40, child: Center(child: SkeletonBone(width: 120, height: 14))),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

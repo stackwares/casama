@@ -8,6 +8,7 @@ import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
 import '../../files/file_preview.dart';
 import '../media/markdown_image.dart';
+import 'mentions.dart';
 
 /// Bot replies as Markdown in the app's type and surfaces: comfortable paragraphs, Fraunces headings,
 /// and code in rounded panels with the language and a copy button.
@@ -25,7 +26,10 @@ class ChatMarkdown extends StatefulWidget {
 }
 
 class _ChatMarkdownState extends State<ChatMarkdown> {
-  final _generator = MarkdownGenerator();
+  var _generator = MarkdownGenerator();
+
+  /// The group's members when the reply is in a group chat: their @mentions show as pills.
+  String? _mentions;
   var _blocks = <String, List<Widget>>{};
   (ColorScheme, TextTheme, AppColors?)? _style;
   MarkdownConfig? _config;
@@ -38,6 +42,13 @@ class _ChatMarkdownState extends State<ChatMarkdown> {
     // new object on every frame, which would throw the cache away each time.
     final theme = Theme.of(context);
     final style = (theme.colorScheme, theme.textTheme, theme.extension<AppColors>());
+    final scope = MentionScope.maybeOf(context);
+    if (scope?.signature != _mentions) {
+      _mentions = scope?.signature;
+      _generator = scope == null ? MarkdownGenerator() : mentionMarkdownGenerator(scope);
+      _blocks = {};
+      _built = null;
+    }
     if (style != _style) {
       _style = style;
       _config = _configFor(context);

@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/rendering.dart' show PipelineOwner;
 import 'package:material_ui/material_ui.dart';
 
 import '../core/local_image.dart';
@@ -309,8 +310,10 @@ class _WallpaperScope extends InheritedWidget {
   bool updateShouldNotify(_WallpaperScope old) => old.painting != painting;
 }
 
-/// Paints the wallpaper behind [child]. Pages get it from [WallpaperPageTransitionsBuilder];
-/// chats use `force` so they keep it when the wallpaper is set to chats only.
+/// Paints the wallpaper behind [child]. The app paints one behind every navigator, under the
+/// see-through pages; on iOS each page paints its own as well, since sliding pages must cover the
+/// page under them (see `OpaquePageTransitionsBuilder`). Chats use `force` so they keep it when the
+/// wallpaper is set to chats only.
 class Wallpaper extends StatefulWidget {
   const Wallpaper({
     super.key,
@@ -329,45 +332,25 @@ class Wallpaper extends StatefulWidget {
 }
 
 class _WallpaperState extends State<Wallpaper> {
-  // The layer paints in window coordinates, measured when it paints. Behind its repaint boundary a
-  // page transition only moves the cached picture, so repaint once a transition settles; otherwise
-  // the picture keeps the mid-animation position (a misaligned photo and an undimmed strip).
-  var _epoch = 0;
-  final _watched = <Animation<double>>[];
-
-  void _settled(AnimationStatus s) {
-    if ((s == AnimationStatus.completed || s == AnimationStatus.dismissed) &&
-        mounted) {
-      setState(() => _epoch++);
-    }
-  }
+  // The layer paints in window coordinates, measured as it paints. While its page moves (a page
+  // transition, a swipe back) it repaints on every frame of that move, so the wallpaper stays
+  // lined up with the window instead of travelling with the page and jumping back when it lands.
+  final _routeAnimations = <Animation<double>>[];
+  Listenable? _moves;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final route = ModalRoute.of(context);
     final now = [?route?.animation, ?route?.secondaryAnimation];
-    if (now.length == _watched.length &&
-        now.indexed.every((e) => identical(e.$2, _watched[e.$1]))) {
+    if (now.length == _routeAnimations.length &&
+        now.indexed.every((e) => identical(e.$2, _routeAnimations[e.$1]))) {
       return;
     }
-    for (final a in _watched) {
-      a.removeStatusListener(_settled);
-    }
-    _watched
+    _routeAnimations
       ..clear()
       ..addAll(now);
-    for (final a in _watched) {
-      a.addStatusListener(_settled);
-    }
-  }
-
-  @override
-  void dispose() {
-    for (final a in _watched) {
-      a.removeStatusListener(_settled);
-    }
-    super.dispose();
+    _moves = now.isEmpty ? null : Listenable.merge(now);
   }
 
   @override
@@ -377,10 +360,10 @@ class _WallpaperState extends State<Wallpaper> {
     final force = widget.force;
     final theme = specOverride ?? Theme.of(context).extension<WallpaperTheme>();
     if (theme == null) return child;
-    // When the page route already paints the wallpaper everywhere, a nested forced wallpaper (such
-    // as ChatScreen inside the shell on desktop/tablet) lets the outer one show through instead of
-    // painting a second copy. On mobile, ChatScreen is its own route so its route's outer Wallpaper
-    // paints plain when everywhere is false and the inner forced Wallpaper paints the chat's wallpaper.
+    // When a wallpaper above already paints it everywhere (the app's own, behind every navigator),
+    // a nested forced wallpaper (ChatScreen) lets that one show through instead of painting a
+    // second copy. When the wallpaper is for chats only, the one above paints plain and the chat's
+    // forced Wallpaper paints the wallpaper under the chat.
     if (force && specOverride == null && _WallpaperScope.isPainting(context)) {
       return child;
     }
@@ -395,7 +378,7 @@ class _WallpaperState extends State<Wallpaper> {
               child: _PhotoLoader(
                 source: plain ? null : theme.spec.photo,
                 builder: (photo) => _WallpaperLayer(
-                  epoch: _epoch,
+                  moves: _moves,
                   theme: theme,
                   plain: plain,
                   photo: photo,
@@ -412,28 +395,6 @@ class _WallpaperState extends State<Wallpaper> {
       ),
     );
   }
-}
-
-/// Wraps every page route's content in a [Wallpaper], so each page is opaque during transitions
-/// and the wallpaper shows behind every screen.
-class WallpaperPageTransitionsBuilder extends PageTransitionsBuilder {
-  const WallpaperPageTransitionsBuilder(this.base);
-  final PageTransitionsBuilder base;
-
-  @override
-  Widget buildTransitions<T>(
-    PageRoute<T> route,
-    BuildContext context,
-    Animation<double> animation,
-    Animation<double> secondaryAnimation,
-    Widget child,
-  ) => base.buildTransitions(
-    route,
-    context,
-    animation,
-    secondaryAnimation,
-    Wallpaper(child: child),
-  );
 }
 
 /// Loads the wallpaper photo, if there is one, and hands the decoded image to [builder]. Until it
@@ -524,12 +485,12 @@ class _WallpaperLayer extends LeafRenderObjectWidget {
     required this.screen,
     required this.textDirection,
     this.photo,
-    this.epoch = 0,
+    this.moves,
   });
   final WallpaperTheme theme;
 
-  /// Bumped to repaint after the page moved (see [_WallpaperState]).
-  final int epoch;
+  /// Notifies while the page moves, so the layer repaints in place (see [_WallpaperState]).
+  final Listenable? moves;
   final bool plain;
   final ui.Image? photo;
 
@@ -545,6 +506,7 @@ class _WallpaperLayer extends LeafRenderObjectWidget {
     screen: screen,
     textDirection: textDirection,
     photo: photo,
+    moves: moves,
   )..pixelRatio = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1;
 
   @override
@@ -556,7 +518,7 @@ class _WallpaperLayer extends LeafRenderObjectWidget {
       ..photo = photo
       ..screen = screen
       ..textDirection = textDirection
-      ..epoch = epoch;
+      ..moves = moves;
   }
 }
 
@@ -567,11 +529,13 @@ class _RenderWallpaper extends RenderBox {
     required Size? screen,
     required TextDirection textDirection,
     ui.Image? photo,
+    Listenable? moves,
   }) : _theme = theme,
        _photo = photo,
        _plain = plain,
        _screen = screen,
-       _textDirection = textDirection;
+       _textDirection = textDirection,
+       _moves = moves;
 
   WallpaperTheme _theme;
   set theme(WallpaperTheme v) {
@@ -601,11 +565,27 @@ class _RenderWallpaper extends RenderBox {
     markNeedsPaint();
   }
 
-  int _epoch = 0;
-  set epoch(int v) {
-    if (v == _epoch) return;
-    _epoch = v;
-    markNeedsPaint();
+  Listenable? _moves;
+  set moves(Listenable? v) {
+    if (identical(v, _moves)) return;
+    if (attached) _moves?.removeListener(markNeedsPaint);
+    _moves = v;
+    if (attached) {
+      _moves?.addListener(markNeedsPaint);
+      markNeedsPaint();
+    }
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _moves?.addListener(markNeedsPaint);
+  }
+
+  @override
+  void detach() {
+    _moves?.removeListener(markNeedsPaint);
+    super.detach();
   }
 
   TextDirection _textDirection;
@@ -653,7 +633,7 @@ class _RenderWallpaper extends RenderBox {
     final spec = _theme.spec;
     final photo = _photo;
     if (photo != null) {
-      _paintPhoto(canvas, world, rect, photo, spec, _theme.surface);
+      _paintPhoto(canvas, world, photo, spec, _theme.surface);
     } else {
       _paintGradient(
         canvas,
@@ -684,15 +664,14 @@ class _RenderWallpaper extends RenderBox {
   static void _paintPhoto(
     Canvas canvas,
     Rect world,
-    Rect painted,
     ui.Image photo,
     WallpaperSpec spec,
     Color surface,
   ) {
     final sigma = spec.photoBlur * 40;
-    // Drawn a little larger than the window so the blur doesn't fade at the edges, and always over
-    // everything painted (a frame painted mid-transition may sit partly outside the window).
-    final cover = world.expandToInclude(painted);
+    // Over the window, a little larger so the blur doesn't fade at the edges. A page sliding in is
+    // partly off screen; that part isn't seen, and stretching the photo over it would distort it.
+    final cover = world;
     final target = cover.inflate(sigma * 2);
     if (sigma > 0.5) {
       final blurred = _blurredPhoto(photo, sigma, target.size);

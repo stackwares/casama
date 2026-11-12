@@ -195,7 +195,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
       );
     } else {
       body = preview.when(
-        loading: () => const SkeletonDetail(),
+        loading: () => const JoinCardSkeleton(),
         error: (e, _) {
           final other = _otherServer;
           return JoinCard(
@@ -374,6 +374,84 @@ class JoinCard extends StatelessWidget {
                   ...actions.expand(
                     (a) => [a, const SizedBox(height: AppSpace.xs)],
                   ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A [JoinCard] still loading: the same centered card with the workspace mark, invited-by line,
+/// name, details and the two buttons. [leadingRadius] null is a rounded square like [SpaceAvatar].
+class JoinCardSkeleton extends StatelessWidget {
+  const JoinCardSkeleton({super.key, this.leadingSize = 72, this.leadingRadius});
+
+  final double leadingSize;
+  final double? leadingRadius;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    final statusBar = MediaQuery.paddingOf(context).top;
+    return SkeletonScope(
+      child: Center(
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(
+            AppSpace.gutter,
+            AppSpace.gutter + statusBar,
+            AppSpace.gutter,
+            BottomPadding.of(context, minimum: AppSpace.gutter),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: SkeletonCard(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.xl,
+                AppSpace.xxl,
+                AppSpace.xl,
+                AppSpace.xl,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: SkeletonBone(
+                      width: leadingSize,
+                      height: leadingSize,
+                      radius: leadingRadius ?? leadingSize * 0.3,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpace.md),
+                  SkeletonText(
+                    style: text.bodyMedium,
+                    widthFactor: 0.4,
+                    center: true,
+                  ),
+                  SkeletonText(
+                    style: text.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                    widthFactor: 0.6,
+                    center: true,
+                  ),
+                  const SizedBox(height: AppSpace.xs),
+                  SkeletonText(
+                    style: text.bodyMedium,
+                    widthFactor: 0.5,
+                    center: true,
+                  ),
+                  const SizedBox(height: AppSpace.xl),
+                  const SkeletonBone(height: 44, radius: AppRadius.pill),
+                  const SizedBox(height: AppSpace.xs),
+                  const SizedBox(
+                    height: 48,
+                    child: Center(child: SkeletonBone(width: 64, height: 12)),
+                  ),
+                  const SizedBox(height: AppSpace.xs),
                 ],
               ),
             ),

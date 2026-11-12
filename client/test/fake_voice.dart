@@ -54,10 +54,42 @@ class FakeDeviceDictation implements DeviceDictation {
 
 class FakePlayer implements SpeechPlayer {
   final played = <int>[];
+  final speeds = <double>[];
+  var stopped = 0;
+  var paused = false;
+  Duration? seekedTo;
+  final _playback = StreamController<SpeechPlayback>.broadcast();
+
+  /// Reports playback as the real player would.
+  void report(Duration position, {Duration duration = const Duration(seconds: 40), bool completed = false}) =>
+      _playback.add(SpeechPlayback(playing: !paused && !completed, position: position, duration: duration, completed: completed));
+
   @override
-  Future<void> play(Uint8List mp3) async => played.add(mp3.length);
+  Future<void> play(Uint8List mp3) async {
+    paused = false;
+    played.add(mp3.length);
+  }
+
   @override
-  Future<void> stop() async {}
+  Future<void> stop() async => stopped++;
+  @override
+  Future<void> pause() async {
+    paused = true;
+    report(Duration.zero);
+  }
+
+  @override
+  Future<void> resume() async {
+    paused = false;
+    report(Duration.zero);
+  }
+
+  @override
+  Future<void> seek(Duration position) async => seekedTo = position;
+  @override
+  Future<void> setSpeed(double speed) async => speeds.add(speed);
+  @override
+  Stream<SpeechPlayback> get playback => _playback.stream;
 }
 
 class FakeCall implements VoiceCall {

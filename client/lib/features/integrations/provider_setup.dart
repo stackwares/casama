@@ -328,9 +328,7 @@ class _ProviderAppPickerState extends ConsumerState<_ProviderAppPicker> {
                     ),
                   );
                 }
-                if (!snap.hasData) {
-                  return const SkeletonList(padding: EdgeInsets.zero);
-                }
+                if (!snap.hasData) return const _ProviderAppsSkeleton();
                 final items = snap.data!;
                 if (items.isEmpty) {
                   return Center(
@@ -387,6 +385,97 @@ class _ProviderAppPickerState extends ConsumerState<_ProviderAppPicker> {
               },
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The app picker's list still loading: two-line list tiles with a logo and a Connect button,
+/// hairlines between them.
+class _ProviderAppsSkeleton extends StatelessWidget {
+  const _ProviderAppsSkeleton();
+
+  static const _titles = [0.36, 0.5, 0.28, 0.44, 0.4, 0.32, 0.48];
+  static const _subtitles = [0.8, 0.66, 0.74, 0.88, 0.6, 0.7, 0.82];
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    final hairline = context.appColors.hairline;
+    return SkeletonScope(
+      child: ClipRect(
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < _titles.length; i++) ...[
+                if (i > 0) Divider(height: 1, color: hairline),
+                // A two-line ListTile: 72 points, xs side padding, 16-point gaps.
+                SizedBox(
+                  height: 72,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
+                    child: Row(
+                      children: [
+                        const SkeletonBone(width: 40, height: 40, radius: 40 * 0.28),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              SkeletonText(style: text.bodyLarge, widthFactor: _titles[i]),
+                              SkeletonText(style: text.bodyMedium, widthFactor: _subtitles[i]),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        const SkeletonBone(width: 88, height: 40, radius: AppRadius.pill),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The signed-in apps still loading: a grouped card of logo rows with a status pill each.
+class _ProviderAccountsSkeleton extends StatelessWidget {
+  const _ProviderAccountsSkeleton();
+
+  static const _titles = [0.32, 0.44, 0.26];
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonScope(
+      child: SkeletonGroupedCard(
+        rows: [
+          for (final w in _titles)
+            Row(
+              children: [
+                Expanded(
+                  child: SkeletonRow(
+                    leading: SkeletonLeading.square,
+                    leadingSize: 32,
+                    trailing: SkeletonTrailing.none,
+                    subtitle: false,
+                    titleWidth: w,
+                    padding: const EdgeInsetsDirectional.fromSTEB(AppSpace.md, 12, 0, 12),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsetsDirectional.only(start: AppSpace.xs, end: AppSpace.md),
+                  child: SkeletonBone(width: 76, height: 24, radius: AppRadius.pill),
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -483,7 +572,7 @@ class ProviderAccountsCard extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         accounts.when(
-          loading: () => const SkeletonList(count: 3, padding: EdgeInsets.zero),
+          loading: () => const _ProviderAccountsSkeleton(),
           error: (e, _) =>
               FormNote(errorText(context, e), icon: LucideIcons.triangleAlert),
           data: (items) => items.isEmpty

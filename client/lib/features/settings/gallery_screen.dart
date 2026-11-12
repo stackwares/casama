@@ -459,32 +459,45 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
     return width == null ? card : SizedBox(width: width, child: card);
   }
 
+  /// The overview before the gallery arrives: the featured row, then a row of themes with its
+  /// "See all", in the same cards, widths and columns as [_overview].
   List<Widget> _skeleton(double width, double side) {
     final compact = width < 600;
     final columns = _columns('theme', width);
+    final featuredColumns = width >= 900 ? 3 : 2;
+    final featuredWidth = (width * 0.84).clamp(240.0, 340.0);
     final cards = [
       for (var i = 0; i < (compact ? 4 : columns); i++) const _SkeletonCard(),
     ];
+    final featured = [
+      for (var i = 0; i < (compact ? 2 : featuredColumns); i++)
+        const _SkeletonCard(featured: true),
+    ];
+    Widget padded(Widget child) => Padding(
+      padding: EdgeInsets.symmetric(horizontal: side),
+      child: child,
+    );
     return [
-      for (var section = 0; section < 2; section++) ...[
-        Padding(
-          padding: EdgeInsets.fromLTRB(
-            side + AppSpace.xxs,
-            AppSpace.lg,
-            side,
-            AppSpace.sm,
-          ),
-          child: const _Bar(width: 96, height: 14),
+      SkeletonScope(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            padded(const SkeletonSectionHeader()),
+            compact
+                ? _shelf([
+                    for (final c in featured)
+                      SizedBox(width: featuredWidth, child: c),
+                  ], side)
+                : padded(_rows(featured, featuredColumns)),
+            padded(const _SkeletonSeeAllHeader()),
+            compact
+                ? _shelf([
+                    for (final c in cards) SizedBox(width: 196, child: c),
+                  ], side)
+                : padded(_rows(cards, columns)),
+          ],
         ),
-        compact
-            ? _shelf([
-                for (final c in cards) SizedBox(width: 196, child: c),
-              ], side)
-            : Padding(
-                padding: EdgeInsets.symmetric(horizontal: side),
-                child: _rows(cards, columns),
-              ),
-      ],
+      ),
     ];
   }
 
@@ -955,29 +968,54 @@ class _FeaturedCard extends ConsumerWidget {
   }
 }
 
-class _Bar extends StatelessWidget {
-  const _Bar({required this.width, required this.height});
-  final double width;
-  final double height;
+/// A [SectionHeader] with a "See all" button, still loading.
+class _SkeletonSeeAllHeader extends StatelessWidget {
+  const _SkeletonSeeAllHeader();
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: width,
-    height: height,
-    decoration: BoxDecoration(
-      color: context.colorScheme.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(height / 2),
-    ),
-  );
+  Widget build(BuildContext context) {
+    // The text button's height at this density sets the header's height.
+    final button = 48 + Theme.of(context).visualDensity.baseSizeAdjustment.dy;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.xxs,
+        AppSpace.lg,
+        AppSpace.xxs,
+        AppSpace.xs,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: SkeletonText(
+              style: context.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+              ),
+              width: 96,
+            ),
+          ),
+          SizedBox(
+            height: button,
+            width: 72,
+            child: const Center(child: SkeletonBone(width: 48, height: 11)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-/// The final card shape with flat grey where the picture and the words will be.
+/// A [_LookCard] (or, [featured], a [_FeaturedCard]) still loading: the same frame, preview and
+/// caption, with bones where the picture and the words will be.
 class _SkeletonCard extends StatelessWidget {
-  const _SkeletonCard();
+  const _SkeletonCard({this.featured = false});
+
+  final bool featured;
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
+    final text = context.textTheme;
     return DecoratedBox(
       decoration: BoxDecoration(
         color: context.isDark
@@ -989,25 +1027,49 @@ class _SkeletonCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(7),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AspectRatio(
-              aspectRatio: 4 / 3,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: scheme.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(AppRadius.tile - 2),
-                ),
-              ),
+              aspectRatio: featured ? 16 / 10 : 4 / 3,
+              child: const SkeletonBone(radius: AppRadius.tile - 2),
             ),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(5, 12, 5, 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(5, 9, 5, 3),
+              child: Row(
                 children: [
-                  _Bar(width: 88, height: 12),
-                  SizedBox(height: 7),
-                  _Bar(width: 56, height: 9),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SkeletonText(
+                          style: featured
+                              ? text.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                )
+                              : text.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
+                          widthFactor: featured ? 0.5 : 0.7,
+                        ),
+                        const SizedBox(height: 1),
+                        SkeletonText(
+                          style: text.labelSmall,
+                          widthFactor: featured ? 0.3 : 0.5,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (featured)
+                    const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: Center(
+                        child: SkeletonBone(width: 7, height: 11, radius: 3),
+                      ),
+                    )
+                  else
+                    const SkeletonBone(width: 26, height: 12),
                 ],
               ),
             ),

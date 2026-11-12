@@ -67,6 +67,7 @@ class _ComputersScreenState extends ConsumerState<ComputersScreen> {
       body: AsyncView(
         value: ref.watch(computersProvider),
         onRetry: () => ref.invalidate(computersProvider),
+        loading: const _ComputersSkeleton(),
         data: (items) => RefreshIndicator(
           onRefresh: () async {
             HapticsHelper.medium();
@@ -81,6 +82,97 @@ class _ComputersScreenState extends ConsumerState<ComputersScreen> {
             itemBuilder: (context, i) => _ComputerCard(computer: items[i]).appListItemEntrance(i),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The computers list still loading: the help note, then computer cards with the
+/// [PageListView] gaps between them.
+class _ComputersSkeleton extends StatelessWidget {
+  const _ComputersSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonPage(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 1),
+              child: SkeletonBone(width: 16, height: 16, radius: 8),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: SkeletonText(
+                style: context.textTheme.bodySmall?.copyWith(height: 1.35),
+                widthFactor: 0.8,
+                lines: 2,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        const _ComputerCardSkeleton(titleWidth: 0.42),
+        const SizedBox(height: AppSpace.xs),
+        const _ComputerCardSkeleton(titleWidth: 0.56),
+        const SizedBox(height: AppSpace.xs),
+        const _ComputerCardSkeleton(titleWidth: 0.36),
+      ],
+    );
+  }
+}
+
+/// A [_ComputerCard] still loading: the state tile, name, owner and system lines, the pills,
+/// the activity line and the menu button.
+class _ComputerCardSkeleton extends StatelessWidget {
+  const _ComputerCardSkeleton({required this.titleWidth});
+  final double titleWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    final meta = text.bodySmall;
+    final pill = text.labelMedium?.copyWith(fontWeight: FontWeight.w600, height: 1.15);
+    Widget pillBone(double width) => Stack(
+      children: [
+        // As tall as a StatusLabel pill: its text line plus 4 points above and below.
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: SizedBox(width: width, child: SkeletonText(style: pill, width: 0)),
+        ),
+        Positioned.fill(child: SkeletonBone(width: width, height: double.infinity, radius: AppRadius.pill)),
+      ],
+    );
+    return SkeletonCard(
+      padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.xxs, 14),
+      child: Row(
+        children: [
+          const SkeletonBone(width: 44, height: 44, radius: AppRadius.icon + 2),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SkeletonText(style: text.titleSmall?.copyWith(fontWeight: FontWeight.w700), widthFactor: titleWidth),
+                const SizedBox(height: 2),
+                SkeletonText(style: meta, widthFactor: 0.3),
+                const SizedBox(height: 2),
+                SkeletonText(style: meta, widthFactor: 0.62),
+                const SizedBox(height: 6),
+                Row(children: [pillBone(64), const SizedBox(width: 6), pillBone(78)]),
+                const SizedBox(height: 6),
+                SkeletonText(style: meta, widthFactor: 0.44),
+              ],
+            ),
+          ),
+          const SizedBox(
+            width: 48,
+            height: 48,
+            child: Center(child: SkeletonBone(width: 4, height: 16, radius: 2)),
+          ),
+        ],
       ),
     );
   }

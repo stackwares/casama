@@ -8141,53 +8141,118 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatTimeYesterday => 'Yesterday';
 
   @override
-  String get remoteUpdateTitle => 'Time to update Casama';
+  String get anyPriority => 'Any priority';
 
   @override
-  String get remoteUpdateBody =>
-      'This version of Casama is no longer supported. Update it to keep going.';
+  String get readingAloud => 'Reading aloud';
 
   @override
-  String get remoteUpdateNoLink =>
-      'This version of Casama is no longer supported. Update it from where you installed it.';
+  String get readAloudPreparing => 'Getting ready…';
 
   @override
-  String get remoteMaintenanceTitle => 'Casama is down for maintenance';
+  String get readAloudPaused => 'Paused';
 
   @override
-  String get openLink => 'Open';
+  String get stopReading => 'Stop reading';
 
   @override
-  String get routineIdeas => 'Ideas';
+  String get readAloudSpeed => 'Playback speed';
 
   @override
-  String get routineIdeasHelp => 'Start from an idea, then change anything.';
-
-  @override
-  String get pluginDirectory => 'Reviewed plugins';
-
-  @override
-  String get pluginDirectoryHelp =>
-      'Checked by Casama and pinned to the version that was checked.';
-
-  @override
-  String get pluginOrPaste => 'Or add one from a GitHub link';
-
-  @override
-  String byAuthor(String name) {
-    return 'By $name';
+  String readAloudTimeLeft(String time) {
+    return '$time left';
   }
 
   @override
-  String get adminAppSettings => 'App settings';
+  String get readAloudShowMessage => 'Show the message being read';
 
   @override
-  String get adminAppSettingsHelp =>
-      'Minimum versions, maintenance, announcements and feature switches for every app, with no release.';
+  String mentionOpenProfile(String name) {
+    return '$name, open profile';
+  }
 
   @override
-  String get adminAppSettingsBadJson =>
-      'That isn\'t valid JSON. Check the brackets, quotes and commas.';
+  String get paywallTitle => 'Grow your crew with Pro';
+
+  @override
+  String get paywallSubtitle =>
+      'More bots, more computer time and fresh credits every month, so your bots can keep working.';
+
+  @override
+  String get paywallPerkBots => 'Bots';
+
+  @override
+  String get paywallPerkBotsBody => 'A whole crew, each with its own job.';
+
+  @override
+  String get paywallPerkComputers => 'Computer time';
+
+  @override
+  String get paywallPerkComputersBody =>
+      'Bots get their own computers to browse, code and build.';
+
+  @override
+  String get paywallPerkCredits => 'Monthly credits';
+
+  @override
+  String get paywallPerkCreditsBody => 'For models, search and tools.';
+
+  @override
+  String get paywallPerkSeats => 'Seats';
+
+  @override
+  String get paywallPerkSeatsBody => 'Bring your team into the same workspace.';
+
+  @override
+  String paywallHours(String hours) {
+    return '$hours h';
+  }
+
+  @override
+  String get paywallMonthly => 'Monthly';
+
+  @override
+  String get paywallYearly => 'Yearly';
+
+  @override
+  String get paywallPerMonth => '/ month';
+
+  @override
+  String get paywallPerYear => '/ year';
+
+  @override
+  String get paywallBestValue => 'BEST VALUE';
+
+  @override
+  String get paywallContinue => 'Continue';
+
+  @override
+  String get paywallContinueCheckout => 'Continue to checkout';
+
+  @override
+  String get paywallRestore => 'Restore';
+
+  @override
+  String get paywallFineStore =>
+      'Renews automatically. Cancel anytime in your store settings.';
+
+  @override
+  String get paywallFineWeb =>
+      'Renews automatically. Cancel anytime from Billing.';
+
+  @override
+  String get paywallAskAdmin =>
+      'Only workspace owners and admins can change the plan. Ask one of them to upgrade.';
+
+  @override
+  String get paywallWelcomePro => 'Welcome to Pro!';
+
+  @override
+  String get upgradeToPro => 'Upgrade to Pro';
+
+  @override
+  String get upgradeToProBody =>
+      'More bots, computer time and monthly credits.';
 
   @override
   String get manageTab => 'Manage';
@@ -8633,4 +8698,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
     return '$nString d';
   }
+
+  @override
+  String get remoteUpdateTitle => 'Time to update Casama';
+
+  @override
+  String get remoteUpdateBody =>
+      'This version of Casama is no longer supported. Update it to keep going.';
+
+  @override
+  String get remoteUpdateNoLink =>
+      'This version of Casama is no longer supported. Update it from where you installed it.';
+
+  @override
+  String get remoteMaintenanceTitle => 'Casama is down for maintenance';
+
+  @override
+  String get openLink => 'Open';
+
+  @override
+  String get routineIdeas => 'Ideas';
+
+  @override
+  String get routineIdeasHelp => 'Start from an idea, then change anything.';
+
+  @override
+  String get pluginDirectory => 'Reviewed plugins';
+
+  @override
+  String get pluginDirectoryHelp =>
+      'Checked by Casama and pinned to the version that was checked.';
+
+  @override
+  String get pluginOrPaste => 'Or add one from a GitHub link';
+
+  @override
+  String byAuthor(String name) {
+    return 'By $name';
+  }
+
+  @override
+  String get adminAppSettings => 'App settings';
+
+  @override
+  String get adminAppSettingsHelp =>
+      'Minimum versions, maintenance, announcements and feature switches for every app, with no release.';
+
+  @override
+  String get adminAppSettingsBadJson =>
+      'That isn\'t valid JSON. Check the brackets, quotes and commas.';
 }

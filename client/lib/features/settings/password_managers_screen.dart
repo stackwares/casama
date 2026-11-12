@@ -59,6 +59,7 @@ class PasswordManagersScreen extends ConsumerWidget {
       body: AsyncView(
         value: ref.watch(passwordManagersProvider),
         onRetry: () => ref.invalidate(passwordManagersProvider),
+        loading: const _ManagersSkeleton(),
         data: (items) => items.isEmpty
             ? EmptyState(
                 icon: LucideIcons.keyRound,
@@ -116,6 +117,86 @@ class PasswordManagersScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+      ),
+    );
+  }
+}
+
+/// The password managers page before it loads: the note over a card of manager rows with a delete button.
+class _ManagersSkeleton extends StatelessWidget {
+  const _ManagersSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonPage(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(padding: EdgeInsets.only(top: 1), child: SkeletonBone(width: 16, height: 16, radius: 4)),
+            const SizedBox(width: 6),
+            Expanded(
+              child: SkeletonText(style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.35), lines: 2, widthFactor: 0.7),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        SkeletonGroupedCard(
+          rows: [
+            for (final (t, st) in const [(0.4, 0.76), (0.32, 0.64)])
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SkeletonRow(padding: EdgeInsets.zero, trailing: SkeletonTrailing.none, titleWidth: t, subtitleWidth: st),
+                    ),
+                    const SizedBox(width: AppSpace.xs),
+                    const SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 18, height: 18, radius: 5))),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// The vault checklist before it loads: checkbox rows with a name and a count of logins.
+class _VaultsSkeleton extends StatelessWidget {
+  const _VaultsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return SkeletonScope(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpace.md,
+        children: [
+          for (final (t, st) in const [(0.44, 0.26), (0.3, 0.22), (0.52, 0.3)])
+            SizedBox(
+              height: 72,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        SkeletonText(style: text.bodyLarge, widthFactor: t),
+                        SkeletonText(style: text.bodyMedium, widthFactor: st),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpace.md),
+                  const SkeletonBone(width: 18, height: 18, radius: 3),
+                  const SizedBox(width: 11),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -284,8 +365,7 @@ class _VaultsState extends ConsumerState<_Vaults> {
         },
         children: [
           if (snap.hasError) Text(errorText(context, snap.error!)),
-          if (!snap.hasData && !snap.hasError)
-            const SkeletonList(count: 3, padding: EdgeInsets.zero),
+          if (!snap.hasData && !snap.hasError) const _VaultsSkeleton(),
           for (final v in snap.data ?? const <PasswordManagerVault>[])
             CheckboxListTile(
               key: Key('vault-${v.id}'),

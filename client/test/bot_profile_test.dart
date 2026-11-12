@@ -1,4 +1,4 @@
-// The bot profile (who it is, four big shortcuts, settings in short sections with Advanced folded
+// The bot profile (who it is, a row of four shortcuts, settings in short sections with Advanced folded
 // away and Archive at the end) and the slim chat header (call, new chat, … with conversations and
 // the profile).
 import 'package:material_ui/material_ui.dart';
@@ -69,7 +69,7 @@ void main() {
     });
   }
 
-  testWidgets('the tiles sit in one row when there is room and two by two on a phone', (tester) async {
+  testWidgets('the tiles sit in one row, on a phone too', (tester) async {
     double rowsOf(WidgetTester tester) => {
       for (final t in ['computer', 'memory', 'routines', 'apps']) tester.getTopLeft(find.byKey(Key('botTile-$t'))).dy,
     }.length.toDouble();
@@ -77,7 +77,7 @@ void main() {
     await setSize(tester, const Size(375, 667));
     await tester.pumpWidget(_profileApp(FakeBackend(), _router()));
     await tester.pumpAndSettle();
-    expect(rowsOf(tester), 2);
+    expect(rowsOf(tester), 1);
 
     await setSize(tester, const Size(1200, 900));
     await tester.pumpAndSettle();

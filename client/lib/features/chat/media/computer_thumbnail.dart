@@ -28,13 +28,25 @@ class ComputerThumbnails {
   static String keyFor(String computerId, String path) =>
       'thumb:${MediaCache.keyFor(computerId, path)}:$size';
 
+  /// The thumbnail already in memory, without waiting (see [MediaCache.peek]).
+  static ComputerThumbnail? peek(String computerId, String path) {
+    final key = keyFor(computerId, path);
+    final bytes = MediaCache.peek(key);
+    if (bytes == null) return null;
+    return ComputerThumbnail(bytes: bytes, duration: _durations[key]);
+  }
+
   /// The thumbnail, or null when there is none (the card keeps its plain look). Never throws.
+  /// [cachedOnly]: only what's kept on the device, never the network (cards look there at once
+  /// and ask the computer only once they've stayed on screen a moment).
   static Future<ComputerThumbnail?> load(
     Backend backend,
     String computerId,
-    String path,
-  ) {
+    String path, {
+    bool cachedOnly = false,
+  }) {
     final key = keyFor(computerId, path);
+    if (cachedOnly) return _cached(key).catchError((_) => null);
     final until = _noneUntil[key];
     if (until != null && DateTime.now().isBefore(until)) {
       return Future.value(null);
@@ -47,27 +59,34 @@ class ComputerThumbnails {
         });
   }
 
+  /// Clip lengths of thumbnails read this session, for [peek].
+  static final _durations = <String, Duration?>{};
+
+  static Future<ComputerThumbnail?> _cached(String key) async {
+    final cached = await MediaCache.read(key, fresh: true);
+    if (cached == null) return null;
+    final meta = await MediaCache.read('$key#ms', fresh: true);
+    final ms = meta == null ? null : int.tryParse(utf8.decode(meta));
+    final duration = ms == null ? null : Duration(milliseconds: ms);
+    _durations[key] = duration;
+    return ComputerThumbnail(bytes: cached, duration: duration);
+  }
+
   static Future<ComputerThumbnail?> _load(
     Backend backend,
     String computerId,
     String path,
     String key,
   ) async {
-    final cached = await MediaCache.read(key, fresh: true);
-    if (cached != null) {
-      final meta = await MediaCache.read('$key#ms', fresh: true);
-      final ms = meta == null ? null : int.tryParse(utf8.decode(meta));
-      return ComputerThumbnail(
-        bytes: cached,
-        duration: ms == null ? null : Duration(milliseconds: ms),
-      );
-    }
+    final cached = await _cached(key);
+    if (cached != null) return cached;
     final t = await backend.computerThumbnail(computerId, path, size: size);
     if (t == null) {
       _noneUntil[key] = DateTime.now().add(_retryAfter);
       return null;
     }
     _noneUntil.remove(key);
+    _durations[key] = t.duration;
     unawaited(MediaCache.write(key, t.bytes, maxAge: _keep));
     if (t.duration case final d?) {
       unawaited(
@@ -85,6 +104,7 @@ class ComputerThumbnails {
   static void reset() {
     _inFlight.clear();
     _noneUntil.clear();
+    _durations.clear();
   }
 }
 

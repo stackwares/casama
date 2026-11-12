@@ -69,6 +69,7 @@ class _UsageScreenState extends ConsumerState<UsageScreen> {
         AsyncView(
           value: report,
           onRetry: () => ref.invalidate(usageReportProvider(_period)),
+          loading: const _ReportSkeleton(),
           data: (r) => r == null ? const SizedBox.shrink() : _Report(report: r, period: _period, periodLabel: _periodLabel(_period)),
         ),
       ],
@@ -432,6 +433,58 @@ class _ModelBreakdown extends ConsumerWidget {
             ? Row(children: [chart, const SizedBox(width: AppSpace.lg), Expanded(child: legend)])
             : Column(children: [chart, const SizedBox(height: AppSpace.md), legend]);
       },
+    );
+  }
+}
+
+/// The report before it loads: the two stat cards, the daily chart and the by-bot bars.
+class _ReportSkeleton extends StatelessWidget {
+  const _ReportSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    Widget stat() => SkeletonCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Align(alignment: AlignmentDirectional.centerStart, child: SkeletonBone(width: 18, height: 18, radius: 5)),
+          const SizedBox(height: AppSpace.xs),
+          SkeletonText(style: text.headlineSmall, widthFactor: 0.5),
+          SkeletonText(style: text.labelMedium, widthFactor: 0.4),
+        ],
+      ),
+    );
+    return SkeletonScope(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            spacing: AppSpace.sm,
+            children: [Expanded(child: stat()), Expanded(child: stat())],
+          ),
+          const SkeletonSectionHeader(width: 110),
+          const SkeletonCard(child: SkeletonBone(height: 200, radius: AppRadius.row)),
+          const SkeletonSectionHeader(width: 70),
+          SkeletonCard(
+            child: Column(
+              children: [
+                for (final (i, w) in const [0.42, 0.3, 0.5].indexed) ...[
+                  if (i > 0) const SizedBox(height: AppSpace.sm),
+                  Row(
+                    children: [
+                      Expanded(child: SkeletonText(style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w600), widthFactor: w)),
+                      SizedBox(width: 48, child: SkeletonText(style: text.labelLarge)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  const SkeletonBone(height: 8, radius: 4),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

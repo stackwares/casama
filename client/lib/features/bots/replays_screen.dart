@@ -30,6 +30,7 @@ class ReplaysScreen extends ConsumerWidget {
       body: AsyncView(
         value: ref.watch(replaysProvider(botId)),
         onRetry: () => ref.invalidate(replaysProvider(botId)),
+        loading: const _ReplaysSkeleton(),
         data: (items) => items.isEmpty
             ? EmptyState(icon: LucideIcons.listVideo, title: l10n.noReplays, message: l10n.replaysHelp)
             : PageColumn(
@@ -111,6 +112,51 @@ class _RunReplayState extends State<_RunReplay> {
             obscureText: hidden && (p.secret ?? false),
             decoration: InputDecoration(labelText: p.name, helperText: p.description, suffixIcon: (p.secret ?? false) ? toggle : null),
           )),
+      ],
+    );
+  }
+}
+
+/// The page while replays load: the help note over a card of replay rows, each with its delete
+/// button, in the real rows' sizes.
+class _ReplaysSkeleton extends StatelessWidget {
+  const _ReplaysSkeleton();
+
+  static const _titles = [0.42, 0.56, 0.36, 0.5];
+  static const _subtitles = [0.78, 0.64, 0.86, 0.7];
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return SkeletonPage(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(padding: EdgeInsets.only(top: 1), child: SkeletonBone(width: 16, height: 16, radius: 4)),
+            const SizedBox(width: 6),
+            Expanded(child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.35), lines: 2, widthFactor: 0.8)),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        SkeletonGroupedCard(
+          rows: [
+            for (var i = 0; i < _titles.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SkeletonRow(trailing: SkeletonTrailing.none, padding: EdgeInsets.zero, titleWidth: _titles[i], subtitleWidth: _subtitles[i]),
+                    ),
+                    const SizedBox(width: AppSpace.xs),
+                    // The delete IconButton's tap target.
+                    const SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 18, height: 18, radius: 4))),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ],
     );
   }

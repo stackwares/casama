@@ -59,6 +59,7 @@ class ActionRulesScreen extends ConsumerWidget {
       body: AsyncView(
         value: ref.watch(actionRulesProvider(botId)),
         onRetry: () => ref.invalidate(actionRulesProvider(botId)),
+        loading: const _ActionRulesSkeleton(),
         data: (rules) {
           final groups = <String, List<ActionRule>>{};
           for (final r in rules) {
@@ -206,6 +207,45 @@ class _AddRuleState extends ConsumerState<_AddRule> {
           value: _workspace,
           onChanged: hapticOnChanged((v) => setState(() => _workspace = v)),
         ),
+      ],
+    );
+  }
+}
+
+/// The page while rules load: the help note, then two categories, each a header over a card of
+/// rule rows with their delete buttons, in the real rows' sizes.
+class _ActionRulesSkeleton extends StatelessWidget {
+  const _ActionRulesSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    Widget row(double title) => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+      child: Row(
+        children: [
+          Expanded(child: SkeletonRow(trailing: SkeletonTrailing.none, subtitle: false, padding: EdgeInsets.zero, titleWidth: title)),
+          const SizedBox(width: AppSpace.xs),
+          // The delete IconButton's tap target.
+          const SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 18, height: 18, radius: 4))),
+        ],
+      ),
+    );
+    return SkeletonPage(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(padding: EdgeInsets.only(top: 1), child: SkeletonBone(width: 16, height: 16, radius: 4)),
+            const SizedBox(width: 6),
+            Expanded(child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.35), lines: 2, widthFactor: 0.8)),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        const SkeletonSectionHeader(width: 72),
+        SkeletonGroupedCard(rows: [row(0.62), row(0.48)]),
+        const SkeletonSectionHeader(width: 96),
+        SkeletonGroupedCard(rows: [row(0.54)]),
       ],
     );
   }

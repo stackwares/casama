@@ -12748,89 +12748,209 @@ abstract class AppLocalizations {
   /// **'Yesterday'**
   String get chatTimeYesterday;
 
-  /// No description provided for @remoteUpdateTitle.
+  /// No description provided for @anyPriority.
   ///
   /// In en, this message translates to:
-  /// **'Time to update Casama'**
-  String get remoteUpdateTitle;
+  /// **'Any priority'**
+  String get anyPriority;
 
-  /// No description provided for @remoteUpdateBody.
+  /// No description provided for @readingAloud.
   ///
   /// In en, this message translates to:
-  /// **'This version of Casama is no longer supported. Update it to keep going.'**
-  String get remoteUpdateBody;
+  /// **'Reading aloud'**
+  String get readingAloud;
 
-  /// No description provided for @remoteUpdateNoLink.
+  /// No description provided for @readAloudPreparing.
   ///
   /// In en, this message translates to:
-  /// **'This version of Casama is no longer supported. Update it from where you installed it.'**
-  String get remoteUpdateNoLink;
+  /// **'Getting ready…'**
+  String get readAloudPreparing;
 
-  /// No description provided for @remoteMaintenanceTitle.
+  /// No description provided for @readAloudPaused.
   ///
   /// In en, this message translates to:
-  /// **'Casama is down for maintenance'**
-  String get remoteMaintenanceTitle;
+  /// **'Paused'**
+  String get readAloudPaused;
 
-  /// No description provided for @openLink.
+  /// No description provided for @stopReading.
   ///
   /// In en, this message translates to:
-  /// **'Open'**
-  String get openLink;
+  /// **'Stop reading'**
+  String get stopReading;
 
-  /// No description provided for @routineIdeas.
+  /// No description provided for @readAloudSpeed.
   ///
   /// In en, this message translates to:
-  /// **'Ideas'**
-  String get routineIdeas;
+  /// **'Playback speed'**
+  String get readAloudSpeed;
 
-  /// No description provided for @routineIdeasHelp.
+  /// No description provided for @readAloudTimeLeft.
   ///
   /// In en, this message translates to:
-  /// **'Start from an idea, then change anything.'**
-  String get routineIdeasHelp;
+  /// **'{time} left'**
+  String readAloudTimeLeft(String time);
 
-  /// No description provided for @pluginDirectory.
+  /// No description provided for @readAloudShowMessage.
   ///
   /// In en, this message translates to:
-  /// **'Reviewed plugins'**
-  String get pluginDirectory;
+  /// **'Show the message being read'**
+  String get readAloudShowMessage;
 
-  /// No description provided for @pluginDirectoryHelp.
+  /// No description provided for @mentionOpenProfile.
   ///
   /// In en, this message translates to:
-  /// **'Checked by Casama and pinned to the version that was checked.'**
-  String get pluginDirectoryHelp;
+  /// **'{name}, open profile'**
+  String mentionOpenProfile(String name);
 
-  /// No description provided for @pluginOrPaste.
+  /// No description provided for @paywallTitle.
   ///
   /// In en, this message translates to:
-  /// **'Or add one from a GitHub link'**
-  String get pluginOrPaste;
+  /// **'Grow your crew with Pro'**
+  String get paywallTitle;
 
-  /// No description provided for @byAuthor.
+  /// No description provided for @paywallSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'By {name}'**
-  String byAuthor(String name);
+  /// **'More bots, more computer time and fresh credits every month, so your bots can keep working.'**
+  String get paywallSubtitle;
 
-  /// No description provided for @adminAppSettings.
+  /// No description provided for @paywallPerkBots.
   ///
   /// In en, this message translates to:
-  /// **'App settings'**
-  String get adminAppSettings;
+  /// **'Bots'**
+  String get paywallPerkBots;
 
-  /// No description provided for @adminAppSettingsHelp.
+  /// No description provided for @paywallPerkBotsBody.
   ///
   /// In en, this message translates to:
-  /// **'Minimum versions, maintenance, announcements and feature switches for every app, with no release.'**
-  String get adminAppSettingsHelp;
+  /// **'A whole crew, each with its own job.'**
+  String get paywallPerkBotsBody;
 
-  /// No description provided for @adminAppSettingsBadJson.
+  /// No description provided for @paywallPerkComputers.
   ///
   /// In en, this message translates to:
-  /// **'That isn\'t valid JSON. Check the brackets, quotes and commas.'**
-  String get adminAppSettingsBadJson;
+  /// **'Computer time'**
+  String get paywallPerkComputers;
+
+  /// No description provided for @paywallPerkComputersBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots get their own computers to browse, code and build.'**
+  String get paywallPerkComputersBody;
+
+  /// No description provided for @paywallPerkCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly credits'**
+  String get paywallPerkCredits;
+
+  /// No description provided for @paywallPerkCreditsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'For models, search and tools.'**
+  String get paywallPerkCreditsBody;
+
+  /// No description provided for @paywallPerkSeats.
+  ///
+  /// In en, this message translates to:
+  /// **'Seats'**
+  String get paywallPerkSeats;
+
+  /// No description provided for @paywallPerkSeatsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring your team into the same workspace.'**
+  String get paywallPerkSeatsBody;
+
+  /// No description provided for @paywallHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h'**
+  String paywallHours(String hours);
+
+  /// No description provided for @paywallMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get paywallMonthly;
+
+  /// No description provided for @paywallYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get paywallYearly;
+
+  /// No description provided for @paywallPerMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'/ month'**
+  String get paywallPerMonth;
+
+  /// No description provided for @paywallPerYear.
+  ///
+  /// In en, this message translates to:
+  /// **'/ year'**
+  String get paywallPerYear;
+
+  /// No description provided for @paywallBestValue.
+  ///
+  /// In en, this message translates to:
+  /// **'BEST VALUE'**
+  String get paywallBestValue;
+
+  /// No description provided for @paywallContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get paywallContinue;
+
+  /// No description provided for @paywallContinueCheckout.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to checkout'**
+  String get paywallContinueCheckout;
+
+  /// No description provided for @paywallRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore'**
+  String get paywallRestore;
+
+  /// No description provided for @paywallFineStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews automatically. Cancel anytime in your store settings.'**
+  String get paywallFineStore;
+
+  /// No description provided for @paywallFineWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews automatically. Cancel anytime from Billing.'**
+  String get paywallFineWeb;
+
+  /// No description provided for @paywallAskAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Only workspace owners and admins can change the plan. Ask one of them to upgrade.'**
+  String get paywallAskAdmin;
+
+  /// No description provided for @paywallWelcomePro.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Pro!'**
+  String get paywallWelcomePro;
+
+  /// No description provided for @upgradeToPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Pro'**
+  String get upgradeToPro;
+
+  /// No description provided for @upgradeToProBody.
+  ///
+  /// In en, this message translates to:
+  /// **'More bots, computer time and monthly credits.'**
+  String get upgradeToProBody;
 
   /// No description provided for @manageTab.
   ///
@@ -13527,6 +13647,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{n} d'**
   String durationDays(int n);
+
+  /// No description provided for @remoteUpdateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to update Casama'**
+  String get remoteUpdateTitle;
+
+  /// No description provided for @remoteUpdateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This version of Casama is no longer supported. Update it to keep going.'**
+  String get remoteUpdateBody;
+
+  /// No description provided for @remoteUpdateNoLink.
+  ///
+  /// In en, this message translates to:
+  /// **'This version of Casama is no longer supported. Update it from where you installed it.'**
+  String get remoteUpdateNoLink;
+
+  /// No description provided for @remoteMaintenanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama is down for maintenance'**
+  String get remoteMaintenanceTitle;
+
+  /// No description provided for @openLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get openLink;
+
+  /// No description provided for @routineIdeas.
+  ///
+  /// In en, this message translates to:
+  /// **'Ideas'**
+  String get routineIdeas;
+
+  /// No description provided for @routineIdeasHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from an idea, then change anything.'**
+  String get routineIdeasHelp;
+
+  /// No description provided for @pluginDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewed plugins'**
+  String get pluginDirectory;
+
+  /// No description provided for @pluginDirectoryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked by Casama and pinned to the version that was checked.'**
+  String get pluginDirectoryHelp;
+
+  /// No description provided for @pluginOrPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Or add one from a GitHub link'**
+  String get pluginOrPaste;
+
+  /// No description provided for @byAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'By {name}'**
+  String byAuthor(String name);
+
+  /// No description provided for @adminAppSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'App settings'**
+  String get adminAppSettings;
+
+  /// No description provided for @adminAppSettingsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum versions, maintenance, announcements and feature switches for every app, with no release.'**
+  String get adminAppSettingsHelp;
+
+  /// No description provided for @adminAppSettingsBadJson.
+  ///
+  /// In en, this message translates to:
+  /// **'That isn\'t valid JSON. Check the brackets, quotes and commas.'**
+  String get adminAppSettingsBadJson;
 }
 
 class _AppLocalizationsDelegate

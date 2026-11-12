@@ -70,7 +70,7 @@ class _McpConsentScreenState extends ConsumerState<McpConsentScreen> {
               errorText(context, snap.error!),
               icon: LucideIcons.triangleAlert,
             ),
-          if (snap.data == null && !snap.hasError) const SkeletonDetail(),
+          if (snap.data == null && !snap.hasError) const _ConsentSkeleton(),
           if (snap.data != null && _done)
             FormNote(l10n.connectAiAppDone, icon: LucideIcons.circleCheck),
           if (snap.data != null && !_done)
@@ -125,6 +125,42 @@ class _McpConsentScreenState extends ConsumerState<McpConsentScreen> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// The consent card still loading: the question, the help line, the workspace field and the
+/// Refuse / Allow buttons.
+class _ConsentSkeleton extends StatelessWidget {
+  const _ConsentSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonScope(
+      child: SkeletonCard(
+        padding: const EdgeInsets.all(AppSpace.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: AppSpace.md,
+          children: [
+            SkeletonText(style: text.titleMedium, widthFactor: 0.7),
+            SkeletonText(style: text.bodyMedium, widthFactor: 0.8, lines: 2),
+            const SkeletonBone(height: 56, radius: 14),
+            const SizedBox(
+              height: 48,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                spacing: AppSpace.sm,
+                children: [
+                  SkeletonBone(width: 72, height: 40, radius: AppRadius.pill),
+                  SkeletonBone(width: 88, height: 48, radius: AppRadius.pill),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

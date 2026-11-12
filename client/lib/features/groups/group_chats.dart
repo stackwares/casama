@@ -12,10 +12,12 @@ import '../../core/widgets.dart';
 import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../theme/wallpaper.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
+import '../../ui/shell_header.dart';
 import '../chat/chat_screen.dart';
 
 /// Group chats (D-118): 2 to 10 bots in one conversation, woken by @Name or @everyone.
@@ -41,8 +43,47 @@ class GroupChatScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final groups = ref.watch(groupChatsProvider).value;
     final g = groups?.where((c) => c.id == conversationId).firstOrNull;
-    if (g == null) return const Scaffold(body: SkeletonMessages());
+    if (g == null) return const _GroupChatSkeleton();
     return ChatScreen(botId: g.botId, conversationId: g.id, group: true);
+  }
+}
+
+/// A group chat while the list of groups loads: the chat's header, the thread's placeholder
+/// bubbles and the composer's outline, where [ChatScreen] puts them.
+class _GroupChatSkeleton extends StatelessWidget {
+  const _GroupChatSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Wallpaper(
+      force: true,
+      child: Scaffold(
+        appBar: const ShellHeader(title: ''),
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth);
+            return Column(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(side, AppSpace.md, side, 0),
+                    child: const ChatThreadSkeleton(),
+                  ),
+                ),
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(side, AppSpace.xxs, side, AppSpace.xs),
+                    // The composer.
+                    child: const SkeletonScope(child: SkeletonBone(height: 54, radius: 26)),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
   }
 }
 

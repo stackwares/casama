@@ -65,6 +65,7 @@ class MemoryScreen extends ConsumerWidget {
       body: AsyncView(
         value: memories,
         onRetry: () => ref.invalidate(memoriesProvider(botId)),
+        loading: const _MemoryListSkeleton(),
         data: (items) => items.isEmpty
             ? EmptyState(icon: LucideIcons.brain, title: l10n.noMemories, message: l10n.noMemoriesHelp)
             : PageListView(
@@ -81,6 +82,66 @@ class MemoryScreen extends ConsumerWidget {
                 ).appListItemEntrance(i),
               ),
       ),
+      ),
+    );
+  }
+}
+
+/// The memory list still loading: the help note, then memory cards.
+class _MemoryListSkeleton extends StatelessWidget {
+  const _MemoryListSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonPage(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(padding: EdgeInsets.only(top: 1), child: SkeletonBone(width: 16, height: 16, radius: 8)),
+            const SizedBox(width: 6),
+            Expanded(child: SkeletonText(style: context.textTheme.bodySmall?.copyWith(height: 1.35), lines: 2, widthFactor: 0.8)),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        for (var i = 0; i < 5; i++) Padding(padding: EdgeInsets.only(top: i == 0 ? 0 : AppSpace.xs), child: _MemoryCardSkeleton(lines: 1 + i % 3)),
+      ],
+    );
+  }
+}
+
+/// A [_MemoryCard] still loading: the kind pill and time, a few lines of memory, the menu button.
+class _MemoryCardSkeleton extends StatelessWidget {
+  const _MemoryCardSkeleton({required this.lines});
+  final int lines;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonCard(
+      padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.xxs, 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    const SkeletonBone(width: 78, height: 22, radius: AppRadius.pill),
+                    const Spacer(),
+                    SizedBox(width: 40, child: SkeletonText(style: text.labelSmall, widthFactor: 1)),
+                  ],
+                ),
+                const SizedBox(height: AppSpace.xs),
+                SkeletonText(style: text.bodyMedium?.copyWith(height: 1.45), lines: lines, widthFactor: 0.7),
+              ],
+            ),
+          ),
+          const SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 4, height: 16, radius: 2))),
+        ],
       ),
     );
   }
