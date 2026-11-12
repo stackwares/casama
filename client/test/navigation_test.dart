@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:casama_app/app.dart';
 import 'package:casama_app/core/providers.dart';
 import 'package:casama_app/features/bots/bots_screen.dart';
+import 'package:casama_app/features/integrations/integrations_screen.dart';
 import 'package:casama_app/features/search/search_view.dart';
 import 'package:casama_app/features/settings/settings_screen.dart';
 import 'package:casama_app/ui/floating_tab_chrome.dart';
@@ -39,11 +40,20 @@ void main() {
       );
     }
 
-    // Search opens over the tabs, as Cmd/Ctrl+K does on larger windows.
+    // Search sits in the Chats header beside "+", and opens over the tabs as Cmd/Ctrl+K does.
+    expect(find.descendant(of: bar, matching: find.byKey(const Key('tabSearch'))), findsNothing);
     await tester.tap(find.byKey(const Key('tabSearch')));
     await tester.pumpAndSettle();
     expect(find.byType(SearchView), findsOneWidget);
     Navigator.of(tester.element(find.byType(SearchView))).pop();
+    await tester.pumpAndSettle();
+
+    // The round button beside the tabs connects more apps and MCP servers.
+    await tester.tap(find.byKey(const Key('tabApps')));
+    await tester.pumpAndSettle();
+    expect(find.byType(IntegrationsScreen), findsOneWidget);
+    expect(GoRouter.of(tester.element(find.byType(IntegrationsScreen))).state.uri.path, '/settings/integrations');
+    await tester.pageBack();
     await tester.pumpAndSettle();
 
     // Tasks is a tab.

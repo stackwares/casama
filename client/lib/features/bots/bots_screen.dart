@@ -31,6 +31,7 @@ import '../settings/model_keys_screen.dart';
 import 'model_picker.dart';
 import 'template_picker.dart';
 import '../../ui/glow_button.dart';
+import '../search/search_view.dart';
 import '../workspaces/spaces.dart';
 import '../../ui/celebration.dart';
 import '../../core/analytics.dart';
@@ -415,6 +416,14 @@ class BotsScreen extends ConsumerWidget {
                 ),
           onTitleTap: () => showSpacesSheet(context, ref),
           actions: [
+            // Phones: search lives here, beside "+" (tablets and desktop have it in the sidebar).
+            if (phone)
+              HeaderIconButton(
+                key: const Key('tabSearch'),
+                icon: LucideIcons.search,
+                tooltip: context.l10n.search,
+                onPressed: () => showWorkspaceSearch(context),
+              ),
             HeaderIconButton(
               key: const Key('createMenu'),
               icon: LucideIcons.plus,

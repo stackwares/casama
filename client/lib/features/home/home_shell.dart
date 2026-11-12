@@ -282,12 +282,13 @@ class HomeShell extends ConsumerWidget {
                           badge: d.path == '/inbox' ? badge : 0,
                         ),
                     ],
-                    // Search floats beside the tabs and opens over them (Cmd/Ctrl+K on larger windows, D-103).
+                    // Connecting more apps (and MCP servers) floats beside the tabs; search sits in
+                    // the Chats header next to "+" (Cmd/Ctrl+K on larger windows, D-103).
                     action: FloatingTabAction(
-                      key: const Key('tabSearch'),
-                      icon: LucideIcons.search,
-                      label: context.l10n.search,
-                      onPressed: () => showWorkspaceSearch(context),
+                      key: const Key('tabApps'),
+                      icon: LucideIcons.puzzle,
+                      label: context.l10n.connectAppsTitle,
+                      onPressed: () => context.push('/settings/integrations'),
                     ),
                   ),
                 ),
