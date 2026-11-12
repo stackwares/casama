@@ -2774,6 +2774,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editMemory => 'Edit Memory';
 
   @override
+  @override
+  String get personalComputerConnected => 'Connected';
+
+  @override
+  String get personalComputerOffline => 'Offline';
+
+  @override
+  String get personalComputerOfflineHelp =>
+      'This computer is offline. Open Casama on it and turn on \"Use this computer for bots\".';
+
+  @override
+  String get personalScreenNote =>
+      'This is your own computer, so you see a new screenshot every few seconds instead of a live view.';
+
   String get editMemoryHelp =>
       'The bot uses this the next time it\'s relevant.';
 

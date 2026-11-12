@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:casama_app/core/live.dart';
 import 'package:casama_app/core/providers.dart';
 import 'package:casama_app/features/chat/chat_screen.dart';
@@ -196,6 +197,25 @@ void main() {
     expect(backend.computerUpdates, ['desktop', 'desktops:3']);
   });
 
+  testWidgets('computers: the open list follows state changes and pulls to refresh', (tester) async {
+    await setSize(tester, const Size(600, 1000));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const ComputersScreen()));
+    await tester.pumpAndSettle();
+    expect(find.text('Asleep'), findsOneWidget);
+
+    // It reconnects while the page is open: the next reload shows it, no reopening.
+    backend.teamComputerState = ComputerState.running;
+    await tester.pump(ComputersScreen.refreshEvery);
+    await tester.pumpAndSettle();
+    expect(find.text('Running'), findsOneWidget);
+
+    backend.teamComputerState = ComputerState.stopped;
+    await tester.fling(find.byKey(const Key('computer-$computerId')), const Offset(0, 400), 1000);
+    await tester.pumpAndSettle();
+    expect(find.text('Stopped'), findsOneWidget);
+  });
+
   testWidgets('side panel: the live view plays inline, opens full screen and comes back', (tester) async {
     await setSize(tester, const Size(1300, 900));
     final backend = _AwakeDesktop();
@@ -235,6 +255,52 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const Key('liveExpand')), findsOneWidget);
   });
+  // D-218: the app offers only what a personal computer can do.
+  testWidgets('a personal computer shows screenshots, not live view, terminal, checkpoints or sleep', (tester) async {
+    await setSize(tester, const Size(1300, 900));
+    final backend = _PersonalComputer();
+    Future<void> show(ComputerState state) async {
+      await tester.pumpWidget(liveHarness(
+        backend,
+        FakeLiveConnector(),
+        Scaffold(body: SizedBox(width: 420, child: ComputerPanel(key: ValueKey(state), computer: _personal(state), embedded: true))),
+      ));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    await show(ComputerState.running);
+    expect(find.text('Connected'), findsOneWidget);
+    expect(find.textContaining('a new screenshot every few seconds'), findsOneWidget);
+    expect(find.text('Files'), findsOneWidget);
+    for (final gone in ['openLiveView', 'liveSurface', 'computerSleep', 'computerStart', 'openComputerSettings']) {
+      expect(find.byKey(Key(gone)), findsNothing, reason: gone);
+    }
+    expect(find.text('Terminal'), findsNothing);
+    expect(find.text('Checkpoints'), findsNothing);
+    expect(find.byIcon(LucideIcons.slidersHorizontal), findsNothing);
+
+    await show(ComputerState.stopped);
+    expect(find.text('Offline'), findsOneWidget);
+    expect(find.byKey(const Key('personalOffline')), findsOneWidget);
+    expect(find.text('Files'), findsNothing);
+    expect(find.byKey(const Key('computerStart')), findsNothing);
+    await tester.pump(const Duration(seconds: 11));
+  });
+
+  testWidgets('the computers list offers no live view or desktop switch on a personal computer', (tester) async {
+    await setSize(tester, const Size(600, 1000));
+    await tester.pumpWidget(harness(_PersonalComputer(), const ComputersScreen()));
+    await tester.pumpAndSettle();
+    expect(find.text('Connected'), findsOneWidget);
+    expect(find.text('local'), findsNothing);
+    await tester.tap(find.byKey(const Key('computerMenu-$computerId')));
+    await tester.pumpAndSettle();
+    expect(find.text('Live view'), findsNothing);
+    expect(find.text('Switch to Headless'), findsNothing);
+    expect(find.text('Rename'), findsOneWidget);
+  });
+
   testWidgets('live view quick actions: paste and copy go through the clipboard; Enter on the phone keyboard sends Return', (tester) async {
     await setSize(tester, const Size(900, 900));
     String? deviceClipboard = 'from my phone';
@@ -274,6 +340,29 @@ void main() {
     final downs = live.connection.sent.where((f) => f[0] == NekoInput.opKeyDown).map((f) => (f[5] << 8) | f[6]).toList();
     expect(downs, [0x68, 0x69, 0xff0d, 0xff08]);
   });
+}
+
+Computer _personal(ComputerState state) => Computer(
+      id: computerId,
+      orgId: orgId,
+      kind: ComputerKindEnum.local,
+      name: 'Work laptop',
+      ownerBotId: null,
+      lastActiveAt: null,
+      error: null,
+      provider: 'local',
+      profile: ComputerProfileEnum.desktop,
+      state: state,
+      size: ComputerSize(cpus: 1),
+      hasSnapshot: false,
+      maxDesktops: 1,
+      createdAt: DateTime(2026),
+    );
+
+class _PersonalComputer extends FakeBackend {
+  ComputerState state = ComputerState.running;
+  @override
+  Future<List<Computer>> computers(String orgId) async => [_personal(state)];
 }
 
 class _AwakeDesktop extends FakeBackend {

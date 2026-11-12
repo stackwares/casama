@@ -2890,6 +2890,12 @@ async function loadIntegrationTools(
         description: t.description.slice(0, 1000),
         inputSchema: t.inputSchema ?? { type: "object" },
         risk: row.risk_overrides?.[t.name] ?? t.risk ?? "medium",
+  // A personal computer is the person's own machine, which the app can't show live (D-218).
+  if (row.kind === "local")
+    return {
+      error:
+        "You're working on the person's own computer, which they can't take over from the app. Ask them in chat to do this step on that computer and tell you when it's done.",
+    };
       });
     }
   }

@@ -144,6 +144,14 @@ export function registerLiveRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
     const { mode = "view" } = c.req.valid("json");
+    const computer = await visible(claims, id);
+    // The desktop app never streams the person's own screen (D-066); the app shows screenshots.
+    if (computer.kind === "local")
+      throw new ApiError(
+        409,
+        "not_on_companion",
+        "Live view is not available on a personal computer.",
+      );
     const live = deps.live;
     if (!live || !deps.computers)
       throw new ApiError(
@@ -151,7 +159,6 @@ export function registerLiveRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         "live_view_unavailable",
         "Live view is not configured on this server",
       );
-    const computer = await visible(claims, id);
     if (computer.profile !== "desktop")
       throw new ApiError(
         409,

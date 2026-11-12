@@ -24,6 +24,55 @@
     {
       "when": {
         "lastRole": "user",
+        "lastUserIncludes": "sign in to my bank"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "t1",
+            "name": "computer__request_takeover",
+            "args": {
+              "reason": "Sign in to your bank."
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "computer.request_takeover",
+        "lastUserIncludes": "sign in to my bank"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Please sign in on your computer and tell me when you're done."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
         "lastUserIncludes": "list my shared folder"
       },
       "events": [

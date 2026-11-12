@@ -171,6 +171,25 @@ describe("local computer companion (Phase 6)", () => {
     expect((await settle(runId)).status).toBe("waiting_approval");
   }, 60_000);
 
+  it("has no live view: the session is refused, and a takeover asks in chat instead (D-218)", async () => {
+    const res = await h.request(`/v1/computers/${device.computer_id}/stream-session`, {
+      method: "POST",
+      token: owner.token,
+      json: { mode: "view" },
+    });
+    expect(res.status).toBe(409);
+    expect((await j(res)).code).toBe("not_on_companion");
+
+    const runId = await chat(botId, "Please sign in to my bank.");
+    expect((await settle(runId)).status).toBe("completed");
+    expect(JSON.stringify(await events(runId))).toContain("can't take over from the app");
+    const [row] = await h.handle.db.execute<{ n: number }>(
+      (await import("drizzle-orm"))
+        .sql`select count(*)::int as n from public.takeover_requests where run_id = ${runId}::uuid`,
+    );
+    expect(row?.n).toBe(0);
+  }, 60_000);
+
   it("fails fast when the device is offline", async () => {
     await fake.close();
     await new Promise((r) => setTimeout(r, 300));

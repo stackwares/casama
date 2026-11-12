@@ -163,14 +163,16 @@ class _ComputerCard extends ConsumerWidget {
                   spacing: 6,
                   runSpacing: 4,
                   children: [
-                    StatusLabel(text: computerStateLabel(context, c.state), color: stateColor, pill: true),
+                    StatusLabel(text: computerStatusLabel(context, c), color: stateColor, pill: true),
+                    // Desktop or headless, and the provider, mean nothing on a personal computer (D-218).
+                    if (!isPersonalComputer(c))
                     StatusLabel(
                       text: desktop ? l10n.profileDesktop : l10n.profileHeadless,
                       color: scheme.onSurfaceVariant,
                       pill: true,
                       icon: desktop ? LucideIcons.monitor : LucideIcons.squareTerminal,
                     ),
-                    if (c.provider != 'docker') StatusLabel(text: c.provider, color: scheme.onSurfaceVariant, pill: true),
+                    if (c.provider != 'docker' && !isPersonalComputer(c)) StatusLabel(text: c.provider, color: scheme.onSurfaceVariant, pill: true),
                   ],
                 ),
               ],
@@ -182,7 +184,7 @@ class _ComputerCard extends ConsumerWidget {
             icon: Icon(LucideIcons.ellipsisVertical, color: scheme.onSurfaceVariant),
             onSelected: action,
             itemBuilder: (_) => [
-              if (desktop)
+              if (desktop && !isPersonalComputer(c))
                 PopupMenuItem(
                   value: 'live',
                   child: ListTile(dense: true, leading: const Icon(LucideIcons.monitorPlay), title: Text(l10n.liveView)),
@@ -225,6 +227,7 @@ class NewComputerSheet extends ConsumerStatefulWidget {
   const NewComputerSheet({super.key});
 
   @override
+              if (!isPersonalComputer(c))
   ConsumerState<NewComputerSheet> createState() => _NewComputerSheetState();
 }
 

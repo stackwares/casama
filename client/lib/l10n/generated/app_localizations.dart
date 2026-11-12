@@ -4198,6 +4198,30 @@ abstract class AppLocalizations {
   /// **'Edit Memory'**
   String get editMemory;
 
+  /// No description provided for @personalComputerConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get personalComputerConnected;
+
+  /// No description provided for @personalComputerOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get personalComputerOffline;
+
+  /// No description provided for @personalComputerOfflineHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'This computer is offline. Open Casama on it and turn on \"Use this computer for bots\".'**
+  String get personalComputerOfflineHelp;
+
+  /// No description provided for @personalScreenNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your own computer, so you see a new screenshot every few seconds instead of a live view.'**
+  String get personalScreenNote;
+
   /// No description provided for @editMemoryHelp.
   ///
   /// In en, this message translates to:

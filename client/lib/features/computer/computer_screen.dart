@@ -47,6 +47,20 @@ String computerStateLabel(BuildContext context, ComputerState s) {
   };
 }
 
+/// A person's own computer, connected from the desktop app ("Use this computer for bots"). The
+/// app doesn't offer what it can't do: live view, terminal, checkpoints, sleep, or switching
+/// between desktop and headless (D-218).
+bool isPersonalComputer(Computer c) => c.kind == ComputerKindEnum.local;
+
+/// The state a person sees. A personal computer is connected or offline, never awake or asleep.
+String computerStatusLabel(BuildContext context, Computer c) {
+  if (!isPersonalComputer(c)) return computerStateLabel(context, c.state);
+  final on = c.state == ComputerState.running || c.state == ComputerState.idle;
+  return on
+      ? context.l10n.personalComputerConnected
+      : context.l10n.personalComputerOffline;
+}
+
 /// The team computer (or a bot's private one): state, screen, terminal, files, checkpoints.
 class ComputerScreen extends ConsumerWidget {
   const ComputerScreen({super.key, this.botId, this.embedded = false});
@@ -184,13 +198,18 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
         computer.state == ComputerState.idle;
     final waking = computerWaking(computer.state) || _action == 'start';
     final failed = computer.state == ComputerState.error;
+    final personal = isPersonalComputer(computer);
     // Screen and Files always; Terminal and Checkpoints once Advanced is opened here (D-182).
+    // A personal computer has neither, and no files while it is offline (D-218).
     final advanced = ref
         .watch(advancedOpenProvider)
         .contains(computerTabsAdvancedId);
     final tabIds = [
       for (final t in const ['screen', 'terminal', 'files', 'checkpoints'])
-        if (advanced || t == 'screen' || t == 'files') t,
+        if (personal
+            ? t == 'screen' || (t == 'files' && running)
+            : advanced || t == 'screen' || t == 'files')
+          t,
     ];
     _tabIds = tabIds;
     final tabIndex = tabIds.indexOf(_tab);
@@ -261,9 +280,9 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                                       ? l10n.stateStarting
                                       : _action == 'sleep'
                                       ? l10n.computerGoingToSleep
-                                      : computerStateLabel(
+                                      : computerStatusLabel(
                                           context,
-                                          computer.state,
+                                          computer,
                                         ),
                                   color: failed
                                       ? context.appColors.negative
@@ -303,6 +322,8 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                         ],
                       ),
                     ),
+                    // A personal computer is on while the desktop app is connected (D-218).
+                    if (!personal)
                     Wrap(
                       spacing: 8,
                       children: [
@@ -405,7 +426,7 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                         ),
                       ),
                     ),
-                    _AdvancedTabsToggle(open: advanced),
+                    if (!personal) _AdvancedTabsToggle(open: advanced),
                   ],
                 ),
               ),
@@ -424,6 +445,20 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                           'checkpoints' => CheckpointsTab(
                             computerId: computer.id,
                           ),
+                          _ when personal => Column(
+                            children: [
+                              _ScreenNote(text: l10n.personalScreenNote),
+                              Expanded(
+                                child: running
+                                    ? _ScreenTab(computerId: computer.id)
+                                    : EmptyState(
+                                        key: const Key('personalOffline'),
+                                        icon: LucideIcons.wifiOff,
+                                        message: l10n.personalComputerOfflineHelp,
+                                      ),
+                              ),
+                            ],
+                          ),
                           _ =>
                             computer.profile == ComputerProfileEnum.desktop
                                 ? (widget.embedded
@@ -436,7 +471,10 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                                       : _LiveEntry(computer: computer))
                                 : Column(
                                     children: [
-                                      const _HeadlessNote(),
+                                      _ScreenNote(
+                                        text: l10n.headlessScreenNoteSettings,
+                                        settingsLink: true,
+                                      ),
                                       Expanded(
                                         child: running
                                             ? _ScreenTab(
@@ -687,10 +725,13 @@ class _InlineLiveState extends ConsumerState<_InlineLive> {
   }
 }
 
-/// Headless computers only have a browser. Switching to a desktop lives in Settings > Computers
-/// (one place for it, D-182); this says so and links there.
-class _HeadlessNote extends StatelessWidget {
-  const _HeadlessNote();
+/// A note above the screen. Headless computers only have a browser, and switching to a desktop
+/// lives in Settings > Computers (one place for it, D-182), so theirs links there. A personal
+/// computer's says it shows screenshots, not a live view (D-218).
+class _ScreenNote extends StatelessWidget {
+  const _ScreenNote({required this.text, this.settingsLink = false});
+  final String text;
+  final bool settingsLink;
 
   @override
   Widget build(BuildContext context) {
@@ -715,7 +756,7 @@ class _HeadlessNote extends StatelessWidget {
                 const SizedBox(width: AppSpace.xs),
                 Expanded(
                   child: Text(
-                    l10n.headlessScreenNoteSettings,
+                    text,
                     style: context.textTheme.bodySmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                       height: 1.4,
@@ -724,6 +765,7 @@ class _HeadlessNote extends StatelessWidget {
                 ),
               ],
             ),
+            if (settingsLink)
             Align(
               alignment: AlignmentDirectional.centerEnd,
               child: TextButton.icon(
