@@ -21,6 +21,10 @@ async function mockVoiceProviders() {
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify(o));
       };
+      if (path === "/v1/audio/transcriptions" && body.includes("BROKEN-CLIP")) {
+        res.writeHead(400, { "content-type": "application/json" });
+        return res.end(JSON.stringify({ error: { message: "Invalid file format." } }));
+      }
       if (path === "/v1/audio/transcriptions")
         return json({ text: "remind me to water the plants", duration: 3.2 });
       if (path === "/v1/listen")
@@ -187,6 +191,17 @@ describe("voice (Phase 6)", () => {
       sql`select sum(quantity)::text as q from public.usage_ledger where kind = 'stt_seconds'`,
     );
     expect(Number(u?.q)).toBe(4);
+  }, 60_000);
+
+  it("a clip the provider rejects comes back as transcription_failed, not a 500", async () => {
+    const res = await h.request(`/v1/voice/transcribe?bot_id=${botId}`, {
+      method: "POST",
+      token: owner.token,
+      headers: { "content-type": "audio/mp4" },
+      body: new TextEncoder().encode("BROKEN-CLIP"),
+    });
+    expect(res.status).toBe(409);
+    expect(await j(res)).toMatchObject({ code: "transcription_failed" });
   }, 60_000);
 
   it("a bot can prefer Deepgram for dictation", async () => {

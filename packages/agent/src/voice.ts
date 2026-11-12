@@ -197,15 +197,20 @@ export interface VoiceBases {
 
 export class VoiceError extends Error {
   readonly status?: number;
-  constructor(message: string, status?: number) {
-    super(message);
+  /** The start of the provider's own error body, for logs (never shown to the person). */
+  readonly detail?: string;
+  constructor(message: string, status?: number, detail?: string) {
+    super(detail ? `${message}: ${detail}` : message);
     this.status = status;
+    this.detail = detail;
   }
 }
 
 async function ok(res: Response, provider: string) {
   if (res.ok) return res;
-  throw new VoiceError(`${provider} returned ${res.status}`, res.status);
+  // The status alone ("returned 400") hid why dictation failed; keep what the provider said.
+  const detail = (await res.text().catch(() => "")).replace(/\s+/g, " ").trim().slice(0, 300);
+  throw new VoiceError(`${provider} returned ${res.status}`, res.status, detail || undefined);
 }
 
 /** Transcribes audio with the user's key. */

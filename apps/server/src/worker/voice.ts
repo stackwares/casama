@@ -24,6 +24,7 @@ import {
   VOICE_CALL_TOOLS,
   VOICE_PRICES,
   type VoiceBases,
+  VoiceError,
 } from "@casama/agent";
 import type { Database } from "@casama/db";
 import type { CloudModelAssignment } from "@casama/domain";
@@ -148,20 +149,53 @@ export async function voiceTranscribe(
   // No key of their own: the server's shared OpenRouter key, on the server's model (D-194).
   const shared = !own?.key && !!rt.platformOpenRouterKey;
   const k = shared ? { provider: "openrouter", key: rt.platformOpenRouterKey ?? null } : own;
+  // The app reads these codes: with no service it switches to the phone's own dictation, and a
+  // failed clip is offered again instead of a bare "Something went wrong".
   if (!k?.key)
-    return { ok: false as const, error: "Add an OpenAI or Deepgram key to use dictation." };
-  const r = await transcribe(
-    k.provider as SttProviderId,
-    k.key,
-    Buffer.from(audioB64, "base64"),
-    mime,
-    {
-      bases: rt.bases,
-      fetch: rt.fetch,
-      language,
-      model: k.provider === "openai" ? assigned?.stt : shared ? OPENROUTER_STT_MODEL : undefined,
-    },
-  );
+    return {
+      ok: false as const,
+      code: "dictation_unavailable",
+      error: "Add an OpenAI or Deepgram key to use dictation.",
+    };
+  let r: Awaited<ReturnType<typeof transcribe>>;
+  try {
+    r = await transcribe(
+      k.provider as SttProviderId,
+      k.key,
+      Buffer.from(audioB64, "base64"),
+      mime,
+      {
+        bases: rt.bases,
+        fetch: rt.fetch,
+        language,
+        model: k.provider === "openai" ? assigned?.stt : shared ? OPENROUTER_STT_MODEL : undefined,
+      },
+    );
+  } catch (e) {
+    if (!(e instanceof VoiceError)) throw e;
+    console.error(
+      JSON.stringify({
+        level: "warn",
+        service: "server-worker",
+        msg: "transcription failed",
+        provider: k.provider,
+        status: e.status,
+        detail: e.detail,
+        mime,
+        bytes: Math.floor((audioB64.length * 3) / 4),
+      }),
+    );
+    // A bad key is the person's to fix; anything else (an unreadable clip, a provider hiccup)
+    // is worth one more try.
+    const badKey = !shared && (e.status === 401 || e.status === 403);
+    return {
+      ok: false as const,
+      code: badKey ? "dictation_unavailable" : "transcription_failed",
+      error: badKey
+        ? `Your ${k.provider} key was refused. Check it in Settings → Model keys.`
+        : "Couldn't turn that recording into text.",
+    };
+  }
   const seconds = Math.ceil(r.seconds ?? 0);
   if (shared) {
     const cost = r.costUsd ?? (seconds / 60) * 0.0002;
