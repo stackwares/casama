@@ -753,6 +753,10 @@ abstract class Backend {
   Future<void> setQuietHours(QuietHoursView hours);
   Future<BotQuietView> botQuiet(String botId);
   Future<void> setBotQuiet(String botId, BotQuietView value);
+  // Invite friends (D-211)
+  Future<Referral> referral();
+  Future<Referral> redeemReferral(String code);
+  Future<ReferralPreview> previewReferral(String code);
   // About you (D-169)
   Future<AboutYouView> aboutYou();
   Future<void> saveAboutYou(AboutYouView value);

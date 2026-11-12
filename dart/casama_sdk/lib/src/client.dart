@@ -88,6 +88,7 @@ class CasamaClient {
   DevicesApi get devices => api.getDevicesApi();
   NotificationsApi get notifications => api.getNotificationsApi();
   AboutYouApi get aboutYou => api.getAboutYouApi();
+  ReferralsApi get referrals => api.getReferralsApi();
   AdminApi get admin => api.getAdminApi();
   SearchApi get search => api.getSearchApi();
   SkillsApi get skills => api.getSkillsApi();

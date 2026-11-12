@@ -31,6 +31,7 @@ import { captureError } from "@casama/observability";
 import { DBOS } from "@dbos-inc/dbos-sdk";
 import { sql } from "drizzle-orm";
 import { sweepSignups } from "../services/analytics-signups.ts";
+import { sweepReferralRewards } from "../services/referrals.ts";
 import {
   claimDueRoutines,
   fireDueCalendarRuns,
@@ -72,6 +73,8 @@ let runtime:
       voip?: import("@casama/agent").VoipSender;
       /** Audit-log forwarding is licensed (D-146). */
       auditForwarding?: boolean;
+      /** Invite friends rewards (D-211). */
+      referrals?: { enabled: boolean; rewardUsd: number; welcomeUsd: number; cap: number };
       /** Leave-now device triggers (D-151): maps key and fetch. */
       leaveNow?: import("./device-triggers.ts").LeaveNowDeps;
     }
@@ -192,6 +195,13 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
     await DBOS.runStep(() => sweepSignups(rt().db).catch(captureStep("analytics-signups", 0)), {
       name: "analytics-signups",
     });
+    // Invite friends (D-211): friends who verified and finished a first run earn their inviter credits.
+    const referrals = rt().referrals;
+    if (referrals?.enabled)
+      await DBOS.runStep(
+        () => sweepReferralRewards(rt().db, referrals).catch(captureStep("referral-rewards", 0)),
+        { name: "referral-rewards" },
+      );
     // Encryption at rest (D-136): seal existing rows, or open them when it's turned off.
     await DBOS.runStep(() => sweepEncryption(rt().db).catch(captureStep("encryption-sweep", 0)), {
       name: "encryption-sweep",

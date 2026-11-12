@@ -29,6 +29,7 @@ export * from "./payments.ts";
 export * from "./plugins.ts";
 export * from "./privacy.ts";
 export * from "./projects.ts";
+export * from "./referrals.ts";
 export * from "./replays.ts";
 export { routes } from "./routes/index.ts";
 export * from "./search.ts";

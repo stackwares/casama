@@ -4,7 +4,7 @@
     "details": [
       {
         "appIDs": ["V8V5US964Z.ai.casama.app"],
-        "components": [{ "/": "/gallery/*" }]
+        "components": [{ "/": "/gallery/*" }, { "/": "/i/*" }]
       }
     ]
   },

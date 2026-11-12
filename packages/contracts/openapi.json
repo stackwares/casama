@@ -14605,6 +14605,127 @@
         "required": [
           "revoked"
         ]
+      },
+      "Referral": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "link": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reward_usd": {
+            "type": "number"
+          },
+          "welcome_usd": {
+            "type": "number"
+          },
+          "reward_cap": {
+            "type": "integer"
+          },
+          "invited": {
+            "type": "integer"
+          },
+          "rewarded": {
+            "type": "integer"
+          },
+          "pending": {
+            "type": "integer"
+          },
+          "earned_usd": {
+            "type": "number"
+          },
+          "invited_by": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "welcome_earned_usd": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "welcome_earned_usd"
+            ]
+          },
+          "redeem_until": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "enabled",
+          "code",
+          "link",
+          "reward_usd",
+          "welcome_usd",
+          "reward_cap",
+          "invited",
+          "rewarded",
+          "pending",
+          "earned_usd",
+          "invited_by",
+          "redeem_until"
+        ]
+      },
+      "ReferralPreview": {
+        "type": "object",
+        "properties": {
+          "inviter_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reward_usd": {
+            "type": "number"
+          },
+          "welcome_usd": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "inviter_name",
+          "reward_usd",
+          "welcome_usd"
+        ]
+      },
+      "RedeemReferralRequest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "code"
+        ]
       }
     },
     "parameters": {}
@@ -34217,6 +34338,182 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/referral": {
+      "get": {
+        "operationId": "getReferral",
+        "tags": [
+          "referrals"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Your invite code and link, what you've earned, and who invited you",
+        "responses": {
+          "200": {
+            "description": "Invite friends",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referral"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/referral/preview": {
+      "get": {
+        "operationId": "previewReferral",
+        "tags": [
+          "referrals"
+        ],
+        "summary": "Who an invite code is from (no sign-in)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "required": true,
+            "name": "code",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invite",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralPreview"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/referral/redeem": {
+      "post": {
+        "operationId": "redeemReferral",
+        "tags": [
+          "referrals"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Enter a friend's invite code (a few days after signing up)",
+        "description": "Errors: 404 referral_not_found, 400 referral_own_code, 409 referral_already, 400 referral_window_closed, 400 referral_mutual, 404 referrals_off, 429 too_many_attempts.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemReferralRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Invite friends",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Referral"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
             "content": {
               "application/problem+json": {
                 "schema": {

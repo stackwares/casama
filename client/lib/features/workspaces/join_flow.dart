@@ -180,7 +180,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
     final preview = ref.watch(_previewProvider(_invite));
     final Widget body;
     if (_requestedFor != null) {
-      body = _JoinCard(
+      body = JoinCard(
         key: const Key('joinRequested'),
         leading: const Icon(LucideIcons.mailCheck, size: 48),
         title: l10n.joinRequestSent,
@@ -198,7 +198,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
         loading: () => const SkeletonDetail(),
         error: (e, _) {
           final other = _otherServer;
-          return _JoinCard(
+          return JoinCard(
             key: const Key('joinInvalid'),
             leading: Icon(
               LucideIcons.unlink,
@@ -236,7 +236,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
           } else {
             label = l10n.joinWorkspaceNamed(ws.name);
           }
-          return _JoinCard(
+          return JoinCard(
             key: const Key('joinPreview'),
             leading: SpaceAvatar(
               name: ws.name,
@@ -296,8 +296,8 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
 }
 
 /// The centered card the join screens share.
-class _JoinCard extends StatelessWidget {
-  const _JoinCard({
+class JoinCard extends StatelessWidget {
+  const JoinCard({
     super.key,
     required this.leading,
     required this.title,
@@ -422,7 +422,7 @@ class _JoinedScreenState extends ConsumerState<JoinedScreen> {
       body: SafeArea(
         top: false,
         bottom: false,
-        child: _JoinCard(
+        child: JoinCard(
           key: const Key('joinedWelcome'),
           leading: SpaceAvatar(
             name: name,
@@ -486,7 +486,7 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
       body: SafeArea(
         top: false,
         bottom: false,
-        child: _JoinCard(
+        child: JoinCard(
           key: const Key('joinTeam'),
           leading: Icon(
             LucideIcons.usersRound,

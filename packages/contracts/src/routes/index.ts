@@ -26,6 +26,7 @@ import * as payments from "./payments.ts";
 import * as plugins from "./plugins.ts";
 import * as privacy from "./privacy.ts";
 import * as projects from "./projects.ts";
+import * as referrals from "./referrals.ts";
 import * as replays from "./replays.ts";
 import * as search from "./search.ts";
 import * as secretStore from "./secret-store.ts";
@@ -80,6 +81,7 @@ export const routes = {
   ...watchers,
   ...workspaceFiles,
   ...mcp,
+  ...referrals,
 };
 export {
   aboutYou,
@@ -109,6 +111,7 @@ export {
   plugins,
   privacy,
   projects,
+  referrals,
   replays,
   search,
   secretStore,

@@ -87,7 +87,12 @@ describe("openapi", () => {
         expect(op.operationId, `${method} ${path}`).toBeTruthy();
         if (
           path.startsWith("/v1/") &&
-          !["/v1/config", "/v1/signup/challenge", "/v1/join/preview"].includes(path)
+          ![
+            "/v1/config",
+            "/v1/signup/challenge",
+            "/v1/join/preview",
+            "/v1/referral/preview",
+          ].includes(path)
         )
           expect(Object.keys(op.responses)).toContain("401");
       }

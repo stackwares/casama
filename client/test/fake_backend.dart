@@ -868,6 +868,63 @@ class FakeBackend implements Backend {
   var _factSeq = 0;
   @override
   Future<AboutYouView> aboutYou() async => about;
+  // Invite friends (D-211)
+  Referral referralState = Referral(
+    enabled: true,
+    code: 'K7M2QX',
+    link: 'https://casama.ai/i/K7M2QX',
+    rewardUsd: 2,
+    welcomeUsd: 2,
+    rewardCap: 20,
+    invited: 3,
+    rewarded: 2,
+    pending: 1,
+    earnedUsd: 4,
+    invitedBy: null,
+    redeemUntil: DateTime.now().add(const Duration(days: 5)),
+  );
+  final redeemedReferrals = <String>[];
+  static Never _referralProblem(int status, String code, String detail) {
+    final req = RequestOptions(path: '/v1/me/referral/redeem');
+    throw DioException(
+      requestOptions: req,
+      response: Response(
+        requestOptions: req,
+        statusCode: status,
+        data: {'type': 'about:blank', 'title': 'Error', 'status': status, 'code': code, 'detail': detail},
+      ),
+    );
+  }
+  @override
+  Future<Referral> referral() async => referralState;
+  @override
+  Future<Referral> redeemReferral(String code) async {
+    redeemedReferrals.add(code);
+    if (code.toUpperCase().replaceAll(RegExp('[^0-9A-Z]'), '') != 'ANA234') {
+      _referralProblem(404, 'referral_not_found', "That invite code doesn't exist.");
+    }
+    return referralState = Referral(
+      enabled: referralState.enabled,
+      code: referralState.code,
+      link: referralState.link,
+      rewardUsd: referralState.rewardUsd,
+      welcomeUsd: referralState.welcomeUsd,
+      rewardCap: referralState.rewardCap,
+      invited: referralState.invited,
+      rewarded: referralState.rewarded,
+      pending: referralState.pending,
+      earnedUsd: referralState.earnedUsd,
+      invitedBy: ReferralInvitedBy(name: 'Ana', welcomeEarnedUsd: null),
+      redeemUntil: null,
+    );
+  }
+  @override
+  Future<ReferralPreview> previewReferral(String code) async {
+    if (code.toUpperCase() != 'ANA234') {
+      _referralProblem(404, 'referral_not_found', 'Not found');
+    }
+    return ReferralPreview(inviterName: 'Ana', rewardUsd: 2, welcomeUsd: 2);
+  }
   @override
   Future<void> saveAboutYou(AboutYouView value) async =>
       about = (value.preferredName?.trim().isNotEmpty ?? false)

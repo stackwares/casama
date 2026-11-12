@@ -48,6 +48,7 @@ import { registerPaymentRoutes } from "./routes/payments.ts";
 import { registerPluginRoutes } from "./routes/plugins.ts";
 import { registerPrivacyRoutes } from "./routes/privacy.ts";
 import { registerProjectRoutes } from "./routes/projects.ts";
+import { registerReferralRoutes } from "./routes/referrals.ts";
 import { registerReplayRoutes } from "./routes/replays.ts";
 import { registerSearchRoutes } from "./routes/search.ts";
 import { registerSecretStoreRoutes } from "./routes/secret-store.ts";
@@ -224,6 +225,7 @@ export function createApp(deps: AppDeps) {
   registerSystemRoutes(app, deps);
   registerWorkspaceRoutes(app, deps);
   registerJoiningRoutes(app, deps);
+  registerReferralRoutes(app, deps);
   registerBotRoutes(app, deps);
   registerChatGptRoutes(app, deps);
   registerComputerRoutes(app, deps);

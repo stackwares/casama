@@ -295,6 +295,50 @@
       "funnels": ["F7"]
     },
     {
+      "name": "referral_redeemed",
+      "by": ["server"],
+      "description": "A new person entered a friend's invite code (D-211).",
+      "properties": {
+        "has_reward": {
+          "type": "boolean"
+        },
+        "has_welcome": {
+          "type": "boolean"
+        }
+      },
+      "funnels": ["F7"]
+    },
+    {
+      "name": "referral_rewarded",
+      "by": ["server"],
+      "description": "A friend someone invited qualified: the inviter was rewarded, had reached the cap, or rewards were off; the friend may have got a welcome bonus (D-211).",
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "values": ["rewarded", "capped", "none"]
+        },
+        "rewarded_count": {
+          "type": "number"
+        },
+        "welcome_given": {
+          "type": "boolean"
+        }
+      },
+      "funnels": ["F7"]
+    },
+    {
+      "name": "referral_shared",
+      "by": ["client"],
+      "description": "Someone copied or shared their personal invite link or code (D-211).",
+      "properties": {
+        "method": {
+          "type": "string",
+          "values": ["copy", "share", "copy_code"]
+        }
+      },
+      "funnels": ["F7"]
+    },
+    {
       "name": "join_completed",
       "by": ["client"],
       "description": "The join screen finished.",

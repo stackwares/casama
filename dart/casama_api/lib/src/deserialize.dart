@@ -305,7 +305,11 @@ import 'package:casama_api/src/model/provider_connect_request.dart';
 import 'package:casama_api/src/model/provider_connect_response.dart';
 import 'package:casama_api/src/model/public_config.dart';
 import 'package:casama_api/src/model/purchase_request.dart';
+import 'package:casama_api/src/model/redeem_referral_request.dart';
 import 'package:casama_api/src/model/redirect_url.dart';
+import 'package:casama_api/src/model/referral.dart';
+import 'package:casama_api/src/model/referral_invited_by.dart';
+import 'package:casama_api/src/model/referral_preview.dart';
 import 'package:casama_api/src/model/release_lease_request.dart';
 import 'package:casama_api/src/model/rename_two_step_factor_request.dart';
 import 'package:casama_api/src/model/replay.dart';
@@ -1155,8 +1159,16 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
         case 'ReasoningEffort':
           
           
+        case 'RedeemReferralRequest':
+          return RedeemReferralRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RedirectUrl':
           return RedirectUrl.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Referral':
+          return Referral.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ReferralInvitedBy':
+          return ReferralInvitedBy.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ReferralPreview':
+          return ReferralPreview.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ReleaseLeaseRequest':
           return ReleaseLeaseRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RenameTwoStepFactorRequest':

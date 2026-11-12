@@ -38,6 +38,7 @@ import 'package:casama_api/src/api/payments_api.dart';
 import 'package:casama_api/src/api/plugins_api.dart';
 import 'package:casama_api/src/api/privacy_api.dart';
 import 'package:casama_api/src/api/projects_api.dart';
+import 'package:casama_api/src/api/referrals_api.dart';
 import 'package:casama_api/src/api/replays_api.dart';
 import 'package:casama_api/src/api/routines_api.dart';
 import 'package:casama_api/src/api/runs_api.dart';
@@ -289,6 +290,12 @@ class CasamaApi {
   /// by doing that all interceptors will not be executed
   ProjectsApi getProjectsApi() {
     return ProjectsApi(dio);
+  }
+
+  /// Get ReferralsApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  ReferralsApi getReferralsApi() {
+    return ReferralsApi(dio);
   }
 
   /// Get ReplaysApi instance, base route and serializer can be overridden by a given but be careful,

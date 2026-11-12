@@ -3,14 +3,20 @@
  * the phone opens it there; anywhere else this page shows the item, drawn by the gallery's own
  * previews, with a way to open it in the app and a way to get the app.
  * https://casama.ai/gallery goes to the gallery itself.
+ *
+ * https://casama.ai/i/<code> is a friend's invite link (D-211): who invited you, the code to enter
+ * after signing up, and a way to open or get the app. With the app installed the phone opens it there.
  */
 const TYPES = "theme|scheme|wallpaper|skill";
 const GALLERY = "https://gallery.casama.ai";
+const API = "https://api.casama.ai";
 const SINGULAR = { theme: "Theme", scheme: "Color scheme", wallpaper: "Wallpaper", skill: "Skill" };
 
 export default {
   async fetch(request) {
     const url = new URL(request.url);
+    const invite = /^\/i\/([0-9A-Za-z]{6})\/?$/.exec(url.pathname);
+    if (invite) return invitePage(invite[1].toUpperCase());
     if (/^\/gallery\/?$/.test(url.pathname)) return Response.redirect(`${GALLERY}/`, 302);
     const match = new RegExp(`^/gallery/(${TYPES})/([a-z0-9][a-z0-9-]{0,62})/?$`).exec(url.pathname);
     if (!match) return new Response("Not found", { status: 404 });
@@ -135,6 +141,66 @@ function page(type, id, item) {
 </script>
 </body>
 </html>`;
+}
+
+async function invitePage(code) {
+  let preview = null;
+  try {
+    const res = await fetch(`${API}/v1/referral/preview?code=${code}`, { cf: { cacheTtl: 300 } });
+    if (res.ok) preview = await res.json();
+  } catch {
+    // The page still shows the code and the app links when the API is briefly unreachable.
+  }
+  const name = preview?.inviter_name ?? "";
+  const who = name ? `${name} invited you to Casama` : "You're invited to Casama";
+  const bonus = Number(preview?.welcome_usd ?? 0);
+  const dollars = Number.isInteger(bonus) ? `$${bonus}` : `$${bonus.toFixed(2)}`;
+  const about =
+    bonus > 0
+      ? `AI teammates that get things done for you, each on its own computer. Sign up with this code and get ${dollars} of free usage after your first chat.`
+      : "AI teammates that get things done for you, each on its own computer. Sign up, then enter the code so your friend gets the credit.";
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>${esc(who)}</title>
+<meta name="description" content="${esc(about)}">
+<meta property="og:title" content="${esc(who)}">
+<meta property="og:description" content="${esc(about)}">
+<meta property="og:image" content="https://casama.ai/og-image.png">
+<style>
+  :root { --bg:#f6f4ef; --ink:#1d1f1c; --muted:#5c625b; --line:#dcd8cf; --accent:#0f6b5c; --accent-ink:#fff; --card:#fffdf8; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#121412; --ink:#ecebe6; --muted:#a3a8a0; --line:#2a2e2a; --accent:#5cc4ae; --accent-ink:#0b1210; --card:#181b18; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px; background: var(--bg); color: var(--ink); font: 17px/1.55 ui-sans-serif, -apple-system, "Segoe UI", Inter, system-ui, sans-serif; }
+  main { width: 100%; max-width: 440px; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 32px 24px; text-align: center; }
+  .logo { font-weight: 700; letter-spacing: -0.02em; font-size: 20px; text-decoration: none; color: inherit; }
+  h1 { font-size: 28px; line-height: 1.15; letter-spacing: -0.02em; margin: 20px 0 10px; }
+  p { margin: 0 0 18px; color: var(--muted); }
+  .code { display: inline-block; margin: 4px 0 22px; padding: 10px 18px; border-radius: 12px; border: 1px dashed var(--accent); font: 700 26px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 6px; user-select: all; }
+  .btn { display: block; padding: 13px 18px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 15px; border: 1px solid var(--line); color: inherit; margin-top: 10px; }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+  .small { font-size: 14px; margin: 18px 0 0; }
+</style>
+</head>
+<body>
+<main>
+  <a class="logo" href="https://casama.ai">casama</a>
+  <h1>${esc(who)}</h1>
+  <p>${esc(about)}</p>
+  <div class="code" aria-label="Invite code">${esc(code)}</div>
+  <a class="btn primary" href="casama://app/i/${esc(code)}">Open in Casama</a>
+  <a class="btn" href="https://casama.ai">Get Casama</a>
+  <p class="small">Already have the app? It opens this invite by itself. Otherwise, after signing up go to Settings → Invite friends and enter the code within a week.</p>
+</main>
+</body>
+</html>`;
+  return new Response(html, {
+    status: 200,
+    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=300" },
+  });
 }
 
 function esc(value) {

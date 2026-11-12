@@ -270,6 +270,9 @@ Class | Method | HTTP request | Description
 [*ProjectsApi*](doc/ProjectsApi.md) | [**listProjects**](doc/ProjectsApi.md#listprojects) | **GET** /v1/projects | 
 [*ProjectsApi*](doc/ProjectsApi.md) | [**signOffMilestone**](doc/ProjectsApi.md#signoffmilestone) | **POST** /v1/projects/{id}/milestones/{milestone_id}/signoff | Sign off a finished milestone so the next one begins
 [*ProjectsApi*](doc/ProjectsApi.md) | [**updateProject**](doc/ProjectsApi.md#updateproject) | **PATCH** /v1/projects/{id} | Pause, resume or cancel a project, or change its budget, deadline or plan
+[*ReferralsApi*](doc/ReferralsApi.md) | [**getReferral**](doc/ReferralsApi.md#getreferral) | **GET** /v1/me/referral | Your invite code and link, what you&#39;ve earned, and who invited you
+[*ReferralsApi*](doc/ReferralsApi.md) | [**previewReferral**](doc/ReferralsApi.md#previewreferral) | **GET** /v1/referral/preview | Who an invite code is from (no sign-in)
+[*ReferralsApi*](doc/ReferralsApi.md) | [**redeemReferral**](doc/ReferralsApi.md#redeemreferral) | **POST** /v1/me/referral/redeem | Enter a friend&#39;s invite code (a few days after signing up)
 [*ReplaysApi*](doc/ReplaysApi.md) | [**deleteReplay**](doc/ReplaysApi.md#deletereplay) | **DELETE** /v1/replays/{id} | 
 [*ReplaysApi*](doc/ReplaysApi.md) | [**listReplays**](doc/ReplaysApi.md#listreplays) | **GET** /v1/replays | A bot&#39;s saved replays
 [*ReplaysApi*](doc/ReplaysApi.md) | [**replayFromTeach**](doc/ReplaysApi.md#replayfromteach) | **POST** /v1/teach/{id}/replay | Save a teach recording as a replay
@@ -690,7 +693,11 @@ Class | Method | HTTP request | Description
  - [PublicConfig](doc/PublicConfig.md)
  - [PurchaseRequest](doc/PurchaseRequest.md)
  - [ReasoningEffort](doc/ReasoningEffort.md)
+ - [RedeemReferralRequest](doc/RedeemReferralRequest.md)
  - [RedirectUrl](doc/RedirectUrl.md)
+ - [Referral](doc/Referral.md)
+ - [ReferralInvitedBy](doc/ReferralInvitedBy.md)
+ - [ReferralPreview](doc/ReferralPreview.md)
  - [ReleaseLeaseRequest](doc/ReleaseLeaseRequest.md)
  - [RenameTwoStepFactorRequest](doc/RenameTwoStepFactorRequest.md)
  - [Replay](doc/Replay.md)

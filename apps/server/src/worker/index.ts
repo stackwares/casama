@@ -141,6 +141,8 @@ export interface WorkerOptions {
   phoneCalls?: boolean;
   /** Audit-log forwarding (D-146): on when the enterprise license includes it. */
   auditForwarding?: boolean;
+  /** Invite friends (D-211): rewards for inviters, decided every minute. Unset: off. */
+  referrals?: { enabled: boolean; rewardUsd: number; welcomeUsd: number; cap: number };
   /** Cloudflare AI Gateway for model calls (D-145). */
   aiGateway?: import("@casama/agent").AiGatewayConfig;
   /** Casama Cloud's shared OpenRouter key. Workspaces without their own key use it. */
@@ -531,6 +533,7 @@ export async function startWorker(opts: WorkerOptions) {
     },
     voip,
     auditForwarding: opts.auditForwarding,
+    referrals: opts.referrals,
     leaveNow: {
       fetch: opts.providerBases?.google_maps || opts.providerBases?.mapbox ? fetch : fetchOut,
       bases: opts.providerBases,

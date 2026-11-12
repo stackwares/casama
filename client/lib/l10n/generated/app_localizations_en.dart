@@ -5988,6 +5988,226 @@ class AppLocalizationsEn extends AppLocalizations {
       'Invite link copied. Send it to the people you work with.';
 
   @override
+  String get inviteFriends => 'Invite Friends';
+
+  @override
+  String inviteFriendsRow(String amount) {
+    return 'Earn $amount of free usage for each friend who joins';
+  }
+
+  @override
+  String get inviteFriendsRowPlain => 'Share Casama with your friends';
+
+  @override
+  String inviteFriendsHeadline(String amount) {
+    return 'Give Casama, Get $amount';
+  }
+
+  @override
+  String get inviteFriendsHeadlinePlain => 'Share Casama with Friends';
+
+  @override
+  String inviteFriendsHelp(String amount) {
+    return 'Send your link to a friend. When they sign up and finish their first chat, you get $amount of free usage.';
+  }
+
+  @override
+  String get inviteFriendsHelpPlain =>
+      'Send your link to a friend. They can sign up straight away.';
+
+  @override
+  String get inviteFriendsYourCode => 'Your invite code. Tap to copy.';
+
+  @override
+  String get inviteFriendsShare => 'Share Link';
+
+  @override
+  String get inviteFriendsCopyLink => 'Copy Link';
+
+  @override
+  String get inviteFriendsCopied => 'Copied. Send it to a friend.';
+
+  @override
+  String inviteFriendsShareText(String link, String code) {
+    return 'Join me on Casama, where AI teammates get things done for you: $link (invite code $code)';
+  }
+
+  @override
+  String get inviteFriendsProgress => 'Your Invites';
+
+  @override
+  String get inviteFriendsJoined => 'Friends Who Joined';
+
+  @override
+  String inviteFriendsPending(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString haven\'t finished a first chat yet',
+      one: '1 hasn\'t finished a first chat yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get inviteFriendsEarned => 'Free Usage Earned';
+
+  @override
+  String inviteFriendsLeft(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString more friends can earn you a reward',
+      one: '1 more friend can earn you a reward',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get inviteFriendsCapReached =>
+      'You\'ve earned the most invites can give. Thank you!';
+
+  @override
+  String get inviteFriendsHow => 'How It Works';
+
+  @override
+  String get inviteFriendsStep1 => 'Share your link or code with a friend';
+
+  @override
+  String get inviteFriendsStep2 =>
+      'They sign up and enter your code within a week';
+
+  @override
+  String inviteFriendsStep3(String amount) {
+    return 'When they finish their first chat, you get $amount of free usage';
+  }
+
+  @override
+  String get inviteFriendsStep3Plain =>
+      'They get going with their own AI teammates';
+
+  @override
+  String get inviteFriendsUnavailable =>
+      'Invites aren\'t available on this server.';
+
+  @override
+  String get referralHaveCode => 'Got a Friend\'s Code?';
+
+  @override
+  String get referralCodeHint => 'Invite code';
+
+  @override
+  String get referralUse => 'Use';
+
+  @override
+  String get referralRedeemed => 'Invite code added. Welcome to Casama!';
+
+  @override
+  String referralRedeemedFrom(String name) {
+    return 'You joined through $name\'s invite. Welcome to Casama!';
+  }
+
+  @override
+  String referralJoinedThrough(String name) {
+    return 'You joined through $name\'s invite.';
+  }
+
+  @override
+  String get referralJoinedThroughFriend =>
+      'You joined through a friend\'s invite.';
+
+  @override
+  String referralInvitedBy(String name) {
+    return '$name invited you';
+  }
+
+  @override
+  String get referralInvitedByFriend => 'A friend invited you';
+
+  @override
+  String get referralWelcomeTitle => 'Welcome to Casama';
+
+  @override
+  String get referralWelcomeHelp =>
+      'AI teammates that work for you on their own computers. Accept the invite so your friend gets the credit.';
+
+  @override
+  String get referralAccept => 'Accept Invite';
+
+  @override
+  String get referralGetStarted => 'Get Started';
+
+  @override
+  String get referralInvalid => 'This Invite Doesn\'t Work';
+
+  @override
+  String get referralInvalidHelp =>
+      'The code may be mistyped. You can still sign up and use Casama.';
+
+  @override
+  String inviteFriendsHeadlineBoth(String amount) {
+    return 'Give $amount, Get $amount';
+  }
+
+  @override
+  String inviteFriendsHelpBoth(String amount) {
+    return 'Send your link to a friend. When they sign up with your code and finish their first chat, you each get $amount of free usage.';
+  }
+
+  @override
+  String inviteFriendsHelpTwo(String reward, String welcome) {
+    return 'Send your link to a friend. When they sign up with your code and finish their first chat, you get $reward of free usage and they get $welcome.';
+  }
+
+  @override
+  String inviteFriendsStep3Both(String amount) {
+    return 'When they finish their first chat, you each get $amount of free usage';
+  }
+
+  @override
+  String inviteFriendsStep3Two(String reward, String welcome) {
+    return 'When they finish their first chat, you get $reward and they get $welcome';
+  }
+
+  @override
+  String inviteFriendsShareTextBonus(String link, String code, String amount) {
+    return 'Join me on Casama, where AI teammates get things done for you. Sign up with my invite code $code and you get $amount of free usage: $link';
+  }
+
+  @override
+  String referralHaveCodeHelp(String amount) {
+    return 'Enter it within a week of signing up and get $amount of free usage after your first chat.';
+  }
+
+  @override
+  String referralWelcomeEarned(String amount) {
+    return 'Your $amount welcome bonus is in your workspace.';
+  }
+
+  @override
+  String referralWelcomePending(String amount) {
+    return 'Your $amount welcome bonus arrives after your first chat.';
+  }
+
+  @override
+  String referralWelcomeHelpBonus(String amount) {
+    return 'AI teammates that work for you on their own computers. Accept the invite and get $amount of free usage after your first chat.';
+  }
+
+  @override
+  String referralRedeemedBonus(String amount) {
+    return 'You\'re in! Your $amount welcome bonus arrives after your first chat.';
+  }
+
+  @override
   String get connectManaged => 'Sign in through Composio';
 
   @override

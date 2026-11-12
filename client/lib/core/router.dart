@@ -61,6 +61,7 @@ import '../features/auth/two_step_screen.dart';
 import '../features/board/board_screen.dart';
 import '../features/workspaces/join_flow.dart';
 import '../features/workspaces/people_screen.dart';
+import '../features/referrals/invite_friends.dart';
 import '../features/workspaces/spaces.dart';
 import 'providers.dart';
 import 'telemetry.dart';
@@ -127,6 +128,7 @@ class _RouterRefresh extends ChangeNotifier {
     ref.listen(newPasswordNeededProvider, (_, _) => notifyListeners());
     ref.listen(organizationsProvider, (_, _) => notifyListeners());
     ref.listen(joinableWorkspacesProvider, (_, _) => notifyListeners());
+    ref.listen(pendingReferralProvider, (_, _) => notifyListeners());
   }
 }
 
@@ -144,7 +146,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final loc = state.matchedLocation;
       // Invite links (D-167): the preview works signed out ("Sign in to join" keeps the invite and
       // brings people back to it after signing in).
-      final joining = loc.startsWith('/join/') || loc.startsWith('/invites/');
+      // A friend's invite link (D-211) works signed out the same way.
+      final joining = loc.startsWith('/join/') || loc.startsWith('/invites/') || loc.startsWith('/i/');
       if (signedIn.value != true) {
         return loc == '/sign-in' || joining ? null : '/sign-in';
       }
@@ -161,6 +164,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         return loc == '/new-password' ? null : '/new-password';
       }
       if (loc == '/new-password') return '/bots';
+      // A friend's invite code kept through sign-up (D-211): ask about it once signed in.
+      final pendingReferral = ref.read(pendingReferralProvider);
+      if (pendingReferral != null && !loc.startsWith('/i/')) {
+        return referralPath(pendingReferral);
+      }
       if (joining || loc.startsWith('/joined/')) return null;
       final orgs = ref.read(organizationsProvider);
       if (orgs.isLoading) return loc == '/sign-in' ? '/bots' : null;
@@ -228,6 +236,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/invites/:token',
         redirect: (_, s) => joinPath(s.pathParameters['token']!),
+      ),
+      GoRoute(
+        path: '/i/:code',
+        pageBuilder: _page(
+          (_, s) => InviteLinkScreen(
+            key: ValueKey(s.pathParameters['code']),
+            code: s.pathParameters['code']!,
+          ),
+        ),
       ),
       GoRoute(
         path: '/gallery/:type/:id',
@@ -639,6 +656,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'people',
                 pageBuilder: _page((_, _) => const PeopleScreen()),
+              ),
+              GoRoute(
+                path: 'invite',
+                pageBuilder: _page((_, _) => const InviteFriendsScreen()),
               ),
             ],
           ),

@@ -72,6 +72,21 @@ export const EnvSchema = z.object({
   GALLERY_URL: z.string().default("https://gallery.casama.ai"),
   /** Casama Cloud only (D-070). Self-hosted servers keep it off: no paywall, unlimited use. */
   BILLING_ENABLED: bool.default(false),
+  /**
+   * Invite friends (D-211): personal invite codes, and free credits for the inviter and a welcome
+   * bonus for the friend once the friend verifies and finishes a first run. auto: on when billing is on. A reward of 0 keeps the codes and
+   * counts but grants nothing.
+   */
+  REFERRALS: z.enum(["auto", "on", "off"]).default("auto"),
+  REFERRAL_REWARD_USD: z.coerce.number().min(0).max(100).default(2),
+  /** The new person's welcome bonus, given at the same moment as the inviter's reward. */
+  REFERRAL_WELCOME_USD: z.coerce.number().min(0).max(100).default(2),
+  /** Rewarded friends per person; friends past it still count but earn nothing. */
+  REFERRAL_REWARD_CAP: z.coerce.number().int().min(0).max(1000).default(20),
+  /** Days after signing up that a person can still enter a friend's code. */
+  REFERRAL_REDEEM_DAYS: z.coerce.number().int().min(0).max(90).default(7),
+  /** Where invite links point; the code is appended (casama.ai/i/<code>, served by site/). */
+  REFERRAL_LINK_BASE: z.url().default("https://casama.ai/i"),
   /** Dodo Payments (web, desktop, credit packs). */
   DODO_API_KEY: z.string().optional(),
   DODO_WEBHOOK_SECRET: z.string().optional(),

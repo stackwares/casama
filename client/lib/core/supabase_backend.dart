@@ -952,6 +952,18 @@ class SupabaseBackend implements Backend {
       '${api.baseUrl.replaceAll(RegExp(r'/+$'), '')}/v1/photos/$photoId';
 
   @override
+  Future<Referral> referral() async =>
+      (await api.referrals.getReferral()).data!;
+  @override
+  Future<Referral> redeemReferral(String code) async =>
+      (await api.referrals.redeemReferral(
+        redeemReferralRequest: RedeemReferralRequest(code: code),
+      )).data!;
+  @override
+  Future<ReferralPreview> previewReferral(String code) async =>
+      (await api.referrals.previewReferral(code: code)).data!;
+
+  @override
   Future<AboutYouView> aboutYou() async =>
       _about((await api.aboutYou.getAboutYou()).data!);
 

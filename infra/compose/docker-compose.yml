@@ -56,6 +56,12 @@ x-casama: &casama
     SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
     # Plans and payments (Phase 7): off for self-hosting; Casama Cloud turns it on (D-197).
     BILLING_ENABLED: ${BILLING_ENABLED:-false}
+    # Invite friends (D-211): on with billing; amounts in US dollars of credits.
+    REFERRALS: ${REFERRALS:-auto}
+    REFERRAL_REWARD_USD: ${REFERRAL_REWARD_USD:-2}
+    REFERRAL_WELCOME_USD: ${REFERRAL_WELCOME_USD:-2}
+    REFERRAL_REWARD_CAP: ${REFERRAL_REWARD_CAP:-20}
+    REFERRAL_REDEEM_DAYS: ${REFERRAL_REDEEM_DAYS:-7}
     DODO_API_KEY: ${DODO_API_KEY:-}
     DODO_WEBHOOK_SECRET: ${DODO_WEBHOOK_SECRET:-}
     DODO_ENVIRONMENT: ${DODO_ENVIRONMENT:-}

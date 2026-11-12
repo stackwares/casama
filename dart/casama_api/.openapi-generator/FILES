@@ -35,6 +35,7 @@ lib/src/api/payments_api.dart
 lib/src/api/plugins_api.dart
 lib/src/api/privacy_api.dart
 lib/src/api/projects_api.dart
+lib/src/api/referrals_api.dart
 lib/src/api/replays_api.dart
 lib/src/api/routines_api.dart
 lib/src/api/runs_api.dart
@@ -375,7 +376,11 @@ lib/src/model/provider_id.dart
 lib/src/model/public_config.dart
 lib/src/model/purchase_request.dart
 lib/src/model/reasoning_effort.dart
+lib/src/model/redeem_referral_request.dart
 lib/src/model/redirect_url.dart
+lib/src/model/referral.dart
+lib/src/model/referral_invited_by.dart
+lib/src/model/referral_preview.dart
 lib/src/model/release_lease_request.dart
 lib/src/model/rename_two_step_factor_request.dart
 lib/src/model/replay.dart

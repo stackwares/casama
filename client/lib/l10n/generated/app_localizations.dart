@@ -9382,6 +9382,306 @@ abstract class AppLocalizations {
   /// **'Invite link copied. Send it to the people you work with.'**
   String get inviteLinkCopied;
 
+  /// No description provided for @inviteFriends.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite Friends'**
+  String get inviteFriends;
+
+  /// No description provided for @inviteFriendsRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Earn {amount} of free usage for each friend who joins'**
+  String inviteFriendsRow(String amount);
+
+  /// No description provided for @inviteFriendsRowPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Casama with your friends'**
+  String get inviteFriendsRowPlain;
+
+  /// No description provided for @inviteFriendsHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Give Casama, Get {amount}'**
+  String inviteFriendsHeadline(String amount);
+
+  /// No description provided for @inviteFriendsHeadlinePlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Casama with Friends'**
+  String get inviteFriendsHeadlinePlain;
+
+  /// No description provided for @inviteFriendsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Send your link to a friend. When they sign up and finish their first chat, you get {amount} of free usage.'**
+  String inviteFriendsHelp(String amount);
+
+  /// No description provided for @inviteFriendsHelpPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Send your link to a friend. They can sign up straight away.'**
+  String get inviteFriendsHelpPlain;
+
+  /// No description provided for @inviteFriendsYourCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Your invite code. Tap to copy.'**
+  String get inviteFriendsYourCode;
+
+  /// No description provided for @inviteFriendsShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Link'**
+  String get inviteFriendsShare;
+
+  /// No description provided for @inviteFriendsCopyLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy Link'**
+  String get inviteFriendsCopyLink;
+
+  /// No description provided for @inviteFriendsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied. Send it to a friend.'**
+  String get inviteFriendsCopied;
+
+  /// No description provided for @inviteFriendsShareText.
+  ///
+  /// In en, this message translates to:
+  /// **'Join me on Casama, where AI teammates get things done for you: {link} (invite code {code})'**
+  String inviteFriendsShareText(String link, String code);
+
+  /// No description provided for @inviteFriendsProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Invites'**
+  String get inviteFriendsProgress;
+
+  /// No description provided for @inviteFriendsJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends Who Joined'**
+  String get inviteFriendsJoined;
+
+  /// No description provided for @inviteFriendsPending.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 hasn\'t finished a first chat yet} other{{count} haven\'t finished a first chat yet}}'**
+  String inviteFriendsPending(int count);
+
+  /// No description provided for @inviteFriendsEarned.
+  ///
+  /// In en, this message translates to:
+  /// **'Free Usage Earned'**
+  String get inviteFriendsEarned;
+
+  /// No description provided for @inviteFriendsLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 more friend can earn you a reward} other{{count} more friends can earn you a reward}}'**
+  String inviteFriendsLeft(int count);
+
+  /// No description provided for @inviteFriendsCapReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve earned the most invites can give. Thank you!'**
+  String get inviteFriendsCapReached;
+
+  /// No description provided for @inviteFriendsHow.
+  ///
+  /// In en, this message translates to:
+  /// **'How It Works'**
+  String get inviteFriendsHow;
+
+  /// No description provided for @inviteFriendsStep1.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your link or code with a friend'**
+  String get inviteFriendsStep1;
+
+  /// No description provided for @inviteFriendsStep2.
+  ///
+  /// In en, this message translates to:
+  /// **'They sign up and enter your code within a week'**
+  String get inviteFriendsStep2;
+
+  /// No description provided for @inviteFriendsStep3.
+  ///
+  /// In en, this message translates to:
+  /// **'When they finish their first chat, you get {amount} of free usage'**
+  String inviteFriendsStep3(String amount);
+
+  /// No description provided for @inviteFriendsStep3Plain.
+  ///
+  /// In en, this message translates to:
+  /// **'They get going with their own AI teammates'**
+  String get inviteFriendsStep3Plain;
+
+  /// No description provided for @inviteFriendsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Invites aren\'t available on this server.'**
+  String get inviteFriendsUnavailable;
+
+  /// No description provided for @referralHaveCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Got a Friend\'s Code?'**
+  String get referralHaveCode;
+
+  /// No description provided for @referralCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite code'**
+  String get referralCodeHint;
+
+  /// No description provided for @referralUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use'**
+  String get referralUse;
+
+  /// No description provided for @referralRedeemed.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite code added. Welcome to Casama!'**
+  String get referralRedeemed;
+
+  /// No description provided for @referralRedeemedFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'You joined through {name}\'s invite. Welcome to Casama!'**
+  String referralRedeemedFrom(String name);
+
+  /// No description provided for @referralJoinedThrough.
+  ///
+  /// In en, this message translates to:
+  /// **'You joined through {name}\'s invite.'**
+  String referralJoinedThrough(String name);
+
+  /// No description provided for @referralJoinedThroughFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'You joined through a friend\'s invite.'**
+  String get referralJoinedThroughFriend;
+
+  /// No description provided for @referralInvitedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} invited you'**
+  String referralInvitedBy(String name);
+
+  /// No description provided for @referralInvitedByFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'A friend invited you'**
+  String get referralInvitedByFriend;
+
+  /// No description provided for @referralWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Casama'**
+  String get referralWelcomeTitle;
+
+  /// No description provided for @referralWelcomeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'AI teammates that work for you on their own computers. Accept the invite so your friend gets the credit.'**
+  String get referralWelcomeHelp;
+
+  /// No description provided for @referralAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept Invite'**
+  String get referralAccept;
+
+  /// No description provided for @referralGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get referralGetStarted;
+
+  /// No description provided for @referralInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This Invite Doesn\'t Work'**
+  String get referralInvalid;
+
+  /// No description provided for @referralInvalidHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The code may be mistyped. You can still sign up and use Casama.'**
+  String get referralInvalidHelp;
+
+  /// No description provided for @inviteFriendsHeadlineBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Give {amount}, Get {amount}'**
+  String inviteFriendsHeadlineBoth(String amount);
+
+  /// No description provided for @inviteFriendsHelpBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'Send your link to a friend. When they sign up with your code and finish their first chat, you each get {amount} of free usage.'**
+  String inviteFriendsHelpBoth(String amount);
+
+  /// No description provided for @inviteFriendsHelpTwo.
+  ///
+  /// In en, this message translates to:
+  /// **'Send your link to a friend. When they sign up with your code and finish their first chat, you get {reward} of free usage and they get {welcome}.'**
+  String inviteFriendsHelpTwo(String reward, String welcome);
+
+  /// No description provided for @inviteFriendsStep3Both.
+  ///
+  /// In en, this message translates to:
+  /// **'When they finish their first chat, you each get {amount} of free usage'**
+  String inviteFriendsStep3Both(String amount);
+
+  /// No description provided for @inviteFriendsStep3Two.
+  ///
+  /// In en, this message translates to:
+  /// **'When they finish their first chat, you get {reward} and they get {welcome}'**
+  String inviteFriendsStep3Two(String reward, String welcome);
+
+  /// No description provided for @inviteFriendsShareTextBonus.
+  ///
+  /// In en, this message translates to:
+  /// **'Join me on Casama, where AI teammates get things done for you. Sign up with my invite code {code} and you get {amount} of free usage: {link}'**
+  String inviteFriendsShareTextBonus(String link, String code, String amount);
+
+  /// No description provided for @referralHaveCodeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter it within a week of signing up and get {amount} of free usage after your first chat.'**
+  String referralHaveCodeHelp(String amount);
+
+  /// No description provided for @referralWelcomeEarned.
+  ///
+  /// In en, this message translates to:
+  /// **'Your {amount} welcome bonus is in your workspace.'**
+  String referralWelcomeEarned(String amount);
+
+  /// No description provided for @referralWelcomePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Your {amount} welcome bonus arrives after your first chat.'**
+  String referralWelcomePending(String amount);
+
+  /// No description provided for @referralWelcomeHelpBonus.
+  ///
+  /// In en, this message translates to:
+  /// **'AI teammates that work for you on their own computers. Accept the invite and get {amount} of free usage after your first chat.'**
+  String referralWelcomeHelpBonus(String amount);
+
+  /// No description provided for @referralRedeemedBonus.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re in! Your {amount} welcome bonus arrives after your first chat.'**
+  String referralRedeemedBonus(String amount);
+
   /// No description provided for @connectManaged.
   ///
   /// In en, this message translates to:

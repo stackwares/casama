@@ -3322,27 +3322,6 @@ export const userKeys = pgTable("user_keys", {
 	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 ]);
 
-export const profilePhotos = pgTable("profile_photos", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	userId: uuid("user_id").notNull(),
-	contentType: text("content_type").notNull(),
-	// TODO: failed to parse database type 'bytea'
-	bytes: text("bytes").notNull(),
-	source: text().default('upload').notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "profile_photos_user_id_fkey"
-		}).onDelete("cascade"),
-	unique("profile_photos_user_id_key").on(table.userId),
-	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
-	check("profile_photos_content_type_check", sql`content_type = ANY (ARRAY['image/jpeg'::text, 'image/png'::text, 'image/webp'::text])`),
-	check("profile_photos_bytes_check", sql`(octet_length(bytes) >= 1) AND (octet_length(bytes) <= 1048576)`),
-	check("profile_photos_source_check", sql`source = ANY (ARRAY['upload'::text, 'provider'::text])`),
-]);
-
 export const profiles = pgTable("profiles", {
 	userId: uuid("user_id").primaryKey().notNull(),
 	displayName: text("display_name"),
@@ -3373,6 +3352,27 @@ export const profiles = pgTable("profiles", {
 	check("profiles_phone_number_check", sql`(phone_number IS NULL) OR (phone_number ~ '^\+[1-9][0-9]{7,14}$'::text)`),
 	check("profiles_preferred_name_check", sql`(preferred_name IS NULL) OR (char_length(preferred_name) <= 60)`),
 	check("profiles_pronouns_check", sql`(pronouns IS NULL) OR (char_length(pronouns) <= 40)`),
+]);
+
+export const profilePhotos = pgTable("profile_photos", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	contentType: text("content_type").notNull(),
+	// TODO: failed to parse database type 'bytea'
+	bytes: text("bytes").notNull(),
+	source: text().default('upload').notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "profile_photos_user_id_fkey"
+		}).onDelete("cascade"),
+	unique("profile_photos_user_id_key").on(table.userId),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("profile_photos_content_type_check", sql`content_type = ANY (ARRAY['image/jpeg'::text, 'image/png'::text, 'image/webp'::text])`),
+	check("profile_photos_bytes_check", sql`(octet_length(bytes) >= 1) AND (octet_length(bytes) <= 1048576)`),
+	check("profile_photos_source_check", sql`source = ANY (ARRAY['upload'::text, 'provider'::text])`),
 ]);
 
 export const userFacts = pgTable("user_facts", {
@@ -3460,6 +3460,61 @@ export const chatMedia = pgTable("chat_media", {
 	check("chat_media_size_check", sql`(size >= 1) AND (size <= 52428800)`),
 ]);
 
+export const referralCodes = pgTable("referral_codes", {
+	userId: uuid("user_id").primaryKey().notNull(),
+	code: text().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "referral_codes_user_id_fkey"
+		}).onDelete("cascade"),
+	unique("referral_codes_code_key").on(table.code),
+	pgPolicy("referral_codes_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
+	check("referral_codes_code_check", sql`code ~ '^[0-9A-HJKMNP-TV-Z]{6}$'::text`),
+]);
+
+export const referrals = pgTable("referrals", {
+	inviteeId: uuid("invitee_id").primaryKey().notNull(),
+	inviterId: uuid("inviter_id"),
+	code: text().notNull(),
+	status: text().default('pending').notNull(),
+	rewardUsd: numeric("reward_usd", { precision: 12, scale:  2 }),
+	rewardOrgId: uuid("reward_org_id"),
+	welcomeUsd: numeric("welcome_usd", { precision: 12, scale:  2 }),
+	welcomeOrgId: uuid("welcome_org_id"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	decidedAt: timestamp("decided_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("referrals_inviter_idx").using("btree", table.inviterId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
+	index("referrals_pending_idx").using("btree", table.createdAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(status = 'pending'::text)`),
+	foreignKey({
+			columns: [table.welcomeOrgId],
+			foreignColumns: [organizations.id],
+			name: "referrals_welcome_org_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.inviteeId],
+			foreignColumns: [users.id],
+			name: "referrals_invitee_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.inviterId],
+			foreignColumns: [users.id],
+			name: "referrals_inviter_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.rewardOrgId],
+			foreignColumns: [organizations.id],
+			name: "referrals_reward_org_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("referrals_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`((invitee_id = ( SELECT auth.uid() AS uid)) OR (inviter_id = ( SELECT auth.uid() AS uid)))` }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
+	check("referrals_status_check", sql`status = ANY (ARRAY['pending'::text, 'rewarded'::text, 'capped'::text, 'none'::text])`),
+]);
+
 export const agentImportFiles = pgTable("agent_import_files", {
 	importId: uuid("import_id").notNull(),
 	path: text().notNull(),
@@ -3474,6 +3529,21 @@ export const agentImportFiles = pgTable("agent_import_files", {
 	primaryKey({ columns: [table.importId, table.path], name: "agent_import_files_pkey"}),
 	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	check("agent_import_files_path_check", sql`(char_length(path) >= 1) AND (char_length(path) <= 1000)`),
+]);
+
+export const analyticsMilestones = pgTable("analytics_milestones", {
+	userId: uuid("user_id").notNull(),
+	milestone: text().notNull(),
+	reachedAt: timestamp("reached_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("analytics_milestones_user_id_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "analytics_milestones_user_id_fkey"
+		}).onDelete("cascade"),
+	primaryKey({ columns: [table.userId, table.milestone], name: "analytics_milestones_pkey"}),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 ]);
 
 export const deviceGrants = pgTable("device_grants", {

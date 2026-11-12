@@ -32,6 +32,7 @@ import { createPagesApp } from "./pages/app.ts";
 import { abuseControlsOn } from "./services/abuse.ts";
 import { disabledEmail, resendEmail, smtpEmail } from "./services/email.ts";
 import { chromiumPdf } from "./services/pdf.ts";
+import { referralConfig } from "./services/referrals.ts";
 
 const env = loadEnv();
 // Encryption at rest (D-136): the key that wraps workspace data keys, if configured.
@@ -198,6 +199,7 @@ if (env.MODE === "api") {
       .then((m) => m.verifyLicense(env.CASAMA_LICENSE_KEY))
       .then((l) => !!l && l.expiresAt > new Date() && l.features.includes("audit_forwarding"))
       .catch(() => false),
+    referrals: referralConfig(env),
     platformOpenRouterKey: env.CLOUD_MODEL_UPSTREAM_KEY,
     platformReasoningEffort: env.DEFAULT_REASONING_EFFORT,
     cloudLockedModel: defaultModelFor("openrouter", modelOverrides(env)),

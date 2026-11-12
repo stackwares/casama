@@ -10,6 +10,7 @@ const analyticsClientEvents = <String>{
   'onboarding_step_done',
   'onboarding_complete',
   'invite_shared',
+  'referral_shared',
   'join_completed',
   'skill_installed',
   'connection_started',

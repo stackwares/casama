@@ -60,6 +60,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="casama.ai" android:pathPrefix="/gallery/" />
+                <data android:scheme="https" android:host="casama.ai" android:pathPrefix="/i/" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

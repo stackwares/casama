@@ -31,6 +31,7 @@ import '../../ui/shell_header.dart';
 import '../admin/admin_screen.dart';
 import '../notifications/quiet_hours.dart';
 import '../companion/companion.dart';
+import '../referrals/invite_friends.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key, this.pane = false, this.current = ''});
@@ -51,6 +52,7 @@ class SettingsScreen extends ConsumerWidget {
     final month = ref.watch(usageMonthProvider).value;
     final isAdmin = org != null && org.role != OrgRole.member;
     final billing = ref.watch(billingProvider).value;
+    final referral = ref.watch(referralProvider).value;
     final scheme = context.colorScheme;
     final email = backend.userEmail ?? '';
     final colors = context.appColors;
@@ -157,6 +159,19 @@ class SettingsScreen extends ConsumerWidget {
                       title: l10n.billing,
                       subtitle: billing!.planName,
                       onTap: () => open('/settings/billing'), selected: sel('/settings/billing'),
+                    ),
+                  // Invite friends (D-211): Casama Cloud only.
+                  if (referral?.enabled ?? false)
+                    GroupedTile(
+                      key: const Key('settingsInvite'),
+                      icon: LucideIcons.gift,
+                      iconColor: scheme.primary,
+                      title: l10n.inviteFriends,
+                      subtitle: referral!.rewardUsd > 0
+                          ? l10n.inviteFriendsRow(formatUsd(referral.rewardUsd, l10n.localeName))
+                          : l10n.inviteFriendsRowPlain,
+                      showChevron: true,
+                      onTap: () => open('/settings/invite'), selected: sel('/settings/invite'),
                     ),
                   if (ref.watch(adminOverviewProvider).value != null)
                     GroupedTile(key: const Key('settingsAdmin'), icon: LucideIcons.shieldUser, title: l10n.adminConsole, subtitle: l10n.adminRowHelp, onTap: () => open('/settings/admin'), selected: sel('/settings/admin')),
