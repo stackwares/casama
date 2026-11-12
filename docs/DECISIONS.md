@@ -2213,6 +2213,16 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 - **Samples (not deployed yet):** `wallpapers/stargazer` (glyphs), `wallpapers/scribbles` (a mesh with hand-made doodles), `schemes/orchid`.
 - **Lucide data:** `gallery/assets/lucide/` (lucide-static 1.63.0, ISC; in THIRD_PARTY_NOTICES).
 
+## D-202 Profile photos live in Postgres and are served by the API; Google's photo is copied once
+
+- **Decision** (Oliver asked, 2026-11-12): people get a profile photo. Uploads come from the camera or the photo library. Google sign-ins get their Google photo copied automatically.
+- **Storage:** `public.profile_photos` (one row per person, ≤ 1 MB JPEG/PNG/WebP checked by magic bytes, no RLS policies, API only). The self-hosted stack and prod run no object storage, and a photo is a few dozen KB, so Postgres it is. Account purge cascades.
+- **Serving:** `GET /v1/photos/{id}`, without a token, cached `immutable`. Every new photo gets a new random id, so caches never show a stale picture. Only people who can already see the profile get the id: your own `GET /v1/me/about` (`photo_id`) and the workspace member list (`WorkspaceMember.photo_id`).
+- **Changing it:** `PUT /v1/me/photo` (base64 body), `DELETE /v1/me/photo`, `POST /v1/me/photo/import` (`replace` for "Use my Google photo").
+- **Google:** the server copies the sign-in photo (from `raw_user_meta_data` `avatar_url`/`picture`, only from `*.googleusercontent.com` over https, asked at 512 px, 8 s timeout, no redirects) the first time the app loads About you without a photo. `profiles.photo_import_tried_at` records the attempt, so a removed photo stays removed. Apple shares no photo.
+- **App:** phones shrink and compress with `image_picker` (512 px, quality 85). Desktop files over 400 KB, or in other formats, are cropped to a 384 px square PNG on the device. `PersonAvatar` shows the photo with the initial as the fallback: MeAvatar (header, rail, Settings card), About you (the editor), People.
+- **Settings reorganized at the same time:** Workspace, App (Appearance has its own page now), Connections, Sign-in & security, Advanced.
+
 ## D-203 One place for how Casama looks: pick a whole theme, then Customize
 
 - **Decision** (Oliver, 2026-11-12: Themes, Colors, Gallery and Presets were too many places): Settings → Appearance is the one place. A look is at most two pages deep, and the gallery is one more source of looks rather than somewhere else to go.
@@ -2233,3 +2243,12 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 - **Not yet:** signing in with Google and connecting it in one consent, as Hark does. That needs Casama's own Google app verified for `calendar.events` (free; the demo video is still missing, NEEDS-FROM-OLIVER) and Supabase's provider tokens handed to the integration. Reading the inbox in Casama's own app also needs the yearly CASA assessment. Until then it's sign-in, then one Google screen for Calendar.
 - **No Microsoft:** the catalog has no Outlook or Microsoft calendar yet, so people who don't use Google tap Not now and connect from More apps.
 - **App tiles:** an empty chat shows "Connect your apps" with one-tap tiles above the starter requests: Gmail, Google Calendar, Google Drive, Notion, GitHub and Slack, in that order, only those that connect in one click on this server (own sign-in, or Composio) and not yet connected (directly or through a hub). They go away once two apps are connected. Tapping one opens its connect sheet (`ConnectAppTiles`, `client/lib/features/chat/widgets/app_tiles.dart`).
+
+## D-205 Chat media: generated images and videos live in Postgres and show under the reply; Office files preview as PDF
+
+- **Decision** (Oliver asked, 2026-11-12, "Build all"): what a bot generates shows in the chat by itself. Before this, it only showed if the bot linked the file, and was lost when there was no computer.
+- **Storage:** `public.chat_media` (≤ 50 MB a file, RLS on with no user policies, written by the worker). `media.image.generate` and `media.video.generate` always keep the bytes there, plus the computer's `media/` copy when there is one. The tool result tells the bot the person already sees it.
+- **In the reply:** `saveFinalMessage` adds one part per row of the run, after the text and UI parts: `{type: "file", path: "media:<id>", name, mime_type, size, width?, height?, duration_s?}`. They go into the stored content and the `message.completed` event. In later turns the model sees "(You showed the person a generated image/png: image.png.)", not a computer file to open.
+- **Serving:** `GET /v1/media/{id}` needs a token and membership of the row's workspace (404 otherwise). It sends `cache-control: private, immutable` and `accept-ranges: bytes`, and answers one `Range` with 206 (416 when unsatisfiable), reading only that slice of the bytea, because AVPlayer won't play without ranges.
+- **Office previews:** `GET /v1/computers/{id}/files/pdf-preview?path=` (`computerFilePdfPreview`) converts doc/docx/odt/rtf/xls/xlsx/ods/ppt/pptx/odp with LibreOffice on the computer (60 s limit), cached in `~/.cache/casama-previews/<sha1(path:mtime)>.pdf`. Responses: 415 `preview_unsupported` (another file type, checked before waking the computer, or no LibreOffice), 404 (no such file), 422 `preview_failed`.
+- **Not encrypted:** media bytes aren't sealed with the workspace key (D-136), the same as files on computers.

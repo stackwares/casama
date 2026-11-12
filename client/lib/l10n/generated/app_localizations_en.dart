@@ -266,17 +266,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navTasks => 'Tasks';
 
   @override
-  String get settingsYouSection => 'You';
-
-  @override
   String get settingsConnectionsSection => 'Connections';
 
   @override
   String get advanced => 'Advanced';
 
   @override
-  String get settingsAdvancedSummary =>
-      'Secrets, computers, devices, bot steps';
+  String get settingsAdvancedSummary => 'Secrets, computers, devices';
 
   @override
   String get bots => 'Bots';
@@ -2536,6 +2532,55 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get previewUnavailable =>
       'No preview for this kind of file. Open or save it to view it.';
+
+  @override
+  String get openInSystemPlayer => 'Open in your video player';
+
+  @override
+  String get playMedia => 'Play';
+
+  @override
+  String get fullScreen => 'Full screen';
+
+  @override
+  String get exitFullScreen => 'Exit full screen';
+
+  @override
+  String pdfPageCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count pages',
+      one: '1 page',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get openInBrowser => 'Open in browser';
+
+  @override
+  String get convertingToPdf => 'Getting a preview ready…';
+
+  @override
+  String tableFirstRows(int count) {
+    return 'Showing the first $count rows';
+  }
+
+  @override
+  String get imageCouldNotLoad => 'Couldn\'t load this picture';
+
+  @override
+  String get mediaKindImage => 'Image';
+
+  @override
+  String get mediaKindVideo => 'Video';
+
+  @override
+  String get mediaKindAudio => 'Audio';
+
+  @override
+  String get mediaKindPdf => 'PDF';
 
   @override
   String get openFileInChat => 'Open file';
@@ -7170,6 +7215,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your bots read this so they can call you by name and answer the way you like. Only you can see it.';
 
   @override
+  String get photoChange => 'Change profile photo';
+
+  @override
+  String get photoTake => 'Take a photo';
+
+  @override
+  String get photoChoose => 'Choose a photo';
+
+  @override
+  String get photoUseGoogle => 'Use my Google photo';
+
+  @override
+  String get photoRemove => 'Remove photo';
+
+  @override
+  String get photoUnreadable =>
+      'That file isn\'t a photo Casama can use. Try a JPEG or PNG.';
+
+  @override
   String get whatToCallYou => 'What should bots call you?';
 
   @override
@@ -7469,7 +7533,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fewerEffectsHelp =>
-      'No celebrations, bouncing tabs or animated bots. The Plain themes turn this on.';
+      'No celebrations, bouncing tabs or animated bots. The Plain theme turns this on.';
+
+  @override
+  String get settingsAppSection => 'App';
+
+  @override
+  String get settingsSecuritySection => 'Sign-in & security';
 
   @override
   String get customize => 'Customize';

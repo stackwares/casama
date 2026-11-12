@@ -15,10 +15,22 @@ import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/page.dart';
 import '../bots/agent_import.dart';
+import 'profile_photo.dart';
 
 final aboutYouProvider = FutureProvider<AboutYouView>((ref) async {
   if (ref.watch(signedInProvider).value == false) return const AboutYouView();
-  return ref.watch(backendProvider).aboutYou();
+  final backend = ref.watch(backendProvider);
+  final about = await backend.aboutYou();
+  // Signed in with Google and no photo yet (D-202): copy the Google photo once. The server does
+  // it only the first time, so a removed photo stays removed.
+  if (about.photoId == null && about.providerPhoto && !about.photoImportTried) {
+    try {
+      return await backend.importProfilePhoto();
+    } catch (_) {
+      return about;
+    }
+  }
+  return about;
 });
 final userFactsProvider = FutureProvider<List<UserFactView>>((ref) => ref.watch(backendProvider).userFacts());
 final profileSharedProvider = FutureProvider.family<bool, String>((ref, orgId) => ref.watch(backendProvider).profileSharedIn(orgId));
@@ -126,6 +138,8 @@ class _AboutYouScreenState extends ConsumerState<AboutYouScreen> {
       title: l10n.aboutYou,
       actions: [IconButton(key: const Key('importToProfile'), tooltip: l10n.importToProfile, icon: const Icon(LucideIcons.download), onPressed: _import)],
       children: [
+        Center(child: ProfilePhotoEditor(label: v.name.isNotEmpty ? v.name : (ref.watch(backendProvider).userEmail ?? ''))),
+        const SizedBox(height: AppSpace.md),
         FormNote(l10n.aboutYouIntro, icon: LucideIcons.lock),
         const SizedBox(height: AppSpace.md),
         AppCard(

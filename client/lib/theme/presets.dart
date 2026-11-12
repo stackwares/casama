@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart' show ThemeMode, immutable;
+import 'package:flutter/material.dart' show immutable;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,7 +21,6 @@ class ThemePreset {
     this.bodyFont = defaultBodyFont,
     this.wallpaper = const WallpaperSpec(),
     this.builtIn = false,
-    this.mode,
     this.fewerEffects = false,
   });
 
@@ -32,9 +31,6 @@ class ThemePreset {
   final String bodyFont;
   final WallpaperSpec wallpaper;
   final bool builtIn;
-
-  /// Light or dark, for a theme that is one (Plain Light, Plain Dark); null leaves it as it is.
-  final ThemeMode? mode;
 
   /// Whether it turns decorative motion off (see [Appearance.fewerEffects]).
   final bool fewerEffects;
@@ -50,8 +46,7 @@ class ThemePreset {
       a.schemeId == schemeId &&
       a.headingFont == headingFont &&
       a.bodyFont == bodyFont &&
-      a.wallpaper.copyWith(everywhere: true) == wallpaper.copyWith(everywhere: true) &&
-      (mode == null || a.mode == mode);
+      a.wallpaper.copyWith(everywhere: true) == wallpaper.copyWith(everywhere: true);
 
   Map<String, Object?> toJson() => {
     'v': 1,
@@ -61,7 +56,6 @@ class ThemePreset {
     'headingFont': headingFont,
     'bodyFont': bodyFont,
     'wallpaper': _shareableWallpaper.toJson(),
-    if (mode != null) 'mode': mode!.name,
     if (fewerEffects) 'fewerEffects': true,
   };
 
@@ -72,7 +66,6 @@ class ThemePreset {
     headingFont: j['headingFont'] as String? ?? defaultHeadingFont,
     bodyFont: j['bodyFont'] as String? ?? defaultBodyFont,
     wallpaper: j['wallpaper'] is Map ? WallpaperSpec.fromJson((j['wallpaper']! as Map).cast<String, Object?>()) : const WallpaperSpec(),
-    mode: ThemeMode.values.asNameMap()[j['mode']],
     fewerEffects: j['fewerEffects'] == true,
   );
 
@@ -103,8 +96,8 @@ extension on String {
   String characters(int max) => length <= max ? this : substring(0, max);
 }
 
-// The Plain themes: a flat surface with no pattern, neutral grays with one quiet accent, one clean
-// sans-serif, and no decorative motion.
+// The Plain theme: a flat surface with no pattern, neutral grays with one quiet accent, one clean
+// sans-serif, and no decorative motion. Light or dark follows the app's own switch.
 const _plainWallpaper = WallpaperSpec(pattern: WallpaperPattern.none, palette: WallpaperPalette.flat);
 
 const builtInPresets = [
@@ -115,29 +108,6 @@ const builtInPresets = [
     headingFont: 'Google Sans',
     bodyFont: 'Google Sans',
     wallpaper: _plainWallpaper,
-    mode: ThemeMode.system,
-    fewerEffects: true,
-    builtIn: true,
-  ),
-  ThemePreset(
-    id: 'plainLight',
-    name: 'Plain Light',
-    schemeId: 'shadNeutral',
-    headingFont: 'Google Sans',
-    bodyFont: 'Google Sans',
-    wallpaper: _plainWallpaper,
-    mode: ThemeMode.light,
-    fewerEffects: true,
-    builtIn: true,
-  ),
-  ThemePreset(
-    id: 'plainDark',
-    name: 'Plain Dark',
-    schemeId: 'shadNeutral',
-    headingFont: 'Google Sans',
-    bodyFont: 'Google Sans',
-    wallpaper: _plainWallpaper,
-    mode: ThemeMode.dark,
     fewerEffects: true,
     builtIn: true,
   ),
@@ -259,7 +229,6 @@ extension ApplyPreset on AppearanceNotifier {
     headingFont: p.headingFont,
     bodyFont: p.bodyFont,
     wallpaper: p.wallpaper,
-    mode: p.mode,
     fewerEffects: p.fewerEffects,
   );
 }

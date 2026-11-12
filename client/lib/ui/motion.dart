@@ -217,7 +217,9 @@ class _ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
           shaderCallback: (bounds) => LinearGradient(
             begin: Alignment(x - 0.6, 0),
             end: Alignment(x + 0.6, 0),
-            colors: [Colors.transparent, widget.color, Colors.transparent],
+            // Fade the highlight to its own color at zero alpha, not to transparent black, which
+            // leaves grey bands either side of the shine.
+            colors: [widget.color.withValues(alpha: 0), widget.color, widget.color.withValues(alpha: 0)],
             stops: const [0, 0.5, 1],
           ).createShader(bounds),
           child: child,

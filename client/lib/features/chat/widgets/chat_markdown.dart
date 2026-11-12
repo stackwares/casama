@@ -7,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
 import '../../files/file_preview.dart';
+import '../media/markdown_image.dart';
 
 /// Bot replies as Markdown in the app's type and surfaces: comfortable paragraphs, Fraunces headings,
 /// and code in rounded panels with the language and a copy button.
@@ -82,6 +83,8 @@ class _ChatMarkdownState extends State<ChatMarkdown> {
     return base.copy(
       configs: [
         PConfig(textStyle: body),
+        // Images in the reply show bounded and tappable, from the web or the bot's computer.
+        ImgConfig(builder: (url, attributes) => ChatMarkdownImage(src: url, alt: attributes['alt'] ?? '')),
         H1Config(style: heading(22)),
         H2Config(style: heading(19)),
         H3Config(style: heading(17)),

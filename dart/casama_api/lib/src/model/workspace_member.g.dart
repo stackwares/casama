@@ -17,6 +17,8 @@ abstract class _$WorkspaceMemberCWProxy {
 
   WorkspaceMember pronouns(String? pronouns);
 
+  WorkspaceMember photoId(String? photoId);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `WorkspaceMember(...).copyWith.fieldName(value)`.
@@ -31,6 +33,7 @@ abstract class _$WorkspaceMemberCWProxy {
     WorkspaceMemberRoleEnum role,
     String? name,
     String? pronouns,
+    String? photoId,
   });
 }
 
@@ -56,6 +59,9 @@ class _$WorkspaceMemberCWProxyImpl implements _$WorkspaceMemberCWProxy {
   @override
   WorkspaceMember pronouns(String? pronouns) => call(pronouns: pronouns);
 
+  @override
+  WorkspaceMember photoId(String? photoId) => call(photoId: photoId);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `WorkspaceMember(...).copyWith.fieldName(value)`.
@@ -71,6 +77,7 @@ class _$WorkspaceMemberCWProxyImpl implements _$WorkspaceMemberCWProxy {
     Object? role = const $CopyWithPlaceholder(),
     Object? name = const $CopyWithPlaceholder(),
     Object? pronouns = const $CopyWithPlaceholder(),
+    Object? photoId = const $CopyWithPlaceholder(),
   }) {
     return WorkspaceMember(
       userId: userId == const $CopyWithPlaceholder() || userId == null
@@ -93,6 +100,10 @@ class _$WorkspaceMemberCWProxyImpl implements _$WorkspaceMemberCWProxy {
           ? _value.pronouns
           // ignore: cast_nullable_to_non_nullable
           : pronouns as String?,
+      photoId: photoId == const $CopyWithPlaceholder()
+          ? _value.photoId
+          // ignore: cast_nullable_to_non_nullable
+          : photoId as String?,
     );
   }
 }
@@ -120,9 +131,10 @@ WorkspaceMember _$WorkspaceMemberFromJson(Map<String, dynamic> json) =>
         ),
         name: $checkedConvert('name', (v) => v as String?),
         pronouns: $checkedConvert('pronouns', (v) => v as String?),
+        photoId: $checkedConvert('photo_id', (v) => v as String?),
       );
       return val;
-    }, fieldKeyMap: const {'userId': 'user_id'});
+    }, fieldKeyMap: const {'userId': 'user_id', 'photoId': 'photo_id'});
 
 Map<String, dynamic> _$WorkspaceMemberToJson(WorkspaceMember instance) =>
     <String, dynamic>{
@@ -131,6 +143,7 @@ Map<String, dynamic> _$WorkspaceMemberToJson(WorkspaceMember instance) =>
       'role': _$WorkspaceMemberRoleEnumEnumMap[instance.role]!,
       'name': ?instance.name,
       'pronouns': ?instance.pronouns,
+      'photo_id': ?instance.photoId,
     };
 
 const _$WorkspaceMemberRoleEnumEnumMap = {

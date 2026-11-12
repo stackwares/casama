@@ -10538,6 +10538,13 @@
               "string",
               "null"
             ]
+          },
+          "photo_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
           }
         },
         "required": [
@@ -12269,18 +12276,6 @@
           "items"
         ]
       },
-      "DeletedUserFact": {
-        "type": "object",
-        "properties": {
-          "deleted": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "deleted"
-        ]
-      },
       "AboutYou": {
         "type": "object",
         "properties": {
@@ -12313,6 +12308,19 @@
           },
           "name_asked": {
             "type": "boolean"
+          },
+          "photo_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "provider_photo": {
+            "type": "boolean"
+          },
+          "photo_import_tried": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -12323,6 +12331,18 @@
           "reply_style",
           "learn",
           "name_asked"
+        ]
+      },
+      "DeletedUserFact": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "deleted"
         ]
       },
       "ProfileSpace": {
@@ -12339,6 +12359,35 @@
         "required": [
           "org_id",
           "shared"
+        ]
+      },
+      "ImportProfilePhotoRequest": {
+        "type": "object",
+        "properties": {
+          "replace": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SetProfilePhotoRequest": {
+        "type": "object",
+        "properties": {
+          "content_type": {
+            "type": "string",
+            "enum": [
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ]
+          },
+          "data": {
+            "type": "string",
+            "maxLength": 1400000
+          }
+        },
+        "required": [
+          "content_type",
+          "data"
         ]
       },
       "SetProfileSpaceRequest": {
@@ -18546,6 +18595,94 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/computers/{id}/files/pdf-preview": {
+      "get": {
+        "operationId": "computerFilePdfPreview",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "A document (Word, Excel, PowerPoint, OpenDocument, RTF) as a PDF, for previewing",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "required": true,
+            "name": "path",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The document as a PDF",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "This kind of file has no PDF preview, or the computer can't make one",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The conversion failed or took too long",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -30444,6 +30581,96 @@
         }
       }
     },
+    "/v1/me/photo": {
+      "delete": {
+        "operationId": "deleteProfilePhoto",
+        "tags": [
+          "about-you"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remove your profile photo",
+        "responses": {
+          "200": {
+            "description": "About you",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AboutYou"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "setProfilePhoto",
+        "tags": [
+          "about-you"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Set your profile photo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetProfilePhotoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "About you",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AboutYou"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/me/facts/{id}": {
       "delete": {
         "operationId": "deleteUserFact",
@@ -30783,6 +31010,63 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/photo/import": {
+      "post": {
+        "operationId": "importProfilePhoto",
+        "tags": [
+          "about-you"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Copy the photo your sign-in provider shares (Google) as your profile photo",
+        "description": "Without replace it only copies once, and only while you have no photo. It finishes quietly when there's nothing to copy or the provider can't be reached.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportProfilePhotoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "About you",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AboutYou"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
             "content": {
               "application/problem+json": {
                 "schema": {

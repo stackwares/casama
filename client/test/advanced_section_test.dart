@@ -62,25 +62,27 @@ void main() {
     expect((await SharedPreferences.getInstance()).getStringList('advanced.open'), isNull);
   });
 
-  testWidgets('Settings keeps secrets, computers, devices and bot steps under Advanced', (tester) async {
+  testWidgets('Settings keeps secrets, computers and devices under Advanced, everyday options outside', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await setSize(tester, const Size(430, 2400));
     await tester.pumpWidget(harness(FakeBackend(), const SettingsScreen()));
     await tester.pumpAndSettle();
-    for (final everyday in ['Model keys', 'Skills', 'People', 'Quiet hours']) {
+    for (final everyday in ['Model keys', 'Skills', 'People', 'Quiet hours', 'Appearance']) {
       expect(find.text(everyday), findsWidgets, reason: everyday);
     }
-    for (final key in ['settingsSecrets', 'settingsComputers', 'settingsDevices', 'showBotSteps']) {
+    for (final key in ['settingsSecrets', 'settingsComputers', 'settingsDevices']) {
       expect(find.byKey(Key(key)), findsNothing, reason: key);
     }
-    // Color scheme, fonts and background live on the Themes page now.
-    expect(find.byKey(const Key('settingsThemes')), findsOneWidget);
+    // Bot steps is an everyday switch now; light/dark, themes and fewer effects sit behind Appearance.
+    expect(find.byKey(const Key('showBotSteps')), findsOneWidget);
+    expect(find.byKey(const Key('settingsAppearance')), findsOneWidget);
+    expect(find.byKey(const Key('settingsThemes')), findsNothing);
     expect(find.byKey(const Key('settingsFonts')), findsNothing);
 
     await tester.ensureVisible(find.byKey(const Key('advanced-settings')));
     await tester.tap(find.byKey(const Key('advanced-settings')));
     await tester.pumpAndSettle();
-    for (final key in ['settingsSecrets', 'settingsComputers', 'settingsDevices', 'showBotSteps']) {
+    for (final key in ['settingsSecrets', 'settingsComputers', 'settingsDevices']) {
       expect(find.byKey(Key(key)), findsOneWidget, reason: key);
     }
   });

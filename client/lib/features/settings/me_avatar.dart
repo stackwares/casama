@@ -4,28 +4,18 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
-import '../../theme/app_colors.dart';
+import '../../ui/person_avatar.dart';
 import 'about_you_screen.dart';
+import 'profile_photo.dart';
 
-/// The signed-in person's initial in an accent-tinted circle.
+/// The signed-in person's profile photo (D-202), else their initial in an accent-tinted circle.
 class MeAvatar extends ConsumerWidget {
   const MeAvatar({super.key, this.size = 36});
   final double size;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = context.colorScheme;
-    final label = meLabel(ref);
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.16), shape: BoxShape.circle),
-      alignment: Alignment.center,
-      child: Text(
-        label.isEmpty ? '?' : label.characters.first.toUpperCase(),
-        style: context.textTheme.titleSmall?.copyWith(color: scheme.primary, fontWeight: FontWeight.w800, fontSize: size * 0.42, height: 1),
-      ),
-    );
+    return PersonAvatar(label: meLabel(ref), photoUrl: myPhotoUrl(ref), size: size);
   }
 }
 

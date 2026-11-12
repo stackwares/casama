@@ -550,12 +550,6 @@ abstract class AppLocalizations {
   /// **'Tasks'**
   String get navTasks;
 
-  /// No description provided for @settingsYouSection.
-  ///
-  /// In en, this message translates to:
-  /// **'You'**
-  String get settingsYouSection;
-
   /// No description provided for @settingsConnectionsSection.
   ///
   /// In en, this message translates to:
@@ -571,7 +565,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAdvancedSummary.
   ///
   /// In en, this message translates to:
-  /// **'Secrets, computers, devices, bot steps'**
+  /// **'Secrets, computers, devices'**
   String get settingsAdvancedSummary;
 
   /// No description provided for @bots.
@@ -3873,6 +3867,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No preview for this kind of file. Open or save it to view it.'**
   String get previewUnavailable;
+
+  /// No description provided for @openInSystemPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in your video player'**
+  String get openInSystemPlayer;
+
+  /// No description provided for @playMedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get playMedia;
+
+  /// No description provided for @fullScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Full screen'**
+  String get fullScreen;
+
+  /// No description provided for @exitFullScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit full screen'**
+  String get exitFullScreen;
+
+  /// No description provided for @pdfPageCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 page} other{{count} pages}}'**
+  String pdfPageCount(int count);
+
+  /// No description provided for @openInBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in browser'**
+  String get openInBrowser;
+
+  /// No description provided for @convertingToPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting a preview ready…'**
+  String get convertingToPdf;
+
+  /// No description provided for @tableFirstRows.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing the first {count} rows'**
+  String tableFirstRows(int count);
+
+  /// No description provided for @imageCouldNotLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load this picture'**
+  String get imageCouldNotLoad;
+
+  /// No description provided for @mediaKindImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get mediaKindImage;
+
+  /// No description provided for @mediaKindVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get mediaKindVideo;
+
+  /// No description provided for @mediaKindAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get mediaKindAudio;
+
+  /// No description provided for @mediaKindPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF'**
+  String get mediaKindPdf;
 
   /// No description provided for @openFileInChat.
   ///
@@ -11398,6 +11470,42 @@ abstract class AppLocalizations {
   /// **'Your bots read this so they can call you by name and answer the way you like. Only you can see it.'**
   String get aboutYouIntro;
 
+  /// No description provided for @photoChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change profile photo'**
+  String get photoChange;
+
+  /// No description provided for @photoTake.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get photoTake;
+
+  /// No description provided for @photoChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a photo'**
+  String get photoChoose;
+
+  /// No description provided for @photoUseGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Use my Google photo'**
+  String get photoUseGoogle;
+
+  /// No description provided for @photoRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get photoRemove;
+
+  /// No description provided for @photoUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'That file isn\'t a photo Casama can use. Try a JPEG or PNG.'**
+  String get photoUnreadable;
+
   /// No description provided for @whatToCallYou.
   ///
   /// In en, this message translates to:
@@ -11881,8 +11989,20 @@ abstract class AppLocalizations {
   /// No description provided for @fewerEffectsHelp.
   ///
   /// In en, this message translates to:
-  /// **'No celebrations, bouncing tabs or animated bots. The Plain themes turn this on.'**
+  /// **'No celebrations, bouncing tabs or animated bots. The Plain theme turns this on.'**
   String get fewerEffectsHelp;
+
+  /// No description provided for @settingsAppSection.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get settingsAppSection;
+
+  /// No description provided for @settingsSecuritySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in & security'**
+  String get settingsSecuritySection;
 
   /// No description provided for @customize.
   ///

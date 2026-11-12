@@ -161,6 +161,35 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     }) as never;
   });
 
+  // Office documents as PDF (D-205). LibreOffice on the computer converts them, once per file
+  // version: the result is cached in ~/.cache/casama-previews under a hash of the path and its
+  // modified time. Checked by extension first, so other files never wake the computer.
+  app.openapi(routes.computerFilePdfPreview, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const { path } = c.req.valid("query");
+    if (!pdfPreviewable(path))
+      throw new ApiError(415, "preview_unsupported", "This kind of file has no PDF preview");
+    const h = await handle(claims, id);
+    const { collectExec } = await import("@casama/sandbox");
+    const r = await collectExec(
+      h.exec(pdfPreviewScript(absoluteComputerPath(h.resolvePath?.(path) ?? path)), {
+        timeoutMs: 90_000,
+      }),
+    );
+    if (r.code === 44) throw new ApiError(404, "not_found", "No such file");
+    if (r.code === 45)
+      throw new ApiError(415, "preview_unsupported", "This computer can't make PDF previews");
+    const out = r.stdout.trim().split("\n").pop() ?? "";
+    if (r.code !== 0 || !out.endsWith(".pdf"))
+      throw new ApiError(422, "preview_failed", "Couldn't make a preview of this document");
+    const pdf = await sandbox(() => h.readFile(out));
+    return c.body(Buffer.from(pdf), 200, {
+      "content-type": "application/pdf",
+      "cache-control": "private, no-cache",
+    }) as never;
+  });
+
   app.openapi(routes.uploadComputerFile, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
@@ -450,3 +479,57 @@ function isResize(data: unknown) {
 }
 
 export type { ComputerRow };
+
+const PDF_PREVIEW_TYPES = new Set([
+  "doc",
+  "docx",
+  "odt",
+  "rtf",
+  "xls",
+  "xlsx",
+  "ods",
+  "ppt",
+  "pptx",
+  "odp",
+]);
+
+/** Whether a file is an office document that previews as a PDF. */
+export function pdfPreviewable(path: string) {
+  const name = path.split("/").pop() ?? "";
+  const dot = name.lastIndexOf(".");
+  return dot > 0 && PDF_PREVIEW_TYPES.has(name.slice(dot + 1).toLowerCase());
+}
+
+const HOME = "/home/casama";
+
+/** A files API path (relative to ~/workspace, `~/…`, or absolute) as an absolute path. */
+export function absoluteComputerPath(path: string) {
+  if (path.startsWith("/")) return path;
+  if (path.startsWith("~/")) return `${HOME}/${path.slice(2)}`;
+  return `${HOME}/workspace/${path.replace(/^\.\//, "")}`;
+}
+
+const shellQuote = (s: string) => `'${s.replace(/'/g, "'\\''")}'`;
+
+/**
+ * Converts one document with LibreOffice and prints the cached PDF's path. Exit 44: no such
+ * file; 45: no LibreOffice here; 46: the conversion failed.
+ */
+export function pdfPreviewScript(file: string) {
+  return [
+    `f=${shellQuote(file)}`,
+    `[ -f "$f" ] || exit 44`,
+    "command -v soffice >/dev/null 2>&1 || exit 45",
+    `key=$(printf '%s:%s' "$f" "$(stat -c %Y "$f")" | sha1sum | cut -c1-40)`,
+    `d="$HOME/.cache/casama-previews"; mkdir -p "$d"`,
+    `out="$d/$key.pdf"`,
+    `if [ ! -s "$out" ]; then`,
+    `  tmp=$(mktemp -d)`,
+    `  timeout 60 soffice --headless --norestore "-env:UserInstallation=file:///tmp/casama-lo-profile" --convert-to pdf --outdir "$tmp" "$f" >/dev/null 2>&1 || { rm -rf "$tmp"; exit 46; }`,
+    `  pdf=$(ls "$tmp"/*.pdf 2>/dev/null | head -n 1)`,
+    `  [ -n "$pdf" ] || { rm -rf "$tmp"; exit 46; }`,
+    `  mv "$pdf" "$out"; rm -rf "$tmp"`,
+    "fi",
+    `echo "$out"`,
+  ].join("\n");
+}

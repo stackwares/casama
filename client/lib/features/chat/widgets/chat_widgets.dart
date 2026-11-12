@@ -19,9 +19,9 @@ import '../../settings/totp_scan.dart';
 import '../../../ui/app_card.dart';
 import '../../../ui/tool_words.dart';
 import '../../../ui/bot_avatar.dart';
-import '../../../ui/cover_image.dart';
 import '../../../ui/motion.dart';
 import '../chat_controller.dart';
+import '../media/attachment_view.dart';
 import 'chat_markdown.dart';
 import 'message_actions.dart';
 import '../../../ui/glow_button.dart';
@@ -91,14 +91,7 @@ class UserBubble extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         if (attachments.isNotEmpty)
-          Wrap(
-            alignment: WrapAlignment.end,
-            spacing: AppSpace.xs,
-            runSpacing: AppSpace.xs,
-            children: [
-              for (final a in attachments) AttachmentTile(attachment: a),
-            ],
-          ),
+          MediaGroup(files: attachments, alignment: WrapAlignment.end),
         if (text.isNotEmpty) ...[
           if (attachments.isNotEmpty) const SizedBox(height: 6),
           _bubble(context),
@@ -265,6 +258,14 @@ class AssistantMessage extends StatelessWidget {
     if (entry.text.isEmpty && entry.streaming) {
       return WorkingIndicator(status: status ?? context.l10n.thinking);
     }
+    // Media the reply made (a generated image or video, D-205) shows under its text.
+    final media = entry.attachments;
+    if (entry.text.isEmpty && media.isNotEmpty) {
+      return Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: MediaGroup(files: media),
+      );
+    }
     final scheme = context.colorScheme;
     final bubble = DecoratedBox(
       decoration: BoxDecoration(
@@ -307,7 +308,7 @@ class AssistantMessage extends StatelessWidget {
         ),
       ),
     );
-    return Align(
+    final message = Align(
       alignment: AlignmentDirectional.centerStart,
       child: entry.streaming
           ? bubble
@@ -318,6 +319,13 @@ class AssistantMessage extends StatelessWidget {
               speakKey: Key('speak-${entry.id}'),
               child: bubble,
             ),
+    );
+    if (media.isEmpty || entry.streaming) return message;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      spacing: AppSpace.xs,
+      children: [message, MediaGroup(files: media)],
     );
   }
 }
@@ -451,109 +459,13 @@ class WorkingIndicator extends StatelessWidget {
 }
 
 /// An attached file: a thumbnail for images, a chip for the rest. Tap to open it.
-class AttachmentTile extends ConsumerWidget {
+class AttachmentTile extends StatelessWidget {
   const AttachmentTile({super.key, required this.attachment});
   final AttachmentRef attachment;
 
+  // Pictures, players, PDF cards and file cards all live in media/ (D-205).
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final scope = FileLinkScope.maybeOf(context);
-    final path = computerPathFromLink(attachment.path) ?? attachment.path;
-    final scheme = context.colorScheme;
-    void open() => scope?.open(path);
-    if (attachment.isImage && scope?.computerId != null) {
-      final bytes = ref
-          .watch(computerFileProvider((scope!.computerId!, path)))
-          .value;
-      return Tooltip(
-        message: attachment.name,
-        child: InkWell(
-          key: Key('attachment-${attachment.path}'),
-          onTap: open,
-          borderRadius: BorderRadius.circular(AppRadius.tile),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.tile),
-            child: Container(
-              width: 168,
-              height: 126,
-              color: scheme.surfaceContainerHigh,
-              child: bytes == null
-                  ? Center(
-                      child: Icon(
-                        LucideIcons.image,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    )
-                  // Decoded at thumbnail size, not the photo's full resolution.
-                  : Image(
-                      image: CoverMemoryImage.sized(
-                        bytes,
-                        const Size(168, 126),
-                        MediaQuery.devicePixelRatioOf(context),
-                      ),
-                      fit: BoxFit.cover,
-                      gaplessPlayback: true,
-                      errorBuilder: (_, _, _) => Icon(
-                        LucideIcons.imageOff,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-            ),
-          ),
-        ),
-      );
-    }
-    return Material(
-      color: scheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: AppRadius.rowAll,
-        side: BorderSide(color: context.appColors.hairline),
-      ),
-      child: InkWell(
-        key: Key('attachment-${attachment.path}'),
-        onTap: open,
-        customBorder: RoundedRectangleBorder(borderRadius: AppRadius.rowAll),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 8, 14, 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                fileIconFor(attachment.name),
-                size: 20,
-                color: scheme.primary,
-              ),
-              const SizedBox(width: AppSpace.xs),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 220),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      attachment.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (attachment.size > 0)
-                      Text(
-                        formatBytes(attachment.size, context.l10n.localeName),
-                        style: context.textTheme.labelSmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => AttachmentView(attachment: attachment);
 }
 
 // ---------------------------------------------------------------------------------------------

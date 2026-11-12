@@ -17,9 +17,9 @@
 	</array>
 
 	<key>NSCameraUsageDescription</key>
-	<string>Casama uses the camera when you take a photo to send to a bot.</string>
+	<string>Casama uses the camera when you take a photo to send to a bot or for your profile.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Casama opens your photo library when you choose a photo to send to a bot.</string>
+	<string>Casama opens your photo library when you choose a photo to send to a bot or for your profile.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Your bots can answer questions about your schedule and add events, only when you turn on Calendar in Device connections.</string>
 	<key>NSCalendarsUsageDescription</key>

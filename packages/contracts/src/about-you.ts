@@ -12,8 +12,29 @@ export const AboutYou = z
     learn: z.boolean(),
     /** The one-time "What should bots call you?" card was answered or dismissed. */
     name_asked: z.boolean(),
+    /** Profile photo (D-202): the current photo's id, served at /v1/photos/{id}. */
+    photo_id: Uuid.nullable().optional(),
+    /** The sign-in provider (Google) shared a photo that "Use my Google photo" can copy. */
+    provider_photo: z.boolean().optional(),
+    /** The sign-in photo was already copied once (or found missing); it isn't copied again by itself. */
+    photo_import_tried: z.boolean().optional(),
   })
   .openapi("AboutYou");
+
+/** A new profile photo: a JPEG, PNG or WebP of at most 1 MB, base64-encoded. */
+export const SetProfilePhotoRequest = z
+  .object({
+    content_type: z.enum(["image/jpeg", "image/png", "image/webp"]),
+    data: z.base64().max(1_400_000),
+  })
+  .openapi("SetProfilePhotoRequest");
+
+export const ImportProfilePhotoRequest = z
+  .object({
+    /** Copy it even if there's a photo already or it was copied before ("Use my Google photo"). */
+    replace: z.boolean().optional(),
+  })
+  .openapi("ImportProfilePhotoRequest");
 
 export const UpdateAboutYouRequest = z
   .object({

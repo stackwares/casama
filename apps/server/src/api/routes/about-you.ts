@@ -8,6 +8,12 @@ import { routes } from "@casama/contracts";
 import { contentKeys } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
+import {
+  fetchProviderPhoto,
+  MAX_PHOTO_BYTES,
+  providerPhotoUrl,
+  sniffPhotoType,
+} from "../../services/profile-photos.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 
@@ -47,9 +53,15 @@ export function registerAboutYouRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       reply_style: string | null;
       learn: boolean | null;
       name_asked_at: string | null;
+      photo_id: string | null;
+      photo_import_tried_at: string | null;
+      meta: Record<string, unknown> | null;
     }>(sql`
-      select p.display_name, p.preferred_name, p.pronouns, a.about, a.reply_style, a.learn, a.name_asked_at
+      select p.display_name, p.preferred_name, p.pronouns, a.about, a.reply_style, a.learn, a.name_asked_at,
+             ph.id as photo_id, p.photo_import_tried_at, u.raw_user_meta_data as meta
       from public.profiles p left join public.user_about a on a.user_id = p.user_id
+      left join public.profile_photos ph on ph.user_id = p.user_id
+      left join auth.users u on u.id = p.user_id
       where p.user_id = ${userId}::uuid`);
     return {
       display_name: r?.display_name ?? null,
@@ -59,8 +71,88 @@ export function registerAboutYouRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       reply_style: r?.reply_style ?? "",
       learn: r?.learn ?? true,
       name_asked: !!r?.name_asked_at || !!orNull(r?.preferred_name),
+      photo_id: r?.photo_id ?? null,
+      provider_photo: !!providerPhotoUrl(r?.meta),
+      photo_import_tried: !!r?.photo_import_tried_at,
     };
   };
+
+  // Profile photos (D-202). A new photo replaces the old one under a new id, so cached copies of
+  // the old address never show the new picture or the other way round.
+  const savePhoto = async (
+    userId: string,
+    bytes: Uint8Array,
+    type: string,
+    source: "upload" | "provider",
+  ) => {
+    await db.execute(sql`
+      insert into public.profile_photos (user_id, content_type, bytes, source)
+      values (${userId}::uuid, ${type}, ${Buffer.from(bytes)}, ${source})
+      on conflict (user_id) do update set id = gen_random_uuid(), content_type = excluded.content_type,
+        bytes = excluded.bytes, source = excluded.source, created_at = now()`);
+  };
+
+  app.openapi(routes.setProfilePhoto, async (c) => {
+    const userId = me(c);
+    const b = c.req.valid("json");
+    const bytes = new Uint8Array(Buffer.from(b.data, "base64"));
+    if (bytes.length === 0 || bytes.length > MAX_PHOTO_BYTES)
+      throw new ApiError(400, "photo_too_big", "Photos can be up to 1 MB");
+    const type = sniffPhotoType(bytes);
+    if (!type || type !== b.content_type)
+      throw new ApiError(400, "photo_unreadable", "That file isn't a JPEG, PNG or WebP picture");
+    await savePhoto(userId, bytes, type, "upload");
+    return c.json(await read(userId), 200);
+  });
+
+  app.openapi(routes.deleteProfilePhoto, async (c) => {
+    const userId = me(c);
+    await db.execute(sql`delete from public.profile_photos where user_id = ${userId}::uuid`);
+    // Removed on purpose: the sign-in photo doesn't come back by itself.
+    await db.execute(sql`
+      update public.profiles set photo_import_tried_at = coalesce(photo_import_tried_at, now())
+      where user_id = ${userId}::uuid`);
+    return c.json(await read(userId), 200);
+  });
+
+  app.openapi(routes.importProfilePhoto, async (c) => {
+    const userId = me(c);
+    const { replace = false } = c.req.valid("json");
+    const [r] = await db.execute<{
+      has_photo: boolean;
+      tried: boolean;
+      meta: Record<string, unknown> | null;
+    }>(sql`
+      select exists (select 1 from public.profile_photos where user_id = p.user_id) as has_photo,
+             p.photo_import_tried_at is not null as tried, u.raw_user_meta_data as meta
+      from public.profiles p left join auth.users u on u.id = p.user_id
+      where p.user_id = ${userId}::uuid`);
+    if (r && (replace || (!r.has_photo && !r.tried))) {
+      const url = providerPhotoUrl(r.meta);
+      const photo = url ? await fetchProviderPhoto(url) : null;
+      if (photo) await savePhoto(userId, photo.bytes, photo.type, "provider");
+      else if (replace)
+        throw new ApiError(400, "photo_unavailable", "Couldn't get your photo from Google");
+      await db.execute(sql`
+        update public.profiles set photo_import_tried_at = now() where user_id = ${userId}::uuid`);
+    }
+    return c.json(await read(userId), 200);
+  });
+
+  // The picture itself, without a token: the id is random and changes with every new photo, and
+  // only people who can see the profile are given it. Cached for good.
+  app.get("/v1/photos/:id", async (c) => {
+    const id = c.req.param("id");
+    if (!/^[0-9a-f-]{36}$/i.test(id)) throw new ApiError(404, "photo_not_found", "No such photo");
+    const [p] = await db.execute<{ content_type: string; bytes: Buffer }>(sql`
+      select content_type, bytes from public.profile_photos where id = ${id}::uuid`);
+    if (!p) throw new ApiError(404, "photo_not_found", "No such photo");
+    return c.body(new Uint8Array(p.bytes), 200, {
+      "content-type": p.content_type,
+      "cache-control": "public, max-age=31536000, immutable",
+      "content-security-policy": "default-src 'none'",
+    });
+  });
 
   app.openapi(routes.getAboutYou, async (c) => c.json(await read(me(c)), 200));
 

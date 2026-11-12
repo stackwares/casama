@@ -3304,6 +3304,44 @@ export const joinRequests = pgTable("join_requests", {
 	check("join_requests_status_check", sql`status = ANY (ARRAY['pending'::text, 'approved'::text, 'declined'::text])`),
 ]);
 
+export const userKeys = pgTable("user_keys", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	wrappedKey: text("wrapped_key").notNull(),
+	wrapper: text().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	rotatedAt: timestamp("rotated_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "user_keys_user_id_fkey"
+		}).onDelete("cascade"),
+	unique("user_keys_user_id_key").on(table.userId),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+]);
+
+export const profilePhotos = pgTable("profile_photos", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	contentType: text("content_type").notNull(),
+	// TODO: failed to parse database type 'bytea'
+	bytes: text("bytes").notNull(),
+	source: text().default('upload').notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "profile_photos_user_id_fkey"
+		}).onDelete("cascade"),
+	unique("profile_photos_user_id_key").on(table.userId),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("profile_photos_content_type_check", sql`content_type = ANY (ARRAY['image/jpeg'::text, 'image/png'::text, 'image/webp'::text])`),
+	check("profile_photos_bytes_check", sql`(octet_length(bytes) >= 1) AND (octet_length(bytes) <= 1048576)`),
+	check("profile_photos_source_check", sql`source = ANY (ARRAY['upload'::text, 'provider'::text])`),
+]);
+
 export const profiles = pgTable("profiles", {
 	userId: uuid("user_id").primaryKey().notNull(),
 	displayName: text("display_name"),
@@ -3315,6 +3353,7 @@ export const profiles = pgTable("profiles", {
 	phoneNumber: text("phone_number"),
 	preferredName: text("preferred_name"),
 	pronouns: text(),
+	photoImportTriedAt: timestamp("photo_import_tried_at", { withTimezone: true, mode: 'string' }),
 }, (table) => [
 	foreignKey({
 			columns: [table.userId],
@@ -3331,23 +3370,6 @@ export const profiles = pgTable("profiles", {
 	check("profiles_phone_number_check", sql`(phone_number IS NULL) OR (phone_number ~ '^\+[1-9][0-9]{7,14}$'::text)`),
 	check("profiles_preferred_name_check", sql`(preferred_name IS NULL) OR (char_length(preferred_name) <= 60)`),
 	check("profiles_pronouns_check", sql`(pronouns IS NULL) OR (char_length(pronouns) <= 40)`),
-]);
-
-export const userKeys = pgTable("user_keys", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	userId: uuid("user_id").notNull(),
-	wrappedKey: text("wrapped_key").notNull(),
-	wrapper: text().notNull(),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	rotatedAt: timestamp("rotated_at", { withTimezone: true, mode: 'string' }),
-}, (table) => [
-	foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "user_keys_user_id_fkey"
-		}).onDelete("cascade"),
-	unique("user_keys_user_id_key").on(table.userId),
-	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 ]);
 
 export const userFacts = pgTable("user_facts", {
@@ -3406,6 +3428,33 @@ export const userAbout = pgTable("user_about", {
 	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 	check("user_about_about_check", sql`(char_length(about) <= 1500) OR ((about ~~ 'enc:v1:%'::text) AND (char_length(about) <= 9000))`),
 	check("user_about_reply_style_check", sql`(char_length(reply_style) <= 600) OR ((reply_style ~~ 'enc:v1:%'::text) AND (char_length(reply_style) <= 4000))`),
+]);
+
+export const chatMedia = pgTable("chat_media", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id"),
+	runId: uuid("run_id"),
+	conversationId: uuid("conversation_id"),
+	name: text(),
+	contentType: text("content_type").notNull(),
+	// TODO: failed to parse database type 'bytea'
+	bytes: text("bytes").notNull(),
+	size: integer().notNull(),
+	width: integer(),
+	height: integer(),
+	durationS: real("duration_s"),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("chat_media_org_id_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")),
+	index("chat_media_run_id_idx").using("btree", table.runId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "chat_media_org_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("chat_media_size_check", sql`(size >= 1) AND (size <= 52428800)`),
 ]);
 
 export const agentImportFiles = pgTable("agent_import_files", {

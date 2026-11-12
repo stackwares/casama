@@ -238,6 +238,10 @@ describe("cross-tenant sweep (Phase 8 security review)", () => {
       "addUserFacts",
       "updateUserFact",
       "deleteUserFact",
+      // Profile photos (D-202) belong to the caller; profile-photos.test.ts checks isolation.
+      "setProfilePhoto",
+      "deleteProfilePhoto",
+      "importProfilePhoto",
     ]);
     for (const [path, ops] of Object.entries(doc.paths)) {
       if (!path.startsWith("/v1/")) continue;

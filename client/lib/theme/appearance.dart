@@ -31,7 +31,7 @@ class Appearance {
   final WallpaperSpec wallpaper;
 
   /// No decorative motion: no celebration bursts, no bouncing tabs, no wiggling or animated bots
-  /// (see [Effects]). The Plain themes turn it on.
+  /// (see [Effects]). The Plain theme turns it on.
   final bool fewerEffects;
 
   ThemeChoice get scheme => themeChoiceById(schemeId);
@@ -214,17 +214,16 @@ class AppearanceNotifier extends Notifier<Appearance> {
     });
   }
 
-  /// A whole look at once, from a preset, a saved theme or the gallery (light/dark only when the
-  /// theme sets it). "Show in the whole app" stays as it is: it's this person's preference, not
-  /// part of a look. The look changes in one step, then it's saved. [gallery] is registered first
-  /// when the scheme comes from the gallery.
+  /// A whole look at once, from a preset, a saved theme or the gallery. Light or dark and "Show in
+  /// the whole app" stay as they are: they're this person's preferences, not part of a look. The
+  /// look changes in one step, then it's saved. [gallery] is registered first when the scheme
+  /// comes from the gallery.
   Future<void> apply({
     required String schemeId,
     ThemeChoice? gallery,
     required String headingFont,
     required String bodyFont,
     required WallpaperSpec wallpaper,
-    ThemeMode? mode,
     bool? fewerEffects,
   }) async {
     if (gallery != null) gallerySchemeChoices[gallery.id] = gallery;
@@ -234,11 +233,9 @@ class AppearanceNotifier extends Notifier<Appearance> {
       headingFont: headingFont,
       bodyFont: bodyFont,
       wallpaper: wallpaper,
-      mode: mode,
       fewerEffects: fewerEffects,
     );
     await _save((p) async {
-      if (mode != null) await p.setString(_modeKey, mode.name);
       if (fewerEffects != null) await p.setBool(_fewerEffectsKey, fewerEffects);
       await p.setString(_schemeKey, state.schemeId);
       await p.setString(_headingKey, headingFont);

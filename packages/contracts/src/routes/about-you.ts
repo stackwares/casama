@@ -1,5 +1,11 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { AboutYou, UpdateAboutYouRequest, UserFact } from "../about-you.ts";
+import {
+  AboutYou,
+  ImportProfilePhotoRequest,
+  SetProfilePhotoRequest,
+  UpdateAboutYouRequest,
+  UserFact,
+} from "../about-you.ts";
 import { jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
 
 /**
@@ -123,4 +129,40 @@ export const setProfileSpace = createRoute({
     body: jsonBody(z.object({ shared: z.boolean() }).openapi("SetProfileSpaceRequest")),
   },
   responses: { 200: jsonResponse("Sharing", ProfileSpace), 400: e400, 401: e401, 404: e404 },
+});
+
+// Profile photo (D-202). Each change returns About you with the new photo_id. The picture itself
+// is served at GET /v1/photos/{id} (no token, cached for good: a new photo gets a new id).
+export const setProfilePhoto = createRoute({
+  operationId: "setProfilePhoto",
+  method: "put",
+  path: "/v1/me/photo",
+  tags: ["about-you"],
+  security,
+  summary: "Set your profile photo",
+  request: { body: jsonBody(SetProfilePhotoRequest) },
+  responses: { 200: jsonResponse("About you", AboutYou), 400: e400, 401: e401 },
+});
+
+export const deleteProfilePhoto = createRoute({
+  operationId: "deleteProfilePhoto",
+  method: "delete",
+  path: "/v1/me/photo",
+  tags: ["about-you"],
+  security,
+  summary: "Remove your profile photo",
+  responses: { 200: jsonResponse("About you", AboutYou), 401: e401 },
+});
+
+export const importProfilePhoto = createRoute({
+  operationId: "importProfilePhoto",
+  method: "post",
+  path: "/v1/me/photo/import",
+  tags: ["about-you"],
+  security,
+  summary: "Copy the photo your sign-in provider shares (Google) as your profile photo",
+  description:
+    "Without replace it only copies once, and only while you have no photo. It finishes quietly when there's nothing to copy or the provider can't be reached.",
+  request: { body: jsonBody(ImportProfilePhotoRequest) },
+  responses: { 200: jsonResponse("About you", AboutYou), 400: e400, 401: e401 },
 });

@@ -873,6 +873,40 @@ class FakeBackend implements Backend {
       about = (value.preferredName?.trim().isNotEmpty ?? false)
       ? value.copyWith(nameAsked: true)
       : value;
+  // Profile photo (D-202)
+  var photoUploads = 0;
+  @override
+  Future<AboutYouView> setProfilePhoto(Uint8List bytes, String contentType) async {
+    photoUploads++;
+    return about = _withPhoto('photo-$photoUploads');
+  }
+
+  @override
+  Future<AboutYouView> removeProfilePhoto() async => about = _withPhoto(null, tried: true);
+
+  @override
+  Future<AboutYouView> importProfilePhoto({bool replace = false}) async {
+    if (!about.providerPhoto) return about;
+    if (!replace && (about.photoId != null || about.photoImportTried)) return about;
+    return about = _withPhoto('google-photo', tried: true);
+  }
+
+  AboutYouView _withPhoto(String? id, {bool? tried}) => AboutYouView(
+    displayName: about.displayName,
+    preferredName: about.preferredName,
+    pronouns: about.pronouns,
+    about: about.about,
+    replyStyle: about.replyStyle,
+    learn: about.learn,
+    nameAsked: about.nameAsked,
+    photoId: id,
+    providerPhoto: about.providerPhoto,
+    photoImportTried: tried ?? about.photoImportTried,
+  );
+
+  @override
+  String photoUrl(String photoId) => 'http://localhost:8787/v1/photos/$photoId';
+
   var nameAskedMarked = false;
   @override
   Future<void> markNameAsked() async {
@@ -3728,6 +3762,7 @@ class FakeBackend implements Backend {
   int? savedSeconds;
   Map<String, Object?>? botVoice;
 
+
   @override
   Future<String> transcribe(String botId, Uint8List audio, String mime) async {
     transcribed.add(mime);
@@ -3962,6 +3997,22 @@ class FakeBackend implements Backend {
     String computerId,
     String path,
   ) async => const [];
+  /// Office files that "convert" to a PDF in tests, by path.
+  final pdfPreviews = <String, Uint8List>{};
+  @override
+  Future<Uint8List?> computerFilePdf(String computerId, String path) async =>
+      pdfPreviews[path];
+
+  /// Chat media bytes by id.
+  final chatMediaFiles = <String, Uint8List>{};
+  @override
+  Future<Uint8List> chatMedia(String id) async =>
+      chatMediaFiles[id] ?? (throw StateError('no media $id'));
+  @override
+  String chatMediaUrl(String id) => 'http://localhost:8787/v1/media/$id';
+  @override
+  Map<String, String> get authHeaders => const {'Authorization': 'Bearer test'};
+
   @override
   Future<Uint8List> downloadFile(String computerId, String path) async =>
       uploads[path] ?? Uint8List.fromList(utf8.encode('# Hello\n\nfile $path'));

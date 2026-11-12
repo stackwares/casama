@@ -405,6 +405,25 @@ describe("approvals", () => {
       select cost_usd, model from public.usage_ledger where run_id = ${runId} and kind = 'media_images'`;
     expect(priced).toMatchObject({ model: "fal-ai/bytedance/seedream/v4.5/text-to-image" });
     expect(Number(priced?.cost_usd)).toBeCloseTo(0.04, 6);
+    // Kept for the chat (D-205) even without a computer, and shown under the reply.
+    const [kept] = await tdb.admin<
+      { id: string; content_type: string; size: number; width: number | null; n: number }[]
+    >`select id, content_type, size, width, octet_length(bytes) as n from public.chat_media where run_id = ${runId}`;
+    expect(kept).toMatchObject({ content_type: "image/png", width: 1024 });
+    expect(kept!.n).toBe(kept!.size);
+    const [reply] = await tdb.admin<{ content: Array<Record<string, unknown>> }[]>`
+      select content from public.messages where run_id = ${runId} and role = 'assistant' order by created_at desc limit 1`;
+    expect(reply!.content).toContainEqual({
+      type: "file",
+      path: `media:${kept!.id}`,
+      name: "image.png",
+      mime_type: "image/png",
+      size: kept!.size,
+      width: 1024,
+      height: 1024,
+    });
+    const completed = (await events(runId)).filter((e) => e.type === "message.completed").at(-1);
+    expect(JSON.stringify(completed?.payload)).toContain(`media:${kept!.id}`);
     const again = await startRun(botId, "make an image of a robot");
     expect((await runAgent(again, makeDeps(fix()).deps)).status).toBe("completed");
     expect((await events(again)).some((e) => e.type === "approval.requested")).toBe(false);

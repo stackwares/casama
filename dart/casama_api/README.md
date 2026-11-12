@@ -69,10 +69,13 @@ Class | Method | HTTP request | Description
 [*A2aApi*](doc/A2aApi.md) | [**getBotA2a**](doc/A2aApi.md#getbota2a) | **GET** /v1/bots/{id}/a2a | 
 [*A2aApi*](doc/A2aApi.md) | [**setBotA2a**](doc/A2aApi.md#setbota2a) | **PUT** /v1/bots/{id}/a2a | Publish a bot as an A2A agent (the workspace must have A2A on)
 [*AboutYouApi*](doc/AboutYouApi.md) | [**addUserFacts**](doc/AboutYouApi.md#adduserfacts) | **POST** /v1/me/facts | 
+[*AboutYouApi*](doc/AboutYouApi.md) | [**deleteProfilePhoto**](doc/AboutYouApi.md#deleteprofilephoto) | **DELETE** /v1/me/photo | Remove your profile photo
 [*AboutYouApi*](doc/AboutYouApi.md) | [**deleteUserFact**](doc/AboutYouApi.md#deleteuserfact) | **DELETE** /v1/me/facts/{id} | 
 [*AboutYouApi*](doc/AboutYouApi.md) | [**getAboutYou**](doc/AboutYouApi.md#getaboutyou) | **GET** /v1/me/about | What bots call you and what you shared about yourself
 [*AboutYouApi*](doc/AboutYouApi.md) | [**getProfileSpace**](doc/AboutYouApi.md#getprofilespace) | **GET** /v1/me/profile-spaces/{org_id} | Whether bots in this workspace use About me and learned facts
+[*AboutYouApi*](doc/AboutYouApi.md) | [**importProfilePhoto**](doc/AboutYouApi.md#importprofilephoto) | **POST** /v1/me/photo/import | Copy the photo your sign-in provider shares (Google) as your profile photo
 [*AboutYouApi*](doc/AboutYouApi.md) | [**listUserFacts**](doc/AboutYouApi.md#listuserfacts) | **GET** /v1/me/facts | Facts bots learned about you, pinned and newest first
+[*AboutYouApi*](doc/AboutYouApi.md) | [**setProfilePhoto**](doc/AboutYouApi.md#setprofilephoto) | **PUT** /v1/me/photo | Set your profile photo
 [*AboutYouApi*](doc/AboutYouApi.md) | [**setProfileSpace**](doc/AboutYouApi.md#setprofilespace) | **PUT** /v1/me/profile-spaces/{org_id} | 
 [*AboutYouApi*](doc/AboutYouApi.md) | [**updateAboutYou**](doc/AboutYouApi.md#updateaboutyou) | **PATCH** /v1/me/about | 
 [*AboutYouApi*](doc/AboutYouApi.md) | [**updateUserFact**](doc/AboutYouApi.md#updateuserfact) | **PATCH** /v1/me/facts/{id} | 
@@ -133,6 +136,7 @@ Class | Method | HTTP request | Description
 [*CheckinsApi*](doc/CheckinsApi.md) | [**getBotCheckins**](doc/CheckinsApi.md#getbotcheckins) | **GET** /v1/bots/{id}/checkins | 
 [*CheckinsApi*](doc/CheckinsApi.md) | [**getForYou**](doc/CheckinsApi.md#getforyou) | **GET** /v1/for-you | Your feed in a workspace: the latest briefs, pending suggestions and approvals
 [*CheckinsApi*](doc/CheckinsApi.md) | [**setBotCheckins**](doc/CheckinsApi.md#setbotcheckins) | **PUT** /v1/bots/{id}/checkins | Turn a bot&#39;s morning brief and scans on or off, and set their times and daily cap
+[*ComputersApi*](doc/ComputersApi.md) | [**computerFilePdfPreview**](doc/ComputersApi.md#computerfilepdfpreview) | **GET** /v1/computers/{id}/files/pdf-preview | A document (Word, Excel, PowerPoint, OpenDocument, RTF) as a PDF, for previewing
 [*ComputersApi*](doc/ComputersApi.md) | [**computerScreenshot**](doc/ComputersApi.md#computerscreenshot) | **GET** /v1/computers/{id}/screenshot | PNG of the desktop, or of the bot&#39;s browser page on headless computers
 [*ComputersApi*](doc/ComputersApi.md) | [**computerStream**](doc/ComputersApi.md#computerstream) | **GET** /v1/computers/{id}/stream | WebSocket live-view signaling (Neko protocol). Authenticated by the stream-session token; input is accepted only in control mode while you hold the lease.
 [*ComputersApi*](doc/ComputersApi.md) | [**computerTerminal**](doc/ComputersApi.md#computerterminal) | **GET** /v1/computers/{id}/terminal | WebSocket terminal. Binary frames carry terminal bytes both ways. Browsers may pass the access token as ?access_token&#x3D;.
@@ -555,6 +559,7 @@ Class | Method | HTTP request | Description
  - [ImportBotRequest](doc/ImportBotRequest.md)
  - [ImportBotResponse](doc/ImportBotResponse.md)
  - [ImportBotResponseConnectionsToAddInner](doc/ImportBotResponseConnectionsToAddInner.md)
+ - [ImportProfilePhotoRequest](doc/ImportProfilePhotoRequest.md)
  - [ImportWorkspaceFilesRequest](doc/ImportWorkspaceFilesRequest.md)
  - [ImportedMemoryItem](doc/ImportedMemoryItem.md)
  - [InstallCatalogSkillRequest](doc/InstallCatalogSkillRequest.md)
@@ -751,6 +756,7 @@ Class | Method | HTTP request | Description
  - [SetOrgLimitsRequest](doc/SetOrgLimitsRequest.md)
  - [SetPaymentSettingsRequest](doc/SetPaymentSettingsRequest.md)
  - [SetPaymentSettingsRequestCardholder](doc/SetPaymentSettingsRequestCardholder.md)
+ - [SetProfilePhotoRequest](doc/SetProfilePhotoRequest.md)
  - [SetProfileSpaceRequest](doc/SetProfileSpaceRequest.md)
  - [SetSecretStoreRequest](doc/SetSecretStoreRequest.md)
  - [SetTelephonyRequest](doc/SetTelephonyRequest.md)

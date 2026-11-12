@@ -913,7 +913,43 @@ class SupabaseBackend implements Backend {
     replyStyle: a.replyStyle,
     learn: a.learn,
     nameAsked: a.nameAsked,
+    photoId: a.photoId,
+    providerPhoto: a.providerPhoto ?? false,
+    photoImportTried: a.photoImportTried ?? true,
   );
+
+  @override
+  Future<AboutYouView> setProfilePhoto(
+    Uint8List bytes,
+    String contentType,
+  ) async => _about(
+    (await api.aboutYou.setProfilePhoto(
+      setProfilePhotoRequest: SetProfilePhotoRequest(
+        contentType: SetProfilePhotoRequestContentTypeEnum.values.firstWhere(
+          (t) => t.value == contentType,
+        ),
+        data: base64Encode(bytes),
+      ),
+    )).data!,
+  );
+
+  @override
+  Future<AboutYouView> removeProfilePhoto() async =>
+      _about((await api.aboutYou.deleteProfilePhoto()).data!);
+
+  @override
+  Future<AboutYouView> importProfilePhoto({bool replace = false}) async =>
+      _about(
+        (await api.aboutYou.importProfilePhoto(
+          importProfilePhotoRequest: ImportProfilePhotoRequest(
+            replace: replace,
+          ),
+        )).data!,
+      );
+
+  @override
+  String photoUrl(String photoId) =>
+      '${api.baseUrl.replaceAll(RegExp(r'/+$'), '')}/v1/photos/$photoId';
 
   @override
   Future<AboutYouView> aboutYou() async =>
@@ -1122,19 +1158,7 @@ class SupabaseBackend implements Backend {
         .join();
   }
 
-  static List<AttachmentRef> _files(Object? content) {
-    if (content is! List) return const [];
-    return [
-      for (final p in content.whereType<Map>())
-        if (p['type'] == 'file' && p['path'] is String)
-          AttachmentRef(
-            path: p['path'] as String,
-            name: '${p['name'] ?? (p['path'] as String).split('/').last}',
-            mimeType: '${p['mime_type'] ?? ''}',
-            size: (p['size'] as num?)?.toInt() ?? 0,
-          ),
-    ];
-  }
+  static List<AttachmentRef> _files(Object? content) => attachmentsOf(content);
 
   static List<UiPart> _ui(Object? content) => uiPartsOf(content);
 
@@ -3481,6 +3505,41 @@ class SupabaseBackend implements Backend {
   @override
   Future<Uint8List> downloadFile(String computerId, String path) async =>
       Uint8List.fromList(await api.downloadComputerFile(computerId, path));
+
+  @override
+  Future<Uint8List?> computerFilePdf(String computerId, String path) async {
+    // 415: not an Office file; 422: the computer couldn't convert it (D-205).
+    final res = await api.computers.computerFilePdfPreview(
+      id: computerId,
+      path: path,
+      validateStatus: (s) => s != null && (s < 300 || s == 415 || s == 422),
+    );
+    if (res.statusCode != null && res.statusCode! >= 300) return null;
+    return res.data;
+  }
+
+  @override
+  Future<Uint8List> chatMedia(String id) async {
+    final res = await api.api.dio.get<List<int>>(
+      '/v1/media/$id',
+      options: Options(
+        responseType: ResponseType.bytes,
+        headers: authHeaders,
+        receiveTimeout: const Duration(seconds: 120),
+      ),
+    );
+    return Uint8List.fromList(res.data!);
+  }
+
+  @override
+  String chatMediaUrl(String id) =>
+      '${api.baseUrl.replaceAll(RegExp(r'/+$'), '')}/v1/media/$id';
+
+  @override
+  Map<String, String> get authHeaders {
+    final token = supabase.auth.currentSession?.accessToken;
+    return {if (token != null) 'Authorization': 'Bearer $token'};
+  }
 
   @override
   Future<void> uploadFile(

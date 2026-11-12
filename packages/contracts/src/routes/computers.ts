@@ -1,5 +1,12 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { IdempotencyKeyHeader, jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
+import {
+  IdempotencyKeyHeader,
+  jsonBody,
+  jsonResponse,
+  Problem,
+  problemResponses,
+  Uuid,
+} from "../common.ts";
 import {
   Checkpoint,
   Computer,
@@ -99,6 +106,33 @@ export const downloadComputerFile = createRoute({
     },
     401: e401,
     404: e404,
+  },
+});
+
+/** Office documents preview as PDF (D-205): converted on the computer with LibreOffice and cached there. */
+export const computerFilePdfPreview = createRoute({
+  operationId: "computerFilePdfPreview",
+  method: "get",
+  path: "/v1/computers/{id}/files/pdf-preview",
+  tags: ["computers"],
+  security,
+  summary: "A document (Word, Excel, PowerPoint, OpenDocument, RTF) as a PDF, for previewing",
+  request: { params: idParam, query: z.object({ path: z.string().min(1).max(4000) }) },
+  responses: {
+    200: {
+      description: "The document as a PDF",
+      content: { "application/pdf": { schema: z.string().openapi({ format: "binary" }) } },
+    },
+    401: e401,
+    404: e404,
+    415: {
+      description: "This kind of file has no PDF preview, or the computer can't make one",
+      content: { "application/problem+json": { schema: Problem } },
+    },
+    422: {
+      description: "The conversion failed or took too long",
+      content: { "application/problem+json": { schema: Problem } },
+    },
   },
 });
 

@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 
 /// Whether the app plays its decorative motion: celebration bursts, the tab bar's stretch and
 /// wobble, a thinking bot's wiggle, the bots animating on empty screens. Off with Settings →
-/// Appearance → Fewer effects (the Plain themes turn it on) and with the system's reduce-motion
+/// Appearance → Fewer effects (the Plain theme turns it on) and with the system's reduce-motion
 /// setting. Motion that tells you something (loading, page changes) isn't decorative and stays.
 class Effects extends InheritedWidget {
   const Effects({super.key, required this.fewer, required super.child});

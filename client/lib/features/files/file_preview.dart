@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io' show File, Platform;
 
 import 'package:file_picker/file_picker.dart';
@@ -16,9 +15,8 @@ import '../../core/share.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
-import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
-import '../chat/widgets/chat_markdown.dart';
+import '../chat/media/preview_body.dart';
 import '../../ui/glow_button.dart';
 
 /// Turns a file reference a bot wrote into a path for the files API (relative to the computer's
@@ -100,20 +98,34 @@ String mimeFor(String name) => switch (_ext(name)) {
   'jpg' || 'jpeg' => 'image/jpeg',
   'gif' => 'image/gif',
   'webp' => 'image/webp',
-  'heic' => 'image/heic',
+  'heic' || 'heif' => 'image/heic',
+  'bmp' => 'image/bmp',
+  'avif' => 'image/avif',
   'svg' => 'image/svg+xml',
   'pdf' => 'application/pdf',
   'md' || 'markdown' => 'text/markdown',
   'csv' => 'text/csv',
+  'tsv' => 'text/tab-separated-values',
   'json' => 'application/json',
   'html' || 'htm' => 'text/html',
   'zip' => 'application/zip',
   'mp3' => 'audio/mpeg',
   'm4a' => 'audio/mp4',
+  'aac' => 'audio/aac',
   'wav' => 'audio/wav',
-  'mp4' => 'video/mp4',
+  'ogg' || 'oga' => 'audio/ogg',
+  'opus' => 'audio/opus',
+  'flac' => 'audio/flac',
+  'mp4' || 'm4v' => 'video/mp4',
   'mov' => 'video/quicktime',
+  'webm' => 'video/webm',
   'doc' => 'application/msword',
+  'rtf' => 'application/rtf',
+  'odt' => 'application/vnd.oasis.opendocument.text',
+  'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
+  'odp' => 'application/vnd.oasis.opendocument.presentation',
+  'xls' => 'application/vnd.ms-excel',
+  'ppt' => 'application/vnd.ms-powerpoint',
   'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'pptx' => 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
@@ -122,13 +134,14 @@ String mimeFor(String name) => switch (_ext(name)) {
 };
 
 IconData fileIconFor(String name) => switch (_ext(name)) {
-  'png' || 'jpg' || 'jpeg' || 'gif' || 'webp' || 'heic' || 'svg' => LucideIcons.image,
+  'png' || 'jpg' || 'jpeg' || 'gif' || 'webp' || 'heic' || 'heif' || 'bmp' || 'avif' || 'svg' => LucideIcons.image,
   'pdf' => LucideIcons.fileText,
-  'md' || 'markdown' || 'txt' => LucideIcons.fileText,
-  'csv' || 'xlsx' || 'tsv' => LucideIcons.table2,
+  'md' || 'markdown' || 'txt' || 'doc' || 'docx' || 'odt' || 'rtf' => LucideIcons.fileText,
+  'csv' || 'xlsx' || 'xls' || 'ods' || 'tsv' => LucideIcons.table2,
+  'ppt' || 'pptx' || 'odp' => LucideIcons.presentation,
   'zip' => LucideIcons.folderArchive,
-  'mp3' || 'm4a' || 'wav' => LucideIcons.music,
-  'mp4' || 'mov' => LucideIcons.film,
+  'mp3' || 'm4a' || 'aac' || 'wav' || 'ogg' || 'oga' || 'opus' || 'flac' => LucideIcons.music,
+  'mp4' || 'm4v' || 'mov' || 'webm' => LucideIcons.film,
   final e when _textTypes.contains(e) => LucideIcons.codeXml,
   _ => LucideIcons.file,
 };
@@ -139,10 +152,44 @@ String formatBytes(int n, String locale) {
   return '${(n / 1024 / 1024).humanizedCount(locale, decimalDigits: 1)} MB';
 }
 
-/// A file's bytes from a bot's computer, by (computer id, files API path).
+/// A file's bytes by (computer id, files API path) from a bot's computer, or a chat media file
+/// by its `media:<id>` path (the computer id is ignored then).
 final computerFileProvider = FutureProvider.autoDispose.family<Uint8List, (String, String)>(
-  (ref, key) => ref.watch(backendProvider).downloadFile(key.$1, key.$2),
+  (ref, key) => key.$2.startsWith('media:')
+      ? ref.watch(backendProvider).chatMedia(key.$2.substring('media:'.length))
+      : ref.watch(backendProvider).downloadFile(key.$1, key.$2),
 );
+
+/// Opens a file a chat shows: chat media (`media:<id>`) right here, anything else on the bot's
+/// computer through [FileLinkScope].
+void openChatFile(BuildContext context, String path, {String? name}) {
+  if (path.startsWith('media:')) {
+    showComputerFile(context, computerId: '', path: path, name: name);
+    return;
+  }
+  FileLinkScope.maybeOf(context)?.open(path);
+}
+
+/// Hands [bytes] to the system: opens them in the default app on desktops, shares them on phones.
+Future<void> openFileBytes(BuildContext context, String name, Uint8List bytes, {Rect? origin}) async {
+  if (_desktop) {
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/casama/$name');
+    await file.parent.create(recursive: true);
+    await file.writeAsBytes(bytes);
+    final ok = await launchUrl(Uri.file(file.path));
+    if (!ok && context.mounted) showWarning(context, context.l10n.noAppToOpen(name));
+    return;
+  }
+  await shareFiles(
+    [XFile.fromData(bytes, name: name, mimeType: mimeFor(name))],
+    names: [name],
+    origin: origin ?? shareOrigin(context),
+  );
+}
+
+/// Whether "open" means the default app (desktops) rather than the share sheet.
+bool get opensInDefaultApp => _desktop;
 
 /// Lets chat content (Markdown links, tool steps, attachments) open files from the bot's computer.
 class FileLinkScope extends InheritedWidget {
@@ -160,47 +207,43 @@ class FileLinkScope extends InheritedWidget {
 
 /// Shows a file from a bot's computer: a preview when the app can render it, plus Open, Save and
 /// Share. A sheet on phones, a dialog on larger windows.
-Future<void> showComputerFile(BuildContext context, {required String computerId, required String path}) {
+Future<void> showComputerFile(BuildContext context, {required String computerId, required String path, String? name}) {
   return showAdaptiveSheet<void>(
     context: context,
     heightFactor: 0.85,
     contentPadsBottom: true,
     dialogMaxWidth: 760,
     dialogMaxHeight: 820,
-    builder: (_) => FilePreview(computerId: computerId, path: path),
+    builder: (_) => FilePreview(computerId: computerId, path: path, name: name),
   );
 }
 
 bool get _desktop => !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
 
 class FilePreview extends ConsumerWidget {
-  const FilePreview({super.key, required this.computerId, required this.path});
+  const FilePreview({super.key, required this.computerId, required this.path, this.name});
+
+  /// The bot's computer; empty for chat media (`media:<id>` paths).
   final String computerId;
   final String path;
 
-  Future<void> _open(BuildContext context, Uint8List bytes, {Rect? origin}) async {
-    final name = fileNameOf(path);
-    if (_desktop) {
-      final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/casama/$name');
-      await file.parent.create(recursive: true);
-      await file.writeAsBytes(bytes);
-      final ok = await launchUrl(Uri.file(file.path));
-      if (!ok && context.mounted) showWarning(context, context.l10n.noAppToOpen(name));
-      return;
-    }
-    await _share(context, bytes, origin: origin);
-  }
+  /// The file's name when the path doesn't say it (chat media).
+  final String? name;
+
+  /// Chat media shows its own name (passed in), not its `media:` id.
+  String get _name => name ?? fileNameOf(path);
+
+  Future<void> _open(BuildContext context, Uint8List bytes, {Rect? origin}) => openFileBytes(context, _name, bytes, origin: origin);
 
   Future<void> _save(BuildContext context, Uint8List bytes) async {
-    final name = fileNameOf(path);
+    final name = _name;
     // The picker writes the file itself on every platform.
     final saved = await FilePicker.saveFile(fileName: name, bytes: bytes, mimeType: mimeFor(name));
     if (saved != null && context.mounted) showSuccess(context, context.l10n.savedFile(name));
   }
 
   Future<void> _share(BuildContext context, Uint8List bytes, {Rect? origin}) async {
-    final name = fileNameOf(path);
+    final name = _name;
     await shareFiles(
       [XFile.fromData(bytes, name: name, mimeType: mimeFor(name))],
       names: [name],
@@ -212,7 +255,7 @@ class FilePreview extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
-    final name = fileNameOf(path);
+    final name = _name;
     final data = ref.watch(computerFileProvider((computerId, path)));
     final bytes = data.value;
     return Column(
@@ -241,7 +284,10 @@ class FilePreview extends ConsumerWidget {
                       style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                     ),
                     Text(
-                      [path.startsWith('~/') || path.startsWith('/') ? path : 'workspace/$path', if (bytes != null) formatBytes(bytes.length, context.l10n.localeName)].join(' · '),
+                      [
+                        if (!path.startsWith('media:')) path.startsWith('~/') || path.startsWith('/') ? path : 'workspace/$path',
+                        if (bytes != null) formatBytes(bytes.length, context.l10n.localeName),
+                      ].join(' · '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
@@ -295,7 +341,7 @@ class FilePreview extends ConsumerWidget {
           child: AsyncView(
             value: data,
             onRetry: () => ref.invalidate(computerFileProvider((computerId, path))),
-            data: (bytes) => _Body(name: name, bytes: bytes, onOpen: () => _open(context, bytes)),
+            data: (bytes) => _Body(name: name, bytes: bytes, computerId: computerId, path: path, onOpen: () => _open(context, bytes)),
           ),
         ),
       ],
@@ -304,52 +350,22 @@ class FilePreview extends ConsumerWidget {
 }
 
 class _Body extends StatelessWidget {
-  const _Body({required this.name, required this.bytes, required this.onOpen});
+  const _Body({required this.name, required this.bytes, required this.computerId, required this.path, required this.onOpen});
   final String name;
   final Uint8List bytes;
+  final String computerId;
+  final String path;
   final VoidCallback onOpen;
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final mime = mimeFor(name);
-    if (mime.startsWith('image/') && mime != 'image/svg+xml' && mime != 'image/heic') {
-      return InteractiveViewer(
-        maxScale: 6,
-        child: Center(
-          child: Image.memory(
-            bytes,
-            fit: BoxFit.contain,
-            errorBuilder: (_, _, _) => _Unsupported(name: name, onOpen: onOpen),
-          ),
-        ),
-      );
-    }
-    final isText = mime.startsWith('text/') || mime == 'application/json';
-    if (isText) {
-      final text = utf8.decode(bytes.length > 400 * 1024 ? bytes.sublist(0, 400 * 1024) : bytes, allowMalformed: true);
-      if (mime == 'text/markdown') {
-        return SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg, AppSpace.lg, BottomPadding.of(context, minimum: AppSpace.lg)),
-          child: ChatMarkdown(data: text),
-        );
-      }
-      return SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(AppSpace.md, AppSpace.md, AppSpace.md, BottomPadding.of(context, minimum: AppSpace.md)),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(AppSpace.md),
-          decoration: BoxDecoration(
-            color: context.appColors.codeBackground,
-            borderRadius: BorderRadius.circular(AppRadius.row),
-            border: Border.all(color: context.appColors.hairline),
-          ),
-          child: SelectableText(text, style: AppText.mono),
-        ),
-      );
-    }
-    return _Unsupported(name: name, onOpen: onOpen, hint: l10n.previewUnavailable);
-  }
+  Widget build(BuildContext context) => PreviewBody(
+    name: name,
+    bytes: bytes,
+    computerId: computerId,
+    path: path,
+    onOpen: onOpen,
+    unsupported: ([hint]) => _Unsupported(name: name, onOpen: onOpen, hint: hint),
+  );
 }
 
 class _Unsupported extends StatelessWidget {

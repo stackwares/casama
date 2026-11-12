@@ -181,6 +181,7 @@ import 'package:casama_api/src/model/ice_server.dart';
 import 'package:casama_api/src/model/import_bot_request.dart';
 import 'package:casama_api/src/model/import_bot_response.dart';
 import 'package:casama_api/src/model/import_bot_response_connections_to_add_inner.dart';
+import 'package:casama_api/src/model/import_profile_photo_request.dart';
 import 'package:casama_api/src/model/import_workspace_files_request.dart';
 import 'package:casama_api/src/model/imported_memory_item.dart';
 import 'package:casama_api/src/model/install_catalog_skill_request.dart';
@@ -366,6 +367,7 @@ import 'package:casama_api/src/model/set_memory_backend_request.dart';
 import 'package:casama_api/src/model/set_org_limits_request.dart';
 import 'package:casama_api/src/model/set_payment_settings_request.dart';
 import 'package:casama_api/src/model/set_payment_settings_request_cardholder.dart';
+import 'package:casama_api/src/model/set_profile_photo_request.dart';
 import 'package:casama_api/src/model/set_profile_space_request.dart';
 import 'package:casama_api/src/model/set_secret_store_request.dart';
 import 'package:casama_api/src/model/set_telephony_request.dart';
@@ -886,6 +888,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ImportBotResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ImportBotResponseConnectionsToAddInner':
           return ImportBotResponseConnectionsToAddInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ImportProfilePhotoRequest':
+          return ImportProfilePhotoRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ImportWorkspaceFilesRequest':
           return ImportWorkspaceFilesRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ImportedMemoryItem':
@@ -1289,6 +1293,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SetPaymentSettingsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetPaymentSettingsRequestCardholder':
           return SetPaymentSettingsRequestCardholder.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetProfilePhotoRequest':
+          return SetProfilePhotoRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetProfileSpaceRequest':
           return SetProfileSpaceRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetSecretStoreRequest':

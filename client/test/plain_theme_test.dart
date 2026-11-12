@@ -12,57 +12,48 @@ ThemePreset preset(String id) => builtInPresets.firstWhere((p) => p.id == id);
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  test('the Plain themes come first: flat, no pattern, fewer effects, each with its own light or dark', () {
-    expect(builtInPresets.take(3).map((p) => p.id), [
-      'plain',
-      'plainLight',
-      'plainDark',
-    ]);
-    for (final p in builtInPresets.take(3)) {
-      expect(p.wallpaper.pattern, WallpaperPattern.none);
-      expect(p.wallpaper.palette, WallpaperPalette.flat);
-      expect(p.fewerEffects, isTrue);
-    }
-    expect(preset('plain').mode, ThemeMode.system);
-    expect(preset('plainLight').mode, ThemeMode.light);
-    expect(preset('plainDark').mode, ThemeMode.dark);
+  test('Plain comes first: flat, no pattern, fewer effects', () {
+    final p = builtInPresets.first;
+    expect(p.id, 'plain');
+    expect(p.wallpaper.pattern, WallpaperPattern.none);
+    expect(p.wallpaper.palette, WallpaperPalette.flat);
+    expect(p.fewerEffects, isTrue);
+    expect(builtInPresets.where((p) => p.fewerEffects), hasLength(1));
   });
 
-  test('Plain Dark switches to dark with fewer effects, survives a restart, and a colorful theme brings effects back', () async {
+  test('Plain keeps light or dark as it is, turns on fewer effects, survives a restart, and a colorful theme brings effects back', () async {
     final c = ProviderContainer();
     addTearDown(c.dispose);
     // Let the saved look finish loading first, as it does before the app's first frame.
     c.read(appearanceProvider);
     await pumpEventQueue();
-    await c.read(appearanceProvider.notifier).applyPreset(preset('plainDark'));
-    var a = c.read(appearanceProvider);
-    expect(a.mode, ThemeMode.dark);
-    expect(a.fewerEffects, isTrue);
-    expect(preset('plainDark').matches(a), isTrue);
-    expect(preset('plainLight').matches(a), isFalse);
-    expect(preset('plain').matches(a), isFalse);
+    final notifier = c.read(appearanceProvider.notifier);
+    for (final mode in [ThemeMode.dark, ThemeMode.light]) {
+      await notifier.setMode(mode);
+      await notifier.applyPreset(preset('plain'));
+      final a = c.read(appearanceProvider);
+      expect(a.mode, mode);
+      expect(a.fewerEffects, isTrue);
+      expect(preset('plain').matches(a), isTrue);
+    }
 
     final saved = await AppearanceNotifier.readSaved();
-    expect(saved!.mode, ThemeMode.dark);
-    expect(saved.fewerEffects, isTrue);
+    expect(saved!.fewerEffects, isTrue);
     expect(saved.wallpaper.palette, WallpaperPalette.flat);
 
-    // Colorful themes keep the current light/dark and turn the effects back on.
-    await c.read(appearanceProvider.notifier).applyPreset(preset('ocean'));
-    a = c.read(appearanceProvider);
-    expect(a.mode, ThemeMode.dark);
-    expect(a.fewerEffects, isFalse);
+    await notifier.applyPreset(preset('ocean'));
+    expect(c.read(appearanceProvider).fewerEffects, isFalse);
   });
 
-  test('a shared Plain theme carries its light/dark and fewer effects', () {
-    final back = ThemePreset.fromCode(preset('plainLight').toCode())!;
-    expect(back.mode, ThemeMode.light);
+  test('a shared Plain theme carries fewer effects', () {
+    final back = ThemePreset.fromCode(preset('plain').toCode())!;
     expect(back.fewerEffects, isTrue);
     expect(back.wallpaper.palette, WallpaperPalette.flat);
-    // Older codes without them still read.
-    final old = ThemePreset.fromCode(preset('ocean').toCode())!;
-    expect(old.mode, isNull);
-    expect(old.fewerEffects, isFalse);
+    // Codes without it still read.
+    expect(
+      ThemePreset.fromCode(preset('ocean').toCode())!.fewerEffects,
+      isFalse,
+    );
   });
 
   testWidgets('decorative motion is off with fewer effects or reduced motion', (

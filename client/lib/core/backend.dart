@@ -11,26 +11,68 @@ class AttachmentRef {
     required this.name,
     required this.mimeType,
     required this.size,
+    this.width,
+    this.height,
+    this.durationS,
   });
+
+  /// A path on the bot's computer, or `media:<id>` for media kept with the chat (served by
+  /// [Backend.chatMediaUrl]), such as a generated image or video.
   final String path;
   final String name;
   final String mimeType;
   final int size;
 
+  /// The picture's or video's own size and a clip's length, when known (to reserve space).
+  final int? width;
+  final int? height;
+  final double? durationS;
+
   bool get isImage => mimeType.startsWith('image/');
+
+  /// Kept with the chat rather than on a computer.
+  bool get isChatMedia => path.startsWith('media:');
+
+  /// The chat media id for a `media:` path.
+  String? get mediaId => isChatMedia ? path.substring('media:'.length) : null;
 
   Map<String, Object?> toJson() => {
     'path': path,
     'name': name,
     'mime_type': mimeType,
     'size': size,
+    if (width != null) 'width': width,
+    if (height != null) 'height': height,
+    if (durationS != null) 'duration_s': durationS,
   };
   static AttachmentRef fromJson(Map<String, dynamic> j) => AttachmentRef(
     path: j['path'] as String,
     name: j['name'] as String,
     mimeType: j['mime_type'] as String,
     size: (j['size'] as num).toInt(),
+    width: (j['width'] as num?)?.toInt(),
+    height: (j['height'] as num?)?.toInt(),
+    durationS: (j['duration_s'] as num?)?.toDouble(),
   );
+}
+
+/// The file parts of a message's content (`{type: "file", path, name, mime_type, size, ...}`),
+/// from loaded history and from a live `message.completed`.
+List<AttachmentRef> attachmentsOf(Object? content) {
+  if (content is! List) return const [];
+  return [
+    for (final p in content.whereType<Map>())
+      if (p['type'] == 'file' && p['path'] is String)
+        AttachmentRef(
+          path: p['path'] as String,
+          name: '${p['name'] ?? (p['path'] as String).split('/').last}',
+          mimeType: '${p['mime_type'] ?? ''}',
+          size: (p['size'] as num?)?.toInt() ?? 0,
+          width: (p['width'] as num?)?.toInt(),
+          height: (p['height'] as num?)?.toInt(),
+          durationS: (p['duration_s'] as num?)?.toDouble(),
+        ),
+  ];
 }
 
 /// One item from the open gallery (D-184). [document] is the theme, scheme or wallpaper JSON.
@@ -385,6 +427,9 @@ class AboutYouView {
     this.replyStyle = '',
     this.learn = true,
     this.nameAsked = true,
+    this.photoId,
+    this.providerPhoto = false,
+    this.photoImportTried = true,
   });
   final String? displayName;
   final String? preferredName;
@@ -397,6 +442,15 @@ class AboutYouView {
 
   /// The one-time "What should bots call you?" card was answered or dismissed.
   final bool nameAsked;
+
+  /// Profile photo (D-202): the current photo's id (see [Backend.photoUrl]), or null.
+  final String? photoId;
+
+  /// Google shared a photo at sign-in that "Use my Google photo" can copy.
+  final bool providerPhoto;
+
+  /// The sign-in photo was already copied once, or the person removed their photo.
+  final bool photoImportTried;
 
   /// The name bots use: the preferred name, else the first word of the sign-in name.
   String get name {
@@ -421,6 +475,9 @@ class AboutYouView {
     replyStyle: replyStyle ?? this.replyStyle,
     learn: learn ?? this.learn,
     nameAsked: nameAsked ?? this.nameAsked,
+    photoId: photoId,
+    providerPhoto: providerPhoto,
+    photoImportTried: photoImportTried,
   );
 }
 
@@ -700,6 +757,16 @@ abstract class Backend {
   Future<AboutYouView> aboutYou();
   Future<void> saveAboutYou(AboutYouView value);
   Future<void> markNameAsked();
+  // Profile photo (D-202)
+  /// Sets the person's photo from a JPEG, PNG or WebP of at most 1 MB.
+  Future<AboutYouView> setProfilePhoto(Uint8List bytes, String contentType);
+  Future<AboutYouView> removeProfilePhoto();
+
+  /// Copies the Google sign-in photo: once by itself, or again when [replace]d on request.
+  Future<AboutYouView> importProfilePhoto({bool replace = false});
+
+  /// Where a profile photo is served, for showing it.
+  String photoUrl(String photoId);
   Future<List<UserFactView>> userFacts();
   Future<void> addUserFacts(List<({String kind, String content})> facts);
   Future<void> updateUserFact(String id, {String? content, bool? pinned});
@@ -1352,6 +1419,19 @@ abstract class Backend {
   Future<Computer> stopComputer(String id);
   Future<List<ComputerFileEntry>> listFiles(String computerId, String path);
   Future<Uint8List> downloadFile(String computerId, String path);
+
+  /// A Word, Excel or PowerPoint file on the computer as a PDF, for the preview; null when the
+  /// file can't be turned into one.
+  Future<Uint8List?> computerFilePdf(String computerId, String path);
+
+  // Chat media: generated images and videos kept with the chat, at `media:<id>`.
+  Future<Uint8List> chatMedia(String id);
+
+  /// Where a chat media file is served (needs [authHeaders]); supports range requests.
+  String chatMediaUrl(String id);
+
+  /// The current sign-in, for players and images that load straight from the API.
+  Map<String, String> get authHeaders;
   Future<void> uploadFile(String computerId, String path, Uint8List bytes);
   Future<void> deleteFile(String computerId, String path);
   Future<List<Checkpoint>> checkpoints(String computerId);

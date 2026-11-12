@@ -324,8 +324,13 @@ export function partsText(content: unknown): string {
       );
     }
   }
+  // Media the bot generated and showed under its reply (D-205): kept in the chat, not on a
+  // computer, so it's a note rather than a file to open.
+  for (const f of partsFiles(content))
+    if (f.path.startsWith("media:"))
+      notes.push(`(You showed the person a generated ${f.mime_type || "file"}: ${f.name}.)`);
   const withNotes = [text, ...notes].filter(Boolean).join("\n\n");
-  const files = partsFiles(content);
+  const files = partsFiles(content).filter((f) => !f.path.startsWith("media:"));
   if (!files.length) return withNotes;
   const list = files.map((f) => `- ${f.path} (${f.mime_type || "file"}, ${kb(f.size)})`).join("\n");
   return `${withNotes}${withNotes ? "\n\n" : ""}Attached files (on your computer, under the home folder):\n${list}`;
@@ -1293,7 +1298,8 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
         text: fromBot(currentRow)
           ? asChat(currentRow, partsText(currentRow.content))
           : partsText(currentRow.content),
-        files: partsFiles(currentRow.content),
+        // Another bot's generated media (D-205) lives in the chat, not on a computer.
+        files: partsFiles(currentRow.content).filter((f) => !f.path.startsWith("media:")),
       };
     // Skills the person attached with the / picker load up front (D-104).
     const attached = partsSkills(currentRow?.content);
@@ -2212,7 +2218,33 @@ async function saveFinalMessage(
     surface_id: r.payload.surface_id,
     messages: r.payload.messages,
   }));
-  const content: Array<Record<string, unknown>> = [{ type: "text", text: final.text }, ...ui];
+  // Images and videos the bot generated during the run (D-205) show under the reply.
+  const media = await db.execute<{
+    id: string;
+    name: string | null;
+    content_type: string;
+    size: number;
+    width: number | null;
+    height: number | null;
+    duration_s: number | null;
+  }>(sql`
+    select id, name, content_type, size, width, height, duration_s from public.chat_media
+    where run_id = ${info.runId}::uuid order by created_at, id`);
+  const files = [...media].map((m) => ({
+    type: "file",
+    path: `media:${m.id}`,
+    name: m.name ?? (m.content_type.startsWith("video/") ? "video.mp4" : "image"),
+    mime_type: m.content_type,
+    size: Number(m.size),
+    ...(m.width != null ? { width: m.width } : {}),
+    ...(m.height != null ? { height: m.height } : {}),
+    ...(m.duration_s != null ? { duration_s: Number(m.duration_s) } : {}),
+  }));
+  const content: Array<Record<string, unknown>> = [
+    { type: "text", text: final.text },
+    ...ui,
+    ...files,
+  ];
   if (info.conversationId) {
     await db.execute(sql`
       insert into public.messages (id, org_id, conversation_id, role, content, run_id, parent_message_id, bot_id)

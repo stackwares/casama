@@ -16,8 +16,6 @@ import '../../core/widgets.dart';
 import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
-import '../../theme/appearance.dart';
-import '../../theme/presets.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/advanced_section.dart';
 import '../../ui/form_sheet.dart';
@@ -25,9 +23,10 @@ import '../voice/wake_word.dart';
 import '../voice/wake_word_sheet.dart';
 import '../../ui/page.dart';
 import 'about_you_screen.dart';
+import 'appearance_screen.dart';
+import 'me_avatar.dart';
 import 'version_indicator.dart';
 import '../../ui/app_card.dart';
-import '../../ui/segmented.dart';
 import '../../ui/shell_header.dart';
 import '../admin/admin_screen.dart';
 import '../notifications/quiet_hours.dart';
@@ -73,16 +72,7 @@ class SettingsScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(AppSpace.md),
                 child: Row(
                   children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(color: scheme.primary.withValues(alpha: 0.16), shape: BoxShape.circle),
-                      alignment: Alignment.center,
-                      child: Text(
-                        name.isNotEmpty ? name.characters.first.toUpperCase() : (email.isEmpty ? '?' : email.characters.first.toUpperCase()),
-                        style: context.textTheme.titleLarge?.copyWith(color: scheme.primary, fontWeight: FontWeight.w800),
-                      ),
-                    ),
+                    const MeAvatar(size: 52),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -110,61 +100,10 @@ class SettingsScreen extends ConsumerWidget {
                   ],
                 ),
               );
-          // Four groups (D-176): you, how the app looks, the workspace, and what bots connect to,
-          // then the rarely needed options folded under Advanced (D-182). Two columns on wide windows.
+          // Most-used first (D-176): the workspace, how the app behaves, what bots connect to, then
+          // sign-in and security, with the rarely needed options folded under Advanced (D-182). Two
+          // columns on wide windows.
           final left = <Widget>[
-              SectionHeader(title: l10n.settingsYouSection),
-              GroupedCard(
-                children: [
-                  GroupedTile(
-                    key: const Key('settingsQuietHours'),
-                    icon: LucideIcons.moon,
-                    title: l10n.quietHours,
-                    subtitle: switch (ref.watch(quietHoursProvider).value) {
-                      final q? => quietSummary(context, q),
-                      null => l10n.off,
-                    },
-                    onTap: () => showQuietHours(context, ref),
-                  ),
-                  // Wake word (D-144): desktop and Android.
-                  if (wakeWordSupported)
-                    GroupedTile(
-                      key: const Key('settingsWakeWord'),
-                      icon: LucideIcons.audioLines,
-                      title: l10n.wakeWord,
-                      subtitle: ref.watch(wakeWordProvider).enabled ? l10n.wakeWordOnRow(ref.watch(wakeWordProvider).phrase) : l10n.wakeWordRow,
-                      onTap: () => showAdaptiveSheet<void>(context: context, builder: (_) => const WakeWordSheet()),
-                    ),
-                  GroupedTile(
-                    key: const Key('settingsAccount'),
-                    icon: LucideIcons.circleUser,
-                    title: l10n.account,
-                    subtitle: backend.userEmail.orPlaceholder(l10n.accountRow),
-                    onTap: () => open('/settings/account'), selected: sel('/settings/account'),
-                  ),
-                  GroupedTile(
-                    key: const Key('settingsTwoStep'),
-                    icon: LucideIcons.smartphone,
-                    title: l10n.twoStepSignIn,
-                    subtitle: org?.requireMfa == true && org?.role != OrgRole.member && !backend.twoStepVerified ? l10n.twoStepNeededForAdmin : l10n.twoStepHelp,
-                    onTap: () => open('/settings/two-step'), selected: sel('/settings/two-step'),
-                  ),
-                  // Passkeys (D-183): when the server has them and this device can make them.
-                  if (ref.watch(authMethodsProvider).value?.passkeys == true)
-                    GroupedTile(
-                      key: const Key('settingsPasskeys'),
-                      icon: LucideIcons.keyRound,
-                      title: l10n.passkeys,
-                      subtitle: l10n.passkeysRow,
-                      onTap: () => open('/settings/passkeys'), selected: sel('/settings/passkeys'),
-                    ),
-                  GroupedTile(key: const Key('settingsPrivacy'), icon: LucideIcons.shieldCheck, title: l10n.privacy, subtitle: l10n.privacyRowHelp, onTap: () => open('/settings/privacy'), selected: sel('/settings/privacy')),
-                ],
-              ),
-              SectionHeader(title: l10n.appearance),
-              const _AppearanceCard(),
-          ];
-          final right = <Widget>[
               SectionHeader(title: l10n.workspace),
               GroupedCard(
                 children: [
@@ -223,10 +162,71 @@ class SettingsScreen extends ConsumerWidget {
                     GroupedTile(key: const Key('settingsAdmin'), icon: LucideIcons.shieldUser, title: l10n.adminConsole, subtitle: l10n.adminRowHelp, onTap: () => open('/settings/admin'), selected: sel('/settings/admin')),
                 ],
               ),
+              SectionHeader(title: l10n.settingsAppSection),
+              GroupedCard(
+                children: [
+                  GroupedTile(
+                    key: const Key('settingsAppearance'),
+                    icon: LucideIcons.swatchBook,
+                    title: l10n.appearance,
+                    subtitle: appearanceSummary(context, ref),
+                    onTap: () => open('/settings/appearance'), selected: sel('/settings/appearance'),
+                  ),
+                  GroupedTile(
+                    key: const Key('settingsQuietHours'),
+                    icon: LucideIcons.moon,
+                    title: l10n.quietHours,
+                    subtitle: switch (ref.watch(quietHoursProvider).value) {
+                      final q? => quietSummary(context, q),
+                      null => l10n.off,
+                    },
+                    onTap: () => showQuietHours(context, ref),
+                  ),
+                  // Wake word (D-144): desktop and Android.
+                  if (wakeWordSupported)
+                    GroupedTile(
+                      key: const Key('settingsWakeWord'),
+                      icon: LucideIcons.audioLines,
+                      title: l10n.wakeWord,
+                      subtitle: ref.watch(wakeWordProvider).enabled ? l10n.wakeWordOnRow(ref.watch(wakeWordProvider).phrase) : l10n.wakeWordRow,
+                      onTap: () => showAdaptiveSheet<void>(context: context, builder: (_) => const WakeWordSheet()),
+                    ),
+                  // Off by default: chats show what the bot is doing, not each step (D-162).
+                  SwitchListTile(
+                    key: const Key('showBotSteps'),
+                    secondary: Icon(LucideIcons.listTree, color: scheme.onSurfaceVariant),
+                    title: Text(l10n.showBotSteps),
+                    subtitle: Text(l10n.showBotStepsHelp),
+                    value: ref.watch(showBotStepsProvider),
+                    onChanged: hapticOnChanged(ref.read(showBotStepsProvider.notifier).set),
+                  ),
+                  // Desktop downloads update themselves (the stores update theirs); Linux is told.
+                  if (selfUpdating || updateNoticeOnly) const _UpdatesRows(),
+                  // Mac: start with the system, ready for the quick-ask shortcut and the menu bar icon.
+                  if (ref.watch(launchAtLoginProvider).value case final on?)
+                    SwitchListTile(
+                      key: const Key('openAtLogin'),
+                      secondary: Icon(LucideIcons.power, color: scheme.onSurfaceVariant),
+                      title: Text(l10n.openAtLogin),
+                      subtitle: Text(l10n.openAtLoginHelp),
+                      value: on,
+                      onChanged: hapticOnChanged((v) async {
+                        await runGuarded(context, () => setLaunchAtLogin(v));
+                        ref.invalidate(launchAtLoginProvider);
+                      }),
+                    ),
+                  GroupedTile(
+                    icon: LucideIcons.languages,
+                    title: l10n.language,
+                    trailing: Text(_languageName(Localizations.localeOf(context)), style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
+                  ),
+                ],
+              ),
+          ];
+          final right = <Widget>[
               SectionHeader(title: l10n.settingsConnectionsSection),
               GroupedCard(
                 children: [
-                  GroupedTile(icon: LucideIcons.keyRound, title: l10n.modelKeys, subtitle: l10n.modelKeysHelp, onTap: () => open('/settings/keys'), selected: sel('/settings/keys')),
                   GroupedTile(
                     key: const Key('settingsIntegrations'),
                     icon: LucideIcons.puzzle,
@@ -235,6 +235,36 @@ class SettingsScreen extends ConsumerWidget {
                     onTap: () => open('/settings/integrations'), selected: sel('/settings/integrations'),
                   ),
                   GroupedTile(icon: LucideIcons.bookOpen, title: l10n.skills, subtitle: l10n.skillsRowHelp, onTap: () => open('/settings/skills'), selected: sel('/settings/skills')),
+                  GroupedTile(icon: LucideIcons.keyRound, title: l10n.modelKeys, subtitle: l10n.modelKeysHelp, onTap: () => open('/settings/keys'), selected: sel('/settings/keys')),
+                ],
+              ),
+              SectionHeader(title: l10n.settingsSecuritySection),
+              GroupedCard(
+                children: [
+                  GroupedTile(
+                    key: const Key('settingsAccount'),
+                    icon: LucideIcons.circleUser,
+                    title: l10n.account,
+                    subtitle: backend.userEmail.orPlaceholder(l10n.accountRow),
+                    onTap: () => open('/settings/account'), selected: sel('/settings/account'),
+                  ),
+                  GroupedTile(
+                    key: const Key('settingsTwoStep'),
+                    icon: LucideIcons.smartphone,
+                    title: l10n.twoStepSignIn,
+                    subtitle: org?.requireMfa == true && org?.role != OrgRole.member && !backend.twoStepVerified ? l10n.twoStepNeededForAdmin : l10n.twoStepHelp,
+                    onTap: () => open('/settings/two-step'), selected: sel('/settings/two-step'),
+                  ),
+                  // Passkeys (D-183): when the server has them and this device can make them.
+                  if (ref.watch(authMethodsProvider).value?.passkeys == true)
+                    GroupedTile(
+                      key: const Key('settingsPasskeys'),
+                      icon: LucideIcons.keyRound,
+                      title: l10n.passkeys,
+                      subtitle: l10n.passkeysRow,
+                      onTap: () => open('/settings/passkeys'), selected: sel('/settings/passkeys'),
+                    ),
+                  GroupedTile(key: const Key('settingsPrivacy'), icon: LucideIcons.shieldCheck, title: l10n.privacy, subtitle: l10n.privacyRowHelp, onTap: () => open('/settings/privacy'), selected: sel('/settings/privacy')),
                 ],
               ),
               // Everything most people never need, in one fold that stays open once opened (D-182).
@@ -264,40 +294,6 @@ class SettingsScreen extends ConsumerWidget {
                           subtitle: l10n.companionRowHelp,
                           onTap: () => open('/settings/companion'), selected: sel('/settings/companion'),
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpace.sm),
-                  GroupedCard(
-                    children: [
-                      // Off by default: chats show what the bot is doing, not each step (D-162).
-                      SwitchListTile(
-                        key: const Key('showBotSteps'),
-                        secondary: Icon(LucideIcons.listTree, color: scheme.onSurfaceVariant),
-                        title: Text(l10n.showBotSteps),
-                        subtitle: Text(l10n.showBotStepsHelp),
-                        value: ref.watch(showBotStepsProvider),
-                        onChanged: hapticOnChanged(ref.read(showBotStepsProvider.notifier).set),
-                      ),
-                      // Desktop downloads update themselves (the stores update theirs); Linux is told.
-                      if (selfUpdating || updateNoticeOnly) const _UpdatesRows(),
-                      // Mac: start with the system, ready for the quick-ask shortcut and the menu bar icon.
-                      if (ref.watch(launchAtLoginProvider).value case final on?)
-                        SwitchListTile(
-                          key: const Key('openAtLogin'),
-                          secondary: Icon(LucideIcons.power, color: scheme.onSurfaceVariant),
-                          title: Text(l10n.openAtLogin),
-                          subtitle: Text(l10n.openAtLoginHelp),
-                          value: on,
-                          onChanged: hapticOnChanged((v) async {
-                            await runGuarded(context, () => setLaunchAtLogin(v));
-                            ref.invalidate(launchAtLoginProvider);
-                          }),
-                        ),
-                      GroupedTile(
-                        icon: LucideIcons.languages,
-                        title: l10n.language,
-                        trailing: Text(_languageName(Localizations.localeOf(context)), style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
-                      ),
                     ],
                   ),
                 ],
@@ -353,83 +349,6 @@ String _roleLabel(BuildContext context, OrgRole role) => switch (role) {
   OrgRole.admin => context.l10n.roleAdmin,
   _ => context.l10n.roleMember,
 };
-
-/// Light or dark, and the theme (its page holds the color scheme, fonts and background, D-182).
-class _AppearanceCard extends ConsumerWidget {
-  const _AppearanceCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final appearance = ref.watch(appearanceProvider);
-    final notifier = ref.read(appearanceProvider.notifier);
-    final scheme = context.colorScheme;
-    Widget row({required Key key, required Widget leading, required String title, required String subtitle, required String route}) => InkWell(
-      key: key,
-      borderRadius: BorderRadius.circular(AppRadius.row),
-      onTap: () => context.push(route),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Row(
-          children: [
-            SizedBox(width: 44, height: 44, child: Center(child: leading)),
-            const SizedBox(width: AppSpace.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: context.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-                  ),
-                ],
-              ),
-            ),
-            Icon(LucideIcons.chevronRight, size: 20, color: scheme.onSurfaceVariant),
-          ],
-        ),
-      ),
-    );
-    return AppCard(
-      padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.md, AppSpace.sm, AppSpace.xs),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: AppSpace.xxs),
-            child: AppSegmentedControl<ThemeMode>(
-              values: const [ThemeMode.light, ThemeMode.system, ThemeMode.dark],
-              labels: {ThemeMode.light: l10n.themeLight, ThemeMode.system: l10n.themeSystem, ThemeMode.dark: l10n.themeDark},
-              icons: const {ThemeMode.light: LucideIcons.sun, ThemeMode.system: LucideIcons.sunMoon, ThemeMode.dark: LucideIcons.moon},
-              groupValue: appearance.mode,
-              onValueChanged: notifier.setMode,
-            ),
-          ),
-          const SizedBox(height: AppSpace.xs),
-          row(
-            key: const Key('settingsThemes'),
-            leading: Icon(LucideIcons.swatchBook, size: 22, color: scheme.primary),
-            title: l10n.themes,
-            subtitle: [...builtInPresets, ...ref.watch(savedThemesProvider)].where((p) => p.matches(appearance)).firstOrNull?.name ?? l10n.currentLook,
-            route: '/settings/themes',
-          ),
-          SwitchListTile(
-            key: const Key('fewerEffects'),
-            contentPadding: const EdgeInsets.only(right: AppSpace.xxs),
-            secondary: SizedBox(width: 44, child: Icon(LucideIcons.wandSparkles, size: 22, color: scheme.primary)),
-            title: Text(l10n.fewerEffects, style: context.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
-            subtitle: Text(l10n.fewerEffectsHelp),
-            value: appearance.fewerEffects,
-            onChanged: hapticOnChanged(notifier.setFewerEffects),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 /// A bot's read-aloud and dictation providers (each uses the workspace's own key).
 class VoiceSettingsDialog extends ConsumerStatefulWidget {

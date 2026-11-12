@@ -38,12 +38,12 @@ class MessageEntry extends ChatEntry {
   /// Edited versions of a message are siblings; arrows switch between them (D-108).
   final int siblingIndex;
   final int siblingCount;
-  MessageEntry copyWith({String? text, bool? streaming}) => MessageEntry(
+  MessageEntry copyWith({String? text, bool? streaming, List<AttachmentRef>? attachments}) => MessageEntry(
         id: id,
         role: role,
         text: text ?? this.text,
         streaming: streaming ?? this.streaming,
-        attachments: attachments,
+        attachments: attachments ?? this.attachments,
         siblingIndex: siblingIndex,
         siblingCount: siblingCount,
         botId: botId,
@@ -512,14 +512,16 @@ class ChatController extends Notifier<ChatState> {
       case MessageCompletedItem(:final event):
         final id = event.payload.messageId;
         final text = event.payload.content.where((p) => p['type'] == 'text').map((p) => '${p['text'] ?? ''}').join();
+        // Media the reply made (a generated image or video) comes with the finished message.
+        final files = attachmentsOf(event.payload.content);
         final i = indexWhere((x) => x is MessageEntry && x.id == id);
         if (i < 0) {
           // A reply that is only an interactive UI has no text bubble.
-          if (text.isNotEmpty) entries.add(MessageEntry(id: id, role: 'assistant', text: text, botId: state.activeBotId));
-        } else if (text.isEmpty) {
+          if (text.isNotEmpty || files.isNotEmpty) entries.add(MessageEntry(id: id, role: 'assistant', text: text, attachments: files, botId: state.activeBotId));
+        } else if (text.isEmpty && files.isEmpty) {
           entries.removeAt(i);
         } else {
-          entries[i] = (entries[i] as MessageEntry).copyWith(text: text, streaming: false);
+          entries[i] = (entries[i] as MessageEntry).copyWith(text: text, streaming: false, attachments: files);
         }
         // Scripted replies (the welcome chat) carry their cards only in the finished message.
         for (final u in uiPartsOf(event.payload.content)) {

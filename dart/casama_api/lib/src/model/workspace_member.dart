@@ -29,6 +29,8 @@ class WorkspaceMember {
      this.name,
 
      this.pronouns,
+
+     this.photoId,
   });
 
   @JsonKey(
@@ -91,6 +93,18 @@ class WorkspaceMember {
 
 
 
+  @JsonKey(
+    
+    name: r'photo_id',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? photoId;
+
+
+
 
 
     @override
@@ -99,7 +113,8 @@ class WorkspaceMember {
       other.email == email &&
       other.role == role &&
       other.name == name &&
-      other.pronouns == pronouns;
+      other.pronouns == pronouns &&
+      other.photoId == photoId;
 
     @override
     int get hashCode =>
@@ -107,7 +122,8 @@ class WorkspaceMember {
         (email == null ? 0 : email.hashCode) +
         role.hashCode +
         (name == null ? 0 : name.hashCode) +
-        (pronouns == null ? 0 : pronouns.hashCode);
+        (pronouns == null ? 0 : pronouns.hashCode) +
+        (photoId == null ? 0 : photoId.hashCode);
 
   factory WorkspaceMember.fromJson(Map<String, dynamic> json) => _$WorkspaceMemberFromJson(json);
 

@@ -5,7 +5,24 @@ import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
 import 'motion.dart';
 
-/// A grey block in the shape of something that is still loading.
+/// The theme's own placeholder colors: bones are the surface with a breath of the accent, and
+/// the shimmer is a lighter wash of the same tone, so loading looks like the theme (neutral on
+/// Plain, orchid on Casama) instead of grey with a white flash.
+({Color bone, Color highlight}) skeletonColors(BuildContext context) {
+  final scheme = Theme.of(context).colorScheme;
+  final dark = context.isDark;
+  final bone = Color.alphaBlend(
+    scheme.primary.withValues(alpha: dark ? 0.08 : 0.07),
+    scheme.surfaceContainerHigh,
+  );
+  final highlight = Color.alphaBlend(
+    scheme.primary.withValues(alpha: dark ? 0.10 : 0.05),
+    Color.lerp(bone, dark ? scheme.onSurface : Colors.white, dark ? 0.10 : 0.65)!,
+  );
+  return (bone: bone, highlight: highlight);
+}
+
+/// A block in the shape of something that is still loading, in the theme's placeholder tone.
 class SkeletonBone extends StatelessWidget {
   const SkeletonBone({
     super.key,
@@ -25,7 +42,7 @@ class SkeletonBone extends StatelessWidget {
       height: height,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHigh,
+          color: skeletonColors(context).bone,
           borderRadius: BorderRadius.circular(radius),
         ),
       ),
@@ -40,7 +57,7 @@ class SkeletonScope extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final highlight = context.isDark ? Colors.white24 : Colors.white;
+    final highlight = skeletonColors(context).highlight;
     return Semantics(
       label: AppLocalizations.of(context).loading,
       child: Shimmer(color: highlight, child: child),

@@ -10,6 +10,7 @@ import '../../core/widgets.dart';
 import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/person_avatar.dart';
 import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/advanced_section.dart';
@@ -80,6 +81,14 @@ class PeopleScreen extends ConsumerWidget {
               GroupedTile(
                 key: Key('member-${m.userId}'),
                 icon: LucideIcons.user,
+                // Their profile photo (D-202), else their initial.
+                leading: PersonAvatar(
+                  label: m.name.orPlaceholder(m.email.orPlaceholder('?')),
+                  photoUrl: m.photoId == null
+                      ? null
+                      : ref.watch(backendProvider).photoUrl(m.photoId!),
+                  size: 36,
+                ),
                 // About you (D-169): the name they go by and their pronouns, then the email.
                 title: [
                   m.name.orPlaceholder(m.email.orPlaceholder(m.userId)),

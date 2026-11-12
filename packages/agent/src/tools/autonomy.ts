@@ -12,11 +12,14 @@ import { z } from "zod";
 import { actingUserOf, personForRun } from "../acting.ts";
 import { wrapUntrusted } from "../context.ts";
 import { sealRunPayload } from "../events.ts";
-import { MEDIA_PRICES, type MediaProvider } from "../media.ts";
+import { MEDIA_PRICES, type MediaProvider, type MediaResult } from "../media.ts";
 import type { NotificationService } from "../notifications.ts";
 import type { SearchProvider } from "../search.ts";
 import { startTicketWork } from "../tickets.ts";
 import { type ToolContext, ToolError, type ToolRegistry } from "./registry.ts";
+
+/** The most a generated file kept for the chat can be (D-205); the table allows the same. */
+export const CHAT_MEDIA_MAX_BYTES = 50 * 1024 * 1024;
 
 export interface AutonomyToolDeps {
   db: Database;
@@ -742,21 +745,39 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
 
   // --- media generation ---------------------------------------------------------
 
-  async function saveMedia(
-    ctx: ToolContext,
-    media: { url: string; data?: Uint8Array },
-    ext: string,
-  ) {
-    if (!ctx.computer) return null;
-    let bytes = media.data;
-    if (!bytes) {
-      const res = await deps.fetch(media.url);
-      if (!res.ok) return null;
-      bytes = new Uint8Array(await res.arrayBuffer());
-    }
+  // Generated media (D-205) is kept twice: in chat_media, so it shows under the reply whether or
+  // not there is a computer, and in the computer's media/ folder when there is one.
+  async function mediaBytes(media: { url: string; data?: Uint8Array }) {
+    if (media.data) return media.data;
+    if (!media.url) return null;
+    const res = await deps.fetch(media.url);
+    if (!res.ok) return null;
+    return new Uint8Array(await res.arrayBuffer());
+  }
+
+  async function saveMedia(ctx: ToolContext, bytes: Uint8Array | null, ext: string) {
+    if (!ctx.computer || !bytes) return null;
     const path = `media/${new Date().toISOString().replace(/[:.]/g, "-")}.${ext}`;
     await (await ctx.computer()).writeFile(path, bytes);
     return path;
+  }
+
+  /** Keeps the file for the chat; null when it couldn't be (too big, or the download failed). */
+  async function keepForChat(
+    ctx: ToolContext,
+    bytes: Uint8Array | null,
+    media: MediaResult,
+    name: string,
+  ) {
+    if (!bytes || bytes.length === 0 || bytes.length > CHAT_MEDIA_MAX_BYTES) return null;
+    const [row] = await db.execute<{ id: string }>(sql`
+      insert into public.chat_media (org_id, bot_id, run_id, conversation_id, name, content_type, bytes, size, width, height, duration_s)
+      values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid,
+              (select conversation_id from public.runs where id = ${ctx.runId}::uuid),
+              ${name}, ${media.contentType}, ${Buffer.from(bytes)}, ${bytes.length},
+              ${media.width ?? null}, ${media.height ?? null}, ${media.durationS ?? null})
+      returning id`);
+    return row?.id ?? null;
   }
 
   registry.register({
@@ -785,11 +806,13 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
         : img.contentType.includes("webp")
           ? "webp"
           : "jpg";
-      const path = await saveMedia(ctx, img, ext).catch(() => null);
+      const bytes = await mediaBytes(img).catch(() => null);
+      const path = await saveMedia(ctx, bytes, ext).catch(() => null);
+      const shown = await keepForChat(ctx, bytes, img, `image.${ext}`).catch(() => null);
       // Inline images (OpenRouter) have no link; never put their bytes in the conversation.
       const where = img.url ? `Generated image: ${img.url}` : "Generated image";
       return {
-        content: `${where}${path ? `\nSaved to ~/workspace/${path}` : img.url ? "" : " (no computer to save it to)"}`,
+        content: `${where}${shown ? "\nThe person sees it in the chat under your reply; no need to link it." : ""}${path ? `\nSaved to ~/workspace/${path}` : img.url || shown ? "" : " (no computer to save it to)"}`,
         preview: path ?? "image generated",
         artifactPath: path,
       };
@@ -820,10 +843,17 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       const seconds = video.durationS ?? args.duration_s ?? 5;
       await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, model)
         values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, 'media_video_seconds', ${seconds}, ${video.costUsd ?? seconds * MEDIA_PRICES.videoPerSecond}, ${video.model ?? provider.id})`);
-      const path = await saveMedia(ctx, video, "mp4").catch(() => null);
+      const bytes = await mediaBytes(video).catch(() => null);
+      const path = await saveMedia(ctx, bytes, "mp4").catch(() => null);
+      const shown = await keepForChat(
+        ctx,
+        bytes,
+        { ...video, durationS: video.durationS ?? seconds },
+        "video.mp4",
+      ).catch(() => null);
       const where = video.url ? `Generated video: ${video.url}` : "Generated video";
       return {
-        content: `${where}${path ? `\nSaved to ~/workspace/${path}` : video.url ? "" : " (no computer to save it to)"}`,
+        content: `${where}${shown ? "\nThe person sees it in the chat under your reply; no need to link it." : ""}${path ? `\nSaved to ~/workspace/${path}` : video.url || shown ? "" : " (no computer to save it to)"}`,
         preview: path ?? "video generated",
         artifactPath: path,
       };

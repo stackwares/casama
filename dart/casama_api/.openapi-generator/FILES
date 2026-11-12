@@ -245,6 +245,7 @@ lib/src/model/ice_server.dart
 lib/src/model/import_bot_request.dart
 lib/src/model/import_bot_response.dart
 lib/src/model/import_bot_response_connections_to_add_inner.dart
+lib/src/model/import_profile_photo_request.dart
 lib/src/model/import_workspace_files_request.dart
 lib/src/model/imported_memory_item.dart
 lib/src/model/install_catalog_skill_request.dart
@@ -441,6 +442,7 @@ lib/src/model/set_memory_backend_request.dart
 lib/src/model/set_org_limits_request.dart
 lib/src/model/set_payment_settings_request.dart
 lib/src/model/set_payment_settings_request_cardholder.dart
+lib/src/model/set_profile_photo_request.dart
 lib/src/model/set_profile_space_request.dart
 lib/src/model/set_secret_store_request.dart
 lib/src/model/set_telephony_request.dart

@@ -21,6 +21,12 @@ abstract class _$AboutYouCWProxy {
 
   AboutYou nameAsked(bool nameAsked);
 
+  AboutYou photoId(String? photoId);
+
+  AboutYou providerPhoto(bool? providerPhoto);
+
+  AboutYou photoImportTried(bool? photoImportTried);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `AboutYou(...).copyWith.fieldName(value)`.
@@ -37,6 +43,9 @@ abstract class _$AboutYouCWProxy {
     String replyStyle,
     bool learn,
     bool nameAsked,
+    String? photoId,
+    bool? providerPhoto,
+    bool? photoImportTried,
   });
 }
 
@@ -69,6 +78,17 @@ class _$AboutYouCWProxyImpl implements _$AboutYouCWProxy {
   @override
   AboutYou nameAsked(bool nameAsked) => call(nameAsked: nameAsked);
 
+  @override
+  AboutYou photoId(String? photoId) => call(photoId: photoId);
+
+  @override
+  AboutYou providerPhoto(bool? providerPhoto) =>
+      call(providerPhoto: providerPhoto);
+
+  @override
+  AboutYou photoImportTried(bool? photoImportTried) =>
+      call(photoImportTried: photoImportTried);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `AboutYou(...).copyWith.fieldName(value)`.
@@ -86,6 +106,9 @@ class _$AboutYouCWProxyImpl implements _$AboutYouCWProxy {
     Object? replyStyle = const $CopyWithPlaceholder(),
     Object? learn = const $CopyWithPlaceholder(),
     Object? nameAsked = const $CopyWithPlaceholder(),
+    Object? photoId = const $CopyWithPlaceholder(),
+    Object? providerPhoto = const $CopyWithPlaceholder(),
+    Object? photoImportTried = const $CopyWithPlaceholder(),
   }) {
     return AboutYou(
       displayName: displayName == const $CopyWithPlaceholder()
@@ -117,6 +140,18 @@ class _$AboutYouCWProxyImpl implements _$AboutYouCWProxy {
           ? _value.nameAsked
           // ignore: cast_nullable_to_non_nullable
           : nameAsked as bool,
+      photoId: photoId == const $CopyWithPlaceholder()
+          ? _value.photoId
+          // ignore: cast_nullable_to_non_nullable
+          : photoId as String?,
+      providerPhoto: providerPhoto == const $CopyWithPlaceholder()
+          ? _value.providerPhoto
+          // ignore: cast_nullable_to_non_nullable
+          : providerPhoto as bool?,
+      photoImportTried: photoImportTried == const $CopyWithPlaceholder()
+          ? _value.photoImportTried
+          // ignore: cast_nullable_to_non_nullable
+          : photoImportTried as bool?,
     );
   }
 }
@@ -156,6 +191,12 @@ AboutYou _$AboutYouFromJson(Map<String, dynamic> json) => $checkedCreate(
       replyStyle: $checkedConvert('reply_style', (v) => v as String),
       learn: $checkedConvert('learn', (v) => v as bool),
       nameAsked: $checkedConvert('name_asked', (v) => v as bool),
+      photoId: $checkedConvert('photo_id', (v) => v as String?),
+      providerPhoto: $checkedConvert('provider_photo', (v) => v as bool?),
+      photoImportTried: $checkedConvert(
+        'photo_import_tried',
+        (v) => v as bool?,
+      ),
     );
     return val;
   },
@@ -164,6 +205,9 @@ AboutYou _$AboutYouFromJson(Map<String, dynamic> json) => $checkedCreate(
     'preferredName': 'preferred_name',
     'replyStyle': 'reply_style',
     'nameAsked': 'name_asked',
+    'photoId': 'photo_id',
+    'providerPhoto': 'provider_photo',
+    'photoImportTried': 'photo_import_tried',
   },
 );
 
@@ -175,4 +219,7 @@ Map<String, dynamic> _$AboutYouToJson(AboutYou instance) => <String, dynamic>{
   'reply_style': instance.replyStyle,
   'learn': instance.learn,
   'name_asked': instance.nameAsked,
+  'photo_id': ?instance.photoId,
+  'provider_photo': ?instance.providerPhoto,
+  'photo_import_tried': ?instance.photoImportTried,
 };

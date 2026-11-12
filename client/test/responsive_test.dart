@@ -14,16 +14,16 @@ void main() {
     await setSize(tester, const Size(1500, 1200));
     await tester.pumpWidget(harness(FakeBackend(), const SettingsScreen()));
     await tester.pumpAndSettle();
-    // You and Appearance on the left; Workspace and Connections on the right (D-176).
-    final you = tester.getTopLeft(find.text('You'));
+    // Workspace and App on the left; Connections and Sign-in & security on the right (D-176).
     final workspace = tester.getTopLeft(find.text('Workspace'));
-    expect(workspace.dx, greaterThan(you.dx + 300));
-    expect(workspace.dy, you.dy);
+    final connections = tester.getTopLeft(find.text('Connections'));
+    expect(connections.dx, greaterThan(workspace.dx + 300));
+    expect(connections.dy, workspace.dy);
 
     await setSize(tester, const Size(700, 2400));
     await tester.pumpAndSettle();
-    expect(tester.getTopLeft(find.text('Workspace')).dx, tester.getTopLeft(find.text('You')).dx);
-    expect(tester.getTopLeft(find.text('Workspace')).dy, greaterThan(tester.getTopLeft(find.text('You')).dy));
+    expect(tester.getTopLeft(find.text('Connections')).dx, tester.getTopLeft(find.text('Workspace')).dx);
+    expect(tester.getTopLeft(find.text('Connections')).dy, greaterThan(tester.getTopLeft(find.text('Workspace')).dy));
   });
 
   testWidgets('on wide windows a settings page opens beside the settings list, the open row highlighted', (tester) async {

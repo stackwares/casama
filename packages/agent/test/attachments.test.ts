@@ -31,6 +31,15 @@ describe("attachments", () => {
     expect(partsText([{ type: "text", text: "plain" }])).toBe("plain");
   });
 
+  it("notes generated media the bot showed instead of listing it as a computer file (D-205)", () => {
+    const text = partsText([
+      { type: "text", text: "Here you go." },
+      { type: "file", path: "media:0b6f", name: "image.png", mime_type: "image/png", size: 10 },
+    ]);
+    expect(text).toBe("Here you go.\n\n(You showed the person a generated image/png: image.png.)");
+    expect(text).not.toContain("Attached files");
+  });
+
   it("sends images to vision models as image parts", () => {
     const data = new Uint8Array([1, 2, 3]);
     const [m] = toModelMessages([

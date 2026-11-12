@@ -106,12 +106,14 @@ export function registerBotSharingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
       role: "member";
       name: string | null;
       pronouns: string | null;
+      photo_id: string | null;
     }>(sql`
       select m.user_id, u.email, m.role,
              coalesce(nullif(btrim(p.preferred_name), ''), nullif(btrim(p.display_name), '')) as name,
-             nullif(btrim(p.pronouns), '') as pronouns
+             nullif(btrim(p.pronouns), '') as pronouns, ph.id as photo_id
       from public.memberships m left join auth.users u on u.id = m.user_id
       left join public.profiles p on p.user_id = m.user_id
+      left join public.profile_photos ph on ph.user_id = m.user_id
       where m.org_id = ${id}::uuid order by m.role, u.email`);
     return c.json({ items: [...rows] }, 200);
   });

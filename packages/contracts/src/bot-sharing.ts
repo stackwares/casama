@@ -44,5 +44,7 @@ export const WorkspaceMember = z
     /** About you (D-169): what they go by and their pronouns, when set. */
     name: z.string().nullable().optional(),
     pronouns: z.string().nullable().optional(),
+    /** Profile photo (D-202), served at /v1/photos/{id}. */
+    photo_id: Uuid.nullable().optional(),
   })
   .openapi("WorkspaceMember");

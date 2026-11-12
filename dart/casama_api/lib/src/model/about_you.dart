@@ -33,6 +33,12 @@ class AboutYou {
     required  this.learn,
 
     required  this.nameAsked,
+
+     this.photoId,
+
+     this.providerPhoto,
+
+     this.photoImportTried,
   });
 
   @JsonKey(
@@ -119,6 +125,42 @@ class AboutYou {
 
 
 
+  @JsonKey(
+    
+    name: r'photo_id',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? photoId;
+
+
+
+  @JsonKey(
+    
+    name: r'provider_photo',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? providerPhoto;
+
+
+
+  @JsonKey(
+    
+    name: r'photo_import_tried',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? photoImportTried;
+
+
+
 
 
     @override
@@ -129,7 +171,10 @@ class AboutYou {
       other.about == about &&
       other.replyStyle == replyStyle &&
       other.learn == learn &&
-      other.nameAsked == nameAsked;
+      other.nameAsked == nameAsked &&
+      other.photoId == photoId &&
+      other.providerPhoto == providerPhoto &&
+      other.photoImportTried == photoImportTried;
 
     @override
     int get hashCode =>
@@ -139,7 +184,10 @@ class AboutYou {
         about.hashCode +
         replyStyle.hashCode +
         learn.hashCode +
-        nameAsked.hashCode;
+        nameAsked.hashCode +
+        (photoId == null ? 0 : photoId.hashCode) +
+        providerPhoto.hashCode +
+        photoImportTried.hashCode;
 
   factory AboutYou.fromJson(Map<String, dynamic> json) => _$AboutYouFromJson(json);
 

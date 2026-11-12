@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/app_tokens.dart';
+import 'skeleton.dart';
 
 /// A picture from the web that eases in: a plain tone holds its place while it loads, it fades in
 /// when ready, and if it can't load a small, faint broken-image mark shows instead (never a
@@ -20,7 +21,7 @@ class SmoothNetworkImage extends StatelessWidget {
   final int? decodeWidth;
 
   /// The tone shown while loading and behind the failure mark. Defaults to the theme's
-  /// surfaceContainerHighest. Pass Colors.transparent when the box behind is already a placeholder.
+  /// skeleton tone (see [skeletonColors]). Pass Colors.transparent when the box behind is already a placeholder.
   final Color? placeholderColor;
 
   /// Shown, centered, if the picture can't load. Defaults to a faint broken-image icon.
@@ -28,7 +29,7 @@ class SmoothNetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tone = placeholderColor ?? Theme.of(context).colorScheme.surfaceContainerHighest;
+    final tone = placeholderColor ?? skeletonColors(context).bone;
     // Faint on any tone: light marks on dark tones, dark marks on light ones.
     final mark = ThemeData.estimateBrightnessForColor(tone) == Brightness.dark ? Colors.white.withValues(alpha: 0.4) : Colors.black.withValues(alpha: 0.25);
     final duration = AppMotion.of(context, AppMotion.duration);
