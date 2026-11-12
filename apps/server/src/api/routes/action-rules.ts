@@ -1,4 +1,4 @@
-/** Action rules (D-115): people manage them here; bots have no tool that changes them. */
+/** Action rules (D-115): people manage them here; bots add and remove only their own (rules.*, D-242). */
 
 import { track } from "@casama/agent";
 import { routes } from "@casama/contracts";

@@ -7838,6 +7838,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get undo => 'Undo';
 
   @override
+  String get suggestedLookApplied => 'New look applied';
+
+  @override
+  String get suggestedLookUnavailable => 'This app doesn\'t have that look';
+
+  @override
   String get removedFromProfile => 'Removed from your profile';
 
   @override

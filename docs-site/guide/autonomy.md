@@ -114,7 +114,10 @@ under **Specific tools**.
 
 - Workspace rules need a workspace owner or admin.
 - A bot's own rules need someone who manages that bot.
-- Bots can't create, change or delete rules, including bots that manage other bots.
+- A bot can add and remove its own rules (never workspace rules). A more careful rule
+  (**Ask me first**, **Hand it to me to finish**) applies at once. A rule that lets it skip
+  approval always asks you first, and a bot can never allow payments or sign-ins this way. See
+  [Bots that change their own setup](/guide/bots#bots-that-change-their-own-setup).
 
 Deleting a rule is recorded in the workspace's audit log.
 

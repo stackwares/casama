@@ -9,6 +9,10 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- Bots can change their own setup: add MCP servers (remote, or run on their computer), use the
+  workspace's connections, suggest plugins and a new look for the app, add their own action
+  rules and knowledge, and quiet their notifications. Anything that lets a bot reach more always
+  asks first.
 - Usage analytics and crash reports for Casama Cloud and the official apps: one switch for people
   (Settings → Privacy), one for workspace admins, crash reports and funnels in PostHog, no message
   content ever; a self-hosted server sends nothing unless its owner turns it on.

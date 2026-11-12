@@ -959,6 +959,13 @@ Bots think on the server, so today they reach only remote MCP servers by URL. MC
 - Limits: a bot can never give any bot, itself included, more autonomy, budget or tool access than it has, or more than its owner's role allows. Creating, archiving and any increase are high risk; other edits are medium. Every change goes to `audit_log` and shows as a card in chat with Undo (backed by bot settings history).
 - The coordinator starter bot uses these tools to build and run a small team.
 
+### Bots that change their own setup (D-242)
+
+- Tools: `mcp.add` (a remote server by https url, with an optional key given as `{{secret:NAME}}`, or a stdio server on the bot's computer by command), `mcp.remove`, `connections.list`, `connections.attach`, `plugins.suggest`, `appearance.suggest`, `rules.list|add|remove` (the bot's own rules), `knowledge.add|list|remove` (the bot's own sources) and `notifications.quiet`.
+- Anything that widens reach always asks, whatever the autonomy or rules: adding a server, attaching a connection, an allow rule, removing an ask rule, going back to the person's usual quiet hours. What only narrows reach applies at once.
+- Plugins and the look go through cards the app handles itself (`app:route` to the plugin install sheet, `app:appearance`), so the person reviews a plugin and the look stays on their device.
+- Out of reach: billing, members, encryption keys, secrets, sharing, and the bot's own autonomy or budget.
+
 ### Ask for a secret in chat
 
 - Tool `secrets.request(name, service, allowed_hosts, reason)`. `allowed_hosts` is required and must belong to one service (one registrable domain and its subdomains).

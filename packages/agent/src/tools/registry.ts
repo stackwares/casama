@@ -53,6 +53,8 @@ export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
   confirm?: boolean;
   /** Always asks, whatever the autonomy, grants or action rules (payments, D-142). */
   alwaysAsk?: boolean;
+  /** Always asks for these arguments (for example loosening a rule but not tightening it, D-242). */
+  alwaysAskFor?: (args: z.infer<S>) => boolean;
   /** Risk that depends on the arguments (overrides `risk`). */
   riskFor?: (args: z.infer<S>) => Risk;
   /**

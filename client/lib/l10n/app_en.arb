@@ -2343,6 +2343,8 @@
   "importToProfile": "Import from ChatGPT or Claude",
   "savedToProfile": "Saved to your profile",
   "undo": "Undo",
+  "suggestedLookApplied": "New look applied",
+  "suggestedLookUnavailable": "This app doesn't have that look",
   "removedFromProfile": "Removed from your profile",
   "factsImported": "Added {count, plural, =1{1 fact} other{{count} facts}}",
   "@factsImported": {"placeholders": {"count": {"type": "int", "format": "decimalPattern"}}},

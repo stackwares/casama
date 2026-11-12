@@ -144,6 +144,7 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 ## Bots that manage bots (D-100)
 
+- `packages/agent/src/tools/settings.ts` (D-242): bots changing their own setup: `mcp.add|remove`, `connections.list|attach`, `plugins.suggest` and `appearance.suggest` (cards with `app:route` and `app:appearance`, handled by `client/lib/features/chat/local_actions.dart` and `client/lib/theme/suggested_look.dart`), `rules.*`, `knowledge.add|list|remove` and `notifications.quiet`. `ToolDefinition.alwaysAskFor` asks for some arguments only. Plugin-less `computer_mcp` rows (`config.added_by_bot`, no `plugin_id`) run from `~/.casama/mcp/<name>`.
 - `packages/agent/src/tools/bots.ts`: `bots.list|create|update|archive` and `sidebar.organize`, capped at the acting bot's autonomy and budget; routine tools take `bot`. `bot_folders`, `bots.folder_id|sort_key|archived_at`, and `bot_revisions` (trigger `bots_record_revision`; the acting bot comes from `casama.actor_bot`). App: sidebar folders, bot settings → Folder, Settings history (restore), Archive; Archived bots on the bot list.
 
 ## Ask for a secret (D-101)

@@ -11,8 +11,9 @@ import { collectExec, type McpServerSpec, type SandboxHandle } from "@casama/san
 import { sql } from "drizzle-orm";
 
 export interface ComputerMcpConfig {
-  plugin_id: string;
-  plugin: string;
+  /** Absent for a server a bot added itself (D-242): no package files, its own folder. */
+  plugin_id?: string;
+  plugin?: string;
   server: string;
   command: string;
   args: string[];
@@ -25,6 +26,8 @@ const synced = new Map<string, string>();
 /** Where a plugin lives on the computer. */
 export const pluginRoot = (home: string, plugin: string) => `${home}/.casama/plugins/${plugin}`;
 export const pluginData = (home: string, plugin: string) => `${home}/.casama/plugin-data/${plugin}`;
+/** Where a server a bot added itself (D-242) runs and keeps its data. */
+export const customMcpRoot = (home: string, server: string) => `${home}/.casama/mcp/${server}`;
 
 const homeOf = async (h: SandboxHandle) => {
   const r = await collectExec(h.exec('printf %s "$HOME"', { timeoutMs: 10_000 }));
@@ -40,11 +43,11 @@ export async function computerPluginServers(db: Database, computerId: string) {
     name: string;
     config: ComputerMcpConfig;
     secret: string | null;
-    commit_sha: string;
+    commit_sha: string | null;
   }>(sql`
     select distinct on (i.id) i.name, i.config, v.decrypted_secret as secret, p.commit_sha
     from public.integrations i
-    join public.plugins p on p.id = i.plugin_id
+    left join public.plugins p on p.id = i.plugin_id
     join public.bot_integrations bi on bi.integration_id = i.id
     join public.bots b on b.id = bi.bot_id
     left join public.computers k on k.id = ${computerId}::uuid
@@ -60,7 +63,12 @@ export async function syncPluginComputer(db: Database, h: SandboxHandle, compute
   if (synced.get(h.ref) === hash) return;
   const home = await homeOf(h);
   const plugins = new Map(
-    rows.map((r) => [r.config.plugin_id, { name: r.config.plugin, commit: r.commit_sha }]),
+    rows
+      .filter((r) => r.config.plugin_id && r.config.plugin && r.commit_sha)
+      .map((r) => [
+        r.config.plugin_id as string,
+        { name: r.config.plugin as string, commit: r.commit_sha as string },
+      ]),
   );
   for (const [id, p] of plugins) {
     const root = pluginRoot(home, p.name);
@@ -84,10 +92,17 @@ export async function syncPluginComputer(db: Database, h: SandboxHandle, compute
     if (exe.length) await collectExec(h.exec(`chmod +x ${exe.join(" ")}`, { timeoutMs: 30_000 }));
     await h.writeFile(`${root}/.casama-commit`, new TextEncoder().encode(p.commit));
   }
+  const custom = rows
+    .filter((r) => !r.config.plugin)
+    .map((r) => `"${customMcpRoot(home, r.name)}"`);
+  if (custom.length)
+    await collectExec(h.exec(`mkdir -p ${custom.join(" ")}`, { timeoutMs: 30_000 }));
   const servers: Record<string, McpServerSpec> = {};
   for (const r of rows) {
     const c = r.config;
-    const roots = { root: pluginRoot(home, c.plugin), data: pluginData(home, c.plugin) };
+    const roots = c.plugin
+      ? { root: pluginRoot(home, c.plugin), data: pluginData(home, c.plugin) }
+      : { root: customMcpRoot(home, r.name), data: customMcpRoot(home, r.name) };
     const x = (s: string) => expandPluginVars(s, roots);
     let secretEnv: Record<string, string> = {};
     try {

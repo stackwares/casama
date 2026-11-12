@@ -281,8 +281,36 @@ groups. It loads a group when it needs it, and keeps it for the rest of the run.
 You may see this as a step in the chat. Nothing else changes: the bot can still use any tool it's
 allowed. Server admins can change the threshold with `LAZY_TOOLS_THRESHOLD` (`0` turns it off).
 
+## Bots that change their own setup
+
+Ask a bot for a new ability and it can often set it up itself. Anything that lets it reach more
+always shows you an approval card first, whatever its autonomy or rules. Anything that only makes
+it more careful or quieter happens straight away.
+
+| A bot can | How it asks |
+| --- | --- |
+| Add an MCP server for itself: a remote one by its https address, or one it runs on its own computer with a command such as `npx -y some-mcp-server` | Always asks |
+| Start using one of the workspace's connections, optionally only some of its tools | Always asks |
+| Suggest a plugin | Shows a card that opens the plugin's install screen, where you review it and enter any keys |
+| Suggest a new look for the app (a theme, colors, fonts, light or dark) | Shows a card. **Apply** changes the look on that device only, with **Undo** |
+| Add an action rule for itself | **Ask me first** and **Hand it to me** apply at once. **Go ahead** rules always ask, and it can never allow payments or sign-ins |
+| Add a website or GitHub repository to its knowledge | Like any other medium-risk action |
+| Stop notifying you, or set its own quiet hours | Quieter applies at once. Going back to your usual hours asks |
+| Remove a server it added, stop using a connection, remove its own knowledge | Never asks |
+
+A key for a server goes in as `{{secret:NAME}}` from **Settings** → **Secrets**. If the secret
+doesn't exist yet, the bot asks you for it in the chat first, and it must be allowed for the
+server's host. New tools arrive from the bot's next message.
+
+Bots can't change billing, members, encryption keys, secrets, sharing, or their own autonomy or
+budget.
+
 ## Limits
 
+- A bot keeps its own copy of a key it gives a server. If you change the secret later, remove the
+  server and let the bot add it again.
+- A server a bot runs on its computer takes plain settings only, not secrets. For one that needs
+  a key, use a plugin.
 - The app has no fields for budgets, fallback models, the cheap model or reasoning effort. Set them
   with `casama bot create` when you create the bot, or through the API. A bot can also change
   another bot's budget with its `bots.update` tool, but never above its own.

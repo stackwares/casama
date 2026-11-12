@@ -17,22 +17,50 @@ import 'plugin_directory.dart';
 /// A bot's plugins (D-121): Agent Plugins 1.0 packages from GitHub, with what each one added.
 final pluginsProvider = FutureProvider.autoDispose.family<List<Plugin>, String>((ref, botId) => ref.watch(backendProvider).plugins(botId));
 
-class PluginsScreen extends ConsumerWidget {
-  const PluginsScreen({super.key, required this.botId});
+class PluginsScreen extends ConsumerStatefulWidget {
+  const PluginsScreen({super.key, required this.botId, this.install});
   final String botId;
 
+  /// A plugin a bot suggested (D-242): its install sheet opens with this address and previews it.
+  final String? install;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PluginsScreen> createState() => _PluginsScreenState();
+}
+
+class _PluginsScreenState extends ConsumerState<PluginsScreen> {
+  String get botId => widget.botId;
+
+  @override
+  void initState() {
+    super.initState();
+    final url = widget.install;
+    if (url == null || !url.startsWith('https://github.com/')) return;
+    // Once the workspace is known (it may still be loading when the screen opens).
+    var opened = false;
+    ref.listenManual(currentOrgProvider, (_, org) {
+      if (opened || org == null) return;
+      opened = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _add(url);
+      });
+    }, fireImmediately: true);
+  }
+
+  Future<void> _add([String? url]) async {
+    final org = ref.read(currentOrgProvider);
+    if (org == null) return;
+    await showAdaptiveSheet<void>(
+      context: context,
+      builder: (_) => _AddPlugin(orgId: org.id, botId: botId, initialUrl: url),
+    );
+    ref.invalidate(pluginsProvider(botId));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
-    Future<void> add() async {
-      final org = ref.read(currentOrgProvider);
-      if (org == null) return;
-      await showAdaptiveSheet<void>(
-        context: context,
-        builder: (_) => _AddPlugin(orgId: org.id, botId: botId),
-      );
-      ref.invalidate(pluginsProvider(botId));
-    }
+    Future<void> add() => _add();
 
     return SubPage(
       title: l10n.plugins,
@@ -169,9 +197,10 @@ class _PreviewList extends StatelessWidget {
 }
 
 class _AddPlugin extends ConsumerStatefulWidget {
-  const _AddPlugin({required this.orgId, required this.botId});
+  const _AddPlugin({required this.orgId, required this.botId, this.initialUrl});
   final String orgId;
   final String botId;
+  final String? initialUrl;
 
   @override
   ConsumerState<_AddPlugin> createState() => _AddPluginState();
@@ -184,6 +213,18 @@ class _AddPluginState extends ConsumerState<_AddPlugin> {
   // The reviewed commit, when the plugin came from the directory (D-241).
   String? _commit;
   var _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final url = widget.initialUrl;
+    if (url != null) {
+      _url.text = url;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _submit();
+      });
+    }
+  }
 
   @override
   void dispose() {

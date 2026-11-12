@@ -361,7 +361,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: ':botId/plugins',
                 pageBuilder: _page(
-                  (_, s) => PluginsScreen(botId: s.pathParameters['botId']!),
+                  (_, s) => PluginsScreen(botId: s.pathParameters['botId']!, install: s.uri.queryParameters['install']),
                 ),
               ),
               GoRoute(

@@ -180,6 +180,8 @@ Connect any MCP server, an OpenAPI spec or another AI agent.
 MCP servers can use Streamable HTTP or legacy SSE. For OpenAPI, the secret's name refers to a
 secret from **Settings** → **Secrets** and is sent as a bearer token.
 
+A bot can also add an MCP server for itself, see [Bots that change their own setup](/guide/bots#bots-that-change-their-own-setup).
+
 MCP servers that run on your own computer are added from the desktop app. See
 [Your own computer](/guide/companion). For agents, see [Bots working together](/guide/bots-together).
 

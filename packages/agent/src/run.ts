@@ -2812,6 +2812,7 @@ async function approvalGate(
       : false;
   const needed =
     def.alwaysAsk === true ||
+    def.alwaysAskFor?.(args as never) === true ||
     rule?.rule === "ask" ||
     needsApproval({
       autonomy: info.autonomy,

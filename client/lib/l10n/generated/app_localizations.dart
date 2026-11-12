@@ -12274,6 +12274,18 @@ abstract class AppLocalizations {
   /// **'Undo'**
   String get undo;
 
+  /// No description provided for @suggestedLookApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'New look applied'**
+  String get suggestedLookApplied;
+
+  /// No description provided for @suggestedLookUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This app doesn\'t have that look'**
+  String get suggestedLookUnavailable;
+
   /// No description provided for @removedFromProfile.
   ///
   /// In en, this message translates to:

@@ -47,6 +47,7 @@ import {
   registerProjectTools,
   registerReplayTools,
   registerSecretRequestTool,
+  registerSettingsTools,
   registerSetupTools,
   registerSkillTools,
   registerSuggestionTools,
@@ -282,6 +283,8 @@ export async function startWorker(opts: WorkerOptions) {
   registerSecretRequestTool(tools);
   registerSkillTools(tools, { db });
   registerSetupTools(tools, { db });
+  // Bots that change their own setup: connections, theme, rules, knowledge, notifications (D-242).
+  registerSettingsTools(tools, { db, fetch: fetchOut });
   registerToolsLoad(tools);
   // Coding agents (D-097): on the bot's computer, the user's own computer, or Cursor's cloud.
   registerCodingTools(tools, {

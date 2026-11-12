@@ -51,4 +51,16 @@ void main() {
     expect(backend.pluginActions.last, 'uninstall:plugin-1');
     expect(find.text('No plugins yet'), findsOneWidget);
   });
+
+  testWidgets('a plugin a bot suggested opens straight into its preview', (tester) async {
+    await setSize(tester, const Size(900, 1400));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(
+      backend,
+      const PluginsScreen(botId: botId, install: 'https://github.com/acme/agent-plugins/tree/main/plugins/weather'),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('plan-trip'), findsOneWidget);
+    expect(backend.pluginActions, ['preview:https://github.com/acme/agent-plugins/tree/main/plugins/weather']);
+  });
 }

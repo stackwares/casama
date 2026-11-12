@@ -8,11 +8,14 @@ import 'package:go_router/go_router.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../settings/model_keys_screen.dart';
+import '../../theme/appearance.dart';
+import '../../theme/suggested_look.dart';
 import '../integrations/connect_app_sheet.dart';
 import 'widgets/bot_ui.dart';
 
 /// Card actions the app handles itself (D-129): "app:connect" opens a connection, "app:route" a
-/// screen, "app:invite" makes an invite link. They never reach the server. Returns whether the
+/// screen, "app:invite" makes an invite link, "app:appearance" applies a look a bot suggested
+/// (D-242). They never reach the server. Returns whether the
 /// action was one of these.
 ///
 /// An "app:connect" with `after` in its context sends that action to the server through [send]
@@ -59,6 +62,20 @@ Future<bool> handleLocalUiAction(
             optionLabels: {app.id: context.l10n.connectedAppSummary(app.name)},
           ));
         }
+      }
+    case 'app:appearance':
+      final notifier = ref.read(appearanceProvider.notifier);
+      final before = await applySuggestedLook(ref.read(appearanceProvider), notifier, ctx);
+      if (!context.mounted) return true;
+      if (before == null) {
+        showWarning(context, context.l10n.suggestedLookUnavailable);
+      } else {
+        showToast(
+          context,
+          context.l10n.suggestedLookApplied,
+          kind: ToastKind.success,
+          action: SnackBarAction(label: context.l10n.undo, onPressed: () => unawaited(restoreLook(notifier, before))),
+        );
       }
     case 'app:invite':
       final org = ref.read(currentOrgProvider);
