@@ -4464,6 +4464,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get changedBySystem => 'Changed by Casama';
 
   @override
+  @override
+  String secretWhat(String service) {
+    return '$service key';
+  }
+
+  @override
+  String totpWhat(String service) {
+    return '$service sign-in code';
+  }
+
+  @override
+  String takeoverHandedBackLine(String what) {
+    return 'Handed back: $what';
+  }
+
+  @override
+  String deviceAccessSkippedLine(String what) {
+    return 'Not shared: your $what';
+  }
+
   String get fieldName => 'name';
 
   @override

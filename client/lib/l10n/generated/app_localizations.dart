@@ -7084,6 +7084,30 @@ abstract class AppLocalizations {
   /// **'Archive {name}?'**
   String archiveBotTitle(String name);
 
+  /// No description provided for @secretWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} key'**
+  String secretWhat(String service);
+
+  /// No description provided for @totpWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} sign-in code'**
+  String totpWhat(String service);
+
+  /// No description provided for @takeoverHandedBackLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Handed back: {what}'**
+  String takeoverHandedBackLine(String what);
+
+  /// No description provided for @deviceAccessSkippedLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Not shared: your {what}'**
+  String deviceAccessSkippedLine(String what);
+
   /// No description provided for @archiveBotBody.
   ///
   /// In en, this message translates to:

@@ -91,7 +91,9 @@ void main() {
       ev(2, 'secret.resolved', {'request_id': 'sr1', 'outcome': 'declined'}),
     );
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('Declined'), findsOneWidget);
+    // Answered: the card folds into one line; the reason and the field are gone.
+    expect(find.text('Declined: Stripe key'), findsOneWidget);
+    expect(find.text('Only for api.stripe.com'), findsNothing);
   });
 
   testWidgets('a request already answered on the server shows how it ended, not an open card', (
@@ -100,7 +102,7 @@ void main() {
     // Declined earlier, but its run had ended, so no secret.resolved event ever came.
     final backend = await openChat(tester, statuses: {'sr1': 'declined'});
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('Declined'), findsOneWidget);
+    expect(find.text('Declined: Stripe key'), findsOneWidget);
     expect(find.byKey(const Key('secretValue')), findsNothing);
     expect(find.byKey(const Key('secretDecline')), findsNothing);
     expect(backend.secretAnswers, isEmpty);

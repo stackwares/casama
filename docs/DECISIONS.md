@@ -2400,3 +2400,9 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 - **Decision:** all of them use `showChoiceSheet` (`ui/form_sheet.dart`), the picker the bot profile and quiet hours already used: the same header as forms (icon tile, title, a line of help), then the options as one grouped card of rows, a bottom sheet on phones and a dialog on larger windows. No Cancel button; a flick down, a tap outside or Escape closes it, like other pickers.
 - **What the picker gained:** per-option keys, a `leading` widget (bot avatars, status dots), a `trailing` widget, destructive rows (Remove Photo in red), and asking without a current choice (`selected` left out: no checks, for "which bot" or "which source"). Settings pass `selected` and the current option is checked, as before, including a null value ("no folder").
 - **Not changed:** the persona gallery and the model picker, which are full pickers with search and previews of their own.
+
+## D-222 An answered request folds into one line
+
+- **Problem** (Oliver, on a declined key request that still showed its title, hosts and the bot's whole reason: "we don't need this big of a card when we've already taken action"): approvals already fold into one line once decided ("Allowed: Making an image"), but key and sign-in code requests, takeover requests and device access requests kept the full card after they were answered.
+- **Decision:** all four fold the same way, into one quiet line with an icon: "Saved STRIPE_API_KEY", "Declined: OpenRouter key", "No answer in time: Stripe sign-in code", "Handed back: <what the bot asked>", "Declined: <what the bot asked>", "Allowed to use your calendar", "Not shared: your calendar". The open card (field, buttons, reason) shows only while it waits for an answer. One widget (`_Folded` in `chat_widgets.dart`) draws all of them.
+- **Tests:** `secret_request_test.dart` (declined, and declined earlier with no event), `live_test.dart` (handed back).

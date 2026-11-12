@@ -1217,11 +1217,7 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
           l10n.approvalExpiredLine(words.doing),
         ),
       };
-      return Padding(
-        key: const Key('chatApproval'),
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: _Outcome(text: line, color: color, icon: icon),
-      );
+      return _Folded(key: const Key('chatApproval'), text: line, color: color, icon: icon);
     }
     // Everyday words: what the bot wants to do, and what it's about. The command stays on the
     // card, because this is the moment someone decides; the raw request stays behind Details.
@@ -1312,6 +1308,20 @@ class TakeoverPrompt extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.appColors;
+    // Answered: one quiet line, like a decided approval.
+    if (entry.outcome != null) {
+      final done = entry.outcome == 'completed';
+      return _Folded(
+        key: const Key('chatTakeover'),
+        text: switch (entry.outcome) {
+          'completed' => l10n.takeoverHandedBackLine(entry.reason),
+          'dismissed' => l10n.approvalDeclinedLine(entry.reason),
+          _ => l10n.approvalExpiredLine(entry.reason),
+        },
+        color: done ? colors.positive : context.colorScheme.onSurfaceVariant,
+        icon: done ? LucideIcons.circleCheck : LucideIcons.circleMinus,
+      );
+    }
     return _ActionCard(
       key: const Key('chatTakeover'),
       accent: colors.info,
@@ -1422,6 +1432,21 @@ class _SecretPromptState extends ConsumerState<SecretPrompt> {
     final colors = context.appColors;
     final e = widget.entry;
     final outcome = e.outcome ?? _sent;
+    // Answered: one quiet line, like a decided approval. The reason and the field are done with.
+    if (outcome != null) {
+      final what = e.totp ? l10n.totpWhat(e.service) : l10n.secretWhat(e.service);
+      final saved = outcome == 'fulfilled';
+      return _Folded(
+        key: const Key('chatSecret'),
+        text: switch (outcome) {
+          'fulfilled' => l10n.secretSaved(e.name),
+          'declined' => l10n.approvalDeclinedLine(what),
+          _ => l10n.approvalExpiredLine(what),
+        },
+        color: saved ? colors.positive : context.colorScheme.onSurfaceVariant,
+        icon: saved ? LucideIcons.circleCheck : LucideIcons.circleMinus,
+      );
+    }
     return _ActionCard(
       key: const Key('chatSecret'),
       accent: colors.warning,
@@ -1569,6 +1594,15 @@ class _DeviceAccessPromptState extends ConsumerState<DeviceAccessPrompt> {
     final colors = context.appColors;
     final e = widget.entry;
     final what = deviceKindLabel(l10n, e.kind);
+    // Answered: one quiet line, like a decided approval.
+    if (_allowed != null) {
+      return _Folded(
+        key: const Key('chatDeviceAccess'),
+        text: _allowed! ? l10n.deviceAccessAllowed(what) : l10n.deviceAccessSkippedLine(what),
+        color: _allowed! ? colors.positive : context.colorScheme.onSurfaceVariant,
+        icon: _allowed! ? LucideIcons.circleCheck : LucideIcons.circleMinus,
+      );
+    }
     return _ActionCard(
       key: const Key('chatDeviceAccess'),
       accent: colors.working,
@@ -1612,6 +1646,20 @@ class _DeviceAccessPromptState extends ConsumerState<DeviceAccessPrompt> {
             ),
     );
   }
+}
+
+/// An answered request (approval, key, takeover, device access) folded into one quiet line.
+class _Folded extends StatelessWidget {
+  const _Folded({super.key, required this.text, required this.color, required this.icon});
+  final String text;
+  final Color color;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 4),
+    child: _Outcome(text: text, color: color, icon: icon),
+  );
 }
 
 class _Outcome extends StatelessWidget {

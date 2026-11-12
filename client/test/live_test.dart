@@ -164,7 +164,8 @@ void main() {
     expect(find.byKey(const Key('chatTakeControl')), findsOneWidget);
     backend.runEventsController.add(ev(4, 'takeover.resolved', {'computer_id': computerId, 'outcome': 'completed', 'note': 'Done'}));
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('Handed back'), findsOneWidget);
+    expect(find.textContaining('Handed back'), findsOneWidget);
+    expect(find.byKey(const Key('chatTakeControl')), findsNothing);
   });
 
   testWidgets('computers: create a private desktop computer and switch a profile', (tester) async {
