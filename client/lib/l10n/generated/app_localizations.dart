@@ -10813,7 +10813,7 @@ abstract class AppLocalizations {
   /// No description provided for @localServerIntro.
   ///
   /// In en, this message translates to:
-  /// **'Needs Docker Desktop running and a few GB of disk. The first start takes several minutes.'**
+  /// **'Needs Docker Desktop running and about 10 GB of disk. The first start downloads the server, which takes several minutes.'**
   String get localServerIntro;
 
   /// No description provided for @localServerChecking.

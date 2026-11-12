@@ -2055,7 +2055,7 @@
   "secretStoreBack": "Use This Server's Vault Again",
   "localServer": "Run Casama on This Computer",
   "localServerHelp": "Starts your own Casama server here with Docker and connects to it. Only this computer can reach it.",
-  "localServerIntro": "Needs Docker Desktop running and a few GB of disk. The first start takes several minutes.",
+  "localServerIntro": "Needs Docker Desktop running and about 10 GB of disk. The first start downloads the server, which takes several minutes.",
   "localServerChecking": "Checking Docker…",
   "localServerDownloading": "Downloading the server…",
   "localServerInstalling": "Setting up the server…",

@@ -6867,7 +6867,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get localServerIntro =>
-      'Needs Docker Desktop running and a few GB of disk. The first start takes several minutes.';
+      'Needs Docker Desktop running and about 10 GB of disk. The first start downloads the server, which takes several minutes.';
 
   @override
   String get localServerChecking => 'Checking Docker…';
