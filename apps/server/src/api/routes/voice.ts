@@ -1,6 +1,7 @@
 /** Voice (Phase 6, D-065): dictation, read aloud, live-call sessions, tool forwarding, transcripts. */
 
 import {
+  answerGreeting,
   callGreeting,
   callNotAnswered,
   geminiLiveCost,
@@ -143,6 +144,13 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           )
         )[0];
     if (!conv) throw new Error("conversation insert returned nothing");
+    // A call the person started (D-234): the bot picks up and says hi first, like answering a phone.
+    if (!greeting) {
+      const [p] = await db.execute<{ name: string | null }>(sql`
+        select coalesce(nullif(btrim(preferred_name), ''), nullif(split_part(btrim(display_name), ' ', 1), '')) as name
+        from public.profiles where user_id = ${claims.sub}::uuid`);
+      greeting = answerGreeting(p?.name);
+    }
     // Calls included on Casama Cloud are paid from credits: none left, no call.
     if (
       deps.billing &&
@@ -165,7 +173,7 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         setup: s.setup,
         conversation_id: conv.id,
         tools: s.tools,
-        speak_first: !!greeting,
+        speak_first: true,
       },
       200,
     );

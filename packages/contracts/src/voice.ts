@@ -40,7 +40,7 @@ export const VoiceSession = z
     }),
     conversation_id: Uuid,
     tools: z.number().int(),
-    /** The bot opens the conversation (an answered phone call). */
+    /** The bot opens the conversation: it greets the person, or says why it phoned (D-234). */
     speak_first: z.boolean(),
   })
   .openapi("VoiceSession");

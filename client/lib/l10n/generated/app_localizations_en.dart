@@ -5235,7 +5235,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newGroupChatHelp =>
-      'Pick 2 to 10 bots. The first one leads: @everyone asks it for a plan. @Name wakes one bot.';
+      'Bring 2 to 10 bots into one chat. @Name asks one bot; @everyone asks the lead to plan and share out the work.';
+
+  @override
+  String get groupCreate => 'Create group chat';
+
+  @override
+  String get groupCrewEmpty => 'Pick bots below to build the group.';
+
+  @override
+  String get groupLeadShort => 'Lead';
+
+  @override
+  String get groupMakeLead => 'Make lead';
+
+  @override
+  String groupRemoveBot(String name) {
+    return 'Remove $name';
+  }
+
+  @override
+  String groupPickMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Pick $count more bots',
+      one: 'Pick 1 more bot',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupFull => 'That\'s 10 bots, the most a group can have.';
+
+  @override
+  String get groupLeadHint =>
+      'The lead plans the work when you @everyone. Tap another bot at the top to make it lead.';
+
+  @override
+  String get groupNeedTwoBots =>
+      'A group chat needs at least two bots. Make another bot first.';
+
+  @override
+  String get groupSearchBots => 'Search bots';
+
+  @override
+  String get groupNoMatch => 'No bots match that name.';
 
   @override
   String get groupTitle => 'Name (optional)';

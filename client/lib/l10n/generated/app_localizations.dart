@@ -8305,8 +8305,74 @@ abstract class AppLocalizations {
   /// No description provided for @newGroupChatHelp.
   ///
   /// In en, this message translates to:
-  /// **'Pick 2 to 10 bots. The first one leads: @everyone asks it for a plan. @Name wakes one bot.'**
+  /// **'Bring 2 to 10 bots into one chat. @Name asks one bot; @everyone asks the lead to plan and share out the work.'**
   String get newGroupChatHelp;
+
+  /// No description provided for @groupCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create group chat'**
+  String get groupCreate;
+
+  /// No description provided for @groupCrewEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick bots below to build the group.'**
+  String get groupCrewEmpty;
+
+  /// No description provided for @groupLeadShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Lead'**
+  String get groupLeadShort;
+
+  /// No description provided for @groupMakeLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Make lead'**
+  String get groupMakeLead;
+
+  /// No description provided for @groupRemoveBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}'**
+  String groupRemoveBot(String name);
+
+  /// No description provided for @groupPickMore.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Pick 1 more bot} other{Pick {count} more bots}}'**
+  String groupPickMore(int count);
+
+  /// No description provided for @groupFull.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s 10 bots, the most a group can have.'**
+  String get groupFull;
+
+  /// No description provided for @groupLeadHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The lead plans the work when you @everyone. Tap another bot at the top to make it lead.'**
+  String get groupLeadHint;
+
+  /// No description provided for @groupNeedTwoBots.
+  ///
+  /// In en, this message translates to:
+  /// **'A group chat needs at least two bots. Make another bot first.'**
+  String get groupNeedTwoBots;
+
+  /// No description provided for @groupSearchBots.
+  ///
+  /// In en, this message translates to:
+  /// **'Search bots'**
+  String get groupSearchBots;
+
+  /// No description provided for @groupNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No bots match that name.'**
+  String get groupNoMatch;
 
   /// No description provided for @groupTitle.
   ///

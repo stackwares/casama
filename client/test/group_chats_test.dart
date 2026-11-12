@@ -37,6 +37,44 @@ void main() {
     expect(backend.groups.single.title, 'Launch crew');
   });
 
+  testWidgets('the new group sheet lets you change the lead and take a bot out', (tester) async {
+    await setSize(tester, const Size(500, 1000));
+    final backend = FakeBackend();
+    backend.extraBots
+      ..add(backend.bot(id: 'bot-b', name: 'Bea'))
+      ..add(backend.bot(id: 'bot-c', name: 'Cy'));
+    await tester.pumpWidget(
+      harness(
+        backend,
+        Consumer(
+          builder: (context, ref, _) => Scaffold(
+            body: TextButton(onPressed: () => showNewGroupChat(context, ref), child: const Text('open')),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    expect(find.text('Pick 2 more bots'), findsOneWidget);
+    expect(tester.widget<FilledButton>(find.byKey(const Key('createGroup'))).onPressed, isNull);
+    for (final id in [botId, 'bot-b', 'bot-c']) {
+      await tester.tap(find.byKey(Key('pick-$id')));
+      await tester.pumpAndSettle();
+    }
+    expect(find.byKey(const Key('crew-bot-c')), findsOneWidget);
+    // Cy becomes the lead; Bea leaves from the strip at the top.
+    await tester.tap(find.byKey(const Key('crewLead-bot-c')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('crewRemove-bot-b')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('crew-bot-b')), findsNothing);
+    await tester.tap(find.byKey(const Key('createGroup')));
+    await tester.pumpAndSettle();
+    expect(backend.groups.single.botIds, ['bot-c', botId]);
+    expect(backend.groups.single.title, isNull);
+  });
+
   testWidgets('an empty group chat says who is in it and how to reach them', (tester) async {
     await setSize(tester, const Size(500, 1000));
     final backend = FakeBackend();

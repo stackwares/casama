@@ -257,11 +257,14 @@ describe("voice (Phase 6)", () => {
       model: "gpt-realtime-2.1",
       client_secret: "ek_test_ephemeral",
       conversation_id: convId,
+      // The person called, so the bot picks up and says hi first (D-234).
+      speak_first: true,
     });
     const minted = JSON.parse(
       mock.calls.find((c) => c.path === "/v1/realtime/client_secrets")?.body ?? "{}",
     );
     expect(minted.session.instructions).toContain("You love plants.");
+    expect(minted.session.instructions).toContain("Speak first: say hi");
     expect(minted.session.tools.map((t: { name: string }) => t.name)).toContain("memory__search");
 
     const t1 = performance.now();

@@ -11,7 +11,9 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
+import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
 import '../chat/chat_screen.dart';
@@ -62,68 +64,558 @@ class _NewGroup extends ConsumerStatefulWidget {
   ConsumerState<_NewGroup> createState() => _NewGroupState();
 }
 
+/// The most bots a group chat can hold (the server's rule, D-118).
+const _maxGroupBots = 10;
+
+/// New group chat: who's in it (the lead first) at the top, then a name, then the bots to pick.
 class _NewGroupState extends ConsumerState<_NewGroup> {
   final _picked = <String>[];
   final _title = TextEditingController();
+  final _search = TextEditingController();
+  var _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _search.addListener(() => setState(() {}));
+  }
 
   @override
   void dispose() {
     _title.dispose();
+    _search.dispose();
     super.dispose();
+  }
+
+  void _toggle(String id) {
+    setState(() {
+      if (_picked.remove(id)) return;
+      if (_picked.length >= _maxGroupBots) return;
+      _picked.add(id);
+    });
+    HapticsHelper.soft();
+  }
+
+  void _makeLead(String id) {
+    if (_picked.firstOrNull == id) return;
+    setState(() => _picked
+      ..remove(id)
+      ..insert(0, id));
+    HapticsHelper.selection();
+  }
+
+  Future<void> _create() async {
+    setState(() => _busy = true);
+    final title = _title.text.trim();
+    final c = await runGuarded(
+      context,
+      () => ref
+          .read(backendProvider)
+          .createGroupChat(
+            _picked.first,
+            _picked.skip(1).toList(),
+            title: title.isEmpty ? null : title,
+          ),
+    );
+    if (!mounted) return;
+    if (c == null) return setState(() => _busy = false);
+    HapticsHelper.success();
+    Navigator.pop(context, c.id);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final bots = ref.watch(botsProvider).value ?? const <Bot>[];
-    final valid = _picked.length >= 2 && _picked.length <= 10;
+    final scheme = context.colorScheme;
+    final bots = (ref.watch(botsProvider).value ?? const <Bot>[])
+        .where((b) => b.archivedAt == null)
+        .toList();
+    final byId = {for (final b in bots) b.id: b};
+    final picked = [
+      for (final id in _picked)
+        if (byId[id] != null) byId[id]!,
+    ];
+    final valid = picked.length >= 2 && picked.length <= _maxGroupBots;
+    final full = picked.length >= _maxGroupBots;
+    final q = _search.text.trim().toLowerCase();
+    final shown = q.isEmpty
+        ? bots
+        : bots.where((b) => b.name.toLowerCase().contains(q)).toList();
+    final note = bots.length < 2
+        ? l10n.groupNeedTwoBots
+        : picked.length < 2
+        ? l10n.groupPickMore(2 - picked.length)
+        : full
+        ? l10n.groupFull
+        : l10n.groupLeadHint;
     return FormSheet(
       icon: LucideIcons.users,
       title: l10n.newGroupChat,
       subtitle: l10n.newGroupChatHelp,
-      submitLabel: l10n.create,
+      submitLabel: l10n.groupCreate,
+      submitIcon: LucideIcons.messagesSquare,
       submitKey: const Key('createGroup'),
-      onSubmit: !valid
-          ? null
-          : () async {
-              final c = await runGuarded(
-                context,
-                () => ref
-                    .read(backendProvider)
-                    .createGroupChat(
-                      _picked.first,
-                      _picked.skip(1).toList(),
-                      title: _title.text.trim().isEmpty
-                          ? null
-                          : _title.text.trim(),
-                    ),
-              );
-              if (c != null && context.mounted) Navigator.pop(context, c.id);
-            },
+      busy: _busy,
+      onSubmit: valid ? _create : null,
+      footer: FormNote(
+        note,
+        key: const Key('groupNote'),
+        icon: picked.length < 2 ? LucideIcons.info : LucideIcons.crown,
+      ),
       children: [
+        _Crew(bots: picked, onRemove: _toggle, onMakeLead: _makeLead),
         TextField(
           key: const Key('groupTitle'),
           controller: _title,
-          decoration: InputDecoration(labelText: l10n.groupTitle),
+          textCapitalization: TextCapitalization.words,
+          textInputAction: TextInputAction.done,
+          decoration: InputDecoration(
+            labelText: l10n.groupTitle,
+            // Unnamed groups go by their bots' names, so show that.
+            hintText: picked.isEmpty
+                ? null
+                : picked.map((b) => b.name).join(', '),
+            floatingLabelBehavior: picked.isEmpty
+                ? null
+                : FloatingLabelBehavior.always,
+            prefixIcon: const Icon(LucideIcons.tag, size: 18),
+          ),
         ),
-        Text(l10n.groupPickBots, style: Theme.of(context).textTheme.labelLarge),
-        for (final b in bots)
-          CheckboxListTile(
-            key: Key('pick-${b.id}'),
-            contentPadding: EdgeInsets.zero,
-            title: Text(b.name),
-            subtitle: _picked.isNotEmpty && _picked.first == b.id
-                ? Text(l10n.groupLead)
-                : null,
-            value: _picked.contains(b.id),
-            onChanged: hapticOnChanged(
-              (v) => setState(
-                () => v == true ? _picked.add(b.id) : _picked.remove(b.id),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                l10n.groupPickBots,
+                style: context.textTheme.labelLarge,
               ),
-              haptic: HapticsHelper.soft,
+            ),
+            AnimatedSwitcher(
+              duration: AppMotion.fast,
+              child: Text(
+                '${picked.length} / $_maxGroupBots',
+                key: ValueKey(picked.length),
+                style: context.textTheme.labelMedium?.copyWith(
+                  color: full ? scheme.primary : scheme.onSurfaceVariant,
+                  fontFeatures: AppText.tabular,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (bots.length > 6)
+          TextField(
+            key: const Key('groupSearch'),
+            controller: _search,
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              hintText: l10n.groupSearchBots,
+              prefixIcon: const Icon(LucideIcons.search, size: 18),
+              suffixIcon: q.isEmpty
+                  ? null
+                  : IconButton(
+                      tooltip: MaterialLocalizations.of(
+                        context,
+                      ).deleteButtonTooltip,
+                      icon: const Icon(LucideIcons.x, size: 16),
+                      onPressed: _search.clear,
+                    ),
+              isDense: true,
             ),
           ),
+        if (shown.isEmpty && bots.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpace.md),
+            child: Text(
+              l10n.groupNoMatch,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
+          ),
+        if (shown.isNotEmpty)
+          GroupedCard(
+            dividerIndent: 64,
+            children: [
+              for (final b in shown)
+                _BotPickRow(
+                  bot: b,
+                  order: _picked.indexOf(b.id),
+                  enabled: !full || _picked.contains(b.id),
+                  onTap: () => _toggle(b.id),
+                ),
+            ],
+          ),
       ],
+    );
+  }
+}
+
+/// The group so far: the lead first with a crown, then the others in the order they were picked.
+/// Tapping another bot makes it the lead; the small x takes a bot out.
+class _Crew extends StatelessWidget {
+  const _Crew({
+    required this.bots,
+    required this.onRemove,
+    required this.onMakeLead,
+  });
+  final List<Bot> bots;
+  final ValueChanged<String> onRemove;
+  final ValueChanged<String> onMakeLead;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    return AnimatedSize(
+      duration: AppMotion.duration,
+      curve: AppMotion.curve,
+      alignment: Alignment.topCenter,
+      child: Container(
+        key: const Key('groupCrew'),
+        constraints: const BoxConstraints(minHeight: 96),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.sm,
+          vertical: AppSpace.sm,
+        ),
+        decoration: BoxDecoration(
+          color: scheme.primary.withValues(alpha: context.isDark ? 0.08 : 0.04),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: context.appColors.hairline),
+        ),
+        child: bots.isEmpty
+            ? Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (var i = 0; i < 3; i++)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: scheme.surfaceContainerHighest.withValues(
+                              alpha: 0.6,
+                            ),
+                          ),
+                          child: Icon(
+                            LucideIcons.plus,
+                            size: 16,
+                            color: scheme.onSurfaceVariant.withValues(
+                              alpha: 0.6,
+                            ),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(width: AppSpace.sm),
+                    Flexible(
+                      child: Text(
+                        l10n.groupCrewEmpty,
+                        style: context.textTheme.bodyMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final (i, b) in bots.indexed)
+                      _CrewMember(
+                        key: ValueKey('crew-${b.id}'),
+                        bot: b,
+                        lead: i == 0,
+                        onRemove: () => onRemove(b.id),
+                        onMakeLead: i == 0 ? null : () => onMakeLead(b.id),
+                      ),
+                  ],
+                ),
+              ),
+      ),
+    );
+  }
+}
+
+class _CrewMember extends StatelessWidget {
+  const _CrewMember({
+    super.key,
+    required this.bot,
+    required this.lead,
+    required this.onRemove,
+    this.onMakeLead,
+  });
+  final Bot bot;
+  final bool lead;
+  final VoidCallback onRemove;
+  final VoidCallback? onMakeLead;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final reduce = MediaQuery.disableAnimationsOf(context);
+    final face = SizedBox(
+      width: 64,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              AnimatedContainer(
+                duration: AppMotion.fast,
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: lead ? scheme.primary : Colors.transparent,
+                    width: 2,
+                  ),
+                ),
+                child: BotAvatar(
+                  name: bot.name,
+                  avatar: bot.avatarUrl,
+                  size: 44,
+                ),
+              ),
+              if (lead)
+                Positioned(
+                  top: -6,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: BoxDecoration(
+                        color: scheme.primary,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: scheme.surface, width: 1.5),
+                      ),
+                      child: Icon(
+                        LucideIcons.crown,
+                        size: 10,
+                        color: scheme.onPrimary,
+                      ),
+                    ),
+                  ),
+                ),
+              Positioned(
+                right: -4,
+                bottom: -2,
+                child: Semantics(
+                  button: true,
+                  label: l10n.groupRemoveBot(bot.name),
+                  child: InkResponse(
+                    key: Key('crewRemove-${bot.id}'),
+                    onTap: onRemove,
+                    radius: 16,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerHighest,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: scheme.surface, width: 1.5),
+                      ),
+                      child: Icon(
+                        LucideIcons.x,
+                        size: 11,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            bot.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: context.textTheme.labelMedium?.copyWith(
+              fontWeight: lead ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+          Text(
+            lead ? l10n.groupLeadShort : l10n.groupMakeLead,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: context.textTheme.labelSmall?.copyWith(
+              color: lead
+                  ? scheme.primary
+                  : scheme.onSurfaceVariant.withValues(alpha: 0.8),
+            ),
+          ),
+        ],
+      ),
+    );
+    final tile = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: onMakeLead == null
+          ? face
+          : Tooltip(
+              message: l10n.groupMakeLead,
+              child: InkWell(
+                key: Key('crewLead-${bot.id}'),
+                borderRadius: BorderRadius.circular(AppRadius.tile),
+                onTap: onMakeLead,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: face,
+                ),
+              ),
+            ),
+    );
+    if (onMakeLead == null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: tile,
+      );
+    }
+    if (reduce) return tile;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.85, end: 1),
+      duration: AppMotion.duration,
+      curve: Curves.easeOutBack,
+      builder: (_, v, child) => Transform.scale(scale: v, child: child),
+      child: tile,
+    );
+  }
+}
+
+/// One bot in the list: its face, name and what it's doing, and a check that shows the order it
+/// joins in. Once the group is full, the rest dim.
+class _BotPickRow extends StatelessWidget {
+  const _BotPickRow({
+    required this.bot,
+    required this.order,
+    required this.enabled,
+    required this.onTap,
+  });
+  final Bot bot;
+
+  /// -1 when not picked; 0 is the lead.
+  final int order;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final picked = order >= 0;
+    final status = switch (bot.status) {
+      BotStatusEnum.working => l10n.botStatusWorking,
+      BotStatusEnum.waiting => l10n.botStatusWaiting,
+      BotStatusEnum.disabled => l10n.botStatusDisabled,
+      BotStatusEnum.idle => null,
+    };
+    final subtitle = order == 0 ? l10n.groupLead : status;
+    return Semantics(
+      checked: picked,
+      enabled: enabled,
+      child: Material(
+        color: picked
+            ? scheme.primary.withValues(alpha: context.isDark ? 0.12 : 0.06)
+            : Colors.transparent,
+        child: InkWell(
+          key: Key('pick-${bot.id}'),
+          onTap: enabled ? onTap : null,
+          child: AnimatedOpacity(
+            duration: AppMotion.fast,
+            opacity: enabled ? 1 : 0.45,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpace.md,
+                vertical: AppSpace.sm,
+              ),
+              child: Row(
+                children: [
+                  BotAvatar(
+                    name: bot.name,
+                    avatar: bot.avatarUrl,
+                    size: 36,
+                  ),
+                  const SizedBox(width: AppSpace.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          bot.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (subtitle != null)
+                          Text(
+                            subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.textTheme.bodySmall?.copyWith(
+                              color: order == 0
+                                  ? scheme.primary
+                                  : scheme.onSurfaceVariant,
+                              fontWeight: order == 0 ? FontWeight.w600 : null,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpace.sm),
+                  AnimatedContainer(
+                    duration: AppMotion.fast,
+                    curve: AppMotion.curve,
+                    width: 26,
+                    height: 26,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: picked ? scheme.primary : Colors.transparent,
+                      border: Border.all(
+                        color: picked ? scheme.primary : scheme.outline,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: AppMotion.fast,
+                      transitionBuilder: (c, a) =>
+                          ScaleTransition(scale: a, child: c),
+                      child: !picked
+                          ? const SizedBox.shrink()
+                          : order == 0
+                          ? Icon(
+                              LucideIcons.crown,
+                              key: const ValueKey('lead'),
+                              size: 13,
+                              color: scheme.onPrimary,
+                            )
+                          : Text(
+                              '${order + 1}',
+                              key: ValueKey(order),
+                              style: context.textTheme.labelMedium?.copyWith(
+                                color: scheme.onPrimary,
+                                fontWeight: FontWeight.w700,
+                                fontFeatures: AppText.tabular,
+                              ),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

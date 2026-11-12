@@ -239,6 +239,15 @@ export function registerPhoneCallTools(registry: ToolRegistry, deps: PhoneCallDe
   });
 }
 
+/**
+ * The person started the call (D-234): the bot answers like a phone, greeting them first so they
+ * aren't left talking into silence. [name]: what they like to be called, when known.
+ */
+export function answerGreeting(name?: string | null) {
+  const who = name?.trim() ? ` (${name.trim()})` : "";
+  return `The user${who} just called you and the line is open. Speak first: say hi warmly in one short sentence${who ? ", using their name" : ""}, and ask what you can do for them. Then listen.`;
+}
+
 /** What the bot says first when the person answers (added to the live call's instructions). */
 export function callGreeting(reason: string) {
   return `You phoned the user and they just answered. You called because: ${reason}\nSpeak first: greet them briefly, say why you called, then listen.`;
