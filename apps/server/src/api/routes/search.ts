@@ -52,12 +52,15 @@ export function registerSearchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.search, async (c) => {
     const claims = c.get("claims") as JwtClaims | undefined;
     if (!claims) throw new ApiError(401, "unauthorized", "Missing or invalid bearer token");
-    const { org_id, q, files } = c.req.valid("query");
+    const { org_id, q, files, kinds } = c.req.valid("query");
+    // A scoped search (D-235) lists more of the kinds asked for and skips the rest.
+    const only = kinds ? new Set(kinds.split(",")) : null;
+    const perKind = only ? 25 : 8;
     const query = q.trim();
     if (query.length < 2) throw new ApiError(400, "query_too_short", "Type at least 2 characters");
     const rows = await withUserSession(db, claims, (tx) =>
       tx.execute<{
-        kind: "message";
+        kind: "message" | "chat" | "memory" | "skill" | "routine" | "ticket";
         id: string;
         title: string;
         snippet: string;
@@ -65,8 +68,9 @@ export function registerSearchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         conversation_id: string | null;
         created_at: string;
       }>(sql`select kind, id, title, snippet, bot_id, conversation_id, created_at
-             from public.search_workspace(${org_id}::uuid, ${query}, 8)`),
+             from public.search_workspace(${org_id}::uuid, ${query}, ${perKind})`),
     );
+    const items = only ? rows.filter((r) => only.has(r.kind)) : rows;
 
     let fileResults: Array<{
       computer_id: string;
@@ -75,7 +79,7 @@ export function registerSearchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       match: "name" | "content";
     }> = [];
     let searched = 0;
-    if (files !== "false" && deps.computers) {
+    if (files !== "false" && (!only || only.has("file")) && deps.computers) {
       // Awake computers the caller can see (RLS); never wake one for a search.
       const awake = await withUserSession(db, claims, (tx) =>
         tx.execute<{ id: string; name: string }>(sql`
@@ -110,7 +114,7 @@ export function registerSearchRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return c.json(
       {
         query,
-        items: rows.map((r) => ({ ...r, created_at: iso(r.created_at) })),
+        items: items.map((r) => ({ ...r, created_at: iso(r.created_at) })),
         files: fileResults,
         files_searched: searched,
       },

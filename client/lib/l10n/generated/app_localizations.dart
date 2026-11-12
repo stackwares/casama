@@ -7348,6 +7348,102 @@ abstract class AppLocalizations {
   /// **'Files on sleeping computers aren\'t searched. Start a computer to include its files.'**
   String get searchFilesAsleep;
 
+  /// No description provided for @searchJumpHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search or jump to…'**
+  String get searchJumpHint;
+
+  /// No description provided for @searchRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get searchRecent;
+
+  /// No description provided for @searchClearRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get searchClearRecent;
+
+  /// No description provided for @searchRemoveRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from recent searches'**
+  String get searchRemoveRecent;
+
+  /// No description provided for @searchJumpBackIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump back in'**
+  String get searchJumpBackIn;
+
+  /// No description provided for @searchNeedsYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs you'**
+  String get searchNeedsYou;
+
+  /// No description provided for @searchWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 thing is waiting for you} other{{n} things are waiting for you}}'**
+  String searchWaiting(int n);
+
+  /// No description provided for @searchGoTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to'**
+  String get searchGoTo;
+
+  /// No description provided for @searchTopHits.
+  ///
+  /// In en, this message translates to:
+  /// **'Top hits'**
+  String get searchTopHits;
+
+  /// No description provided for @searchScopeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get searchScopeAll;
+
+  /// No description provided for @searchMemories.
+  ///
+  /// In en, this message translates to:
+  /// **'Memories'**
+  String get searchMemories;
+
+  /// No description provided for @searchKeepTyping.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep typing to search messages, memories and files.'**
+  String get searchKeepTyping;
+
+  /// No description provided for @searchAskBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask {bot} about “{query}”'**
+  String searchAskBot(String bot, String query);
+
+  /// No description provided for @searchAskBotHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts a new chat with this question'**
+  String get searchAskBotHelp;
+
+  /// No description provided for @searchKeysHint.
+  ///
+  /// In en, this message translates to:
+  /// **'↑ ↓ to move   ↵ to open   esc to close'**
+  String get searchKeysHint;
+
+  /// No description provided for @searchClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get searchClear;
+
   /// No description provided for @installFor.
   ///
   /// In en, this message translates to:

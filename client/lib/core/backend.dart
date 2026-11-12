@@ -743,8 +743,9 @@ abstract class Backend {
   });
   Future<UsageReport> usage(String orgId, {String period});
 
-  /// Workspace search (D-103), including files on awake computers.
-  Future<SearchResponse> search(String orgId, String query);
+  /// Workspace search (D-103), including files on awake computers. [kinds] scopes it (D-235):
+  /// message, chat, memory, skill, routine, ticket or file; files only when `file` is listed.
+  Future<SearchResponse> search(String orgId, String query, {List<String>? kinds});
 
   // Bot folders, archive and settings history (D-100)
   Future<List<BotFolder>> botFolders(String orgId);

@@ -24,6 +24,7 @@ class SearchApi {
   /// * [orgId] 
   /// * [q] 
   /// * [files] - Also search file names and contents on awake computers (default true)
+  /// * [kinds] - Only these kinds, comma-separated (message, chat, memory, skill, routine, ticket, file). A scoped search returns up to 25 of each kind instead of 8; files are searched only when `file` is listed.
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -37,6 +38,7 @@ class SearchApi {
     required String orgId,
     required String q,
     String? files,
+    String? kinds,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -67,6 +69,7 @@ class SearchApi {
       r'org_id': orgId,
       r'q': q,
       if (files != null) r'files': files,
+      if (kinds != null) r'kinds': kinds,
     };
 
     final _response = await _dio.request<Object>(

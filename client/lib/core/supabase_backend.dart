@@ -806,8 +806,8 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<SearchResponse> search(String orgId, String query) async =>
-      (await api.search.search(orgId: orgId, q: query)).data!;
+  Future<SearchResponse> search(String orgId, String query, {List<String>? kinds}) async =>
+      (await api.search.search(orgId: orgId, q: query, kinds: kinds?.join(','))).data!;
 
   @override
   Future<List<BotFolder>> botFolders(String orgId) async {

@@ -4634,6 +4634,65 @@ class AppLocalizationsEn extends AppLocalizations {
       'Files on sleeping computers aren\'t searched. Start a computer to include its files.';
 
   @override
+  String get searchJumpHint => 'Search or jump to…';
+
+  @override
+  String get searchRecent => 'Recent';
+
+  @override
+  String get searchClearRecent => 'Clear';
+
+  @override
+  String get searchRemoveRecent => 'Remove from recent searches';
+
+  @override
+  String get searchJumpBackIn => 'Jump back in';
+
+  @override
+  String get searchNeedsYou => 'Needs you';
+
+  @override
+  String searchWaiting(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n things are waiting for you',
+      one: '1 thing is waiting for you',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get searchGoTo => 'Go to';
+
+  @override
+  String get searchTopHits => 'Top hits';
+
+  @override
+  String get searchScopeAll => 'All';
+
+  @override
+  String get searchMemories => 'Memories';
+
+  @override
+  String get searchKeepTyping =>
+      'Keep typing to search messages, memories and files.';
+
+  @override
+  String searchAskBot(String bot, String query) {
+    return 'Ask $bot about “$query”';
+  }
+
+  @override
+  String get searchAskBotHelp => 'Starts a new chat with this question';
+
+  @override
+  String get searchKeysHint => '↑ ↓ to move   ↵ to open   esc to close';
+
+  @override
+  String get searchClear => 'Clear search';
+
+  @override
   String get installFor => 'Install for';
 
   @override

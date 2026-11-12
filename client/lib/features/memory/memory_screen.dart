@@ -11,6 +11,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../../ui/route_focus.dart';
 import '../bots/agent_import.dart';
 
 /// What a bot remembers: view, edit, pin and delete (deleted memories are gone, not hidden).
@@ -50,7 +51,14 @@ class MemoryScreen extends ConsumerWidget {
       if (n != null && context.mounted) showSuccess(context, l10n.memoriesImported(n));
     }
 
-    return SubPage(
+    // A search result links here with `?focus=<memory>` (D-235): open that memory.
+    final focus = routeFocus(context);
+    final focused = memories.value?.where((m) => m.id == focus).firstOrNull;
+    return OpenOnce(
+      id: focused?.id,
+      ready: focused != null,
+      open: (_) => _edit(context, ref, focused!),
+      child: SubPage(
       title: l10n.memory,
       subtitle: bot?.name,
       actions: [IconButton(key: const Key('importMemories'), tooltip: l10n.importMemoryTitle, icon: const Icon(LucideIcons.download), onPressed: importMemories)],
@@ -72,6 +80,7 @@ class MemoryScreen extends ConsumerWidget {
                   },
                 ).appListItemEntrance(i),
               ),
+      ),
       ),
     );
   }

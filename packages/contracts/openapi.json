@@ -25749,6 +25749,17 @@
             "description": "Also search file names and contents on awake computers (default true)",
             "name": "files",
             "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^(message|chat|memory|skill|routine|ticket|file)(,(message|chat|memory|skill|routine|ticket|file))*$",
+              "description": "Only these kinds, comma-separated (message, chat, memory, skill, routine, ticket, file). A scoped search returns up to 25 of each kind instead of 8; files are searched only when `file` is listed."
+            },
+            "required": false,
+            "description": "Only these kinds, comma-separated (message, chat, memory, skill, routine, ticket, file). A scoped search returns up to 25 of each kind instead of 8; files are searched only when `file` is listed.",
+            "name": "kinds",
+            "in": "query"
           }
         ],
         "responses": {

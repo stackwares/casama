@@ -18,6 +18,7 @@ import '../../ui/advanced_section.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/app_card.dart';
 import '../../ui/page.dart';
+import '../../ui/route_focus.dart';
 import '../../ui/segmented.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
@@ -34,6 +35,8 @@ class RoutinesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    // A search result links here with `?focus=<routine>` (D-235): that card scrolls in and glows.
+    final focus = routeFocus(context);
     return Scaffold(
       appBar: ShellHeader(
         title: l10n.routines,
@@ -56,7 +59,10 @@ class RoutinesScreen extends ConsumerWidget {
                     padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xl + MediaQuery.paddingOf(context).bottom),
                     itemCount: items.length,
                     separatorBuilder: (_, _) => const SizedBox(height: AppSpace.xs),
-                    itemBuilder: (context, i) => _RoutineCard(routine: items[i]).appListItemEntrance(i),
+                    itemBuilder: (context, i) => FocusHighlight(
+                      active: items[i].id == focus,
+                      child: _RoutineCard(routine: items[i]),
+                    ).appListItemEntrance(i),
                   );
                 },
               ),

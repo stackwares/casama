@@ -17,6 +17,7 @@ import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
+import '../../ui/route_focus.dart';
 import 'skill_catalog_screen.dart';
 import 'skill_library.dart';
 
@@ -43,7 +44,14 @@ class SkillsScreen extends ConsumerWidget {
     final skills = ref.watch(skillsProvider);
     // For each catalog skill's own icon; rows fall back to category icons until it loads.
     final catalog = ref.watch(skillCatalogProvider).value;
-    return SubPage(
+    // A search result links here with `?focus=<skill>` (D-235): open that skill.
+    final focus = routeFocus(context);
+    final focused = skills.value?.where((s) => s.id == focus).firstOrNull;
+    return OpenOnce(
+      id: focused?.id,
+      ready: focused != null,
+      open: (_) => _edit(context, ref, focused),
+      child: SubPage(
       title: l10n.skills,
       actions: [
         HeaderIconButton(
@@ -178,6 +186,7 @@ class SkillsScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+      ),
       ),
     );
   }

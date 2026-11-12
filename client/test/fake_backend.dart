@@ -1215,9 +1215,13 @@ class FakeBackend implements Backend {
   Future<void> applySkillUpdate(String skillId, String commit) async =>
       appliedUpdate = commit;
   final searches = <String>[];
+  final searchKinds = <List<String>?>[];
+  var searchFindsNothing = false;
   @override
-  Future<SearchResponse> search(String orgId, String query) async {
+  Future<SearchResponse> search(String orgId, String query, {List<String>? kinds}) async {
     searches.add(query);
+    searchKinds.add(kinds);
+    bool wanted(String kind) => !searchFindsNothing && (kinds == null || kinds.contains(kind));
     return SearchResponse(
       query: query,
       items: [
@@ -1239,16 +1243,17 @@ class FakeBackend implements Backend {
           conversationId: null,
           createdAt: DateTime(2026, 11, 9),
         ),
-      ],
+      ].where((r) => wanted(r.kind.value)).toList(),
       files: [
-        FileSearchResult(
-          computerId: 'comp-1',
-          computerName: 'Team computer',
-          path: 'docs/invoice.md',
-          match: FileSearchResultMatchEnum.name,
-        ),
+        if (wanted('file'))
+          FileSearchResult(
+            computerId: 'comp-1',
+            computerName: 'Team computer',
+            path: 'docs/invoice.md',
+            match: FileSearchResultMatchEnum.name,
+          ),
       ],
-      filesSearched: 1,
+      filesSearched: wanted('file') ? 1 : 0,
     );
   }
 

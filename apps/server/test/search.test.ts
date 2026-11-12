@@ -85,6 +85,24 @@ describe("search", () => {
     );
     expect(res.items).toEqual([]);
   });
+
+  it("limits a scoped search to the kinds asked for (D-235)", async () => {
+    const res = await j(
+      await h.request(`/v1/search?org_id=${orgA}&q=invoice&kinds=memory,ticket`, {
+        token: ada.token,
+      }),
+    );
+    expect([...new Set(res.items.map((i: { kind: string }) => i.kind))].sort()).toEqual([
+      "memory",
+      "ticket",
+    ]);
+    expect(res.files).toEqual([]);
+    expect(res.files_searched).toBe(0);
+    expect(
+      (await h.request(`/v1/search?org_id=${orgA}&q=invoice&kinds=pages`, { token: ada.token }))
+        .status,
+    ).toBe(400);
+  });
 });
 
 describe("file search command", () => {

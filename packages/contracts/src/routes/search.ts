@@ -19,6 +19,16 @@ export const search = createRoute({
       files: z.enum(["true", "false"]).optional().openapi({
         description: "Also search file names and contents on awake computers (default true)",
       }),
+      kinds: z
+        .string()
+        .regex(
+          /^(message|chat|memory|skill|routine|ticket|file)(,(message|chat|memory|skill|routine|ticket|file))*$/,
+        )
+        .optional()
+        .openapi({
+          description:
+            "Only these kinds, comma-separated (message, chat, memory, skill, routine, ticket, file). A scoped search returns up to 25 of each kind instead of 8; files are searched only when `file` is listed.",
+        }),
     }),
   },
   responses: { 200: jsonResponse("Results grouped by kind", SearchResponse), 400: e400, 401: e401 },
