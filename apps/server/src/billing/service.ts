@@ -4,14 +4,18 @@
  * belongs to the workspace, so buying on one platform unlocks every platform.
  */
 import { randomUUID } from "node:crypto";
+import { track } from "@casama/agent";
 import type { Database } from "@casama/db";
+import { deterministicUuid, getProductAnalytics } from "@casama/observability";
 import { sql } from "drizzle-orm";
+import { PAID_CHANGES, subscriptionChange } from "./analytics.ts";
 import {
   BillingError,
   type BillingProvider,
   type BillingSource,
   ENTITLED,
   type SubscriptionSnapshot,
+  type SubscriptionStatus,
   type WebhookRequest,
 } from "./types.ts";
 
@@ -138,8 +142,14 @@ export class BillingService {
 
   /** Stores the provider's view of a subscription and recomputes the workspace's entitlement. */
   async applySnapshot(snap: SubscriptionSnapshot, opts: { orgId?: string; refund?: boolean } = {}) {
-    const [existing] = await this.db.execute<{ org_id: string }>(sql`
-      select org_id from public.subscriptions where source = ${snap.source} and external_id = ${snap.externalId}`);
+    const [existing] = await this.db.execute<{
+      org_id: string;
+      status: SubscriptionStatus;
+      plan_code: string;
+      current_period_end: Date | string | null;
+    }>(sql`
+      select org_id, status, plan_code, current_period_end from public.subscriptions
+      where source = ${snap.source} and external_id = ${snap.externalId}`);
     const orgId = existing?.org_id ?? snap.orgId ?? opts.orgId;
     if (!orgId)
       throw new BillingError("unknown_org", "This purchase is not linked to a workspace", 400);
@@ -168,7 +178,75 @@ export class BillingService {
         customer_id = coalesce(excluded.customer_id, public.subscriptions.customer_id),
         raw = excluded.raw,
         updated_at = now()`);
+    await this.trackSubscription(orgId, snap, plan, status, existing);
     return this.recompute(orgId);
+  }
+
+  /**
+   * Product analytics for a subscription change (ANALYTICS-PLAN §6.8). Attributed to the workspace owner
+   * (the webhook does not say who paid), carries ids and enums only, and a retry of the same period merges
+   * in PostHog. `purchase` has no `value` yet: plans only have a text price label, not an amount.
+   */
+  private async trackSubscription(
+    orgId: string,
+    snap: SubscriptionSnapshot,
+    plan: PlanRow,
+    status: SubscriptionStatus,
+    existing:
+      | {
+          status: SubscriptionStatus;
+          plan_code: string;
+          current_period_end: Date | string | null;
+        }
+      | undefined,
+  ) {
+    if (!getProductAnalytics().enabled) return;
+    const asDate = (d: Date | string | null) => (d ? new Date(d) : null);
+    const change = subscriptionChange(
+      existing && {
+        status: existing.status,
+        plan_code: existing.plan_code,
+        period_end: asDate(existing.current_period_end),
+      },
+      { status, plan_code: plan.code, period_end: snap.currentPeriodEnd },
+    );
+    if (!change) return;
+    const [owner] = await this.db.execute<{ created_by: string | null }>(
+      sql`select created_by from public.organizations where id = ${orgId}::uuid`,
+    );
+    const base = {
+      store: snap.source,
+      plan: plan.code,
+      interval: plan.interval,
+      product_id: snap.productId,
+    };
+    const once = deterministicUuid(
+      "subscription",
+      snap.source,
+      snap.externalId,
+      change,
+      snap.currentPeriodEnd?.toISOString() ?? "",
+    );
+    track(this.db, {
+      event: "subscription_changed",
+      userId: owner?.created_by,
+      orgId,
+      uuid: once,
+      properties: { ...base, change, from_status: existing?.status ?? "none", to_status: status },
+    });
+    if (PAID_CHANGES.includes(change))
+      track(this.db, {
+        event: "purchase",
+        userId: owner?.created_by,
+        orgId,
+        uuid: deterministicUuid(
+          "purchase",
+          snap.source,
+          snap.externalId,
+          snap.currentPeriodEnd?.toISOString() ?? "",
+        ),
+        properties: { ...base, kind: change === "renewed" ? "renewal" : "new" },
+      });
   }
 
   private async applyPayment(provider: BillingProvider, paymentId: string) {
@@ -179,6 +257,18 @@ export class BillingService {
     if (credits <= 0) return; // subscription payments are handled by subscription events
     if (!p.orgId) throw new BillingError("unknown_org", "Payment has no workspace", 400);
     await this.credit(p.orgId, credits, "purchase", `dodo:${paymentId}`, "Credit pack");
+    if (getProductAnalytics().enabled) {
+      const [owner] = await this.db.execute<{ created_by: string | null }>(
+        sql`select created_by from public.organizations where id = ${p.orgId}::uuid`,
+      );
+      track(this.db, {
+        event: "purchase",
+        userId: owner?.created_by,
+        orgId: p.orgId,
+        uuid: deterministicUuid("purchase", "dodo", paymentId),
+        properties: { store: "dodo", kind: "credit_pack" },
+      });
+    }
   }
 
   private async applyRefund(provider: BillingProvider, paymentId: string) {

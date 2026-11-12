@@ -36,6 +36,7 @@ export const organizations = pgTable("organizations", {
 	allowBotToBot: boolean("allow_bot_to_bot").default(true).notNull(),
 	contentEncryption: text("content_encryption").default('off').notNull(),
 	a2AEnabled: boolean("a2a_enabled").default(false).notNull(),
+	analyticsOptOut: boolean("analytics_opt_out").default(false).notNull(),
 }, (table) => [
 	foreignKey({
 			columns: [table.createdBy],

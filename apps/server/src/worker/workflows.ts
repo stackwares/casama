@@ -30,6 +30,7 @@ import { DEFAULT_MODELS } from "@casama/domain";
 import { captureError } from "@casama/observability";
 import { DBOS } from "@dbos-inc/dbos-sdk";
 import { sql } from "drizzle-orm";
+import { sweepSignups } from "../services/analytics-signups.ts";
 import {
   claimDueRoutines,
   fireDueCalendarRuns,
@@ -181,15 +182,20 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
     // Pushes held back by quiet hours go out once the window ends (D-109).
     await DBOS.runStep(
       () =>
-        rt()
-          .agent.notifications?.sendDeferred()
-          .catch(captureStep("deferred-pushes", 0)) ?? Promise.resolve(0),
+        rt().agent.notifications?.sendDeferred().catch(captureStep("deferred-pushes", 0)) ??
+        Promise.resolve(0),
       {
         name: "deferred-pushes",
       },
     );
+    // New sign-ups become `signed_up` events (the sign-up is a database trigger the API never sees).
+    await DBOS.runStep(() => sweepSignups(rt().db).catch(captureStep("analytics-signups", 0)), {
+      name: "analytics-signups",
+    });
     // Encryption at rest (D-136): seal existing rows, or open them when it's turned off.
-    await DBOS.runStep(() => sweepEncryption(rt().db).catch(captureStep("encryption-sweep", 0)), { name: "encryption-sweep" });
+    await DBOS.runStep(() => sweepEncryption(rt().db).catch(captureStep("encryption-sweep", 0)), {
+      name: "encryption-sweep",
+    });
     // Payments (D-142): unused cards are cancelled after their hour.
     await DBOS.runStep(
       () =>
@@ -209,13 +215,19 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
       );
     // Phone calls nobody answered (D-135) become a push with the reason.
     await DBOS.runStep(
-      () => expireCalls({ db: rt().db, notifications: rt().agent.notifications }).catch(captureStep("expire-calls", 0)),
+      () =>
+        expireCalls({ db: rt().db, notifications: rt().agent.notifications }).catch(
+          captureStep("expire-calls", 0),
+        ),
       { name: "expire-calls" },
     );
     // Every step catches its own errors, so one failing step never blocks the rest (audit 2026-11).
-    const runIds = await DBOS.runStep(() => claimDueRoutines(rt().db).catch(captureStep("claim-due", [] as string[])), {
-      name: "claim-due",
-    });
+    const runIds = await DBOS.runStep(
+      () => claimDueRoutines(rt().db).catch(captureStep("claim-due", [] as string[])),
+      {
+        name: "claim-due",
+      },
+    );
     // Device triggers (D-151): leave now for the next event with a place.
     const lnDeps = rt().leaveNow;
     if (lnDeps)
@@ -230,13 +242,19 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
       );
     // Calendar triggers (D-132): read calendars every 5 minutes; start the runs whose time has come.
     await DBOS.runStep(
-      () => checkCalendarTriggers({ db: rt().db, fetch: rt().agent.fetch ?? fetch }).catch(captureStep("calendar-check", 0)),
+      () =>
+        checkCalendarTriggers({ db: rt().db, fetch: rt().agent.fetch ?? fetch }).catch(
+          captureStep("calendar-check", 0),
+        ),
       { name: "calendar-check" },
     );
     runIds.push(
-      ...(await DBOS.runStep(() => fireDueCalendarRuns(rt().db).catch(captureStep("calendar-fire", [] as string[])), {
-        name: "calendar-fire",
-      })),
+      ...(await DBOS.runStep(
+        () => fireDueCalendarRuns(rt().db).catch(captureStep("calendar-fire", [] as string[])),
+        {
+          name: "calendar-fire",
+        },
+      )),
     );
     // Projects (D-113): start the next session of each active project that has ready work.
     // One heartbeat at a time across overlapping ticks and workers (a project never gets two sessions).
@@ -693,15 +711,26 @@ export async function cleanupIdempotencyKeys(db: Database) {
 
 export const maintenanceWorkflow = DBOS.registerWorkflow(
   async (_scheduledAt: Date, _context: unknown) => {
-    await DBOS.runStep(() => cleanupIdempotencyKeys(rt().db).catch(captureStep("idempotency-keys", 0)), {
-      name: "idempotency-keys",
-    });
-    await DBOS.runStep(() => refreshIdleChatGpt(rt().db, rt().agent.credentials).catch(captureStep("chatgpt-refresh", 0)), {
-      name: "chatgpt-refresh",
-    });
+    await DBOS.runStep(
+      () => cleanupIdempotencyKeys(rt().db).catch(captureStep("idempotency-keys", 0)),
+      {
+        name: "idempotency-keys",
+      },
+    );
+    await DBOS.runStep(
+      () =>
+        refreshIdleChatGpt(rt().db, rt().agent.credentials).catch(
+          captureStep("chatgpt-refresh", 0),
+        ),
+      {
+        name: "chatgpt-refresh",
+      },
+    );
     // Encryption at rest (D-136): data keys still wrapped with a previous server key are rewrapped
     // with the current one, so changing CONTENT_ENCRYPTION_KEY needs no manual step (audit 2026-11).
-    await DBOS.runStep(() => rewrapAllKeys(rt().db).catch(captureStep("rewrap-keys", 0)), { name: "rewrap-keys" });
+    await DBOS.runStep(() => rewrapAllKeys(rt().db).catch(captureStep("rewrap-keys", 0)), {
+      name: "rewrap-keys",
+    });
   },
   { name: "maintenance" },
 );
@@ -730,10 +759,15 @@ export const billingSettleWorkflow = DBOS.registerWorkflow(
 export const privacyWorkflow = DBOS.registerWorkflow(
   async (_scheduledAt: Date, _context: unknown) => {
     const { purgeDueAccounts, applyRetention } = await import("../services/privacy.ts");
-    await DBOS.runStep(() => purgeDueAccounts(rt().db, rt().computers).catch(captureStep("purge-accounts", 0)), {
-      name: "purge-accounts",
+    await DBOS.runStep(
+      () => purgeDueAccounts(rt().db, rt().computers).catch(captureStep("purge-accounts", 0)),
+      {
+        name: "purge-accounts",
+      },
+    );
+    await DBOS.runStep(() => applyRetention(rt().db).catch(captureStep("retention", 0)), {
+      name: "retention",
     });
-    await DBOS.runStep(() => applyRetention(rt().db).catch(captureStep("retention", 0)), { name: "retention" });
   },
   { name: "privacy" },
 );
@@ -755,9 +789,12 @@ export const telemetryWorkflow = DBOS.registerWorkflow(
 export const analyticsDailyWorkflow = DBOS.registerWorkflow(
   async (_scheduledAt: Date, _context: unknown) => {
     const { runDailyAnalyticsRollup } = await import("./analytics-rollup.ts");
-    await DBOS.runStep(() => runDailyAnalyticsRollup(rt().db).catch(captureStep("analytics-rollup", 0)), {
-      name: "analytics-rollup",
-    });
+    await DBOS.runStep(
+      () => runDailyAnalyticsRollup(rt().db).catch(captureStep("analytics-rollup", 0)),
+      {
+        name: "analytics-rollup",
+      },
+    );
   },
   { name: "analyticsDaily" },
 );

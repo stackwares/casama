@@ -60,9 +60,12 @@ class CasamaApp extends ConsumerWidget {
         unawaited(cacheClear(ref.read(localCacheProvider)));
         unawaited(Analytics.reset());
       } else if (next.value == true) {
+        // Signed out, then in (not a cold start with a saved session): the sign-in funnel's end (F1).
+        if (prev?.value == false) unawaited(Analytics.capture('sign_in_completed'));
         final userId = ref.read(backendProvider).userId;
         if (userId != null) {
           unawaited(Analytics.identify(userId));
+          unawaited(Analytics.syncOptOut(ref.read(backendProvider).setAnalyticsOptOut));
         }
       }
     });

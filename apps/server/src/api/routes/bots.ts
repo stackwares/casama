@@ -6,6 +6,7 @@ import {
   type StoredMemory,
   startWelcome,
   storeFromConfig,
+  track,
 } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { contentKeys, type JwtClaims, schema, withUserSession } from "@casama/db";
@@ -244,7 +245,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     );
     if (!(org[0] as { ok?: boolean } | undefined)?.ok)
       throw new ApiError(404, "org_not_found", "Organization not found");
-    await enforceLimit(db, body.org_id, "max_bots");
+    await enforceLimit(db, body.org_id, "max_bots", claims.sub);
     const modelPolicy =
       deps.env.BILLING_ENABLED && deps.env.CLOUD_MODEL_UPSTREAM_KEY
         ? cloudRunPolicy(await getCloudModels(db))
@@ -287,6 +288,16 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       bot.id,
       body.template_id ? { template: body.template_id } : {},
     );
+    track(db, {
+      event: "bot_created",
+      userId: claims.sub,
+      orgId: bot.orgId,
+      properties: {
+        source: body.template_id ? "template" : "manual",
+        template_id: body.template_id ?? null,
+        autonomy: bot.autonomy,
+      },
+    });
     return c.json(botOut(bot), 201);
   });
 

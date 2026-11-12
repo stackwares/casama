@@ -11,6 +11,7 @@ import { NodeSDK } from "@opentelemetry/sdk-node";
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from "@opentelemetry/semantic-conventions";
 import * as Sentry from "@sentry/node";
 import { PostHog } from "posthog-node";
+import { closeProductAnalytics } from "./analytics.ts";
 import { forcedIds } from "./run-trace.ts";
 
 export type ErrorReporting = "auto" | "sentry" | "posthog" | "none";
@@ -166,7 +167,7 @@ export function initObservability(opts: ObservabilityOptions) {
 }
 
 export async function shutdownObservability() {
-  await Promise.allSettled([sdk?.shutdown(), reporter?.close()]);
+  await Promise.allSettled([sdk?.shutdown(), reporter?.close(), closeProductAnalytics()]);
 }
 
 export const tracer = () => trace.getTracer("casama");
@@ -222,5 +223,5 @@ export function createLogger(
 }
 export type Logger = ReturnType<typeof createLogger>;
 
-export * from "./run-trace.ts";
 export * from "./analytics.ts";
+export * from "./run-trace.ts";

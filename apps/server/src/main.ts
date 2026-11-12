@@ -5,6 +5,7 @@ import {
   captureError,
   createLogger,
   initObservability,
+  initProductAnalytics,
   shutdownObservability,
 } from "@casama/observability";
 import { LocalProvider, SupervisorProvider, unavailableProvider } from "@casama/sandbox";
@@ -56,6 +57,14 @@ initObservability({
   posthogHost: env.POSTHOG_HOST,
   otlpEndpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT,
 });
+// Product events and daily rollups: Casama Cloud only, off unless PRODUCT_ANALYTICS=on (D-208).
+initProductAnalytics({
+  enabled: env.PRODUCT_ANALYTICS === "on",
+  apiKey: env.POSTHOG_API_KEY,
+  host: env.POSTHOG_HOST,
+  version: CASAMA_VERSION,
+  environment: env.ANALYTICS_ENVIRONMENT ?? env.NODE_ENV,
+});
 
 const stoppers: Array<() => Promise<unknown>> = [];
 const shutdown = async (signal: string) => {
@@ -68,7 +77,9 @@ process.once("SIGTERM", () => void shutdown("SIGTERM"));
 process.once("SIGINT", () => void shutdown("SIGINT"));
 
 process.on("unhandledRejection", async (reason) => {
-  logger.error("unhandledRejection", { error: reason instanceof Error ? reason.message : String(reason) });
+  logger.error("unhandledRejection", {
+    error: reason instanceof Error ? reason.message : String(reason),
+  });
   captureError(reason, { service: `casama-${env.MODE}`, type: "unhandledRejection" });
   for (const stop of stoppers.reverse()) await stop().catch(() => {});
   await shutdownObservability();

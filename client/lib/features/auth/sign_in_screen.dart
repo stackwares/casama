@@ -20,6 +20,7 @@ import '../../ui/form_sheet.dart';
 import 'floating_mascots.dart';
 import 'welcome_tagline.dart';
 import '../../ui/glow_button.dart';
+import '../../core/analytics.dart';
 import '../../ui/otp_code_field.dart';
 import '../../ui/progressive_fade.dart';
 import '../../ui/revealable.dart';
@@ -180,8 +181,14 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     super.dispose();
   }
 
+  /// The sign-in funnel's first step (F1). Only the method, never the address.
+  void _started(String method, {bool? signUp}) => unawaited(
+    Analytics.capture('sign_in_started', properties: {'method': method, 'surface': 'sign_in', 'is_sign_up': signUp}),
+  );
+
   Future<void> _submit() async {
     if (!_form.currentState!.validate()) return;
+    _started('password', signUp: _signUp);
     setState(() => _busy = true);
     final backend = ref.read(backendProvider);
     await runGuarded(context, () async {
@@ -211,6 +218,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
 
   Future<void> _magicLink() async {
     if (_sentTo == null && !_form.currentState!.validate()) return;
+    if (_sentTo == null) _started('email_code');
     final email = _sentTo ?? _email.text.trim();
     setState(() => _busy = true);
     final ok = await runGuarded(context, () async {
@@ -279,6 +287,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
   /// Google or Apple opens a browser: one tap opens one, however fast the second comes.
   Future<void> _provider(String name) async {
     if (_busy) return;
+    _started(name);
     setState(() => _busy = true);
     await runGuarded(
       context,
@@ -318,6 +327,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
   /// The system passkey sheet; closing it just leaves the options as they were.
   Future<void> _passkey() async {
     if (_busy) return;
+    _started('passkey');
     setState(() => _busy = true);
     await runGuarded(context, () => ref.read(backendProvider).signInWithPasskey());
     if (mounted) setState(() => _busy = false);
@@ -332,6 +342,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
       builder: (_) => const _SsoForm(),
     );
     if (email == null || !email.contains('@') || !mounted) return;
+    _started('sso');
     await runGuarded(
       context,
       () => ref.read(backendProvider).signInWithSso(email),

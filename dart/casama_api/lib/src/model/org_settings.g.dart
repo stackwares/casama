@@ -19,6 +19,8 @@ abstract class _$OrgSettingsCWProxy {
 
   OrgSettings llmTracing(bool llmTracing);
 
+  OrgSettings analyticsOptOut(bool? analyticsOptOut);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `OrgSettings(...).copyWith.fieldName(value)`.
@@ -34,6 +36,7 @@ abstract class _$OrgSettingsCWProxy {
     bool allowBotToBot,
     bool a2aEnabled,
     bool llmTracing,
+    bool? analyticsOptOut,
   });
 }
 
@@ -65,6 +68,10 @@ class _$OrgSettingsCWProxyImpl implements _$OrgSettingsCWProxy {
   @override
   OrgSettings llmTracing(bool llmTracing) => call(llmTracing: llmTracing);
 
+  @override
+  OrgSettings analyticsOptOut(bool? analyticsOptOut) =>
+      call(analyticsOptOut: analyticsOptOut);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `OrgSettings(...).copyWith.fieldName(value)`.
@@ -81,6 +88,7 @@ class _$OrgSettingsCWProxyImpl implements _$OrgSettingsCWProxy {
     Object? allowBotToBot = const $CopyWithPlaceholder(),
     Object? a2aEnabled = const $CopyWithPlaceholder(),
     Object? llmTracing = const $CopyWithPlaceholder(),
+    Object? analyticsOptOut = const $CopyWithPlaceholder(),
   }) {
     return OrgSettings(
       runEventRetentionDays:
@@ -115,6 +123,10 @@ class _$OrgSettingsCWProxyImpl implements _$OrgSettingsCWProxy {
           ? _value.llmTracing
           // ignore: cast_nullable_to_non_nullable
           : llmTracing as bool,
+      analyticsOptOut: analyticsOptOut == const $CopyWithPlaceholder()
+          ? _value.analyticsOptOut
+          // ignore: cast_nullable_to_non_nullable
+          : analyticsOptOut as bool?,
     );
   }
 }
@@ -158,6 +170,7 @@ OrgSettings _$OrgSettingsFromJson(Map<String, dynamic> json) => $checkedCreate(
       allowBotToBot: $checkedConvert('allow_bot_to_bot', (v) => v as bool),
       a2aEnabled: $checkedConvert('a2a_enabled', (v) => v as bool),
       llmTracing: $checkedConvert('llm_tracing', (v) => v as bool),
+      analyticsOptOut: $checkedConvert('analytics_opt_out', (v) => v as bool?),
     );
     return val;
   },
@@ -168,6 +181,7 @@ OrgSettings _$OrgSettingsFromJson(Map<String, dynamic> json) => $checkedCreate(
     'allowBotToBot': 'allow_bot_to_bot',
     'a2aEnabled': 'a2a_enabled',
     'llmTracing': 'llm_tracing',
+    'analyticsOptOut': 'analytics_opt_out',
   },
 );
 
@@ -179,4 +193,5 @@ Map<String, dynamic> _$OrgSettingsToJson(OrgSettings instance) =>
       'allow_bot_to_bot': instance.allowBotToBot,
       'a2a_enabled': instance.a2aEnabled,
       'llm_tracing': instance.llmTracing,
+      'analytics_opt_out': ?instance.analyticsOptOut,
     };

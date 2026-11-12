@@ -242,6 +242,8 @@ describe("cross-tenant sweep (Phase 8 security review)", () => {
       "setProfilePhoto",
       "deleteProfilePhoto",
       "importProfilePhoto",
+      // The caller's own analytics opt-out (ANALYTICS-PLAN): updates only their profile row.
+      "setAnalyticsOptOut",
     ]);
     for (const [path, ops] of Object.entries(doc.paths)) {
       if (!path.startsWith("/v1/")) continue;

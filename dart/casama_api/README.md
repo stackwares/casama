@@ -262,6 +262,7 @@ Class | Method | HTTP request | Description
 [*PrivacyApi*](doc/PrivacyApi.md) | [**exportMyData**](doc/PrivacyApi.md#exportmydata) | **GET** /v1/me/export | Download everything you can see as a ZIP of JSON files
 [*PrivacyApi*](doc/PrivacyApi.md) | [**getOrgSettings**](doc/PrivacyApi.md#getorgsettings) | **GET** /v1/orgs/{id}/settings | 
 [*PrivacyApi*](doc/PrivacyApi.md) | [**renameTwoStepFactor**](doc/PrivacyApi.md#renametwostepfactor) | **PATCH** /v1/me/two-step/{id} | Rename one of your authenticator apps (two-step sign-in)
+[*PrivacyApi*](doc/PrivacyApi.md) | [**setAnalyticsOptOut**](doc/PrivacyApi.md#setanalyticsoptout) | **POST** /v1/me/analytics-opt-out | Update the user&#39;s analytics opt-out preference
 [*PrivacyApi*](doc/PrivacyApi.md) | [**updateOrgSettings**](doc/PrivacyApi.md#updateorgsettings) | **PATCH** /v1/orgs/{id}/settings | Change workspace settings such as run event retention (admins)
 [*ProjectsApi*](doc/ProjectsApi.md) | [**approveProjectPlan**](doc/ProjectsApi.md#approveprojectplan) | **POST** /v1/projects/{id}/plan/approve | Approve the proposed plan; sessions start
 [*ProjectsApi*](doc/ProjectsApi.md) | [**createProject**](doc/ProjectsApi.md#createproject) | **POST** /v1/projects | Start a project; its lead bot drafts a plan for you to approve
@@ -743,6 +744,7 @@ Class | Method | HTTP request | Description
  - [SecretStoreSettings](doc/SecretStoreSettings.md)
  - [SendMessageRequest](doc/SendMessageRequest.md)
  - [SendMessageResponse](doc/SendMessageResponse.md)
+ - [SetAnalyticsOptOutRequest](doc/SetAnalyticsOptOutRequest.md)
  - [SetBotA2aRequest](doc/SetBotA2aRequest.md)
  - [SetBotAccessRequest](doc/SetBotAccessRequest.md)
  - [SetBotAccessRequestEntriesInner](doc/SetBotAccessRequestEntriesInner.md)

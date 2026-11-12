@@ -81,8 +81,9 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       mcp_decide_approvals: boolean;
       allow_bot_to_bot: boolean;
       a2a_enabled: boolean;
+      analytics_opt_out: boolean;
     }>(
-      sql`select run_event_retention_days, require_mfa, llm_tracing, mcp_decide_approvals, allow_bot_to_bot, a2a_enabled from public.organizations where id = ${orgId}::uuid`,
+      sql`select run_event_retention_days, require_mfa, llm_tracing, mcp_decide_approvals, allow_bot_to_bot, a2a_enabled, analytics_opt_out from public.organizations where id = ${orgId}::uuid`,
     );
     return {
       run_event_retention_days: o?.run_event_retention_days ?? 180,
@@ -91,6 +92,7 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       mcp_decide_approvals: o?.mcp_decide_approvals ?? false,
       allow_bot_to_bot: o?.allow_bot_to_bot ?? true,
       a2a_enabled: o?.a2a_enabled ?? false,
+      analytics_opt_out: o?.analytics_opt_out ?? false,
     };
   };
 
@@ -120,7 +122,8 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       body.llm_tracing != null ||
       body.mcp_decide_approvals != null ||
       body.allow_bot_to_bot != null ||
-      body.a2a_enabled != null
+      body.a2a_enabled != null ||
+      body.analytics_opt_out != null
     ) {
       if (body.a2a_enabled != null) {
         await db.execute(
@@ -138,6 +141,9 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       if (body.mcp_decide_approvals != null)
         await db.execute(sql`
           update public.organizations set mcp_decide_approvals = ${body.mcp_decide_approvals} where id = ${id}::uuid`);
+      if (body.analytics_opt_out != null)
+        await db.execute(sql`
+          update public.organizations set analytics_opt_out = ${body.analytics_opt_out} where id = ${id}::uuid`);
       if (body.llm_tracing != null)
         await db.execute(sql`
           update public.organizations set llm_tracing = ${body.llm_tracing} where id = ${id}::uuid`);

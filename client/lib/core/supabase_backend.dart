@@ -2906,6 +2906,23 @@ class SupabaseBackend implements Backend {
   Future<Uint8List> exportMyData() async =>
       (await api.privacy.exportMyData()).data!;
   @override
+  Future<void> setAnalyticsOptOut(bool optOut) async {
+    await api.privacy.setAnalyticsOptOut(
+      setAnalyticsOptOutRequest: SetAnalyticsOptOutRequest(optOut: optOut),
+    );
+  }
+
+  @override
+  Future<bool> orgAnalyticsOptOut(String orgId) async =>
+      (await api.privacy.getOrgSettings(id: orgId)).data!.analyticsOptOut ?? false;
+  @override
+  Future<void> setOrgAnalyticsOptOut(String orgId, bool optOut) async {
+    await api.privacy.updateOrgSettings(
+      id: orgId,
+      updateOrgSettingsRequest: UpdateOrgSettingsRequest(analyticsOptOut: optOut),
+    );
+  }
+  @override
   Future<AccountDeletion> deleteAccount(String confirmEmail) async {
     final r = (await api.privacy.deleteMyAccount(
       deleteAccountRequest: DeleteAccountRequest(confirmEmail: confirmEmail),

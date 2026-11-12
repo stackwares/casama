@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +9,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/analytics.dart';
 import '../../core/billing.dart';
 import '../../core/display_text.dart';
 import '../../core/number_format.dart';
@@ -54,6 +57,7 @@ final openUrlProvider = Provider<Future<void> Function(String url)>(
 /// Shown when the server answers 402 (plan limit or out of credits).
 Future<void> showPaywall(BuildContext context, String message) async {
   final l10n = context.l10n;
+  unawaited(Analytics.capture('paywall_view', properties: {'source': 'limit', 'paywall_kind': 'regular'}));
   final go = await showConfirm(
     context: context,
     icon: LucideIcons.gem,
@@ -63,6 +67,7 @@ Future<void> showPaywall(BuildContext context, String message) async {
     cancelLabel: l10n.notNow,
     confirmKey: const Key('paywallSeePlans'),
   );
+  if (go != true) unawaited(Analytics.capture('paywall_dismiss', properties: {'source': 'limit'}));
   if (go == true && context.mounted) await context.push('/settings/billing');
 }
 
@@ -92,11 +97,25 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   String get _orgId => ref.read(currentOrgProvider)!.id;
 
   Future<void> _webCheckout({String? plan, String? pack}) => _run(() async {
+    unawaited(
+      Analytics.capture(
+        'purchase_started',
+        properties: {'store': 'dodo', 'kind': pack != null ? 'credit_pack' : 'subscription', 'product_id': plan ?? pack},
+      ),
+    );
     final url = await ref.read(backendProvider).checkoutUrl(_orgId, planCode: plan, packCode: pack);
     await ref.read(openUrlProvider)(url);
   });
 
-  Future<void> _storeBuy(StoreProduct p) => _run(() => ref.read(storeProvider).buy(p, orgId: _orgId));
+  Future<void> _storeBuy(StoreProduct p) => _run(() {
+    unawaited(
+      Analytics.capture(
+        'purchase_started',
+        properties: {'store': ref.read(storeProvider).source ?? 'store', 'kind': 'subscription', 'product_id': p.id},
+      ),
+    );
+    return ref.read(storeProvider).buy(p, orgId: _orgId);
+  });
 
   Future<void> _restore() => _run(() async {
     await ref.read(storeProvider).restore(orgId: _orgId);

@@ -2778,7 +2778,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareAnalyticsHelp =>
-      'Help improve Casama by sharing anonymous usage metrics and error reports. Message content, prompts, files and secrets are never shared.';
+      'Help improve Casama by sharing how you use it, linked to your account on Casama Cloud, and crash reports. Message content, prompts, files and secrets are never shared.';
+
+  @override
+  String get workspaceAnalytics => 'Usage data for this workspace';
+
+  @override
+  String get workspaceAnalyticsHelp =>
+      'When off, Casama collects no usage data about this workspace\'s activity. Crash reports still work.';
 
   @override
   String get dangerZone => 'Danger zone';

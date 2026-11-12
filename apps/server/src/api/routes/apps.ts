@@ -13,6 +13,7 @@ import {
   oauthSecretFrom,
   pipedreamDirectory,
   refreshIntegration,
+  track,
 } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { pgErrorCode, schema, withUserSession } from "@casama/db";
@@ -223,6 +224,17 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
     if (!id) throw new Error("integration insert returned nothing");
     await refreshIntegration(db, id, { fetch: fetchImpl, secrets: [] });
     const [row] = await db.select().from(integrations).where(eq(integrations.id, id));
+    // The connect funnel's server side (F4): did the connection come up? Ids and enums only.
+    track(db, {
+      event: row?.status === "ok" ? "connection_added" : "connection_failed",
+      userId: args.createdBy,
+      orgId: args.orgId,
+      properties: {
+        app_id: args.app.id,
+        reconnect: Boolean(args.integrationId),
+        ...(row?.status === "ok" ? {} : { reason: "connect_error" }),
+      },
+    });
     const bots = await db.execute<{ bot_id: string }>(
       sql`select bot_id from public.bot_integrations where integration_id = ${id}::uuid`,
     );

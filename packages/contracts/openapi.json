@@ -8059,6 +8059,10 @@
           "llm_tracing": {
             "type": "boolean",
             "description": "Send model calls to the server's Langfuse, secrets redacted; no effect without Langfuse"
+          },
+          "analytics_opt_out": {
+            "type": "boolean",
+            "description": "Disable usage analytics collection and rollups for this workspace"
           }
         },
         "required": [
@@ -8097,6 +8101,10 @@
           "llm_tracing": {
             "type": "boolean",
             "description": "Send model calls to the server's Langfuse, secrets redacted; no effect without Langfuse"
+          },
+          "analytics_opt_out": {
+            "type": "boolean",
+            "description": "Disable usage analytics collection and rollups for this workspace"
           }
         }
       },
@@ -24462,6 +24470,53 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/analytics-opt-out": {
+      "post": {
+        "operationId": "setAnalyticsOptOut",
+        "tags": [
+          "privacy"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Update the user's analytics opt-out preference",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "opt_out": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "opt_out"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Updated"
+          },
+          "401": {
+            "description": "Not authenticated",
             "content": {
               "application/problem+json": {
                 "schema": {

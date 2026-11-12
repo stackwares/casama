@@ -4,6 +4,7 @@
  * Off by default on self-hosted instances.
  * Respects user opt-out and workspace privacy settings.
  */
+import { createHash } from "node:crypto";
 import { PostHog } from "posthog-node";
 
 export interface AnalyticsEvent {
@@ -23,6 +24,8 @@ export interface CaptureOptions {
 }
 
 export interface ProductAnalytics {
+  /** False for the null implementation: callers skip work (and never mark anything as reported). */
+  readonly enabled: boolean;
   capture(opts: CaptureOptions): void;
   flush(): Promise<void>;
   close(): Promise<void>;
@@ -37,6 +40,7 @@ export interface AnalyticsOptions {
 }
 
 class PostHogProductAnalytics implements ProductAnalytics {
+  readonly enabled = true;
   private client: PostHog;
   private version: string;
   private environment: string;
@@ -93,6 +97,7 @@ class PostHogProductAnalytics implements ProductAnalytics {
 }
 
 class NullProductAnalytics implements ProductAnalytics {
+  readonly enabled = false;
   capture(): void {}
   async flush(): Promise<void> {}
   async close(): Promise<void> {}
@@ -117,9 +122,32 @@ export function initProductAnalytics(opts: AnalyticsOptions): ProductAnalytics {
   return analyticsInstance;
 }
 
+/** Replaces the instance (tests pass a recording fake). */
+export function setProductAnalytics(instance: ProductAnalytics | null) {
+  analyticsInstance = instance;
+}
+
+export async function closeProductAnalytics(): Promise<void> {
+  await analyticsInstance?.close();
+}
+
 export function getProductAnalytics(): ProductAnalytics {
   if (!analyticsInstance) {
     analyticsInstance = new NullProductAnalytics();
   }
   return analyticsInstance;
+}
+
+/**
+ * A deterministic UUID (v5-shaped, from SHA-1) per key, so a retried once-only event or rollup
+ * merges in PostHog instead of counting twice. PostHog rejects event ids that are not UUIDs.
+ */
+export function deterministicUuid(...parts: string[]): string {
+  const h = createHash("sha1")
+    .update(`casama:${parts.join(":")}`)
+    .digest("hex");
+  const variant = ((Number.parseInt(h.slice(16, 18), 16) & 0x3f) | 0x80)
+    .toString(16)
+    .padStart(2, "0");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-5${h.slice(13, 16)}-${variant}${h.slice(18, 20)}-${h.slice(20, 32)}`;
 }

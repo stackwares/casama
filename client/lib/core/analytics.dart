@@ -8,6 +8,7 @@ import 'telemetry.dart';
 /// or server_kind is not 'cloud'.
 class Analytics {
   static const _consentKey = 'casama.analytics_enabled';
+  static const _syncedKey = 'casama.analytics_opt_out_synced';
   static bool? _consentCache;
 
   /// Whether analytics consent is currently active (default true on Cloud builds).
@@ -43,6 +44,20 @@ class Analytics {
     }
   }
 
+  /// Tells the server the current choice, once per change, so its events and rollups follow the switch.
+  /// Cleared on sign-out, so the next person to sign in on this device is told too.
+  static Future<void> syncOptOut(Future<void> Function(bool optOut) send) async {
+    try {
+      final optOut = !await isConsentEnabled();
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool(_syncedKey) == optOut) return;
+      await send(optOut);
+      await prefs.setBool(_syncedKey, optOut);
+    } catch (_) {
+      // Offline or signed out: tried again at the next sign-in or switch.
+    }
+  }
+
   /// Identifies the user on PostHog when server is cloud and consent is given.
   static Future<void> identify(String userId) async {
     if (!Telemetry.posthogOn) return;
@@ -63,6 +78,10 @@ class Analytics {
 
   /// Resets distinctId on sign-out or account deletion.
   static Future<void> reset() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_syncedKey);
+    } catch (_) {}
     if (!Telemetry.posthogOn) return;
     try {
       await Posthog().reset();

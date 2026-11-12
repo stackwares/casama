@@ -323,7 +323,7 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         throw new ApiError(400, "bad_owner", "That bot is not in this workspace");
     }
     await canManage(claims, body.org_id, owner);
-    await enforceLimit(db, body.org_id, "max_computers");
+    await enforceLimit(db, body.org_id, "max_computers", claims.sub);
     if (body.provider === "casama-cloud" && !deps.env.CASAMA_CLOUD_KEY)
       throw new ApiError(
         409,

@@ -31,6 +31,8 @@ class UpdateOrgSettingsRequest {
      this.a2aEnabled,
 
      this.llmTracing,
+
+     this.analyticsOptOut,
   });
 
           // minimum: 7
@@ -112,6 +114,19 @@ class UpdateOrgSettingsRequest {
 
 
 
+      /// Disable usage analytics collection and rollups for this workspace
+  @JsonKey(
+    
+    name: r'analytics_opt_out',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? analyticsOptOut;
+
+
+
 
 
     @override
@@ -121,7 +136,8 @@ class UpdateOrgSettingsRequest {
       other.mcpDecideApprovals == mcpDecideApprovals &&
       other.allowBotToBot == allowBotToBot &&
       other.a2aEnabled == a2aEnabled &&
-      other.llmTracing == llmTracing;
+      other.llmTracing == llmTracing &&
+      other.analyticsOptOut == analyticsOptOut;
 
     @override
     int get hashCode =>
@@ -130,7 +146,8 @@ class UpdateOrgSettingsRequest {
         mcpDecideApprovals.hashCode +
         allowBotToBot.hashCode +
         a2aEnabled.hashCode +
-        llmTracing.hashCode;
+        llmTracing.hashCode +
+        analyticsOptOut.hashCode;
 
   factory UpdateOrgSettingsRequest.fromJson(Map<String, dynamic> json) => _$UpdateOrgSettingsRequestFromJson(json);
 

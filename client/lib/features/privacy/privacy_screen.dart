@@ -25,6 +25,10 @@ final _retentionProvider = FutureProvider<int?>((ref) async {
   return org == null ? null : ref.watch(backendProvider).retentionDays(org.id);
 });
 
+final _workspaceAnalyticsOffProvider = FutureProvider.family<bool, String>(
+  (ref, orgId) => ref.watch(backendProvider).orgAnalyticsOptOut(orgId),
+);
+
 /// Overridable in tests: hands the export to the platform (share sheet, save dialog, download).
 final saveExportProvider = Provider<Future<void> Function(Uint8List bytes, String name, {Rect? origin})>(
   (ref) =>
@@ -130,6 +134,7 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                     value: enabled,
                     onChanged: (val) async {
                       await Analytics.setConsentEnabled(val);
+                      await Analytics.syncOptOut(ref.read(backendProvider).setAnalyticsOptOut);
                       setState(() {});
                     },
                   ),
@@ -163,6 +168,25 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                           ref.invalidate(_retentionProvider);
                         }, haptic: HapticsHelper.selection),
                       ),
+              ),
+              Consumer(
+                builder: (context, ref, _) {
+                  final off = ref.watch(_workspaceAnalyticsOffProvider(org.id)).value ?? false;
+                  return GroupedTile(
+                    key: const Key('workspaceAnalyticsTile'),
+                    icon: LucideIcons.chartColumn,
+                    title: l10n.workspaceAnalytics,
+                    subtitle: l10n.workspaceAnalyticsHelp,
+                    trailing: Switch.adaptive(
+                      key: const Key('workspaceAnalyticsSwitch'),
+                      value: !off,
+                      onChanged: (val) async {
+                        await runGuarded(context, () => ref.read(backendProvider).setOrgAnalyticsOptOut(org.id, !val));
+                        ref.invalidate(_workspaceAnalyticsOffProvider(org.id));
+                      },
+                    ),
+                  );
+                },
               ),
             ],
           ),

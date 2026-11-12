@@ -23,6 +23,7 @@ import {
   useSharedKeyForMissing,
 } from "@casama/domain";
 import { captureError, type Logger } from "@casama/observability";
+import { runCompletedMilestones } from "./analytics.ts";
 import { collectExec, type SandboxHandle } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
@@ -2448,6 +2449,11 @@ async function setTerminal(db: Database, info: RunInfo, status: string, error: u
 
 async function finishCompleted(
   db: Database,
+  // A person's first finished run is their first value (ANALYTICS-PLAN §6.2, §6.12).
+  if (r && status === "completed")
+    void runCompletedMilestones(db, { userId: info.createdBy, orgId: info.orgId, trigger: info.trigger }).catch(
+      (e) => captureError(e, { service: "casama-worker", step: "analytics-milestone" }),
+    );
   info: RunInfo,
   finalMessageId: string,
   busFn: () => Promise<EventBus>,

@@ -56,6 +56,39 @@ void main() {
     expect(find.text('Account scheduled for deletion'), findsOneWidget);
   });
 
+  testWidgets('the usage-data switches tell the server: the person (off, then on) and the workspace admin', (tester) async {
+    await setSize(tester, const Size(800, 1000));
+    SharedPreferences.setMockInitialValues({});
+    final backend = FakeBackend();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [backendProvider.overrideWithValue(backend)],
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: PrivacyScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final mine = find.byKey(const Key('shareAnalyticsSwitch'));
+    expect(tester.widget<Switch>(mine).value, isTrue);
+    await tester.tap(mine);
+    await tester.pumpAndSettle();
+    expect(tester.widget<Switch>(mine).value, isFalse);
+    expect(backend.analyticsOptOutCalls, [true]);
+    await tester.tap(mine);
+    await tester.pumpAndSettle();
+    expect(backend.analyticsOptOutCalls, [true, false]);
+
+    final workspace = find.byKey(const Key('workspaceAnalyticsSwitch'));
+    expect(tester.widget<Switch>(workspace).value, isTrue);
+    await tester.tap(workspace);
+    await tester.pumpAndSettle();
+    expect(backend.workspaceAnalyticsOff, isTrue);
+    expect(tester.widget<Switch>(workspace).value, isFalse);
+  });
+
   testWidgets('sign-in offers SSO and switching to a self-hosted server', (tester) async {
     await setSize(tester, const Size(800, 1200));
     SharedPreferences.setMockInitialValues({});

@@ -429,6 +429,7 @@ export 'package:casama_api/src/model/secret_resolved_event_payload.dart';
 export 'package:casama_api/src/model/secret_store_settings.dart';
 export 'package:casama_api/src/model/send_message_request.dart';
 export 'package:casama_api/src/model/send_message_response.dart';
+export 'package:casama_api/src/model/set_analytics_opt_out_request.dart';
 export 'package:casama_api/src/model/set_bot_a2a_request.dart';
 export 'package:casama_api/src/model/set_bot_access_request.dart';
 export 'package:casama_api/src/model/set_bot_access_request_entries_inner.dart';

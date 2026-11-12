@@ -1,5 +1,6 @@
 /** Share a bot as a template (D-110): export, share links, preview and import. */
 import { createHash, randomBytes } from "node:crypto";
+import { track } from "@casama/agent";
 import { type BotTemplateFile, routes } from "@casama/contracts";
 import { contentKeys, type Database, type JwtClaims, withUserSession } from "@casama/db";
 import {
@@ -183,7 +184,7 @@ export function registerBotTemplateRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
     for (const r of t.routines)
       if (!isValidCron(r.schedule_cron))
         throw new ApiError(400, "invalid_cron", `Routine "${r.name}" has an invalid schedule.`);
-    await enforceLimit(db, body.org_id, "max_bots");
+    await enforceLimit(db, body.org_id, "max_bots", claims.sub);
     const cloud = deps.env.BILLING_ENABLED && Boolean(deps.env.CLOUD_MODEL_UPSTREAM_KEY);
     const cloudKey = cloud || body.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID;
     const model = cloud
@@ -235,6 +236,12 @@ export function registerBotTemplateRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
     });
     await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
       values (${body.org_id}::uuid, 'user', ${claims.sub}::uuid, 'bot.imported', 'bot', ${botId}::uuid, ${JSON.stringify({ name: t.name })}::jsonb)`);
+    track(db, {
+      event: "bot_created",
+      userId: claims.sub,
+      orgId: body.org_id,
+      properties: { source: "share_link" },
+    });
     return c.json(
       {
         bot_id: botId,

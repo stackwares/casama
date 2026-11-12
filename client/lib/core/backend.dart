@@ -1230,6 +1230,13 @@ abstract class Backend {
 
   // Privacy and SSO (Phase 8)
   Future<Uint8List> exportMyData();
+
+  /// Tells the server whether this person opted out of usage analytics (server events and rollups).
+  Future<void> setAnalyticsOptOut(bool optOut);
+
+  /// Whether the workspace turned usage analytics off (admins).
+  Future<bool> orgAnalyticsOptOut(String orgId);
+  Future<void> setOrgAnalyticsOptOut(String orgId, bool optOut);
   Future<AccountDeletion> deleteAccount(String confirmEmail);
   // Two-step sign-in (D-093)
   Future<List<TwoStepFactor>> twoStepFactors();

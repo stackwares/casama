@@ -1,3 +1,4 @@
+import { track } from "@casama/agent";
 import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../api/errors.ts";
@@ -18,12 +19,23 @@ const COUNTS = {
 } as const;
 
 /** Paywall check before creating a bot or computer (D-070). No limit set = no check. */
-export async function enforceLimit(db: Database, orgId: string, key: keyof typeof COUNTS) {
+export async function enforceLimit(
+  db: Database,
+  orgId: string,
+  key: keyof typeof COUNTS,
+  userId?: string | null,
+) {
   const limit = (await orgLimits(db, orgId))[key];
   if (typeof limit !== "number") return;
   const [r] = await db.execute<{ n: number }>(COUNTS[key](orgId));
   if ((r?.n ?? 0) >= limit) {
     const what = key === "max_bots" ? "bots" : "computers";
+    track(db, {
+      event: "limit_reached",
+      userId,
+      orgId,
+      properties: { kind: key, surface: key === "max_bots" ? "bot" : "computer" },
+    });
     throw new ApiError(
       402,
       "plan_limit",

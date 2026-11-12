@@ -4285,8 +4285,20 @@ abstract class AppLocalizations {
   /// No description provided for @shareAnalyticsHelp.
   ///
   /// In en, this message translates to:
-  /// **'Help improve Casama by sharing anonymous usage metrics and error reports. Message content, prompts, files and secrets are never shared.'**
+  /// **'Help improve Casama by sharing how you use it, linked to your account on Casama Cloud, and crash reports. Message content, prompts, files and secrets are never shared.'**
   String get shareAnalyticsHelp;
+
+  /// No description provided for @workspaceAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage data for this workspace'**
+  String get workspaceAnalytics;
+
+  /// No description provided for @workspaceAnalyticsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'When off, Casama collects no usage data about this workspace\'s activity. Crash reports still work.'**
+  String get workspaceAnalyticsHelp;
 
   /// No description provided for @dangerZone.
   ///

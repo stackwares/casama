@@ -3323,6 +3323,19 @@ class FakeBackend implements Backend {
   String? ssoEmail;
   final sentUiActions = <Map<String, Object?>>[];
 
+  /// What the app last told the server about the person's analytics choice, newest last.
+  final analyticsOptOutCalls = <bool>[];
+  bool workspaceAnalyticsOff = false;
+
+  @override
+  Future<void> setAnalyticsOptOut(bool optOut) async => analyticsOptOutCalls.add(optOut);
+
+  @override
+  Future<bool> orgAnalyticsOptOut(String orgId) async => workspaceAnalyticsOff;
+
+  @override
+  Future<void> setOrgAnalyticsOptOut(String orgId, bool optOut) async => workspaceAnalyticsOff = optOut;
+
   @override
   Future<Uint8List> exportMyData() async {
     exported++;
