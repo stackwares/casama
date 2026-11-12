@@ -181,6 +181,7 @@ class _ComputerCard extends ConsumerWidget {
                   value: 'live',
                   child: ListTile(dense: true, leading: const Icon(LucideIcons.monitorPlay), title: Text(l10n.liveView)),
                 ),
+              if (!isPersonalComputer(c))
               PopupMenuItem(
                 value: 'profile',
                 child: ListTile(
@@ -219,7 +220,6 @@ class NewComputerSheet extends ConsumerStatefulWidget {
   const NewComputerSheet({super.key});
 
   @override
-              if (!isPersonalComputer(c))
   ConsumerState<NewComputerSheet> createState() => _NewComputerSheetState();
 }
 
