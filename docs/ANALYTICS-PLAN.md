@@ -1205,7 +1205,15 @@ repo. **Not run, by design:** anything against the live PostHog project, real de
 
 ---
 
-## Appendix A: what to create in PostHog (Oliver; the shared project 637030)
+## Appendix A: what to create in PostHog (done 2026-11-12 except the items marked left)
+
+Created in project 637030 from the signed-in browser session: the five dashboards (Overview pinned), 28 insights below (25
+plus three small trend insights that carry the alerts), the four cohorts, the two actions, and three email alerts
+(sign-in failures more than doubled; connection failure rate above 25%; fatal crashes above 3 people a day). Left: the
+`$ip` transformation, error tracking alerts, an Internal cohort (nothing sets `is_internal`; the server never
+implemented it) and the `plan` person property (not set either: the Paying cohort uses the `purchase` event), revenue
+analytics, and the alerts on the SQL insights (PostHog alerts work on plain trends only: activation rate, crash-free
+users and events per active person have none). The definitions follow.
 
 Naming, tagging and the "no duplicates" rule follow `FlutterVibe/AGENTS.md`. Add `Casama | casama` to its slug table.
 Every insight filters `app = casama` at the insight level plus the test-account filter, and gets a ~15-word
