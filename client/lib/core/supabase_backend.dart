@@ -21,6 +21,7 @@ import 'backend.dart';
 import 'chatgpt_connect.dart';
 
 const _terminal = {'run.completed', 'run.failed', 'run.cancelled'};
+const _finishedStatus = {RunStatus.completed, RunStatus.failed, RunStatus.cancelled};
 
 /// Backend on Supabase (auth, reads, simple writes, Realtime) and the Casama API (commands).
 class SupabaseBackend implements Backend {
@@ -1354,7 +1355,16 @@ class SupabaseBackend implements Backend {
   )).data!;
 
   @override
-  Future<void> cancelRun(String runId) async => api.runs.cancelRun(id: runId);
+  Future<void> cancelRun(String runId) async {
+    try {
+      await api.runs.cancelRun(id: runId);
+    } on DioException catch (e) {
+      // 409 run_finished, or 404 when the run (its chat) was deleted.
+      final code = e.response?.statusCode;
+      if (code == 409 || code == 404) throw const RunAlreadyFinished();
+      rethrow;
+    }
+  }
 
   @override
   Future<List<RunEventItem>> runEvents(String runId, {int afterSeq = 0}) async {
@@ -1376,6 +1386,7 @@ class SupabaseBackend implements Backend {
     Timer? poll;
     var closed = false;
     var catchingUp = false;
+    DateTime? finishedSince;
 
     Future<void> close() async {
       if (closed) return;
@@ -1402,10 +1413,27 @@ class SupabaseBackend implements Backend {
       if (catchingUp || closed) return;
       catchingUp = true;
       try {
-        final items = await runEvents(runId, afterSeq: buffer.lastSeq);
+        final page = (await api.runs.listRunEvents(
+          id: runId,
+          afterSeq: buffer.lastSeq,
+          limit: 1000,
+        )).data!;
         final before = buffer.lastSeq;
-        deliver(items);
+        deliver(page.items.map((e) => RunEventItem.fromJson(e.toJson())));
         catchUpEvents += buffer.lastSeq - before;
+        // The server says the run is over, but its last event never came through (a gap held
+        // back, a phone that slept through it): stop following it, or the chat keeps a Stop
+        // button for a run that has ended. Only once it has stayed finished for a while: the
+        // worker marks the run finished a moment before it writes the last event.
+        if (!closed && page.items.length < 1000 && _finishedStatus.contains(page.runStatus)) {
+          final since = finishedSince ??= DateTime.now();
+          if (DateTime.now().difference(since) >= const Duration(milliseconds: 1500)) unawaited(close());
+        } else {
+          finishedSince = null;
+        }
+      } on DioException catch (e) {
+        // The run is gone (its chat was deleted): nothing left to follow.
+        if (e.response?.statusCode == 404) unawaited(close());
       } catch (_) {
         // Next poll retries.
       } finally {

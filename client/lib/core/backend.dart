@@ -532,6 +532,11 @@ class BotRevision {
   final DateTime createdAt;
 }
 
+/// Stop was pressed for a run that had already ended: the chat missed its last event.
+class RunAlreadyFinished implements Exception {
+  const RunAlreadyFinished();
+}
+
 abstract class Backend {
   // Auth
   Stream<bool> get signedInChanges;
@@ -813,6 +818,7 @@ abstract class Backend {
     Map<String, Object?>? uiAction,
     List<String> skills = const [],
   });
+  /// Asks the run to stop. Throws [RunAlreadyFinished] when it has already ended (or is gone).
   Future<void> cancelRun(String runId);
 
   /// Edits a sent message: forks there and reruns (D-108).

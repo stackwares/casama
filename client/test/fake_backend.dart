@@ -2678,7 +2678,13 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<void> cancelRun(String runId) async => cancelled = true;
+  Future<void> cancelRun(String runId) async {
+    if (runAlreadyFinished) throw const RunAlreadyFinished();
+    cancelled = true;
+  }
+
+  /// The server answers Stop with "already finished" (the chat missed the run's end).
+  var runAlreadyFinished = false;
   @override
   Stream<RunEventItem> watchRun(String runId, {int afterSeq = 0}) =>
       runEventsController.stream;

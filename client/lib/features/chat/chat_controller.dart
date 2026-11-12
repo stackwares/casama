@@ -489,7 +489,18 @@ class ChatController extends Notifier<ChatState> {
 
   Future<void> cancel() async {
     final run = state.activeRunId;
-    if (run != null) await _backend.cancelRun(run);
+    if (run == null) return;
+    try {
+      await _backend.cancelRun(run);
+    } on RunAlreadyFinished {
+      // It had already ended and this chat missed it: let it go and show how it ended, instead
+      // of a Stop button that does nothing.
+      _sub?.cancel();
+      if (state.activeRunId == run) state = state.copyWith(clearActiveRun: true);
+      ref.invalidate(botsProvider);
+      final conv = state.conversationId;
+      if (conv != null) await open(conv);
+    }
   }
 
   void _attach(String runId) {
