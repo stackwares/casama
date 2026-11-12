@@ -11,6 +11,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { costOf } from "@casama/agent";
 import type { Database } from "@casama/db";
+import { captureError } from "@casama/observability";
 import { sql } from "drizzle-orm";
 import type { Context, Hono } from "hono";
 import type { BillingService } from "./service.ts";
@@ -237,7 +238,9 @@ export function registerConnectRoutes(app: Hono, opts: ConnectOptions) {
       if (res.ok) {
         try {
           await meter((JSON.parse(text) as { usage?: Usage }).usage);
-        } catch {}
+        } catch (e) {
+          captureError(e, { service: "casama-api", step: "connect-meter-json", key_id: k.keyId, org_id: k.orgId });
+        }
       }
       return new Response(text, {
         status: res.status,
@@ -260,13 +263,17 @@ export function registerConnectRoutes(app: Hono, opts: ConnectOptions) {
             try {
               const j = JSON.parse(line.slice(5)) as { usage?: Usage };
               if (j.usage) usage = j.usage;
-            } catch {}
+            } catch (e) {
+              captureError(e, { service: "casama-api", step: "connect-meter-stream-parse", key_id: k.keyId, org_id: k.orgId });
+            }
           }
           i = buf.indexOf("\n");
         }
       },
       async flush() {
-        await meter(usage).catch(() => {});
+        await meter(usage).catch((e) => {
+          captureError(e, { service: "casama-api", step: "connect-meter-stream-flush", key_id: k.keyId, org_id: k.orgId });
+        });
       },
     });
     return new Response(res.body.pipeThrough(tap), {

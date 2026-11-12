@@ -10,6 +10,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'distribution.dart';
+import 'telemetry.dart';
 
 /// Where releases live: a public repo with only installers and update feeds (the source repo is
 /// private, so its release files aren't downloadable without signing in). Overridable per build.
@@ -45,8 +46,9 @@ final updaterProvider = Provider<void>((ref) {
         await autoUpdater.setScheduledCheckInterval(_checkEvery);
         await autoUpdater.checkForUpdates(inBackground: true);
       }
-    } catch (e) {
+    } catch (e, st) {
       debugPrint('updater: $e');
+      Telemetry.captureException(e, st, context: {'service': 'updater'}, warning: true);
     }
   }());
 });

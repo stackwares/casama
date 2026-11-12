@@ -15,9 +15,26 @@ import {
   type SandboxProvider,
   tlsFetch,
 } from "@casama/sandbox";
+import {
+  captureError,
+  initObservability,
+  shutdownObservability,
+} from "@casama/observability";
 import { startSupervisor } from "./app.ts";
 
 const env = process.env;
+
+initObservability({
+  service: "casama-supervisor",
+  version: "0.8.0",
+  environment: env.ANALYTICS_ENVIRONMENT ?? env.NODE_ENV,
+  errorReporting: env.ERROR_REPORTING as never,
+  sentryDsn: env.SENTRY_DSN,
+  posthogKey: env.POSTHOG_API_KEY,
+  posthogHost: env.POSTHOG_HOST,
+  otlpEndpoint: env.OTEL_EXPORTER_OTLP_ENDPOINT,
+});
+
 const need = (k: string) => {
   const v = env[k];
   if (!v) throw new Error(`${k} is required`);
@@ -217,10 +234,15 @@ if (provider instanceof DockerProvider && provider.opts.warmPool) {
   const fill = () =>
     provider
       .fillPool()
-      .catch((e: Error) =>
-        console.error(JSON.stringify({ msg: "warm pool fill failed", error: e.message })),
-      );
+      .catch((e: Error) => {
+        captureError(e, { service: "casama-supervisor", step: "warm-pool-fill" });
+        console.error(JSON.stringify({ msg: "warm pool fill failed", error: e.message }));
+      });
   void fill();
   setInterval(fill, 60_000).unref();
 }
-for (const s of ["SIGTERM", "SIGINT"] as const) process.once(s, () => process.exit(0));
+for (const s of ["SIGTERM", "SIGINT"] as const)
+  process.once(s, async () => {
+    await shutdownObservability();
+    process.exit(0);
+  });

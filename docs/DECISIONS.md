@@ -2264,3 +2264,16 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 - **Screen views & dedupe:** `ShellRoute` passes `Telemetry.observers`. `SessionScreenObserver` deduplicates screens per session, expiring after 30 minutes in background.
 - **Web telemetry:** dynamic script loader for `posthog-js` on web when a PostHog key is provided; updated Caddy CSP to allow `https://us-assets.i.posthog.com`.
 - **Server:** Centralized `CASAMA_VERSION` in `apps/server/src/version.ts` and passed `version` and `environment` to `initObservability`. Documented `ANALYTICS_ENVIRONMENT` and `PRODUCT_ANALYTICS` in `env.ts`, `.env.example`, and `docker-compose.yml`.
+
+## D-207 Crash reporting and error tracking (Phase 1)
+
+- **Decision** (Oliver: "Go and finish all until all phases are completed"): Phase 1 of `docs/ANALYTICS-PLAN.md` implemented.
+- **Client rate capping & fingerprint deduplication:** `Telemetry.captureException` limits captured exceptions to at most 20 exceptions per minute per process, and suppresses identical error fingerprints (`errorType:message:topFrame`) for 5 minutes to prevent reconnect / offline loops from burning error quotas.
+- **Client error config:** PostHog error tracking enabled with `captureFlutterErrors = true`, `capturePlatformDispatcherErrors = true`, `captureIsolateErrors = true`, `captureNativeExceptions = true`, `captureNativeCrashes = true`, and `inAppIncludes = ['casama_app']`.
+- **Handled client exceptions:** `showError` in `client/lib/core/widgets.dart` reports unexpected exceptions (filtering expected 4xx DioExceptions and AuthExceptions). `runGuarded` forwards stack traces. Purchase verification failures in `billing.dart` and updater failures in `updater.dart` report with warning level.
+- **Server and worker unhandled error boundaries:**
+  - `apps/server/src/main.ts`: Process `unhandledRejection` and `uncaughtException` handlers capture to observability, flush/close, and exit with code 1.
+  - `apps/server/src/worker/workflows.ts`: `agentRunWorkflow` guarded with try/catch to ensure unexpected workflow errors update `public.runs` to `status = 'failed'` (`run_error`) and capture with `run_id` and `trace_id`, preventing permanent zombie/stuck runs (§1.3 Bug 1).
+  - Background tick steps in `workflows.ts` now route through `captureStep` to log and report recurring failures instead of silently swallowing errors.
+  - Usage meter reporting in `billing/connect.ts` and external object/memory cleanup in `services/privacy.ts` now capture unexpected exceptions.
+- **Supervisor:** Added `@casama/observability` to `apps/supervisor`, initialized observability in `apps/supervisor/src/main.ts`, captured warm pool errors, and wired `app.onError` in `app.ts`.

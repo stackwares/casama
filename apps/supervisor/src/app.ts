@@ -6,6 +6,7 @@ import {
   type SandboxProvider,
   type SnapshotRef,
 } from "@casama/sandbox";
+import { captureError } from "@casama/observability";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { stream } from "hono/streaming";
@@ -49,6 +50,7 @@ export function createSupervisorApp(
             : 502;
       return c.json({ code: err.code, message: err.message }, status as 400);
     }
+    captureError(err, { service: "casama-supervisor", path: c.req.path });
     return c.json({ code: "internal_error", message: (err as Error).message }, 500);
   });
 

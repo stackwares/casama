@@ -13,6 +13,7 @@ import '../ui/skeleton.dart';
 export '../ui/skeleton.dart';
 import 'date_format.dart';
 import 'haptics.dart';
+import 'telemetry.dart';
 import '../ui/effects.dart';
 
 extension L10nContext on BuildContext {
@@ -67,10 +68,28 @@ String errorText(BuildContext context, Object error) {
   return m?.group(1) ?? s.replaceFirst('Exception: ', '');
 }
 
-void showError(BuildContext context, Object error) {
+void showError(BuildContext context, Object error, [StackTrace? stackTrace]) {
   HapticsHelper.error();
   ScaffoldMessenger.of(context)
       .showSnackBar(SnackBar(content: Text(errorText(context, error))));
+
+  // Filter out expected user/network issues:
+  // DioException with 4xx or offline network connection timeouts
+  var isExpected = false;
+  if (error is DioException) {
+    final status = error.response?.statusCode;
+    if (status != null && status >= 400 && status < 500) {
+      isExpected = true;
+    } else if (error.response == null) {
+      isExpected = true;
+    }
+  } else if (error is sb.AuthException) {
+    isExpected = true;
+  }
+
+  if (!isExpected) {
+    Telemetry.captureException(error, stackTrace ?? StackTrace.current, warning: true);
+  }
 }
 
 void showMessage(BuildContext context, String message) {
@@ -327,13 +346,13 @@ Future<T?> runGuarded<T>(
 ) async {
   try {
     return await action();
-  } catch (e) {
+  } catch (e, st) {
     if (!context.mounted) return null;
     final paywall = onPaymentRequired;
     if (paywall != null && e is DioException && e.response?.statusCode == 402) {
       await paywall(context, errorText(context, e));
     } else {
-      showError(context, e);
+      showError(context, e, st);
     }
     return null;
   }

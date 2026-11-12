@@ -22,7 +22,7 @@ import {
   toolCategory,
   useSharedKeyForMissing,
 } from "@casama/domain";
-import type { Logger } from "@casama/observability";
+import { captureError, type Logger } from "@casama/observability";
 import { collectExec, type SandboxHandle } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
@@ -1106,6 +1106,12 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     log?.error("run failed", {
       run_id: runId,
       error: red ? red.text(message) : message.slice(0, 200),
+    });
+    captureError(err, {
+      workspace_id: info?.orgId,
+      run_id: runId,
+      trace_id: runTraceId(runId),
+      step: "runAgent",
     });
     await step("fail", () =>
       finishFailed(

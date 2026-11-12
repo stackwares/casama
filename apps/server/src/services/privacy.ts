@@ -5,6 +5,7 @@
 import type { ComputerService } from "@casama/agent";
 import { memoryBackendConfig, storeFromConfig } from "@casama/agent";
 import { type Database, type JwtClaims, withUserSession } from "@casama/db";
+import { captureError } from "@casama/observability";
 import { sql } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
 
@@ -166,7 +167,11 @@ export async function purgeDueAccounts(db: Database, computers?: ComputerService
       const comps = await db.execute<{ id: string }>(
         sql`select id from public.computers where org_id = ${org.id}::uuid`,
       );
-      for (const c of comps) await computers?.remove(c.id).catch(() => {});
+      for (const c of comps) {
+        await computers?.remove(c.id).catch((e) => {
+          captureError(e, { service: "casama-worker", step: "purge-computer", computer_id: c.id, org_id: org.id });
+        });
+      }
       // So is memory kept in Honcho or Supermemory (D-137).
       const backend = await memoryBackendConfig(db, org.id);
       if (backend) {
@@ -175,7 +180,9 @@ export async function purgeDueAccounts(db: Database, computers?: ComputerService
         );
         await storeFromConfig(backend, org.id)
           .deleteAll(bots.map((b) => b.id))
-          .catch(() => {});
+          .catch((e) => {
+            captureError(e, { service: "casama-worker", step: "purge-memories", org_id: org.id });
+          });
       }
       await db.execute(sql`delete from public.organizations where id = ${org.id}::uuid`);
     }

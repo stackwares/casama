@@ -6,6 +6,7 @@
 import { hashPageToken, newPageToken } from "@casama/agent";
 import { type Database, withUserSession } from "@casama/db";
 import { PAGE_HEADERS, renderPage } from "@casama/domain";
+import { captureError } from "@casama/observability";
 import { sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
@@ -19,6 +20,11 @@ type PageRow = { id: string; title: string; html: string; data: unknown; updated
 export function createPagesApp(deps: { db: Database; pdf?: PdfRenderer | null }) {
   const { db } = deps;
   const app = new Hono();
+
+  app.onError((err, c) => {
+    captureError(err, { service: "casama-pages", path: c.req.path });
+    return c.text("Something went wrong", 500);
+  });
 
   const notFound = () =>
     new Response(

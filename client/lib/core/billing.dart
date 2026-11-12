@@ -9,6 +9,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'providers.dart';
 import 'distribution.dart';
 import 'haptics.dart';
+import 'telemetry.dart';
 
 /// Where a purchase can happen (D-070).
 enum PurchaseChannel { web, appStore, googlePlay }
@@ -192,9 +193,14 @@ class PurchaseVerifier {
       ref.invalidate(billingProvider);
       // A new purchase went through (Restore Purchases replays old ones, quietly).
       if (!p.restored) HapticsHelper.success();
-    } catch (e) {
+    } catch (e, st) {
       // Left uncompleted: the store redelivers it, and Restore Purchases retries.
       debugPrint('purchase verification failed: $e');
+      Telemetry.captureException(e, st, context: {
+        'source': p.source,
+        'product_id': p.productId,
+        'restored': p.restored,
+      }, warning: true);
     }
   }
 

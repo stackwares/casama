@@ -257,6 +257,9 @@ importers:
 
   apps/supervisor:
     dependencies:
+      '@casama/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@casama/sandbox':
         specifier: workspace:*
         version: link:../../packages/sandbox

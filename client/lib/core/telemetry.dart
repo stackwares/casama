@@ -160,7 +160,12 @@ class Telemetry {
       if (posthogErrors) {
         config.errorTrackingConfig
           ..captureFlutterErrors = true
-          ..capturePlatformDispatcherErrors = true;
+          ..capturePlatformDispatcherErrors = true
+          ..captureIsolateErrors = true
+          ..captureNativeExceptions = true
+          ..captureNativeCrashes = true
+          ..inAppIncludes.add('casama_app')
+          ..exceptionSteps.enabled = true;
       }
       await Posthog().setup(config);
 
@@ -196,6 +201,81 @@ class Telemetry {
     runApp(app);
   }
 
+  // Rate-limiting for reported exceptions (ANALYTICS-PLAN §8.2):
+  // At most 20 exceptions a minute per process, and the same error fingerprint
+  // at most once every 5 minutes.
+  static final List<DateTime> _recentExceptionTimes = [];
+  static final Map<String, DateTime> _recentFingerprints = {};
+  static const int _maxExceptionsPerMinute = 20;
+  static const Duration _fingerprintCooldown = Duration(minutes: 5);
+
+  /// Captures an unexpected exception or warning to PostHog / Sentry if configured.
+  /// Rate-limited to protect quotas against reconnect / retry loops.
+  static Future<void> captureException(
+    Object error,
+    StackTrace? stackTrace, {
+    Map<String, Object?>? context,
+    bool warning = false,
+  }) async {
+    final now = DateTime.now();
+
+    // 1. Minute rate-cap check
+    _recentExceptionTimes.removeWhere((t) => now.difference(t) > const Duration(minutes: 1));
+    if (_recentExceptionTimes.length >= _maxExceptionsPerMinute) {
+      return;
+    }
+
+    // 2. Fingerprint deduplication (error type + first line of stack trace)
+    final topFrame = stackTrace?.toString().split('\n').firstOrNull ?? '';
+    final fingerprint = '${error.runtimeType}:${scrub(error.toString())}:$topFrame';
+    final lastSeen = _recentFingerprints[fingerprint];
+    if (lastSeen != null && now.difference(lastSeen) < _fingerprintCooldown) {
+      return;
+    }
+
+    _recentExceptionTimes.add(now);
+    _recentFingerprints[fingerprint] = now;
+
+    // Prune stale fingerprints periodically
+    if (_recentFingerprints.length > 200) {
+      _recentFingerprints.removeWhere((_, time) => now.difference(time) > _fingerprintCooldown);
+    }
+
+    final scrubbedContext = (_deep(context) as Map?)?.cast<String, Object>();
+
+    if (posthogErrors) {
+      try {
+        await Posthog().capture(
+          eventName: r'$exception',
+          properties: {
+            r'$exception_message': scrub(error.toString()),
+            r'$exception_type': error.runtimeType.toString(),
+            if (stackTrace != null) r'$exception_stack_trace_raw': scrub(stackTrace.toString(), 2000),
+            r'$exception_level': warning ? 'warning' : 'error',
+            ...?scrubbedContext,
+          },
+        );
+      } catch (_) {}
+    }
+
+    if (sentryErrors) {
+      try {
+        await Sentry.captureException(
+          error,
+          stackTrace: stackTrace,
+          withScope: (scope) {
+            if (warning) scope.level = SentryLevel.warning;
+            if (scrubbedContext != null) {
+              for (final entry in scrubbedContext.entries) {
+                scope.setContexts(entry.key, entry.value);
+              }
+            }
+          },
+        );
+      } catch (_) {}
+    }
+  }
+
   /// Screen views for PostHog (no-op when PostHog is off).
   /// Returns a fresh session-deduped observer for each navigator.
   static List<NavigatorObserver> get observers =>
@@ -204,7 +284,7 @@ class Telemetry {
 
 /// Deduplicates screen tracking events so each screen template is sent at most once
 /// per session (ANALYTICS-PLAN.md §4.2). A session resets after 30 minutes in background.
-class SessionScreenObserver extends PosthogObserver with WidgetsBindingObserver {
+class SessionScreenObserver extends NavigatorObserver with WidgetsBindingObserver {
   SessionScreenObserver() {
     WidgetsBinding.instance.addObserver(this);
   }
@@ -217,6 +297,9 @@ class SessionScreenObserver extends PosthogObserver with WidgetsBindingObserver 
     _seenScreens.clear();
     _lastActive = DateTime.now();
   }
+
+  @visibleForTesting
+  static bool hasSeen(String name) => _seenScreens.contains(name);
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -252,7 +335,9 @@ class SessionScreenObserver extends PosthogObserver with WidgetsBindingObserver 
     final name = route.settings.name;
     if (name == null || name.trim().isEmpty) return;
     if (_seenScreens.add(name)) {
-      Posthog().screen(screenName: name);
+      if (Telemetry.posthogOn) {
+        Posthog().screen(screenName: name);
+      }
     }
   }
 }

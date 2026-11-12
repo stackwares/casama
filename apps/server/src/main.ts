@@ -1,7 +1,12 @@
 import { ComputerService, computerRates, createSafeFetch } from "@casama/agent";
 import { contentKeys, createDb } from "@casama/db";
 import { defaultModelFor } from "@casama/domain";
-import { createLogger, initObservability, shutdownObservability } from "@casama/observability";
+import {
+  captureError,
+  createLogger,
+  initObservability,
+  shutdownObservability,
+} from "@casama/observability";
 import { LocalProvider, SupervisorProvider, unavailableProvider } from "@casama/sandbox";
 import { serve } from "@hono/node-server";
 import { sql } from "drizzle-orm";
@@ -61,6 +66,22 @@ const shutdown = async (signal: string) => {
 };
 process.once("SIGTERM", () => void shutdown("SIGTERM"));
 process.once("SIGINT", () => void shutdown("SIGINT"));
+
+process.on("unhandledRejection", async (reason) => {
+  logger.error("unhandledRejection", { error: reason instanceof Error ? reason.message : String(reason) });
+  captureError(reason, { service: `casama-${env.MODE}`, type: "unhandledRejection" });
+  for (const stop of stoppers.reverse()) await stop().catch(() => {});
+  await shutdownObservability();
+  process.exit(1);
+});
+
+process.on("uncaughtException", async (error) => {
+  logger.error("uncaughtException", { error: error.message, stack: error.stack });
+  captureError(error, { service: `casama-${env.MODE}`, type: "uncaughtException" });
+  for (const stop of stoppers.reverse()) await stop().catch(() => {});
+  await shutdownObservability();
+  process.exit(1);
+});
 
 // Without INTERNAL_TOKEN the internal endpoints use a token derived from DATABASE_URL, which a weak
 // database URL makes guessable (audit 2026-11). install.sh and the Helm chart always set one.

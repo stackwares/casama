@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^2.1.6",
+    "@casama/observability": "workspace:*",
     "@casama/sandbox": "workspace:*",
     "hono": "^4.13.17",
     "ws": "^8.22.1"

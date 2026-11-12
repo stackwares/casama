@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/core/telemetry.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   test('error payloads lose secrets and emails', () {
     final s = Telemetry.scrub(
       'failed for ada@example.com using sk-or-v1-abcdef1234567890 and Bearer abcdefghijklmnop',
@@ -78,5 +79,11 @@ void main() {
 
     SessionScreenObserver.resetSession();
     observer.didPush(route1, route3);
+  });
+
+  test('captureException runs safely without keys and dedupes', () async {
+    final err = StateError('test-failure');
+    await Telemetry.captureException(err, StackTrace.current);
+    await Telemetry.captureException(err, StackTrace.current);
   });
 }
