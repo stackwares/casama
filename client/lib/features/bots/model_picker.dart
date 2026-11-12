@@ -27,6 +27,22 @@ String? casamaLockedModel(
   return backend.defaultModelFor('openrouter');
 }
 
+/// True on Casama Cloud (billing on), where Casama chooses every model (D-188). The key and model
+/// fields are not shown there at all: there is nothing for a person to choose.
+bool casamaModelFixed(WidgetRef ref, {bool listen = true}) =>
+    (listen ? ref.watch(billingProvider) : ref.read(billingProvider)).value?.enabled == true;
+
+/// On Casama Cloud the bot uses Casama's own key; elsewhere the first usable key.
+String? preferredKeyId(WidgetRef ref, List<Credential> keys, {bool listen = true}) {
+  if (keys.isEmpty) return null;
+  if (casamaModelFixed(ref, listen: listen)) {
+    for (final k in keys) {
+      if (k.id == casamaCloudCredentialId) return k.id;
+    }
+  }
+  return keys.first.id;
+}
+
 /// A dropdown-style field for a bot's model. Opens a searchable list of the models the chosen key
 /// can use (recommended first) and still accepts any model id typed in. On Casama Cloud the
 /// model is fixed: the field shows what Casama runs and does not open.

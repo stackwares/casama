@@ -84,6 +84,24 @@ void main() {
     expect(rowsOf(tester), 1);
   });
 
+  testWidgets('on Casama Cloud the profile has no key or model to choose, but still sets how much the bot does on its own', (tester) async {
+    await setSize(tester, const Size(430, 4400));
+    await tester.pumpWidget(harness(FakeBackend()..billingEnabled = true, const BotProfileScreen(botId: botId)));
+    await tester.pumpAndSettle();
+    expect(find.text('Brain'), findsOneWidget);
+    expect(find.text('Model key'), findsNothing);
+    expect(find.byKey(const Key('modelPicker')), findsNothing);
+    expect(find.byKey(const Key('autonomy-ask_risky')), findsOneWidget);
+  });
+
+  testWidgets('on a self-hosted server the profile lets you choose the key and model', (tester) async {
+    await setSize(tester, const Size(430, 4400));
+    await tester.pumpWidget(harness(FakeBackend(), const BotProfileScreen(botId: botId)));
+    await tester.pumpAndSettle();
+    expect(find.text('Model key'), findsOneWidget);
+    expect(find.byKey(const Key('modelPicker')), findsOneWidget);
+  });
+
   testWidgets('the profile shows who the bot is and its settings in sections; Advanced opens in place', (tester) async {
     await setSize(tester, const Size(430, 4400)); // tall enough to build every row with Advanced open
     await tester.pumpWidget(harness(FakeBackend(), const BotProfileScreen(botId: botId)));

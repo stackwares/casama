@@ -167,7 +167,9 @@ class _AgentImportReviewScreenState extends ConsumerState<AgentImportReviewScree
     final p = widget.plan;
     final t = p.template;
     final keys = ref.watch(credentialsProvider).value ?? const <Credential>[];
-    _credentialId ??= keys.firstOrNull?.id;
+    _credentialId ??= preferredKeyId(ref, keys);
+    // Casama Cloud chooses the key and the model (D-188): the fields are not shown.
+    final fixedModel = casamaModelFixed(ref);
     if (_model.isEmpty) {
       final key = keys.where((k) => k.id == _credentialId).firstOrNull;
       if (key != null) _model = ref.read(backendProvider).defaultModelFor(key.provider.value) ?? '';
@@ -215,7 +217,8 @@ class _AgentImportReviewScreenState extends ConsumerState<AgentImportReviewScree
             onChanged: hapticOnChanged((v) => setState(() => _copyFiles = v)),
           ),
         if (p.skipped.isNotEmpty) FormNote(l10n.agentImportSkipped(p.skipped.map((s) => '${s.path} (${s.reason})').take(8).join(', ')), icon: LucideIcons.shieldCheck),
-        SectionHeader(title: l10n.thinking0),
+        if (!fixedModel) SectionHeader(title: l10n.thinking0),
+        if (!fixedModel)
         DropdownButtonFormField<String>(
           key: const Key('agentImportKey'),
           initialValue: _credentialId,
@@ -227,8 +230,8 @@ class _AgentImportReviewScreenState extends ConsumerState<AgentImportReviewScree
             _model = '';
           }), haptic: HapticsHelper.selection),
         ),
-        const SizedBox(height: AppSpace.sm),
-        ModelPickerField(credentialId: _credentialId, value: _model, onChanged: (m) => setState(() => _model = m)),
+        if (!fixedModel) const SizedBox(height: AppSpace.sm),
+        if (!fixedModel) ModelPickerField(credentialId: _credentialId, value: _model, onChanged: (m) => setState(() => _model = m)),
         const SizedBox(height: AppSpace.lg),
         GlowButton.icon(
           key: const Key('agentImportGo'),

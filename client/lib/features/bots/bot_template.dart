@@ -212,7 +212,9 @@ class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final keys = ref.watch(credentialsProvider).value ?? const <Credential>[];
-    _credentialId ??= keys.firstOrNull?.id;
+    _credentialId ??= preferredKeyId(ref, keys);
+    // Casama Cloud chooses the key and the model (D-188): the fields are not shown.
+    final fixedModel = casamaModelFixed(ref);
     if (_model.isEmpty) {
       final key = keys.where((k) => k.id == _credentialId).firstOrNull;
       if (key != null) {
@@ -312,7 +314,8 @@ class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
                     (v) => setState(() => _memories = v),
                   ),
                 ),
-              SectionHeader(title: l10n.thinking0),
+              if (!fixedModel) SectionHeader(title: l10n.thinking0),
+              if (!fixedModel)
               DropdownButtonFormField<String>(
                 key: const Key('importKey'),
                 initialValue: _credentialId,
@@ -330,7 +333,8 @@ class _ImportBotScreenState extends ConsumerState<ImportBotScreen> {
                   haptic: HapticsHelper.selection,
                 ),
               ),
-              const SizedBox(height: AppSpace.sm),
+              if (!fixedModel) const SizedBox(height: AppSpace.sm),
+              if (!fixedModel)
               ModelPickerField(
                 credentialId: _credentialId,
                 value: _model,

@@ -768,6 +768,54 @@ void main() {
     },
   );
 
+  testWidgets(
+    'on Casama Cloud the new-bot sheet has no key or model to pick, and uses Casama\'s model',
+    (tester) async {
+      await setSize(tester, const Size(600, 1000));
+      final backend = FakeBackend()..billingEnabled = true;
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => Scaffold(
+              body: Consumer(
+                builder: (context, ref, _) => TextButton(
+                  onPressed: () => showCreateBot(context, ref),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/bots/:id/chat',
+            builder: (_, _) => const Text('chat opened'),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [backendProvider.overrideWithValue(backend)],
+          child: MaterialApp.router(
+            routerConfig: router,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expect(find.text('Model key'), findsNothing);
+      expect(find.byKey(const Key('modelPicker')), findsNothing);
+      expect(find.byKey(const Key('advanced-bot.create')), findsNothing);
+      final create = find.widgetWithText(FilledButton, 'Create');
+      expect(tester.widget<FilledButton>(create).onPressed, isNotNull);
+      await tester.tap(create);
+      await tester.pumpAndSettle();
+      expect(backend.createdBot?.model, 'meta/muse-ember');
+      expect(find.text('chat opened'), findsOneWidget);
+    },
+  );
+
   testWidgets('without a model key the new-bot sheet offers to add one', (
     tester,
   ) async {

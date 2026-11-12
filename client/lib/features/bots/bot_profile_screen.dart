@@ -349,6 +349,8 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
 
         // Brain: the model and how much it does on its own.
         SectionHeader(title: l10n.botBrain),
+        // Casama Cloud chooses the key and the model (D-188): nothing to show.
+        if (!casamaModelFixed(ref))
         AppCard(
           padding: const EdgeInsets.all(AppSpace.lg),
           child: Column(

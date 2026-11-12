@@ -451,11 +451,13 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
         .where((k) => _chatProviders.contains(k.provider))
         .toList();
     if (_credentialId == null || !keys.any((k) => k.id == _credentialId)) {
-      _credentialId = keys.isEmpty ? null : keys.first.id;
+      _credentialId = preferredKeyId(ref, keys);
       _fillDefaultModel(keys);
       if (_credentialId != null && _model.isEmpty) _modelInSight = true;
     }
     final needsKey = keysAsync.hasValue && keys.isEmpty;
+    // Casama Cloud picks the key and the model (D-188): neither is shown.
+    final fixedModel = casamaModelFixed(ref);
     final keyFields = [
       DropdownButtonFormField<String>(
         isExpanded: true,
@@ -584,7 +586,7 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
             const SizedBox(height: 8),
             AddKeyForm(onAdded: () => ref.invalidate(credentialsProvider)),
             const SizedBox(height: 8),
-          ] else if (_modelInSight) ...[
+          ] else if (_modelInSight && !fixedModel) ...[
             ...keyFields,
             const SizedBox(height: 8),
           ],
@@ -600,7 +602,7 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
             maxLines: 8,
           ),
           // The key and model already picked for you, folded until asked for (D-182).
-          if (!needsKey && !_modelInSight)
+          if (!needsKey && !_modelInSight && !fixedModel)
             AdvancedSection(
               id: 'bot.create',
               summary: l10n.createBotAdvancedSummary,
@@ -615,7 +617,9 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(50),
             ),
-            onPressed: _busy || _credentialId == null || _model.isEmpty
+            onPressed: _busy ||
+                    _credentialId == null ||
+                    (_model.isEmpty && !fixedModel)
                 ? null
                 : () async {
                     setState(() => _busy = true);
@@ -628,7 +632,9 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
                             org.id,
                             name: _finalName(context),
                             credentialId: _credentialId!,
-                            model: _model,
+                            model:
+                                casamaLockedModel(ref, _credentialId, listen: false) ??
+                                _model,
                             persona: _persona.text.trim(),
                             templateId: _templateId,
                             avatarUrl: _avatar,
