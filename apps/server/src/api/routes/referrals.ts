@@ -15,7 +15,7 @@ import {
 } from "../../services/referrals.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
-import { iso } from "../util.ts";
+import { clientIp, iso } from "../util.ts";
 import { failureLimiter } from "./joining.ts";
 
 function requireClaims(claims: JwtClaims | undefined): JwtClaims {
@@ -41,7 +41,7 @@ export function registerReferralRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
   const limitKey = (c: { req: { header(n: string): string | undefined } }, claims?: JwtClaims) =>
     claims?.sub
       ? `u:${claims.sub}`
-      : `ip:${c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ?? c.req.header("x-real-ip") ?? "unknown"}`;
+      : `ip:${clientIp((n) => c.req.header(n), deps.env.TRUSTED_CLIENT_IP_HEADER)}`;
 
   /** The person's code, made on first use (a clash with someone else's code just tries again). */
   const ensureCode = async (userId: string) => {

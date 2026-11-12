@@ -56,6 +56,8 @@ x-casama: &casama
     SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
     # Plans and payments (Phase 7): off for self-hosting; Casama Cloud turns it on (D-197).
     BILLING_ENABLED: ${BILLING_ENABLED:-false}
+    # Signed-out rate limits: the header holding the caller's address (cf-connecting-ip behind Cloudflare).
+    TRUSTED_CLIENT_IP_HEADER: ${TRUSTED_CLIENT_IP_HEADER:-}
     # Invite friends (D-211): on with billing; amounts in US dollars of credits.
     REFERRALS: ${REFERRALS:-auto}
     REFERRAL_REWARD_USD: ${REFERRAL_REWARD_USD:-2}

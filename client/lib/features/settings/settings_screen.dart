@@ -168,7 +168,7 @@ class SettingsScreen extends ConsumerWidget {
                       iconColor: scheme.primary,
                       title: l10n.inviteFriends,
                       subtitle: referral!.rewardUsd > 0
-                          ? l10n.inviteFriendsRow(formatUsd(referral.rewardUsd, l10n.localeName))
+                          ? l10n.inviteFriendsRow(creditLabel(context, referral.rewardUsd))
                           : l10n.inviteFriendsRowPlain,
                       showChevron: true,
                       onTap: () => open('/settings/invite'), selected: sel('/settings/invite'),

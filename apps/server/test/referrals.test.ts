@@ -1,5 +1,7 @@
 /** Invite friends (D-211): codes, redeeming, the public preview, and rewards for the inviter. */
+import { strFromU8, unzipSync } from "fflate";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { clientIp } from "../src/api/util.ts";
 import { normalizeReferralCode, sweepReferralRewards } from "../src/services/referrals.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
@@ -177,5 +179,76 @@ describe("rewards", () => {
 
   it("does nothing when invites are off", async () => {
     expect(await sweepReferralRewards(h.handle.db, { ...cfg, enabled: false })).toBe(0);
+  });
+});
+
+describe("audit fixes", () => {
+  it("never leaves a referral stuck when the inviter owns no workspace", async () => {
+    // Eve owns nothing and belongs nowhere: her friend is decided anyway and still gets a welcome.
+    const eve = await h.user("eve@example.dev");
+    const fay = await h.user("fay@example.dev");
+    const fayOrg = (
+      await j(
+        await h.request("/v1/orgs", { method: "POST", token: fay.token, json: { name: "Fay" } }),
+      )
+    ).id;
+    expect((await redeem(fay, (await me(eve)).code)).status).toBe(200);
+    await qualify(fay);
+    // Gus only belongs to Ana's workspace: his reward lands there.
+    const gus = await h.user("gus@example.dev");
+    const hal = await h.user("hal@example.dev");
+    await h.tdb
+      .admin`insert into public.memberships (org_id, user_id, role) values (${anaOrg}::uuid, ${gus.id}::uuid, 'member')`;
+    expect((await redeem(hal, (await me(gus)).code)).status).toBe(200);
+    await qualify(hal);
+    const before = await balance(anaOrg);
+    expect(await sweepReferralRewards(h.handle.db, { ...cfg, cap: 20 })).toBe(2);
+    const rows = await h.tdb.admin<
+      { invitee_id: string; status: string; welcome_usd: string | null }[]
+    >`
+      select invitee_id, status, welcome_usd from public.referrals
+      where invitee_id in (${fay.id}::uuid, ${hal.id}::uuid)`;
+    const byId = Object.fromEntries(rows.map((r) => [r.invitee_id, r]));
+    expect(byId[fay.id]).toMatchObject({ status: "none", welcome_usd: "1.00" });
+    expect(byId[hal.id]?.status).toBe("rewarded");
+    expect(await balance(fayOrg)).toBe(1);
+    expect(await balance(anaOrg)).toBe(before + 2);
+    // Nothing is left pending for the next sweep.
+    expect(await sweepReferralRewards(h.handle.db, { ...cfg, cap: 20 })).toBe(0);
+  });
+
+  it("answers a second redeem at the same moment as already used, not a server error", async () => {
+    const ivy = await h.user("ivy@example.dev");
+    const { code } = await me(ana);
+    const results = await Promise.all([redeem(ivy, code), redeem(ivy, code), redeem(ivy, code)]);
+    const statuses = results.map((r) => r.status).sort();
+    expect(statuses).toEqual([200, 409, 409]);
+  });
+
+  it("puts your invites in your data export without naming the friends", async () => {
+    const res = await h.request("/v1/me/export", { token: ana.token });
+    expect(res.status).toBe(200);
+    const files = unzipSync(new Uint8Array(await res.arrayBuffer()));
+    const account = JSON.parse(strFromU8(files["account.json"] as Uint8Array));
+    expect(account.invites.code.code).toBe((await me(ana)).code);
+    expect(account.invites.invited.length).toBeGreaterThan(0);
+    expect(JSON.stringify(account.invites)).not.toContain(ben.id);
+    const benExport = unzipSync(
+      new Uint8Array(await (await h.request("/v1/me/export", { token: ben.token })).arrayBuffer()),
+    );
+    const benAccount = JSON.parse(strFromU8(benExport["account.json"] as Uint8Array));
+    expect(benAccount.invites.joined_with).toMatchObject({ status: "rewarded" });
+  });
+
+  it("reads the caller's address from the trusted edge header when one is set", () => {
+    const headers: Record<string, string> = {
+      "x-forwarded-for": "172.18.0.1",
+      "cf-connecting-ip": "203.0.113.7",
+    };
+    const get = (n: string) => headers[n];
+    expect(clientIp(get, "cf-connecting-ip")).toBe("203.0.113.7");
+    // Without the setting, a client-sent CF header is ignored and Caddy's X-Forwarded-For wins.
+    expect(clientIp(get)).toBe("172.18.0.1");
+    expect(clientIp(() => undefined, "cf-connecting-ip")).toBe("unknown");
   });
 });

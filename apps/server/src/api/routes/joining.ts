@@ -23,7 +23,7 @@ import {
 } from "../../services/email-layout.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
-import { iso, newToken, sha256Hex } from "../util.ts";
+import { clientIp, iso, newToken, sha256Hex } from "../util.ts";
 
 function requireClaims(claims: JwtClaims | undefined): JwtClaims {
   if (!claims) throw new ApiError(401, "unauthorized", "Missing or invalid bearer token");
@@ -392,7 +392,7 @@ export function registerJoiningRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   const limitKey = (c: { req: { header(n: string): string | undefined } }, claims?: JwtClaims) =>
     claims?.sub
       ? `u:${claims.sub}`
-      : `ip:${c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ?? c.req.header("x-real-ip") ?? "unknown"}`;
+      : `ip:${clientIp((n) => c.req.header(n), deps.env.TRUSTED_CLIENT_IP_HEADER)}`;
 
   type PreviewRow = {
     kind: "link" | "code" | "email";

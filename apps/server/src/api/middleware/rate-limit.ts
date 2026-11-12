@@ -1,19 +1,22 @@
 import type { MiddlewareHandler } from "hono";
 import { ApiError } from "../errors.ts";
+import { clientIp } from "../util.ts";
 
 /**
  * Fixed-window rate limit per key (user id when signed in, else client IP).
  * In-memory: correct for the single API process the spec targets; swap for a shared store to scale out.
  */
-export function rateLimit(opts: { perMinute: number; now?: () => number }): MiddlewareHandler {
+export function rateLimit(opts: {
+  perMinute: number;
+  now?: () => number;
+  /** TRUSTED_CLIENT_IP_HEADER: see clientIp. */
+  trustedIpHeader?: string;
+}): MiddlewareHandler {
   const now = opts.now ?? Date.now;
   const windows = new Map<string, { start: number; count: number }>();
   return async (c, next) => {
     const user = c.get("claims" as never) as { sub?: string } | undefined;
-    const ip =
-      c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ??
-      c.req.header("x-real-ip") ??
-      "unknown";
+    const ip = clientIp((n) => c.req.header(n), opts.trustedIpHeader);
     const key = user?.sub ? `u:${user.sub}` : `ip:${ip}`;
     const t = now();
     let w = windows.get(key);

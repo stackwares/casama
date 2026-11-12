@@ -44,7 +44,7 @@ void main() {
       await _settle(tester);
       expect(find.byKey(const Key('settingsInvite')), findsOneWidget);
       expect(
-        find.text('Earn \$2.00 of free usage for each friend who joins'),
+        find.text('Earn \$2 of free usage for each friend who joins'),
         findsOneWidget,
       );
       await tester.tap(find.byKey(const Key('settingsInvite')));

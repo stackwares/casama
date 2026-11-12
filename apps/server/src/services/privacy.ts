@@ -91,6 +91,25 @@ export async function exportUserData(db: Database, claims: JwtClaims) {
       notifications: await q(
         sql`select * from public.notifications where user_id = ${claims.sub}::uuid`,
       ),
+      // Invite friends (D-211): your code, the invite you joined with, and the friends you invited
+      // (when and what it earned, not who they are).
+      invites: {
+        code:
+          (
+            await q(
+              sql`select code, created_at from public.referral_codes where user_id = ${claims.sub}::uuid`,
+            )
+          )[0] ?? null,
+        joined_with:
+          (
+            await q(
+              sql`select code, status, welcome_usd, created_at, decided_at from public.referrals where invitee_id = ${claims.sub}::uuid`,
+            )
+          )[0] ?? null,
+        invited: await q(
+          sql`select status, reward_usd, created_at, decided_at from public.referrals where inviter_id = ${claims.sub}::uuid order by created_at`,
+        ),
+      },
     });
     const orgs = await q(sql`
       select o.*, m.role from public.organizations o

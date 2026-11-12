@@ -217,9 +217,27 @@ export function createApp(deps: AppDeps) {
       "content-type": "text/plain; version=0.0.4",
     });
   });
-  app.use("/v1/*", rateLimit({ perMinute: deps.env.RATE_LIMIT_PER_MINUTE }));
-  app.use("/hooks/*", rateLimit({ perMinute: deps.env.RATE_LIMIT_PER_MINUTE }));
-  app.use("/connect/*", rateLimit({ perMinute: deps.env.RATE_LIMIT_PER_MINUTE * 10 }));
+  app.use(
+    "/v1/*",
+    rateLimit({
+      perMinute: deps.env.RATE_LIMIT_PER_MINUTE,
+      trustedIpHeader: deps.env.TRUSTED_CLIENT_IP_HEADER,
+    }),
+  );
+  app.use(
+    "/hooks/*",
+    rateLimit({
+      perMinute: deps.env.RATE_LIMIT_PER_MINUTE,
+      trustedIpHeader: deps.env.TRUSTED_CLIENT_IP_HEADER,
+    }),
+  );
+  app.use(
+    "/connect/*",
+    rateLimit({
+      perMinute: deps.env.RATE_LIMIT_PER_MINUTE * 10,
+      trustedIpHeader: deps.env.TRUSTED_CLIENT_IP_HEADER,
+    }),
+  );
   app.use("/v1/*", idempotency(deps.db));
 
   registerSystemRoutes(app, deps);

@@ -59,7 +59,8 @@ final pendingReferralProvider = NotifierProvider<PendingReferral, String?>(
 /// The app path for a friend's invite code.
 String referralPath(String code) => '/i/${Uri.encodeComponent(code)}';
 
-String _usd(BuildContext context, num value) {
+/// A credit amount the way invites show it: "$2" for whole dollars, "$2.50" otherwise.
+String creditLabel(BuildContext context, num value) {
   final whole = value == value.roundToDouble();
   return whole
       ? '\$${value.toInt()}'
@@ -70,7 +71,7 @@ String _usd(BuildContext context, num value) {
 String redeemedMessage(BuildContext context, Referral r) {
   final l10n = context.l10n;
   if (r.welcomeUsd > 0) {
-    return l10n.referralRedeemedBonus(_usd(context, r.welcomeUsd));
+    return l10n.referralRedeemedBonus(creditLabel(context, r.welcomeUsd));
   }
   final name = r.invitedBy?.name;
   return name.isUsable
@@ -91,6 +92,15 @@ class InviteFriendsScreen extends ConsumerStatefulWidget {
 class _InviteFriendsScreenState extends ConsumerState<InviteFriendsScreen> {
   final _code = TextEditingController();
   var _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Settings keeps the summary alive; refresh it so counts and credits are current on open.
+    Future.microtask(() {
+      if (mounted) ref.invalidate(referralProvider);
+    });
+  }
 
   @override
   void dispose() {
@@ -117,7 +127,7 @@ class _InviteFriendsScreenState extends ConsumerState<InviteFriendsScreen> {
           ? l10n.inviteFriendsShareTextBonus(
               r.link!,
               r.code!,
-              _usd(context, r.welcomeUsd),
+              creditLabel(context, r.welcomeUsd),
             )
           : l10n.inviteFriendsShareText(r.link!, r.code!),
       origin: shareOrigin(context),
@@ -175,8 +185,8 @@ class _InviteFriendsScreenState extends ConsumerState<InviteFriendsScreen> {
     final scheme = context.colorScheme;
     final colors = context.appColors;
     final hasReward = r.rewardUsd > 0;
-    final reward = _usd(context, r.rewardUsd);
-    final welcome = _usd(context, r.welcomeUsd);
+    final reward = creditLabel(context, r.rewardUsd);
+    final welcome = creditLabel(context, r.welcomeUsd);
     // Both sides get something: "you each get $2" when the amounts match.
     final both = hasReward && r.welcomeUsd > 0;
     final same = both && r.rewardUsd == r.welcomeUsd;
@@ -305,7 +315,7 @@ class _InviteFriendsScreenState extends ConsumerState<InviteFriendsScreen> {
               iconColor: colors.positive,
               title: l10n.inviteFriendsEarned,
               trailing: Text(
-                _usd(context, r.earnedUsd),
+                creditLabel(context, r.earnedUsd),
                 style: context.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   fontFeatures: AppText.tabular,
@@ -349,7 +359,7 @@ class _InviteFriendsScreenState extends ConsumerState<InviteFriendsScreen> {
                   : l10n.referralJoinedThroughFriend,
               if ((r.invitedBy!.welcomeEarnedUsd ?? 0) > 0)
                 l10n.referralWelcomeEarned(
-                  _usd(context, r.invitedBy!.welcomeEarnedUsd!),
+                  creditLabel(context, r.invitedBy!.welcomeEarnedUsd!),
                 )
               else if (r.invitedBy!.welcomeEarnedUsd == null &&
                   r.welcomeUsd > 0)
@@ -491,7 +501,7 @@ class _InviteLinkScreenState extends ConsumerState<InviteLinkScreen> {
             : l10n.referralInvitedByFriend,
         title: l10n.referralWelcomeTitle,
         message: p.welcomeUsd > 0
-            ? l10n.referralWelcomeHelpBonus(_usd(context, p.welcomeUsd))
+            ? l10n.referralWelcomeHelpBonus(creditLabel(context, p.welcomeUsd))
             : l10n.referralWelcomeHelp,
         actions: [
           FilledButton(

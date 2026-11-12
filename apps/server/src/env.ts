@@ -25,6 +25,15 @@ export const EnvSchema = z.object({
   /** Store pages shown on the invite join page. */
   APP_STORE_URL: z.url().optional(),
   PLAY_STORE_URL: z.url().optional(),
+  /**
+   * A header the edge sets with the caller's address and clients can't override, used for signed-out
+   * rate limits. Casama Cloud: cf-connecting-ip (behind Cloudflare Tunnel, X-Forwarded-For is the
+   * tunnel's own address). Unset: the first X-Forwarded-For entry, which Caddy sets.
+   */
+  TRUSTED_CLIENT_IP_HEADER: z
+    .string()
+    .optional()
+    .transform((v) => v?.trim().toLowerCase() || undefined),
   /** Extra comma-separated origins allowed to call the API from a browser. */
   CORS_ORIGINS: z.string().default(""),
   /**
