@@ -10,6 +10,7 @@ import 'providers.dart';
 import 'distribution.dart';
 import 'haptics.dart';
 import 'telemetry.dart';
+import 'analytics.dart';
 
 /// Where a purchase can happen (D-070).
 enum PurchaseChannel { web, appStore, googlePlay }
@@ -50,12 +51,23 @@ class StoreProduct {
 
 /// A purchase or restored purchase the server must verify before it counts.
 class StorePurchase {
-  const StorePurchase({required this.source, required this.productId, this.transactionId, this.purchaseToken, this.restored = false, this.raw});
+  const StorePurchase({
+    required this.source,
+    required this.productId,
+    this.transactionId,
+    this.purchaseToken,
+    this.restored = false,
+    this.status = PurchaseStatus.purchased,
+    this.error,
+    this.raw,
+  });
   final String source; // app_store | google_play
   final String productId;
   final String? transactionId;
   final String? purchaseToken;
   final bool restored;
+  final PurchaseStatus status;
+  final Object? error;
   final Object? raw;
 }
 
@@ -136,16 +148,16 @@ class InAppPurchaseStore implements StorePurchases {
   Future<void> restore({required String orgId}) => _iap.restorePurchases(applicationUserName: orgId);
 
   @override
-  Stream<StorePurchase> get purchases => _iap.purchaseStream.expand((list) => list
-      .where((p) => p.status == PurchaseStatus.purchased || p.status == PurchaseStatus.restored)
-      .map((p) => StorePurchase(
-            source: source,
-            productId: p.productID,
-            transactionId: source == 'app_store' ? p.purchaseID : null,
-            purchaseToken: source == 'google_play' ? p.verificationData.serverVerificationData : null,
-            restored: p.status == PurchaseStatus.restored,
-            raw: p,
-          )));
+  Stream<StorePurchase> get purchases => _iap.purchaseStream.expand((list) => list.map((p) => StorePurchase(
+        source: source,
+        productId: p.productID,
+        transactionId: source == 'app_store' ? p.purchaseID : null,
+        purchaseToken: source == 'google_play' ? p.verificationData.serverVerificationData : null,
+        restored: p.status == PurchaseStatus.restored,
+        status: p.status,
+        error: p.error,
+        raw: p,
+      )));
 
   @override
   Future<void> complete(StorePurchase purchase) async {
@@ -186,13 +198,52 @@ class PurchaseVerifier {
   Future<void> _verify(StorePurchase p) async {
     final org = ref.read(currentOrgProvider);
     if (org == null) return;
+
+    if (p.status == PurchaseStatus.canceled) {
+      await Analytics.capture('purchase_completed', properties: {
+        'outcome': 'cancelled',
+        'store': p.source,
+        'product_id': p.productId,
+      });
+      return;
+    }
+
+    if (p.status == PurchaseStatus.error) {
+      await Analytics.capture('purchase_completed', properties: {
+        'outcome': 'failed',
+        'store': p.source,
+        'product_id': p.productId,
+      });
+      return;
+    }
+
+    if (p.status == PurchaseStatus.pending) {
+      await Analytics.capture('purchase_completed', properties: {
+        'outcome': 'pending',
+        'store': p.source,
+        'product_id': p.productId,
+      });
+      return;
+    }
+
+    if (p.status != PurchaseStatus.purchased && p.status != PurchaseStatus.restored) {
+      return;
+    }
+
     try {
       await ref.read(backendProvider).verifyPurchase(org.id,
           source: p.source, productId: p.productId, transactionId: p.transactionId, purchaseToken: p.purchaseToken);
       await ref.read(storeProvider).complete(p);
       ref.invalidate(billingProvider);
       // A new purchase went through (Restore Purchases replays old ones, quietly).
-      if (!p.restored) HapticsHelper.success();
+      if (!p.restored) {
+        HapticsHelper.success();
+        await Analytics.capture('purchase_completed', properties: {
+          'outcome': 'purchased',
+          'store': p.source,
+          'product_id': p.productId,
+        });
+      }
     } catch (e, st) {
       // Left uncompleted: the store redelivers it, and Restore Purchases retries.
       debugPrint('purchase verification failed: $e');
@@ -201,6 +252,11 @@ class PurchaseVerifier {
         'product_id': p.productId,
         'restored': p.restored,
       }, warning: true);
+      await Analytics.capture('purchase_completed', properties: {
+        'outcome': 'failed',
+        'store': p.source,
+        'product_id': p.productId,
+      });
     }
   }
 

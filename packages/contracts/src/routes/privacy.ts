@@ -79,3 +79,14 @@ export const updateOrgSettings = createRoute({
     404: e404,
   },
 });
+
+export const setAnalyticsOptOut = createRoute({
+  operationId: "setAnalyticsOptOut",
+  method: "post",
+  path: "/v1/me/analytics-opt-out",
+  tags,
+  security,
+  summary: "Update the user's analytics opt-out preference",
+  request: { body: jsonBody(z.object({ opt_out: z.boolean() })) },
+  responses: { 204: { description: "Updated" }, 401: e401 },
+});

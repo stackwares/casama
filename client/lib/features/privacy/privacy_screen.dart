@@ -12,6 +12,7 @@ import '../../core/providers.dart';
 import '../../core/share.dart';
 import '../../core/widgets.dart';
 import '../../core/haptics.dart';
+import '../../core/analytics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
@@ -114,6 +115,26 @@ class _PrivacyScreenState extends ConsumerState<PrivacyScreen> {
                     ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
                     : Icon(LucideIcons.chevronRight, color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
               ),
+            ),
+            FutureBuilder<bool>(
+              future: Analytics.isConsentEnabled(),
+              builder: (context, snapshot) {
+                final enabled = snapshot.data ?? true;
+                return GroupedTile(
+                  key: const Key('shareAnalyticsTile'),
+                  icon: LucideIcons.chartColumn,
+                  title: l10n.shareAnalytics,
+                  subtitle: l10n.shareAnalyticsHelp,
+                  trailing: Switch.adaptive(
+                    key: const Key('shareAnalyticsSwitch'),
+                    value: enabled,
+                    onChanged: (val) async {
+                      await Analytics.setConsentEnabled(val);
+                      setState(() {});
+                    },
+                  ),
+                );
+              },
             ),
           ],
         ),

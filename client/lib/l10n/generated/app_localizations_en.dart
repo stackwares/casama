@@ -1356,6 +1356,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dictate => 'Dictate';
 
   @override
+  String get dictateOnDevice => 'Dictate with this device';
+
+  @override
+  String get stopListening => 'Stop listening';
+
+  @override
+  String get dictationRetry => 'Try again';
+
+  @override
+  String get dictationSayAgain => 'Say it again';
+
+  @override
+  String get dictationFailed => 'Couldn\'t turn that into text.';
+
+  @override
+  String get dictationFailedUseDevice =>
+      'Couldn\'t turn that into text. Say it again and your device will listen.';
+
+  @override
+  String get dictationNoServiceUseDevice =>
+      'Dictation isn\'t set up for this workspace. Your device can listen instead.';
+
+  @override
+  String get dictationDeviceFailed =>
+      'Your device\'s dictation stopped working, so the mic is back on Casama\'s.';
+
+  @override
+  String get dictationDevicePermission =>
+      'Allow speech recognition to dictate with this device.';
+
+  @override
   String get readAloud => 'Read aloud';
 
   @override
@@ -2741,6 +2772,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get yourData => 'Your data';
+
+  @override
+  String get shareAnalytics => 'Share usage data';
+
+  @override
+  String get shareAnalyticsHelp =>
+      'Help improve Casama by sharing anonymous usage metrics and error reports. Message content, prompts, files and secrets are never shared.';
 
   @override
   String get dangerZone => 'Danger zone';

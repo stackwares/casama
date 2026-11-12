@@ -142,15 +142,19 @@ A self-hosted server can also send model calls to Langfuse for debugging. Those 
 input and output, with secrets and model keys removed. Workspaces can opt out with the
 `llm_tracing` workspace setting through the [API](/develop/api).
 
-## Telemetry
+## Telemetry and usage analytics
 
 - **Usage ping:** off by default. A self-hosted server sends nothing unless its owner sets
   `TELEMETRY=on`. Then, once a week, it sends a random instance id, the Casama version, and the
   number of bots and users active in the last 7 days. Nothing else. The admin console shows
   whether it's on.
-- **Error reports and product analytics:** off unless whoever builds the app or runs the server
-  adds a Sentry or PostHog key. When on, reports never carry message text, prompts, secrets or
-  email addresses.
+- **Product analytics:** On Casama Cloud, the official app and server capture usage metrics (screen
+  views, milestone completions, daily activity rollups) to PostHog to improve the app. You can opt
+  out at any time in **Settings → Privacy → Share usage data**. On self-hosted servers, product
+  analytics is completely disabled unless the server owner explicitly sets `PRODUCT_ANALYTICS=on`
+  and supplies a `POSTHOG_API_KEY`.
+- **Error reports:** Sent to Sentry/PostHog when configured. When on, reports never carry message
+  text, prompts, secrets, personal device data, or email addresses.
 
 ## Limits
 

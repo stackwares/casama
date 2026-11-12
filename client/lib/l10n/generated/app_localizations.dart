@@ -2278,6 +2278,60 @@ abstract class AppLocalizations {
   /// **'Dictate'**
   String get dictate;
 
+  /// No description provided for @dictateOnDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Dictate with this device'**
+  String get dictateOnDevice;
+
+  /// No description provided for @stopListening.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop listening'**
+  String get stopListening;
+
+  /// No description provided for @dictationRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get dictationRetry;
+
+  /// No description provided for @dictationSayAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Say it again'**
+  String get dictationSayAgain;
+
+  /// No description provided for @dictationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t turn that into text.'**
+  String get dictationFailed;
+
+  /// No description provided for @dictationFailedUseDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t turn that into text. Say it again and your device will listen.'**
+  String get dictationFailedUseDevice;
+
+  /// No description provided for @dictationNoServiceUseDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Dictation isn\'t set up for this workspace. Your device can listen instead.'**
+  String get dictationNoServiceUseDevice;
+
+  /// No description provided for @dictationDeviceFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your device\'s dictation stopped working, so the mic is back on Casama\'s.'**
+  String get dictationDeviceFailed;
+
+  /// No description provided for @dictationDevicePermission.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow speech recognition to dictate with this device.'**
+  String get dictationDevicePermission;
+
   /// No description provided for @readAloud.
   ///
   /// In en, this message translates to:
@@ -4221,6 +4275,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your data'**
   String get yourData;
+
+  /// No description provided for @shareAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Share usage data'**
+  String get shareAnalytics;
+
+  /// No description provided for @shareAnalyticsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Help improve Casama by sharing anonymous usage metrics and error reports. Message content, prompts, files and secrets are never shared.'**
+  String get shareAnalyticsHelp;
 
   /// No description provided for @dangerZone.
   ///

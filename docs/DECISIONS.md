@@ -2277,3 +2277,19 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
   - Background tick steps in `workflows.ts` now route through `captureStep` to log and report recurring failures instead of silently swallowing errors.
   - Usage meter reporting in `billing/connect.ts` and external object/memory cleanup in `services/privacy.ts` now capture unexpected exceptions.
 - **Supervisor:** Added `@casama/observability` to `apps/supervisor`, initialized observability in `apps/supervisor/src/main.ts`, captured warm pool errors, and wired `app.onError` in `app.ts`.
+
+## D-208 Identity, consent, and core funnels (Phase 2)
+
+- **Decision** (Oliver: \"Go and finish all until all phases are completed\"): Phase 2 of `docs/ANALYTICS-PLAN.md` implemented.
+- **Privacy & Opt-out:**
+  - Added migration `20270120000001_analytics.sql` adding `profiles.analytics_opt_out` (default false), `profiles.analytics_signup_sent_at`, and `public.analytics_milestones` table.
+  - Added `analytics_opt_out` to workspace settings and API route `POST /v1/me/analytics-opt-out` in `apps/server/src/api/routes/privacy.ts`.
+  - Added client analytics sharing toggle in `client/lib/features/privacy/privacy_screen.dart` under "Your data", backed by `SharedPreferences` and syncing with PostHog's `optIn()` / `optOut()`.
+  - Updated `client/ios/Runner/PrivacyInfo.xcprivacy` and `client/macos/Runner/PrivacyInfo.xcprivacy` declaring `ProductInteraction`, linked `CrashData`, `UserID`, and `OtherDiagnosticData`.
+  - Updated disclosures in `site/privacy.html` and `docs-site/guide/privacy.md`.
+- **Client & Server Analytics Facades:**
+  - Implemented `client/lib/core/analytics.dart` with `capture`, `identify`, `reset`, and `featureUsed` (rate-limited per day).
+  - Wired `Analytics.identify` on sign-in and `Analytics.reset` on sign-out in `client/lib/app.dart`.
+  - Implemented `packages/observability/src/analytics.ts` providing `initProductAnalytics`, `getProductAnalytics`, and personless capture options when `PRODUCT_ANALYTICS=on`.
+  - Updated client `beforeSend` in `client/lib/core/telemetry.dart` to strictly allow only cataloged product events and scrub payload properties.
+  - Wired purchase completion analytics tracking across store purchase states in `client/lib/core/billing.dart`.

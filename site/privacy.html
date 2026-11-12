@@ -144,8 +144,8 @@
       <li>Signals that protect sign-up and our computers from abuse, such as a sign-up check token and blocked network attempts from a bot's computer.</li>
     </ul>
 
-    <h3>Error reports and screen analytics</h3>
-    <p>Official Casama apps, and Casama Cloud's servers, send crash and error reports to Sentry. Official apps also send PostHog the name of each screen you open, as a route template such as a settings page, with the ids taken out, and whether the app opened or moved to the background. Reports and screen names are scrubbed of message text, prompts, secrets and email addresses before they leave. PostHog is not used to build a profile of you, and the apps do not record your screen. An app you build yourself sends none of this unless you turn it on, and then it goes to your own project.</p>
+    <h3>Error reports and usage analytics</h3>
+    <p>Official Casama apps and Casama Cloud send crash and error reports to Sentry and PostHog to diagnose issues. On Casama Cloud, official apps and servers also collect usage and product interaction events (such as screens viewed, features used, milestones reached, and daily activity rollups) to PostHog to understand how the product is used and improve reliability. You can disable usage analytics sharing at any time in <strong>Settings → Privacy</strong>. Reports and events are scrubbed: we never collect message text, prompts, personal content, secrets, device files, or audio in analytics. Apps you build yourself send nothing unless you explicitly configure them.</p>
 
     <h3>When you contact us</h3>
     <p>Your email address and whatever you write to us.</p>
@@ -227,7 +227,7 @@
         <tr><td>Composio, Pipedream</td><td>Connecting apps such as GitHub, Slack or Google through their sign-in</td><td>Only when you connect an app through them</td></tr>
         <tr><td>Sandbox providers (such as E2B or Daytona)</td><td>Running bots' cloud computers when our own machines are full</td><td>Only if we use them for your computer</td></tr>
         <tr><td>Sentry</td><td>Crash and error reports, scrubbed as described above</td><td>Official apps and Casama Cloud</td></tr>
-        <tr><td>PostHog</td><td>Screen names, and whether the app opened or moved to the background. No profile and no screen recording</td><td>Official apps</td></tr>
+        <tr><td>PostHog</td><td>Usage events, screen names, crash reports; linked to your account on Casama Cloud (unless opted out in Settings → Privacy)</td><td>Official apps and Casama Cloud</td></tr>
         <tr><td>Apps and services you connect</td><td>Whatever you ask your bots to do with them (for example Gmail, Slack, Twilio, Stripe, chat apps, memory services, maps)</td><td>Only when you connect them</td></tr>
       </tbody>
     </table>

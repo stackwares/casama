@@ -36,7 +36,16 @@ export const OrgSettings = z
       description:
         "Send model calls to the server's Langfuse, secrets redacted; no effect without Langfuse",
     }),
+    analytics_opt_out: z.boolean().optional().openapi({
+      description: "Disable usage analytics collection and rollups for this workspace",
+    }),
   })
   .openapi("OrgSettings");
 
 export const UpdateOrgSettingsRequest = OrgSettings.partial().openapi("UpdateOrgSettingsRequest");
+
+export const SetAnalyticsOptOutRequest = z
+  .object({
+    opt_out: z.boolean().openapi({ description: "True to opt out of usage analytics" }),
+  })
+  .openapi("SetAnalyticsOptOutRequest");

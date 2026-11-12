@@ -3354,6 +3354,8 @@ export const profiles = pgTable("profiles", {
 	preferredName: text("preferred_name"),
 	pronouns: text(),
 	photoImportTriedAt: timestamp("photo_import_tried_at", { withTimezone: true, mode: 'string' }),
+	analyticsOptOut: boolean("analytics_opt_out").default(false).notNull(),
+	analyticsSignupSentAt: timestamp("analytics_signup_sent_at", { withTimezone: true, mode: 'string' }),
 }, (table) => [
 	foreignKey({
 			columns: [table.userId],

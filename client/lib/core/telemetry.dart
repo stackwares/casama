@@ -151,8 +151,48 @@ class Telemetry {
             if (eventName == r'$screen') {
               return event;
             }
-            // In Phase 0, drop uncataloged/unrecognized events.
-            // In debug mode, throw so tests immediately surface violations.
+            // Allow defined client product events from ANALYTICS-PLAN §6
+            const allowedCatalogEvents = {
+              'sign_in_started',
+              'sign_in_failed',
+              'sign_in_completed',
+              'two_step_completed',
+              'signed_out',
+              'onboarding_begin',
+              'onboarding_step_done',
+              'onboarding_complete',
+              'invite_shared',
+              'join_completed',
+              'connection_started',
+              'connection_failed',
+              'live_view_failed',
+              'companion_paired',
+              'device_data_toggled',
+              'call_started',
+              'bot_call_answered',
+              'paywall_view',
+              'paywall_plan_selected',
+              'purchase_started',
+              'purchase_completed',
+              'restore_purchases',
+              'paywall_dismiss',
+              'skill_installed',
+              'push_permission_result',
+              'push_opened',
+              'app_startup_failed',
+              'app_active_daily',
+              'app_error_shown',
+              'feature_used',
+              'enable_analytics_sharing',
+              'disable_analytics_sharing',
+            };
+            if (allowedCatalogEvents.contains(eventName)) {
+              if (event.properties != null) {
+                event.properties = (_deep(event.properties) as Map?)?.cast<String, Object>();
+              }
+              return event;
+            }
+            // Drop uncataloged events
             assert(false, 'Unexpected event before catalog registration: $eventName');
             return null;
           },

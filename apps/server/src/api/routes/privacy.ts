@@ -154,6 +154,18 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return c.json(await settings(id), 200);
   });
 
+  app.openapi(routes.setAnalyticsOptOut, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { opt_out } = c.req.valid("json");
+    await db.execute(sql`
+      update public.profiles
+      set analytics_opt_out = ${opt_out}
+      where user_id = ${claims.sub}::uuid
+    `);
+    deps.logger.info("analytics opt-out updated", { user_id: claims.sub, opt_out });
+    return c.body(null, 204) as never;
+  });
+
   // Casama Cloud receives opt-in telemetry pings (D-074): counts only, validated strictly.
   if (deps.billing?.enabled) {
     app.post("/telemetry/v1/ping", async (c) => {

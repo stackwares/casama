@@ -9,6 +9,7 @@ import 'core/local_cache.dart';
 import 'core/providers.dart';
 import 'core/shortcuts.dart';
 import 'core/widgets.dart';
+import 'core/analytics.dart';
 import 'features/billing/billing_screen.dart';
 
 import 'core/mobile_extras.dart';
@@ -55,7 +56,15 @@ class CasamaApp extends ConsumerWidget {
     keep(shortcutsProvider);
     // Signing out (or a session ending) wipes the offline cache on this device (D-112).
     ref.listen(signedInProvider, (prev, next) {
-      if (prev?.value == true && next.value == false) unawaited(cacheClear(ref.read(localCacheProvider)));
+      if (prev?.value == true && next.value == false) {
+        unawaited(cacheClear(ref.read(localCacheProvider)));
+        unawaited(Analytics.reset());
+      } else if (next.value == true) {
+        final userId = ref.read(backendProvider).userId;
+        if (userId != null) {
+          unawaited(Analytics.identify(userId));
+        }
+      }
     });
     final appearance = ref.watch(appearanceProvider);
     final router = ref.watch(routerProvider);

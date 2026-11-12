@@ -223,3 +223,4 @@ export function createLogger(
 export type Logger = ReturnType<typeof createLogger>;
 
 export * from "./run-trace.ts";
+export * from "./analytics.ts";
