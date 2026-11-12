@@ -75,6 +75,7 @@ import 'package:casama_api/src/model/checkpoint_created_event_payload.dart';
 import 'package:casama_api/src/model/checkpoint_list.dart';
 import 'package:casama_api/src/model/cloud_models.dart';
 import 'package:casama_api/src/model/computer.dart';
+import 'package:casama_api/src/model/computer_device.dart';
 import 'package:casama_api/src/model/computer_file_entry.dart';
 import 'package:casama_api/src/model/computer_file_list.dart';
 import 'package:casama_api/src/model/computer_list.dart';
@@ -673,6 +674,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CloudModels.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Computer':
           return Computer.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerDevice':
+          return ComputerDevice.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ComputerFileEntry':
           return ComputerFileEntry.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ComputerFileList':

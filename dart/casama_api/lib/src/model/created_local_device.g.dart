@@ -19,6 +19,8 @@ abstract class _$CreatedLocalDeviceCWProxy {
 
   CreatedLocalDevice platform(CreatedLocalDevicePlatformEnum platform);
 
+  CreatedLocalDevice osVersion(String? osVersion);
+
   CreatedLocalDevice capabilities(LocalCapabilities capabilities);
 
   CreatedLocalDevice allowedRoots(List<String> allowedRoots);
@@ -50,6 +52,7 @@ abstract class _$CreatedLocalDeviceCWProxy {
     String? computerId,
     String name,
     CreatedLocalDevicePlatformEnum platform,
+    String? osVersion,
     LocalCapabilities capabilities,
     List<String> allowedRoots,
     List<String> allowedBotIds,
@@ -87,6 +90,9 @@ class _$CreatedLocalDeviceCWProxyImpl implements _$CreatedLocalDeviceCWProxy {
   @override
   CreatedLocalDevice platform(CreatedLocalDevicePlatformEnum platform) =>
       call(platform: platform);
+
+  @override
+  CreatedLocalDevice osVersion(String? osVersion) => call(osVersion: osVersion);
 
   @override
   CreatedLocalDevice capabilities(LocalCapabilities capabilities) =>
@@ -133,6 +139,7 @@ class _$CreatedLocalDeviceCWProxyImpl implements _$CreatedLocalDeviceCWProxy {
     Object? computerId = const $CopyWithPlaceholder(),
     Object? name = const $CopyWithPlaceholder(),
     Object? platform = const $CopyWithPlaceholder(),
+    Object? osVersion = const $CopyWithPlaceholder(),
     Object? capabilities = const $CopyWithPlaceholder(),
     Object? allowedRoots = const $CopyWithPlaceholder(),
     Object? allowedBotIds = const $CopyWithPlaceholder(),
@@ -167,6 +174,10 @@ class _$CreatedLocalDeviceCWProxyImpl implements _$CreatedLocalDeviceCWProxy {
           ? _value.platform
           // ignore: cast_nullable_to_non_nullable
           : platform as CreatedLocalDevicePlatformEnum,
+      osVersion: osVersion == const $CopyWithPlaceholder()
+          ? _value.osVersion
+          // ignore: cast_nullable_to_non_nullable
+          : osVersion as String?,
       capabilities:
           capabilities == const $CopyWithPlaceholder() || capabilities == null
           ? _value.capabilities
@@ -252,6 +263,7 @@ CreatedLocalDevice _$CreatedLocalDeviceFromJson(Map<String, dynamic> json) =>
             'platform',
             (v) => $enumDecode(_$CreatedLocalDevicePlatformEnumEnumMap, v),
           ),
+          osVersion: $checkedConvert('os_version', (v) => v as String?),
           capabilities: $checkedConvert(
             'capabilities',
             (v) => LocalCapabilities.fromJson(v as Map<String, dynamic>),
@@ -282,6 +294,7 @@ CreatedLocalDevice _$CreatedLocalDeviceFromJson(Map<String, dynamic> json) =>
         'orgId': 'org_id',
         'userId': 'user_id',
         'computerId': 'computer_id',
+        'osVersion': 'os_version',
         'allowedRoots': 'allowed_roots',
         'allowedBotIds': 'allowed_bot_ids',
         'lastSeenAt': 'last_seen_at',
@@ -297,6 +310,7 @@ Map<String, dynamic> _$CreatedLocalDeviceToJson(CreatedLocalDevice instance) =>
       'computer_id': instance.computerId,
       'name': instance.name,
       'platform': _$CreatedLocalDevicePlatformEnumEnumMap[instance.platform]!,
+      'os_version': ?instance.osVersion,
       'capabilities': instance.capabilities.toJson(),
       'allowed_roots': instance.allowedRoots,
       'allowed_bot_ids': instance.allowedBotIds,

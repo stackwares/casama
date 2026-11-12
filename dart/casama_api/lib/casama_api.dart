@@ -137,6 +137,7 @@ export 'package:casama_api/src/model/checkpoint_created_event_payload.dart';
 export 'package:casama_api/src/model/checkpoint_list.dart';
 export 'package:casama_api/src/model/cloud_models.dart';
 export 'package:casama_api/src/model/computer.dart';
+export 'package:casama_api/src/model/computer_device.dart';
 export 'package:casama_api/src/model/computer_file_entry.dart';
 export 'package:casama_api/src/model/computer_file_list.dart';
 export 'package:casama_api/src/model/computer_list.dart';

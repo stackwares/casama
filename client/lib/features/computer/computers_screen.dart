@@ -15,6 +15,8 @@ import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
+import '../companion/companion_controller.dart';
+import 'computer_details.dart';
 import 'computer_screen.dart';
 
 /// Team and private computers: create, rename, switch between headless and desktop, delete.
@@ -62,9 +64,22 @@ class _ComputerCard extends ConsumerWidget {
     }
     final desktop = c.profile == ComputerProfileEnum.desktop;
     final running = c.state == ComputerState.running || c.state == ComputerState.idle;
-    final owner = c.kind == ComputerKindEnum.team
-        ? l10n.teamComputer
-        : (ownerBot != null ? l10n.privateComputerOf(ownerBot.name) : (c.kind == ComputerKindEnum.local ? l10n.thisDevice : l10n.privateComputer));
+    final local = c.kind == ComputerKindEnum.local;
+    // Whose computer it is, unless the name already says so; a personal computer says "This
+    // device" in its system line instead (D-227).
+    final owner = local
+        ? null
+        : (c.kind == ComputerKindEnum.team
+              ? l10n.teamComputer
+              : (ownerBot != null ? l10n.privateComputerOf(ownerBot.name) : l10n.privateComputer));
+    final showOwner = owner != null && owner.toLowerCase() != c.name.trim().toLowerCase();
+    // Without a device from the server (an older one), the companion knows if it's this machine.
+    final thisDevice = local && ref.watch(companionControllerProvider).value?.computerId == c.id;
+    final system = computerSystemLine(context, c, thisDevice: thisDevice);
+    final access = local ? computerAccessLine(context, c) : null;
+    final activity = computerActivityLine(context, c);
+    final error = c.state == ComputerState.error ? c.error?.trim() : null;
+    final meta = context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant);
     final stateColor = running ? colors.working : (c.state == ComputerState.error ? colors.negative : scheme.onSurfaceVariant);
     final backend = ref.read(backendProvider);
 
@@ -148,8 +163,18 @@ class _ComputerCard extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                   style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
-                const SizedBox(height: 2),
-                Text(owner, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                if (showOwner) ...[
+                  const SizedBox(height: 2),
+                  Text(owner, maxLines: 1, overflow: TextOverflow.ellipsis, style: meta),
+                ],
+                if (system.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(system, key: Key('computerSystem-${c.id}'), maxLines: 2, overflow: TextOverflow.ellipsis, style: meta),
+                ],
+                if (access != null) ...[
+                  const SizedBox(height: 2),
+                  Text(access, key: Key('computerAccess-${c.id}'), maxLines: 2, overflow: TextOverflow.ellipsis, style: meta),
+                ],
                 const SizedBox(height: 6),
                 Wrap(
                   spacing: 6,
@@ -164,9 +189,21 @@ class _ComputerCard extends ConsumerWidget {
                       pill: true,
                       icon: desktop ? LucideIcons.monitor : LucideIcons.squareTerminal,
                     ),
+                    if (c.hasSnapshot && !isPersonalComputer(c))
+                      Tooltip(
+                        message: l10n.computerSavedHelp,
+                        child: StatusLabel(text: l10n.computerSaved, color: scheme.onSurfaceVariant, pill: true, icon: LucideIcons.archive),
+                      ),
                     if (c.provider != 'docker' && !isPersonalComputer(c)) StatusLabel(text: c.provider, color: scheme.onSurfaceVariant, pill: true),
                   ],
                 ),
+                if (error != null && error.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(error, key: Key('computerError-${c.id}'), maxLines: 2, overflow: TextOverflow.ellipsis, style: meta?.copyWith(color: colors.negative)),
+                ] else if (activity != null) ...[
+                  const SizedBox(height: 6),
+                  Text(activity, key: Key('computerActivity-${c.id}'), style: meta),
+                ],
               ],
             ),
           ),

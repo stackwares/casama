@@ -454,6 +454,7 @@ Class | Method | HTTP request | Description
  - [CheckpointList](doc/CheckpointList.md)
  - [CloudModels](doc/CloudModels.md)
  - [Computer](doc/Computer.md)
+ - [ComputerDevice](doc/ComputerDevice.md)
  - [ComputerFileEntry](doc/ComputerFileEntry.md)
  - [ComputerFileList](doc/ComputerFileList.md)
  - [ComputerList](doc/ComputerList.md)

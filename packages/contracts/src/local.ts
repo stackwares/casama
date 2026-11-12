@@ -43,6 +43,9 @@ export const LocalDevice = z
     computer_id: Uuid.nullable(),
     name: z.string(),
     platform: z.enum(["macos", "windows", "linux"]),
+    os_version: z.string().nullable().optional().openapi({
+      description: 'What the desktop app reported when it last connected, e.g. "macOS 26.2"',
+    }),
     capabilities: LocalCapabilities,
     allowed_roots: z.array(z.string()),
     allowed_bot_ids: z.array(Uuid),

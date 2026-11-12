@@ -4601,6 +4601,49 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "os": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The operating system to show, e.g. \"Ubuntu 24.04\" or \"macOS 26.2\"; null when unknown (D-227)"
+          },
+          "device": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "platform": {
+                "type": "string",
+                "enum": [
+                  "macos",
+                  "windows",
+                  "linux"
+                ]
+              },
+              "online": {
+                "type": "boolean"
+              },
+              "last_seen_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "capabilities": {
+                "$ref": "#/components/schemas/LocalCapabilities"
+              }
+            },
+            "required": [
+              "platform",
+              "online",
+              "last_seen_at",
+              "capabilities"
+            ],
+            "description": "Personal computers only: the paired device"
           }
         },
         "required": [
@@ -4631,6 +4674,29 @@
           "stopped",
           "error"
         ]
+      },
+      "LocalCapabilities": {
+        "type": "object",
+        "properties": {
+          "shell": {
+            "type": "boolean"
+          },
+          "files": {
+            "type": "boolean"
+          },
+          "browser": {
+            "type": "boolean"
+          },
+          "desktop": {
+            "type": "boolean"
+          },
+          "mcp": {
+            "type": "boolean"
+          },
+          "messages": {
+            "type": "boolean"
+          }
+        }
       },
       "CreateComputerRequest": {
         "type": "object",
@@ -6862,29 +6928,6 @@
           }
         ]
       },
-      "LocalCapabilities": {
-        "type": "object",
-        "properties": {
-          "shell": {
-            "type": "boolean"
-          },
-          "files": {
-            "type": "boolean"
-          },
-          "browser": {
-            "type": "boolean"
-          },
-          "desktop": {
-            "type": "boolean"
-          },
-          "mcp": {
-            "type": "boolean"
-          },
-          "messages": {
-            "type": "boolean"
-          }
-        }
-      },
       "LocalDevice": {
         "type": "object",
         "properties": {
@@ -6917,6 +6960,13 @@
               "windows",
               "linux"
             ]
+          },
+          "os_version": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "What the desktop app reported when it last connected, e.g. \"macOS 26.2\""
           },
           "capabilities": {
             "$ref": "#/components/schemas/LocalCapabilities"

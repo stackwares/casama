@@ -35,6 +35,10 @@ abstract class _$ComputerCWProxy {
 
   Computer createdAt(DateTime createdAt);
 
+  Computer os(String? os);
+
+  Computer device(ComputerDevice? device);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Computer(...).copyWith.fieldName(value)`.
@@ -58,6 +62,8 @@ abstract class _$ComputerCWProxy {
     DateTime? lastActiveAt,
     String? error,
     DateTime createdAt,
+    String? os,
+    ComputerDevice? device,
   });
 }
 
@@ -111,6 +117,12 @@ class _$ComputerCWProxyImpl implements _$ComputerCWProxy {
   @override
   Computer createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
+  @override
+  Computer os(String? os) => call(os: os);
+
+  @override
+  Computer device(ComputerDevice? device) => call(device: device);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Computer(...).copyWith.fieldName(value)`.
@@ -135,6 +147,8 @@ class _$ComputerCWProxyImpl implements _$ComputerCWProxy {
     Object? lastActiveAt = const $CopyWithPlaceholder(),
     Object? error = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
+    Object? os = const $CopyWithPlaceholder(),
+    Object? device = const $CopyWithPlaceholder(),
   }) {
     return Computer(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -195,6 +209,14 @@ class _$ComputerCWProxyImpl implements _$ComputerCWProxy {
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
+      os: os == const $CopyWithPlaceholder()
+          ? _value.os
+          // ignore: cast_nullable_to_non_nullable
+          : os as String?,
+      device: device == const $CopyWithPlaceholder()
+          ? _value.device
+          // ignore: cast_nullable_to_non_nullable
+          : device as ComputerDevice?,
     );
   }
 }
@@ -266,6 +288,13 @@ Computer _$ComputerFromJson(Map<String, dynamic> json) => $checkedCreate(
         'created_at',
         (v) => DateTime.parse(v as String),
       ),
+      os: $checkedConvert('os', (v) => v as String?),
+      device: $checkedConvert(
+        'device',
+        (v) => v == null
+            ? null
+            : ComputerDevice.fromJson(v as Map<String, dynamic>),
+      ),
     );
     return val;
   },
@@ -294,6 +323,8 @@ Map<String, dynamic> _$ComputerToJson(Computer instance) => <String, dynamic>{
   'last_active_at': instance.lastActiveAt?.toIso8601String(),
   'error': instance.error,
   'created_at': instance.createdAt.toIso8601String(),
+  'os': ?instance.os,
+  'device': ?instance.device?.toJson(),
 };
 
 const _$ComputerKindEnumEnumMap = {

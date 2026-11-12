@@ -137,6 +137,7 @@ lib/src/model/checkpoint_created_event_payload.dart
 lib/src/model/checkpoint_list.dart
 lib/src/model/cloud_models.dart
 lib/src/model/computer.dart
+lib/src/model/computer_device.dart
 lib/src/model/computer_file_entry.dart
 lib/src/model/computer_file_list.dart
 lib/src/model/computer_list.dart

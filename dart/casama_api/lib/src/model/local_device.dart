@@ -33,6 +33,8 @@ class LocalDevice {
 
     required  this.platform,
 
+     this.osVersion,
+
     required  this.capabilities,
 
     required  this.allowedRoots,
@@ -117,6 +119,19 @@ class LocalDevice {
 
 
   final LocalDevicePlatformEnum platform;
+
+
+
+      /// What the desktop app reported when it last connected, e.g. \"macOS 26.2\"
+  @JsonKey(
+    
+    name: r'os_version',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? osVersion;
 
 
 
@@ -214,6 +229,7 @@ class LocalDevice {
       other.computerId == computerId &&
       other.name == name &&
       other.platform == platform &&
+      other.osVersion == osVersion &&
       other.capabilities == capabilities &&
       other.allowedRoots == allowedRoots &&
       other.allowedBotIds == allowedBotIds &&
@@ -230,6 +246,7 @@ class LocalDevice {
         (computerId == null ? 0 : computerId.hashCode) +
         name.hashCode +
         platform.hashCode +
+        (osVersion == null ? 0 : osVersion.hashCode) +
         capabilities.hashCode +
         allowedRoots.hashCode +
         allowedBotIds.hashCode +

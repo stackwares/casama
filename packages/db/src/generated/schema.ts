@@ -1000,6 +1000,7 @@ export const localDevices = pgTable("local_devices", {
 	enabled: boolean().default(true).notNull(),
 	lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: 'string' }),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	osVersion: text("os_version"),
 }, (table) => [
 	index("local_devices_org_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")),
 	foreignKey({

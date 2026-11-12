@@ -1,11 +1,22 @@
 import { z } from "@hono/zod-openapi";
 import { Uuid } from "./common.ts";
+import { LocalCapabilities } from "./local.ts";
 
 const ts = z.iso.datetime({ offset: true });
 
 export const ComputerState = z
   .enum(["provisioning", "starting", "running", "idle", "sleeping", "stopped", "error"])
   .openapi("ComputerState");
+
+/** A personal computer's device (kind "local"): what the desktop app reports (D-227). */
+export const ComputerDevice = z
+  .object({
+    platform: z.enum(["macos", "windows", "linux"]),
+    online: z.boolean(),
+    last_seen_at: ts.nullable(),
+    capabilities: LocalCapabilities,
+  })
+  .openapi("ComputerDevice");
 
 export const Computer = z
   .object({
@@ -29,6 +40,13 @@ export const Computer = z
     last_active_at: ts.nullable(),
     error: z.string().nullable(),
     created_at: ts,
+    os: z.string().nullable().optional().openapi({
+      description:
+        'The operating system to show, e.g. "Ubuntu 24.04" or "macOS 26.2"; null when unknown (D-227)',
+    }),
+    device: ComputerDevice.nullable().optional().openapi({
+      description: "Personal computers only: the paired device",
+    }),
   })
   .openapi("Computer");
 

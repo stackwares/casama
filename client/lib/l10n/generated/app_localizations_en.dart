@@ -1151,6 +1151,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get botComputer => 'Computer';
 
   @override
+  String get botComputerDefault =>
+      'Its private computer if it has one, otherwise the team computer';
+
+  @override
+  String get botInControl => 'Bot in control';
+
+  @override
   String get liveScreenshots => 'Screenshots';
 
   @override
@@ -1174,13 +1181,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveWatching => 'Watching';
-
-  @override
-  String get botComputerDefault =>
-      'Its private computer if it has one, otherwise the team computer';
-
-  @override
-  String get botInControl => 'Bot in control';
 
   @override
   String get computerName => 'Name';
@@ -2799,11 +2799,81 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editMemory => 'Edit Memory';
 
   @override
+  String get editMemoryHelp =>
+      'The bot uses this the next time it\'s relevant.';
+
+  @override
+  String get modelKeysIntro =>
+      'Bots think with your own model provider keys. Keys are stored encrypted and never shown again.';
+
   @override
   String get personalComputerConnected => 'Connected';
 
   @override
   String get personalComputerOffline => 'Offline';
+
+  @override
+  String computerCpus(num n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n CPUs',
+      one: '1 CPU',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String computerMemory(Object size) {
+    return '$size RAM';
+  }
+
+  @override
+  String computerDisk(Object size) {
+    return '$size disk';
+  }
+
+  @override
+  String computerLastUsed(Object when) {
+    return 'Last used $when';
+  }
+
+  @override
+  String computerLastSeen(Object when) {
+    return 'Last seen $when';
+  }
+
+  @override
+  String get computerSaved => 'Saved';
+
+  @override
+  String get computerSavedHelp => 'Its files are kept while it\'s stopped';
+
+  @override
+  String computerCanUse(Object list) {
+    return 'Bots can use: $list';
+  }
+
+  @override
+  String get computerCanUseNothing => 'Bots can\'t use it yet';
+
+  @override
+  String get computerCapShell => 'Terminal';
+
+  @override
+  String get computerCapFiles => 'Files';
+
+  @override
+  String get computerCapBrowser => 'Browser';
+
+  @override
+  String get computerCapDesktop => 'Screen';
+
+  @override
+  String get computerCapMcp => 'Local tools';
+
+  @override
+  String get computerCapMessages => 'Messages';
 
   @override
   String get personalComputerOfflineHelp =>
@@ -2812,13 +2882,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get personalScreenNote =>
       'This is your own computer, so you see a new screenshot every few seconds instead of a live view.';
-
-  String get editMemoryHelp =>
-      'The bot uses this the next time it\'s relevant.';
-
-  @override
-  String get modelKeysIntro =>
-      'Bots think with your own model provider keys. Keys are stored encrypted and never shown again.';
 
   @override
   String get casamaCloudKeyHint => 'Paid from your credits';
@@ -4448,23 +4511,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get restoreSettings => 'Restore These Settings';
 
   @override
-  String restoreSettingsBody(String fields) {
-    return 'Put back $fields as they were before this change? The current settings stay in the history.';
-  }
-
-  @override
-  String changedByBot(String name) {
-    return 'Changed by $name';
-  }
-
-  @override
-  String get changedByPerson => 'Changed by a person';
-
-  @override
-  String get changedBySystem => 'Changed by Casama';
-
-  @override
-  @override
   String secretWhat(String service) {
     return '$service key';
   }
@@ -4484,6 +4530,23 @@ class AppLocalizationsEn extends AppLocalizations {
     return 'Not shared: your $what';
   }
 
+  @override
+  String restoreSettingsBody(String fields) {
+    return 'Put back $fields as they were before this change? The current settings stay in the history.';
+  }
+
+  @override
+  String changedByBot(String name) {
+    return 'Changed by $name';
+  }
+
+  @override
+  String get changedByPerson => 'Changed by a person';
+
+  @override
+  String get changedBySystem => 'Changed by Casama';
+
+  @override
   String get fieldName => 'name';
 
   @override

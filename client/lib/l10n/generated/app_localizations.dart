@@ -1930,18 +1930,6 @@ abstract class AppLocalizations {
   /// **'Bot in control'**
   String get botInControl;
 
-  /// No description provided for @computerName.
-  ///
-  /// In en, this message translates to:
-  /// **'Name'**
-  String get computerName;
-
-  /// No description provided for @computers.
-  ///
-  /// In en, this message translates to:
-  /// **'Computers'**
-  String get computers;
-
   /// No description provided for @liveScreenshots.
   ///
   /// In en, this message translates to:
@@ -1989,6 +1977,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Watching'**
   String get liveWatching;
+
+  /// No description provided for @computerName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get computerName;
+
+  /// No description provided for @computers.
+  ///
+  /// In en, this message translates to:
+  /// **'Computers'**
+  String get computers;
 
   /// No description provided for @connectingLive.
   ///
@@ -4246,6 +4246,18 @@ abstract class AppLocalizations {
   /// **'Edit Memory'**
   String get editMemory;
 
+  /// No description provided for @editMemoryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'The bot uses this the next time it\'s relevant.'**
+  String get editMemoryHelp;
+
+  /// No description provided for @modelKeysIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots think with your own model provider keys. Keys are stored encrypted and never shown again.'**
+  String get modelKeysIntro;
+
   /// No description provided for @personalComputerConnected.
   ///
   /// In en, this message translates to:
@@ -4258,6 +4270,96 @@ abstract class AppLocalizations {
   /// **'Offline'**
   String get personalComputerOffline;
 
+  /// No description provided for @computerCpus.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 CPU} other{{n} CPUs}}'**
+  String computerCpus(num n);
+
+  /// No description provided for @computerMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} RAM'**
+  String computerMemory(Object size);
+
+  /// No description provided for @computerDisk.
+  ///
+  /// In en, this message translates to:
+  /// **'{size} disk'**
+  String computerDisk(Object size);
+
+  /// No description provided for @computerLastUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last used {when}'**
+  String computerLastUsed(Object when);
+
+  /// No description provided for @computerLastSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen {when}'**
+  String computerLastSeen(Object when);
+
+  /// No description provided for @computerSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get computerSaved;
+
+  /// No description provided for @computerSavedHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Its files are kept while it\'s stopped'**
+  String get computerSavedHelp;
+
+  /// No description provided for @computerCanUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots can use: {list}'**
+  String computerCanUse(Object list);
+
+  /// No description provided for @computerCanUseNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots can\'t use it yet'**
+  String get computerCanUseNothing;
+
+  /// No description provided for @computerCapShell.
+  ///
+  /// In en, this message translates to:
+  /// **'Terminal'**
+  String get computerCapShell;
+
+  /// No description provided for @computerCapFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get computerCapFiles;
+
+  /// No description provided for @computerCapBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Browser'**
+  String get computerCapBrowser;
+
+  /// No description provided for @computerCapDesktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen'**
+  String get computerCapDesktop;
+
+  /// No description provided for @computerCapMcp.
+  ///
+  /// In en, this message translates to:
+  /// **'Local tools'**
+  String get computerCapMcp;
+
+  /// No description provided for @computerCapMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get computerCapMessages;
+
   /// No description provided for @personalComputerOfflineHelp.
   ///
   /// In en, this message translates to:
@@ -4269,18 +4371,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This is your own computer, so you see a new screenshot every few seconds instead of a live view.'**
   String get personalScreenNote;
-
-  /// No description provided for @editMemoryHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'The bot uses this the next time it\'s relevant.'**
-  String get editMemoryHelp;
-
-  /// No description provided for @modelKeysIntro.
-  ///
-  /// In en, this message translates to:
-  /// **'Bots think with your own model provider keys. Keys are stored encrypted and never shown again.'**
-  String get modelKeysIntro;
 
   /// No description provided for @casamaCloudKeyHint.
   ///
@@ -7084,30 +7174,6 @@ abstract class AppLocalizations {
   /// **'Archive {name}?'**
   String archiveBotTitle(String name);
 
-  /// No description provided for @secretWhat.
-  ///
-  /// In en, this message translates to:
-  /// **'{service} key'**
-  String secretWhat(String service);
-
-  /// No description provided for @totpWhat.
-  ///
-  /// In en, this message translates to:
-  /// **'{service} sign-in code'**
-  String totpWhat(String service);
-
-  /// No description provided for @takeoverHandedBackLine.
-  ///
-  /// In en, this message translates to:
-  /// **'Handed back: {what}'**
-  String takeoverHandedBackLine(String what);
-
-  /// No description provided for @deviceAccessSkippedLine.
-  ///
-  /// In en, this message translates to:
-  /// **'Not shared: your {what}'**
-  String deviceAccessSkippedLine(String what);
-
   /// No description provided for @archiveBotBody.
   ///
   /// In en, this message translates to:
@@ -7161,6 +7227,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restore These Settings'**
   String get restoreSettings;
+
+  /// No description provided for @secretWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} key'**
+  String secretWhat(String service);
+
+  /// No description provided for @totpWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} sign-in code'**
+  String totpWhat(String service);
+
+  /// No description provided for @takeoverHandedBackLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Handed back: {what}'**
+  String takeoverHandedBackLine(String what);
+
+  /// No description provided for @deviceAccessSkippedLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Not shared: your {what}'**
+  String deviceAccessSkippedLine(String what);
 
   /// No description provided for @restoreSettingsBody.
   ///

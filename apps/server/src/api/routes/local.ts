@@ -7,6 +7,7 @@
  *   device -> API  {type:"response", id, status, headers} {type:"chunk", id, data: base64}* {type:"end", id}
  *                  {type:"error", id, message}
  *   device -> API  {type:"hello", platform, version}   API -> device {type:"ready", device_id}
+ * The connect request may carry x-casama-os ("macOS 26.2"), kept for the computer card (D-227).
  */
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, Server } from "node:http";
@@ -180,6 +181,7 @@ export function registerLocalRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     computer_id: d.computerId,
     name: d.name,
     platform: d.platform as "macos",
+    os_version: d.osVersion ?? null,
     capabilities: caps(d.capabilities),
     allowed_roots: d.allowedRoots,
     allowed_bot_ids: d.allowedBotIds,
@@ -503,6 +505,14 @@ export function attachLocalConnect(server: Server, deps: AppDeps) {
     if (!d?.enabled || !d.computerId) return reject("401 Unauthorized");
     const registry = deps.devices;
     const computerId = d.computerId;
+    // What the desktop app says it runs, e.g. "macOS 26.2" (D-227). Display text only.
+    const os = deviceOsVersion(req.headers["x-casama-os"]);
+    if (os && os !== d.osVersion)
+      void deps.db
+        .update(localDevices)
+        .set({ osVersion: os })
+        .where(eq(localDevices.id, d.id))
+        .catch(() => {});
     wss.handleUpgrade(req, socket, head, (ws) => {
       registry.attach(computerId, d.id, ws);
       ws.send(JSON.stringify({ type: "ready", device_id: d.id, computer_id: computerId }));
@@ -519,6 +529,13 @@ export function attachLocalConnect(server: Server, deps: AppDeps) {
       });
     });
   });
+}
+
+/** The OS a device reported: printable text, at most 80 characters, or null. */
+export function deviceOsVersion(raw: string | string[] | undefined): string | null {
+  const v = (Array.isArray(raw) ? raw[0] : raw) ?? "";
+  const clean = v.replace(/[\p{Cc}\s]+/gu, " ").trim();
+  return clean ? clean.slice(0, 80).trim() : null;
 }
 
 async function touch(db: Database, deviceId: string, computerId: string) {

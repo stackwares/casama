@@ -5,6 +5,7 @@
 // ignore_for_file: unused_element
 import 'package:casama_api/src/model/computer_size.dart';
 import 'package:casama_api/src/model/computer_state.dart';
+import 'package:casama_api/src/model/computer_device.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -49,6 +50,10 @@ class Computer {
     required  this.error,
 
     required  this.createdAt,
+
+     this.os,
+
+     this.device,
   });
 
   @JsonKey(
@@ -220,6 +225,31 @@ class Computer {
 
 
 
+      /// The operating system to show, e.g. \"Ubuntu 24.04\" or \"macOS 26.2\"; null when unknown (D-226)
+  @JsonKey(
+    
+    name: r'os',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? os;
+
+
+
+  @JsonKey(
+    
+    name: r'device',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final ComputerDevice? device;
+
+
+
 
 
     @override
@@ -237,7 +267,9 @@ class Computer {
       other.maxDesktops == maxDesktops &&
       other.lastActiveAt == lastActiveAt &&
       other.error == error &&
-      other.createdAt == createdAt;
+      other.createdAt == createdAt &&
+      other.os == os &&
+      other.device == device;
 
     @override
     int get hashCode =>
@@ -254,7 +286,9 @@ class Computer {
         maxDesktops.hashCode +
         (lastActiveAt == null ? 0 : lastActiveAt.hashCode) +
         (error == null ? 0 : error.hashCode) +
-        createdAt.hashCode;
+        createdAt.hashCode +
+        (os == null ? 0 : os.hashCode) +
+        (device == null ? 0 : device.hashCode);
 
   factory Computer.fromJson(Map<String, dynamic> json) => _$ComputerFromJson(json);
 

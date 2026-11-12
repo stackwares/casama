@@ -5,7 +5,7 @@ import { routes } from "@casama/contracts";
 import { type JwtClaims, schema, withUserSession } from "@casama/db";
 import { SandboxError } from "@casama/sandbox";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, inArray, sql } from "drizzle-orm";
 import { WebSocket, WebSocketServer } from "ws";
 import { enforceLimit } from "../../billing/limits.ts";
 import { ApiError } from "../errors.ts";
@@ -13,7 +13,7 @@ import { isPresence, throttledTouch } from "../keep-awake.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
 
-const { computers, checkpoints } = schema;
+const { computers, checkpoints, localDevices } = schema;
 const MAX_UPLOAD = 100 * 1024 * 1024;
 
 function requireClaims(claims: JwtClaims | undefined): JwtClaims {
@@ -22,7 +22,27 @@ function requireClaims(claims: JwtClaims | undefined): JwtClaims {
 }
 
 type Row = typeof computers.$inferSelect;
-const out = (c: Row) => ({
+type DeviceRow = typeof localDevices.$inferSelect;
+type Platform = "macos" | "windows" | "linux";
+
+/** What the computer images run (infra/images/computer/Dockerfile.*: FROM ubuntu:24.04). */
+export const DOCKER_COMPUTER_OS = "Ubuntu 24.04";
+const PLATFORM_NAMES: Record<Platform, string> = {
+  macos: "macOS",
+  windows: "Windows",
+  linux: "Linux",
+};
+
+/** The operating system the card shows (D-227): the device's own report, else what we know. */
+export function computerOs(c: Pick<Row, "kind" | "provider">, d?: DeviceRow | null): string | null {
+  if (c.kind === "local") {
+    if (!d) return null;
+    return d.osVersion || PLATFORM_NAMES[d.platform as Platform] || null;
+  }
+  return c.provider === "docker" ? DOCKER_COMPUTER_OS : null;
+}
+
+const out = (c: Row, d?: DeviceRow | null, online?: boolean) => ({
   id: c.id,
   org_id: c.orgId,
   kind: c.kind as "team",
@@ -37,7 +57,25 @@ const out = (c: Row) => ({
   last_active_at: c.lastActiveAt ? iso(c.lastActiveAt) : null,
   error: c.error,
   created_at: iso(c.createdAt),
+  os: computerOs(c, d),
+  device:
+    c.kind === "local" && d
+      ? {
+          platform: d.platform as Platform,
+          online: !!online,
+          last_seen_at: d.lastSeenAt ? iso(d.lastSeenAt) : null,
+          capabilities: deviceCaps(d.capabilities),
+        }
+      : null,
 });
+
+function deviceCaps(raw: unknown) {
+  const v = (raw ?? {}) as Record<string, unknown>;
+  const pick = ["shell", "files", "browser", "desktop", "mcp", "messages"] as const;
+  return Object.fromEntries(pick.filter((k) => v[k] === true).map((k) => [k, true])) as Partial<
+    Record<(typeof pick)[number], boolean>
+  >;
+}
 
 /** Turns sandbox errors into problem responses. */
 async function sandbox<T>(fn: () => Promise<T>): Promise<T> {
@@ -78,9 +116,18 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     if (!c) throw new ApiError(404, "computer_not_found", "Computer not found");
     return c;
   };
+  /** The API shape, with each personal computer's device (read after RLS let the rows through). */
+  const present = async (rows: Row[]) => {
+    const local = rows.filter((r) => r.kind === "local").map((r) => r.id);
+    const devices = local.length
+      ? await db.select().from(localDevices).where(inArray(localDevices.computerId, local))
+      : [];
+    const byComputer = new Map(devices.map((d) => [d.computerId, d]));
+    return rows.map((r) => out(r, byComputer.get(r.id), !!deps.devices?.online(r.id)));
+  };
   const reload = async (id: string) => {
     const [c] = await db.select().from(computers).where(eq(computers.id, id));
-    return out(c as Row);
+    return (await present([c as Row]))[0];
   };
   const handle = async (claims: JwtClaims, id: string) => {
     await visible(claims, id);
@@ -105,12 +152,12 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       ]);
       if (settled?.some((s, i) => s !== rows[i]?.state)) rows = await list();
     }
-    return c.json({ items: rows.map(out) }, 200);
+    return c.json({ items: await present(rows) }, 200);
   });
 
   app.openapi(routes.getComputer, async (c) => {
     const claims = requireClaims(c.get("claims"));
-    return c.json(out(await visible(claims, c.req.valid("param").id)), 200);
+    return c.json((await present([await visible(claims, c.req.valid("param").id)]))[0], 200);
   });
 
   app.openapi(routes.startComputer, async (c) => {
@@ -351,7 +398,7 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         throw err;
       });
     milestone(db, claims.sub, "first_computer", body.org_id);
-    return c.json(out(inserted[0] as Row), 201);
+    return c.json((await present([inserted[0] as Row]))[0], 201);
   });
 
   app.openapi(routes.updateComputer, async (c) => {

@@ -8,6 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:casama_computerd/computerd.dart';
 
 import 'companion.dart';
+import 'os_label.dart';
 import '../../core/distribution.dart';
 
 Companion createCompanion() => IoCompanion();
@@ -119,6 +120,7 @@ class IoCompanion implements Companion {
   Computerd? _computerd;
   String? _token;
   WebSocket? _ws;
+  String? _os;
   var _running = false;
   // Each start gets a generation; an older connect loop exits instead of reconnecting.
   var _generation = 0;
@@ -165,6 +167,7 @@ class IoCompanion implements Companion {
       },
     ));
     await _computerd!.start();
+    _os ??= await currentOsLabel();
     unawaited(_connectLoop(apiUrl, deviceToken, generation));
   }
 
@@ -173,7 +176,7 @@ class IoCompanion implements Companion {
     bool current() => _running && generation == _generation;
     while (current()) {
       try {
-        final ws = await WebSocket.connect(url, headers: {'authorization': 'Device $deviceToken'});
+        final ws = await WebSocket.connect(url, headers: {'authorization': 'Device $deviceToken', 'x-casama-os': ?_os});
         if (!current()) {
           await ws.close();
           break;
