@@ -3,7 +3,8 @@
 --    minute, ahead of newer ones; with enough of them, the 100-row sweep would never reach the rest,
 --    and the new person's welcome bonus waited too. Credits now go to the oldest workspace the
 --    person owns, else the oldest one they belong to; with no workspace at all the referral is
---    decided anyway (no credits for that side), so nothing stays stuck.
+--    decided anyway (no credits for that side), so nothing stays stuck. An inviter whose account
+--    is deleted or banned gets nothing.
 -- 2. Two redeems by the same person at the same moment hit the primary key and surfaced as a 500.
 --    They now answer referral_already like any second redeem.
 -- 3. redeem_referral took the redeem window from its caller and was executable by `authenticated`,
@@ -53,7 +54,9 @@ begin
   loop
     v_org := null;
     v_count := 0;
-    if r.inviter_id is null or coalesce(p_amount, 0) <= 0 then
+    -- No reward without an inviter, or for one whose account is deleted or banned (D-072 bans first).
+    if r.inviter_id is null or coalesce(p_amount, 0) <= 0
+       or exists (select 1 from auth.users iu where iu.id = r.inviter_id and iu.banned_until >= now()) then
       v_status := 'none';
     else
       -- One inviter at a time, so two sweeps can't both pass the cap.

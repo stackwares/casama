@@ -217,6 +217,24 @@ describe("audit fixes", () => {
     expect(await sweepReferralRewards(h.handle.db, { ...cfg, cap: 20 })).toBe(0);
   });
 
+  it("pays nothing to an inviter whose account is deleted or banned", async () => {
+    const kim = await h.user("kim@example.dev");
+    const kimOrg = (
+      await j(
+        await h.request("/v1/orgs", { method: "POST", token: kim.token, json: { name: "Kim" } }),
+      )
+    ).id;
+    const lee = await h.user("lee@example.dev");
+    expect((await redeem(lee, (await me(kim)).code)).status).toBe(200);
+    await qualify(lee);
+    await h.tdb.admin`update auth.users set banned_until = 'infinity' where id = ${kim.id}::uuid`;
+    expect(await sweepReferralRewards(h.handle.db, { ...cfg, cap: 20 })).toBe(1);
+    expect(await balance(kimOrg)).toBe(0);
+    const [row] = await h.tdb.admin<{ status: string }[]>`
+      select status from public.referrals where invitee_id = ${lee.id}::uuid`;
+    expect(row?.status).toBe("none");
+  });
+
   it("answers a second redeem at the same moment as already used, not a server error", async () => {
     const ivy = await h.user("ivy@example.dev");
     const { code } = await me(ana);
