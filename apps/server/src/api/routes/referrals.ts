@@ -5,7 +5,7 @@
  */
 import { track } from "@casama/agent";
 import { routes } from "@casama/contracts";
-import { type JwtClaims, pgErrorCode, pgErrorMessage, withUserSession } from "@casama/db";
+import { type JwtClaims, pgErrorCode, pgErrorMessage } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import {
@@ -148,8 +148,9 @@ export function registerReferralRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       throw new ApiError(404, "referral_not_found", REDEEM_ERRORS.referral_not_found?.[1] ?? "");
     }
     try {
-      await withUserSession(db, claims, (tx) =>
-        tx.execute(sql`select inviter_id from public.redeem_referral(${code}, ${cfg.redeemDays})`),
+      // API-only (not granted to `authenticated`): the window comes from the server, never the caller.
+      await db.execute(
+        sql`select inviter_id from public.redeem_referral_for(${claims.sub}::uuid, ${code}, ${cfg.redeemDays})`,
       );
     } catch (err) {
       const msg = pgErrorMessage(err) ?? "";

@@ -240,6 +240,19 @@ describe("audit fixes", () => {
     expect(benAccount.invites.joined_with).toMatchObject({ status: "rewarded" });
   });
 
+  it("keeps redeeming and previews API-only (nothing callable through PostgREST)", async () => {
+    const rows = await h.tdb.admin<{ role: string; fn: string; ok: boolean }[]>`
+      select r as role, f as fn, has_function_privilege(r, f, 'execute') as ok
+      from (values ('anon'), ('authenticated')) a(r),
+           (values ('public.redeem_referral_for(uuid,text,integer)'), ('public.referral_preview(text)'),
+                   ('public.referral_inviter_name(uuid)'), ('public.referral_credit_org(uuid)'),
+                   ('public.worker_reward_referrals(numeric,numeric,integer,integer)')) b(f)`;
+    expect(rows.filter((r) => r.ok)).toEqual([]);
+    const [old] = await h.tdb.admin<{ n: number }[]>`
+      select count(*)::int as n from pg_proc where proname = 'redeem_referral'`;
+    expect(old?.n).toBe(0);
+  });
+
   it("reads the caller's address from the trusted edge header when one is set", () => {
     const headers: Record<string, string> = {
       "x-forwarded-for": "172.18.0.1",

@@ -6,6 +6,12 @@
 --    decided anyway (no credits for that side), so nothing stays stuck.
 -- 2. Two redeems by the same person at the same moment hit the primary key and surfaced as a 500.
 --    They now answer referral_already like any second redeem.
+-- 3. redeem_referral took the redeem window from its caller and was executable by `authenticated`,
+--    so anyone signed in could call it through PostgREST (/rest/v1/rpc) with a window of years and
+--    redeem a code on an old account. referral_preview was executable by `anon`, which skipped the
+--    API's guessing limit. Both are now API-only: redeem_referral_for(user, code, days) is called by
+--    the API with the signed-in person's id and the server's window, and neither is granted to
+--    anon or authenticated.
 
 -- The workspace that receives someone's credits: oldest owned, else oldest membership.
 create or replace function public.referral_credit_org(p_user uuid)
@@ -89,34 +95,36 @@ $$;
 revoke all on function public.worker_reward_referrals(numeric, numeric, integer, integer) from public, anon, authenticated;
 grant execute on function public.worker_reward_referrals(numeric, numeric, integer, integer) to casama_worker;
 
-create or replace function public.redeem_referral(p_code text, p_window_days integer)
+drop function if exists public.redeem_referral(text, integer);
+
+create or replace function public.redeem_referral_for(p_user uuid, p_code text, p_window_days integer)
 returns table (inviter_id uuid, inviter_name text)
 language plpgsql volatile security definer set search_path = ''
 as $$
 declare
-  v_me uuid := auth.uid();
   v_inviter uuid;
   v_signed_up timestamptz;
 begin
-  if v_me is null then raise exception 'not signed in' using errcode = '42501'; end if;
+  if p_user is null then raise exception 'not signed in' using errcode = '42501'; end if;
   select rc.user_id into v_inviter
   from public.referral_codes rc join auth.users u on u.id = rc.user_id
   where rc.code = upper(p_code) and (u.banned_until is null or u.banned_until < now());
   if v_inviter is null then raise exception 'referral_not_found' using errcode = 'P0002'; end if;
-  if v_inviter = v_me then raise exception 'referral_own_code' using errcode = '22023'; end if;
-  if exists (select 1 from public.referrals r where r.invitee_id = v_me) then
+  if v_inviter = p_user then raise exception 'referral_own_code' using errcode = '22023'; end if;
+  if exists (select 1 from public.referrals r where r.invitee_id = p_user) then
     raise exception 'referral_already' using errcode = '23505';
   end if;
   -- Two people can't each claim to have invited the other.
-  if exists (select 1 from public.referrals r where r.invitee_id = v_inviter and r.inviter_id = v_me) then
+  if exists (select 1 from public.referrals r where r.invitee_id = v_inviter and r.inviter_id = p_user) then
     raise exception 'referral_mutual' using errcode = '22023';
   end if;
-  select u.created_at into v_signed_up from auth.users u where u.id = v_me;
+  select u.created_at into v_signed_up from auth.users u where u.id = p_user;
+  if v_signed_up is null then raise exception 'not signed in' using errcode = '42501'; end if;
   if v_signed_up < now() - make_interval(days => greatest(p_window_days, 0)) then
     raise exception 'referral_window_closed' using errcode = '22023';
   end if;
   begin
-    insert into public.referrals (invitee_id, inviter_id, code) values (v_me, v_inviter, upper(p_code));
+    insert into public.referrals (invitee_id, inviter_id, code) values (p_user, v_inviter, upper(p_code));
   exception when unique_violation then
     -- The same person redeeming twice at once: the other request won.
     raise exception 'referral_already' using errcode = '23505';
@@ -124,5 +132,6 @@ begin
   return query select v_inviter, public.referral_inviter_name(v_inviter);
 end;
 $$;
-revoke all on function public.redeem_referral(text, integer) from public, anon;
-grant execute on function public.redeem_referral(text, integer) to authenticated;
+revoke all on function public.redeem_referral_for(uuid, text, integer) from public, anon, authenticated;
+
+revoke execute on function public.referral_preview(text) from anon, authenticated;
