@@ -181,7 +181,15 @@ export class ComputerdClient {
 
   async screenshot() {
     const res = await this.call("/screenshot");
-    return new Uint8Array(await res.arrayBuffer());
+    try {
+      return new Uint8Array(await res.arrayBuffer());
+    } catch (err) {
+      // The computer went away mid-response (stopping or restarting): undici says "terminated".
+      throw new SandboxError(
+        "computer_unreachable",
+        `computerd unreachable: ${(err as Error).message}`,
+      );
+    }
   }
 
   async input(event: InputEvent) {

@@ -4,6 +4,7 @@ import { openApiConfig, registerComponents } from "@casama/contracts";
 import { pgErrorCode, pgErrorMessage } from "@casama/db";
 import { registerEnterpriseRoutes } from "@casama/ee";
 import { captureError } from "@casama/observability";
+import { SandboxError } from "@casama/sandbox";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { Scalar } from "@scalar/hono-api-reference";
 import { sql } from "drizzle-orm";
@@ -32,7 +33,7 @@ import { registerChannelRoutes } from "./routes/channels.ts";
 import { registerChatMediaRoutes } from "./routes/chat-media.ts";
 import { registerChatGptRoutes } from "./routes/chatgpt.ts";
 import { registerCheckinRoutes } from "./routes/checkins.ts";
-import { registerComputerRoutes } from "./routes/computers.ts";
+import { registerComputerRoutes, sandboxApiError } from "./routes/computers.ts";
 import { registerDeviceDataRoutes } from "./routes/device-data.ts";
 import { registerEncryptionRoutes } from "./routes/encryption.ts";
 import { registerGalleryRoutes } from "./routes/gallery.ts";
@@ -123,6 +124,17 @@ export function createApp(deps: AppDeps) {
         c,
         new ApiError(403, "email_unverified", "Confirm your email address to start a computer."),
       );
+    // A computer that can't be reached is an expected state (stopped, restarting, offline device),
+    // not a server bug: answer with what happened instead of a 500.
+    if (err instanceof SandboxError) {
+      deps.logger.warn("sandbox error", {
+        request_id: c.get("requestId"),
+        path: c.req.path,
+        code: err.code,
+        error: err.message,
+      });
+      return problem(c, sandboxApiError(err));
+    }
     if (err instanceof HTTPException) {
       return problem(
         c,

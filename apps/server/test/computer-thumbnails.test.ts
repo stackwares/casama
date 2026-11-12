@@ -1,5 +1,10 @@
 import { ComputerService } from "@casama/agent";
-import type { FileThumbnail, SandboxHandle, SandboxProvider } from "@casama/sandbox";
+import {
+  type FileThumbnail,
+  SandboxError,
+  type SandboxHandle,
+  type SandboxProvider,
+} from "@casama/sandbox";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
@@ -17,7 +22,8 @@ let computerId: string;
 let svc: ComputerService;
 
 const thumbnail = vi.fn<(path: string, size: number) => Promise<FileThumbnail | null>>();
-const handle = { ref: "fake", thumbnail } as unknown as SandboxHandle;
+const screenshot = vi.fn<() => Promise<Uint8Array>>();
+const handle = { ref: "fake", thumbnail, screenshot } as unknown as SandboxHandle;
 const provider = {
   id: "docker",
   capabilities: { desktop: false, snapshots: true, liveStream: false },
@@ -138,5 +144,15 @@ describe("computer file thumbnails", () => {
     expect(anon.status).toBe(401);
     expect(provider.get).not.toHaveBeenCalled();
     expect(thumbnail).not.toHaveBeenCalled();
+  });
+
+  it("answers 503 computer_unavailable, not a 500, when the computer can't be reached", async () => {
+    await setState("running");
+    screenshot.mockRejectedValueOnce(
+      new SandboxError("computer_unreachable", "computerd unreachable: fetch failed"),
+    );
+    const res = await h.request(`/v1/computers/${computerId}/screenshot`, { token: owner.token });
+    expect(res.status).toBe(503);
+    expect((await j(res)).code).toBe("computer_unavailable");
   });
 });

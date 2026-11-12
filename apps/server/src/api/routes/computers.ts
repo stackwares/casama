@@ -99,35 +99,38 @@ function deviceCaps(raw: unknown) {
   >;
 }
 
+/** The problem response for a sandbox error; the API's error handler uses it for any route. */
+export function sandboxApiError(err: SandboxError): ApiError {
+  if (err.status === 404 || err.code === "not_found")
+    return new ApiError(404, "not_found", err.message);
+  if (err.status === 400) return new ApiError(400, err.code, err.message);
+  // A personal computer refuses anyone but its owner and the bots they allowed.
+  if (err.status === 403)
+    return new ApiError(
+      403,
+      "computer_forbidden",
+      "Only the person who owns this computer, and the bots they allowed, can open its files.",
+    );
+  // A personal computer whose app isn't connected: say what to do, not "try again shortly".
+  if (err.code === "device_offline")
+    return new ApiError(
+      409,
+      "device_offline",
+      'This computer is offline. Open the Casama app on it and turn on "Use this computer for bots".',
+    );
+  return new ApiError(
+    503,
+    "computer_unavailable",
+    "The computer could not be reached. Try again shortly.",
+  );
+}
+
 /** Turns sandbox errors into problem responses. */
 async function sandbox<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch (err) {
-    if (err instanceof SandboxError) {
-      if (err.status === 404 || err.code === "not_found")
-        throw new ApiError(404, "not_found", err.message);
-      if (err.status === 400) throw new ApiError(400, err.code, err.message);
-      // A personal computer refuses anyone but its owner and the bots they allowed.
-      if (err.status === 403)
-        throw new ApiError(
-          403,
-          "computer_forbidden",
-          "Only the person who owns this computer, and the bots they allowed, can open its files.",
-        );
-      // A personal computer whose app isn't connected: say what to do, not "try again shortly".
-      if (err.code === "device_offline")
-        throw new ApiError(
-          409,
-          "device_offline",
-          'This computer is offline. Open the Casama app on it and turn on "Use this computer for bots".',
-        );
-      throw new ApiError(
-        503,
-        "computer_unavailable",
-        "The computer could not be reached. Try again shortly.",
-      );
-    }
+    if (err instanceof SandboxError) throw sandboxApiError(err);
     throw err;
   }
 }
