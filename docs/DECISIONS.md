@@ -2569,3 +2569,28 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 - **Seed entries:** Canva (`https://mcp.canva.com/mcp`, OAuth with dynamic client registration) and DeepWiki (`https://mcp.deepwiki.com/mcp`, no sign-in), both checked live on 2026-11-12. Neither has been connected end to end from the app yet.
 - **Not covered:** the generated Dart enums for `category` and `auth` still have no fallback for unknown values, so the gallery can only use the categories and sign-in methods apps already know. Adding a new one later needs those enums to accept unknown values first, then an app release.
 - **Tests:** `packages/domain/test/gallery-apps.test.ts`, the app cases in `apps/server/test/gallery.test.ts`, `client/test/gallery_app_logo_test.dart`.
+
+## D-238 Data key rotation, for when the database leaks
+
+- **Why:** rotating the server key (D-136) only rewraps each data key. If an attacker has a copy of the database and the old server key, they can open the data keys in that copy, and rotation never changes them. A leak like that needs new data keys and every row re-encrypted onto them.
+- **Keys:** `org_keys` and `user_keys` (D-169) get `retired_at`. Each workspace or person has one current key (a partial unique index on `retired_at is null`) and any number of retired ones. A retired key still opens rows, since sealed values name their key (`enc:v1:<keyId>:…`), but it seals nothing new. The key ring loads every key and seals only with the current one.
+- **Replacing:** `POST /v1/orgs/{id}/encryption/replace-key` (owners, audited as `encryption.key_replaced`) retires the workspace's key and makes a new one in one statement, so two calls at once can't leave two current keys. It also replaces the About you keys of the workspace's members. `POST /v1/admin/encryption/replace-keys` (instance owner) replaces every data key on the server. `replaceDataKey` needs encryption to be on or turning on (409 `encryption_off` otherwise). `GET …/encryption` gains `rekeying` (optional in the contract, so older servers and apps still parse each other).
+- **Resealing:** `sweepReplacedKeys` runs with the worker's minute sweep. For each retired key it finds rows sealed with it (500 per column per pass), opens them in the process and seals them with the current key. Postgres never sees plaintext. It covers the D-136 columns, `invite_links.share_token`, device data (`device_readings.summary`, `device_requests.result`, sealed with a workspace key of the owner's, D-149/D-150) and About you. Rows are updated by `tableoid` and `ctid` and only if the column's hash is unchanged since it was read, so a concurrent edit is never overwritten.
+- **Deleting an old key:** only when no rows are left on it, 15 minutes after it was retired (for a server process that hasn't heard about the new key yet), and when `content_key_in_use(key)` finds nothing. That function scans every text and json column in `public`, nested values too, as security definer so row level security can't hide a row. A key still in use stays and is checked again every 15 minutes.
+- **Fixes found on the way:**
+  - The hourly `rewrapAllKeys` rewrapped workspace keys only, not people's About you keys. After a server key change and dropping `CONTENT_ENCRYPTION_KEY_PREVIOUS`, those keys couldn't be unwrapped and the key ring failed to load. It now rewraps both, and `rotateEncryptionKey` rewraps a workspace's retired keys too.
+  - Turning encryption off deleted the workspace key even when device data was still sealed with it, which made that data unreadable. A key that's still in use is now kept, retired.
+  - `invite_links.share_token` is sealed at write, but wasn't in the sweep's column list, so turning encryption off left it sealed. It's in the list now.
+  - Production had no `CONTENT_ENCRYPTION_KEY`, because `install.sh` never generated one. The server got one on 2026-11-12, and `install.sh` now generates it unless AWS KMS is set.
+- **Tests:**
+  - API (`encryption.test.ts`):
+    - Owners only.
+    - New writes go to the new key at once, and old rows read in the meantime.
+    - The sweep leaves nothing on the old workspace or person key.
+    - A stray value sealed with the old key in an unlisted column keeps that key alive, and the key is deleted once the value is gone.
+    - A fresh key ring that never held the old keys reads everything.
+    - Changing the server key rewraps About you keys.
+  - pgTAP (`encryption_rls.test.sql`):
+    - One current key per workspace.
+    - The in-use check finds a value in any column.
+    - App sessions can't run it.

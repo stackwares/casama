@@ -87,6 +87,7 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**adminConnectionSettings**](doc/AdminApi.md#adminconnectionsettings) | **GET** /v1/admin/connections | How apps without their own sign-in connect (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminOrgs**](doc/AdminApi.md#adminorgs) | **GET** /v1/admin/orgs | Workspaces with their limits and spend
 [*AdminApi*](doc/AdminApi.md) | [**adminOverview**](doc/AdminApi.md#adminoverview) | **GET** /v1/admin/overview | Instance totals (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminReplaceDataKeys**](doc/AdminApi.md#adminreplacedatakeys) | **POST** /v1/admin/encryption/replace-keys | Replace every data key on this server (instance owner), after a database leak; rows are resealed in the background
 [*AdminApi*](doc/AdminApi.md) | [**adminServices**](doc/AdminApi.md#adminservices) | **GET** /v1/admin/services | Configured providers and system health
 [*AdminApi*](doc/AdminApi.md) | [**adminUpdates**](doc/AdminApi.md#adminupdates) | **GET** /v1/admin/updates | Whether a newer Casama release exists
 [*AdminApi*](doc/AdminApi.md) | [**adminUsers**](doc/AdminApi.md#adminusers) | **GET** /v1/admin/users | Everyone on this instance
@@ -185,7 +186,9 @@ Class | Method | HTTP request | Description
 [*DevicesApi*](doc/DevicesApi.md) | [**saveDeviceSource**](doc/DevicesApi.md#savedevicesource) | **PUT** /v1/device-sources/{key} | Register this device and the kinds it shares; kinds turned off lose their data
 [*DevicesApi*](doc/DevicesApi.md) | [**setDeviceGrant**](doc/DevicesApi.md#setdevicegrant) | **PUT** /v1/device-grants | Allow or stop a bot reading one kind of your device data
 [*DevicesApi*](doc/DevicesApi.md) | [**uploadDeviceReadings**](doc/DevicesApi.md#uploaddevicereadings) | **POST** /v1/device-sources/{key}/readings | Upload summaries (re-uploading the same external_id replaces it)
+[*EncryptionApi*](doc/EncryptionApi.md) | [**adminReplaceDataKeys**](doc/EncryptionApi.md#adminreplacedatakeys) | **POST** /v1/admin/encryption/replace-keys | Replace every data key on this server (instance owner), after a database leak; rows are resealed in the background
 [*EncryptionApi*](doc/EncryptionApi.md) | [**getEncryption**](doc/EncryptionApi.md#getencryption) | **GET** /v1/orgs/{id}/encryption | Encryption at rest for a workspace
+[*EncryptionApi*](doc/EncryptionApi.md) | [**replaceEncryptionKey**](doc/EncryptionApi.md#replaceencryptionkey) | **POST** /v1/orgs/{id}/encryption/replace-key | Replace the workspace&#39;s data key (owners); rows are resealed onto the new key in the background
 [*EncryptionApi*](doc/EncryptionApi.md) | [**rotateEncryptionKey**](doc/EncryptionApi.md#rotateencryptionkey) | **POST** /v1/orgs/{id}/encryption/rotate | Rewrap the workspace&#39;s data key with the server&#39;s current key (rows are not rewritten)
 [*EncryptionApi*](doc/EncryptionApi.md) | [**setEncryption**](doc/EncryptionApi.md#setencryption) | **PUT** /v1/orgs/{id}/encryption | Turn encryption at rest on or off (owners); existing rows are sealed or opened in the background
 [*FilesApi*](doc/FilesApi.md) | [**deleteGitSync**](doc/FilesApi.md#deletegitsync) | **DELETE** /v1/orgs/{id}/git-sync | 
@@ -707,6 +710,7 @@ Class | Method | HTTP request | Description
  - [ReferralPreview](doc/ReferralPreview.md)
  - [ReleaseLeaseRequest](doc/ReleaseLeaseRequest.md)
  - [RenameTwoStepFactorRequest](doc/RenameTwoStepFactorRequest.md)
+ - [ReplacedDataKeys](doc/ReplacedDataKeys.md)
  - [Replay](doc/Replay.md)
  - [ReplayFromTeachRequest](doc/ReplayFromTeachRequest.md)
  - [ReplayList](doc/ReplayList.md)

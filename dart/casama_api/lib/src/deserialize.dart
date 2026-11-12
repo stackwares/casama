@@ -316,6 +316,7 @@ import 'package:casama_api/src/model/referral_invited_by.dart';
 import 'package:casama_api/src/model/referral_preview.dart';
 import 'package:casama_api/src/model/release_lease_request.dart';
 import 'package:casama_api/src/model/rename_two_step_factor_request.dart';
+import 'package:casama_api/src/model/replaced_data_keys.dart';
 import 'package:casama_api/src/model/replay.dart';
 import 'package:casama_api/src/model/replay_from_teach_request.dart';
 import 'package:casama_api/src/model/replay_list.dart';
@@ -1185,6 +1186,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ReleaseLeaseRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RenameTwoStepFactorRequest':
           return RenameTwoStepFactorRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ReplacedDataKeys':
+          return ReplacedDataKeys.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Replay':
           return Replay.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ReplayFromTeachRequest':

@@ -29,6 +29,8 @@ class EncryptionStatus {
     required  this.since,
 
     required  this.rotatedAt,
+
+     this.rekeying,
   });
 
   @JsonKey(
@@ -91,6 +93,18 @@ class EncryptionStatus {
 
 
 
+  @JsonKey(
+    
+    name: r'rekeying',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? rekeying;
+
+
+
 
 
     @override
@@ -99,7 +113,8 @@ class EncryptionStatus {
       other.available == available &&
       other.key == key &&
       other.since == since &&
-      other.rotatedAt == rotatedAt;
+      other.rotatedAt == rotatedAt &&
+      other.rekeying == rekeying;
 
     @override
     int get hashCode =>
@@ -107,7 +122,8 @@ class EncryptionStatus {
         available.hashCode +
         (key == null ? 0 : key.hashCode) +
         (since == null ? 0 : since.hashCode) +
-        (rotatedAt == null ? 0 : rotatedAt.hashCode);
+        (rotatedAt == null ? 0 : rotatedAt.hashCode) +
+        rekeying.hashCode;
 
   factory EncryptionStatus.fromJson(Map<String, dynamic> json) => _$EncryptionStatusFromJson(json);
 

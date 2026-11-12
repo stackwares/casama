@@ -1,6 +1,11 @@
-/** Encryption at rest (D-136): status, on and off, key rotation. Owners only. */
+/** Encryption at rest (D-136): status, on and off, key rotation, data key replacement (D-238). Owners only. */
 
-import { encryptionStatus, rotateEncryptionKey, setEncryption } from "@casama/agent";
+import {
+  encryptionStatus,
+  replaceDataKey,
+  rotateEncryptionKey,
+  setEncryption,
+} from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
@@ -74,6 +79,25 @@ export function registerEncryptionRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
     } catch (e) {
       if ((e as Error).message === "no_key")
         throw new ApiError(409, "encryption_off", "Encryption isn't on for this workspace");
+      throw e;
+    }
+  });
+
+  app.openapi(routes.replaceEncryptionKey, async (c) => {
+    const claims = claimsOf(c);
+    const { id } = c.req.valid("param");
+    if (!(await role(claims, id)).owner)
+      throw new ApiError(403, "forbidden", "Only workspace owners can replace keys");
+    try {
+      const s = await replaceDataKey(db, id);
+      await audit(id, claims.sub, "encryption.key_replaced", {});
+      return c.json(s, 200);
+    } catch (e) {
+      const m = (e as Error).message;
+      if (m === "not_encrypted")
+        throw new ApiError(409, "encryption_off", "Encryption isn't on for this workspace");
+      if (m === "not_configured")
+        throw new ApiError(409, "encryption_unavailable", "This server has no encryption key.");
       throw e;
     }
   });

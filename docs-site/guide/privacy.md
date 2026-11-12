@@ -95,6 +95,7 @@ content stays readable and nothing is re-encrypted.
 
 ::: tip Self-hosting
 Encryption needs `CONTENT_ENCRYPTION_KEY` (32 bytes, base64) or an AWS KMS key on the server.
+`install.sh` generates the key for new installs and fills it in on older ones the next time it runs.
 Without one, the setting reads **Not available: this server has no encryption key set up**. See
 [Configuration](/self-hosting/configuration).
 :::

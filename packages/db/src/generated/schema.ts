@@ -2659,13 +2659,15 @@ export const orgKeys = pgTable("org_keys", {
 	wrapper: text().notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	rotatedAt: timestamp("rotated_at", { withTimezone: true, mode: 'string' }),
+	retiredAt: timestamp("retired_at", { withTimezone: true, mode: 'string' }),
 }, (table) => [
+	uniqueIndex("org_keys_active_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")).where(sql`(retired_at IS NULL)`),
+	index("org_keys_org_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")),
 	foreignKey({
 			columns: [table.orgId],
 			foreignColumns: [organizations.id],
 			name: "org_keys_org_id_fkey"
 		}).onDelete("cascade"),
-	unique("org_keys_org_id_key").on(table.orgId),
 	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 ]);
 
@@ -3313,13 +3315,15 @@ export const userKeys = pgTable("user_keys", {
 	wrapper: text().notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	rotatedAt: timestamp("rotated_at", { withTimezone: true, mode: 'string' }),
+	retiredAt: timestamp("retired_at", { withTimezone: true, mode: 'string' }),
 }, (table) => [
+	uniqueIndex("user_keys_active_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops")).where(sql`(retired_at IS NULL)`),
+	index("user_keys_user_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops")),
 	foreignKey({
 			columns: [table.userId],
 			foreignColumns: [users.id],
 			name: "user_keys_user_id_fkey"
 		}).onDelete("cascade"),
-	unique("user_keys_user_id_key").on(table.userId),
 	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 ]);
 

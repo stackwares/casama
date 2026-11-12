@@ -1168,7 +1168,7 @@ Bots should know who they are talking to without the person filling in a form. E
 
 ### Encryption at rest
 
-- Envelope encryption (AES-256-GCM) of `messages.content`, `run_events.payload`, `memories.content`, `conversations.summary`, ticket details, page content and knowledge chunks, done by the server before writing. Each workspace has a data key, wrapped by a key from `CONTENT_ENCRYPTION_KEY` or AWS KMS. It is off by default; turning it on encrypts existing rows in a background job.
+- Envelope encryption (AES-256-GCM) of `messages.content`, `run_events.payload`, `memories.content`, `conversations.summary`, ticket details, page content and knowledge chunks, done by the server before writing. Each workspace has a data key, wrapped by a key from `CONTENT_ENCRYPTION_KEY` or AWS KMS. It is off by default; turning it on encrypts existing rows in a background job. After a database leak, data keys can be replaced; a background job re-encrypts rows onto the new keys (D-238).
 - Postgres no longer sees plaintext, so the app reads these through the API instead of Supabase, and Realtime carries only event ids that the app fetches from the API. Memory and knowledge search use embeddings only, because full-text search needs plaintext; embeddings stay unencrypted, and the docs say so.
 - Deleting a workspace destroys its data key. Key rotation rewraps data keys without rewriting rows.
 

@@ -483,7 +483,7 @@ server has a key.
 
 | Name                               | Default         | What it does                                                                                                    |
 | ---------------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------- |
-| `CONTENT_ENCRYPTION_KEY`           | (empty)         | The server key that wraps workspace keys: 32 bytes, base64. Generate with `openssl rand -base64 32`.            |
+| `CONTENT_ENCRYPTION_KEY`           | (generated)     | The server key that wraps workspace keys: 32 bytes, base64. `install.sh` makes one unless KMS is set; back it up. |
 | `CONTENT_ENCRYPTION_KEY_PREVIOUS`  | (empty)         | Older keys during a rotation, comma-separated.                                                                  |
 | `CONTENT_KMS_KEY_ID`               | (empty)         | Use AWS KMS instead: the key's id or ARN.                                                                       |
 | `CONTENT_KMS_REGION`               | (empty)         | The KMS key's region.                                                                                           |
@@ -507,8 +507,24 @@ Without the key, encrypted content can't be read. Keep a copy somewhere other th
    settings.
 5. Remove `CONTENT_ENCRYPTION_KEY_PREVIOUS` and run `casama selfhost up` again.
 
-Rotation rewraps workspace keys; it doesn't rewrite rows. Search can't look inside sealed text:
-memory and knowledge search use embeddings only, which stay unencrypted.
+Rotation rewraps workspace keys and people's About you keys; it doesn't rewrite rows. Search can't
+look inside sealed text: memory and knowledge search use embeddings only, which stay unencrypted.
+
+**If the database leaked:** rotating the server key isn't enough, because a copy of the database
+plus the old server key still opens the old data keys. Replace the data keys as well:
+
+1. Rotate the server key as above.
+2. As the instance owner, call `POST /v1/admin/encryption/replace-keys`. It replaces every
+   workspace's data key and every person's About you key. A workspace owner can do the same for one
+   workspace with `POST /v1/orgs/{id}/encryption/replace-key`.
+3. The worker re-encrypts every row onto the new keys in the background, 500 rows per column a
+   minute. Rows are decrypted and encrypted again in the server, never in Postgres, and keep reading
+   normally the whole time. The workspace's encryption status shows `rekeying: true` until it's done.
+4. An old key is deleted 15 minutes after its last row moves, once nothing anywhere in the database
+   still holds a value encrypted with it.
+
+Content in the leaked copy stays readable to whoever has it; replacing keys protects everything
+from then on.
 
 ## Audit forwarding and enterprise features
 

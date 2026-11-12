@@ -214,6 +214,13 @@ env_value() { grep "^$1=" "$ENV_FILE" 2>/dev/null | tail -n1 | cut -d= -f2- || t
 
 # Sign-up hook secret (Standard Webhooks, D-094): the same value on Auth and the API.
 [[ -n "$(env_value AUTH_HOOK_SECRET)" ]] || set_env AUTH_HOOK_SECRET "v1,whsec_$(openssl rand -base64 32 | tr -d '\n')"
+# Server key for encryption at rest (D-136), so workspace owners can turn it on. Without it the
+# switch stays unavailable. Never replaced once set (losing it makes encrypted data unreadable),
+# and skipped when AWS KMS wraps the keys instead.
+if [[ -z "$(env_value CONTENT_ENCRYPTION_KEY)" && -z "$(env_value CONTENT_KMS_KEY_ID)" ]]; then
+  set_env CONTENT_ENCRYPTION_KEY "$(openssl rand -base64 32 | tr -d '\n')"
+  say "Generated CONTENT_ENCRYPTION_KEY: back it up with $ENV_FILE, encrypted data can't be read without it"
+fi
 [[ -n "$turn_host_opt" ]] && set_env TURN_PUBLIC_HOST "$turn_host_opt"
 # Behind a tunnel or proxy on this machine, Caddy listens on loopback only: Docker's published
 # ports skip ufw, so 0.0.0.0 would serve plain HTTP to the internet.

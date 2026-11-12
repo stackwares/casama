@@ -17,6 +17,8 @@ abstract class _$EncryptionStatusCWProxy {
 
   EncryptionStatus rotatedAt(DateTime? rotatedAt);
 
+  EncryptionStatus rekeying(bool? rekeying);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `EncryptionStatus(...).copyWith.fieldName(value)`.
@@ -31,6 +33,7 @@ abstract class _$EncryptionStatusCWProxy {
     EncryptionStatusKeyEnum? key,
     DateTime? since,
     DateTime? rotatedAt,
+    bool? rekeying,
   });
 }
 
@@ -56,6 +59,9 @@ class _$EncryptionStatusCWProxyImpl implements _$EncryptionStatusCWProxy {
   @override
   EncryptionStatus rotatedAt(DateTime? rotatedAt) => call(rotatedAt: rotatedAt);
 
+  @override
+  EncryptionStatus rekeying(bool? rekeying) => call(rekeying: rekeying);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `EncryptionStatus(...).copyWith.fieldName(value)`.
@@ -71,6 +77,7 @@ class _$EncryptionStatusCWProxyImpl implements _$EncryptionStatusCWProxy {
     Object? key = const $CopyWithPlaceholder(),
     Object? since = const $CopyWithPlaceholder(),
     Object? rotatedAt = const $CopyWithPlaceholder(),
+    Object? rekeying = const $CopyWithPlaceholder(),
   }) {
     return EncryptionStatus(
       mode: mode == const $CopyWithPlaceholder() || mode == null
@@ -93,6 +100,10 @@ class _$EncryptionStatusCWProxyImpl implements _$EncryptionStatusCWProxy {
           ? _value.rotatedAt
           // ignore: cast_nullable_to_non_nullable
           : rotatedAt as DateTime?,
+      rekeying: rekeying == const $CopyWithPlaceholder()
+          ? _value.rekeying
+          // ignore: cast_nullable_to_non_nullable
+          : rekeying as bool?,
     );
   }
 }
@@ -132,6 +143,7 @@ EncryptionStatus _$EncryptionStatusFromJson(Map<String, dynamic> json) =>
           'rotated_at',
           (v) => v == null ? null : DateTime.parse(v as String),
         ),
+        rekeying: $checkedConvert('rekeying', (v) => v as bool?),
       );
       return val;
     }, fieldKeyMap: const {'rotatedAt': 'rotated_at'});
@@ -143,6 +155,7 @@ Map<String, dynamic> _$EncryptionStatusToJson(EncryptionStatus instance) =>
       'key': _$EncryptionStatusKeyEnumEnumMap[instance.key],
       'since': instance.since?.toIso8601String(),
       'rotated_at': instance.rotatedAt?.toIso8601String(),
+      'rekeying': ?instance.rekeying,
     };
 
 const _$EncryptionStatusModeEnumEnumMap = {

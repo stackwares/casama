@@ -1,15 +1,22 @@
-/** Encryption at rest (D-136): Postgres sees ciphertext; the API reads plaintext; sweep, rotation, off, KMS. */
+/** Encryption at rest (D-136): Postgres sees ciphertext; the API reads plaintext; sweep, rotation, data key replacement (D-238), off, KMS. */
 import { randomBytes } from "node:crypto";
 import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { EventBus, MemoryService, sweepEncryption } from "@casama/agent";
+import {
+  EventBus,
+  MemoryService,
+  rewrapAllKeys,
+  sweepEncryption,
+  sweepReplacedKeys,
+} from "@casama/agent";
 import { AwsKmsKeyWrapper, contentKeys, LocalKeyWrapper } from "@casama/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
 const keyA = randomBytes(32).toString("base64");
 const keyB = randomBytes(32).toString("base64");
+const keyC = randomBytes(32).toString("base64");
 let h: Harness;
 let owner: { id: string; token: string };
 let orgId = "";
@@ -182,6 +189,158 @@ describe("encryption at rest", () => {
     expect(mems).toContain("Allergic to peanuts");
   });
 
+  it("replacing the data key reseals every row onto a new key, then deletes the old one", async () => {
+    const active = async () =>
+      (
+        await h.tdb.admin<
+          { id: string }[]
+        >`select id from public.org_keys where org_id = ${orgId} and retired_at is null`
+      )[0]!.id;
+    const oldKey = await active();
+    // About you gets a person's key while they're in a workspace that encrypts (D-169).
+    await h.tdb
+      .admin`insert into public.user_about (user_id, about) values (${owner.id}, 'Hikes on Sundays')`;
+    await h.tdb
+      .admin`insert into public.user_facts (user_id, content) values (${owner.id}, 'Has a dog named Miso')`;
+    await sweepEncryption(h.handle.db, 500, { recheckOn: false });
+    const [oldUserKey] = await h.tdb.admin<
+      { id: string }[]
+    >`select id from public.user_keys where user_id = ${owner.id}`;
+    expect(
+      String((await raw("select about from public.user_about where user_id = $1", owner.id)).about),
+    ).toMatch(new RegExp(`^enc:v1:${oldUserKey!.id}:`));
+    const sealedOld = await h.tdb.admin`
+      select 1 from public.memories where org_id = ${orgId} and content like ${`enc:v1:${oldKey}:%`}`;
+    expect(sealedOld.length).toBeGreaterThan(0);
+    // A value sealed with the old key in a column the worker doesn't know about keeps the key alive.
+    const [conv] = await h.tdb.admin<
+      { id: string; title: string | null }[]
+    >`select id, title from public.conversations where org_id = ${orgId} limit 1`;
+    await h.tdb
+      .admin`update public.conversations set title = ${contentKeys.sealWith(oldKey, "Stray")} where id = ${conv!.id}`;
+
+    const member = await h.user("crypt-member2@example.com");
+    await h.tdb
+      .admin`insert into public.memberships (org_id, user_id, role) values (${orgId}, ${member.id}, 'member')`;
+    expect(
+      (
+        await h.request(`/v1/orgs/${orgId}/encryption/replace-key`, {
+          method: "POST",
+          token: member.token,
+        })
+      ).status,
+    ).toBe(403);
+    const r = await j(
+      await h.request(`/v1/orgs/${orgId}/encryption/replace-key`, {
+        method: "POST",
+        token: owner.token,
+      }),
+    );
+    expect(r).toMatchObject({ mode: "on", rekeying: true, key: "server_key" });
+    const newKey = await active();
+    expect(newKey).not.toBe(oldKey);
+
+    // New writes use the new key at once; old rows still read while they wait.
+    const memory = new MemoryService(h.handle.db, null);
+    const fresh = await memory.write({ orgId, botId, kind: "fact", content: "Takes oat milk" });
+    expect(
+      String((await raw("select content from public.memories where id = $1", fresh.id)).content),
+    ).toMatch(new RegExp(`^enc:v1:${newKey}:`));
+    const before = (
+      await j(await h.request(`/v1/bots/${botId}/memories`, { token: owner.token }))
+    ).items.map((x: { content: string }) => x.content);
+    expect(before).toEqual(expect.arrayContaining(["Allergic to peanuts", "Takes oat milk"]));
+
+    // The sweep moves every row; nothing in a covered column is left on the old key.
+    expect(await sweepReplacedKeys(h.handle.db)).toBeGreaterThan(0);
+    for (const q of [
+      `select 1 from public.memories where content like 'enc:v1:${oldKey}:%'`,
+      `select 1 from public.messages where content->>'$enc' like 'enc:v1:${oldKey}:%'`,
+      `select 1 from public.run_events where payload->>'$enc' like 'enc:v1:${oldKey}:%'`,
+      `select 1 from public.user_about where about like 'enc:v1:${oldUserKey!.id}:%'`,
+      `select 1 from public.user_facts where content like 'enc:v1:${oldUserKey!.id}:%'`,
+    ])
+      expect(await h.tdb.admin.unsafe(q)).toHaveLength(0);
+    expect(
+      String((await raw("select about from public.user_about where user_id = $1", owner.id)).about),
+    ).toMatch(/^enc:v1:/);
+    // The old keys stay through the grace period.
+    expect(await h.tdb.admin`select 1 from public.org_keys where id = ${oldKey}`).toHaveLength(1);
+    await h.tdb
+      .admin`update public.org_keys set retired_at = now() - interval '1 hour' where id = ${oldKey}`;
+    await h.tdb
+      .admin`update public.user_keys set retired_at = now() - interval '1 hour' where id = ${oldUserKey!.id}`;
+    // The stray value still needs the old workspace key, so only the person's old key goes.
+    await sweepReplacedKeys(h.handle.db, 500, { inUseCheckEveryMs: 0 });
+    expect(await h.tdb.admin`select 1 from public.org_keys where id = ${oldKey}`).toHaveLength(1);
+    expect(
+      await h.tdb.admin`select 1 from public.user_keys where id = ${oldUserKey!.id}`,
+    ).toHaveLength(0);
+    expect(
+      (await j(await h.request(`/v1/orgs/${orgId}/encryption`, { token: owner.token }))).rekeying,
+    ).toBe(true);
+    await h.tdb
+      .admin`update public.conversations set title = ${conv!.title} where id = ${conv!.id}`;
+    await sweepReplacedKeys(h.handle.db, 500, { inUseCheckEveryMs: 0 });
+    expect(await h.tdb.admin`select 1 from public.org_keys where id = ${oldKey}`).toHaveLength(0);
+    expect(
+      (await j(await h.request(`/v1/orgs/${orgId}/encryption`, { token: owner.token }))).rekeying,
+    ).toBe(false);
+
+    // A server that never held the old keys reads everything.
+    contentKeys.reset();
+    await contentKeys.refresh();
+    const after = (
+      await j(await h.request(`/v1/bots/${botId}/memories`, { token: owner.token }))
+    ).items.map((x: { content: string }) => x.content);
+    expect(after).toEqual(
+      expect.arrayContaining(["Allergic to peanuts", "Prefers aisle seats", "Takes oat milk"]),
+    );
+    const thread = await j(
+      await h.request(`/v1/conversations/${conv!.id}/thread`, { token: owner.token }),
+    );
+    expect(JSON.stringify(thread)).not.toMatch(/enc:v1/);
+    const about = await j(await h.request("/v1/me/about", { token: owner.token }));
+    expect(JSON.stringify(about)).toContain("Hikes on Sundays");
+  });
+
+  it("changing the server key rewraps people's About you keys too", async () => {
+    contentKeys.configure(new LocalKeyWrapper(keyC, [keyB]));
+    expect(await rewrapAllKeys(h.handle.db)).toBeGreaterThanOrEqual(2);
+    // Drop the previous key: everything still loads and reads.
+    contentKeys.configure(new LocalKeyWrapper(keyC));
+    contentKeys.reset();
+    await contentKeys.refresh();
+    const about = await j(await h.request("/v1/me/about", { token: owner.token }));
+    expect(JSON.stringify(about)).toContain("Hikes on Sundays");
+    const mems = (
+      await j(await h.request(`/v1/bots/${botId}/memories`, { token: owner.token }))
+    ).items.map((x: { content: string }) => x.content);
+    expect(mems).toContain("Takes oat milk");
+  });
+
+  it("the instance owner can replace every data key at once", async () => {
+    const other = await h.user("crypt-not-admin@example.com");
+    expect(
+      (await h.request("/v1/admin/encryption/replace-keys", { method: "POST", token: other.token }))
+        .status,
+    ).toBe(403);
+    const r = await j(
+      await h.request("/v1/admin/encryption/replace-keys", { method: "POST", token: owner.token }),
+    );
+    expect(r.workspaces).toBeGreaterThanOrEqual(1);
+    expect(r.people).toBeGreaterThanOrEqual(1);
+    await sweepReplacedKeys(h.handle.db);
+    const retired = await h.tdb.admin<{ id: string }[]>`
+      select id from public.org_keys where org_id = ${orgId} and retired_at is not null`;
+    expect(retired).toHaveLength(1);
+    expect(
+      await h.tdb.admin.unsafe(
+        `select 1 from public.memories where content like 'enc:v1:${retired[0]!.id}:%'`,
+      ),
+    ).toHaveLength(0);
+  });
+
   it("turning it off opens every row again and deletes the key", async () => {
     expect(
       (
@@ -208,6 +367,7 @@ describe("encryption at rest", () => {
     expect(mems.map((x) => x.content).sort()).toEqual([
       "Allergic to peanuts",
       "Prefers aisle seats",
+      "Takes oat milk",
     ]);
     const [m] = await h.tdb.admin<
       { content: Array<{ text: string }> }[]

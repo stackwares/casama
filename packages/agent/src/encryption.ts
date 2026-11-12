@@ -1,6 +1,7 @@
 /**
  * Encryption at rest (D-136): turning it on and off for a workspace, key rotation, and the sweep that
  * seals existing rows (and any row a write path missed) or opens them again when it's turned off.
+ * Data key rotation (D-238): replacing a workspace's data key, and resealing rows onto the new key.
  */
 import { contentKeys, type Database, isSealed } from "@casama/db";
 import { sql } from "drizzle-orm";
@@ -19,6 +20,8 @@ export const SEALED_COLUMNS = [
   { table: "page_versions", column: "html", json: false, key: ["page_id", "version"] },
   { table: "page_versions", column: "data", json: true, key: ["page_id", "version"] },
   { table: "knowledge_chunks", column: "text", json: false, key: ["id"] },
+  // The default invite link's token, kept so the link can be shown again (D-167).
+  { table: "invite_links", column: "share_token", json: false, key: ["id"] },
 ] as const;
 
 export type EncryptionMode = "off" | "encrypting" | "on" | "decrypting";
@@ -29,9 +32,13 @@ export async function encryptionStatus(db: Database, orgId: string) {
     wrapper: string | null;
     rotated_at: string | null;
     created_at: string | null;
+    rekeying: boolean;
   }>(sql`
-    select o.content_encryption as mode, k.wrapper, k.rotated_at, k.created_at
-    from public.organizations o left join public.org_keys k on k.org_id = o.id where o.id = ${orgId}::uuid`);
+    select o.content_encryption as mode, k.wrapper, k.rotated_at, k.created_at,
+           exists (select 1 from public.org_keys r where r.org_id = o.id and r.retired_at is not null) as rekeying
+    from public.organizations o
+    left join public.org_keys k on k.org_id = o.id and k.retired_at is null
+    where o.id = ${orgId}::uuid`);
   return {
     mode: o?.mode ?? "off",
     available: contentKeys.configured,
@@ -42,6 +49,8 @@ export async function encryptionStatus(db: Database, orgId: string) {
       : null,
     rotated_at: o?.rotated_at ? new Date(o.rotated_at).toISOString() : null,
     since: o?.created_at ? new Date(o.created_at).toISOString() : null,
+    // Rows are still being moved from a replaced data key to the current one (D-238).
+    rekeying: (o?.mode === "on" || o?.mode === "encrypting") && !!o?.rekeying,
   };
 }
 
@@ -50,7 +59,7 @@ export async function setEncryption(db: Database, orgId: string, enabled: boolea
   if (enabled) {
     if (!contentKeys.configured) throw new Error("not_configured");
     const [k] = await db.execute<{ id: string }>(
-      sql`select id from public.org_keys where org_id = ${orgId}::uuid`,
+      sql`select id from public.org_keys where org_id = ${orgId}::uuid and retired_at is null`,
     );
     if (!k) {
       const nk = await contentKeys.newKey();
@@ -68,27 +77,108 @@ export async function setEncryption(db: Database, orgId: string, enabled: boolea
   return encryptionStatus(db, orgId);
 }
 
-/** Rewraps the workspace's data key with the server's current key; rows are not rewritten. */
-export async function rotateEncryptionKey(db: Database, orgId: string) {
-  const [k] = await db.execute<{ id: string; wrapped_key: string; wrapper: string }>(sql`
-    select id, wrapped_key, wrapper from public.org_keys where org_id = ${orgId}::uuid`);
-  if (!k) throw new Error("no_key");
+type KeyTable = "org_keys" | "user_keys";
+
+async function rewrapRow(
+  db: Database,
+  table: KeyTable,
+  k: { id: string; wrapped_key: string; wrapper: string },
+) {
   const r = await contentKeys.rewrap(k.wrapped_key, k.wrapper);
   await db.execute(
-    sql`update public.org_keys set wrapped_key = ${r.wrapped}, wrapper = ${r.wrapper}, rotated_at = now() where id = ${k.id}::uuid`,
+    sql`update ${sql.raw(`public.${table}`)} set wrapped_key = ${r.wrapped}, wrapper = ${r.wrapper}, rotated_at = now() where id = ${k.id}::uuid`,
   );
+}
+
+/**
+ * Rewraps the workspace's data keys (the current one and any being replaced) with the server's
+ * current key; rows are not rewritten.
+ */
+export async function rotateEncryptionKey(db: Database, orgId: string) {
+  const keys = await db.execute<{ id: string; wrapped_key: string; wrapper: string }>(sql`
+    select id, wrapped_key, wrapper from public.org_keys where org_id = ${orgId}::uuid`);
+  if (!keys.length) throw new Error("no_key");
+  for (const k of keys) await rewrapRow(db, "org_keys", k);
   return encryptionStatus(db, orgId);
 }
 
-/** Rewraps every workspace key still wrapped by an older server key (run after changing keys). */
+/**
+ * Rewraps every data key still wrapped by an older server key (run after changing keys): workspace
+ * keys and each person's About you key (D-169), so dropping CONTENT_ENCRYPTION_KEY_PREVIOUS later
+ * can't strand any of them.
+ */
 export async function rewrapAllKeys(db: Database) {
   const id = contentKeys.wrapperId;
   if (!id) return 0;
-  const old = await db.execute<{ org_id: string }>(
-    sql`select org_id from public.org_keys where wrapper <> ${id}`,
+  let n = 0;
+  for (const table of ["org_keys", "user_keys"] as const) {
+    const old = await db.execute<{ id: string; wrapped_key: string; wrapper: string }>(
+      sql`select id, wrapped_key, wrapper from ${sql.raw(`public.${table}`)} where wrapper <> ${id}`,
+    );
+    for (const k of old) await rewrapRow(db, table, k);
+    n += old.length;
+  }
+  return n;
+}
+
+/**
+ * Replaces the workspace's data key (D-238), for when the database may have leaked: the current key
+ * is retired (it keeps opening older rows, seals nothing new) and a new one takes over. The sweep
+ * then reseals every row onto the new key and deletes the old one. People's About you keys (D-169)
+ * for the workspace's members are replaced too.
+ */
+export async function replaceDataKey(db: Database, orgId: string, opts: { people?: boolean } = {}) {
+  if (!contentKeys.configured) throw new Error("not_configured");
+  const [o] = await db.execute<{ mode: EncryptionMode }>(
+    sql`select content_encryption as mode from public.organizations where id = ${orgId}::uuid`,
   );
-  for (const k of old) await rotateEncryptionKey(db, k.org_id);
-  return old.length;
+  if (o?.mode !== "on" && o?.mode !== "encrypting") throw new Error("not_encrypted");
+  const nk = await contentKeys.newKey();
+  // One statement: two replacements at once can't leave two current keys (the second finds none to retire).
+  await db.execute(sql`
+    with old as (
+      update public.org_keys set retired_at = now()
+      where org_id = ${orgId}::uuid and retired_at is null
+      returning org_id)
+    insert into public.org_keys (org_id, wrapped_key, wrapper)
+    select org_id, ${nk.wrapped}, ${nk.wrapper} from old`);
+  if (opts.people !== false) {
+    const members = await db.execute<{ user_id: string }>(sql`
+      select k.user_id from public.user_keys k
+      join public.memberships m on m.user_id = k.user_id and m.org_id = ${orgId}::uuid
+      where k.retired_at is null`);
+    for (const m of members) await replaceUserKey(db, m.user_id);
+  }
+  await contentKeys.refresh();
+  return encryptionStatus(db, orgId);
+}
+
+/** Replaces a person's About you key (D-169, D-238); the sweep reseals their rows. */
+export async function replaceUserKey(db: Database, userId: string) {
+  const nk = await contentKeys.newKey();
+  await db.execute(sql`
+    with old as (
+      update public.user_keys set retired_at = now()
+      where user_id = ${userId}::uuid and retired_at is null
+      returning user_id)
+    insert into public.user_keys (user_id, wrapped_key, wrapper)
+    select user_id, ${nk.wrapped}, ${nk.wrapper} from old`);
+}
+
+/** Replaces every data key on this server (D-238): after a leak, run once; the worker does the rest. */
+export async function replaceAllDataKeys(db: Database) {
+  if (!contentKeys.configured) throw new Error("not_configured");
+  const orgs = await db.execute<{ id: string }>(sql`
+    select o.id from public.organizations o
+    where o.content_encryption in ('on', 'encrypting')
+      and exists (select 1 from public.org_keys k where k.org_id = o.id and k.retired_at is null)`);
+  const users = await db.execute<{ user_id: string }>(
+    sql`select user_id from public.user_keys where retired_at is null`,
+  );
+  for (const o of orgs) await replaceDataKey(db, o.id, { people: false });
+  for (const u of users) await replaceUserKey(db, u.user_id);
+  await contentKeys.refresh();
+  return { workspaces: orgs.length, people: users.length };
 }
 
 const keyCols = (key: readonly string[]) => sql.raw(key.map((k) => `"${k}"`).join(", "));
@@ -159,10 +249,37 @@ export async function sweepEncryption(
       await db.execute(
         sql`update public.organizations set content_encryption = 'off' where id = ${o.id}::uuid and content_encryption = 'decrypting'`,
       );
-      await db.execute(sql`delete from public.org_keys where org_id = ${o.id}::uuid`);
+      await dropKeys(db, "org_keys", o.id);
     }
   }
-  return changed + (await sweepUserProfiles(db, batch));
+  return changed + (await sweepUserProfiles(db, batch)) + (await sweepReplacedKeys(db, batch));
+}
+
+/** The first table still holding a value sealed with this key (any column, nested too), or null. */
+async function keyInUse(db: Database, keyId: string) {
+  const [r] = await db.execute<{ t: string | null }>(
+    sql`select public.content_key_in_use(${keyId}::uuid) as t`,
+  );
+  return r?.t ?? null;
+}
+
+/**
+ * Deletes a workspace's or person's keys once they no longer seal. A key something still needs
+ * (device data sealed with a workspace's key, say) is kept, retired, so that data stays readable.
+ */
+async function dropKeys(db: Database, table: KeyTable, owner: string) {
+  const col = sql.raw(table === "org_keys" ? "org_id" : "user_id");
+  const t = sql.raw(`public.${table}`);
+  const keys = await db.execute<{ id: string }>(
+    sql`select id from ${t} where ${col} = ${owner}::uuid`,
+  );
+  for (const k of keys) {
+    if (await keyInUse(db, k.id))
+      await db.execute(
+        sql`update ${t} set retired_at = coalesce(retired_at, now()) where id = ${k.id}::uuid`,
+      );
+    else await db.execute(sql`delete from ${t} where id = ${k.id}::uuid`);
+  }
 }
 
 /** About you text sealed with the person's own key (D-169). */
@@ -185,17 +302,17 @@ export async function sweepUserProfiles(db: Database, batch = 500) {
       union select user_id from public.user_facts
     ) u
     where public.user_seals_profile(u.user_id)
-      and not exists (select 1 from public.user_keys k where k.user_id = u.user_id)
+      and not exists (select 1 from public.user_keys k where k.user_id = u.user_id and k.retired_at is null)
     limit 100`);
   for (const m of missing) {
     const nk = await contentKeys.newKey();
     await db.execute(sql`
       insert into public.user_keys (user_id, wrapped_key, wrapper) values (${m.user_id}::uuid, ${nk.wrapped}, ${nk.wrapper})
-      on conflict (user_id) do nothing`);
+      on conflict (user_id) where retired_at is null do nothing`);
   }
   if (missing.length) await contentKeys.refresh();
   const keyed = await db.execute<{ user_id: string; seal: boolean }>(
-    sql`select user_id, public.user_seals_profile(user_id) as seal from public.user_keys`,
+    sql`select distinct user_id, public.user_seals_profile(user_id) as seal from public.user_keys`,
   );
   let changed = 0;
   for (const u of keyed) {
@@ -219,8 +336,127 @@ export async function sweepUserProfiles(db: Database, batch = 500) {
       }
       left += rows.length;
     }
-    if (!u.seal && left === 0)
-      await db.execute(sql`delete from public.user_keys where user_id = ${u.user_id}::uuid`);
+    if (!u.seal && left === 0) await dropKeys(db, "user_keys", u.user_id);
+  }
+  return changed;
+}
+
+/**
+ * Every column that can hold a value sealed with a workspace key or a person's key, for resealing
+ * onto a replacement key (D-238). `owner` narrows the scan to the key's workspace or person.
+ */
+const RESEAL_COLUMNS: ReadonlyArray<{
+  table: string;
+  column: string;
+  json: boolean;
+  kind: "org" | "user";
+  owner: "org_id" | "user_id" | null;
+}> = [
+  ...SEALED_COLUMNS.map((c) => ({
+    table: c.table,
+    column: c.column,
+    json: c.json,
+    kind: "org" as const,
+    owner: "org_id" as const,
+  })),
+  // Device data is sealed with a workspace key of its owner's (D-149, D-150) and has no org_id.
+  { table: "device_readings", column: "summary", json: true, kind: "org", owner: null },
+  { table: "device_requests", column: "result", json: true, kind: "org", owner: null },
+  ...USER_SEALED_COLUMNS.map((c) => ({
+    table: c.table,
+    column: c.column,
+    json: false,
+    kind: "user" as const,
+    owner: "user_id" as const,
+  })),
+];
+
+/** How long a replaced key is kept after its last row moves, for servers still sealing with it. */
+const RETIRED_GRACE = "15 minutes";
+/** When each replaced key was last checked against the whole database (that check scans every table). */
+const lastInUseCheck = new Map<string, number>();
+
+/**
+ * Data key rotation (D-238): moves rows sealed with a replaced key onto the workspace's (or
+ * person's) current key, `batch` per column per pass. Rows are opened and sealed again in this
+ * process, never in Postgres. Once none are left, the grace period has passed and nothing anywhere
+ * in the database still holds a value sealed with it, the old key is deleted.
+ */
+export async function sweepReplacedKeys(
+  db: Database,
+  batch = 500,
+  opts: { inUseCheckEveryMs?: number } = {},
+) {
+  if (!contentKeys.configured) return 0;
+  const retired = await db.execute<{
+    id: string;
+    owner: string;
+    kind: "org" | "user";
+    settled: boolean;
+  }>(sql`
+    select k.id, k.org_id as owner, 'org' as kind,
+           k.retired_at < now() - ${RETIRED_GRACE}::interval as settled
+    from public.org_keys k join public.organizations o on o.id = k.org_id
+    where k.retired_at is not null and o.content_encryption in ('on', 'encrypting')
+      and exists (select 1 from public.org_keys n where n.org_id = k.org_id and n.retired_at is null)
+    union all
+    select k.id, k.user_id, 'user', k.retired_at < now() - ${RETIRED_GRACE}::interval
+    from public.user_keys k
+    where k.retired_at is not null
+      and exists (select 1 from public.user_keys n where n.user_id = k.user_id and n.retired_at is null)`);
+  let changed = 0;
+  for (const k of retired) {
+    const current = () =>
+      k.kind === "org" ? contentKeys.orgKeyId(k.owner) : contentKeys.userKeyId(k.owner);
+    let now = current();
+    if (!now || now === k.id) {
+      await contentKeys.refresh();
+      now = current();
+      // This process doesn't know the new key yet; try again next pass.
+      if (!now || now === k.id) continue;
+    }
+    const pattern = `enc:v1:${k.id}:%`;
+    let left = 0;
+    for (const c of RESEAL_COLUMNS) {
+      if (c.kind !== k.kind) continue;
+      const col = sql.raw(`"${c.column}"`);
+      const t = sql.raw(`public.${c.table}`);
+      const cond = c.json
+        ? sql`jsonb_typeof(${col}) = 'object' and ${col}->>'$enc' like ${pattern}`
+        : sql`${col} like ${pattern}`;
+      const owner = c.owner ? sql`and ${sql.raw(c.owner)} = ${k.owner}::uuid` : sql``;
+      // tableoid and ctid find the row in any table (partitions too); the hash makes sure it hasn't
+      // changed since it was read, so a concurrent edit is never overwritten with older content.
+      const rows = await db.execute<{ rel: string; tid: string; h: string; value: unknown }>(sql`
+        select tableoid::regclass::text as rel, ctid::text as tid, md5(${col}::text) as h, ${col} as value
+        from ${t} where ${cond} ${owner} limit ${batch}`);
+      for (const r of rows) {
+        // Rows read through this client are already opened; one this process couldn't open stays.
+        if (isSealed(r.value)) continue;
+        const value =
+          k.kind === "user"
+            ? contentKeys.sealForUser(k.owner, r.value as string)
+            : c.json
+              ? contentKeys.sealJson(k.owner, JSON.stringify(r.value))
+              : contentKeys.seal(k.owner, r.value as string);
+        await db.execute(sql`
+          update ${t} set ${col} = ${value}${c.json ? sql`::jsonb` : sql``}
+          where tableoid = ${r.rel}::regclass and ctid = ${r.tid}::tid and md5(${col}::text) = ${r.h}`);
+        changed++;
+      }
+      left += rows.length;
+    }
+    if (left > 0 || !k.settled) continue;
+    // A key still in use somewhere else is checked again every 15 minutes, not every pass.
+    const last = lastInUseCheck.get(k.id);
+    if (last && Date.now() - last < (opts.inUseCheckEveryMs ?? 15 * 60_000)) continue;
+    if (await keyInUse(db, k.id)) {
+      lastInUseCheck.set(k.id, Date.now());
+      continue;
+    }
+    const t = sql.raw(k.kind === "org" ? "public.org_keys" : "public.user_keys");
+    await db.execute(sql`delete from ${t} where id = ${k.id}::uuid and retired_at is not null`);
+    lastInUseCheck.delete(k.id);
   }
   return changed;
 }

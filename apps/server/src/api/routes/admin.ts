@@ -1,5 +1,6 @@
 /** Owner admin console (Phase 6): instance totals, users, quotas, services, update notices. */
 
+import { replaceAllDataKeys } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import type { JwtClaims } from "@casama/db";
 import { verifyLicense } from "@casama/ee";
@@ -57,6 +58,21 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     await requireOwner(requireClaims(c.get("claims")));
     const settings = await getConnectionSettings(db);
     return c.json(connectionsOut(settings), 200);
+  });
+
+  // After a database leak (D-238): every data key is replaced; the worker reseals rows.
+  app.openapi(routes.adminReplaceDataKeys, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    try {
+      const r = await replaceAllDataKeys(db);
+      deps.logger.info("data keys replaced", { ...r, by: claims.sub });
+      return c.json(r, 200);
+    } catch (e) {
+      if ((e as Error).message === "not_configured")
+        throw new ApiError(409, "encryption_unavailable", "This server has no encryption key.");
+      throw e;
+    }
   });
 
   app.openapi(routes.adminCloudModels, async (c) => {

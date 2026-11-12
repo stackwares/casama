@@ -164,6 +164,8 @@ export interface OrgKeyRow {
   wrapper: string;
   /** off, encrypting, on or decrypting (from organizations.content_encryption). */
   mode: string;
+  /** A replaced key (D-238): it still opens older rows but seals nothing new. */
+  retired?: boolean;
 }
 
 /** Unwrapped data keys in memory, and which workspaces seal new writes. */
@@ -209,24 +211,41 @@ export class KeyRing {
   async refresh() {
     if (!this.sql || !this.wrapper) return;
     const rows = await this.sql<OrgKeyRow[]>`
-      select k.id, k.org_id, k.wrapped_key, k.wrapper, o.content_encryption as mode
+      select k.id, k.org_id, k.wrapped_key, k.wrapper, o.content_encryption as mode,
+             k.retired_at is not null as retired
       from public.org_keys k join public.organizations o on o.id = k.org_id`;
     this.sealing.clear();
     for (const r of rows) await this.add(r);
     // Per-person keys (D-169); absent before that migration.
     const users = await this.sql<
-      Array<{ id: string; user_id: string; wrapped_key: string; wrapper: string }>
+      Array<{ id: string; user_id: string; wrapped_key: string; wrapper: string; retired: boolean }>
     >`
-      select id, user_id, wrapped_key, wrapper from public.user_keys`.catch(() => []);
+      select id, user_id, wrapped_key, wrapper, retired_at is not null as retired from public.user_keys`.catch(
+      () =>
+        // Before data key rotation (D-238) there is no retired_at.
+        this.sql!<Array<{ id: string; user_id: string; wrapped_key: string; wrapper: string }>>`
+          select id, user_id, wrapped_key, wrapper from public.user_keys`.catch(() => []),
+    );
     this.userSealing.clear();
     for (const u of users) await this.addUser(u);
   }
 
-  async addUser(r: { id: string; user_id: string; wrapped_key: string; wrapper: string }) {
+  async addUser(r: {
+    id: string;
+    user_id: string;
+    wrapped_key: string;
+    wrapper: string;
+    retired?: boolean;
+  }) {
     if (!this.wrapper) throw new Error("Encryption at rest isn't configured on this server");
     if (!this.keys.has(r.id))
       this.keys.set(r.id, await this.wrapper.unwrap(r.wrapped_key, r.wrapper));
-    this.userSealing.set(r.user_id, r.id);
+    if (!r.retired) this.userSealing.set(r.user_id, r.id);
+  }
+
+  /** The key a person's About you is sealed with now (D-238), or null. */
+  userKeyId(userId: string) {
+    return this.userSealing.get(userId) ?? null;
   }
 
   /** Whether this person's About you is sealed on write. */
@@ -246,8 +265,15 @@ export class KeyRing {
     if (!this.wrapper) throw new Error("Encryption at rest isn't configured on this server");
     if (!this.keys.has(r.id))
       this.keys.set(r.id, await this.wrapper.unwrap(r.wrapped_key, r.wrapper));
+    // A retired key only opens older rows (D-238); the workspace's current key seals.
+    if (r.retired) return;
     if (r.mode === "encrypting" || r.mode === "on") this.sealing.set(r.org_id, r.id);
     else this.sealing.delete(r.org_id);
+  }
+
+  /** The key new writes for this workspace are sealed with (D-238), or null. */
+  orgKeyId(orgId: string) {
+    return this.sealing.get(orgId) ?? null;
   }
 
   /** A new data key, wrapped (the caller stores it). */

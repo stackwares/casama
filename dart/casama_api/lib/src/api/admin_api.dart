@@ -17,6 +17,7 @@ import 'package:casama_api/src/model/admin_service_list.dart';
 import 'package:casama_api/src/model/admin_user_list.dart';
 import 'package:casama_api/src/model/cloud_models.dart';
 import 'package:casama_api/src/model/connection_settings.dart';
+import 'package:casama_api/src/model/replaced_data_keys.dart';
 import 'package:casama_api/src/model/set_connection_settings_request.dart';
 import 'package:casama_api/src/model/set_org_limits_request.dart';
 import 'package:casama_api/src/model/suspend_org_request.dart';
@@ -397,6 +398,82 @@ _responseData = rawData == null ? null : deserialize<AdminOverview, AdminOvervie
     }
 
     return Response<AdminOverview>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Replace every data key on this server (instance owner), after a database leak; rows are resealed in the background
+  /// 
+  ///
+  /// Parameters:
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [ReplacedDataKeys] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<ReplacedDataKeys>> adminReplaceDataKeys({ 
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/admin/encryption/replace-keys';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    ReplacedDataKeys? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<ReplacedDataKeys, ReplacedDataKeys>(rawData, 'ReplacedDataKeys', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<ReplacedDataKeys>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,
