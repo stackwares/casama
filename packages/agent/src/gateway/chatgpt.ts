@@ -4,6 +4,7 @@
  * `stream: true`, history in `input`, system text in `instructions`, and none of the request fields
  * that route rejects (temperature, top_p, max_output_tokens, metadata, user, truncation, ...).
  */
+import { ToolRegistry } from "../tools/registry.ts";
 import {
   type ChatMessage,
   type GatewayEvent,
@@ -41,7 +42,7 @@ export function toResponsesInput(messages: ChatMessage[]): Json[] {
         out.push({
           type: "function_call",
           call_id: c.callId,
-          name: c.name,
+          name: ToolRegistry.wireName(c.name),
           arguments: JSON.stringify(c.args ?? {}),
         });
       }

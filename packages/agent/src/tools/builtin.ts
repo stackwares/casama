@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { savePersonFact } from "../about-you.ts";
 import type { MemoryStore } from "../memory-store.ts";
+import { shq } from "./computer.ts";
 import { ToolError, ToolRegistry } from "./registry.ts";
 import { registerUiTools } from "./ui.ts";
 
@@ -182,13 +183,12 @@ export function builtinTools(deps: {
       if (files.length && ctx.computer) {
         try {
           const handle = await ctx.computer();
+          // ~/skills/<name>/ (D-104), as an absolute path: a relative one would land in
+          // ~/workspace (or the bot's own folder on a team computer).
+          const dir = `/home/casama/skills/${skill.name}`;
           for (const f of files) {
-            await handle.writeFile(
-              `skills/${skill.name}/${f.path}`,
-              Buffer.from(f.content, "base64"),
-            );
-            if (f.executable)
-              await collectExec(handle.exec(`chmod +x ~/skills/${skill.name}/${f.path}`));
+            await handle.writeFile(`${dir}/${f.path}`, Buffer.from(f.content, "base64"));
+            if (f.executable) await collectExec(handle.exec(`chmod +x ${shq(`${dir}/${f.path}`)}`));
           }
           note = `\n\n[This skill's files are in ~/skills/${skill.name}/: ${files.map((f) => f.path).join(", ")}]`;
         } catch {

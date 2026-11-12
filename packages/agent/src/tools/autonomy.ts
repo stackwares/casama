@@ -757,10 +757,16 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
 
   async function saveMedia(ctx: ToolContext, bytes: Uint8Array | null, ext: string) {
     if (!ctx.computer || !bytes) return null;
-    const path = `media/${new Date().toISOString().replace(/[:.]/g, "-")}.${ext}`;
-    await (await ctx.computer()).writeFile(path, bytes);
+    const asked = `media/${new Date().toISOString().replace(/[:.]/g, "-")}.${ext}`;
+    // On a team computer this is in the bot's own folder (D-148): report where it really is.
+    const h = await ctx.computer();
+    const path = h.resolvePath?.(asked) ?? asked;
+    await h.writeFile(path, bytes);
     return path;
   }
+
+  /** The saved file's name (the chat copy shares it, so a link to it isn't shown twice). */
+  const fileName = (path: string | null, fallback: string) => path?.split("/").pop() || fallback;
 
   /** Keeps the file for the chat; null when it couldn't be (too big, or the download failed). */
   async function keepForChat(
@@ -808,11 +814,13 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
           : "jpg";
       const bytes = await mediaBytes(img).catch(() => null);
       const path = await saveMedia(ctx, bytes, ext).catch(() => null);
-      const shown = await keepForChat(ctx, bytes, img, `image.${ext}`).catch(() => null);
+      const shown = await keepForChat(ctx, bytes, img, fileName(path, `image.${ext}`)).catch(
+        () => null,
+      );
       // Inline images (OpenRouter) have no link; never put their bytes in the conversation.
       const where = img.url ? `Generated image: ${img.url}` : "Generated image";
       return {
-        content: `${where}${shown ? "\nThe person sees it in the chat under your reply; no need to link it." : ""}${path ? `\nSaved to ~/workspace/${path}` : img.url || shown ? "" : " (no computer to save it to)"}`,
+        content: `${where}${shown ? "\nThe person already sees it in the chat under your reply: don't link it or name the file." : ""}${path ? `\nSaved to ~/workspace/${path}` : img.url || shown ? "" : " (no computer to save it to)"}`,
         preview: path ?? "image generated",
         artifactPath: path,
       };
@@ -849,11 +857,11 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
         ctx,
         bytes,
         { ...video, durationS: video.durationS ?? seconds },
-        "video.mp4",
+        fileName(path, "video.mp4"),
       ).catch(() => null);
       const where = video.url ? `Generated video: ${video.url}` : "Generated video";
       return {
-        content: `${where}${shown ? "\nThe person sees it in the chat under your reply; no need to link it." : ""}${path ? `\nSaved to ~/workspace/${path}` : video.url || shown ? "" : " (no computer to save it to)"}`,
+        content: `${where}${shown ? "\nThe person already sees it in the chat under your reply: don't link it or name the file." : ""}${path ? `\nSaved to ~/workspace/${path}` : video.url || shown ? "" : " (no computer to save it to)"}`,
         preview: path ?? "video generated",
         artifactPath: path,
       };

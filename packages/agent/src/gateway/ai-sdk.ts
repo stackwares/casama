@@ -14,6 +14,7 @@ import {
   type ToolSet,
   tool,
 } from "ai";
+import { ToolRegistry } from "../tools/registry.ts";
 import { type ChatGptOptions, streamChatGpt } from "./chatgpt.ts";
 import { openRouterFetch } from "./openrouter.ts";
 import {
@@ -99,7 +100,7 @@ export function toModelMessages(messages: ChatMessage[]): ModelMessage[] {
           {
             type: "tool-result",
             toolCallId: m.callId,
-            toolName: m.name,
+            toolName: ToolRegistry.wireName(m.name),
             output: { type: "text", value: m.content },
           },
         ],
@@ -113,7 +114,7 @@ export function toModelMessages(messages: ChatMessage[]): ModelMessage[] {
         ...m.toolCalls.map((c) => ({
           type: "tool-call" as const,
           toolCallId: c.callId,
-          toolName: c.name,
+          toolName: ToolRegistry.wireName(c.name),
           input: c.args,
         })),
       ],

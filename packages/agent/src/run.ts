@@ -34,6 +34,7 @@ const LIMIT_CODES = new Set([
   "cloud_daily_cap",
   "computer_hours_exceeded",
 ]);
+
 import { collectExec, type SandboxHandle } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
@@ -145,7 +146,7 @@ import {
   withHomePaths,
 } from "./team-computer.ts";
 import { ticketAfterRun, ticketStarted } from "./tickets.ts";
-import { type ToolDefinition, ToolError, ToolRegistry } from "./tools/registry.ts";
+import { type ToolDefinition, ToolError, type ToolRegistry } from "./tools/registry.ts";
 import { UI_SHOWN_RESULT } from "./tools/ui.ts";
 
 /** Runs fn as a durable, checkpointed step (DBOS.runStep in the worker; direct call in tests). */
@@ -577,7 +578,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       const vc = info.voiceCall;
       const call: ToolCall = {
         callId: vc.call_id,
-        name: ToolRegistry.fromWire(vc.name),
+        name: registry.resolveWire(vc.name),
         args: vc.arguments ?? {},
       };
       if (!available.some((d) => d.name === call.name)) {
@@ -759,6 +760,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
             system: lazy ? [...ctx.system, lazy.index] : ctx.system,
             messages: [...ctx.messages, ...turn],
             tools: lazy ? specsNow() : toolSpecs,
+            resolveName: (wire) => registry.resolveWire(wire),
           },
           chainFor,
           bus,
@@ -797,7 +799,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         callCounts.set(signature, times);
         if (!looking && times >= 3) {
           const res = await step(`loop-${i}-${call.callId}`, () =>
-            blockedStep(deps, info, call, LOOP_NUDGE, bus),
+            blockedStep(deps, info, call, LOOP_NUDGE, bus, "repeated_call"),
           );
           turn.push({ role: "tool", callId: call.callId, name: call.name, content: res.content });
           failStreak++;
@@ -811,6 +813,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
               call,
               "A card is already showing. Show one card at a time and wait for the answer.",
               bus,
+              "card_already_shown",
             ),
           );
           turn.push({ role: "tool", callId: call.callId, name: call.name, content: res.content });
@@ -877,7 +880,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
               };
           if ("error" in started) {
             const res = await step(`blocked-${i}-${call.callId}`, () =>
-              blockedStep(deps, info, call, started.error, bus),
+              blockedStep(deps, info, call, started.error, bus, "secret_request_failed"),
             );
             turn.push({ role: "tool", callId: call.callId, name: call.name, content: res.content });
             continue;
@@ -916,7 +919,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           );
           if ("error" in started) {
             const res = await step(`blocked-${i}-${call.callId}`, () =>
-              blockedStep(deps, info, call, started.error, bus),
+              blockedStep(deps, info, call, started.error, bus, "takeover_failed"),
             );
             turn.push({ role: "tool", callId: call.callId, name: call.name, content: res.content });
             continue;
@@ -1668,7 +1671,13 @@ async function modelStep(
   deps: RunDeps,
   info: RunInfo,
   i: number,
-  req: { system: string[]; messages: ChatMessage[]; tools: ReturnType<ToolRegistry["specs"]> },
+  req: {
+    system: string[];
+    messages: ChatMessage[];
+    tools: ReturnType<ToolRegistry["specs"]>;
+    /** The tool a provider's tool name means (ToolRegistry.resolveWire). */
+    resolveName: (wire: string) => string;
+  },
   chainFor: (
     c: Array<{ credential_id: string; model: string } | undefined>,
   ) => Promise<ResolvedModel[]>,
@@ -1763,7 +1772,7 @@ async function modelStep(
         text += ev.text;
         coalescer.push(redactor.text(ev.text));
       } else if (ev.type === "tool_call") {
-        toolCalls.push({ ...ev.call, name: ToolRegistry.fromWire(ev.call.name) });
+        toolCalls.push({ ...ev.call, name: req.resolveName(ev.call.name) });
       } else {
         usage = ev.usage;
         model = ev.model || model;
@@ -2149,7 +2158,7 @@ async function wakeMentioned(
 /** Failed steps in a row after which a run stops (the loop guard). */
 export const STUCK_AFTER_FAILURES = 5;
 const LOOP_NUDGE =
-  "You've already done exactly this twice and it didn't get you further, so it wasn't run again. Try a different approach (another element, reload the page, a different site), or stop and tell the person what's blocking you.";
+  "You've already done exactly this twice and it didn't get you further, so it wasn't run again. Try a different approach (other arguments, another tool, another page or site), or stop and tell the person what's blocking you.";
 
 /** The person's messages attached to this run after it started that the model hasn't seen yet. */
 async function arrivedMessages(db: Database, runId: string, currentId: string, seen: string[]) {
@@ -2469,6 +2478,13 @@ async function setTerminal(db: Database, info: RunInfo, status: string, error: u
         ? { type: (error as { code?: string } | null)?.code ?? "failed" }
         : undefined,
     );
+  // A person's first finished run is their first value (ANALYTICS-PLAN §6.2, §6.12).
+  if (r && status === "completed")
+    void runCompletedMilestones(db, {
+      userId: info.createdBy,
+      orgId: info.orgId,
+      trigger: info.trigger,
+    }).catch((e) => captureError(e, { service: "casama-worker", step: "analytics-milestone" }));
   await db.execute(sql`
     update public.bots set status = 'idle' where id = ${info.botId}::uuid
       and not exists (select 1 from public.runs where bot_id = ${info.botId}::uuid and status = 'running' and id <> ${info.runId}::uuid)`);
@@ -2477,11 +2493,6 @@ async function setTerminal(db: Database, info: RunInfo, status: string, error: u
 
 async function finishCompleted(
   db: Database,
-  // A person's first finished run is their first value (ANALYTICS-PLAN §6.2, §6.12).
-  if (r && status === "completed")
-    void runCompletedMilestones(db, { userId: info.createdBy, orgId: info.orgId, trigger: info.trigger }).catch(
-      (e) => captureError(e, { service: "casama-worker", step: "analytics-milestone" }),
-    );
   info: RunInfo,
   finalMessageId: string,
   busFn: () => Promise<EventBus>,
@@ -2722,10 +2733,12 @@ async function blockedStep(
   call: ToolCall,
   message: string,
   busFn: () => Promise<EventBus>,
+  /** Why it wasn't run: a denied or expired approval unless said otherwise. */
+  code = "approval_denied",
 ) {
   await (await busFn()).append(info.runId, "tool.failed", {
     call_id: call.callId,
-    error_code: "approval_denied",
+    error_code: code,
     message,
   });
   return { content: message, untrusted: false };
