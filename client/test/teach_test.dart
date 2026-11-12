@@ -53,10 +53,17 @@ void main() {
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.byKey(const Key('teachStart')), findsNothing); // only while in control
+    // Teach a task waits behind ⋯, and only while in control.
+    await tester.tap(find.byKey(const Key('liveMore')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('teachStart')), findsNothing);
+    await tester.tapAt(const Offset(5, 5));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('takeControl')));
     await tester.pump();
     await tester.pump();
+    await tester.tap(find.byKey(const Key('liveMore')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('teachStart')));
     await tester.pumpAndSettle();
     // A team computer: pick the bot that learns it.

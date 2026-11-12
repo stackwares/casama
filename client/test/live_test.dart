@@ -73,7 +73,9 @@ void main() {
     await tester.pump();
     expect(backend.leaseHeld, isTrue);
     expect(live.connection.controlRequests, 1);
-    expect(find.textContaining("You're in control"), findsOneWidget);
+    // In control: the dock holds the tools and Hand Back; the privacy note shows once.
+    expect(find.byKey(const Key('handBack')), findsOneWidget);
+    expect(find.byKey(const Key('liveCopy')), findsOneWidget);
     expect(find.textContaining('nothing you type or see is sent'), findsOneWidget);
 
     // A tap in the middle of the surface clicks the middle of the remote screen.
@@ -255,6 +257,36 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     expect(find.byKey(const Key('liveExpand')), findsOneWidget);
   });
+  testWidgets('live view on a phone: rotate hint upright, controls beside the screen sideways', (tester) async {
+    final backend = FakeBackend();
+    final live = FakeLiveConnector();
+    await setSize(tester, const Size(390, 844));
+    await tester.pumpWidget(liveHarness(backend, live, const LiveViewScreen(computerId: computerId)));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const Key('liveRotateHint')), findsOneWidget);
+    expect(find.byType(AppBar), findsWidgets);
+
+    // Sideways: no header, the tools in the bar beside the screen, nothing over it.
+    await setSize(tester, const Size(844, 390));
+    await tester.pump();
+    expect(find.byKey(const Key('liveRotateHint')), findsNothing);
+    expect(find.byType(AppBar), findsNothing);
+    await tester.tap(find.byKey(const Key('takeControl')));
+    await tester.pump();
+    await tester.pump();
+    expect(backend.leaseHeld, isTrue);
+    for (final k in ['liveKeyboard', 'liveRightClick', 'livePaste', 'liveCopy', 'handBack', 'liveMore', 'liveStatus']) {
+      expect(find.byKey(Key(k)), findsOneWidget, reason: k);
+    }
+    // Save Screenshot waits behind ⋯.
+    await tester.tap(find.byKey(const Key('liveMore')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('liveScreenshot')), findsOneWidget);
+    expect(find.byKey(const Key('teachStart')), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   // D-218: the app offers only what a personal computer can do.
   testWidgets('a personal computer shows screenshots, not live view, terminal, checkpoints or sleep', (tester) async {
     await setSize(tester, const Size(1300, 900));

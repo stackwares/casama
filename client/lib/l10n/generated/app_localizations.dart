@@ -1942,6 +1942,54 @@ abstract class AppLocalizations {
   /// **'Computers'**
   String get computers;
 
+  /// No description provided for @liveScreenshots.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshots'**
+  String get liveScreenshots;
+
+  /// No description provided for @liveScreenshotsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Live video can\'t get through this network, so the screen updates about once a second.'**
+  String get liveScreenshotsHelp;
+
+  /// No description provided for @liveMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get liveMore;
+
+  /// No description provided for @liveSaveScreenshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Screenshot'**
+  String get liveSaveScreenshot;
+
+  /// No description provided for @liveCopyFromComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy from the computer'**
+  String get liveCopyFromComputer;
+
+  /// No description provided for @livePasteToComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste onto the computer'**
+  String get livePasteToComputer;
+
+  /// No description provided for @liveRotateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn your phone sideways for a bigger screen'**
+  String get liveRotateHint;
+
+  /// No description provided for @liveWatching.
+  ///
+  /// In en, this message translates to:
+  /// **'Watching'**
+  String get liveWatching;
+
   /// No description provided for @connectingLive.
   ///
   /// In en, this message translates to:

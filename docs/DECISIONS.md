@@ -2382,3 +2382,14 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 - **Server:** `POST /v1/computers/{id}/stream-session` answers 409 `not_on_companion` for a personal computer, before anything starts. A bot that calls `computer.request_takeover` there gets told to ask the person in chat to do the step on their own computer, and no takeover request is made (the card would lead to Live View).
 - **Not done:** a real live view of the person's own screen. It needs screen capture in the desktop app with its own approval, a visible "being watched" sign, and a decision on control from a phone.
 - **Tests:** `live_test.dart` (the panel connected and offline, the list's menu); `local.test.ts` (the 409 and the takeover answer).
+
+## D-219 The live view puts the computer's screen first
+
+- **Problem** (Oliver: "we need the best design for the Live View screen especially on mobile… put some options behind a menu"): on a phone the header, a three-line status sentence, a row of quick actions and a privacy note took about a third of the height. Held sideways, the computer's screen was a small box under all of it.
+- **One status chip** in the header: a dot and Live, Screenshots, Connecting or Paused, plus the round trip while live. Tapping it says what Screenshots means ("live video can't get through this network…") and who has the screen. The dot is still, not animated, so the page doesn't redraw while it's open.
+- **A dock at the bottom**, in reach of a thumb. Watching: who has the screen and Take Control. In control: Keyboard and Right-click (touch devices and phone-sized windows), Paste and Copy, then Hand Back. Phones push Hand Back to the edge, and it shrinks to its icon (with a tooltip) on the narrowest screens. Wide windows keep the tools and Hand Back together in the middle.
+- **Behind ⋯:** Save Screenshot, and Teach a Task while you're in control.
+- **Phone held sideways:** no header. When the black bars beside the screen are at least 72 pt wide (a 16:10 desktop on a modern phone), the controls go there: back, ⋯ and the status dot on the left; the tools and the main action (Take Control or Hand Back, round, with its name under it) on the right, so nothing covers the screen. Narrower bars get a floating dock instead. A bot's takeover request shows over the top of the screen, between the bars.
+- **Upright phone:** when there's room under the screen, a line says to turn the phone for a bigger screen.
+- **The privacy note** ("While you're in control, the bot is paused…") shows once, over the top of the screen, for 6 seconds after taking control. It doesn't take taps. A toast at the bottom would cover the dock just as the person reaches for it.
+- **Checked:** phone (upright, sideways, 320 pt), tablet, light and dark, rendered from widget tests. `live_test.dart` covers the hint, the side bars and the ⋯ menu; `teach_test.dart` opens Teach a Task from ⋯.

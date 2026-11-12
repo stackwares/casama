@@ -1151,6 +1151,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get botComputer => 'Computer';
 
   @override
+  String get liveScreenshots => 'Screenshots';
+
+  @override
+  String get liveScreenshotsHelp =>
+      'Live video can\'t get through this network, so the screen updates about once a second.';
+
+  @override
+  String get liveMore => 'More';
+
+  @override
+  String get liveSaveScreenshot => 'Save Screenshot';
+
+  @override
+  String get liveCopyFromComputer => 'Copy from the computer';
+
+  @override
+  String get livePasteToComputer => 'Paste onto the computer';
+
+  @override
+  String get liveRotateHint => 'Turn your phone sideways for a bigger screen';
+
+  @override
+  String get liveWatching => 'Watching';
+
+  @override
   String get botComputerDefault =>
       'Its private computer if it has one, otherwise the team computer';
 

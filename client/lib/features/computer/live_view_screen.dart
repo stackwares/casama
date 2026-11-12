@@ -18,7 +18,6 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
-import '../../ui/edge_fade.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/shell_header.dart';
@@ -26,6 +25,8 @@ import '../../ui/glow_button.dart';
 import '../teach/teach_draft_screen.dart';
 import '../teach/teach_recorder.dart';
 import '../../core/analytics.dart';
+import '../../core/haptics.dart';
+import '../../ui/page.dart';
 
 /// Watch a computer's desktop live and take control (deep link: /computer/live?c=&takeover=).
 class LiveViewScreen extends ConsumerStatefulWidget {
@@ -75,6 +76,8 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
   var _powerPaused = false;
   Timer? _answerTimer;
   Timer? _idleRecheck;
+  var _privacyNote = false;
+  Timer? _privacyTimer;
 
   @override
   void initState() {
@@ -94,6 +97,10 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     if (!_disposed && mounted) setState(() {});
   }
 
+  void _refreshWith(VoidCallback change) {
+    if (!_disposed && mounted) setState(change);
+  }
+
   @override
   void dispose() {
     _disposed = true;
@@ -103,6 +110,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     _pingTimer?.cancel();
     _answerTimer?.cancel();
     _idleRecheck?.cancel();
+    _privacyTimer?.cancel();
     _presence.dispose();
     _idle.dispose();
     unawaited(_conn?.close());
@@ -269,6 +277,11 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
       _lastInput = DateTime.now();
       _conn?.requestControl();
       _focus.requestFocus();
+      // Said once, as control starts, over the top of the screen: it doesn't stay, and it doesn't
+      // cover the tools the person is about to use.
+      setState(() => _privacyNote = true);
+      _privacyTimer?.cancel();
+      _privacyTimer = Timer(const Duration(seconds: 6), () => _refreshWith(() => _privacyNote = false));
     }
   }
 
@@ -332,32 +345,6 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     if (png == null || !mounted) return;
     final name = 'computer-${DateTime.now().toIso8601String().replaceAll(RegExp(r'[:.]'), '-')}.png';
     await shareFiles([XFile.fromData(png, name: name, mimeType: 'image/png')], names: [name], origin: origin);
-  }
-
-  Widget _quickActions(BuildContext context, double gutter) {
-    final l10n = context.l10n;
-    final phone = AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
-    Widget action(Key key, IconData icon, String label, VoidCallback? onPressed) => TextButton.icon(
-      key: key,
-      style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: 10)),
-      onPressed: onPressed,
-      icon: Icon(icon, size: 16),
-      label: Text(label),
-    );
-    return EdgeFade(child: SingleChildScrollView(
-      key: const Key('liveQuickActions'),
-      scrollDirection: Axis.horizontal,
-      // Scrolls to the screen edges and carries its own gutter (- 6 lines the first button's icon up with the text above).
-      padding: EdgeInsets.fromLTRB(gutter - 6, 0, gutter, 0),
-      child: Row(
-        children: [
-          action(const Key('liveCopy'), LucideIcons.copy, l10n.liveCopy, _controlling ? _copy : null),
-          action(const Key('livePaste'), LucideIcons.clipboardPaste, l10n.pasteLabel, _controlling ? _paste : null),
-          Builder(builder: (b) => action(const Key('liveScreenshot'), LucideIcons.camera, l10n.liveScreenshot, () => _screenshot(b))),
-          if (phone && _controlling) action(const Key('liveKeyboard'), LucideIcons.keyboard, l10n.showKeyboard, () => _typingFocus.requestFocus()),
-        ],
-      ),
-    ));
   }
 
   // --- teach a task (D-120) -------------------------------------------------
@@ -536,6 +523,13 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
 
   // --- build ---------------------------------------------------------------
 
+  /// Touch devices and phone-sized windows get the keyboard and right-click buttons; a mouse and a
+  /// hardware keyboard don't need them.
+  bool get _touch {
+    final platform = Theme.of(context).platform;
+    return platform == TargetPlatform.iOS || platform == TargetPlatform.android || AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -547,239 +541,728 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
       if (t.id == widget.takeoverId || (widget.takeoverId == null && t.computerId == widget.computerId)) takeover = t;
     }
     final holder = _lease == null
-        ? ''
+        ? l10n.liveWatching
         : _lease!.you
         ? l10n.youAreInControl
         : (_lease!.holderType == LeaseHolderTypeEnum.user ? l10n.someoneElseInControl : l10n.botInControl);
-    final size = conn?.screenSize.value ?? const Size(1280, 800);
+    final media = MediaQuery.of(context);
+    // A phone on its side: the computer's screen gets all of it, the controls float on top.
+    final immersive = !widget.embedded && media.size.height < 500 && media.size.width > media.size.height;
+    final minimize = !widget.embedded && AppBreakpoints.of(media.size.width) != WindowSize.compact && Navigator.of(context).canPop();
 
-    final video = state == LiveState.fallback || conn?.renderer == null
-        ? (_shot == null
-              ? Center(
-                  child: Text(l10n.connectingLive, style: const TextStyle(color: Colors.white70)),
-                )
-              : Image.memory(_shot!, gaplessPlayback: true, fit: BoxFit.fill))
-        : RTCVideoView(conn!.renderer!, objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain);
+    final status = _StatusChip(state: state, rtt: _rtt, holder: holder, onDark: immersive);
+    final more = _moreMenu(context, onDark: immersive);
+    final banners = [
+      if (takeover != null) _TakeoverBanner(takeover: takeover, onDismiss: () => _dismissTakeover(takeover!)),
+      if (_teach != null)
+        _RecordingBanner(
+          lastStep: _lastStep,
+          recording: _recorder != null,
+          onStop: _stopTeach,
+          onMarkSecret: _lastStep != null && _lastStep!.kind == TeachStepKindEnum.type && _lastStep!.secretName == null ? () => _markSecret(_lastStep!) : null,
+        ),
+    ];
+    final canvas = _canvas(context, conn: conn, state: state, hint: !immersive && !widget.embedded && AppBreakpoints.of(media.size.width) == WindowSize.compact);
+    final dock = _Dock(floating: immersive, compact: widget.embedded, children: _dockChildren(context, holder: holder));
+    final typing = _typingField();
 
-    final minimize = !widget.embedded && AppBreakpoints.of(MediaQuery.sizeOf(context).width) != WindowSize.compact && Navigator.of(context).canPop();
+    final screen = conn?.screenSize.value ?? const Size(1280, 800);
+    final rail = (media.size.width - media.size.height * screen.width / screen.height) / 2;
+    if (immersive && rail >= 72) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            canvas,
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: rail,
+              child: SafeArea(
+                right: false,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpace.sm),
+                  child: Column(
+                    children: [
+                      _GlassButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, icon: LucideIcons.arrowLeft, onPressed: () => Navigator.of(context).maybePop()),
+                      const SizedBox(height: AppSpace.xs),
+                      more,
+                      const Spacer(),
+                      _StatusChip(state: state, rtt: _rtt, holder: holder, onDark: true, dotOnly: true),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              width: rail,
+              child: SafeArea(
+                left: false,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpace.sm),
+                  child: _RailColumn(children: _railChildren(context)),
+                ),
+              ),
+            ),
+            if (banners.isNotEmpty)
+              Positioned(
+                left: rail,
+                right: rail,
+                top: 0,
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpace.xs),
+                    child: Column(children: [for (final b in banners) Padding(padding: const EdgeInsets.only(bottom: AppSpace.xs), child: b)]),
+                  ),
+                ),
+              ),
+            Positioned(left: 0, bottom: 0, child: typing),
+          ],
+        ),
+      );
+    }
+
+    if (immersive) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            canvas,
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpace.xs),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        _GlassButton(tooltip: MaterialLocalizations.of(context).backButtonTooltip, icon: LucideIcons.arrowLeft, onPressed: () => Navigator.of(context).maybePop()),
+                        const SizedBox(width: AppSpace.xs),
+                        status,
+                        const Spacer(),
+                        more,
+                      ],
+                    ),
+                    for (final b in banners) Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 560), child: Padding(padding: const EdgeInsets.only(top: AppSpace.xs), child: b))),
+                    const Spacer(),
+                    Center(child: dock),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(left: 0, bottom: 0, child: typing),
+          ],
+        ),
+      );
+    }
+
+    final gutter = widget.embedded ? AppSpace.sm : AppSpace.gutter;
     final page = Column(
-      children: _body(context, state: state, takeover: takeover, holder: holder, size: size, video: video),
+      children: [
+        if (widget.embedded)
+          Padding(
+            padding: EdgeInsets.fromLTRB(gutter, AppSpace.xs, AppSpace.xxs, AppSpace.xs),
+            child: Row(
+              children: [
+                status,
+                const Spacer(),
+                more,
+                if (widget.onExpand != null)
+                  IconButton(key: const Key('liveExpand'), tooltip: l10n.liveExpand, onPressed: widget.onExpand, icon: const Icon(LucideIcons.maximize2, size: 18)),
+              ],
+            ),
+          ),
+        for (final b in banners) Padding(padding: EdgeInsets.fromLTRB(gutter, 0, gutter, AppSpace.xs), child: b),
+        Expanded(child: canvas),
+        dock,
+        typing,
+      ],
     );
     if (widget.embedded) return Material(type: MaterialType.transparency, child: page);
     return Scaffold(
       appBar: ShellHeader(
         title: l10n.liveView,
         actions: [
+          Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Center(child: status)),
           if (minimize)
             HeaderIconButton(key: const Key('liveMinimize'), tooltip: l10n.liveMinimize, icon: LucideIcons.minimize2, onPressed: () => Navigator.of(context).maybePop()),
-          if (_rtt != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Center(
-                child: StatusLabel(
-                  key: const Key('latency'),
-                  text: l10n.latencyMs(_rtt!.round()),
-                  color: _rtt! < 120 ? context.appColors.positive : context.appColors.warning,
-                  pill: true,
-                  icon: LucideIcons.activity,
-                ),
-              ),
-            ),
-          if (_controlling) ...[
-            HeaderIconButton(
-              tooltip: l10n.rightClickNextTap,
-              selected: _rightClick,
-              icon: LucideIcons.mousePointer2,
-              onPressed: () => setState(() => _rightClick = !_rightClick),
-            ),
-            HeaderIconButton(tooltip: l10n.showKeyboard, icon: LucideIcons.keyboard, onPressed: () => _typingFocus.requestFocus()),
-          ],
-          if (_lease?.you == true && _teach == null)
-            HeaderIconButton(key: const Key('teachStart'), tooltip: l10n.teachTask, icon: LucideIcons.graduationCap, onPressed: _startTeach),
+          more,
         ],
       ),
       body: page,
     );
   }
 
-  List<Widget> _body(
-    BuildContext context, {
-    required LiveState state,
-    required TakeoverRequest? takeover,
-    required String holder,
-    required Size size,
-    required Widget video,
-  }) {
+  Future<void> _dismissTakeover(TakeoverRequest t) async {
+    await runGuarded(context, () => ref.read(backendProvider).dismissTakeover(t.id));
+    ref.invalidate(takeoversProvider);
+  }
+
+  /// What waits behind ⋯: things done now and then, so the dock keeps to what's used all the time.
+  Widget _moreMenu(BuildContext context, {required bool onDark}) {
     final l10n = context.l10n;
-    final theme = Theme.of(context);
-    final gutter = widget.embedded ? AppSpace.sm : AppSpace.gutter;
+    final canTeach = _lease?.you == true && _teach == null;
+    return Builder(
+      builder: (button) => PopupMenuButton<String>(
+        key: const Key('liveMore'),
+        tooltip: l10n.liveMore,
+        position: PopupMenuPosition.under,
+        onSelected: (v) => switch (v) {
+          'screenshot' => _screenshot(button),
+          'teach' => _startTeach(),
+          _ => null,
+        },
+        itemBuilder: (_) => [
+          PopupMenuItem(
+            key: const Key('liveScreenshot'),
+            value: 'screenshot',
+            child: ListTile(dense: true, contentPadding: EdgeInsets.zero, leading: const Icon(LucideIcons.camera, size: 20), title: Text(l10n.liveSaveScreenshot)),
+          ),
+          if (canTeach)
+            PopupMenuItem(
+              key: const Key('teachStart'),
+              value: 'teach',
+              child: ListTile(dense: true, contentPadding: EdgeInsets.zero, leading: const Icon(LucideIcons.graduationCap, size: 20), title: Text(l10n.teachTask)),
+            ),
+        ],
+        child: IgnorePointer(child: onDark ? _GlassButton(tooltip: l10n.liveMore, icon: LucideIcons.ellipsis, onPressed: () {}) : HeaderIconButton(tooltip: l10n.liveMore, icon: LucideIcons.ellipsis, onPressed: () {})),
+      ),
+    );
+  }
+
+  /// Watching: who has the screen, and Take Control. In control: the tools a finger needs (keyboard,
+  /// right-click, paste, copy) and Hand Back.
+  List<Widget> _dockChildren(BuildContext context, {required String holder}) {
+    final l10n = context.l10n;
+    if (_lease?.you != true) {
+      final someoneElse = _lease?.holderType == LeaseHolderTypeEnum.user;
+      return [
+        Icon(someoneElse ? LucideIcons.user : (_lease == null ? LucideIcons.eye : LucideIcons.bot), size: 18, color: context.colorScheme.onSurfaceVariant),
+        const SizedBox(width: AppSpace.xs),
+        Expanded(
+          child: Text(holder, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+        ),
+        const SizedBox(width: AppSpace.sm),
+        GlowButton.icon(
+          key: const Key('takeControl'),
+          onPressed: _busy || someoneElse ? null : _takeControl,
+          icon: const Icon(LucideIcons.mousePointer2, size: 18),
+          label: Text(l10n.takeControl),
+        ),
+      ];
+    }
+    final wide = AppBreakpoints.of(MediaQuery.sizeOf(context).width) != WindowSize.compact && !widget.embedded;
+    final handBack = Tooltip(
+      message: l10n.handBack,
+      child: FilledButton.tonalIcon(
+        key: const Key('handBack'),
+        onPressed: _handBack,
+        icon: const Icon(LucideIcons.undo2, size: 18),
+        label: Text(l10n.handBack, maxLines: 1, overflow: TextOverflow.ellipsis),
+      ),
+    );
     return [
-          if (takeover != null)
-            Container(
-              key: const Key('takeoverBanner'),
-              margin: EdgeInsets.fromLTRB(gutter, AppSpace.xs, gutter, 0),
-              padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
-              decoration: BoxDecoration(
-                color: context.appColors.waiting.withValues(alpha: context.isDark ? 0.18 : 0.1),
-                borderRadius: BorderRadius.circular(AppRadius.row),
-                border: Border.all(color: context.appColors.waiting.withValues(alpha: 0.4)),
-              ),
-              child: Row(
-                children: [
-                  Icon(LucideIcons.hand, size: 20, color: context.appColors.waiting),
-                  const SizedBox(width: AppSpace.sm),
-                  Expanded(child: Text(l10n.botAsksForHelp(takeover.reason), style: theme.textTheme.bodyMedium?.copyWith(height: 1.35))),
-                  TextButton(
-                    onPressed: () async {
-                      await runGuarded(context, () => ref.read(backendProvider).dismissTakeover(takeover.id));
-                      ref.invalidate(takeoversProvider);
-                    },
-                    child: Text(l10n.dismiss),
-                  ),
-                ],
-              ),
-            ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(gutter, AppSpace.sm, gutter, AppSpace.sm),
-            child: Row(
-              children: [
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: switch (state) {
-                      LiveState.live => context.appColors.positive,
-                      LiveState.fallback => context.appColors.warning,
-                      _ => theme.colorScheme.outline,
-                    },
-                  ),
-                ),
-                const SizedBox(width: AppSpace.xs),
-                Expanded(
-                  child: Text(
-                    [
-                      switch (state) {
-                        LiveState.live => l10n.live,
-                        LiveState.fallback => l10n.screenshotMode,
-                        LiveState.closed => l10n.paused,
-                        LiveState.connecting => l10n.connectingLive,
-                      },
-                      if (holder.isNotEmpty) holder,
-                    ].join(' · '),
-                    key: const Key('liveStatus'),
-                    style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                if (_lease?.you == true)
-                  FilledButton.tonalIcon(
-                    key: const Key('handBack'),
-                    onPressed: _handBack,
-                    icon: const Icon(LucideIcons.undo2, size: 18),
-                    label: Text(l10n.handBack),
-                  )
-                else
-                  GlowButton.icon(
-                    key: const Key('takeControl'),
-                    onPressed: _busy || (_lease?.holderType == LeaseHolderTypeEnum.user) ? null : _takeControl,
-                    icon: const Icon(LucideIcons.mousePointer2, size: 18),
-                    label: Text(l10n.takeControl),
-                  ),
-                if (widget.embedded && widget.onExpand != null) ...[
-                  const SizedBox(width: 4),
-                  IconButton(
-                    key: const Key('liveExpand'),
-                    tooltip: l10n.liveExpand,
-                    onPressed: widget.onExpand,
-                    icon: const Icon(LucideIcons.maximize2, size: 18),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          Padding(padding: const EdgeInsets.only(bottom: AppSpace.xs), child: _quickActions(context, gutter)),
-          if (_teach != null)
-            _RecordingBanner(
-              lastStep: _lastStep,
-              recording: _recorder != null,
-              onStop: _stopTeach,
-              onMarkSecret: _lastStep != null && _lastStep!.kind == TeachStepKindEnum.type && _lastStep!.secretName == null ? () => _markSecret(_lastStep!) : null,
-            )
-          else if (_lease?.you == true)
-            Padding(
-              padding: EdgeInsets.fromLTRB(gutter, 0, gutter, AppSpace.sm),
-              child: FormNote(l10n.takeoverPrivacy, icon: LucideIcons.lock),
-            ),
-          Expanded(
-            child: _powerPaused
-                ? _PausedToSavePower(onResume: _resume)
-                : Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Container(
-                        color: Colors.black,
-                        child: Focus(
-                          focusNode: _focus,
-                          onKeyEvent: _key,
-                          child: InteractiveViewer(
-                            transformationController: _transform,
-                            minScale: 1,
-                            maxScale: 5,
-                            panEnabled: !_controlling,
-                            child: Center(
-                              child: AspectRatio(
-                                aspectRatio: size.width / size.height,
-                                child: LayoutBuilder(
-                                  builder: (context, box) {
-                                    final s = Size(box.maxWidth, box.maxHeight);
-                                    return Listener(
-                                      key: const Key('liveSurface'),
-                                      onPointerHover: (e) => _pointer(e, s),
-                                      onPointerMove: (e) => _pointer(e, s),
-                                      onPointerDown: (e) {
-                                        _focus.requestFocus();
-                                        _pointer(e, s, down: true);
-                                      },
-                                      onPointerUp: (e) => _pointer(e, s, down: false),
-                                      onPointerSignal: (e) {
-                                        if (e is PointerScrollEvent && _controlling) {
-                                          _send(NekoInput.scroll((e.scrollDelta.dx / 20).round(), (e.scrollDelta.dy / 20).round()));
-                                          _recorder?.scroll((e.scrollDelta.dx / 20).round(), (e.scrollDelta.dy / 20).round());
-                                        }
-                                      },
-                                      child: video,
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (_stillWatching) _StillWatching(onKeepWatching: _keepWatching),
-                    ],
-                  ),
-          ),
-          // Hidden field that brings up the phone keyboard.
-          SizedBox(
-            height: 1,
-            child: Opacity(
-              opacity: 0,
-              // Multi-line, so the keyboard's Enter types Return on the computer instead of closing.
-              child: TextField(
-                key: const Key('liveTyping'),
-                focusNode: _typingFocus,
-                controller: _typing,
-                onChanged: _onTyped,
-                autocorrect: false,
-                enableSuggestions: false,
-                keyboardType: TextInputType.multiline,
-                textInputAction: TextInputAction.newline,
-                maxLines: null,
-              ),
-            ),
-          ),
+      if (wide) const Spacer(),
+      if (_touch) ...[
+        _DockButton(key: const Key('liveKeyboard'), icon: LucideIcons.keyboard, tooltip: l10n.showKeyboard, onPressed: _controlling ? () => _typingFocus.requestFocus() : null),
+        _DockButton(
+          key: const Key('liveRightClick'),
+          icon: LucideIcons.mousePointerClick,
+          tooltip: l10n.rightClickNextTap,
+          selected: _rightClick,
+          onPressed: _controlling ? () => setState(() => _rightClick = !_rightClick) : null,
+        ),
+      ],
+      _DockButton(key: const Key('livePaste'), icon: LucideIcons.clipboardPaste, tooltip: l10n.livePasteToComputer, onPressed: _controlling ? _paste : null),
+      _DockButton(key: const Key('liveCopy'), icon: LucideIcons.copy, tooltip: l10n.liveCopyFromComputer, onPressed: _controlling ? _copy : null),
+      // Wide windows keep the tools and Hand Back together in the middle; phones push Hand Back
+      // to the edge, where it shrinks to its icon on the smallest screens.
+      if (wide) const SizedBox(width: AppSpace.lg) else const SizedBox(width: AppSpace.xxs),
+      if (wide) handBack else Expanded(child: Align(alignment: AlignmentDirectional.centerEnd, child: handBack)),
+      if (wide) const Spacer(),
     ];
+  }
+
+  /// The right-hand bar on a phone held sideways: the same tools as the dock, stacked, with the
+  /// main action at the bottom under the thumb.
+  List<Widget> _railChildren(BuildContext context) {
+    final l10n = context.l10n;
+    if (_lease?.you != true) {
+      final someoneElse = _lease?.holderType == LeaseHolderTypeEnum.user;
+      return [
+        const Spacer(),
+        _RailAction(
+          key: const Key('takeControl'),
+          icon: LucideIcons.mousePointer2,
+          label: l10n.takeControl,
+          primary: true,
+          onPressed: _busy || someoneElse ? null : _takeControl,
+        ),
+      ];
+    }
+    return [
+      if (_touch) ...[
+        _DockButton(key: const Key('liveKeyboard'), icon: LucideIcons.keyboard, tooltip: l10n.showKeyboard, onDark: true, onPressed: _controlling ? () => _typingFocus.requestFocus() : null),
+        _DockButton(
+          key: const Key('liveRightClick'),
+          icon: LucideIcons.mousePointerClick,
+          tooltip: l10n.rightClickNextTap,
+          selected: _rightClick,
+          onDark: true,
+          onPressed: _controlling ? () => setState(() => _rightClick = !_rightClick) : null,
+        ),
+      ],
+      _DockButton(key: const Key('livePaste'), icon: LucideIcons.clipboardPaste, tooltip: l10n.livePasteToComputer, onDark: true, onPressed: _controlling ? _paste : null),
+      _DockButton(key: const Key('liveCopy'), icon: LucideIcons.copy, tooltip: l10n.liveCopyFromComputer, onDark: true, onPressed: _controlling ? _copy : null),
+      const Spacer(),
+      _RailAction(key: const Key('handBack'), icon: LucideIcons.undo2, label: l10n.handBack, onPressed: _handBack),
+    ];
+  }
+
+  /// The computer's screen on black, pinch to zoom; touches and keys go to the computer while you
+  /// have control.
+  Widget _canvas(BuildContext context, {required LiveConnection? conn, required LiveState state, required bool hint}) {
+    final l10n = context.l10n;
+    final size = conn?.screenSize.value ?? const Size(1280, 800);
+    final video = state == LiveState.fallback || conn?.renderer == null
+        ? (_shot == null
+              ? Center(child: Text(l10n.connectingLive, style: const TextStyle(color: Colors.white70)))
+              : Image.memory(_shot!, gaplessPlayback: true, fit: BoxFit.fill))
+        : RTCVideoView(conn!.renderer!, objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain);
+    if (_powerPaused) return _PausedToSavePower(onResume: _resume);
+    return ColoredBox(
+      color: Colors.black,
+      child: LayoutBuilder(
+        builder: (context, area) {
+          // Room left under the screen on a phone held upright: say it gets bigger sideways.
+          final screenHeight = area.maxWidth * size.height / size.width;
+          final showHint = hint && area.maxHeight - screenHeight > 160;
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              Focus(
+                focusNode: _focus,
+                onKeyEvent: _key,
+                child: InteractiveViewer(
+                  transformationController: _transform,
+                  minScale: 1,
+                  maxScale: 5,
+                  panEnabled: !_controlling,
+                  child: Center(
+                    child: AspectRatio(
+                      aspectRatio: size.width / size.height,
+                      child: LayoutBuilder(
+                        builder: (context, box) {
+                          final s = Size(box.maxWidth, box.maxHeight);
+                          return Listener(
+                            key: const Key('liveSurface'),
+                            onPointerHover: (e) => _pointer(e, s),
+                            onPointerMove: (e) => _pointer(e, s),
+                            onPointerDown: (e) {
+                              _focus.requestFocus();
+                              _pointer(e, s, down: true);
+                            },
+                            onPointerUp: (e) => _pointer(e, s, down: false),
+                            onPointerSignal: (e) {
+                              if (e is PointerScrollEvent && _controlling) {
+                                _send(NekoInput.scroll((e.scrollDelta.dx / 20).round(), (e.scrollDelta.dy / 20).round()));
+                                _recorder?.scroll((e.scrollDelta.dx / 20).round(), (e.scrollDelta.dy / 20).round());
+                              }
+                            },
+                            child: video,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: AppSpace.gutter,
+                right: AppSpace.gutter,
+                top: AppSpace.sm,
+                child: IgnorePointer(
+                  child: Center(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      child: _privacyNote && _lease?.you == true
+                          ? Container(
+                              key: const Key('livePrivacy'),
+                              constraints: const BoxConstraints(maxWidth: 440),
+                              padding: const EdgeInsets.fromLTRB(12, 8, 14, 8),
+                              decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.72), borderRadius: BorderRadius.circular(14), border: Border.all(color: Colors.white24)),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(LucideIcons.lock, size: 16, color: Colors.white70),
+                                  const SizedBox(width: AppSpace.xs),
+                                  Flexible(child: Text(l10n.takeoverPrivacy, style: context.textTheme.bodySmall?.copyWith(color: Colors.white, height: 1.35))),
+                                ],
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+              ),
+              if (showHint)
+                Positioned(
+                  left: AppSpace.gutter,
+                  right: AppSpace.gutter,
+                  bottom: AppSpace.lg,
+                  child: IgnorePointer(
+                    child: Row(
+                      key: const Key('liveRotateHint'),
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(LucideIcons.smartphone, size: 16, color: Colors.white38),
+                        const SizedBox(width: AppSpace.xs),
+                        Flexible(child: Text(l10n.liveRotateHint, textAlign: TextAlign.center, style: context.textTheme.bodySmall?.copyWith(color: Colors.white54))),
+                      ],
+                    ),
+                  ),
+                ),
+              if (_stillWatching) _StillWatching(onKeepWatching: _keepWatching),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// Hidden field that brings up the phone keyboard. Multi-line, so the keyboard's Enter types
+  /// Return on the computer instead of closing.
+  Widget _typingField() => SizedBox(
+    width: 1,
+    height: 1,
+    child: Opacity(
+      opacity: 0,
+      child: TextField(
+        key: const Key('liveTyping'),
+        focusNode: _typingFocus,
+        controller: _typing,
+        onChanged: _onTyped,
+        autocorrect: false,
+        enableSuggestions: false,
+        keyboardType: TextInputType.multiline,
+        textInputAction: TextInputAction.newline,
+        maxLines: null,
+      ),
+    ),
+  );
+}
+
+/// Live or Screenshots, and the round trip, in one pill. Tap it for what it means and who has the
+/// screen.
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.state, required this.rtt, required this.holder, this.onDark = false, this.dotOnly = false});
+  final LiveState state;
+  final double? rtt;
+  final String holder;
+  final bool onDark;
+
+  /// Just the dot in a round button (the narrow bar beside the screen); the words are in the tip.
+  final bool dotOnly;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.appColors;
+    final dot = switch (state) {
+      LiveState.live => colors.positive,
+      LiveState.fallback => colors.warning,
+      _ => context.colorScheme.outline,
+    };
+    final label = switch (state) {
+      LiveState.live => l10n.live,
+      LiveState.fallback => l10n.liveScreenshots,
+      LiveState.closed => l10n.paused,
+      LiveState.connecting => l10n.connectingLive,
+    };
+    final text = onDark ? Colors.white : context.colorScheme.onSurface;
+    final muted = onDark ? Colors.white70 : context.colorScheme.onSurfaceVariant;
+    final style = context.textTheme.labelLarge?.copyWith(color: text, fontWeight: FontWeight.w700);
+    final message = [
+      if (dotOnly) [label, if (rtt != null && state == LiveState.live) l10n.latencyMs(rtt!.round())].join(' · '),
+      if (state == LiveState.fallback) l10n.liveScreenshotsHelp,
+      holder,
+    ].join('\n');
+    if (dotOnly) {
+      return Tooltip(
+        triggerMode: TooltipTriggerMode.tap,
+        showDuration: const Duration(seconds: 5),
+        message: message,
+        child: Container(
+          key: const Key('liveStatus'),
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.55), shape: BoxShape.circle, border: Border.all(color: Colors.white24)),
+          child: _Pulse(color: dot, on: state == LiveState.live),
+        ),
+      );
+    }
+    return Tooltip(
+      triggerMode: TooltipTriggerMode.tap,
+      showDuration: const Duration(seconds: 5),
+      message: message,
+      child: Container(
+        key: const Key('liveStatus'),
+        height: 34,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: onDark ? Colors.black.withValues(alpha: 0.55) : context.colorScheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(17),
+          border: onDark ? Border.all(color: Colors.white24) : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _Pulse(color: dot, on: state == LiveState.live),
+            const SizedBox(width: 8),
+            Text(label, style: style),
+            if (rtt != null && state == LiveState.live) ...[
+              Text('  ·  ', style: style?.copyWith(color: muted)),
+              Text(l10n.latencyMs(rtt!.round()), key: const Key('latency'), style: style?.copyWith(color: muted, fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()])),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The status dot, with a soft halo while the video is live. Still on purpose: a looping
+/// animation would redraw the page all the time it's open.
+class _Pulse extends StatelessWidget {
+  const _Pulse({required this.color, required this.on});
+  final Color color;
+  final bool on;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 10,
+    height: 10,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: color,
+      boxShadow: on ? [BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 6, spreadRadius: 1.5)] : null,
+    ),
+  );
+}
+
+/// The bar at the bottom, in reach of a thumb. On a phone held sideways it floats over the screen.
+class _Dock extends StatelessWidget {
+  const _Dock({required this.children, this.floating = false, this.compact = false});
+  final List<Widget> children;
+  final bool floating;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final row = Row(children: children);
+    if (floating) {
+      return ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainer.withValues(alpha: 0.92),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+            boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 24, offset: Offset(0, 8))],
+          ),
+          child: row,
+        ),
+      );
+    }
+    final gutter = compact ? AppSpace.sm : AppSpace.gutter;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerLow,
+        border: Border(top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6))),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: kPageMaxWidth),
+            child: Padding(padding: EdgeInsets.fromLTRB(gutter, 10, gutter, 10), child: row),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A square tool in the dock; [selected] tints it (right-click armed).
+class _DockButton extends StatelessWidget {
+  const _DockButton({super.key, required this.icon, required this.tooltip, required this.onPressed, this.selected = false, this.onDark = false});
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+  final bool selected;
+
+  /// On the black bar beside the screen (phone held sideways): stacked, glassy.
+  final bool onDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Padding(
+      padding: onDark ? const EdgeInsets.only(bottom: 8) : const EdgeInsetsDirectional.only(end: 4),
+      child: IconButton(
+        tooltip: tooltip,
+        onPressed: onPressed == null
+            ? null
+            : () {
+                HapticsHelper.light();
+                onPressed!();
+              },
+        isSelected: selected,
+        style: IconButton.styleFrom(
+          fixedSize: const Size(44, 44),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          backgroundColor: selected ? scheme.primary : (onDark ? Colors.white.withValues(alpha: 0.12) : scheme.surfaceContainerHighest),
+          foregroundColor: selected ? scheme.onPrimary : (onDark ? Colors.white : scheme.onSurface),
+          disabledBackgroundColor: onDark ? Colors.white.withValues(alpha: 0.06) : null,
+          disabledForegroundColor: onDark ? Colors.white38 : null,
+        ),
+        icon: Icon(icon, size: 20),
+      ),
+    );
+  }
+}
+
+/// The bar's tools at the top, its main action at the bottom; the tools scroll if a short screen
+/// can't fit them all.
+class _RailColumn extends StatelessWidget {
+  const _RailColumn({required this.children});
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final split = children.indexWhere((w) => w is Spacer);
+    final tools = split < 0 ? const <Widget>[] : children.sublist(0, split);
+    final rest = split < 0 ? children : children.sublist(split + 1);
+    return Column(
+      children: [
+        Expanded(child: SingleChildScrollView(child: Column(children: tools))),
+        ...rest,
+      ],
+    );
+  }
+}
+
+/// The main action in the bar beside the screen: a round button with its name under it.
+class _RailAction extends StatelessWidget {
+  const _RailAction({super.key, required this.icon, required this.label, required this.onPressed, this.primary = false});
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+  final bool primary;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onPressed,
+        customBorder: const StadiumBorder(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: primary ? scheme.primary : scheme.secondaryContainer,
+                  boxShadow: primary ? [BoxShadow(color: scheme.primary.withValues(alpha: 0.45), blurRadius: 18)] : null,
+                ),
+                child: Icon(icon, size: 22, color: primary ? scheme.onPrimary : scheme.onSecondaryContainer),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                style: context.textTheme.labelSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w700, height: 1.15),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A round button over the video (phone held sideways).
+class _GlassButton extends StatelessWidget {
+  const _GlassButton({required this.tooltip, required this.icon, required this.onPressed});
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: tooltip,
+    onPressed: onPressed,
+    style: IconButton.styleFrom(
+      fixedSize: const Size(40, 40),
+      backgroundColor: Colors.black.withValues(alpha: 0.55),
+      foregroundColor: Colors.white,
+      side: const BorderSide(color: Colors.white24),
+    ),
+    icon: Icon(icon, size: 20),
+  );
+}
+
+/// A bot asking the person to step in, with its reason.
+class _TakeoverBanner extends StatelessWidget {
+  const _TakeoverBanner({required this.takeover, required this.onDismiss});
+  final TakeoverRequest takeover;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final waiting = context.appColors.waiting;
+    return Container(
+      key: const Key('takeoverBanner'),
+      padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(waiting.withValues(alpha: context.isDark ? 0.18 : 0.1), context.colorScheme.surface),
+        borderRadius: BorderRadius.circular(AppRadius.row),
+        border: Border.all(color: waiting.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          Icon(LucideIcons.hand, size: 20, color: waiting),
+          const SizedBox(width: AppSpace.sm),
+          Expanded(
+            child: Text(
+              context.l10n.botAsksForHelp(takeover.reason),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: context.textTheme.bodyMedium?.copyWith(height: 1.35),
+            ),
+          ),
+          TextButton(onPressed: onDismiss, child: Text(context.l10n.dismiss)),
+        ],
+      ),
+    );
   }
 }
 
