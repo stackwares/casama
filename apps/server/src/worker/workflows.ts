@@ -750,3 +750,14 @@ export const telemetryWorkflow = DBOS.registerWorkflow(
   },
   { name: "telemetry" },
 );
+
+/** Daily at 00:20 UTC: summarize yesterday's product and workspace usage metrics (D-208, ANALYTICS-PLAN §6.11). */
+export const analyticsDailyWorkflow = DBOS.registerWorkflow(
+  async (_scheduledAt: Date, _context: unknown) => {
+    const { runDailyAnalyticsRollup } = await import("./analytics-rollup.ts");
+    await DBOS.runStep(() => runDailyAnalyticsRollup(rt().db).catch(captureStep("analytics-rollup", 0)), {
+      name: "analytics-rollup",
+    });
+  },
+  { name: "analyticsDaily" },
+);

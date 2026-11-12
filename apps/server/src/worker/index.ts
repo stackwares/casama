@@ -77,6 +77,7 @@ import {
   QUEUES,
   routinesTickWorkflow,
   telemetryWorkflow,
+  analyticsDailyWorkflow,
 } from "./workflows.ts";
 
 export interface WorkerOptions {
@@ -608,6 +609,7 @@ export async function startWorker(opts: WorkerOptions) {
     { scheduleName: "computers-idle", workflowFn: computersIdleWorkflow, schedule: "* * * * *" },
     { scheduleName: "routines-tick", workflowFn: routinesTickWorkflow, schedule: "* * * * *" },
     { scheduleName: "privacy-daily", workflowFn: privacyWorkflow, schedule: "17 3 * * *" },
+    { scheduleName: "analytics-daily", workflowFn: analyticsDailyWorkflow, schedule: "20 0 * * *" },
     ...(opts.telemetry
       ? [
           {

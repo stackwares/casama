@@ -2293,3 +2293,14 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
   - Implemented `packages/observability/src/analytics.ts` providing `initProductAnalytics`, `getProductAnalytics`, and personless capture options when `PRODUCT_ANALYTICS=on`.
   - Updated client `beforeSend` in `client/lib/core/telemetry.dart` to strictly allow only cataloged product events and scrub payload properties.
   - Wired purchase completion analytics tracking across store purchase states in `client/lib/core/billing.dart`.
+
+## D-209 Adoption, reliability, and daily rollups (Phase 3)
+
+- **Decision** (Oliver: \"Go and finish all until all phases are completed\"): Phase 3 of `docs/ANALYTICS-PLAN.md` implemented.
+- **Daily Rollup Worker Workflow:**
+  - Implemented `apps/server/src/worker/analytics-rollup.ts` (`runDailyAnalyticsRollup`) to summarize yesterday's metrics directly in Postgres at 00:20 UTC without tracking individual messages or tool calls.
+  - Generates deterministic PostHog event UUIDs (`rollup:usage_daily:<userId>:<date>` and `rollup:workspace_daily:<orgId>:<date>`).
+  - Respects user consent in SQL (`p.analytics_opt_out = false`) and sends workspace rollups as personless events (`distinct_id = workspace:<orgId>`, `personless = true`).
+  - Scheduled via DBOS `analyticsDailyWorkflow` in `apps/server/src/worker/workflows.ts` and registered in `apps/server/src/worker/index.ts` with schedule `20 0 * * *`.
+- **Client Adoption Tracking:**
+  - Wired `Analytics.featureUsed` rate-limiting (at most once per feature per day per device) into the Analytics client facade.
