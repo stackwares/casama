@@ -1,13 +1,20 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
-/// Error reporting and product analytics (D-063). Off unless a key is given at build time:
+import 'billing.dart' show defaultStore, InAppPurchaseStore;
+import 'config.dart';
+import 'distribution.dart';
+import 'telemetry_web_stub.dart' if (dart.library.js_interop) 'telemetry_web.dart';
+
+/// Error reporting and product analytics (D-063, D-206). Off unless a key is given at build time:
 ///   --dart-define=SENTRY_DSN=...          Sentry, self-hosted Sentry or GlitchTip
 ///   --dart-define=POSTHOG_API_KEY=...     PostHog errors and screen analytics
 ///   --dart-define=POSTHOG_HOST=...        PostHog Cloud region or a self-hosted instance
+///   --dart-define=POSTHOG_ENVIRONMENT=... production|staging|development
 ///   --dart-define=ERROR_REPORTING=auto|sentry|posthog|none
 /// Payloads never carry message text, prompts, secrets or emails.
 ///
@@ -17,7 +24,14 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 class Telemetry {
   static const sentryDsn = String.fromEnvironment('SENTRY_DSN');
   static const posthogKey = String.fromEnvironment('POSTHOG_API_KEY');
-  static const posthogHost = String.fromEnvironment('POSTHOG_HOST', defaultValue: 'https://us.i.posthog.com');
+  static const posthogHost = String.fromEnvironment(
+    'POSTHOG_HOST',
+    defaultValue: 'https://us.i.posthog.com',
+  );
+  static const posthogEnv = String.fromEnvironment(
+    'POSTHOG_ENVIRONMENT',
+    defaultValue: kReleaseMode ? 'production' : 'development',
+  );
   static const mode = String.fromEnvironment('ERROR_REPORTING', defaultValue: 'auto');
 
   static bool get posthogOn => posthogKey.isNotEmpty && mode != 'none';
@@ -35,7 +49,13 @@ class Telemetry {
     r'authorization|cookie|token|secret|password|api[_-]?key|credential|prompt|content|message|text|args|input|output|body|email|persona',
     caseSensitive: false,
   );
-  static const _keepKeys = {r'$exception_list', r'$exception_level', r'$exception_type', r'$exception_message', r'$screen_name'};
+  static const _keepKeys = {
+    r'$exception_list',
+    r'$exception_level',
+    r'$exception_type',
+    r'$exception_message',
+    r'$screen_name',
+  };
 
   /// Removes secrets and emails, and truncates.
   static String scrub(String s, [int max = 500]) {
@@ -58,20 +78,83 @@ class Telemetry {
         _ => v,
       };
 
+  /// Platform string matching PostHog schema.
+  static String get platformName {
+    if (kIsWeb) return 'web';
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.iOS => 'ios',
+      TargetPlatform.android => 'android',
+      TargetPlatform.macOS => 'macos',
+      TargetPlatform.windows => 'windows',
+      TargetPlatform.linux => 'linux',
+      _ => 'unknown',
+    };
+  }
+
+  /// How this build is distributed: app_store | google_play | mac_app_store | direct | web.
+  static String get distributionName {
+    if (kIsWeb) return 'web';
+    if (isMacAppStoreBuild) return 'mac_app_store';
+    final store = defaultStore();
+    if (store is InAppPurchaseStore) {
+      return store.source; // 'app_store' or 'google_play'
+    }
+    return kDistribution == 'appstore' ? 'app_store' : 'direct';
+  }
+
+  /// Classifies connected server kind (cloud, local, self_hosted) without sending the URL.
+  static String resolveServerKind({required String apiUrl, required bool billingEnabled}) {
+    if (billingEnabled && (apiUrl == 'https://cloud.casama.ai' || apiUrl == AppConfig.fromEnvironment.apiUrl)) {
+      return 'cloud';
+    }
+    final uri = Uri.tryParse(apiUrl);
+    final host = uri?.host ?? '';
+    if (host == 'localhost' || host == '127.0.0.1' || host == '::1') {
+      return 'local';
+    }
+    return 'self_hosted';
+  }
+
+  /// Registers or updates server_kind super property once server configuration is known.
+  static Future<void> updateServerKind({required String apiUrl, required bool billingEnabled}) async {
+    if (!posthogOn) return;
+    try {
+      final kind = resolveServerKind(apiUrl: apiUrl, billingEnabled: billingEnabled);
+      await Posthog().register('server_kind', kind);
+    } catch (_) {}
+  }
+
   /// Starts error reporting (if configured) and runs the app.
   static Future<void> run(Widget app) async {
     if (posthogOn) {
+      if (kIsWeb) {
+        await initWebPosthog(apiKey: posthogKey, host: posthogHost);
+      }
       final config = PostHogConfig(posthogKey)
         ..host = posthogHost
-        ..captureApplicationLifecycleEvents = true
-        ..personProfiles = PostHogPersonProfiles.never
+        ..captureApplicationLifecycleEvents = false
+        ..personProfiles = PostHogPersonProfiles.identifiedOnly
         ..sessionReplay = false
+        ..surveys = false
+        ..preloadFeatureFlags = false
+        ..capturePushNotificationSubscriptions = false
+        ..capturePushNotificationOpened = false
         ..beforeSend = [
           (event) {
-            event.properties = (_deep(event.properties) as Map?)?.cast<String, Object>();
-            event.userProperties = null;
-            event.userPropertiesSetOnce = null;
-            return event;
+            final eventName = event.event;
+            if (eventName == r'$exception') {
+              event.properties = (_deep(event.properties) as Map?)?.cast<String, Object>();
+              event.userProperties = null;
+              event.userPropertiesSetOnce = null;
+              return event;
+            }
+            if (eventName == r'$screen') {
+              return event;
+            }
+            // In Phase 0, drop uncataloged/unrecognized events.
+            // In debug mode, throw so tests immediately surface violations.
+            assert(false, 'Unexpected event before catalog registration: $eventName');
+            return null;
           },
         ];
       if (posthogErrors) {
@@ -80,6 +163,13 @@ class Telemetry {
           ..capturePlatformDispatcherErrors = true;
       }
       await Posthog().setup(config);
+
+      // Super properties applied to every event
+      await Posthog().register('app', 'casama');
+      await Posthog().register('environment', posthogEnv);
+      await Posthog().register('platform', platformName);
+      await Posthog().register('distribution', distributionName);
+      await Posthog().register('server_kind', 'unknown');
     }
     if (sentryErrors) {
       await SentryFlutter.init((o) {
@@ -107,5 +197,62 @@ class Telemetry {
   }
 
   /// Screen views for PostHog (no-op when PostHog is off).
-  static List<NavigatorObserver> get observers => posthogOn ? [PosthogObserver()] : const [];
+  /// Returns a fresh session-deduped observer for each navigator.
+  static List<NavigatorObserver> get observers =>
+      posthogOn ? [SessionScreenObserver()] : const [];
+}
+
+/// Deduplicates screen tracking events so each screen template is sent at most once
+/// per session (ANALYTICS-PLAN.md §4.2). A session resets after 30 minutes in background.
+class SessionScreenObserver extends PosthogObserver with WidgetsBindingObserver {
+  SessionScreenObserver() {
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  static final Set<String> _seenScreens = <String>{};
+  static DateTime _lastActive = DateTime.now();
+  static const Duration sessionTimeout = Duration(minutes: 30);
+
+  static void resetSession() {
+    _seenScreens.clear();
+    _lastActive = DateTime.now();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      if (DateTime.now().difference(_lastActive) > sessionTimeout) {
+        _seenScreens.clear();
+      }
+      _lastActive = DateTime.now();
+    } else if (state == AppLifecycleState.paused) {
+      _lastActive = DateTime.now();
+    }
+  }
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    _maybeTrack(route);
+    super.didPush(route, previousRoute);
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    if (newRoute != null) _maybeTrack(newRoute);
+    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (previousRoute != null) _maybeTrack(previousRoute);
+    super.didPop(route, previousRoute);
+  }
+
+  void _maybeTrack(Route<dynamic> route) {
+    final name = route.settings.name;
+    if (name == null || name.trim().isEmpty) return;
+    if (_seenScreens.add(name)) {
+      Posthog().screen(screenName: name);
+    }
+  }
 }

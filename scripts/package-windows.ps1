@@ -5,8 +5,12 @@
 # dist\appcast-windows.xml for scripts/publish-desktop-release.sh.
 $ErrorActionPreference = "Stop"
 Set-Location (Join-Path $PSScriptRoot "..\client")
-$api = if ($env:CASAMA_API_URL) { $env:CASAMA_API_URL } else { "https://cloud.casama.ai" }
-flutter build windows --release --dart-define=CASAMA_API_URL=$api --dart-define-from-file=config/telemetry.json
+$api = if ($env:CASAMA_API_URL) { $env:CASAMA_API_URL } else { "https://api.casama.ai" }
+$defines = @("--dart-define=CASAMA_API_URL=$api")
+if ($env:CASAMA_OFFICIAL_BUILD -eq "1" -and (Test-Path "config\telemetry.json")) {
+  $defines += "--dart-define-from-file=config/telemetry.json"
+}
+flutter build windows --release @defines
 $version = (Select-String -Path pubspec.yaml -Pattern '^version: (.+)\+').Matches[0].Groups[1].Value
 New-Item -ItemType Directory -Force -Path ..\dist | Out-Null
 Compress-Archive -Force -Path build\windows\x64\runner\Release\* -DestinationPath "..\dist\casama-$version-windows-x64.zip"

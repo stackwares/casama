@@ -20,6 +20,7 @@ supabase/.temp
 *.secret
 *.secrets.json
 dart-defines*.json
+client/config/telemetry.json
 .live/
 live-check*.log
 

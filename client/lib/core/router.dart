@@ -257,6 +257,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       ShellRoute(
+        observers: Telemetry.observers,
         pageBuilder: (context, state, child) => MaterialPage(
           key: state.pageKey,
           child: PasskeySuggestion(

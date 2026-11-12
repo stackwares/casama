@@ -12,12 +12,18 @@
 set -euo pipefail
 cd "$(dirname "$0")/../client"
 version=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)
+defines=()
+if [[ -f config/firebase.json ]]; then
+  defines+=(--dart-define-from-file=config/firebase.json)
+fi
+if [[ "${CASAMA_OFFICIAL_BUILD:-0}" == "1" && -f config/telemetry.json ]]; then
+  defines+=(--dart-define-from-file=config/telemetry.json)
+fi
 flutter build macos --release \
   --dart-define=CASAMA_DISTRIBUTION=appstore \
   --dart-define=CASAMA_SIGNED_MAC=true \
-  --dart-define=CASAMA_API_URL="${CASAMA_API_URL:-https://cloud.casama.ai}" \
-  --dart-define-from-file=config/firebase.json \
-  --dart-define-from-file=config/telemetry.json
+  --dart-define=CASAMA_API_URL="${CASAMA_API_URL:-https://api.casama.ai}" \
+  "${defines[@]}"
 app="build/macos/Build/Products/Release/casama_app.app"
 # The Mac App Store updates the app, so this build never starts Sparkle (D-159): mark it (the menu
 # leaves out Check for Updates…) and drop Sparkle's helper programs, which aren't sandboxed and

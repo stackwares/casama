@@ -29,7 +29,7 @@ adds a paid service or a vendor changes its price.
 | Composio | $0 now (Hobby), **$29 / month** on Pro | Pro needed at launch for the data processing agreement; usage on top, see below |
 | E2B (only if hosted computers run on E2B) | **$150 / month** Pro, plus usage | Hobby has a one-time $100 credit, 1-hour sessions only |
 | Sentry Team | $26 / month (annual) | 50k errors; free tier 5k errors |
-| PostHog | $0 up to 1M events / month | Then from $0.00005 per event |
+| PostHog | Shared Stackwares project, already past the free 1M events. Casama adds about $0.02–0.04 per monthly active person; error tracking free to 100k exceptions a month (shared). | Then from $0.00005 per event |
 | Langfuse (optional) | $0 up to 50k units, then $29 / month | |
 | Email: Zoho Mail | $1–4 per mailbox / month | hello@ sends sign-in email; switch sign-in mail to Resend ($20 / month for 50k) when volume grows |
 | Cloudflare (DNS, site, docs, gallery, tunnel) | $0; Workers Paid $5 / month if needed | The gallery (D-184) is static assets: free, no bandwidth charge; R2 at $0.015 per GB-month only if images outgrow the static limits |

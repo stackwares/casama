@@ -1990,7 +1990,7 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 - **Inbox** is one feed with filters (All, Needs you, Briefs, Pages) instead of three tabs; decisions (approvals, takeovers, suggestions, skill ideas) come first, then updates (briefs, notifications, published pages) newest first. `/inbox?tab=0` opens Needs you.
 - **Tasks**: a project picker replaces the projects button; on phones tickets are a list grouped by status (long-press to move), columns stay on tablets and desktop.
 - **Bots:** tapping a bot's name opens its **profile** (still `/bots/:id/settings`): four tiles (Computer, Memory, Routines, Apps), then Profile, Brain, Abilities, Schedule, and an Advanced group that starts collapsed. The chat header keeps Call, New chat and "…" (Conversations, Computer, Activity, Bot profile); a computer button with a live dot shows while the bot is working on its computer.
-- **Why:** three to five tabs is the platform norm; the computer belongs to a bot, not the whole app; Settings is visited rarely and needn't take a tab. It also settles the tab bar before the Liquid Glass work replaces its look.
+- **Why:** three to five tabs is the platform norm; the computer belongs to a bot, not the whole app; Settings is visited rarely and needn't take a tab.
 - **Tests:** `client/test/navigation_test.dart` (tabs and search button, avatar to Settings and back, links straight to Settings/computer/search keep a way back, tablet rail, desktop sidebar rows), plus the Inbox, Tasks and bot profile tests.
 
 ## D-177 Calls without a key of your own; the call orb
@@ -2253,3 +2253,14 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 - **Serving:** `GET /v1/media/{id}` needs a token and membership of the row's workspace (404 otherwise). It sends `cache-control: private, immutable` and `accept-ranges: bytes`, and answers one `Range` with 206 (416 when unsatisfiable), reading only that slice of the bytea, because AVPlayer won't play without ranges.
 - **Office previews:** `GET /v1/computers/{id}/files/pdf-preview?path=` (`computerFilePdfPreview`) converts doc/docx/odt/rtf/xls/xlsx/ods/ppt/pptx/odp with LibreOffice on the computer (60 s limit), cached in `~/.cache/casama-previews/<sha1(path:mtime)>.pdf`. Responses: 415 `preview_unsupported` (another file type, checked before waking the computer, or no LibreOffice), 404 (no such file), 422 `preview_failed`.
 - **Not encrypted:** media bytes aren't sealed with the workspace key (D-136), the same as files on computers.
+
+## D-206 Telemetry hygiene, official build isolation, and super properties (Phase 0)
+
+- **Decision** (Oliver: "Execute the plan"): Phase 0 of `docs/ANALYTICS-PLAN.md` implemented.
+- **Client & Official builds:** `client/config/telemetry.json` is untracked and gitignored with `client/config/telemetry.example.json` committed. Packaging scripts (`package-macos.sh`, `package-macos-appstore.sh`, `package-linux.sh`, `package-windows.ps1`, `package-ios.sh`, `package-android.sh`) pass telemetry defines ONLY when `CASAMA_OFFICIAL_BUILD=1` and `config/telemetry.json` exists. Builds without the file send nothing.
+- **API URL default:** Fixed `CASAMA_API_URL` default in packaging scripts to `https://api.casama.ai` (was `cloud.casama.ai`).
+- **Telemetry super properties:** `app` (`casama`), `environment` (`production|staging|development`), `platform` (`ios|android|macos|windows|linux|web`), `distribution` (`app_store|google_play|mac_app_store|direct|web`), and `server_kind` (`cloud|local|self_hosted|unknown`). `server_kind` is classified from `billing_enabled` and `apiUrl` without sending the URL.
+- **PostHog configuration:** lifecycle event capture, survey capture, push open/subscription captures, and feature flag preloading turned off. Person profiles set to `identifiedOnly`.
+- **Screen views & dedupe:** `ShellRoute` passes `Telemetry.observers`. `SessionScreenObserver` deduplicates screens per session, expiring after 30 minutes in background.
+- **Web telemetry:** dynamic script loader for `posthog-js` on web when a PostHog key is provided; updated Caddy CSP to allow `https://us-assets.i.posthog.com`.
+- **Server:** Centralized `CASAMA_VERSION` in `apps/server/src/version.ts` and passed `version` and `environment` to `initObservability`. Documented `ANALYTICS_ENVIRONMENT` and `PRODUCT_ANALYTICS` in `env.ts`, `.env.example`, and `docker-compose.yml`.

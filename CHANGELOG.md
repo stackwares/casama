@@ -65,6 +65,7 @@ The first public release. Highlights:
   their email.
 - Row-level security on every table, encryption at rest, data export, account deletion, retention
   settings, and telemetry off by default.
+- Telemetry hygiene (D-206): official build isolation with `CASAMA_OFFICIAL_BUILD=1`, gitignored client telemetry configuration, super property tracking (`app`, `environment`, `platform`, `distribution`, `server_kind`), session-deduplicated screen tracking, and dynamic web telemetry loading.
 
 ### Self-hosting and developers
 

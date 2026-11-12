@@ -168,6 +168,10 @@ export const EnvSchema = z.object({
   SENTRY_DSN: z.string().optional(),
   POSTHOG_API_KEY: z.string().optional(),
   POSTHOG_HOST: z.url().optional(),
+  /** Product analytics environment tag (production|staging|development). Defaults to NODE_ENV. */
+  ANALYTICS_ENVIRONMENT: z.string().optional(),
+  /** Product analytics on server: off by default until consent and catalog in Phase 2. */
+  PRODUCT_ANALYTICS: z.enum(["true", "false"]).default("false"),
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
   /** Langfuse LLM traces (D-107): all three set turns them on (workspaces can opt out). */
   LANGFUSE_BASE_URL: z.url().optional(),

@@ -15,8 +15,9 @@ import {
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
+import { CASAMA_VERSION } from "../../version.ts";
 
-export const CASAMA_VERSION = "0.8.0";
+export { CASAMA_VERSION };
 
 const num = (v: unknown) => Number(v ?? 0);
 

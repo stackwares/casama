@@ -43,7 +43,8 @@ const cloud =
     : undefined;
 initObservability({
   service: `casama-${env.MODE}`,
-  environment: env.NODE_ENV,
+  version: CASAMA_VERSION,
+  environment: env.ANALYTICS_ENVIRONMENT ?? env.NODE_ENV,
   errorReporting: env.ERROR_REPORTING,
   sentryDsn: env.SENTRY_DSN,
   posthogKey: env.POSTHOG_API_KEY,

@@ -10,7 +10,14 @@ version=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)
 # A signed build carries the passkey entitlement (added below), so the app offers passkeys (D-184).
 signed=()
 [[ -n "${SIGN_IDENTITY:-}" ]] && signed=(--dart-define=CASAMA_SIGNED_MAC=true)
-flutter build macos --release --dart-define=CASAMA_API_URL="${CASAMA_API_URL:-https://cloud.casama.ai}" --dart-define-from-file=config/firebase.json --dart-define-from-file=config/telemetry.json "${signed[@]}"
+defines=()
+if [[ -f config/firebase.json ]]; then
+  defines+=(--dart-define-from-file=config/firebase.json)
+fi
+if [[ "${CASAMA_OFFICIAL_BUILD:-0}" == "1" && -f config/telemetry.json ]]; then
+  defines+=(--dart-define-from-file=config/telemetry.json)
+fi
+flutter build macos --release --dart-define=CASAMA_API_URL="${CASAMA_API_URL:-https://api.casama.ai}" "${defines[@]}" "${signed[@]}"
 app="build/macos/Build/Products/Release/casama_app.app"
 out="../dist/Casama-$version-macos.dmg"
 mkdir -p ../dist

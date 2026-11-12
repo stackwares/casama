@@ -39,6 +39,7 @@ Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config, {VoidCallback? onS
   final saved = await ServerConfigCache.read(config.apiUrl);
   final server = saved ?? (await CasamaClient.connect(config.apiUrl)).config;
   if (saved == null) unawaited(ServerConfigCache.write(config.apiUrl, server));
+  unawaited(Telemetry.updateServerKind(apiUrl: config.apiUrl, billingEnabled: server.billingEnabled));
   await Supabase.initialize(url: server.supabaseUrl, publishableKey: server.supabaseAnonKey);
   final supabase = Supabase.instance.client;
   final api = await SupabaseBackend.connectApi(config.apiUrl, supabase, config: server);
