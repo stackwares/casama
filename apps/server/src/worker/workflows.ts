@@ -5,6 +5,7 @@ import {
   checkCalendarTriggers,
   checkWatchers,
   collect,
+  EventBus,
   expireCalls,
   expireCards,
   followUpLeftovers,
@@ -97,6 +98,31 @@ async function approvalState(db: Database, approvalId: string, runId: string) {
   return row.status;
 }
 
+/**
+ * What the chat says about an unhandled error. A replay that no longer matches the code (DBOS
+ * codes 26 and 37) means Casama was updated while the run waited; DBOS's own text is for us.
+ */
+function runErrorMessage(err: unknown): string {
+  const code = (err as { dbosErrorCode?: number } | null)?.dbosErrorCode;
+  if (code === 26 || code === 37)
+    return "Casama was updated while this was waiting, so it stopped. Send your message again to pick up where it left off.";
+  return (err as Error)?.message ?? String(err);
+}
+
+/** Marks a run that hasn't ended as failed and tells the chat, so nothing waits on it any more. */
+async function failUnfinishedRun(runId: string, message: string) {
+  const db = rt().db;
+  const [failed] = await db.execute<{ id: string }>(sql`
+    update public.runs
+    set status = 'failed', ended_at = now(),
+        error = ${JSON.stringify({ ok: false, code: "run_error", message })}::jsonb
+    where id = ${runId}::uuid and status not in ('completed', 'failed', 'cancelled')
+    returning id
+  `);
+  if (failed)
+    await new EventBus(db).append(runId, "run.failed", { error_code: "run_error", message });
+}
+
 /** One durable workflow per run: every model and tool call is a checkpointed step. */
 export const agentRunWorkflow = DBOS.registerWorkflow(
   async (runId: string) => {
@@ -110,29 +136,26 @@ export const agentRunWorkflow = DBOS.registerWorkflow(
         trace_id: runId.replace(/-/g, ""),
         step: "agentRunWorkflow",
       });
-      // Never leave workflow or run hanging in non-terminal state on unhandled exception (ANALYTICS-PLAN §8.3 / §1.3 bug 1)
-      await DBOS.runStep(
-        async () => {
-          await rt().db.execute(sql`
-            update public.runs
-            set status = 'failed', ended_at = now(),
-                error = ${JSON.stringify({ ok: false, code: "run_error", message: (err as Error).message ?? String(err) })}::jsonb
-            where id = ${runId}::uuid and status not in ('completed', 'failed', 'cancelled')
-          `);
-        },
-        { name: "fail-unhandled-workflow-error" },
-      ).catch(() => {});
+      // Never leave workflow or run hanging in non-terminal state on unhandled exception (ANALYTICS-PLAN §8.3 / §1.3 bug 1).
+      // Written directly, not as a DBOS step: when the error is a replay that no longer matches
+      // the code (D-228), every later step hits the same mismatch, so a step here never ran and
+      // the run stayed "waiting" for good. The update only changes a run that hasn't ended.
+      await failUnfinishedRun(runId, runErrorMessage(err)).catch(() => {});
       result = { status: "failed" };
     }
     // Stopped or failed: what the person sent meanwhile still gets an answer.
     if (result.status !== "completed") {
-      const next = await DBOS.runStep(() => followUpLeftovers(rt().db, runId).catch(() => null), {
-        name: "leftover-after-stop",
-      });
-      if (next)
-        await rt()
-          .agent.startRun?.(next)
-          .catch(() => {});
+      try {
+        const next = await DBOS.runStep(() => followUpLeftovers(rt().db, runId).catch(() => null), {
+          name: "leftover-after-stop",
+        });
+        if (next)
+          await rt()
+            .agent.startRun?.(next)
+            .catch(() => {});
+      } catch {
+        // A replay that no longer matches the code fails here too; the run is already marked.
+      }
     }
     return result;
   },

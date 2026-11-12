@@ -574,6 +574,12 @@ export async function startWorker(opts: WorkerOptions) {
     systemDatabaseUrl: opts.databaseUrl,
     systemDatabaseSchemaName: "dbos",
     logLevel: opts.logLevel ?? "info",
+    // One version across deploys (D-228). DBOS otherwise stamps each build with a hash of its
+    // code and only recovers workflows carrying its own hash, so a run waiting on an approval or a
+    // key when the worker is redeployed was never picked up again: answering it did nothing, and
+    // the chat replayed the stuck run under every reopen. A run whose recorded steps no longer
+    // match the code now fails (agentRunWorkflow marks it failed) instead of hanging forever.
+    applicationVersion: process.env.DBOS__APPVERSION || "casama",
   });
   await DBOS.launch();
   // The API enqueues runs through DBOS's tables, which belong to the worker's role (D-095). On
