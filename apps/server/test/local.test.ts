@@ -199,5 +199,14 @@ describe("local computer companion (Phase 6)", () => {
     expect(Date.now() - t0).toBeLessThan(15_000);
     const failed = (await events(runId)).find((e) => e.type === "tool.failed");
     expect(JSON.stringify(failed?.payload)).toMatch(/offline|could not be reached|unavailable/i);
+    // Opening a file says the computer is offline and what to do, not "try again shortly".
+    const open = await h.request(
+      `/v1/computers/${device.computer_id}/files?path=${encodeURIComponent(join(home, "Shared", "report-draft.md"))}`,
+      { token: owner.token },
+    );
+    expect(open.status).toBe(409);
+    const problem = await j(open);
+    expect(problem.code).toBe("device_offline");
+    expect(problem.detail).toContain("Use this computer for bots");
   }, 60_000);
 });

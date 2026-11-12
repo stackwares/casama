@@ -19,6 +19,8 @@ export interface LocalProviderOptions {
   apiUrl: string;
   /** Shared secret for /internal/local/* (derived from server secrets). */
   internalToken: string;
+  /** How long a call waits for a device that is reconnecting before it's offline (default 8 s). */
+  reconnectGraceMs?: number;
 }
 
 type Activity = { run_id: string; bot: string; tool: string; summary: string };
@@ -50,8 +52,21 @@ export class LocalProvider implements SandboxProvider {
   }
 
   async create(spec: { ref: string }) {
-    if (!(await this.online(spec.ref))) this.offline(spec.ref);
+    if (!(await this.waitOnline(spec.ref))) this.offline(spec.ref);
     return this.handle(spec.ref);
+  }
+
+  /**
+   * Waits a moment for a device that is reconnecting. When the API restarts, every desktop app
+   * drops its tunnel and dials back within a few seconds; a call in that gap shouldn't fail.
+   */
+  private async waitOnline(ref: string) {
+    const until = Date.now() + (this.opts.reconnectGraceMs ?? 8000);
+    for (;;) {
+      if (await this.online(ref)) return true;
+      if (Date.now() >= until) return false;
+      await new Promise((r) => setTimeout(r, 1000));
+    }
   }
 
   async resume(ref: string) {

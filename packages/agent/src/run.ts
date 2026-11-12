@@ -49,6 +49,7 @@ import {
 } from "./credentials.ts";
 import type { Embedder } from "./embeddings.ts";
 import { DeltaCoalescer, EventBus } from "./events.ts";
+import { missingFilesNote, missingLinkedFiles } from "./file-links.ts";
 import { type FallbackOptions, withFallback } from "./gateway/fallback.ts";
 import { capabilitiesOf, cloudCallReserveUsd, costOf } from "./gateway/registry.ts";
 import {
@@ -721,6 +722,8 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     // Loop guard: identical actions and failures in a row (a stuck page, a click that keeps missing).
     const callCounts = new Map<string, number>();
     let failStreak = 0;
+    // File links in the final reply are checked once per run (D-231).
+    let fileLinksChecked = false;
     // Untrusted content read since the last approval (web pages, outside services).
     let untrusted = false;
 
@@ -772,6 +775,44 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         return { status: "cancelled" };
       }
       if (out.toolCalls.length === 0) {
+        // A reply that links to computer files that aren't there (D-231): take the draft back and
+        // send the model back once, to make the file or to say plainly what it did.
+        if (!fileLinksChecked && info.conversationId) {
+          fileLinksChecked = true;
+          const draft = out;
+          const missing = await step(`file-links-${i}`, () =>
+            missingLinkedFiles(
+              deps.computers,
+              {
+                runId: info.runId,
+                botId: info.botId,
+                botName: info.botName,
+                actingUserId: info.actingUserId,
+                localOwner: async (computerId) =>
+                  (
+                    await db.execute<{ user_id: string }>(
+                      sql`select user_id from public.local_devices where computer_id = ${computerId}::uuid limit 1`,
+                    )
+                  )[0]?.user_id ?? null,
+              },
+              draft.text,
+            ),
+          );
+          if (missing.length > 0) {
+            // An empty finished message removes the streamed draft from the chat.
+            await step(`file-links-retract-${i}`, () =>
+              bus().then((b) =>
+                b.append(info.runId, "message.completed", {
+                  message_id: draft.messageId,
+                  content: [],
+                }),
+              ),
+            );
+            turn.push({ role: "assistant", content: draft.text });
+            turn.push({ role: "user", content: missingFilesNote(missing) });
+            continue;
+          }
+        }
         final = { text: out.text, messageId: out.messageId };
         break;
       }
@@ -2763,6 +2804,12 @@ async function startTakeoverStep(
   const computers = deps.computers;
   const row = await computers?.forBot(info.botId).catch(() => null);
   if (!computers || !row) return { error: "Takeover needs a computer." };
+  // A personal computer is the person's own machine, which the app can't show live (D-218).
+  if (row.kind === "local")
+    return {
+      error:
+        "You're working on the person's own computer, which they can't take over from the app. Ask them in chat to do this step on that computer and tell you when it's done.",
+    };
   // The page the bot is on, so the person lands where they are needed.
   const url = await currentBrowserUrl(computers, row.id);
   if (row.profile !== "desktop") {
@@ -2890,12 +2937,6 @@ async function loadIntegrationTools(
         description: t.description.slice(0, 1000),
         inputSchema: t.inputSchema ?? { type: "object" },
         risk: row.risk_overrides?.[t.name] ?? t.risk ?? "medium",
-  // A personal computer is the person's own machine, which the app can't show live (D-218).
-  if (row.kind === "local")
-    return {
-      error:
-        "You're working on the person's own computer, which they can't take over from the app. Ask them in chat to do this step on that computer and tell you when it's done.",
-    };
       });
     }
   }

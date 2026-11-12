@@ -86,6 +86,13 @@ async function sandbox<T>(fn: () => Promise<T>): Promise<T> {
       if (err.status === 404 || err.code === "not_found")
         throw new ApiError(404, "not_found", err.message);
       if (err.status === 400) throw new ApiError(400, err.code, err.message);
+      // A personal computer whose app isn't connected: say what to do, not "try again shortly".
+      if (err.code === "device_offline")
+        throw new ApiError(
+          409,
+          "device_offline",
+          'This computer is offline. Open the Casama app on it and turn on "Use this computer for bots".',
+        );
       throw new ApiError(
         503,
         "computer_unavailable",

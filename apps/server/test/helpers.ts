@@ -128,7 +128,12 @@ export async function startHarness(
   // A real port for the companion tunnel, chosen before the worker starts.
   const localPort = opts.local || opts.serve ? await freePort() : 0;
   const localOpts = opts.local
-    ? { apiUrl: `http://127.0.0.1:${localPort}`, internalToken: internalToken(env) }
+    ? {
+        apiUrl: `http://127.0.0.1:${localPort}`,
+        internalToken: internalToken(env),
+        // Tests check "offline" straight away; packages/sandbox/test/local-reconnect.test.ts covers the grace period.
+        reconnectGraceMs: 0,
+      }
     : undefined;
   const email: EmailSender = opts.email
     ? { enabled: true, send: async (m) => void outbox.push(m) }
