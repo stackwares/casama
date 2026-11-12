@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { googleClientIds } from "../src/api/routes/system.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
 let h: Harness;
@@ -18,7 +19,18 @@ describe("system", () => {
       supabase_anon_key: "anon",
       billing_enabled: false,
       wallpapers_enabled: false,
+      google_client_ids: [],
     });
+  });
+
+  it("lists the Google client ids Auth accepts only when Google sign-in is on", () => {
+    const ids = "web.apps.googleusercontent.com, ios.apps.googleusercontent.com,";
+    expect(googleClientIds({ GOOGLE_AUTH_ENABLED: true, GOOGLE_AUTH_CLIENT_ID: ids })).toEqual([
+      "web.apps.googleusercontent.com",
+      "ios.apps.googleusercontent.com",
+    ]);
+    expect(googleClientIds({ GOOGLE_AUTH_ENABLED: false, GOOGLE_AUTH_CLIENT_ID: ids })).toEqual([]);
+    expect(googleClientIds({ GOOGLE_AUTH_ENABLED: true })).toEqual([]);
   });
 
   it("serves the OpenAPI document and the reference page", async () => {

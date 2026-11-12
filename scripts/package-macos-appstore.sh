@@ -41,8 +41,14 @@ cp "$PROVISIONING_PROFILE" "$app/Contents/embedded.provisionprofile"
 # Inside out: frameworks and helpers first, then the app with the sandbox entitlements.
 find "$app/Contents/Frameworks" -maxdepth 1 \( -name '*.framework' -o -name '*.dylib' \) -print0 |
   while IFS= read -r -d '' item; do codesign --force --timestamp --sign "$APP_SIGN_IDENTITY" "$item"; done
-codesign --force --timestamp --options runtime --entitlements macos/Runner/AppStore.entitlements \
+# codesign doesn't expand Xcode's $(AppIdentifierPrefix) (Google sign-in's keychain group, D-217):
+# fill in the team prefix from the provisioning profile.
+prefix=$(security cms -D -i "$PROVISIONING_PROFILE" | plutil -extract ApplicationIdentifierPrefix.0 raw -)
+entitlements=$(mktemp)
+sed "s/\$(AppIdentifierPrefix)/$prefix./g" macos/Runner/AppStore.entitlements >"$entitlements"
+codesign --force --timestamp --options runtime --entitlements "$entitlements" \
   --sign "$APP_SIGN_IDENTITY" "$app"
+rm -f "$entitlements"
 codesign --verify --deep --strict "$app"
 out="../dist/Casama-$version-macappstore.pkg"
 mkdir -p ../dist

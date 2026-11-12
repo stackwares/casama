@@ -69,6 +69,12 @@ export const EnvSchema = z.object({
   /** OpenAI's auth server and Responses API; overridable for tests and proxies. */
   CHATGPT_AUTH_URL: z.url().default("https://auth.openai.com"),
   CHATGPT_API_URL: z.url().default("https://api.openai.com/v1"),
+  /**
+   * Continue with Google, read here only to tell the apps which client ids Auth accepts (D-217).
+   * The same comma-separated list the auth service gets: the web client first, then the iOS one.
+   */
+  GOOGLE_AUTH_ENABLED: bool.default(false),
+  GOOGLE_AUTH_CLIENT_ID: z.string().optional(),
   /** Optional wallpaper photo search (D-087). Unset: the app offers its own patterns and photos. */
   UNSPLASH_ACCESS_KEY: z.string().optional(),
   /** Worker: the server's SearXNG for web search without a workspace key (D-179), e.g. http://searxng:8080. */

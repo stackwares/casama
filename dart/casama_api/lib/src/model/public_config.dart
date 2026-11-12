@@ -41,6 +41,8 @@ class PublicConfig {
      this.signupProofs,
 
      this.traceUrlTemplate,
+
+     this.googleClientIds,
   });
 
   @JsonKey(
@@ -176,6 +178,18 @@ class PublicConfig {
 
 
 
+  @JsonKey(
+    
+    name: r'google_client_ids',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<String>? googleClientIds;
+
+
+
 
 
     @override
@@ -190,7 +204,8 @@ class PublicConfig {
       other.wallpapersEnabled == wallpapersEnabled &&
       other.chatgptSignIn == chatgptSignIn &&
       other.signupProofs == signupProofs &&
-      other.traceUrlTemplate == traceUrlTemplate;
+      other.traceUrlTemplate == traceUrlTemplate &&
+      other.googleClientIds == googleClientIds;
 
     @override
     int get hashCode =>
@@ -204,7 +219,8 @@ class PublicConfig {
         wallpapersEnabled.hashCode +
         chatgptSignIn.hashCode +
         signupProofs.hashCode +
-        (traceUrlTemplate == null ? 0 : traceUrlTemplate.hashCode);
+        (traceUrlTemplate == null ? 0 : traceUrlTemplate.hashCode) +
+        googleClientIds.hashCode;
 
   factory PublicConfig.fromJson(Map<String, dynamic> json) => _$PublicConfigFromJson(json);
 

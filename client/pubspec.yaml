@@ -71,6 +71,7 @@ dependencies:
   archive: ^4.6.0
   crypto: ^3.0.8
   sign_in_with_apple: ^8.2.0
+  google_sign_in: ^7.2.0
   device_calendar: ^4.3.3
   flutter_contacts: ^2.6.0
   health: ^13.3.2

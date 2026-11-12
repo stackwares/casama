@@ -2089,6 +2089,12 @@
               "string",
               "null"
             ]
+          },
+          "google_client_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [

@@ -8,11 +8,14 @@ import 'dart:async';
 import 'package:casama_sdk/casama_sdk.dart' hide AuthException, GalleryItem;
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import 'package:flutter/services.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'apple_sign_in.dart';
 import 'desktop_sign_in.dart';
+import 'google_sign_in.dart';
 import 'passkeys.dart';
 import 'backend.dart';
 import 'chatgpt_connect.dart';
@@ -140,6 +143,8 @@ class SupabaseBackend implements Backend {
         await _signInWithAppleNative()) {
       return;
     }
+    // Android, iOS and macOS use Google's own sheet when this server accepts the app's client id.
+    if (provider == 'google' && await _signInWithGoogleNative()) return;
     final oauthProvider = provider == 'apple'
         ? sb.OAuthProvider.apple
         : sb.OAuthProvider.google;
@@ -253,6 +258,60 @@ class SupabaseBackend implements Backend {
     return true;
   }
 
+  /// Google's SDK may be set up only once per launch, so its nonce and client are too. Supabase
+  /// checks the raw nonce against the hash inside each ID token.
+  static String? _googleRawNonce;
+  static String? _googleClient;
+  static Future<void>? _googleSetUp;
+
+  Future<void> _setUpGoogle(String client) => _googleSetUp ??= () async {
+    final raw = _googleRawNonce = supabase.auth.generateRawNonce();
+    _googleClient = client;
+    final android = defaultTargetPlatform == TargetPlatform.android;
+    await GoogleSignIn.instance.initialize(
+      clientId: android ? null : client,
+      serverClientId: android ? client : null,
+      nonce: appleNonceHash(raw),
+    );
+  }();
+
+  /// True when Google's sheet finished (signed in, or the person cancelled). False when this
+  /// platform or server can't use it, or it failed on its own, so the caller opens the browser.
+  Future<bool> _signInWithGoogleNative() async {
+    final client = googleNativeClient(
+      defaultTargetPlatform,
+      config?.googleClientIds ?? const [],
+    );
+    if (client == null) return false;
+    // Set up for another server's client earlier in this launch: its token would be refused here.
+    if (_googleClient != null && _googleClient != client) return false;
+    final String? idToken;
+    try {
+      await _setUpGoogle(client);
+      if (!GoogleSignIn.instance.supportsAuthenticate()) return false;
+      final account = await GoogleSignIn.instance.authenticate();
+      idToken = account.authentication.idToken;
+    } on GoogleSignInException catch (error) {
+      if (googleSheetUnavailable(error)) return false;
+      return true;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    }
+    if (idToken == null) {
+      throw const sb.AuthException(
+        'Google did not return a sign-in token. Try again.',
+      );
+    }
+    await supabase.auth.signInWithIdToken(
+      provider: sb.OAuthProvider.google,
+      idToken: idToken,
+      nonce: _googleRawNonce,
+    );
+    return true;
+  }
+
   /// Apple sends the name once, on the first authorization, and not inside the token. Saving it
   /// must not turn a finished sign-in into an error; the profile copies it from this metadata.
   Future<void> _saveAppleName(String? given, String? family) async {
@@ -277,7 +336,15 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<void> signOut() => supabase.auth.signOut();
+  Future<void> signOut() async {
+    // Forget the Google account too, so the next Continue with Google offers every account.
+    if (_googleSetUp != null) {
+      try {
+        await GoogleSignIn.instance.signOut();
+      } catch (_) {}
+    }
+    await supabase.auth.signOut();
+  }
 
   /// The Auth server's public settings say which sign-ins are on (SAML SSO, passkeys).
   @override

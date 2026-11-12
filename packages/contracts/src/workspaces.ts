@@ -269,6 +269,11 @@ export const PublicConfig = z
     signup_proofs: z.array(z.enum(["app_check", "pow"])).optional(),
     /** Where a run's trace opens, with {trace_id} in it (Grafana, Jaeger, Honeycomb…; D-107). */
     trace_url_template: z.string().nullable().optional(),
+    /**
+     * Google client ids Auth accepts in an ID token (D-217). The apps sign in with Google's own
+     * sheet only when their client id is listed here. Empty: Continue with Google opens the browser.
+     */
+    google_client_ids: z.array(z.string()).optional(),
   })
   .openapi("PublicConfig");
 

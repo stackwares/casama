@@ -1,7 +1,7 @@
 import { API_VERSION, PRODUCT_NAME, routes } from "@casama/contracts";
 import { DEFAULT_MODELS, defaultModelFor } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
-import { modelOverrides } from "../../env.ts";
+import { type Env, modelOverrides } from "../../env.ts";
 import { abuseControlsOn, signupProofKinds } from "../../services/abuse.ts";
 import { getCloudModels } from "../../services/cloud-models.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -48,8 +48,21 @@ export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         chatgpt_sign_in: chatGptSignInEnabled(deps.env),
         signup_proofs: abuseControlsOn(deps.env) ? signupProofKinds(deps.env) : [],
         trace_url_template: deps.env.TRACE_URL_TEMPLATE ?? null,
+        google_client_ids: googleClientIds(deps.env),
       },
       200,
     );
   });
+}
+
+/**
+ * The Google client ids this server's Auth accepts in an ID token (D-217). The apps use Google's
+ * own sign-in sheet only when their client id is listed, and the browser otherwise.
+ */
+export function googleClientIds(env: Pick<Env, "GOOGLE_AUTH_ENABLED" | "GOOGLE_AUTH_CLIENT_ID">) {
+  if (!env.GOOGLE_AUTH_ENABLED) return [];
+  return (env.GOOGLE_AUTH_CLIENT_ID ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
 }

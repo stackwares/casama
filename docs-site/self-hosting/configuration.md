@@ -232,7 +232,7 @@ use to enter Casama. A Google client for Gmail, Calendar and Drive is a differen
 | `APPLE_AUTH_CLIENT_IDS`  | (empty) | Comma-separated. The Services ID first, then the app id `ai.casama.app`. The first is the browser flow. The app id is the system sheet on iPhone and Mac.           |
 | `APPLE_AUTH_SECRET`      | (empty) | Apple's client secret, a signed token. It expires within six months. Make a new one from the same key before it does, or browser sign-in starts failing.             |
 | `GOOGLE_AUTH_ENABLED`    | `false` | `true` turns on Continue with Google.                                                                                                                                 |
-| `GOOGLE_AUTH_CLIENT_ID`  | (empty) | The web client id from Google Cloud.                                                                                                                                  |
+| `GOOGLE_AUTH_CLIENT_ID`  | (empty) | The web client id from Google Cloud. To let your own build of the app use Google's sign-in sheet on iPhone and Mac, add its iOS client id after a comma.           |
 | `GOOGLE_AUTH_SECRET`     | (empty) | That client's secret.                                                                                                                                                 |
 
 Apple and Google both send people back to `https://<your domain>/auth/v1/callback`. Register that
