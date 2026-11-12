@@ -103,6 +103,7 @@ export 'package:casama_api/src/model/bot_access.dart';
 export 'package:casama_api/src/model/bot_access_entry.dart';
 export 'package:casama_api/src/model/bot_budget.dart';
 export 'package:casama_api/src/model/bot_checkins.dart';
+export 'package:casama_api/src/model/bot_last_message.dart';
 export 'package:casama_api/src/model/bot_link.dart';
 export 'package:casama_api/src/model/bot_link_list.dart';
 export 'package:casama_api/src/model/bot_list.dart';

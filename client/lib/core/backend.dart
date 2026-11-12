@@ -1376,6 +1376,8 @@ abstract class Backend {
   // Secret requests from bots (D-101): the value goes to Vault through the API, nowhere else.
   Future<void> fulfillSecretRequest(String requestId, String value);
   Future<void> declineSecretRequest(String requestId);
+  /// pending | fulfilled | declined | expired | cancelled; expired when it can't be seen.
+  Future<String> secretRequestStatus(String requestId);
 
   // Device connections (D-149): data this person shares from their devices.
   Future<List<DeviceSource>> deviceSources();

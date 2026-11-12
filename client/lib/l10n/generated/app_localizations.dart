@@ -12501,6 +12501,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings · development server {host}'**
   String settingsOnDevServer(String host);
+
+  /// No description provided for @chatPreviewYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You: {text}'**
+  String chatPreviewYou(String text);
+
+  /// No description provided for @chatPreviewPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get chatPreviewPhoto;
+
+  /// No description provided for @chatPreviewVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get chatPreviewVideo;
+
+  /// No description provided for @chatPreviewVoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Voice note'**
+  String get chatPreviewVoice;
+
+  /// No description provided for @chatPreviewNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages yet'**
+  String get chatPreviewNone;
+
+  /// No description provided for @chatTimeYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get chatTimeYesterday;
 }
 
 class _AppLocalizationsDelegate

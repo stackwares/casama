@@ -3,12 +3,14 @@ import 'agent_import.dart';
 import 'bot_template.dart';
 
 import 'package:material_ui/material_ui.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
+import '../../core/date_format.dart';
 import '../groups/group_chats.dart';
 import '../../ui/bot_activity.dart';
 import '../../core/widgets.dart';
@@ -40,7 +42,55 @@ String botStatusLabel(BuildContext context, BotStatusEnum s) => switch (s) {
   _ => context.l10n.botStatusIdle,
 };
 
-/// The list of bots with status, today's cost and a new-bot button.
+/// One line for a chat list row: the bot's last message ("You: …" when it was yours), or a
+/// word for a lone attachment. Null when the bot has no messages yet.
+String? lastMessagePreview(BuildContext context, Bot bot) {
+  final m = bot.lastMessage;
+  if (m == null) return null;
+  final l10n = context.l10n;
+  final mime = m.fileMime ?? '';
+  final text = m.text.isNotEmpty
+      ? m.text
+      : mime.startsWith('image/')
+      ? l10n.chatPreviewPhoto
+      : mime.startsWith('video/')
+      ? l10n.chatPreviewVideo
+      : mime.startsWith('audio/')
+      ? l10n.chatPreviewVoice
+      : m.fileName ?? '';
+  if (text.isEmpty) return null;
+  return m.from == BotLastMessageFromEnum.you ? l10n.chatPreviewYou(text) : text;
+}
+
+/// When a chat list row last had a message: the time today, "Yesterday", the weekday this
+/// week, then the date.
+String chatListTime(BuildContext context, DateTime at) {
+  final t = at.toLocal();
+  final now = DateTime.now();
+  final days = DateTime(now.year, now.month, now.day)
+      .difference(DateTime(t.year, t.month, t.day))
+      .inDays;
+  if (days <= 0) return t.formattedTime(context);
+  if (days == 1) return context.l10n.chatTimeYesterday;
+  if (days < 7) {
+    return DateFormat.E(Localizations.localeOf(context).toString()).format(t);
+  }
+  return t.formattedDate(context);
+}
+
+/// Bots with the most recent chat first; bots never talked to keep their order after them.
+List<Bot> byRecentChat(List<Bot> bots) {
+  final order = {for (final (i, b) in bots.indexed) b.id: i};
+  return [...bots]..sort((a, b) {
+    final at = a.lastMessage?.at, bt = b.lastMessage?.at;
+    if (at != null && bt != null) return bt.compareTo(at);
+    if (at != null) return -1;
+    if (bt != null) return 1;
+    return order[a.id]!.compareTo(order[b.id]!);
+  });
+}
+
+/// The list of bots: each one's last message and what it's doing, most recent first.
 class BotsList extends ConsumerWidget {
   const BotsList({super.key, this.selectedBotId});
   final String? selectedBotId;
@@ -50,18 +100,13 @@ class BotsList extends ConsumerWidget {
     final l10n = context.l10n;
     final bots = ref.watch(botsProvider);
     final archived = ref.watch(archivedBotsProvider).value ?? const <Bot>[];
-    final usage = ref.watch(usageTodayProvider).value;
-    double costFor(String botId) =>
-        (usage?.byBot
-                    .where((b) => b.botId == botId)
-                    .fold<num>(0, (n, b) => n + b.costUsd) ??
-                0)
-            .toDouble();
 
     return AsyncView(
       value: bots,
       onRetry: () => ref.invalidate(botsProvider),
-      data: (items) => items.isEmpty
+      data: (all) {
+        final items = byRecentChat(all);
+        return items.isEmpty
           ? EmptyState(
               illustration: const BlankBotImage(size: 132),
               title: l10n.noBots,
@@ -113,7 +158,6 @@ class BotsList extends ConsumerWidget {
               onRefresh: () async {
                 HapticsHelper.medium();
                 ref.invalidate(botsProvider);
-                ref.invalidate(usageTodayProvider);
               },
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -145,14 +189,14 @@ class BotsList extends ConsumerWidget {
                       return _BotCard(
                         key: Key('bot-${items[i].id}'),
                         bot: items[i],
-                        cost: costFor(items[i].id),
                         selected: items[i].id == selectedBotId,
                       ).appListItemEntrance(i);
                     },
                   );
                 },
               ),
-            ),
+            );
+      },
     );
   }
 }
@@ -161,11 +205,9 @@ class _BotCard extends StatelessWidget {
   const _BotCard({
     super.key,
     required this.bot,
-    required this.cost,
     required this.selected,
   });
   final Bot bot;
-  final double cost;
   final bool selected;
 
   @override
@@ -179,6 +221,7 @@ class _BotCard extends StatelessWidget {
       BotStatusEnum.disabled => colors.negative,
       _ => scheme.onSurfaceVariant,
     };
+    final preview = lastMessagePreview(context, bot);
     return AppCard(
       onTap: () => context.go('/bots/${bot.id}/chat'),
       padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.sm, 14),
@@ -198,34 +241,55 @@ class _BotCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  bot.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-                const SizedBox(height: 3),
                 Row(
                   children: [
-                    StatusLabel(
-                      text: botStatusLabel(context, bot.status),
-                      color: statusColor,
-                      pill: bot.status != BotStatusEnum.idle,
-                    ),
-                    const SizedBox(width: AppSpace.xs),
-                    Flexible(
+                    Expanded(
                       child: Text(
-                        l10n.costToday(
-                          formatUsd(cost, context.l10n.localeName),
-                        ),
+                        bot.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: context.textTheme.labelMedium?.copyWith(
+                        style: context.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                    ),
+                    if (bot.lastMessage case final m?) ...[
+                      const SizedBox(width: AppSpace.xs),
+                      Text(
+                        chatListTime(context, m.at),
+                        key: Key('bot-time-${bot.id}'),
+                        style: context.textTheme.labelSmall?.copyWith(
                           color: scheme.onSurfaceVariant,
                           fontFeatures: AppText.tabular,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 3),
+                // What it's doing when that matters, then its last message.
+                Row(
+                  children: [
+                    if (bot.status != BotStatusEnum.idle) ...[
+                      StatusLabel(
+                        text: botStatusLabel(context, bot.status),
+                        color: statusColor,
+                        pill: true,
+                      ),
+                      const SizedBox(width: AppSpace.xs),
+                    ],
+                    Flexible(
+                      child: Text(
+                        preview ?? l10n.chatPreviewNone,
+                        key: Key('bot-preview-${bot.id}'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.bodyMedium?.copyWith(
+                          color: scheme.onSurfaceVariant.withValues(
+                            alpha: preview == null ? 0.7 : 1,
+                          ),
+                          height: 1.25,
                         ),
                       ),
                     ),

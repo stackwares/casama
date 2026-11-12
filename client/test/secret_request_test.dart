@@ -6,9 +6,12 @@ import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
 
 void main() {
-  Future<FakeBackend> openChat(WidgetTester tester) async {
+  Future<FakeBackend> openChat(
+    WidgetTester tester, {
+    Map<String, String> statuses = const {},
+  }) async {
     await setSize(tester, const Size(500, 900));
-    final backend = FakeBackend();
+    final backend = FakeBackend()..secretStatuses.addAll(statuses);
     await tester.pumpWidget(
       harness(backend, const ChatScreen(botId: botId, conversationId: convId)),
     );
@@ -89,5 +92,17 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Declined'), findsOneWidget);
+  });
+
+  testWidgets('a request already answered on the server shows how it ended, not an open card', (
+    tester,
+  ) async {
+    // Declined earlier, but its run had ended, so no secret.resolved event ever came.
+    final backend = await openChat(tester, statuses: {'sr1': 'declined'});
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('Declined'), findsOneWidget);
+    expect(find.byKey(const Key('secretValue')), findsNothing);
+    expect(find.byKey(const Key('secretDecline')), findsNothing);
+    expect(backend.secretAnswers, isEmpty);
   });
 }

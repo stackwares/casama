@@ -42,6 +42,7 @@ import 'package:casama_api/src/model/bot_access.dart';
 import 'package:casama_api/src/model/bot_access_entry.dart';
 import 'package:casama_api/src/model/bot_budget.dart';
 import 'package:casama_api/src/model/bot_checkins.dart';
+import 'package:casama_api/src/model/bot_last_message.dart';
 import 'package:casama_api/src/model/bot_link.dart';
 import 'package:casama_api/src/model/bot_link_list.dart';
 import 'package:casama_api/src/model/bot_list.dart';
@@ -603,6 +604,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return BotBudget.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotCheckins':
           return BotCheckins.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'BotLastMessage':
+          return BotLastMessage.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotLink':
           return BotLink.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BotLinkList':

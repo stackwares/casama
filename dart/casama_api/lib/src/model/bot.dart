@@ -5,6 +5,7 @@
 // ignore_for_file: unused_element
 import 'package:casama_api/src/model/bot_budget.dart';
 import 'package:casama_api/src/model/visibility.dart';
+import 'package:casama_api/src/model/bot_last_message.dart';
 import 'package:casama_api/src/model/model_policy.dart';
 import 'package:casama_api/src/model/autonomy.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
@@ -55,6 +56,8 @@ class Bot {
     required  this.setupStatus,
 
     required  this.createdAt,
+
+     this.lastMessage,
   });
 
   @JsonKey(
@@ -253,6 +256,18 @@ class Bot {
 
 
 
+  @JsonKey(
+    
+    name: r'last_message',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final BotLastMessage? lastMessage;
+
+
+
 
 
     @override
@@ -272,7 +287,8 @@ class Bot {
       other.sortKey == sortKey &&
       other.archivedAt == archivedAt &&
       other.setupStatus == setupStatus &&
-      other.createdAt == createdAt;
+      other.createdAt == createdAt &&
+      other.lastMessage == lastMessage;
 
     @override
     int get hashCode =>
@@ -291,7 +307,8 @@ class Bot {
         sortKey.hashCode +
         (archivedAt == null ? 0 : archivedAt.hashCode) +
         setupStatus.hashCode +
-        createdAt.hashCode;
+        createdAt.hashCode +
+        (lastMessage == null ? 0 : lastMessage.hashCode);
 
   factory Bot.fromJson(Map<String, dynamic> json) => _$BotFromJson(json);
 

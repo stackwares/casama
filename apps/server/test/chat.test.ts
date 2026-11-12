@@ -370,6 +370,67 @@ describe("bots and chat", () => {
     expect(usage.by_kind.map((k: { kind: string }) => k.kind)).toContain("tokens_in");
     expect(usage.runs).toBeGreaterThan(0);
   });
+
+  it("lists each bot with its last message, skipping turns with nothing to show", async () => {
+    const bot = await j(
+      await call("/v1/bots", {
+        method: "POST",
+        token: owner.token,
+        json: { org_id: orgId, name: "Bea" },
+      }),
+    );
+    const listed = async () =>
+      (await j(await call(`/v1/bots?org_id=${orgId}`, { token: owner.token }))).items.find(
+        (b: { id: string }) => b.id === bot.id,
+      );
+    expect((await listed()).last_message).toBeNull();
+
+    const conv = await j(
+      await call("/v1/conversations", {
+        method: "POST",
+        token: owner.token,
+        json: { bot_id: bot.id },
+      }),
+    );
+    const add = async (role: string, content: unknown, secondsAgo: number) => {
+      await h.tdb.admin`
+        insert into public.messages (org_id, conversation_id, role, author_user_id, content, created_at)
+        values (${orgId}::uuid, ${conv.id}::uuid, ${role}, ${role === "user" ? owner.id : null},
+                ${JSON.stringify(content)}::text::jsonb, now() - make_interval(secs => ${secondsAgo}))`;
+      await h.tdb
+        .admin`update public.conversations set last_message_at = now() where id = ${conv.id}::uuid`;
+    };
+    await add("user", [{ type: "text", text: "Can you **summarise** the\n\nreport?" }], 30);
+    expect((await listed()).last_message).toMatchObject({
+      text: "Can you summarise the report?",
+      from: "you",
+      file_name: null,
+      conversation_id: conv.id,
+    });
+
+    await add(
+      "assistant",
+      [
+        { type: "text", text: "Here it is." },
+        {
+          type: "file",
+          path: "out/sum.pdf",
+          name: "sum.pdf",
+          mime_type: "application/pdf",
+          size: 10,
+        },
+      ],
+      20,
+    );
+    // A tool-only turn after it shows nothing, so the reply above stays the preview.
+    await add("assistant", [{ type: "tool_call", name: "x" }], 10);
+    expect((await listed()).last_message).toMatchObject({
+      text: "Here it is.",
+      from: "bot",
+      file_name: "sum.pdf",
+      file_mime: "application/pdf",
+    });
+  });
 });
 
 describe("secrets", () => {

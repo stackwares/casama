@@ -420,6 +420,7 @@ Class | Method | HTTP request | Description
  - [BotAccessEntry](doc/BotAccessEntry.md)
  - [BotBudget](doc/BotBudget.md)
  - [BotCheckins](doc/BotCheckins.md)
+ - [BotLastMessage](doc/BotLastMessage.md)
  - [BotLink](doc/BotLink.md)
  - [BotLinkList](doc/BotLinkList.md)
  - [BotList](doc/BotList.md)

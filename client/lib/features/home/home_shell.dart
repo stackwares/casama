@@ -642,8 +642,9 @@ class _Sidebar extends ConsumerWidget {
                           ringColor: scheme.surfaceContainerLow,
                         ),
                         label: b.name,
+                        // What it's doing when that matters, else its last message.
                         subtitle: b.status == BotStatusEnum.idle
-                            ? null
+                            ? lastMessagePreview(context, b)
                             : botStatusLabel(context, b.status),
                         selected: b.id == selectedBotId,
                         trailing: BotActivity(
@@ -808,6 +809,7 @@ class _SidebarItem extends StatelessWidget {
                               Text(
                                 subtitle!,
                                 maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: tt.bodySmall?.copyWith(
                                   color: scheme.onSurfaceVariant,
                                   height: 1.2,

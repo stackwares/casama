@@ -521,8 +521,11 @@ class FakeBackend implements Backend {
     setupStatus: setupStatus,
     sortKey: 0,
     createdAt: DateTime(2026),
+    lastMessage: id == botId ? lastMessage : null,
   );
 
+  /// Ada's last message, shown on the chats list.
+  BotLastMessage? lastMessage;
   String? botFolder;
   final archived = <String>{};
   final revisions = <BotRevision>[
@@ -1253,6 +1256,12 @@ class FakeBackend implements Backend {
   @override
   Future<void> declineSecretRequest(String requestId) async =>
       secretAnswers.add((requestId, null));
+
+  /// What the server says about each secret request; pending when not listed.
+  final secretStatuses = <String, String>{};
+  @override
+  Future<String> secretRequestStatus(String requestId) async =>
+      secretStatuses[requestId] ?? 'pending';
 
   // Device connections (D-149).
   final deviceSourcesSaved = <String, DeviceSource>{};

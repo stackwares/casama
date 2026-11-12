@@ -3383,6 +3383,57 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "last_message": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "Plain text, one line, cut to 160 characters"
+              },
+              "from": {
+                "type": "string",
+                "enum": [
+                  "you",
+                  "bot",
+                  "someone"
+                ],
+                "description": "you = the caller; someone = another person in the workspace"
+              },
+              "file_name": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "The first attached file, if any"
+              },
+              "file_mime": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "conversation_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "text",
+              "from",
+              "file_name",
+              "file_mime",
+              "conversation_id",
+              "at"
+            ],
+            "description": "The latest message in its direct chats you can see (listBots only); null when there is none"
           }
         },
         "required": [

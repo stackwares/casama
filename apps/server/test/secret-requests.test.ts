@@ -182,6 +182,30 @@ describe("secrets.request", () => {
     });
   });
 
+  it("records the answer itself when the run already ended, so the card closes", async () => {
+    // A request left open on a run that is over (cancelled, failed, finished after a stall):
+    // nothing is waiting for it, so only the API can tell the chat how it ended.
+    const [run] = await h.tdb.admin<{ id: string; bot_id: string; created_by: string }[]>`
+      select id, bot_id, created_by from public.runs
+      where org_id = ${orgId}::uuid and status = 'completed' and created_by = ${member.id}::uuid
+      order by created_at desc limit 1`;
+    const [ask] = await h.tdb.admin<{ id: string }[]>`
+      insert into public.secret_requests (org_id, bot_id, run_id, name, service, allowed_hosts)
+      values (${orgId}::uuid, ${run!.bot_id}::uuid, ${run!.id}::uuid, 'LATE_KEY', 'Late', array['late.example'])
+      returning id`;
+    const res = await h.request(`/v1/secrets/requests/${ask!.id}/decline`, {
+      method: "POST",
+      token: owner.token,
+    });
+    expect(res.status).toBe(200);
+    const evs = (
+      await j(await h.request(`/v1/runs/${run!.id}/events?limit=1000`, { token: owner.token }))
+    ).items as Array<{ type: string; payload: Record<string, unknown> }>;
+    expect(
+      evs.filter((e) => e.type === "secret.resolved" && e.payload.request_id === ask!.id),
+    ).toEqual([expect.objectContaining({ payload: { request_id: ask!.id, outcome: "declined" } })]);
+  });
+
   it("refuses hosts from more than one service without waiting", async () => {
     const runId = await chat(owner.token, "Use a key for two services.");
     await waitStatus(runId, "completed");

@@ -65,6 +65,44 @@ const botOut = (b: BotRow) => ({
   created_at: iso(b.createdAt),
 });
 
+const PREVIEW_MAX = 160;
+
+/** One line of plain text for a chat list row: markdown marks dropped, whitespace collapsed. */
+export function previewText(text: string): string {
+  const plain = text
+    .replace(/```[^\n]*\n?/g, " ")
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/^\s{0,3}(#{1,6}|>|[-*+]|\d+\.)\s+/gm, "")
+    .replace(/(\*\*|__|~~|`)/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return plain.length > PREVIEW_MAX ? `${plain.slice(0, PREVIEW_MAX - 1).trimEnd()}…` : plain;
+}
+
+/** A message's preview, or null when it has nothing to show (a tool-only turn, a UI action). */
+export function messagePreview(
+  content: unknown,
+): { text: string; file_name: string | null; file_mime: string | null } | null {
+  if (!Array.isArray(content)) return null;
+  const parts = content.filter((p): p is Record<string, unknown> => !!p && typeof p === "object");
+  const text = previewText(
+    parts
+      .filter((p) => p.type === "text" && typeof p.text === "string")
+      .map((p) => p.text as string)
+      .join(" "),
+  );
+  const file = parts.find((p) => p.type === "file" && typeof p.path === "string");
+  if (!text && !file) return null;
+  return {
+    text,
+    file_name: file
+      ? String(file.name ?? (file.path as string).split("/").pop() ?? "").slice(0, 255)
+      : null,
+    file_mime: file && typeof file.mime_type === "string" ? file.mime_type : null,
+  };
+}
+
 type ConvRow = typeof conversations.$inferSelect;
 const convOut = (c: ConvRow, botIds: string[] = []) => ({
   id: c.id,
@@ -308,8 +346,8 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.listBots, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { org_id, archived } = c.req.valid("query");
-    const rows = await withUserSession(db, claims, (tx) =>
-      tx
+    const { rows, recent } = await withUserSession(db, claims, async (tx) => {
+      const rows = await tx
         .select()
         .from(bots)
         .where(
@@ -318,9 +356,61 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
             archived === "true" ? isNotNull(bots.archivedAt) : isNull(bots.archivedAt),
           ),
         )
-        .orderBy(bots.sortKey, bots.createdAt),
+        .orderBy(bots.sortKey, bots.createdAt);
+      if (!rows.length) return { rows, recent: [] };
+      // Each bot's most recent direct chat the caller can see (RLS hides others' private chats),
+      // and its last few messages: a tool-only turn has no text, so the newest one with some wins.
+      const recent = await tx.execute<{
+        bot_id: string;
+        conversation_id: string;
+        role: string;
+        author_user_id: string | null;
+        content: unknown;
+        created_at: string;
+      }>(sql`
+        with latest as (
+          select distinct on (c.bot_id) c.id, c.bot_id
+          from public.conversations c
+          where c.org_id = ${org_id}::uuid and c.kind = 'direct' and c.last_message_at is not null
+            and c.bot_id in (${sql.join(
+              rows.map((b) => sql`${b.id}::uuid`),
+              sql`, `,
+            )})
+          order by c.bot_id, c.last_message_at desc
+        )
+        select l.bot_id, l.id as conversation_id, m.role, m.author_user_id, m.content, m.created_at
+        from latest l
+        cross join lateral (
+          select role, author_user_id, content, created_at from public.messages
+          where conversation_id = l.id and role in ('user', 'assistant')
+          order by created_at desc limit 6
+        ) m
+        order by l.bot_id, m.created_at desc`);
+      return { rows, recent };
+    });
+    const last = new Map<
+      string,
+      NonNullable<ReturnType<typeof messagePreview>> & {
+        from: "you" | "bot" | "someone";
+        conversation_id: string;
+        at: string;
+      }
+    >();
+    for (const r of recent) {
+      if (last.has(r.bot_id)) continue;
+      const preview = messagePreview(contentKeys.open(r.content));
+      if (!preview) continue;
+      last.set(r.bot_id, {
+        ...preview,
+        from: r.role === "assistant" ? "bot" : r.author_user_id === claims.sub ? "you" : "someone",
+        conversation_id: r.conversation_id,
+        at: iso(r.created_at),
+      });
+    }
+    return c.json(
+      { items: rows.map((b) => ({ ...botOut(b), last_message: last.get(b.id) ?? null })) },
+      200,
     );
-    return c.json({ items: rows.map(botOut) }, 200);
   });
 
   app.openapi(routes.startBotSetup, async (c) => {

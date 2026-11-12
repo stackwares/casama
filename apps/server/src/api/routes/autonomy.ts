@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { milestone, secretStoreFor, startTicketWork, track } from "@casama/agent";
+import { EventBus, milestone, secretStoreFor, startTicketWork, track } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import {
   contentKeys,
@@ -337,6 +337,22 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     return row;
   };
 
+  /**
+   * The run writes secret.resolved when its wait wakes up. A run that already ended (cancelled,
+   * failed, finished after a stall) never will, so the card would stay open in the chat: write it here.
+   */
+  const recordIfRunEnded = async (
+    runId: string,
+    requestId: string,
+    outcome: "fulfilled" | "declined",
+  ) => {
+    const [run] = await db.execute<{ status: string }>(
+      sql`select status from public.runs where id = ${runId}::uuid`,
+    );
+    if (run && ["completed", "failed", "cancelled"].includes(run.status))
+      await new EventBus(db).append(runId, "secret.resolved", { request_id: requestId, outcome });
+  };
+
   app.openapi(routes.listSecretRequests, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const rows = await withUserSession(db, claims, (tx) =>
@@ -424,6 +440,7 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       values (${ask.org_id}::uuid, 'user', ${claims.sub}::uuid, 'secret.request_fulfilled', 'secret', ${secretId}::uuid,
               ${JSON.stringify({ name: ask.name, bot_id: ask.bot_id, hosts: ask.allowed_hosts })}::jsonb)`);
     await deps.workflows.signalRun(ask.run_id);
+    await recordIfRunEnded(ask.run_id, id, "fulfilled");
     return c.json(askOut({ ...ask, status: "fulfilled" as never }), 200);
   });
 
@@ -434,6 +451,7 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     await db.execute(sql`update public.secret_requests set status = 'declined', resolved_by = ${claims.sub}::uuid, resolved_at = now()
       where id = ${id}::uuid and status = 'pending'`);
     await deps.workflows.signalRun(ask.run_id);
+    await recordIfRunEnded(ask.run_id, id, "declined");
     return c.json(askOut({ ...ask, status: "declined" as never }), 200);
   });
 

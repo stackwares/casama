@@ -39,6 +39,19 @@ export const BotBudget = z
 export const Autonomy = z.enum(["ask_always", "ask_risky", "autonomous"]).openapi("Autonomy");
 export const Visibility = z.enum(["private", "team"]).openapi("Visibility");
 
+export const BotLastMessage = z
+  .object({
+    text: z.string().openapi({ description: "Plain text, one line, cut to 160 characters" }),
+    from: z
+      .enum(["you", "bot", "someone"])
+      .openapi({ description: "you = the caller; someone = another person in the workspace" }),
+    file_name: z.string().nullable().openapi({ description: "The first attached file, if any" }),
+    file_mime: z.string().nullable(),
+    conversation_id: Uuid,
+    at: ts,
+  })
+  .openapi("BotLastMessage");
+
 export const Bot = z
   .object({
     id: Uuid,
@@ -61,6 +74,10 @@ export const Bot = z
       .enum(["pending", "done", "skipped"])
       .openapi({ description: "The setup interview" }),
     created_at: ts,
+    last_message: BotLastMessage.nullable().optional().openapi({
+      description:
+        "The latest message in its direct chats you can see (listBots only); null when there is none",
+    }),
   })
   .openapi("Bot");
 

@@ -3380,6 +3380,22 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  Future<String> secretRequestStatus(String requestId) async {
+    final row = await supabase
+        .from('secret_requests')
+        .select('status, expires_at')
+        .eq('id', requestId)
+        .maybeSingle();
+    if (row == null) return 'expired';
+    final status = row['status'] as String? ?? 'expired';
+    final expires = DateTime.tryParse('${row['expires_at']}');
+    if (status == 'pending' && expires != null && expires.isBefore(DateTime.now())) {
+      return 'expired';
+    }
+    return status;
+  }
+
+  @override
   Future<List<DeviceSource>> deviceSources() async =>
       (await api.devices.listDeviceSources()).data!.items;
 

@@ -7929,4 +7929,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String settingsOnDevServer(String host) {
     return 'Settings · development server $host';
   }
+
+  @override
+  String chatPreviewYou(String text) {
+    return 'You: $text';
+  }
+
+  @override
+  String get chatPreviewPhoto => 'Photo';
+
+  @override
+  String get chatPreviewVideo => 'Video';
+
+  @override
+  String get chatPreviewVoice => 'Voice note';
+
+  @override
+  String get chatPreviewNone => 'No messages yet';
+
+  @override
+  String get chatTimeYesterday => 'Yesterday';
 }

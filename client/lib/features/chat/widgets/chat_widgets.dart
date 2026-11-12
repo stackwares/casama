@@ -1366,6 +1366,27 @@ class _SecretPromptState extends ConsumerState<SecretPrompt> {
   String? _sent;
 
   @override
+  void initState() {
+    super.initState();
+    // The chat only learns an answer from the run's secret.resolved event, which a run that had
+    // already ended never writes: ask the server, so an answered request doesn't stay open.
+    if (widget.entry.outcome == null) unawaited(_refreshStatus());
+  }
+
+  Future<void> _refreshStatus() async {
+    try {
+      final status = await ref
+          .read(backendProvider)
+          .secretRequestStatus(widget.entry.requestId);
+      if (mounted && status != 'pending' && _sent == null) {
+        setState(() => _sent = status);
+      }
+    } catch (_) {
+      // Offline: the card stays as it is, and answering says what happened.
+    }
+  }
+
+  @override
   void dispose() {
     _value.clear();
     _value.dispose();
@@ -1391,6 +1412,8 @@ class _SecretPromptState extends ConsumerState<SecretPrompt> {
       _busy = false;
       if (ok == true) _sent = save ? 'fulfilled' : 'declined';
     });
+    // Answered elsewhere, or it ran out: show how it ended instead of an open card.
+    if (ok != true) await _refreshStatus();
   }
 
   @override

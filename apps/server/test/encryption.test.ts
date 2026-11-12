@@ -141,6 +141,12 @@ describe("encryption at rest", () => {
       await h.request(`/v1/conversations/${conv.id}/thread`, { token: owner.token }),
     );
     expect(JSON.stringify(thread)).toContain("My locker code is 4417");
+    // The chats list preview is opened too, never ciphertext.
+    const listed = (
+      await j(await h.request(`/v1/bots?org_id=${orgId}`, { token: owner.token }))
+    ).items.find((b: { id: string }) => b.id === botId);
+    expect(listed.last_message.text).toBeTruthy();
+    expect(listed.last_message.text).not.toMatch(/enc:v1|\$enc/);
   });
 
   it("rotation rewraps the data key without rewriting rows", async () => {

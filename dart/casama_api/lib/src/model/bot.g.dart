@@ -39,6 +39,8 @@ abstract class _$BotCWProxy {
 
   Bot createdAt(DateTime createdAt);
 
+  Bot lastMessage(BotLastMessage? lastMessage);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Bot(...).copyWith.fieldName(value)`.
@@ -64,6 +66,7 @@ abstract class _$BotCWProxy {
     DateTime? archivedAt,
     BotSetupStatusEnum setupStatus,
     DateTime createdAt,
+    BotLastMessage? lastMessage,
   });
 }
 
@@ -124,6 +127,10 @@ class _$BotCWProxyImpl implements _$BotCWProxy {
   @override
   Bot createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
+  @override
+  Bot lastMessage(BotLastMessage? lastMessage) =>
+      call(lastMessage: lastMessage);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Bot(...).copyWith.fieldName(value)`.
@@ -150,6 +157,7 @@ class _$BotCWProxyImpl implements _$BotCWProxy {
     Object? archivedAt = const $CopyWithPlaceholder(),
     Object? setupStatus = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
+    Object? lastMessage = const $CopyWithPlaceholder(),
   }) {
     return Bot(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -219,6 +227,10 @@ class _$BotCWProxyImpl implements _$BotCWProxy {
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
+      lastMessage: lastMessage == const $CopyWithPlaceholder()
+          ? _value.lastMessage
+          // ignore: cast_nullable_to_non_nullable
+          : lastMessage as BotLastMessage?,
     );
   }
 }
@@ -303,6 +315,12 @@ Bot _$BotFromJson(Map<String, dynamic> json) => $checkedCreate(
         'created_at',
         (v) => DateTime.parse(v as String),
       ),
+      lastMessage: $checkedConvert(
+        'last_message',
+        (v) => v == null
+            ? null
+            : BotLastMessage.fromJson(v as Map<String, dynamic>),
+      ),
     );
     return val;
   },
@@ -317,6 +335,7 @@ Bot _$BotFromJson(Map<String, dynamic> json) => $checkedCreate(
     'archivedAt': 'archived_at',
     'setupStatus': 'setup_status',
     'createdAt': 'created_at',
+    'lastMessage': 'last_message',
   },
 );
 
@@ -337,6 +356,7 @@ Map<String, dynamic> _$BotToJson(Bot instance) => <String, dynamic>{
   'archived_at': instance.archivedAt?.toIso8601String(),
   'setup_status': _$BotSetupStatusEnumEnumMap[instance.setupStatus]!,
   'created_at': instance.createdAt.toIso8601String(),
+  'last_message': ?instance.lastMessage?.toJson(),
 };
 
 const _$AutonomyEnumMap = {

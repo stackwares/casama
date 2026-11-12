@@ -5,7 +5,8 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
-import 'package:casama_sdk/casama_sdk.dart' show WelcomeChat;
+import 'package:casama_sdk/casama_sdk.dart'
+    show BotLastMessage, BotLastMessageFromEnum, WelcomeChat;
 import 'package:casama_app/features/computer/computer_screen.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:casama_app/app.dart';
@@ -608,21 +609,56 @@ void main() {
   });
 
   testWidgets(
-    'phone layout uses the floating tab bar and lists bots with cost',
+    'phone layout uses the floating tab bar and lists bots with their last message',
     (tester) async {
       await setSize(tester, const Size(400, 800));
+      final backend = FakeBackend()
+        ..lastMessage = BotLastMessage(
+          text: 'Here is the summary.',
+          from: BotLastMessageFromEnum.bot,
+          fileName: null,
+          fileMime: null,
+          conversationId: 'conv-1',
+          at: DateTime.now().subtract(const Duration(days: 1)),
+        );
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [backendProvider.overrideWithValue(FakeBackend())],
+          overrides: [backendProvider.overrideWithValue(backend)],
           child: const CasamaApp(),
         ),
       );
       await tester.pumpAndSettle();
       expect(find.byType(FloatingTabChrome), findsOneWidget);
       expect(find.text('Ada'), findsOneWidget);
-      expect(find.textContaining('\$0.0123 today'), findsOneWidget);
+      expect(find.text('Here is the summary.'), findsOneWidget);
+      expect(find.text('Yesterday'), findsOneWidget);
+      // Cost lives on the Usage screen now, not on every row.
+      expect(find.textContaining('today'), findsNothing);
     },
   );
+
+  testWidgets('chat rows say "You:" for your own message and name a lone photo', (
+    tester,
+  ) async {
+    await setSize(tester, const Size(400, 800));
+    final backend = FakeBackend()
+      ..lastMessage = BotLastMessage(
+        text: '',
+        from: BotLastMessageFromEnum.you,
+        fileName: 'cat.jpg',
+        fileMime: 'image/jpeg',
+        conversationId: 'conv-1',
+        at: DateTime.now(),
+      );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [backendProvider.overrideWithValue(backend)],
+        child: const CasamaApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('You: Photo'), findsOneWidget);
+  });
 
   testWidgets('desktop layout shows bots, chat and computer side by side', (
     tester,

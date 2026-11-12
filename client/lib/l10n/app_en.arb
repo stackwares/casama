@@ -2385,5 +2385,12 @@
   "@appearanceSaved": {"placeholders": {"name": {"type": "String"}}},
   "appearanceAboutTheme": "About this theme",
   "settingsOnDevServer": "Settings · development server {host}",
-  "@settingsOnDevServer": {"placeholders": {"host": {"type": "String"}}}
+  "@settingsOnDevServer": {"placeholders": {"host": {"type": "String"}}},
+  "chatPreviewYou": "You: {text}",
+  "@chatPreviewYou": {"placeholders": {"text": {"type": "String"}}},
+  "chatPreviewPhoto": "Photo",
+  "chatPreviewVideo": "Video",
+  "chatPreviewVoice": "Voice note",
+  "chatPreviewNone": "No messages yet",
+  "chatTimeYesterday": "Yesterday"
 }
