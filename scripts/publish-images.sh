@@ -106,7 +106,7 @@ if [[ "$latest" -eq 1 && -n "$only" ]]; then
   done
 fi
 if [[ "$latest" -eq 1 ]]; then
-  git -C "$root" tag -f selfhost "$full" >/dev/null
+  git -C "$root" update-ref refs/tags/selfhost "$full"
   git -C "$root" push --quiet --force origin refs/tags/selfhost
   echo "==> Moved the selfhost tag to $sha"
 fi
