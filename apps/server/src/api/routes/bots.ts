@@ -20,7 +20,6 @@ import {
   FEATURED_MODELS,
   lockCloudPolicy,
   parseMentions,
-  templateById,
 } from "@casama/domain";
 import { withSpan } from "@casama/observability";
 import type { OpenAPIHono } from "@hono/zod-openapi";
@@ -30,6 +29,7 @@ import { enforceLimit } from "../../billing/limits.ts";
 import { modelOverrides } from "../../env.ts";
 import { getCloudModels } from "../../services/cloud-models.ts";
 import { googleConnectRoute } from "../../services/connection-settings.ts";
+import { findTemplate } from "../../services/gallery.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
@@ -298,6 +298,10 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
             )
           : (body.model_policy ?? {});
     await checkPolicy(claims, body.org_id, modelPolicy);
+    // A built-in starter bot or one from the gallery (D-241).
+    const template = body.template_id ? await findTemplate(deps.env, body.template_id) : undefined;
+    if (body.template_id && !template)
+      throw new ApiError(404, "template_not_found", "That starter bot isn't available");
     const [bot] = await withUserSession(db, claims, (tx) =>
       tx
         .insert(bots)
@@ -306,22 +310,17 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           createdBy: claims.sub,
           name: body.name,
           // An empty persona falls back to the template's instructions.
-          personaMd:
-            body.persona_md?.trim() ||
-            (body.template_id ? (templateById(body.template_id)?.persona ?? "") : ""),
+          personaMd: body.persona_md?.trim() || (template?.persona ?? ""),
           avatarUrl: body.avatar_url,
           modelPolicy,
-          autonomy:
-            body.autonomy ??
-            (body.template_id ? templateById(body.template_id)?.autonomy : undefined) ??
-            "ask_risky",
+          autonomy: body.autonomy ?? template?.autonomy ?? "ask_risky",
           visibility: body.visibility ?? "team",
           budget: { per_run_usd: 1, daily_usd: 10, ...body.budget },
         })
         .returning(),
     );
     if (!bot) throw new Error("bot insert returned nothing");
-    if (body.template_id) await applyTemplate(db, bot.id, bot.orgId, claims.sub, body.template_id);
+    if (template) await applyTemplate(db, bot.id, bot.orgId, claims.sub, template);
     await audit(
       bot.orgId,
       claims.sub,

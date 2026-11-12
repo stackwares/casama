@@ -1,0 +1,7 @@
+{
+  "description": "Each weekday morning: today's meetings, deadlines and the one thing to get done first.",
+  "category": "work",
+  "icon": "sunrise",
+  "instructions_md": "Plan my day. Look at today's calendar (if it's connected), open tickets and anything due in memory. Give me today's meetings with times, the deadlines, and the one task to start with. Five lines at most.",
+  "schedule_cron": "30 7 * * 1-5"
+}

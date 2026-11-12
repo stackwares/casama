@@ -2664,10 +2664,28 @@ class SupabaseBackend implements Backend {
       (await api.plugins.listPlugins(botId: botId)).data!.items;
 
   @override
-  Future<PluginPreview> previewPlugin(String orgId, String url) async =>
+  Future<PluginPreview> previewPlugin(String orgId, String url, {String? commit}) async =>
       (await api.plugins.previewPlugin(
-        previewPluginRequest: PreviewPluginRequest(orgId: orgId, url: url),
+        previewPluginRequest: PreviewPluginRequest(orgId: orgId, url: url, commit: commit),
       )).data!;
+
+  @override
+  Future<List<DirectoryPlugin>> pluginDirectory() async =>
+      (await api.plugins.listPluginDirectory()).data!.items;
+
+  @override
+  Future<List<RoutineIdea>> routineIdeas() async =>
+      (await api.routines.listRoutineIdeas()).data!.items;
+
+  @override
+  Future<RemoteAppConfig> appConfig() async => (await api.system.getAppConfig()).data!;
+
+  @override
+  Future<RemoteAppConfig> adminAppConfig() async => (await api.admin.adminAppConfig()).data!;
+
+  @override
+  Future<RemoteAppConfig> setAdminAppConfig(Map<String, dynamic> settings) async =>
+      (await api.admin.adminSetAppConfig(requestBody: settings)).data!;
 
   @override
   Future<Plugin> installPlugin(

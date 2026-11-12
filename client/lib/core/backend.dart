@@ -1137,7 +1137,21 @@ abstract class Backend {
   );
   // Plugins (D-121)
   Future<List<Plugin>> plugins(String botId);
-  Future<PluginPreview> previewPlugin(String orgId, String url);
+  /// [commit]: preview that commit (a reviewed one from the plugin directory) instead of the latest.
+  Future<PluginPreview> previewPlugin(String orgId, String url, {String? commit});
+
+  /// Reviewed plugins from the open gallery, each pinned to its reviewed commit (D-241).
+  Future<List<DirectoryPlugin>> pluginDirectory();
+
+  /// Routine ideas from the open gallery, to fill in a new routine (D-241).
+  Future<List<RoutineIdea>> routineIdeas();
+
+  /// The server owner's remote settings: minimum versions, maintenance, announcements, flags (D-241).
+  Future<RemoteAppConfig> appConfig();
+
+  /// The remote settings as the owner edits them, and replacing them (owner only, D-241).
+  Future<RemoteAppConfig> adminAppConfig();
+  Future<RemoteAppConfig> setAdminAppConfig(Map<String, dynamic> settings);
   Future<Plugin> installPlugin(
     String orgId,
     String botId,

@@ -36,6 +36,7 @@ import { registerComputerRoutes } from "./routes/computers.ts";
 import { registerDeviceDataRoutes } from "./routes/device-data.ts";
 import { registerEncryptionRoutes } from "./routes/encryption.ts";
 import { registerGalleryRoutes } from "./routes/gallery.ts";
+import { registerGalleryContentRoutes } from "./routes/gallery-content.ts";
 import { registerJoiningRoutes } from "./routes/joining.ts";
 import { registerKnowledgeRoutes } from "./routes/knowledge.ts";
 import { registerLinkRoutes } from "./routes/links.ts";
@@ -258,6 +259,7 @@ export function createApp(deps: AppDeps) {
   registerPrivacyRoutes(app, deps);
   registerAppearanceRoutes(app, deps, deps.wallpapers);
   registerGalleryRoutes(app, deps);
+  registerGalleryContentRoutes(app, deps);
   registerAppRoutes(app, deps, deps.apps);
   registerSearchRoutes(app, deps);
   registerSkillRoutes(app, deps);

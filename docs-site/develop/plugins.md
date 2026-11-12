@@ -235,6 +235,12 @@ something, as the GitHub Action does by default.
    shows the skills, each server's command or address, the hosts it talks to, the secrets it needs
    and any warnings, then installs that exact commit.
 
+**The plugin directory:** a bot's **Add a plugin** sheet also lists **Reviewed plugins** from the
+[open gallery](https://gallery.casama.ai/#plugin). To list yours, open a pull request to
+[stackwares/casama-gallery](https://github.com/stackwares/casama-gallery) with `plugins/<id>/plugin.json`
+naming the repository folder and the exact commit to review. People who add it from the directory
+get that commit; a newer version is another pull request that changes `commit`.
+
 **Updates:** push a new commit. People press **Check for update** on the plugin's page and see
 what changed (skills and servers added, changed or removed, new hosts, new secrets) before updating.
 Tag releases and keep `version` current so the change is easy to read.

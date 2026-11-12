@@ -83,12 +83,14 @@ Class | Method | HTTP request | Description
 [*ActionRulesApi*](doc/ActionRulesApi.md) | [**deleteActionRule**](doc/ActionRulesApi.md#deleteactionrule) | **DELETE** /v1/action-rules/{id} | 
 [*ActionRulesApi*](doc/ActionRulesApi.md) | [**listActionRules**](doc/ActionRulesApi.md#listactionrules) | **GET** /v1/action-rules | A bot&#39;s rules plus the workspace&#39;s (or only the workspace&#39;s without bot_id)
 [*AdminApi*](doc/AdminApi.md) | [**adminAbuseEvents**](doc/AdminApi.md#adminabuseevents) | **GET** /v1/admin/abuse | Recent abuse signals and actions (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminAppConfig**](doc/AdminApi.md#adminappconfig) | **GET** /v1/admin/app-config | Remote app settings (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminCloudModels**](doc/AdminApi.md#admincloudmodels) | **GET** /v1/admin/models | The models Casama Cloud runs (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminConnectionSettings**](doc/AdminApi.md#adminconnectionsettings) | **GET** /v1/admin/connections | How apps without their own sign-in connect (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminOrgs**](doc/AdminApi.md#adminorgs) | **GET** /v1/admin/orgs | Workspaces with their limits and spend
 [*AdminApi*](doc/AdminApi.md) | [**adminOverview**](doc/AdminApi.md#adminoverview) | **GET** /v1/admin/overview | Instance totals (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminReplaceDataKeys**](doc/AdminApi.md#adminreplacedatakeys) | **POST** /v1/admin/encryption/replace-keys | Replace every data key on this server (instance owner), after a database leak; rows are resealed in the background
 [*AdminApi*](doc/AdminApi.md) | [**adminServices**](doc/AdminApi.md#adminservices) | **GET** /v1/admin/services | Configured providers and system health
+[*AdminApi*](doc/AdminApi.md) | [**adminSetAppConfig**](doc/AdminApi.md#adminsetappconfig) | **PUT** /v1/admin/app-config | Replace the remote app settings (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminUpdates**](doc/AdminApi.md#adminupdates) | **GET** /v1/admin/updates | Whether a newer Casama release exists
 [*AdminApi*](doc/AdminApi.md) | [**adminUsers**](doc/AdminApi.md#adminusers) | **GET** /v1/admin/users | Everyone on this instance
 [*AdminApi*](doc/AdminApi.md) | [**setAdminCloudModels**](doc/AdminApi.md#setadmincloudmodels) | **PUT** /v1/admin/models | Change the models Casama Cloud runs (owner only)
@@ -260,6 +262,7 @@ Class | Method | HTTP request | Description
 [*PaymentsApi*](doc/PaymentsApi.md) | [**setPaymentSettings**](doc/PaymentsApi.md#setpaymentsettings) | **PUT** /v1/orgs/{id}/payments | Connect the workspace&#39;s card issuing account for single-use cards (owners)
 [*PluginsApi*](doc/PluginsApi.md) | [**getPluginUpdate**](doc/PluginsApi.md#getpluginupdate) | **GET** /v1/plugins/{id}/update | The latest commit of the plugin&#39;s source and what changes
 [*PluginsApi*](doc/PluginsApi.md) | [**installPlugin**](doc/PluginsApi.md#installplugin) | **POST** /v1/plugins | Install a plugin for a bot, pinned to the previewed commit
+[*PluginsApi*](doc/PluginsApi.md) | [**listPluginDirectory**](doc/PluginsApi.md#listplugindirectory) | **GET** /v1/plugin-directory | Reviewed plugins from the gallery, each pinned to the commit that was reviewed
 [*PluginsApi*](doc/PluginsApi.md) | [**listPlugins**](doc/PluginsApi.md#listplugins) | **GET** /v1/plugins | 
 [*PluginsApi*](doc/PluginsApi.md) | [**previewPlugin**](doc/PluginsApi.md#previewplugin) | **POST** /v1/plugins/preview | What an Agent Plugins 1.0 package from GitHub would add
 [*PluginsApi*](doc/PluginsApi.md) | [**uninstallPlugin**](doc/PluginsApi.md#uninstallplugin) | **DELETE** /v1/plugins/{id} | Remove the plugin and everything it added
@@ -285,6 +288,7 @@ Class | Method | HTTP request | Description
 [*ReplaysApi*](doc/ReplaysApi.md) | [**runReplay**](doc/ReplaysApi.md#runreplay) | **POST** /v1/replays/{id}/run | Run a replay without the model; the bot takes over if a step fails
 [*RoutinesApi*](doc/RoutinesApi.md) | [**createRoutine**](doc/RoutinesApi.md#createroutine) | **POST** /v1/routines | Schedule a routine (cron in a timezone) or create a GitHub/custom webhook trigger
 [*RoutinesApi*](doc/RoutinesApi.md) | [**deleteRoutine**](doc/RoutinesApi.md#deleteroutine) | **DELETE** /v1/routines/{id} | Delete a routine (its past runs and conversation are kept)
+[*RoutinesApi*](doc/RoutinesApi.md) | [**listRoutineIdeas**](doc/RoutinesApi.md#listroutineideas) | **GET** /v1/routine-ideas | Routine ideas from the gallery, to fill in a new routine
 [*RoutinesApi*](doc/RoutinesApi.md) | [**listRoutines**](doc/RoutinesApi.md#listroutines) | **GET** /v1/bots/{id}/routines | 
 [*RoutinesApi*](doc/RoutinesApi.md) | [**runRoutine**](doc/RoutinesApi.md#runroutine) | **POST** /v1/routines/{id}/run | Run a routine now
 [*RoutinesApi*](doc/RoutinesApi.md) | [**updateRoutine**](doc/RoutinesApi.md#updateroutine) | **PATCH** /v1/routines/{id} | 
@@ -311,6 +315,7 @@ Class | Method | HTTP request | Description
 [*SkillsApi*](doc/SkillsApi.md) | [**installGitHubSkill**](doc/SkillsApi.md#installgithubskill) | **POST** /v1/skills/github/install | Install a GitHub skill pinned to the previewed commit
 [*SkillsApi*](doc/SkillsApi.md) | [**listSkillProposals**](doc/SkillsApi.md#listskillproposals) | **GET** /v1/skill-proposals | Skills and skill edits bots proposed from their runs
 [*SkillsApi*](doc/SkillsApi.md) | [**previewGitHubSkill**](doc/SkillsApi.md#previewgithubskill) | **POST** /v1/skills/github/preview | Read a skill folder from GitHub at its latest commit and show its files before installing
+[*SystemApi*](doc/SystemApi.md) | [**getAppConfig**](doc/SystemApi.md#getappconfig) | **GET** /v1/app-config | Remote app settings: minimum versions, maintenance, announcements, flags (no auth)
 [*SystemApi*](doc/SystemApi.md) | [**getConfig**](doc/SystemApi.md#getconfig) | **GET** /v1/config | Public client configuration (no auth)
 [*SystemApi*](doc/SystemApi.md) | [**getSignupChallenge**](doc/SystemApi.md#getsignupchallenge) | **GET** /v1/signup/challenge | A proof-of-work puzzle for signing up when the server asks for one (no auth)
 [*SystemApi*](doc/SystemApi.md) | [**healthz**](doc/SystemApi.md#healthz) | **GET** /healthz | 
@@ -405,6 +410,7 @@ Class | Method | HTTP request | Description
  - [AgentImportPlanLeftoversInner](doc/AgentImportPlanLeftoversInner.md)
  - [AgentImportPlanSkippedInner](doc/AgentImportPlanSkippedInner.md)
  - [AgentImportPlanSources](doc/AgentImportPlanSources.md)
+ - [Announcement](doc/Announcement.md)
  - [AppCatalog](doc/AppCatalog.md)
  - [ApplySkillUpdateRequest](doc/ApplySkillUpdateRequest.md)
  - [Approval](doc/Approval.md)
@@ -474,6 +480,7 @@ Class | Method | HTTP request | Description
  - [ConnectKey](doc/ConnectKey.md)
  - [ConnectKeyList](doc/ConnectKeyList.md)
  - [ConnectionSettings](doc/ConnectionSettings.md)
+ - [ContentAuthor](doc/ContentAuthor.md)
  - [Conversation](doc/Conversation.md)
  - [ConversationList](doc/ConversationList.md)
  - [ConversationThread](doc/ConversationThread.md)
@@ -552,6 +559,7 @@ Class | Method | HTTP request | Description
  - [DeviceRequestResult](doc/DeviceRequestResult.md)
  - [DeviceSource](doc/DeviceSource.md)
  - [DeviceTriggerConfig](doc/DeviceTriggerConfig.md)
+ - [DirectoryPlugin](doc/DirectoryPlugin.md)
  - [DismissSuggestionRequest](doc/DismissSuggestionRequest.md)
  - [EditMessageRequest](doc/EditMessageRequest.md)
  - [EncryptionStatus](doc/EncryptionStatus.md)
@@ -675,6 +683,7 @@ Class | Method | HTTP request | Description
  - [Plan](doc/Plan.md)
  - [PlanCatalog](doc/PlanCatalog.md)
  - [Plugin](doc/Plugin.md)
+ - [PluginDirectory](doc/PluginDirectory.md)
  - [PluginList](doc/PluginList.md)
  - [PluginPreview](doc/PluginPreview.md)
  - [PluginPreviewSkillsInner](doc/PluginPreviewSkillsInner.md)
@@ -709,6 +718,10 @@ Class | Method | HTTP request | Description
  - [ReferralInvitedBy](doc/ReferralInvitedBy.md)
  - [ReferralPreview](doc/ReferralPreview.md)
  - [ReleaseLeaseRequest](doc/ReleaseLeaseRequest.md)
+ - [RemoteAppConfig](doc/RemoteAppConfig.md)
+ - [RemoteAppConfigMaintenance](doc/RemoteAppConfigMaintenance.md)
+ - [RemoteAppConfigMinVersions](doc/RemoteAppConfigMinVersions.md)
+ - [RemoteAppConfigUpdateUrls](doc/RemoteAppConfigUpdateUrls.md)
  - [RenameTwoStepFactorRequest](doc/RenameTwoStepFactorRequest.md)
  - [ReplacedDataKeys](doc/ReplacedDataKeys.md)
  - [Replay](doc/Replay.md)
@@ -723,6 +736,8 @@ Class | Method | HTTP request | Description
  - [RevokedKey](doc/RevokedKey.md)
  - [Risk](doc/Risk.md)
  - [Routine](doc/Routine.md)
+ - [RoutineIdea](doc/RoutineIdea.md)
+ - [RoutineIdeaList](doc/RoutineIdeaList.md)
  - [RoutineList](doc/RoutineList.md)
  - [RoutineTrigger](doc/RoutineTrigger.md)
  - [Run](doc/Run.md)
@@ -828,6 +843,7 @@ Class | Method | HTTP request | Description
  - [TeachStep](doc/TeachStep.md)
  - [TelephonySettings](doc/TelephonySettings.md)
  - [Template](doc/Template.md)
+ - [TemplateAuthor](doc/TemplateAuthor.md)
  - [TemplateList](doc/TemplateList.md)
  - [TemplateRoutinesInner](doc/TemplateRoutinesInner.md)
  - [TestCredentialRequest](doc/TestCredentialRequest.md)

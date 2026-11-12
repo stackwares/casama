@@ -23,6 +23,7 @@ import 'features/companion/companion_controller.dart';
 import 'features/companion/companion_overlay.dart';
 import 'features/companion/desktop_shell.dart';
 import 'core/router.dart';
+import 'core/remote_config.dart';
 import 'core/route_title.dart';
 import 'core/theme.dart';
 import 'ui/app_scroll_behavior.dart';
@@ -97,7 +98,8 @@ class CasamaApp extends ConsumerWidget {
           context,
           _DismissKeyboard(
             child: CompanionOverlay(
-              child: _FirstRunSteps(push: ref.read(pushProvider), child: child ?? const SizedBox.shrink()),
+              // The server owner's remote settings sit over everything (D-241).
+              child: RemoteConfigGate(child: _FirstRunSteps(push: ref.read(pushProvider), child: child ?? const SizedBox.shrink())),
             ),
           ),
         ),

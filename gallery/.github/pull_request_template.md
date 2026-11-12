@@ -14,4 +14,9 @@
 - [ ] `capabilities` say what a bot can do with it, nothing it can't.
 - [ ] `logo.svg` (optional) is the vendor's single-color mark, for example from Simple Icons, with no scripts, styles or links.
 
+### For a starter bot, routine idea or plugin
+
+- [ ] A starter bot's persona says what it does and asks before acting; its routines run at sensible times.
+- [ ] A plugin's `commit` is the full commit I read, and `adds` lists everything it installs (skills, servers, secrets it asks for).
+
 Community or self-hosted servers don't belong here: anyone can already add them in Casama with Settings → Connections → Custom server.

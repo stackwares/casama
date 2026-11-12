@@ -23,6 +23,8 @@ class PreviewPluginRequest {
     required  this.orgId,
 
     required  this.url,
+
+     this.commit,
   });
 
   @JsonKey(
@@ -49,17 +51,31 @@ class PreviewPluginRequest {
 
 
 
+  @JsonKey(
+    
+    name: r'commit',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? commit;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is PreviewPluginRequest &&
       other.orgId == orgId &&
-      other.url == url;
+      other.url == url &&
+      other.commit == commit;
 
     @override
     int get hashCode =>
         orgId.hashCode +
-        url.hashCode;
+        url.hashCode +
+        commit.hashCode;
 
   factory PreviewPluginRequest.fromJson(Map<String, dynamic> json) => _$PreviewPluginRequestFromJson(json);
 

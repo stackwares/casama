@@ -12,6 +12,7 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/revealable.dart';
+import 'plugin_directory.dart';
 
 /// A bot's plugins (D-121): Agent Plugins 1.0 packages from GitHub, with what each one added.
 final pluginsProvider = FutureProvider.autoDispose.family<List<Plugin>, String>((ref, botId) => ref.watch(backendProvider).plugins(botId));
@@ -179,6 +180,8 @@ class _AddPluginState extends ConsumerState<_AddPlugin> {
   final _url = TextEditingController();
   final _secrets = <String, TextEditingController>{};
   PluginPreview? _preview;
+  // The reviewed commit, when the plugin came from the directory (D-241).
+  String? _commit;
   var _busy = false;
 
   @override
@@ -194,7 +197,7 @@ class _AddPluginState extends ConsumerState<_AddPlugin> {
     final backend = ref.read(backendProvider);
     setState(() => _busy = true);
     if (_preview == null) {
-      final p = await runGuarded(context, () => backend.previewPlugin(widget.orgId, _url.text.trim()));
+      final p = await runGuarded(context, () => backend.previewPlugin(widget.orgId, _url.text.trim(), commit: _commit));
       if (!mounted) return;
       setState(() {
         _busy = false;
@@ -225,6 +228,17 @@ class _AddPluginState extends ConsumerState<_AddPlugin> {
       submitKey: const Key('pluginSubmit'),
       onSubmit: !ready || _busy ? null : _submit,
       children: [
+        if (p == null)
+          PluginDirectoryList(
+            enabled: !_busy,
+            onPick: (d) {
+              setState(() {
+                _url.text = d.url;
+                _commit = d.commit;
+              });
+              _submit();
+            },
+          ),
         TextField(
           key: const Key('pluginUrl'),
           controller: _url,
@@ -233,7 +247,7 @@ class _AddPluginState extends ConsumerState<_AddPlugin> {
             if (ready && !_busy) _submit();
           },
           enabled: p == null,
-          onChanged: (_) => setState(() {}),
+          onChanged: (_) => setState(() => _commit = null),
           decoration: const InputDecoration(labelText: 'GitHub', hintText: 'https://github.com/owner/repo/tree/main/plugin'),
         ),
         if (p != null) ...[

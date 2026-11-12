@@ -1,0 +1,15 @@
+{
+  "name": "Digest",
+  "author": {
+    "name": "Anthropic",
+    "url": "https://github.com/anthropics/knowledge-work-plugins"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work"
+  ],
+  "category": "work",
+  "featured": false,
+  "version": 1,
+  "icon": "newspaper"
+}

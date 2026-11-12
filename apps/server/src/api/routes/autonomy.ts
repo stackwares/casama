@@ -11,15 +11,16 @@ import {
 } from "@casama/db";
 import {
   BOT_TEMPLATES,
+  type BotTemplate,
   isValidCron,
   isValidTimezone,
   nextRunAt,
   parseTotp,
   TotpError,
-  templateById,
 } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { and, desc, eq, sql } from "drizzle-orm";
+import { galleryBots } from "../../services/gallery.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
@@ -202,10 +203,8 @@ export async function applyTemplate(
   botId: string,
   orgId: string,
   userId: string,
-  templateId: string,
+  t: BotTemplate,
 ) {
-  const t = templateById(templateId);
-  if (!t) return;
   for (const s of t.skills) {
     await db.execute(sql`insert into public.skills (org_id, bot_id, name, description, body_md)
       values (${orgId}::uuid, ${botId}::uuid, ${s.name}, ${s.description}, ${s.body_md}) on conflict do nothing`);
@@ -872,11 +871,17 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
 
   // --- templates and tasks -----------------------------------------------------------
 
+  // Built-in starter bots first, then the gallery's (D-241), credited to their authors.
   app.openapi(routes.listTemplates, async (c) => {
     requireClaims(c.get("claims"));
+    const fromGallery = await galleryBots(deps.env);
+    const all: (BotTemplate & { author?: { name: string; url?: string } })[] = [
+      ...BOT_TEMPLATES,
+      ...fromGallery,
+    ];
     return c.json(
       {
-        items: BOT_TEMPLATES.map((t) => ({
+        items: all.map((t) => ({
           id: t.id,
           name: t.name,
           description: t.description,
@@ -891,6 +896,7 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
           icon: t.icon,
           mascot: t.mascot,
           starters: t.starters,
+          ...(t.author ? { author: t.author } : {}),
         })),
       },
       200,

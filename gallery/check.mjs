@@ -19,6 +19,13 @@ const APP_AUTH = ["oauth", "api_key", "none"];
 const APP_KEYS = ["description", "category", "color", "homepage", "url", "auth", "oauthClient", "scopes", "apiKey", "note", "capabilities"];
 const RESERVED_HEADERS = new Set(["host", "cookie", "connection", "content-length", "content-type", "transfer-encoding", "accept", "mcp-session-id", "mcp-protocol-version"]);
 const LOGO_MAX = 24 * 1024;
+// Starter bots, routine ideas and reviewed plugins (D-241).
+const WRITING = ["MIT", "Apache-2.0", "CC0-1.0", "CC-BY-4.0"];
+const TEMPLATE_CATEGORIES = ["work", "research", "build", "create", "life"];
+const MASCOTS = ["cool", "focused", "giggly", "lovey", "shy", "sleepy", "starry", "thinker", "winky", "wow"];
+const BOT_AUTONOMY = ["ask_always", "ask_risky"];
+const DOCUMENTS = { bot: "bot.json", routine: "routine.json", plugin: "plugin.json" };
+const INDEX_TYPES = ["theme", "scheme", "wallpaper", "skill"];
 const FONTS = new Set([
   "Libre Baskerville", "Lato", "Google Sans", "Noto Serif", "Fraunces", "Figtree", "Inter",
   "Plus Jakarta Sans", "DM Sans", "Manrope", "Nunito", "Outfit", "Poppins", "Lexend", "Work Sans",
@@ -364,9 +371,121 @@ function appLogo(svg, bytes, errors) {
   if (/<!(DOCTYPE|ENTITY)/i.test(svg)) errors.push("logo.svg can't declare entities");
 }
 
+// ---------------------------------------------------------------- bots, routines, plugins (D-241)
+// Mirrors packages/domain/src/gallery-content.ts; the server runs the same checks again (with a
+// full cron parser; this one checks the shape).
+const ICON_NAME = /^[a-z0-9][a-z0-9-]{0,39}$/;
+const CRON_FIELD = /^(\*|\d{1,2}(-\d{1,2})?)(\/\d{1,2})?(,(\*|\d{1,2}(-\d{1,2})?)(\/\d{1,2})?)*$/;
+const cronOk = (v) => typeof v === "string" && v.trim().split(/\s+/).length === 5 && v.trim().split(/\s+/).every((f) => CRON_FIELD.test(f) || /^[A-Za-z]{3}(-[A-Za-z]{3})?$/.test(f));
+const longText = (v, max, min) => {
+  if (typeof v !== "string") return undefined;
+  const t = v.trim();
+  return t.length >= min && t.length <= max ? t : undefined;
+};
+const onlyKeys = (raw, allowed, label, errors) => {
+  for (const key of Object.keys(raw)) if (!allowed.includes(key)) errors.push(`${label} can't have ${key}`);
+};
+
+function botDocument(raw, errors) {
+  if (!isRecord(raw)) return errors.push("bot.json must be an object"), undefined;
+  const start = errors.length;
+  onlyKeys(raw, ["description", "category", "icon", "mascot", "persona", "starters", "autonomy", "skills", "routines"], "bot.json", errors);
+  const description = text(raw.description, 300);
+  if (!description) errors.push("description must be 1 to 300 characters");
+  const category = TEMPLATE_CATEGORIES.find((c) => c === raw.category);
+  if (!category) errors.push(`category must be one of ${TEMPLATE_CATEGORIES.join(", ")}`);
+  const icon = typeof raw.icon === "string" && ICON_NAME.test(raw.icon) ? raw.icon : undefined;
+  if (!icon) errors.push("icon must be a Lucide icon name such as notebook-pen");
+  const mascot = MASCOTS.find((m) => m === raw.mascot);
+  if (!mascot) errors.push(`mascot must be one of ${MASCOTS.join(", ")}`);
+  const persona = longText(raw.persona, 20000, 20);
+  if (!persona) errors.push("persona must be 20 to 20,000 characters of standing instructions");
+  const starters = Array.isArray(raw.starters) ? raw.starters.map((x) => text(x, 160)) : [];
+  if (!Array.isArray(raw.starters) || starters.length < 1 || starters.length > 6 || starters.some((x) => !x))
+    errors.push("starters must be 1 to 6 first messages of at most 160 characters");
+  const autonomy = BOT_AUTONOMY.find((a) => a === raw.autonomy);
+  if (!autonomy) errors.push(`autonomy must be ${BOT_AUTONOMY.join(" or ")}`);
+  const skills = [];
+  if (raw.skills !== undefined) {
+    if (!Array.isArray(raw.skills) || raw.skills.length > 10) errors.push("skills must be at most 10");
+    else
+      raw.skills.forEach((k, i) => {
+        const at = `skills[${i}]`;
+        if (!isRecord(k)) return errors.push(`${at} must be an object`);
+        onlyKeys(k, ["name", "description", "body_md"], at, errors);
+        const name = typeof k.name === "string" && /^[a-z0-9][a-z0-9_-]{0,62}$/.test(k.name) ? k.name : undefined;
+        const desc = text(k.description, 300);
+        const body = longText(k.body_md, 50000, 1);
+        if (!name) errors.push(`${at}.name must be lowercase letters, digits, dashes or underscores`);
+        if (!desc) errors.push(`${at}.description must be 1 to 300 characters`);
+        if (!body) errors.push(`${at}.body_md must be 1 to 50,000 characters`);
+        if (name && skills.some((x) => x.name === name)) errors.push(`${at}.name ${name} is used twice`);
+        if (name && desc && body) skills.push({ name, description: desc, body_md: body });
+      });
+  }
+  const routines = [];
+  if (raw.routines !== undefined) {
+    if (!Array.isArray(raw.routines) || raw.routines.length > 5) errors.push("routines must be at most 5");
+    else
+      raw.routines.forEach((r, i) => {
+        const at = `routines[${i}]`;
+        if (!isRecord(r)) return errors.push(`${at} must be an object`);
+        onlyKeys(r, ["name", "instructions_md", "schedule_cron"], at, errors);
+        const name = text(r.name, 120);
+        const instructions = longText(r.instructions_md, 20000, 1);
+        const cron = cronOk(r.schedule_cron) ? r.schedule_cron : undefined;
+        if (!name) errors.push(`${at}.name must be 1 to 120 characters`);
+        if (!instructions) errors.push(`${at}.instructions_md must be 1 to 20,000 characters`);
+        if (!cron) errors.push(`${at}.schedule_cron must be a 5-field cron expression`);
+        if (name && instructions && cron) routines.push({ name, instructions_md: instructions, schedule_cron: cron });
+      });
+  }
+  if (errors.length > start) return undefined;
+  return { description, category, icon, mascot, persona, starters, autonomy, skills, ...(routines.length ? { routines } : {}) };
+}
+
+function routineDocument(raw, errors) {
+  if (!isRecord(raw)) return errors.push("routine.json must be an object"), undefined;
+  const start = errors.length;
+  onlyKeys(raw, ["description", "category", "icon", "instructions_md", "schedule_cron"], "routine.json", errors);
+  const description = text(raw.description, 200);
+  if (!description) errors.push("description must be 1 to 200 characters");
+  const category = TEMPLATE_CATEGORIES.find((c) => c === raw.category);
+  if (!category) errors.push(`category must be one of ${TEMPLATE_CATEGORIES.join(", ")}`);
+  const icon = typeof raw.icon === "string" && ICON_NAME.test(raw.icon) ? raw.icon : undefined;
+  if (!icon) errors.push("icon must be a Lucide icon name such as calendar-check");
+  const instructions = longText(raw.instructions_md, 20000, 10);
+  if (!instructions) errors.push("instructions_md must be 10 to 20,000 characters");
+  const cron = cronOk(raw.schedule_cron) ? raw.schedule_cron : undefined;
+  if (!cron) errors.push("schedule_cron must be a 5-field cron expression such as 0 9 * * 1-5");
+  if (errors.length > start) return undefined;
+  return { description, category, icon, instructions_md: instructions, schedule_cron: cron };
+}
+
+function pluginDocument(raw, errors) {
+  if (!isRecord(raw)) return errors.push("plugin.json must be an object"), undefined;
+  const start = errors.length;
+  onlyKeys(raw, ["description", "url", "commit", "icon", "adds"], "plugin.json", errors);
+  const description = text(raw.description, 300);
+  if (!description) errors.push("description must be 1 to 300 characters");
+  const url = typeof raw.url === "string" && /^https:\/\/github\.com\/[A-Za-z0-9_.-]{1,100}\/[A-Za-z0-9_.-]{1,100}(\/tree\/[^/\s]{1,200}(\/[^\s]{1,300})?)?\/?$/.test(raw.url) ? raw.url : undefined;
+  if (!url) errors.push("url must be a github.com repository or folder link");
+  const commit = typeof raw.commit === "string" && /^[0-9a-f]{40}$/.test(raw.commit) ? raw.commit : undefined;
+  if (!commit) errors.push("commit must be the full 40-character commit that was reviewed");
+  let icon;
+  if (raw.icon !== undefined) {
+    icon = typeof raw.icon === "string" && ICON_NAME.test(raw.icon) ? raw.icon : undefined;
+    if (!icon) errors.push("icon must be a Lucide icon name such as puzzle");
+  }
+  const adds = Array.isArray(raw.adds) ? raw.adds.map((a) => text(a, 80)) : [];
+  if (adds.length < 1 || adds.length > 6 || adds.some((a) => !a)) errors.push("adds must be 1 to 6 short phrases of at most 80 characters");
+  if (errors.length > start) return undefined;
+  return { description, url, commit, ...(icon ? { icon } : {}), adds };
+}
+
 const errors = [];
 const items = [];
-for (const [dir, type] of [["themes", "theme"], ["schemes", "scheme"], ["wallpapers", "wallpaper"], ["skills", "skill"], ["apps", "app"]]) {
+for (const [dir, type] of [["themes", "theme"], ["schemes", "scheme"], ["wallpapers", "wallpaper"], ["skills", "skill"], ["apps", "app"], ["bots", "bot"], ["routines", "routine"], ["plugins", "plugin"]]) {
   const parent = join(root, dir);
   let ids = [];
   try {
@@ -396,7 +515,7 @@ for (const [dir, type] of [["themes", "theme"], ["schemes", "scheme"], ["wallpap
       errors.push(`${where}: item.json is not JSON`);
       continue;
     }
-    const licenses = type === "skill" ? SKILL : type === "app" ? APP : LOOK;
+    const licenses = type === "skill" ? SKILL : type === "app" ? APP : type === "plugin" ? APP : type === "bot" || type === "routine" ? WRITING : LOOK;
     const name = typeof meta.name === "string" ? meta.name.trim() : "";
     if (name.length < 1 || name.length > 60) errors.push(`${where}: name must be 1 to 60 characters`);
     const authorName = meta.author && typeof meta.author.name === "string" ? meta.author.name.trim() : "";
@@ -432,7 +551,18 @@ for (const [dir, type] of [["themes", "theme"], ["schemes", "scheme"], ["wallpap
         return null;
       }
     };
-    if (type === "app") {
+    if (DOCUMENTS[type]) {
+      const docName = DOCUMENTS[type];
+      for (const f of files)
+        if (f.relative !== "item.json" && f.relative !== docName) errors.push(`${where}: ${f.relative} isn't allowed (only item.json and ${docName})`);
+      const raw = readJson(docName);
+      if (raw) {
+        const local = [];
+        document = type === "bot" ? botDocument(raw, local) : type === "routine" ? routineDocument(raw, local) : pluginDocument(raw, local);
+        description = document?.description;
+        for (const e of local) errors.push(`${where}: ${e}`);
+      }
+    } else if (type === "app") {
       for (const f of files)
         if (!["item.json", "app.json", "logo.svg"].includes(f.relative)) errors.push(`${where}: ${f.relative} isn't allowed (only item.json, app.json, logo.svg)`);
       const raw = readJson("app.json");
@@ -542,8 +672,11 @@ items.sort((a, b) => (a.type === b.type ? a.id.localeCompare(b.id) : a.type.loca
 // Apps get their own file (D-239): servers and apps from before apps only read index.json, and
 // their parsers know just the four look and skill types.
 const outputs = [
-  { file: "index.json", items: items.filter((i) => i.type !== "app") },
+  { file: "index.json", items: items.filter((i) => INDEX_TYPES.includes(i.type)) },
   { file: "apps.json", items: items.filter((i) => i.type === "app") },
+  { file: "bots.json", items: items.filter((i) => i.type === "bot") },
+  { file: "routines.json", items: items.filter((i) => i.type === "routine") },
+  { file: "plugins.json", items: items.filter((i) => i.type === "plugin") },
 ];
 let stale = false;
 for (const out of outputs) {

@@ -4,6 +4,7 @@ import type { AddressInfo } from "node:net";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { resetAppConfigCache } from "../src/services/app-config.ts";
 import { galleryApps, resetGalleryCache } from "../src/services/gallery.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
@@ -187,6 +188,129 @@ describe("gallery", () => {
     resetGalleryCache();
     expect(apps.map((a) => a.id)).toEqual(["good"]);
     expect(apps[0]).not.toHaveProperty("logoUrl");
+  });
+
+  it("adds the gallery's starter bots to the templates and builds a bot from one", async () => {
+    const templates = await j(await h.request("/v1/templates", { token: owner.token }));
+    const buddy = templates.items.find((t: { id: string }) => t.id === "study-buddy");
+    expect(buddy).toMatchObject({
+      name: "Study buddy",
+      category: "life",
+      mascot: "thinker",
+      autonomy: "ask_always",
+      skills: ["flashcards"],
+      author: { name: "Casama" },
+    });
+    // Built-in ones come first and carry no author.
+    expect(templates.items[0].author).toBeUndefined();
+    const credId = (
+      await j(
+        await h.request("/v1/credentials", {
+          method: "POST",
+          token: owner.token,
+          json: { org_id: orgId, provider: "openrouter", label: "m", api_key: "sk-or-gallery" },
+        }),
+      )
+    ).id;
+    const make = (template_id: string) =>
+      h.request("/v1/bots", {
+        method: "POST",
+        token: owner.token,
+        json: {
+          org_id: orgId,
+          name: "Home",
+          template_id,
+          model_policy: { primary: { credential_id: credId, model: "fixture-main" } },
+        },
+      });
+    const bot = await j(await make("home-organizer"));
+    expect(bot.persona_md).toContain("household");
+    expect(bot.autonomy).toBe("ask_risky");
+    const routines = await j(
+      await h.request(`/v1/bots/${bot.id}/routines`, { token: owner.token }),
+    );
+    expect(routines.items[0]).toMatchObject({
+      name: "Sunday week ahead",
+      schedule_cron: "0 18 * * 0",
+    });
+    expect((await make("no-such-bot")).status).toBe(404);
+  });
+
+  it("lists routine ideas and reviewed plugins", async () => {
+    const ideas = await j(await h.request("/v1/routine-ideas", { token: owner.token }));
+    expect(ideas.items[0].featured).toBe(true);
+    expect(ideas.items.find((i: { id: string }) => i.id === "weekly-review")).toMatchObject({
+      schedule_cron: "0 16 * * 5",
+      category: "work",
+      icon: "calendar-check",
+    });
+    const plugins = await j(await h.request("/v1/plugin-directory", { token: owner.token }));
+    expect(plugins.items).toEqual([
+      expect.objectContaining({
+        id: "hello-casama",
+        commit: "6efc18250f69b9c2938b689076384237324136e3",
+        url: "https://github.com/stackwares/casama/tree/main/examples/hello-plugin",
+      }),
+    ]);
+  });
+
+  it("serves the skill catalog from the gallery and installs its copy", async () => {
+    const catalog = await j(await h.request("/v1/skills/catalog", { token: owner.token }));
+    const ids = catalog.items.map((i: { id: string }) => i.id);
+    expect(ids).toContain("meeting-notes");
+    expect(ids).toContain("teach");
+    expect(new Set(ids).size).toBe(ids.length);
+    const res = await h.request("/v1/skills/install", {
+      method: "POST",
+      token: owner.token,
+      json: { org_id: orgId, catalog_id: "proofread" },
+    });
+    expect(res.status).toBe(201);
+    const skill = await j(res);
+    expect(skill.source).toBe("catalog");
+    expect(skill.source_ref.id).toBe("proofread");
+    expect(skill.source_ref.sha256).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("serves remote app settings without sign-in; only the owner changes them", async () => {
+    resetAppConfigCache();
+    const empty = await j(await h.request("/v1/app-config"));
+    expect(empty).toEqual({
+      min_versions: {},
+      update_urls: {},
+      maintenance: null,
+      announcements: [],
+      flags: {},
+    });
+    const bad = await h.request("/v1/admin/app-config", {
+      method: "PUT",
+      token: owner.token,
+      json: { min_versions: { ios: "soon" } },
+    });
+    expect(bad.status).toBe(400);
+    const set = await h.request("/v1/admin/app-config", {
+      method: "PUT",
+      token: owner.token,
+      json: {
+        min_versions: { ios: "0.8.0" },
+        update_urls: { ios: "https://apps.apple.com/app/id1" },
+        announcements: [{ id: "launch", title: "We're live", body: "Thanks for testing." }],
+        flags: { new_home: true },
+      },
+    });
+    expect(set.status).toBe(200);
+    const live = await j(await h.request("/v1/app-config"));
+    expect(live.min_versions).toEqual({ ios: "0.8.0" });
+    expect(live.announcements[0]).toMatchObject({ id: "launch", level: "info" });
+    expect(live.flags).toEqual({ new_home: true });
+    const other = await h.user("gallery-other@example.com");
+    const denied = await h.request("/v1/admin/app-config", {
+      method: "PUT",
+      token: other.token,
+      json: {},
+    });
+    expect(denied.status).toBe(403);
+    resetAppConfigCache();
   });
 
   it("is off when the URL is empty", async () => {

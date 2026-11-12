@@ -92,6 +92,8 @@ describe("openapi", () => {
             "/v1/signup/challenge",
             "/v1/join/preview",
             "/v1/referral/preview",
+            // Remote app settings: apps read them before signing in (D-241).
+            "/v1/app-config",
           ].includes(path)
         )
           expect(Object.keys(op.responses)).toContain("401");

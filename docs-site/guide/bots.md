@@ -178,6 +178,11 @@ the instructions change; skills and routines stay as they are.
 The Coordinator plans bigger jobs, splits them into tickets and hands them to other bots. See
 [Bots working together](/guide/bots-together).
 
+More personas come from the [open gallery](https://gallery.casama.ai/#bot), such as Study buddy and
+Home organizer, and show **By** whoever made them. New ones appear without an app update. Anyone can
+propose one by pull request to [stackwares/casama-gallery](https://github.com/stackwares/casama-gallery);
+a gallery persona asks before acting, at least before risky actions.
+
 ## Your first bot: the welcome chat
 
 When you sign in for the first time and don't belong to a workspace yet, Casama creates a

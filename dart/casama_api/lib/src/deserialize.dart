@@ -23,6 +23,7 @@ import 'package:casama_api/src/model/agent_import_plan.dart';
 import 'package:casama_api/src/model/agent_import_plan_leftovers_inner.dart';
 import 'package:casama_api/src/model/agent_import_plan_skipped_inner.dart';
 import 'package:casama_api/src/model/agent_import_plan_sources.dart';
+import 'package:casama_api/src/model/announcement.dart';
 import 'package:casama_api/src/model/app_catalog.dart';
 import 'package:casama_api/src/model/apply_skill_update_request.dart';
 import 'package:casama_api/src/model/approval.dart';
@@ -88,6 +89,7 @@ import 'package:casama_api/src/model/connect_flow_status.dart';
 import 'package:casama_api/src/model/connect_key.dart';
 import 'package:casama_api/src/model/connect_key_list.dart';
 import 'package:casama_api/src/model/connection_settings.dart';
+import 'package:casama_api/src/model/content_author.dart';
 import 'package:casama_api/src/model/conversation.dart';
 import 'package:casama_api/src/model/conversation_list.dart';
 import 'package:casama_api/src/model/conversation_thread.dart';
@@ -164,6 +166,7 @@ import 'package:casama_api/src/model/device_request.dart';
 import 'package:casama_api/src/model/device_request_result.dart';
 import 'package:casama_api/src/model/device_source.dart';
 import 'package:casama_api/src/model/device_trigger_config.dart';
+import 'package:casama_api/src/model/directory_plugin.dart';
 import 'package:casama_api/src/model/dismiss_suggestion_request.dart';
 import 'package:casama_api/src/model/edit_message_request.dart';
 import 'package:casama_api/src/model/encryption_status.dart';
@@ -284,6 +287,7 @@ import 'package:casama_api/src/model/phone_call_list.dart';
 import 'package:casama_api/src/model/plan.dart';
 import 'package:casama_api/src/model/plan_catalog.dart';
 import 'package:casama_api/src/model/plugin.dart';
+import 'package:casama_api/src/model/plugin_directory.dart';
 import 'package:casama_api/src/model/plugin_list.dart';
 import 'package:casama_api/src/model/plugin_preview.dart';
 import 'package:casama_api/src/model/plugin_preview_skills_inner.dart';
@@ -315,6 +319,10 @@ import 'package:casama_api/src/model/referral.dart';
 import 'package:casama_api/src/model/referral_invited_by.dart';
 import 'package:casama_api/src/model/referral_preview.dart';
 import 'package:casama_api/src/model/release_lease_request.dart';
+import 'package:casama_api/src/model/remote_app_config.dart';
+import 'package:casama_api/src/model/remote_app_config_maintenance.dart';
+import 'package:casama_api/src/model/remote_app_config_min_versions.dart';
+import 'package:casama_api/src/model/remote_app_config_update_urls.dart';
 import 'package:casama_api/src/model/rename_two_step_factor_request.dart';
 import 'package:casama_api/src/model/replaced_data_keys.dart';
 import 'package:casama_api/src/model/replay.dart';
@@ -328,6 +336,8 @@ import 'package:casama_api/src/model/revert_page_request.dart';
 import 'package:casama_api/src/model/revoked_connect_key.dart';
 import 'package:casama_api/src/model/revoked_key.dart';
 import 'package:casama_api/src/model/routine.dart';
+import 'package:casama_api/src/model/routine_idea.dart';
+import 'package:casama_api/src/model/routine_idea_list.dart';
 import 'package:casama_api/src/model/routine_list.dart';
 import 'package:casama_api/src/model/run.dart';
 import 'package:casama_api/src/model/run_cancelled_event.dart';
@@ -426,6 +436,7 @@ import 'package:casama_api/src/model/teach_session.dart';
 import 'package:casama_api/src/model/teach_step.dart';
 import 'package:casama_api/src/model/telephony_settings.dart';
 import 'package:casama_api/src/model/template.dart';
+import 'package:casama_api/src/model/template_author.dart';
 import 'package:casama_api/src/model/template_list.dart';
 import 'package:casama_api/src/model/template_routines_inner.dart';
 import 'package:casama_api/src/model/test_credential_request.dart';
@@ -564,6 +575,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AgentImportPlanSkippedInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AgentImportPlanSources':
           return AgentImportPlanSources.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Announcement':
+          return Announcement.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AppCatalog':
           return AppCatalog.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ApplySkillUpdateRequest':
@@ -706,6 +719,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ConnectKeyList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ConnectionSettings':
           return ConnectionSettings.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ContentAuthor':
+          return ContentAuthor.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Conversation':
           return Conversation.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ConversationList':
@@ -864,6 +879,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeviceSource.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeviceTriggerConfig':
           return DeviceTriggerConfig.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DirectoryPlugin':
+          return DirectoryPlugin.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DismissSuggestionRequest':
           return DismissSuggestionRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'EditMessageRequest':
@@ -1113,6 +1130,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return PlanCatalog.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Plugin':
           return Plugin.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'PluginDirectory':
+          return PluginDirectory.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PluginList':
           return PluginList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'PluginPreview':
@@ -1184,6 +1203,14 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ReferralPreview.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ReleaseLeaseRequest':
           return ReleaseLeaseRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RemoteAppConfig':
+          return RemoteAppConfig.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RemoteAppConfigMaintenance':
+          return RemoteAppConfigMaintenance.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RemoteAppConfigMinVersions':
+          return RemoteAppConfigMinVersions.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RemoteAppConfigUpdateUrls':
+          return RemoteAppConfigUpdateUrls.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RenameTwoStepFactorRequest':
           return RenameTwoStepFactorRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ReplacedDataKeys':
@@ -1213,6 +1240,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           
         case 'Routine':
           return Routine.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RoutineIdea':
+          return RoutineIdea.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RoutineIdeaList':
+          return RoutineIdeaList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RoutineList':
           return RoutineList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RoutineTrigger':
@@ -1430,6 +1461,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return TelephonySettings.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Template':
           return Template.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'TemplateAuthor':
+          return TemplateAuthor.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'TemplateList':
           return TemplateList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'TemplateRoutinesInner':

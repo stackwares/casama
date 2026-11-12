@@ -29,6 +29,8 @@ abstract class _$TemplateCWProxy {
 
   Template starters(List<String>? starters);
 
+  Template author(TemplateAuthor? author);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Template(...).copyWith.fieldName(value)`.
@@ -49,6 +51,7 @@ abstract class _$TemplateCWProxy {
     String? icon,
     String? mascot,
     List<String>? starters,
+    TemplateAuthor? author,
   });
 }
 
@@ -93,6 +96,9 @@ class _$TemplateCWProxyImpl implements _$TemplateCWProxy {
   @override
   Template starters(List<String>? starters) => call(starters: starters);
 
+  @override
+  Template author(TemplateAuthor? author) => call(author: author);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Template(...).copyWith.fieldName(value)`.
@@ -114,6 +120,7 @@ class _$TemplateCWProxyImpl implements _$TemplateCWProxy {
     Object? icon = const $CopyWithPlaceholder(),
     Object? mascot = const $CopyWithPlaceholder(),
     Object? starters = const $CopyWithPlaceholder(),
+    Object? author = const $CopyWithPlaceholder(),
   }) {
     return Template(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -161,6 +168,10 @@ class _$TemplateCWProxyImpl implements _$TemplateCWProxy {
           ? _value.starters
           // ignore: cast_nullable_to_non_nullable
           : starters as List<String>?,
+      author: author == const $CopyWithPlaceholder()
+          ? _value.author
+          // ignore: cast_nullable_to_non_nullable
+          : author as TemplateAuthor?,
     );
   }
 }
@@ -176,54 +187,57 @@ extension $TemplateCopyWith on Template {
 // JsonSerializableGenerator
 // **************************************************************************
 
-Template _$TemplateFromJson(Map<String, dynamic> json) =>
-    $checkedCreate('Template', json, ($checkedConvert) {
-      $checkKeys(
-        json,
-        requiredKeys: const [
-          'id',
-          'name',
-          'description',
-          'autonomy',
-          'skills',
-          'routines',
-        ],
-      );
-      final val = Template(
-        id: $checkedConvert('id', (v) => v as String),
-        name: $checkedConvert('name', (v) => v as String),
-        description: $checkedConvert('description', (v) => v as String),
-        autonomy: $checkedConvert(
-          'autonomy',
-          (v) => $enumDecode(_$TemplateAutonomyEnumEnumMap, v),
-        ),
-        skills: $checkedConvert(
-          'skills',
-          (v) => (v as List<dynamic>).map((e) => e as String).toList(),
-        ),
-        routines: $checkedConvert(
-          'routines',
-          (v) => (v as List<dynamic>)
-              .map(
-                (e) =>
-                    TemplateRoutinesInner.fromJson(e as Map<String, dynamic>),
-              )
-              .toList(),
-        ),
-        persona: $checkedConvert('persona', (v) => v as String?),
-        category: $checkedConvert(
-          'category',
-          (v) => $enumDecodeNullable(_$TemplateCategoryEnumEnumMap, v),
-        ),
-        icon: $checkedConvert('icon', (v) => v as String?),
-        mascot: $checkedConvert('mascot', (v) => v as String?),
-        starters: $checkedConvert(
-          'starters',
-          (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
-        ),
-      );
-      return val;
-    });
+Template _$TemplateFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate('Template', json, ($checkedConvert) {
+  $checkKeys(
+    json,
+    requiredKeys: const [
+      'id',
+      'name',
+      'description',
+      'autonomy',
+      'skills',
+      'routines',
+    ],
+  );
+  final val = Template(
+    id: $checkedConvert('id', (v) => v as String),
+    name: $checkedConvert('name', (v) => v as String),
+    description: $checkedConvert('description', (v) => v as String),
+    autonomy: $checkedConvert(
+      'autonomy',
+      (v) => $enumDecode(_$TemplateAutonomyEnumEnumMap, v),
+    ),
+    skills: $checkedConvert(
+      'skills',
+      (v) => (v as List<dynamic>).map((e) => e as String).toList(),
+    ),
+    routines: $checkedConvert(
+      'routines',
+      (v) => (v as List<dynamic>)
+          .map((e) => TemplateRoutinesInner.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    ),
+    persona: $checkedConvert('persona', (v) => v as String?),
+    category: $checkedConvert(
+      'category',
+      (v) => $enumDecodeNullable(_$TemplateCategoryEnumEnumMap, v),
+    ),
+    icon: $checkedConvert('icon', (v) => v as String?),
+    mascot: $checkedConvert('mascot', (v) => v as String?),
+    starters: $checkedConvert(
+      'starters',
+      (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
+    ),
+    author: $checkedConvert(
+      'author',
+      (v) =>
+          v == null ? null : TemplateAuthor.fromJson(v as Map<String, dynamic>),
+    ),
+  );
+  return val;
+});
 
 Map<String, dynamic> _$TemplateToJson(Template instance) => <String, dynamic>{
   'id': instance.id,
@@ -237,6 +251,7 @@ Map<String, dynamic> _$TemplateToJson(Template instance) => <String, dynamic>{
   'icon': ?instance.icon,
   'mascot': ?instance.mascot,
   'starters': ?instance.starters,
+  'author': ?instance.author?.toJson(),
 };
 
 const _$TemplateAutonomyEnumEnumMap = {

@@ -29,7 +29,19 @@ import {
   checkAppLogo,
   GALLERY_APP_TYPE,
 } from "../packages/domain/src/gallery-apps.ts";
+import {
+  BOT_LICENSES,
+  checkBotDocument,
+  checkPluginDocument,
+  checkRoutineDocument,
+  GALLERY_BOT_TYPE,
+  GALLERY_PLUGIN_TYPE,
+  GALLERY_ROUTINE_TYPE,
+  PLUGIN_ENTRY_LICENSES,
+  ROUTINE_LICENSES,
+} from "../packages/domain/src/gallery-content.ts";
 import { parseSkillMd } from "../packages/domain/src/skill-format.ts";
+import { BOT_TEMPLATES } from "../packages/domain/src/templates.ts";
 
 const root = fileURLToPath(new URL("../gallery", import.meta.url));
 const checkOnly = process.argv.includes("--check");
@@ -38,14 +50,33 @@ const lucide = JSON.parse(
   readFileSync(join(root, "assets/lucide/icon-nodes.json"), "utf8"),
 ) as LucideNodes;
 
-const folders: { dir: string; type: GalleryType | typeof GALLERY_APP_TYPE }[] = [
+type FolderType =
+  | GalleryType
+  | typeof GALLERY_APP_TYPE
+  | typeof GALLERY_BOT_TYPE
+  | typeof GALLERY_ROUTINE_TYPE
+  | typeof GALLERY_PLUGIN_TYPE;
+/** The look and skill types that index.json carries; every other type has its own file. */
+const INDEX_TYPES = new Set<string>(["theme", "scheme", "wallpaper", "skill"]);
+/** The one document each newer type's folder holds next to item.json. */
+const DOCUMENTS: Record<string, string> = {
+  bot: "bot.json",
+  routine: "routine.json",
+  plugin: "plugin.json",
+};
+const folders: { dir: string; type: FolderType }[] = [
   { dir: "themes", type: "theme" },
   { dir: "schemes", type: "scheme" },
   { dir: "wallpapers", type: "wallpaper" },
   { dir: "skills", type: "skill" },
   // Vendors' MCP servers (D-239). Built-in apps (packages/domain/src/apps.ts) keep their ids.
   { dir: "apps", type: GALLERY_APP_TYPE },
+  // Starter bots, routine ideas and reviewed plugins (D-241).
+  { dir: "bots", type: GALLERY_BOT_TYPE },
+  { dir: "routines", type: GALLERY_ROUTINE_TYPE },
+  { dir: "plugins", type: GALLERY_PLUGIN_TYPE },
 ];
+const builtInBots = new Set(BOT_TEMPLATES.map((t) => t.id));
 const builtInApps = new Set(APP_CATALOG.map((a) => a.id));
 
 function walk(dir: string): string[] {
@@ -90,7 +121,17 @@ for (const { dir, type } of folders) {
       continue;
     }
     const licenses =
-      type === "skill" ? SKILL_LICENSES : type === GALLERY_APP_TYPE ? APP_LICENSES : LOOK_LICENSES;
+      type === "skill"
+        ? SKILL_LICENSES
+        : type === GALLERY_APP_TYPE
+          ? APP_LICENSES
+          : type === GALLERY_BOT_TYPE
+            ? BOT_LICENSES
+            : type === GALLERY_ROUTINE_TYPE
+              ? ROUTINE_LICENSES
+              : type === GALLERY_PLUGIN_TYPE
+                ? PLUGIN_ENTRY_LICENSES
+                : LOOK_LICENSES;
     const parsed = parseGalleryMeta(metaJson, licenses);
     for (const e of parsed.errors) errors.push(`${where}: ${e}`);
     if (!parsed.meta) continue;
@@ -101,7 +142,37 @@ for (const { dir, type } of folders) {
     let document: unknown;
     let description: string | undefined;
     let requires: string[] = [];
-    if (type === GALLERY_APP_TYPE) {
+    const docName = DOCUMENTS[type];
+    if (docName) {
+      if (type === GALLERY_BOT_TYPE && builtInBots.has(id))
+        errors.push(
+          `${where}: ${id} is a built-in starter bot; change it in packages/domain/src/templates.ts`,
+        );
+      for (const f of files)
+        if (f.relative !== "item.json" && f.relative !== docName)
+          errors.push(`${where}: ${f.relative} isn't allowed (only item.json and ${docName})`);
+      const doc = files.find((f) => f.relative === docName);
+      if (!doc) {
+        errors.push(`${where}: missing ${docName}`);
+        continue;
+      }
+      let json: unknown;
+      try {
+        json = JSON.parse(doc.bytes.toString("utf8"));
+      } catch {
+        errors.push(`${where}: ${docName} is not JSON`);
+        continue;
+      }
+      const checked =
+        type === GALLERY_BOT_TYPE
+          ? checkBotDocument(json)
+          : type === GALLERY_ROUTINE_TYPE
+            ? checkRoutineDocument(json)
+            : checkPluginDocument(json);
+      for (const e of checked.errors) errors.push(`${where}: ${e}`);
+      document = checked.doc;
+      description = checked.doc?.description;
+    } else if (type === GALLERY_APP_TYPE) {
       if (builtInApps.has(id) || builtInApps.has(id.replaceAll("-", "_")))
         errors.push(`${where}: ${id} is a built-in app; change it in packages/domain/src/apps.ts`);
       for (const f of files)
@@ -207,10 +278,13 @@ items.sort((a, b) => {
 
 // Apps get their own file (D-239): servers and apps from before apps only read index.json, and
 // their parsers know just the four look and skill types.
-const isApp = (i: unknown) => (i as { type: string }).type === GALLERY_APP_TYPE;
+const typeOf = (i: unknown) => (i as { type: string }).type;
 const outputs = [
-  { file: "index.json", items: items.filter((i) => !isApp(i)) },
-  { file: "apps.json", items: items.filter(isApp) },
+  { file: "index.json", items: items.filter((i) => INDEX_TYPES.has(typeOf(i))) },
+  { file: "apps.json", items: items.filter((i) => typeOf(i) === GALLERY_APP_TYPE) },
+  { file: "bots.json", items: items.filter((i) => typeOf(i) === GALLERY_BOT_TYPE) },
+  { file: "routines.json", items: items.filter((i) => typeOf(i) === GALLERY_ROUTINE_TYPE) },
+  { file: "plugins.json", items: items.filter((i) => typeOf(i) === GALLERY_PLUGIN_TYPE) },
 ];
 let stale = false;
 for (const out of outputs) {

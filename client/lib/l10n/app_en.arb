@@ -2440,5 +2440,20 @@
   "chatPreviewVideo": "Video",
   "chatPreviewVoice": "Voice note",
   "chatPreviewNone": "No messages yet",
-  "chatTimeYesterday": "Yesterday"
+  "chatTimeYesterday": "Yesterday",
+  "remoteUpdateTitle": "Time to update Casama",
+  "remoteUpdateBody": "This version of Casama is no longer supported. Update it to keep going.",
+  "remoteUpdateNoLink": "This version of Casama is no longer supported. Update it from where you installed it.",
+  "remoteMaintenanceTitle": "Casama is down for maintenance",
+  "openLink": "Open",
+  "routineIdeas": "Ideas",
+  "routineIdeasHelp": "Start from an idea, then change anything.",
+  "pluginDirectory": "Reviewed plugins",
+  "pluginDirectoryHelp": "Checked by Casama and pinned to the version that was checked.",
+  "pluginOrPaste": "Or add one from a GitHub link",
+  "byAuthor": "By {name}",
+  "@byAuthor": {"placeholders": {"name": {"type": "String"}}},
+  "adminAppSettings": "App settings",
+  "adminAppSettingsHelp": "Minimum versions, maintenance, announcements and feature switches for every app, with no release.",
+  "adminAppSettingsBadJson": "That isn't valid JSON. Check the brackets, quotes and commas."
 }

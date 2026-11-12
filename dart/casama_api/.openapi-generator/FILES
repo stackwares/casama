@@ -82,6 +82,7 @@ lib/src/model/agent_import_plan.dart
 lib/src/model/agent_import_plan_leftovers_inner.dart
 lib/src/model/agent_import_plan_skipped_inner.dart
 lib/src/model/agent_import_plan_sources.dart
+lib/src/model/announcement.dart
 lib/src/model/app_catalog.dart
 lib/src/model/apply_skill_update_request.dart
 lib/src/model/approval.dart
@@ -151,6 +152,7 @@ lib/src/model/connect_flow_status.dart
 lib/src/model/connect_key.dart
 lib/src/model/connect_key_list.dart
 lib/src/model/connection_settings.dart
+lib/src/model/content_author.dart
 lib/src/model/conversation.dart
 lib/src/model/conversation_list.dart
 lib/src/model/conversation_thread.dart
@@ -229,6 +231,7 @@ lib/src/model/device_request.dart
 lib/src/model/device_request_result.dart
 lib/src/model/device_source.dart
 lib/src/model/device_trigger_config.dart
+lib/src/model/directory_plugin.dart
 lib/src/model/dismiss_suggestion_request.dart
 lib/src/model/edit_message_request.dart
 lib/src/model/encryption_status.dart
@@ -352,6 +355,7 @@ lib/src/model/phone_call_list.dart
 lib/src/model/plan.dart
 lib/src/model/plan_catalog.dart
 lib/src/model/plugin.dart
+lib/src/model/plugin_directory.dart
 lib/src/model/plugin_list.dart
 lib/src/model/plugin_preview.dart
 lib/src/model/plugin_preview_skills_inner.dart
@@ -386,6 +390,10 @@ lib/src/model/referral.dart
 lib/src/model/referral_invited_by.dart
 lib/src/model/referral_preview.dart
 lib/src/model/release_lease_request.dart
+lib/src/model/remote_app_config.dart
+lib/src/model/remote_app_config_maintenance.dart
+lib/src/model/remote_app_config_min_versions.dart
+lib/src/model/remote_app_config_update_urls.dart
 lib/src/model/rename_two_step_factor_request.dart
 lib/src/model/replaced_data_keys.dart
 lib/src/model/replay.dart
@@ -400,6 +408,8 @@ lib/src/model/revoked_connect_key.dart
 lib/src/model/revoked_key.dart
 lib/src/model/risk.dart
 lib/src/model/routine.dart
+lib/src/model/routine_idea.dart
+lib/src/model/routine_idea_list.dart
 lib/src/model/routine_list.dart
 lib/src/model/routine_trigger.dart
 lib/src/model/run.dart
@@ -505,6 +515,7 @@ lib/src/model/teach_session.dart
 lib/src/model/teach_step.dart
 lib/src/model/telephony_settings.dart
 lib/src/model/template.dart
+lib/src/model/template_author.dart
 lib/src/model/template_list.dart
 lib/src/model/template_routines_inner.dart
 lib/src/model/test_credential_request.dart

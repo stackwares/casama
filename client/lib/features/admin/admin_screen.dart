@@ -15,6 +15,7 @@ import '../../ui/edge_fade.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import 'app_settings_card.dart';
 
 /// Null when the signed-in user is not this instance's owner.
 final adminOverviewProvider = FutureProvider<AdminOverview?>((ref) async {
@@ -389,6 +390,7 @@ class _Services extends ConsumerWidget {
         children: [
           const _CloudModelsCard(),
           const _ConnectionSettingsCard(),
+          const AppSettingsCard(),
           const SizedBox(height: AppSpace.lg),
           GroupedCard(
             children: [

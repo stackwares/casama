@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/lucide_names.dart';
 
 /// Icons, colors and labels for skills: catalog skills name a Lucide icon (`icon` in
 /// skills/catalog.json); anything unknown falls back to its category's icon, then a book.
@@ -74,7 +75,7 @@ IconData skillCategoryIcon(String? category) =>
     _categoryIcons[category] ?? LucideIcons.bookOpen;
 
 IconData skillIcon({String? icon, String? category}) =>
-    _skillIcons[icon] ?? skillCategoryIcon(category);
+    _skillIcons[icon] ?? lucideByName(icon) ?? skillCategoryIcon(category);
 
 /// The category's tint; skills without one use the theme's primary color.
 Color skillCategoryColor(BuildContext context, String? category) {

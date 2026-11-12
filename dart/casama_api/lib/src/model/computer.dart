@@ -225,7 +225,7 @@ class Computer {
 
 
 
-      /// The operating system to show, e.g. \"Ubuntu 24.04\" or \"macOS 26.2\"; null when unknown (D-226)
+      /// The operating system to show, e.g. \"Ubuntu 24.04\" or \"macOS 26.2\"; null when unknown (D-227)
   @JsonKey(
     
     name: r'os',

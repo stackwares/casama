@@ -35,7 +35,15 @@ export const PluginPreview = z
   .openapi("PluginPreview");
 
 export const PreviewPluginRequest = z
-  .object({ org_id: Uuid, url: z.string().min(1).max(500) })
+  .object({
+    org_id: Uuid,
+    url: z.string().min(1).max(500),
+    /** Preview this commit instead of the latest (the plugin directory's reviewed commit, D-241). */
+    commit: z
+      .string()
+      .regex(/^[0-9a-f]{40}$/)
+      .optional(),
+  })
   .openapi("PreviewPluginRequest");
 
 export const InstallPluginRequest = z

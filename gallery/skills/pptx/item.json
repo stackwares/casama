@@ -1,0 +1,15 @@
+{
+  "name": "PowerPoint decks",
+  "author": {
+    "name": "Anthropic",
+    "url": "https://github.com/anthropics/skills"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work"
+  ],
+  "category": "work",
+  "featured": false,
+  "version": 1,
+  "icon": "presentation"
+}

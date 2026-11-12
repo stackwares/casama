@@ -374,8 +374,9 @@ export function registerPluginRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   app.openapi(routes.previewPlugin, async (c) => {
     claimsOf(c);
-    const { url } = c.req.valid("json");
-    return c.json(preview(await load(parseGitHubUrl(url), null)), 200);
+    // A commit from the plugin directory previews exactly what was reviewed (D-241).
+    const { url, commit } = c.req.valid("json");
+    return c.json(preview(await load(parseGitHubUrl(url), commit ?? null)), 200);
   });
 
   app.openapi(routes.installPlugin, async (c) => {

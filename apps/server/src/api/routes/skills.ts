@@ -5,7 +5,7 @@ import { type Database, type JwtClaims, pgErrorCode, withUserSession } from "@ca
 import { lineDiff } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
-import { fetchGallerySkill } from "../../services/gallery.ts";
+import { fetchGallerySkill, skillCatalog } from "../../services/gallery.ts";
 import {
   GitHubReader,
   isText,
@@ -113,9 +113,10 @@ export function registerSkillRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return new GitHubReader({ apiUrl: deps.env.GITHUB_API_URL, token: tok?.value ?? null });
   };
 
+  // The gallery's copy of each skill when it can be read, the bundled one otherwise (D-241).
   app.openapi(routes.getSkillCatalog, async (c) => {
     claimsOf(c);
-    const cat = loadCatalog();
+    const cat = await skillCatalog(deps.env);
     return c.json(
       {
         categories: cat.categories,
@@ -145,6 +146,22 @@ export function registerSkillRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         category: fetched.category,
       });
       return c.json(out(row), 201);
+    }
+    const entry = (await skillCatalog(deps.env)).skills.find((s) => s.id === body.catalog_id);
+    if (!entry) throw new ApiError(404, "catalog_skill_not_found", "No such skill in the catalog");
+    if (entry.from === "gallery") {
+      // Fetched and checked against the gallery index; the bundled copy stands in if that fails.
+      try {
+        const fetched = await fetchGallerySkill(deps.env, entry.id);
+        const row = await saveSkill(db, claims, target, fetched.bundle, {
+          kind: "catalog",
+          ref: { id: entry.id, sha256: fetched.sha256 },
+          category: entry.category,
+        });
+        return c.json(out(row), 201);
+      } catch (err) {
+        if (!loadCatalog().skills.some((s) => s.id === entry.id)) throw err;
+      }
     }
     const skill = loadCatalog().skills.find((s) => s.id === body.catalog_id);
     if (!skill) throw new ApiError(404, "catalog_skill_not_found", "No such skill in the catalog");

@@ -26,6 +26,7 @@ import '../bots/channels_screen.dart' show channelKindName;
 import 'cron_words.dart';
 import '../../ui/celebration.dart';
 import '../../core/analytics.dart';
+import 'routine_ideas.dart';
 
 /// A bot's routines: one-time, repeating (cron in a timezone), or webhook-triggered.
 class RoutinesScreen extends ConsumerWidget {
@@ -328,6 +329,17 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
     if (shape case CronWeekly(:final days) when days.length == 1) _weekday = days.single;
   }
 
+  /// Fills the sheet from a gallery idea (D-241); everything stays editable.
+  void _useIdea(RoutineIdea idea) {
+    setState(() {
+      _name.text = idea.name;
+      _instructions.text = idea.instructionsMd;
+      _cron.text = idea.scheduleCron;
+      _trigger = 'schedule';
+      _readCron();
+    });
+  }
+
   Future<void> _pickRepeatTime() async {
     unfocusBeforeModal();
     final time = await showTimePicker(context: context, initialTime: _time);
@@ -372,6 +384,7 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
         children: [
           Text(l10n.newRoutine, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.3)),
           const SizedBox(height: AppSpace.md),
+          RoutineIdeasStrip(onPick: _useIdea),
           TextField(
             key: const Key('routineName'),
             controller: _name,

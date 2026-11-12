@@ -11,6 +11,8 @@ abstract class _$PreviewPluginRequestCWProxy {
 
   PreviewPluginRequest url(String url);
 
+  PreviewPluginRequest commit(String? commit);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `PreviewPluginRequest(...).copyWith.fieldName(value)`.
@@ -19,7 +21,7 @@ abstract class _$PreviewPluginRequestCWProxy {
   /// ```dart
   /// PreviewPluginRequest(...).copyWith(id: 12, name: "My name")
   /// ```
-  PreviewPluginRequest call({String orgId, String url});
+  PreviewPluginRequest call({String orgId, String url, String? commit});
 }
 
 /// Callable proxy for `copyWith` functionality.
@@ -36,6 +38,9 @@ class _$PreviewPluginRequestCWProxyImpl
   @override
   PreviewPluginRequest url(String url) => call(url: url);
 
+  @override
+  PreviewPluginRequest commit(String? commit) => call(commit: commit);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `PreviewPluginRequest(...).copyWith.fieldName(value)`.
@@ -48,6 +53,7 @@ class _$PreviewPluginRequestCWProxyImpl
   PreviewPluginRequest call({
     Object? orgId = const $CopyWithPlaceholder(),
     Object? url = const $CopyWithPlaceholder(),
+    Object? commit = const $CopyWithPlaceholder(),
   }) {
     return PreviewPluginRequest(
       orgId: orgId == const $CopyWithPlaceholder() || orgId == null
@@ -58,6 +64,10 @@ class _$PreviewPluginRequestCWProxyImpl
           ? _value.url
           // ignore: cast_nullable_to_non_nullable
           : url as String,
+      commit: commit == const $CopyWithPlaceholder()
+          ? _value.commit
+          // ignore: cast_nullable_to_non_nullable
+          : commit as String?,
     );
   }
 }
@@ -81,10 +91,15 @@ PreviewPluginRequest _$PreviewPluginRequestFromJson(
   final val = PreviewPluginRequest(
     orgId: $checkedConvert('org_id', (v) => v as String),
     url: $checkedConvert('url', (v) => v as String),
+    commit: $checkedConvert('commit', (v) => v as String?),
   );
   return val;
 }, fieldKeyMap: const {'orgId': 'org_id'});
 
 Map<String, dynamic> _$PreviewPluginRequestToJson(
   PreviewPluginRequest instance,
-) => <String, dynamic>{'org_id': instance.orgId, 'url': instance.url};
+) => <String, dynamic>{
+  'org_id': instance.orgId,
+  'url': instance.url,
+  'commit': ?instance.commit,
+};

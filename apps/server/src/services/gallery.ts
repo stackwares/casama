@@ -5,16 +5,26 @@
  */
 import {
   APP_CATALOG,
+  BOT_TEMPLATES,
+  type BotTemplate,
+  botTemplateFromGallery,
   type CatalogApp,
   catalogAppFromGallery,
+  checkPluginDocument,
+  checkRoutineDocument,
   GALLERY_APP_TYPE,
+  GALLERY_BOT_TYPE,
+  GALLERY_PLUGIN_TYPE,
+  GALLERY_ROUTINE_TYPE,
   GALLERY_TYPES,
+  type GalleryPluginDocument,
+  type GalleryRoutineDocument,
   type GalleryType,
   galleryHash,
 } from "@casama/domain";
 import { ApiError } from "../api/errors.ts";
 import type { Env } from "../env.ts";
-import { bundleFrom, type SkillBundle } from "./skills.ts";
+import { bundleFrom, type CatalogSkill, loadCatalog, type SkillBundle } from "./skills.ts";
 
 export interface GalleryAuthor {
   name: string;
@@ -57,7 +67,10 @@ interface Cache {
 
 const OK_TTL = 15 * 60 * 1000;
 const MISS_TTL = 30 * 1000;
-/** One entry per file: index.json and apps.json. */
+/** The gallery's files: looks and skills in index.json, every newer kind in its own (D-239, D-241). */
+type GalleryFile = "index.json" | "apps.json" | "bots.json" | "routines.json" | "plugins.json";
+
+/** One entry per file. */
 const caches = new Map<string, Cache>();
 
 export function resetGalleryCache() {
@@ -84,7 +97,7 @@ function join(base: string, path: string) {
 async function readIndex(
   env: Env,
   fetchImpl: typeof fetch,
-  file: "index.json" | "apps.json" = "index.json",
+  file: GalleryFile = "index.json",
 ): Promise<IndexFile | null> {
   const base = galleryBase(env);
   if (!base) return null;
@@ -260,4 +273,201 @@ export async function fetchGallerySkill(
     sha256,
     category: item.category ?? null,
   };
+}
+
+// ---------------------------------------------------------------- bots, routines, plugins (D-241)
+
+const ITEM_ID = /^[a-z0-9][a-z0-9-]{0,62}$/;
+
+type RawItem = Omit<Partial<GalleryRecord>, "type"> & { type?: string };
+
+/** The live, well-formed items of one type in one of the newer files. */
+async function liveItems(
+  env: Env,
+  fetchImpl: typeof fetch,
+  file: GalleryFile,
+  type: string,
+): Promise<(RawItem & { id: string; name: string })[]> {
+  if (!galleryBase(env)) return [];
+  const index = await readIndex(env, fetchImpl, file);
+  if (!index) return [];
+  const seen = new Set<string>();
+  const out: (RawItem & { id: string; name: string })[] = [];
+  for (const raw of index.items as unknown[]) {
+    if (typeof raw !== "object" || raw === null) continue;
+    const i = raw as RawItem;
+    if (i.type !== type || i.retired === true) continue;
+    if (typeof i.id !== "string" || !ITEM_ID.test(i.id) || seen.has(i.id)) continue;
+    const name = typeof i.name === "string" ? i.name.trim() : "";
+    if (name.length < 1 || name.length > 60) continue;
+    seen.add(i.id);
+    out.push({ ...i, id: i.id, name });
+  }
+  return out;
+}
+
+/** Who made a gallery item, for the app to credit. */
+function authorOf(i: RawItem): GalleryAuthor {
+  const a = i.author;
+  const name = a && typeof a.name === "string" ? a.name.trim().slice(0, 80) : "";
+  const url = a && typeof a.url === "string" && a.url.startsWith("https://") ? a.url : undefined;
+  return { name: name || "Unknown", ...(url ? { url } : {}) };
+}
+
+/** A gallery starter bot, credited to its author. */
+export type GalleryBot = BotTemplate & { author: GalleryAuthor };
+
+/**
+ * The gallery's starter bots, checked again here; ids a built-in bot uses are left out. Empty when
+ * the gallery is off or can't be reached.
+ */
+export async function galleryBots(
+  env: Env,
+  fetchImpl: typeof fetch = fetch,
+): Promise<GalleryBot[]> {
+  const builtIn = new Set(BOT_TEMPLATES.map((t) => t.id));
+  const out: GalleryBot[] = [];
+  for (const i of await liveItems(env, fetchImpl, "bots.json", GALLERY_BOT_TYPE)) {
+    if (builtIn.has(i.id)) continue;
+    const t = botTemplateFromGallery(i.id, i.name, i.document);
+    if (t) out.push({ ...t, author: authorOf(i) });
+  }
+  return out;
+}
+
+/** A built-in starter bot, or one from the gallery. */
+export async function findTemplate(
+  env: Env,
+  id: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<BotTemplate | undefined> {
+  return (
+    BOT_TEMPLATES.find((t) => t.id === id) ??
+    (await galleryBots(env, fetchImpl)).find((t) => t.id === id)
+  );
+}
+
+export type GalleryRoutine = GalleryRoutineDocument & {
+  id: string;
+  name: string;
+  author: GalleryAuthor;
+  featured: boolean;
+};
+
+/** Routine ideas from the gallery, checked again here. */
+export async function galleryRoutines(
+  env: Env,
+  fetchImpl: typeof fetch = fetch,
+): Promise<GalleryRoutine[]> {
+  const out: GalleryRoutine[] = [];
+  for (const i of await liveItems(env, fetchImpl, "routines.json", GALLERY_ROUTINE_TYPE)) {
+    const { doc } = checkRoutineDocument(i.document);
+    if (doc)
+      out.push({
+        id: i.id,
+        name: i.name,
+        author: authorOf(i),
+        featured: i.featured === true,
+        ...doc,
+      });
+  }
+  return out;
+}
+
+export type GalleryPlugin = GalleryPluginDocument & {
+  id: string;
+  name: string;
+  author: GalleryAuthor;
+};
+
+/** Plugins someone reviewed, each pinned to the reviewed commit. */
+export async function galleryPlugins(
+  env: Env,
+  fetchImpl: typeof fetch = fetch,
+): Promise<GalleryPlugin[]> {
+  const out: GalleryPlugin[] = [];
+  for (const i of await liveItems(env, fetchImpl, "plugins.json", GALLERY_PLUGIN_TYPE)) {
+    const { doc } = checkPluginDocument(i.document);
+    if (doc) out.push({ id: i.id, name: i.name, author: authorOf(i), ...doc });
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------- the skill catalog (D-241)
+
+/** SKILL.md text by the skill's hash: a changed skill gets a new hash, so entries never go stale. */
+const skillMdCache = new Map<string, string>();
+
+async function skillMdOf(env: Env, item: GalleryRecord, fetchImpl: typeof fetch) {
+  const hit = skillMdCache.get(item.sha256);
+  if (hit !== undefined) return hit;
+  const base = galleryBase(env);
+  const path = item.files.find((f) => f.endsWith("/SKILL.md"));
+  if (!base || !path) return null;
+  try {
+    const res = await fetchImpl(join(base, path), { signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) return null;
+    const text = await res.text();
+    if (skillMdCache.size > 500) skillMdCache.clear();
+    skillMdCache.set(item.sha256, text);
+    return text;
+  } catch {
+    return null;
+  }
+}
+
+/** A catalog entry and where an install takes it from. */
+export type CatalogEntry = CatalogSkill & { from: "gallery" | "bundled" };
+
+/**
+ * The skill catalog: the gallery's skills when it can be read, so a merged change reaches every
+ * server without a release, and the bundled `skills/` for anything the gallery doesn't have (or
+ * all of it when the gallery is off or down). Gallery skills outside the catalog's categories
+ * are left out, since the app groups by them.
+ */
+export async function skillCatalog(
+  env: Env,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ categories: string[]; skills: CatalogEntry[] }> {
+  const bundled = loadCatalog();
+  const categories = bundled.categories;
+  const listed = await galleryIndex(env, fetchImpl);
+  const fromGallery = new Map<string, CatalogEntry>();
+  const live = listed.items.filter(
+    (i) => i.type === "skill" && !i.retired && i.category && categories.includes(i.category),
+  );
+  await Promise.all(
+    live.map(async (i) => {
+      const md = await skillMdOf(env, i, fetchImpl);
+      if (md === null) return;
+      try {
+        const bundle = bundleFrom(
+          md,
+          i.files
+            .filter((f) => !f.endsWith("/SKILL.md") && !f.endsWith("/item.json"))
+            .map((f) => ({
+              path: f.split("/").slice(2).join("/"),
+              content: Buffer.alloc(0),
+              executable: false,
+            })),
+        );
+        if (bundle.name !== i.id) return;
+        const icon = (i as { icon?: unknown }).icon;
+        fromGallery.set(i.id, {
+          ...bundle,
+          id: i.id,
+          category: i.category as string,
+          icon: typeof icon === "string" ? icon : null,
+          from: "gallery",
+        });
+      } catch {
+        // A skill this server can't read stays out; its bundled copy (if any) stands in.
+      }
+    }),
+  );
+  const skills: CatalogEntry[] = bundled.skills.map(
+    (s) => fromGallery.get(s.id) ?? { ...s, from: "bundled" as const },
+  );
+  for (const [id, entry] of fromGallery) if (!skills.some((s) => s.id === id)) skills.push(entry);
+  return { categories, skills };
 }

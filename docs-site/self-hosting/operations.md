@@ -266,6 +266,37 @@ Instance owners see a health summary under Settings → admin console: the datab
 sandbox supervisor, the live view relay, personal computers, email, error reporting, the enterprise
 license and telemetry, each with whether it's configured and healthy.
 
+### Remote app settings
+
+Under Settings → admin console → **App settings**, the instance owner can change every installed
+app without a release. The settings are JSON:
+
+```json
+{
+  "min_versions": { "ios": "0.9.0", "android": "0.9.0" },
+  "update_urls": { "ios": "https://apps.apple.com/app/…", "android": "https://play.google.com/store/apps/details?id=…" },
+  "maintenance": null,
+  "announcements": [
+    { "id": "spring-update", "title": "New: routine ideas", "body": "Start a routine from an idea.", "level": "info",
+      "url": "https://casama.ai/changelog", "ends_at": "2026-12-01T00:00:00Z", "platforms": ["ios", "android"] }
+  ],
+  "flags": { "new_home": true }
+}
+```
+
+- `min_versions`: apps older than this on a platform show **Time to update Casama** instead of the
+  app, with an **Update** button to `update_urls` for that platform. Platforms: `ios`, `android`,
+  `macos`, `windows`, `linux`, `web`.
+- `maintenance`: `{ "message": "Back at 3 pm UTC." }` covers every app with that message until it's
+  `null` again.
+- `announcements`: up to 10 banners. Each has an `id`, a `title`, an optional `body`, `url`, `level`
+  (`info` or `warning`), a time window, `platforms` and `min_version` / `max_version`. A dismissed
+  banner stays dismissed on that device.
+- `flags`: on/off switches the app reads by name.
+
+Apps read the settings without signing in (`GET /v1/app-config`), every half hour and whenever they
+come back to the front, and keep the last copy for when they're offline.
+
 ### Health endpoints
 
 | Endpoint    | What it checks                                                     |

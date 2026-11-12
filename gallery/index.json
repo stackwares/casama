@@ -331,6 +331,132 @@
       ]
     },
     {
+      "id": "article-outline",
+      "type": "skill",
+      "name": "Article outline",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "writing"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "85897c1334822b2fcaad54da59997b9c84409d52ecb473567e63cb0de19ec98f",
+      "size": 1010,
+      "category": "writing",
+      "icon": "list-tree",
+      "description": "Outline a blog post, article or talk with a working title, the main argument, sections with key points and sources to find.",
+      "files": [
+        "skills/article-outline/SKILL.md",
+        "skills/article-outline/item.json"
+      ]
+    },
+    {
+      "id": "budget-review",
+      "type": "skill",
+      "name": "Budget review",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "money"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "51d5953d35c3ff288a07c59e1842f932f45678c01066d2521496428a89641a6b",
+      "size": 1064,
+      "category": "money",
+      "icon": "wallet",
+      "description": "Review income and spending from a statement or spreadsheet, group it into categories and point out where money could be saved.",
+      "files": [
+        "skills/budget-review/SKILL.md",
+        "skills/budget-review/item.json"
+      ]
+    },
+    {
+      "id": "bug-report",
+      "type": "skill",
+      "name": "Bug report",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "build"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "f415467aa97777283b613c2f4300e27b2a67ab1ad9d97f2e0bb9b4cb1867a1c1",
+      "size": 1067,
+      "category": "build",
+      "icon": "bug",
+      "description": "Turn a vague problem description into a clear bug report with steps to reproduce, expected and actual behaviour, and environment.",
+      "files": [
+        "skills/bug-report/SKILL.md",
+        "skills/bug-report/item.json"
+      ]
+    },
+    {
+      "id": "build-dashboard",
+      "type": "skill",
+      "name": "Build dashboard",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/knowledge-work-plugins"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "data"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "6ee4a7ba6d1ef7b179ff4b83f0cc08e102dc4a8d7ea917a63e23261c24a4b8b3",
+      "size": 37791,
+      "category": "data",
+      "icon": "layout-dashboard",
+      "description": "Build an interactive HTML dashboard with charts, filters, and tables. Use when creating an executive overview with KPI cards, turning query results into a shareable self-contained report, building a team monitoring snapshot, or needing multiple charts with filters in one browser-openable file.",
+      "files": [
+        "skills/build-dashboard/LICENSE.txt",
+        "skills/build-dashboard/SKILL.md",
+        "skills/build-dashboard/item.json"
+      ]
+    },
+    {
+      "id": "chart-from-data",
+      "type": "skill",
+      "name": "Chart from data",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "data"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "cc9526c033cecdab8e9c0b835c23e98590d12df27d77771964a264fbaa3549b6",
+      "size": 1093,
+      "category": "data",
+      "icon": "chart-line",
+      "description": "Turn a table or CSV into a clear chart, choosing the right chart type and writing a one-line takeaway.",
+      "files": [
+        "skills/chart-from-data/SKILL.md",
+        "skills/chart-from-data/item.json"
+      ]
+    },
+    {
       "id": "code-review",
       "type": "skill",
       "name": "Code review",
@@ -354,6 +480,57 @@
         "skills/code-review/LICENSE.txt",
         "skills/code-review/SKILL.md",
         "skills/code-review/item.json"
+      ]
+    },
+    {
+      "id": "compare-options",
+      "type": "skill",
+      "name": "Compare options",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "research"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "1d4b52cdbc58d93c162c4e6a09622d9029343b7061a42874d22ed3eb4f86e649",
+      "size": 1052,
+      "category": "research",
+      "icon": "columns-3",
+      "description": "Compare products, services or plans side by side on what matters to the person, and recommend one with the reasons.",
+      "files": [
+        "skills/compare-options/SKILL.md",
+        "skills/compare-options/item.json"
+      ]
+    },
+    {
+      "id": "competitive-brief",
+      "type": "skill",
+      "name": "Competitive brief",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/knowledge-work-plugins"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "research"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "4902850d1f21f1c1f694b4890acd7ff878532059c06696b26abb7bad86b21435",
+      "size": 24873,
+      "category": "research",
+      "icon": "binoculars",
+      "description": "Research competitors and write a positioning and messaging comparison with gaps, opportunities, and threats. Use for a sales battlecard, an unclaimed angle, or a competitor's move.",
+      "files": [
+        "skills/competitive-brief/LICENSE.txt",
+        "skills/competitive-brief/SKILL.md",
+        "skills/competitive-brief/item.json"
       ]
     },
     {
@@ -385,6 +562,319 @@
       ]
     },
     {
+      "id": "decision-memo",
+      "type": "skill",
+      "name": "Decision memo",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "e7f1099001bbf30e14ec9f01c783eeb9351e5c0886b50711419ebff300815da4",
+      "size": 1051,
+      "category": "work",
+      "icon": "scale",
+      "description": "Write a one-page decision memo that lays out the options, trade-offs, a recommendation and what would change it.",
+      "files": [
+        "skills/decision-memo/SKILL.md",
+        "skills/decision-memo/item.json"
+      ]
+    },
+    {
+      "id": "digest",
+      "type": "skill",
+      "name": "Digest",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/knowledge-work-plugins"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "04cbe5b9305b30ac1ae719fa8ecbb1588f449716ce6cfbfa33c1ac135321b6e3",
+      "size": 17722,
+      "category": "work",
+      "icon": "newspaper",
+      "description": "Generate a daily or weekly digest of activity across all connected sources. Use when catching up after time away, starting the day and wanting a summary of mentions and action items, or reviewing a week's decisions and document updates grouped by project.",
+      "files": [
+        "skills/digest/LICENSE.txt",
+        "skills/digest/SKILL.md",
+        "skills/digest/item.json"
+      ]
+    },
+    {
+      "id": "docx",
+      "type": "skill",
+      "name": "Word documents",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/skills"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "e3d9e65990c25ed1baa330e7ae7c266c33b268e3b576942cc3b0f0e8dfcfe886",
+      "size": 1138344,
+      "category": "work",
+      "icon": "file-pen",
+      "description": "Use when creating, reading, or editing a Word document (.docx or .dotx): reports, memos, letters, templates, tracked changes, comments, or find-and-replace. Not for PDFs or spreadsheets.",
+      "files": [
+        "skills/docx/LICENSE.txt",
+        "skills/docx/SKILL.md",
+        "skills/docx/item.json",
+        "skills/docx/scripts/__init__.py",
+        "skills/docx/scripts/accept_changes.py",
+        "skills/docx/scripts/comment.py",
+        "skills/docx/scripts/merge_runs.py",
+        "skills/docx/scripts/office/helpers/__init__.py",
+        "skills/docx/scripts/office/helpers/pptx_chart.py",
+        "skills/docx/scripts/office/helpers/pptx_slide.py",
+        "skills/docx/scripts/office/helpers/pptx_theme.py",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chart.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chartDrawing.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-diagram.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-lockedCanvas.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-main.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-picture.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-spreadsheetDrawing.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-wordprocessingDrawing.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/pml.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-additionalCharacteristics.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-bibliography.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-commonSimpleTypes.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlDataProperties.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlSchemaProperties.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesCustom.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesExtended.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesVariantTypes.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-math.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-relationshipReference.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/sml.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-main.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-officeDrawing.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-presentationDrawing.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-spreadsheetDrawing.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-wordprocessingDrawing.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/wml.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/xml.xsd",
+        "skills/docx/scripts/office/schemas/ecma/fouth-edition/opc-contentTypes.xsd",
+        "skills/docx/scripts/office/schemas/ecma/fouth-edition/opc-coreProperties.xsd",
+        "skills/docx/scripts/office/schemas/ecma/fouth-edition/opc-digSig.xsd",
+        "skills/docx/scripts/office/schemas/ecma/fouth-edition/opc-relationships.xsd",
+        "skills/docx/scripts/office/schemas/mce/mc.xsd",
+        "skills/docx/scripts/office/schemas/microsoft/wml-2010.xsd",
+        "skills/docx/scripts/office/schemas/microsoft/wml-2012.xsd",
+        "skills/docx/scripts/office/schemas/microsoft/wml-2018.xsd",
+        "skills/docx/scripts/office/schemas/microsoft/wml-cex-2018.xsd",
+        "skills/docx/scripts/office/schemas/microsoft/wml-cid-2016.xsd",
+        "skills/docx/scripts/office/schemas/microsoft/wml-sdtdatahash-2020.xsd",
+        "skills/docx/scripts/office/schemas/microsoft/wml-symex-2015.xsd",
+        "skills/docx/scripts/office/soffice.py",
+        "skills/docx/scripts/office/validate.py",
+        "skills/docx/scripts/office/validators/__init__.py",
+        "skills/docx/scripts/office/validators/base.py",
+        "skills/docx/scripts/office/validators/docx.py",
+        "skills/docx/scripts/office/validators/pptx.py",
+        "skills/docx/scripts/office/validators/redlining.py",
+        "skills/docx/scripts/templates/comments.xml",
+        "skills/docx/scripts/templates/commentsExtended.xml",
+        "skills/docx/scripts/templates/commentsExtensible.xml",
+        "skills/docx/scripts/templates/commentsIds.xml",
+        "skills/docx/scripts/templates/people.xml"
+      ]
+    },
+    {
+      "id": "doublecheck",
+      "type": "skill",
+      "name": "Doublecheck",
+      "author": {
+        "name": "GitHub",
+        "url": "https://github.com/github/awesome-copilot"
+      },
+      "license": "MIT",
+      "tags": [
+        "research"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "243f9ec558fe498ab1b5dbf1727a0136b68186c4564f06fcf4ac82e9d2440618",
+      "size": 20034,
+      "category": "research",
+      "icon": "badge-check",
+      "description": "Three-layer verification pipeline for AI output. Extracts verifiable claims, finds supporting or contradicting sources via web search, runs adversarial review for hallucination patterns, and produces a structured verification report with source links for human review.",
+      "files": [
+        "skills/doublecheck/LICENSE.txt",
+        "skills/doublecheck/SKILL.md",
+        "skills/doublecheck/assets/verification-report-template.md",
+        "skills/doublecheck/item.json"
+      ]
+    },
+    {
+      "id": "email-drafter",
+      "type": "skill",
+      "name": "Email drafter",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "ffab9e9b47ff981c618f4aabe609288fa4cda16bece98f8c0f1221fd42accfc2",
+      "size": 1133,
+      "category": "work",
+      "icon": "mail",
+      "description": "Draft a clear email or reply from a few notes, matched to the reader and the tone the person wants.",
+      "files": [
+        "skills/email-drafter/SKILL.md",
+        "skills/email-drafter/item.json"
+      ]
+    },
+    {
+      "id": "fact-check",
+      "type": "skill",
+      "name": "Fact check",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "research"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "5e22185a584235b150bf1d244da5f3368785e58eb732b3d3951083316fa4356f",
+      "size": 1052,
+      "category": "research",
+      "icon": "badge-check",
+      "description": "Check the claims in a text against reliable sources and mark each one as supported, wrong, misleading or unverified.",
+      "files": [
+        "skills/fact-check/SKILL.md",
+        "skills/fact-check/item.json"
+      ]
+    },
+    {
+      "id": "gift-ideas",
+      "type": "skill",
+      "name": "Gift ideas",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "life"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "7fccf0d0e86398d2304e6372972db1a44bbdc0ddfaeebb2df403d541bd7232e5",
+      "size": 970,
+      "category": "life",
+      "icon": "gift",
+      "description": "Suggest thoughtful gift ideas for a person and occasion within a budget, with where to get them.",
+      "files": [
+        "skills/gift-ideas/SKILL.md",
+        "skills/gift-ideas/item.json"
+      ]
+    },
+    {
+      "id": "inbox-triage",
+      "type": "skill",
+      "name": "Inbox triage",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "314c1e343cab7be06ea4282ad6adb740bb88b7e5b45797b44177da1e31270ef9",
+      "size": 1055,
+      "category": "work",
+      "icon": "inbox",
+      "description": "Sort a pile of emails or messages into reply now, do later, read and ignore, with a one-line reason for each.",
+      "files": [
+        "skills/inbox-triage/SKILL.md",
+        "skills/inbox-triage/item.json"
+      ]
+    },
+    {
+      "id": "invoice-check",
+      "type": "skill",
+      "name": "Invoice check",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "money"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "f2f84f65aaec02677efed251ab6f9475e779243421166aa556c808c33a5f5a3c",
+      "size": 1169,
+      "category": "money",
+      "icon": "receipt",
+      "description": "Check an invoice or bill against the quote, contract or order for wrong amounts, duplicates, missing details and due dates.",
+      "files": [
+        "skills/invoice-check/SKILL.md",
+        "skills/invoice-check/item.json"
+      ]
+    },
+    {
+      "id": "meal-planner",
+      "type": "skill",
+      "name": "Meal planner",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "life"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "f350ade9d2d303176e520bae57162eac5f7cbcf2a670475d881265f91d5e95f9",
+      "size": 1015,
+      "category": "life",
+      "icon": "utensils",
+      "description": "Plan a week of meals around diet, budget and time, with simple recipes and one combined shopping list.",
+      "files": [
+        "skills/meal-planner/SKILL.md",
+        "skills/meal-planner/item.json"
+      ]
+    },
+    {
       "id": "meeting-notes",
       "type": "skill",
       "name": "Meeting notes",
@@ -411,6 +901,172 @@
       ]
     },
     {
+      "id": "meeting-prep",
+      "type": "skill",
+      "name": "Meeting prep",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "fbd4672dc1c0ceb8b4d9b934f1be3c8f7ada996491016ef5459d8bb2281d9973",
+      "size": 1105,
+      "category": "work",
+      "icon": "calendar-clock",
+      "description": "Prepare for a meeting with a short brief on the people, the goal, open items from last time and questions to ask.",
+      "files": [
+        "skills/meeting-prep/SKILL.md",
+        "skills/meeting-prep/item.json"
+      ]
+    },
+    {
+      "id": "pdf",
+      "type": "skill",
+      "name": "PDF",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/skills"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "ed0bc43f076a97a7c7be7ab490a3f4942ca2eedc3353769f06a7f5dee5cacbe3",
+      "size": 68764,
+      "category": "work",
+      "icon": "file-text",
+      "description": "Use when the person wants anything done with a PDF: read or extract text and tables, merge, split, rotate, watermark, create, fill a form, encrypt, pull images out, or OCR a scan.",
+      "files": [
+        "skills/pdf/LICENSE.txt",
+        "skills/pdf/SKILL.md",
+        "skills/pdf/forms.md",
+        "skills/pdf/item.json",
+        "skills/pdf/reference.md",
+        "skills/pdf/scripts/check_bounding_boxes.py",
+        "skills/pdf/scripts/check_fillable_fields.py",
+        "skills/pdf/scripts/convert_pdf_to_images.py",
+        "skills/pdf/scripts/create_validation_image.py",
+        "skills/pdf/scripts/extract_form_field_info.py",
+        "skills/pdf/scripts/extract_form_structure.py",
+        "skills/pdf/scripts/fill_fillable_fields.py",
+        "skills/pdf/scripts/fill_pdf_form_with_annotations.py"
+      ]
+    },
+    {
+      "id": "pptx",
+      "type": "skill",
+      "name": "PowerPoint decks",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/skills"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "2b6695a7e6b09057915f400f64943c98362da49e0ac2f91f5632fa8cd8567066",
+      "size": 1148894,
+      "category": "work",
+      "icon": "presentation",
+      "description": "Use whenever a .pptx or .potx file is involved: create or edit a slide deck, read text out of one, combine or split slides, or work with notes and comments.",
+      "files": [
+        "skills/pptx/LICENSE.txt",
+        "skills/pptx/SKILL.md",
+        "skills/pptx/item.json",
+        "skills/pptx/scripts/__init__.py",
+        "skills/pptx/scripts/add_slide.py",
+        "skills/pptx/scripts/clean.py",
+        "skills/pptx/scripts/office/helpers/__init__.py",
+        "skills/pptx/scripts/office/helpers/pptx_chart.py",
+        "skills/pptx/scripts/office/helpers/pptx_slide.py",
+        "skills/pptx/scripts/office/helpers/pptx_theme.py",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chart.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chartDrawing.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-diagram.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-lockedCanvas.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-main.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-picture.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-spreadsheetDrawing.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-wordprocessingDrawing.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/pml.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-additionalCharacteristics.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-bibliography.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-commonSimpleTypes.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlDataProperties.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlSchemaProperties.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesCustom.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesExtended.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesVariantTypes.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-math.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-relationshipReference.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/sml.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-main.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-officeDrawing.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-presentationDrawing.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-spreadsheetDrawing.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-wordprocessingDrawing.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/wml.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/xml.xsd",
+        "skills/pptx/scripts/office/schemas/ecma/fouth-edition/opc-contentTypes.xsd",
+        "skills/pptx/scripts/office/schemas/ecma/fouth-edition/opc-coreProperties.xsd",
+        "skills/pptx/scripts/office/schemas/ecma/fouth-edition/opc-digSig.xsd",
+        "skills/pptx/scripts/office/schemas/ecma/fouth-edition/opc-relationships.xsd",
+        "skills/pptx/scripts/office/schemas/mce/mc.xsd",
+        "skills/pptx/scripts/office/schemas/microsoft/wml-2010.xsd",
+        "skills/pptx/scripts/office/schemas/microsoft/wml-2012.xsd",
+        "skills/pptx/scripts/office/schemas/microsoft/wml-2018.xsd",
+        "skills/pptx/scripts/office/schemas/microsoft/wml-cex-2018.xsd",
+        "skills/pptx/scripts/office/schemas/microsoft/wml-cid-2016.xsd",
+        "skills/pptx/scripts/office/schemas/microsoft/wml-sdtdatahash-2020.xsd",
+        "skills/pptx/scripts/office/schemas/microsoft/wml-symex-2015.xsd",
+        "skills/pptx/scripts/office/soffice.py",
+        "skills/pptx/scripts/office/validate.py",
+        "skills/pptx/scripts/office/validators/__init__.py",
+        "skills/pptx/scripts/office/validators/base.py",
+        "skills/pptx/scripts/office/validators/docx.py",
+        "skills/pptx/scripts/office/validators/pptx.py",
+        "skills/pptx/scripts/office/validators/redlining.py",
+        "skills/pptx/scripts/thumbnail.py"
+      ]
+    },
+    {
+      "id": "proofread",
+      "type": "skill",
+      "name": "Proofread",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "writing"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "d0c2bc2d249d31e30487a610cc347a20bd27b08485f194c357b095ee24d50a18",
+      "size": 1007,
+      "category": "writing",
+      "icon": "spell-check",
+      "description": "Proofread a text for spelling, grammar, punctuation and clarity, keeping the author's voice, and list what changed.",
+      "files": [
+        "skills/proofread/SKILL.md",
+        "skills/proofread/item.json"
+      ]
+    },
+    {
       "id": "research-brief",
       "type": "skill",
       "name": "Research brief",
@@ -434,6 +1090,192 @@
         "skills/research-brief/LICENSE.txt",
         "skills/research-brief/SKILL.md",
         "skills/research-brief/item.json"
+      ]
+    },
+    {
+      "id": "rewrite-tone",
+      "type": "skill",
+      "name": "Rewrite tone",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "writing"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "6e3a296c2903c20df5cdf82fd9937bcb50cf334283663d2b2d8756fc502d6493",
+      "size": 992,
+      "category": "writing",
+      "icon": "wand-sparkles",
+      "description": "Rewrite a text in a different tone or for a different reader, such as friendlier, more formal, shorter or simpler.",
+      "files": [
+        "skills/rewrite-tone/SKILL.md",
+        "skills/rewrite-tone/item.json"
+      ]
+    },
+    {
+      "id": "social-post",
+      "type": "skill",
+      "name": "Social post",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "writing"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "3b009ce3ad0e708a84c2bb90aee9d06f7daac7d3b8eaeff558ec4f812473f05b",
+      "size": 990,
+      "category": "writing",
+      "icon": "megaphone",
+      "description": "Turn an announcement, article or idea into short social posts sized for each network, with a few variations to choose from.",
+      "files": [
+        "skills/social-post/SKILL.md",
+        "skills/social-post/item.json"
+      ]
+    },
+    {
+      "id": "spreadsheet-formulas",
+      "type": "skill",
+      "name": "Spreadsheet formulas",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "data"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "63379532953385c4e8c1a8512abb6d6854e610ef0ad0ca37dd8cc964b406c12a",
+      "size": 1113,
+      "category": "data",
+      "icon": "sigma",
+      "description": "Write, explain or fix spreadsheet formulas for Excel or Google Sheets from a plain-language description of what is needed.",
+      "files": [
+        "skills/spreadsheet-formulas/SKILL.md",
+        "skills/spreadsheet-formulas/item.json"
+      ]
+    },
+    {
+      "id": "sql-helper",
+      "type": "skill",
+      "name": "SQL helper",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "build"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "43d3f7fee8999190ab1d662f27b168a2ede560ba1d86e44e14d9ccadcc8538fb",
+      "size": 1048,
+      "category": "build",
+      "icon": "database",
+      "description": "Write, explain or speed up a SQL query from a plain-language question and the table structure.",
+      "files": [
+        "skills/sql-helper/SKILL.md",
+        "skills/sql-helper/item.json"
+      ]
+    },
+    {
+      "id": "summarize-document",
+      "type": "skill",
+      "name": "Summarize document",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "research"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "3f60ae290e600f7a0a0cdbf3dbc3cc44d9707a7f68bea14e3c48c66068cbf6ce",
+      "size": 1127,
+      "category": "research",
+      "icon": "file-text",
+      "description": "Summarize a long document, report or contract into the key points, numbers, obligations and anything that needs attention.",
+      "files": [
+        "skills/summarize-document/SKILL.md",
+        "skills/summarize-document/item.json"
+      ]
+    },
+    {
+      "id": "systematic-debugging",
+      "type": "skill",
+      "name": "Systematic debugging",
+      "author": {
+        "name": "Jesse Vincent",
+        "url": "https://github.com/obra/superpowers"
+      },
+      "license": "MIT",
+      "tags": [
+        "build"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "517d283c965b9abc60d363b9823cd699849871e147489fd62ba49d2ee6036fc7",
+      "size": 30394,
+      "category": "build",
+      "icon": "bug",
+      "description": "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes",
+      "files": [
+        "skills/systematic-debugging/LICENSE.txt",
+        "skills/systematic-debugging/SKILL.md",
+        "skills/systematic-debugging/condition-based-waiting-example.ts",
+        "skills/systematic-debugging/condition-based-waiting.md",
+        "skills/systematic-debugging/defense-in-depth.md",
+        "skills/systematic-debugging/find-polluter.sh",
+        "skills/systematic-debugging/item.json",
+        "skills/systematic-debugging/root-cause-tracing.md"
+      ]
+    },
+    {
+      "id": "teach",
+      "type": "skill",
+      "name": "Teach",
+      "author": {
+        "name": "Matt Pocock",
+        "url": "https://github.com/mattpocock/skills"
+      },
+      "license": "MIT",
+      "tags": [
+        "life"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "22b528d7cc9910ed8113178c2035fc7bffab1d5834f99a8b4c7834c013cbaaf9",
+      "size": 19369,
+      "category": "life",
+      "icon": "graduation-cap",
+      "description": "Teach the user a new skill or concept, within this workspace.",
+      "files": [
+        "skills/teach/GLOSSARY-FORMAT.md",
+        "skills/teach/LEARNING-RECORD-FORMAT.md",
+        "skills/teach/LICENSE.txt",
+        "skills/teach/MISSION-FORMAT.md",
+        "skills/teach/RESOURCES-FORMAT.md",
+        "skills/teach/SKILL.md",
+        "skills/teach/item.json"
       ]
     },
     {
@@ -464,6 +1306,36 @@
       ]
     },
     {
+      "id": "webapp-testing",
+      "type": "skill",
+      "name": "Web app testing",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/skills"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "build"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "0b6e677af98a0cb8410af3ba304f15ff7984056efb592e16862ccdc2c59b8992",
+      "size": 22799,
+      "category": "build",
+      "icon": "app-window",
+      "description": "Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs.",
+      "files": [
+        "skills/webapp-testing/LICENSE.txt",
+        "skills/webapp-testing/SKILL.md",
+        "skills/webapp-testing/examples/console_logging.py",
+        "skills/webapp-testing/examples/element_discovery.py",
+        "skills/webapp-testing/examples/static_html_automation.py",
+        "skills/webapp-testing/item.json",
+        "skills/webapp-testing/scripts/with_server.py"
+      ]
+    },
+    {
       "id": "weekly-report",
       "type": "skill",
       "name": "Weekly report",
@@ -488,6 +1360,134 @@
         "skills/weekly-report/LICENSE.txt",
         "skills/weekly-report/SKILL.md",
         "skills/weekly-report/item.json"
+      ]
+    },
+    {
+      "id": "workout-plan",
+      "type": "skill",
+      "name": "Workout plan",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "life"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "8702522dfbee9ef250698087bc6bf1a1b23d3a44a876ccb982506f03eab053ec",
+      "size": 1040,
+      "category": "life",
+      "icon": "dumbbell",
+      "description": "Build a simple weekly workout plan around goals, fitness level, equipment and time, with how to progress.",
+      "files": [
+        "skills/workout-plan/SKILL.md",
+        "skills/workout-plan/item.json"
+      ]
+    },
+    {
+      "id": "write-spec",
+      "type": "skill",
+      "name": "Write spec",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/knowledge-work-plugins"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "15fb309cf577582e3072d0f9b0bf2f5d6c77c5eafee0b1f42ba552e39569d2ae",
+      "size": 24177,
+      "category": "work",
+      "icon": "clipboard-list",
+      "description": "Write a feature spec or PRD from a problem statement or feature idea. Use when turning a vague idea or user request into a structured document, scoping a feature with goals and non-goals, defining success metrics and acceptance criteria, or breaking a big ask into a phased spec.",
+      "files": [
+        "skills/write-spec/LICENSE.txt",
+        "skills/write-spec/SKILL.md",
+        "skills/write-spec/item.json"
+      ]
+    },
+    {
+      "id": "xlsx",
+      "type": "skill",
+      "name": "Excel spreadsheets",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/skills"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "data"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "0bc2844f3c415f18973a25b7381e0f712452332411ae8cb35c6ca0b9e5863efe",
+      "size": 1112390,
+      "category": "data",
+      "icon": "sheet",
+      "description": "Use when a spreadsheet is the main input or output: open, edit, or create .xlsx, .xlsm, .csv, or .tsv files, including formulas, charts, and cleaning messy tables.",
+      "files": [
+        "skills/xlsx/LICENSE.txt",
+        "skills/xlsx/SKILL.md",
+        "skills/xlsx/item.json",
+        "skills/xlsx/scripts/office/helpers/__init__.py",
+        "skills/xlsx/scripts/office/helpers/pptx_chart.py",
+        "skills/xlsx/scripts/office/helpers/pptx_slide.py",
+        "skills/xlsx/scripts/office/helpers/pptx_theme.py",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chart.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chartDrawing.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-diagram.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-lockedCanvas.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-main.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-picture.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-spreadsheetDrawing.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-wordprocessingDrawing.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/pml.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-additionalCharacteristics.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-bibliography.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-commonSimpleTypes.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlDataProperties.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlSchemaProperties.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesCustom.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesExtended.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesVariantTypes.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-math.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-relationshipReference.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/sml.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-main.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-officeDrawing.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-presentationDrawing.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-spreadsheetDrawing.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-wordprocessingDrawing.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/wml.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/xml.xsd",
+        "skills/xlsx/scripts/office/schemas/ecma/fouth-edition/opc-contentTypes.xsd",
+        "skills/xlsx/scripts/office/schemas/ecma/fouth-edition/opc-coreProperties.xsd",
+        "skills/xlsx/scripts/office/schemas/ecma/fouth-edition/opc-digSig.xsd",
+        "skills/xlsx/scripts/office/schemas/ecma/fouth-edition/opc-relationships.xsd",
+        "skills/xlsx/scripts/office/schemas/mce/mc.xsd",
+        "skills/xlsx/scripts/office/schemas/microsoft/wml-2010.xsd",
+        "skills/xlsx/scripts/office/schemas/microsoft/wml-2012.xsd",
+        "skills/xlsx/scripts/office/schemas/microsoft/wml-2018.xsd",
+        "skills/xlsx/scripts/office/schemas/microsoft/wml-cex-2018.xsd",
+        "skills/xlsx/scripts/office/schemas/microsoft/wml-cid-2016.xsd",
+        "skills/xlsx/scripts/office/schemas/microsoft/wml-sdtdatahash-2020.xsd",
+        "skills/xlsx/scripts/office/schemas/microsoft/wml-symex-2015.xsd",
+        "skills/xlsx/scripts/office/soffice.py",
+        "skills/xlsx/scripts/office/validate.py",
+        "skills/xlsx/scripts/office/validators/__init__.py",
+        "skills/xlsx/scripts/office/validators/base.py",
+        "skills/xlsx/scripts/office/validators/docx.py",
+        "skills/xlsx/scripts/office/validators/pptx.py",
+        "skills/xlsx/scripts/office/validators/redlining.py",
+        "skills/xlsx/scripts/recalc.py"
       ]
     },
     {

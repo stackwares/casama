@@ -340,6 +340,8 @@ export const Template = z
     mascot: z.string().optional(),
     /** Example first messages. */
     starters: z.array(z.string()).optional(),
+    /** Who made it, for starter bots from the open gallery (D-241). Built-in ones have none. */
+    author: z.object({ name: z.string(), url: z.string().optional() }).optional(),
   })
   .openapi("Template");
 

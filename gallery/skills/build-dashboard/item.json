@@ -1,0 +1,15 @@
+{
+  "name": "Build dashboard",
+  "author": {
+    "name": "Anthropic",
+    "url": "https://github.com/anthropics/knowledge-work-plugins"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "data"
+  ],
+  "category": "data",
+  "featured": false,
+  "version": 1,
+  "icon": "layout-dashboard"
+}

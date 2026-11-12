@@ -74,6 +74,10 @@ competitive briefs), Data (CSV cleanup with a cleaning script, spreadsheet formu
 an HTML dashboard), Money (budget reviews, invoice checks), Build (code review, bug reports, SQL,
 web app checks, systematic debugging) and Life (trips, meals, gifts, workouts, teaching a topic).
 
+The catalog comes from the [open gallery](https://gallery.casama.ai/#skill), so new and improved
+skills arrive without an app update, and anyone can propose one by pull request. When the gallery
+can't be reached, the copy that ships with Casama is shown.
+
 1. Go to **Settings** → **Skills** and select **Skill catalog**. The catalog opens as its own page.
 2. Search, or filter by category. Select a skill to read its full instructions.
 3. Select **Install**, then choose **The whole workspace** or one bot. With no bots yet, it installs

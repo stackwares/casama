@@ -1,0 +1,15 @@
+{
+  "name": "Systematic debugging",
+  "author": {
+    "name": "Jesse Vincent",
+    "url": "https://github.com/obra/superpowers"
+  },
+  "license": "MIT",
+  "tags": [
+    "build"
+  ],
+  "category": "build",
+  "featured": false,
+  "version": 1,
+  "icon": "bug"
+}

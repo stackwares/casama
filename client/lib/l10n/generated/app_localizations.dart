@@ -12747,6 +12747,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yesterday'**
   String get chatTimeYesterday;
+
+  /// No description provided for @remoteUpdateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to update Casama'**
+  String get remoteUpdateTitle;
+
+  /// No description provided for @remoteUpdateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This version of Casama is no longer supported. Update it to keep going.'**
+  String get remoteUpdateBody;
+
+  /// No description provided for @remoteUpdateNoLink.
+  ///
+  /// In en, this message translates to:
+  /// **'This version of Casama is no longer supported. Update it from where you installed it.'**
+  String get remoteUpdateNoLink;
+
+  /// No description provided for @remoteMaintenanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama is down for maintenance'**
+  String get remoteMaintenanceTitle;
+
+  /// No description provided for @openLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get openLink;
+
+  /// No description provided for @routineIdeas.
+  ///
+  /// In en, this message translates to:
+  /// **'Ideas'**
+  String get routineIdeas;
+
+  /// No description provided for @routineIdeasHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Start from an idea, then change anything.'**
+  String get routineIdeasHelp;
+
+  /// No description provided for @pluginDirectory.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewed plugins'**
+  String get pluginDirectory;
+
+  /// No description provided for @pluginDirectoryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked by Casama and pinned to the version that was checked.'**
+  String get pluginDirectoryHelp;
+
+  /// No description provided for @pluginOrPaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Or add one from a GitHub link'**
+  String get pluginOrPaste;
+
+  /// No description provided for @byAuthor.
+  ///
+  /// In en, this message translates to:
+  /// **'By {name}'**
+  String byAuthor(String name);
+
+  /// No description provided for @adminAppSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'App settings'**
+  String get adminAppSettings;
+
+  /// No description provided for @adminAppSettingsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum versions, maintenance, announcements and feature switches for every app, with no release.'**
+  String get adminAppSettingsHelp;
+
+  /// No description provided for @adminAppSettingsBadJson.
+  ///
+  /// In en, this message translates to:
+  /// **'That isn\'t valid JSON. Check the brackets, quotes and commas.'**
+  String get adminAppSettingsBadJson;
 }
 
 class _AppLocalizationsDelegate

@@ -566,6 +566,9 @@
   window.CasamaGallery = {
     HOST: HOST,
     icon: icon,
+    // Icons beyond the embedded set (D-241): pages add them from assets/lucide/icon-nodes.json.
+    hasIcon: function (name) { return Object.prototype.hasOwnProperty.call(ICONS, name); },
+    addIcons: function (nodes) { Object.keys(nodes || {}).forEach(function (k) { if (!ICONS[k]) ICONS[k] = nodes[k]; }); },
     scheme: scheme,
     lookOf: lookOf,
     chat: chat,

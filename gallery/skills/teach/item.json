@@ -1,0 +1,15 @@
+{
+  "name": "Teach",
+  "author": {
+    "name": "Matt Pocock",
+    "url": "https://github.com/mattpocock/skills"
+  },
+  "license": "MIT",
+  "tags": [
+    "life"
+  ],
+  "category": "life",
+  "featured": false,
+  "version": 1,
+  "icon": "graduation-cap"
+}

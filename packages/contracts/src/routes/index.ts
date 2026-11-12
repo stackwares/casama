@@ -16,6 +16,7 @@ import * as computers from "./computers.ts";
 import * as deviceData from "./device-data.ts";
 import * as encryption from "./encryption.ts";
 import * as gallery from "./gallery.ts";
+import * as galleryContent from "./gallery-content.ts";
 import * as knowledge from "./knowledge.ts";
 import * as links from "./links.ts";
 import * as local from "./local.ts";
@@ -65,6 +66,7 @@ export const routes = {
   ...channels,
   ...encryption,
   ...gallery,
+  ...galleryContent,
   ...telephony,
   ...payments,
   ...links,

@@ -14,6 +14,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/edge_fade.dart';
 import '../../ui/reveal_when_selected.dart';
 import '../../ui/bot_avatar.dart';
+import '../../ui/lucide_names.dart';
 
 /// The Lucide icon a persona names (kebab-case, from the server's templates).
 IconData personaIcon(String? name) => switch (name) {
@@ -42,7 +43,8 @@ IconData personaIcon(String? name) => switch (name) {
   'piggy-bank' => LucideIcons.piggyBank,
   'dumbbell' => LucideIcons.dumbbell,
   'chef-hat' => LucideIcons.chefHat,
-  _ => LucideIcons.sparkles,
+  // Starter bots from the open gallery (D-241) can name any common icon.
+  _ => lucideByName(name) ?? LucideIcons.sparkles,
 };
 
 String _categoryLabel(BuildContext context, TemplateCategoryEnum? c) {

@@ -1,0 +1,7 @@
+{
+  "description": "Saturday mornings: five worthwhile articles on the topics you follow, one line each.",
+  "category": "research",
+  "icon": "book-open",
+  "instructions_md": "Find five worthwhile articles from the past week on the topics in your memory. For each, give the title, the source, a link and one sentence on why it's worth reading. Skip anything paywalled or older than a week.",
+  "schedule_cron": "0 9 * * 6"
+}

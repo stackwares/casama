@@ -2464,10 +2464,39 @@ class FakeBackend implements Backend {
   @override
   Future<List<Plugin>> plugins(String botId) async => List.of(pluginList);
   @override
-  Future<PluginPreview> previewPlugin(String orgId, String url) async {
-    pluginActions.add('preview:$url');
+  Future<PluginPreview> previewPlugin(String orgId, String url, {String? commit}) async {
+    pluginActions.add(commit == null ? 'preview:$url' : 'preview:$url@$commit');
     return pluginPreview();
   }
+
+  /// The plugin directory (D-241); tests add entries.
+  final directoryPlugins = <DirectoryPlugin>[];
+  @override
+  Future<List<DirectoryPlugin>> pluginDirectory() async => List.of(directoryPlugins);
+
+  /// Routine ideas (D-241); tests add entries.
+  final routineIdeaList = <RoutineIdea>[];
+  @override
+  Future<List<RoutineIdea>> routineIdeas() async => List.of(routineIdeaList);
+
+  /// Remote app settings (D-241); tests replace them.
+  RemoteAppConfig remoteConfig = RemoteAppConfig(
+    minVersions: RemoteAppConfigMinVersions(),
+    updateUrls: RemoteAppConfigUpdateUrls(),
+    maintenance: null,
+    announcements: const [],
+    flags: const {},
+  );
+  @override
+  Future<RemoteAppConfig> appConfig() async => remoteConfig;
+  @override
+  Future<RemoteAppConfig> adminAppConfig() async => remoteConfig;
+  @override
+  Future<RemoteAppConfig> setAdminAppConfig(Map<String, dynamic> settings) async =>
+      remoteConfig = RemoteAppConfig.fromJson(
+        jsonDecode(jsonEncode({'min_versions': {}, 'update_urls': {}, 'maintenance': null, 'announcements': [], 'flags': {}, ...settings}))
+            as Map<String, dynamic>,
+      );
 
   @override
   Future<Plugin> installPlugin(

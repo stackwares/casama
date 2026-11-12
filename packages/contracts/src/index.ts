@@ -18,6 +18,7 @@ export * from "./device-data.ts";
 export * from "./encryption.ts";
 export * from "./events.ts";
 export * from "./gallery.ts";
+export * from "./gallery-content.ts";
 export * from "./knowledge.ts";
 export * from "./links.ts";
 export * from "./local.ts";

@@ -4,6 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:casama_api/src/model/template_routines_inner.dart';
+import 'package:casama_api/src/model/template_author.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -42,6 +43,8 @@ class Template {
      this.mascot,
 
      this.starters,
+
+     this.author,
   });
 
   @JsonKey(
@@ -176,6 +179,18 @@ class Template {
 
 
 
+  @JsonKey(
+    
+    name: r'author',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final TemplateAuthor? author;
+
+
+
 
 
     @override
@@ -190,7 +205,8 @@ class Template {
       other.category == category &&
       other.icon == icon &&
       other.mascot == mascot &&
-      other.starters == starters;
+      other.starters == starters &&
+      other.author == author;
 
     @override
     int get hashCode =>
@@ -204,7 +220,8 @@ class Template {
         category.hashCode +
         icon.hashCode +
         mascot.hashCode +
-        starters.hashCode;
+        starters.hashCode +
+        author.hashCode;
 
   factory Template.fromJson(Map<String, dynamic> json) => _$TemplateFromJson(json);
 

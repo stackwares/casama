@@ -7,7 +7,7 @@
 <meta name="description" content="Themes, color schemes, wallpapers and skills for Casama, free and open source. See each one as it looks in the app, then open it in Casama.">
 <link rel="canonical" href="https://gallery.casama.ai/">
 <meta property="og:title" content="Casama Gallery">
-<meta property="og:description" content="Themes, color schemes, wallpapers, skills and apps for Casama, free and open source.">
+<meta property="og:description" content="Themes, color schemes, wallpapers, skills, apps, starter bots, routine ideas and plugins for Casama, free and open source.">
 <meta name="theme-color" content="#fcf3fb" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1e1a22" media="(prefers-color-scheme: dark)">
 <link rel="icon" type="image/svg+xml" href="assets/casama-winky-animated.svg">
@@ -60,13 +60,13 @@
 
   <section class="contribute" id="contribute" aria-labelledby="contribute-title">
     <div class="contribute-text">
-      <h2 id="contribute-title">Add your own look, skill or app</h2>
+      <h2 id="contribute-title">Add your own</h2>
       <p>The gallery is a GitHub repository. Each item is a folder with a short <code>item.json</code> and its file. A pull request adds it, and once it is merged every Casama app sees it within half an hour, with no app update.</p>
       <ol class="steps">
         <li>Fork <a href="https://github.com/stackwares/casama-gallery">stackwares/casama-gallery</a>.</li>
-        <li>Add a folder under <code>themes/</code>, <code>schemes/</code>, <code>wallpapers/</code>, <code>skills/</code> or <code>apps/</code> with <code>item.json</code> and its <code>theme.json</code>, <code>scheme.json</code>, <code>wallpaper.json</code>, <code>SKILL.md</code> or <code>app.json</code>.</li>
-        <li>Run <code>node check.mjs</code>. It checks the license, text contrast, fonts and file sizes, and updates <code>index.json</code> and <code>apps.json</code>.</li>
-        <li>Open a pull request. Casama reviews it; skills with scripts get a second review, and an app is checked against the vendor's own docs.</li>
+        <li>Add a folder under <code>themes/</code>, <code>schemes/</code>, <code>wallpapers/</code>, <code>skills/</code>, <code>apps/</code>, <code>bots/</code>, <code>routines/</code> or <code>plugins/</code> with <code>item.json</code> and its document (the README lists each).</li>
+        <li>Run <code>node check.mjs</code>. It checks the license, text contrast, fonts and file sizes, and updates <code>index.json</code> and the other lists.</li>
+        <li>Open a pull request. Casama reviews it; skills with scripts get a second review, an app is checked against the vendor's own docs, and a plugin's exact commit is read before it's listed.</li>
       </ol>
       <p class="small">Looks use CC0 1.0 or CC BY 4.0, skills MIT or Apache 2.0, apps CC0 1.0. An app is a vendor's own hosted MCP server, added by anyone. Photos from Unsplash's API can't be added here: use your own. In the app, Settings → Appearance → Share to gallery fills in an issue with your current look.</p>
     </div>

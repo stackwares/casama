@@ -6495,6 +6495,20 @@
             "items": {
               "type": "string"
             }
+          },
+          "author": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ]
           }
         },
         "required": [
@@ -11239,6 +11253,290 @@
           "items"
         ]
       },
+      "RemoteAppConfig": {
+        "type": "object",
+        "properties": {
+          "min_versions": {
+            "type": "object",
+            "properties": {
+              "ios": {
+                "type": "string"
+              },
+              "android": {
+                "type": "string"
+              },
+              "macos": {
+                "type": "string"
+              },
+              "windows": {
+                "type": "string"
+              },
+              "linux": {
+                "type": "string"
+              },
+              "web": {
+                "type": "string"
+              }
+            },
+            "description": "Apps older than this on a platform must update first"
+          },
+          "update_urls": {
+            "type": "object",
+            "properties": {
+              "ios": {
+                "type": "string"
+              },
+              "android": {
+                "type": "string"
+              },
+              "macos": {
+                "type": "string"
+              },
+              "windows": {
+                "type": "string"
+              },
+              "linux": {
+                "type": "string"
+              },
+              "web": {
+                "type": "string"
+              }
+            },
+            "description": "Where Update goes on each platform"
+          },
+          "maintenance": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "message"
+            ]
+          },
+          "announcements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Announcement"
+            }
+          },
+          "flags": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "description": "Feature switches; a missing name means the app's own default"
+          }
+        },
+        "required": [
+          "min_versions",
+          "update_urls",
+          "maintenance",
+          "announcements",
+          "flags"
+        ]
+      },
+      "Announcement": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "info",
+              "warning"
+            ]
+          },
+          "starts_at": {
+            "type": "string"
+          },
+          "ends_at": {
+            "type": "string"
+          },
+          "platforms": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ios",
+                "android",
+                "macos",
+                "windows",
+                "linux",
+                "web"
+              ]
+            }
+          },
+          "min_version": {
+            "type": "string"
+          },
+          "max_version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "body",
+          "level"
+        ]
+      },
+      "SetRemoteAppConfigRequest": {
+        "type": "object",
+        "additionalProperties": {},
+        "description": "The whole settings object; it replaces what's stored after it's checked"
+      },
+      "PluginDirectory": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DirectoryPlugin"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "DirectoryPlugin": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "description": "The plugin's GitHub folder"
+          },
+          "commit": {
+            "type": "string",
+            "description": "The reviewed commit; installing pins it"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "adds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "author": {
+            "$ref": "#/components/schemas/ContentAuthor"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "url",
+          "commit",
+          "adds",
+          "author"
+        ]
+      },
+      "ContentAuthor": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "RoutineIdeaList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoutineIdea"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "RoutineIdea": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "work",
+              "research",
+              "build",
+              "create",
+              "life"
+            ]
+          },
+          "icon": {
+            "type": "string",
+            "description": "Lucide icon name, kebab-case"
+          },
+          "instructions_md": {
+            "type": "string"
+          },
+          "schedule_cron": {
+            "type": "string"
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "author": {
+            "$ref": "#/components/schemas/ContentAuthor"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "category",
+          "icon",
+          "instructions_md",
+          "schedule_cron",
+          "featured",
+          "author"
+        ]
+      },
       "TelephonySettings": {
         "type": "object",
         "properties": {
@@ -13873,6 +14171,10 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 500
+          },
+          "commit": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
           }
         },
         "required": [
@@ -29039,6 +29341,209 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/app-config": {
+      "get": {
+        "operationId": "adminAppConfig",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remote app settings (owner only)",
+        "responses": {
+          "200": {
+            "description": "Remote app settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoteAppConfig"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "adminSetAppConfig",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Replace the remote app settings (owner only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRemoteAppConfigRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Remote app settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoteAppConfig"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/app-config": {
+      "get": {
+        "operationId": "getAppConfig",
+        "tags": [
+          "system"
+        ],
+        "summary": "Remote app settings: minimum versions, maintenance, announcements, flags (no auth)",
+        "responses": {
+          "200": {
+            "description": "Remote app settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoteAppConfig"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/plugin-directory": {
+      "get": {
+        "operationId": "listPluginDirectory",
+        "tags": [
+          "plugins"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Reviewed plugins from the gallery, each pinned to the commit that was reviewed",
+        "responses": {
+          "200": {
+            "description": "Plugins",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PluginDirectory"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/routine-ideas": {
+      "get": {
+        "operationId": "listRoutineIdeas",
+        "tags": [
+          "routines"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Routine ideas from the gallery, to fill in a new routine",
+        "responses": {
+          "200": {
+            "description": "Routine ideas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoutineIdeaList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
             "content": {
               "application/problem+json": {
                 "schema": {

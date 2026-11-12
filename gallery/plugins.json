@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "id": "hello-casama",
+      "type": "plugin",
+      "name": "Hello Casama",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "example",
+        "notes"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "a0b3ec319333d9e0445ccd7f8547a9764bf61e9cea698afba81428381744009c",
+      "size": 562,
+      "description": "A small example plugin: a stand-up skill and a notes server that asks for one setting.",
+      "document": {
+        "description": "A small example plugin: a stand-up skill and a notes server that asks for one setting.",
+        "url": "https://github.com/stackwares/casama/tree/main/examples/hello-plugin",
+        "commit": "6efc18250f69b9c2938b689076384237324136e3",
+        "icon": "puzzle",
+        "adds": [
+          "A stand-up skill",
+          "A notes server on the bot's computer",
+          "Asks for a note signature"
+        ]
+      },
+      "files": [
+        "plugins/hello-casama/item.json",
+        "plugins/hello-casama/plugin.json"
+      ]
+    }
+  ]
+}

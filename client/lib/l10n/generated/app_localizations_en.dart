@@ -8137,4 +8137,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatTimeYesterday => 'Yesterday';
+
+  @override
+  String get remoteUpdateTitle => 'Time to update Casama';
+
+  @override
+  String get remoteUpdateBody =>
+      'This version of Casama is no longer supported. Update it to keep going.';
+
+  @override
+  String get remoteUpdateNoLink =>
+      'This version of Casama is no longer supported. Update it from where you installed it.';
+
+  @override
+  String get remoteMaintenanceTitle => 'Casama is down for maintenance';
+
+  @override
+  String get openLink => 'Open';
+
+  @override
+  String get routineIdeas => 'Ideas';
+
+  @override
+  String get routineIdeasHelp => 'Start from an idea, then change anything.';
+
+  @override
+  String get pluginDirectory => 'Reviewed plugins';
+
+  @override
+  String get pluginDirectoryHelp =>
+      'Checked by Casama and pinned to the version that was checked.';
+
+  @override
+  String get pluginOrPaste => 'Or add one from a GitHub link';
+
+  @override
+  String byAuthor(String name) {
+    return 'By $name';
+  }
+
+  @override
+  String get adminAppSettings => 'App settings';
+
+  @override
+  String get adminAppSettingsHelp =>
+      'Minimum versions, maintenance, announcements and feature switches for every app, with no release.';
+
+  @override
+  String get adminAppSettingsBadJson =>
+      'That isn\'t valid JSON. Check the brackets, quotes and commas.';
 }

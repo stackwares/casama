@@ -1,9 +1,9 @@
 # Casama gallery
 
 The public catalog is [stackwares/casama-gallery](https://github.com/stackwares/casama-gallery).
-A pull request there is how a theme, color scheme, wallpaper, skill or app reaches everyone's Casama.
+A pull request there is how a theme, color scheme, wallpaper, skill, app, starter bot, routine idea or plugin reaches everyone's Casama.
 
-Themes, color schemes, wallpapers, skills and apps for Casama. A pull request is how someone contributes.
+Themes, color schemes, wallpapers, skills, apps, starter bots, routine ideas and plugins for Casama. A pull request is how someone contributes.
 Casama reviews it, and a merge is what every app sees, without an app release.
 
 Each item is a folder:
@@ -20,6 +20,12 @@ skills/<id>/SKILL.md
 apps/<id>/item.json
 apps/<id>/app.json
 apps/<id>/logo.svg   (optional)
+bots/<id>/item.json
+bots/<id>/bot.json
+routines/<id>/item.json
+routines/<id>/routine.json
+plugins/<id>/item.json
+plugins/<id>/plugin.json
 ```
 
 `item.json` names the author and the license. Looks use CC0-1.0 or CC-BY-4.0. Skills use MIT or Apache-2.0.
@@ -128,3 +134,70 @@ they can do stay there: Google's apps, sign-ins with a client the server owner r
 Community and self-hosted servers don't go here: Settings → Connections → Custom server adds any MCP URL.
 
 Apps are written to `apps.json`, not `index.json`, so servers and apps from before apps never see them.
+
+### Skills are the catalog
+
+Casama's skill catalog (Settings → Skills → Skill catalog) shows the skills here. A merged change reaches
+every server without a release; the copy bundled with Casama only stands in when the gallery can't be
+read. A skill's `category` has to be one of the catalog's: `work`, `writing`, `research`, `data`, `money`,
+`build` or `life`.
+
+### Starter bots
+
+A starter bot is offered when someone makes a new bot. `bot.json`:
+
+```json
+{
+  "description": "Quizzes you, explains what you got wrong and plans revision before an exam.",
+  "category": "life",
+  "icon": "graduation-cap",
+  "mascot": "thinker",
+  "persona": "You are a patient study partner. ...",
+  "starters": ["Quiz me on photosynthesis"],
+  "autonomy": "ask_always",
+  "skills": [{ "name": "flashcards", "description": "...", "body_md": "..." }],
+  "routines": [{ "name": "Sunday week ahead", "instructions_md": "...", "schedule_cron": "0 18 * * 0" }]
+}
+```
+
+- `category`: `work`, `research`, `build`, `create` or `life`. `icon`: a Lucide name.
+- `mascot`: `cool`, `focused`, `giggly`, `lovey`, `shy`, `sleepy`, `starry`, `thinker`, `winky` or `wow`.
+- `persona`: the bot's standing instructions, 20 to 20,000 characters. `starters`: 1 to 6 first messages.
+- `autonomy`: `ask_always` or `ask_risky`. A gallery bot never starts fully on its own.
+- `skills` (up to 10) and `routines` (up to 5, five-field cron) are optional.
+- License: MIT, Apache-2.0, CC0-1.0 or CC-BY-4.0. Built-in starter bots keep their ids.
+
+### Routine ideas
+
+A routine idea fills in a new routine (a bot's Routines → New routine → Ideas). `routine.json`:
+
+```json
+{
+  "description": "Every Friday afternoon: what got done, what slipped, and next week's priorities.",
+  "category": "work",
+  "icon": "calendar-check",
+  "instructions_md": "Write my weekly review. ...",
+  "schedule_cron": "0 16 * * 5"
+}
+```
+
+### Plugins
+
+A plugin entry points at an Agent Plugins 1.0 package on GitHub and the exact commit that was reviewed.
+People add it from a bot's Plugins page, and that commit is what gets installed, never a later one.
+`plugin.json`:
+
+```json
+{
+  "description": "A small example plugin: a stand-up skill and a notes server.",
+  "url": "https://github.com/stackwares/casama/tree/main/examples/hello-plugin",
+  "commit": "6efc18250f69b9c2938b689076384237324136e3",
+  "icon": "puzzle",
+  "adds": ["A stand-up skill", "A notes server on the bot's computer"]
+}
+```
+
+A newer version is a pull request that changes `commit`, reviewed like the first. The entry is CC0-1.0;
+the plugin keeps its own license.
+
+Bots, routine ideas and plugins are written to `bots.json`, `routines.json` and `plugins.json`.

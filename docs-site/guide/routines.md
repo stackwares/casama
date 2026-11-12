@@ -20,7 +20,10 @@ To create one yourself:
 1. Open the bot's chat, open the **More** menu and tap **Routines**. You can also go to
    **Bot settings → Routines**.
 2. Tap **New routine**.
-3. Enter a **Name** and **Instructions**: what the bot should do each time.
+3. Enter a **Name** and **Instructions**: what the bot should do each time. Or tap one of the
+   **Ideas** at the top (a weekly review, a morning plan, bill reminders…) to fill in the name,
+   instructions and schedule, then change anything. Ideas come from the
+   [open gallery](https://gallery.casama.ai/#routine).
 4. Pick a trigger: **Once**, **Repeats**, **Meetings**, **Messages**, **GitHub** or **Webhook**,
    and fill in its options (below).
 5. Tap **Create**.
