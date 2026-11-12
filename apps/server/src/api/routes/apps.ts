@@ -157,6 +157,9 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
     (env.PUBLIC_API_URL ?? new URL(c.req.url).origin).replace(/\/$/, "");
   const redirectUri = (c: Context) => env.OAUTH_REDIRECT_URL ?? oauthRedirectFor(apiBase(c));
   const cimdUrl = (c: Context) => `${apiBase(c)}/oauth/client.json`;
+  /** Where Composio and Pipedream send the browser after a sign-in; names the connection to finish. */
+  const doneUrl = (c: Context, integrationId: string) =>
+    `${apiBase(c)}/oauth/done?integration=${encodeURIComponent(integrationId)}`;
   /** OAuth 2.1 servers only accept a return address on https, or on this machine (loopback). */
   const secureRedirect = (c: Context) => {
     const u = new URL(redirectUri(c));
@@ -353,7 +356,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
       if (!rec) throw new Error("managed integration missing");
       let out: { redirect_url: string };
       try {
-        out = await composioDirectory(rec, fetchImpl).connect(slug, `${apiBase(c)}/oauth/done`);
+        out = await composioDirectory(rec, fetchImpl).connect(slug, doneUrl(c, row?.id as string));
       } catch (err) {
         throw new ApiError(400, "provider_error", (err as Error).message.slice(0, 300));
       }
@@ -706,7 +709,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
     const { row, dir } = await directory(c, id, true);
     const { app: slug } = c.req.valid("json");
     try {
-      const out = await dir.connect(slug, `${apiBase(c)}/oauth/done`);
+      const out = await dir.connect(slug, doneUrl(c, id));
       // The app's tools become available to bots once it's on the list.
       const config = row.config as Record<string, unknown>;
       const key = row.kind === "composio" ? "toolkits" : "apps";
@@ -731,9 +734,34 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
   });
 
   // Where Composio and Pipedream send people after signing in.
-  app.get("/oauth/done", (c) =>
-    c.html(resultPage("You're signed in. You can close this window and go back to Casama.", true)),
-  );
+  // The app also watches for the sign-in, but Android can stop it while the browser is open; then
+  // nothing would list the new app's tools and the connection would stay "pending". So the
+  // server finishes it here too. Only a connection still waiting for its tools is refreshed, so
+  // this unauthenticated page can't be used to make the server call the provider at will.
+  app.get("/oauth/done", async (c) => {
+    // Leading match: a provider may append its own "?status=…" to a return address that has a query.
+    const id = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.exec(
+      c.req.query("integration") ?? "",
+    )?.[0];
+    if (id) {
+      const [row] = await db
+        .execute<{ id: string }>(sql`
+          select id from public.integrations
+          where id = ${id}::uuid and kind in ('composio', 'pipedream')
+            and (status = 'pending' or (status = 'ok' and tools_cached_at is null))`)
+        .catch(() => []);
+      if (row)
+        void refreshIntegration(db, row.id, { fetch: fetchImpl, secrets: [] }).catch((err) =>
+          deps.logger.warn("sign-in refresh failed", {
+            integration_id: row.id,
+            error: (err as Error).message,
+          }),
+        );
+    }
+    return c.html(
+      resultPage("You're signed in. You can close this window and go back to Casama.", true),
+    );
+  });
 }
 
 /** A small page shown in the browser after a sign-in; it tries to close itself. */

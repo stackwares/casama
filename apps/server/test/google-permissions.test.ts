@@ -30,6 +30,10 @@ beforeAll(async () => {
       return res.end(JSON.stringify({ redirect_url: "https://composio.example/signin/123" }));
     if (req.url?.startsWith("/api/v3/connected_accounts?"))
       return res.end(JSON.stringify({ items: accounts }));
+    if (req.url?.startsWith("/api/v3/tools?"))
+      return res.end(
+        JSON.stringify({ items: [{ slug: "GMAIL_SEND_EMAIL", description: "Send an email" }] }),
+      );
     res.writeHead(404).end("{}");
   }).listen(0, "127.0.0.1");
   await once(composio, "listening");
@@ -232,6 +236,44 @@ describe("Google permissions", () => {
     >`select kind, config from public.integrations where org_id = ${orgId}`;
     expect(i).toMatchObject({ kind: "composio", config: { managed: true, toolkits: ["gmail"] } });
   });
+  it("the sign-in's return page finishes a waiting connection, even if the app never comes back", async () => {
+    const owner = await h.user("composio-done@example.com");
+    const orgId = (
+      await j(
+        await h.request("/v1/orgs", { method: "POST", token: owner.token, json: { name: "D" } }),
+      )
+    ).id;
+    const before = calls.length;
+    await h.request("/v1/apps/connect", {
+      method: "POST",
+      token: owner.token,
+      json: { org_id: orgId, app_id: "gmail", method: "managed" },
+    });
+    const [i] = await h.tdb.admin<{ id: string; status: string }[]>`
+      select id, status from public.integrations where org_id = ${orgId} and kind = 'composio'`;
+    expect(i?.status).toBe("pending");
+    const id = i?.id as string;
+    const link = calls.slice(before).find((c) => c.path === "/api/v3/connected_accounts/link");
+    const callback = String((link?.body as { callback_url?: string })?.callback_url);
+    expect(callback).toMatch(new RegExp(`/oauth/done\\?integration=${id}$`));
+    // Composio adds its own query to the return address.
+    const res = await h.request(`/oauth/done?integration=${id}?status=success`);
+    expect(res.status).toBe(200);
+    let row: { status: string; tools: number } | undefined;
+    for (let n = 0; n < 50 && row?.status !== "ok"; n++) {
+      await new Promise((r) => setTimeout(r, 50));
+      [row] = await h.tdb.admin<{ status: string; tools: number }[]>`
+        select status, jsonb_array_length(coalesce(tools_cache, '[]'::jsonb)) as tools
+        from public.integrations where id = ${id}`;
+    }
+    expect(row).toEqual({ status: "ok", tools: 1 });
+    // Once finished, the page doesn't call Composio again.
+    const after = calls.length;
+    await h.request(`/oauth/done?integration=${id}`);
+    await new Promise((r) => setTimeout(r, 100));
+    expect(calls.length).toBe(after);
+  });
+
   it("a Composio sign-in reads as waiting until Composio says the account is active", async () => {
     const owner = await h.user("composio-pending@example.com");
     const orgId = (
