@@ -17,6 +17,7 @@ import '../../ui/page.dart';
 import '../desktop/desktop_watch.dart';
 import 'device_labels.dart';
 import 'device_sync.dart';
+import '../../core/analytics.dart';
 
 class _DeviceState {
   const _DeviceState({required this.key, required this.sources, required this.grants});
@@ -62,6 +63,7 @@ class _DeviceConnectionsScreenState extends ConsumerState<DeviceConnectionsScree
     final ok = await _guarded(() => ref.read(deviceSyncProvider).setKind(kind, on));
     if (!mounted) return;
     setState(() => _busy.remove(kind));
+    Analytics.log('device_data_toggled', {'kind': kind.name, 'result': !on ? 'off' : ok == false ? 'denied' : 'granted'});
     if (ok == false) showWarning(context, l10n.devicePermissionDenied);
     ref.invalidate(_deviceStateProvider);
   }

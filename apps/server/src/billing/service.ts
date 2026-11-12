@@ -4,7 +4,7 @@
  * belongs to the workspace, so buying on one platform unlocks every platform.
  */
 import { randomUUID } from "node:crypto";
-import { track } from "@casama/agent";
+import { milestone, track } from "@casama/agent";
 import type { Database } from "@casama/db";
 import { deterministicUuid, getProductAnalytics } from "@casama/observability";
 import { sql } from "drizzle-orm";
@@ -235,6 +235,8 @@ export class BillingService {
       properties: { ...base, change, from_status: existing?.status ?? "none", to_status: status },
     });
     if (PAID_CHANGES.includes(change))
+      milestone(this.db, owner?.created_by, "first_purchase", orgId);
+    if (PAID_CHANGES.includes(change))
       track(this.db, {
         event: "purchase",
         userId: owner?.created_by,
@@ -281,6 +283,13 @@ export class BillingService {
     const credits = await this.packCredits(p.productIds);
     if (credits > 0 && p.orgId)
       await this.credit(p.orgId, -credits, "refund", `dodo:${paymentId}`, "Credit pack refunded");
+    if (p.orgId && getProductAnalytics().enabled)
+      track(this.db, {
+        event: "refund_issued",
+        orgId: p.orgId,
+        uuid: deterministicUuid("refund", "dodo", paymentId),
+        properties: { store: "dodo", kind: credits > 0 ? "credit_pack" : "subscription" },
+      });
   }
 
   private async packCredits(productIds: string[]) {

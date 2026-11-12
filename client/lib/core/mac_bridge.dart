@@ -12,6 +12,7 @@ import '../ui/adaptive_modal.dart';
 import 'providers.dart';
 import 'router.dart';
 import 'updater.dart';
+import 'analytics.dart';
 
 /// Where Help in the menu bar goes (overridable per build until the docs site has its address).
 const kHelpUrl = String.fromEnvironment('CASAMA_HELP_URL', defaultValue: 'https://github.com/stackwares/casama/tree/main/docs-site');
@@ -33,6 +34,7 @@ final macBridgeProvider = Provider<void>((ref) {
 });
 
 Future<void> _menu(Ref ref, String action) async {
+  Analytics.feature('mac_menu');
   final router = ref.read(routerProvider);
   final context = router.routerDelegate.navigatorKey.currentContext;
   final location = router.routerDelegate.currentConfiguration.uri.path;

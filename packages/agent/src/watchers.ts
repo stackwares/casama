@@ -9,6 +9,7 @@ import { contentKeys } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
+import { track } from "./analytics.ts";
 import { createAdapter, loadIntegration } from "./integrations.ts";
 import { loadSecrets } from "./secrets.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
@@ -282,6 +283,12 @@ export function registerWatcherTools(registry: ToolRegistry, deps: { db: Databas
                 ${args.condition ?? ""}, ${args.on_match ?? ""}, ${Math.max(60, every)},
                 ${args.expires_in_days ? new Date(Date.now() + args.expires_in_days * 86_400_000).toISOString() : null}::timestamptz)
         returning id`);
+      track(db, {
+        event: "watcher_created",
+        userId: owner,
+        orgId: ctx.orgId,
+        properties: { kind: args.kind },
+      });
       return {
         content: `Watching "${args.name}" (${w?.id}). I'll be woken when it changes.`,
         preview: `watching ${args.name}`,

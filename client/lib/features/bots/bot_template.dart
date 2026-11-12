@@ -23,6 +23,7 @@ import '../../ui/page.dart';
 import '../routines/cron_words.dart';
 import 'model_picker.dart';
 import '../../ui/celebration.dart';
+import '../../core/analytics.dart';
 
 /// Share a bot as a template (D-110): a file or a link with its instructions, skills, routines and
 /// suggested connections. Never secrets; memories only when chosen. Importing previews first.
@@ -71,6 +72,7 @@ class _ShareSheetState extends ConsumerState<_ShareSheet> {
   }
 
   Future<void> _makeLink() async {
+    Analytics.feature('share_template');
     setState(() => _busy = true);
     final link = await runGuarded(
       context,

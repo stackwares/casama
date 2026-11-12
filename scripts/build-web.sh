@@ -57,3 +57,5 @@ if ! grep -q 'dart2wasm' "$boot" || ! grep -q 'main.dart.wasm' "$boot"; then
   exit 1
 fi
 echo "Wasm web build is ready (build/web/main.dart.wasm)."
+# Source maps to PostHog error tracking when a key is set; otherwise a note and nothing else.
+"$root/scripts/upload-symbols.sh" web build/web

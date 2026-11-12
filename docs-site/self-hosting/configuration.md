@@ -449,7 +449,12 @@ Cloud Connect key.
 | `TELEMETRY_URL`                | `https://telemetry.casama.ai/v1/ping`    | Where telemetry goes.                                                                                                |
 | `ERROR_REPORTING`              | `auto`                                    | `auto` (Sentry if `SENTRY_DSN` is set, else PostHog if `POSTHOG_API_KEY` is set, else nothing), `sentry`, `posthog` or `none`. |
 | `SENTRY_DSN`                   | (empty)                                   | A Sentry-protocol DSN: sentry.io, self-hosted Sentry or GlitchTip.                                                   |
-| `POSTHOG_API_KEY`              | (empty)                                   | PostHog project key for error reports.                                                                               |
+| `POSTHOG_API_KEY`              | (empty)                                   | PostHog project key for error reports (and for product analytics when `PRODUCT_ANALYTICS=on`).                       |
+| `PRODUCT_ANALYTICS`            | `off`                                     | `on` sends product events and daily summaries to your PostHog project (Casama Cloud turns it on). Needs `POSTHOG_API_KEY`. People and workspaces that opted out are skipped. |
+| `ANALYTICS_ENVIRONMENT`        | (`NODE_ENV`)                              | The `environment` tag on analytics and error events: `production`, `staging` or `development`.                       |
+| `POSTHOG_PERSONAL_API_KEY`     | (empty)                                   | Optional. A PostHog personal API key with person write scope: when an account is purged, its PostHog person and events are deleted too. |
+| `POSTHOG_PROJECT_ID`           | (empty)                                   | The PostHog project the key above belongs to.                                                                        |
+| `POSTHOG_APP_HOST`             | `https://us.posthog.com`                  | PostHog's app address for person deletion (your region or self-hosted address).                                      |
 | `OTEL_EXPORTER_OTLP_ENDPOINT`  | (empty)                                   | Send traces to an OpenTelemetry collector.                                                                           |
 | `LANGFUSE_BASE_URL`            | (empty)                                   | Langfuse address. With all three Langfuse settings, runs send LLM traces (workspaces can opt out).                   |
 | `LANGFUSE_PUBLIC_KEY`          | (empty)                                   | Langfuse public key.                                                                                                 |

@@ -10,6 +10,7 @@ import 'package:window_manager/window_manager.dart';
 import '../../core/router.dart';
 import 'companion.dart';
 import '../desktop/desktop_context.dart';
+import '../../core/analytics.dart';
 
 bool get isDesktop =>
     !kIsWeb && const {TargetPlatform.macOS, TargetPlatform.windows, TargetPlatform.linux}.contains(defaultTargetPlatform);
@@ -81,6 +82,7 @@ class DesktopShell {
   }
 
   void openQuickAsk() {
+    Analytics.feature('desktop_hotkey');
     // Read what's in front (selection, window, tab) before Casama's window takes focus (D-152).
     unawaited(() async {
       final c = await ref.read(desktopContextReaderProvider).capture().timeout(const Duration(milliseconds: 2500), onTimeout: () => const DesktopContext()).catchError((_) => const DesktopContext());

@@ -157,3 +157,17 @@ export function track(
     });
   })().catch((err) => captureError(err, { step: "analytics-track", event: e.event }));
 }
+
+/** Records a once-only milestone without blocking or failing the caller (never throws). */
+export function milestone(
+  db: Database,
+  userId: string | null | undefined,
+  name: string,
+  orgId?: string | null,
+  analytics?: ProductAnalytics,
+): void {
+  if (!userId) return;
+  void reachMilestone(db, userId, name, { orgId: orgId ?? undefined, analytics }).catch((err) =>
+    captureError(err, { step: "analytics-milestone", milestone: name }),
+  );
+}

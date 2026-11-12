@@ -5,6 +5,7 @@ import '../../core/providers.dart';
 import '../../theme/appearance.dart';
 import '../../theme/presets.dart';
 import 'gallery_previews.dart';
+import '../../core/analytics.dart';
 
 /// The looks in the open gallery (D-184): themes, color schemes and wallpapers, featured first.
 /// Appearance and Customize show them next to the built-in ones, so the gallery is one more
@@ -56,6 +57,7 @@ Future<void> applyGalleryItem(WidgetRef ref, GalleryItem item) async {
       final look = GalleryLook.of(item, current);
       final wallpaper = (galleryWallpaperOf(item) ?? current.wallpaper)
           .copyWith(everywhere: everywhere);
+      Analytics.feature('gallery_look');
       await notifier.apply(
         schemeId: look.scheme.id,
         gallery: choice != null && choice.id.startsWith('gallery:')

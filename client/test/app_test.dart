@@ -553,6 +553,24 @@ void main() {
     },
   );
 
+  testWidgets('a run that failed for lack of credits offers See plans, not a model key', (tester) async {
+    await setSize(tester, const Size(500, 900));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const ChatScreen(botId: botId, conversationId: convId)));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('messageInput')), 'who are you?');
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('sendButton')));
+    await tester.pump();
+    backend.runEventsController.add(
+      ev(1, 'run.failed', {'error_code': 'out_of_credits', 'message': 'You are out of credits.'}),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('noticeFix')), findsOneWidget);
+    expect(find.text('See plans'), findsOneWidget);
+    expect(find.text('Add a model key'), findsNothing);
+  });
+
   testWidgets('timeline filters events and offers restore on checkpoints', (
     tester,
   ) async {

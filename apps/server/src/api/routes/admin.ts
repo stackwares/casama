@@ -12,10 +12,10 @@ import {
   getConnectionSettings,
   setConnectionSettings,
 } from "../../services/connection-settings.ts";
+import { CASAMA_VERSION } from "../../version.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
-import { CASAMA_VERSION } from "../../version.ts";
 
 export { CASAMA_VERSION };
 

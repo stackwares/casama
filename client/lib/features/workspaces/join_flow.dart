@@ -22,6 +22,7 @@ import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/progressive_fade.dart';
 import 'spaces.dart';
+import '../../core/analytics.dart';
 
 // --- reading invites (D-167) ------------------------------------------------------------------
 
@@ -147,6 +148,7 @@ class _JoinScreenState extends ConsumerState<JoinScreen> {
     if (!mounted) return;
     setState(() => _busy = false);
     if (result == null) return;
+    Analytics.log('join_completed', {'status': result.status.value, 'via': 'link'});
     final org = result.organization;
     switch (result.status) {
       case JoinResultStatusEnum.requested:
@@ -542,6 +544,7 @@ class _JoinTeamScreenState extends ConsumerState<JoinTeamScreen> {
     if (!mounted) return;
     setState(() => _busy = null);
     if (org == null) return;
+    Analytics.log('join_completed', {'status': 'joined', 'via': 'domain'});
     ref.invalidate(organizationsProvider);
     ref.read(selectedOrgIdProvider.notifier).select(org.id);
     context.go('/joined/${org.id}');
@@ -822,6 +825,7 @@ Future<void> copyInvite(BuildContext context, String text) async {
     return;
   }
   HapticFeedback.selectionClick();
+  Analytics.log('invite_shared', {'method': 'copy'});
   if (context.mounted) showMessage(context, context.l10n.inviteLinkCopied);
 }
 
@@ -830,7 +834,10 @@ Future<void> shareInvite(
   BuildContext context, {
   required String url,
   required String workspace,
-}) => shareText(
-  context.l10n.inviteShareText(workspace, url),
-  origin: shareOrigin(context),
-);
+}) {
+  Analytics.log('invite_shared', {'method': 'share'});
+  return shareText(
+    context.l10n.inviteShareText(workspace, url),
+    origin: shareOrigin(context),
+  );
+}

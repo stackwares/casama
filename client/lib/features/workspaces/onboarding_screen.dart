@@ -16,6 +16,7 @@ import '../settings/model_keys_screen.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/mascot.dart';
 import '../../ui/celebration.dart';
+import '../../core/analytics.dart';
 
 /// First run: create or join a workspace, add a model key, create a bot. One step at a time, with
 /// progress across the top.
@@ -85,6 +86,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       if (_workspace.text.trim().isEmpty) return;
                       final org = await ref.read(backendProvider).createOrganization(_workspace.text.trim());
                       if (context.mounted) showCelebration(context, context.l10n.celebrateNewSpace(org.name));
+                      Analytics.log('onboarding_step_done', {'step': 'manual_workspace', 'action': 'created'});
                       ref.read(selectedOrgIdProvider.notifier).select(org.id);
                       ref.invalidate(organizationsProvider);
                     }),
@@ -120,6 +122,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         : () => _guard(() async {
                             await ref.read(backendProvider).acceptInvite(_invite.text.trim());
                             if (context.mounted) showCelebration(context, context.l10n.celebrateJoined);
+                            Analytics.log('onboarding_step_done', {'step': 'manual_join_code', 'action': 'joined'});
                             ref.invalidate(organizationsProvider);
                           }),
                     child: Text(l10n.join),
@@ -138,7 +141,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AddKeyForm(onAdded: () => ref.invalidate(credentialsProvider)),
+            AddKeyForm(
+              onAdded: () {
+                Analytics.log('onboarding_step_done', {'step': 'manual_key', 'action': 'added'});
+                ref.invalidate(credentialsProvider);
+              },
+            ),
             const SizedBox(height: AppSpace.xs),
             Center(
               child: TextButton.icon(

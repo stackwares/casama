@@ -9,6 +9,7 @@ import '../../ui/bottom_padding.dart';
 import '../../ui/mascot.dart';
 import '../../ui/progressive_fade.dart';
 import 'about_you_screen.dart';
+import '../../core/analytics.dart';
 
 /// This session already finished the name step, so it hides at once instead of waiting for the
 /// profile to reload.
@@ -92,6 +93,7 @@ class _NamePageState extends ConsumerState<_NamePage> {
     if (!mounted) return;
     setState(() => _busy = false);
     if (ok == true) {
+      Analytics.log('onboarding_step_done', {'step': 'name_overlay', 'action': save && name.isNotEmpty ? 'saved' : 'skipped'});
       ref.read(_nameStepDoneProvider.notifier).finish();
       ref.invalidate(aboutYouProvider);
     }

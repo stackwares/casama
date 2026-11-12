@@ -27,6 +27,7 @@ import '../../core/call_audio.dart';
 import 'call_activity.dart';
 import 'call_mascot.dart';
 import 'call_motion.dart';
+import '../../core/analytics.dart';
 
 /// A live voice call with a bot (/bots/:id/call?c=conversation).
 class CallScreen extends ConsumerStatefulWidget {
@@ -274,8 +275,11 @@ class _CallScreenState extends ConsumerState<CallScreen>
         }
       });
       setState(() => _call = call);
+      Analytics.log('call_started', {'provider': _provider, 'kind': 'in_app', 'result': 'connected'});
+      Analytics.feature('voice_call');
       unawaited(_loadRoute());
     } catch (e) {
+      Analytics.log('call_started', {'provider': _provider, 'kind': 'in_app', 'result': 'failed'});
       if (mounted) {
         setState(() => _error = e);
         _syncOrb();

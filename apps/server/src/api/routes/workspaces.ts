@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { track } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, pgErrorCode, pgErrorMessage, schema, withUserSession } from "@casama/db";
 import { withSpan } from "@casama/observability";
@@ -102,6 +103,12 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
           if (!row) throw new Error("create_organization returned nothing");
           // Casama Cloud: new workspaces start on the free plan with its included credits.
           if (deps.billing?.enabled) row.plan = (await deps.billing.recompute(row.id)).planCode;
+          track(db, {
+            event: "workspace_created",
+            userId: claims.sub,
+            orgId: row.id,
+            properties: { source: "manual", plan: row.plan },
+          });
           return c.json(orgOut({ ...row, createdAt: row.created_at }), 201);
         } catch (err) {
           if (pgErrorCode(err) !== "23505") throw err;
@@ -260,6 +267,7 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
     }
     const org = (await listMyOrgs(claims)).find((o) => o.id === orgId);
     if (!org) throw new ApiError(404, "org_not_found", "Workspace not found");
+    track(db, { event: "member_joined", userId: claims.sub, orgId, properties: { via: "link" } });
     return c.json(org, 200);
   });
 
@@ -292,6 +300,12 @@ export function registerWorkspaceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
         ),
       );
       if (!m) throw new Error("accept_invite returned nothing");
+      track(db, {
+        event: "member_joined",
+        userId: claims.sub,
+        orgId: m.org_id,
+        properties: { via: "email", role: m.role },
+      });
       return c.json({ ...m, created_at: iso(m.created_at) }, 200);
     } catch (err) {
       const code = pgErrorCode(err);

@@ -239,7 +239,12 @@ export function registerConnectRoutes(app: Hono, opts: ConnectOptions) {
         try {
           await meter((JSON.parse(text) as { usage?: Usage }).usage);
         } catch (e) {
-          captureError(e, { service: "casama-api", step: "connect-meter-json", key_id: k.keyId, org_id: k.orgId });
+          captureError(e, {
+            service: "casama-api",
+            step: "connect-meter-json",
+            key_id: k.keyId,
+            org_id: k.orgId,
+          });
         }
       }
       return new Response(text, {
@@ -264,7 +269,12 @@ export function registerConnectRoutes(app: Hono, opts: ConnectOptions) {
               const j = JSON.parse(line.slice(5)) as { usage?: Usage };
               if (j.usage) usage = j.usage;
             } catch (e) {
-              captureError(e, { service: "casama-api", step: "connect-meter-stream-parse", key_id: k.keyId, org_id: k.orgId });
+              captureError(e, {
+                service: "casama-api",
+                step: "connect-meter-stream-parse",
+                key_id: k.keyId,
+                org_id: k.orgId,
+              });
             }
           }
           i = buf.indexOf("\n");
@@ -272,7 +282,12 @@ export function registerConnectRoutes(app: Hono, opts: ConnectOptions) {
       },
       async flush() {
         await meter(usage).catch((e) => {
-          captureError(e, { service: "casama-api", step: "connect-meter-stream-flush", key_id: k.keyId, org_id: k.orgId });
+          captureError(e, {
+            service: "casama-api",
+            step: "connect-meter-stream-flush",
+            key_id: k.keyId,
+            org_id: k.orgId,
+          });
         });
       },
     });

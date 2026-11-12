@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "gen": "node src/scripts/emit-openapi.ts",
-    "gen:dart": "node src/scripts/gen-dart.ts"
+    "gen:dart": "node src/scripts/gen-dart.ts",
+    "gen:analytics": "node src/scripts/emit-analytics.ts"
   },
   "dependencies": {
     "@hono/zod-openapi": "^1.6.3",

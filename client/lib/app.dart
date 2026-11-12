@@ -58,7 +58,11 @@ class CasamaApp extends ConsumerWidget {
     ref.listen(signedInProvider, (prev, next) {
       if (prev?.value == true && next.value == false) {
         unawaited(cacheClear(ref.read(localCacheProvider)));
-        unawaited(Analytics.reset());
+        // Signed out (or the session ended): say so, then start a new anonymous identity.
+        unawaited(() async {
+          await Analytics.capture('signed_out');
+          await Analytics.reset();
+        }());
       } else if (next.value == true) {
         // Signed out, then in (not a cold start with a saved session): the sign-in funnel's end (F1).
         if (prev?.value == false) unawaited(Analytics.capture('sign_in_completed'));

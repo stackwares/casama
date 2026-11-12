@@ -118,7 +118,12 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   });
 
   Future<void> _restore() => _run(() async {
-    await ref.read(storeProvider).restore(orgId: _orgId);
+    try {
+      await ref.read(storeProvider).restore(orgId: _orgId);
+    } catch (_) {
+      Analytics.log('restore_purchases', {'outcome': 'failed', 'store': ref.read(storeProvider).source ?? 'store'});
+      rethrow;
+    }
     if (mounted) showSuccess(context, context.l10n.restoreStarted);
   });
 

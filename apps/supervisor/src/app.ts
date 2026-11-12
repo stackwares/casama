@@ -1,12 +1,12 @@
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
+import { captureError } from "@casama/observability";
 import {
   type ComputerSpec,
   SandboxError,
   type SandboxProvider,
   type SnapshotRef,
 } from "@casama/sandbox";
-import { captureError } from "@casama/observability";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { stream } from "hono/streaming";

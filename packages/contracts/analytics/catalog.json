@@ -1,0 +1,1072 @@
+{
+  "version": 1,
+  "notes": "Source of truth for product analytics events (ANALYTICS-PLAN \u00a76). Names are permanent. `pnpm gen` writes client/lib/core/analytics_events.g.dart from this file; packages/contracts/test/analytics-catalog.test.ts checks it against the code.",
+  "forbidden_property_words": [
+    "message",
+    "text",
+    "content",
+    "token",
+    "input",
+    "output",
+    "body",
+    "args",
+    "prompt",
+    "email",
+    "persona",
+    "secret",
+    "password",
+    "credential",
+    "cookie",
+    "authorization",
+    "name",
+    "title",
+    "url",
+    "phone",
+    "query"
+  ],
+  "super_properties": ["app", "environment", "platform", "distribution", "server_kind", "source"],
+  "events": [
+    {
+      "name": "sign_in_started",
+      "by": ["client"],
+      "description": "A sign-in method was started.",
+      "properties": {
+        "method": {
+          "type": "string",
+          "values": [
+            "password",
+            "email_code",
+            "apple",
+            "google",
+            "passkey",
+            "sso",
+            "desktop_browser"
+          ]
+        },
+        "surface": {
+          "type": "string",
+          "values": ["sign_in"]
+        },
+        "is_sign_up": {
+          "type": "boolean"
+        }
+      },
+      "funnels": ["F1"]
+    },
+    {
+      "name": "sign_in_failed",
+      "by": ["client"],
+      "description": "A password or code sign-in did not work.",
+      "properties": {
+        "method": {
+          "type": "string",
+          "values": ["password", "email_code"]
+        },
+        "is_sign_up": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string",
+          "values": ["rejected", "invalid_code"]
+        }
+      },
+      "funnels": ["F1"]
+    },
+    {
+      "name": "sign_in_completed",
+      "by": ["client"],
+      "description": "Signed out then in on this device (not a cold start with a saved session).",
+      "properties": {},
+      "funnels": ["F1"]
+    },
+    {
+      "name": "two_step_completed",
+      "by": ["client"],
+      "description": "The two-step code was accepted.",
+      "properties": {},
+      "funnels": ["F1"]
+    },
+    {
+      "name": "signed_up",
+      "by": ["server"],
+      "description": "A new account exists (swept from new profiles).",
+      "properties": {
+        "method": {
+          "type": "string"
+        }
+      },
+      "funnels": ["F1", "F2"]
+    },
+    {
+      "name": "signed_out",
+      "by": ["client"],
+      "description": "The session ended; a new anonymous identity follows.",
+      "properties": {},
+      "funnels": []
+    },
+    {
+      "name": "account_deletion_requested",
+      "by": ["server"],
+      "description": "Account deletion was requested.",
+      "properties": {
+        "owned_workspaces": {
+          "type": "number"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "onboarding_begin",
+      "by": ["client", "server"],
+      "description": "Onboarding started on one of three paths.",
+      "properties": {
+        "path": {
+          "type": "string",
+          "values": ["welcome_chat", "manual", "joined_team"]
+        }
+      },
+      "funnels": ["F2"]
+    },
+    {
+      "name": "onboarding_step_view",
+      "by": ["server"],
+      "description": "A Welcome chat step was shown.",
+      "properties": {
+        "step": {
+          "type": "string",
+          "values": [
+            "name",
+            "google",
+            "focus",
+            "scope",
+            "model",
+            "connect",
+            "phone",
+            "invite",
+            "first_value",
+            "offer_setup",
+            "interview",
+            "learned",
+            "done"
+          ]
+        },
+        "step_index": {
+          "type": "number"
+        }
+      },
+      "funnels": ["F2"]
+    },
+    {
+      "name": "onboarding_step_done",
+      "by": ["client", "server"],
+      "description": "An onboarding step was answered.",
+      "properties": {
+        "step": {
+          "type": "string",
+          "values": [
+            "name",
+            "google",
+            "focus",
+            "scope",
+            "model",
+            "connect",
+            "phone",
+            "invite",
+            "first_value",
+            "offer_setup",
+            "interview",
+            "learned",
+            "done",
+            "name_overlay",
+            "manual_workspace",
+            "manual_join_code",
+            "manual_key",
+            "manual_bot"
+          ]
+        },
+        "action": {
+          "type": "string"
+        },
+        "choice": {
+          "type": "string"
+        }
+      },
+      "funnels": ["F2"]
+    },
+    {
+      "name": "onboarding_complete",
+      "by": ["client", "server"],
+      "description": "Onboarding finished.",
+      "properties": {
+        "path": {
+          "type": "string",
+          "values": ["welcome_chat", "manual", "joined_team"]
+        }
+      },
+      "funnels": ["F2"]
+    },
+    {
+      "name": "first_value",
+      "by": ["server"],
+      "description": "A person's first finished run of their own.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "values": ["chat", "voice"]
+        },
+        "minutes_since_signup": {
+          "type": "number"
+        }
+      },
+      "funnels": ["F2", "F3"]
+    },
+    {
+      "name": "milestone_reached",
+      "by": ["server"],
+      "description": "A once-only activation marker.",
+      "properties": {
+        "milestone": {
+          "type": "string",
+          "values": [
+            "first_bot_created",
+            "first_message",
+            "first_run_completed",
+            "first_connection",
+            "first_routine",
+            "first_computer",
+            "first_invite",
+            "first_approval",
+            "first_voice_call",
+            "first_purchase"
+          ]
+        },
+        "minutes_since_signup": {
+          "type": "number"
+        }
+      },
+      "funnels": ["F3"]
+    },
+    {
+      "name": "workspace_created",
+      "by": ["server"],
+      "description": "A workspace was created.",
+      "properties": {
+        "source": {
+          "type": "string",
+          "values": ["manual", "welcome"]
+        },
+        "plan": {
+          "type": "string"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "invite_created",
+      "by": ["server"],
+      "description": "An invite, link or code was made.",
+      "properties": {
+        "channel": {
+          "type": "string",
+          "values": ["email", "link", "code", "standing_link"]
+        },
+        "role": {
+          "type": "string"
+        },
+        "requires_approval": {
+          "type": "boolean"
+        },
+        "email_sent": {
+          "type": "boolean"
+        }
+      },
+      "funnels": ["F7"]
+    },
+    {
+      "name": "invite_shared",
+      "by": ["client"],
+      "description": "An invite link was copied or shared.",
+      "properties": {
+        "method": {
+          "type": "string",
+          "values": ["copy", "share"]
+        }
+      },
+      "funnels": ["F7"]
+    },
+    {
+      "name": "join_completed",
+      "by": ["client"],
+      "description": "The join screen finished.",
+      "properties": {
+        "status": {
+          "type": "string",
+          "values": ["joined", "member", "requested"]
+        },
+        "via": {
+          "type": "string",
+          "values": ["link", "domain"]
+        }
+      },
+      "funnels": ["F7"]
+    },
+    {
+      "name": "member_joined",
+      "by": ["server"],
+      "description": "Someone joined a workspace.",
+      "properties": {
+        "via": {
+          "type": "string",
+          "values": ["email", "link", "code", "domain"]
+        },
+        "role": {
+          "type": "string"
+        }
+      },
+      "funnels": ["F7"]
+    },
+    {
+      "name": "join_requested",
+      "by": ["server"],
+      "description": "Someone asked to join and waits for an admin.",
+      "properties": {
+        "via": {
+          "type": "string",
+          "values": ["link", "code"]
+        }
+      },
+      "funnels": ["F7"]
+    },
+    {
+      "name": "join_request_decided",
+      "by": ["server"],
+      "description": "An admin decided a join request.",
+      "properties": {
+        "decision": {
+          "type": "string",
+          "values": ["approved", "declined"]
+        }
+      },
+      "funnels": ["F7"]
+    },
+    {
+      "name": "bot_created",
+      "by": ["server"],
+      "description": "A bot was created.",
+      "properties": {
+        "source": {
+          "type": "string",
+          "values": ["manual", "template", "welcome", "share_link"]
+        },
+        "template_id": {
+          "type": "string"
+        },
+        "autonomy": {
+          "type": "string",
+          "values": ["ask_always", "ask_risky", "autonomous"]
+        }
+      },
+      "funnels": ["F3"]
+    },
+    {
+      "name": "bot_shared",
+      "by": ["server"],
+      "description": "A bot was shared as a template.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "values": ["template_link"]
+        },
+        "include_memories": {
+          "type": "boolean"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "run_refused",
+      "by": ["server"],
+      "description": "A person's run did not start.",
+      "properties": {
+        "reason": {
+          "type": "string"
+        },
+        "surface": {
+          "type": "string",
+          "values": ["run"]
+        }
+      },
+      "funnels": ["F6"]
+    },
+    {
+      "name": "routine_created",
+      "by": ["server"],
+      "description": "A routine was created.",
+      "properties": {
+        "trigger_kind": {
+          "type": "string",
+          "values": ["schedule", "once", "webhook", "github", "message", "calendar", "device"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "watcher_created",
+      "by": ["server"],
+      "description": "A watcher was created.",
+      "properties": {
+        "kind": {
+          "type": "string"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "action_rule_created",
+      "by": ["server"],
+      "description": "An action rule was created.",
+      "properties": {
+        "decision": {
+          "type": "string"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "skill_installed",
+      "by": ["client"],
+      "description": "A catalog skill was installed.",
+      "properties": {
+        "source": {
+          "type": "string",
+          "values": ["catalog"]
+        },
+        "skill_id": {
+          "type": "string"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "page_published",
+      "by": ["server"],
+      "description": "A page was published.",
+      "properties": {
+        "visibility": {
+          "type": "string",
+          "values": ["private", "workspace", "public"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "chat_app_connected",
+      "by": ["server"],
+      "description": "A chat app was connected.",
+      "properties": {
+        "channel": {
+          "type": "string"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "connection_started",
+      "by": ["client"],
+      "description": "The connect sheet started.",
+      "properties": {
+        "app_id": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string"
+        },
+        "reconnect": {
+          "type": "boolean"
+        }
+      },
+      "funnels": ["F4"]
+    },
+    {
+      "name": "connection_added",
+      "by": ["server"],
+      "description": "A connection came up.",
+      "properties": {
+        "app_id": {
+          "type": "string"
+        },
+        "reconnect": {
+          "type": "boolean"
+        }
+      },
+      "funnels": ["F4"]
+    },
+    {
+      "name": "connection_failed",
+      "by": ["client", "server"],
+      "description": "A connection did not come up.",
+      "properties": {
+        "app_id": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string"
+        },
+        "reconnect": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string",
+          "values": ["connect_error", "oauth_error", "cancelled", "expired", "exception"]
+        }
+      },
+      "funnels": ["F4"]
+    },
+    {
+      "name": "model_key_added",
+      "by": ["server"],
+      "description": "A model key was added.",
+      "properties": {
+        "provider": {
+          "type": "string"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "computer_start_requested",
+      "by": ["server"],
+      "description": "A computer start was requested.",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string",
+          "values": ["provision", "restore"]
+        }
+      },
+      "funnels": ["F5"]
+    },
+    {
+      "name": "computer_ready",
+      "by": ["server"],
+      "description": "A computer is running.",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string",
+          "values": ["provision", "restore"]
+        },
+        "start_ms": {
+          "type": "number"
+        }
+      },
+      "funnels": ["F5"]
+    },
+    {
+      "name": "computer_start_failed",
+      "by": ["server"],
+      "description": "A computer did not start.",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string",
+          "values": ["provision", "restore"]
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "funnels": ["F5"]
+    },
+    {
+      "name": "live_view_failed",
+      "by": ["client"],
+      "description": "Live view fell back to screenshots.",
+      "properties": {
+        "fallback": {
+          "type": "string",
+          "values": ["screenshot"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "companion_paired",
+      "by": ["client"],
+      "description": "This computer was paired.",
+      "properties": {
+        "os": {
+          "type": "string"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "device_data_toggled",
+      "by": ["client"],
+      "description": "A device data kind was switched.",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "result": {
+          "type": "string",
+          "values": ["off", "granted", "denied"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "call_started",
+      "by": ["client"],
+      "description": "A live call connected or failed.",
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "values": ["in_app"]
+        },
+        "result": {
+          "type": "string",
+          "values": ["connected", "failed"]
+        }
+      },
+      "funnels": ["F8"]
+    },
+    {
+      "name": "call_ended",
+      "by": ["server"],
+      "description": "A live call ended.",
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "duration_s": {
+          "type": "number"
+        },
+        "billable": {
+          "type": "boolean"
+        }
+      },
+      "funnels": ["F8"]
+    },
+    {
+      "name": "bot_call_answered",
+      "by": ["client"],
+      "description": "A call from a bot was answered or declined.",
+      "properties": {
+        "answer": {
+          "type": "string",
+          "values": ["accepted", "declined"]
+        }
+      },
+      "funnels": ["F8"]
+    },
+    {
+      "name": "limit_reached",
+      "by": ["server"],
+      "description": "A plan or credit limit stopped something.",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "surface": {
+          "type": "string",
+          "values": ["bot", "computer", "run", "call"]
+        }
+      },
+      "funnels": ["F6"]
+    },
+    {
+      "name": "paywall_view",
+      "by": ["client"],
+      "description": "The paywall or plans were opened from a limit.",
+      "properties": {
+        "source": {
+          "type": "string",
+          "values": ["limit", "credits_depleted"]
+        },
+        "paywall_kind": {
+          "type": "string",
+          "values": ["regular"]
+        }
+      },
+      "funnels": ["F6"]
+    },
+    {
+      "name": "paywall_dismiss",
+      "by": ["client"],
+      "description": "The paywall was closed without going on.",
+      "properties": {
+        "source": {
+          "type": "string",
+          "values": ["limit"]
+        }
+      },
+      "funnels": ["F6"]
+    },
+    {
+      "name": "purchase_started",
+      "by": ["client"],
+      "description": "Checkout or a store purchase started.",
+      "properties": {
+        "store": {
+          "type": "string",
+          "values": ["dodo", "app_store", "google_play", "store"]
+        },
+        "kind": {
+          "type": "string",
+          "values": ["subscription", "credit_pack"]
+        },
+        "product_id": {
+          "type": "string"
+        }
+      },
+      "funnels": ["F6"]
+    },
+    {
+      "name": "purchase_completed",
+      "by": ["client"],
+      "description": "The client's view of a store purchase.",
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "values": ["purchased", "pending", "cancelled", "failed"]
+        },
+        "store": {
+          "type": "string",
+          "values": ["dodo", "app_store", "google_play", "store"]
+        },
+        "product_id": {
+          "type": "string"
+        }
+      },
+      "funnels": ["F6"]
+    },
+    {
+      "name": "restore_purchases",
+      "by": ["client"],
+      "description": "Restore purchases finished.",
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "values": ["restored", "failed"]
+        },
+        "store": {
+          "type": "string",
+          "values": ["dodo", "app_store", "google_play", "store"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "checkout_created",
+      "by": ["server"],
+      "description": "A web checkout was created.",
+      "properties": {
+        "store": {
+          "type": "string",
+          "values": ["dodo"]
+        },
+        "kind": {
+          "type": "string",
+          "values": ["subscription", "credit_pack"]
+        },
+        "product_id": {
+          "type": "string"
+        }
+      },
+      "funnels": ["F6"]
+    },
+    {
+      "name": "subscription_changed",
+      "by": ["server"],
+      "description": "A subscription changed status or plan.",
+      "properties": {
+        "store": {
+          "type": "string"
+        },
+        "plan": {
+          "type": "string"
+        },
+        "interval": {
+          "type": "string"
+        },
+        "product_id": {
+          "type": "string"
+        },
+        "change": {
+          "type": "string",
+          "values": [
+            "started",
+            "trial_started",
+            "trial_converted",
+            "renewed",
+            "recovered",
+            "grace",
+            "cancelled",
+            "expired",
+            "refunded",
+            "plan_changed"
+          ]
+        },
+        "from_status": {
+          "type": "string"
+        },
+        "to_status": {
+          "type": "string"
+        }
+      },
+      "funnels": ["F6"]
+    },
+    {
+      "name": "purchase",
+      "by": ["server"],
+      "description": "Money arrived (revenue truth; no value until plans have prices).",
+      "properties": {
+        "store": {
+          "type": "string"
+        },
+        "plan": {
+          "type": "string"
+        },
+        "interval": {
+          "type": "string"
+        },
+        "product_id": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "values": ["new", "renewal", "credit_pack"]
+        }
+      },
+      "funnels": ["F6"]
+    },
+    {
+      "name": "refund_issued",
+      "by": ["server"],
+      "description": "A refund was issued.",
+      "properties": {
+        "store": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "values": ["subscription", "credit_pack"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "push_permission_result",
+      "by": ["client"],
+      "description": "The notification prompt was answered.",
+      "properties": {
+        "result": {
+          "type": "string",
+          "values": ["granted", "denied", "snoozed", "dismissed"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "push_opened",
+      "by": ["client"],
+      "description": "A notification was opened.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "values": ["approval", "run", "call", "checkin", "mention", "other"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "app_startup_failed",
+      "by": ["client"],
+      "description": "The app could not reach its server at start.",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "values": ["timeout", "unreachable", "error"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "app_active_daily",
+      "by": ["client"],
+      "description": "First use of the day on a server that is not Casama Cloud.",
+      "properties": {
+        "server_kind": {
+          "type": "string",
+          "values": ["self_hosted", "local", "unknown"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "app_error_shown",
+      "by": ["client"],
+      "description": "A failure the person saw.",
+      "properties": {
+        "error_code": {
+          "type": "string"
+        },
+        "http_status": {
+          "type": "number"
+        },
+        "kind": {
+          "type": "string",
+          "values": ["network", "server", "auth", "validation", "unknown"]
+        },
+        "screen": {
+          "type": "string"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "feature_used",
+      "by": ["client"],
+      "description": "A feature was used (once a day per device).",
+      "properties": {
+        "feature": {
+          "type": "string",
+          "values": [
+            "dictation",
+            "read_aloud",
+            "voice_call",
+            "wake_word",
+            "quick_ask",
+            "edit_resend",
+            "branch_switch",
+            "search",
+            "pages",
+            "routines_run_now",
+            "projects",
+            "tasks_board",
+            "inbox",
+            "for_you",
+            "computer_live",
+            "computer_take_control",
+            "teach",
+            "gallery_look",
+            "share_template",
+            "group_chat",
+            "desktop_hotkey",
+            "share_extension",
+            "mac_menu"
+          ]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "enable_analytics_sharing",
+      "by": ["client"],
+      "description": "Usage data sharing was turned on.",
+      "properties": {},
+      "funnels": []
+    },
+    {
+      "name": "disable_analytics_sharing",
+      "by": ["client"],
+      "description": "Usage data sharing was turned off.",
+      "properties": {},
+      "funnels": []
+    },
+    {
+      "name": "usage_daily",
+      "by": ["server"],
+      "description": "What a person did yesterday (rollup).",
+      "properties": {
+        "runs_started": {
+          "type": "number"
+        },
+        "runs_completed": {
+          "type": "number"
+        },
+        "runs_failed": {
+          "type": "number"
+        },
+        "runs_cancelled": {
+          "type": "number"
+        },
+        "bots_used": {
+          "type": "number"
+        },
+        "cost_usd": {
+          "type": "number"
+        },
+        "approvals_approved": {
+          "type": "number"
+        },
+        "approvals_denied": {
+          "type": "number"
+        }
+      },
+      "funnels": ["F3"]
+    },
+    {
+      "name": "workspace_daily",
+      "by": ["server"],
+      "description": "What happened in a workspace yesterday (rollup, personless).",
+      "properties": {
+        "runs_total": {
+          "type": "number"
+        },
+        "runs_failed": {
+          "type": "number"
+        },
+        "cost_usd": {
+          "type": "number"
+        },
+        "members_active": {
+          "type": "number"
+        },
+        "bots_active": {
+          "type": "number"
+        },
+        "computer_seconds": {
+          "type": "number"
+        },
+        "voice_seconds": {
+          "type": "number"
+        },
+        "dictation_seconds": {
+          "type": "number"
+        },
+        "approvals_approved": {
+          "type": "number"
+        },
+        "approvals_denied": {
+          "type": "number"
+        },
+        "runs_by_trigger_*": {
+          "type": "number"
+        }
+      },
+      "funnels": [],
+      "personless": true
+    }
+  ]
+}

@@ -2,11 +2,14 @@ import {
   existingWelcome,
   handleWelcomeAction,
   memoryStoreFor,
+  milestone,
   PLATFORM_OPENROUTER_CREDENTIAL_ID,
   type StoredMemory,
   startWelcome,
   storeFromConfig,
   track,
+  trackWelcomeStepView,
+  welcomeStep,
 } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { contentKeys, type JwtClaims, schema, withUserSession } from "@casama/db";
@@ -298,6 +301,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         autonomy: bot.autonomy,
       },
     });
+    milestone(db, claims.sub, "first_bot_created", bot.orgId);
     return c.json(botOut(bot), 201);
   });
 
@@ -682,6 +686,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       });
       span.setAttribute("run_id", created.runId);
       span.setAttribute("org_id", created.orgId);
+      milestone(db, claims.sub, "first_message", created.orgId);
       try {
         await deps.workflows.startRun(created.runId);
       } catch (err) {
@@ -781,6 +786,28 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       nameKnown: !!profile?.asked,
       google: await googleConnectRoute(db, deps.env),
     });
+    // The Welcome path (F2): a workspace, a bot and the start of onboarding in one step.
+    track(db, {
+      event: "workspace_created",
+      userId: claims.sub,
+      orgId: w.orgId,
+      properties: { source: "welcome" },
+    });
+    track(db, {
+      event: "bot_created",
+      userId: claims.sub,
+      orgId: w.orgId,
+      properties: { source: "welcome" },
+    });
+    track(db, {
+      event: "onboarding_begin",
+      userId: claims.sub,
+      orgId: w.orgId,
+      properties: { path: "welcome_chat" },
+    });
+    milestone(db, claims.sub, "first_bot_created", w.orgId);
+    const opening = await welcomeStep(db, w.conversationId).catch(() => null);
+    if (opening) trackWelcomeStepView(db, { orgId: w.orgId, userId: claims.sub }, opening.step);
     return c.json(
       { org_id: w.orgId, bot_id: w.botId, conversation_id: w.conversationId, created: true },
       200,
@@ -928,6 +955,12 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (!cred) throw new Error("credential insert returned nothing");
     await audit(cred.orgId, claims.sub, "credential.created", "model_credential", cred.id, {
       provider: cred.provider,
+    });
+    track(db, {
+      event: "model_key_added",
+      userId: claims.sub,
+      orgId: cred.orgId,
+      properties: { provider: cred.provider },
     });
     return c.json(credOut(cred), 201);
   });

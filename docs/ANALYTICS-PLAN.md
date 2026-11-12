@@ -1,6 +1,10 @@
 # Product analytics, funnels and crash reporting: plan
 
-Status: **ready to execute** (Oliver, 2026-11-12: "we want an agent to start working on it").
+Status: **built** (2026-11-12, D-206 to D-210). What shipped, and where it differs from the sections below, is in
+D-210 and in "Status of the build" at the end. The text below stays as the plan that was followed; the event
+list that actually runs is `packages/contracts/analytics/catalog.json`.
+
+Original status: ready to execute (Oliver, 2026-11-12: "we want an agent to start working on it").
 The recommendations in §12 are adopted as defaults. Record them as decisions in
 `docs/DECISIONS.md` when the first phase lands (check the highest number first; it was D-203 on
 2026-11-12).
@@ -1174,3 +1178,105 @@ of them; the code keeps each one behind a setting where that's cheap.
   F2's history. Add new ids instead of renaming.
 - **Line numbers drift** because the tree is shared. Each phase re-checks hook points before
   editing.
+
+
+---
+
+## Status of the build (2026-11-12)
+
+| Phase | State |
+|---|---|
+| 0 Hygiene | Done (D-206): super properties, shell-navigator screens with per-session dedupe, SDK defaults off (push token capture, surveys, flag preload, lifecycle events), `telemetry.json` out of git with official-build packaging, web posthog-js, `version` to the server's reporters. |
+| 1 Crash reporting | Done (D-207, D-210): handled errors, silent-catch reporting (billing, startup, push, updater, plus A2A, live view, idle sleep, OAuth, ChatGPT sign-in), worker/supervisor/pages reporting, stuck-run and purge fixes, symbol upload helper (`scripts/upload-symbols.sh`, hooked into the web, iOS and macOS builds). **Not run:** the crash drill on real devices and the Android mapping upload (Appendix C). |
+| 2 Identity, consent, funnels | Done (D-208, D-210): catalog and generator, identify/reset, personal and workspace switches synced to the server, sign-up sweep, milestones, F1 F2 F4 F6 F7 events, person erasure on purge, privacy pages and manifests. |
+| 3 Adoption, reliability, rollups | Done (D-209, D-210): `feature_used`, computer/voice/push/startup/error events, daily rollups with approvals, voice, computer and activity numbers. |
+| 4 Dashboards and growth tools | The definitions are Appendix A. Creating them in the shared PostHog project, flags, surveys, experiments, the reverse proxy and group analytics are Oliver's decisions. |
+
+**Differences from the plan above** (full list in D-210): `purchase` has no `value` (plans have only a text price);
+`paywall_plan_selected` is merged into `purchase_started`; `signup_blocked` is dropped; `restore_purchases` has no
+`none` outcome; the workspace switch stops server events and rollups but not the app's `identify`; purchases are
+attributed to the workspace owner; PostHog's person-deletion API was checked in its docs but never called against the
+live project; the Gradle (Android) and Xcode-phase (Apple) symbol uploads of §8.4 are replaced by the CLI helper for
+Apple and web, and Appendix C for Android; the PostHog transformation that drops `$ip` (§5.3) is a PostHog setting
+for Oliver (Appendix A).
+
+**Verification run:** server, agent, contracts, domain, db, pgTAP and Flutter suites; typecheck and lint across the
+repo. **Not run, by design:** anything against the live PostHog project, real devices, store consoles, deploys.
+
+---
+
+## Appendix A: what to create in PostHog (Oliver; the shared project 637030)
+
+Naming, tagging and the "no duplicates" rule follow `FlutterVibe/AGENTS.md`. Add `Casama | casama` to its slug table.
+Every insight filters `app = casama` at the insight level plus the test-account filter, and gets a ~15-word
+description. Tag everything `casama`. Pin only `Casama — Overview`.
+
+**Dashboards:** `Casama — Overview`, `Casama — Activation & onboarding`, `Casama — Monetization`,
+`Casama — Reliability`, `Casama — Features & retention`.
+
+**Insights** (event → breakdown):
+
+| Name | Kind | Steps or series |
+|---|---|---|
+| Casama · Drop-off: onboarding steps | funnel | `onboarding_step_view` by `step_index`, then `onboarding_complete` |
+| Casama · Drop-off: onboarding → paywall → purchase | funnel | `onboarding_complete` → `paywall_view` → `purchase_started` → `purchase` |
+| Casama · Drop-off: first value | funnel, 1 day | `signed_up` → `first_value` |
+| Casama · Drop-off: week-1 retention | retention | start `first_value`, return `usage_daily` |
+| Casama · Sign-up (F1) | funnel, 1 h | `$screen` where `$screen_name = /sign-in` → `sign_in_started` → `sign_in_completed` → `signed_up`; breakdown `method`, `platform` |
+| Casama · Activation (F2) | funnel, 1 and 7 days | `signed_up` → `onboarding_begin` → `onboarding_step_view` → `first_value` → `onboarding_complete`; breakdown `path` |
+| Casama · First-week habit (F3) | stickiness | `usage_daily` per person over 7 days after `first_value` |
+| Casama · Connect an app (F4) | funnel, 15 min | `connection_started` → `connection_added`; breakdown `app_id`; a second trend of `connection_failed` by `reason` |
+| Casama · Computer start (F5) | funnel, 3 min + trend | `computer_start_requested` → `computer_ready`; p50/p95 of `start_ms` |
+| Casama · Paid conversion (F6) | funnel, 1 day | `limit_reached` or `paywall_view` → `purchase_started` → `purchase`; breakdown `store`, `source` |
+| Casama · Team growth (F7) | funnel, 7 days | `invite_created` → `join_completed` → `member_joined` |
+| Casama · Voice (F8) | funnel, 1 h | `call_started` (result = connected) → `call_ended` with `duration_s ≥ 30` |
+| Casama · Weekly active doers | trend | people with `usage_daily.runs_completed ≥ 1` on ≥ 2 days in a week |
+| Casama · Activation rate | formula | people with `first_value` within 24 h ÷ people with `signed_up` |
+| Casama · Crash-free users | formula | 1 − people with an `$exception` at level `fatal` ÷ people with any `$screen`, by release and `platform` |
+| Casama · Errors by code | trend | `app_error_shown` by `error_code`, `screen` |
+| Casama · Run failures | trend | `workspace_daily.runs_failed` ÷ `runs_total` |
+| Casama · Feature adoption | trend | unique people per `feature_used.feature` ÷ weekly active people |
+| Casama · Automation share | trend | non-chat `workspace_daily.runs_by_trigger_*` ÷ `runs_total` |
+| Casama · Cost per active person | trend | `usage_daily.cost_usd` per person per week |
+| Casama · Events per active person | trend | events ÷ people, monthly (the budget check) |
+
+**Cohorts:** Activated (`first_value`), Paying (person property `plan` not `free`), Internal (`is_internal`),
+Weekly active doers (3 weeks or more), Connected Google during Welcome (`onboarding_step_done` step `google`,
+action `connected`). **Actions:** `Casama: Meaningful activity` (`usage_daily` or `milestone_reached`),
+`Casama: Purchase` (server `purchase`). **Alerts:** activation rate down more than 30% week on week; daily
+`sign_in_failed` more than doubles; F4 failure rate above 25%; crash-free users below 99%; events per active person
+above 250. Error tracking alerts for a new issue in `environment = production`, a regression and a spike.
+
+**Project settings:** add `is_internal` people to test-account cohort 603648; point revenue analytics at the server
+`purchase` event once it has a `value`; add a transformation that drops `$ip` after GeoIP enrichment for
+`app = casama` (check that it runs after GeoIP); billing limits are organization-wide, so set none for Casama.
+
+## Appendix B: store privacy answers
+
+**App Store privacy labels:** Usage Data → Product Interaction: collected, linked to the user, for Analytics, not
+used for tracking. Identifiers → User ID: linked, Analytics. Diagnostics → Crash Data and Other Diagnostic Data:
+linked, App Functionality. (The apps' `PrivacyInfo.xcprivacy` already says the same; tracking stays No.)
+
+**Google Play Data safety:** App activity → App interactions: collected, not shared, optional (the switch), for
+Analytics. App info and performance → Crash logs and Diagnostics: collected, not shared, for Analytics and App
+functionality. Device or other IDs: the account id, collected, not shared. Encrypted in transit: yes. Users can
+request deletion: yes (Settings → Privacy → Delete account removes analytics too).
+
+## Appendix C: crash drill and Android symbols
+
+**Drill** (each platform: Android, iOS, macOS, Windows, Linux, web; use a build with `environment = staging`):
+1. A forced Dart error: it appears in PostHog error tracking within five minutes with function names and lines.
+2. A handled error (turn the network off and trigger a request): `app_error_shown` appears, and no `$exception`
+   for the expected offline case.
+3. A native crash (Android and Apple): it arrives on the next launch, symbolicated once symbols are uploaded.
+4. A forced worker exception (a step that throws): it arrives with `run_id` and `trace_id`; a run whose `load`
+   step throws ends `failed`.
+Keep the Sentry DSN in Vaultwarden until this passes; going back is `ERROR_REPORTING=sentry`.
+
+**Symbols:** set `POSTHOG_CLI_API_KEY`, `POSTHOG_CLI_PROJECT_ID` and install the CLI (`npm i -g @posthog/cli`);
+the web, iOS and macOS builds then upload. Check `posthog-cli dsym upload --help` and `posthog-cli sourcemap
+upload --help` on the installed version once: the flags in `scripts/upload-symbols.sh` follow PostHog's docs and
+were not run here. For Android, add the PostHog Gradle plugin (`com.posthog.android`, in `android/build.gradle`
+`buildscript` and applied in `android/app/build.gradle`) so R8 mappings upload with a release build; it needs the
+same key at build time, so it was left out of the repo rather than risk the build. Flutter web on dart2wasm: whether
+PostHog can symbolicate wasm frames is unverified (the dart2js fallback build is the one source maps help).

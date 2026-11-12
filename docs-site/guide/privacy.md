@@ -153,6 +153,12 @@ input and output, with secrets and model keys removed. Workspaces can opt out wi
   out at any time in **Settings → Privacy → Share usage data**. On self-hosted servers, product
   analytics is completely disabled unless the server owner explicitly sets `PRODUCT_ANALYTICS=on`
   and supplies a `POSTHOG_API_KEY`.
+- **Who is counted:** a person is identified only by their account id, only on Casama Cloud, and only
+  while their switch is on. Workspace admins can also turn usage data off for a whole workspace in
+  **Settings → Privacy → Workspace**. Automated work (routines, watchers, chat apps) is counted per
+  workspace, never as a person being active. Deleting your account also deletes your analytics.
+- **On someone else's server:** the official app connected to a self-hosted server sends crash
+  reports and one anonymous "the app was used today" ping a day. No screens, no events, no account id.
 - **Error reports:** Sent to Sentry/PostHog when configured. When on, reports never carry message
   text, prompts, secrets, personal device data, or email addresses.
 

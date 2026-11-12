@@ -69,6 +69,7 @@ import { sql } from "drizzle-orm";
 import { casamaCloudProvider } from "../billing/index.ts";
 import { getCloudModels } from "../services/cloud-models.ts";
 import {
+  analyticsDailyWorkflow,
   billingSettleWorkflow,
   computersIdleWorkflow,
   configureWorkflows,
@@ -77,7 +78,6 @@ import {
   QUEUES,
   routinesTickWorkflow,
   telemetryWorkflow,
-  analyticsDailyWorkflow,
 } from "./workflows.ts";
 
 export interface WorkerOptions {

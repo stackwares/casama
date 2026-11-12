@@ -344,8 +344,8 @@ Everything hosted is optional, behind an interface, with a default that runs in 
 | Concern                   | Self-hosted default                                  | Optional                                                                         | Decision            |
 | ------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------- |
 | Snapshots and checkpoints | Filesystem volume                                    | SeaweedFS (`--profile s3`), Cloudflare R2 (hosted), AWS S3, Supabase Storage     | D-062               |
-| Error reporting           | Off                                                  | Sentry protocol (sentry.io, self-hosted Sentry, GlitchTip) or PostHog (any host) | D-063               |
-| Product analytics         | Off                                                  | PostHog (any host)                                                               | D-063               |
+| Error reporting           | Off                                                  | Sentry protocol (sentry.io, self-hosted Sentry, GlitchTip) or PostHog (any host); Casama Cloud and official apps use PostHog | D-063, D-207 |
+| Product analytics         | Off                                                  | PostHog (any host): `PRODUCT_ANALYTICS=on`; Casama Cloud and the official app on it. Catalog: `packages/contracts/analytics/catalog.json` | D-063, D-208, D-210 |
 | Computers                 | Docker, plus users' own machines (desktop companion) | E2B, Daytona                                                                     | D-056, D-057, D-066 |
 | Voice                     | Off                                                  | The workspace's own OpenAI, Deepgram, ElevenLabs, Cartesia or Fish Audio keys    | D-065               |
 | Live view relay           | coturn container                                     | any TURN service                                                                 | D-055               |

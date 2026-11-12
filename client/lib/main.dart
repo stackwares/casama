@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
@@ -25,6 +26,7 @@ import 'ui/brand_splash.dart';
 import 'ui/glow_button.dart';
 import 'ui/text_scale.dart';
 import 'ui/friendly_error_view.dart';
+import 'core/analytics.dart';
 
 /// Connects to the API and Supabase and returns the app widget with its backend.
 ///
@@ -40,6 +42,7 @@ Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config, {VoidCallback? onS
   final server = saved ?? (await CasamaClient.connect(config.apiUrl)).config;
   if (saved == null) unawaited(ServerConfigCache.write(config.apiUrl, server));
   unawaited(Telemetry.updateServerKind(apiUrl: config.apiUrl, billingEnabled: server.billingEnabled));
+  unawaited(Analytics.dailyPing());
   await Supabase.initialize(url: server.supabaseUrl, publishableKey: server.supabaseAnonKey);
   final supabase = Supabase.instance.client;
   final api = await SupabaseBackend.connectApi(config.apiUrl, supabase, config: server);
@@ -149,6 +152,9 @@ class _StartupGateState extends State<StartupGate> {
       await (_assets ?? Future<void>.value()).timeout(const Duration(milliseconds: 500), onTimeout: () {});
       if (mounted) setState(() => _app = app);
     } catch (e) {
+      Analytics.log('app_startup_failed', {
+        'reason': e is TimeoutException ? 'timeout' : (e is DioException && e.response == null ? 'unreachable' : 'error'),
+      });
       if (mounted) setState(() => _error = e);
     }
   }

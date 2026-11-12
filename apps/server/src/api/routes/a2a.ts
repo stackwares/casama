@@ -15,6 +15,7 @@ import {
 } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { contentKeys, type JwtClaims, withUserSession } from "@casama/db";
+import { captureError } from "@casama/observability";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
@@ -338,6 +339,8 @@ export function registerA2aRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           return rpcError(req.id, E.method, `Method not found: ${req.method}`);
       }
     } catch (e) {
+      // An ApiError is the caller's mistake; anything else is ours.
+      if (!(e instanceof ApiError)) captureError(e, { service: "casama-api", step: "a2a" });
       return rpcError(req.id, E.internal, (e as Error).message.slice(0, 200));
     }
   });

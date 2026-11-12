@@ -10,6 +10,7 @@ import { isValidCron, isValidTimezone, nextRunAt, PAGE_AUTHORING_NOTE } from "@c
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
+import { track } from "./analytics.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
 
 export const PAGE_HTML_MAX = 2_000_000;
@@ -131,6 +132,12 @@ export function registerPageTools(
                   ${args.title}, ${contentKeys.seal(ctx.orgId, html)}, ${contentKeys.sealJson(ctx.orgId, data ?? {})}::jsonb, ${args.visibility ?? "private"})
           returning id`);
         id = p?.id as string;
+        track(db, {
+          event: "page_published",
+          userId: user,
+          orgId: ctx.orgId,
+          properties: { visibility: args.visibility ?? "private" },
+        });
         await db.execute(sql`
           insert into public.page_versions (page_id, version, org_id, html, data)
           select id, version, org_id, html, data from public.pages where id = ${id}::uuid`);

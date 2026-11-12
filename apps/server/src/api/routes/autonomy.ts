@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { secretStoreFor, startTicketWork } from "@casama/agent";
+import { milestone, secretStoreFor, startTicketWork, track } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import {
   contentKeys,
@@ -275,6 +275,7 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
       values (${row.orgId}::uuid, 'user', ${claims.sub}::uuid, ${`approval.${row.status}`}, 'approval', ${row.id}::uuid,
               ${JSON.stringify({ tool: row.toolName, always_allow: row.alwaysAllow })}::jsonb)`);
+    milestone(db, claims.sub, "first_approval", row.orgId);
     await deps.workflows.signalRun(row.runId);
     return c.json(approvalOut(row), 200);
   });
@@ -756,6 +757,13 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       })
       .returning();
     if (!row) throw new Error("routine insert returned nothing");
+    track(db, {
+      event: "routine_created",
+      userId: claims.sub,
+      orgId: bot.orgId,
+      properties: { trigger_kind: trigger },
+    });
+    milestone(db, claims.sub, "first_routine", bot.orgId);
     const base = new URL(c.req.url).origin;
     return c.json(
       {

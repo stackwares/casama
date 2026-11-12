@@ -1,6 +1,8 @@
 import type { Database } from "@casama/db";
+import { captureError } from "@casama/observability";
 import type { CheckpointRef, SandboxHandle, SandboxProvider, SnapshotRef } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
+import { track } from "./analytics.ts";
 
 /**
  * Idle computers sleep after 5 minutes (D-178); waking restores their files. Only bots, running
@@ -224,7 +226,24 @@ export class ComputerService {
           return h;
         }
       }
-      await this.checkCanStart(c.org_id, { credits: c.kind !== "local" });
+      // The computer funnel (F5): requested → ready or failed. Workspace-level (no person), ids and enums only.
+      const started = Date.now();
+      const facts = {
+        kind: c.kind,
+        provider: c.provider ?? null,
+        mode: c.snapshot_ref ? "restore" : "provision",
+      };
+      track(this.db, { event: "computer_start_requested", orgId: c.org_id, properties: facts });
+      try {
+        await this.checkCanStart(c.org_id, { credits: c.kind !== "local" });
+      } catch (err) {
+        track(this.db, {
+          event: "computer_start_failed",
+          orgId: c.org_id,
+          properties: { ...facts, reason: (err as { code?: string }).code ?? "refused" },
+        });
+        throw err;
+      }
       await this.setState(computerId, c.snapshot_ref ? "starting" : "provisioning", emit);
       try {
         const spec = {
@@ -234,8 +253,18 @@ export class ComputerService {
         };
         const h = await this.providerFor(c).resume(computerId, c.snapshot_ref ?? undefined, spec);
         await this.setState(computerId, "running", emit);
+        track(this.db, {
+          event: "computer_ready",
+          orgId: c.org_id,
+          properties: { ...facts, start_ms: Date.now() - started },
+        });
         return h;
       } catch (err) {
+        track(this.db, {
+          event: "computer_start_failed",
+          orgId: c.org_id,
+          properties: { ...facts, reason: "provider_error" },
+        });
         await this.setState(computerId, "error", emit, {
           error: (err as Error).message.slice(0, 500),
         });
@@ -332,7 +361,9 @@ export class ComputerService {
           continue;
         }
       }
-      await this.sleep(c.id).catch(() => {});
+      await this.sleep(c.id).catch((err) =>
+        captureError(err, { service: "casama-worker", step: "idle-sleep", computer_id: c.id }),
+      );
       slept.push(c.id);
     }
     return slept;

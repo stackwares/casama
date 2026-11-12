@@ -11,6 +11,7 @@ import 'backend.dart';
 import 'providers.dart';
 import 'router.dart';
 import 'web_notification_prompt_web.dart' if (dart.library.io) 'web_notification_prompt_stub.dart';
+import 'analytics.dart';
 
 /// Firebase settings come from --dart-define (official builds: `--dart-define-from-file=config/firebase.json`,
 /// the public client identifiers of the `kasama-ai` project). Self-hosters building their own apps
@@ -166,6 +167,7 @@ class PushRegistrar {
     if (kIsWeb) {
       try {
         final status = await takeWebNotificationPermission();
+        Analytics.log('push_permission_result', {'result': status == 'granted' ? 'granted' : status == 'denied' ? 'denied' : 'dismissed'});
         if (status != 'granted') {
           if (status == 'denied') {
             webBlocked.value = true;
@@ -188,7 +190,9 @@ class PushRegistrar {
       (await SharedPreferences.getInstance()).setBool(_askedKey, true).ignore();
       final messaging = FirebaseMessaging.instance;
       final settings = await messaging.requestPermission();
-      if (settings.authorizationStatus == AuthorizationStatus.denied) return false;
+      final denied = settings.authorizationStatus == AuthorizationStatus.denied;
+      Analytics.log('push_permission_result', {'result': denied ? 'denied' : 'granted'});
+      if (denied) return false;
       await _register(messaging);
       return true;
     } catch (e) {
@@ -200,6 +204,7 @@ class PushRegistrar {
   /// "Not now": asked again in a week.
   Future<void> snooze() async {
     needsAsk.value = false;
+    Analytics.log('push_permission_result', {'result': 'snoozed'});
     try {
       await (await SharedPreferences.getInstance()).setString(_snoozedKey, DateTime.now().add(const Duration(days: 7)).toIso8601String());
     } catch (_) {}
@@ -226,10 +231,23 @@ class PushRegistrar {
     }
   }
 
+  /// What a notification was about, from its in-app link (never the link itself).
+  @visibleForTesting
+  static String pushKind(String? link) {
+    if (link == null) return 'other';
+    if (link.startsWith('/approvals')) return 'approval';
+    if (link.contains('/call') || link.startsWith('/calls')) return 'call';
+    if (link.contains('/runs/')) return 'run';
+    if (link.startsWith('/inbox')) return 'checkin';
+    if (link.contains('/chat')) return 'mention';
+    return 'other';
+  }
+
   void _open(RemoteMessage message) {
+    final link = message.data['link'];
+    Analytics.log('push_opened', {'kind': pushKind(link is String ? link : null)});
     final id = message.data['notification_id'];
     if (id is String && id.isNotEmpty) onOpened?.call(id);
-    final link = message.data['link'];
     if (link is String && link.startsWith('/')) _openLink(link);
   }
 

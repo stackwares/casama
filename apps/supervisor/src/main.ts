@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import { captureError, initObservability, shutdownObservability } from "@casama/observability";
 import {
   boatProvider,
   DockerApi,
@@ -15,11 +16,6 @@ import {
   type SandboxProvider,
   tlsFetch,
 } from "@casama/sandbox";
-import {
-  captureError,
-  initObservability,
-  shutdownObservability,
-} from "@casama/observability";
 import { startSupervisor } from "./app.ts";
 
 const env = process.env;
@@ -232,12 +228,10 @@ console.log(
 );
 if (provider instanceof DockerProvider && provider.opts.warmPool) {
   const fill = () =>
-    provider
-      .fillPool()
-      .catch((e: Error) => {
-        captureError(e, { service: "casama-supervisor", step: "warm-pool-fill" });
-        console.error(JSON.stringify({ msg: "warm pool fill failed", error: e.message }));
-      });
+    provider.fillPool().catch((e: Error) => {
+      captureError(e, { service: "casama-supervisor", step: "warm-pool-fill" });
+      console.error(JSON.stringify({ msg: "warm pool fill failed", error: e.message }));
+    });
   void fill();
   setInterval(fill, 60_000).unref();
 }

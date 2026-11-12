@@ -25,6 +25,7 @@ import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
 import '../teach/teach_draft_screen.dart';
 import '../teach/teach_recorder.dart';
+import '../../core/analytics.dart';
 
 /// Watch a computer's desktop live and take control (deep link: /computer/live?c=&takeover=).
 class LiveViewScreen extends ConsumerStatefulWidget {
@@ -217,9 +218,15 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     }
   }
 
+  var _fallbackLogged = false;
+
   void _onState() {
     if (_disposed || !mounted) return;
-    if (_conn?.state.value == LiveState.fallback) _startFallback();
+    if (_conn?.state.value == LiveState.fallback) {
+      if (!_fallbackLogged) Analytics.log('live_view_failed', {'fallback': 'screenshot'});
+      _fallbackLogged = true;
+      _startFallback();
+    }
     setState(() {});
   }
 

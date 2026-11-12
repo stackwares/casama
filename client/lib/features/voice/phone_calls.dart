@@ -14,6 +14,7 @@ import '../../core/router.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../core/analytics.dart';
 
 /// Phone-call voice (D-135): a bot rings this person. iOS shows CallKit (from a PushKit push,
 /// handled in AppDelegate.swift), Android its own calling screen (from a high-priority FCM data
@@ -163,6 +164,7 @@ class PhoneCalls {
       ref.read(routerProvider).go(call.conversationId != null ? '/bots/${call.botId}/chat?c=${call.conversationId}' : '/bots/${call.botId}/chat');
       return;
     }
+    Analytics.log('bot_call_answered', {'answer': 'accepted'});
     ref.invalidate(ringingCallsProvider);
     unawaited(ref.read(routerProvider).push(call.callPath));
   }
@@ -173,6 +175,7 @@ class PhoneCalls {
     } catch (_) {
       // Already over; nothing to do.
     }
+    Analytics.log('bot_call_answered', {'answer': 'declined'});
     ref.invalidate(ringingCallsProvider);
   }
 

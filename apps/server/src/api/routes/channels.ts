@@ -4,7 +4,7 @@
  * request is checked with the provider's signature before anything happens.
  */
 import { randomBytes } from "node:crypto";
-import { ADAPTERS, handleInbound, loadChannel } from "@casama/agent";
+import { ADAPTERS, handleInbound, loadChannel, track } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
@@ -151,6 +151,12 @@ export function registerChannelRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         );
       }
     }
+    track(db, {
+      event: "chat_app_connected",
+      userId: claims.sub,
+      orgId: b.org_id,
+      properties: { channel: body.kind },
+    });
     return c.json(out(c, r, verifyToken), 201);
   });
 

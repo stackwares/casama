@@ -11,6 +11,7 @@ import '../../theme/app_tokens.dart';
 import '../../ui/mascot.dart';
 import '../settings/name_step.dart';
 import '../../ui/bot_loader.dart';
+import '../../core/analytics.dart';
 
 /// Welcome chat (D-129): a new person gets a personal space and bot, and lands in its chat. No
 /// form; the old wizard is behind "Set up manually".
@@ -95,7 +96,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 key: const Key('setUpManually'),
                 icon: const Icon(LucideIcons.slidersHorizontal, size: 18),
                 label: Text(l10n.setUpManually),
-                onPressed: () => GoRouter.maybeOf(context)?.go('/onboarding'),
+                onPressed: () {
+                  Analytics.log('onboarding_begin', {'path': 'manual'});
+                  GoRouter.maybeOf(context)?.go('/onboarding');
+                },
               ),
             ],
           ),

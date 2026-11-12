@@ -1,5 +1,6 @@
 /** Action rules (D-115): people manage them here; bots have no tool that changes them. */
 
+import { track } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, pgErrorCode, withUserSession } from "@casama/db";
 import { type ActionRule, describeActionRule } from "@casama/domain";
@@ -62,6 +63,12 @@ export function registerActionRuleRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
       if (!row) throw new Error("rule insert returned nothing");
       await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
         values (${b.org_id}::uuid, 'user', ${claims.sub}::uuid, 'action_rule.created', 'action_rule', ${row.id}::uuid, ${JSON.stringify({ preview: describeActionRule(row) })}::jsonb)`);
+      track(db, {
+        event: "action_rule_created",
+        userId: claims.sub,
+        orgId: b.org_id,
+        properties: { decision: b.rule },
+      });
       return c.json(out(row), 201);
     } catch (err) {
       if (pgErrorCode(err) === "42501")

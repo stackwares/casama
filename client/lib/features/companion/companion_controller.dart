@@ -6,6 +6,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 
 import '../../core/providers.dart';
 import 'companion.dart';
+import '../../core/analytics.dart';
 
 Set<String> capsOf(LocalDevice d) => {
   if (d.capabilities.shell == true) 'shell',
@@ -83,6 +84,7 @@ class CompanionController extends AsyncNotifier<LocalDevice?> {
     final org = ref.read(currentOrgProvider)!;
     final created = await ref.read(backendProvider).createLocalDevice(org.id, name, platformName());
     await ref.read(deviceTokenStoreProvider).write(org.id, created.id, created.token);
+    Analytics.log('companion_paired', {'os': platformName()});
     ref.invalidateSelf();
     await future;
   }

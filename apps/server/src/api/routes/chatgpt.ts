@@ -19,6 +19,7 @@ import {
 } from "@casama/agent";
 import { PRODUCT_NAME, routes } from "@casama/contracts";
 import { type JwtClaims, schema, withUserSession } from "@casama/db";
+import { captureError } from "@casama/observability";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { eq, sql } from "drizzle-orm";
 import { createRemoteJWKSet, jwtVerify } from "jose";
@@ -223,6 +224,7 @@ export function registerChatGptRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       tokens = tokensFrom(resp, clientId);
     } catch (err) {
       deps.logger.warn("chatgpt sign-in failed", { error: (err as Error).message });
+      captureError(err, { service: "casama-api", step: "chatgpt-sign-in" });
       throw await fail(
         "chatgpt_sign_in_failed",
         err instanceof ChatGptAuthError

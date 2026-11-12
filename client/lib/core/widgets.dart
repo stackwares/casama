@@ -13,6 +13,7 @@ import '../ui/skeleton.dart';
 export '../ui/skeleton.dart';
 import 'date_format.dart';
 import 'haptics.dart';
+import 'analytics.dart';
 import 'telemetry.dart';
 import '../ui/effects.dart';
 
@@ -70,6 +71,7 @@ String errorText(BuildContext context, Object error) {
 
 void showError(BuildContext context, Object error, [StackTrace? stackTrace]) {
   HapticsHelper.error();
+  _reportShown(error);
   ScaffoldMessenger.of(context)
       .showSnackBar(SnackBar(content: Text(errorText(context, error))));
 
@@ -89,6 +91,27 @@ void showError(BuildContext context, Object error, [StackTrace? stackTrace]) {
 
   if (!isExpected) {
     Telemetry.captureException(error, stackTrace ?? StackTrace.current, warning: true);
+  }
+}
+
+/// The usage-data side of an error the person saw (the `app_error_shown` event).
+void _reportShown(Object error) {
+  if (error is DioException) {
+    final status = error.response?.statusCode;
+    final kind = status == null
+        ? 'network'
+        : status == 401 || status == 403
+            ? 'auth'
+            : status == 400 || status == 422
+                ? 'validation'
+                : status >= 500
+                    ? 'server'
+                    : 'unknown';
+    Analytics.errorShown(code: problemOf(error)?.code, status: status, kind: kind);
+  } else if (error is sb.AuthException) {
+    Analytics.errorShown(code: error.code, status: null, kind: 'auth');
+  } else {
+    Analytics.errorShown(kind: 'unknown');
   }
 }
 

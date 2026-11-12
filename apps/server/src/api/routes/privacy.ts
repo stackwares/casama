@@ -1,5 +1,6 @@
 /** Privacy (Phase 8, D-072): data export, account deletion, retention settings. */
 
+import { track } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
@@ -58,6 +59,11 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       throw new ApiError(400, "confirm_mismatch", "Type your account's email to confirm");
     const r = await requestAccountDeletion(db, claims.sub, env.ACCOUNT_DELETION_GRACE_DAYS);
     deps.logger.info("account deletion requested", { user_id: claims.sub, orgs: r.solo.length });
+    track(db, {
+      event: "account_deletion_requested",
+      userId: claims.sub,
+      properties: { owned_workspaces: r.solo.length },
+    });
     return c.json(
       { purge_after: r.purgeAfter.toISOString(), workspaces_deleted: r.solo.map((o) => o.name) },
       200,

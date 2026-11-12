@@ -138,6 +138,12 @@ export function registerBotTemplateRoutes(app: OpenAPIHono<AppEnv>, deps: AppDep
       returning expires_at`);
     await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
       values (${bot.org_id}::uuid, 'user', ${claims.sub}::uuid, 'bot.shared', 'bot', ${id}::uuid, ${JSON.stringify({ memories: body.include_memories })}::jsonb)`);
+    track(db, {
+      event: "bot_shared",
+      userId: claims.sub,
+      orgId: bot.org_id,
+      properties: { kind: "template_link", include_memories: body.include_memories },
+    });
     return c.json(
       {
         token,

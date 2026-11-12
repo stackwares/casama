@@ -1,5 +1,6 @@
 /** Billing (Phase 7, D-070): plans, entitlements, checkout, store purchases, webhooks, Cloud Connect keys. */
 
+import { track } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
@@ -101,6 +102,16 @@ export function registerBillingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         returnUrl(body.return_url),
       ),
     );
+    track(deps.db, {
+      event: "checkout_created",
+      userId: claims.sub,
+      orgId: id,
+      properties: {
+        store: "dodo",
+        kind: body.pack_code ? "credit_pack" : "subscription",
+        product_id: body.pack_code ?? body.plan_code ?? null,
+      },
+    });
     return c.json({ url: r.url }, 200);
   });
 

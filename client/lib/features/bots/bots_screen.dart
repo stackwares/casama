@@ -31,6 +31,7 @@ import 'template_picker.dart';
 import '../../ui/glow_button.dart';
 import '../workspaces/spaces.dart';
 import '../../ui/celebration.dart';
+import '../../core/analytics.dart';
 
 String botStatusLabel(BuildContext context, BotStatusEnum s) => switch (s) {
   BotStatusEnum.working => context.l10n.botStatusWorking,
@@ -637,6 +638,8 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
                     setState(() => _busy = false);
                     if (bot != null) {
                       ref.invalidate(botsProvider);
+                      // The manual wizard ends with the first bot (the Welcome chat reports its own end).
+                      if (widget.embedded) Analytics.log('onboarding_complete', {'path': 'manual'});
                       // The new bot itself pops up to say hi.
                       showCelebration(context, l10n.celebrateNewBot(bot.name), mascot: Mascot.fromAvatar(bot.avatarUrl));
                       final router = GoRouter.of(context);

@@ -10,6 +10,7 @@ import { randomBytes } from "node:crypto";
 import {
   composioDirectory,
   loadIntegration,
+  milestone,
   oauthSecretFrom,
   pipedreamDirectory,
   refreshIntegration,
@@ -18,6 +19,7 @@ import {
 import { routes } from "@casama/contracts";
 import { pgErrorCode, schema, withUserSession } from "@casama/db";
 import { APP_CATALOG, appByIdOrNull, type CatalogApp } from "@casama/domain";
+import { captureError } from "@casama/observability";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import {
   discoverOAuthServerInfo,
@@ -235,6 +237,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
         ...(row?.status === "ok" ? {} : { reason: "connect_error" }),
       },
     });
+    if (row?.status === "ok") milestone(db, args.createdBy, "first_connection", args.orgId);
     const bots = await db.execute<{ bot_id: string }>(
       sql`select bot_id from public.bot_integrations where integration_id = ${id}::uuid`,
     );
@@ -473,6 +476,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
     } catch (err) {
       if (err instanceof ApiError) throw err;
       deps.logger.warn("oauth start failed", { app: a.id, error: (err as Error).message });
+      captureError(err, { service: "casama-api", step: "oauth-start", app_id: a.id });
       return c.json(
         {
           status: "error" as const,
@@ -552,16 +556,23 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
         resultPage("This sign-in link has expired. Go back to Casama and try again.", false),
         400,
       );
-    const fail = async (message: string) => {
+    const fail = async (message: string, reason = "oauth_error") => {
       await db.execute(
         sql`update public.integration_oauth_flows set status = 'error', error = ${message.slice(0, 500)} where id = ${flow.id}::uuid`,
       );
+      track(db, {
+        event: "connection_failed",
+        userId: flow.created_by,
+        orgId: flow.org_id,
+        properties: { app_id: a.id, method: "oauth", reason },
+      });
       return c.html(resultPage(message, false), 400);
     };
     const denied = c.req.query("error");
     if (denied)
       return fail(
         `${a.name} sign-in was cancelled (${c.req.query("error_description") ?? denied}).`,
+        "cancelled",
       );
     const code = c.req.query("code");
     if (!code) return fail(`${a.name} didn't send a sign-in code.`);
@@ -602,6 +613,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
       );
     } catch (err) {
       deps.logger.warn("oauth callback failed", { app: a.id, error: (err as Error).message });
+      captureError(err, { service: "casama-api", step: "oauth-callback", app_id: a.id });
       return fail(`Couldn't finish connecting ${a.name}: ${(err as Error).message}`);
     }
   });

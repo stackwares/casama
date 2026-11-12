@@ -16,6 +16,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/glow_button.dart';
 import 'app_logo.dart';
+import '../../core/analytics.dart';
 
 /// Opens the connect flow for a built-in app. Returns the connection when it worked.
 Future<Integration?> showConnectApp(BuildContext context, CatalogApp app, {Integration? reconnect}) =>
@@ -72,6 +73,7 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
     // Closed while the person is still signing in (in another tab or app): keep checking for a few
     // minutes, so the connection still shows up once the sign-in finishes.
     final flow = _flowId;
+    if (_step == _Step.waiting) Analytics.log('connection_failed', {'app_id': app.id, 'method': _method.value, 'reason': 'cancelled'});
     if (flow != null && _step == _Step.waiting) finishInBackground(ProviderScope.containerOf(context, listen: false), flow);
     _lifecycle.dispose();
     _key.dispose();
@@ -85,6 +87,8 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
       _step = _Step.connecting;
       _error = null;
     });
+    // The connect funnel (F4). The server reports the outcome it sees; this side reports what it can't.
+    Analytics.log('connection_started', {'app_id': app.id, 'method': _method.value, 'reconnect': widget.reconnect != null});
     try {
       final r = await ref.read(backendProvider).connectApp(
             org.id,
@@ -112,6 +116,7 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
           _fail(r.error ?? r.integration?.error);
       }
     } catch (e) {
+      Analytics.log('connection_failed', {'app_id': app.id, 'method': _method.value, 'reason': 'exception'});
       if (mounted) _fail(errorText(context, e));
     }
   }
@@ -140,6 +145,7 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
         case ConnectFlowStatusStatusEnum.error:
           _fail(s.error);
         case ConnectFlowStatusStatusEnum.expired:
+          Analytics.log('connection_failed', {'app_id': app.id, 'method': _method.value, 'reason': 'expired'});
           _fail(context.l10n.connectFailedTitle);
         case ConnectFlowStatusStatusEnum.pending:
           break;

@@ -1,6 +1,13 @@
 /** Voice (Phase 6, D-065): dictation, read aloud, live-call sessions, tool forwarding, transcripts. */
 
-import { callGreeting, callNotAnswered, geminiLiveCost, VOICE_PRICES } from "@casama/agent";
+import {
+  callGreeting,
+  callNotAnswered,
+  geminiLiveCost,
+  milestone,
+  track,
+  VOICE_PRICES,
+} from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { contentKeys, type JwtClaims, schema, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
@@ -291,6 +298,15 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, billable, meta)
         values (${conv.orgId}::uuid, ${conv.botId}::uuid, 'voice_seconds', ${seconds}, ${cost}, ${billable},
                 ${JSON.stringify({ provider: provider ?? "openai", ...(usage ? { tokens: usage } : { estimated: true }), ...(billable ? { key: "server" } : {}) })}::jsonb)`);
+    if (seconds > 0) {
+      track(db, {
+        event: "call_ended",
+        userId: claims.sub,
+        orgId: conv.orgId,
+        properties: { provider: provider ?? "openai", duration_s: Math.round(seconds), billable },
+      });
+      milestone(db, claims.sub, "first_voice_call", conv.orgId);
+    }
     return c.json({ saved: turns.length }, 200);
   });
 

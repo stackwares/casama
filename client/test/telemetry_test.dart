@@ -57,6 +57,31 @@ void main() {
     );
   });
 
+  test('Casama Cloud is the official hosts with billing on, never the URL itself', () {
+    String kind(String url, {bool billing = true}) => Telemetry.resolveServerKind(apiUrl: url, billingEnabled: billing);
+    expect(kind('https://api.casama.ai'), 'cloud');
+    expect(kind('https://api-dev.casama.ai'), 'cloud');
+    expect(kind('https://api.casama.ai', billing: false), 'self_hosted');
+    expect(kind('https://casama.example.com'), 'self_hosted');
+    expect(kind('https://evilcasama.ai'), 'self_hosted');
+  });
+
+  test('screens and product events leave only for Casama Cloud; crashes always; a self-hosted server sees two', () {
+    for (final cloud in ['cloud']) {
+      expect(Telemetry.allowEvent(r'$screen', cloud), isTrue);
+      expect(Telemetry.allowEvent('sign_in_started', cloud), isTrue);
+      expect(Telemetry.allowEvent('first_name_typed', cloud), isFalse, reason: 'uncatalogued events are dropped');
+    }
+    for (final other in ['self_hosted', 'local', 'unknown']) {
+      expect(Telemetry.allowEvent(r'$exception', other), isTrue);
+      expect(Telemetry.allowEvent('app_active_daily', other), isTrue);
+      expect(Telemetry.allowEvent('app_startup_failed', other), isTrue);
+      expect(Telemetry.allowEvent(r'$screen', other), isFalse);
+      expect(Telemetry.allowEvent('sign_in_started', other), isFalse);
+      expect(Telemetry.allowEvent('purchase_completed', other), isFalse);
+    }
+  });
+
   test('session screen observer deduplicates screens per session', () {
     SessionScreenObserver.resetSession();
     final observer = SessionScreenObserver();

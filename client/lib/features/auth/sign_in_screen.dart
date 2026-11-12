@@ -191,7 +191,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     _started('password', signUp: _signUp);
     setState(() => _busy = true);
     final backend = ref.read(backendProvider);
-    await runGuarded(context, () async {
+    final ok = await runGuarded(context, () async {
       if (_signUp) {
         final signedIn = await backend.signUp(
           _email.text.trim(),
@@ -212,7 +212,9 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
       }
       // Signed in, or signed up and the confirmation email is on its way.
       HapticsHelper.success();
+      return true;
     });
+    if (ok != true) Analytics.log('sign_in_failed', {'method': 'password', 'is_sign_up': _signUp, 'reason': 'rejected'});
     if (mounted) setState(() => _busy = false);
   }
 
@@ -267,6 +269,7 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     });
     if (!mounted) return;
     if (ok == true) HapticsHelper.success();
+    if (ok != true) Analytics.log('sign_in_failed', {'method': 'email_code', 'reason': 'invalid_code'});
     setState(() {
       _busy = false;
       _codeInvalid = ok != true;

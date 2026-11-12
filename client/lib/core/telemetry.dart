@@ -9,6 +9,8 @@ import 'billing.dart' show defaultStore, InAppPurchaseStore;
 import 'config.dart';
 import 'distribution.dart';
 import 'telemetry_web_stub.dart' if (dart.library.js_interop) 'telemetry_web.dart';
+import 'analytics.dart';
+import 'analytics_events.g.dart';
 
 /// Error reporting and product analytics (D-063, D-206). Off unless a key is given at build time:
 ///   --dart-define=SENTRY_DSN=...          Sentry, self-hosted Sentry or GlitchTip
@@ -102,13 +104,34 @@ class Telemetry {
     return kDistribution == 'appstore' ? 'app_store' : 'direct';
   }
 
+  /// Client product events (ANALYTICS-PLAN §6). Anything else is dropped before it leaves the device.
+  static const catalogEvents = analyticsClientEvents;
+
+  /// What an official app may send while connected to someone else's server: crash reports (always) and these.
+  static const _selfHostedEvents = {'app_active_daily', 'app_startup_failed'};
+
+  /// The kind of server the app is connected to (cloud, self_hosted, local), unknown until its config loads.
+  static String serverKind = 'unknown';
+
+  static bool get isCloud => serverKind == 'cloud';
+
+  /// The route template of the page on screen (never ids), for events that say where something happened.
+  static String? currentScreen;
+
+  /// Whether an event may leave the device: exceptions always; screens and product events on Casama
+  /// Cloud only; a self-hosted or local server only ever sees [_selfHostedEvents].
+  static bool allowEvent(String name, String kind) {
+    if (name == r'$exception') return true;
+    if (kind == 'cloud') return name == r'$screen' || catalogEvents.contains(name);
+    return _selfHostedEvents.contains(name);
+  }
+
   /// Classifies connected server kind (cloud, local, self_hosted) without sending the URL.
   static String resolveServerKind({required String apiUrl, required bool billingEnabled}) {
-    if (billingEnabled && (apiUrl == 'https://cloud.casama.ai' || apiUrl == AppConfig.fromEnvironment.apiUrl)) {
-      return 'cloud';
-    }
     final uri = Uri.tryParse(apiUrl);
     final host = uri?.host ?? '';
+    final official = host == 'casama.ai' || host.endsWith('.casama.ai') || apiUrl == AppConfig.fromEnvironment.apiUrl;
+    if (billingEnabled && official) return 'cloud';
     if (host == 'localhost' || host == '127.0.0.1' || host == '::1') {
       return 'local';
     }
@@ -120,6 +143,7 @@ class Telemetry {
     if (!posthogOn) return;
     try {
       final kind = resolveServerKind(apiUrl: apiUrl, billingEnabled: billingEnabled);
+      serverKind = kind;
       await Posthog().register('server_kind', kind);
     } catch (_) {}
   }
@@ -148,53 +172,19 @@ class Telemetry {
               event.userPropertiesSetOnce = null;
               return event;
             }
-            if (eventName == r'$screen') {
-              return event;
+            if (!allowEvent(eventName, serverKind)) {
+              // Product events and screens are Casama Cloud only; anything uncatalogued is a bug in debug builds.
+              assert(
+                serverKind != 'cloud' || eventName == r'$screen' || _selfHostedEvents.contains(eventName),
+                'Unexpected event before catalog registration: $eventName',
+              );
+              return null;
             }
-            // Allow defined client product events from ANALYTICS-PLAN §6
-            const allowedCatalogEvents = {
-              'sign_in_started',
-              'sign_in_failed',
-              'sign_in_completed',
-              'two_step_completed',
-              'signed_out',
-              'onboarding_begin',
-              'onboarding_step_done',
-              'onboarding_complete',
-              'invite_shared',
-              'join_completed',
-              'connection_started',
-              'connection_failed',
-              'live_view_failed',
-              'companion_paired',
-              'device_data_toggled',
-              'call_started',
-              'bot_call_answered',
-              'paywall_view',
-              'paywall_plan_selected',
-              'purchase_started',
-              'purchase_completed',
-              'restore_purchases',
-              'paywall_dismiss',
-              'skill_installed',
-              'push_permission_result',
-              'push_opened',
-              'app_startup_failed',
-              'app_active_daily',
-              'app_error_shown',
-              'feature_used',
-              'enable_analytics_sharing',
-              'disable_analytics_sharing',
-            };
-            if (allowedCatalogEvents.contains(eventName)) {
-              if (event.properties != null) {
-                event.properties = (_deep(event.properties) as Map?)?.cast<String, Object>();
-              }
-              return event;
+            if (eventName == r'$screen') return event;
+            if (event.properties != null) {
+              event.properties = (_deep(event.properties) as Map?)?.cast<String, Object>();
             }
-            // Drop uncataloged events
-            assert(false, 'Unexpected event before catalog registration: $eventName');
-            return null;
+            return event;
           },
         ];
       if (posthogErrors) {
@@ -374,6 +364,8 @@ class SessionScreenObserver extends NavigatorObserver with WidgetsBindingObserve
   void _maybeTrack(Route<dynamic> route) {
     final name = route.settings.name;
     if (name == null || name.trim().isEmpty) return;
+    Telemetry.currentScreen = name;
+    Analytics.routeFeature(name);
     if (_seenScreens.add(name)) {
       if (Telemetry.posthogOn) {
         Posthog().screen(screenName: name);

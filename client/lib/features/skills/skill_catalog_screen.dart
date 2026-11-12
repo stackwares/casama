@@ -19,6 +19,7 @@ import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../chat/widgets/chat_markdown.dart';
 import 'skill_visuals.dart';
+import '../../core/analytics.dart';
 
 /// Settings → Skills → Skill catalog (D-104): the bundled skills on their own page, grouped by
 /// category, with search, a detail sheet and install to the workspace or one bot.
@@ -262,6 +263,7 @@ Future<void> installCatalogSkill(
   });
   if (ok == true && context.mounted) {
     ref.invalidate(skillsProvider);
+    Analytics.log('skill_installed', {'source': 'catalog', 'skill_id': s.name});
     showSuccess(context, l10n.skillInstalled(skillTitle(s.name)));
   }
 }

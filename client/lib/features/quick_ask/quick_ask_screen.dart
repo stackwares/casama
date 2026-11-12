@@ -20,6 +20,7 @@ import '../../ui/page.dart';
 import '../../ui/glow_button.dart';
 import '../chat/chat_screen.dart' show computerForBot;
 import '../desktop/desktop_context.dart';
+import '../../core/analytics.dart';
 
 /// Quick ask (global shortcut, share-to-bot target): pick a bot, type, send; opens the chat.
 class QuickAskScreen extends ConsumerStatefulWidget {
@@ -51,6 +52,7 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
     _ctx = ref.read(pendingDesktopContextProvider);
     if (_ctx != null) WidgetsBinding.instance.addPostFrameCallback((_) => ref.read(pendingDesktopContextProvider.notifier).set(null));
     if (widget.fromShareExtension) {
+      Analytics.feature('share_extension');
       takeSharedText().then((t) {
         if (mounted && t.isNotEmpty) _text.text = t;
       });

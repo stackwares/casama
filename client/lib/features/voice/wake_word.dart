@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa;
 
 import '../../core/router.dart';
+import '../../core/analytics.dart';
 
 /// Wake word (D-144): on desktop and Android, saying the phrase opens a live call with the chosen
 /// bot. Detection runs on the device with an open-source keyword spotter (sherpa-onnx, Apache-2.0,
@@ -281,6 +282,7 @@ class WakeWordController extends Notifier<WakeWordSettings> {
     if (botId == null) return;
     _sub = _engine.listen(state.phrase).listen((_) {
       // Heard it: open a live call with the chosen bot.
+      Analytics.feature('wake_word');
       unawaited(ref.read(routerProvider).push('/bots/$botId/call'));
     }, onError: (Object e) => debugPrint('wake word: $e'));
   }

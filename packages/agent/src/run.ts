@@ -23,7 +23,17 @@ import {
   useSharedKeyForMissing,
 } from "@casama/domain";
 import { captureError, type Logger } from "@casama/observability";
-import { runCompletedMilestones } from "./analytics.ts";
+import { runCompletedMilestones, track } from "./analytics.ts";
+
+/** Refusal codes that mean a plan or credit limit, not a setup problem (they start the paywall funnel). */
+const LIMIT_CODES = new Set([
+  "out_of_credits",
+  "quota_exceeded",
+  "daily_budget_exceeded",
+  "budget_exceeded",
+  "cloud_daily_cap",
+  "computer_hours_exceeded",
+]);
 import { collectExec, type SandboxHandle } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
@@ -474,6 +484,24 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       admit(db, info, bus, deps.billCloudModels === true, cloudLocked),
     );
     if (!admitted.ok) {
+      // A person's own run that never started: the refusal is what the paywall funnel (F6) begins with.
+      if (info.createdBy && ["chat", "mention", "voice"].includes(info.trigger)) {
+        const reason = String((admitted as { code?: string }).code ?? "refused");
+        const props = { reason, surface: "run" };
+        track(db, {
+          event: "run_refused",
+          userId: info.createdBy,
+          orgId: info.orgId,
+          properties: props,
+        });
+        if (LIMIT_CODES.has(reason))
+          track(db, {
+            event: "limit_reached",
+            userId: info.createdBy,
+            orgId: info.orgId,
+            properties: { kind: reason, surface: "run" },
+          });
+      }
       await step("reject", () => finishFailed(db, info, admitted, bus));
       return { status: "failed" };
     }

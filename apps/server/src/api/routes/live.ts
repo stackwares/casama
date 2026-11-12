@@ -8,6 +8,7 @@ import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
 import { routes } from "@casama/contracts";
 import { type Database, type JwtClaims, schema, withUserSession } from "@casama/db";
+import { captureError } from "@casama/observability";
 import { turnCredentials, turnIceServer } from "@casama/sandbox";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { eq, sql } from "drizzle-orm";
@@ -157,7 +158,8 @@ export function registerLiveRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         "no_desktop",
         "This computer has no desktop. Switch it to the desktop profile first.",
       );
-    await deps.computers.ensureRunning(id).catch(() => {
+    await deps.computers.ensureRunning(id).catch((err) => {
+      captureError(err, { service: "casama-api", step: "live-start", computer_id: id });
       throw new ApiError(
         503,
         "computer_unavailable",
@@ -384,7 +386,8 @@ export function attachStream(server: Server, deps: AppDeps) {
         client.on("close", close);
         client.on("error", close);
       });
-    } catch {
+    } catch (err) {
+      captureError(err, { service: "casama-api", step: "live-upstream" });
       reject("503 Service Unavailable");
     }
   });

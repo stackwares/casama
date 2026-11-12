@@ -20,6 +20,7 @@ import '../../ui/glow_button.dart';
 import '../../ui/otp_code_field.dart';
 import '../../ui/page.dart';
 import '../../ui/progressive_fade.dart';
+import '../../core/analytics.dart';
 
 /// The person's authenticator apps (refreshed after changes).
 final twoStepFactorsProvider = FutureProvider<List<TwoStepFactor>>(
@@ -315,6 +316,7 @@ class _TwoStepPromptScreenState extends ConsumerState<TwoStepPromptScreen> {
       _codeInvalid = ok != true;
     });
     if (ok == true) {
+      Analytics.log('two_step_completed');
       ref.invalidate(twoStepCodeNeededProvider);
       ref.invalidate(organizationsProvider);
       context.go('/bots');

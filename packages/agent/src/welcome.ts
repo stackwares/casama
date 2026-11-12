@@ -14,6 +14,7 @@ import type { Database } from "@casama/db";
 import { contentKeys } from "@casama/db";
 import { defaultModelFor } from "@casama/domain";
 import { sql } from "drizzle-orm";
+import { track } from "./analytics.ts";
 import { PLATFORM_OPENROUTER_CREDENTIAL_ID } from "./credentials.ts";
 import { composioDirectory, loadIntegration } from "./integrations.ts";
 import { surfaceMessages } from "./tools/ui.ts";
@@ -777,7 +778,84 @@ export interface WelcomeDeps {
  * Handles a "welcome.*" card action. Scripted steps answer at once (no run is queued); steps that
  * need the model return a run to start, created like a normal chat run.
  */
+/** The steps in the order the script walks them (F2 uses the index). New steps are added, never renamed. */
+export const WELCOME_STEPS: WelcomeState["step"][] = [
+  "name",
+  "google",
+  "focus",
+  "scope",
+  "model",
+  "connect",
+  "phone",
+  "invite",
+  "first_value",
+  "offer_setup",
+  "interview",
+  "learned",
+  "done",
+];
+
+export async function welcomeStep(
+  db: Database,
+  conversationId: string,
+): Promise<WelcomeState | null> {
+  const [r] = await db.execute<{ welcome: WelcomeState | null }>(
+    sql`select welcome from public.conversations where id = ${conversationId}::uuid`,
+  );
+  return r?.welcome ?? null;
+}
+
+/** The step the person just reached, for the activation funnel (F2). Ids and enums only, never answers. */
+export function trackWelcomeStepView(
+  db: Database,
+  c: { orgId: string; userId: string },
+  step: WelcomeState["step"],
+) {
+  track(db, {
+    event: "onboarding_step_view",
+    userId: c.userId,
+    orgId: c.orgId,
+    properties: { step, step_index: WELCOME_STEPS.indexOf(step) },
+  });
+}
+
+/** A card was answered: what happened is the action's name, and a choice only when it is a fixed option. */
 export async function handleWelcomeAction(
+  d: WelcomeDeps,
+  c: { orgId: string; botId: string; conversationId: string; userId: string },
+  action: WelcomeAction,
+  summary: string,
+): Promise<{ runId: string; messageId: string; queue: boolean }> {
+  const before = await welcomeStep(d.db, c.conversationId);
+  const result = await handleWelcomeActionInner(d, c, action, summary);
+  const after = await welcomeStep(d.db, c.conversationId).catch(() => null);
+  if (before && after) {
+    const done = action.name.replace(/^welcome\./, "");
+    const choice =
+      action.name === "welcome.focus"
+        ? after.focus.join(",")
+        : action.name === "welcome.scope"
+          ? after.scope
+          : null;
+    track(d.db, {
+      event: "onboarding_step_done",
+      userId: c.userId,
+      orgId: c.orgId,
+      properties: { step: before.step, action: done, choice: choice || null },
+    });
+    if (after.step !== before.step) trackWelcomeStepView(d.db, c, after.step);
+    if (after.step === "done" && before.step !== "done")
+      track(d.db, {
+        event: "onboarding_complete",
+        userId: c.userId,
+        orgId: c.orgId,
+        properties: { path: "welcome_chat" },
+      });
+  }
+  return result;
+}
+
+async function handleWelcomeActionInner(
   d: WelcomeDeps,
   c: { orgId: string; botId: string; conversationId: string; userId: string },
   action: WelcomeAction,

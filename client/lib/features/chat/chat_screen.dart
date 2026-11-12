@@ -38,6 +38,7 @@ import 'widgets/chat_widgets.dart';
 import 'widgets/composer.dart';
 import 'widgets/error_details.dart';
 import 'widgets/shared_files.dart';
+import '../../core/analytics.dart';
 
 /// The computer a bot uses: its private computer, else the team computer.
 Computer? computerForBot(List<Computer> computers, String botId, {String? defaultComputerId}) {
@@ -359,11 +360,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final text = await showAdaptiveSheet<String>(context: context, builder: (_) => _EditSheet(initial: e.text));
     if (text == null || text.trim().isEmpty || text.trim() == e.text.trim() || !mounted) return;
     _stickToBottom = true;
+    Analytics.feature('edit_resend');
     await runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).edit(e.id, text));
   }
 
   /// Dictation: tap to record, tap again to transcribe into the message box.
   Future<void> _toggleDictation() async {
+    Analytics.feature('dictation');
     final dictation = ref.read(dictationProvider);
     if (!_recording) {
       try {
@@ -424,6 +427,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _speak(String messageId) async {
+    Analytics.feature('read_aloud');
     final audio = await runGuarded(context, () => ref.read(backendProvider).speech(messageId));
     if (audio != null) await ref.read(speechPlayerProvider).play(audio);
   }
@@ -828,7 +832,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 siblingIndex: e.siblingIndex,
                 siblingCount: e.siblingCount,
                 onEdit: chat.running || e.id.startsWith('local-') ? null : () => _editMessage(e),
-                onBranch: chat.running ? null : (d) => runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).switchBranch(e.id, d)),
+                onBranch: chat.running ? null : (d) { Analytics.feature('branch_switch'); runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).switchBranch(e.id, d)); },
               ),
               fresh: fresh,
               inputs: (e, chat.running),
@@ -961,8 +965,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       if (fix != null)
                         FilledButton.tonalIcon(
                           key: const Key('noticeFix'),
-                          onPressed: () => context.push(fix.route),
-                          icon: const Icon(LucideIcons.keyRound, size: 18),
+                          onPressed: () {
+                            // Out of credits sends the person to the plans page: the paywall funnel's start (F6).
+                            if (fix.route == '/settings/billing') {
+                              Analytics.log('paywall_view', {'source': 'credits_depleted', 'paywall_kind': 'regular'});
+                            }
+                            context.push(fix.route);
+                          },
+                          icon: Icon(fix.route == '/settings/billing' ? LucideIcons.gem : LucideIcons.keyRound, size: 18),
                           label: Text(fix.label),
                         ),
                       if (canRetry)

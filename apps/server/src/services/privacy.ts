@@ -8,6 +8,7 @@ import { type Database, type JwtClaims, withUserSession } from "@casama/db";
 import { captureError } from "@casama/observability";
 import { sql } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
+import { erasePostHogPerson } from "./posthog-erase.ts";
 
 /** Per-workspace tables in the export, in a readable order. */
 const ORG_TABLES = [
@@ -157,7 +158,11 @@ async function soleOwnedOrgs(db: Database, userId: string) {
 }
 
 /** Daily: purge accounts past their grace period (workspaces, snapshots, then the user). */
-export async function purgeDueAccounts(db: Database, computers?: ComputerService) {
+export async function purgeDueAccounts(
+  db: Database,
+  computers?: ComputerService,
+  opts: { erase?: (userId: string) => Promise<unknown> } = {},
+) {
   const due = await db.execute<{ user_id: string }>(sql`
     select user_id from public.account_deletions where completed_at is null and purge_after <= now() limit 50`);
   for (const { user_id } of due) {
@@ -169,7 +174,12 @@ export async function purgeDueAccounts(db: Database, computers?: ComputerService
       );
       for (const c of comps) {
         await computers?.remove(c.id).catch((e) => {
-          captureError(e, { service: "casama-worker", step: "purge-computer", computer_id: c.id, org_id: org.id });
+          captureError(e, {
+            service: "casama-worker",
+            step: "purge-computer",
+            computer_id: c.id,
+            org_id: org.id,
+          });
         });
       }
       // So is memory kept in Honcho or Supermemory (D-137).
@@ -186,6 +196,11 @@ export async function purgeDueAccounts(db: Database, computers?: ComputerService
       }
       await db.execute(sql`delete from public.organizations where id = ${org.id}::uuid`);
     }
+    // Product analytics for this person (PostHog). A failure is reported with the id so it can be erased by
+    // hand; it never blocks erasing the account itself.
+    await (opts.erase ?? erasePostHogPerson)(user_id).catch((e) => {
+      captureError(e, { service: "casama-worker", step: "purge-analytics", user_id });
+    });
     await db.execute(sql`select public.worker_purge_user(${user_id}::uuid)`);
     await db.execute(sql`
       update public.account_deletions set completed_at = now(), orgs_deleted = ${orgs.length} where user_id = ${user_id}::uuid`);

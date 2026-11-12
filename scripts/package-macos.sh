@@ -18,6 +18,8 @@ if [[ "${CASAMA_OFFICIAL_BUILD:-0}" == "1" && -f config/telemetry.json ]]; then
   defines+=(--dart-define-from-file=config/telemetry.json)
 fi
 flutter build macos --release --dart-define=CASAMA_API_URL="${CASAMA_API_URL:-https://api.casama.ai}" "${defines[@]}" "${signed[@]}"
+# dSYMs to PostHog error tracking when a key is set (never fails the build).
+../scripts/upload-symbols.sh apple build/macos/Build/Products/Release
 app="build/macos/Build/Products/Release/casama_app.app"
 out="../dist/Casama-$version-macos.dmg"
 mkdir -p ../dist

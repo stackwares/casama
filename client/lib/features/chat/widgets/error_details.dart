@@ -27,12 +27,16 @@ const _keyErrors = {
   'chatgpt_not_eligible',
 };
 
+/// Failures that mean the workspace is out of credits or over its plan: the fix is the plans page.
+const limitErrors = {'out_of_credits', 'quota_exceeded', 'cloud_daily_cap', 'computer_hours_exceeded'};
+
 /// A one-tap fix for a failure people can fix themselves: no model, or a missing or rejected key.
 /// With no key at all, "no model" also leads to Model keys rather than a model list that's empty.
 ({String label, String route})? errorFix(BuildContext context, WidgetRef ref, NoticeEntry entry, String botId) {
   final code = entry.errorCode;
   if (entry.kind != NoticeKind.failed || code == null) return null;
   final keys = (route: '/settings/keys', label: context.l10n.addModelKeyTitle);
+  if (limitErrors.contains(code)) return (route: '/settings/billing', label: context.l10n.seePlans);
   if (_keyErrors.contains(code)) return keys;
   if (code != 'no_model_configured') return null;
   final hasKeys = ref.read(credentialsProvider).value?.isNotEmpty ?? false;

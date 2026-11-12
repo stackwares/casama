@@ -243,6 +243,8 @@ class PurchaseVerifier {
           'store': p.source,
           'product_id': p.productId,
         });
+      } else {
+        Analytics.log('restore_purchases', {'outcome': 'restored', 'store': p.source});
       }
     } catch (e, st) {
       // Left uncompleted: the store redelivers it, and Restore Purchases retries.

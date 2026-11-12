@@ -24,6 +24,7 @@ import '../../ui/glow_button.dart';
 import '../bots/channels_screen.dart' show channelKindName;
 import 'cron_words.dart';
 import '../../ui/celebration.dart';
+import '../../core/analytics.dart';
 
 /// A bot's routines: one-time, repeating (cron in a timezone), or webhook-triggered.
 class RoutinesScreen extends ConsumerWidget {
@@ -203,6 +204,7 @@ class _RoutineCard extends ConsumerWidget {
                 key: Key('runRoutine-${r.id}'),
                 leadingIcon: const Icon(LucideIcons.play, size: 20),
                 onPressed: () async {
+                  Analytics.feature('routines_run_now');
                   final runId = await runGuarded(context, () => ref.read(backendProvider).runRoutine(r.id));
                   if (runId != null && context.mounted) {
                     final router = GoRouter.maybeOf(context);

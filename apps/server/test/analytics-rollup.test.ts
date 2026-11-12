@@ -42,6 +42,15 @@ it("rolls up yesterday: interactive runs per person, all runs per workspace, opt
     await tdb.admin`insert into public.runs (org_id, bot_id, created_by, trigger, status, cost_usd, created_at)
       values (${org.id}, ${bot.id}, ${a.id}, 'chat', 'completed', 9, '2027-02-02T23:00:00Z')`; // other day
 
+    // An approval decided by the person, and computer time in the workspace.
+    const runIdRows = await tdb.admin<
+      { id: string }[]
+    >`select id from public.runs where org_id = ${org.id} limit 1`;
+    await tdb.admin`insert into public.approvals (org_id, bot_id, run_id, call_id, tool_name, risk, status, decided_by, decided_at)
+      values (${org.id}, ${bot.id}, ${(runIdRows[0] as { id: string }).id}, 'c1', 'email.send', 'high', 'approved', ${a.id}, ${day.toISOString()})`;
+    await tdb.admin`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, created_at)
+      values (${org.id}, ${bot.id}, 'computer_seconds', 120, 0.01, ${day.toISOString()})`;
+
     // A workspace that opted out: its runs appear in neither rollup, even for a person who has not opted out.
     const quietRows = await tdb.admin<
       { id: string }[]
@@ -82,6 +91,10 @@ it("rolls up yesterday: interactive runs per person, all runs per workspace, opt
       runs_total: 4,
       runs_by_trigger_chat: 3,
       runs_by_trigger_routine: 1,
+      computer_seconds: 120,
+      approvals_approved: 1,
+      members_active: 2,
+      bots_active: 1,
     });
     // No text or names ever leave: only numbers.
     for (const e of rec.events)

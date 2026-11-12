@@ -5,6 +5,7 @@
  * make links open the app (the join landing page and the app-link association files).
  */
 import { randomBytes, randomInt } from "node:crypto";
+import { milestone, track } from "@casama/agent";
 import { PRODUCT_NAME, routes } from "@casama/contracts";
 import {
   contentKeys,
@@ -221,9 +222,20 @@ export function registerJoiningRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       )
     ).map((r) => r.user_id);
 
-  const audit = (orgId: string, actor: string, action: string, metadata: object) =>
-    db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+  const audit = async (orgId: string, actor: string, action: string, metadata: object) => {
+    await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
       values (${orgId}::uuid, 'user', ${actor}::uuid, ${action}, 'organization', ${orgId}::uuid, ${JSON.stringify(metadata)}::jsonb)`);
+    // Team growth (F7): ids and enums only (`via` is email, link, code or domain).
+    const via = (metadata as { via?: string }).via ?? null;
+    const events: Record<string, [string, Record<string, string | null>]> = {
+      "member.joined": ["member_joined", { via }],
+      "member.requested": ["join_requested", { via }],
+      "member.approved": ["join_request_decided", { decision: "approved" }],
+      "member.declined": ["join_request_decided", { decision: "declined" }],
+    };
+    const e = events[action];
+    if (e) track(db, { event: e[0], userId: actor, orgId, properties: e[1] });
+  };
 
   /** Tells the person who made the invite (and, for domain joins, the admins) who joined. */
   const announceJoin = async (orgId: string, joinerId: string, toUserIds: string[]) => {
@@ -268,6 +280,17 @@ export function registerJoiningRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
       values (${orgId}::uuid, 'user', ${claims.sub}::uuid, 'invite_link.created', 'invite_link', ${row.id}::uuid,
               ${JSON.stringify({ role: row.role, kind: row.kind, default: row.is_default, approval: row.requires_approval })}::jsonb)`);
+    track(db, {
+      event: "invite_created",
+      userId: claims.sub,
+      orgId,
+      properties: {
+        channel: row.is_default ? "standing_link" : row.kind,
+        role: row.role,
+        requires_approval: row.requires_approval,
+      },
+    });
+    milestone(db, claims.sub, "first_invite", orgId);
     return row;
   };
 
@@ -883,6 +906,13 @@ export async function createEmailInvite(
   );
   if (!invite) throw new Error("invite insert returned nothing");
   const sent = await sendInviteEmail(deps, orgId, invite.email, token);
+  track(deps.db, {
+    event: "invite_created",
+    userId: claims.sub,
+    orgId,
+    properties: { channel: "email", role: invite.role, email_sent: sent },
+  });
+  milestone(deps.db, claims.sub, "first_invite", orgId);
   return {
     id: invite.id,
     org_id: invite.org_id,

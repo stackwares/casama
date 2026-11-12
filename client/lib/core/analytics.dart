@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'analytics_events.g.dart';
 import 'telemetry.dart';
 
 /// Facade for product analytics (ANALYTICS-PLAN.md §4.2).
@@ -60,15 +61,12 @@ class Analytics {
 
   /// Identifies the user on PostHog when server is cloud and consent is given.
   static Future<void> identify(String userId) async {
-    if (!Telemetry.posthogOn) return;
+    if (!Telemetry.posthogOn || !Telemetry.isCloud) return;
     final consent = await isConsentEnabled();
     if (!consent) return;
     try {
       await Posthog().identify(
         userId: userId,
-        userProperties: {
-          'server_kind': 'cloud',
-        },
         userPropertiesSetOnce: {
           'signup_platform': Telemetry.platformName,
         },
@@ -107,8 +105,62 @@ class Analytics {
     } catch (_) {}
   }
 
+  /// [capture] without waiting, for call sites in UI handlers.
+  static void log(String event, [Map<String, Object?>? properties]) => unawaited(capture(event, properties: properties));
+
+  /// Errors already reported this session, as `code|screen`: each pair once, so a loop can't flood events.
+  static final _errorsShown = <String>{};
+
+  /// A failure the person saw. Only a stable code, the HTTP status, a coarse kind and the screen's route
+  /// template: never the message, which can carry names or text.
+  static void errorShown({String? code, int? status, required String kind}) {
+    final screen = Telemetry.currentScreen;
+    if (!_errorsShown.add('${code ?? kind}|$status|$screen')) return;
+    log('app_error_shown', {'error_code': code, 'http_status': status, 'kind': kind, 'screen': screen});
+  }
+
+  /// Once a day on a server that is not Casama Cloud: that the app was used, and which kind of server. This
+  /// and crash reports are all the official app sends there (ANALYTICS-PLAN §3).
+  static Future<void> dailyPing() async {
+    if (!Telemetry.posthogOn || Telemetry.isCloud) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final today = DateTime.now().toUtc().toIso8601String().substring(0, 10);
+      if (prefs.getString('casama.daily_ping') == today) return;
+      await prefs.setString('casama.daily_ping', today);
+      await capture('app_active_daily', properties: {'server_kind': Telemetry.serverKind});
+    } catch (_) {}
+  }
+
+  /// The closed list of `feature_used` features (ANALYTICS-PLAN §6.10): a new one is added here and in the catalog.
+  static const features = analyticsFeatures;
+
+  /// Pages that count as using a feature when opened (the route template, never ids).
+  static const routeFeatures = {
+    '/search': 'search',
+    '/pages': 'pages',
+    '/projects': 'projects',
+    '/tasks': 'tasks_board',
+    '/inbox': 'inbox',
+    '/computer/live': 'computer_live',
+    '/teach/:id': 'teach',
+    '/groups/:id': 'group_chat',
+    '/quick-ask': 'quick_ask',
+  };
+
+  /// [featureUsed] without waiting, for UI handlers.
+  static void feature(String name) => unawaited(featureUsed(name));
+
+  /// Counts a page as feature use, when it is one.
+  static void routeFeature(String route) {
+    final f = routeFeatures[route];
+    if (f != null) unawaited(featureUsed(f));
+  }
+
   /// Emits feature_used at most once per feature per day per device.
   static Future<void> featureUsed(String feature) async {
+    assert(features.contains(feature), 'Unknown feature: $feature');
+    if (!features.contains(feature)) return;
     if (!Telemetry.posthogOn) return;
     final consent = await isConsentEnabled();
     if (!consent) return;

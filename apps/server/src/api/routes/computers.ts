@@ -1,6 +1,6 @@
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
-import type { ComputerRow, ComputerService } from "@casama/agent";
+import { type ComputerRow, type ComputerService, milestone } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, schema, withUserSession } from "@casama/db";
 import { SandboxError } from "@casama/sandbox";
@@ -350,6 +350,7 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
           );
         throw err;
       });
+    milestone(db, claims.sub, "first_computer", body.org_id);
     return c.json(out(inserted[0] as Row), 201);
   });
 

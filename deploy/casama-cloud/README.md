@@ -29,6 +29,7 @@ All of these are in Vaultwarden. Never commit them, and never copy them to anoth
 | `COMPOSIO_API_KEY` (the **prod** key)                               | Composio API key: Casama org, casama_prod project           |
 | `CASAMA_LICENSE_KEY`                                                | Casama · enterprise license key (Casama Cloud)              |
 | `SENTRY_DSN`, `POSTHOG_API_KEY`                                     | Sentry and PostHog items (casama-server)                    |
+| `POSTHOG_PERSONAL_API_KEY`, `POSTHOG_PROJECT_ID`                    | A PostHog personal key with person write scope, and project 637030: deletes a purged account's analytics (D-208). Not created yet |
 | `GOOGLE_AI_API_KEY` (live calls without a key, D-177)               | Google AI Studio (Gemini API key) - Casama                  |
 | `CLOUD_MODEL_UPSTREAM_KEY` (OpenRouter on the Cloud account, D-186) | OpenRouter Casama workspace key                             |
 | `DODO_*`, `APP_STORE_*`, `GOOGLE_PLAY_*`                            | Once billing is set up (NEEDS-FROM-OLIVER, Phase 7)          |

@@ -9,6 +9,10 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- Usage analytics and crash reports for Casama Cloud and the official apps: one switch for people
+  (Settings → Privacy), one for workspace admins, crash reports and funnels in PostHog, no message
+  content ever; a self-hosted server sends nothing unless its owner turns it on.
+
 The first public release. Highlights:
 
 ### Bots and chat
