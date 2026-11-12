@@ -88,7 +88,6 @@ x-casama: &casama
     OAUTH_REDIRECT_URL: ${OAUTH_REDIRECT_URL:-}
     PHONE_CALLS: ${PHONE_CALLS:-}
     APNS_VOIP_TOPIC: ${APNS_VOIP_TOPIC:-}
-    POSTHOG_HOST: ${POSTHOG_HOST:-}
     LOG_LEVEL: ${LOG_LEVEL:-}
     # Shared by the API and the worker: encryption at rest (D-136) and the sign-up hook (D-145).
     CONTENT_ENCRYPTION_KEY: ${CONTENT_ENCRYPTION_KEY:-}
