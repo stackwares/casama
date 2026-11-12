@@ -9,11 +9,13 @@ FROM base AS deps
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY apps/supervisor/package.json apps/supervisor/
 COPY packages/sandbox/package.json packages/sandbox/
+COPY packages/observability/package.json packages/observability/
 RUN pnpm install --frozen-lockfile --prod --filter @casama/supervisor...
 
 FROM base AS runtime
 COPY --from=deps /app /app
 COPY packages/sandbox/src packages/sandbox/src
+COPY packages/observability/src packages/observability/src
 COPY apps/supervisor/src apps/supervisor/src
 WORKDIR /app/apps/supervisor
 EXPOSE 8788
