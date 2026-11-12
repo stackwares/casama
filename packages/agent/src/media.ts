@@ -19,6 +19,8 @@ export interface MediaResult {
 
 export interface MediaProvider {
   readonly id: string;
+  /** Whether it can make this kind of media (a router may have only one side). */
+  supports?(kind: "image" | "video"): boolean;
   generateImage(input: {
     prompt: string;
     size?: "square" | "portrait" | "landscape";
@@ -213,6 +215,9 @@ const ASPECT = { square: "1:1", portrait: "3:4", landscape: "16:9" } as const;
 
 export class OpenRouterMediaProvider implements MediaProvider {
   readonly id = "openrouter";
+  supports(kind: "image" | "video") {
+    return kind === "image";
+  }
   private readonly key: string;
   private readonly base: string;
   private readonly fetchImpl: typeof fetch;
@@ -284,6 +289,9 @@ export const GEMINI_VIDEO_PER_SECOND = 0.0695;
 
 export class GeminiVideoProvider implements MediaProvider {
   readonly id = "gemini";
+  supports(kind: "image" | "video") {
+    return kind === "video";
+  }
   private readonly key: string;
   private readonly base: string;
   private readonly fetchImpl: typeof fetch;
@@ -371,6 +379,10 @@ export class MediaRouter implements MediaProvider {
     this.images = images;
     this.video = video;
     this.id = images?.id ?? video?.id ?? "none";
+  }
+  supports(kind: "image" | "video") {
+    const side = kind === "image" ? this.images : this.video;
+    return !!side && side.supports?.(kind) !== false;
   }
   generateImage(input: Parameters<MediaProvider["generateImage"]>[0]) {
     if (!this.images) throw new Error("Images need an OpenRouter or fal.ai key in Model keys.");

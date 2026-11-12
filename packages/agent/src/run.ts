@@ -1177,6 +1177,7 @@ export function failureMessage(code: string, detail: string): string {
     no_model_configured: "This bot has no model set. Pick one in its settings.",
     model_auth_failed: "The model provider rejected the key. Check it in Settings → Model keys.",
     model_rate_limited: "The model provider is rate limiting this key. Try again in a minute.",
+    model_timeout: "The model took too long to answer. Try again in a moment.",
     chatgpt_plan_limit:
       "Your ChatGPT plan limit is reached. Check it under Manage usage in ChatGPT (Settings → Usage), or let this bot use its next model.",
     chatgpt_needs_reconnect:
@@ -2580,6 +2581,10 @@ async function approvalGate(
   } catch {
     return { approvalId: null }; // the tool step reports the error
   }
+  // A tool that can't run here (no key for it) reports that itself; asking first would only
+  // have someone approve something that then fails.
+  if (def.ready && !(await def.ready({ orgId: info.orgId, botId: info.botId }).catch(() => true)))
+    return { approvalId: null };
   const risk = def.riskFor?.(args as never) ?? def.risk;
   // Action rules (D-115): the most specific rule for this call decides before autonomy does.
   if (isCredentialChange(call.name, args))

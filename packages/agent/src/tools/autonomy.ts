@@ -765,6 +765,12 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     return path;
   }
 
+  /** Whether this workspace has a key that makes this kind of media. */
+  async function mediaReady(orgId: string, kind: "image" | "video") {
+    const provider = await deps.mediaFor?.(orgId);
+    return !!provider && provider.supports?.(kind) !== false;
+  }
+
   /** The saved file's name (the chat copy shares it, so a link to it isn't shown twice). */
   const fileName = (path: string | null, fallback: string) => path?.split("/").pop() || fallback;
 
@@ -792,13 +798,14 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       "Generate an image from a text prompt. The image is saved in your computer (media/) when you have one.",
     risk: "medium",
     confirm: true,
+    ready: (ctx) => mediaReady(ctx.orgId, "image"),
     schema: z.object({
       prompt: z.string().min(1).max(4000),
       size: z.enum(["square", "portrait", "landscape"]).optional(),
     }),
     async execute(args, ctx) {
       const provider = await deps.mediaFor?.(ctx.orgId);
-      if (!provider)
+      if (!provider || provider.supports?.("image") === false)
         throw new ToolError(
           "no_media_provider",
           "No image generation key is configured. Add an OpenRouter or fal.ai key in Model keys.",
@@ -833,13 +840,14 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       "Generate a short video clip from a text prompt (can take a few minutes). Saved in your computer (media/) when you have one.",
     risk: "medium",
     confirm: true,
+    ready: (ctx) => mediaReady(ctx.orgId, "video"),
     schema: z.object({
       prompt: z.string().min(1).max(4000),
       duration_s: z.number().int().min(1).max(20).optional(),
     }),
     async execute(args, ctx) {
       const provider = await deps.mediaFor?.(ctx.orgId);
-      if (!provider)
+      if (!provider || provider.supports?.("video") === false)
         throw new ToolError(
           "no_media_provider",
           "No video generation key is configured. Add a Google AI or fal.ai key in Model keys.",

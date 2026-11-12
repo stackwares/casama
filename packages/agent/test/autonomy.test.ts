@@ -387,6 +387,22 @@ describe("approvals", () => {
     expect(evs.at(-1)?.type).toBe("run.completed");
   });
 
+  it("without a media key nobody is asked to approve: the step says what's missing", async () => {
+    await tdb.admin`delete from public.model_credentials where org_id = ${orgId} and provider = 'fal'`;
+    try {
+      const botId = await makeBot("ArtistNoKey");
+      const runId = await startRun(botId, "make an image of a robot");
+      expect((await runAgent(runId, makeDeps(fix()).deps)).status).toBe("completed");
+      const evs = await events(runId);
+      expect(evs.some((e) => e.type === "approval.requested")).toBe(false);
+      expect(evs.find((e) => e.type === "tool.failed")?.payload).toMatchObject({
+        error_code: "no_media_provider",
+      });
+    } finally {
+      await tdb.admin`insert into public.model_credentials (org_id, provider, label, vault_secret_id) values (${orgId}, 'fal', 'fal', vault.create_secret('fal-key-123456'))`;
+    }
+  });
+
   it("approved media generation succeeds and is recorded; always-allow skips the next approval", async () => {
     const botId = await makeBot("Artist2");
     const runId = await startRun(botId, "make an image of a robot");

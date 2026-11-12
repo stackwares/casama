@@ -70,6 +70,11 @@ export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
   ) => Promise<Record<string, unknown>>;
   /** Its action category for action rules (D-115); otherwise guessed from the name. */
   category?: "send" | "pay" | "delete" | "publish" | "share" | "sign_in";
+  /**
+   * Whether the tool can run at all for this workspace (a key it needs is set up). When false,
+   * nobody is asked to approve it: it runs straight away and reports what's missing.
+   */
+  ready?: (ctx: { orgId: string; botId: string }) => Promise<boolean>;
   /** Raw JSON Schema for tools defined outside Zod (integration tools). */
   jsonSchema?: Record<string, unknown>;
   execute(args: z.infer<S>, ctx: ToolContext): Promise<ToolResult>;

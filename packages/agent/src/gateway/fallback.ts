@@ -17,7 +17,8 @@ export interface FallbackOptions {
 
 /**
  * Tries each model in order. Fails over on retryable errors (429, 5xx, timeouts) that happen
- * before any output was produced; once output has streamed, errors propagate.
+ * before any output was produced; once output has streamed, errors propagate. A bot with one
+ * model gets a second try of it, so one stalled request doesn't fail the run.
  */
 export function withFallback(
   inner: ModelGateway,
@@ -29,10 +30,11 @@ export function withFallback(
   const timeout = opts.firstTokenTimeoutMs ?? 60_000;
   if (chain.length === 0) throw new ModelCallError("no model configured", { retryable: false });
 
+  const attempts = chain.length === 1 ? [chain[0], chain[0]] : chain;
   return async function* stream(req: Omit<ModelRequest, "model">): AsyncIterable<GatewayEvent> {
     let lastError: unknown;
-    for (let i = 0; i < chain.length; i++) {
-      const model = chain[i] as ResolvedModel;
+    for (let i = 0; i < attempts.length; i++) {
+      const model = attempts[i] as ResolvedModel;
       if (i > 0) await sleep(backoff * 2 ** (i - 1));
       const ctrl = new AbortController();
       const onAbort = () => ctrl.abort(req.abortSignal?.reason);
@@ -56,10 +58,23 @@ export function withFallback(
       } catch (err) {
         if (req.abortSignal?.aborted) throw err;
         const timedOut = ctrl.signal.aborted && !req.abortSignal?.aborted;
+        // A stall reads as "took too long", not as the abort that ended it.
+        const failure = timedOut
+          ? new ModelCallError(`${model.model} sent nothing for ${Math.round(timeout / 1000)} s`, {
+              retryable: true,
+              code: "model_timeout",
+              cause: err,
+            })
+          : err;
         const retryable = timedOut || (err instanceof ModelCallError ? err.retryable : true);
-        opts.onAttempt?.({ model: model.model, attempt: i, error: (err as Error).message, err });
-        lastError = err;
-        if (produced || !retryable) throw err;
+        opts.onAttempt?.({
+          model: model.model,
+          attempt: i,
+          error: (failure as Error).message,
+          err: failure,
+        });
+        lastError = failure;
+        if (produced || !retryable) throw failure;
       } finally {
         if (timer) clearTimeout(timer);
         req.abortSignal?.removeEventListener("abort", onAbort);
