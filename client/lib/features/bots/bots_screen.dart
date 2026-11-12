@@ -577,42 +577,24 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (!widget.embedded)
-            Row(
-              children: [
-                AnimatedSwitcher(
-                  duration: AppMotion.of(context, AppMotion.fast),
-                  child: BotAvatar(
-                    key: ValueKey('${_finalName(context)}|$_avatar'),
-                    name: _finalName(context),
-                    avatar: _avatar,
-                    size: 52,
-                  ),
-                ),
-                const SizedBox(width: AppSpace.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.newBot,
-                        style: context.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                      Text(
-                        l10n.newBotSubtitle,
-                        style: context.textTheme.bodyMedium?.copyWith(
-                          color: context.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          if (!widget.embedded) ...[
+            Text(
+              l10n.newBot,
+              style: context.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+              ),
             ),
-          if (!widget.embedded) const SizedBox(height: AppSpace.lg),
+            const SizedBox(height: 2),
+            Text(
+              l10n.newBotSubtitle,
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: context.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpace.lg),
+          ],
+          // 1. What it does: a persona fills in the instructions, name and icon below.
           TemplatePicker(
             selected: _templateId,
             onChanged: (t) => setState(() {
@@ -625,57 +607,73 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
               _autoPersona = t?.persona;
               if (t?.mascot != null) _avatar = 'mascot:${t!.mascot}';
             }),
+            instructions: _InstructionsField(controller: _persona),
           ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _name,
-            decoration: InputDecoration(
-              labelText: l10n.botName,
-              hintText: l10n.defaultBotName,
-            ),
-            onChanged: (_) => setState(() {}),
-          ),
-          const SizedBox(height: AppSpace.sm),
-          Text(
-            l10n.botIcon,
-            style: context.textTheme.labelLarge?.copyWith(
-              color: context.colorScheme.onSurfaceVariant,
-            ),
-          ),
+          const SizedBox(height: AppSpace.lg),
+          // 2. Who it is: name and icon, with a live preview.
+          _FormLabel(l10n.botIdentity),
           const SizedBox(height: AppSpace.xs),
-          MascotPicker(
-            value: _avatar,
-            initials: botInitials(_finalName(context)),
-            initialsLabel: l10n.botIconInitials,
-            onChanged: (v) => setState(() => _avatar = v),
+          AppCard(
+            padding: const EdgeInsets.all(AppSpace.md),
+            color: context.isDark
+                ? context.colorScheme.surfaceContainer
+                : context.colorScheme.surfaceContainerLowest,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    AnimatedSwitcher(
+                      duration: AppMotion.of(context, AppMotion.fast),
+                      child: BotAvatar(
+                        key: ValueKey('${_finalName(context)}|$_avatar'),
+                        name: _finalName(context),
+                        avatar: _avatar,
+                        size: 52,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpace.sm),
+                    Expanded(
+                      child: TextField(
+                        controller: _name,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: InputDecoration(
+                          labelText: l10n.botName,
+                          hintText: l10n.defaultBotName,
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpace.sm),
+                MascotPicker(
+                  value: _avatar,
+                  scrollable: true,
+                  initials: botInitials(_finalName(context)),
+                  initialsLabel: l10n.botIconInitials,
+                  onChanged: (v) => setState(() => _avatar = v),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: AppSpace.sm),
           // A missing key is a required step, so it's asked for in plain sight.
           if (needsKey) ...[
+            const SizedBox(height: AppSpace.lg),
             Text(
               l10n.addModelKeyFirst,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 8),
             AddKeyForm(onAdded: () => ref.invalidate(credentialsProvider)),
-            const SizedBox(height: 8),
           ] else if (_modelInSight && !fixedModel) ...[
+            const SizedBox(height: AppSpace.lg),
             ...keyFields,
-            const SizedBox(height: 8),
           ],
-          TextField(
-            key: const Key('botInstructions'),
-            controller: _persona,
-            decoration: InputDecoration(
-              labelText: l10n.persona,
-              hintText: l10n.personaHint,
-              alignLabelWithHint: true,
-            ),
-            minLines: 3,
-            maxLines: 8,
-          ),
-          // The key and model already picked for you, folded until asked for (D-182).
-          if (!needsKey && !_modelInSight && !fixedModel)
+          // The key and model already picked for you, folded until asked for (D-182). Casama
+          // Cloud has none to show (D-188).
+          if (!needsKey && !_modelInSight && !fixedModel) ...[
+            const SizedBox(height: AppSpace.xs),
             AdvancedSection(
               id: 'bot.create',
               summary: l10n.createBotAdvancedSummary,
@@ -684,8 +682,8 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
                 ...keyFields,
               ],
             ),
-          const SizedBox(height: 12),
-          const SizedBox(height: AppSpace.xs),
+          ],
+          const SizedBox(height: AppSpace.lg),
           GlowButton(
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(50),
@@ -730,6 +728,71 @@ class _CreateBotSheetState extends ConsumerState<CreateBotSheet> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A small heading over a part of the new-bot form.
+class _FormLabel extends StatelessWidget {
+  const _FormLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsetsDirectional.only(start: AppSpace.xxs),
+    child: Text(
+      text,
+      style: context.textTheme.labelLarge?.copyWith(
+        color: context.colorScheme.onSurfaceVariant,
+        fontWeight: FontWeight.w700,
+      ),
+    ),
+  );
+}
+
+/// The bot's instructions, written inside the persona card: a plain text area under a small
+/// heading, with no box of its own.
+class _InstructionsField extends StatelessWidget {
+  const _InstructionsField({required this.controller});
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Icon(LucideIcons.scrollText, size: 14, color: scheme.onSurfaceVariant),
+            const SizedBox(width: AppSpace.xxs + 2),
+            Text(
+              context.l10n.persona,
+              style: context.textTheme.labelMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        TextField(
+          key: const Key('botInstructions'),
+          controller: controller,
+          minLines: 3,
+          maxLines: 8,
+          style: context.textTheme.bodyMedium?.copyWith(height: 1.45),
+          decoration: InputDecoration(
+            hintText: context.l10n.personaHint,
+            hintMaxLines: 3,
+            filled: false,
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            isDense: true,
+            contentPadding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
+          ),
+        ),
+      ],
     );
   }
 }

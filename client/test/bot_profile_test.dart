@@ -92,6 +92,8 @@ void main() {
     expect(find.text('Model key'), findsNothing);
     expect(find.byKey(const Key('modelPicker')), findsNothing);
     expect(find.byKey(const Key('autonomy-ask_risky')), findsOneWidget);
+    // Casama chooses the model, so its name isn't shown under the bot's name either.
+    expect(tester.widget<Text>(find.byKey(const Key('botProfileStatus'))).data, isNot(contains('·')));
   });
 
   testWidgets('on a self-hosted server the profile lets you choose the key and model', (tester) async {

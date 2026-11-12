@@ -5398,6 +5398,42 @@ abstract class AppLocalizations {
   /// **'Browse'**
   String get browse;
 
+  /// No description provided for @browseAllPersonas.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse all'**
+  String get browseAllPersonas;
+
+  /// No description provided for @botIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Name and icon'**
+  String get botIdentity;
+
+  /// No description provided for @serviceKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Service keys'**
+  String get serviceKeys;
+
+  /// No description provided for @noServiceKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'No service keys yet.'**
+  String get noServiceKeys;
+
+  /// No description provided for @serviceKeysHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own search, maps or data keys'**
+  String get serviceKeysHelp;
+
+  /// No description provided for @serviceKeysIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama runs the models, voice and images for you. Add a key here only to use your own search, maps or data service. Keys are stored encrypted and never shown again.'**
+  String get serviceKeysIntro;
+
   /// No description provided for @choosePersona.
   ///
   /// In en, this message translates to:

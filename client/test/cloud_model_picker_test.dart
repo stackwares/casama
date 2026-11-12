@@ -62,4 +62,28 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('modelSearch')), findsOneWidget);
   });
+
+  testWidgets('Casama Cloud\'s keys page offers only search, maps and data keys', (tester) async {
+    final backend = FakeBackend()..billingEnabled = true;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          backendProvider.overrideWithValue(backend),
+          billingProvider.overrideWith((ref) async => backend.billing('org')),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const ModelKeysScreen(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Service keys'), findsWidgets);
+    expect(find.text('Model keys'), findsNothing);
+    // The workspace's OpenRouter key does nothing on Cloud, so it isn't listed; no ChatGPT sign-in.
+    expect(find.text('No service keys yet.'), findsOneWidget);
+    expect(find.text('OpenRouter'), findsNothing);
+    expect(find.text('Brave Search'), findsOneWidget);
+  });
 }

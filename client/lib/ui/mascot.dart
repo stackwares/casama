@@ -3,6 +3,9 @@ import 'dart:math';
 import 'package:material_ui/material_ui.dart';
 import 'package:lottie/lottie.dart';
 
+import 'edge_fade.dart';
+import 'reveal_when_selected.dart';
+
 /// The Casama cloud bots. Art lives in assets/mascots, made from the SVGs in assets/bots:
 /// `<name>.json` is the 8 second loop as Lottie (scripts/casama-mascot-lottie.py) and `<name>.png` the
 /// still pose (scripts/casama-mascot-render.mjs).
@@ -160,6 +163,7 @@ class MascotPicker extends StatelessWidget {
     required this.onChanged,
     required this.initials,
     this.initialsLabel = 'Initials',
+    this.scrollable = false,
   });
 
   final String? value;
@@ -169,13 +173,13 @@ class MascotPicker extends StatelessWidget {
   final String initials;
   final String initialsLabel;
 
+  /// One row that scrolls sideways (a compact form) instead of wrapping onto more lines.
+  final bool scrollable;
+
   @override
   Widget build(BuildContext context) {
     final selected = Mascot.fromAvatar(value);
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
+    final choices = [
         _Choice(
           label: initialsLabel,
           selected: selected == null,
@@ -196,7 +200,27 @@ class MascotPicker extends StatelessWidget {
             onTap: () => onChanged(m.avatarValue),
             child: MascotImage(m, size: 44, animate: m == selected),
           ),
-      ],
+    ];
+    if (!scrollable) {
+      return Wrap(spacing: 8, runSpacing: 8, children: choices);
+    }
+    return SizedBox(
+      height: 60,
+      child: EdgeFade(
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          children: [
+            for (final (i, c) in choices.indexed)
+              Padding(
+                padding: const EdgeInsetsDirectional.only(end: 8),
+                child: RevealWhenSelected(
+                  selected: i == 0 ? selected == null : Mascot.values[i - 1] == selected,
+                  child: Center(child: c),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/display_text.dart';
+import '../../core/haptics.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -74,83 +75,190 @@ class PersonaChoice {
   final Template? template;
 }
 
-/// Starter personas (instructions, skills, routines, a mascot) shown as a field that opens a
-/// searchable gallery; null means a blank bot.
+/// The new-bot sheet's persona section: a row of quick picks, the chosen persona (tap to browse the
+/// full gallery) and, in the same card, the instructions it fills in ([instructions]). Null
+/// [selected] means a blank bot.
 class TemplatePicker extends ConsumerWidget {
-  const TemplatePicker({super.key, required this.selected, required this.onChanged});
+  const TemplatePicker({super.key, required this.selected, required this.onChanged, this.instructions});
   final String? selected;
   final void Function(Template? template) onChanged;
+
+  /// Shown inside the persona card, under the chosen persona: the instructions field.
+  final Widget? instructions;
+
+  /// How many personas the quick-pick row offers before "Browse all".
+  static const _quickPicks = 6;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     final templatesValue = ref.watch(templatesProvider);
-    if (templatesValue.hasError && !templatesValue.hasValue) return InlineError(error: templatesValue.error!, onRetry: () => ref.invalidate(templatesProvider));
     final templates = templatesValue.value ?? const <Template>[];
-    if (templates.isEmpty) return const SizedBox.shrink();
     Template? current;
     for (final t in templates) {
       if (t.id == selected) current = t;
     }
+    Future<void> browse() async {
+      final choice = await showPersonaGallery(context, selected: selected);
+      if (choice != null) onChanged(choice.template);
+    }
+
+    // The chosen persona always has a chip, even when it came from the full gallery.
+    final picks = [
+      ?current,
+      ...templates.where((t) => t.id != current?.id).take(_quickPicks - (current == null ? 0 : 1)),
+    ];
+    final hasPersonas = templates.isNotEmpty;
+    final card = Material(
+      color: context.isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        side: BorderSide(color: context.appColors.hairline),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (hasPersonas)
+            InkWell(
+              key: const Key('personaPicker'),
+              onTap: browse,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.md, AppSpace.sm, AppSpace.md),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AnimatedSwitcher(
+                      duration: AppMotion.of(context, AppMotion.fast),
+                      child: _PersonaIcon(key: ValueKey(current?.id), template: current, size: 44),
+                    ),
+                    const SizedBox(width: AppSpace.sm),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(current?.name ?? l10n.blankBot, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 2),
+                          Text(
+                            current?.description ?? l10n.blankBotHelp,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                          ),
+                          if (current != null && current.routines.isNotEmpty) ...[
+                            const SizedBox(height: AppSpace.xxs),
+                            Row(
+                              children: [
+                                Icon(LucideIcons.alarmClock, size: 13, color: scheme.tertiary),
+                                const SizedBox(width: AppSpace.xxs),
+                                Expanded(
+                                  child: Text(
+                                    l10n.templateIncludesRoutines(current.routines.map((r) => r.name).join(', ')),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: context.textTheme.labelSmall?.copyWith(color: scheme.tertiary),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Icon(LucideIcons.chevronRight, size: 18, color: scheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          if (hasPersonas && instructions != null) Divider(height: 1, color: context.appColors.hairline),
+          if (instructions != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.sm, AppSpace.md, AppSpace.sm),
+              child: instructions,
+            ),
+        ],
+      ),
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(l10n.startFrom, style: context.textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant)),
-        const SizedBox(height: AppSpace.xs),
-        Material(
-          color: context.isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.tile),
-            side: BorderSide(color: current == null ? context.appColors.hairline : scheme.primary.withValues(alpha: 0.5)),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            key: const Key('personaPicker'),
-            onTap: () async {
-              final choice = await showPersonaGallery(context, selected: selected);
-              if (choice != null) onChanged(choice.template);
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpace.sm),
-              child: Row(
+        Row(
+          children: [
+            Expanded(child: _SectionLabel(l10n.startFrom)),
+            if (hasPersonas)
+              TextButton.icon(
+                key: const Key('browsePersonas'),
+                style: TextButton.styleFrom(visualDensity: VisualDensity.compact, padding: const EdgeInsets.symmetric(horizontal: AppSpace.xs)),
+                onPressed: browse,
+                iconAlignment: IconAlignment.end,
+                icon: const Icon(LucideIcons.chevronRight, size: 16),
+                label: Text(l10n.browseAllPersonas),
+              ),
+          ],
+        ),
+        if (templatesValue.hasError && !templatesValue.hasValue) ...[
+          InlineError(error: templatesValue.error!, onRetry: () => ref.invalidate(templatesProvider)),
+          const SizedBox(height: AppSpace.xs),
+        ],
+        if (hasPersonas) ...[
+          SizedBox(
+            height: 40,
+            child: EdgeFade(
+              child: ListView(
+                scrollDirection: Axis.horizontal,
                 children: [
-                  _PersonaIcon(template: current, size: 44),
-                  const SizedBox(width: AppSpace.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(current?.name ?? l10n.blankBot, style: context.textTheme.titleSmall),
-                        Text(
-                          current == null
-                              ? l10n.blankBotHelp
-                              : [
-                                  current.description,
-                                  if (current.routines.isNotEmpty) l10n.templateIncludesRoutines(current.routines.map((r) => r.name).join(', ')),
-                                ].join(' '),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                  for (final t in [null, ...picks])
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(end: AppSpace.xs),
+                      child: RevealWhenSelected(
+                        selected: t?.id == current?.id,
+                        child: ChoiceChip(
+                          key: Key('personaChip-${t?.id ?? 'blank'}'),
+                          showCheckmark: false,
+                          selected: t?.id == current?.id,
+                          avatar: Icon(t == null ? LucideIcons.filePlus2 : personaIcon(t.icon), size: 16),
+                          label: Text(t?.name ?? l10n.blankBot),
+                          onSelected: (_) {
+                            HapticsHelper.selection();
+                            onChanged(t);
+                          },
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpace.xs),
-                  Text(l10n.browse, style: context.textTheme.labelLarge?.copyWith(color: scheme.primary)),
-                  Icon(LucideIcons.chevronRight, size: 18, color: scheme.primary),
                 ],
               ),
             ),
           ),
-        ),
+          const SizedBox(height: AppSpace.sm),
+        ],
+        card,
       ],
     );
   }
 }
 
+/// A small heading over a part of a form.
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsetsDirectional.only(start: AppSpace.xxs),
+    child: Text(
+      text,
+      style: context.textTheme.labelLarge?.copyWith(color: context.colorScheme.onSurfaceVariant, fontWeight: FontWeight.w700),
+    ),
+  );
+}
+
 class _PersonaIcon extends StatelessWidget {
-  const _PersonaIcon({required this.template, this.size = 44});
+  const _PersonaIcon({super.key, required this.template, this.size = 44});
   final Template? template;
   final double size;
 

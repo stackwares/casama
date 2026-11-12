@@ -923,6 +923,45 @@ void main() {
     },
   );
 
+  testWidgets('a quick-pick persona chip fills in the instructions, name and icon', (
+    tester,
+  ) async {
+    await setSize(tester, const Size(600, 1000));
+    final backend = FakeBackend();
+    await tester.pumpWidget(
+      harness(backend, const Scaffold(body: CreateBotSheet())),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('personaChip-blank')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('personaChip-daily-briefing')));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('botInstructions')))
+          .controller!
+          .text,
+      'You prepare short briefings.',
+    );
+    expect(
+      tester
+          .widget<TextField>(find.widgetWithText(TextField, 'Bot name'))
+          .controller!
+          .text,
+      'Daily briefing',
+    );
+    expect(find.textContaining('Includes routines: Morning summary.'), findsOneWidget);
+    // Back to Blank clears what the persona filled in.
+    await tester.tap(find.byKey(const Key('personaChip-blank')));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<TextField>(find.byKey(const Key('botInstructions')))
+          .controller!
+          .text,
+      '',
+    );
+  });
+
   testWidgets('without a model key the new-bot sheet offers to add one', (
     tester,
   ) async {

@@ -2532,3 +2532,18 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 - **New group chat sheet:** a strip at the top shows the group so far, the lead first with a crown; tapping another bot there makes it the lead and its small x takes it out. The name field shows the name an unnamed group will go by. The bot list has faces, what each bot is doing, a check that shows the order it joins in (a crown for the lead) and a live "n / 10" count; once ten are picked the rest dim. A search field appears past six bots. The note under it says what's missing (pick n more), that the group is full, or what the lead does. Archived bots aren't offered.
 - **Local MCP servers stay visible on phones and the web:** they run on the desktop through computerd and the tunnel (D-096), so a bot reached from any device can use them while that computer is online. Adding one stays desktop-only.
 - **Tests:** `voice.test.ts` (speak first and the greeting in the instructions), `group_chats_test.dart` (change the lead, remove from the strip, button off until two bots).
+
+## D-233 Casama Cloud shows no provider or model anywhere; the new-bot sheet leads with the persona
+
+- **Why** (Oliver, 2026-11-12): on Casama Cloud nobody can change the provider or model (D-188), so showing them only adds noise. The new-bot sheet should be as simple as it can be.
+- **Cloud (billing on):**
+  - The bot profile no longer names the model under the bot's name.
+  - Settings shows **Service keys** ("Your own search, maps or data keys") instead of Model keys. The page lists and adds only Brave Search, Tavily, Google Maps, Mapbox and Treg (`cloudKeyProviders`). Chat, voice and media keys, the Casama Cloud row and ChatGPT sign-in are hidden. The web tab title follows. Casama Cloud will soon supply these keys too: remove each provider from `cloudKeyProviders` once it does. When the list is empty, the Settings row disappears.
+  - A failed run's one-tap fix no longer points at keys or "Choose a model". Out of credits still leads to plans.
+  - Already hidden before this (D-188): key and model fields in the new-bot sheet, bot profile, template import and agent import, and voice provider menus.
+- **New-bot sheet, top to bottom:**
+  1. Title and subtitle.
+  2. **Persona:** a row of quick-pick chips (Blank plus up to six personas, with the chosen one always included) and "Browse all" for the gallery. Below that, one card shows the chosen persona (with its routines) and holds the instructions it fills in. Picking a persona fills in the instructions, name and icon further down.
+  3. **Name and icon:** one card with a live avatar next to the name field, and the mascots in one row that scrolls sideways (`MascotPicker(scrollable: true)`) instead of wrapping.
+  4. Advanced (key and model, self-hosted only), then Create.
+- **Tests:** `autonomy_test.dart` (quick-pick chip fills persona, name and routines; Blank clears them), `cloud_model_picker_test.dart` (Cloud keys page), `bot_profile_test.dart` (no model name on Cloud).

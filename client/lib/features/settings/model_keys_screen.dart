@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/display_text.dart';
+import '../../core/billing.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../core/haptics.dart';
@@ -74,6 +75,17 @@ final moreKeyProviders = [
         !chatKeyProviders.contains(p) &&
         !_moreKeyOrder.contains(p))
       p,
+];
+
+/// The only keys worth adding on Casama Cloud, which runs every model, voice and image itself (D-188).
+/// Remove a provider here once Casama Cloud supplies its key; when the list is empty, Settings hides
+/// the Service keys row.
+const cloudKeyProviders = [
+  ProviderId.braveSearch,
+  ProviderId.tavily,
+  ProviderId.googleMaps,
+  ProviderId.mapbox,
+  ProviderId.treg,
 ];
 
 /// Keys added by pasting a key (a ChatGPT plan is connected by signing in instead).
@@ -189,8 +201,11 @@ String? _providerHint(BuildContext context, ProviderId p) => switch (p) {
 
 /// Form to add a model key; the key goes to Vault and is never shown again.
 class AddKeyForm extends ConsumerStatefulWidget {
-  const AddKeyForm({super.key, required this.onAdded, this.initialProvider});
+  const AddKeyForm({super.key, required this.onAdded, this.initialProvider, this.providers});
   final VoidCallback onAdded;
+
+  /// Limits the form to these providers, with no ChatGPT sign-in (Casama Cloud). Null offers all.
+  final List<ProviderId>? providers;
 
   /// The provider picked when the form opens (from a link such as "Use a local model").
   final ProviderId? initialProvider;
@@ -200,9 +215,9 @@ class AddKeyForm extends ConsumerStatefulWidget {
 }
 
 class _AddKeyFormState extends ConsumerState<AddKeyForm> {
-  late var _provider = keyProviders.contains(widget.initialProvider)
+  late var _provider = (widget.providers ?? keyProviders).contains(widget.initialProvider)
       ? widget.initialProvider!
-      : ProviderId.openrouter;
+      : widget.providers?.first ?? ProviderId.openrouter;
   final _label = TextEditingController(text: 'Main');
   final _key = TextEditingController();
   final _baseUrl = TextEditingController();
@@ -265,7 +280,8 @@ class _AddKeyFormState extends ConsumerState<AddKeyForm> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final compatible = _provider == ProviderId.openaiCompatible;
-    final chatGpt = ref.watch(backendProvider).chatGptSignIn;
+    final only = widget.providers;
+    final chatGpt = only == null && ref.watch(backendProvider).chatGptSignIn;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: AppSpace.md,
@@ -297,7 +313,9 @@ class _AddKeyFormState extends ConsumerState<AddKeyForm> {
             prefixIcon: const Icon(LucideIcons.network, size: 20),
           ),
           // Chat models first; voice, search, maps and the rest under a "More providers" heading (D-182).
-          items: [
+          items: only != null
+              ? [for (final p in only) _providerItem(context, p)]
+              : [
             for (final p in chatKeyProviders) _providerItem(context, p),
             DropdownMenuItem<ProviderId>(
               key: const Key('moreProviders'),
@@ -318,7 +336,9 @@ class _AddKeyFormState extends ConsumerState<AddKeyForm> {
             ),
             for (final p in moreKeyProviders) _providerItem(context, p),
           ],
-          selectedItemBuilder: (context) => [
+          selectedItemBuilder: (context) => only != null
+              ? [for (final p in only) Text(providerLabel(p))]
+              : [
             for (final p in chatKeyProviders) Text(providerLabel(p)),
             const SizedBox.shrink(),
             for (final p in moreKeyProviders) Text(providerLabel(p)),
@@ -407,10 +427,12 @@ class ModelKeysScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final keys = ref.watch(credentialsProvider);
     final org = ref.watch(currentOrgProvider);
+    // Casama Cloud runs every model, voice and image (D-188): only service keys are left to manage.
+    final cloud = ref.watch(billingProvider).value?.enabled == true;
     return SubPage(
-      title: l10n.modelKeys,
+      title: cloud ? l10n.serviceKeys : l10n.modelKeys,
       children: [
-        FormNote(l10n.modelKeysIntro),
+        FormNote(cloud ? l10n.serviceKeysIntro : l10n.modelKeysIntro),
         // Keys are per workspace; say which, so a new workspace's empty list isn't a surprise.
         if (org != null) ...[
           const SizedBox(height: AppSpace.xs),
@@ -421,13 +443,15 @@ class ModelKeysScreen extends ConsumerWidget {
           value: keys,
           onRetry: () => ref.invalidate(credentialsProvider),
           data: (items) {
-            final ordered = [
-              ...items.where((k) => k.id == casamaCloudCredentialId),
-              ...items.where((k) => k.id != casamaCloudCredentialId),
-            ];
+            final ordered = cloud
+                ? items.where((k) => cloudKeyProviders.contains(k.provider)).toList()
+                : [
+                    ...items.where((k) => k.id == casamaCloudCredentialId),
+                    ...items.where((k) => k.id != casamaCloudCredentialId),
+                  ];
             return ordered.isEmpty
                 ? AppCard(
-                    child: FormNote(l10n.noKeys, icon: LucideIcons.keyRound),
+                    child: FormNote(cloud ? l10n.noServiceKeys : l10n.noKeys, icon: LucideIcons.keyRound),
                   )
                 : GroupedCard(
                     children: [for (final k in ordered) _KeyRow(credential: k)],
@@ -438,6 +462,7 @@ class ModelKeysScreen extends ConsumerWidget {
         AppCard(
           padding: const EdgeInsets.all(AppSpace.lg),
           child: AddKeyForm(
+            providers: cloud ? cloudKeyProviders : null,
             initialProvider: ProviderId.values
                 .where((p) => p.value == provider)
                 .firstOrNull,

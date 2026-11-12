@@ -8,6 +8,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../core/billing.dart';
 import '../../../core/providers.dart';
 import '../../../core/share.dart';
 import '../../../core/widgets.dart';
@@ -38,6 +39,8 @@ const limitErrors = {'out_of_credits', 'quota_exceeded', 'cloud_daily_cap', 'com
   if (entry.kind != NoticeKind.failed || code == null) return null;
   final keys = (route: '/settings/keys', label: context.l10n.addModelKeyTitle);
   if (limitErrors.contains(code)) return (route: '/settings/billing', label: context.l10n.seePlans);
+  // Casama Cloud runs on its own key and model (D-188): there's nothing for a person to change.
+  if (ref.read(billingProvider).value?.enabled == true) return null;
   if (_keyErrors.contains(code)) return keys;
   if (code != 'no_model_configured') return null;
   final hasKeys = ref.read(credentialsProvider).value?.isNotEmpty ?? false;

@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../voice/call_tools_sheet.dart';
 import '../chat/chat_detail.dart';
 import '../../core/billing.dart';
+import 'model_keys_screen.dart';
 import '../../core/mac_bridge.dart';
 import '../../core/updater.dart';
 import '../../core/display_text.dart';
@@ -250,7 +251,13 @@ class SettingsScreen extends ConsumerWidget {
                     onTap: () => open('/settings/integrations'), selected: sel('/settings/integrations'),
                   ),
                   GroupedTile(icon: LucideIcons.bookOpen, title: l10n.skills, subtitle: l10n.skillsRowHelp, onTap: () => open('/settings/skills'), selected: sel('/settings/skills')),
-                  GroupedTile(icon: LucideIcons.keyRound, title: l10n.modelKeys, subtitle: l10n.modelKeysHelp, onTap: () => open('/settings/keys'), selected: sel('/settings/keys')),
+                  // Casama Cloud runs the models (D-188): only search, maps and data keys are left to add.
+                  // Once Casama Cloud covers every key itself, the row goes away.
+                  if (ref.watch(billingProvider).value?.enabled == true) ...[
+                    if (cloudKeyProviders.isNotEmpty)
+                    GroupedTile(icon: LucideIcons.keyRound, title: l10n.serviceKeys, subtitle: l10n.serviceKeysHelp, onTap: () => open('/settings/keys'), selected: sel('/settings/keys')),
+                  ] else
+                    GroupedTile(icon: LucideIcons.keyRound, title: l10n.modelKeys, subtitle: l10n.modelKeysHelp, onTap: () => open('/settings/keys'), selected: sel('/settings/keys')),
                 ],
               ),
               SectionHeader(title: l10n.settingsSecuritySection),

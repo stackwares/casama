@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import 'providers.dart';
+import 'telemetry.dart';
 
 /// Web: the browser tab names the open page ("Settings · Casama", "Memory · Ada · Casama"), so open tabs,
 /// history and bookmarks can be told apart. It sits in MaterialApp's builder, above every page, and
@@ -140,7 +141,8 @@ String tabTitleFor(String? fullPath, AppLocalizations l10n, {String? botName}) {
     '/computer' => l10n.computerTitle,
     '/computer/live' => l10n.liveView,
     '/settings' => l10n.settings,
-    '/settings/keys' => l10n.modelKeys,
+    // Casama Cloud runs the models (D-188), so its keys page holds only service keys.
+    '/settings/keys' => Telemetry.isCloud ? l10n.serviceKeys : l10n.modelKeys,
     '/settings/appearance' => l10n.appearance,
     '/settings/appearance/customize' => l10n.customize,
     '/settings/usage' => l10n.usage,

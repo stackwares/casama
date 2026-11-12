@@ -3478,6 +3478,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get browse => 'Browse';
 
   @override
+  String get browseAllPersonas => 'Browse all';
+
+  @override
+  String get botIdentity => 'Name and icon';
+
+  @override
+  String get serviceKeys => 'Service keys';
+
+  @override
+  String get noServiceKeys => 'No service keys yet.';
+
+  @override
+  String get serviceKeysHelp => 'Your own search, maps or data keys';
+
+  @override
+  String get serviceKeysIntro =>
+      'Casama runs the models, voice and images for you. Add a key here only to use your own search, maps or data service. Keys are stored encrypted and never shown again.';
+
+  @override
   String get choosePersona => 'Choose a persona';
 
   @override

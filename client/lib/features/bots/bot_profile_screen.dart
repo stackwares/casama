@@ -156,7 +156,8 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
         .toList();
     final dirty = _dirty(bot);
     final name = _name!.text.trim().isEmpty ? bot.name : _name!.text.trim();
-    final model = _modelLabel(bot);
+    // Casama Cloud chooses the model (D-188), so its name isn't shown there.
+    final model = casamaModelFixed(ref) ? '' : _modelLabel(bot);
     final levels = [
       (
         'ask_always',
