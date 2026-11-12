@@ -12,6 +12,7 @@ import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
+import { withTimeout } from "./safe-fetch.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
 
 /** Allowed over the approved amount (taxes, rounding). */
@@ -79,7 +80,7 @@ export class StripeIssuingProvider implements PaymentProvider {
       key: o.secretKey,
       cardholder: o.cardholderId,
       api: (o.apiUrl ?? "https://api.stripe.com").replace(/\/$/, ""),
-      fetch: o.fetch ?? fetch,
+      fetch: withTimeout(o.fetch ?? fetch, 30_000),
     };
   }
   private async req<T>(method: string, path: string, params?: Array<[string, string]>) {

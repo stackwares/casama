@@ -353,7 +353,7 @@ class SupabaseBackend implements Backend {
       RegExp(r'/rest/v1/?$'),
       '/auth/v1',
     );
-    final r = await Dio().get<Map<String, dynamic>>(
+    final r = await Dio(BaseOptions(connectTimeout: const Duration(seconds: 10), receiveTimeout: const Duration(seconds: 15))).get<Map<String, dynamic>>(
       '$authUrl/settings',
       options: Options(headers: supabase.headers),
     );

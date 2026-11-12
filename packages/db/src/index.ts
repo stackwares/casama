@@ -26,12 +26,21 @@ export interface DbHandle {
   close(): Promise<void>;
 }
 
+/** Per-connection limits, so one runaway query or forgotten transaction can't hold a pool slot forever. */
+export const DB_TIMEOUTS = { statementMs: 60_000, idleInTransactionMs: 60_000, connectS: 10 };
+
 export function createDb(url: string, opts: { max?: number } = {}): DbHandle {
   // Encrypted content (D-136) is decrypted as rows are read.
   const client = postgres(url, {
     max: opts.max ?? 10,
     onnotice: () => {},
     prepare: false,
+    connect_timeout: DB_TIMEOUTS.connectS,
+    // Paths that legitimately run longer (computer provisioning, privacy sweeps) lift these with liftTimeouts.
+    connection: {
+      statement_timeout: DB_TIMEOUTS.statementMs,
+      idle_in_transaction_session_timeout: DB_TIMEOUTS.idleInTransactionMs,
+    },
     transform: { value: { from: (v: unknown) => contentKeys.open(v) } },
   });
   const db = drizzle(client, { schema: fullSchema });
@@ -52,6 +61,24 @@ export async function withUserSession<T>(
       sql`select set_config('request.jwt.claims', ${JSON.stringify({ ...claims, role: "authenticated" })}, true),
                  set_config('role', 'authenticated', true)`,
     );
+    return fn(tx);
+  });
+}
+
+/**
+ * Lifts the statement and idle-in-transaction limits for the rest of [tx]: for a transaction that
+ * waits on something slow while it holds a lock (provisioning a computer) or a bulk sweep.
+ */
+export async function liftTimeouts(tx: Tx | Database) {
+  await tx.execute(
+    sql`select set_config('statement_timeout', '0', true), set_config('idle_in_transaction_session_timeout', '0', true)`,
+  );
+}
+
+/** Runs fn in its own transaction with the limits lifted (bulk deletes and sweeps). */
+export function withoutTimeouts<T>(db: Database, fn: (tx: Tx) => Promise<T>): Promise<T> {
+  return db.transaction(async (tx) => {
+    await liftTimeouts(tx);
     return fn(tx);
   });
 }

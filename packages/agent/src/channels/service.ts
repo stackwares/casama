@@ -367,6 +367,7 @@ export async function pollIMessage(
         `${local.apiUrl.replace(/\/$/, "")}/internal/local/${c.config.computer_id}/http/imessage/new?since=${since}`,
         {
           headers: { "x-casama-internal": local.internalToken },
+          signal: AbortSignal.timeout(15_000),
         },
       );
       if (!res.ok) continue;

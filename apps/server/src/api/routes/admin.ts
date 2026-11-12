@@ -264,7 +264,9 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       .catch(() => [{ n: -1 }]);
     const supervisor = env.SUPERVISOR_URL
       ? await check(async () => {
-          const r = await fetch(`${env.SUPERVISOR_URL}/healthz`);
+          const r = await fetch(`${env.SUPERVISOR_URL}/healthz`, {
+            signal: AbortSignal.timeout(5000),
+          });
           if (!r.ok) throw new Error();
         })
       : null;

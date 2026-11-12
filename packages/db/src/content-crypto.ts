@@ -129,6 +129,8 @@ export class AwsKmsKeyWrapper implements KeyWrapper {
     const { host: _h, ...send } = headers;
     const res = await this.o.fetch(url.toString(), {
       method: "POST",
+      // KMS answers in milliseconds; a hung call must not hold every encrypted read behind it.
+      signal: AbortSignal.timeout(10_000),
       headers: {
         ...send,
         authorization: `AWS4-HMAC-SHA256 Credential=${this.o.accessKeyId}/${scope}, SignedHeaders=${names.join(";")}, Signature=${signature}`,

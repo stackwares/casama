@@ -6,6 +6,7 @@
  */
 import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
+import { withTimeout } from "./safe-fetch.ts";
 
 export interface SecretStore {
   readonly kind: "vault" | "infisical";
@@ -54,7 +55,11 @@ export class InfisicalSecretStore implements SecretStore {
   private readonly o: InfisicalConfig & { fetch: typeof fetch };
   private token: { value: string; until: number } | null = null;
   constructor(o: InfisicalConfig & { fetch?: typeof fetch }) {
-    this.o = { ...o, siteUrl: o.siteUrl.replace(/\/$/, ""), fetch: o.fetch ?? fetch };
+    this.o = {
+      ...o,
+      siteUrl: o.siteUrl.replace(/\/$/, ""),
+      fetch: withTimeout(o.fetch ?? fetch, 15_000),
+    };
   }
   private async access() {
     if (this.token && this.token.until > Date.now() + 30_000) return this.token.value;

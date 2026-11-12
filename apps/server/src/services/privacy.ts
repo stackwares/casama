@@ -4,7 +4,13 @@
  */
 import type { ComputerService } from "@casama/agent";
 import { memoryBackendConfig, storeFromConfig } from "@casama/agent";
-import { type Database, type JwtClaims, withUserSession } from "@casama/db";
+import {
+  type Database,
+  type JwtClaims,
+  liftTimeouts,
+  withoutTimeouts,
+  withUserSession,
+} from "@casama/db";
 import { captureError } from "@casama/observability";
 import { sql } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
@@ -52,6 +58,8 @@ const clean = (rows: Array<Record<string, unknown>>) =>
 
 export async function exportUserData(db: Database, claims: JwtClaims) {
   return withUserSession(db, claims, async (tx) => {
+    // A big workspace's export reads every message and run event, and asks memory backends too.
+    await liftTimeouts(tx);
     const files: Record<string, Uint8Array> = {};
     const put = (name: string, value: unknown) => {
       files[name] = strToU8(`${JSON.stringify(value, null, 2)}\n`);
@@ -213,14 +221,19 @@ export async function purgeDueAccounts(
             captureError(e, { service: "casama-worker", step: "purge-memories", org_id: org.id });
           });
       }
-      await db.execute(sql`delete from public.organizations where id = ${org.id}::uuid`);
+      // Cascades through all of the workspace's messages, runs and events.
+      await withoutTimeouts(db, (tx) =>
+        tx.execute(sql`delete from public.organizations where id = ${org.id}::uuid`),
+      );
     }
     // Product analytics for this person (PostHog). A failure is reported with the id so it can be erased by
     // hand; it never blocks erasing the account itself.
     await (opts.erase ?? erasePostHogPerson)(user_id).catch((e) => {
       captureError(e, { service: "casama-worker", step: "purge-analytics", user_id });
     });
-    await db.execute(sql`select public.worker_purge_user(${user_id}::uuid)`);
+    await withoutTimeouts(db, (tx) =>
+      tx.execute(sql`select public.worker_purge_user(${user_id}::uuid)`),
+    );
     await db.execute(sql`
       update public.account_deletions set completed_at = now(), orgs_deleted = ${orgs.length} where user_id = ${user_id}::uuid`);
   }
@@ -229,11 +242,14 @@ export async function purgeDueAccounts(
 
 /** Daily: drop run events older than each workspace's retention. */
 export async function applyRetention(db: Database) {
-  const rows = await db.execute<{ n: number }>(sql`
+  // One delete across every workspace: the first run (or a lowered retention) can be large.
+  const rows = await withoutTimeouts(db, (tx) =>
+    tx.execute<{ n: number }>(sql`
     with d as (
       delete from public.run_events e using public.organizations o
       where e.org_id = o.id and e.created_at < now() - make_interval(days => o.run_event_retention_days)
       returning 1)
-    select count(*)::int as n from d`);
+    select count(*)::int as n from d`),
+  );
   return rows[0]?.n ?? 0;
 }

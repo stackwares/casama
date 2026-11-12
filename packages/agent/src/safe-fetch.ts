@@ -90,5 +90,19 @@ function wrap(res: Response): Response {
   return out;
 }
 
+/**
+ * [f] with a deadline on every call (headers and body together), combined with any signal the
+ * caller passes. For vendor APIs, whose answers are small and quick: a hung vendor fails in
+ * seconds instead of waiting out Node's five-minute defaults. Not for bot traffic (MCP tool calls
+ * and http.request can legitimately take minutes; those have their own limits).
+ */
+export function withTimeout(f: typeof fetch, ms: number): typeof fetch {
+  return ((input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+    const own = init?.signal ?? (input instanceof Request ? input.signal : undefined);
+    const deadline = AbortSignal.timeout(ms);
+    return f(input, { ...init, signal: own ? AbortSignal.any([own, deadline]) : deadline });
+  }) as typeof fetch;
+}
+
 /** The default guarded fetch (no exemptions). */
 export const safeFetch = createSafeFetch();

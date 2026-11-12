@@ -18,6 +18,7 @@ import 'core/server_config_cache.dart';
 import 'core/startup_assets.dart';
 import 'core/supabase_backend.dart';
 import 'core/telemetry.dart';
+import 'core/timeout_http_client.dart';
 import 'core/theme.dart';
 import 'theme/appearance.dart';
 import 'theme/fonts.dart';
@@ -43,7 +44,7 @@ Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config, {VoidCallback? onS
   if (saved == null) unawaited(ServerConfigCache.write(config.apiUrl, server));
   unawaited(Telemetry.updateServerKind(apiUrl: config.apiUrl, billingEnabled: server.billingEnabled));
   unawaited(Analytics.dailyPing());
-  await Supabase.initialize(url: server.supabaseUrl, publishableKey: server.supabaseAnonKey);
+  await Supabase.initialize(url: server.supabaseUrl, publishableKey: server.supabaseAnonKey, httpClient: TimeoutHttpClient());
   final supabase = Supabase.instance.client;
   final api = await SupabaseBackend.connectApi(config.apiUrl, supabase, config: server);
   final backend = SupabaseBackend(supabase, api, config: server);

@@ -1,4 +1,4 @@
-import type { Database } from "@casama/db";
+import { type Database, liftTimeouts } from "@casama/db";
 import { captureError } from "@casama/observability";
 import type { CheckpointRef, SandboxHandle, SandboxProvider, SnapshotRef } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
@@ -212,6 +212,8 @@ export class ComputerService {
   /** Makes sure the computer is running and returns its handle. Serialized per computer. */
   async ensureRunning(computerId: string, emit?: Emit): Promise<SandboxHandle> {
     return this.db.transaction(async (tx) => {
+      // Provisioning can take minutes while this holds the lock (and others wait on it).
+      await liftTimeouts(tx);
       await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`computer:${computerId}`}))`);
       const [c] = await tx.execute<ComputerRow>(
         sql`select * from public.computers where id = ${computerId}::uuid`,

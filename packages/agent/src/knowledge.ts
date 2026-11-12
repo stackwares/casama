@@ -12,6 +12,7 @@ import { z } from "zod";
 import { type Embedder, toPgVector } from "./embeddings.ts";
 import { createAdapter, loadIntegration } from "./integrations.ts";
 import { chunkSections, type ParsedDoc, parseDocument, parseHtml } from "./knowledge-parse.ts";
+import { withTimeout } from "./safe-fetch.ts";
 import type { ToolRegistry } from "./tools/registry.ts";
 
 export const KNOWLEDGE_SYNC_HOURS = 24;
@@ -84,8 +85,10 @@ export function robotsRules(txt: string) {
 
 async function crawlWebsite(d: KnowledgeDeps, start: string, maxPages: number): Promise<Doc[]> {
   const origin = new URL(start).origin;
-  const robots = await d
-    .fetch(`${origin}/robots.txt`, { headers: { "user-agent": "CasamaBot (knowledge sources)" } })
+  const fetchPage = withTimeout(d.fetch, 20_000);
+  const robots = await fetchPage(`${origin}/robots.txt`, {
+    headers: { "user-agent": "CasamaBot (knowledge sources)" },
+  })
     .then(async (r) => (r.ok ? robotsRules(await r.text()) : () => true))
     .catch(() => () => true);
   const queue = [new URL(start).href.replace(/#.*$/, "")];
@@ -95,18 +98,18 @@ async function crawlWebsite(d: KnowledgeDeps, start: string, maxPages: number): 
     const url = queue.shift() as string;
     const u = new URL(url);
     if (!robots(u.pathname + u.search)) continue;
-    const res = await d
-      .fetch(url, {
-        headers: {
-          "user-agent": "CasamaBot (knowledge sources)",
-          accept: "text/html,text/plain,text/markdown",
-        },
-      })
-      .catch(() => null);
+    const res = await fetchPage(url, {
+      headers: {
+        "user-agent": "CasamaBot (knowledge sources)",
+        accept: "text/html,text/plain,text/markdown",
+      },
+    }).catch(() => null);
     if (!res?.ok) continue;
     const type = res.headers.get("content-type") ?? "";
     if (!/text\/(html|plain|markdown)/.test(type)) continue;
-    const body = await res.text();
+    // A page that stops sending mid-body is skipped like one that never answered.
+    const body = await res.text().catch(() => null);
+    if (body === null) continue;
     const parsed = type.includes("html")
       ? parseHtml(body, u.pathname)
       : parseDocument(`${u.pathname || "page"}.md`, new TextEncoder().encode(body));
@@ -141,7 +144,7 @@ async function readGitHub(
     select v.decrypted_secret as token from public.secrets s join vault.decrypted_secrets v on v.id = s.vault_secret_id
     where s.org_id = ${orgId}::uuid and s.name = 'GITHUB_TOKEN' and 'api.github.com' = any(s.allowed_hosts)`);
   const get = async <T>(p: string) => {
-    const r = await d.fetch(`${api}/repos/${c.owner}/${c.repo}${p}`, {
+    const r = await withTimeout(d.fetch, 30_000)(`${api}/repos/${c.owner}/${c.repo}${p}`, {
       headers: {
         accept: "application/vnd.github+json",
         "user-agent": "casama-knowledge",

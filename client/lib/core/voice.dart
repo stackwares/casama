@@ -287,7 +287,10 @@ class _RealtimeCall implements VoiceCall {
     }
     final offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
-    final res = await http.post(Uri.parse(s.connectUrl), headers: {'authorization': 'Bearer ${s.clientSecret}', 'content-type': 'application/sdp'}, body: offer.sdp);
+    final res = await http.post(Uri.parse(s.connectUrl), headers: {'authorization': 'Bearer ${s.clientSecret}', 'content-type': 'application/sdp'}, body: offer.sdp).timeout(const Duration(seconds: 15), onTimeout: () {
+      _state.value = CallState.failed;
+      throw TimeoutException('Realtime connection timed out');
+    });
     if (res.statusCode >= 300) {
       _state.value = CallState.failed;
       throw StateError('Realtime connection refused (${res.statusCode})');

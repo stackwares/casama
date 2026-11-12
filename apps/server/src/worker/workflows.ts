@@ -26,7 +26,7 @@ import {
   safeFetch,
   sweepEncryption,
 } from "@casama/agent";
-import type { Database } from "@casama/db";
+import { type Database, liftTimeouts } from "@casama/db";
 import { DEFAULT_MODELS } from "@casama/domain";
 import { captureError } from "@casama/observability";
 import { DBOS } from "@dbos-inc/dbos-sdk";
@@ -295,6 +295,8 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
       (): Promise<string[]> =>
         rt()
           .db.transaction(async (tx) => {
+            // Notifications (push) go out while the lock is held.
+            await liftTimeouts(tx);
             const [lock] = await tx.execute<{ ok: boolean }>(
               sql`select pg_try_advisory_xact_lock(${TICK_LOCKS.projects}) as ok`,
             );
@@ -326,7 +328,9 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
           () =>
             rt()
               .db.transaction(async (tx) => {
-                // Overlapping ticks would reply twice: one poll at a time.
+                // Overlapping ticks would reply twice: one poll at a time. Each Mac is asked in turn
+                // while the lock is held.
+                await liftTimeouts(tx);
                 const [lock] = await tx.execute<{ ok: boolean }>(
                   sql`select pg_try_advisory_xact_lock(${TICK_LOCKS.imessage}) as ok`,
                 );

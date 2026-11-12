@@ -22,6 +22,8 @@ export function openAiEmbedder(m: ResolvedModel): Embedder {
         model: provider.embedding(m.model),
         value: text,
         maxRetries: 2,
+        // One deadline across the tries, so a hung provider can't hold up memory writes for minutes.
+        abortSignal: AbortSignal.timeout(45_000),
       });
       return embedding;
     },

@@ -13,6 +13,7 @@ import '../../core/backend.dart';
 import '../../core/server_address.dart';
 import '../../core/server_config_cache.dart';
 import '../../core/supabase_backend.dart';
+import '../../core/timeout_http_client.dart';
 
 /// Device triggers (D-151): events this device reports (arrive and leave named places, watched-app
 /// notifications), kept in a small queue until the server has them. Only place names travel, never
@@ -87,7 +88,7 @@ Future<Backend?> backgroundBackend() async {
     try {
       Supabase.instance.client;
     } catch (_) {
-      await Supabase.initialize(url: server.supabaseUrl, publishableKey: server.supabaseAnonKey);
+      await Supabase.initialize(url: server.supabaseUrl, publishableKey: server.supabaseAnonKey, httpClient: TimeoutHttpClient());
     }
     final supabase = Supabase.instance.client;
     if (supabase.auth.currentSession == null) return null;

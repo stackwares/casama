@@ -4,7 +4,7 @@
  * reminders on the device. The data is the person's own: only runs acting for them, by bots they
  * allowed, read it.
  */
-import type { Database } from "@casama/db";
+import { type Database, withoutTimeouts } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
@@ -372,9 +372,9 @@ export function registerDeviceTools(registry: ToolRegistry, deps: DeviceDataDeps
     registry.register({
       name,
       description,
+      // Changes the person's own calendar or reminders: runs without asking under the default
+      // autonomy; an "ask" action rule makes it ask (D-213, was D-149).
       risk: "medium",
-      // Changes the person's own calendar: asks first by default (action rules can allow it).
-      confirm: true,
       schema,
       async execute(args, ctx) {
         const user = await owner(ctx);
@@ -439,13 +439,16 @@ export async function purgeDeviceData(db: Database) {
   const defaults = JSON.stringify(DEFAULT_RETENTION_DAYS);
   // Only rows older than the shortest retention (7 days, or 0 for live only) can be due, so the
   // per-row retention check runs on that slice (indexed on period_end), not the whole table.
-  const [removed] = await db.execute<{ n: number }>(sql`
+  // A backlog (or the first run) can be large.
+  const [removed] = await withoutTimeouts(db, (tx) =>
+    tx.execute<{ n: number }>(sql`
     with gone as (
       delete from public.device_readings r using public.device_sources s
       where s.id = r.source_id and r.period_end < now()
         and r.period_end < now() - make_interval(days => coalesce((s.kinds -> r.kind ->> 'retention_days')::int, (${defaults}::jsonb ->> r.kind)::int, 365))
       returning 1)
-    select count(*)::int as n from gone`);
+    select count(*)::int as n from gone`),
+  );
   await db.execute(
     sql`update public.device_requests set status = 'expired' where status = 'pending' and created_at < now() - interval '1 hour'`,
   );

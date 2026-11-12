@@ -15,6 +15,7 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
 import type { NotificationService } from "./notifications.ts";
+import { withTimeout } from "./safe-fetch.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
 
 export interface TwilioConfig {
@@ -46,7 +47,7 @@ export class TwilioClient {
       token: o.authToken,
       api: (o.apiUrl ?? "https://api.twilio.com").replace(/\/$/, ""),
       lookups: (o.lookupsUrl ?? "https://lookups.twilio.com").replace(/\/$/, ""),
-      fetch: o.fetch ?? fetch,
+      fetch: withTimeout(o.fetch ?? fetch, 30_000),
     };
   }
   private auth() {

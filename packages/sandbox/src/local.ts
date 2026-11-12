@@ -43,6 +43,7 @@ export class LocalProvider implements SandboxProvider {
   async online(ref: string) {
     const res = await fetch(`${this.opts.apiUrl}/internal/local/${ref}/status`, {
       headers: { "x-casama-internal": this.opts.internalToken },
+      signal: AbortSignal.timeout(5000),
     }).catch(() => null);
     if (!res?.ok) return false;
     return ((await res.json()) as { online: boolean }).online;

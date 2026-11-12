@@ -15,6 +15,7 @@ import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { wrapUntrusted } from "./context.ts";
+import { withTimeout } from "./safe-fetch.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
 
 export interface DataService {
@@ -89,7 +90,7 @@ export class TregProvider implements DataProvider {
     this.o = {
       key: o.key,
       base: (o.base ?? "https://treg.to").replace(/\/$/, ""),
-      fetch: o.fetch ?? fetch,
+      fetch: withTimeout(o.fetch ?? fetch, 60_000),
     };
   }
   private headers(extra: Record<string, string> = {}) {

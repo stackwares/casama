@@ -47,3 +47,52 @@ describe("withFallback with one model", () => {
     expect(g.calls()).toBe(2);
   });
 });
+
+describe("withFallback idle timeout", () => {
+  it("ends a stream that goes quiet after output started", async () => {
+    let calls = 0;
+    const gateway: ModelGateway = {
+      async *stream(req): AsyncIterable<GatewayEvent> {
+        calls++;
+        yield { type: "text", text: "partial" };
+        await new Promise((_, reject) =>
+          req.abortSignal?.addEventListener("abort", () =>
+            reject(Object.assign(new Error("aborted"), { name: "AbortError" })),
+          ),
+        );
+      },
+    };
+    let text = "";
+    const stream = withFallback(gateway, [model], {
+      firstTokenTimeoutMs: 1000,
+      idleTimeoutMs: 20,
+      sleep: async () => {},
+    })({ system: [], messages: [] });
+    await expect(
+      (async () => {
+        for await (const ev of stream) if (ev.type === "text") text += ev.text;
+      })(),
+    ).rejects.toMatchObject({ code: "model_timeout" });
+    expect(text).toBe("partial");
+    // Output already reached the caller, so it isn't retried.
+    expect(calls).toBe(1);
+  });
+
+  it("doesn't count time the caller spends handling an event", async () => {
+    const gateway: ModelGateway = {
+      async *stream(): AsyncIterable<GatewayEvent> {
+        yield { type: "text", text: "a" };
+        yield { type: "text", text: "b" };
+      },
+    };
+    let text = "";
+    for await (const ev of withFallback(gateway, [model], { idleTimeoutMs: 20 })({
+      system: [],
+      messages: [],
+    })) {
+      if (ev.type === "text") text += ev.text;
+      await new Promise((r) => setTimeout(r, 60));
+    }
+    expect(text).toBe("ab");
+  });
+});

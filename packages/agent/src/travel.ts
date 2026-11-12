@@ -2,6 +2,8 @@
  * Travel time for leave-now triggers (D-151), on the workspace's own maps key: Google Maps
  * (Distance Matrix, with traffic) or Mapbox (geocoding, then driving-traffic directions).
  */
+import { withTimeout } from "./safe-fetch.ts";
+
 export type MapsProvider = "google_maps" | "mapbox";
 
 export interface TravelDeps {
@@ -18,6 +20,7 @@ export async function travelMinutes(
   destination: string,
   deps: TravelDeps,
 ): Promise<number | null> {
+  const fetch = withTimeout(deps.fetch, 15_000);
   if (provider === "google_maps") {
     const base = deps.bases?.google_maps ?? "https://maps.googleapis.com";
     const u = new URL("/maps/api/distancematrix/json", base);
@@ -27,7 +30,7 @@ export async function travelMinutes(
       departure_time: "now",
       key,
     }).toString();
-    const r = await deps.fetch(u);
+    const r = await fetch(u);
     if (!r.ok) return null;
     const j = (await r.json()) as {
       rows?: Array<{
@@ -50,7 +53,7 @@ export async function travelMinutes(
     proximity: `${origin.lng},${origin.lat}`,
     access_token: key,
   }).toString();
-  const gr = await deps.fetch(g);
+  const gr = await fetch(g);
   if (!gr.ok) return null;
   const coords = (
     (await gr.json()) as { features?: Array<{ geometry?: { coordinates?: [number, number] } }> }
@@ -61,7 +64,7 @@ export async function travelMinutes(
     base,
   );
   d.search = new URLSearchParams({ access_token: key, overview: "false" }).toString();
-  const dr = await deps.fetch(d);
+  const dr = await fetch(d);
   if (!dr.ok) return null;
   const sec = ((await dr.json()) as { routes?: Array<{ duration?: number }> }).routes?.[0]
     ?.duration;

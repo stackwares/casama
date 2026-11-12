@@ -30,6 +30,7 @@ export function egressControl(baseUrl: string, token: string): EgressControl {
       method,
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
       body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok)
       throw new SandboxError(
@@ -399,6 +400,7 @@ export class DockerProvider implements SandboxProvider {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify(user),
+          signal: AbortSignal.timeout(10_000),
         }).catch((err: Error) => {
           throw new SandboxError("stream_unreachable", `streamer unreachable: ${err.message}`);
         });
