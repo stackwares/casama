@@ -33,7 +33,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('pluginMenu-plugin-1')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Check for update'));
+    await tester.tap(find.text('Check for Update'));
     await tester.pumpAndSettle();
     expect(find.text('Changed skills: plan-trip'), findsOneWidget);
     expect(find.text('New tool servers: tides'), findsOneWidget);

@@ -51,7 +51,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('keyMenu-plan')));
     await tester.pumpAndSettle();
-    expect(find.text('Manage usage'), findsOneWidget);
+    expect(find.text('Manage Usage'), findsOneWidget);
     await tester.tap(find.byKey(const Key('fallbackOnLimit')));
     await tester.pumpAndSettle();
     expect(backend.credentialUpdates, {'plan': true});
@@ -76,7 +76,7 @@ void main() {
     await tester.tap(find.byKey(const Key('keyMenu-plan')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('fallbackOnLimit')), findsNothing);
-    expect(find.text('Test key'), findsNothing);
+    expect(find.text('Test Key'), findsNothing);
   });
 
   test('ChatGPT is never offered as a paste-a-key provider', () {

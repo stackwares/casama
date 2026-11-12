@@ -38,7 +38,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loading => 'Loading…';
 
   @override
-  String get retry => 'Try again';
+  String get retry => 'Try Again';
 
   @override
   String get cancel => 'Cancel';
@@ -108,13 +108,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continueWithApple => 'Continue with Apple';
 
   @override
-  String get continueWithEmail => 'Continue with email';
+  String get continueWithEmail => 'Continue with Email';
 
   @override
-  String get moreSignInOptions => 'More options';
+  String get moreSignInOptions => 'More Options';
 
   @override
-  String get usePasswordInstead => 'Use a password instead';
+  String get usePasswordInstead => 'Use a Password Instead';
 
   @override
   String get checkInboxTitle => 'Check your inbox';
@@ -128,7 +128,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emailCodeLabel => '6-digit code';
 
   @override
-  String get resendLink => 'Send again';
+  String get resendLink => 'Send Again';
 
   @override
   String resendLinkIn(int seconds) {
@@ -136,11 +136,11 @@ class AppLocalizationsEn extends AppLocalizations {
         intl.NumberFormat.decimalPattern(localeName);
     final String secondsString = secondsNumberFormat.format(seconds);
 
-    return 'Send again in ${secondsString}s';
+    return 'Send Again in ${secondsString}s';
   }
 
   @override
-  String get useDifferentEmail => 'Use a different email';
+  String get useDifferentEmail => 'Use a Different Email';
 
   @override
   String get authWrongPassword =>
@@ -165,7 +165,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authSignupDisabled => 'This server isn\'t taking new sign-ups.';
 
   @override
-  String get useMagicLinkInstead => 'Email me a link instead';
+  String get useMagicLinkInstead => 'Email Me a Link Instead';
 
   @override
   String get invalidEmail => 'Enter a valid email address';
@@ -174,7 +174,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordTooShort => 'Use at least 6 characters';
 
   @override
-  String get signOut => 'Sign out';
+  String get signOut => 'Sign Out';
 
   @override
   String get onboardingTitle => 'Set up your workspace';
@@ -214,7 +214,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get baseUrl => 'Base URL';
 
   @override
-  String get testKey => 'Test key';
+  String get testKey => 'Test Key';
 
   @override
   String keyOk(String model, int ms) {
@@ -529,7 +529,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noKeys => 'No model keys yet.';
 
   @override
-  String get addKey => 'Add key';
+  String get addKey => 'Add Key';
 
   @override
   String get usage => 'Usage';
@@ -649,7 +649,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aBot => 'A bot';
 
   @override
-  String get addIntegration => 'Add integration';
+  String get addIntegration => 'Add Integration';
 
   @override
   String get addSecret => 'Add secret';
@@ -661,7 +661,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get allowedHostsHelp => 'Comma-separated, for example api.github.com';
 
   @override
-  String get alwaysAllow => 'Always allow';
+  String get alwaysAllow => 'Always Allow';
 
   @override
   String get approval => 'Approval';
@@ -735,7 +735,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Toolkits (comma-separated, for example github, gmail)';
 
   @override
-  String get copySecret => 'Copy secret';
+  String get copySecret => 'Copy Secret';
 
   @override
   String get cronExpression => 'Cron expression';
@@ -781,7 +781,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kindOpenapi => 'OpenAPI';
 
   @override
-  String get markAllRead => 'Mark all as read';
+  String get markAllRead => 'Mark All as Read';
 
   @override
   String get mondaysAt9 => 'Mondays at 9:00';
@@ -811,7 +811,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifications => 'Notifications';
 
   @override
-  String get openInbox => 'Open inbox';
+  String get openInbox => 'Open Inbox';
 
   @override
   String get pipedreamApps => 'Apps (comma-separated)';
@@ -992,10 +992,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'This computer has no desktop, so this shows its browser (blank until the bot opens a page). To watch and control apps live, switch it to a desktop in computer settings.';
 
   @override
-  String get openComputerSettings => 'Open computer settings';
+  String get openComputerSettings => 'Open Computer Settings';
 
   @override
-  String get runNow => 'Run now';
+  String get runNow => 'Run Now';
 
   @override
   String get secretName => 'Name';
@@ -1052,7 +1052,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewRun => 'View run';
 
   @override
-  String get webhookCreated => 'Webhook created';
+  String get webhookCreated => 'Webhook Created';
 
   @override
   String get webhookSecret => 'Signing secret';
@@ -1173,7 +1173,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forBot => 'For bot';
 
   @override
-  String get handBack => 'Hand back';
+  String get handBack => 'Hand Back';
 
   @override
   String get handBackNote => 'Note for the bot (optional)';
@@ -1199,7 +1199,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'A private computer belongs to one bot. Its files stay separate from the team computer.';
 
   @override
-  String get openLiveView => 'Open live view';
+  String get openLiveView => 'Open Live View';
 
   @override
   String get liveExpand => 'Full screen';
@@ -1234,7 +1234,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The computer sleeps when nobody\'s watching, to save power.';
 
   @override
-  String get liveKeepWatching => 'Keep watching';
+  String get liveKeepWatching => 'Keep Watching';
 
   @override
   String get livePausedToSavePower => 'Paused to save power';
@@ -1279,13 +1279,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get someoneElseInControl => 'Someone else is in control';
 
   @override
-  String get switchToDesktop => 'Switch to desktop';
+  String get switchToDesktop => 'Switch to Desktop';
 
   @override
-  String get switchToHeadless => 'Switch to headless';
+  String get switchToHeadless => 'Switch to Headless';
 
   @override
-  String get takeControl => 'Take control';
+  String get takeControl => 'Take Control';
 
   @override
   String get takeoverCompleted => 'Handed back';
@@ -1362,7 +1362,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stopListening => 'Stop listening';
 
   @override
-  String get dictationRetry => 'Try again';
+  String get dictationRetry => 'Try Again';
 
   @override
   String get dictationSayAgain => 'Say it again';
@@ -1653,7 +1653,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callToolAllow => 'Allow';
 
   @override
-  String get callToolNotNow => 'Not now';
+  String get callToolNotNow => 'Not Now';
 
   @override
   String get callToolAllowed => 'Allowed. The result will show in the chat';
@@ -1721,7 +1721,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceSettingsHelp => 'Read-aloud voice and dictation provider';
 
   @override
-  String get callTools => 'Tools on calls';
+  String get callTools => 'Tools on Calls';
 
   @override
   String get callToolsHelp =>
@@ -1787,7 +1787,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get companionOff => 'Off';
 
   @override
-  String get companionCapabilities => 'What bots may do';
+  String get companionCapabilities => 'What Bots May Do';
 
   @override
   String get companionCapabilitiesHelp =>
@@ -1806,16 +1806,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get capDesktop => 'Use desktop apps';
 
   @override
-  String get sharedFolders => 'Shared folders';
+  String get sharedFolders => 'Shared Folders';
 
   @override
   String get sharedFoldersHelp => 'Bots can only reach these folders.';
 
   @override
-  String get addFolder => 'Add a folder';
+  String get addFolder => 'Add a Folder';
 
   @override
-  String get botsAllowed => 'Bots allowed';
+  String get botsAllowed => 'Bots Allowed';
 
   @override
   String get botsAllowedHelp => 'Allowed bots use this computer as theirs.';
@@ -1853,24 +1853,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminServices => 'Services';
 
   @override
-  String get cloudModelsTitle => 'Cloud models';
+  String get cloudModelsTitle => 'Cloud Models';
 
   @override
   String get cloudModelsHelp =>
       'Casama Cloud runs these. A change reaches every server within a few seconds. People on Cloud cannot pick their own.';
 
   @override
-  String get connectionsTitle => 'App connections';
+  String get connectionsTitle => 'App Connections';
 
   @override
-  String get connectionsServerComposio => 'Casama\'s Composio account';
+  String get connectionsServerComposio => 'Casama\'s Composio Account';
 
   @override
   String get connectionsServerComposioHelp =>
       'Apps without their own sign-in connect in one click through this server\'s Composio account.';
 
   @override
-  String get connectionsOwnAccounts => 'People\'s own accounts';
+  String get connectionsOwnAccounts => 'People\'s Own Accounts';
 
   @override
   String get connectionsOwnAccountsHelp =>
@@ -1881,7 +1881,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add COMPOSIO_API_KEY to this server to use Casama\'s account.';
 
   @override
-  String get connectionsGoogleTitle => 'Google apps';
+  String get connectionsGoogleTitle => 'Google Apps';
 
   @override
   String get connectionsGoogleComposio => 'Through Composio';
@@ -1891,7 +1891,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Gmail, Calendar, Drive and the rest work right away. Google\'s own servers need Developer Preview enrollment.';
 
   @override
-  String get connectionsGoogleDirect => 'Google\'s own servers';
+  String get connectionsGoogleDirect => 'Google\'s Own Servers';
 
   @override
   String get connectionsGoogleDirectHelp =>
@@ -2014,10 +2014,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get upgradeTitle => 'Upgrade your plan';
+  String get upgradeTitle => 'Upgrade Your Plan';
 
   @override
-  String get notNow => 'Not now';
+  String get notNow => 'Not Now';
 
   @override
   String get seePlans => 'See plans';
@@ -2030,7 +2030,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Billing is off on this server. Self-hosted Casama has no limits.';
 
   @override
-  String get restorePurchases => 'Restore purchases';
+  String get restorePurchases => 'Restore Purchases';
 
   @override
   String get restoreStarted => 'Checking your purchases…';
@@ -2047,7 +2047,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get subscribeOnWeb => 'Subscribe on the web';
+  String get subscribeOnWeb => 'Subscribe on the Web';
 
   @override
   String get credits => 'Credits';
@@ -2109,7 +2109,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get manageSubscription => 'Manage subscription';
+  String get manageSubscription => 'Manage Subscription';
 
   @override
   String usageComputerHours(String hours) {
@@ -2144,10 +2144,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Let a self-hosted Casama use cloud computers and model credits, billed to this workspace.';
 
   @override
-  String get cloudConnectNewKey => 'New Cloud Connect key';
+  String get cloudConnectNewKey => 'New Cloud Connect Key';
 
   @override
-  String get cloudConnectKeyCreated => 'Key created';
+  String get cloudConnectKeyCreated => 'Key Created';
 
   @override
   String get cloudConnectKeyOnce =>
@@ -2172,7 +2172,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connect => 'Connect';
 
   @override
-  String get changeServer => 'Use a different server';
+  String get changeServer => 'Use a Different Server';
 
   @override
   String serverIs(String host) {
@@ -2189,7 +2189,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacy => 'Privacy';
 
   @override
-  String get exportMyData => 'Export my data';
+  String get exportMyData => 'Export My Data';
 
   @override
   String get exportMyDataHelp =>
@@ -2201,7 +2201,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get runHistoryRetention => 'Keep run history for';
+  String get runHistoryRetention => 'Keep Run History For';
 
   @override
   String get runHistoryRetentionHelp =>
@@ -2223,7 +2223,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get deleteAccount => 'Delete my account';
+  String get deleteAccount => 'Delete My Account';
 
   @override
   String get deleteAccountHelp =>
@@ -2238,7 +2238,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get accountDeleted => 'Account scheduled for deletion';
+  String get accountDeleted => 'Account Scheduled for Deletion';
 
   @override
   String accountDeletedBody(String date) {
@@ -2356,7 +2356,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Chrome is blocking notifications for this site. Allow them from the lock in the address bar, then tap Turn on again.';
 
   @override
-  String get notificationsTurnOn => 'Turn on';
+  String get notificationsTurnOn => 'Turn On';
 
   @override
   String get createMenuTitle => 'Add';
@@ -2383,14 +2383,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkForUpdates => 'Check for updates';
 
   @override
-  String get autoUpdates => 'Update automatically';
+  String get autoUpdates => 'Update Automatically';
 
   @override
   String get autoUpdatesHelp =>
       'Download new versions in the background and install them when you quit.';
 
   @override
-  String get upToDate => 'Casama is up to date';
+  String get upToDate => 'Casama Is Up to Date';
 
   @override
   String updateReady(String version) {
@@ -2404,11 +2404,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String whatsNewTitle(String version) {
-    return 'What\'s new in Casama $version';
+    return 'What\'s New in Casama $version';
   }
 
   @override
-  String get whatsNewGotIt => 'Got it';
+  String get whatsNewGotIt => 'Got It';
 
   @override
   String get whatsNew080Calls =>
@@ -2427,7 +2427,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sign in with a passkey, Apple, Google or a code from your email.';
 
   @override
-  String get openAtLogin => 'Open at login';
+  String get openAtLogin => 'Open at Login';
 
   @override
   String get openAtLoginHelp =>
@@ -2507,7 +2507,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orJoinWithCode => 'or join with an invite code';
 
   @override
-  String get getOpenRouterKey => 'Get an OpenRouter key';
+  String get getOpenRouterKey => 'Get an OpenRouter Key';
 
   @override
   String get createFirstBotBody =>
@@ -2653,7 +2653,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get openInBrowser => 'Open in browser';
+  String get openInBrowser => 'Open in Browser';
 
   @override
   String get convertingToPdf => 'Getting a preview ready…';
@@ -2679,7 +2679,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaKindPdf => 'PDF';
 
   @override
-  String get openFileInChat => 'Open file';
+  String get openFileInChat => 'Open File';
 
   @override
   String get attach => 'Attach';
@@ -2771,7 +2771,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pinned => 'Pinned';
 
   @override
-  String get editMemory => 'Edit memory';
+  String get editMemory => 'Edit Memory';
 
   @override
   String get editMemoryHelp =>
@@ -2796,7 +2796,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get yourKeys => 'Your keys';
+  String get yourKeys => 'Your Keys';
 
   @override
   String get keyWorking => 'Working';
@@ -2820,7 +2820,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editSkill => 'Edit skill';
 
   @override
-  String get deleteSkill => 'Delete skill';
+  String get deleteSkill => 'Delete Skill';
 
   @override
   String get skillDescriptionHelp =>
@@ -2837,7 +2837,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get thisDevice => 'This device';
 
   @override
-  String get renameComputer => 'Rename computer';
+  String get renameComputer => 'Rename Computer';
 
   @override
   String deleteComputerTitle(String name) {
@@ -2849,24 +2849,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your chats, memories and files belong to you. Export them any time, or delete your account.';
 
   @override
-  String get yourData => 'Your data';
+  String get yourData => 'Your Data';
 
   @override
-  String get shareAnalytics => 'Share usage data';
+  String get shareAnalytics => 'Share Usage Data';
 
   @override
   String get shareAnalyticsHelp =>
       'Help improve Casama by sharing how you use it, linked to your account on Casama Cloud, and crash reports. Message content, prompts, files and secrets are never shared.';
 
   @override
-  String get workspaceAnalytics => 'Usage data for this workspace';
+  String get workspaceAnalytics => 'Usage Data for This Workspace';
 
   @override
   String get workspaceAnalyticsHelp =>
       'When off, Casama collects no usage data about this workspace\'s activity. Crash reports still work.';
 
   @override
-  String get dangerZone => 'Danger zone';
+  String get dangerZone => 'Danger Zone';
 
   @override
   String get quotasHelp => 'Leave a field empty for no limit.';
@@ -2885,7 +2885,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'They\'ll get an email with a link to join this workspace.';
 
   @override
-  String get sendInvite => 'Send invite';
+  String get sendInvite => 'Send Invite';
 
   @override
   String get inviteReady => 'Invite ready';
@@ -2905,7 +2905,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get computerAndTools => 'Computer and tools';
 
   @override
-  String get saveChanges => 'Save changes';
+  String get saveChanges => 'Save Changes';
 
   @override
   String get autonomyAskAlwaysHelp =>
@@ -3075,7 +3075,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter your work email and we\'ll send you to your company\'s sign-in page.';
 
   @override
-  String get colorScheme => 'Color scheme';
+  String get colorScheme => 'Color Scheme';
 
   @override
   String get searchThemes => 'Search schemes';
@@ -3120,7 +3120,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backgroundThemeColors => 'Theme';
 
   @override
-  String get patternStrength => 'Pattern strength';
+  String get patternStrength => 'Pattern Strength';
 
   @override
   String get wallpaperEverywhere => 'Show on every screen';
@@ -3130,7 +3130,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Turn off to keep it behind chats only.';
 
   @override
-  String get resetBackground => 'Reset to default';
+  String get resetBackground => 'Reset to Default';
 
   @override
   String get chatsOnly => 'Chats only';
@@ -3166,7 +3166,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportLabel => 'Export';
 
   @override
-  String get openTimeline => 'Open run timeline';
+  String get openTimeline => 'Open Run Timeline';
 
   @override
   String get details => 'Details';
@@ -3185,13 +3185,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get myThemes => 'Your themes';
 
   @override
-  String get saveTheme => 'Save current look';
+  String get saveTheme => 'Save Current Look';
 
   @override
   String get themeName => 'Theme name';
 
   @override
-  String get importTheme => 'Import a theme';
+  String get importTheme => 'Import a Theme';
 
   @override
   String get themeCode => 'Theme code';
@@ -3249,7 +3249,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noFontsFound => 'No font with that name';
 
   @override
-  String get resetFonts => 'Use the defaults';
+  String get resetFonts => 'Use the Defaults';
 
   @override
   String get fontSample => 'Your bots, working together with you.';
@@ -3258,13 +3258,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backgroundPhoto => 'Photo';
 
   @override
-  String get yourPhoto => 'Your photo';
+  String get yourPhoto => 'Your Photo';
 
   @override
   String get browsePhotos => 'Browse photos';
 
   @override
-  String get removePhoto => 'Remove photo';
+  String get removePhoto => 'Remove Photo';
 
   @override
   String get photoBlur => 'Blur';
@@ -3303,25 +3303,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totalSpend => 'Spend';
 
   @override
-  String get tokensIn => 'Tokens in';
+  String get tokensIn => 'Tokens In';
 
   @override
-  String get tokensOut => 'Tokens out';
+  String get tokensOut => 'Tokens Out';
 
   @override
   String get runsLabel => 'Runs';
 
   @override
-  String get spendByDay => 'Spend by day';
+  String get spendByDay => 'Spend by Day';
 
   @override
-  String get byBot => 'By bot';
+  String get byBot => 'By Bot';
 
   @override
-  String get byModel => 'By model';
+  String get byModel => 'By Model';
 
   @override
-  String get everythingMetered => 'Everything metered';
+  String get everythingMetered => 'Everything Metered';
 
   @override
   String get exportCsv => 'Export CSV';
@@ -3330,7 +3330,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportJson => 'Export JSON';
 
   @override
-  String get askBotAboutUsage => 'Ask a bot about this';
+  String get askBotAboutUsage => 'Ask a Bot About This';
 
   @override
   String get noUsageYet => 'No usage in this period yet.';
@@ -3418,7 +3418,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get loadPersona => 'Load a persona';
+  String get loadPersona => 'Load a Persona';
 
   @override
   String get replaceInstructionsTitle => 'Replace the instructions?';
@@ -3516,7 +3516,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get reopenSignIn => 'Open the sign-in page again';
+  String get reopenSignIn => 'Open the Sign-in Page Again';
 
   @override
   String appConnected(String app) {
@@ -3592,7 +3592,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pipedreamHelp => 'Thousands of apps through Pipedream Connect.';
 
   @override
-  String get customServer => 'Custom server';
+  String get customServer => 'Custom Server';
 
   @override
   String get customServerHelp =>
@@ -3631,7 +3631,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Read-only tools run on their own. Tools that make changes ask first when a bot has read something untrusted, and ones marked “Always asks” wait for you every time.';
 
   @override
-  String get botsWithAccess => 'Bots with access';
+  String get botsWithAccess => 'Bots with Access';
 
   @override
   String get reconnect => 'Reconnect';
@@ -3649,7 +3649,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Bots lose its tools right away, and the saved sign-in is deleted.';
 
   @override
-  String get testConnection => 'Test connection';
+  String get testConnection => 'Test Connection';
 
   @override
   String get signedInOAuth => 'Signed in with your account';
@@ -3668,7 +3668,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Stripe, Linear, Notion, Gmail and more. Most take one click.';
 
   @override
-  String get browseApps => 'Browse apps';
+  String get browseApps => 'Browse Apps';
 
   @override
   String providerSetupTitle(String provider) {
@@ -3690,7 +3690,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String providerAppsTitle(String provider) {
-    return 'Apps through $provider';
+    return 'Apps Through $provider';
   }
 
   @override
@@ -3739,7 +3739,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'This computer is asleep. Opening the live view wakes it up; it goes back to sleep after a while without use.';
 
   @override
-  String get wakeAndWatch => 'Wake up and watch live';
+  String get wakeAndWatch => 'Wake Up and Watch Live';
 
   @override
   String get chatGptPlan => 'ChatGPT plan';
@@ -3795,7 +3795,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Off: a run stops when your ChatGPT limit is reached. On: it continues on the bot\'s next model, which may cost money.';
 
   @override
-  String get manageUsage => 'Manage usage';
+  String get manageUsage => 'Manage Usage';
 
   @override
   String get removeKey => 'Remove';
@@ -3821,7 +3821,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Ask for a code from an authenticator app whenever you sign in.';
 
   @override
-  String get signInWithPasskey => 'Sign in with a passkey';
+  String get signInWithPasskey => 'Sign In with a Passkey';
 
   @override
   String get account => 'Account';
@@ -3874,7 +3874,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get changeEmailTitle => 'Change email';
+  String get changeEmailTitle => 'Change Email';
 
   @override
   String get changeEmailHelp =>
@@ -3884,7 +3884,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newEmail => 'New email';
 
   @override
-  String get changeEmailSend => 'Send confirmation';
+  String get changeEmailSend => 'Send Confirmation';
 
   @override
   String get changeEmailRow => 'Change the email you sign in with';
@@ -3900,7 +3900,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get signOutEverywhere => 'Sign out everywhere';
+  String get signOutEverywhere => 'Sign Out Everywhere';
 
   @override
   String get signOutEverywhereHelp =>
@@ -3929,10 +3929,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'A passkey signs you in with Face ID, a fingerprint or your screen lock, with no password or email. Each phone, computer or password manager keeps its own.';
 
   @override
-  String get passkeyAdd => 'Add a passkey';
+  String get passkeyAdd => 'Add a Passkey';
 
   @override
-  String get passkeyAddAnother => 'Add another passkey';
+  String get passkeyAddAnother => 'Add Another Passkey';
 
   @override
   String get passkeyAdded => 'Passkey added. Next time, sign in with it.';
@@ -3941,7 +3941,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passkeyRename => 'Rename';
 
   @override
-  String get passkeyRenameTitle => 'Rename passkey';
+  String get passkeyRenameTitle => 'Rename Passkey';
 
   @override
   String get passkeyNameLabel => 'Name';
@@ -3965,10 +3965,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get twoStepSetUp => 'Set up an authenticator app';
+  String get twoStepSetUp => 'Set Up an Authenticator App';
 
   @override
-  String get twoStepAddAnother => 'Add another authenticator';
+  String get twoStepAddAnother => 'Add Another Authenticator';
 
   @override
   String get twoStepScan =>
@@ -3987,13 +3987,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get twoStepNowOn => 'Two-step sign-in is on.';
 
   @override
-  String get twoStepAuthenticators => 'Authenticator apps';
+  String get twoStepAuthenticators => 'Authenticator Apps';
 
   @override
   String get twoStepRename => 'Rename';
 
   @override
-  String get twoStepRenameTitle => 'Rename authenticator';
+  String get twoStepRenameTitle => 'Rename Authenticator';
 
   @override
   String get twoStepNameLabel => 'Name';
@@ -4079,14 +4079,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get capMcp => 'Local tools (MCP)';
 
   @override
-  String get localMcpServers => 'Local tools (MCP)';
+  String get localMcpServers => 'Local Tools (MCP)';
 
   @override
   String get localMcpHelp =>
       'MCP servers on this computer that your bots can use, such as Claude Code, Codex or design apps. Their tokens stay on this computer.';
 
   @override
-  String get localMcpAdd => 'Add a local MCP server';
+  String get localMcpAdd => 'Add a Local MCP Server';
 
   @override
   String get localMcpEmpty => 'No local MCP servers yet.';
@@ -4095,10 +4095,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get localMcpName => 'Name';
 
   @override
-  String get localMcpStdio => 'A command';
+  String get localMcpStdio => 'A Command';
 
   @override
-  String get localMcpLoopback => 'An address on this computer';
+  String get localMcpLoopback => 'An Address on This Computer';
 
   @override
   String get localMcpCommand => 'Command';
@@ -4110,7 +4110,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get localMcpUrl => 'Address';
 
   @override
-  String get localMcpFolder => 'Working folder (optional)';
+  String get localMcpFolder => 'Working Folder (Optional)';
 
   @override
   String get localMcpEnv =>
@@ -4129,7 +4129,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pick a folder inside one of the shared folders.';
 
   @override
-  String get codingAgents => 'Coding agents';
+  String get codingAgents => 'Coding Agents';
 
   @override
   String get codingAgentsHelp =>
@@ -4144,7 +4144,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Coding agents run as commands, so they need Run commands turned on.';
 
   @override
-  String get allowCommands => 'Turn on';
+  String get allowCommands => 'Turn On';
 
   @override
   String get navBoard => 'Board';
@@ -4174,7 +4174,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMatchingTicketsHelp => 'No tickets match these filters.';
 
   @override
-  String get clearFilters => 'Clear filters';
+  String get clearFilters => 'Clear Filters';
 
   @override
   String get ticketTitle => 'Title';
@@ -4222,7 +4222,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get assignToMe => 'Me';
 
   @override
-  String get reviewRequired => 'Needs review';
+  String get reviewRequired => 'Needs Review';
 
   @override
   String get reviewRequiredHelp =>
@@ -4238,10 +4238,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendComment => 'Send';
 
   @override
-  String get openThread => 'Open the bot\'s thread';
+  String get openThread => 'Open the Bot\'s Thread';
 
   @override
-  String get deleteTicket => 'Delete ticket';
+  String get deleteTicket => 'Delete Ticket';
 
   @override
   String get noTickets => 'No tickets yet';
@@ -4257,7 +4257,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get spaces => 'Workspaces';
 
   @override
-  String get newWorkspace => 'New workspace';
+  String get newWorkspace => 'New Workspace';
 
   @override
   String get joinWorkspaceHelp => 'Paste the invite link someone sent you.';
@@ -4285,7 +4285,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Anyone with a link can join after signing in, until it expires, runs out of uses or you revoke it.';
 
   @override
-  String get createInviteLink => 'Create a link';
+  String get createInviteLink => 'Create a Link';
 
   @override
   String get linkExpires => 'Expires';
@@ -4370,7 +4370,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get folderName => 'Folder name';
 
   @override
-  String get archiveBot => 'Archive bot';
+  String get archiveBot => 'Archive Bot';
 
   @override
   String archiveBotTitle(String name) {
@@ -4388,7 +4388,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get archivedBots => 'Archived bots';
 
   @override
-  String get unarchive => 'Bring back';
+  String get unarchive => 'Bring Back';
 
   @override
   String botArchived(String name) {
@@ -4406,7 +4406,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noHistory => 'No changes yet.';
 
   @override
-  String get restoreSettings => 'Restore these settings';
+  String get restoreSettings => 'Restore These Settings';
 
   @override
   String restoreSettingsBody(String fields) {
@@ -4474,7 +4474,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInCode => 'Sign-in code';
 
   @override
-  String get secretKindValue => 'Key or password';
+  String get secretKindValue => 'Key or Password';
 
   @override
   String get totpSeedLabel => 'Two-step key or otpauth:// link';
@@ -4621,13 +4621,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Answer a few quick questions and it will propose its instructions, routines and the accounts to connect. Nothing changes until you approve.';
 
   @override
-  String get startSetup => 'Start setup';
+  String get startSetup => 'Start Setup';
 
   @override
-  String get skipSetup => 'Skip for now';
+  String get skipSetup => 'Skip for Now';
 
   @override
-  String get rerunSetup => 'Run setup again';
+  String get rerunSetup => 'Run Setup Again';
 
   @override
   String get rerunSetupHelp =>
@@ -4637,7 +4637,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trace => 'Trace';
 
   @override
-  String get openTrace => 'Open trace';
+  String get openTrace => 'Open Trace';
 
   @override
   String get editMessage => 'Edit';
@@ -4690,7 +4690,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get until => 'Until';
 
   @override
-  String get shareAsTemplate => 'Share as template';
+  String get shareAsTemplate => 'Share as Template';
 
   @override
   String get shareAsTemplateRow =>
@@ -4704,14 +4704,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copyLink => 'Copy link';
 
   @override
-  String get includeMemories => 'Include memories';
+  String get includeMemories => 'Include Memories';
 
   @override
   String get includeMemoriesHelp =>
       'What it has learned about you and your work. Leave off unless you trust who you share with.';
 
   @override
-  String get saveAsFile => 'Save as file';
+  String get saveAsFile => 'Save as File';
 
   @override
   String get notABotTemplate => 'That file isn\'t a Casama bot template.';
@@ -4730,13 +4730,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get whatComesWithIt => 'What comes with it';
+  String get whatComesWithIt => 'What Comes with It';
 
   @override
   String get connectAfterImport => 'Connect after importing';
 
   @override
-  String get importRoutines => 'Schedule its routines';
+  String get importRoutines => 'Schedule Its Routines';
 
   @override
   String importMemories(int count) {
@@ -4777,7 +4777,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The lead bot drafts milestones and tickets. Nothing starts until you approve the plan.';
 
   @override
-  String get startPlanning => 'Start planning';
+  String get startPlanning => 'Start Planning';
 
   @override
   String get projectTitle => 'Title';
@@ -4798,7 +4798,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get projectThread => 'Project chat';
 
   @override
-  String get approvePlan => 'Approve the plan';
+  String get approvePlan => 'Approve the Plan';
 
   @override
   String get pause => 'Pause';
@@ -4813,7 +4813,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get needsSignoff => 'needs your sign-off';
 
   @override
-  String get signOff => 'Sign off';
+  String get signOff => 'Sign Off';
 
   @override
   String get projectPlan => 'Plan';
@@ -4907,16 +4907,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dismissSuggestion => 'Dismiss this suggestion?';
 
   @override
-  String get justThisOnce => 'Just this once';
+  String get justThisOnce => 'Just This Once';
 
   @override
-  String get dontSuggestAgain => 'Don\'t suggest it again';
+  String get dontSuggestAgain => 'Don\'t Suggest It Again';
 
   @override
-  String get doIt => 'Do it';
+  String get doIt => 'Do It';
 
   @override
-  String get checkins => 'Check-ins';
+  String get checkins => 'Check-Ins';
 
   @override
   String get checkinsHelp =>
@@ -4970,7 +4970,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noRules => 'No rules yet. The bot\'s autonomy level decides.';
 
   @override
-  String get otherTools => 'Specific tools';
+  String get otherTools => 'Specific Tools';
 
   @override
   String get workspaceRule => 'Workspace rule';
@@ -5084,14 +5084,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get allow => 'Allow';
 
   @override
-  String get connectAiApps => 'Connect AI apps';
+  String get connectAiApps => 'Connect AI Apps';
 
   @override
   String get connectAiAppsHelp =>
       'Apps that support MCP connect to this address and sign in, or use an API key. They act as the person who connected them.';
 
   @override
-  String get mcpApprovals => 'Allow approvals from AI apps';
+  String get mcpApprovals => 'Allow Approvals from AI Apps';
 
   @override
   String get mcpApprovalsHelp =>
@@ -5101,7 +5101,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get apiKeyOnce => 'Copy this key now; it won\'t be shown again.';
 
   @override
-  String get newApiKey => 'New API key';
+  String get newApiKey => 'New API Key';
 
   @override
   String get apiKeyName => 'Name';
@@ -5215,10 +5215,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Anyone with the link can open it, including the data on it. You can take it back any time; the link stops working.';
 
   @override
-  String get pageMakePublic => 'Make public';
+  String get pageMakePublic => 'Make Public';
 
   @override
-  String get pagePublicLinkTitle => 'Public link';
+  String get pagePublicLinkTitle => 'Public Link';
 
   @override
   String get pagePublicLinkBody =>
@@ -5258,7 +5258,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get teachStop => 'Stop';
 
   @override
-  String get teachMarkSecret => 'Mark as secret';
+  String get teachMarkSecret => 'Mark as Secret';
 
   @override
   String get teachMarkSecretHelp =>
@@ -5312,7 +5312,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get teachAlreadySaved => 'This skill is saved';
 
   @override
-  String get teachSaveAndTry => 'Save and try';
+  String get teachSaveAndTry => 'Save and Try';
 
   @override
   String teachSaved(String name) {
@@ -5403,7 +5403,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginUpToDate => 'Already up to date';
 
   @override
-  String get checkForUpdate => 'Check for update';
+  String get checkForUpdate => 'Check for Update';
 
   @override
   String get uninstall => 'Uninstall';
@@ -5467,10 +5467,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get botNameLabel => 'Name';
 
   @override
-  String get importAgent => 'Import an agent';
+  String get importAgent => 'Import an Agent';
 
   @override
-  String get importAgentPickFolder => 'Pick its folder';
+  String get importAgentPickFolder => 'Pick Its Folder';
 
   @override
   String get importAgentPickZip => 'Upload a ZIP of its folder';
@@ -5593,17 +5593,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get routinesAsFiles => 'Routines and skills as files';
+  String get routinesAsFiles => 'Routines and Skills as Files';
 
   @override
   String get routinesAsFilesHelp =>
       'Every routine and skill as a Markdown file: export them, edit them anywhere, import them back, or keep them in a GitHub repository.';
 
   @override
-  String get exportFiles => 'Export as files';
+  String get exportFiles => 'Export as Files';
 
   @override
-  String get importFiles => 'Import files';
+  String get importFiles => 'Import Files';
 
   @override
   String get importFilesApply => 'Apply';
@@ -5636,7 +5636,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get gitSync => 'Git sync';
+  String get gitSync => 'Git Sync';
 
   @override
   String get gitSyncOff => 'Off';
@@ -5654,7 +5654,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get gitSyncPr => 'Pull request waiting for you';
+  String get gitSyncPr => 'Pull Request Waiting for You';
 
   @override
   String get syncNow => 'Sync now';
@@ -5669,10 +5669,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gitFolder => 'Folder in the repository (optional)';
 
   @override
-  String get gitSyncOn => 'Sync on';
+  String get gitSyncOn => 'Sync On';
 
   @override
-  String get gitSyncRemove => 'Stop syncing';
+  String get gitSyncRemove => 'Stop Syncing';
 
   @override
   String get gitWebhookTitle => 'Add this webhook to the repository';
@@ -5714,7 +5714,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get knowledgeWebsite => 'Website';
 
   @override
-  String get knowledgePickFiles => 'Choose files';
+  String get knowledgePickFiles => 'Choose Files';
 
   @override
   String get knowledgeWebsiteUrl => 'Website address';
@@ -5778,10 +5778,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get saveSkill => 'Save skill';
+  String get saveSkill => 'Save Skill';
 
   @override
-  String get applyEdit => 'Apply change';
+  String get applyEdit => 'Apply Change';
 
   @override
   String skillSaved(String name) {
@@ -5882,7 +5882,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get run => 'Run';
 
   @override
-  String get saveAsReplay => 'Also save as a replay';
+  String get saveAsReplay => 'Also Save as a Replay';
 
   @override
   String replaySaved(String name) {
@@ -5965,10 +5965,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pmBwToken => 'Access token (optional)';
 
   @override
-  String get pmForWorkspace => 'For the whole workspace';
+  String get pmForWorkspace => 'For the Whole Workspace';
 
   @override
-  String get pmChooseVaults => 'Vaults bots may use';
+  String get pmChooseVaults => 'Vaults Bots May Use';
 
   @override
   String get pmChooseVaultsHelp =>
@@ -5978,10 +5978,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcomeGettingReady => 'Getting your space ready…';
 
   @override
-  String get setUpManually => 'Set up manually';
+  String get setUpManually => 'Set Up Manually';
 
   @override
-  String get tryAgain => 'Try again';
+  String get tryAgain => 'Try Again';
 
   @override
   String get inviteLinkCopied =>
@@ -6238,7 +6238,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharingPeople => 'People';
 
   @override
-  String get sharingOnlyCreator => 'Only its creator';
+  String get sharingOnlyCreator => 'Only Its Creator';
 
   @override
   String get sharingEveryoneChats =>
@@ -6246,7 +6246,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String sharingEveryoneRole(String role) {
-    return 'Everyone who is $role';
+    return 'Everyone Who Is $role';
   }
 
   @override
@@ -6493,7 +6493,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callDecline => 'Decline';
 
   @override
-  String get encryption => 'Encrypt content';
+  String get encryption => 'Encrypt Content';
 
   @override
   String get encryptionHelp =>
@@ -6524,10 +6524,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Content will be encrypted with this workspace\'s key. If the workspace is deleted, its key is destroyed and the content can\'t be recovered. Exact-word search stops matching encrypted text.';
 
   @override
-  String get encryptionTurnOn => 'Turn on';
+  String get encryptionTurnOn => 'Turn On';
 
   @override
-  String get encryptionRotate => 'Rotate key';
+  String get encryptionRotate => 'Rotate Key';
 
   @override
   String get encryptionKeyManaged =>
@@ -6550,7 +6550,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get memoryBackend => 'Where memory is kept';
+  String get memoryBackend => 'Where Memory Is Kept';
 
   @override
   String get memoryBuiltIn => 'Built in';
@@ -6577,10 +6577,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only for a self-hosted Honcho or Supermemory';
 
   @override
-  String get memoryCopyExisting => 'Copy current memories over';
+  String get memoryCopyExisting => 'Copy Current Memories Over';
 
   @override
-  String get memoryUseBuiltIn => 'Use built-in memory again';
+  String get memoryUseBuiltIn => 'Use Built-in Memory Again';
 
   @override
   String get providerHintData => 'paid data (places, emails, SEO)';
@@ -6595,14 +6595,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get a2aAgentToken => 'Access token (optional)';
 
   @override
-  String get a2a => 'Agent-to-agent (A2A)';
+  String get a2a => 'Agent-to-Agent (A2A)';
 
   @override
   String get a2aHelp =>
       'Let outside AI agents give tasks to bots you publish, using workspace API keys. Tasks run with the bot\'s usual approvals and limits.';
 
   @override
-  String get a2aPublish => 'Publish as an A2A agent';
+  String get a2aPublish => 'Publish as an A2A Agent';
 
   @override
   String get a2aPublishHelp =>
@@ -6616,7 +6616,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get a2aCardUrl => 'Agent card';
 
   @override
-  String get phoneCalls => 'Phone calls';
+  String get phoneCalls => 'Phone Calls';
 
   @override
   String get phoneCallsHelp =>
@@ -6632,7 +6632,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get twilioFrom => 'Calls come from';
 
   @override
-  String get phoneCallsPersonal => 'Allow calling personal numbers';
+  String get phoneCallsPersonal => 'Allow Calling Personal Numbers';
 
   @override
   String get phoneCallsCap => 'Calls per day';
@@ -6671,10 +6671,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get outCallNothingYet => 'Nothing said yet.';
 
   @override
-  String get outCallTakeOver => 'Take over';
+  String get outCallTakeOver => 'Take Over';
 
   @override
-  String get outCallEnd => 'End call';
+  String get outCallEnd => 'End Call';
 
   @override
   String get outCallYourPhone => 'Your phone number';
@@ -6752,7 +6752,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linksContactName => 'Contact\'s name';
 
   @override
-  String get linksInviteReady => 'Send this invite';
+  String get linksInviteReady => 'Send This Invite';
 
   @override
   String get linksInviteHelp =>
@@ -6794,7 +6794,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linksRevoke => 'Unlink';
 
   @override
-  String get wakeWord => 'Wake word';
+  String get wakeWord => 'Wake Word';
 
   @override
   String get wakeWordRow => 'Say a phrase to start a call with a bot';
@@ -6809,7 +6809,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'While Casama is open, this device listens for your phrase and starts a live call with the bot you choose.';
 
   @override
-  String get wakeWordListen => 'Listen for the wake word';
+  String get wakeWordListen => 'Listen for the Wake Word';
 
   @override
   String get wakeWordPhrase => 'Phrase';
@@ -6828,7 +6828,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Listening happens on this device with an open-source model (about 18 MB, downloaded once). Nothing is sent anywhere until the call starts.';
 
   @override
-  String get secretStore => 'Where secrets are kept';
+  String get secretStore => 'Where Secrets Are Kept';
 
   @override
   String get secretStoreVault => 'This server\'s vault';
@@ -6853,13 +6853,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get secretStoreClientSecret => 'Client secret';
 
   @override
-  String get secretStoreMove => 'Move current secrets into Infisical';
+  String get secretStoreMove => 'Move Current Secrets into Infisical';
 
   @override
-  String get secretStoreBack => 'Use this server\'s vault again';
+  String get secretStoreBack => 'Use This Server\'s Vault Again';
 
   @override
-  String get localServer => 'Run Casama on this computer';
+  String get localServer => 'Run Casama on This Computer';
 
   @override
   String get localServerHelp =>
@@ -6986,7 +6986,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get devicePrivateModel => 'Private models only';
+  String get devicePrivateModel => 'Private Models Only';
 
   @override
   String get devicePrivateModelHelp => 'Only bots on a local model can read it';
@@ -6999,7 +6999,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Casama doesn\'t have permission. Allow it in the system settings, then try again.';
 
   @override
-  String get deviceOtherDevices => 'Your other devices';
+  String get deviceOtherDevices => 'Your Other Devices';
 
   @override
   String get deviceForget => 'Forget this device';
@@ -7026,7 +7026,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Health data needs encryption at rest. Turn it on for a workspace you own, then try again.';
 
   @override
-  String get placeAddHere => 'Add where I am now';
+  String get placeAddHere => 'Add Where I Am Now';
 
   @override
   String get placeName => 'Name this place (Home, Work, Gym)';
@@ -7055,20 +7055,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get ctxSelection => 'Selected text';
+  String get ctxSelection => 'Selected Text';
 
   @override
-  String get ctxAddScreenshot => 'Add a screenshot';
+  String get ctxAddScreenshot => 'Add a Screenshot';
 
   @override
-  String get ctxScreenshotAdded => 'Screenshot added';
+  String get ctxScreenshotAdded => 'Screenshot Added';
 
   @override
   String get ctxScreenshotFailed =>
       'Couldn\'t take a screenshot. Allow screen recording for Casama in your system settings.';
 
   @override
-  String get watchedFolders => 'Watched folders';
+  String get watchedFolders => 'Watched Folders';
 
   @override
   String get watchedFoldersHelp =>
@@ -7111,7 +7111,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessLikeThis => 'Less like this';
 
   @override
-  String get lessLikeThisDone => 'Got it, fewer like this';
+  String get lessLikeThisDone => 'Got It, Fewer Like This';
 
   @override
   String get widgetStatusWorking => 'Working…';
@@ -7147,7 +7147,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosFromUnsplash => 'Photos from Unsplash';
 
   @override
-  String get showBotSteps => 'Show the bot\'s steps';
+  String get showBotSteps => 'Show the Bot\'s Steps';
 
   @override
   String get showBotStepsHelp =>
@@ -7198,7 +7198,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'It\'s shown only this once. Paste it into the app you\'re connecting, then tap Done.';
 
   @override
-  String get copyKey => 'Copy key';
+  String get copyKey => 'Copy Key';
 
   @override
   String get keyCopied => 'Key copied';
@@ -7229,7 +7229,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only owners and admins can invite people. Ask one of them for an invite link.';
 
   @override
-  String get askBeforeJoining => 'Ask me before people join';
+  String get askBeforeJoining => 'Ask Me Before People Join';
 
   @override
   String get askBeforeJoiningHelp =>
@@ -7253,22 +7253,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Paste one or more, separated by commas or new lines.';
 
   @override
-  String get getCode => 'Get a code';
+  String get getCode => 'Get a Code';
 
   @override
-  String get getNewCode => 'Get a new code';
+  String get getNewCode => 'Get a New Code';
 
   @override
-  String get getStarted => 'Get started';
+  String get getStarted => 'Get Started';
 
   @override
-  String get welcomeCta => 'Let\'s go';
+  String get welcomeCta => 'Let\'s Go';
 
   @override
-  String get inviteAsAdmin => 'Invite as admins';
+  String get inviteAsAdmin => 'Invite as Admins';
 
   @override
-  String get inviteByEmail => 'Invite by email';
+  String get inviteByEmail => 'Invite by Email';
 
   @override
   String get inviteExpired => 'Expired';
@@ -7306,7 +7306,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String invitePeopleTo(String name) {
-    return 'Invite people to $name';
+    return 'Invite People to $name';
   }
 
   @override
@@ -7353,7 +7353,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinAsMember => 'You\'ll join as a member';
 
   @override
-  String get joinByDomain => 'Join by email domain';
+  String get joinByDomain => 'Join by Email Domain';
 
   @override
   String get joinByDomainHelp =>
@@ -7425,7 +7425,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get pendingInvites => 'Invites not accepted yet';
+  String get pendingInvites => 'Invites Not Accepted Yet';
 
   @override
   String get people => 'People';
@@ -7469,23 +7469,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get peopleRow => 'Invite people, approve requests, see members';
 
   @override
-  String get qrCode => 'QR code';
+  String get qrCode => 'QR Code';
 
   @override
   String get remove => 'Remove';
 
   @override
-  String get resendInvite => 'Send again';
+  String get resendInvite => 'Send Again';
 
   @override
-  String get resetLink => 'Reset link';
+  String get resetLink => 'Reset Link';
 
   @override
   String get resetLinkHelp =>
       'The current link stops working right away and you get a new one. People already in stay in.';
 
   @override
-  String get revokeInvite => 'Cancel invite';
+  String get revokeInvite => 'Cancel Invite';
 
   @override
   String scanToJoin(String name) {
@@ -7498,7 +7498,7 @@ class AppLocalizationsEn extends AppLocalizations {
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
-    return 'Send $countString invites';
+    return 'Send $countString Invites';
   }
 
   @override
@@ -7512,7 +7512,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInToJoin => 'Sign in to join';
 
   @override
-  String get startOwnWorkspace => 'Start my own workspace instead';
+  String get startOwnWorkspace => 'Start My Own Workspace Instead';
 
   @override
   String switchToServer(String host) {
@@ -7520,7 +7520,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get waitingToJoin => 'Waiting to join';
+  String get waitingToJoin => 'Waiting to Join';
 
   @override
   String welcomeToWorkspace(String name) {
@@ -7528,7 +7528,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get workspacesYouCanJoin => 'Workspaces you can join';
+  String get workspacesYouCanJoin => 'Workspaces You Can Join';
 
   @override
   String get yourTeamIsHere => 'Your team is already here';
@@ -7564,16 +7564,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photoChange => 'Change profile photo';
 
   @override
-  String get photoTake => 'Take a photo';
+  String get photoTake => 'Take a Photo';
 
   @override
-  String get photoChoose => 'Choose a photo';
+  String get photoChoose => 'Choose a Photo';
 
   @override
-  String get photoUseGoogle => 'Use my Google photo';
+  String get photoUseGoogle => 'Use My Google Photo';
 
   @override
-  String get photoRemove => 'Remove photo';
+  String get photoRemove => 'Remove Photo';
 
   @override
   String get photoUnreadable =>
@@ -7600,7 +7600,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'For example: short answers, no emoji, explain things like I\'m new to them';
 
   @override
-  String get learnAboutMe => 'Learn about me from chats';
+  String get learnAboutMe => 'Learn About Me from Chats';
 
   @override
   String get learnAboutMeHelp =>
@@ -7616,14 +7616,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your name and reply style are used everywhere. About me and learned facts stay in spaces where you\'re the only member, unless you turn this on.';
 
   @override
-  String get learnedAboutYou => 'What bots learned';
+  String get learnedAboutYou => 'What Bots Learned';
 
   @override
   String get noLearnedFacts =>
       'Nothing yet. Facts bots learn about you in chat show up here.';
 
   @override
-  String get addFact => 'Add a fact';
+  String get addFact => 'Add a Fact';
 
   @override
   String get editFact => 'Edit fact';
@@ -7756,7 +7756,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get galleryReport => 'Report';
 
   @override
-  String get galleryShare => 'Share to gallery';
+  String get galleryShare => 'Share to Gallery';
 
   @override
   String galleryBy(String name) {
@@ -7790,7 +7790,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get gallerySeeAll => 'See all';
+  String get gallerySeeAll => 'See All';
 
   @override
   String get galleryInUse => 'In use';
@@ -7854,7 +7854,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get galleryTypeSkill => 'Skill';
 
   @override
-  String get galleryBehindChats => 'Behind your chats';
+  String get galleryBehindChats => 'Behind Your Chats';
 
   @override
   String celebrateNewBot(String name) {
@@ -7875,7 +7875,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get fewerEffects => 'Fewer effects';
+  String get fewerEffects => 'Fewer Effects';
 
   @override
   String get fewerEffectsHelp =>
@@ -7885,7 +7885,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAppSection => 'App';
 
   @override
-  String get settingsSecuritySection => 'Sign-in & security';
+  String get settingsSecuritySection => 'Sign-in & Security';
 
   @override
   String get customize => 'Customize';
@@ -7901,7 +7901,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your own changes. Save them to keep this look.';
 
   @override
-  String get appearanceFromGallery => 'From the gallery';
+  String get appearanceFromGallery => 'From the Gallery';
 
   @override
   String appearanceShowAll(int count) {
@@ -7909,7 +7909,7 @@ class AppLocalizationsEn extends AppLocalizations {
         intl.NumberFormat.decimalPattern(localeName);
     final String countString = countNumberFormat.format(count);
 
-    return 'Show all $countString';
+    return 'Show All $countString';
   }
 
   @override

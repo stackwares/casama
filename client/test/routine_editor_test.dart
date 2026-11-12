@@ -54,7 +54,7 @@ void main() {
 
     await _tapVisible(tester, find.byKey(const Key('createRoutine')));
     expect(backend.routineList.single.trigger, RoutineTrigger.webhook);
-    expect(find.text('Webhook created'), findsOneWidget);
+    expect(find.text('Webhook Created'), findsOneWidget);
   });
 
   testWidgets('an existing webhook routine still shows its trigger', (tester) async {

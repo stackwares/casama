@@ -143,7 +143,7 @@ void main() {
       await tapMic(tester);
       await tapMic(tester);
       expect(find.text("Couldn't turn that into text."), findsOneWidget);
-      await tester.tap(find.text('Try again'));
+      await tester.tap(find.text('Try Again'));
       await settleSome(tester);
       expect(backend.transcribed, hasLength(3));
       expect(messageText(tester), 'water the plants');

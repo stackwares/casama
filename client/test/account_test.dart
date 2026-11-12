@@ -83,7 +83,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('newEmail')), 'ana@new.example');
     await tester.pump();
-    await tester.tap(find.text('Send confirmation'));
+    await tester.tap(find.text('Send Confirmation'));
     await tester.pumpAndSettle();
     expect(backend.pendingEmail, 'ana@new.example');
     expect(find.text('Waiting for confirmation: ana@new.example'), findsOneWidget);
@@ -96,7 +96,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('signOutEverywhere')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Sign out everywhere').last);
+    await tester.tap(find.text('Sign Out Everywhere').last);
     await tester.pumpAndSettle();
     expect(backend.signedOutEverywhere, isTrue);
     expect(backend.signedIn, isFalse);
@@ -110,7 +110,7 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
     await tester.pumpAndSettle();
     expect(find.text('Sign in faster next time?'), findsOneWidget);
-    await tester.tap(find.text('Add a passkey'));
+    await tester.tap(find.text('Add a Passkey'));
     await tester.pumpAndSettle();
     expect(backend.passkeyList, hasLength(1));
 

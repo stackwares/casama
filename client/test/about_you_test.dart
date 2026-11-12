@@ -110,7 +110,7 @@ void main() {
     expect(find.text('app'), findsOneWidget);
   });
 
-  testWidgets('an empty name is not saved, and "Not now" skips the name step for good', (tester) async {
+  testWidgets('an empty name is not saved, and "Not Now" skips the name step for good', (tester) async {
     await setSize(tester, const Size(400, 800));
     final backend = FakeBackend()..about = const AboutYouView(nameAsked: false);
     await tester.pumpWidget(harness(backend, const _Steps()));

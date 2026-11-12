@@ -30,6 +30,6 @@ void main() {
     await tester.tap(find.byKey(const Key('lessLikeThis')));
     await tester.pumpAndSettle();
     expect(backend.lessLiked, ['n1']);
-    expect(find.text('Got it, fewer like this'), findsOneWidget);
+    expect(find.text('Got It, Fewer Like This'), findsOneWidget);
   });
 }

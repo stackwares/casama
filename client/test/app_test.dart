@@ -92,7 +92,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
       expect(tester.takeException(), isNull);
       final button = tester.getRect(find.byKey(const Key('openSignIn')));
-      final label = tester.getRect(find.text("Let's go"));
+      final label = tester.getRect(find.text("Let's Go"));
       expect(button.height, greaterThanOrEqualTo(56));
       expect(
         button.contains(label.topLeft) &&
@@ -719,7 +719,7 @@ void main() {
     for (var i = 0; i < 5; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
-    // New people land in the welcome chat (D-129); the wizard is behind "Set up manually".
+    // New people land in the welcome chat (D-129); the wizard is behind "Set Up Manually".
     await tester.tap(find.byKey(const Key('setUpManually')));
     await tester.pumpAndSettle();
     expect(find.text('Set up your workspace'), findsOneWidget);

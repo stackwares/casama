@@ -82,12 +82,12 @@ void main() {
     final backend = FakeBackend();
     await tester.pumpWidget(harness(backend, const PasskeysScreen()));
     await tester.pumpAndSettle();
-    expect(find.text('Add a passkey'), findsOneWidget);
+    expect(find.text('Add a Passkey'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('addPasskey')));
     await tester.pumpAndSettle();
     expect(backend.passkeyList.single.name, 'iCloud Keychain');
-    expect(find.text('Add another passkey'), findsOneWidget);
+    expect(find.text('Add Another Passkey'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('renamePasskey-pk1')));
     await tester.pumpAndSettle();

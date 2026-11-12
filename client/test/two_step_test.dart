@@ -15,7 +15,7 @@ void main() {
     final backend = FakeBackend();
     await tester.pumpWidget(harness(backend, const TwoStepSettingsScreen()));
     await tester.pumpAndSettle();
-    expect(find.text('Set up an authenticator app'), findsOneWidget);
+    expect(find.text('Set Up an Authenticator App'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('startTwoStep')));
     await tester.pumpAndSettle();
@@ -27,7 +27,7 @@ void main() {
     await tester.enterText(find.byKey(const Key('enrollCode')), '123456');
     await tester.pumpAndSettle();
     expect(backend.twoStep.single.id, 'f-new');
-    expect(find.text('Add another authenticator'), findsOneWidget);
+    expect(find.text('Add Another Authenticator'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('removeFactor-f-new')));
     await tester.pumpAndSettle();

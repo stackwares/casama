@@ -145,7 +145,7 @@ abstract class AppLocalizations {
   /// No description provided for @retry.
   ///
   /// In en, this message translates to:
-  /// **'Try again'**
+  /// **'Try Again'**
   String get retry;
 
   /// No description provided for @cancel.
@@ -283,19 +283,19 @@ abstract class AppLocalizations {
   /// No description provided for @continueWithEmail.
   ///
   /// In en, this message translates to:
-  /// **'Continue with email'**
+  /// **'Continue with Email'**
   String get continueWithEmail;
 
   /// No description provided for @moreSignInOptions.
   ///
   /// In en, this message translates to:
-  /// **'More options'**
+  /// **'More Options'**
   String get moreSignInOptions;
 
   /// No description provided for @usePasswordInstead.
   ///
   /// In en, this message translates to:
-  /// **'Use a password instead'**
+  /// **'Use a Password Instead'**
   String get usePasswordInstead;
 
   /// No description provided for @checkInboxTitle.
@@ -319,19 +319,19 @@ abstract class AppLocalizations {
   /// No description provided for @resendLink.
   ///
   /// In en, this message translates to:
-  /// **'Send again'**
+  /// **'Send Again'**
   String get resendLink;
 
   /// No description provided for @resendLinkIn.
   ///
   /// In en, this message translates to:
-  /// **'Send again in {seconds}s'**
+  /// **'Send Again in {seconds}s'**
   String resendLinkIn(int seconds);
 
   /// No description provided for @useDifferentEmail.
   ///
   /// In en, this message translates to:
-  /// **'Use a different email'**
+  /// **'Use a Different Email'**
   String get useDifferentEmail;
 
   /// No description provided for @authWrongPassword.
@@ -373,7 +373,7 @@ abstract class AppLocalizations {
   /// No description provided for @useMagicLinkInstead.
   ///
   /// In en, this message translates to:
-  /// **'Email me a link instead'**
+  /// **'Email Me a Link Instead'**
   String get useMagicLinkInstead;
 
   /// No description provided for @invalidEmail.
@@ -391,7 +391,7 @@ abstract class AppLocalizations {
   /// No description provided for @signOut.
   ///
   /// In en, this message translates to:
-  /// **'Sign out'**
+  /// **'Sign Out'**
   String get signOut;
 
   /// No description provided for @onboardingTitle.
@@ -469,7 +469,7 @@ abstract class AppLocalizations {
   /// No description provided for @testKey.
   ///
   /// In en, this message translates to:
-  /// **'Test key'**
+  /// **'Test Key'**
   String get testKey;
 
   /// No description provided for @keyOk.
@@ -1021,7 +1021,7 @@ abstract class AppLocalizations {
   /// No description provided for @addKey.
   ///
   /// In en, this message translates to:
-  /// **'Add key'**
+  /// **'Add Key'**
   String get addKey;
 
   /// No description provided for @usage.
@@ -1177,7 +1177,7 @@ abstract class AppLocalizations {
   /// No description provided for @addIntegration.
   ///
   /// In en, this message translates to:
-  /// **'Add integration'**
+  /// **'Add Integration'**
   String get addIntegration;
 
   /// No description provided for @addSecret.
@@ -1201,7 +1201,7 @@ abstract class AppLocalizations {
   /// No description provided for @alwaysAllow.
   ///
   /// In en, this message translates to:
-  /// **'Always allow'**
+  /// **'Always Allow'**
   String get alwaysAllow;
 
   /// No description provided for @approval.
@@ -1333,7 +1333,7 @@ abstract class AppLocalizations {
   /// No description provided for @copySecret.
   ///
   /// In en, this message translates to:
-  /// **'Copy secret'**
+  /// **'Copy Secret'**
   String get copySecret;
 
   /// No description provided for @cronExpression.
@@ -1423,7 +1423,7 @@ abstract class AppLocalizations {
   /// No description provided for @markAllRead.
   ///
   /// In en, this message translates to:
-  /// **'Mark all as read'**
+  /// **'Mark All as Read'**
   String get markAllRead;
 
   /// No description provided for @mondaysAt9.
@@ -1477,7 +1477,7 @@ abstract class AppLocalizations {
   /// No description provided for @openInbox.
   ///
   /// In en, this message translates to:
-  /// **'Open inbox'**
+  /// **'Open Inbox'**
   String get openInbox;
 
   /// No description provided for @pipedreamApps.
@@ -1699,13 +1699,13 @@ abstract class AppLocalizations {
   /// No description provided for @openComputerSettings.
   ///
   /// In en, this message translates to:
-  /// **'Open computer settings'**
+  /// **'Open Computer Settings'**
   String get openComputerSettings;
 
   /// No description provided for @runNow.
   ///
   /// In en, this message translates to:
-  /// **'Run now'**
+  /// **'Run Now'**
   String get runNow;
 
   /// No description provided for @secretName.
@@ -1819,7 +1819,7 @@ abstract class AppLocalizations {
   /// No description provided for @webhookCreated.
   ///
   /// In en, this message translates to:
-  /// **'Webhook created'**
+  /// **'Webhook Created'**
   String get webhookCreated;
 
   /// No description provided for @webhookSecret.
@@ -1963,7 +1963,7 @@ abstract class AppLocalizations {
   /// No description provided for @handBack.
   ///
   /// In en, this message translates to:
-  /// **'Hand back'**
+  /// **'Hand Back'**
   String get handBack;
 
   /// No description provided for @handBackNote.
@@ -2011,7 +2011,7 @@ abstract class AppLocalizations {
   /// No description provided for @openLiveView.
   ///
   /// In en, this message translates to:
-  /// **'Open live view'**
+  /// **'Open Live View'**
   String get openLiveView;
 
   /// No description provided for @liveExpand.
@@ -2077,7 +2077,7 @@ abstract class AppLocalizations {
   /// No description provided for @liveKeepWatching.
   ///
   /// In en, this message translates to:
-  /// **'Keep watching'**
+  /// **'Keep Watching'**
   String get liveKeepWatching;
 
   /// No description provided for @livePausedToSavePower.
@@ -2161,19 +2161,19 @@ abstract class AppLocalizations {
   /// No description provided for @switchToDesktop.
   ///
   /// In en, this message translates to:
-  /// **'Switch to desktop'**
+  /// **'Switch to Desktop'**
   String get switchToDesktop;
 
   /// No description provided for @switchToHeadless.
   ///
   /// In en, this message translates to:
-  /// **'Switch to headless'**
+  /// **'Switch to Headless'**
   String get switchToHeadless;
 
   /// No description provided for @takeControl.
   ///
   /// In en, this message translates to:
-  /// **'Take control'**
+  /// **'Take Control'**
   String get takeControl;
 
   /// No description provided for @takeoverCompleted.
@@ -2293,7 +2293,7 @@ abstract class AppLocalizations {
   /// No description provided for @dictationRetry.
   ///
   /// In en, this message translates to:
-  /// **'Try again'**
+  /// **'Try Again'**
   String get dictationRetry;
 
   /// No description provided for @dictationSayAgain.
@@ -2515,7 +2515,7 @@ abstract class AppLocalizations {
   /// No description provided for @callToolNotNow.
   ///
   /// In en, this message translates to:
-  /// **'Not now'**
+  /// **'Not Now'**
   String get callToolNotNow;
 
   /// No description provided for @callToolAllowed.
@@ -2617,7 +2617,7 @@ abstract class AppLocalizations {
   /// No description provided for @callTools.
   ///
   /// In en, this message translates to:
-  /// **'Tools on calls'**
+  /// **'Tools on Calls'**
   String get callTools;
 
   /// No description provided for @callToolsHelp.
@@ -2713,7 +2713,7 @@ abstract class AppLocalizations {
   /// No description provided for @companionCapabilities.
   ///
   /// In en, this message translates to:
-  /// **'What bots may do'**
+  /// **'What Bots May Do'**
   String get companionCapabilities;
 
   /// No description provided for @companionCapabilitiesHelp.
@@ -2749,7 +2749,7 @@ abstract class AppLocalizations {
   /// No description provided for @sharedFolders.
   ///
   /// In en, this message translates to:
-  /// **'Shared folders'**
+  /// **'Shared Folders'**
   String get sharedFolders;
 
   /// No description provided for @sharedFoldersHelp.
@@ -2761,13 +2761,13 @@ abstract class AppLocalizations {
   /// No description provided for @addFolder.
   ///
   /// In en, this message translates to:
-  /// **'Add a folder'**
+  /// **'Add a Folder'**
   String get addFolder;
 
   /// No description provided for @botsAllowed.
   ///
   /// In en, this message translates to:
-  /// **'Bots allowed'**
+  /// **'Bots Allowed'**
   String get botsAllowed;
 
   /// No description provided for @botsAllowedHelp.
@@ -2839,7 +2839,7 @@ abstract class AppLocalizations {
   /// No description provided for @cloudModelsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Cloud models'**
+  /// **'Cloud Models'**
   String get cloudModelsTitle;
 
   /// No description provided for @cloudModelsHelp.
@@ -2851,13 +2851,13 @@ abstract class AppLocalizations {
   /// No description provided for @connectionsTitle.
   ///
   /// In en, this message translates to:
-  /// **'App connections'**
+  /// **'App Connections'**
   String get connectionsTitle;
 
   /// No description provided for @connectionsServerComposio.
   ///
   /// In en, this message translates to:
-  /// **'Casama\'s Composio account'**
+  /// **'Casama\'s Composio Account'**
   String get connectionsServerComposio;
 
   /// No description provided for @connectionsServerComposioHelp.
@@ -2869,7 +2869,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectionsOwnAccounts.
   ///
   /// In en, this message translates to:
-  /// **'People\'s own accounts'**
+  /// **'People\'s Own Accounts'**
   String get connectionsOwnAccounts;
 
   /// No description provided for @connectionsOwnAccountsHelp.
@@ -2887,7 +2887,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectionsGoogleTitle.
   ///
   /// In en, this message translates to:
-  /// **'Google apps'**
+  /// **'Google Apps'**
   String get connectionsGoogleTitle;
 
   /// No description provided for @connectionsGoogleComposio.
@@ -2905,7 +2905,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectionsGoogleDirect.
   ///
   /// In en, this message translates to:
-  /// **'Google\'s own servers'**
+  /// **'Google\'s Own Servers'**
   String get connectionsGoogleDirect;
 
   /// No description provided for @connectionsGoogleDirectHelp.
@@ -3043,13 +3043,13 @@ abstract class AppLocalizations {
   /// No description provided for @upgradeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Upgrade your plan'**
+  /// **'Upgrade Your Plan'**
   String get upgradeTitle;
 
   /// No description provided for @notNow.
   ///
   /// In en, this message translates to:
-  /// **'Not now'**
+  /// **'Not Now'**
   String get notNow;
 
   /// No description provided for @seePlans.
@@ -3073,7 +3073,7 @@ abstract class AppLocalizations {
   /// No description provided for @restorePurchases.
   ///
   /// In en, this message translates to:
-  /// **'Restore purchases'**
+  /// **'Restore Purchases'**
   String get restorePurchases;
 
   /// No description provided for @restoreStarted.
@@ -3103,7 +3103,7 @@ abstract class AppLocalizations {
   /// No description provided for @subscribeOnWeb.
   ///
   /// In en, this message translates to:
-  /// **'Subscribe on the web'**
+  /// **'Subscribe on the Web'**
   String get subscribeOnWeb;
 
   /// No description provided for @credits.
@@ -3175,7 +3175,7 @@ abstract class AppLocalizations {
   /// No description provided for @manageSubscription.
   ///
   /// In en, this message translates to:
-  /// **'Manage subscription'**
+  /// **'Manage Subscription'**
   String get manageSubscription;
 
   /// No description provided for @usageComputerHours.
@@ -3223,13 +3223,13 @@ abstract class AppLocalizations {
   /// No description provided for @cloudConnectNewKey.
   ///
   /// In en, this message translates to:
-  /// **'New Cloud Connect key'**
+  /// **'New Cloud Connect Key'**
   String get cloudConnectNewKey;
 
   /// No description provided for @cloudConnectKeyCreated.
   ///
   /// In en, this message translates to:
-  /// **'Key created'**
+  /// **'Key Created'**
   String get cloudConnectKeyCreated;
 
   /// No description provided for @cloudConnectKeyOnce.
@@ -3277,7 +3277,7 @@ abstract class AppLocalizations {
   /// No description provided for @changeServer.
   ///
   /// In en, this message translates to:
-  /// **'Use a different server'**
+  /// **'Use a Different Server'**
   String get changeServer;
 
   /// No description provided for @serverIs.
@@ -3307,7 +3307,7 @@ abstract class AppLocalizations {
   /// No description provided for @exportMyData.
   ///
   /// In en, this message translates to:
-  /// **'Export my data'**
+  /// **'Export My Data'**
   String get exportMyData;
 
   /// No description provided for @exportMyDataHelp.
@@ -3325,7 +3325,7 @@ abstract class AppLocalizations {
   /// No description provided for @runHistoryRetention.
   ///
   /// In en, this message translates to:
-  /// **'Keep run history for'**
+  /// **'Keep Run History For'**
   String get runHistoryRetention;
 
   /// No description provided for @runHistoryRetentionHelp.
@@ -3343,7 +3343,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccount.
   ///
   /// In en, this message translates to:
-  /// **'Delete my account'**
+  /// **'Delete My Account'**
   String get deleteAccount;
 
   /// No description provided for @deleteAccountHelp.
@@ -3367,7 +3367,7 @@ abstract class AppLocalizations {
   /// No description provided for @accountDeleted.
   ///
   /// In en, this message translates to:
-  /// **'Account scheduled for deletion'**
+  /// **'Account Scheduled for Deletion'**
   String get accountDeleted;
 
   /// No description provided for @accountDeletedBody.
@@ -3529,7 +3529,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationsTurnOn.
   ///
   /// In en, this message translates to:
-  /// **'Turn on'**
+  /// **'Turn On'**
   String get notificationsTurnOn;
 
   /// No description provided for @createMenuTitle.
@@ -3577,7 +3577,7 @@ abstract class AppLocalizations {
   /// No description provided for @autoUpdates.
   ///
   /// In en, this message translates to:
-  /// **'Update automatically'**
+  /// **'Update Automatically'**
   String get autoUpdates;
 
   /// No description provided for @autoUpdatesHelp.
@@ -3589,7 +3589,7 @@ abstract class AppLocalizations {
   /// No description provided for @upToDate.
   ///
   /// In en, this message translates to:
-  /// **'Casama is up to date'**
+  /// **'Casama Is Up to Date'**
   String get upToDate;
 
   /// No description provided for @updateReady.
@@ -3607,13 +3607,13 @@ abstract class AppLocalizations {
   /// No description provided for @whatsNewTitle.
   ///
   /// In en, this message translates to:
-  /// **'What\'s new in Casama {version}'**
+  /// **'What\'s New in Casama {version}'**
   String whatsNewTitle(String version);
 
   /// No description provided for @whatsNewGotIt.
   ///
   /// In en, this message translates to:
-  /// **'Got it'**
+  /// **'Got It'**
   String get whatsNewGotIt;
 
   /// No description provided for @whatsNew080Calls.
@@ -3643,7 +3643,7 @@ abstract class AppLocalizations {
   /// No description provided for @openAtLogin.
   ///
   /// In en, this message translates to:
-  /// **'Open at login'**
+  /// **'Open at Login'**
   String get openAtLogin;
 
   /// No description provided for @openAtLoginHelp.
@@ -3787,7 +3787,7 @@ abstract class AppLocalizations {
   /// No description provided for @getOpenRouterKey.
   ///
   /// In en, this message translates to:
-  /// **'Get an OpenRouter key'**
+  /// **'Get an OpenRouter Key'**
   String get getOpenRouterKey;
 
   /// No description provided for @createFirstBotBody.
@@ -3985,7 +3985,7 @@ abstract class AppLocalizations {
   /// No description provided for @openInBrowser.
   ///
   /// In en, this message translates to:
-  /// **'Open in browser'**
+  /// **'Open in Browser'**
   String get openInBrowser;
 
   /// No description provided for @convertingToPdf.
@@ -4033,7 +4033,7 @@ abstract class AppLocalizations {
   /// No description provided for @openFileInChat.
   ///
   /// In en, this message translates to:
-  /// **'Open file'**
+  /// **'Open File'**
   String get openFileInChat;
 
   /// No description provided for @attach.
@@ -4195,7 +4195,7 @@ abstract class AppLocalizations {
   /// No description provided for @editMemory.
   ///
   /// In en, this message translates to:
-  /// **'Edit memory'**
+  /// **'Edit Memory'**
   String get editMemory;
 
   /// No description provided for @editMemoryHelp.
@@ -4237,7 +4237,7 @@ abstract class AppLocalizations {
   /// No description provided for @yourKeys.
   ///
   /// In en, this message translates to:
-  /// **'Your keys'**
+  /// **'Your Keys'**
   String get yourKeys;
 
   /// No description provided for @keyWorking.
@@ -4279,7 +4279,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteSkill.
   ///
   /// In en, this message translates to:
-  /// **'Delete skill'**
+  /// **'Delete Skill'**
   String get deleteSkill;
 
   /// No description provided for @skillDescriptionHelp.
@@ -4309,7 +4309,7 @@ abstract class AppLocalizations {
   /// No description provided for @renameComputer.
   ///
   /// In en, this message translates to:
-  /// **'Rename computer'**
+  /// **'Rename Computer'**
   String get renameComputer;
 
   /// No description provided for @deleteComputerTitle.
@@ -4327,13 +4327,13 @@ abstract class AppLocalizations {
   /// No description provided for @yourData.
   ///
   /// In en, this message translates to:
-  /// **'Your data'**
+  /// **'Your Data'**
   String get yourData;
 
   /// No description provided for @shareAnalytics.
   ///
   /// In en, this message translates to:
-  /// **'Share usage data'**
+  /// **'Share Usage Data'**
   String get shareAnalytics;
 
   /// No description provided for @shareAnalyticsHelp.
@@ -4345,7 +4345,7 @@ abstract class AppLocalizations {
   /// No description provided for @workspaceAnalytics.
   ///
   /// In en, this message translates to:
-  /// **'Usage data for this workspace'**
+  /// **'Usage Data for This Workspace'**
   String get workspaceAnalytics;
 
   /// No description provided for @workspaceAnalyticsHelp.
@@ -4357,7 +4357,7 @@ abstract class AppLocalizations {
   /// No description provided for @dangerZone.
   ///
   /// In en, this message translates to:
-  /// **'Danger zone'**
+  /// **'Danger Zone'**
   String get dangerZone;
 
   /// No description provided for @quotasHelp.
@@ -4393,7 +4393,7 @@ abstract class AppLocalizations {
   /// No description provided for @sendInvite.
   ///
   /// In en, this message translates to:
-  /// **'Send invite'**
+  /// **'Send Invite'**
   String get sendInvite;
 
   /// No description provided for @inviteReady.
@@ -4429,7 +4429,7 @@ abstract class AppLocalizations {
   /// No description provided for @saveChanges.
   ///
   /// In en, this message translates to:
-  /// **'Save changes'**
+  /// **'Save Changes'**
   String get saveChanges;
 
   /// No description provided for @autonomyAskAlwaysHelp.
@@ -4723,7 +4723,7 @@ abstract class AppLocalizations {
   /// No description provided for @colorScheme.
   ///
   /// In en, this message translates to:
-  /// **'Color scheme'**
+  /// **'Color Scheme'**
   String get colorScheme;
 
   /// No description provided for @searchThemes.
@@ -4813,7 +4813,7 @@ abstract class AppLocalizations {
   /// No description provided for @patternStrength.
   ///
   /// In en, this message translates to:
-  /// **'Pattern strength'**
+  /// **'Pattern Strength'**
   String get patternStrength;
 
   /// No description provided for @wallpaperEverywhere.
@@ -4831,7 +4831,7 @@ abstract class AppLocalizations {
   /// No description provided for @resetBackground.
   ///
   /// In en, this message translates to:
-  /// **'Reset to default'**
+  /// **'Reset to Default'**
   String get resetBackground;
 
   /// No description provided for @chatsOnly.
@@ -4903,7 +4903,7 @@ abstract class AppLocalizations {
   /// No description provided for @openTimeline.
   ///
   /// In en, this message translates to:
-  /// **'Open run timeline'**
+  /// **'Open Run Timeline'**
   String get openTimeline;
 
   /// No description provided for @details.
@@ -4939,7 +4939,7 @@ abstract class AppLocalizations {
   /// No description provided for @saveTheme.
   ///
   /// In en, this message translates to:
-  /// **'Save current look'**
+  /// **'Save Current Look'**
   String get saveTheme;
 
   /// No description provided for @themeName.
@@ -4951,7 +4951,7 @@ abstract class AppLocalizations {
   /// No description provided for @importTheme.
   ///
   /// In en, this message translates to:
-  /// **'Import a theme'**
+  /// **'Import a Theme'**
   String get importTheme;
 
   /// No description provided for @themeCode.
@@ -5053,7 +5053,7 @@ abstract class AppLocalizations {
   /// No description provided for @resetFonts.
   ///
   /// In en, this message translates to:
-  /// **'Use the defaults'**
+  /// **'Use the Defaults'**
   String get resetFonts;
 
   /// No description provided for @fontSample.
@@ -5071,7 +5071,7 @@ abstract class AppLocalizations {
   /// No description provided for @yourPhoto.
   ///
   /// In en, this message translates to:
-  /// **'Your photo'**
+  /// **'Your Photo'**
   String get yourPhoto;
 
   /// No description provided for @browsePhotos.
@@ -5083,7 +5083,7 @@ abstract class AppLocalizations {
   /// No description provided for @removePhoto.
   ///
   /// In en, this message translates to:
-  /// **'Remove photo'**
+  /// **'Remove Photo'**
   String get removePhoto;
 
   /// No description provided for @photoBlur.
@@ -5155,13 +5155,13 @@ abstract class AppLocalizations {
   /// No description provided for @tokensIn.
   ///
   /// In en, this message translates to:
-  /// **'Tokens in'**
+  /// **'Tokens In'**
   String get tokensIn;
 
   /// No description provided for @tokensOut.
   ///
   /// In en, this message translates to:
-  /// **'Tokens out'**
+  /// **'Tokens Out'**
   String get tokensOut;
 
   /// No description provided for @runsLabel.
@@ -5173,25 +5173,25 @@ abstract class AppLocalizations {
   /// No description provided for @spendByDay.
   ///
   /// In en, this message translates to:
-  /// **'Spend by day'**
+  /// **'Spend by Day'**
   String get spendByDay;
 
   /// No description provided for @byBot.
   ///
   /// In en, this message translates to:
-  /// **'By bot'**
+  /// **'By Bot'**
   String get byBot;
 
   /// No description provided for @byModel.
   ///
   /// In en, this message translates to:
-  /// **'By model'**
+  /// **'By Model'**
   String get byModel;
 
   /// No description provided for @everythingMetered.
   ///
   /// In en, this message translates to:
-  /// **'Everything metered'**
+  /// **'Everything Metered'**
   String get everythingMetered;
 
   /// No description provided for @exportCsv.
@@ -5209,7 +5209,7 @@ abstract class AppLocalizations {
   /// No description provided for @askBotAboutUsage.
   ///
   /// In en, this message translates to:
-  /// **'Ask a bot about this'**
+  /// **'Ask a Bot About This'**
   String get askBotAboutUsage;
 
   /// No description provided for @noUsageYet.
@@ -5371,7 +5371,7 @@ abstract class AppLocalizations {
   /// No description provided for @loadPersona.
   ///
   /// In en, this message translates to:
-  /// **'Load a persona'**
+  /// **'Load a Persona'**
   String get loadPersona;
 
   /// No description provided for @replaceInstructionsTitle.
@@ -5551,7 +5551,7 @@ abstract class AppLocalizations {
   /// No description provided for @reopenSignIn.
   ///
   /// In en, this message translates to:
-  /// **'Open the sign-in page again'**
+  /// **'Open the Sign-in Page Again'**
   String get reopenSignIn;
 
   /// No description provided for @appConnected.
@@ -5653,7 +5653,7 @@ abstract class AppLocalizations {
   /// No description provided for @customServer.
   ///
   /// In en, this message translates to:
-  /// **'Custom server'**
+  /// **'Custom Server'**
   String get customServer;
 
   /// No description provided for @customServerHelp.
@@ -5701,7 +5701,7 @@ abstract class AppLocalizations {
   /// No description provided for @botsWithAccess.
   ///
   /// In en, this message translates to:
-  /// **'Bots with access'**
+  /// **'Bots with Access'**
   String get botsWithAccess;
 
   /// No description provided for @reconnect.
@@ -5731,7 +5731,7 @@ abstract class AppLocalizations {
   /// No description provided for @testConnection.
   ///
   /// In en, this message translates to:
-  /// **'Test connection'**
+  /// **'Test Connection'**
   String get testConnection;
 
   /// No description provided for @signedInOAuth.
@@ -5767,7 +5767,7 @@ abstract class AppLocalizations {
   /// No description provided for @browseApps.
   ///
   /// In en, this message translates to:
-  /// **'Browse apps'**
+  /// **'Browse Apps'**
   String get browseApps;
 
   /// No description provided for @providerSetupTitle.
@@ -5797,7 +5797,7 @@ abstract class AppLocalizations {
   /// No description provided for @providerAppsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Apps through {provider}'**
+  /// **'Apps Through {provider}'**
   String providerAppsTitle(String provider);
 
   /// No description provided for @addAnApp.
@@ -5887,7 +5887,7 @@ abstract class AppLocalizations {
   /// No description provided for @wakeAndWatch.
   ///
   /// In en, this message translates to:
-  /// **'Wake up and watch live'**
+  /// **'Wake Up and Watch Live'**
   String get wakeAndWatch;
 
   /// No description provided for @chatGptPlan.
@@ -5983,7 +5983,7 @@ abstract class AppLocalizations {
   /// No description provided for @manageUsage.
   ///
   /// In en, this message translates to:
-  /// **'Manage usage'**
+  /// **'Manage Usage'**
   String get manageUsage;
 
   /// No description provided for @removeKey.
@@ -6025,7 +6025,7 @@ abstract class AppLocalizations {
   /// No description provided for @signInWithPasskey.
   ///
   /// In en, this message translates to:
-  /// **'Sign in with a passkey'**
+  /// **'Sign In with a Passkey'**
   String get signInWithPasskey;
 
   /// No description provided for @account.
@@ -6121,7 +6121,7 @@ abstract class AppLocalizations {
   /// No description provided for @changeEmailTitle.
   ///
   /// In en, this message translates to:
-  /// **'Change email'**
+  /// **'Change Email'**
   String get changeEmailTitle;
 
   /// No description provided for @changeEmailHelp.
@@ -6139,7 +6139,7 @@ abstract class AppLocalizations {
   /// No description provided for @changeEmailSend.
   ///
   /// In en, this message translates to:
-  /// **'Send confirmation'**
+  /// **'Send Confirmation'**
   String get changeEmailSend;
 
   /// No description provided for @changeEmailRow.
@@ -6163,7 +6163,7 @@ abstract class AppLocalizations {
   /// No description provided for @signOutEverywhere.
   ///
   /// In en, this message translates to:
-  /// **'Sign out everywhere'**
+  /// **'Sign Out Everywhere'**
   String get signOutEverywhere;
 
   /// No description provided for @signOutEverywhereHelp.
@@ -6211,13 +6211,13 @@ abstract class AppLocalizations {
   /// No description provided for @passkeyAdd.
   ///
   /// In en, this message translates to:
-  /// **'Add a passkey'**
+  /// **'Add a Passkey'**
   String get passkeyAdd;
 
   /// No description provided for @passkeyAddAnother.
   ///
   /// In en, this message translates to:
-  /// **'Add another passkey'**
+  /// **'Add Another Passkey'**
   String get passkeyAddAnother;
 
   /// No description provided for @passkeyAdded.
@@ -6235,7 +6235,7 @@ abstract class AppLocalizations {
   /// No description provided for @passkeyRenameTitle.
   ///
   /// In en, this message translates to:
-  /// **'Rename passkey'**
+  /// **'Rename Passkey'**
   String get passkeyRenameTitle;
 
   /// No description provided for @passkeyNameLabel.
@@ -6271,13 +6271,13 @@ abstract class AppLocalizations {
   /// No description provided for @twoStepSetUp.
   ///
   /// In en, this message translates to:
-  /// **'Set up an authenticator app'**
+  /// **'Set Up an Authenticator App'**
   String get twoStepSetUp;
 
   /// No description provided for @twoStepAddAnother.
   ///
   /// In en, this message translates to:
-  /// **'Add another authenticator'**
+  /// **'Add Another Authenticator'**
   String get twoStepAddAnother;
 
   /// No description provided for @twoStepScan.
@@ -6313,7 +6313,7 @@ abstract class AppLocalizations {
   /// No description provided for @twoStepAuthenticators.
   ///
   /// In en, this message translates to:
-  /// **'Authenticator apps'**
+  /// **'Authenticator Apps'**
   String get twoStepAuthenticators;
 
   /// No description provided for @twoStepRename.
@@ -6325,7 +6325,7 @@ abstract class AppLocalizations {
   /// No description provided for @twoStepRenameTitle.
   ///
   /// In en, this message translates to:
-  /// **'Rename authenticator'**
+  /// **'Rename Authenticator'**
   String get twoStepRenameTitle;
 
   /// No description provided for @twoStepNameLabel.
@@ -6481,7 +6481,7 @@ abstract class AppLocalizations {
   /// No description provided for @localMcpServers.
   ///
   /// In en, this message translates to:
-  /// **'Local tools (MCP)'**
+  /// **'Local Tools (MCP)'**
   String get localMcpServers;
 
   /// No description provided for @localMcpHelp.
@@ -6493,7 +6493,7 @@ abstract class AppLocalizations {
   /// No description provided for @localMcpAdd.
   ///
   /// In en, this message translates to:
-  /// **'Add a local MCP server'**
+  /// **'Add a Local MCP Server'**
   String get localMcpAdd;
 
   /// No description provided for @localMcpEmpty.
@@ -6511,13 +6511,13 @@ abstract class AppLocalizations {
   /// No description provided for @localMcpStdio.
   ///
   /// In en, this message translates to:
-  /// **'A command'**
+  /// **'A Command'**
   String get localMcpStdio;
 
   /// No description provided for @localMcpLoopback.
   ///
   /// In en, this message translates to:
-  /// **'An address on this computer'**
+  /// **'An Address on This Computer'**
   String get localMcpLoopback;
 
   /// No description provided for @localMcpCommand.
@@ -6541,7 +6541,7 @@ abstract class AppLocalizations {
   /// No description provided for @localMcpFolder.
   ///
   /// In en, this message translates to:
-  /// **'Working folder (optional)'**
+  /// **'Working Folder (Optional)'**
   String get localMcpFolder;
 
   /// No description provided for @localMcpEnv.
@@ -6571,7 +6571,7 @@ abstract class AppLocalizations {
   /// No description provided for @codingAgents.
   ///
   /// In en, this message translates to:
-  /// **'Coding agents'**
+  /// **'Coding Agents'**
   String get codingAgents;
 
   /// No description provided for @codingAgentsHelp.
@@ -6595,7 +6595,7 @@ abstract class AppLocalizations {
   /// No description provided for @allowCommands.
   ///
   /// In en, this message translates to:
-  /// **'Turn on'**
+  /// **'Turn On'**
   String get allowCommands;
 
   /// No description provided for @navBoard.
@@ -6655,7 +6655,7 @@ abstract class AppLocalizations {
   /// No description provided for @clearFilters.
   ///
   /// In en, this message translates to:
-  /// **'Clear filters'**
+  /// **'Clear Filters'**
   String get clearFilters;
 
   /// No description provided for @ticketTitle.
@@ -6751,7 +6751,7 @@ abstract class AppLocalizations {
   /// No description provided for @reviewRequired.
   ///
   /// In en, this message translates to:
-  /// **'Needs review'**
+  /// **'Needs Review'**
   String get reviewRequired;
 
   /// No description provided for @reviewRequiredHelp.
@@ -6781,13 +6781,13 @@ abstract class AppLocalizations {
   /// No description provided for @openThread.
   ///
   /// In en, this message translates to:
-  /// **'Open the bot\'s thread'**
+  /// **'Open the Bot\'s Thread'**
   String get openThread;
 
   /// No description provided for @deleteTicket.
   ///
   /// In en, this message translates to:
-  /// **'Delete ticket'**
+  /// **'Delete Ticket'**
   String get deleteTicket;
 
   /// No description provided for @noTickets.
@@ -6817,7 +6817,7 @@ abstract class AppLocalizations {
   /// No description provided for @newWorkspace.
   ///
   /// In en, this message translates to:
-  /// **'New workspace'**
+  /// **'New Workspace'**
   String get newWorkspace;
 
   /// No description provided for @joinWorkspaceHelp.
@@ -6871,7 +6871,7 @@ abstract class AppLocalizations {
   /// No description provided for @createInviteLink.
   ///
   /// In en, this message translates to:
-  /// **'Create a link'**
+  /// **'Create a Link'**
   String get createInviteLink;
 
   /// No description provided for @linkExpires.
@@ -7003,7 +7003,7 @@ abstract class AppLocalizations {
   /// No description provided for @archiveBot.
   ///
   /// In en, this message translates to:
-  /// **'Archive bot'**
+  /// **'Archive Bot'**
   String get archiveBot;
 
   /// No description provided for @archiveBotTitle.
@@ -7033,7 +7033,7 @@ abstract class AppLocalizations {
   /// No description provided for @unarchive.
   ///
   /// In en, this message translates to:
-  /// **'Bring back'**
+  /// **'Bring Back'**
   String get unarchive;
 
   /// No description provided for @botArchived.
@@ -7063,7 +7063,7 @@ abstract class AppLocalizations {
   /// No description provided for @restoreSettings.
   ///
   /// In en, this message translates to:
-  /// **'Restore these settings'**
+  /// **'Restore These Settings'**
   String get restoreSettings;
 
   /// No description provided for @restoreSettingsBody.
@@ -7177,7 +7177,7 @@ abstract class AppLocalizations {
   /// No description provided for @secretKindValue.
   ///
   /// In en, this message translates to:
-  /// **'Key or password'**
+  /// **'Key or Password'**
   String get secretKindValue;
 
   /// No description provided for @totpSeedLabel.
@@ -7417,19 +7417,19 @@ abstract class AppLocalizations {
   /// No description provided for @startSetup.
   ///
   /// In en, this message translates to:
-  /// **'Start setup'**
+  /// **'Start Setup'**
   String get startSetup;
 
   /// No description provided for @skipSetup.
   ///
   /// In en, this message translates to:
-  /// **'Skip for now'**
+  /// **'Skip for Now'**
   String get skipSetup;
 
   /// No description provided for @rerunSetup.
   ///
   /// In en, this message translates to:
-  /// **'Run setup again'**
+  /// **'Run Setup Again'**
   String get rerunSetup;
 
   /// No description provided for @rerunSetupHelp.
@@ -7447,7 +7447,7 @@ abstract class AppLocalizations {
   /// No description provided for @openTrace.
   ///
   /// In en, this message translates to:
-  /// **'Open trace'**
+  /// **'Open Trace'**
   String get openTrace;
 
   /// No description provided for @editMessage.
@@ -7543,7 +7543,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareAsTemplate.
   ///
   /// In en, this message translates to:
-  /// **'Share as template'**
+  /// **'Share as Template'**
   String get shareAsTemplate;
 
   /// No description provided for @shareAsTemplateRow.
@@ -7567,7 +7567,7 @@ abstract class AppLocalizations {
   /// No description provided for @includeMemories.
   ///
   /// In en, this message translates to:
-  /// **'Include memories'**
+  /// **'Include Memories'**
   String get includeMemories;
 
   /// No description provided for @includeMemoriesHelp.
@@ -7579,7 +7579,7 @@ abstract class AppLocalizations {
   /// No description provided for @saveAsFile.
   ///
   /// In en, this message translates to:
-  /// **'Save as file'**
+  /// **'Save as File'**
   String get saveAsFile;
 
   /// No description provided for @notABotTemplate.
@@ -7609,7 +7609,7 @@ abstract class AppLocalizations {
   /// No description provided for @whatComesWithIt.
   ///
   /// In en, this message translates to:
-  /// **'What comes with it'**
+  /// **'What Comes with It'**
   String get whatComesWithIt;
 
   /// No description provided for @connectAfterImport.
@@ -7621,7 +7621,7 @@ abstract class AppLocalizations {
   /// No description provided for @importRoutines.
   ///
   /// In en, this message translates to:
-  /// **'Schedule its routines'**
+  /// **'Schedule Its Routines'**
   String get importRoutines;
 
   /// No description provided for @importMemories.
@@ -7675,7 +7675,7 @@ abstract class AppLocalizations {
   /// No description provided for @startPlanning.
   ///
   /// In en, this message translates to:
-  /// **'Start planning'**
+  /// **'Start Planning'**
   String get startPlanning;
 
   /// No description provided for @projectTitle.
@@ -7717,7 +7717,7 @@ abstract class AppLocalizations {
   /// No description provided for @approvePlan.
   ///
   /// In en, this message translates to:
-  /// **'Approve the plan'**
+  /// **'Approve the Plan'**
   String get approvePlan;
 
   /// No description provided for @pause.
@@ -7747,7 +7747,7 @@ abstract class AppLocalizations {
   /// No description provided for @signOff.
   ///
   /// In en, this message translates to:
-  /// **'Sign off'**
+  /// **'Sign Off'**
   String get signOff;
 
   /// No description provided for @projectPlan.
@@ -7903,25 +7903,25 @@ abstract class AppLocalizations {
   /// No description provided for @justThisOnce.
   ///
   /// In en, this message translates to:
-  /// **'Just this once'**
+  /// **'Just This Once'**
   String get justThisOnce;
 
   /// No description provided for @dontSuggestAgain.
   ///
   /// In en, this message translates to:
-  /// **'Don\'t suggest it again'**
+  /// **'Don\'t Suggest It Again'**
   String get dontSuggestAgain;
 
   /// No description provided for @doIt.
   ///
   /// In en, this message translates to:
-  /// **'Do it'**
+  /// **'Do It'**
   String get doIt;
 
   /// No description provided for @checkins.
   ///
   /// In en, this message translates to:
-  /// **'Check-ins'**
+  /// **'Check-Ins'**
   String get checkins;
 
   /// No description provided for @checkinsHelp.
@@ -7999,7 +7999,7 @@ abstract class AppLocalizations {
   /// No description provided for @otherTools.
   ///
   /// In en, this message translates to:
-  /// **'Specific tools'**
+  /// **'Specific Tools'**
   String get otherTools;
 
   /// No description provided for @workspaceRule.
@@ -8191,7 +8191,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectAiApps.
   ///
   /// In en, this message translates to:
-  /// **'Connect AI apps'**
+  /// **'Connect AI Apps'**
   String get connectAiApps;
 
   /// No description provided for @connectAiAppsHelp.
@@ -8203,7 +8203,7 @@ abstract class AppLocalizations {
   /// No description provided for @mcpApprovals.
   ///
   /// In en, this message translates to:
-  /// **'Allow approvals from AI apps'**
+  /// **'Allow Approvals from AI Apps'**
   String get mcpApprovals;
 
   /// No description provided for @mcpApprovalsHelp.
@@ -8221,7 +8221,7 @@ abstract class AppLocalizations {
   /// No description provided for @newApiKey.
   ///
   /// In en, this message translates to:
-  /// **'New API key'**
+  /// **'New API Key'**
   String get newApiKey;
 
   /// No description provided for @apiKeyName.
@@ -8383,13 +8383,13 @@ abstract class AppLocalizations {
   /// No description provided for @pageMakePublic.
   ///
   /// In en, this message translates to:
-  /// **'Make public'**
+  /// **'Make Public'**
   String get pageMakePublic;
 
   /// No description provided for @pagePublicLinkTitle.
   ///
   /// In en, this message translates to:
-  /// **'Public link'**
+  /// **'Public Link'**
   String get pagePublicLinkTitle;
 
   /// No description provided for @pagePublicLinkBody.
@@ -8461,7 +8461,7 @@ abstract class AppLocalizations {
   /// No description provided for @teachMarkSecret.
   ///
   /// In en, this message translates to:
-  /// **'Mark as secret'**
+  /// **'Mark as Secret'**
   String get teachMarkSecret;
 
   /// No description provided for @teachMarkSecretHelp.
@@ -8515,7 +8515,7 @@ abstract class AppLocalizations {
   /// No description provided for @teachSaveAndTry.
   ///
   /// In en, this message translates to:
-  /// **'Save and try'**
+  /// **'Save and Try'**
   String get teachSaveAndTry;
 
   /// No description provided for @teachSaved.
@@ -8659,7 +8659,7 @@ abstract class AppLocalizations {
   /// No description provided for @checkForUpdate.
   ///
   /// In en, this message translates to:
-  /// **'Check for update'**
+  /// **'Check for Update'**
   String get checkForUpdate;
 
   /// No description provided for @uninstall.
@@ -8749,13 +8749,13 @@ abstract class AppLocalizations {
   /// No description provided for @importAgent.
   ///
   /// In en, this message translates to:
-  /// **'Import an agent'**
+  /// **'Import an Agent'**
   String get importAgent;
 
   /// No description provided for @importAgentPickFolder.
   ///
   /// In en, this message translates to:
-  /// **'Pick its folder'**
+  /// **'Pick Its Folder'**
   String get importAgentPickFolder;
 
   /// No description provided for @importAgentPickZip.
@@ -8857,7 +8857,7 @@ abstract class AppLocalizations {
   /// No description provided for @routinesAsFiles.
   ///
   /// In en, this message translates to:
-  /// **'Routines and skills as files'**
+  /// **'Routines and Skills as Files'**
   String get routinesAsFiles;
 
   /// No description provided for @routinesAsFilesHelp.
@@ -8869,13 +8869,13 @@ abstract class AppLocalizations {
   /// No description provided for @exportFiles.
   ///
   /// In en, this message translates to:
-  /// **'Export as files'**
+  /// **'Export as Files'**
   String get exportFiles;
 
   /// No description provided for @importFiles.
   ///
   /// In en, this message translates to:
-  /// **'Import files'**
+  /// **'Import Files'**
   String get importFiles;
 
   /// No description provided for @importFilesApply.
@@ -8899,7 +8899,7 @@ abstract class AppLocalizations {
   /// No description provided for @gitSync.
   ///
   /// In en, this message translates to:
-  /// **'Git sync'**
+  /// **'Git Sync'**
   String get gitSync;
 
   /// No description provided for @gitSyncOff.
@@ -8929,7 +8929,7 @@ abstract class AppLocalizations {
   /// No description provided for @gitSyncPr.
   ///
   /// In en, this message translates to:
-  /// **'Pull request waiting for you'**
+  /// **'Pull Request Waiting for You'**
   String get gitSyncPr;
 
   /// No description provided for @syncNow.
@@ -8959,13 +8959,13 @@ abstract class AppLocalizations {
   /// No description provided for @gitSyncOn.
   ///
   /// In en, this message translates to:
-  /// **'Sync on'**
+  /// **'Sync On'**
   String get gitSyncOn;
 
   /// No description provided for @gitSyncRemove.
   ///
   /// In en, this message translates to:
-  /// **'Stop syncing'**
+  /// **'Stop Syncing'**
   String get gitSyncRemove;
 
   /// No description provided for @gitWebhookTitle.
@@ -9043,7 +9043,7 @@ abstract class AppLocalizations {
   /// No description provided for @knowledgePickFiles.
   ///
   /// In en, this message translates to:
-  /// **'Choose files'**
+  /// **'Choose Files'**
   String get knowledgePickFiles;
 
   /// No description provided for @knowledgeWebsiteUrl.
@@ -9127,13 +9127,13 @@ abstract class AppLocalizations {
   /// No description provided for @saveSkill.
   ///
   /// In en, this message translates to:
-  /// **'Save skill'**
+  /// **'Save Skill'**
   String get saveSkill;
 
   /// No description provided for @applyEdit.
   ///
   /// In en, this message translates to:
-  /// **'Apply change'**
+  /// **'Apply Change'**
   String get applyEdit;
 
   /// No description provided for @skillSaved.
@@ -9235,7 +9235,7 @@ abstract class AppLocalizations {
   /// No description provided for @saveAsReplay.
   ///
   /// In en, this message translates to:
-  /// **'Also save as a replay'**
+  /// **'Also Save as a Replay'**
   String get saveAsReplay;
 
   /// No description provided for @replaySaved.
@@ -9343,13 +9343,13 @@ abstract class AppLocalizations {
   /// No description provided for @pmForWorkspace.
   ///
   /// In en, this message translates to:
-  /// **'For the whole workspace'**
+  /// **'For the Whole Workspace'**
   String get pmForWorkspace;
 
   /// No description provided for @pmChooseVaults.
   ///
   /// In en, this message translates to:
-  /// **'Vaults bots may use'**
+  /// **'Vaults Bots May Use'**
   String get pmChooseVaults;
 
   /// No description provided for @pmChooseVaultsHelp.
@@ -9367,13 +9367,13 @@ abstract class AppLocalizations {
   /// No description provided for @setUpManually.
   ///
   /// In en, this message translates to:
-  /// **'Set up manually'**
+  /// **'Set Up Manually'**
   String get setUpManually;
 
   /// No description provided for @tryAgain.
   ///
   /// In en, this message translates to:
-  /// **'Try again'**
+  /// **'Try Again'**
   String get tryAgain;
 
   /// No description provided for @inviteLinkCopied.
@@ -9739,7 +9739,7 @@ abstract class AppLocalizations {
   /// No description provided for @sharingOnlyCreator.
   ///
   /// In en, this message translates to:
-  /// **'Only its creator'**
+  /// **'Only Its Creator'**
   String get sharingOnlyCreator;
 
   /// No description provided for @sharingEveryoneChats.
@@ -9751,7 +9751,7 @@ abstract class AppLocalizations {
   /// No description provided for @sharingEveryoneRole.
   ///
   /// In en, this message translates to:
-  /// **'Everyone who is {role}'**
+  /// **'Everyone Who Is {role}'**
   String sharingEveryoneRole(String role);
 
   /// No description provided for @accessChat.
@@ -10141,7 +10141,7 @@ abstract class AppLocalizations {
   /// No description provided for @encryption.
   ///
   /// In en, this message translates to:
-  /// **'Encrypt content'**
+  /// **'Encrypt Content'**
   String get encryption;
 
   /// No description provided for @encryptionHelp.
@@ -10195,13 +10195,13 @@ abstract class AppLocalizations {
   /// No description provided for @encryptionTurnOn.
   ///
   /// In en, this message translates to:
-  /// **'Turn on'**
+  /// **'Turn On'**
   String get encryptionTurnOn;
 
   /// No description provided for @encryptionRotate.
   ///
   /// In en, this message translates to:
-  /// **'Rotate key'**
+  /// **'Rotate Key'**
   String get encryptionRotate;
 
   /// No description provided for @encryptionKeyManaged.
@@ -10237,7 +10237,7 @@ abstract class AppLocalizations {
   /// No description provided for @memoryBackend.
   ///
   /// In en, this message translates to:
-  /// **'Where memory is kept'**
+  /// **'Where Memory Is Kept'**
   String get memoryBackend;
 
   /// No description provided for @memoryBuiltIn.
@@ -10285,13 +10285,13 @@ abstract class AppLocalizations {
   /// No description provided for @memoryCopyExisting.
   ///
   /// In en, this message translates to:
-  /// **'Copy current memories over'**
+  /// **'Copy Current Memories Over'**
   String get memoryCopyExisting;
 
   /// No description provided for @memoryUseBuiltIn.
   ///
   /// In en, this message translates to:
-  /// **'Use built-in memory again'**
+  /// **'Use Built-in Memory Again'**
   String get memoryUseBuiltIn;
 
   /// No description provided for @providerHintData.
@@ -10321,7 +10321,7 @@ abstract class AppLocalizations {
   /// No description provided for @a2a.
   ///
   /// In en, this message translates to:
-  /// **'Agent-to-agent (A2A)'**
+  /// **'Agent-to-Agent (A2A)'**
   String get a2a;
 
   /// No description provided for @a2aHelp.
@@ -10333,7 +10333,7 @@ abstract class AppLocalizations {
   /// No description provided for @a2aPublish.
   ///
   /// In en, this message translates to:
-  /// **'Publish as an A2A agent'**
+  /// **'Publish as an A2A Agent'**
   String get a2aPublish;
 
   /// No description provided for @a2aPublishHelp.
@@ -10357,7 +10357,7 @@ abstract class AppLocalizations {
   /// No description provided for @phoneCalls.
   ///
   /// In en, this message translates to:
-  /// **'Phone calls'**
+  /// **'Phone Calls'**
   String get phoneCalls;
 
   /// No description provided for @phoneCallsHelp.
@@ -10387,7 +10387,7 @@ abstract class AppLocalizations {
   /// No description provided for @phoneCallsPersonal.
   ///
   /// In en, this message translates to:
-  /// **'Allow calling personal numbers'**
+  /// **'Allow Calling Personal Numbers'**
   String get phoneCallsPersonal;
 
   /// No description provided for @phoneCallsCap.
@@ -10453,13 +10453,13 @@ abstract class AppLocalizations {
   /// No description provided for @outCallTakeOver.
   ///
   /// In en, this message translates to:
-  /// **'Take over'**
+  /// **'Take Over'**
   String get outCallTakeOver;
 
   /// No description provided for @outCallEnd.
   ///
   /// In en, this message translates to:
-  /// **'End call'**
+  /// **'End Call'**
   String get outCallEnd;
 
   /// No description provided for @outCallYourPhone.
@@ -10603,7 +10603,7 @@ abstract class AppLocalizations {
   /// No description provided for @linksInviteReady.
   ///
   /// In en, this message translates to:
-  /// **'Send this invite'**
+  /// **'Send This Invite'**
   String get linksInviteReady;
 
   /// No description provided for @linksInviteHelp.
@@ -10681,7 +10681,7 @@ abstract class AppLocalizations {
   /// No description provided for @wakeWord.
   ///
   /// In en, this message translates to:
-  /// **'Wake word'**
+  /// **'Wake Word'**
   String get wakeWord;
 
   /// No description provided for @wakeWordRow.
@@ -10705,7 +10705,7 @@ abstract class AppLocalizations {
   /// No description provided for @wakeWordListen.
   ///
   /// In en, this message translates to:
-  /// **'Listen for the wake word'**
+  /// **'Listen for the Wake Word'**
   String get wakeWordListen;
 
   /// No description provided for @wakeWordPhrase.
@@ -10741,7 +10741,7 @@ abstract class AppLocalizations {
   /// No description provided for @secretStore.
   ///
   /// In en, this message translates to:
-  /// **'Where secrets are kept'**
+  /// **'Where Secrets Are Kept'**
   String get secretStore;
 
   /// No description provided for @secretStoreVault.
@@ -10789,19 +10789,19 @@ abstract class AppLocalizations {
   /// No description provided for @secretStoreMove.
   ///
   /// In en, this message translates to:
-  /// **'Move current secrets into Infisical'**
+  /// **'Move Current Secrets into Infisical'**
   String get secretStoreMove;
 
   /// No description provided for @secretStoreBack.
   ///
   /// In en, this message translates to:
-  /// **'Use this server\'s vault again'**
+  /// **'Use This Server\'s Vault Again'**
   String get secretStoreBack;
 
   /// No description provided for @localServer.
   ///
   /// In en, this message translates to:
-  /// **'Run Casama on this computer'**
+  /// **'Run Casama on This Computer'**
   String get localServer;
 
   /// No description provided for @localServerHelp.
@@ -10987,7 +10987,7 @@ abstract class AppLocalizations {
   /// No description provided for @devicePrivateModel.
   ///
   /// In en, this message translates to:
-  /// **'Private models only'**
+  /// **'Private Models Only'**
   String get devicePrivateModel;
 
   /// No description provided for @devicePrivateModelHelp.
@@ -11011,7 +11011,7 @@ abstract class AppLocalizations {
   /// No description provided for @deviceOtherDevices.
   ///
   /// In en, this message translates to:
-  /// **'Your other devices'**
+  /// **'Your Other Devices'**
   String get deviceOtherDevices;
 
   /// No description provided for @deviceForget.
@@ -11059,7 +11059,7 @@ abstract class AppLocalizations {
   /// No description provided for @placeAddHere.
   ///
   /// In en, this message translates to:
-  /// **'Add where I am now'**
+  /// **'Add Where I Am Now'**
   String get placeAddHere;
 
   /// No description provided for @placeName.
@@ -11107,19 +11107,19 @@ abstract class AppLocalizations {
   /// No description provided for @ctxSelection.
   ///
   /// In en, this message translates to:
-  /// **'Selected text'**
+  /// **'Selected Text'**
   String get ctxSelection;
 
   /// No description provided for @ctxAddScreenshot.
   ///
   /// In en, this message translates to:
-  /// **'Add a screenshot'**
+  /// **'Add a Screenshot'**
   String get ctxAddScreenshot;
 
   /// No description provided for @ctxScreenshotAdded.
   ///
   /// In en, this message translates to:
-  /// **'Screenshot added'**
+  /// **'Screenshot Added'**
   String get ctxScreenshotAdded;
 
   /// No description provided for @ctxScreenshotFailed.
@@ -11131,7 +11131,7 @@ abstract class AppLocalizations {
   /// No description provided for @watchedFolders.
   ///
   /// In en, this message translates to:
-  /// **'Watched folders'**
+  /// **'Watched Folders'**
   String get watchedFolders;
 
   /// No description provided for @watchedFoldersHelp.
@@ -11197,7 +11197,7 @@ abstract class AppLocalizations {
   /// No description provided for @lessLikeThisDone.
   ///
   /// In en, this message translates to:
-  /// **'Got it, fewer like this'**
+  /// **'Got It, Fewer Like This'**
   String get lessLikeThisDone;
 
   /// No description provided for @widgetStatusWorking.
@@ -11269,7 +11269,7 @@ abstract class AppLocalizations {
   /// No description provided for @showBotSteps.
   ///
   /// In en, this message translates to:
-  /// **'Show the bot\'s steps'**
+  /// **'Show the Bot\'s Steps'**
   String get showBotSteps;
 
   /// No description provided for @showBotStepsHelp.
@@ -11365,7 +11365,7 @@ abstract class AppLocalizations {
   /// No description provided for @copyKey.
   ///
   /// In en, this message translates to:
-  /// **'Copy key'**
+  /// **'Copy Key'**
   String get copyKey;
 
   /// No description provided for @keyCopied.
@@ -11413,7 +11413,7 @@ abstract class AppLocalizations {
   /// No description provided for @askBeforeJoining.
   ///
   /// In en, this message translates to:
-  /// **'Ask me before people join'**
+  /// **'Ask Me Before People Join'**
   String get askBeforeJoining;
 
   /// No description provided for @askBeforeJoiningHelp.
@@ -11455,37 +11455,37 @@ abstract class AppLocalizations {
   /// No description provided for @getCode.
   ///
   /// In en, this message translates to:
-  /// **'Get a code'**
+  /// **'Get a Code'**
   String get getCode;
 
   /// No description provided for @getNewCode.
   ///
   /// In en, this message translates to:
-  /// **'Get a new code'**
+  /// **'Get a New Code'**
   String get getNewCode;
 
   /// No description provided for @getStarted.
   ///
   /// In en, this message translates to:
-  /// **'Get started'**
+  /// **'Get Started'**
   String get getStarted;
 
   /// No description provided for @welcomeCta.
   ///
   /// In en, this message translates to:
-  /// **'Let\'s go'**
+  /// **'Let\'s Go'**
   String get welcomeCta;
 
   /// No description provided for @inviteAsAdmin.
   ///
   /// In en, this message translates to:
-  /// **'Invite as admins'**
+  /// **'Invite as Admins'**
   String get inviteAsAdmin;
 
   /// No description provided for @inviteByEmail.
   ///
   /// In en, this message translates to:
-  /// **'Invite by email'**
+  /// **'Invite by Email'**
   String get inviteByEmail;
 
   /// No description provided for @inviteExpired.
@@ -11545,7 +11545,7 @@ abstract class AppLocalizations {
   /// No description provided for @invitePeopleTo.
   ///
   /// In en, this message translates to:
-  /// **'Invite people to {name}'**
+  /// **'Invite People to {name}'**
   String invitePeopleTo(String name);
 
   /// No description provided for @inviteRenewed.
@@ -11599,7 +11599,7 @@ abstract class AppLocalizations {
   /// No description provided for @joinByDomain.
   ///
   /// In en, this message translates to:
-  /// **'Join by email domain'**
+  /// **'Join by Email Domain'**
   String get joinByDomain;
 
   /// No description provided for @joinByDomainHelp.
@@ -11689,7 +11689,7 @@ abstract class AppLocalizations {
   /// No description provided for @pendingInvites.
   ///
   /// In en, this message translates to:
-  /// **'Invites not accepted yet'**
+  /// **'Invites Not Accepted Yet'**
   String get pendingInvites;
 
   /// No description provided for @people.
@@ -11767,7 +11767,7 @@ abstract class AppLocalizations {
   /// No description provided for @qrCode.
   ///
   /// In en, this message translates to:
-  /// **'QR code'**
+  /// **'QR Code'**
   String get qrCode;
 
   /// No description provided for @remove.
@@ -11779,13 +11779,13 @@ abstract class AppLocalizations {
   /// No description provided for @resendInvite.
   ///
   /// In en, this message translates to:
-  /// **'Send again'**
+  /// **'Send Again'**
   String get resendInvite;
 
   /// No description provided for @resetLink.
   ///
   /// In en, this message translates to:
-  /// **'Reset link'**
+  /// **'Reset Link'**
   String get resetLink;
 
   /// No description provided for @resetLinkHelp.
@@ -11797,7 +11797,7 @@ abstract class AppLocalizations {
   /// No description provided for @revokeInvite.
   ///
   /// In en, this message translates to:
-  /// **'Cancel invite'**
+  /// **'Cancel Invite'**
   String get revokeInvite;
 
   /// No description provided for @scanToJoin.
@@ -11809,7 +11809,7 @@ abstract class AppLocalizations {
   /// No description provided for @sendInvitesCount.
   ///
   /// In en, this message translates to:
-  /// **'Send {count} invites'**
+  /// **'Send {count} Invites'**
   String sendInvitesCount(int count);
 
   /// No description provided for @sendInvitesYourself.
@@ -11833,7 +11833,7 @@ abstract class AppLocalizations {
   /// No description provided for @startOwnWorkspace.
   ///
   /// In en, this message translates to:
-  /// **'Start my own workspace instead'**
+  /// **'Start My Own Workspace Instead'**
   String get startOwnWorkspace;
 
   /// No description provided for @switchToServer.
@@ -11845,7 +11845,7 @@ abstract class AppLocalizations {
   /// No description provided for @waitingToJoin.
   ///
   /// In en, this message translates to:
-  /// **'Waiting to join'**
+  /// **'Waiting to Join'**
   String get waitingToJoin;
 
   /// No description provided for @welcomeToWorkspace.
@@ -11857,7 +11857,7 @@ abstract class AppLocalizations {
   /// No description provided for @workspacesYouCanJoin.
   ///
   /// In en, this message translates to:
-  /// **'Workspaces you can join'**
+  /// **'Workspaces You Can Join'**
   String get workspacesYouCanJoin;
 
   /// No description provided for @yourTeamIsHere.
@@ -11917,25 +11917,25 @@ abstract class AppLocalizations {
   /// No description provided for @photoTake.
   ///
   /// In en, this message translates to:
-  /// **'Take a photo'**
+  /// **'Take a Photo'**
   String get photoTake;
 
   /// No description provided for @photoChoose.
   ///
   /// In en, this message translates to:
-  /// **'Choose a photo'**
+  /// **'Choose a Photo'**
   String get photoChoose;
 
   /// No description provided for @photoUseGoogle.
   ///
   /// In en, this message translates to:
-  /// **'Use my Google photo'**
+  /// **'Use My Google Photo'**
   String get photoUseGoogle;
 
   /// No description provided for @photoRemove.
   ///
   /// In en, this message translates to:
-  /// **'Remove photo'**
+  /// **'Remove Photo'**
   String get photoRemove;
 
   /// No description provided for @photoUnreadable.
@@ -11983,7 +11983,7 @@ abstract class AppLocalizations {
   /// No description provided for @learnAboutMe.
   ///
   /// In en, this message translates to:
-  /// **'Learn about me from chats'**
+  /// **'Learn About Me from Chats'**
   String get learnAboutMe;
 
   /// No description provided for @learnAboutMeHelp.
@@ -12007,7 +12007,7 @@ abstract class AppLocalizations {
   /// No description provided for @learnedAboutYou.
   ///
   /// In en, this message translates to:
-  /// **'What bots learned'**
+  /// **'What Bots Learned'**
   String get learnedAboutYou;
 
   /// No description provided for @noLearnedFacts.
@@ -12019,7 +12019,7 @@ abstract class AppLocalizations {
   /// No description provided for @addFact.
   ///
   /// In en, this message translates to:
-  /// **'Add a fact'**
+  /// **'Add a Fact'**
   String get addFact;
 
   /// No description provided for @editFact.
@@ -12217,7 +12217,7 @@ abstract class AppLocalizations {
   /// No description provided for @galleryShare.
   ///
   /// In en, this message translates to:
-  /// **'Share to gallery'**
+  /// **'Share to Gallery'**
   String get galleryShare;
 
   /// No description provided for @galleryBy.
@@ -12277,7 +12277,7 @@ abstract class AppLocalizations {
   /// No description provided for @gallerySeeAll.
   ///
   /// In en, this message translates to:
-  /// **'See all'**
+  /// **'See All'**
   String get gallerySeeAll;
 
   /// No description provided for @galleryInUse.
@@ -12391,7 +12391,7 @@ abstract class AppLocalizations {
   /// No description provided for @galleryBehindChats.
   ///
   /// In en, this message translates to:
-  /// **'Behind your chats'**
+  /// **'Behind Your Chats'**
   String get galleryBehindChats;
 
   /// No description provided for @celebrateNewBot.
@@ -12421,7 +12421,7 @@ abstract class AppLocalizations {
   /// No description provided for @fewerEffects.
   ///
   /// In en, this message translates to:
-  /// **'Fewer effects'**
+  /// **'Fewer Effects'**
   String get fewerEffects;
 
   /// No description provided for @fewerEffectsHelp.
@@ -12439,7 +12439,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsSecuritySection.
   ///
   /// In en, this message translates to:
-  /// **'Sign-in & security'**
+  /// **'Sign-in & Security'**
   String get settingsSecuritySection;
 
   /// No description provided for @customize.
@@ -12469,13 +12469,13 @@ abstract class AppLocalizations {
   /// No description provided for @appearanceFromGallery.
   ///
   /// In en, this message translates to:
-  /// **'From the gallery'**
+  /// **'From the Gallery'**
   String get appearanceFromGallery;
 
   /// No description provided for @appearanceShowAll.
   ///
   /// In en, this message translates to:
-  /// **'Show all {count}'**
+  /// **'Show All {count}'**
   String appearanceShowAll(int count);
 
   /// No description provided for @appearanceSwitched.

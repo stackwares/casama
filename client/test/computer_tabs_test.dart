@@ -53,7 +53,7 @@ void main() {
     await tester.pumpWidget(harness(FakeBackend(), const Scaffold(body: ComputerScreen(embedded: true))));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('switchToDesktop')), findsNothing);
-    expect(find.text('Switch to desktop'), findsNothing);
+    expect(find.text('Switch to Desktop'), findsNothing);
     expect(find.byKey(const Key('openComputerSettings')), findsOneWidget);
     expect(find.textContaining('switch it to a desktop in computer settings'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());

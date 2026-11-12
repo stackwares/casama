@@ -128,7 +128,7 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    expect(find.text('Run Casama on this computer'), findsWidgets);
+    expect(find.text('Run Casama on This Computer'), findsWidgets);
     await tester.runAsync(() async {
       await tester.tap(find.byKey(const Key('startLocalServer')));
       for (var i = 0; i < 20 && switched == null; i++) {

@@ -68,7 +68,7 @@ void main() {
     final backend = FakeBackend();
     await tester.pumpWidget(harness(backend, const IntegrationsScreen()));
     await tester.pumpAndSettle();
-    expect(find.byTooltip('Custom server'), findsNothing);
+    expect(find.byTooltip('Custom Server'), findsNothing);
     await tester.scrollUntilVisible(find.byKey(const Key('advanced-integrations')), 300, scrollable: _page);
     expect(find.text('Composio, Pipedream, custom servers'), findsOneWidget);
     for (final k in ['setupComposio', 'setupPipedream', 'addIntegration']) {

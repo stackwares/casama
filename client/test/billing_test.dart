@@ -244,7 +244,7 @@ void main() {
     ));
     await tester.tap(find.text('Add bot'));
     await tester.pumpAndSettle();
-    expect(find.text('Upgrade your plan'), findsOneWidget);
+    expect(find.text('Upgrade Your Plan'), findsOneWidget);
     expect(find.text('Your plan allows 2 bots. Upgrade in Billing to add more.'), findsOneWidget);
     await tester.tap(find.byKey(const Key('paywallSeePlans')));
     await tester.pumpAndSettle();

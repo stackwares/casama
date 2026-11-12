@@ -176,7 +176,7 @@ void main() {
     await tester.tap(find.byKey(const Key('resetInvite')));
     await tester.pumpAndSettle();
     expect(backend.defaultResets, 0, reason: 'resetting asks first');
-    await tester.tap(find.widgetWithText(FilledButton, 'Reset link').last);
+    await tester.tap(find.widgetWithText(FilledButton, 'Reset Link').last);
     await tester.pumpAndSettle();
     expect(backend.defaultResets, 1);
     expect(find.text('https://app.example.com/join/kjoin_default1abcdefghijk'), findsOneWidget);
@@ -218,7 +218,7 @@ void main() {
 
     await tester.enterText(find.byKey(const Key('inviteEmails')), 'ana@acme.dev, ben@acme.dev');
     await tester.pump();
-    expect(find.text('Send 2 invites'), findsOneWidget);
+    expect(find.text('Send 2 Invites'), findsOneWidget);
     await tester.tap(find.byKey(const Key('sendInvites')));
     await tester.pumpAndSettle();
     expect(backend.invitedEmails, ['ana@acme.dev', 'ben@acme.dev']);
@@ -231,7 +231,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('pendingMenu-i1')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Cancel invite'));
+    await tester.tap(find.text('Cancel Invite'));
     await tester.pumpAndSettle();
     expect(backend.revokedInvites, ['i1']);
 

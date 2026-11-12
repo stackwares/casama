@@ -81,7 +81,7 @@ void main() {
       await tester.pumpAndSettle();
       final c = _container(tester, AppearanceScreen);
 
-      expect(find.textContaining('From the gallery'), findsOneWidget);
+      expect(find.textContaining('From the Gallery'), findsOneWidget);
       // Only themes here: colors and wallpapers belong to Customize.
       expect(find.byKey(const Key('gallery-theme-lagoon')), findsOneWidget);
       expect(find.text('Reef'), findsNothing);

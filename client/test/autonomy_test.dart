@@ -83,10 +83,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Morning summary is ready'), findsOneWidget);
 
-    await tester.tap(find.text('Mark all as read'));
+    await tester.tap(find.text('Mark All as Read'));
     await tester.pumpAndSettle();
     expect(backend.notificationsRead, isTrue);
-    expect(find.text('Mark all as read'), findsNothing);
+    expect(find.text('Mark All as Read'), findsNothing);
   });
 
   testWidgets(
@@ -260,7 +260,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('createRoutine')));
       await tester.pumpAndSettle();
-      expect(find.text('Webhook created'), findsOneWidget);
+      expect(find.text('Webhook Created'), findsOneWidget);
       expect(find.textContaining('whsec_test'), findsOneWidget);
     },
   );

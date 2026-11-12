@@ -15,7 +15,7 @@ void main() {
     await tester.pumpWidget(harness(backend, const BotsScreen()));
     await tester.pumpAndSettle();
     expect(find.text('Import a bot'), findsNothing);
-    expect(find.text('Import an agent'), findsNothing);
+    expect(find.text('Import an Agent'), findsNothing);
     await tester.tap(find.byKey(const Key('createMenu')));
     await tester.pumpAndSettle();
     expect(find.byType(CreateBotSheet), findsOneWidget);

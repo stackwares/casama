@@ -165,7 +165,7 @@ void main() {
     await tester.enterText(find.widgetWithText(TextField, 'Bot name'), 'Ada Lovelace');
     await tester.pump();
     expect(tester.widget<Text>(find.byKey(const Key('botProfileName'))).data, 'Ada Lovelace'); // the header follows the field
-    await tester.tap(find.text('Save changes'));
+    await tester.tap(find.text('Save Changes'));
     await tester.pumpAndSettle();
     expect(backend.botUpdate?.botId, botId);
     expect(backend.botUpdate?.name, 'Ada Lovelace');

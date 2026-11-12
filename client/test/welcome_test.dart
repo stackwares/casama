@@ -20,7 +20,7 @@ Widget routed(FakeBackend backend, GoRouter router) => ProviderScope(
     );
 
 void main() {
-  testWidgets('a new person lands in their welcome chat; the wizard is behind "Set up manually"', (tester) async {
+  testWidgets('a new person lands in their welcome chat; the wizard is behind "Set Up Manually"', (tester) async {
     await setSize(tester, const Size(900, 900));
     final backend = FakeBackend()..hasOrg = false;
     final router = GoRouter(initialLocation: '/welcome', routes: [
@@ -72,7 +72,7 @@ void main() {
     expect(find.byKey(const Key('welcomeLoading')), findsNothing);
   });
 
-  testWidgets('"Set up manually" opens the wizard', (tester) async {
+  testWidgets('"Set Up Manually" opens the wizard', (tester) async {
     await setSize(tester, const Size(900, 900));
     final backend = _SlowWelcome()..hasOrg = false;
     final router = GoRouter(initialLocation: '/welcome', routes: [

@@ -182,7 +182,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('computerMenu-$computerId')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Switch to desktop'));
+    await tester.tap(find.text('Switch to Desktop'));
     await tester.pumpAndSettle();
     expect(backend.computerUpdates, ['desktop']);
 

@@ -53,7 +53,7 @@ void main() {
     await tester.tap(confirm);
     await tester.pumpAndSettle();
     expect(backend.deletedWith, 'tester@example.com');
-    expect(find.text('Account scheduled for deletion'), findsOneWidget);
+    expect(find.text('Account Scheduled for Deletion'), findsOneWidget);
   });
 
   testWidgets('the usage-data switches tell the server: the person (off, then on) and the workspace admin', (tester) async {

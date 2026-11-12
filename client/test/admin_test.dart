@@ -37,8 +37,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(Tab, 'Services'));
     await tester.pumpAndSettle();
-    expect(find.text('App connections'), findsOneWidget);
-    expect(find.text("Casama's Composio account"), findsOneWidget);
+    expect(find.text('App Connections'), findsOneWidget);
+    expect(find.text("Casama's Composio Account"), findsOneWidget);
     await tester.tap(find.byKey(const Key('connectionsOwn')));
     await tester.pumpAndSettle();
     expect(backend.connectionSettings.composio.value, 'own');
