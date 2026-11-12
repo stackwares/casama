@@ -29,6 +29,8 @@ x-casama: &casama
     API_INTERNAL_URL: http://api:8787
     TURN_SECRET: ${TURN_SECRET}
     TURN_PUBLIC_HOST: ${TURN_PUBLIC_HOST}
+    # The port clients reach TURN on (a local install may move it off 3478 when that's taken).
+    TURN_PORT: ${TURN_HOST_PORT:-3478}
     METRICS_TOKEN: ${METRICS_TOKEN}
     TELEMETRY: ${TELEMETRY:-off}
     INSTANCE_ADMIN_EMAILS: ${INSTANCE_ADMIN_EMAILS:-}
@@ -114,6 +116,9 @@ x-casama: &casama
     MCP_OAUTH_CLIENTS: ${MCP_OAUTH_CLIENTS:-}
     COMPOSIO_API_KEY: ${COMPOSIO_API_KEY:-}
     UNSPLASH_ACCESS_KEY: ${UNSPLASH_ACCESS_KEY:-}
+    # Tells the apps which Google client ids Auth accepts, for Google's own sign-in sheet (D-217).
+    GOOGLE_AUTH_ENABLED: ${GOOGLE_AUTH_ENABLED:-false}
+    GOOGLE_AUTH_CLIENT_ID: ${GOOGLE_AUTH_CLIENT_ID:-}
     GALLERY_URL: ${GALLERY_URL:-https://gallery.casama.ai}
     TREG_API_KEY: ${TREG_API_KEY:-}
     DEFAULT_MODEL_OPENROUTER: ${DEFAULT_MODEL_OPENROUTER:-}
@@ -402,9 +407,10 @@ services:
     networks: [internal]
     environment:
       TURN_SECRET: ${TURN_SECRET}
+    # TURN_BIND is 127.0.0.1 for a local install (install.sh --local): only this machine reaches it.
     ports:
-      - "3478:3478/udp"
-      - "3478:3478/tcp"
+      - "${TURN_BIND:-0.0.0.0}:${TURN_HOST_PORT:-3478}:3478/udp"
+      - "${TURN_BIND:-0.0.0.0}:${TURN_HOST_PORT:-3478}:3478/tcp"
 
   # Daily off-site backups (D-197, profile "backup"): the database, the .env (only age-encrypted)
   # and optionally computer archives, to any S3-compatible bucket. install.sh --backups turns it on.

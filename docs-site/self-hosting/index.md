@@ -238,16 +238,24 @@ You can also pass the address for a single command with the global `--api` optio
 
 ## Run a server on your own computer
 
-The desktop app (macOS, Windows and Linux) can install and start a local server for you:
+The desktop app (macOS and Linux) can install and start a local server for you:
 
 1. Start Docker Desktop.
 2. On the sign-in screen, tap **More options** → **Run Casama on this computer**.
 3. Tap **Start the server**.
+4. Create an account (no email confirmation; the first account is the instance owner), then add a
+   model key or a local Ollama address and create your first bot.
 
-The app checks that Docker and Compose v2 are running, downloads the self-host bundle into its
-support folder, runs `install.sh --local --http-port 8080`, waits for the server, then connects to
-`http://localhost:8080`. If a server already answers there, it connects right away. Only this
-computer can reach it.
+The app checks that Docker and Compose v2 are running, downloads the source of the release whose
+images are published (the `selfhost` tag) into its support folder, and runs
+`install.sh --local --pull <that release>`, which pulls the published images instead of building
+them. The first start downloads a few GB of images. Then it waits for the server and connects to
+`http://localhost:8080`. If a port is taken (8080, 8443, 8790 or TURN's 3478), it picks the next
+free one and keeps it. Every port listens on `127.0.0.1` only, so only this computer can reach it.
+If a server already answers there, it connects right away. Closing the sheet while it installs
+stops the installer; starting again picks up where it left off.
+
+Windows isn't supported yet (the installer needs bash and OpenSSL). Use WSL and `./install.sh --local`.
 
 ## Other ways to deploy
 

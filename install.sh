@@ -218,6 +218,10 @@ env_value() { grep "^$1=" "$ENV_FILE" 2>/dev/null | tail -n1 | cut -d= -f2- || t
 # Behind a tunnel or proxy on this machine, Caddy listens on loopback only: Docker's published
 # ports skip ufw, so 0.0.0.0 would serve plain HTTP to the internet.
 [[ "$behind_proxy" -eq 1 ]] && set_env HTTP_BIND 127.0.0.1
+# A local install (--local) is for this machine only: every published port listens on loopback,
+# so nothing on the network can reach the plain-HTTP server. --settings can move the ports
+# (HTTP_PORT, HTTPS_PORT, PAGES_PORT with CASAMA_PAGES_URL, TURN_HOST_PORT) when they're taken.
+[[ "$local" -eq 1 ]] && set_env HTTP_BIND 127.0.0.1 && set_env TURN_BIND 127.0.0.1
 [[ -n "$admin_email" ]] && set_env INSTANCE_ADMIN_EMAILS "$admin_email"
 if [[ -n "$settings_file" ]]; then
   [[ -f "$settings_file" ]] || die "No such settings file: $settings_file"

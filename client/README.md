@@ -39,7 +39,7 @@ Pass these with `--dart-define=NAME=value`. All are optional.
 | `CASAMA_API_URL` | The default server address (default `http://localhost:8787`; empty on web means the page's own origin) |
 | `CASAMA_DISTRIBUTION` | `direct` (default; a signed download with every feature) or `appstore` (the sandboxed Mac App Store build, which turns off features that reach outside the app) |
 | `CASAMA_HELP_URL` | Where **Help** in the macOS menu bar points (default: the docs on GitHub) |
-| `CASAMA_SELFHOST_BUNDLE` | Where **Run Casama on this computer** downloads the server from |
+| `CASAMA_SELFHOST_BUNDLE` | A fixed bundle for **Run Casama on this computer** (with `latest` images). Unset, it downloads the commit tagged `selfhost` and pulls that commit's published images |
 | `SENTRY_DSN`, `POSTHOG_API_KEY`, `POSTHOG_HOST`, `ERROR_REPORTING` | Error reporting and screen analytics (off unless set). Official builds pass `--dart-define-from-file=config/telemetry.json`: Sentry project `casama-app` and the Stackwares PostHog project. Self-hosters building their own apps leave it out or point it at their own projects |
 | `FIREBASE_*` | Push notifications for official builds (see `config/firebase.json`) |
 
