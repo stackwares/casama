@@ -249,6 +249,15 @@ h1 { margin: 0; font-size: clamp(36px, 4vw, 48px); line-height: 1.05; }
 .skill-desc { display: block; color: var(--muted); font-size: 14px; line-height: 1.4; }
 .skill-meta { color: var(--muted); font-size: 14px; }
 .skill-go { color: var(--muted); display: flex; }
+/* Apps (D-239): the skills list, with the app's mark on its brand color */
+.app-row { grid-template-columns: 32px minmax(0, 1fr) 120px 110px auto; }
+.app-logo { display: inline-flex; align-items: center; justify-content: center; flex: none; box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.06); }
+.app-logo i { display: block; width: 52%; height: 52%; }
+.app-logo b { font-weight: 800; line-height: 1; }
+.app-hero { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; min-height: 220px; width: 100%; }
+.app-can { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.app-can li { display: flex; align-items: center; gap: 8px; }
+.app-can svg { color: var(--accent); flex: none; }
 
 /* Phones: rows of looks scroll sideways; the list keeps two lines per skill */
 .shelf { display: grid; grid-auto-flow: column; grid-auto-columns: var(--w, 200px); gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 calc(var(--side) * -1); padding: 0 var(--side) 4px; scroll-padding: 0 var(--side); }
@@ -331,6 +340,7 @@ h1 { margin: 0; font-size: clamp(36px, 4vw, 48px); line-height: 1.05; }
   .skill { grid-template-columns: 22px minmax(0, 1fr) auto; gap: 12px; }
   .skill .skill-meta { display: none; }
   .skill .skill-meta-line { display: block; }
+  .app-row { grid-template-columns: 32px minmax(0, 1fr) auto; }
   .detail { width: 100vw; max-width: 100vw; max-height: 100dvh; height: 100dvh; margin: 0; border-radius: 0; }
   .detail-pic { padding: 56px 16px 16px; }
   .detail-info { padding: 20px 16px 24px; }

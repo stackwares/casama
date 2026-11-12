@@ -30,6 +30,7 @@ import {
 import { and, eq, sql } from "drizzle-orm";
 import type { Context } from "hono";
 import { getConnectionSettings } from "../../services/connection-settings.ts";
+import { type GalleryCatalogApp, galleryApps } from "../../services/gallery.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { integrationOut, isAdmin, requireClaims } from "./autonomy.ts";
@@ -46,6 +47,8 @@ export interface AppsOptions {
   fetch?: typeof fetch;
   /** Extra or replacement catalog entries (tests, private deployments). */
   catalog?: CatalogApp[];
+  /** Where gallery apps come from (D-239); tests serve gallery/ locally. Default: GALLERY_URL. */
+  galleryFetch?: typeof fetch;
 }
 
 /** Admin-registered OAuth clients: MCP_OAUTH_CLIENTS (JSON by app id), and Google's own pair. */
@@ -92,15 +95,15 @@ export function oauthRedirectFor(apiBase: string): string {
  * whenever the server has it, even with a Google client, unless the owner chose Google's servers
  * (`googleDirect`, self-hosted only). On Casama Cloud they aren't offered without Composio.
  */
-export function catalogFor(
-  catalog: CatalogApp[],
+export function catalogFor<T extends CatalogApp>(
+  catalog: T[],
   o: {
     cloud: boolean;
     composio: boolean;
     hasClient?: (id: string) => boolean;
     googleDirect?: boolean;
   },
-): CatalogApp[] {
+): T[] {
   const hasClient = o.hasClient ?? (() => false);
   const googleViaComposio = o.cloud || !o.googleDirect;
   return catalog
@@ -133,14 +136,21 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
   /** The server's Composio account is used when it has a key and the admin hasn't turned it off. */
   const serverComposio = async () =>
     !!env.COMPOSIO_API_KEY && (await getConnectionSettings(db)).composio === "server";
-  const currentCatalog = async () =>
-    catalogFor(fullCatalog, {
+  /**
+   * Built-in apps first, then the gallery's (D-239), which never replace one. The gallery's are
+   * checked again on read and only connect through their own sign-in, a key or nothing.
+   */
+  const currentCatalog = async (): Promise<GalleryCatalogApp[]> => {
+    const own = new Set(fullCatalog.map((a) => a.id));
+    const extra = (await galleryApps(env, opts.galleryFetch)).filter((a) => !own.has(a.id));
+    return catalogFor([...fullCatalog, ...extra], {
       cloud,
       composio: await serverComposio(),
       hasClient: (id) => !!clients[id],
       googleDirect: (await getConnectionSettings(db)).google === "direct",
     });
-  const findApp = async (id: string) =>
+  };
+  const findApp = async (id: string): Promise<GalleryCatalogApp | null> =>
     (await currentCatalog()).find((a) => a.id === id) ?? appByIdOrNull(id);
 
   const apiBase = (c: Context) =>
@@ -278,6 +288,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
           ...(a.note ? { note: a.note } : {}),
           oauth_available: oauthAvailable(a, c),
           ...(a.composio ? { composio: a.composio } : {}),
+          ...(a.logoUrl ? { logo_url: a.logoUrl } : {}),
         })),
       },
       200,

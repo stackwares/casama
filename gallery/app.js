@@ -2,10 +2,12 @@
 (function () {
   "use strict";
   var G = window.CasamaGallery;
-  var TYPES = ["theme", "scheme", "wallpaper", "skill"];
-  var PLURAL = { theme: "Themes", scheme: "Colors", wallpaper: "Wallpapers", skill: "Skills" };
-  var NOUN = { theme: ["theme", "themes"], scheme: ["color scheme", "color schemes"], wallpaper: ["wallpaper", "wallpapers"], skill: ["skill", "skills"] };
-  var SINGULAR = { theme: "Theme", scheme: "Color scheme", wallpaper: "Wallpaper", skill: "Skill" };
+  var TYPES = ["theme", "scheme", "wallpaper", "skill", "app"];
+  var PLURAL = { theme: "Themes", scheme: "Colors", wallpaper: "Wallpapers", skill: "Skills", app: "Apps" };
+  var NOUN = { theme: ["theme", "themes"], scheme: ["color scheme", "color schemes"], wallpaper: ["wallpaper", "wallpapers"], skill: ["skill", "skills"], app: ["app", "apps"] };
+  var SINGULAR = { theme: "Theme", scheme: "Color scheme", wallpaper: "Wallpaper", skill: "Skill", app: "App" };
+  var APP_CATEGORY = { developer: "Developer", productivity: "Productivity", payments: "Payments", design: "Design", sales: "Sales", data: "Data", automation: "Automation" };
+  var AUTH = { oauth: "Sign in with the vendor", api_key: "An API key", none: "Nothing, it's public" };
   var CATEGORY_ICON = { work: "briefcase", writing: "pen-line", research: "telescope", data: "table-2", money: "coins", build: "code", life: "compass" };
   var CATEGORY = { work: "Work", writing: "Writing", research: "Research", data: "Data", money: "Money", build: "Build", life: "Life" };
 
@@ -36,9 +38,13 @@
   function load() {
     state.failed = false;
     render();
-    fetch("index.json", { cache: "no-cache" })
-      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then(function (data) {
+    var get = function (file) {
+      return fetch(file, { cache: "no-cache" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); });
+    };
+    // Apps live in their own file (D-239); the looks and skills still show if it can't be read.
+    Promise.all([get("index.json"), get("apps.json").catch(function () { return { items: [] }; })])
+      .then(function (files) {
+        var data = { items: (files[0].items || []).concat(files[1].items || []) };
         state.items = (data.items || []).filter(function (i) { return !i.retired; });
         summary();
         route();
@@ -136,8 +142,46 @@
     ])]);
   }
 
+  // An app's mark, tinted on its brand color like the app draws it; its initial without one.
+  function appLogo(item, size) {
+    var doc = item.document || {};
+    var hex = /^[0-9A-Fa-f]{6}$/.test(doc.color || "") ? doc.color : "6B7280";
+    var n = parseInt(hex, 16);
+    var light = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255 > 0.6;
+    var ink = light ? "#1B1B1F" : "#FFFFFF";
+    var tile = el("span", { class: "app-logo", "aria-hidden": "true" });
+    tile.style.cssText = "width:" + size + "px;height:" + size + "px;border-radius:" + Math.round(size * 0.28) + "px;background:#" + hex;
+    var logo = "apps/" + item.id + "/logo.svg";
+    if ((item.files || []).indexOf(logo) !== -1) {
+      var mark = el("i");
+      mark.style.cssText = "background:" + ink + ";-webkit-mask:url(" + logo + ") center/contain no-repeat;mask:url(" + logo + ") center/contain no-repeat";
+      tile.appendChild(mark);
+    } else {
+      var letter = el("b", { text: (item.name || "?").charAt(0).toUpperCase() });
+      letter.style.cssText = "color:" + ink + ";font-size:" + Math.round(size * 0.44) + "px";
+      tile.appendChild(letter);
+    }
+    return tile;
+  }
+
+  function appRow(item) {
+    var cat = APP_CATEGORY[(item.document || {}).category] || "";
+    return el("li", null, [el("a", { class: "skill app-row", href: "#app/" + item.id }, [
+      appLogo(item, 32),
+      el("span", null, [
+        el("span", { class: "skill-name", text: item.name }),
+        el("span", { class: "skill-desc", text: item.description || "" }),
+        el("span", { class: "skill-meta-line", text: cat }),
+      ]),
+      el("span", { class: "skill-meta", text: community(item) ? "By " + item.author.name : cat }),
+      el("span", { class: "skill-meta", text: cat }),
+      el("span", { class: "skill-go" }, [G.icon("chevron-right", { size: 18 })]),
+    ])]);
+  }
+
   function cardsFor(type, list) {
     if (type === "skill") return el("ul", { class: "skills" }, list.map(skillRow));
+    if (type === "app") return el("ul", { class: "skills" }, list.map(appRow));
     var cards = list.map(card);
     var grid = el("div", { class: "grid" }, cards);
     grid.style.setProperty("--cols", columns(type));
@@ -228,7 +272,7 @@
       var list = found.filter(function (i) { return i.type === type; });
       if (!list.length) return;
       // A phone shows two rows of each kind; wider screens one.
-      var visible = type === "skill" ? list.slice(0, 4) : list.slice(0, columns(type) * (phone() ? 2 : 1));
+      var visible = type === "skill" || type === "app" ? list.slice(0, 4) : list.slice(0, columns(type) * (phone() ? 2 : 1));
       content.appendChild(section(PLURAL[type], list.length, cardsFor(type, visible), function () { setType(type); }));
     });
   }
@@ -264,6 +308,11 @@
       row("Dark", swatchChips(doc, true));
     } else if (item.type === "wallpaper") {
       row("Kind", document.createTextNode(G.describeWallpaper(doc)));
+    } else if (item.type === "app") {
+      row("Category", document.createTextNode(APP_CATEGORY[doc.category] || "-"));
+      row("Connects to", el("code", { text: doc.url || "-" }));
+      row("Needs", document.createTextNode((doc.auth || []).map(function (a) { return AUTH[a] || a; }).join(" or ")));
+      if (doc.homepage) row("Website", el("a", { href: doc.homepage, rel: "noopener", text: doc.homepage.replace(/^https:\/\//, "") }));
     } else {
       row("Category", document.createTextNode(CATEGORY[item.category] || item.category || "-"));
     }
@@ -287,6 +336,16 @@
     var pic = el("div", { class: "detail-pic" });
     function drawPic() {
       pic.textContent = "";
+      if (item.type === "app") {
+        var doc = item.document || {};
+        var hero = el("div", { class: "app-hero" }, [
+          appLogo(item, 88),
+          el("ul", { class: "app-can" }, (doc.capabilities || []).map(function (c) { return el("li", null, [G.icon("check", { size: 16 }), c]); })),
+          doc.note ? el("p", { class: "small", text: doc.note }) : null,
+        ]);
+        pic.appendChild(hero);
+        return;
+      }
       if (item.type === "skill") {
         var pre = el("pre", { class: "instructions", "aria-label": "Instructions", text: "Loading the instructions…" });
         pre.style.maxHeight = "none";
@@ -332,10 +391,12 @@
       (item.tags || []).length ? el("div", { class: "tags" }, item.tags.map(function (tag) {
         return el("button", { class: "tag", type: "button", onclick: function () { dialog.close(); setQuery(tag); setType(null); }, text: tag });
       })) : null,
-      el("div", { class: "actions" }, [
-        el("a", { class: "btn primary", href: G.appLink(item) }, [G.icon("external-link"), item.type === "skill" ? "Install in Casama" : "Open in Casama"]),
-        copy,
-      ]),
+      item.type === "app"
+        ? el("p", { class: "small", text: "Connect it in Casama from Settings → Connections." })
+        : el("div", { class: "actions" }, [
+          el("a", { class: "btn primary", href: G.appLink(item) }, [G.icon("external-link"), item.type === "skill" ? "Install in Casama" : "Open in Casama"]),
+          copy,
+        ]),
     ]);
     var close = el("button", { class: "detail-close", type: "button", "aria-label": "Close", autofocus: "", onclick: function () { dialog.close(); } }, [G.icon("x")]);
     dialog.appendChild(el("div", { class: "detail-inner" }, [pic, info]));

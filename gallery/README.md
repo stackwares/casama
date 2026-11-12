@@ -1,9 +1,9 @@
 # Casama gallery
 
 The public catalog is [stackwares/casama-gallery](https://github.com/stackwares/casama-gallery).
-A pull request there is how a theme, color scheme, wallpaper or skill reaches every app.
+A pull request there is how a theme, color scheme, wallpaper, skill or app reaches everyone's Casama.
 
-Themes, color schemes, wallpapers and skills for Casama. A pull request is how someone contributes.
+Themes, color schemes, wallpapers, skills and apps for Casama. A pull request is how someone contributes.
 Casama reviews it, and a merge is what every app sees, without an app release.
 
 Each item is a folder:
@@ -17,6 +17,9 @@ wallpapers/<id>/item.json
 wallpapers/<id>/wallpaper.json
 skills/<id>/item.json
 skills/<id>/SKILL.md
+apps/<id>/item.json
+apps/<id>/app.json
+apps/<id>/logo.svg   (optional)
 ```
 
 `item.json` names the author and the license. Looks use CC0-1.0 or CC-BY-4.0. Skills use MIT or Apache-2.0.
@@ -82,3 +85,46 @@ seed or exact colors with live contrast checks, a built-in palette or your own m
 preview), built-in doodles or Lucide icons you pick. It previews the look with `gallery.js` in light and dark,
 applies the rules above, and gives you `item.json` and the item's file to copy, download, or propose on
 GitHub. Nothing is sent anywhere until you open the GitHub link yourself.
+
+### Apps
+
+An app is a vendor's own hosted MCP server, such as `https://mcp.canva.com/mcp`. Once merged it shows
+in every Casama's Connections next to the built-in apps, within about 15 minutes, with no app or server
+release. Removing it (or setting `"retired": true`) hides it from the list; people who already connected
+it keep their connection.
+
+`item.json` is like any item's, with the license `CC0-1.0`. `app.json` says how to connect:
+
+```json
+{
+  "description": "Find, create and edit your Canva designs.",
+  "category": "design",
+  "color": "00C4CC",
+  "homepage": "https://www.canva.com",
+  "url": "https://mcp.canva.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Search your designs", "Create designs from a prompt"]
+}
+```
+
+- `category`: `developer`, `productivity`, `payments`, `design`, `sales`, `data` or `automation`.
+- `color`: the brand color, hex without `#`. The app draws the logo on it.
+- `url` and `homepage`: https on a public host name (no IP addresses, ports or internal names).
+- `auth`: any of `oauth`, `api_key`, or `none` on its own.
+  - `oauth` needs `oauthClient`: `dcr` when the server registers clients itself (its authorization server
+    metadata has a `registration_endpoint`), `cimd` when it accepts a client metadata document. Optional
+    `scopes` replace what the server announces; leave them out unless it announces far more than it needs.
+  - `api_key` needs `apiKey`: `label`, `url` (where to create a key), 1 to 6 `steps`, and optionally a
+    `placeholder` and a `header` (default `Authorization: Bearer`).
+- `note` (optional, up to 200 characters): a caveat for the connect sheet, such as "Read-only".
+- `capabilities`: 1 to 6 short phrases of what a bot can do with it.
+- `logo.svg` (optional): the vendor's single-color mark on a 24 × 24 `viewBox`, such as Simple Icons' copy.
+  The app tints it, so its colors don't matter. No scripts, styles, links or images, at most 24 KB. The
+  mark stays the vendor's trademark.
+
+Built-in apps (Google's, GitHub, Slack and the rest) live in Casama's code and keep their ids. Things only
+they can do stay there: Google's apps, sign-ins with a client the server owner registers, and Composio.
+Community and self-hosted servers don't go here: Settings → Connections → Custom server adds any MCP URL.
+
+Apps are written to `apps.json`, not `index.json`, so servers and apps from before apps never see them.

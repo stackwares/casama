@@ -37,6 +37,11 @@ export const CatalogApp = z
     oauth_available: z.boolean(),
     /** Composio's toolkit slug for this app, so apps connected through a Composio hub can be matched to it. */
     composio: z.string().optional(),
+    /**
+     * A single-color SVG mark for apps from the open gallery (D-239), tinted by the app like its
+     * bundled logos. Built-in apps have none: the app ships their marks.
+     */
+    logo_url: z.string().optional(),
   })
   .openapi("CatalogApp");
 

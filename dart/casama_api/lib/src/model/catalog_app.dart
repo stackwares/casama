@@ -48,6 +48,8 @@ class CatalogApp {
     required  this.oauthAvailable,
 
      this.composio,
+
+     this.logoUrl,
   });
 
   @JsonKey(
@@ -219,6 +221,18 @@ class CatalogApp {
 
 
 
+  @JsonKey(
+    
+    name: r'logo_url',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? logoUrl;
+
+
+
 
 
     @override
@@ -236,7 +250,8 @@ class CatalogApp {
       other.popular == popular &&
       other.note == note &&
       other.oauthAvailable == oauthAvailable &&
-      other.composio == composio;
+      other.composio == composio &&
+      other.logoUrl == logoUrl;
 
     @override
     int get hashCode =>
@@ -253,7 +268,8 @@ class CatalogApp {
         popular.hashCode +
         note.hashCode +
         oauthAvailable.hashCode +
-        composio.hashCode;
+        composio.hashCode +
+        logoUrl.hashCode;
 
   factory CatalogApp.fromJson(Map<String, dynamic> json) => _$CatalogAppFromJson(json);
 

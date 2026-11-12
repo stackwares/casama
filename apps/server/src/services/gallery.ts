@@ -1,8 +1,17 @@
 /**
  * The open gallery (D-184). The API caches index.json and checks a skill's files against the
- * index hash before installing them. An empty GALLERY_URL turns the gallery off.
+ * index hash before installing them. Apps (D-239) come from apps.json, cached the same way, and
+ * join the built-in catalog. An empty GALLERY_URL turns the gallery off.
  */
-import { type GalleryType, galleryHash } from "@casama/domain";
+import {
+  APP_CATALOG,
+  type CatalogApp,
+  catalogAppFromGallery,
+  GALLERY_APP_TYPE,
+  GALLERY_TYPES,
+  type GalleryType,
+  galleryHash,
+} from "@casama/domain";
 import { ApiError } from "../api/errors.ts";
 import type { Env } from "../env.ts";
 import { bundleFrom, type SkillBundle } from "./skills.ts";
@@ -37,6 +46,7 @@ interface IndexFile {
 }
 
 interface Cache {
+  /** The index file's full address. */
   url: string;
   etag: string;
   at: number;
@@ -47,10 +57,11 @@ interface Cache {
 
 const OK_TTL = 15 * 60 * 1000;
 const MISS_TTL = 30 * 1000;
-let cache: Cache | undefined;
+/** One entry per file: index.json and apps.json. */
+const caches = new Map<string, Cache>();
 
 export function resetGalleryCache() {
-  cache = undefined;
+  caches.clear();
 }
 
 /** `off` turns the gallery off. An empty env value is treated as unset and uses the default site. */
@@ -70,53 +81,98 @@ function join(base: string, path: string) {
   return `${base.replace(/\/$/, "")}/${path}`;
 }
 
-async function readIndex(env: Env, fetchImpl: typeof fetch): Promise<IndexFile | null> {
-  const url = galleryBase(env);
-  if (!url) return null;
+async function readIndex(
+  env: Env,
+  fetchImpl: typeof fetch,
+  file: "index.json" | "apps.json" = "index.json",
+): Promise<IndexFile | null> {
+  const base = galleryBase(env);
+  if (!base) return null;
+  const url = join(base, file);
   const now = Date.now();
-  if (cache && cache.url === url && now - cache.at < cache.ttl) return cache.index;
+  const cache = caches.get(file);
+  const same = cache?.url === url ? cache : undefined;
+  if (same && now - same.at < same.ttl) return same.index;
   const headers: Record<string, string> = {};
-  if (cache && cache.url === url && cache.etag) headers["If-None-Match"] = cache.etag;
+  if (same?.etag) headers["If-None-Match"] = same.etag;
+  const miss = (etag: string, index: IndexFile | null = null) => {
+    caches.set(file, { url, etag, at: now, index, ttl: index ? OK_TTL : MISS_TTL });
+    return index;
+  };
   let res: Response;
   try {
-    res = await fetchImpl(join(url, "index.json"), {
-      headers,
-      signal: AbortSignal.timeout(10_000),
-    });
+    res = await fetchImpl(url, { headers, signal: AbortSignal.timeout(10_000) });
   } catch {
-    cache = {
-      url,
-      etag: cache?.url === url ? cache.etag : "",
-      at: now,
-      index: null,
-      ttl: MISS_TTL,
-    };
-    return null;
+    return miss(same?.etag ?? "");
   }
-  if (res.status === 304 && cache?.url === url && cache.index) {
-    cache = { ...cache, at: now, ttl: OK_TTL };
-    return cache.index;
+  if (res.status === 304 && same?.index) {
+    caches.set(file, { ...same, at: now, ttl: OK_TTL });
+    return same.index;
   }
-  if (!res.ok) {
-    cache = { url, etag: "", at: now, index: null, ttl: MISS_TTL };
-    return null;
+  if (!res.ok) return miss("");
+  let index: IndexFile;
+  try {
+    index = (await res.json()) as IndexFile;
+  } catch {
+    return miss("");
   }
-  const index = (await res.json()) as IndexFile;
-  cache = {
-    url,
-    etag: res.headers.get("etag") ?? "",
-    at: now,
-    index,
-    ttl: OK_TTL,
-  };
+  if (!Array.isArray(index?.items)) return miss("");
+  caches.set(file, { url, etag: res.headers.get("etag") ?? "", at: now, index, ttl: OK_TTL });
   return index;
 }
+
+/** Looks and skills only: an index from a newer gallery may carry types this server doesn't know. */
+const knownType = (i: GalleryRecord) =>
+  (GALLERY_TYPES as readonly string[]).includes(String(i.type));
 
 export async function galleryIndex(env: Env, fetchImpl: typeof fetch = fetch) {
   const url = galleryBase(env);
   if (!url) return { enabled: false as const, available: false, items: [] as GalleryRecord[] };
   const index = await readIndex(env, fetchImpl);
-  return { enabled: true as const, available: index != null, items: index?.items ?? [] };
+  return {
+    enabled: true as const,
+    available: index != null,
+    items: (index?.items ?? []).filter(knownType),
+  };
+}
+
+/** A gallery app as the catalog offers it, with its logo's address when it has one. */
+export type GalleryCatalogApp = CatalogApp & { logoUrl?: string };
+
+/**
+ * The gallery's apps (D-239), checked again here so a broken or hostile entry never reaches the
+ * catalog. Retired entries and ids a built-in app already uses are left out. Empty when the
+ * gallery is off or can't be reached: built-in apps never depend on it.
+ */
+export async function galleryApps(
+  env: Env,
+  fetchImpl: typeof fetch = fetch,
+): Promise<GalleryCatalogApp[]> {
+  const base = galleryBase(env);
+  if (!base) return [];
+  const index = await readIndex(env, fetchImpl, "apps.json");
+  if (!index) return [];
+  const builtIn = new Set(APP_CATALOG.map((a) => a.id));
+  const seen = new Set<string>();
+  const out: GalleryCatalogApp[] = [];
+  for (const item of index.items as unknown[]) {
+    if (typeof item !== "object" || item === null) continue;
+    const i = item as Omit<Partial<GalleryRecord>, "type"> & { type?: string };
+    if (i.type !== GALLERY_APP_TYPE || i.retired === true) continue;
+    if (typeof i.id !== "string" || !/^[a-z0-9][a-z0-9-]{0,62}$/.test(i.id)) continue;
+    if (builtIn.has(i.id) || builtIn.has(i.id.replaceAll("-", "_")) || seen.has(i.id)) continue;
+    const name = typeof i.name === "string" ? i.name.trim() : "";
+    if (name.length < 1 || name.length > 60) continue;
+    const app = catalogAppFromGallery(i.id, name, i.document);
+    if (!app) continue;
+    seen.add(i.id);
+    const logo = `apps/${i.id}/logo.svg`;
+    out.push({
+      ...app,
+      ...(Array.isArray(i.files) && i.files.includes(logo) ? { logoUrl: join(base, logo) } : {}),
+    });
+  }
+  return out;
 }
 
 export async function galleryItem(

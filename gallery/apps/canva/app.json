@@ -1,0 +1,10 @@
+{
+  "description": "Find, create and edit your Canva designs.",
+  "category": "design",
+  "color": "00C4CC",
+  "homepage": "https://www.canva.com",
+  "url": "https://mcp.canva.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Search your designs", "Create designs from a prompt", "Edit text and pages", "Export to PDF or images"]
+}

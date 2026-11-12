@@ -35,6 +35,8 @@ abstract class _$CatalogAppCWProxy {
 
   CatalogApp composio(String? composio);
 
+  CatalogApp logoUrl(String? logoUrl);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CatalogApp(...).copyWith.fieldName(value)`.
@@ -58,6 +60,7 @@ abstract class _$CatalogAppCWProxy {
     String? note,
     bool oauthAvailable,
     String? composio,
+    String? logoUrl,
   });
 }
 
@@ -113,6 +116,9 @@ class _$CatalogAppCWProxyImpl implements _$CatalogAppCWProxy {
   @override
   CatalogApp composio(String? composio) => call(composio: composio);
 
+  @override
+  CatalogApp logoUrl(String? logoUrl) => call(logoUrl: logoUrl);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CatalogApp(...).copyWith.fieldName(value)`.
@@ -137,6 +143,7 @@ class _$CatalogAppCWProxyImpl implements _$CatalogAppCWProxy {
     Object? note = const $CopyWithPlaceholder(),
     Object? oauthAvailable = const $CopyWithPlaceholder(),
     Object? composio = const $CopyWithPlaceholder(),
+    Object? logoUrl = const $CopyWithPlaceholder(),
   }) {
     return CatalogApp(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -199,6 +206,10 @@ class _$CatalogAppCWProxyImpl implements _$CatalogAppCWProxy {
           ? _value.composio
           // ignore: cast_nullable_to_non_nullable
           : composio as String?,
+      logoUrl: logoUrl == const $CopyWithPlaceholder()
+          ? _value.logoUrl
+          // ignore: cast_nullable_to_non_nullable
+          : logoUrl as String?,
     );
   }
 }
@@ -265,10 +276,15 @@ CatalogApp _$CatalogAppFromJson(Map<String, dynamic> json) => $checkedCreate(
       note: $checkedConvert('note', (v) => v as String?),
       oauthAvailable: $checkedConvert('oauth_available', (v) => v as bool),
       composio: $checkedConvert('composio', (v) => v as String?),
+      logoUrl: $checkedConvert('logo_url', (v) => v as String?),
     );
     return val;
   },
-  fieldKeyMap: const {'apiKey': 'api_key', 'oauthAvailable': 'oauth_available'},
+  fieldKeyMap: const {
+    'apiKey': 'api_key',
+    'oauthAvailable': 'oauth_available',
+    'logoUrl': 'logo_url',
+  },
 );
 
 Map<String, dynamic> _$CatalogAppToJson(
@@ -288,6 +304,7 @@ Map<String, dynamic> _$CatalogAppToJson(
   'note': ?instance.note,
   'oauth_available': instance.oauthAvailable,
   'composio': ?instance.composio,
+  'logo_url': ?instance.logoUrl,
 };
 
 const _$CatalogAppCategoryEnumEnumMap = {

@@ -121,6 +121,8 @@ export async function startHarness(
     NODE_ENV: "test",
     RATE_LIMIT_PER_MINUTE: String(opts.rateLimit ?? 10_000),
     UPDATE_CHECK_URL: process.env.TEST_UPDATE_CHECK_URL,
+    // No network: tests that need the gallery serve gallery/ locally.
+    GALLERY_URL: "off",
     ...opts.env,
   });
   const billing = billingFromEnv(env, handle.db);

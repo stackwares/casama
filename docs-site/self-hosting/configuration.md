@@ -411,7 +411,7 @@ the in-app inbox still shows every notification.
 | `COMPOSIO_API_KEY`            | (empty)   | A server-wide Composio key that enables Composio's managed sign-in for inbox apps such as Gmail.                                                                |
 | `SEARXNG_URL`                 | (empty)   | A SearXNG instance for web search in workspaces without a Brave Search or Tavily key. Free: `./install.sh --search` runs one (`http://searxng:8080`). Its settings must allow JSON results. |
 | `UNSPLASH_ACCESS_KEY`         | (empty)   | Wallpaper photo search in Appearance. Without it, the app offers its own patterns and photos.                                                                   |
-| `GALLERY_URL`                 | `https://gallery.casama.ai` | The open gallery of themes, color schemes, wallpapers and skills. Set to `off` to turn it off; a fork can point here instead. When it can't be reached, the built-in looks and skills stay. |
+| `GALLERY_URL`                 | `https://gallery.casama.ai` | The open gallery of themes, color schemes, wallpapers, skills and apps. Set to `off` to turn it off; a fork can point here instead. When it can't be reached, the built-in looks, skills and apps stay. |
 
 Register `https://casama.example.com/oauth/callback` as the redirect URI in each OAuth app. See
 [Connections](/guide/connections).

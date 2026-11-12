@@ -12,6 +12,13 @@ const checkOnly = process.argv.includes("--check");
 
 const LOOK = ["CC0-1.0", "CC-BY-4.0"];
 const SKILL = ["MIT", "Apache-2.0"];
+// Apps (D-239): the entry is CC0; its logo stays the vendor's trademark.
+const APP = ["CC0-1.0"];
+const APP_CATEGORIES = ["developer", "productivity", "payments", "design", "sales", "data", "automation"];
+const APP_AUTH = ["oauth", "api_key", "none"];
+const APP_KEYS = ["description", "category", "color", "homepage", "url", "auth", "oauthClient", "scopes", "apiKey", "note", "capabilities"];
+const RESERVED_HEADERS = new Set(["host", "cookie", "connection", "content-length", "content-type", "transfer-encoding", "accept", "mcp-session-id", "mcp-protocol-version"]);
+const LOGO_MAX = 24 * 1024;
 const FONTS = new Set([
   "Libre Baskerville", "Lato", "Google Sans", "Noto Serif", "Fraunces", "Figtree", "Inter",
   "Plus Jakarta Sans", "DM Sans", "Manrope", "Nunito", "Outfit", "Poppins", "Lexend", "Work Sans",
@@ -251,9 +258,115 @@ function wallpaperFields(raw, errors) {
     errors.push("wallpaper.intensity must be between 0 and 1");
 }
 
+// ---------------------------------------------------------------- apps (D-239)
+// Mirrors packages/domain/src/gallery-apps.ts: the server runs the same checks again.
+const text = (v, max) => {
+  if (typeof v !== "string") return undefined;
+  const t = v.trim();
+  return t.length >= 1 && t.length <= max ? t : undefined;
+};
+
+function publicHttpsUrl(raw) {
+  if (typeof raw !== "string" || raw.length > 500) return undefined;
+  let u;
+  try {
+    u = new URL(raw);
+  } catch {
+    return undefined;
+  }
+  if (u.protocol !== "https:" || u.username || u.password || u.port) return undefined;
+  const host = u.hostname.toLowerCase();
+  if (!host.includes(".") || host.startsWith("[") || /^[\d.]+$/.test(host)) return undefined;
+  if (host === "localhost" || /\.(localhost|local|internal|lan|home|corp|test|invalid|example)$/.test(host)) return undefined;
+  return raw;
+}
+
+function appDocument(raw, errors) {
+  if (!isRecord(raw)) return errors.push("app.json must be an object"), undefined;
+  const start = errors.length;
+  for (const key of Object.keys(raw)) if (!APP_KEYS.includes(key)) errors.push(`app.json can't have ${key}`);
+  const description = text(raw.description, 140);
+  if (!description) errors.push("description must be 1 to 140 characters");
+  const category = APP_CATEGORIES.find((c) => c === raw.category);
+  if (!category) errors.push(`category must be one of ${APP_CATEGORIES.join(", ")}`);
+  const color = typeof raw.color === "string" && /^[0-9A-Fa-f]{6}$/.test(raw.color) ? raw.color : undefined;
+  if (!color) errors.push("color must be a hex color without # (for example 00C4CC)");
+  const homepage = publicHttpsUrl(raw.homepage);
+  if (!homepage) errors.push("homepage must be an https link on a public host");
+  const url = publicHttpsUrl(raw.url);
+  if (!url) errors.push("url must be the vendor's https MCP endpoint on a public host");
+  const auth = [];
+  if (!Array.isArray(raw.auth) || raw.auth.length < 1) errors.push("auth must list how it connects");
+  else
+    for (const m of raw.auth) {
+      const found = APP_AUTH.find((a) => a === m);
+      if (!found) errors.push(`auth can only use ${APP_AUTH.join(", ")}`);
+      else if (auth.includes(found)) errors.push(`auth lists ${found} twice`);
+      else auth.push(found);
+    }
+  if (auth.includes("none") && auth.length > 1) errors.push('auth "none" can\'t be combined');
+  let oauthClient;
+  if (auth.includes("oauth")) {
+    if (raw.oauthClient === "dcr" || raw.oauthClient === "cimd") oauthClient = raw.oauthClient;
+    else errors.push('with oauth, oauthClient must be "dcr" or "cimd"');
+  } else if (raw.oauthClient !== undefined) errors.push("oauthClient is only for oauth");
+  let scopes;
+  if (raw.scopes !== undefined) {
+    if (!auth.includes("oauth")) errors.push("scopes are only for oauth");
+    else if (!Array.isArray(raw.scopes) || raw.scopes.length > 30 || !raw.scopes.every((s) => typeof s === "string" && /^[\x21-\x7E]{1,200}$/.test(s)))
+      errors.push("scopes must be at most 30 scope names");
+    else scopes = raw.scopes;
+  }
+  let apiKey;
+  if (auth.includes("api_key")) {
+    const k = isRecord(raw.apiKey) ? raw.apiKey : null;
+    const label = k ? text(k.label, 40) : undefined;
+    const keyUrl = k ? publicHttpsUrl(k.url) : undefined;
+    const placeholder = k && k.placeholder !== undefined ? text(k.placeholder, 60) : undefined;
+    const steps = k && Array.isArray(k.steps) && k.steps.length >= 1 && k.steps.length <= 6 ? k.steps.map((s) => text(s, 160)) : [];
+    const header = k && k.header !== undefined ? k.header : undefined;
+    if (!k) errors.push("with api_key, apiKey must say where to get one");
+    else {
+      for (const key of Object.keys(k)) if (!["label", "placeholder", "url", "steps", "header"].includes(key)) errors.push(`apiKey can't have ${key}`);
+      if (!label) errors.push("apiKey.label must be 1 to 40 characters");
+      if (!keyUrl) errors.push("apiKey.url must be an https link on a public host");
+      if (k.placeholder !== undefined && !placeholder) errors.push("apiKey.placeholder must be 1 to 60 characters");
+      if (!steps.length || steps.some((s) => !s)) errors.push("apiKey.steps must be 1 to 6 lines of at most 160 characters");
+      if (header !== undefined && (typeof header !== "string" || !/^[A-Za-z0-9-]{1,40}$/.test(header) || RESERVED_HEADERS.has(header.toLowerCase())))
+        errors.push("apiKey.header must be a header name such as X-Api-Key");
+    }
+    if (label && keyUrl && steps.length && steps.every(Boolean))
+      apiKey = { label, url: keyUrl, steps, ...(placeholder ? { placeholder } : {}), ...(typeof header === "string" ? { header } : {}) };
+  } else if (raw.apiKey !== undefined) errors.push("apiKey is only for api_key");
+  const note = raw.note === undefined ? undefined : text(raw.note, 200);
+  if (raw.note !== undefined && !note) errors.push("note must be 1 to 200 characters");
+  const capabilities = Array.isArray(raw.capabilities) ? raw.capabilities.map((c) => text(c, 60)) : [];
+  if (capabilities.length < 1 || capabilities.length > 6 || capabilities.some((c) => !c))
+    errors.push("capabilities must be 1 to 6 short phrases of at most 60 characters");
+  if (errors.length > start) return undefined;
+  return {
+    description, category, color: color.toUpperCase(), homepage, url, auth,
+    ...(oauthClient ? { oauthClient } : {}),
+    ...(scopes ? { scopes } : {}),
+    ...(apiKey ? { apiKey } : {}),
+    ...(note ? { note } : {}),
+    capabilities,
+  };
+}
+
+function appLogo(svg, bytes, errors) {
+  if (bytes > LOGO_MAX) errors.push(`logo.svg is over ${LOGO_MAX / 1024} KB`);
+  if (!/^\s*(<\?xml[^>]*\?>\s*)?<svg[\s>]/.test(svg) || !/<\/svg>\s*$/.test(svg)) errors.push("logo.svg must be one <svg> element");
+  if (!/viewBox\s*=\s*"[\d.\s-]+"/.test(svg)) errors.push("logo.svg needs a viewBox");
+  if (/<(script|style|foreignObject|image|use|a|iframe|object|embed)[\s>/]/i.test(svg)) errors.push("logo.svg can't have scripts, styles, links, images or <use>");
+  if (/\son[a-z]+\s*=/i.test(svg)) errors.push("logo.svg can't have event handlers");
+  if (/(xlink:)?href\s*=|url\s*\(|javascript:|data:/i.test(svg)) errors.push("logo.svg can't point at other files or URLs");
+  if (/<!(DOCTYPE|ENTITY)/i.test(svg)) errors.push("logo.svg can't declare entities");
+}
+
 const errors = [];
 const items = [];
-for (const [dir, type] of [["themes", "theme"], ["schemes", "scheme"], ["wallpapers", "wallpaper"], ["skills", "skill"]]) {
+for (const [dir, type] of [["themes", "theme"], ["schemes", "scheme"], ["wallpapers", "wallpaper"], ["skills", "skill"], ["apps", "app"]]) {
   const parent = join(root, dir);
   let ids = [];
   try {
@@ -283,7 +396,7 @@ for (const [dir, type] of [["themes", "theme"], ["schemes", "scheme"], ["wallpap
       errors.push(`${where}: item.json is not JSON`);
       continue;
     }
-    const licenses = type === "skill" ? SKILL : LOOK;
+    const licenses = type === "skill" ? SKILL : type === "app" ? APP : LOOK;
     const name = typeof meta.name === "string" ? meta.name.trim() : "";
     if (name.length < 1 || name.length > 60) errors.push(`${where}: name must be 1 to 60 characters`);
     const authorName = meta.author && typeof meta.author.name === "string" ? meta.author.name.trim() : "";
@@ -319,7 +432,23 @@ for (const [dir, type] of [["themes", "theme"], ["schemes", "scheme"], ["wallpap
         return null;
       }
     };
-    if (type === "theme") {
+    if (type === "app") {
+      for (const f of files)
+        if (!["item.json", "app.json", "logo.svg"].includes(f.relative)) errors.push(`${where}: ${f.relative} isn't allowed (only item.json, app.json, logo.svg)`);
+      const raw = readJson("app.json");
+      if (raw) {
+        const local = [];
+        document = appDocument(raw, local);
+        description = document?.description;
+        for (const e of local) errors.push(`${where}: ${e}`);
+      }
+      const logo = files.find((f) => f.relative === "logo.svg");
+      if (logo) {
+        const local = [];
+        appLogo(logo.bytes.toString("utf8"), logo.bytes.byteLength, local);
+        for (const e of local) errors.push(`${where}: ${e}`);
+      }
+    } else if (type === "theme") {
       const doc = readJson("theme.json");
       document = doc ?? undefined;
       if (doc) {
@@ -410,16 +539,31 @@ if (errors.length) {
   process.exit(1);
 }
 items.sort((a, b) => (a.type === b.type ? a.id.localeCompare(b.id) : a.type.localeCompare(b.type)));
-const body = `${JSON.stringify({ schema: 1, items }, null, 2)}\n`;
-const indexPath = join(root, "index.json");
-if (checkOnly) {
-  const current = readFileSync(indexPath, "utf8");
-  if (createHash("sha256").update(current).digest("hex") !== createHash("sha256").update(body).digest("hex")) {
-    console.error("index.json is stale. Run: node check.mjs");
-    process.exit(1);
+// Apps get their own file (D-239): servers and apps from before apps only read index.json, and
+// their parsers know just the four look and skill types.
+const outputs = [
+  { file: "index.json", items: items.filter((i) => i.type !== "app") },
+  { file: "apps.json", items: items.filter((i) => i.type === "app") },
+];
+let stale = false;
+for (const out of outputs) {
+  const body = `${JSON.stringify({ schema: 1, items: out.items }, null, 2)}\n`;
+  const path = join(root, out.file);
+  if (checkOnly) {
+    let current = "";
+    try {
+      current = readFileSync(path, "utf8");
+    } catch {
+      // Missing counts as stale.
+    }
+    if (createHash("sha256").update(current).digest("hex") !== createHash("sha256").update(body).digest("hex")) {
+      console.error(`${out.file} is stale. Run: node check.mjs`);
+      stale = true;
+    }
+  } else {
+    writeFileSync(path, body);
+    console.log(`wrote ${out.file} (${out.items.length} items)`);
   }
-  console.log(`gallery ok, ${items.length} items`);
-} else {
-  writeFileSync(indexPath, body);
-  console.log(`wrote index.json (${items.length} items)`);
 }
+if (stale) process.exit(1);
+if (checkOnly) console.log(`gallery ok, ${items.length} items`);

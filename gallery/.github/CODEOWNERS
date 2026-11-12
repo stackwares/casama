@@ -1,0 +1,4 @@
+# Every change needs a maintainer's review. Apps connect people's accounts to a third-party
+# server, so a maintainer approves each one (D-239).
+*        @oliverbytes
+/apps/   @oliverbytes

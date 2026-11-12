@@ -9,6 +9,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../core/app_marks.dart';
 import '../../core/media_cache.dart';
 
 /// Apps with a bundled brand mark (assets/apps, from Simple Icons, CC0).
@@ -81,8 +82,15 @@ class AppLogo extends StatelessWidget {
     final ink = lightBrand ? const Color(0xFF1B1B1F) : Colors.white;
     final radius = BorderRadius.circular(size * 0.28);
     final hasMark = appId != null && _bundledLogos.contains(appId);
+    // A gallery app's mark (D-239) is drawn like a bundled one: tinted on its brand color.
+    final galleryMark = hasMark || appId == null ? null : galleryAppMarks[appId];
     final Widget mark;
-    if (imageUrl != null) {
+    if (imageUrl == null && galleryMark != null) {
+      mark = Padding(
+        padding: EdgeInsets.all(size * 0.24),
+        child: _RemoteLogo(galleryMark, size: size, tint: ink, fallback: _initial(ink)),
+      );
+    } else if (imageUrl != null) {
       mark = Padding(
         padding: EdgeInsets.all(size * 0.16),
         child: _RemoteLogo(imageUrl!, size: size, fallback: _initial(scheme.onSurfaceVariant)),
@@ -138,10 +146,14 @@ class AppLogo extends StatelessWidget {
 /// drawn by format; on the web the browser's own <img> draws either (the logo hosts send no CORS
 /// headers, so the bytes can't be fetched there). The tile is the placeholder while it loads.
 class _RemoteLogo extends StatefulWidget {
-  const _RemoteLogo(this.url, {required this.size, required this.fallback});
+  const _RemoteLogo(this.url, {required this.size, required this.fallback, this.tint});
 
   final String url;
   final double size;
+
+  /// Draws an SVG mark in this one color (gallery marks). The gallery allows cross-origin reads,
+  /// so on the web its bytes are fetched like on devices.
+  final Color? tint;
 
   /// Shown when the logo can't load or isn't a picture.
   final Widget fallback;
@@ -162,7 +174,7 @@ class _RemoteLogoState extends State<_RemoteLogo> {
   @override
   void didUpdateWidget(_RemoteLogo old) {
     super.didUpdateWidget(old);
-    if (old.url != widget.url && !kIsWeb) _bytes = _fetch();
+    if (old.url != widget.url && (!kIsWeb || widget.tint != null)) _bytes = _fetch();
   }
 
   /// SVG text starts with markup (an XML prolog, a comment or <svg) after any BOM or whitespace.
@@ -174,7 +186,7 @@ class _RemoteLogoState extends State<_RemoteLogo> {
   @override
   Widget build(BuildContext context) {
     final px = (widget.size * MediaQuery.devicePixelRatioOf(context)).ceil();
-    if (kIsWeb) {
+    if (kIsWeb && widget.tint == null) {
       return Image.network(
         widget.url,
         fit: BoxFit.contain,
@@ -189,7 +201,12 @@ class _RemoteLogoState extends State<_RemoteLogo> {
         final bytes = snap.data;
         if (bytes == null) return const SizedBox.expand();
         final child = _isSvg(bytes)
-            ? SvgPicture.memory(bytes, fit: BoxFit.contain, errorBuilder: (_, _, _) => Center(child: widget.fallback))
+            ? SvgPicture.memory(
+                bytes,
+                fit: BoxFit.contain,
+                colorFilter: widget.tint == null ? null : ColorFilter.mode(widget.tint!, BlendMode.srcIn),
+                errorBuilder: (_, _, _) => Center(child: widget.fallback),
+              )
             // Decoded at the tile's size: remote logos are often 512 px or more.
             : Image.memory(bytes, fit: BoxFit.contain, cacheWidth: px, errorBuilder: (_, _, _) => Center(child: widget.fallback));
         return TweenAnimationBuilder<double>(

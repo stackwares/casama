@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 
+import 'app_marks.dart';
 import 'backend.dart';
 import 'local_cache.dart';
 import 'number_format.dart';
@@ -390,7 +391,11 @@ final botBadgeProvider = Provider.family<int, String>((ref, botId) {
 final routinesProvider = FutureProvider.family<List<Routine>, String>((ref, botId) => ref.watch(backendProvider).routines(botId));
 
 /// Built-in apps (D-089); cached for the session.
-final appCatalogProvider = FutureProvider<AppCatalog>((ref) => ref.watch(backendProvider).appCatalog());
+final appCatalogProvider = FutureProvider<AppCatalog>((ref) async {
+  final catalog = await ref.watch(backendProvider).appCatalog();
+  rememberAppMarks(catalog.apps);
+  return catalog;
+});
 
 final integrationsProvider = FutureProvider<List<Integration>>((ref) async {
   final org = ref.watch(currentOrgProvider);

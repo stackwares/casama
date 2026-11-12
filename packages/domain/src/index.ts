@@ -10,6 +10,7 @@ export * from "./cloud-model-assignment.ts";
 export * from "./cloud-models.ts";
 export * from "./diff.ts";
 export * from "./gallery.ts";
+export * from "./gallery-apps.ts";
 export * from "./mentions.ts";
 export * from "./models.ts";
 export * from "./pages.ts";

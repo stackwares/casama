@@ -1,0 +1,10 @@
+{
+  "description": "Ask questions about any public GitHub repository and read its generated docs.",
+  "category": "developer",
+  "color": "1A1A2E",
+  "homepage": "https://deepwiki.com",
+  "url": "https://mcp.deepwiki.com/mcp",
+  "auth": ["none"],
+  "note": "Public repositories only. No sign-in needed.",
+  "capabilities": ["Read a repository's docs", "Ask questions about a codebase"]
+}

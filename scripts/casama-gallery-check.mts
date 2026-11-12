@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { APP_CATALOG } from "../packages/domain/src/apps.ts";
 import {
   checkGalleryId,
   checkSchemeDocument,
@@ -22,6 +23,12 @@ import {
   parseGalleryMeta,
   SKILL_LICENSES,
 } from "../packages/domain/src/gallery.ts";
+import {
+  APP_LICENSES,
+  checkAppDocument,
+  checkAppLogo,
+  GALLERY_APP_TYPE,
+} from "../packages/domain/src/gallery-apps.ts";
 import { parseSkillMd } from "../packages/domain/src/skill-format.ts";
 
 const root = fileURLToPath(new URL("../gallery", import.meta.url));
@@ -31,12 +38,15 @@ const lucide = JSON.parse(
   readFileSync(join(root, "assets/lucide/icon-nodes.json"), "utf8"),
 ) as LucideNodes;
 
-const folders: { dir: string; type: GalleryType }[] = [
+const folders: { dir: string; type: GalleryType | typeof GALLERY_APP_TYPE }[] = [
   { dir: "themes", type: "theme" },
   { dir: "schemes", type: "scheme" },
   { dir: "wallpapers", type: "wallpaper" },
   { dir: "skills", type: "skill" },
+  // Vendors' MCP servers (D-239). Built-in apps (packages/domain/src/apps.ts) keep their ids.
+  { dir: "apps", type: GALLERY_APP_TYPE },
 ];
+const builtInApps = new Set(APP_CATALOG.map((a) => a.id));
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -79,7 +89,8 @@ for (const { dir, type } of folders) {
       errors.push(`${where}: item.json is not JSON`);
       continue;
     }
-    const licenses = type === "skill" ? SKILL_LICENSES : LOOK_LICENSES;
+    const licenses =
+      type === "skill" ? SKILL_LICENSES : type === GALLERY_APP_TYPE ? APP_LICENSES : LOOK_LICENSES;
     const parsed = parseGalleryMeta(metaJson, licenses);
     for (const e of parsed.errors) errors.push(`${where}: ${e}`);
     if (!parsed.meta) continue;
@@ -90,7 +101,33 @@ for (const { dir, type } of folders) {
     let document: unknown;
     let description: string | undefined;
     let requires: string[] = [];
-    if (type === "theme" || type === "scheme" || type === "wallpaper") {
+    if (type === GALLERY_APP_TYPE) {
+      if (builtInApps.has(id) || builtInApps.has(id.replaceAll("-", "_")))
+        errors.push(`${where}: ${id} is a built-in app; change it in packages/domain/src/apps.ts`);
+      for (const f of files)
+        if (f.relative !== "item.json" && f.relative !== "app.json" && f.relative !== "logo.svg")
+          errors.push(`${where}: ${f.relative} isn't allowed (only item.json, app.json, logo.svg)`);
+      const doc = files.find((f) => f.relative === "app.json");
+      if (!doc) {
+        errors.push(`${where}: missing app.json`);
+        continue;
+      }
+      let json: unknown;
+      try {
+        json = JSON.parse(doc.bytes.toString("utf8"));
+      } catch {
+        errors.push(`${where}: app.json is not JSON`);
+        continue;
+      }
+      const checked = checkAppDocument(json);
+      for (const e of checked.errors) errors.push(`${where}: ${e}`);
+      document = checked.doc;
+      description = checked.doc?.description;
+      const logo = files.find((f) => f.relative === "logo.svg");
+      if (logo)
+        for (const e of checkAppLogo(logo.bytes.toString("utf8"), logo.bytes.byteLength))
+          errors.push(`${where}: ${e}`);
+    } else if (type === "theme" || type === "scheme" || type === "wallpaper") {
       const name =
         type === "theme" ? "theme.json" : type === "scheme" ? "scheme.json" : "wallpaper.json";
       const doc = files.find((f) => f.relative === name);
@@ -168,19 +205,35 @@ items.sort((a, b) => {
     : left.type.localeCompare(right.type);
 });
 
-const body = `${JSON.stringify({ schema: 1, items }, null, 2)}\n`;
-const indexPath = join(root, "index.json");
-if (checkOnly) {
-  const current = readFileSync(indexPath, "utf8");
-  const same =
-    createHash("sha256").update(current).digest("hex") ===
-    createHash("sha256").update(body).digest("hex");
-  if (!same) {
-    console.error("gallery/index.json is stale. Run scripts/casama-gallery-check.ts");
-    process.exit(1);
+// Apps get their own file (D-239): servers and apps from before apps only read index.json, and
+// their parsers know just the four look and skill types.
+const isApp = (i: unknown) => (i as { type: string }).type === GALLERY_APP_TYPE;
+const outputs = [
+  { file: "index.json", items: items.filter((i) => !isApp(i)) },
+  { file: "apps.json", items: items.filter(isApp) },
+];
+let stale = false;
+for (const out of outputs) {
+  const body = `${JSON.stringify({ schema: 1, items: out.items }, null, 2)}\n`;
+  const path = join(root, out.file);
+  if (checkOnly) {
+    let current = "";
+    try {
+      current = readFileSync(path, "utf8");
+    } catch {
+      // Missing counts as stale.
+    }
+    const same =
+      createHash("sha256").update(current).digest("hex") ===
+      createHash("sha256").update(body).digest("hex");
+    if (!same) {
+      console.error(`gallery/${out.file} is stale. Run: node scripts/casama-gallery-check.mts`);
+      stale = true;
+    }
+  } else {
+    writeFileSync(path, body);
+    console.log(`wrote gallery/${out.file} (${out.items.length} items)`);
   }
-  console.log(`gallery ok, ${items.length} items`);
-} else {
-  writeFileSync(indexPath, body);
-  console.log(`wrote gallery/index.json (${items.length} items)`);
 }
+if (stale) process.exit(1);
+if (checkOnly) console.log(`gallery ok, ${items.length} items`);

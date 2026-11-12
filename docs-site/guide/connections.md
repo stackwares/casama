@@ -42,6 +42,22 @@ Each app tile shows how it connects: **One click**, **API key**, **No sign-in** 
 Cloudflare Docs works without signing in. Hugging Face, Context7 and Exa work without signing in
 and also take an optional API key.
 
+More apps come from the [open gallery](https://gallery.casama.ai/#app), such as Canva and DeepWiki.
+They sit in the same list, with the same tiles, and new ones appear without an app update.
+
+### Add an app to the catalog
+
+Anyone can propose a vendor's hosted MCP server for everyone's catalog:
+
+1. Fork [stackwares/casama-gallery](https://github.com/stackwares/casama-gallery).
+2. Add a folder under `apps/` with `item.json`, `app.json` and, if you like, the vendor's
+   single-color `logo.svg`. The gallery's README lists every field.
+3. Run `node check.mjs`, then open a pull request.
+
+Casama checks the server against the vendor's own docs before merging. Once merged, the app shows
+up in Connections for everyone within about 15 minutes. Only servers the vendor itself runs are
+accepted; for any other server, use [a custom server](#add-a-custom-server).
+
 ### When an app says "Needs setup"
 
 Some vendors don't let apps register themselves for one-click sign-in. For those, whoever runs
@@ -268,6 +284,8 @@ build one, see [Building plugins](/develop/plugins).
   checked against live accounts yet.
 - The Treg connection follows Treg's public guides and hasn't been checked against a live account
   yet. Buying data calls through Casama Cloud credits isn't offered.
+- Apps from the gallery can't use Google's sign-in, a sign-in client registered by the server's
+  owner, or Composio. Those apps are built in.
 - Bitwarden Secrets Manager isn't supported. Use named secrets for key-value secrets.
 - In the app, a secret is available to every bot in the workspace. Limiting a secret to certain
   bots is possible through the API only.

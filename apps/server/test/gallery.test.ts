@@ -4,7 +4,7 @@ import type { AddressInfo } from "node:net";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { resetGalleryCache } from "../src/services/gallery.ts";
+import { galleryApps, resetGalleryCache } from "../src/services/gallery.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
 const galleryRoot = fileURLToPath(new URL("../../../gallery", import.meta.url));
@@ -120,6 +120,73 @@ describe("gallery", () => {
       source: "gallery",
       category: "work",
     });
+  });
+
+  it("adds the gallery's apps to the catalog, with their marks, and keeps them out of looks", async () => {
+    const catalog = await j(await h.request("/v1/apps", { token: owner.token }));
+    const canva = catalog.apps.find((a: { id: string }) => a.id === "canva");
+    expect(canva).toMatchObject({
+      name: "Canva",
+      category: "design",
+      url: "https://mcp.canva.com/mcp",
+      auth: ["oauth"],
+      popular: false,
+      logo_url: `${site.url}/apps/canva/logo.svg`,
+    });
+    const deepwiki = catalog.apps.find((a: { id: string }) => a.id === "deepwiki");
+    expect(deepwiki.auth).toEqual(["none"]);
+    expect(deepwiki.logo_url).toBeUndefined();
+    // Built-in apps still come first.
+    expect(catalog.apps[0].id).not.toBe("canva");
+    const all = await j(await h.request("/v1/gallery", { token: owner.token }));
+    expect(all.items.some((i: { type: string }) => i.type === "app")).toBe(false);
+  });
+
+  it("checks gallery apps again and refuses what only the built-in catalog may do", async () => {
+    const good = {
+      description: "Fine.",
+      category: "design",
+      color: "112233",
+      homepage: "https://vendor.example.org",
+      url: "https://mcp.vendor.example.org/mcp",
+      auth: ["oauth"],
+      oauthClient: "dcr",
+      capabilities: ["Do things"],
+    };
+    const item = (id: string, document: unknown, extra: Record<string, unknown> = {}) => ({
+      id,
+      type: "app",
+      name: id,
+      retired: false,
+      files: [`apps/${id}/app.json`, `apps/${id}/item.json`],
+      document,
+      ...extra,
+    });
+    const items = [
+      item("good", good),
+      item("google-ish", { ...good, category: "google" }),
+      item("borrowed-client", { ...good, oauthClient: "preregistered" }),
+      item("via-composio", { ...good, composio: "x" }),
+      item("inward", { ...good, url: "https://10.0.0.5/mcp" }),
+      item("plain-http", { ...good, url: "http://mcp.vendor.example.org/mcp" }),
+      item("retired", good, { retired: true }),
+      item("github", good),
+      item("google-drive", good),
+      item("Bad_Id", good),
+      { ...item("theme-like", good), type: "theme" },
+    ];
+    const fakeFetch = (async () =>
+      new Response(JSON.stringify({ schema: 1, items }), {
+        headers: { "content-type": "application/json" },
+      })) as typeof fetch;
+    resetGalleryCache();
+    const apps = await galleryApps(
+      { GALLERY_URL: "https://gallery.example.org" } as never,
+      fakeFetch,
+    );
+    resetGalleryCache();
+    expect(apps.map((a) => a.id)).toEqual(["good"]);
+    expect(apps[0]).not.toHaveProperty("logoUrl");
   });
 
   it("is off when the URL is empty", async () => {
