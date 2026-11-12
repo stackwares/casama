@@ -209,6 +209,21 @@ export class ComputerService {
       values (${c.org_id}::uuid, ${c.owner_bot_id}::uuid, 'computer_seconds', ${seconds}, ${cost})`);
   }
 
+  /**
+   * The computer's handle only when it is already up (a personal computer: connected). Never
+   * starts, wakes or restores it and doesn't count as activity, so looking costs nothing (D-226).
+   */
+  async ifRunning(computerId: string): Promise<SandboxHandle | null> {
+    const c = await this.byId(computerId);
+    if (!c) return null;
+    if (c.kind !== "local" && c.state !== "running" && c.state !== "idle") return null;
+    return (
+      (await this.providerFor(c)
+        .get(computerId)
+        .catch(() => null)) ?? null
+    );
+  }
+
   /** Makes sure the computer is running and returns its handle. Serialized per computer. */
   async ensureRunning(computerId: string, emit?: Emit): Promise<SandboxHandle> {
     return this.db.transaction(async (tx) => {

@@ -52,7 +52,7 @@ export const BOT_TEMPLATES: BotTemplate[] = [
       "Draft a polite reply declining this meeting",
       "Plan my week around these three deadlines",
     ],
-    autonomy: "ask_always",
+    autonomy: "ask_risky",
     skills: [],
   },
   {
@@ -109,7 +109,7 @@ export const BOT_TEMPLATES: BotTemplate[] = [
       "Summarise the top questions from this week",
       "Turn these answers into an FAQ page",
     ],
-    autonomy: "ask_always",
+    autonomy: "ask_risky",
     skills: [],
   },
   {
@@ -367,7 +367,7 @@ export const BOT_TEMPLATES: BotTemplate[] = [
       "Draft a launch announcement",
       "Turn these notes into a blog post",
     ],
-    autonomy: "ask_always",
+    autonomy: "ask_risky",
     skills: [],
   },
   {
@@ -413,7 +413,7 @@ export const BOT_TEMPLATES: BotTemplate[] = [
       "Draft a thread about our new feature",
       "Reply ideas for these comments",
     ],
-    autonomy: "ask_always",
+    autonomy: "ask_risky",
     skills: [],
     routines: [
       {
@@ -492,7 +492,7 @@ export const BOT_TEMPLATES: BotTemplate[] = [
       "Build a monthly budget from my income and bills",
       "Explain how an index fund works",
     ],
-    autonomy: "ask_always",
+    autonomy: "ask_risky",
     skills: [],
   },
   {
@@ -619,7 +619,7 @@ export const BOT_TEMPLATES: BotTemplate[] = [
       "Write a scorecard for a support lead",
       "Draft interview invites for the shortlist",
     ],
-    autonomy: "ask_always",
+    autonomy: "ask_risky",
     skills: [],
   },
   {

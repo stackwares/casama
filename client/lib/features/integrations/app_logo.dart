@@ -1,10 +1,15 @@
+import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:http/http.dart' as http;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../theme/app_colors.dart';
-import '../../ui/smooth_network_image.dart';
+import '../../theme/app_tokens.dart';
+import '../../core/media_cache.dart';
 
 /// Apps with a bundled brand mark (assets/apps, from Simple Icons, CC0).
 const _bundledLogos = {
@@ -80,15 +85,7 @@ class AppLogo extends StatelessWidget {
     if (imageUrl != null) {
       mark = Padding(
         padding: EdgeInsets.all(size * 0.16),
-        // Decoded at the tile's size: remote logos are often 512 px or more. The neutral tile is the
-        // placeholder; the logo fades in, and one that can't load shows the app's initial.
-        child: SmoothNetworkImage(
-          imageUrl!,
-          fit: BoxFit.contain,
-          decodeWidth: (size * MediaQuery.devicePixelRatioOf(context)).ceil(),
-          placeholderColor: Colors.transparent,
-          error: _initial(scheme.onSurfaceVariant),
-        ),
+        child: _RemoteLogo(imageUrl!, size: size, fallback: _initial(scheme.onSurfaceVariant)),
       );
     } else if (hasMark) {
       mark = Padding(
@@ -134,4 +131,75 @@ class AppLogo extends StatelessWidget {
     (name.isEmpty ? '?' : name.characters.first).toUpperCase(),
     style: TextStyle(color: ink, fontWeight: FontWeight.w800, fontSize: size * 0.44, height: 1),
   );
+}
+
+/// A directory's logo, SVG or raster: Composio serves SVG (logos.composio.dev), Pipedream PNG, and
+/// Flutter's Image can't read SVG. On devices the bytes are fetched once, kept in [MediaCache] and
+/// drawn by format; on the web the browser's own <img> draws either (the logo hosts send no CORS
+/// headers, so the bytes can't be fetched there). The tile is the placeholder while it loads.
+class _RemoteLogo extends StatefulWidget {
+  const _RemoteLogo(this.url, {required this.size, required this.fallback});
+
+  final String url;
+  final double size;
+
+  /// Shown when the logo can't load or isn't a picture.
+  final Widget fallback;
+
+  @override
+  State<_RemoteLogo> createState() => _RemoteLogoState();
+}
+
+class _RemoteLogoState extends State<_RemoteLogo> {
+  late Future<Uint8List> _bytes = _fetch();
+
+  Future<Uint8List> _fetch() => MediaCache.getOrFetch('logo:${widget.url}', () async {
+    final res = await http.get(Uri.parse(widget.url));
+    if (res.statusCode != 200 || res.bodyBytes.isEmpty) throw StateError('logo ${res.statusCode}');
+    return res.bodyBytes;
+  });
+
+  @override
+  void didUpdateWidget(_RemoteLogo old) {
+    super.didUpdateWidget(old);
+    if (old.url != widget.url && !kIsWeb) _bytes = _fetch();
+  }
+
+  /// SVG text starts with markup (an XML prolog, a comment or <svg) after any BOM or whitespace.
+  static bool _isSvg(Uint8List b) {
+    final head = String.fromCharCodes(b.take(512)).replaceFirst('\uFEFF', '').trimLeft();
+    return head.startsWith('<') && head.contains('<svg');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final px = (widget.size * MediaQuery.devicePixelRatioOf(context)).ceil();
+    if (kIsWeb) {
+      return Image.network(
+        widget.url,
+        fit: BoxFit.contain,
+        webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
+        errorBuilder: (_, _, _) => Center(child: widget.fallback),
+      );
+    }
+    return FutureBuilder<Uint8List>(
+      future: _bytes,
+      builder: (context, snap) {
+        if (snap.hasError) return Center(child: widget.fallback);
+        final bytes = snap.data;
+        if (bytes == null) return const SizedBox.expand();
+        final child = _isSvg(bytes)
+            ? SvgPicture.memory(bytes, fit: BoxFit.contain, errorBuilder: (_, _, _) => Center(child: widget.fallback))
+            // Decoded at the tile's size: remote logos are often 512 px or more.
+            : Image.memory(bytes, fit: BoxFit.contain, cacheWidth: px, errorBuilder: (_, _, _) => Center(child: widget.fallback));
+        return TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: AppMotion.of(context, AppMotion.duration),
+          curve: AppMotion.curve,
+          builder: (_, t, c) => Opacity(opacity: t, child: c),
+          child: child,
+        );
+      },
+    );
+  }
 }

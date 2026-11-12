@@ -200,6 +200,25 @@ void main() {
     expect(backend.computerUpdates, ['desktop', 'desktops:3']);
   });
 
+  testWidgets('computers: the open list follows state changes and pulls to refresh', (tester) async {
+    await setSize(tester, const Size(600, 1000));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const ComputersScreen()));
+    await tester.pumpAndSettle();
+    expect(find.text('Asleep'), findsOneWidget);
+
+    // It reconnects while the page is open: the next reload shows it, no reopening.
+    backend.teamComputerState = ComputerState.running;
+    await tester.pump(ComputersScreen.refreshEvery);
+    await tester.pumpAndSettle();
+    expect(find.text('Running'), findsOneWidget);
+
+    backend.teamComputerState = ComputerState.stopped;
+    await tester.fling(find.byKey(const Key('computer-$computerId')), const Offset(0, 400), 1000);
+    await tester.pumpAndSettle();
+    expect(find.text('Stopped'), findsOneWidget);
+  });
+
   testWidgets('side panel: the live view plays inline, opens full screen and comes back', (tester) async {
     await setSize(tester, const Size(1300, 900));
     final backend = _AwakeDesktop();

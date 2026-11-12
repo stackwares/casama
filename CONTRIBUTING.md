@@ -28,6 +28,10 @@ Docker Desktop and Flutter.
 
 ### Run the backend
 
+`scripts/dev-up.sh` does all of this in one command: Docker, `supabase start`, the computer
+services, then the API and worker until Ctrl-C (`--down` stops Supabase and the services too). The
+steps it runs:
+
 ```sh
 pnpm install
 supabase start                      # Postgres :54322, API :54321, Studio :54323

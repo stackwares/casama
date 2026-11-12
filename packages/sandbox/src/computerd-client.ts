@@ -3,6 +3,7 @@ import {
   type ExecChunk,
   type ExecOptions,
   type FileEntry,
+  type FileThumbnail,
   type HealthStatus,
   type InputEvent,
   SandboxError,
@@ -170,6 +171,14 @@ export class ComputerdClient {
     }
   }
 
+  /** A file's thumbnail (D-226), or null when computerd has none for it. */
+  async thumbnail(path: string, size: number): Promise<FileThumbnail | null> {
+    return fetchThumbnail(
+      `${this.baseUrl}/files/thumbnail?path=${encodeURIComponent(path)}&size=${size}`,
+      this.authHeaders,
+    );
+  }
+
   async screenshot() {
     const res = await this.call("/screenshot");
     return new Uint8Array(await res.arrayBuffer());
@@ -218,4 +227,48 @@ export class ComputerdClient {
       await new Promise((r) => setTimeout(r, 150));
     }
   }
+}
+
+/**
+ * computerd's queue plus its 8-second tool limit, with room for the relay. A thumbnail that takes
+ * longer isn't worth waiting for: the app shows its plain tile.
+ */
+export const THUMBNAIL_TIMEOUT_MS = 15_000;
+
+/** GET a `/files/thumbnail` response (computerd, the supervisor or the device tunnel). */
+export async function fetchThumbnail(
+  url: string,
+  headers: Record<string, string>,
+): Promise<FileThumbnail | null> {
+  let res: Response;
+  try {
+    res = await fetch(url, { headers, signal: AbortSignal.timeout(THUMBNAIL_TIMEOUT_MS) });
+  } catch (err) {
+    throw new SandboxError(
+      "computer_unreachable",
+      `computerd unreachable: ${(err as Error).message}`,
+    );
+  }
+  if (res.status === 404) {
+    await res.body?.cancel().catch(() => {});
+    return null;
+  }
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { code?: string; message?: string };
+    throw new SandboxError(
+      body.code ?? "computerd_error",
+      body.message ?? `computerd returned ${res.status}`,
+      res.status,
+    );
+  }
+  const num = (h: string) => {
+    const v = Number(res.headers.get(h) ?? Number.NaN);
+    return Number.isFinite(v) && v >= 0 ? v : undefined;
+  };
+  return {
+    data: new Uint8Array(await res.arrayBuffer()),
+    contentType: res.headers.get("content-type") ?? "image/jpeg",
+    mtimeMs: num("x-file-mtime"),
+    durationMs: num("x-duration-ms"),
+  };
 }

@@ -46,6 +46,7 @@ export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         default_reasoning_effort: deps.env.DEFAULT_REASONING_EFFORT,
         wallpapers_enabled: Boolean(deps.env.UNSPLASH_ACCESS_KEY),
         chatgpt_sign_in: chatGptSignInEnabled(deps.env),
+        server_voice: serverVoice(deps.env),
         signup_proofs: abuseControlsOn(deps.env) ? signupProofKinds(deps.env) : [],
         trace_url_template: deps.env.TRACE_URL_TEMPLATE ?? null,
         google_client_ids: googleClientIds(deps.env),
@@ -53,6 +54,17 @@ export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       200,
     );
   });
+}
+
+/** Voice features the server's own keys cover (the same defaults as Casama Cloud). */
+export function serverVoice(env: {
+  GOOGLE_AI_API_KEY?: string;
+  CLOUD_MODEL_UPSTREAM_KEY?: string;
+}): Array<"live" | "read_aloud" | "dictation"> {
+  return [
+    ...(env.GOOGLE_AI_API_KEY ? (["live", "read_aloud"] as const) : []),
+    ...(env.CLOUD_MODEL_UPSTREAM_KEY ? (["dictation"] as const) : []),
+  ];
 }
 
 /**

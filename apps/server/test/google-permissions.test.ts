@@ -10,6 +10,8 @@ import { type Harness, j, startHarness } from "./helpers.ts";
 let h: Harness;
 let composio: Server;
 const calls: Array<{ path: string; key: string; body: unknown }> = [];
+/** Composio's connected accounts, as its list endpoint returns them. */
+let accounts: Array<{ toolkit: { slug: string }; status: string }> = [];
 
 beforeAll(async () => {
   composio = createServer(async (req, res) => {
@@ -26,6 +28,8 @@ beforeAll(async () => {
       return res.end(JSON.stringify({ auth_config: { id: "ac_1" } }));
     if (req.url === "/api/v3/connected_accounts/link")
       return res.end(JSON.stringify({ redirect_url: "https://composio.example/signin/123" }));
+    if (req.url?.startsWith("/api/v3/connected_accounts?"))
+      return res.end(JSON.stringify({ items: accounts }));
     res.writeHead(404).end("{}");
   }).listen(0, "127.0.0.1");
   await once(composio, "listening");
@@ -227,5 +231,60 @@ describe("Google permissions", () => {
       { kind: string; config: { toolkits: string[]; managed: boolean } }[]
     >`select kind, config from public.integrations where org_id = ${orgId}`;
     expect(i).toMatchObject({ kind: "composio", config: { managed: true, toolkits: ["gmail"] } });
+  });
+  it("a Composio sign-in reads as waiting until Composio says the account is active", async () => {
+    const owner = await h.user("composio-pending@example.com");
+    const orgId = (
+      await j(
+        await h.request("/v1/orgs", { method: "POST", token: owner.token, json: { name: "P" } }),
+      )
+    ).id;
+    const r = await j(
+      await h.request("/v1/apps/connect", {
+        method: "POST",
+        token: owner.token,
+        json: { org_id: orgId, app_id: "gmail", method: "managed" },
+      }),
+    );
+    // Starting the sign-in never claims it's connected: the person still has to approve it.
+    expect(r.status).toBe("authorize");
+    const hubId = r.integration.id as string;
+    const list = async () =>
+      (
+        await j(
+          await h.request(`/v1/integrations/${hubId}/provider/accounts`, { token: owner.token }),
+        )
+      ).items;
+    accounts = [{ toolkit: { slug: "gmail" }, status: "INITIATED" }];
+    expect(await list()).toEqual([{ app: "gmail", status: "pending" }]);
+    // Approved in the browser: the next check sees it.
+    accounts = [{ toolkit: { slug: "gmail" }, status: "ACTIVE" }];
+    expect(await list()).toEqual([{ app: "gmail", status: "connected" }]);
+    accounts = [];
+  });
+
+  it("adding an app to a Composio connection clears its cached tools so the new app's are listed", async () => {
+    const owner = await h.user("composio-cache@example.com");
+    const orgId = (
+      await j(
+        await h.request("/v1/orgs", { method: "POST", token: owner.token, json: { name: "C" } }),
+      )
+    ).id;
+    const connect = (app_id: string) =>
+      h.request("/v1/apps/connect", {
+        method: "POST",
+        token: owner.token,
+        json: { org_id: orgId, app_id, method: "managed" },
+      });
+    await connect("gmail");
+    await h.tdb.admin`
+      update public.integrations set tools_cached_at = now() where org_id = ${orgId}`;
+    await connect("slack");
+    const [i] = await h.tdb.admin<
+      { tools_cached_at: Date | null; config: { toolkits: string[] } }[]
+    >`
+      select tools_cached_at, config from public.integrations where org_id = ${orgId}`;
+    expect(i?.tools_cached_at).toBeNull();
+    expect(i?.config.toolkits.sort()).toEqual(["gmail", "slack"]);
   });
 });

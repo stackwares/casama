@@ -109,6 +109,18 @@ export function registerChatGptRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       order by (id = ${body.credential_id ?? null}::uuid) desc nulls last, created_at desc limit 1`);
     if (prior?.client_id) clientId = prior.client_id;
     if (prior?.email) loginHint = prior.email;
+    // OpenAI issues a client on the first callback even when the code exchange then fails, and its
+    // docs say to retry with that issued id. Only the very next attempt does: the client is bound
+    // to the account and workspace picked then, so if that retry never finishes (the person chose
+    // another account and ChatGPT refused it on its own page), register again and let them pick.
+    if (clientId === CHATGPT_DYNAMIC_CLIENT) {
+      const [last] = await db.execute<{ client_id: string | null }>(sql`
+        select oauth->>'issued_client_id' as client_id
+        from public.integration_oauth_flows
+        where app_id = 'chatgpt' and created_by = ${claims.sub}::uuid
+        order by created_at desc limit 1`);
+      if (last?.client_id) clientId = last.client_id;
+    }
 
     const state = randomToken(32);
     const nonce = randomToken(24);
@@ -169,13 +181,19 @@ export function registerChatGptRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         "sign_in_expired",
         "This sign-in expired or was already used. Start again.",
       );
-    const fail = async (code: string, message: string) => {
+    // The row keeps the code and the underlying reason, so a failed sign-in can be diagnosed later.
+    const fail = async (code: string, message: string, detail = message) => {
+      const reason = `${code}: ${detail}`.slice(0, 500);
       await db.execute(
-        sql`update public.integration_oauth_flows set status = 'error', error = ${code} where id = ${flow.id}::uuid`,
+        sql`update public.integration_oauth_flows set status = 'error', error = ${reason} where id = ${flow.id}::uuid`,
       );
       return new ApiError(400, code, message);
     };
     if (body.error || !body.code) {
+      deps.logger.warn("chatgpt sign-in returned an error", {
+        error: body.error ?? "no_code",
+        description: body.error_description,
+      });
       throw await fail(
         body.error === "access_denied" ? "chatgpt_sign_in_declined" : "chatgpt_sign_in_failed",
         body.error === "access_denied"
@@ -184,6 +202,19 @@ export function registerChatGptRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       );
     }
     const clientId = body.client_id ?? flow.oauth.client_id;
+    if (body.client_id && body.client_id !== flow.oauth.client_id) {
+      if (flow.oauth.client_id !== CHATGPT_DYNAMIC_CLIENT)
+        throw await fail(
+          "chatgpt_sign_in_failed",
+          "ChatGPT returned a different client. Start again.",
+          `expected ${flow.oauth.client_id}, got ${body.client_id}`,
+        );
+      // Kept before the exchange, so a retry after a failed exchange reuses this client.
+      await db.execute(sql`
+        update public.integration_oauth_flows
+        set oauth = oauth || jsonb_build_object('issued_client_id', ${body.client_id}::text)
+        where id = ${flow.id}::uuid`);
+    }
     if (clientId === CHATGPT_DYNAMIC_CLIENT && !body.client_id)
       throw await fail(
         "chatgpt_sign_in_failed",
@@ -225,11 +256,17 @@ export function registerChatGptRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     } catch (err) {
       deps.logger.warn("chatgpt sign-in failed", { error: (err as Error).message });
       captureError(err, { service: "casama-api", step: "chatgpt-sign-in" });
+      // OpenAI's guidance for a refused code: discard it and sign in again with the issued client,
+      // which the next start picks up (issued_client_id above).
+      const refused = err instanceof ChatGptAuthError && err.code === "invalid_grant";
       throw await fail(
         "chatgpt_sign_in_failed",
-        err instanceof ChatGptAuthError
-          ? err.message
-          : "ChatGPT sign-in could not be verified. Start again.",
+        refused
+          ? "ChatGPT didn't accept this sign-in. Try again: the next one finishes setting up."
+          : err instanceof ChatGptAuthError
+            ? err.message
+            : "ChatGPT sign-in could not be verified. Start again.",
+        (err as Error).message,
       );
     }
 

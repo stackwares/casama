@@ -18,6 +18,7 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import 'join_flow.dart';
+import '../../ui/action_buttons.dart';
 
 final _defaultInviteProvider = FutureProvider.autoDispose
     .family<CreatedInviteLink, String>(
@@ -162,16 +163,8 @@ class _LinkBox extends StatelessWidget {
             style: AppText.mono,
           ),
         ),
-        Wrap(
-          spacing: AppSpace.xs,
-          runSpacing: AppSpace.xs,
-          children: [
-            FilledButton.icon(
-              key: const Key('copyInvite'),
-              onPressed: () => copyInvite(context, url),
-              icon: const Icon(LucideIcons.copy, size: 18),
-              label: Text(l10n.copyLink),
-            ),
+        ActionButtons(
+          actions: [
             Builder(
               builder: (c) => OutlinedButton.icon(
                 key: const Key('shareInvite'),
@@ -180,7 +173,15 @@ class _LinkBox extends StatelessWidget {
                 label: Text(l10n.shareLinkLabel),
               ),
             ),
-            OutlinedButton.icon(
+            FilledButton.icon(
+              key: const Key('copyInvite'),
+              onPressed: () => copyInvite(context, url),
+              icon: const Icon(LucideIcons.copy, size: 18),
+              label: Text(l10n.copyLink),
+            ),
+          ],
+          extra: [
+            TextButton.icon(
               key: const Key('qrInvite'),
               onPressed: () =>
                   showInviteQr(context, url: url, workspace: workspace),

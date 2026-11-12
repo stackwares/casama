@@ -16,6 +16,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/glow_button.dart';
 import 'app_logo.dart';
+import 'provider_setup.dart';
 import '../../core/analytics.dart';
 
 /// Opens the connect flow for a built-in app. Returns the connection when it worked.
@@ -47,6 +48,15 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
   var _showKey = false;
   String? _authorizeUrl;
   String? _flowId;
+  // Composio's managed sign-in: the workspace's Composio connection, the app's slug there, and how
+  // many of its accounts were signed in before the browser opened (null: couldn't tell).
+  Integration? _hub;
+  String? _slug;
+  int? _baseline;
+  // Looked up while mounted: dispose can't look up ancestors.
+  BuildContext? _rootContext;
+  ProviderContainer? _container;
+  String _connectedMessage = '';
   String? _error;
   Integration? _result;
   final _bots = <String>{};
@@ -68,13 +78,34 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Where a toast can still show after this sheet closes.
+    _rootContext = Navigator.maybeOf(context, rootNavigator: true)?.context;
+    _container = ProviderScope.containerOf(context, listen: false);
+    _connectedMessage = context.l10n.appConnected(app.name);
+  }
+
+  @override
   void dispose() {
     _poll?.cancel();
     // Closed while the person is still signing in (in another tab or app): keep checking for a few
     // minutes, so the connection still shows up once the sign-in finishes.
     final flow = _flowId;
     if (_step == _Step.waiting) Analytics.log('connection_failed', {'app_id': app.id, 'method': _method.value, 'reason': 'cancelled'});
-    if (flow != null && _step == _Step.waiting) finishInBackground(ProviderScope.containerOf(context, listen: false), flow);
+    final container = _container;
+    if (container != null && flow != null && _step == _Step.waiting) finishInBackground(container, flow);
+    final hub = _hub, slug = _slug;
+    if (container != null && hub != null && slug != null && _step == _Step.waiting) {
+      watchProviderSignIn(
+        container,
+        hubId: hub.id,
+        slug: slug,
+        baseline: _baseline,
+        message: _connectedMessage,
+        toastContext: _rootContext,
+      );
+    }
     _lifecycle.dispose();
     _key.dispose();
     super.dispose();
@@ -86,6 +117,7 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
     setState(() {
       _step = _Step.connecting;
       _error = null;
+      _hub = null;
     });
     // The connect funnel (F4). The server reports the outcome it sees; this side reports what it can't.
     Analytics.log('connection_started', {'app_id': app.id, 'method': _method.value, 'reconnect': widget.reconnect != null});
@@ -99,11 +131,18 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
           );
       if (!mounted) return;
       switch (r.status) {
-        // Composio's managed sign-in (D-130): no flow to poll; the connection finishes in the browser.
+        // Composio's managed sign-in (D-130): no flow to poll. The sign-in finishes in the browser,
+        // so wait for Composio to list the app's account as signed in before saying it's connected.
         case ConnectAppResponseStatusEnum.authorize when r.flowId == null && r.integration != null:
           _authorizeUrl = r.authorizeUrl;
+          _hub = r.integration;
+          _slug = app.composio ?? app.id;
+          // Counted before the browser opens, so a sign-in finished there is always new.
+          _baseline = await connectedAccountsNow(ref.read(backendProvider), _hub!.id, _slug!);
+          if (!mounted) return;
+          setState(() => _step = _Step.waiting);
+          _poll = Timer.periodic(const Duration(seconds: 3), (_) => _check());
           unawaited(_openSignIn());
-          _succeed(r.integration!);
         case ConnectAppResponseStatusEnum.authorize:
           _authorizeUrl = r.authorizeUrl;
           _flowId = r.flowId;
@@ -133,6 +172,7 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
 
   var _checking = false;
   Future<void> _check() async {
+    if (_hub != null) return _checkManaged();
     final id = _flowId;
     if (id == null || _checking || _step != _Step.waiting) return;
     _checking = true;
@@ -152,6 +192,33 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
       }
     } catch (_) {
       // A missed poll is fine; the next one will try again.
+    } finally {
+      _checking = false;
+    }
+  }
+
+  /// Composio's sign-in: connected once the app has a newly signed-in account there.
+  Future<void> _checkManaged() async {
+    final hub = _hub, slug = _slug;
+    if (hub == null || slug == null || _checking || _step != _Step.waiting) return;
+    _checking = true;
+    try {
+      final backend = ref.read(backendProvider);
+      final now = connectedAccounts(await backend.providerAccounts(hub.id), slug);
+      if (!mounted || _step != _Step.waiting || now <= (_baseline ?? 0)) return;
+      _poll?.cancel();
+      // List the new app's tools now, then show the connection as it is after that.
+      await backend.testIntegration(hub.id).then<void>((_) {}, onError: (_) {});
+      final org = ref.read(currentOrgProvider);
+      final fresh = org == null
+          ? null
+          : (await backend.integrations(org.id).catchError((_) => const <Integration>[])).where((i) => i.id == hub.id).firstOrNull;
+      if (!mounted) return;
+      ref.invalidate(providerAccountsProvider(hub.id));
+      showSuccess(context, context.l10n.appConnected(app.name));
+      await _succeed(fresh ?? hub);
+    } catch (_) {
+      // A missed check is fine; the next one will try again.
     } finally {
       _checking = false;
     }

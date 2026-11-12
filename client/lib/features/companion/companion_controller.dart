@@ -79,6 +79,23 @@ class CompanionController extends AsyncNotifier<LocalDevice?> {
     if (d.enabled && stored != null) await _start(d, stored.$2);
   }
 
+  /// Tests one local MCP server the way a bot reaches it: the workspace lists its tools through
+  /// the tunnel and this computer's computerd, which also refreshes the tools bots see. Null when
+  /// the workspace has no record of the server.
+  Future<IntegrationTestResult?> testMcpServer(String key) async {
+    final d = state.value;
+    if (d == null) return null;
+    final backend = ref.read(backendProvider);
+    // The API names each one `<key, 32 chars>_<first 6 of the device id>` (setLocalMcpServers).
+    final id = d.id.replaceAll('-', '');
+    final name = '${key.length > 32 ? key.substring(0, 32) : key}_${id.length > 6 ? id.substring(0, 6) : id}';
+    final match = (await backend.integrations(d.orgId)).where((i) => i.kind == IntegrationKind.localMcp && i.device?.id == d.id && i.name == name).firstOrNull;
+    if (match == null) return null;
+    final result = await backend.testIntegration(match.id);
+    ref.invalidate(integrationsProvider);
+    return result;
+  }
+
   /// Pairs this machine (off until the user approves capabilities and folders).
   Future<void> pair(String name) async {
     final org = ref.read(currentOrgProvider)!;

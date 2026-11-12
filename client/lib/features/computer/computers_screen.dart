@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,27 +22,63 @@ import 'computer_details.dart';
 import 'computer_screen.dart';
 
 /// Team and private computers: create, rename, switch between headless and desktop, delete.
-class ComputersScreen extends ConsumerWidget {
+/// The list refreshes itself while open, so a computer that wakes, sleeps or reconnects (a desktop
+/// app's tunnel drops whenever its server restarts) shows its real state without reopening.
+class ComputersScreen extends ConsumerStatefulWidget {
   const ComputersScreen({super.key});
 
-  Future<void> _create(BuildContext context, WidgetRef ref) async {
+  /// How often the open list is reloaded.
+  static const refreshEvery = Duration(seconds: 5);
+
+  @override
+  ConsumerState<ComputersScreen> createState() => _ComputersScreenState();
+}
+
+class _ComputersScreenState extends ConsumerState<ComputersScreen> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    // A reload keeps the current list on screen until the new one arrives (no loading flash).
+    _timer = Timer.periodic(ComputersScreen.refreshEvery, (_) {
+      if (mounted) ref.invalidate(computersProvider);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _create() async {
     final created = await showAdaptiveSheet<bool>(context: context, builder: (_) => const NewComputerSheet());
     if (created == true) ref.invalidate(computersProvider);
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     return SubPage(
       title: l10n.computers,
-      actions: [HeaderIconButton(key: const Key('newComputer'), icon: LucideIcons.plus, tooltip: l10n.newComputer, onPressed: () => _create(context, ref))],
+      actions: [HeaderIconButton(key: const Key('newComputer'), icon: LucideIcons.plus, tooltip: l10n.newComputer, onPressed: _create)],
       body: AsyncView(
         value: ref.watch(computersProvider),
         onRetry: () => ref.invalidate(computersProvider),
-        data: (items) => PageListView(
-          header: FormNote(l10n.computersHelp),
-          itemCount: items.length,
-          itemBuilder: (context, i) => _ComputerCard(computer: items[i]).appListItemEntrance(i),
+        data: (items) => RefreshIndicator(
+          onRefresh: () async {
+            HapticsHelper.medium();
+            ref.invalidate(computersProvider);
+            await ref.read(computersProvider.future);
+          },
+          child: PageListView(
+            // Pull to refresh works even when the list is shorter than the screen.
+            physics: const AlwaysScrollableScrollPhysics(),
+            header: FormNote(l10n.computersHelp),
+            itemCount: items.length,
+            itemBuilder: (context, i) => _ComputerCard(computer: items[i]).appListItemEntrance(i),
+          ),
         ),
       ),
     );

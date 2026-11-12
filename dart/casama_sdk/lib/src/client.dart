@@ -162,7 +162,9 @@ class CasamaClient {
   /// WebSocket URL and headers for a computer's interactive terminal.
   Future<(Uri, Map<String, String>)> terminalEndpoint(String computerId, {int cols = 120, int rows = 32}) async {
     final base = Uri.parse(baseUrl);
-    final uri = base.replace(scheme: base.scheme == 'https' ? 'wss' : 'ws', path: '/v1/computers/$computerId/terminal', queryParameters: {'cols': '$cols', 'rows': '$rows'});
+    // The port is kept explicit: Dart has no default port for ws/wss, so swapping the scheme alone
+    // leaves port 0, which shows up as ":0" in the address and in connection errors.
+    final uri = base.replace(scheme: base.scheme == 'https' ? 'wss' : 'ws', port: base.port, path: '/v1/computers/$computerId/terminal', queryParameters: {'cols': '$cols', 'rows': '$rows'});
     return (uri, await _authHeader());
   }
 

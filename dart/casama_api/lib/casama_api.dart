@@ -199,6 +199,8 @@ export 'package:casama_api/src/model/delete_integration200_response.dart';
 export 'package:casama_api/src/model/delete_result.dart';
 export 'package:casama_api/src/model/deleted_channel.dart';
 export 'package:casama_api/src/model/deleted_computer.dart';
+export 'package:casama_api/src/model/deleted_conversation.dart';
+export 'package:casama_api/src/model/deleted_conversations.dart';
 export 'package:casama_api/src/model/deleted_device.dart';
 export 'package:casama_api/src/model/deleted_id.dart';
 export 'package:casama_api/src/model/deleted_knowledge_source.dart';

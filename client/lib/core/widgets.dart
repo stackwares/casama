@@ -9,7 +9,9 @@ import '../l10n/generated/app_localizations.dart';
 import '../ui/bottom_padding.dart';
 import '../ui/mascot.dart';
 import '../ui/skeleton.dart';
+import '../ui/toast.dart';
 
+export '../ui/toast.dart' show ToastKind;
 export '../ui/skeleton.dart';
 import 'date_format.dart';
 import 'haptics.dart';
@@ -62,7 +64,11 @@ String errorText(BuildContext context, Object error) {
           DioExceptionType.unknown,
         }.contains(error.type);
     if (noAnswer) return context.l10n.connectionFailed;
-    return error.message ?? context.l10n.somethingWentWrong;
+    // An answer without Casama's error body came from something in between (a proxy or tunnel
+    // while the server restarts) or an unexpected crash; Dio's own text is for developers.
+    final status = error.response?.statusCode ?? 0;
+    if (status >= 500) return context.l10n.serverNotResponding;
+    return context.l10n.somethingWentWrong;
   }
   final s = error.toString();
   final m = RegExp(r'message: ([^,)]+)').firstMatch(s);
@@ -72,8 +78,8 @@ String errorText(BuildContext context, Object error) {
 void showError(BuildContext context, Object error, [StackTrace? stackTrace]) {
   HapticsHelper.error();
   _reportShown(error);
-  ScaffoldMessenger.of(context)
-      .showSnackBar(SnackBar(content: Text(errorText(context, error))));
+  final message = errorText(context, error);
+  showToast(context, message, kind: ToastKind.error, copyText: _errorCopyText(message, error));
 
   // Filter out expected user/network issues:
   // DioException with 4xx or offline network connection timeouts
@@ -115,28 +121,68 @@ void _reportShown(Object error) {
   }
 }
 
+/// The text an error message's Copy button copies: what the person saw, then the technical detail
+/// behind it (problem code, HTTP status, request path, the raw error) for a bug report.
+String _errorCopyText(String message, Object error) {
+  final lines = <String>[message];
+  if (error is DioException) {
+    final problem = problemOf(error);
+    if (problem != null) {
+      lines.add('Code: ${problem.code}');
+      if (problem.detail != null && problem.detail != message) lines.add('Detail: ${problem.detail}');
+    }
+    final status = error.response?.statusCode;
+    if (status != null) lines.add('HTTP $status');
+    // The path only: query strings can carry tokens.
+    lines.add('${error.requestOptions.method} ${error.requestOptions.uri.path}');
+    if (problem == null && error.message != null && error.message != message) lines.add(error.message!);
+  } else if (error is sb.AuthException) {
+    lines.add([if (error.code != null) 'Code: ${error.code}', if (error.statusCode != null) 'HTTP ${error.statusCode}', error.message].join(' · '));
+  } else {
+    final raw = error.toString();
+    if (raw != message && raw.replaceFirst('Exception: ', '') != message) lines.add(raw);
+  }
+  return lines.join('\n');
+}
+
+/// A floating message of [kind] (see [ToastKind]): the shared look for every snackbar in the app.
+/// [copyText] adds a Copy button; [action] a trailing button such as Undo.
+void showToast(
+  BuildContext context,
+  String message, {
+  ToastKind kind = ToastKind.info,
+  String? copyText,
+  SnackBarAction? action,
+  Duration? duration,
+  bool replace = false,
+}) {
+  final messenger = ScaffoldMessenger.of(context);
+  if (replace) messenger.hideCurrentSnackBar();
+  messenger.showSnackBar(toastSnackBar(context, message, kind: kind, copyText: copyText, action: action, duration: duration));
+}
+
 void showMessage(BuildContext context, String message) {
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  showToast(context, message);
 }
 
 /// [showMessage] for something that just worked (saved, sent, imported), with a success haptic.
 void showSuccess(BuildContext context, String message) {
   HapticsHelper.success();
-  showMessage(context, message);
+  showToast(context, message, kind: ToastKind.success);
 }
 
 /// [showMessage] for something the person has to fix or can't do here (an invalid email, a file
 /// too large, a missing permission), with a warning haptic.
 void showWarning(BuildContext context, String message) {
   HapticsHelper.warning();
-  showMessage(context, message);
+  showToast(context, message, kind: ToastKind.warning);
 }
 
 /// [showMessage] for a failure that already has its own words (an upload that didn't go through),
 /// with an error haptic. For an error object, use [showError].
 void showFailure(BuildContext context, String message) {
   HapticsHelper.error();
-  showMessage(context, message);
+  showToast(context, message, kind: ToastKind.error, copyText: message);
 }
 
 /// Renders an AsyncValue with loading, error (with retry) and data states.

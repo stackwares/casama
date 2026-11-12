@@ -95,6 +95,8 @@ export function registerLinkTools(registry: ToolRegistry, deps: LinkToolDeps) {
       "Ask a linked contact's assistant something on the person's behalf (\"find a dinner slot for 4 next week\", \"is Thursday's meeting still on?\"). Name the contact as the link is named, and say exactly what you need; their assistant answers under its own person's rules and shares only what's needed. Include only what the request needs from your side too.",
     risk: "medium",
     category: "send",
+    // Goes to someone else's assistant (D-213).
+    sendsOut: true,
     schema: z.object({ contact: z.string().min(1).max(100), request: z.string().min(1).max(4000) }),
     async execute(args, ctx) {
       const links = await db.execute<LinkRow>(sql`

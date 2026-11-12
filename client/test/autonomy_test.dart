@@ -323,6 +323,16 @@ void main() {
     },
   );
 
+  testWidgets('apps: popular cards shrink on phones and still fit', (tester) async {
+    await setSize(tester, const Size(390, 1400));
+    await tester.pumpWidget(harness(FakeBackend(), const IntegrationsScreen()));
+    await tester.pumpAndSettle();
+    final card = find.byKey(const Key('featured-stripe'));
+    expect(card, findsOneWidget);
+    expect(tester.getSize(card).height, lessThanOrEqualTo(140));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('apps: connect Stripe with an API key and give it to a bot', (
     tester,
   ) async {
@@ -378,6 +388,103 @@ void main() {
       await tester.pump(const Duration(seconds: 2));
       await tester.pump(const Duration(milliseconds: 600));
       expect(find.byKey(const Key('appConnected')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    "apps: a Composio sign-in isn't called connected until it finishes in the browser",
+    (tester) async {
+      await setSize(tester, const Size(700, 1400));
+      final backend = FakeBackend();
+      backend.catalog.add(
+        FakeBackend.catalogApp('gmail', 'Gmail', [
+          CatalogAppAuthEnum.managed,
+        ]).copyWith(composio: 'gmail'),
+      );
+      await tester.pumpWidget(harness(backend, const IntegrationsScreen()));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('featured-gmail')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('connectAppSubmit')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(backend.connectCalls.single.$2, 'managed');
+      // Waiting for the browser, not "connected".
+      expect(find.text('Finish signing in to Gmail'), findsOneWidget);
+      expect(find.byKey(const Key('appConnected')), findsNothing);
+      // Composio still lists the sign-in as waiting: nothing changes.
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pump(const Duration(seconds: 3));
+      expect(find.text('Finish signing in to Gmail'), findsOneWidget);
+      expect(find.byType(SnackBar), findsNothing);
+      // Approved in the browser: the next check picks it up and says so.
+      backend.providerAccountList
+        ..clear()
+        ..add(
+          ProviderAccount(
+            app: 'gmail',
+            status: ProviderAccountStatusEnum.connected,
+          ),
+        );
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.byKey(const Key('appConnected')), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(SnackBar),
+          matching: find.text('Gmail is connected'),
+        ),
+        findsOneWidget,
+      );
+      await tester.pump(const Duration(seconds: 5));
+    },
+  );
+
+  testWidgets(
+    'apps: closing the sheet mid Composio sign-in still confirms it once it finishes',
+    (tester) async {
+      await setSize(tester, const Size(700, 1400));
+      final backend = FakeBackend();
+      backend.catalog.add(
+        FakeBackend.catalogApp('gmail', 'Gmail', [
+          CatalogAppAuthEnum.managed,
+        ]).copyWith(composio: 'gmail'),
+      );
+      await tester.pumpWidget(harness(backend, const IntegrationsScreen()));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('featured-gmail')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('connectAppSubmit')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('Finish signing in to Gmail'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('Finish signing in to Gmail'), findsNothing);
+      await tester.pump(const Duration(seconds: 3));
+      expect(find.byType(SnackBar), findsNothing);
+      backend.providerAccountList
+        ..clear()
+        ..add(
+          ProviderAccount(
+            app: 'gmail',
+            status: ProviderAccountStatusEnum.connected,
+          ),
+        );
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(
+        find.descendant(
+          of: find.byType(SnackBar),
+          matching: find.text('Gmail is connected'),
+        ),
+        findsOneWidget,
+      );
+      // The app now has its own row among the connections.
+      await tester.pumpAndSettle();
+      final hub = backend.integrationList.single;
+      expect(find.byKey(Key('hubApp-${hub.id}-gmail')), findsOneWidget);
     },
   );
 

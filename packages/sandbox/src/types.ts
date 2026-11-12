@@ -127,6 +127,13 @@ export interface SandboxHandle {
   setMcpServers?(servers: Record<string, McpServerSpec>): Promise<void>;
   /** One MCP Streamable HTTP request to a server computerd runs (plugins, D-121). */
   mcpFetch?(key: string, init: RequestInit): Promise<Response>;
+  /**
+   * A small JPEG or PNG of a video's first frame, an image or a PDF's first page (D-226), made and
+   * cached by computerd. Null when this file has none (unsupported, no tool, too slow).
+   */
+  thumbnail?(path: string, size: number): Promise<FileThumbnail | null>;
+  /** Personal computers only: a handle whose calls are made for the device's owner, not a bot (D-226). */
+  forViewer?(userId: string): SandboxHandle;
   /** Where a relative path really points, relative to ~/workspace (team computer folders, D-148). */
   resolvePath?(path: string): string;
   /** Personal computers only: a handle whose calls tell the user which bot is acting (D-066). */
@@ -136,6 +143,16 @@ export interface SandboxHandle {
     tool: string;
     summary: string;
   }): SandboxHandle;
+}
+
+/** What `GET /files/thumbnail` returns (D-226). */
+export interface FileThumbnail {
+  data: Uint8Array;
+  contentType: string;
+  /** The file's modified time, so a viewer can tell a cached thumbnail is stale. */
+  mtimeMs?: number;
+  /** Videos: their length, when the computer could read it cheaply. */
+  durationMs?: number;
 }
 
 /** An MCP server computerd starts and bridges (`POST /mcp/<key>`). */

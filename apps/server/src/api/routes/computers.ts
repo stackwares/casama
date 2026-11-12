@@ -3,7 +3,7 @@ import type { Duplex } from "node:stream";
 import { type ComputerRow, type ComputerService, milestone } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, schema, withUserSession } from "@casama/db";
-import { SandboxError } from "@casama/sandbox";
+import { type FileThumbnail, SandboxError } from "@casama/sandbox";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { desc, eq, inArray, sql } from "drizzle-orm";
 import { WebSocket, WebSocketServer } from "ws";
@@ -86,6 +86,13 @@ async function sandbox<T>(fn: () => Promise<T>): Promise<T> {
       if (err.status === 404 || err.code === "not_found")
         throw new ApiError(404, "not_found", err.message);
       if (err.status === 400) throw new ApiError(400, err.code, err.message);
+      // A personal computer refuses anyone but its owner and the bots they allowed.
+      if (err.status === 403)
+        throw new ApiError(
+          403,
+          "computer_forbidden",
+          "Only the person who owns this computer, and the bots they allowed, can open its files.",
+        );
       // A personal computer whose app isn't connected: say what to do, not "try again shortly".
       if (err.code === "device_offline")
         throw new ApiError(
@@ -139,6 +146,11 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
   const handle = async (claims: JwtClaims, id: string) => {
     await visible(claims, id);
     return sandbox(() => service().ensureRunning(id));
+  };
+  /** For reads the person makes from the app: a personal computer lets its owner through. */
+  const viewerHandle = async (claims: JwtClaims, id: string) => {
+    const h = await handle(claims, id);
+    return h.forViewer?.(claims.sub) ?? h;
   };
 
   app.openapi(routes.listComputers, async (c) => {
@@ -197,7 +209,8 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
     const { path = "" } = c.req.valid("query");
-    const h = await handle(claims, id);
+    // On a personal computer the app reads as its owner (no bot is acting); cloud computers ignore it.
+    const h = await viewerHandle(claims, id);
     const entries = await sandbox(() => h.listDir(path));
     return c.json({ path: path || "~/workspace", entries }, 200);
   });
@@ -206,7 +219,7 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
     const { path } = c.req.valid("query");
-    const h = await handle(claims, id);
+    const h = await viewerHandle(claims, id);
     const data = await sandbox(() => h.readFile(path));
     const name = path.split("/").pop() ?? "file";
     return c.body(Buffer.from(data), 200, {
@@ -241,6 +254,38 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     return c.body(Buffer.from(pdf), 200, {
       "content-type": "application/pdf",
       "cache-control": "private, no-cache",
+    }) as never;
+  });
+
+  // Thumbnails (D-226). Cost rule: never start, wake or restore a computer for one, and don't
+  // count it as activity. A computer that isn't already up (or a personal computer that isn't
+  // connected) answers 409 at once and the app keeps its plain tile. Nothing is stored here.
+  app.openapi(routes.computerFileThumbnail, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const { path, size } = c.req.valid("query");
+    await visible(claims, id);
+    const unavailable = () =>
+      new ApiError(409, "thumbnail_unavailable", "The computer isn't running, so no thumbnail");
+    const running = await service()
+      .ifRunning(id)
+      .catch(() => null);
+    if (!running?.thumbnail) throw unavailable();
+    // A personal computer lets its owner see thumbnails with no bot involved; others are refused.
+    const h = running.forViewer?.(claims.sub) ?? running;
+    const px = Math.min(640, Math.max(128, Math.round(size ?? 480)));
+    let t: FileThumbnail | null;
+    try {
+      t = (await h.thumbnail?.(path, px)) ?? null;
+    } catch {
+      throw unavailable();
+    }
+    if (!t) throw new ApiError(404, "no_thumbnail", "No thumbnail for this file");
+    return c.body(Buffer.from(t.data), 200, {
+      "content-type": /^image\/(jpeg|png)$/.test(t.contentType) ? t.contentType : "image/jpeg",
+      "cache-control": "private, max-age=86400",
+      ...(t.mtimeMs !== undefined ? { "x-file-mtime": String(Math.round(t.mtimeMs)) } : {}),
+      ...(t.durationMs !== undefined ? { "x-duration-ms": String(Math.round(t.durationMs)) } : {}),
     }) as never;
   });
 

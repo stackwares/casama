@@ -209,11 +209,11 @@ class _RoutineCard extends ConsumerWidget {
                   if (runId != null && context.mounted) {
                     final router = GoRouter.maybeOf(context);
                     HapticsHelper.success();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.routineStarted),
-                        action: router == null ? null : SnackBarAction(label: l10n.viewRun, onPressed: () => router.push('/bots/${r.botId}/runs/$runId')),
-                      ),
+                    showToast(
+                      context,
+                      l10n.routineStarted,
+                      kind: ToastKind.success,
+                      action: router == null ? null : SnackBarAction(label: l10n.viewRun, onPressed: () => router.push('/bots/${r.botId}/runs/$runId')),
                     );
                   }
                 },

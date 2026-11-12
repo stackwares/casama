@@ -9,10 +9,12 @@ import '../../../core/widgets.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
 import '../../files/file_preview.dart';
+import 'computer_thumbnail.dart';
 import 'media_kind.dart';
 
 /// A PDF in a chat: its first page as a thumbnail over its name and page count; a tap opens
-/// the page viewer.
+/// the page viewer. A PDF on the bot's computer shows a first-page picture the computer makes
+/// (D-226) instead of downloading the whole file (and waking the computer) just for the card.
 class ChatPdfCard extends ConsumerWidget {
   const ChatPdfCard({
     super.key,
@@ -30,8 +32,11 @@ class ChatPdfCard extends ConsumerWidget {
     final path = attachment.isChatMedia
         ? attachment.path
         : (computerPathFromLink(attachment.path) ?? attachment.path);
-    final canLoad = attachment.isChatMedia || computerId != null;
-    final bytes = canLoad && mediaPluginsAvailable
+    final onComputer = !attachment.isChatMedia && computerId != null;
+    final thumb = onComputer
+        ? ref.watch(computerThumbnailProvider((computerId!, path))).value
+        : null;
+    final bytes = attachment.isChatMedia && mediaPluginsAvailable
         ? ref.watch(computerFileProvider((computerId ?? '', path))).value
         : null;
     final tone = skeletonColors(context).bone;
@@ -58,7 +63,30 @@ class ChatPdfCard extends ConsumerWidget {
                 height: 150,
                 child: ColoredBox(
                   color: tone,
-                  child: bytes == null
+                  child: thumb != null
+                      ? Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.12),
+                                  blurRadius: 6,
+                                ),
+                              ],
+                            ),
+                            child: Image.memory(
+                              thumb.bytes,
+                              key: const Key('pdfThumbnail'),
+                              fit: BoxFit.fitWidth,
+                              alignment: Alignment.topCenter,
+                              gaplessPlayback: true,
+                              errorBuilder: (_, _, _) => icon(),
+                            ),
+                          ),
+                        )
+                      : bytes == null
                       ? icon()
                       : PdfDocumentViewBuilder(
                           documentRef: PdfDocumentRefData(

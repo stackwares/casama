@@ -407,8 +407,21 @@ export function registerInternalRoutes(app: Hono<AppEnv>, deps: AppDeps) {
         return false;
       }
     })();
+    // The device's owner may open, list and see thumbnails of files in the folders they shared,
+    // read-only and with no bot involved (D-226). The API route sets the viewer after checking the
+    // person's sign-in; the device still refuses paths outside the shared folders.
+    const viewer = c.req.header("x-casama-viewer");
+    const ownerThumbnail =
+      !!viewer &&
+      c.req.method === "GET" &&
+      /^\/files(\/thumbnail|\/list)?(\?|$)/.test(path) &&
+      !!(
+        await deps.db.execute<{ ok: boolean }>(sql`
+          select true as ok from public.local_devices
+          where computer_id = ${computerId}::uuid and enabled and user_id::text = ${viewer} limit 1`)
+      )[0]?.ok;
     // Only bots the user allowed may act on their machine (health checks carry no run).
-    if (path !== "/health" && !listingOnly) {
+    if (path !== "/health" && !listingOnly && !ownerThumbnail) {
       const runId = (activity as { run_id?: string } | undefined)?.run_id;
       // iMessage chat apps (D-134) poll and send with no run: allowed when the Mac's owner
       // connected it to a bot they allowed on this machine.

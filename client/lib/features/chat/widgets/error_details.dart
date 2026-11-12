@@ -13,6 +13,7 @@ import '../../../core/share.dart';
 import '../../../core/widgets.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
+import '../../../ui/action_buttons.dart';
 import '../../../ui/adaptive_modal.dart';
 import '../chat_controller.dart';
 import '../../../ui/glow_button.dart';
@@ -144,22 +145,50 @@ class ErrorDetails extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpace.md),
-          Wrap(
-            spacing: AppSpace.xs,
-            runSpacing: AppSpace.xs,
-            alignment: WrapAlignment.end,
-            children: [
-              OutlinedButton.icon(
+          Builder(
+            builder: (context) {
+              final fix = errorFix(context, ref, entry, botId);
+              final Widget? primary = fix != null
+                  ? GlowButton.icon(
+                      key: const Key('errorFix'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        context.push(fix.route);
+                      },
+                      icon: const Icon(LucideIcons.keyRound, size: 18),
+                      label: Text(fix.label),
+                    )
+                  : runId != null
+                  ? GlowButton.icon(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        context.push('/bots/$botId/runs/$runId');
+                      },
+                      icon: const Icon(LucideIcons.activity, size: 18),
+                      label: Text(l10n.openTimeline),
+                    )
+                  : null;
+              // With a main action, copy and export step back to quiet text buttons under it.
+              Widget side({required Key key, required VoidCallback onPressed, required IconData icon, required String label}) => primary == null
+                  ? OutlinedButton.icon(key: key, onPressed: onPressed, icon: Icon(icon, size: 18), label: Text(label))
+                  : TextButton.icon(
+                      key: key,
+                      onPressed: onPressed,
+                      style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                      icon: Icon(icon, size: 18),
+                      label: Text(label),
+                    );
+              final copy = side(
                 key: const Key('errorCopy'),
                 onPressed: () async {
                   await Clipboard.setData(ClipboardData(text: text));
                   if (context.mounted) showMessage(context, l10n.copied);
                 },
-                icon: const Icon(LucideIcons.copy, size: 18),
-                label: Text(l10n.copyMessage),
-              ),
-              Builder(
-                builder: (button) => OutlinedButton.icon(
+                icon: LucideIcons.copy,
+                label: l10n.copyMessage,
+              );
+              final export = Builder(
+                builder: (button) => side(
                   key: const Key('errorExport'),
                   onPressed: () {
                     final json = const JsonEncoder.withIndent('  ').convert({
@@ -176,30 +205,14 @@ class ErrorDetails extends ConsumerWidget {
                       origin: shareOrigin(button),
                     );
                   },
-                  icon: const Icon(LucideIcons.download, size: 18),
-                  label: Text(l10n.exportLabel),
+                  icon: LucideIcons.download,
+                  label: l10n.exportLabel,
                 ),
-              ),
-              if (errorFix(context, ref, entry, botId) case final fix?)
-                GlowButton.icon(
-                  key: const Key('errorFix'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    context.push(fix.route);
-                  },
-                  icon: const Icon(LucideIcons.keyRound, size: 18),
-                  label: Text(fix.label),
-                )
-              else if (runId != null)
-                GlowButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    context.push('/bots/$botId/runs/$runId');
-                  },
-                  icon: const Icon(LucideIcons.activity, size: 18),
-                  label: Text(l10n.openTimeline),
-                ),
-            ],
+              );
+              return primary == null
+                  ? ActionButtons(actions: [copy, export])
+                  : ActionButtons(actions: [primary], extra: [copy, export]);
+            },
           ),
         ],
       ),

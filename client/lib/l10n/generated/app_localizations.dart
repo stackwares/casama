@@ -262,12 +262,6 @@ abstract class AppLocalizations {
   /// **'Check your email for a sign-in link.'**
   String get magicLinkSent;
 
-  /// No description provided for @confirmEmailSent.
-  ///
-  /// In en, this message translates to:
-  /// **'Check your email to confirm your account, then sign in.'**
-  String get confirmEmailSent;
-
   /// No description provided for @continueWithGoogle.
   ///
   /// In en, this message translates to:
@@ -520,23 +514,11 @@ abstract class AppLocalizations {
   /// **'Model key'**
   String get modelKey;
 
-  /// No description provided for @navBots.
-  ///
-  /// In en, this message translates to:
-  /// **'Bots'**
-  String get navBots;
-
   /// No description provided for @navComputer.
   ///
   /// In en, this message translates to:
   /// **'Computer'**
   String get navComputer;
-
-  /// No description provided for @navSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'Settings'**
-  String get navSettings;
 
   /// No description provided for @navChats.
   ///
@@ -718,12 +700,6 @@ abstract class AppLocalizations {
   /// **'Computer {state}'**
   String computerState(String state);
 
-  /// No description provided for @runCost.
-  ///
-  /// In en, this message translates to:
-  /// **'{cost} · {tokens} tokens'**
-  String runCost(String cost, int tokens);
-
   /// No description provided for @activity.
   ///
   /// In en, this message translates to:
@@ -825,12 +801,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Checkpoints'**
   String get checkpoints;
-
-  /// No description provided for @headlessScreenNote.
-  ///
-  /// In en, this message translates to:
-  /// **'This computer has no desktop, so this shows its browser (blank until the bot opens a page). Switch to a desktop to watch and control apps live.'**
-  String get headlessScreenNote;
 
   /// No description provided for @noScreen.
   ///
@@ -1036,23 +1006,11 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get language;
 
-  /// No description provided for @inviteMember.
-  ///
-  /// In en, this message translates to:
-  /// **'Invite a member'**
-  String get inviteMember;
-
   /// No description provided for @inviteSent.
   ///
   /// In en, this message translates to:
   /// **'Invite sent to {email}.'**
   String inviteSent(String email);
-
-  /// No description provided for @botSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'Bot settings'**
-  String get botSettings;
 
   /// No description provided for @botProfile.
   ///
@@ -1101,12 +1059,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Schedule'**
   String get botSchedule;
-
-  /// No description provided for @botAdvanced.
-  ///
-  /// In en, this message translates to:
-  /// **'Advanced'**
-  String get botAdvanced;
 
   /// No description provided for @chatComputerLive.
   ///
@@ -1318,12 +1270,6 @@ abstract class AppLocalizations {
   /// **'Add a model key first. Your bot uses it to think; it\'s stored encrypted and never shown again.'**
   String get addModelKeyFirst;
 
-  /// No description provided for @botIntegrations.
-  ///
-  /// In en, this message translates to:
-  /// **'Integrations for this bot'**
-  String get botIntegrations;
-
   /// No description provided for @composioToolkits.
   ///
   /// In en, this message translates to:
@@ -1359,12 +1305,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deny'**
   String get deny;
-
-  /// No description provided for @everyDayAt7.
-  ///
-  /// In en, this message translates to:
-  /// **'Every day at 7:00'**
-  String get everyDayAt7;
 
   /// No description provided for @everyHour.
   ///
@@ -1426,35 +1366,17 @@ abstract class AppLocalizations {
   /// **'Mark All as Read'**
   String get markAllRead;
 
-  /// No description provided for @mondaysAt9.
-  ///
-  /// In en, this message translates to:
-  /// **'Mondays at 9:00'**
-  String get mondaysAt9;
-
   /// No description provided for @newRoutine.
   ///
   /// In en, this message translates to:
   /// **'New routine'**
   String get newRoutine;
 
-  /// No description provided for @noApprovals.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing needs your approval right now.'**
-  String get noApprovals;
-
   /// No description provided for @noIntegrationsForBot.
   ///
   /// In en, this message translates to:
   /// **'Add integrations in Settings first, then turn them on for this bot here.'**
   String get noIntegrationsForBot;
-
-  /// No description provided for @noNotifications.
-  ///
-  /// In en, this message translates to:
-  /// **'No notifications yet'**
-  String get noNotifications;
 
   /// No description provided for @noRoutines.
   ///
@@ -1840,12 +1762,6 @@ abstract class AppLocalizations {
   /// **'URL'**
   String get webhookUrl;
 
-  /// No description provided for @approvalsCount.
-  ///
-  /// In en, this message translates to:
-  /// **'Approvals ({n})'**
-  String approvalsCount(int n);
-
   /// No description provided for @botWantsTo.
   ///
   /// In en, this message translates to:
@@ -1900,12 +1816,6 @@ abstract class AppLocalizations {
   /// **'{n, plural, =1{1 tool} other{{n} tools}}'**
   String toolCount(int n);
 
-  /// No description provided for @weekdaysAt9.
-  ///
-  /// In en, this message translates to:
-  /// **'Weekdays at 9:00'**
-  String get weekdaysAt9;
-
   /// No description provided for @botBackInControl.
   ///
   /// In en, this message translates to:
@@ -1929,54 +1839,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bot in control'**
   String get botInControl;
-
-  /// No description provided for @liveScreenshots.
-  ///
-  /// In en, this message translates to:
-  /// **'Screenshots'**
-  String get liveScreenshots;
-
-  /// No description provided for @liveScreenshotsHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Live video can\'t get through this network, so the screen updates about once a second.'**
-  String get liveScreenshotsHelp;
-
-  /// No description provided for @liveMore.
-  ///
-  /// In en, this message translates to:
-  /// **'More'**
-  String get liveMore;
-
-  /// No description provided for @liveSaveScreenshot.
-  ///
-  /// In en, this message translates to:
-  /// **'Save Screenshot'**
-  String get liveSaveScreenshot;
-
-  /// No description provided for @liveCopyFromComputer.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy from the computer'**
-  String get liveCopyFromComputer;
-
-  /// No description provided for @livePasteToComputer.
-  ///
-  /// In en, this message translates to:
-  /// **'Paste onto the computer'**
-  String get livePasteToComputer;
-
-  /// No description provided for @liveRotateHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Turn your phone sideways for a bigger screen'**
-  String get liveRotateHint;
-
-  /// No description provided for @liveWatching.
-  ///
-  /// In en, this message translates to:
-  /// **'Watching'**
-  String get liveWatching;
 
   /// No description provided for @computerName.
   ///
@@ -2079,6 +1941,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Screenshot'**
   String get liveScreenshot;
+
+  /// No description provided for @liveScreenshots.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshots'**
+  String get liveScreenshots;
+
+  /// No description provided for @liveScreenshotsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Live video can\'t get through this network, so the screen updates about once a second.'**
+  String get liveScreenshotsHelp;
+
+  /// No description provided for @liveMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get liveMore;
+
+  /// No description provided for @liveSaveScreenshot.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Screenshot'**
+  String get liveSaveScreenshot;
+
+  /// No description provided for @liveCopyFromComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy from the computer'**
+  String get liveCopyFromComputer;
+
+  /// No description provided for @livePasteToComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste onto the computer'**
+  String get livePasteToComputer;
+
+  /// No description provided for @liveRotateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn your phone sideways for a bigger screen'**
+  String get liveRotateHint;
+
+  /// No description provided for @liveWatching.
+  ///
+  /// In en, this message translates to:
+  /// **'Watching'**
+  String get liveWatching;
 
   /// No description provided for @liveCopied.
   ///
@@ -2479,13 +2389,13 @@ abstract class AppLocalizations {
   /// What the bot is doing in a tool step, in everyday words (chats, calls, the computer view).
   ///
   /// In en, this message translates to:
-  /// **'{tool, select, memory_search{Searching your memories} memory_write{Saving that to memory} memory{Updating its memory} knowledge_search{Looking through your knowledge} web_search{Searching the web} web{Reading a web page} browser_open{Opening a website} browser_click{Clicking on the page} browser_type{Typing on the page} browser_press{Pressing a key} browser_scroll{Scrolling the page} browser_look{Looking at the page} desktop_click{Clicking on the screen} desktop_type{Typing} desktop_press{Pressing keys} desktop_launch{Opening an app} desktop_look{Looking at the screen} shell{Working on its computer} files_read{Reading a file} files_write{Writing a file} files_list{Looking through files} files_search{Searching files} http{Contacting a service} data_search{Looking for data} data_call{Getting data} skills_load{Getting a skill ready} skills_create{Learning a new skill} skills_update{Improving a skill} checkpoint{Saving a restore point} takeover{Asking you to take over} delegate{Asking a helper} routines_list{Checking your routines} routines_create{Setting up a routine} routines_update{Updating a routine} routines_delete{Removing a routine} watchers_create{Setting up a watcher} watchers_list{Checking your watchers} watchers_delete{Removing a watcher} tasks_list{Checking your tasks} tasks_create{Adding a task} tasks{Updating your tasks} notify_user{Sending you a note} usage_report{Checking usage} device_read{Reading your device data} device_access{Asking for device access} pages_publish{Publishing a page} pages{Updating a page} media{Making an image} media_video{Making a video} bots_create{Making a new bot} bots_update{Updating a bot} bots_list{Checking your bots} bots_archive{Archiving a bot} channel_send{Sending a message} links_ask{Asking a contact\'s assistant} logins_list{Checking saved logins} replay_run{Repeating saved steps} replay_save{Saving these steps} setup_apply{Suggesting a setup} sidebar_organize{Organizing your sidebar} suggestions_add{Adding a suggestion} teach_save_draft{Saving a draft skill} welcome_name{Picking a name} secrets_request{Asking you for a secret} pages_list{Checking your pages} pages_share{Changing who can see a page} projects_create{Starting a project} projects_status{Checking a project} projects_update{Updating a project} projects{Planning a project} payments{Asking to make a payment} voice_call{Calling a business} voice_call_user{Calling you} tools_load{Getting ready} ui_show{Showing you something} start_task{Starting this in the chat} other{Working on it}}'**
+  /// **'{tool, select, memory_search{Searching your memories} memory_write{Saving that to memory} memory{Updating its memory} knowledge_search{Looking through your knowledge} web_search{Searching the web} web{Reading a web page} browser_open{Opening a website} browser_click{Clicking on the page} browser_type{Typing on the page} browser_press{Pressing a key} browser_scroll{Scrolling the page} browser_look{Looking at the page} desktop_click{Clicking on the screen} desktop_type{Typing} desktop_press{Pressing keys} desktop_launch{Opening an app} desktop_look{Looking at the screen} shell{Working on its computer} files_read{Reading a file} files_write{Writing a file} files_list{Looking through files} files_search{Searching files} files_from_chat{Getting a file from the chat} http{Contacting a service} data_search{Looking for data} data_call{Getting data} skills_load{Getting a skill ready} skills_create{Learning a new skill} skills_update{Improving a skill} checkpoint{Saving a restore point} takeover{Asking you to take over} delegate{Asking a helper} routines_list{Checking your routines} routines_create{Setting up a routine} routines_update{Updating a routine} routines_delete{Removing a routine} watchers_create{Setting up a watcher} watchers_list{Checking your watchers} watchers_delete{Removing a watcher} tasks_list{Checking your tasks} tasks_create{Adding a task} tasks{Updating your tasks} notify_user{Sending you a note} usage_report{Checking usage} device_read{Reading your device data} device_access{Asking for device access} pages_publish{Publishing a page} pages{Updating a page} media{Making an image} media_video{Making a video} bots_create{Making a new bot} bots_update{Updating a bot} bots_list{Checking your bots} bots_archive{Archiving a bot} channel_send{Sending a message} links_ask{Asking a contact\'s assistant} logins_list{Checking saved logins} replay_run{Repeating saved steps} replay_save{Saving these steps} setup_apply{Suggesting a setup} sidebar_organize{Organizing your sidebar} suggestions_add{Adding a suggestion} teach_save_draft{Saving a draft skill} welcome_name{Picking a name} secrets_request{Asking you for a secret} pages_list{Checking your pages} pages_share{Changing who can see a page} projects_create{Starting a project} projects_status{Checking a project} projects_update{Updating a project} projects{Planning a project} payments{Asking to make a payment} voice_call{Calling a business} voice_call_user{Calling you} tools_load{Getting ready} ui_show{Showing you something} start_task{Starting this in the chat} other{Working on it}}'**
   String toolDoing(String tool);
 
   /// The same step once it's done.
   ///
   /// In en, this message translates to:
-  /// **'{tool, select, memory_search{Searched your memories} memory_write{Saved to memory} memory{Updated its memory} knowledge_search{Looked through your knowledge} web_search{Searched the web} web{Read a web page} browser_open{Opened a website} browser_click{Clicked on the page} browser_type{Typed on the page} browser_press{Pressed a key} browser_scroll{Scrolled the page} browser_look{Looked at the page} desktop_click{Clicked on the screen} desktop_type{Typed} desktop_press{Pressed keys} desktop_launch{Opened an app} desktop_look{Looked at the screen} shell{Worked on its computer} files_read{Read a file} files_write{Wrote a file} files_list{Looked through files} files_search{Searched files} http{Contacted a service} data_search{Looked for data} data_call{Got data} skills_load{Used a skill} skills_create{Learned a new skill} skills_update{Improved a skill} checkpoint{Saved a restore point} takeover{Asked you to take over} delegate{Asked a helper} routines_list{Checked your routines} routines_create{Set up a routine} routines_update{Updated a routine} routines_delete{Removed a routine} watchers_create{Set up a watcher} watchers_list{Checked your watchers} watchers_delete{Removed a watcher} tasks_list{Checked your tasks} tasks_create{Added a task} tasks{Updated your tasks} notify_user{Sent you a note} usage_report{Checked usage} device_read{Read your device data} device_access{Asked for device access} pages_publish{Published a page} pages{Updated a page} media{Made an image} media_video{Made a video} bots_create{Made a new bot} bots_update{Updated a bot} bots_list{Checked your bots} bots_archive{Archived a bot} channel_send{Sent a message} links_ask{Asked a contact\'s assistant} logins_list{Checked saved logins} replay_run{Repeated saved steps} replay_save{Saved these steps} setup_apply{Suggested a setup} sidebar_organize{Organized your sidebar} suggestions_add{Added a suggestion} teach_save_draft{Saved a draft skill} welcome_name{Picked a name} secrets_request{Asked you for a secret} pages_list{Checked your pages} pages_share{Changed who can see a page} projects_create{Started a project} projects_status{Checked a project} projects_update{Updated a project} projects{Planned a project} payments{Asked to make a payment} voice_call{Called a business} voice_call_user{Called you} tools_load{Got ready} ui_show{Showed you something} start_task{Started in the chat} other{Done}}'**
+  /// **'{tool, select, memory_search{Searched your memories} memory_write{Saved to memory} memory{Updated its memory} knowledge_search{Looked through your knowledge} web_search{Searched the web} web{Read a web page} browser_open{Opened a website} browser_click{Clicked on the page} browser_type{Typed on the page} browser_press{Pressed a key} browser_scroll{Scrolled the page} browser_look{Looked at the page} desktop_click{Clicked on the screen} desktop_type{Typed} desktop_press{Pressed keys} desktop_launch{Opened an app} desktop_look{Looked at the screen} shell{Worked on its computer} files_read{Read a file} files_write{Wrote a file} files_list{Looked through files} files_search{Searched files} files_from_chat{Got a file from the chat} http{Contacted a service} data_search{Looked for data} data_call{Got data} skills_load{Used a skill} skills_create{Learned a new skill} skills_update{Improved a skill} checkpoint{Saved a restore point} takeover{Asked you to take over} delegate{Asked a helper} routines_list{Checked your routines} routines_create{Set up a routine} routines_update{Updated a routine} routines_delete{Removed a routine} watchers_create{Set up a watcher} watchers_list{Checked your watchers} watchers_delete{Removed a watcher} tasks_list{Checked your tasks} tasks_create{Added a task} tasks{Updated your tasks} notify_user{Sent you a note} usage_report{Checked usage} device_read{Read your device data} device_access{Asked for device access} pages_publish{Published a page} pages{Updated a page} media{Made an image} media_video{Made a video} bots_create{Made a new bot} bots_update{Updated a bot} bots_list{Checked your bots} bots_archive{Archived a bot} channel_send{Sent a message} links_ask{Asked a contact\'s assistant} logins_list{Checked saved logins} replay_run{Repeated saved steps} replay_save{Saved these steps} setup_apply{Suggested a setup} sidebar_organize{Organized your sidebar} suggestions_add{Added a suggestion} teach_save_draft{Saved a draft skill} welcome_name{Picked a name} secrets_request{Asked you for a secret} pages_list{Checked your pages} pages_share{Changed who can see a page} projects_create{Started a project} projects_status{Checked a project} projects_update{Updated a project} projects{Planned a project} payments{Asked to make a payment} voice_call{Called a business} voice_call_user{Called you} tools_load{Got ready} ui_show{Showed you something} start_task{Started in the chat} other{Done}}'**
   String toolDid(String tool);
 
   /// No description provided for @toolUsingApp.
@@ -2505,12 +2415,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Details'**
   String get toolDetails;
-
-  /// No description provided for @toolNeedsOkTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'{bot} needs your OK'**
-  String toolNeedsOkTitle(String bot);
 
   /// No description provided for @approvalAsking.
   ///
@@ -2893,7 +2797,7 @@ abstract class AppLocalizations {
   /// No description provided for @cloudModelsHelp.
   ///
   /// In en, this message translates to:
-  /// **'Casama Cloud runs these. A change reaches every server within a few seconds. People on Cloud cannot pick their own.'**
+  /// **'Applies to every Cloud server within seconds.'**
   String get cloudModelsHelp;
 
   /// No description provided for @connectionsTitle.
@@ -2923,7 +2827,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectionsOwnAccountsHelp.
   ///
   /// In en, this message translates to:
-  /// **'People connect those apps with their own Composio, Pipedream or Zapier account.'**
+  /// **'Each person uses their own Composio, Pipedream or Zapier.'**
   String get connectionsOwnAccountsHelp;
 
   /// No description provided for @connectionsNoComposioKey.
@@ -2947,7 +2851,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectionsGoogleComposioHelp.
   ///
   /// In en, this message translates to:
-  /// **'Gmail, Calendar, Drive and the rest work right away. Google\'s own servers need Developer Preview enrollment.'**
+  /// **'Gmail, Calendar, Drive and more work right away.'**
   String get connectionsGoogleComposioHelp;
 
   /// No description provided for @connectionsGoogleDirect.
@@ -2959,7 +2863,7 @@ abstract class AppLocalizations {
   /// No description provided for @connectionsGoogleDirectHelp.
   ///
   /// In en, this message translates to:
-  /// **'Uses this server\'s Google client. Only works once your Google Cloud project is enrolled in Google Workspace Developer Preview.'**
+  /// **'Needs Google Workspace Developer Preview enrollment.'**
   String get connectionsGoogleDirectHelp;
 
   /// No description provided for @notInstanceOwner.
@@ -3081,6 +2985,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t reach your Casama server. Check your connection and try again.'**
   String get connectionFailed;
+
+  /// No description provided for @serverNotResponding.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Casama server isn\'t responding right now. Try again in a moment.'**
+  String get serverNotResponding;
 
   /// No description provided for @cannotReachServerHelp.
   ///
@@ -3361,7 +3271,7 @@ abstract class AppLocalizations {
   /// No description provided for @exportMyDataHelp.
   ///
   /// In en, this message translates to:
-  /// **'A ZIP of everything you can see: bots, chats, runs, memories and settings. Secrets and keys are never included.'**
+  /// **'Bots, chats, runs, memories and settings. No secrets.'**
   String get exportMyDataHelp;
 
   /// No description provided for @exportReady.
@@ -3397,7 +3307,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccountHelp.
   ///
   /// In en, this message translates to:
-  /// **'Signs you out now and erases your data and the workspaces you solely own after a short grace period.'**
+  /// **'Erases your data after a short grace period.'**
   String get deleteAccountHelp;
 
   /// No description provided for @deleteAccountQuestion.
@@ -3496,6 +3406,24 @@ abstract class AppLocalizations {
   /// **'Connect your apps'**
   String get connectAppsTitle;
 
+  /// No description provided for @moreApps.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get moreApps;
+
+  /// No description provided for @addAppTile.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {app} to this bot'**
+  String addAppTile(String app);
+
+  /// No description provided for @appAddedToBot.
+  ///
+  /// In en, this message translates to:
+  /// **'{app} added to {bot}'**
+  String appAddedToBot(String app, String bot);
+
   /// No description provided for @connectAppsHint.
   ///
   /// In en, this message translates to:
@@ -3580,41 +3508,11 @@ abstract class AppLocalizations {
   /// **'Turn On'**
   String get notificationsTurnOn;
 
-  /// No description provided for @createMenuTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Add'**
-  String get createMenuTitle;
-
-  /// No description provided for @createBotHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'A teammate with its own instructions, memory and tools'**
-  String get createBotHelp;
-
-  /// No description provided for @createGroupHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Several bots in one chat; @mention who should answer'**
-  String get createGroupHelp;
-
-  /// No description provided for @importBotHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'From a Casama bot file someone shared'**
-  String get importBotHelp;
-
   /// No description provided for @importAgentHelp.
   ///
   /// In en, this message translates to:
   /// **'Bring a bot over from OpenClaw or Hermes Agent: its persona, skills, schedules and memories. You\'ll review everything before it\'s created. Keys and settings files are never read.'**
   String get importAgentHelp;
-
-  /// No description provided for @archivedBotsHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Bring back a bot you archived'**
-  String get archivedBotsHelp;
 
   /// No description provided for @checkForUpdates.
   ///
@@ -3631,7 +3529,7 @@ abstract class AppLocalizations {
   /// No description provided for @autoUpdatesHelp.
   ///
   /// In en, this message translates to:
-  /// **'Download new versions in the background and install them when you quit.'**
+  /// **'Installs new versions when you quit.'**
   String get autoUpdatesHelp;
 
   /// No description provided for @upToDate.
@@ -3697,7 +3595,7 @@ abstract class AppLocalizations {
   /// No description provided for @openAtLoginHelp.
   ///
   /// In en, this message translates to:
-  /// **'Start Casama when you log in to this Mac, ready for the quick-ask shortcut.'**
+  /// **'Ready for the quick-ask shortcut.'**
   String get openAtLoginHelp;
 
   /// No description provided for @signInTagline.
@@ -3748,18 +3646,6 @@ abstract class AppLocalizations {
   /// **'Appearance'**
   String get appearance;
 
-  /// No description provided for @settingsBotsSection.
-  ///
-  /// In en, this message translates to:
-  /// **'What your bots can use'**
-  String get settingsBotsSection;
-
-  /// No description provided for @settingsMoreSection.
-  ///
-  /// In en, this message translates to:
-  /// **'Privacy and more'**
-  String get settingsMoreSection;
-
   /// No description provided for @modelKeysHelp.
   ///
   /// In en, this message translates to:
@@ -3807,12 +3693,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dark'**
   String get themeDark;
-
-  /// No description provided for @noApprovalsHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'When a bot wants to do something risky, it asks here first.'**
-  String get noApprovalsHelp;
 
   /// No description provided for @createWorkspaceBody.
   ///
@@ -4144,6 +4024,96 @@ abstract class AppLocalizations {
   /// **'Uploading…'**
   String get uploadingAttachments;
 
+  /// No description provided for @notSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent'**
+  String get notSent;
+
+  /// No description provided for @deleteChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Chat'**
+  String get deleteChat;
+
+  /// No description provided for @deleteChatTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this chat?'**
+  String get deleteChatTitle;
+
+  /// No description provided for @deleteChatBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Its messages, photos and files are deleted for everyone who can see it. Usage records stay, and anything {bot} remembered from it stays in its memory.'**
+  String deleteChatBody(String bot);
+
+  /// No description provided for @chatDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat deleted'**
+  String get chatDeleted;
+
+  /// No description provided for @deleteAllChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete All Chats'**
+  String get deleteAllChats;
+
+  /// No description provided for @deleteAllChatsRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Start over with a clean history. Memories stay.'**
+  String get deleteAllChatsRow;
+
+  /// No description provided for @deleteAllChatsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all chats with {bot}?'**
+  String deleteAllChatsTitle(String bot);
+
+  /// No description provided for @deleteAllChatsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every chat with {bot} that you can delete goes, with its messages, photos and files. Group chats stay. Usage records stay, and what {bot} remembered stays in its memory.'**
+  String deleteAllChatsBody(String bot);
+
+  /// No description provided for @chatsDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =0{No chats to delete.} =1{1 chat deleted.} other{{n} chats deleted.}}'**
+  String chatsDeleted(int n);
+
+  /// No description provided for @chatsKeptBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 chat was kept because the bot is still working in it.} other{{n} chats were kept because the bot is still working in them.}}'**
+  String chatsKeptBusy(int n);
+
+  /// No description provided for @groupEmptySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, other{{n} bots are in this chat. Each keeps its own memory and settings.}}'**
+  String groupEmptySubtitle(int n);
+
+  /// No description provided for @groupTipMention.
+  ///
+  /// In en, this message translates to:
+  /// **'Type @ and a name to ask one bot directly.'**
+  String get groupTipMention;
+
+  /// No description provided for @groupTipEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'@everyone asks {lead} to plan the work and hand a part to each bot.'**
+  String groupTipEveryone(String lead);
+
+  /// No description provided for @groupTipNoMention.
+  ///
+  /// In en, this message translates to:
+  /// **'Without a mention, the bot that spoke last answers ({lead} at first).'**
+  String groupTipNoMention(String lead);
+
   /// No description provided for @messageNotSent.
   ///
   /// In en, this message translates to:
@@ -4257,6 +4227,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bots think with your own model provider keys. Keys are stored encrypted and never shown again.'**
   String get modelKeysIntro;
+
+  /// No description provided for @casamaCloudKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid from your credits'**
+  String get casamaCloudKeyHint;
+
+  /// No description provided for @casamaCloudIncluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Included'**
+  String get casamaCloudIncluded;
+
+  /// No description provided for @casamaCloudModelLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama chooses this model.'**
+  String get casamaCloudModelLocked;
+
+  /// No description provided for @serverVoiceSetUp.
+  ///
+  /// In en, this message translates to:
+  /// **'This server provides voice, so there\'s no key to add. A workspace\'s own key is used first.'**
+  String get serverVoiceSetUp;
+
+  /// No description provided for @modelKeysFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Keys belong to one workspace. These are for {workspace}.'**
+  String modelKeysFor(String workspace);
+
+  /// No description provided for @yourKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Keys'**
+  String get yourKeys;
+
+  /// No description provided for @keyWorking.
+  ///
+  /// In en, this message translates to:
+  /// **'Working'**
+  String get keyWorking;
+
+  /// No description provided for @keyFailing.
+  ///
+  /// In en, this message translates to:
+  /// **'Failing'**
+  String get keyFailing;
+
+  /// No description provided for @keyUntested.
+  ///
+  /// In en, this message translates to:
+  /// **'Not tested'**
+  String get keyUntested;
+
+  /// No description provided for @skillsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A skill is a set of instructions a bot loads when a task calls for it, like your house style for reports.'**
+  String get skillsHelp;
+
+  /// No description provided for @deleteSkillTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the skill “{name}”?'**
+  String deleteSkillTitle(String name);
+
+  /// No description provided for @editSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit skill'**
+  String get editSkill;
+
+  /// No description provided for @deleteSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Skill'**
+  String get deleteSkill;
+
+  /// No description provided for @skillDescriptionHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots read this to decide when the skill applies.'**
+  String get skillDescriptionHelp;
+
+  /// No description provided for @skillBodyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'# Steps\n1. …'**
+  String get skillBodyHint;
+
+  /// No description provided for @computersHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Each bot works on a computer: the team computer everyone shares, or a private one. Files stay on it between chats.'**
+  String get computersHelp;
+
+  /// No description provided for @thisDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get thisDevice;
 
   /// No description provided for @personalComputerConnected.
   ///
@@ -4372,102 +4444,6 @@ abstract class AppLocalizations {
   /// **'This is your own computer, so you see a new screenshot every few seconds instead of a live view.'**
   String get personalScreenNote;
 
-  /// No description provided for @casamaCloudKeyHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Paid from your credits'**
-  String get casamaCloudKeyHint;
-
-  /// No description provided for @casamaCloudIncluded.
-  ///
-  /// In en, this message translates to:
-  /// **'Included'**
-  String get casamaCloudIncluded;
-
-  /// No description provided for @casamaCloudModelLocked.
-  ///
-  /// In en, this message translates to:
-  /// **'Casama chooses this model.'**
-  String get casamaCloudModelLocked;
-
-  /// No description provided for @modelKeysFor.
-  ///
-  /// In en, this message translates to:
-  /// **'Keys belong to one workspace. These are for {workspace}.'**
-  String modelKeysFor(String workspace);
-
-  /// No description provided for @yourKeys.
-  ///
-  /// In en, this message translates to:
-  /// **'Your Keys'**
-  String get yourKeys;
-
-  /// No description provided for @keyWorking.
-  ///
-  /// In en, this message translates to:
-  /// **'Working'**
-  String get keyWorking;
-
-  /// No description provided for @keyFailing.
-  ///
-  /// In en, this message translates to:
-  /// **'Failing'**
-  String get keyFailing;
-
-  /// No description provided for @keyUntested.
-  ///
-  /// In en, this message translates to:
-  /// **'Not tested'**
-  String get keyUntested;
-
-  /// No description provided for @skillsHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'A skill is a set of instructions a bot loads when a task calls for it, like your house style for reports.'**
-  String get skillsHelp;
-
-  /// No description provided for @deleteSkillTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete the skill “{name}”?'**
-  String deleteSkillTitle(String name);
-
-  /// No description provided for @editSkill.
-  ///
-  /// In en, this message translates to:
-  /// **'Edit skill'**
-  String get editSkill;
-
-  /// No description provided for @deleteSkill.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete Skill'**
-  String get deleteSkill;
-
-  /// No description provided for @skillDescriptionHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Bots read this to decide when the skill applies.'**
-  String get skillDescriptionHelp;
-
-  /// No description provided for @skillBodyHint.
-  ///
-  /// In en, this message translates to:
-  /// **'# Steps\n1. …'**
-  String get skillBodyHint;
-
-  /// No description provided for @computersHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Each bot works on a computer: the team computer everyone shares, or a private one. Files stay on it between chats.'**
-  String get computersHelp;
-
-  /// No description provided for @thisDevice.
-  ///
-  /// In en, this message translates to:
-  /// **'This device'**
-  String get thisDevice;
-
   /// No description provided for @renameComputer.
   ///
   /// In en, this message translates to:
@@ -4501,7 +4477,7 @@ abstract class AppLocalizations {
   /// No description provided for @shareAnalyticsHelp.
   ///
   /// In en, this message translates to:
-  /// **'Help improve Casama by sharing how you use it, linked to your account on Casama Cloud, and crash reports. Message content, prompts, files and secrets are never shared.'**
+  /// **'Usage and crash reports. Never your messages or files.'**
   String get shareAnalyticsHelp;
 
   /// No description provided for @workspaceAnalytics.
@@ -4513,7 +4489,7 @@ abstract class AppLocalizations {
   /// No description provided for @workspaceAnalyticsHelp.
   ///
   /// In en, this message translates to:
-  /// **'When off, Casama collects no usage data about this workspace\'s activity. Crash reports still work.'**
+  /// **'Usage data for this workspace. Crash reports stay on.'**
   String get workspaceAnalyticsHelp;
 
   /// No description provided for @dangerZone.
@@ -4546,47 +4522,17 @@ abstract class AppLocalizations {
   /// **'OK'**
   String get serviceOk;
 
-  /// No description provided for @inviteMemberHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'They\'ll get an email with a link to join this workspace.'**
-  String get inviteMemberHelp;
-
   /// No description provided for @sendInvite.
   ///
   /// In en, this message translates to:
   /// **'Send Invite'**
   String get sendInvite;
 
-  /// No description provided for @inviteReady.
-  ///
-  /// In en, this message translates to:
-  /// **'Invite ready'**
-  String get inviteReady;
-
-  /// No description provided for @inviteCodeHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Email isn\'t set up on this server, so share this code with {email}. They paste it when joining.'**
-  String inviteCodeHelp(String email);
-
-  /// No description provided for @copyCode.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy code'**
-  String get copyCode;
-
   /// No description provided for @thinking0.
   ///
   /// In en, this message translates to:
   /// **'Model'**
   String get thinking0;
-
-  /// No description provided for @computerAndTools.
-  ///
-  /// In en, this message translates to:
-  /// **'Computer and tools'**
-  String get computerAndTools;
 
   /// No description provided for @saveChanges.
   ///
@@ -4749,12 +4695,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'What should {bot} do?'**
   String quickAskHintBot(String bot);
-
-  /// No description provided for @noNotificationsHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Routine results, budget alerts and requests from your bots show up here.'**
-  String get noNotificationsHelp;
 
   /// No description provided for @stateProvisioning.
   ///
@@ -4996,12 +4936,6 @@ abstract class AppLocalizations {
   /// **'Reset to Default'**
   String get resetBackground;
 
-  /// No description provided for @chatsOnly.
-  ///
-  /// In en, this message translates to:
-  /// **'Chats only'**
-  String get chatsOnly;
-
   /// No description provided for @copyMessage.
   ///
   /// In en, this message translates to:
@@ -5080,18 +5014,6 @@ abstract class AppLocalizations {
   /// **'Themes'**
   String get themes;
 
-  /// No description provided for @themesHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'A theme sets the color scheme, fonts and background together. Change any of them afterwards and save the result as your own.'**
-  String get themesHelp;
-
-  /// No description provided for @themePresets.
-  ///
-  /// In en, this message translates to:
-  /// **'Presets'**
-  String get themePresets;
-
   /// No description provided for @myThemes.
   ///
   /// In en, this message translates to:
@@ -5157,12 +5079,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete {name}?'**
   String deleteThemeTitle(String name);
-
-  /// No description provided for @currentLook.
-  ///
-  /// In en, this message translates to:
-  /// **'Custom'**
-  String get currentLook;
 
   /// No description provided for @fonts.
   ///
@@ -5794,16 +5710,10 @@ abstract class AppLocalizations {
   /// **'The sign-in is stored encrypted and never shown again. Disconnect anytime.'**
   String get privacyNote;
 
-  /// No description provided for @moreWays.
-  ///
-  /// In en, this message translates to:
-  /// **'More ways to connect'**
-  String get moreWays;
-
   /// No description provided for @composioHelp.
   ///
   /// In en, this message translates to:
-  /// **'Hundreds of apps like Gmail, Salesforce and Shopify, with sign-in handled by Composio.'**
+  /// **'Hundreds of apps, with sign-in handled for you.'**
   String get composioHelp;
 
   /// No description provided for @pipedreamHelp.
@@ -5847,12 +5757,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Checking'**
   String get statusChecking;
-
-  /// No description provided for @toolsTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Tools'**
-  String get toolsTitle;
 
   /// No description provided for @toolsHelp.
   ///
@@ -6208,12 +6112,6 @@ abstract class AppLocalizations {
   /// **'Forgot password?'**
   String get forgotPassword;
 
-  /// No description provided for @passwordResetTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Reset your password'**
-  String get passwordResetTitle;
-
   /// No description provided for @newPassword.
   ///
   /// In en, this message translates to:
@@ -6535,7 +6433,7 @@ abstract class AppLocalizations {
   /// No description provided for @requireTwoStepHelp.
   ///
   /// In en, this message translates to:
-  /// **'Owners and admins without it keep member access only until they sign in with it. Turn it on for yourself first.'**
+  /// **'Owners and admins must use it. Turn yours on first.'**
   String get requireTwoStepHelp;
 
   /// No description provided for @twoStepNeededForAdmin.
@@ -6742,6 +6640,18 @@ abstract class AppLocalizations {
   /// **'Bots can hand coding tasks to these agents on this computer. They use your own sign-ins and work in the folders you share.'**
   String get codingAgentsHelp;
 
+  /// No description provided for @codingAgentsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =0{No coding agents found} =1{Found 1 coding agent} other{Found {n} coding agents}}'**
+  String codingAgentsFound(int n);
+
+  /// No description provided for @localMcpNotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'This server isn\'t saved to the workspace yet. Remove it and add it again.'**
+  String get localMcpNotSaved;
+
   /// No description provided for @codingAgentsNone.
   ///
   /// In en, this message translates to:
@@ -6759,12 +6669,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Turn On'**
   String get allowCommands;
-
-  /// No description provided for @navBoard.
-  ///
-  /// In en, this message translates to:
-  /// **'Board'**
-  String get navBoard;
 
   /// No description provided for @board.
   ///
@@ -7096,47 +7000,11 @@ abstract class AppLocalizations {
   /// **'Role'**
   String get inviteRole;
 
-  /// No description provided for @inviteLinkReady.
-  ///
-  /// In en, this message translates to:
-  /// **'Your new invite link'**
-  String get inviteLinkReady;
-
-  /// No description provided for @inviteLinkOnce.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy or share it now. For security, the full link isn\'t shown again.'**
-  String get inviteLinkOnce;
-
   /// No description provided for @shareLinkLabel.
   ///
   /// In en, this message translates to:
   /// **'Share'**
   String get shareLinkLabel;
-
-  /// No description provided for @joiningWorkspace.
-  ///
-  /// In en, this message translates to:
-  /// **'Joining the workspace…'**
-  String get joiningWorkspace;
-
-  /// No description provided for @joinedWorkspace.
-  ///
-  /// In en, this message translates to:
-  /// **'You joined {name}.'**
-  String joinedWorkspace(String name);
-
-  /// No description provided for @joinFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'This invite link doesn\'t work anymore. Ask for a new one.'**
-  String get joinFailed;
-
-  /// No description provided for @joinWithLink.
-  ///
-  /// In en, this message translates to:
-  /// **'Join with a link'**
-  String get joinWithLink;
 
   /// No description provided for @botFolder.
   ///
@@ -7227,30 +7095,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Restore These Settings'**
   String get restoreSettings;
-
-  /// No description provided for @secretWhat.
-  ///
-  /// In en, this message translates to:
-  /// **'{service} key'**
-  String secretWhat(String service);
-
-  /// No description provided for @totpWhat.
-  ///
-  /// In en, this message translates to:
-  /// **'{service} sign-in code'**
-  String totpWhat(String service);
-
-  /// No description provided for @takeoverHandedBackLine.
-  ///
-  /// In en, this message translates to:
-  /// **'Handed back: {what}'**
-  String takeoverHandedBackLine(String what);
-
-  /// No description provided for @deviceAccessSkippedLine.
-  ///
-  /// In en, this message translates to:
-  /// **'Not shared: your {what}'**
-  String deviceAccessSkippedLine(String what);
 
   /// No description provided for @restoreSettingsBody.
   ///
@@ -7347,6 +7191,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Declined'**
   String get secretDeclined;
+
+  /// No description provided for @secretWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} key'**
+  String secretWhat(String service);
+
+  /// No description provided for @totpWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'{service} sign-in code'**
+  String totpWhat(String service);
+
+  /// No description provided for @takeoverHandedBackLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Handed back: {what}'**
+  String takeoverHandedBackLine(String what);
+
+  /// No description provided for @deviceAccessSkippedLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Not shared: your {what}'**
+  String deviceAccessSkippedLine(String what);
 
   /// No description provided for @decline.
   ///
@@ -7588,30 +7456,6 @@ abstract class AppLocalizations {
   /// **'Attach a skill'**
   String get attachSkill;
 
-  /// No description provided for @setupTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Set up {name}'**
-  String setupTitle(String name);
-
-  /// No description provided for @setupBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Answer a few quick questions and it will propose its instructions, routines and the accounts to connect. Nothing changes until you approve.'**
-  String get setupBody;
-
-  /// No description provided for @startSetup.
-  ///
-  /// In en, this message translates to:
-  /// **'Start Setup'**
-  String get startSetup;
-
-  /// No description provided for @skipSetup.
-  ///
-  /// In en, this message translates to:
-  /// **'Skip for Now'**
-  String get skipSetup;
-
   /// No description provided for @rerunSetup.
   ///
   /// In en, this message translates to:
@@ -7759,7 +7603,7 @@ abstract class AppLocalizations {
   /// No description provided for @includeMemoriesHelp.
   ///
   /// In en, this message translates to:
-  /// **'What it has learned about you and your work. Leave off unless you trust who you share with.'**
+  /// **'What it has learned about you. Share with care.'**
   String get includeMemoriesHelp;
 
   /// No description provided for @saveAsFile.
@@ -8395,14 +8239,8 @@ abstract class AppLocalizations {
   /// No description provided for @mcpApprovalsHelp.
   ///
   /// In en, this message translates to:
-  /// **'Connected apps can approve or deny your bots\' actions. Off by default.'**
+  /// **'Connected apps can approve your bots\' actions.'**
   String get mcpApprovalsHelp;
-
-  /// No description provided for @apiKeyOnce.
-  ///
-  /// In en, this message translates to:
-  /// **'Copy this key now; it won\'t be shown again.'**
-  String get apiKeyOnce;
 
   /// No description provided for @newApiKey.
   ///
@@ -9286,12 +9124,6 @@ abstract class AppLocalizations {
   /// **'Add'**
   String get add;
 
-  /// No description provided for @skillIdeas.
-  ///
-  /// In en, this message translates to:
-  /// **'Skill ideas'**
-  String get skillIdeas;
-
   /// No description provided for @skillIdeaFrom.
   ///
   /// In en, this message translates to:
@@ -10021,7 +9853,7 @@ abstract class AppLocalizations {
   /// No description provided for @botToBotHelp.
   ///
   /// In en, this message translates to:
-  /// **'When off, bots can\'t @mention, message or hand work to each other. Each bot can still split its own work into subagents.'**
+  /// **'Bots can @mention, message and hand work to each other.'**
   String get botToBotHelp;
 
   /// No description provided for @capMessages.
@@ -10513,7 +10345,7 @@ abstract class AppLocalizations {
   /// No description provided for @a2aHelp.
   ///
   /// In en, this message translates to:
-  /// **'Let outside AI agents give tasks to bots you publish, using workspace API keys. Tasks run with the bot\'s usual approvals and limits.'**
+  /// **'Outside agents can give tasks to bots you publish.'**
   String get a2aHelp;
 
   /// No description provided for @a2aPublish.
@@ -11461,7 +11293,7 @@ abstract class AppLocalizations {
   /// No description provided for @showBotStepsHelp.
   ///
   /// In en, this message translates to:
-  /// **'Each step it takes, with commands and technical errors. Off, chats show what it\'s doing in a few words and its answer.'**
+  /// **'Commands and technical errors in every chat.'**
   String get showBotStepsHelp;
 
   /// No description provided for @activityReady.
@@ -11605,7 +11437,7 @@ abstract class AppLocalizations {
   /// No description provided for @askBeforeJoiningHelp.
   ///
   /// In en, this message translates to:
-  /// **'People who use the link ask to join, and an admin approves them here.'**
+  /// **'An admin approves each person who uses the link.'**
   String get askBeforeJoiningHelp;
 
   /// No description provided for @askToJoin.
@@ -11791,7 +11623,7 @@ abstract class AppLocalizations {
   /// No description provided for @joinByDomainHelp.
   ///
   /// In en, this message translates to:
-  /// **'They can join from the workspace list without an invite, once their email address is verified.'**
+  /// **'Verified addresses join without an invite.'**
   String get joinByDomainHelp;
 
   /// No description provided for @joinByDomainSwitch.
@@ -12175,7 +12007,7 @@ abstract class AppLocalizations {
   /// No description provided for @learnAboutMeHelp.
   ///
   /// In en, this message translates to:
-  /// **'Bots save facts about you here. Edit or delete them any time.'**
+  /// **'Bots save facts about you. Edit them any time.'**
   String get learnAboutMeHelp;
 
   /// No description provided for @useInThisSpace.
@@ -12187,7 +12019,7 @@ abstract class AppLocalizations {
   /// No description provided for @useInThisSpaceHelp.
   ///
   /// In en, this message translates to:
-  /// **'Your name and reply style are used everywhere. About me and learned facts stay in spaces where you\'re the only member, unless you turn this on.'**
+  /// **'Off: only your name and reply style are used here.'**
   String get useInThisSpaceHelp;
 
   /// No description provided for @learnedAboutYou.
@@ -12363,12 +12195,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Gallery'**
   String get gallery;
-
-  /// No description provided for @galleryHelp.
-  ///
-  /// In en, this message translates to:
-  /// **'Themes, color schemes, wallpapers and skills other people contribute. Using one saves it on this device.'**
-  String get galleryHelp;
 
   /// No description provided for @galleryEmpty.
   ///
@@ -12613,7 +12439,7 @@ abstract class AppLocalizations {
   /// No description provided for @fewerEffectsHelp.
   ///
   /// In en, this message translates to:
-  /// **'No celebrations, bouncing tabs or animated bots. The Plain theme turns this on.'**
+  /// **'No celebrations, bouncing tabs or animated bots.'**
   String get fewerEffectsHelp;
 
   /// No description provided for @settingsAppSection.

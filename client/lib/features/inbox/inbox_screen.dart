@@ -16,6 +16,7 @@ import '../../core/widgets.dart';
 import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/action_buttons.dart';
 import '../../ui/app_card.dart';
 import '../../ui/edge_fade.dart';
 import '../../ui/reveal_when_selected.dart';
@@ -454,17 +455,8 @@ class _ApprovalCardState extends ConsumerState<ApprovalCard> {
             child: SingleChildScrollView(child: SelectableText(args, style: AppText.mono.copyWith(fontSize: 12.5))),
           ),
           const SizedBox(height: AppSpace.sm),
-          Wrap(
-            alignment: WrapAlignment.end,
-            spacing: AppSpace.xs,
-            runSpacing: AppSpace.xs,
-            children: [
-              TextButton.icon(
-                onPressed: () => context.push('/bots/${a.botId}/runs/${a.runId}'),
-                icon: const Icon(LucideIcons.activity, size: 18),
-                label: Text(l10n.viewRun),
-              ),
-              TextButton(key: const Key('alwaysAllow'), onPressed: _busy ? null : () => _decide(true, always: true), child: Text(l10n.alwaysAllow)),
+          ActionButtons(
+            actions: [
               OutlinedButton.icon(
                 key: const Key('deny'),
                 onPressed: _busy ? null : () => _decide(false),
@@ -476,6 +468,20 @@ class _ApprovalCardState extends ConsumerState<ApprovalCard> {
                 onPressed: _busy ? null : () => _decide(true),
                 icon: const Icon(LucideIcons.check, size: 18),
                 label: Text(l10n.approve),
+              ),
+            ],
+            extra: [
+              TextButton(
+                key: const Key('alwaysAllow'),
+                onPressed: _busy ? null : () => _decide(true, always: true),
+                style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                child: Text(l10n.alwaysAllow),
+              ),
+              TextButton.icon(
+                onPressed: () => context.push('/bots/${a.botId}/runs/${a.runId}'),
+                style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                icon: const Icon(LucideIcons.activity, size: 18),
+                label: Text(l10n.viewRun),
               ),
             ],
           ),
@@ -650,11 +656,8 @@ class TakeoverCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: AppSpace.md),
-          Wrap(
-            alignment: WrapAlignment.end,
-            spacing: AppSpace.xs,
-            runSpacing: AppSpace.xs,
-            children: [
+          ActionButtons(
+            actions: [
               OutlinedButton(
                 key: const Key('dismissTakeover'),
                 onPressed: () async {

@@ -693,6 +693,9 @@ class SupabaseBackend implements Backend {
       api.credentials.deleteCredential(id: credentialId);
 
   @override
+  Set<String> get serverVoice => {for (final v in config?.serverVoice ?? const []) v.value};
+
+  @override
   bool get chatGptSignIn => config?.chatgptSignIn ?? false;
 
   @override
@@ -1222,6 +1225,17 @@ class SupabaseBackend implements Backend {
   @override
   Future<List<Conversation>> conversations(String botId) async =>
       (await api.chat.listConversations(id: botId)).data!.items;
+
+  @override
+  Future<void> deleteConversation(String conversationId) async {
+    await api.chat.deleteConversation(id: conversationId);
+  }
+
+  @override
+  Future<(int, int)> deleteBotConversations(String botId) async {
+    final r = (await api.chat.deleteBotConversations(id: botId)).data!;
+    return (r.deleted, r.skipped);
+  }
 
   @override
   Future<Conversation> createConversation(String botId) async =>
@@ -1829,6 +1843,39 @@ class SupabaseBackend implements Backend {
           return <NotificationView>[];
         }
       });
+
+  @override
+  Stream<String?> watchConversation(String conversationId) {
+    sb.RealtimeChannel? channel;
+    late final StreamController<String?> out;
+    out = StreamController<String?>(
+      onListen: () {
+        var joined = false;
+        channel = supabase
+            .channel('conversation:$conversationId', opts: const sb.RealtimeChannelConfig(private: true))
+            .onBroadcast(
+              event: 'conversation_activity',
+              callback: (message) {
+                final data = message['payload'] is Map ? message['payload'] as Map : message;
+                final run = data['run_id'];
+                out.add(run is String ? run : null);
+              },
+            )
+            .subscribe((status, _) {
+              if (status != sb.RealtimeSubscribeStatus.subscribed) return;
+              // Joined again after a dropped connection: a run may have started meanwhile.
+              if (joined) out.add(null);
+              joined = true;
+            });
+      },
+      onCancel: () async {
+        final c = channel;
+        channel = null;
+        if (c != null) await supabase.removeChannel(c);
+      },
+    );
+    return out.stream;
+  }
 
   @override
   Stream<void> watchBotsChanged(String orgId) {
@@ -3683,6 +3730,36 @@ class SupabaseBackend implements Backend {
     );
     if (res.statusCode != null && res.statusCode! >= 300) return null;
     return res.data;
+  }
+
+  @override
+  Future<ComputerThumbnail?> computerThumbnail(
+    String computerId,
+    String path, {
+    int size = 480,
+  }) async {
+    try {
+      // 404: no thumbnail for this file; 409: the computer is asleep or offline (D-226).
+      final res = await api.computers.computerFileThumbnail(
+        id: computerId,
+        path: path,
+        size: size,
+        validateStatus: (s) => s != null && (s < 300 || s == 404 || s == 409),
+      );
+      final bytes = res.data;
+      if ((res.statusCode ?? 500) >= 300 || bytes == null || bytes.isEmpty) {
+        return null;
+      }
+      int? header(String name) => int.tryParse(res.headers.value(name) ?? '');
+      final ms = header('x-duration-ms');
+      return ComputerThumbnail(
+        bytes: bytes,
+        duration: ms == null ? null : Duration(milliseconds: ms),
+        modifiedMs: header('x-file-mtime'),
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   @override

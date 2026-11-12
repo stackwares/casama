@@ -112,8 +112,23 @@ export const Conversation = z
     kind: z.enum(["direct", "group"]),
     bot_ids: z.array(Uuid).openapi({ description: "Group chats: every bot, the lead first" }),
     created_at: ts,
+    can_delete: z.boolean().optional().openapi({
+      description: "Whether you may delete it: you started it, or you manage its bot",
+    }),
   })
   .openapi("Conversation");
+
+export const DeletedConversation = z.object({ deleted: Uuid }).openapi("DeletedConversation");
+
+export const DeletedConversations = z
+  .object({
+    deleted: z.number().int().openapi({ description: "How many conversations were deleted" }),
+    skipped: z
+      .number()
+      .int()
+      .openapi({ description: "Left alone because the bot is still working in them" }),
+  })
+  .openapi("DeletedConversations");
 
 export const CreateConversationRequest = z
   .object({

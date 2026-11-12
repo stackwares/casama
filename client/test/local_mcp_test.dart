@@ -70,6 +70,12 @@ void main() {
     expect(companion.started?.mcpServers.single.key, 'codex');
     expect(find.byKey(const Key('localMcp-codex')), findsOneWidget);
 
+    // Test runs the workspace's check for this server and says what it found.
+    await tester.tap(find.byKey(const Key('testLocalMcp-codex')));
+    await tester.pumpAndSettle();
+    expect(backend.tested, ['local-codex']);
+    expect(find.text('Connected, 2 tools'), findsOneWidget);
+
     await tester.tap(find.descendant(of: find.byKey(const Key('localMcp-codex')), matching: find.byTooltip('Delete')));
     await tester.pumpAndSettle();
     expect(mcp.m[orgId], isEmpty);
@@ -101,6 +107,14 @@ void main() {
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.byKey(const Key('codingAgent-codex')), 200);
     expect(find.text('Claude Code'), findsOneWidget);
+    // Installed another one while the page was open: Refresh finds it.
+    companion.codingAgents = ['claude', 'codex', 'cursor-agent'];
+    await tester.scrollUntilVisible(find.byKey(const Key('refreshCodingAgents')), -200);
+    await tester.tap(find.byKey(const Key('refreshCodingAgents')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('codingAgent-cursor-agent')), findsOneWidget);
+    expect(find.text('Found 3 coding agents'), findsOneWidget);
+    await tester.scrollUntilVisible(find.byKey(const Key('allowCodingAgents')), 200);
     await tester.tap(find.byKey(const Key('allowCodingAgents')));
     await tester.pumpAndSettle();
     expect(companion.started?.capabilities, contains('shell'));

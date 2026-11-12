@@ -2074,6 +2074,17 @@
           "chatgpt_sign_in": {
             "type": "boolean"
           },
+          "server_voice": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "live",
+                "read_aloud",
+                "dictation"
+              ]
+            }
+          },
           "signup_proofs": {
             "type": "array",
             "items": {
@@ -3632,6 +3643,10 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "can_delete": {
+            "type": "boolean",
+            "description": "Whether you may delete it: you started it, or you manage its bot"
           }
         },
         "required": [
@@ -3701,6 +3716,35 @@
           "org_id",
           "provider",
           "label"
+        ]
+      },
+      "DeletedConversations": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "integer",
+            "description": "How many conversations were deleted"
+          },
+          "skipped": {
+            "type": "integer",
+            "description": "Left alone because the bot is still working in them"
+          }
+        },
+        "required": [
+          "deleted",
+          "skipped"
+        ]
+      },
+      "DeletedConversation": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "deleted"
         ]
       },
       "DeletedMemory": {
@@ -17180,6 +17224,196 @@
         }
       }
     },
+    "/v1/bots/{id}/conversations": {
+      "delete": {
+        "operationId": "deleteBotConversations",
+        "tags": [
+          "chat"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete every direct conversation with a bot that you may delete",
+        "description": "Yours, or all of them if you manage the bot. Group chats and conversations the bot is still working in are left alone.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedConversations"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listConversations",
+        "tags": [
+          "chat"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Newest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/conversations/{id}": {
+      "delete": {
+        "operationId": "deleteConversation",
+        "tags": [
+          "chat"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete a conversation and its messages",
+        "description": "Only the person who started it or someone who manages its bot. Usage records and what the bot remembered stay. Refused with 409 while the bot is working in it.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedConversation"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/credentials/{id}": {
       "delete": {
         "operationId": "deleteCredential",
@@ -18091,62 +18325,6 @@
         }
       }
     },
-    "/v1/bots/{id}/conversations": {
-      "get": {
-        "operationId": "listConversations",
-        "tags": [
-          "chat"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true,
-            "name": "id",
-            "in": "path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Newest first",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConversationList"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Not authenticated",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not found",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Problem"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/v1/credentials/{id}/models": {
       "get": {
         "operationId": "listCredentialModels",
@@ -18919,6 +19097,102 @@
           },
           "422": {
             "description": "The conversion failed or took too long",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/computers/{id}/files/thumbnail": {
+      "get": {
+        "operationId": "computerFileThumbnail",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "A small JPEG or PNG of a video's first frame, an image or a PDF's first page",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "required": true,
+            "name": "path",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "example": 480
+            },
+            "required": false,
+            "name": "size",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The thumbnail. `x-duration-ms` carries a video's length and `x-file-mtime` the file's modified time (ms) when known.",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No thumbnail for this file (missing, unsupported, or the computer can't make one)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The computer is asleep, stopped or offline (thumbnail_unavailable); it isn't woken",
             "content": {
               "application/problem+json": {
                 "schema": {

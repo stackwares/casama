@@ -190,6 +190,61 @@ describe("local computer companion (Phase 6)", () => {
     expect(row?.n).toBe(0);
   }, 60_000);
 
+  it("thumbnails: only the device's owner, only inside the shared folders, with no bot (D-226)", async () => {
+    const thumb = (path: string, token: string) =>
+      h.request(
+        `/v1/computers/${device.computer_id}/files/thumbnail?path=${encodeURIComponent(path)}`,
+        { token },
+      );
+    // The tunnel lets the owner through: computerd itself answers that a text file has none.
+    const none = await thumb(join(home, "Shared", "report-draft.md"), owner.token);
+    expect(none.status).toBe(404);
+    expect((await j(none)).code).toBe("no_thumbnail");
+    // Outside the shared folders computerd refuses, and the app just keeps its plain tile.
+    const outside = await thumb(join(home, "Private", "passwords.txt"), owner.token);
+    expect(outside.status).toBe(409);
+    // Another member of the workspace can't look at the owner's computer this way.
+    const member = await h.user("companion-member@example.com");
+    await h.tdb
+      .admin`insert into public.memberships (org_id, user_id, role) values (${orgId}, ${member.id}, 'member')`;
+    const other = await thumb(join(home, "Shared", "report-draft.md"), member.token);
+    expect(other.status).toBe(409);
+    expect((await j(other)).code).toBe("thumbnail_unavailable");
+  }, 60_000);
+
+  it("the owner opens and lists files in the shared folders from the app, read-only (D-226)", async () => {
+    const file = (path: string, token: string) =>
+      h.request(`/v1/computers/${device.computer_id}/files?path=${encodeURIComponent(path)}`, {
+        token,
+      });
+    const ok = await file(join(home, "Shared", "report-draft.md"), owner.token);
+    expect(ok.status).toBe(200);
+    expect((await ok.text()).length).toBeGreaterThan(0);
+    const list = await h.request(
+      `/v1/computers/${device.computer_id}/files/list?path=${encodeURIComponent(join(home, "Shared"))}`,
+      { token: owner.token },
+    );
+    expect(list.status).toBe(200);
+    expect(JSON.stringify(await j(list))).toContain("report-draft.md");
+    // Still only inside the shared folders.
+    const outside = await file(join(home, "Private", "passwords.txt"), owner.token);
+    expect(outside.status).not.toBe(200);
+    expect(await outside.text()).not.toContain("hunter2");
+    // Another member is refused plainly, not told to try again.
+    const member = await h.user("companion-reader@example.com");
+    await h.tdb
+      .admin`insert into public.memberships (org_id, user_id, role) values (${orgId}, ${member.id}, 'member')`;
+    const other = await file(join(home, "Shared", "report-draft.md"), member.token);
+    expect(other.status).toBe(403);
+    expect((await j(other)).code).toBe("computer_forbidden");
+    // Writing still needs a bot the owner allowed.
+    const put = await h.request(
+      `/v1/computers/${device.computer_id}/files?path=${encodeURIComponent(join(home, "Shared", "x.txt"))}`,
+      { method: "PUT", token: owner.token, body: "hi" },
+    );
+    expect(put.status).toBe(403);
+  }, 60_000);
+
   it("fails fast when the device is offline", async () => {
     await fake.close();
     await new Promise((r) => setTimeout(r, 300));

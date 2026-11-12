@@ -21,6 +21,8 @@ abstract class _$ConversationCWProxy {
 
   Conversation createdAt(DateTime createdAt);
 
+  Conversation canDelete(bool? canDelete);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Conversation(...).copyWith.fieldName(value)`.
@@ -37,6 +39,7 @@ abstract class _$ConversationCWProxy {
     ConversationKindEnum kind,
     List<String> botIds,
     DateTime createdAt,
+    bool? canDelete,
   });
 }
 
@@ -69,6 +72,9 @@ class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
   @override
   Conversation createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
+  @override
+  Conversation canDelete(bool? canDelete) => call(canDelete: canDelete);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Conversation(...).copyWith.fieldName(value)`.
@@ -86,6 +92,7 @@ class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
     Object? kind = const $CopyWithPlaceholder(),
     Object? botIds = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
+    Object? canDelete = const $CopyWithPlaceholder(),
   }) {
     return Conversation(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -116,6 +123,10 @@ class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
+      canDelete: canDelete == const $CopyWithPlaceholder()
+          ? _value.canDelete
+          // ignore: cast_nullable_to_non_nullable
+          : canDelete as bool?,
     );
   }
 }
@@ -168,6 +179,7 @@ Conversation _$ConversationFromJson(Map<String, dynamic> json) =>
             'created_at',
             (v) => DateTime.parse(v as String),
           ),
+          canDelete: $checkedConvert('can_delete', (v) => v as bool?),
         );
         return val;
       },
@@ -176,6 +188,7 @@ Conversation _$ConversationFromJson(Map<String, dynamic> json) =>
         'lastMessageAt': 'last_message_at',
         'botIds': 'bot_ids',
         'createdAt': 'created_at',
+        'canDelete': 'can_delete',
       },
     );
 
@@ -188,6 +201,7 @@ Map<String, dynamic> _$ConversationToJson(Conversation instance) =>
       'kind': _$ConversationKindEnumEnumMap[instance.kind]!,
       'bot_ids': instance.botIds,
       'created_at': instance.createdAt.toIso8601String(),
+      'can_delete': ?instance.canDelete,
     };
 
 const _$ConversationKindEnumEnumMap = {

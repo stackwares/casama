@@ -86,7 +86,8 @@ class ChatComposer extends StatelessWidget {
     return ListenableBuilder(
       listenable: Listenable.merge([controller, focusNode]),
       builder: (context, _) {
-        final canSend = (controller.text.trim().isNotEmpty || hasAttachments) && !uploading;
+        // While dictating, Send finishes the dictation and sends it, so it never turns into Stop.
+        final canSend = (controller.text.trim().isNotEmpty || hasAttachments || recording) && !uploading;
         final focused = focusNode.hasFocus;
         // The mic and send buttons are 40pt inside 7pt of padding, but on phones Material pads
         // each to a 48pt tap target, so the row is 62pt there and 54pt on desktop. The line is
@@ -170,14 +171,7 @@ class ChatComposer extends StatelessWidget {
                         ),
                         // Working: Stop, until there's something typed; then Send (it joins the task).
                         child: running && (!canSend || !allowSendWhileRunning)
-                            ? _RoundButton(
-                                key: const Key('stopButton'),
-                                tooltip: l10n.stop,
-                                icon: LucideIcons.square,
-                                background: scheme.onSurface,
-                                foreground: scheme.surface,
-                                onPressed: onStop,
-                              )
+                            ? _StopButton(key: const Key('stopButton'), tooltip: l10n.stop, onPressed: onStop)
                             : _RoundButton(
                                 key: const Key('sendButton'),
                                 tooltip: l10n.send,
@@ -231,6 +225,36 @@ class _DictateButton extends StatelessWidget {
         minimumSize: const Size.square(40),
         padding: EdgeInsets.zero,
         backgroundColor: recording ? red.withValues(alpha: 0.12) : Colors.transparent,
+      ),
+    );
+  }
+}
+
+/// Stop while the bot works: a small filled square without a circle, sized like the mic beside it.
+class _StopButton extends StatelessWidget {
+  const _StopButton({super.key, required this.tooltip, required this.onPressed});
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: () {
+        HapticFeedback.lightImpact();
+        onPressed();
+      },
+      icon: Container(
+        width: 14,
+        height: 14,
+        decoration: BoxDecoration(color: scheme.onSurface, borderRadius: BorderRadius.circular(3.5)),
+      ),
+      style: IconButton.styleFrom(
+        fixedSize: const Size.square(40),
+        minimumSize: const Size.square(40),
+        padding: EdgeInsets.zero,
+        backgroundColor: Colors.transparent,
       ),
     );
   }

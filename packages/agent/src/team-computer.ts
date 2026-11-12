@@ -66,6 +66,8 @@ export function withHomePaths(h: SandboxHandle): SandboxHandle {
     deleteFile: (p) => h.deleteFile(homeRelative(p) ?? p),
     listDir: (p) => h.listDir(homeRelative(p) ?? p),
     search: (q, p) => h.search(q, homeRelative(p)),
+    thumbnail:
+      h.thumbnail && (async (p, size) => (await h.thumbnail?.(homeRelative(p) ?? p, size)) ?? null),
   };
 }
 
@@ -122,6 +124,7 @@ export function inTeamFolder(h: SandboxHandle, folder: string): SandboxHandle {
       return h.listDir(resolve(p));
     },
     search: (q, p) => h.search(q, p === undefined ? undefined : resolve(p)),
+    thumbnail: h.thumbnail && (async (p, size) => (await h.thumbnail?.(resolve(p), size)) ?? null),
   };
 }
 

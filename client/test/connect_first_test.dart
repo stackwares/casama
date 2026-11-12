@@ -103,13 +103,15 @@ void main() {
       // Its own sign-in isn't set up on this server.
       FakeBackend.catalogApp('slack', 'Slack', [CatalogAppAuthEnum.oauth], color: '4A154B', oauthAvailable: false),
     ]);
-    await tester.pumpWidget(harness(backend, const Scaffold(body: ConnectAppTiles())));
+    await tester.pumpWidget(harness(backend, const Scaffold(body: ConnectAppTiles(botId: botId, botName: 'Ada'))));
     await tester.pumpAndSettle();
     expect(find.text('Connect your apps'), findsOneWidget);
     for (final id in ['gmail', 'google_calendar', 'notion']) {
       expect(find.byKey(Key('connectTile-$id')), findsOneWidget, reason: id);
     }
     expect(find.byKey(const Key('connectTile-github')), findsNothing);
+    // Always a way to every other app (and a second account).
+    expect(find.byKey(const Key('moreAppsTile')), findsOneWidget);
     expect(find.byKey(const Key('connectTile-slack')), findsNothing);
     // Tiles follow the starter order: Gmail first.
     expect(
@@ -117,16 +119,22 @@ void main() {
       lessThan(tester.getTopLeft(find.byKey(const Key('connectTile-notion'))).dx),
     );
 
-    // One connected: it drops out, the rest stay.
-    await backend.connectApp(orgId, appId: 'notion', method: 'none');
-    await tester.pumpWidget(harness(backend, const Scaffold(body: ConnectAppTiles(key: ValueKey(2)))));
+    // Connected in the workspace but not on this bot: offered as "add", one tap, no sign-in.
+    final notion = (await backend.connectApp(orgId, appId: 'notion', method: 'none')).integration!;
+    await tester.pumpWidget(harness(backend, const Scaffold(body: ConnectAppTiles(key: ValueKey(2), botId: botId, botName: 'Ada'))));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('connectTile-notion')), findsNothing);
     expect(find.byKey(const Key('connectTile-gmail')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('addTile-notion')));
+    await tester.pumpAndSettle();
+    expect(backend.attached, contains(notion.id));
+    expect(find.text('Notion added to Ada'), findsOneWidget);
+    expect(find.byKey(const Key('addTile-notion')), findsNothing);
 
-    // Two connected: the tiles step aside.
-    await backend.connectApp(orgId, appId: 'gmail', method: 'none');
-    await tester.pumpWidget(harness(backend, const Scaffold(body: ConnectAppTiles(key: ValueKey(3)))));
+    // Two on this bot: the tiles step aside.
+    final gmail = (await backend.connectApp(orgId, appId: 'gmail', method: 'none')).integration!;
+    backend.attached.add(gmail.id);
+    await tester.pumpWidget(harness(backend, const Scaffold(body: ConnectAppTiles(key: ValueKey(3), botId: botId, botName: 'Ada'))));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('connectAppTiles')), findsNothing);
   });
@@ -134,7 +142,7 @@ void main() {
   testWidgets('tapping a tile opens that app\'s connect sheet', (tester) async {
     await setSize(tester, const Size(700, 1200));
     final backend = FakeBackend();
-    await tester.pumpWidget(harness(backend, const Scaffold(body: ConnectAppTiles())));
+    await tester.pumpWidget(harness(backend, const Scaffold(body: ConnectAppTiles(botId: botId, botName: 'Ada'))));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('connectTile-notion')));
     await tester.pumpAndSettle();

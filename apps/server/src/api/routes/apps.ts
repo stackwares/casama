@@ -346,10 +346,12 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
       } catch (err) {
         throw new ApiError(400, "provider_error", (err as Error).message.slice(0, 300));
       }
+      // The cached tool list predates this app: clear it so the next run (or the app's check once
+      // the sign-in finishes) lists the new app's tools instead of waiting a day for the cache.
       await db.execute(sql`
         update public.integrations set config = jsonb_set(config, '{toolkits}', (
           select to_jsonb(array(select distinct x from jsonb_array_elements_text(coalesce(config -> 'toolkits', '[]'::jsonb) || to_jsonb(${slug}::text)) x)))
-        ) where id = ${row?.id}::uuid`);
+        ), tools_cached_at = null where id = ${row?.id}::uuid`);
       const [irow] = await db
         .select()
         .from(integrations)
@@ -700,7 +702,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
       const list = new Set([...((config[key] as string[]) ?? []), slug]);
       await db
         .update(integrations)
-        .set({ config: { ...config, [key]: [...list] } })
+        .set({ config: { ...config, [key]: [...list] }, toolsCachedAt: null })
         .where(eq(integrations.id, id));
       return c.json(out, 200);
     } catch (err) {

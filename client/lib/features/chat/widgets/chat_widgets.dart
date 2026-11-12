@@ -24,6 +24,7 @@ import '../media/attachment_view.dart';
 import 'chat_markdown.dart';
 import 'message_actions.dart';
 import 'shared_files.dart';
+import '../../../ui/action_buttons.dart';
 import '../../../ui/glow_button.dart';
 import '../../devices/device_labels.dart';
 import '../../../ui/effects.dart';
@@ -43,9 +44,15 @@ class UserBubble extends StatelessWidget {
     this.siblingCount = 1,
     this.onBranch,
     this.uploading = false,
+    this.onResend,
+    this.onDiscard,
   });
   final String text;
   final List<AttachmentRef> attachments;
+
+  /// Set when the message didn't reach the server: "Not sent" with Try Again and Remove.
+  final VoidCallback? onResend;
+  final VoidCallback? onDiscard;
 
   /// Sent while its files upload: a quiet note says so until they are up.
   final bool uploading;
@@ -90,7 +97,38 @@ class UserBubble extends StatelessWidget {
             ],
           )
         : null;
-    final note = uploading
+    final scheme = context.colorScheme;
+    final note = onResend != null
+        ? Padding(
+            key: const Key('notSentNote'),
+            padding: const EdgeInsets.only(top: 2),
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Icon(LucideIcons.circleAlert, size: 14, color: scheme.error),
+                const SizedBox(width: 4),
+                Text(context.l10n.notSent, style: context.textTheme.labelSmall?.copyWith(color: scheme.error, fontWeight: FontWeight.w600)),
+                TextButton.icon(
+                  key: const Key('resendMessage'),
+                  style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                  onPressed: onResend,
+                  icon: const Icon(LucideIcons.rotateCw, size: 14),
+                  label: Text(context.l10n.retry),
+                ),
+                if (onDiscard != null)
+                  IconButton(
+                    key: const Key('discardMessage'),
+                    visualDensity: VisualDensity.compact,
+                    iconSize: 16,
+                    tooltip: context.l10n.remove,
+                    onPressed: onDiscard,
+                    icon: Icon(LucideIcons.x, color: scheme.onSurfaceVariant),
+                  ),
+              ],
+            ),
+          )
+        : uploading
         ? Padding(
             key: const Key('uploadingNote'),
             padding: const EdgeInsets.only(top: 4, right: 4),
@@ -143,6 +181,7 @@ class UserBubble extends StatelessWidget {
           child: MessageActions(
             text: text,
             onEdit: onEdit,
+            alignEnd: true,
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: Color.alphaBlend(
@@ -890,9 +929,12 @@ class _TechnicalDetailsState extends State<_TechnicalDetails> {
           alignment: Alignment.centerLeft,
           child: TextButton.icon(
             key: const Key('approvalDetails'),
+            // No side padding, so the chevron lines up with the text above it.
             style: TextButton.styleFrom(
               visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(0, 36),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             onPressed: () => setState(() => _open = !_open),
             icon: AnimatedRotation(
@@ -1265,17 +1307,8 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
           _TechnicalDetails(tool: e.tool, args: e.args),
         ],
       ),
-      footer: Wrap(
-        alignment: WrapAlignment.end,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: AppSpace.xs,
-        runSpacing: AppSpace.xs,
-        children: [
-          TextButton(
-            onPressed: _busy ? null : () => _decide(true, always: true),
-            style: TextButton.styleFrom(foregroundColor: muted),
-            child: Text(l10n.alwaysAllow),
-          ),
+      footer: ActionButtons(
+        actions: [
           OutlinedButton(
             key: const Key('chatDeny'),
             onPressed: _busy ? null : () => _decide(false),
@@ -1285,6 +1318,17 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
             key: const Key('chatApprove'),
             onPressed: _busy ? null : () => _decide(true),
             child: Text(l10n.allow),
+          ),
+        ],
+        extra: [
+          TextButton(
+            key: const Key('chatAlwaysAllow'),
+            onPressed: _busy ? null : () => _decide(true, always: true),
+            style: TextButton.styleFrom(
+              foregroundColor: muted,
+              visualDensity: VisualDensity.compact,
+            ),
+            child: Text(l10n.alwaysAllow),
           ),
         ],
       ),
@@ -1331,29 +1375,16 @@ class TakeoverPrompt extends StatelessWidget {
         entry.reason,
         style: context.textTheme.bodyMedium?.copyWith(height: 1.4),
       ),
-      footer: entry.outcome != null
-          ? _Outcome(
-              text: switch (entry.outcome) {
-                'completed' => l10n.takeoverCompleted,
-                'dismissed' => l10n.takeoverDismissed,
-                _ => l10n.expired,
-              },
-              color: entry.outcome == 'completed'
-                  ? colors.positive
-                  : context.colorScheme.onSurfaceVariant,
-              icon: entry.outcome == 'completed'
-                  ? LucideIcons.circleCheck
-                  : LucideIcons.circleMinus,
-            )
-          : Align(
-              alignment: Alignment.centerRight,
-              child: GlowButton.icon(
-                key: const Key('chatTakeControl'),
-                onPressed: onOpen,
-                icon: const Icon(LucideIcons.monitorPlay, size: 18),
-                label: Text(l10n.takeControl),
-              ),
-            ),
+      footer: ActionButtons(
+        actions: [
+          GlowButton.icon(
+            key: const Key('chatTakeControl'),
+            onPressed: onOpen,
+            icon: const Icon(LucideIcons.monitorPlay, size: 18),
+            label: Text(l10n.takeControl),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1464,8 +1495,7 @@ class _SecretPromptState extends ConsumerState<SecretPrompt> {
               e.reason,
               style: context.textTheme.bodyMedium?.copyWith(height: 1.4),
             ),
-          if (outcome == null)
-            TextField(
+          TextField(
               key: const Key('secretValue'),
               controller: _value,
               obscureText: _obscure,
@@ -1502,37 +1532,21 @@ class _SecretPromptState extends ConsumerState<SecretPrompt> {
             ),
         ],
       ),
-      footer: outcome != null
-          ? _Outcome(
-              text: switch (outcome) {
-                'fulfilled' => l10n.secretSaved(e.name),
-                'declined' => l10n.secretDeclined,
-                _ => l10n.expired,
-              },
-              color: outcome == 'fulfilled'
-                  ? colors.positive
-                  : context.colorScheme.onSurfaceVariant,
-              icon: outcome == 'fulfilled'
-                  ? LucideIcons.circleCheck
-                  : LucideIcons.circleMinus,
-            )
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              spacing: AppSpace.sm,
-              children: [
-                TextButton(
-                  key: const Key('secretDecline'),
-                  onPressed: _busy ? null : () => _answer(false),
-                  child: Text(l10n.decline),
-                ),
-                GlowButton.icon(
-                  key: const Key('secretSave'),
-                  onPressed: _busy ? null : () => _answer(true),
-                  icon: const Icon(LucideIcons.lock, size: 18),
-                  label: Text(l10n.save),
-                ),
-              ],
-            ),
+      footer: ActionButtons(
+        actions: [
+          OutlinedButton(
+            key: const Key('secretDecline'),
+            onPressed: _busy ? null : () => _answer(false),
+            child: Text(l10n.decline),
+          ),
+          GlowButton.icon(
+            key: const Key('secretSave'),
+            onPressed: _busy ? null : () => _answer(true),
+            icon: const Icon(LucideIcons.lock, size: 18),
+            label: Text(l10n.save),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1615,23 +1629,9 @@ class _DeviceAccessPromptState extends ConsumerState<DeviceAccessPrompt> {
               e.reason,
               style: context.textTheme.bodyMedium?.copyWith(height: 1.4),
             ),
-      footer: _allowed != null
-          ? _Outcome(
-              text: _allowed!
-                  ? l10n.deviceAccessAllowed(what)
-                  : l10n.deviceAccessSkipped,
-              color: _allowed!
-                  ? colors.positive
-                  : context.colorScheme.onSurfaceVariant,
-              icon: _allowed!
-                  ? LucideIcons.circleCheck
-                  : LucideIcons.circleMinus,
-            )
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              spacing: AppSpace.sm,
-              children: [
-                TextButton(
+      footer: ActionButtons(
+              actions: [
+                OutlinedButton(
                   key: const Key('deviceAccessSkip'),
                   onPressed: _busy ? null : () => _answer(false),
                   child: Text(l10n.notNow),

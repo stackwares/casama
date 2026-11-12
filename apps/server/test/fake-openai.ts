@@ -45,6 +45,8 @@ export interface FakeOpenAI {
     script: ScriptedResponse[];
     /** Make every refresh token unusable (the person disconnected the app in ChatGPT). */
     killRefresh: boolean;
+    /** Refuse the next code exchange with invalid_grant (the client stays issued). */
+    failNextExchange: boolean;
   };
   stop(): Promise<void>;
 }
@@ -85,6 +87,7 @@ export async function startFakeOpenAI(): Promise<FakeOpenAI> {
     responsesBodies: [],
     script: [],
     killRefresh: false,
+    failNextExchange: false,
   };
 
   const issue = async (clientId: string, plan: boolean, nonce?: string) => {
@@ -177,6 +180,10 @@ export async function startFakeOpenAI(): Promise<FakeOpenAI> {
               .update(form.get("code_verifier") ?? "")
               .digest(),
           );
+          if (state.failNextExchange) {
+            state.failNextExchange = false;
+            return json(res, 400, { error: "invalid_grant" });
+          }
           if (
             !c ||
             c.clientId !== form.get("client_id") ||

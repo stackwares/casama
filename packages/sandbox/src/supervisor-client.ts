@@ -1,3 +1,4 @@
+import { fetchThumbnail } from "./computerd-client.ts";
 import { ndjson } from "./ndjson.ts";
 import {
   type CheckpointRef,
@@ -162,6 +163,12 @@ export class SupervisorProvider implements SandboxProvider {
       },
       screenshot: async () =>
         new Uint8Array(await (await self.call(`${base}/screenshot`)).arrayBuffer()),
+      // The supervisor answers 409 when the computer isn't running; it never starts one for this.
+      thumbnail: (p, size) =>
+        fetchThumbnail(
+          `${self.baseUrl}${base}/files/thumbnail?path=${encodeURIComponent(p)}&size=${size}`,
+          self.authHeaders,
+        ),
       input: async (e: InputEvent) => void (await self.json(`${base}/input`, "POST", e)),
       setMcpServers: async (servers) =>
         void (await self.json(`${base}/mcp-servers`, "PUT", servers)),

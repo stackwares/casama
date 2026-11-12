@@ -32,6 +32,12 @@ async function mockVoiceProviders() {
         res.writeHead(200, { "content-type": "audio/mpeg" });
         return res.end(Buffer.from("ID3-fake-mp3"));
       }
+      if (path.endsWith(":generateContent"))
+        return json({
+          candidates: [
+            { content: { parts: [{ inlineData: { data: Buffer.alloc(48).toString("base64") } }] } },
+          ],
+        });
       if (path === "/v1beta/auth_tokens") return json({ name: "auth_tokens/gemini-test-token" });
       if (path === "/v1/realtime/client_secrets")
         return json({
@@ -127,5 +133,19 @@ describe("live calls on the server's key", () => {
       sql`select billable from public.usage_ledger where org_id = ${w.orgId}::uuid and kind = 'voice_seconds'`,
     );
     expect(row?.billable).toBe(false);
+
+    // Read-aloud uses the same key with Gemini when the workspace has no voice key of its own.
+    const [conv] = await h.handle.db.execute<{ id: string }>(
+      sql`select id from public.conversations where org_id = ${w.orgId}::uuid limit 1`,
+    );
+    const [m] = await h.handle.db.execute<{ id: string }>(sql`
+      insert into public.messages (org_id, conversation_id, role, content)
+      values (${w.orgId}::uuid, ${conv?.id}::uuid, 'assistant', '[{"type":"text","text":"Water the fern."}]'::jsonb)
+      returning id`);
+    const speech = await h.request(`/v1/messages/${m?.id}/speech`, { token: w.owner.token });
+    expect(speech.status).toBe(200);
+    expect(
+      mock.calls.findLast((c) => c.path.endsWith(":generateContent"))?.headers["x-goog-api-key"],
+    ).toBe("server-gemini-key");
   }, 120_000);
 });

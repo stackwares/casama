@@ -67,4 +67,20 @@ void main() {
       });
     },
   );
+
+  testWidgets('voice providers the server covers have no picker; the rest still do', (tester) async {
+    await setSize(tester, const Size(700, 1400));
+    final backend = FakeBackend()..serverVoice = {'live', 'read_aloud'};
+    await tester.pumpWidget(harness(backend, const Scaffold(body: VoiceSettingsDialog(botId: botId))));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('ttsProvider')), findsNothing);
+    expect(find.byKey(const Key('sttProvider')), findsOneWidget);
+    expect(find.textContaining('This server provides voice'), findsOneWidget);
+
+    final none = FakeBackend();
+    await tester.pumpWidget(harness(none, const Scaffold(body: VoiceSettingsDialog(botId: botId))));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('ttsProvider')), findsOneWidget);
+    expect(find.textContaining('This server provides voice'), findsNothing);
+  });
 }

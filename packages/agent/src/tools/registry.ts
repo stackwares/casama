@@ -53,8 +53,17 @@ export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
   alwaysAsk?: boolean;
   /** Risk that depends on the arguments (overrides `risk`). */
   riskFor?: (args: z.infer<S>) => Risk;
-  /** The output is untrusted (web pages, outside services): later medium-risk calls need approval. */
+  /**
+   * The output is untrusted (web pages, outside services): under the default autonomy, later
+   * medium-risk calls that send data out need approval.
+   */
   untrustedOutput?: boolean;
+  /**
+   * Sends data out of Casama (D-213): after untrusted content, a medium-risk call asks first under the
+   * default autonomy. `sendsOutFor` decides from the arguments (for example only writing requests).
+   */
+  sendsOut?: boolean;
+  sendsOutFor?: (args: z.infer<S>) => boolean;
   /**
    * Acts on the screen (browser or desktop). Waits while a person has control of the computer;
    * shell and file tools wait too unless the person allowed them.

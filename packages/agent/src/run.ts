@@ -338,10 +338,12 @@ export function partsText(content: unknown): string {
     }
   }
   // Media the bot generated and showed under its reply (D-205): kept in the chat, not on a
-  // computer, so it's a note rather than a file to open.
+  // computer, so it's a note with the id tools take, rather than a file to open.
   for (const f of partsFiles(content))
     if (f.path.startsWith("media:"))
-      notes.push(`(You showed the person a generated ${f.mime_type || "file"}: ${f.name}.)`);
+      notes.push(
+        `(You showed the person a generated ${f.mime_type || "file"}: ${f.name}, ${f.path}.)`,
+      );
   const withNotes = [text, ...notes].filter(Boolean).join("\n\n");
   const files = partsFiles(content).filter((f) => !f.path.startsWith("media:"));
   if (!files.length) return withNotes;
@@ -552,6 +554,32 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           return row?.kind === "team" ? await teamFolder(db, info.botId).catch(() => null) : null;
         })
       : null;
+    // The person's own computer (D-066): describe it as it is, not as a cloud Linux computer.
+    const localComputer = deps.computers
+      ? await step("computer-local", async () => {
+          const row = await deps.computers?.forBot(info.botId).catch(() => null);
+          if (row?.kind !== "local") return null;
+          const [dev] = await db.execute<{
+            platform: "macos" | "windows" | "linux";
+            capabilities: Record<string, boolean>;
+            allowed_roots: string[];
+          }>(sql`
+            select platform, capabilities, allowed_roots from public.local_devices
+            where computer_id = ${row.id}::uuid limit 1`);
+          if (!dev) return null;
+          const broken = await db.execute<{ label: string }>(sql`
+            select coalesce(i.config ->> 'label', i.name) as label
+            from public.bot_integrations bi join public.integrations i on i.id = bi.integration_id
+            where bi.bot_id = ${info.botId}::uuid and i.kind = 'local_mcp' and i.status = 'error'
+              and i.config ->> 'computer_id' = ${row.id}`);
+          return {
+            platform: dev.platform,
+            capabilities: dev.capabilities ?? {},
+            roots: dev.allowed_roots ?? [],
+            unreachableTools: broken.map((b) => b.label),
+          };
+        })
+      : null;
     const available = registry.available(
       { computer: !!deps.computers, desktop, vision: caps.vision },
       allowed ? (name) => allowed.some((a) => name === a || name.startsWith(`${a}.`)) : undefined,
@@ -697,6 +725,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         contextWindow: caps.contextWindow,
         computer: !!deps.computers,
         teamFolder: folder ?? undefined,
+        localComputer: localComputer ?? undefined,
         routine: info.routine ? { id: info.routine.id, name: info.routine.name } : undefined,
         person,
       });
@@ -736,6 +765,42 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         return { status: "cancelled" };
       }
       if (check !== "ok") {
+        // Out of steps or time in a chat: one last turn without tools, so the person hears where it
+        // got to and what's blocking it instead of a bot that just stops answering.
+        if (
+          info.conversationId &&
+          (check.code === "max_steps_exceeded" || check.code === "wall_time_exceeded")
+        ) {
+          const wrap = await step("wrap-up", () =>
+            modelStep(
+              deps,
+              info,
+              i,
+              {
+                system: ctx.system,
+                messages: [
+                  ...ctx.messages,
+                  ...turn,
+                  {
+                    role: "user",
+                    content:
+                      "[Casama: this run has reached its limit and can't use any more tools. Without calling tools, tell the person in a few short lines what you got done, what's blocking you (for example a tool your computer doesn't have), and what you suggest next. Don't claim anything you didn't finish.]",
+                  },
+                ],
+                tools: [],
+                resolveName: (wire) => registry.resolveWire(wire),
+              },
+              chainFor,
+              bus,
+              redactor,
+            ).catch(() => null),
+          );
+          if (wrap && !wrap.cancelled && wrap.text.trim()) {
+            const done = { text: wrap.text, messageId: wrap.messageId };
+            const after = lastSaid;
+            await step("wrap-up-save", () => saveFinalMessage(db, info, done, bus, after));
+          }
+        }
         await step("limit", () => finishFailed(db, info, check, bus));
         return { status: "failed" };
       }
@@ -1397,13 +1462,74 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
           )
           .join("\n\n")}`;
     }
-    history = (idx >= 0 ? msgs.slice(0, idx) : msgs)
-      .map((m) =>
-        fromBot(m)
-          ? { role: "user" as const, content: asChat(m, partsText(m.content)) }
-          : { role: m.role as "user" | "assistant", content: partsText(m.content) },
-      )
+    // Earlier requests the person stopped, or that ended without a reply: without this note the
+    // model sees an unanswered request and picks it back up on the next message, so a stopped bot
+    // seems impossible to stop.
+    const earlier = idx >= 0 ? msgs.slice(0, idx) : msgs;
+    const runIds = [
+      ...new Set(
+        earlier
+          .filter((m) => m.role === "user" && m.run_id && m.run_id !== runId)
+          .map((m) => m.run_id as string),
+      ),
+    ];
+    const ended = new Map<string, string>();
+    if (runIds.length) {
+      const rows = await db.execute<{ id: string; stopped: boolean; error: string | null }>(sql`
+        select r.id, r.cancel_requested_at is not null or r.status = 'cancelled' as stopped,
+               case when r.status = 'failed' and not exists (
+                 select 1 from public.messages a where a.run_id = r.id and a.role = 'assistant')
+               then coalesce(r.error ->> 'message', 'it failed') end as error
+        from public.runs r
+        where r.id in (select jsonb_array_elements_text(${JSON.stringify(runIds)}::jsonb)::uuid)`);
+      for (const r of rows) {
+        if (r.stopped)
+          ended.set(
+            r.id,
+            "[The person stopped your work on this before you replied. Don't pick it back up unless they ask again.]",
+          );
+        else if (r.error)
+          ended.set(
+            r.id,
+            `[Your work on this ended without a reply (${r.error}). Don't silently retry the same approach; if it comes up, say what blocked you.]`,
+          );
+      }
+    }
+    history = earlier
+      .map((m) => {
+        if (fromBot(m)) return { role: "user" as const, content: asChat(m, partsText(m.content)) };
+        const text = partsText(m.content);
+        const note = m.role === "user" && m.run_id ? ended.get(m.run_id) : undefined;
+        return {
+          role: m.role as "user" | "assistant",
+          content: note && text ? `${text}\n\n${note}` : text,
+        };
+      })
       .filter((m) => m.content.length > 0);
+  }
+  // Work this bot is doing in other chats right now: asked "are you working on it?" from another chat,
+  // it can say so instead of claiming it's idle.
+  if (current && row.conversation_id) {
+    const busy = await db.execute<{ title: string | null; ask: string | null; started: Date }>(sql`
+      select c.title, (select left(m.content -> 0 ->> 'text', 120) from public.messages m
+                       where m.run_id = r.id and m.role = 'user' order by m.created_at limit 1) as ask,
+             coalesce(r.started_at, r.created_at) as started
+      from public.runs r left join public.conversations c on c.id = r.conversation_id
+      where r.bot_id = ${row.bot_id}::uuid and r.id <> ${runId}::uuid
+        and r.status in ('queued', 'running', 'waiting_approval', 'waiting_takeover')
+        and r.cancel_requested_at is null
+        and r.conversation_id is distinct from ${row.conversation_id}::uuid
+        and r.created_at > now() - interval '6 hours'
+      order by r.created_at desc limit 3`);
+    if (busy.length)
+      current.text += `\n\n[Casama: you're also working in ${busy.length === 1 ? "another chat" : "other chats"} right now: ${busy
+        .map(
+          (b) =>
+            `${b.title ? `"${b.title}"` : "a chat"}${b.ask ? ` (on: ${b.ask.replace(/\s+/g, " ")})` : ""}, started ${Math.max(1, Math.round((Date.now() - new Date(b.started).getTime()) / 60_000))} min ago`,
+        )
+        .join(
+          "; ",
+        )}. If asked what you're doing, say so; you can't see that work's progress from here.]`;
   }
   // Subagent runs carry their task in the run's budget instead of a conversation message.
   const task = typeof row.run_budget?.task === "string" ? (row.run_budget.task as string) : null;
@@ -2672,6 +2798,7 @@ async function approvalGate(
       selfOnly: def.selfOnly === true,
       confirmUnderDefault: def.confirm === true,
       untrustedSinceApproval: untrusted,
+      sendsOut: def.sendsOutFor?.(args as never) ?? def.sendsOut === true,
       granted: !!grant,
       forceHighRisk: onLocal,
     });
@@ -2957,6 +3084,8 @@ function integrationDefs(
     description: `[${spec.kind}:${spec.integration}] ${spec.description}`,
     risk: spec.risk,
     untrustedOutput: true,
+    // Connected apps (MCP, OpenAPI, other agents) are outside Casama: their write tools send data out.
+    sendsOut: true,
     jsonSchema: { type: "object", ...spec.inputSchema },
     schema: z.record(z.string(), z.unknown()),
     async execute(args: Record<string, unknown>, ctx) {

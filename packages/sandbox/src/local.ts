@@ -84,12 +84,17 @@ export class LocalProvider implements SandboxProvider {
 
   async destroy() {}
 
-  handle(ref: string, activity?: Activity): SandboxHandle {
+  /**
+   * viewer: the person a call is made for when no bot is acting. The tunnel lets only the device's
+   * owner through, and only for thumbnails (D-226).
+   */
+  handle(ref: string, activity?: Activity, viewer?: string): SandboxHandle {
     const headers: Record<string, string> = {
       "x-casama-internal": this.opts.internalToken,
       ...(activity
         ? { "x-casama-activity": Buffer.from(JSON.stringify(activity)).toString("base64") }
         : {}),
+      ...(viewer ? { "x-casama-viewer": viewer } : {}),
     };
     // The tunnel authenticates to the device's computerd itself; this token is unused there.
     const c = new ComputerdClient(
@@ -115,6 +120,7 @@ export class LocalProvider implements SandboxProvider {
       search: (q, p) => c.search(q, p),
       enableDesktop: async () => {},
       screenshot: () => c.screenshot(),
+      thumbnail: (p, size) => c.thumbnail(p, size),
       input: (e: InputEvent) => c.input(e),
       streamEndpoint: unsupported("Live view"),
       stopStream: async () => {},
@@ -123,6 +129,7 @@ export class LocalProvider implements SandboxProvider {
       restore: unsupported("Checkpoints"),
       health: () => c.health(),
       withActivity: (a) => this.handle(ref, a),
+      forViewer: (userId) => this.handle(ref, undefined, userId),
     };
   }
 }

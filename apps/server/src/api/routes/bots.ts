@@ -104,7 +104,8 @@ export function messagePreview(
 }
 
 type ConvRow = typeof conversations.$inferSelect;
-const convOut = (c: ConvRow, botIds: string[] = []) => ({
+const convOut = (c: ConvRow, botIds: string[] = [], canDelete?: boolean) => ({
+  ...(canDelete === undefined ? {} : { can_delete: canDelete }),
   id: c.id,
   bot_id: c.botId,
   title: c.title,
@@ -493,7 +494,91 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       return row ? { row, ids } : undefined;
     });
     if (!conv) throw new Error("conversation insert returned nothing");
-    return c.json(convOut(conv.row, conv.ids), 201);
+    return c.json(convOut(conv.row, conv.ids, true), 201);
+  });
+
+  // Deleting chats: the database lets the person who started one, or a manager of its bot, delete
+  // it (conversations_delete); messages and attachments go with it, runs and pages stay unlinked.
+  const ACTIVE_RUN = sql`('queued', 'running', 'waiting_approval', 'waiting_takeover')`;
+  const busyIds = async (ids: string[]) => {
+    if (!ids.length) return new Set<string>();
+    const rows = await db.execute<{ id: string }>(sql`
+      select distinct conversation_id as id from public.runs
+      where status in ${ACTIVE_RUN}
+        and conversation_id in (select jsonb_array_elements_text(${JSON.stringify(ids)}::jsonb)::uuid)`);
+    return new Set(rows.map((r) => r.id));
+  };
+  /** Removes the chat's photos and recordings, which aren't tied to it by a foreign key. */
+  const dropMedia = (ids: string[]) =>
+    ids.length
+      ? db.execute(sql`delete from public.chat_media
+          where conversation_id in (select jsonb_array_elements_text(${JSON.stringify(ids)}::jsonb)::uuid)`)
+      : Promise.resolve();
+
+  app.openapi(routes.deleteConversation, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const conv = await withUserSession(db, claims, async (tx) => {
+      const [row] = await tx.select().from(conversations).where(eq(conversations.id, id));
+      if (!row) throw new ApiError(404, "conversation_not_found", "Conversation not found");
+      if ((await busyIds([id])).size)
+        throw new ApiError(
+          409,
+          "conversation_busy",
+          "The bot is still working in this chat. Stop it first, then delete the chat.",
+        );
+      const gone = await tx
+        .delete(conversations)
+        .where(eq(conversations.id, id))
+        .returning({ id: conversations.id });
+      if (!gone.length)
+        throw new ApiError(
+          403,
+          "forbidden",
+          "Only the person who started this chat or someone who manages the bot can delete it",
+        );
+      return row;
+    });
+    await dropMedia([id]);
+    await audit(conv.orgId, claims.sub, "conversation.deleted", "conversation", id, {
+      bot_id: conv.botId,
+      kind: conv.kind,
+    });
+    return c.json({ deleted: id }, 200);
+  });
+
+  app.openapi(routes.deleteBotConversations, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const out = await withUserSession(db, claims, async (tx) => {
+      const [bot] = await tx
+        .select({ id: bots.id, orgId: bots.orgId })
+        .from(bots)
+        .where(eq(bots.id, id));
+      if (!bot) throw new ApiError(404, "bot_not_found", "Bot not found");
+      const rows = await tx
+        .select({ id: conversations.id })
+        .from(conversations)
+        .where(and(eq(conversations.botId, id), eq(conversations.kind, "direct")));
+      const busy = await busyIds(rows.map((r) => r.id));
+      const candidates = rows.map((r) => r.id).filter((r) => !busy.has(r));
+      // RLS keeps only the ones this person may delete.
+      const gone = candidates.length
+        ? await tx
+            .delete(conversations)
+            .where(
+              sql`${conversations.id} in (select jsonb_array_elements_text(${JSON.stringify(candidates)}::jsonb)::uuid)`,
+            )
+            .returning({ id: conversations.id })
+        : [];
+      return { orgId: bot.orgId, ids: gone.map((g) => g.id), skipped: busy.size };
+    });
+    await dropMedia(out.ids);
+    if (out.ids.length)
+      await audit(out.orgId, claims.sub, "conversation.deleted_all", "bot", id, {
+        count: out.ids.length,
+      });
+    return c.json({ deleted: out.ids.length, skipped: out.skipped }, 200);
   });
 
   app.openapi(routes.listConversations, async (c) => {
@@ -502,14 +587,23 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const rows = await withUserSession(db, claims, async (tx) => {
       const [bot] = await tx.select({ id: bots.id }).from(bots).where(eq(bots.id, id));
       if (!bot) throw new ApiError(404, "bot_not_found", "Bot not found");
-      return tx
+      const [m] = await tx.execute<{ ok: boolean }>(
+        sql`select public.can_manage_bot(${id}::uuid) as ok`,
+      );
+      const list = await tx
         .select()
         .from(conversations)
         .where(and(eq(conversations.botId, id), eq(conversations.kind, "direct")))
         .orderBy(desc(sql`coalesce(${conversations.lastMessageAt}, ${conversations.createdAt})`))
         .limit(100);
+      return { list, manage: !!m?.ok };
     });
-    return c.json({ items: rows.map((r) => convOut(r)) }, 200);
+    return c.json(
+      {
+        items: rows.list.map((r) => convOut(r, [], rows.manage || r.createdBy === claims.sub)),
+      },
+      200,
+    );
   });
 
   app.openapi(routes.listGroupChats, async (c) => {
@@ -528,10 +622,17 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
             where conversation_id in (select jsonb_array_elements_text(${JSON.stringify(rows.map((r) => r.id))}::jsonb)::uuid)
             order by position`)
         : [];
+      const leads = [...new Set(rows.map((r) => r.botId))];
+      const managed = leads.length
+        ? await tx.execute<{ id: string }>(sql`
+            select id from unnest(${`{${leads.join(",")}}`}::uuid[]) as id where public.can_manage_bot(id)`)
+        : [];
+      const manages = new Set(managed.map((m) => m.id));
       return rows.map((r) =>
         convOut(
           r,
           members.filter((m) => m.conversation_id === r.id).map((m) => m.bot_id),
+          manages.has(r.botId) || r.createdBy === claims.sub,
         ),
       );
     });

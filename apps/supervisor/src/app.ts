@@ -158,6 +158,17 @@ export function createSupervisorApp(
     await (await running(c.req.param("ref"), c)).deleteFile(c.req.query("path") ?? "");
     return c.json({ ok: true });
   });
+  // Thumbnails (D-226): only from a computer that is already running (409 otherwise).
+  app.get("/computers/:ref/files/thumbnail", async (c) => {
+    const h = await running(c.req.param("ref"), c);
+    const t = await h.thumbnail?.(c.req.query("path") ?? "", Number(c.req.query("size") ?? 480));
+    if (!t) return c.json({ code: "no_thumbnail", message: "No thumbnail for this file" }, 404);
+    return c.body(Buffer.from(t.data), 200, {
+      "content-type": t.contentType,
+      ...(t.mtimeMs !== undefined ? { "x-file-mtime": String(t.mtimeMs) } : {}),
+      ...(t.durationMs !== undefined ? { "x-duration-ms": String(t.durationMs) } : {}),
+    });
+  });
   app.get("/computers/:ref/files/list", async (c) =>
     c.json({
       entries: await (await running(c.req.param("ref"), c)).listDir(c.req.query("path") ?? ""),

@@ -136,6 +136,49 @@ export const computerFilePdfPreview = createRoute({
   },
 });
 
+/**
+ * Thumbnails of videos, images and PDFs (D-226), made and cached on the computer. Only from a
+ * computer that is already running (or a personal computer that is connected): asking never
+ * starts or wakes one, so a chat full of videos costs nothing while the computer sleeps.
+ */
+export const computerFileThumbnail = createRoute({
+  operationId: "computerFileThumbnail",
+  method: "get",
+  path: "/v1/computers/{id}/files/thumbnail",
+  tags: ["computers"],
+  security,
+  summary: "A small JPEG or PNG of a video's first frame, an image or a PDF's first page",
+  request: {
+    params: idParam,
+    query: z.object({
+      path: z.string().min(1).max(4000),
+      /** The longest side in pixels; clamped to 128–640. */
+      size: z.coerce.number().int().optional().openapi({ example: 480 }),
+    }),
+  },
+  responses: {
+    200: {
+      description:
+        "The thumbnail. `x-duration-ms` carries a video's length and `x-file-mtime` the file's modified time (ms) when known.",
+      content: {
+        "image/jpeg": { schema: z.string().openapi({ format: "binary" }) },
+        "image/png": { schema: z.string().openapi({ format: "binary" }) },
+      },
+    },
+    401: e401,
+    404: {
+      description:
+        "No thumbnail for this file (missing, unsupported, or the computer can't make one)",
+      content: { "application/problem+json": { schema: Problem } },
+    },
+    409: {
+      description:
+        "The computer is asleep, stopped or offline (thumbnail_unavailable); it isn't woken",
+      content: { "application/problem+json": { schema: Problem } },
+    },
+  },
+});
+
 export const uploadComputerFile = createRoute({
   operationId: "uploadComputerFile",
   method: "put",

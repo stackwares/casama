@@ -633,7 +633,11 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       tx.select().from(integrations).where(eq(integrations.id, id)),
     );
     if (!row) throw new ApiError(404, "integration_not_found", "Integration not found");
-    if (!(await isAdmin(db, claims, row.orgId)))
+    // A local MCP server runs on someone's own computer: they can test it without being an admin.
+    const ownLocal =
+      row.kind === "local_mcp" &&
+      (row.config as Record<string, unknown>)?.owner_user_id === claims.sub;
+    if (!ownLocal && !(await isAdmin(db, claims, row.orgId)))
       throw new ApiError(403, "forbidden", "Only owners and admins can test integrations");
     return c.json(await deps.workflows.testIntegration(id), 200);
   });

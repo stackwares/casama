@@ -422,6 +422,10 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final cloud = ref.watch(billingProvider).value?.enabled == true;
+    // The server's own keys cover these, as on Casama Cloud, so there's nothing to choose.
+    final serverVoice = ref.watch(backendProvider).serverVoice;
+    final fixedTts = cloud || serverVoice.contains('read_aloud');
+    final fixedStt = cloud || serverVoice.contains('dictation');
     String label(String p) => switch (p) {
       'google' => 'Google',
       'elevenlabs' => 'ElevenLabs',
@@ -444,8 +448,13 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpace.md),
             child: Text(l10n.casamaCloudModelLocked),
+          )
+        else if (fixedTts || fixedStt)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpace.md),
+            child: Text(l10n.serverVoiceSetUp),
           ),
-        if (!cloud)
+        if (!fixedTts)
         DropdownButtonFormField<String?>(
           isExpanded: true,
           key: const Key('ttsProvider'),
@@ -461,7 +470,7 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
           controller: _voice,
           decoration: InputDecoration(labelText: l10n.voiceId, helperText: l10n.voiceIdHelp, prefixIcon: const Icon(LucideIcons.audioLines, size: 20)),
         ),
-        if (!cloud)
+        if (!fixedStt)
         DropdownButtonFormField<String?>(
           isExpanded: true,
           key: const Key('sttProvider'),

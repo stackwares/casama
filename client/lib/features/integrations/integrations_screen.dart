@@ -164,7 +164,11 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
   void initState() {
     super.initState();
     _lifecycle = AppLifecycleListener(
-      onResume: () => ref.invalidate(integrationsProvider),
+      onResume: () {
+        ref.invalidate(integrationsProvider);
+        // A hub's page lists its apps' sign-ins; one may have finished in the browser.
+        ref.invalidate(providerAccountsProvider);
+      },
     );
     // hubAppsProvider follows integrationsProvider, so it refreshes with it.
   }
@@ -387,7 +391,9 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
         SectionHeader(title: l10n.popularApps),
         PageBleed(
           child: SizedBox(
-            height: 204,
+            // Phones get smaller cards so the row doesn't take half the screen.
+            // The text lines (about 50 px at normal size) grow with the person's text size.
+            height: (_FeaturedApp.compact(context) ? 90 : 154) + MediaQuery.textScalerOf(context).scale(50),
             child: EdgeFade(
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
@@ -496,17 +502,20 @@ class _FeaturedApp extends StatelessWidget {
   final bool connected;
   final VoidCallback onTap;
 
+  static bool compact(BuildContext context) => AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
+
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     final brand = brandColor(app.color, scheme.primary);
     final dark = context.isDark;
+    final small = compact(context);
     return SizedBox(
-      width: 220,
+      width: small ? 160 : 220,
       child: Material(
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(small ? 18 : 22),
           side: BorderSide(color: context.appColors.hairline),
         ),
         color: dark ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
@@ -524,7 +533,7 @@ class _FeaturedApp extends StatelessWidget {
                 ],
               ),
             ),
-            padding: const EdgeInsets.all(AppSpace.md),
+            padding: EdgeInsets.all(small ? AppSpace.sm + 4 : AppSpace.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -534,24 +543,29 @@ class _FeaturedApp extends StatelessWidget {
                       appId: app.id,
                       name: app.name,
                       color: app.color,
-                      size: 48,
+                      size: small ? 36 : 48,
                     ),
                     const Spacer(),
                     if (connected) const _ConnectedBadge(),
                   ],
                 ),
                 const Spacer(),
-                Text(app.name, style: context.textTheme.titleMedium),
+                Text(
+                  app.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: small ? context.textTheme.titleSmall : context.textTheme.titleMedium,
+                ),
                 const SizedBox(height: 2),
                 Text(
                   app.description,
-                  maxLines: 2,
+                  maxLines: small ? 1 : 2,
                   overflow: TextOverflow.ellipsis,
                   style: context.textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: AppSpace.sm),
+                SizedBox(height: small ? AppSpace.xs + 2 : AppSpace.sm),
                 Row(
                   children: [
                     Icon(
@@ -566,11 +580,15 @@ class _FeaturedApp extends StatelessWidget {
                       color: brand,
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      _authLabel(context, app),
-                      style: context.textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
+                    Flexible(
+                      child: Text(
+                        _authLabel(context, app),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.textTheme.labelSmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],

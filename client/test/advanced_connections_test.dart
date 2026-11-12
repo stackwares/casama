@@ -8,6 +8,7 @@ import 'package:casama_app/features/devices/device_connections_screen.dart';
 import 'package:casama_app/features/devices/device_sync.dart';
 import 'package:casama_app/features/integrations/integration_detail_screen.dart';
 import 'package:casama_app/features/integrations/integrations_screen.dart';
+import 'package:casama_app/features/integrations/provider_setup.dart';
 import 'package:casama_app/features/settings/model_keys_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -103,6 +104,21 @@ void main() {
     final gmail = find.ancestor(of: find.text('Gmail'), matching: find.byType(InkWell)).first;
     await tester.scrollUntilVisible(gmail, 300, scrollable: _page);
     expect(find.descendant(of: gmail, matching: find.text('Connected')), findsOneWidget);
+  });
+
+  test("apps: a hub's page shows one row per app, a finished sign-in over earlier waiting ones", () {
+    ProviderAccount a(String app, ProviderAccountStatusEnum s) => ProviderAccount(app: app, status: s);
+    final rows = accountPerApp([
+      a('gmail', ProviderAccountStatusEnum.pending),
+      a('gmail', ProviderAccountStatusEnum.connected),
+      a('slack', ProviderAccountStatusEnum.error),
+      a('slack', ProviderAccountStatusEnum.pending),
+    ]);
+    expect({for (final r in rows) r.app: r.status}, {
+      'gmail': ProviderAccountStatusEnum.connected,
+      'slack': ProviderAccountStatusEnum.pending,
+    });
+    expect(connectedAccounts([a('gmail', ProviderAccountStatusEnum.pending)], 'gmail'), 0);
   });
 
   testWidgets('apps: a Composio connection with no apps yet still shows its own card', (tester) async {

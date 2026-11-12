@@ -135,6 +135,8 @@ import 'package:casama_api/src/model/delete_integration200_response.dart';
 import 'package:casama_api/src/model/delete_result.dart';
 import 'package:casama_api/src/model/deleted_channel.dart';
 import 'package:casama_api/src/model/deleted_computer.dart';
+import 'package:casama_api/src/model/deleted_conversation.dart';
+import 'package:casama_api/src/model/deleted_conversations.dart';
 import 'package:casama_api/src/model/deleted_device.dart';
 import 'package:casama_api/src/model/deleted_id.dart';
 import 'package:casama_api/src/model/deleted_knowledge_source.dart';
@@ -800,6 +802,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedChannel.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedComputer':
           return DeletedComputer.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedConversation':
+          return DeletedConversation.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedConversations':
+          return DeletedConversations.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedDevice':
           return DeletedDevice.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedId':

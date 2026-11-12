@@ -12,7 +12,7 @@ import { z } from "zod";
 import { actingUserOf, personForRun } from "../acting.ts";
 import { wrapUntrusted } from "../context.ts";
 import { sealRunPayload } from "../events.ts";
-import { MEDIA_PRICES, type MediaProvider, type MediaResult } from "../media.ts";
+import { MEDIA_PRICES, type MediaInput, type MediaProvider, type MediaResult } from "../media.ts";
 import type { NotificationService } from "../notifications.ts";
 import type { SearchProvider } from "../search.ts";
 import { startTicketWork } from "../tickets.ts";
@@ -86,6 +86,8 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     risk: "medium",
     acceptsSecrets: true,
     untrustedOutput: true,
+    // Writing requests send data out; reads don't ask after untrusted content (D-213).
+    sendsOutFor: (args) => args.method !== "GET" && args.method !== "HEAD",
     destinationHost: (args) => {
       try {
         return new URL(args.url).hostname;
@@ -765,6 +767,43 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     return path;
   }
 
+  /**
+   * A file the bot points at, for tools that take one as input: `media:<id>` for a file kept
+   * in this workspace's chats, otherwise a path on the bot's computer (`workspace/uploads/…` as
+   * attachments are listed, `~/…`, absolute, or relative to its working folder).
+   */
+  async function loadFile(ctx: ToolContext, ref: string): Promise<MediaInput & { name: string }> {
+    const id = /^media:([0-9a-f-]{36})$/.exec(ref.trim())?.[1];
+    if (id) {
+      const [row] = await db.execute<{
+        bytes: Buffer;
+        content_type: string;
+        name: string | null;
+      }>(sql`
+        select bytes, content_type, name from public.chat_media
+        where id = ${id}::uuid and org_id = ${ctx.orgId}::uuid`);
+      if (!row) throw new ToolError("file_not_found", `There's no chat file ${ref}.`);
+      return {
+        data: new Uint8Array(row.bytes),
+        contentType: row.content_type,
+        name: row.name ?? `${id}.${row.content_type.split("/")[1] ?? "bin"}`,
+      };
+    }
+    if (!ctx.computer)
+      throw new ToolError(
+        "file_not_found",
+        `${ref} would be on your computer, and you don't have one here. Pass a media: id instead.`,
+      );
+    const path = ref.trim().startsWith("workspace/") ? `~/${ref.trim()}` : ref.trim();
+    const data = await (await ctx.computer()).readFile(path).catch(() => {
+      throw new ToolError("file_not_found", `There's no file at ${ref} on your computer.`);
+    });
+    if (data.length > MAX_INPUT_BYTES)
+      throw new ToolError("file_too_large", `${ref} is over 25 MB, too big to pass on.`);
+    const name = path.split("/").pop() ?? path;
+    return { data, contentType: contentTypeOf(name), name };
+  }
+
   /** Whether this workspace has a key that makes this kind of media. */
   async function mediaReady(orgId: string, kind: "image" | "video") {
     const provider = await deps.mediaFor?.(orgId);
@@ -797,7 +836,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     description:
       "Generate an image from a text prompt. The image is saved in your computer (media/) when you have one.",
     risk: "medium",
-    confirm: true,
+    // Runs without asking under the default autonomy; credit caps and budgets still apply (D-213).
     ready: (ctx) => mediaReady(ctx.orgId, "image"),
     schema: z.object({
       prompt: z.string().min(1).max(4000),
@@ -827,7 +866,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       // Inline images (OpenRouter) have no link; never put their bytes in the conversation.
       const where = img.url ? `Generated image: ${img.url}` : "Generated image";
       return {
-        content: `${where}${shown ? "\nThe person already sees it in the chat under your reply: don't link it or name the file." : ""}${path ? `\nSaved to ~/workspace/${path}` : img.url || shown ? "" : " (no computer to save it to)"}`,
+        content: `${where}${shown ? `\nThe person already sees it in the chat under your reply: don't link it or name the file. To use it again (animate it, convert it), pass media:${shown}.` : ""}${path ? `\nSaved to ~/workspace/${path}` : img.url || shown ? "" : " (no computer to save it to)"}`,
         preview: path ?? "image generated",
         artifactPath: path,
       };
@@ -837,13 +876,19 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
   registry.register({
     name: "media.video.generate",
     description:
-      "Generate a short video clip from a text prompt (can take a few minutes). Saved in your computer (media/) when you have one.",
+      "Generate a short video clip from a text prompt (can take a few minutes). To animate a picture (one you made, or one the person sent), pass it as image: its media: id or its path on your computer; the clip then starts from that exact picture. Saved in your computer (media/) when you have one.",
     risk: "medium",
-    confirm: true,
+    // Runs without asking under the default autonomy; credit caps and budgets still apply (D-213).
     ready: (ctx) => mediaReady(ctx.orgId, "video"),
     schema: z.object({
       prompt: z.string().min(1).max(4000),
       duration_s: z.number().int().min(1).max(20).optional(),
+      image: z
+        .string()
+        .min(1)
+        .max(1000)
+        .optional()
+        .describe("A picture to start from: a media: id or a path on your computer."),
     }),
     async execute(args, ctx) {
       const provider = await deps.mediaFor?.(ctx.orgId);
@@ -852,9 +897,16 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
           "no_media_provider",
           "No video generation key is configured. Add a Google AI or fal.ai key in Model keys.",
         );
+      const image = args.image ? await loadFile(ctx, args.image) : undefined;
+      if (image && !image.contentType.startsWith("image/"))
+        throw new ToolError(
+          "invalid_arguments",
+          `${args.image} is ${image.contentType}, not a picture. Pass an image to animate.`,
+        );
       const video = await provider.generateVideo({
         prompt: args.prompt,
         durationS: args.duration_s,
+        ...(image ? { image } : {}),
       });
       const seconds = video.durationS ?? args.duration_s ?? 5;
       await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, model)
@@ -869,12 +921,57 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       ).catch(() => null);
       const where = video.url ? `Generated video: ${video.url}` : "Generated video";
       return {
-        content: `${where}${shown ? "\nThe person already sees it in the chat under your reply: don't link it or name the file." : ""}${path ? `\nSaved to ~/workspace/${path}` : video.url || shown ? "" : " (no computer to save it to)"}`,
+        content: `${where}${shown ? `\nThe person already sees it in the chat under your reply: don't link it or name the file. To use it again, pass media:${shown}.` : ""}${path ? `\nSaved to ~/workspace/${path}` : video.url || shown ? "" : " (no computer to save it to)"}`,
         preview: path ?? "video generated",
         artifactPath: path,
       };
     },
   });
 
+  registry.register({
+    name: "files.from_chat",
+    description:
+      "Copy a file kept in the chat (a media: id: a picture or video you made) onto your computer, so you can convert or edit it there with your shell tools (for example ffmpeg, pandoc, LibreOffice). Returns its path.",
+    risk: "low",
+    requires: { computer: true },
+    schema: z.object({
+      file: z.string().regex(/^media:[0-9a-f-]{36}$/, "a media: id, like media:<id>"),
+      path: z.string().min(1).max(1000).optional(),
+    }),
+    async execute(args, ctx) {
+      if (!ctx.computer) throw new ToolError("no_computer", "This needs your computer.");
+      const f = await loadFile(ctx, args.file);
+      const h = await ctx.computer();
+      const asked = args.path ?? `media/${f.name}`;
+      const path = h.resolvePath?.(asked) ?? asked;
+      await h.writeFile(path, f.data);
+      const where = path.startsWith("/") || path.startsWith("~") ? path : `~/workspace/${path}`;
+      return {
+        content: `Copied ${f.name} (${f.contentType}) to ${where}.`,
+        preview: `copied to ${path}`,
+      };
+    },
+  });
+
   return registry;
 }
+
+/** A file reference's type, from its name. */
+function contentTypeOf(name: string) {
+  const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  const types: Record<string, string> = {
+    png: "image/png",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    webp: "image/webp",
+    gif: "image/gif",
+    mp4: "video/mp4",
+    mov: "video/quicktime",
+    webm: "video/webm",
+    pdf: "application/pdf",
+  };
+  return types[ext] ?? "application/octet-stream";
+}
+
+/** Largest file a tool reads into memory as input. */
+const MAX_INPUT_BYTES = 25 * 1024 * 1024;

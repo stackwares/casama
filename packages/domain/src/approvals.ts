@@ -17,14 +17,21 @@ export interface ApprovalInput {
   forceHighRisk?: boolean;
   /** The run read untrusted content (web, email, tool output) since the last approval. */
   untrustedSinceApproval: boolean;
+  /**
+   * The call sends data out of Casama (a web request that writes, a connected app's write tool, a
+   * message to someone else's assistant). Under ask_risky, only these medium-risk calls ask after
+   * untrusted content, so an injected instruction can't quietly send things out (D-213).
+   */
+  sendsOut?: boolean;
   /** "Always allow this tool for this bot" was ticked before. */
   granted: boolean;
 }
 
 /**
  * Whether a tool call needs a human's approval.
- * ask_always: every tool with side effects. ask_risky (default): high risk, medium risk after untrusted
- * input, and tools that always confirm. autonomous: only providers that force approval for high risk.
+ * ask_always: every tool with side effects. ask_risky (default): high risk, tools that always confirm,
+ * and medium-risk calls that send data out after untrusted input (D-213). autonomous: only providers
+ * that force approval for high risk.
  */
 export function needsApproval(i: ApprovalInput): boolean {
   if (i.readOnly || i.selfOnly) return false;
@@ -39,7 +46,7 @@ export function needsApproval(i: ApprovalInput): boolean {
       return (
         i.risk === "high" ||
         i.confirmUnderDefault === true ||
-        (i.risk === "medium" && i.untrustedSinceApproval)
+        (i.risk === "medium" && i.untrustedSinceApproval && i.sendsOut === true)
       );
   }
 }

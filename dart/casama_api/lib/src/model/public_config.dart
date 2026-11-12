@@ -38,6 +38,8 @@ class PublicConfig {
 
      this.chatgptSignIn,
 
+     this.serverVoice,
+
      this.signupProofs,
 
      this.traceUrlTemplate,
@@ -156,6 +158,18 @@ class PublicConfig {
 
   @JsonKey(
     
+    name: r'server_voice',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<PublicConfigServerVoiceEnum>? serverVoice;
+
+
+
+  @JsonKey(
+    
     name: r'signup_proofs',
     required: false,
     includeIfNull: false,
@@ -203,6 +217,7 @@ class PublicConfig {
       other.defaultReasoningEffort == defaultReasoningEffort &&
       other.wallpapersEnabled == wallpapersEnabled &&
       other.chatgptSignIn == chatgptSignIn &&
+      other.serverVoice == serverVoice &&
       other.signupProofs == signupProofs &&
       other.traceUrlTemplate == traceUrlTemplate &&
       other.googleClientIds == googleClientIds;
@@ -218,6 +233,7 @@ class PublicConfig {
         defaultReasoningEffort.hashCode +
         wallpapersEnabled.hashCode +
         chatgptSignIn.hashCode +
+        serverVoice.hashCode +
         signupProofs.hashCode +
         (traceUrlTemplate == null ? 0 : traceUrlTemplate.hashCode) +
         googleClientIds.hashCode;
@@ -249,6 +265,24 @@ xhigh(r'xhigh'),
 max(r'max');
 
 const PublicConfigDefaultReasoningEffortEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
+
+
+enum PublicConfigServerVoiceEnum {
+@JsonValue(r'live')
+live(r'live'),
+@JsonValue(r'read_aloud')
+readAloud(r'read_aloud'),
+@JsonValue(r'dictation')
+dictation(r'dictation');
+
+const PublicConfigServerVoiceEnum(this.value);
 
 final String value;
 

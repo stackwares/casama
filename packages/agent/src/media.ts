@@ -30,7 +30,29 @@ export interface MediaProvider {
     prompt: string;
     durationS?: number;
     model?: string;
+    /** A picture to start from: the clip animates it instead of drawing something new. */
+    image?: MediaInput;
   }): Promise<MediaResult>;
+}
+
+/** A file handed to a model as input. */
+export interface MediaInput {
+  data: Uint8Array;
+  contentType: string;
+}
+
+const dataUri = (m: MediaInput) =>
+  `data:${m.contentType};base64,${Buffer.from(m.data).toString("base64")}`;
+
+/**
+ * fal's image-to-video endpoint for a text-to-video model: `…/text-to-video` becomes
+ * `…/image-to-video`, and a model with no such suffix (LTX) gets `/image-to-video` added.
+ */
+export function falImageToVideoModel(model: string): string {
+  if (model.endsWith("/image-to-video")) return model;
+  if (model.endsWith("/text-to-video"))
+    return `${model.slice(0, -"text-to-video".length)}image-to-video`;
+  return `${model}/image-to-video`;
 }
 
 export interface FalOptions {
@@ -115,13 +137,21 @@ export class FalMediaProvider implements MediaProvider {
     }));
   }
 
-  async generateVideo(input: { prompt: string; durationS?: number; model?: string }) {
-    const model = input.model ?? this.o.videoModel;
+  async generateVideo(input: {
+    prompt: string;
+    durationS?: number;
+    model?: string;
+    image?: MediaInput;
+  }) {
+    const base = input.model ?? this.o.videoModel;
+    // fal takes the picture inline as a data URI.
+    const model = input.image ? falImageToVideoModel(base) : base;
     const queued = await this.json(`${this.o.queueBase}/${model}`, {
       method: "POST",
       body: JSON.stringify({
         prompt: input.prompt,
         ...(input.durationS ? { duration: input.durationS } : {}),
+        ...(input.image ? { image_url: dataUri(input.image) } : {}),
       }),
     });
     const statusUrl = String(
@@ -312,6 +342,7 @@ export class GeminiVideoProvider implements MediaProvider {
     durationS?: number;
     model?: string;
     size?: "square" | "portrait" | "landscape";
+    image?: MediaInput;
   }) {
     const model = input.model ?? this.model;
     const seconds = Math.min(15, Math.max(3, input.durationS ?? 5));
@@ -320,7 +351,17 @@ export class GeminiVideoProvider implements MediaProvider {
       headers: { "x-goog-api-key": this.key, "content-type": "application/json" },
       body: JSON.stringify({
         model,
-        input: input.prompt,
+        // A starting picture goes in with the prompt, as an image part.
+        input: input.image
+          ? [
+              { type: "text", text: input.prompt },
+              {
+                type: "image",
+                data: Buffer.from(input.image.data).toString("base64"),
+                mime_type: input.image.contentType,
+              },
+            ]
+          : input.prompt,
         response_format: {
           type: "video",
           duration: `${seconds}s`,

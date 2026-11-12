@@ -25,9 +25,10 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../theme/wallpaper.dart';
 import '../../ui/bottom_padding.dart';
+import '../groups/empty_group.dart';
+import 'delete_chat.dart';
 import '../groups/group_chats.dart';
 import '../../ui/edge_fade.dart';
-import '../../ui/glow_button.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
@@ -166,6 +167,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   var _transcribing = false;
   /// The device's own recognizer is listening (words are typed live), not the recorder.
   DeviceDictation? _listening;
+
+  /// Bumped when a device dictation starts or is cut short by Send: words from an older one are
+  /// dropped, so the recognizer can't write a sent message back into the emptied box.
+  var _dictationRun = 0;
+
+  /// Bumped each time Send empties the box, so a dictation re-apply still pending (the keyboard
+  /// echo workaround in [_applyInput]) never writes a sent message back.
+  var _sentEpoch = 0;
   Dictation? _recorder;
   var _stickToBottom = true;
   var _opening = true;
@@ -441,6 +450,33 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return false;
   }
 
+  /// Whether this chat exists on the server and this person may delete it (started it, or
+  /// manages the bot).
+  bool _canDeleteCurrent(String? id) {
+    if (id == null) return false;
+    final list = widget.group ? ref.watch(groupChatsProvider).value : ref.watch(conversationsProvider(widget.botId)).value;
+    return list?.where((c) => c.id == id).firstOrNull?.canDelete == true;
+  }
+
+  Future<void> _deleteCurrent(String id, String botName) async {
+    final deleted = await confirmDeleteChat(context, ref, conversationId: id, botId: widget.botId, botName: botName);
+    if (!deleted || !mounted) return;
+    // A group chat is gone from the sidebar too; a direct chat starts fresh with the same bot.
+    if (widget.group) {
+      context.go('/bots');
+    } else {
+      ref.read(chatControllerProvider(widget.botId).notifier).newChat();
+    }
+  }
+
+  /// Starts the message to one group member (or everyone) from the empty group chat.
+  void _startMention(String name) {
+    final text = _input.text.trim();
+    final value = '${text.isEmpty ? '' : '$text '}@$name ';
+    _input.value = TextEditingValue(text: value, selection: TextSelection.collapsed(offset: value.length));
+    _focus.requestFocus();
+  }
+
   void _jumpToLatest() {
     if (!_scroll.hasClients) return;
     _scroll.animateTo(0, duration: AppMotion.of(context, const Duration(milliseconds: 380)), curve: AppMotion.curve);
@@ -457,6 +493,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final uploads = inFlight.isEmpty ? null : Future.wait([for (final p in inFlight) p.upload!]).then((r) => r.every((ok) => ok));
     final skills = text == null ? [..._pickedSkills] : const <String>[];
     if (text == null) {
+      _sentEpoch++;
       _input.clear();
       setState(() {
         _pending.removeWhere(items.contains);
@@ -466,13 +503,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _stickToBottom = true;
     if (_touchFirst) FocusManager.instance.primaryFocus?.unfocus();
     var notSent = false;
-    await runGuarded(context, () async {
+    final ok = await runGuarded(context, () async {
       try {
         await ref.read(chatControllerProvider(widget.botId).notifier).send(message, attachments: attachments, skills: skills, uploads: uploads);
       } on UploadsFailed {
         notSent = true;
       }
+      return true;
     });
+    // Failed before its bubble showed (the chat itself couldn't be created): back to the box.
+    if (ok == null && mounted && text == null) {
+      final kept = ref.read(chatControllerProvider(widget.botId)).entries.any((e) => e is MessageEntry && e.failed && e.text == message.trim());
+      if (!kept) {
+        setState(() {
+          if (_input.text.trim().isEmpty) _input.text = message;
+          _pending.insertAll(0, [for (final p in items) if (!_pending.contains(p)) p]);
+          _pickedSkills.addAll([for (final s in skills) if (!_pickedSkills.contains(s)) s]);
+        });
+      }
+      return;
+    }
     if (notSent) {
       // Nothing is lost: the words and files come back to the box, failed ones marked to retry.
       if (!mounted) return;
@@ -538,15 +588,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final before = _input.text.trimRight();
     String join(String words) => before.isEmpty ? words : '$before $words';
     var latest = '';
+    final run = ++_dictationRun;
     final started = await device.start(
       onWords: (words) {
-        if (!mounted) return;
+        if (!mounted || run != _dictationRun) return;
         latest = words;
         final next = join(words);
         _input.value = TextEditingValue(text: next, selection: TextSelection.collapsed(offset: next.length));
       },
       onEnd: (end) {
-        if (!mounted) return;
+        if (!mounted || run != _dictationRun) return;
         setState(() {
           _listening = null;
           _recording = false;
@@ -569,6 +620,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       _recording = true;
     });
     return true;
+  }
+
+  /// Send from the composer. While dictating, it finishes first: the device's words are already
+  /// in the box (and its recognizer is cut off so nothing comes back after), a recording is
+  /// transcribed into the box, and then everything goes as one message.
+  Future<void> _sendFromComposer() async {
+    final device = _listening;
+    if (device != null) {
+      _dictationRun++;
+      setState(() {
+        _listening = null;
+        _recording = false;
+      });
+      unawaited(device.cancel());
+    } else if (_recording) {
+      await _stopRecording();
+      if (!mounted) return;
+    }
+    await _send();
   }
 
   Future<void> _stopRecording() async {
@@ -639,12 +709,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         return;
       }
       HapticsHelper.error();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.dictationFailed),
-          duration: const Duration(seconds: 8),
-          action: SnackBarAction(label: context.l10n.dictationRetry, onPressed: () => _retryTranscribe(clip)),
-        ),
+      showToast(
+        context,
+        context.l10n.dictationFailed,
+        kind: ToastKind.error,
+        duration: const Duration(seconds: 8),
+        action: SnackBarAction(label: context.l10n.dictationRetry, onPressed: () => _retryTranscribe(clip)),
       );
     }
   }
@@ -653,12 +723,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   /// right away. The snackbar floats over the composer, so "tap the mic" would mean reaching under it.
   void _offerDevice(String message) {
     HapticsHelper.warning();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 8),
-        action: SnackBarAction(label: context.l10n.dictationSayAgain, onPressed: _listenOnDevice),
-      ),
+    showToast(
+      context,
+      message,
+      kind: ToastKind.warning,
+      duration: const Duration(seconds: 8),
+      action: SnackBarAction(label: context.l10n.dictationSayAgain, onPressed: _listenOnDevice),
     );
   }
 
@@ -703,8 +773,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _applyInput(String next) {
     final value = TextEditingValue(text: next, selection: TextSelection.collapsed(offset: next.length));
+    final epoch = _sentEpoch;
     void apply() {
-      if (!mounted || _input.text.contains(next)) return;
+      if (!mounted || epoch != _sentEpoch || _input.text.contains(next)) return;
       _input.value = value;
     }
 
@@ -796,7 +867,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             tooltip: l10n.newChat,
             onPressed: chat.running || chat.empty ? null : controller.newChat,
           ),
-          _MoreMenu(botId: widget.botId, showComputer: layout != LayoutSize.desktop, onConversations: () => _showConversations(context, chat.conversationId)),
+          _MoreMenu(
+            botId: widget.botId,
+            showComputer: layout != LayoutSize.desktop,
+            onConversations: () => _showConversations(context, chat.conversationId),
+            onDelete: chat.running || !_canDeleteCurrent(chat.conversationId) ? null : () => _deleteCurrent(chat.conversationId!, name),
+          ),
           // Far right, next to the panel it opens and closes; the live dot shows while the bot works on its computer.
           if (layout == LayoutSize.desktop)
             _LiveDot(
@@ -825,10 +901,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 padding: EdgeInsets.fromLTRB(side, AppSpace.lg, side, 0),
                 child: const Align(alignment: Alignment.topCenter, child: SkeletonMessages()),
               );
-            } else if (chat.empty && bot?.setupStatus == BotSetupStatusEnum.pending) {
-              thread = _SetupCard(bot: bot!, side: side);
+            } else if (chat.empty && widget.group) {
+              final g = ref.watch(groupChatsProvider).value?.where((c) => c.id == widget.conversationId).firstOrNull;
+              final bots = ref.watch(botsProvider).value ?? const <Bot>[];
+              final members = [for (final id in g?.botIds ?? const <String>[]) ?bots.where((b) => b.id == id).firstOrNull];
+              thread = EmptyGroupThread(
+                title: g == null ? name : groupTitle(g, bots),
+                members: members,
+                side: side,
+                onMention: _startMention,
+              );
             } else if (chat.empty) {
-              thread = _EmptyThread(name: name, avatar: bot?.avatarUrl, side: side, onAsk: _send);
+              // A new bot goes straight to chat; the setup interview (D-105) is optional, from bot
+              // settings (Run Setup Again).
+              thread = _EmptyThread(botId: widget.botId, name: name, avatar: bot?.avatarUrl, side: side, onAsk: _send);
             } else {
               thread = Consumer(
                 builder: (context, ref, _) {
@@ -978,7 +1064,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           allowSendWhileRunning: !widget.group,
                           hint: l10n.messageHint(name),
                           running: chat.running,
-                          onSend: _send,
+                          onSend: _sendFromComposer,
                           onStop: () => runGuarded(context, controller.cancel),
                           recording: _recording,
                           transcribing: _transcribing,
@@ -1128,6 +1214,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 text: e.text,
                 attachments: e.attachments,
                 uploading: e.uploading,
+                onResend: e.failed ? () => runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).resend(e.id)) : null,
+                onDiscard: e.failed ? () => ref.read(chatControllerProvider(widget.botId).notifier).discardUnsent(e.id) : null,
                 siblingIndex: e.siblingIndex,
                 siblingCount: e.siblingCount,
                 onEdit: chat.running || e.id.startsWith('local-') ? null : () => _editMessage(e),
@@ -1328,6 +1416,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         onOpen: (id) {
           Navigator.of(sheetContext).pop();
           context.go('/bots/${widget.botId}/chat?c=$id');
+        },
+        onDelete: (c) async {
+          final name = ref.read(botProvider(widget.botId))?.name ?? '';
+          final deleted = await confirmDeleteChat(sheetContext, ref, conversationId: c.id, botId: widget.botId, botName: name);
+          // The open chat was the one deleted: start fresh behind the sheet.
+          if (deleted && c.id == ref.read(chatControllerProvider(widget.botId)).conversationId) {
+            ref.read(chatControllerProvider(widget.botId).notifier).newChat();
+          }
         },
       ),
     );
@@ -1573,7 +1669,8 @@ class _Same {
 /// The first open: the bot's mark and one line of what it can do, centered above starter requests
 /// parked by the composer.
 class _EmptyThread extends StatelessWidget {
-  const _EmptyThread({required this.name, this.avatar, required this.side, required this.onAsk});
+  const _EmptyThread({required this.botId, required this.name, this.avatar, required this.side, required this.onAsk});
+  final String botId;
   final String name;
   final String? avatar;
   final double side;
@@ -1615,7 +1712,7 @@ class _EmptyThread extends StatelessWidget {
                 ),
                 const Spacer(),
                 // Apps to connect first, until two are connected (D-204).
-                const ConnectAppTiles(),
+                ConnectAppTiles(botId: botId, botName: name),
                 const SizedBox(height: AppSpace.md),
                 for (var i = 0; i < suggestions.length; i++)
                   Padding(
@@ -1690,10 +1787,14 @@ class _HeroMark extends StatelessWidget {
 /// The chat's … menu: its conversations, the computer (phones and tablets) and the bot's profile,
 /// where its memory, routines and apps live (and its activity, under Advanced).
 class _MoreMenu extends StatelessWidget {
-  const _MoreMenu({required this.botId, required this.showComputer, required this.onConversations});
+  const _MoreMenu({required this.botId, required this.showComputer, required this.onConversations, this.onDelete});
   final String botId;
   final bool showComputer;
   final VoidCallback onConversations;
+
+  /// Set when this chat may be deleted now (it exists, it's yours or you manage the bot, and the
+  /// bot isn't working in it).
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -1714,6 +1815,18 @@ class _MoreMenu extends StatelessWidget {
         if (showComputer) item(LucideIcons.monitor, l10n.navComputer, () => context.push('/computer?bot=$botId'), key: const Key('openComputer')),
         const Divider(),
         item(LucideIcons.circleUser, l10n.botProfile, () => context.push('/bots/$botId/settings'), key: const Key('openBotProfile')),
+        if (onDelete != null) ...[
+          const Divider(),
+          MenuItemButton(
+            key: const Key('deleteChat'),
+            leadingIcon: Icon(LucideIcons.trash2, size: 20, color: context.colorScheme.error),
+            onPressed: onDelete,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 24),
+              child: Text(l10n.deleteChat, style: TextStyle(color: context.colorScheme.error)),
+            ),
+          ),
+        ],
       ],
       builder: (context, controller, _) => HeaderIconButton(
         key: const Key('chatMoreMenu'),
@@ -1781,11 +1894,14 @@ bool _computerInUse(ChatState c) {
 }
 
 class _ConversationsSheet extends ConsumerWidget {
-  const _ConversationsSheet({required this.botId, required this.currentId, required this.onNew, required this.onOpen});
+  const _ConversationsSheet({required this.botId, required this.currentId, required this.onNew, required this.onOpen, required this.onDelete});
   final String botId;
   final String? currentId;
   final VoidCallback onNew;
   final ValueChanged<String> onOpen;
+
+  /// Deletes a chat after asking (rows the person may delete: theirs, or all if they manage the bot).
+  final ValueChanged<Conversation> onDelete;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1821,11 +1937,25 @@ class _ConversationsSheet extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                           style: context.textTheme.bodyLarge?.copyWith(fontWeight: current ? FontWeight.w700 : FontWeight.w500),
                         ),
-                        trailing: Text(
-                          relativeTime(c.lastMessageAt ?? c.createdAt, context),
-                          style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              relativeTime(c.lastMessageAt ?? c.createdAt, context),
+                              style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
+                            ),
+                            if (c.canDelete == true)
+                              IconButton(
+                                key: Key('deleteConversation-${c.id}'),
+                                tooltip: l10n.deleteChat,
+                                visualDensity: VisualDensity.compact,
+                                icon: Icon(LucideIcons.trash2, size: 18, color: scheme.onSurfaceVariant),
+                                onPressed: () => onDelete(c),
+                              ),
+                          ],
                         ),
                         onTap: () => onOpen(c.id),
+                        onLongPress: c.canDelete == true ? () => onDelete(c) : null,
                       );
                     },
                   ),
@@ -1908,55 +2038,6 @@ class _SkillPicker extends ConsumerWidget {
           ),
         );
       },
-    );
-  }
-}
-
-/// A new bot offers its setup interview (D-105): a few questions, then a proposal to approve.
-class _SetupCard extends ConsumerWidget {
-  const _SetupCard({required this.bot, required this.side});
-  final Bot bot;
-  final double side;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    return Center(
-      child: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: side, vertical: AppSpace.xl),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 460),
-          child: Column(
-            key: const Key('setupCard'),
-            mainAxisSize: MainAxisSize.min,
-            spacing: AppSpace.md,
-            children: [
-              BotAvatar(name: bot.name, avatar: bot.avatarUrl, size: 72),
-              Text(l10n.setupTitle(bot.name), style: context.textTheme.titleLarge, textAlign: TextAlign.center),
-              Text(l10n.setupBody, textAlign: TextAlign.center, style: TextStyle(color: context.colorScheme.onSurfaceVariant)),
-              GlowButton.icon(
-                key: const Key('startSetup'),
-                onPressed: () async {
-                  final conv = await runGuarded(context, () => ref.read(backendProvider).startBotSetup(bot.id));
-                  if (conv == null || !context.mounted) return;
-                  ref.invalidate(botsProvider);
-                  GoRouter.maybeOf(context)?.go('/bots/${bot.id}/chat?c=$conv');
-                },
-                icon: const Icon(LucideIcons.sparkles, size: 18),
-                label: Text(l10n.startSetup),
-              ),
-              TextButton(
-                key: const Key('skipSetup'),
-                onPressed: () async {
-                  await runGuarded(context, () => ref.read(backendProvider).skipBotSetup(bot.id));
-                  ref.invalidate(botsProvider);
-                },
-                child: Text(l10n.skipSetup),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

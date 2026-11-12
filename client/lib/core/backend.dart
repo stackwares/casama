@@ -3,6 +3,18 @@ import 'dart:typed_data';
 
 import 'package:casama_sdk/casama_sdk.dart';
 
+/// A thumbnail of a video, image or PDF on a bot's computer (D-226).
+class ComputerThumbnail {
+  const ComputerThumbnail({required this.bytes, this.duration, this.modifiedMs});
+  final Uint8List bytes;
+
+  /// A video's length, when the computer could read it.
+  final Duration? duration;
+
+  /// The file's modified time (ms since the epoch), when known.
+  final int? modifiedMs;
+}
+
 /// A message as shown in a conversation (final messages only; live text comes from run events).
 /// A file attached to a message, stored on the bot's computer ([path] is under its home folder).
 class AttachmentRef {
@@ -685,6 +697,10 @@ abstract class Backend {
   /// Deletes a key and its Vault secret; a ChatGPT sign-in is revoked first.
   Future<void> deleteCredential(String credentialId);
 
+  /// Voice features the server's own keys cover (live, read_aloud, dictation): the voice sheet hides
+  /// those provider choices, as on Casama Cloud.
+  Set<String> get serverVoice;
+
   // ChatGPT plan sign-in (D-091)
   /// Whether this server lets people connect a ChatGPT plan.
   bool get chatGptSignIn;
@@ -807,6 +823,12 @@ abstract class Backend {
   // Chat
   Future<List<Conversation>> conversations(String botId);
   Future<Conversation> createConversation(String botId);
+
+  /// Deletes a chat with its messages and media (the person who started it or a bot manager).
+  Future<void> deleteConversation(String conversationId);
+
+  /// Deletes every direct chat with [botId] this person may delete; returns (deleted, skipped).
+  Future<(int, int)> deleteBotConversations(String botId);
   Future<List<ChatMessageView>> messages(String conversationId);
   Future<String?> activeRun(String conversationId);
 
@@ -907,6 +929,10 @@ abstract class Backend {
   /// moved, deleted, a status change), and after Realtime reconnects (D-225). No details: the
   /// listener refetches its list.
   Stream<void> watchBotsChanged(String orgId);
+
+  /// A run started in this conversation, from any device or trigger (D-224): its id. Null after
+  /// Realtime reconnects, when something may have happened meanwhile.
+  Stream<String?> watchConversation(String conversationId);
   Future<void> registerDevice(String platform, String token);
 
   // Routines
@@ -1447,6 +1473,11 @@ abstract class Backend {
   /// A Word, Excel or PowerPoint file on the computer as a PDF, for the preview; null when the
   /// file can't be turned into one.
   Future<Uint8List?> computerFilePdf(String computerId, String path);
+
+  /// A small picture of a video's first frame, an image or a PDF's first page on the computer
+  /// (D-226). Null when there is none, including whenever the computer is asleep or offline: it
+  /// is never woken for this.
+  Future<ComputerThumbnail?> computerThumbnail(String computerId, String path, {int size = 480});
 
   // Chat media: generated images and videos kept with the chat, at `media:<id>`.
   Future<Uint8List> chatMedia(String id);

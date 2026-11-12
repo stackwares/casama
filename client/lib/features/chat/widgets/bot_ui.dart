@@ -8,6 +8,7 @@ import '../../../core/widgets.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
 import 'bot_ui_components.dart';
+import 'sdk_material_bridge.dart';
 
 /// What a person did on a bot's interactive UI: the action's name and its resolved values.
 class BotUiAction {
@@ -173,12 +174,15 @@ class BotUiCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // The basic components are Material widgets and need a Material ancestor.
+              // Casama's components need a Material ancestor; the basic ones are Flutter SDK Material
+              // widgets and need an SDK Material and Theme too.
               Material(
                 type: MaterialType.transparency,
-                child: IgnorePointer(
-                  ignoring: answered,
-                  child: AnimatedOpacity(opacity: answered ? 0.6 : 1, duration: AppMotion.fast, child: body),
+                child: SdkMaterialBridge(
+                  child: IgnorePointer(
+                    ignoring: answered,
+                    child: AnimatedOpacity(opacity: answered ? 0.6 : 1, duration: AppMotion.fast, child: body),
+                  ),
                 ),
               ),
               if (answered) ...[

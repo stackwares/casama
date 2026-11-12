@@ -434,6 +434,9 @@ class FakeBackend implements Backend {
   /// Extra keys for a test (for example a ChatGPT plan).
   List<Credential> extraCredentials = [];
   @override
+  Set<String> serverVoice = {};
+
+  @override
   bool chatGptSignIn = true;
   @override
   bool canConnectChatGpt = false;
@@ -1547,18 +1550,34 @@ class FakeBackend implements Backend {
         ],
       );
 
+  /// Chats deleted, by id, and bots whose chats were all deleted.
+  final deletedConversations = <String>[];
+  final clearedBots = <String>[];
+
+  /// Whether the person may delete the fake chat (they started it, or manage the bot).
+  var canDeleteChats = true;
   @override
   Future<List<Conversation>> conversations(String botId) async => [
-    Conversation(
-      id: convId,
-      botId: botId,
-      title: 'Hello',
-      lastMessageAt: null,
-      createdAt: DateTime(2026),
-      kind: ConversationKindEnum.direct,
-      botIds: [botId],
-    ),
+    if (!deletedConversations.contains(convId) && !clearedBots.contains(botId))
+      Conversation(
+        id: convId,
+        botId: botId,
+        title: 'Hello',
+        lastMessageAt: null,
+        createdAt: DateTime(2026),
+        kind: ConversationKindEnum.direct,
+        botIds: [botId],
+        canDelete: canDeleteChats,
+      ),
   ];
+  @override
+  Future<void> deleteConversation(String conversationId) async =>
+      deletedConversations.add(conversationId);
+  @override
+  Future<(int, int)> deleteBotConversations(String botId) async {
+    clearedBots.add(botId);
+    return (1, 0);
+  }
   @override
   Future<Conversation> createConversation(String botId) async => Conversation(
     id: convId,
@@ -2655,9 +2674,13 @@ class FakeBackend implements Backend {
 
   /// Simulates no network for bots and messages (offline cache tests).
   bool offline = false;
+  /// The run in progress in a conversation, if any.
+  String? activeRunId;
   @override
-  Future<String?> activeRun(String conversationId) async => null;
+  Future<String?> activeRun(String conversationId) async => activeRunId;
   final sentAttachments = <List<AttachmentRef>>[];
+  /// Thrown by the next send, once (the server unreachable, say).
+  Object? failNextSend;
   @override
   Future<SendMessageResponse> send(
     String conversationId,
@@ -2666,6 +2689,11 @@ class FakeBackend implements Backend {
     Map<String, Object?>? uiAction,
     List<String> skills = const [],
   }) async {
+    final fail = failNextSend;
+    if (fail != null) {
+      failNextSend = null;
+      throw fail;
+    }
     sent.add(text);
     sentSkills.add(skills);
     sentAttachments.add(attachments);
@@ -2841,6 +2869,15 @@ class FakeBackend implements Backend {
   Stream<NotificationView> watchNotifications() =>
       notificationsController.stream;
 
+  /// A run started in a conversation from elsewhere (D-224): its id.
+  final conversationActivity = StreamController<String?>.broadcast();
+  final watchedConversations = <String>[];
+  @override
+  Stream<String?> watchConversation(String conversationId) {
+    watchedConversations.add(conversationId);
+    return conversationActivity.stream;
+  }
+
   /// Another device changed the workspace's bots (D-225).
   final botsChangedController = StreamController<void>.broadcast();
   var botsChangedListeners = 0;
@@ -2952,8 +2989,12 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<IntegrationTestResult> testIntegration(String integrationId) async =>
-      IntegrationTestResult(ok: true, tools: const ['add', 'subtract']);
+  Future<IntegrationTestResult> testIntegration(String integrationId) async {
+    tested.add(integrationId);
+    return IntegrationTestResult(ok: true, tools: const ['add', 'subtract']);
+  }
+
+  final tested = <String>[];
   @override
   Future<Set<String>> botIntegrationIds(String botId) async => attached;
   @override
@@ -3054,6 +3095,18 @@ class FakeBackend implements Backend {
     String? integrationId,
   }) async {
     connectCalls.add((appId, method, apiKey));
+    if (method == 'managed') {
+      // Like the server: the workspace's one Composio connection, and a sign-in page to open. The
+      // person hasn't approved anything yet, so Composio lists the account as waiting.
+      final hub = integrationList.where((i) => i.kind == IntegrationKind.composio).firstOrNull ??
+          await createIntegration(orgId, kind: 'composio', name: 'apps', config: {'managed': true});
+      providerAccountList.add(ProviderAccount(app: appId, status: ProviderAccountStatusEnum.pending));
+      return ConnectAppResponse(
+        status: ConnectAppResponseStatusEnum.authorize,
+        authorizeUrl: 'https://composio.example/signin/$appId',
+        integration: hub,
+      );
+    }
     if (method == 'oauth') {
       return ConnectAppResponse(
         status: ConnectAppResponseStatusEnum.authorize,
@@ -3113,7 +3166,11 @@ class FakeBackend implements Backend {
       [
         for (final a in providerConnects)
           ProviderAccount(app: a, status: ProviderAccountStatusEnum.connected),
+        ...providerAccountList,
       ];
+
+  /// More accounts the hub lists, with their own status (a managed sign-in adds a waiting one).
+  final providerAccountList = <ProviderAccount>[];
 
   @override
   Future<List<Secret>> secrets(String orgId) async => secretList;
@@ -3840,7 +3897,27 @@ class FakeBackend implements Backend {
     List<LocalMcpServerInfo> servers,
   ) async {
     localMcpSyncs.add(servers);
-    return const [];
+    // Like the API: one local_mcp integration per server, named `<key>_<device id prefix>`.
+    final bare = deviceId.replaceAll('-', '');
+    final suffix = bare.length > 6 ? bare.substring(0, 6) : bare;
+    integrationList.removeWhere((i) => i.kind == IntegrationKind.localMcp && i.device?.id == deviceId);
+    final items = [
+      for (final s in servers)
+        Integration(
+          id: 'local-${s.key}',
+          orgId: device?.orgId ?? orgId,
+          kind: IntegrationKind.localMcp,
+          name: '${s.key}_$suffix',
+          status: IntegrationStatusEnum.pending,
+          error: null,
+          tools: const [],
+          toolsCachedAt: null,
+          createdAt: DateTime.now(),
+          device: IntegrationDevice(id: deviceId, computerId: null, ownerUserId: 'u1', label: s.label),
+        ),
+    ];
+    integrationList.addAll(items);
+    return items;
   }
 
   @override
@@ -4064,6 +4141,8 @@ class FakeBackend implements Backend {
     openTakeovers = openTakeovers.where((t) => t.id != takeoverId).toList();
   }
 
+  /// The team computer's state; tests change it to see the list update.
+  ComputerState teamComputerState = ComputerState.sleeping;
   @override
   Future<List<Computer>> computers(String orgId) async => [
     Computer(
@@ -4076,7 +4155,7 @@ class FakeBackend implements Backend {
       error: null,
       provider: 'docker',
       profile: ComputerProfileEnum.headless,
-      state: ComputerState.sleeping,
+      state: teamComputerState,
       size: ComputerSize(cpus: 1),
       hasSnapshot: true,
       maxDesktops: 1,
@@ -4099,6 +4178,19 @@ class FakeBackend implements Backend {
   @override
   Future<Uint8List?> computerFilePdf(String computerId, String path) async =>
       pdfPreviews[path];
+
+  /// Thumbnails of computer files by path (D-226), and every path asked for.
+  final thumbnails = <String, ComputerThumbnail>{};
+  final thumbnailRequests = <String>[];
+  @override
+  Future<ComputerThumbnail?> computerThumbnail(
+    String computerId,
+    String path, {
+    int size = 480,
+  }) async {
+    thumbnailRequests.add(path);
+    return thumbnails[path];
+  }
 
   /// Chat media bytes by id.
   final chatMediaFiles = <String, Uint8List>{};

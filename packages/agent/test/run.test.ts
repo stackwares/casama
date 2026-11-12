@@ -96,6 +96,22 @@ const finish = (n = 10) => ({
 
 const fixtures: FixtureFile[] = [
   {
+    name: "limits-and-stops",
+    turns: [
+      {
+        when: { lastRole: "user", lastUserIncludes: "reached its limit" },
+        events: [
+          { type: "text", text: "I ran out of steps: my computer has no ffmpeg." },
+          finish(1),
+        ],
+      },
+      {
+        when: { lastRole: "user", lastUserIncludes: "say hi to me" },
+        events: [{ type: "text", text: "Hi Oliver!" }, finish(1)],
+      },
+    ],
+  },
+  {
     name: "memory-extraction",
     turns: [
       {
@@ -382,14 +398,49 @@ describe("runAgent", () => {
     });
   });
 
-  it("stops at max steps", async () => {
+  it("stops at max steps, and says where it got to instead of going quiet", async () => {
     const botId = await makeBot({ budget: { per_run_usd: 1000, daily_usd: 1000 } });
     const { runId } = await startRun(botId, "loop forever");
-    await runAgent(runId, deps(new ReplayGateway(fixtures), { limits: { maxSteps: 3 } }));
+    const gateway = new ReplayGateway(fixtures);
+    await runAgent(runId, deps(gateway, { limits: { maxSteps: 3 } }));
     expect((await events(runId)).at(-1)).toMatchObject({
       type: "run.failed",
       payload: { error_code: "max_steps_exceeded" },
     });
+    // The wrap-up turn has no tools, and its words are saved as the reply.
+    expect(gateway.requests.at(-1)?.tools ?? []).toHaveLength(0);
+    const [reply] = await tdb.admin<{ content: Array<{ text?: string }> }[]>`
+      select content from public.messages where run_id = ${runId} and role = 'assistant'
+      order by created_at desc limit 1`;
+    expect(reply?.content[0]?.text).toBe("I ran out of steps: my computer has no ffmpeg.");
+  });
+
+  it("a bot asked from another chat knows it's busy elsewhere", async () => {
+    const botId = await makeBot();
+    const busy = await startRun(botId, "crop the video to 1:1");
+    await tdb.admin`update public.runs set status = 'running', started_at = now() where id = ${busy.runId}`;
+    const asked = await startRun(botId, "Can you say hi to me here?");
+    const gateway = new ReplayGateway(fixtures);
+    expect((await runAgent(asked.runId, deps(gateway))).status).toBe("completed");
+    const req = gateway.requests.find((r) => JSON.stringify(r.messages).includes("say hi to me"));
+    const last = req?.messages.at(-1)?.content;
+    expect(last).toContain("you're also working in another chat right now");
+    expect(last).toContain("crop the video to 1:1");
+    await tdb.admin`update public.runs set status = 'cancelled', ended_at = now() where id = ${busy.runId}`;
+  });
+
+  it("after the person stops a run, the next message doesn't pick the stopped work back up", async () => {
+    const botId = await makeBot();
+    const first = await startRun(botId, "crop the video to 1:1");
+    await tdb.admin`update public.runs set status = 'cancelled', cancel_requested_at = now(), cancelled_by = ${userId}, ended_at = now() where id = ${first.runId}`;
+    const next = await startRun(botId, "Can you say hi to me here?", first.conversationId);
+    const gateway = new ReplayGateway(fixtures);
+    expect((await runAgent(next.runId, deps(gateway))).status).toBe("completed");
+    const asked = gateway.requests.find((r) => JSON.stringify(r.messages).includes("say hi to me"));
+    const crop = asked?.messages.find(
+      (m) => typeof m.content === "string" && m.content.startsWith("crop the video"),
+    );
+    expect(crop?.content).toContain("The person stopped your work on this before you replied");
   });
 
   it("reports tool errors to the model instead of failing the run", async () => {

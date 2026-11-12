@@ -16,6 +16,7 @@ import '../../ui/page.dart';
 import '../../ui/bot_loader.dart';
 import '../../ui/mascot.dart';
 import '../../ui/celebration.dart';
+import '../../ui/action_buttons.dart';
 
 /// The draft skill from a teach recording (D-120): wait for the bot's draft, edit it, save it,
 /// and try it right away.
@@ -175,18 +176,18 @@ class _TeachDraftScreenState extends ConsumerState<TeachDraftScreen> {
               subtitle: st.url.isUsable ? Text(st.url!, maxLines: 1, overflow: TextOverflow.ellipsis) : null,
             ),
           const SizedBox(height: AppSpace.lg),
-          Wrap(
-            spacing: AppSpace.sm,
-            runSpacing: AppSpace.sm,
-            children: [
+          ActionButtons(
+            actions: [
+              OutlinedButton(key: const Key('teachSave'), onPressed: !valid || _busy ? null : () => _save(tryNow: false), child: Text(l10n.save)),
               FilledButton.icon(
                 key: const Key('teachSaveTry'),
                 onPressed: !valid || _busy ? null : () => _save(tryNow: true),
                 icon: const Icon(LucideIcons.play, size: 18),
                 label: Text(l10n.teachSaveAndTry),
               ),
-              OutlinedButton(key: const Key('teachSave'), onPressed: !valid || _busy ? null : () => _save(tryNow: false), child: Text(l10n.save)),
-              OutlinedButton.icon(
+            ],
+            extra: [
+              TextButton.icon(
                 key: const Key('teachSaveReplay'),
                 onPressed: !valid || _busy
                     ? null

@@ -53,10 +53,16 @@ final shortcutsProvider = Provider<void>((ref) {
     }).catchError((_) {}));
   }
 
+  // A rebuild (new backend or router) or a newer bot list makes an earlier sync stale: read the
+  // backend before any await, and drop the result once the provider is gone or superseded.
+  var generation = 0;
   Future<void> sync(List<Bot> bots) async {
+    final mine = ++generation;
+    final backend = ref.read(backendProvider);
     final routines = <String, List<Routine>>{};
     for (final b in bots.take(20)) {
-      routines[b.id] = await ref.read(backendProvider).routines(b.id).catchError((_) => const <Routine>[]);
+      routines[b.id] = await backend.routines(b.id).catchError((_) => const <Routine>[]);
+      if (!ref.mounted || mine != generation) return;
     }
     if (_apple) {
       try {

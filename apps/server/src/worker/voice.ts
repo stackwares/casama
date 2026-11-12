@@ -141,10 +141,12 @@ export async function voiceTranscribe(
   const bot = await botVoice(rt.db, botId);
   if (bot.org_id !== orgId) throw new Error("bot_not_found");
   const assigned = await rt.cloudModels?.();
-  // On Casama Cloud the person cannot pick a dictation service.
+  // On Casama Cloud, or with the server's shared key, the person cannot pick a dictation service.
   const own = await rt.key(
     orgId,
-    assigned ? STT_PROVIDERS : ordered(bot.voice.stt_provider, STT_PROVIDERS),
+    assigned || rt.platformOpenRouterKey
+      ? STT_PROVIDERS
+      : ordered(bot.voice.stt_provider, STT_PROVIDERS),
   );
   // No key of their own: the server's shared OpenRouter key, on the server's model (D-194).
   const shared = !own?.key && !!rt.platformOpenRouterKey;
@@ -228,9 +230,12 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
   if (!m) return { ok: false as const, error: "Message not found." };
   const bot = await botVoice(rt.db, m.bot_id);
   const assigned = await rt.cloudModels?.();
-  const google = assigned ? await rt.key(orgId, ["google"]) : null;
+  // Casama Cloud, or any server with its own Google AI key: Gemini reads aloud (the workspace's
+  // Google key first) and the bot's provider choice doesn't apply, as with live calls.
+  const managed = !!assigned || !!rt.serverGeminiKey;
+  const google = managed ? await rt.key(orgId, ["google"]) : null;
   const k =
-    assigned && (google?.key || rt.serverGeminiKey)
+    managed && (google?.key || rt.serverGeminiKey)
       ? { provider: "google", key: google?.key ?? rt.serverGeminiKey ?? null }
       : await rt.key(
           orgId,

@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:path/path.dart' as p;
 
 import 'mcp_bridge.dart';
+import 'thumbnails.dart';
 
 /// computerd configuration. Inside a computer: HOME=/home/casama, workspace under it.
 class ComputerdConfig {
@@ -23,7 +24,15 @@ class ComputerdConfig {
     this.mcpServers = const {},
     this.imessageDb,
     this.imessageSendCommand,
+    this.thumbnailTools,
+    this.thumbnailCacheDir,
   });
+
+  /// Thumbnails (D-226): the tools that make them (tests pass fakes) and where they are cached.
+  /// The cache defaults to ~/.cache/casama/thumbs in a bot computer (left out of archives) and the
+  /// system temp folder on a person's own computer.
+  final ThumbnailTools? thumbnailTools;
+  final String? thumbnailCacheDir;
 
   /// iMessage chat apps (D-134): the Messages database to read (default ~/Library/Messages/chat.db).
   final String? imessageDb;
@@ -113,6 +122,13 @@ class Computerd {
 
   int get port => _server!.port;
 
+  late final ThumbnailService _thumbs = ThumbnailService(
+    tools: config.thumbnailTools ?? ThumbnailTools(extraPath: config.extraPath),
+    cacheDir:
+        config.thumbnailCacheDir ??
+        (config.companion ? p.join(Directory.systemTemp.path, 'casama-thumbs') : p.join(config.home, '.cache', 'casama', 'thumbs')),
+  );
+
   /// Local MCP servers (companion mode, D-096).
   late final McpBridge mcp = McpBridge(config.mcpServers, checkCwd: (cwd) => _allowed(cwd));
 
@@ -182,6 +198,8 @@ class Computerd {
           return await _deleteFile(req);
         case ('GET', ['files', 'list']):
           return await _listDir(req);
+        case ('GET', ['files', 'thumbnail']):
+          return await _thumbnail(req);
         case ('POST', ['files', 'search']):
           return await _search(req);
         case ('POST', ['archive']):
@@ -446,6 +464,31 @@ class Computerd {
     await res.close();
   }
 
+  /// GET /files/thumbnail?path=&size= (D-226): a JPEG or PNG no larger than size (128–640, default
+  /// 480) of a video's first frame, an image or a PDF's first page. 404 no_thumbnail when the file
+  /// has none or the computer lacks the tool; 503 thumbnail_busy when too many are waiting.
+  Future<void> _thumbnail(HttpRequest req) async {
+    final raw = req.uri.queryParameters['path'];
+    if (raw == null || raw.isEmpty) throw _ApiError(400, 'bad_request', 'path is required');
+    final path = _resolve(raw);
+    if (!FileSystemEntity.isFileSync(path)) throw _ApiError(404, 'not_found', 'No such file: $path');
+    final size = (int.tryParse(req.uri.queryParameters['size'] ?? '') ?? 480).clamp(128, 640);
+    final Thumbnail? t;
+    try {
+      t = await _thumbs.thumbnail(File(path), size);
+    } on ThumbnailBusy {
+      throw _ApiError(503, 'thumbnail_busy', 'Too many thumbnails are being made; try again shortly');
+    }
+    if (t == null) throw _ApiError(404, 'no_thumbnail', 'No thumbnail for this file');
+    final res = req.response;
+    res.headers.contentType = ContentType.parse(t.contentType);
+    res.headers.contentLength = t.bytes.length;
+    res.headers.set('x-file-mtime', '${t.modified.millisecondsSinceEpoch}');
+    if (t.durationMs != null) res.headers.set('x-duration-ms', '${t.durationMs}');
+    res.add(t.bytes);
+    await res.close();
+  }
+
   Future<void> _writeFile(HttpRequest req) async {
     final path = _resolve(req.uri.queryParameters['path']);
     final file = File(path);
@@ -515,7 +558,7 @@ class Computerd {
   Future<void> _archive(HttpRequest req) async {
     final body = await _body(req);
     final path = _resolve((body['path'] as String?) ?? config.home);
-    final excludes = <String>[...((body['exclude'] as List?)?.cast<String>() ?? const []), '.cache/ms-playwright', '.npm/_cacache', '.cache/pip', '.casama-restore-*'];
+    final excludes = <String>[...((body['exclude'] as List?)?.cast<String>() ?? const []), '.cache/ms-playwright', '.npm/_cacache', '.cache/pip', '.cache/casama/thumbs', '.casama-restore-*'];
     final process = await Process.start('tar', ['-czf', '-', for (final e in excludes) '--exclude=./$e', '-C', path, '.']);
     final res = req.response;
     res.headers.contentType = ContentType('application', 'gzip');

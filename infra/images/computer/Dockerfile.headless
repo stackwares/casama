@@ -36,10 +36,11 @@ RUN npm install -g agent-browser@${AGENT_BROWSER_VERSION} playwright@${PLAYWRIGH
     && chrome --version
 
 # Document skills (pdf, docx, xlsx, pptx) call these by name and treat them as already installed.
-# LibreOffice is for conversion; the bot cannot apt-install later (it is not root).
+# LibreOffice is for conversion; ffmpeg for video and audio (crop, trim, GIFs). The bot cannot
+# apt-install later (it is not root), so a missing tool sends it hunting for workarounds.
 RUN apt-get update && apt-get install -y --no-install-recommends \
       libreoffice-writer libreoffice-calc libreoffice-impress \
-      poppler-utils pandoc qpdf tesseract-ocr \
+      poppler-utils pandoc qpdf tesseract-ocr ffmpeg \
     && rm -rf /var/lib/apt/lists/* \
     && pip3 install --break-system-packages --no-cache-dir \
       pypdf pdfplumber pandas reportlab pytesseract pdf2image openpyxl Pillow defusedxml lxml 'markitdown[pptx]' \

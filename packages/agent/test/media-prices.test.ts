@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   FalMediaProvider,
   falImageCost,
+  falImageToVideoModel,
   GeminiVideoProvider,
   MEDIA_PRICES,
   MediaRouter,
@@ -122,5 +123,49 @@ describe("media prices", () => {
     });
     expect(video.costUsd).toBeCloseTo(3 * 0.0695, 6);
     expect(Buffer.from(video.data ?? []).toString()).toBe("mp4");
+  });
+
+  it("animating a picture: fal uses the image-to-video model, Gemini gets the picture with the prompt", async () => {
+    expect(falImageToVideoModel("fal-ai/ltx-video")).toBe("fal-ai/ltx-video/image-to-video");
+    expect(falImageToVideoModel("fal-ai/pixverse/v6/text-to-video")).toBe(
+      "fal-ai/pixverse/v6/image-to-video",
+    );
+    const image = { data: new Uint8Array([137, 80, 78, 71]), contentType: "image/png" };
+    const posted: Array<{ path: string; body: Record<string, unknown> }> = [];
+    const fal = (async (url: string, init?: RequestInit) => {
+      const path = new URL(url).pathname;
+      if (init?.method === "POST") {
+        posted.push({ path, body: JSON.parse(String(init.body)) });
+        return Response.json({ request_id: "q1" });
+      }
+      if (path.endsWith("/status")) return Response.json({ status: "COMPLETED" });
+      return Response.json({ video: { url: "https://x/v.mp4" } });
+    }) as unknown as typeof fetch;
+    const clip = await new FalMediaProvider({
+      apiKey: "k",
+      fetch: fal,
+      queueBase: "http://fal.test",
+      videoModel: "fal-ai/pixverse/v6/text-to-video",
+      pollMs: 1,
+    }).generateVideo({ prompt: "make it wag", durationS: 4, image });
+    expect(posted[0]).toEqual({
+      path: "/fal-ai/pixverse/v6/image-to-video",
+      body: { prompt: "make it wag", duration: 4, image_url: `data:image/png;base64,${PNG}` },
+    });
+    // An image-to-video endpoint without its own price is recorded high, never low.
+    expect(clip.costUsd).toBeCloseTo(4 * 0.1, 6);
+
+    let sent: Record<string, unknown> = {};
+    const gemini = (async (_url: string, init: RequestInit) => {
+      sent = JSON.parse(String(init.body));
+      return Response.json({ output_video: { data: PNG, mime_type: "video/mp4" } });
+    }) as unknown as typeof fetch;
+    await new GeminiVideoProvider("g", { base: "http://gemini.test", fetch: gemini }).generateVideo(
+      { prompt: "make it wag", image },
+    );
+    expect(sent.input).toEqual([
+      { type: "text", text: "make it wag" },
+      { type: "image", data: PNG, mime_type: "image/png" },
+    ]);
   });
 });

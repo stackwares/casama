@@ -18,6 +18,7 @@ import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/mascot.dart';
 import '../../ui/page.dart';
+import '../chat/delete_chat.dart';
 import '../notifications/checkins_sheet.dart';
 import '../notifications/quiet_hours.dart';
 import '../settings/model_keys_screen.dart';
@@ -710,6 +711,15 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
         const SizedBox(height: AppSpace.lg),
         GroupedCard(
           children: [
+            GroupedTile(
+              key: const Key('deleteAllChats'),
+              icon: LucideIcons.trash2,
+              title: l10n.deleteAllChats,
+              subtitle: l10n.deleteAllChatsRow,
+              destructive: true,
+              showChevron: false,
+              onTap: () => confirmDeleteAllChats(context, ref, botId: bot.id, botName: bot.name),
+            ),
             GroupedTile(
               key: const Key('archiveBot'),
               icon: LucideIcons.archive,

@@ -18,12 +18,14 @@ Rules:
 - Use tools when they help; prefer acting over asking when the request is clear.
 - When you learn a lasting fact or preference about the user, you may save it with memory.write (about: "person" for facts about them, such as their job, family or tastes; "work" for facts about the work).
 - Load a skill with skills.load before following it; the skills index lists only names and descriptions.
+- When asked to change or convert something the person sent or you made (animate a picture, turn a PDF into Markdown, resize a photo, trim a video), work on that actual file: pass its media: id or path to a tool that takes a file, or use your computer's tools on it (files.from_chat puts a chat file there). If nothing you have can take it, say so plainly and offer the closest thing you can do; never present something newly made as the original, changed.
 - Reply like a person: when a request needs tools, first write one short line saying what you're about to do (for example "On it, opening Google now."), in the same turn as your first tool call. Don't narrate each step after that; when you're done, give the result.
 - A message the person sends while you're working arrives marked as sent mid-task. Acknowledge it in one short line, then decide: fold it into what you're doing, stop and switch to it, or finish first and then handle it.`;
 
 const AUTONOMY_TEXT = {
   ask_always: "Ask for approval before any action with side effects.",
-  ask_risky: "Act on your own for low-risk actions; risky actions will be sent for approval.",
+  ask_risky:
+    "Act on your own for most actions; only risky ones (sending for the person, sharing publicly, paying, destructive changes) will be sent for approval.",
   autonomous: "Act on your own; only actions the platform marks as always-approve will pause.",
 } as const;
 
@@ -45,6 +47,8 @@ export interface ContextInput {
   computer?: boolean;
   /** On a team computer: the bot's own folder under ~/workspace/bots (D-148). */
   teamFolder?: string;
+  /** The bot's computer is the person's own machine through the desktop app (D-066). */
+  localComputer?: LocalComputerContext;
   /** Fraction of the window that triggers compaction. */
   compactAt?: number;
   /** Set when one of the bot's routines started this run. */
@@ -84,17 +88,56 @@ function localDate(now: Date, timezone: string) {
  * The first two blocks only change when the bot's settings or skills change, so
  * providers with prompt caching can reuse them.
  */
+export interface LocalComputerContext {
+  platform: "macos" | "windows" | "linux";
+  /** What the person allowed: shell, files, browser, desktop, messages, mcp. */
+  capabilities: Record<string, boolean>;
+  /** Shared folders; commands start in the first. */
+  roots: string[];
+  /** Local MCP servers on that computer that can't be reached right now. */
+  unreachableTools?: string[];
+}
+
+const PLATFORM_NAME = { macos: "Mac", windows: "Windows PC", linux: "Linux computer" } as const;
+
+/** The system prompt's computer paragraph for the person's own machine (D-066). */
+export function localComputerText(c: LocalComputerContext): string {
+  const machine = PLATFORM_NAME[c.platform];
+  const can = [
+    c.capabilities.shell && "run commands",
+    c.capabilities.files && "read and edit files",
+    c.capabilities.browser && "use a browser of your own (separate from theirs)",
+    c.capabilities.desktop && "use their desktop apps",
+    c.capabilities.messages && "use Messages (iMessage)",
+    c.capabilities.mcp && "use the local tools (MCP servers) they added",
+  ].filter(Boolean);
+  const folders = c.roots.length
+    ? `They shared these folders, and paths outside them are refused: ${c.roots.join(", ")}. Commands start in ${c.roots[0]}.`
+    : "They haven't shared any folders yet, so you can't reach their files; they can add folders in Settings → Use this computer.";
+  // Forward slashes on every platform: backslashes are escapes inside a Markdown link.
+  const root = (c.roots[0] ?? (c.platform === "windows" ? "C:/Users/you" : "/Users/you"))
+    .replace(/\\/g, "/")
+    .replace(/\/$/, "");
+  const example = `${root}/report.md`;
+  const broken = c.unreachableTools?.length
+    ? ` These local tools are added but not reachable right now (their server may not be running): ${c.unreachableTools.join(", ")}. Tell the person to start them if they ask for them.`
+    : "";
+  return `Your computer is the person's own ${machine}, connected through the Casama desktop app; it is not a cloud computer. ${can.length ? `They allowed you to ${can.join(", ")}.` : "They haven't allowed any actions on it yet."} ${folders} Every action shows on their screen and high-risk ones always ask first. Files persist there. When you mention a file you made, link it with its full path, like [report.md](${example}); the app shows each linked file as a card under your reply, so never write a bare path. Link each file once, inside a sentence (I made [report.md](...) for you); don't add a list of the files, labels like PDF:, or the same file twice. Never use sandbox: or file: links.${broken}`;
+}
+
 export function buildContext(input: ContextInput): BuiltContext {
   const stable = [
     PLATFORM_RULES,
     `Your name is ${input.botName}.`,
     input.persona.trim() ? `Persona:\n${input.persona.trim()}` : "",
     `Autonomy: ${AUTONOMY_TEXT[input.autonomy]}`,
-    input.computer && input.teamFolder
-      ? `You work on your team's shared Linux computer (Ubuntu, home /home/casama) with a shell, files and a browser. Your own folder is ~/workspace/bots/${input.teamFolder}: commands start there and relative paths are inside it. Put files every bot on this computer should use in ~/workspace/shared (the path shared/ works from anywhere); other bots have their own folders under ~/workspace/bots, so leave those alone unless asked. Files persist between conversations. Use the browser tools for websites and files.write for deliverables. When you mention a file you made, link it with its path under the home folder, like [report.md](workspace/bots/${input.teamFolder}/report.md); the app shows each linked file as a card under your reply. Link each file once, inside a sentence (I made [report.md](...) for you); don't add a list of the files, labels like PDF:, or the same file twice. Never use sandbox: or file: links. Files the user attaches arrive in workspace/uploads.`
-      : input.computer
-        ? "You have your own Linux computer (Ubuntu, home /home/casama, work in ~/workspace) with a shell, files and a browser. Files persist between conversations. Use the browser tools for websites and files.write for deliverables. When you mention a file you made, link it with its path under the home folder, like [report.md](workspace/report.md); the app shows each linked file as a card under your reply. Link each file once, inside a sentence (I made [report.md](...) for you); don't add a list of the files, labels like PDF:, or the same file twice. Never use sandbox: or file: links. Files the user attaches arrive in workspace/uploads."
-        : "",
+    input.computer && input.localComputer
+      ? localComputerText(input.localComputer)
+      : input.computer && input.teamFolder
+        ? `You work on your team's shared Linux computer (Ubuntu, home /home/casama) with a shell, files and a browser. Your own folder is ~/workspace/bots/${input.teamFolder}: commands start there and relative paths are inside it. Put files every bot on this computer should use in ~/workspace/shared (the path shared/ works from anywhere); other bots have their own folders under ~/workspace/bots, so leave those alone unless asked. Files persist between conversations. Use the browser tools for websites and files.write for deliverables. When you mention a file you made, link it with its path under the home folder, like [report.md](workspace/bots/${input.teamFolder}/report.md); the app shows each linked file as a card under your reply. Link each file once, inside a sentence (I made [report.md](...) for you); don't add a list of the files, labels like PDF:, or the same file twice. Never use sandbox: or file: links. Files the user attaches arrive in workspace/uploads.`
+        : input.computer
+          ? "You have your own Linux computer (Ubuntu, home /home/casama, work in ~/workspace) with a shell, files and a browser. Files persist between conversations. Use the browser tools for websites and files.write for deliverables. When you mention a file you made, link it with its path under the home folder, like [report.md](workspace/report.md); the app shows each linked file as a card under your reply. Link each file once, inside a sentence (I made [report.md](...) for you); don't add a list of the files, labels like PDF:, or the same file twice. Never use sandbox: or file: links. Files the user attaches arrive in workspace/uploads."
+          : "",
     "To do something later, use routines.create: in_minutes or run_at for one-time work (reminders, follow-ups), schedule_cron only for work that repeats. Use routines.list, routines.update and routines.delete to change or stop routines.",
   ]
     .filter(Boolean)
@@ -170,11 +213,14 @@ export async function offloadLargeResult(
   if (estimateTokens(text) <= maxTokens) return { content: text, artifactPath: null };
   const previewChars = Math.min(2000, maxTokens * 2);
   if (opts.sink) {
-    const path = await opts.sink.write(opts.name, text);
-    return {
-      content: `${text.slice(0, previewChars)}\n\n[Output truncated: ${text.length} characters. Full output saved to ${path}]`,
-      artifactPath: path,
-    };
+    // The command already ran: if the file can't be written (a person's own computer refuses
+    // paths outside the folders they shared), keep head and tail instead of failing the call.
+    const path = await opts.sink.write(opts.name, text).catch(() => null);
+    if (path)
+      return {
+        content: `${text.slice(0, previewChars)}\n\n[Output truncated: ${text.length} characters. Full output saved to ${path}]`,
+        artifactPath: path,
+      };
   }
   const half = Math.floor((maxTokens * 4) / 2);
   return {

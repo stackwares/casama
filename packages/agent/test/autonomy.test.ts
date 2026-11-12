@@ -148,6 +148,18 @@ async function startApi() {
           { url: `${apiUrl}/files/img.png`, content_type: "image/png", width: 1024, height: 1024 },
         ],
       });
+    // fal's queue: animating a picture (image-to-video).
+    if (url.pathname === "/fal-ai/ltx-video/image-to-video" && req.method === "POST")
+      return json(res, 200, {
+        request_id: "v1",
+        status_url: `${apiUrl}/queue/v1/status`,
+        response_url: `${apiUrl}/queue/v1`,
+      });
+    if (url.pathname === "/queue/v1/status") return json(res, 200, { status: "COMPLETED" });
+    if (url.pathname === "/queue/v1")
+      return json(res, 200, { video: { url: `${apiUrl}/files/clip.mp4` } });
+    if (url.pathname === "/files/clip.mp4")
+      return res.writeHead(200, { "content-type": "video/mp4" }).end(Buffer.from("mp4"));
     if (url.pathname === "/files/img.png")
       return res
         .writeHead(200, { "content-type": "image/png" })
@@ -328,8 +340,18 @@ describe("approvals", () => {
           finish(),
         ),
         turn(
-          { lastRole: "tool", lastToolName: "web.search" },
-          call("h1", "http__request", { method: "GET", url: `PLACEHOLDER/echo` }),
+          { lastRole: "tool", lastToolName: "web.search", lastUserIncludes: "search then call" },
+          call("h1", "http__request", { method: "POST", url: `PLACEHOLDER/echo`, body: "{}" }),
+          finish(),
+        ),
+        turn(
+          { lastRole: "user", lastUserIncludes: "search then read" },
+          call("s2", "web__search", { query: "casama" }),
+          finish(),
+        ),
+        turn(
+          { lastRole: "tool", lastToolName: "web.search", lastUserIncludes: "search then read" },
+          call("h2", "http__request", { method: "GET", url: `PLACEHOLDER/echo` }),
           finish(),
         ),
         turn({ lastRole: "tool", lastToolName: "http.request" }, say("Called the API."), finish()),
@@ -350,7 +372,16 @@ describe("approvals", () => {
     expect((await events(runId)).some((e) => e.type === "approval.requested")).toBe(false);
   });
 
-  it("asks before medium-risk calls after untrusted input; approval resumes the run", async () => {
+  it("reading the web after untrusted input runs without approval under ask_risky (D-213)", async () => {
+    const botId = await makeBot("Reader");
+    const runId = await startRun(botId, "search then read the api");
+    expect((await runAgent(runId, makeDeps(fix()).deps)).status).toBe("completed");
+    const evs = await events(runId);
+    expect(evs.some((e) => e.type === "approval.requested")).toBe(false);
+    expect(evs.filter((e) => e.type === "tool.completed")).toHaveLength(2);
+  });
+
+  it("asks before sending data out after untrusted input; approval resumes the run", async () => {
     const botId = await makeBot("Searcher");
     const runId = await startRun(botId, "search then call the api");
     const decided = decideWhenPending(runId, "approved");
@@ -371,8 +402,20 @@ describe("approvals", () => {
     ).toBe(true);
   });
 
-  it("media generation waits for approval, and denying cancels that step only", async () => {
-    const botId = await makeBot("Artist");
+  it("media generation runs without asking under ask_risky (D-213)", async () => {
+    const botId = await makeBot("ArtistFree");
+    const runId = await startRun(botId, "make an image of a robot");
+    expect((await runAgent(runId, makeDeps(fix()).deps)).status).toBe("completed");
+    const evs = await events(runId);
+    expect(evs.some((e) => e.type === "approval.requested")).toBe(false);
+    expect(evs.find((e) => e.type === "tool.completed")?.payload.result_preview).toBe(
+      "image generated",
+    );
+  });
+
+  // The approval flow itself, on bots that ask before acting.
+  it("media generation waits for approval when the bot asks first, and denying cancels that step only", async () => {
+    const botId = await makeBot("Artist", { autonomy: "ask_always" });
     const runId = await startRun(botId, "make an image of a robot");
     const decided = decideWhenPending(runId, "denied");
     expect((await runAgent(runId, makeDeps(fix()).deps)).status).toBe("completed");
@@ -404,7 +447,7 @@ describe("approvals", () => {
   });
 
   it("approved media generation succeeds and is recorded; always-allow skips the next approval", async () => {
-    const botId = await makeBot("Artist2");
+    const botId = await makeBot("Artist2", { autonomy: "ask_always" });
     const runId = await startRun(botId, "make an image of a robot");
     const decided = decideWhenPending(runId, "approved", true);
     expect((await runAgent(runId, makeDeps(fix()).deps)).status).toBe("completed");
@@ -445,8 +488,69 @@ describe("approvals", () => {
     expect((await events(again)).some((e) => e.type === "approval.requested")).toBe(false);
   });
 
+  it("animating a picture from the chat sends that exact picture to the video model", async () => {
+    const [pic] = await tdb.admin<{ id: string }[]>`
+      insert into public.chat_media (org_id, name, content_type, bytes, size)
+      values (${orgId}, 'dog.png', 'image/png', ${Buffer.from([137, 80, 78, 71])}, 4) returning id`;
+    const botId = await makeBot("Animator");
+    const runId = await startRun(botId, "make this picture a video");
+    const fixtures: FixtureFile[] = [
+      {
+        name: "animate",
+        turns: [
+          turn({ systemIncludes: "extract lasting memories" }, say('{"memories":[]}'), finish()),
+          turn(
+            { lastRole: "user", lastUserIncludes: "make this picture a video" },
+            call("v1", "media__video__generate", {
+              prompt: "the dog wags",
+              image: `media:${pic!.id}`,
+            }),
+            finish(),
+          ),
+          turn(
+            { lastRole: "tool", lastToolName: "media.video.generate" },
+            say("Here it is."),
+            finish(),
+          ),
+        ],
+      },
+    ];
+    expect((await runAgent(runId, makeDeps(fixtures).deps)).status).toBe("completed");
+    const posted = received.find((r) => r.url === "/fal-ai/ltx-video/image-to-video");
+    expect(JSON.parse(posted!.body)).toMatchObject({
+      prompt: "the dog wags",
+      image_url: "data:image/png;base64,iVBORw==",
+    });
+    const done = (await events(runId)).find((e) => e.type === "tool.completed");
+    expect(String(done?.payload.result_preview)).toContain("video generated");
+  });
+
+  it("files.from_chat copies a chat file onto the computer, only from this workspace", async () => {
+    const [pic] = await tdb.admin<{ id: string }[]>`
+      insert into public.chat_media (org_id, name, content_type, bytes, size)
+      values (${orgId}, 'cat.png', 'image/png', ${Buffer.from([1, 2, 3])}, 3) returning id`;
+    const writes: Array<[string, number[]]> = [];
+    const computer = async () =>
+      ({ writeFile: async (p: string, d: Uint8Array) => void writes.push([p, [...d]]) }) as never;
+    const ctx = (org: string) => ({
+      runId: crypto.randomUUID(),
+      botId: crypto.randomUUID(),
+      orgId: org,
+      output: async () => {},
+      emit: async () => {},
+      computer,
+    });
+    const tool = makeDeps([]).deps.tools.get("files.from_chat")!;
+    const res = await tool.execute({ file: `media:${pic!.id}` }, ctx(orgId));
+    expect(writes).toEqual([["media/cat.png", [1, 2, 3]]]);
+    expect(res.content).toBe("Copied cat.png (image/png) to ~/workspace/media/cat.png.");
+    await expect(
+      tool.execute({ file: `media:${pic!.id}` }, ctx(crypto.randomUUID())),
+    ).rejects.toMatchObject({ code: "file_not_found" });
+  });
+
   it("an approval left undecided expires and the run continues", async () => {
-    const botId = await makeBot("Waiter");
+    const botId = await makeBot("Waiter", { autonomy: "ask_always" });
     const runId = await startRun(botId, "make an image of a robot");
     const { deps } = makeDeps(fix(), { waitForApproval: async () => {} });
     expect((await runAgent(runId, deps)).status).toBe("completed");

@@ -37,6 +37,24 @@ void main() {
     expect(backend.groups.single.title, 'Launch crew');
   });
 
+  testWidgets('an empty group chat says who is in it and how to reach them', (tester) async {
+    await setSize(tester, const Size(500, 1000));
+    final backend = FakeBackend();
+    backend.extraBots.add(backend.bot(id: 'bot-b', name: 'Bea'));
+    final g = await backend.createGroupChat(botId, ['bot-b'], title: 'Launch crew');
+    await tester.pumpWidget(harness(backend, GroupChatScreen(conversationId: g.id)));
+    await tester.pumpAndSettle();
+    expect(find.text('Launch crew'), findsWidgets);
+    expect(find.byKey(const Key('groupHowItWorks')), findsOneWidget);
+    expect(find.text('2 bots are in this chat. Each keeps its own memory and settings.'), findsOneWidget);
+    // No one-bot starter requests in a group.
+    expect(find.byKey(const Key('suggestion-0')), findsNothing);
+    // A member's chip starts the message to them.
+    await tester.tap(find.byKey(const Key('groupMention-bot-b')));
+    await tester.pumpAndSettle();
+    expect(find.descendant(of: find.byKey(const Key('messageInput')), matching: find.text('@Bea '), matchRoot: true), findsOneWidget);
+  });
+
   testWidgets('typing @ suggests the group bots and everyone', (tester) async {
     final backend = FakeBackend();
     backend.extraBots.add(backend.bot(id: 'bot-b', name: 'Bea'));

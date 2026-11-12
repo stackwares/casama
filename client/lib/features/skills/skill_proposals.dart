@@ -11,6 +11,7 @@ import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../chat/widgets/chat_markdown.dart';
+import '../../ui/action_buttons.dart';
 
 /// Self-improving skills (D-126): skills and edits bots proposed, waiting for the owner.
 final skillProposalsProvider = FutureProvider.autoDispose<List<SkillProposal>>((ref) async {
@@ -107,7 +108,15 @@ class SkillProposalCard extends ConsumerWidget {
               ChatMarkdown(data: p.bodyMd),
               if (p.tools.isNotEmpty) Text(l10n.skillUsesTools(p.tools.join(', ')), style: context.textTheme.bodySmall),
             ],
-            Row(children: [
+            ActionButtons(actions: [
+              OutlinedButton(
+                key: Key('dismissProposal-${p.id}'),
+                onPressed: () async {
+                  await runGuarded(context, () => backend.dismissSkillProposal(p.id));
+                  ref.invalidate(skillProposalsProvider);
+                },
+                child: Text(l10n.dismiss),
+              ),
               FilledButton(
                 key: Key('acceptProposal-${p.id}'),
                 onPressed: () async {
@@ -116,15 +125,6 @@ class SkillProposalCard extends ConsumerWidget {
                   if (context.mounted) showSuccess(context, isEdit ? l10n.skillUpdated(p.name) : l10n.skillSaved(p.name));
                 },
                 child: Text(isEdit ? l10n.applyEdit : l10n.saveSkill),
-              ),
-              const SizedBox(width: AppSpace.sm),
-              TextButton(
-                key: Key('dismissProposal-${p.id}'),
-                onPressed: () async {
-                  await runGuarded(context, () => backend.dismissSkillProposal(p.id));
-                  ref.invalidate(skillProposalsProvider);
-                },
-                child: Text(l10n.dismiss),
               ),
             ]),
           ],

@@ -33,6 +33,8 @@ class Conversation {
     required  this.botIds,
 
     required  this.createdAt,
+
+     this.canDelete,
   });
 
   @JsonKey(
@@ -120,6 +122,19 @@ class Conversation {
 
 
 
+      /// Whether you may delete it: you started it, or you manage its bot
+  @JsonKey(
+    
+    name: r'can_delete',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? canDelete;
+
+
+
 
 
     @override
@@ -130,7 +145,8 @@ class Conversation {
       other.lastMessageAt == lastMessageAt &&
       other.kind == kind &&
       other.botIds == botIds &&
-      other.createdAt == createdAt;
+      other.createdAt == createdAt &&
+      other.canDelete == canDelete;
 
     @override
     int get hashCode =>
@@ -140,7 +156,8 @@ class Conversation {
         (lastMessageAt == null ? 0 : lastMessageAt.hashCode) +
         kind.hashCode +
         botIds.hashCode +
-        createdAt.hashCode;
+        createdAt.hashCode +
+        canDelete.hashCode;
 
   factory Conversation.fromJson(Map<String, dynamic> json) => _$ConversationFromJson(json);
 

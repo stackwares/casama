@@ -27,6 +27,8 @@ abstract class _$PublicConfigCWProxy {
 
   PublicConfig chatgptSignIn(bool? chatgptSignIn);
 
+  PublicConfig serverVoice(List<PublicConfigServerVoiceEnum>? serverVoice);
+
   PublicConfig signupProofs(List<PublicConfigSignupProofsEnum>? signupProofs);
 
   PublicConfig traceUrlTemplate(String? traceUrlTemplate);
@@ -51,6 +53,7 @@ abstract class _$PublicConfigCWProxy {
     PublicConfigDefaultReasoningEffortEnum defaultReasoningEffort,
     bool? wallpapersEnabled,
     bool? chatgptSignIn,
+    List<PublicConfigServerVoiceEnum>? serverVoice,
     List<PublicConfigSignupProofsEnum>? signupProofs,
     String? traceUrlTemplate,
     List<String>? googleClientIds,
@@ -101,6 +104,10 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
       call(chatgptSignIn: chatgptSignIn);
 
   @override
+  PublicConfig serverVoice(List<PublicConfigServerVoiceEnum>? serverVoice) =>
+      call(serverVoice: serverVoice);
+
+  @override
   PublicConfig signupProofs(List<PublicConfigSignupProofsEnum>? signupProofs) =>
       call(signupProofs: signupProofs);
 
@@ -131,6 +138,7 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
     Object? defaultReasoningEffort = const $CopyWithPlaceholder(),
     Object? wallpapersEnabled = const $CopyWithPlaceholder(),
     Object? chatgptSignIn = const $CopyWithPlaceholder(),
+    Object? serverVoice = const $CopyWithPlaceholder(),
     Object? signupProofs = const $CopyWithPlaceholder(),
     Object? traceUrlTemplate = const $CopyWithPlaceholder(),
     Object? googleClientIds = const $CopyWithPlaceholder(),
@@ -182,6 +190,10 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
           ? _value.chatgptSignIn
           // ignore: cast_nullable_to_non_nullable
           : chatgptSignIn as bool?,
+      serverVoice: serverVoice == const $CopyWithPlaceholder()
+          ? _value.serverVoice
+          // ignore: cast_nullable_to_non_nullable
+          : serverVoice as List<PublicConfigServerVoiceEnum>?,
       signupProofs: signupProofs == const $CopyWithPlaceholder()
           ? _value.signupProofs
           // ignore: cast_nullable_to_non_nullable
@@ -246,6 +258,12 @@ PublicConfig _$PublicConfigFromJson(
         (v) => v as bool?,
       ),
       chatgptSignIn: $checkedConvert('chatgpt_sign_in', (v) => v as bool?),
+      serverVoice: $checkedConvert(
+        'server_voice',
+        (v) => (v as List<dynamic>?)
+            ?.map((e) => $enumDecode(_$PublicConfigServerVoiceEnumEnumMap, e))
+            .toList(),
+      ),
       signupProofs: $checkedConvert(
         'signup_proofs',
         (v) => (v as List<dynamic>?)
@@ -273,6 +291,7 @@ PublicConfig _$PublicConfigFromJson(
     'defaultReasoningEffort': 'default_reasoning_effort',
     'wallpapersEnabled': 'wallpapers_enabled',
     'chatgptSignIn': 'chatgpt_sign_in',
+    'serverVoice': 'server_voice',
     'signupProofs': 'signup_proofs',
     'traceUrlTemplate': 'trace_url_template',
     'googleClientIds': 'google_client_ids',
@@ -292,6 +311,9 @@ Map<String, dynamic> _$PublicConfigToJson(PublicConfig instance) =>
               .defaultReasoningEffort]!,
       'wallpapers_enabled': ?instance.wallpapersEnabled,
       'chatgpt_sign_in': ?instance.chatgptSignIn,
+      'server_voice': ?instance.serverVoice
+          ?.map((e) => _$PublicConfigServerVoiceEnumEnumMap[e]!)
+          .toList(),
       'signup_proofs': ?instance.signupProofs
           ?.map((e) => _$PublicConfigSignupProofsEnumEnumMap[e]!)
           .toList(),
@@ -306,6 +328,12 @@ const _$PublicConfigDefaultReasoningEffortEnumEnumMap = {
   PublicConfigDefaultReasoningEffortEnum.high: 'high',
   PublicConfigDefaultReasoningEffortEnum.xhigh: 'xhigh',
   PublicConfigDefaultReasoningEffortEnum.max: 'max',
+};
+
+const _$PublicConfigServerVoiceEnumEnumMap = {
+  PublicConfigServerVoiceEnum.live: 'live',
+  PublicConfigServerVoiceEnum.readAloud: 'read_aloud',
+  PublicConfigServerVoiceEnum.dictation: 'dictation',
 };
 
 const _$PublicConfigSignupProofsEnumEnumMap = {

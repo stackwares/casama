@@ -6,6 +6,7 @@ import '../core/widgets.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
 import 'app_card.dart';
+import 'action_buttons.dart';
 
 /// A key or token that's shown only once: big Copy button, the value in a box you can tap to
 /// copy, and Done to put it away. Copying is the main action, so it's the first thing you see.
@@ -71,11 +72,9 @@ class _OneTimeSecretCardState extends State<OneTimeSecretCard> {
               ),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            spacing: AppSpace.xs,
-            children: [
-              TextButton(key: const Key('oneTimeSecretDone'), onPressed: widget.onDone, child: Text(l10n.doneLabel)),
+          ActionButtons(
+            actions: [
+              OutlinedButton(key: const Key('oneTimeSecretDone'), onPressed: widget.onDone, child: Text(l10n.doneLabel)),
               FilledButton.icon(
                 key: const Key('oneTimeSecretCopy'),
                 onPressed: _copy,

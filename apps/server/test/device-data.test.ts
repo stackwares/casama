@@ -282,6 +282,10 @@ describe("device connections", () => {
       token: owner.token,
       json: { bot_id: botId, kind: "calendar", allowed: true },
     });
+    // Calendar writes run without asking under the default autonomy (D-213); an "ask" rule makes them ask.
+    await h.tdb
+      .admin`insert into public.action_rules (org_id, bot_id, match_kind, match_value, rule)
+      values (${orgId}, ${botId}, 'tool', 'device.calendar.create', 'ask')`;
     const runId = await start(owner, "Please add lunch with Sam on Friday");
     const approval = await waitFor(async () => {
       const p = await j(

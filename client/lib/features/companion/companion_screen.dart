@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/display_text.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../core/haptics.dart';
@@ -243,13 +244,39 @@ List<String> splitCommand(String line) {
 }
 
 /// Local MCP servers on this computer (D-096).
-class _LocalMcpSection extends ConsumerWidget {
+class _LocalMcpSection extends ConsumerStatefulWidget {
   const _LocalMcpSection({required this.device, required this.enabled});
   final LocalDevice device;
   final bool enabled;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_LocalMcpSection> createState() => _LocalMcpSectionState();
+}
+
+class _LocalMcpSectionState extends ConsumerState<_LocalMcpSection> {
+  /// The server being tested, if any.
+  String? _testing;
+
+  Future<void> _test(LocalMcpConfig s) async {
+    final l10n = context.l10n;
+    setState(() => _testing = s.key);
+    final r = await runGuarded(context, () async => (await ref.read(companionControllerProvider.notifier).testMcpServer(s.key)) ?? IntegrationTestResult(ok: false, tools: const [], error: l10n.localMcpNotSaved));
+    if (!mounted) return;
+    setState(() => _testing = null);
+    if (r == null) return;
+    if (r.ok) {
+      showSuccess(context, l10n.integrationOk(r.tools.length));
+    } else {
+      showFailure(context, l10n.integrationFailed(r.error.orPlaceholder()));
+    }
+  }
+
+  LocalDevice get device => widget.device;
+  bool get enabled => widget.enabled;
+
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final servers = ref.watch(localMcpServersProvider).value ?? const <LocalMcpConfig>[];
     final controller = ref.read(companionControllerProvider.notifier);
@@ -284,10 +311,23 @@ class _LocalMcpSection extends ConsumerWidget {
                   icon: s.kind == 'loopback' ? LucideIcons.network : LucideIcons.squareTerminal,
                   title: s.label,
                   subtitle: s.summary,
-                  trailing: IconButton(
-                    tooltip: l10n.delete,
-                    icon: const Icon(LucideIcons.x),
-                    onPressed: () => runGuarded(context, () => controller.saveMcpServers(servers.where((x) => x.key != s.key).toList())),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        key: Key('testLocalMcp-${s.key}'),
+                        tooltip: l10n.testConnection,
+                        icon: _testing == s.key
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(LucideIcons.activity),
+                        onPressed: _testing == null ? () => _test(s) : null,
+                      ),
+                      IconButton(
+                        tooltip: l10n.delete,
+                        icon: const Icon(LucideIcons.x),
+                        onPressed: () => runGuarded(context, () => controller.saveMcpServers(servers.where((x) => x.key != s.key).toList())),
+                      ),
+                    ],
                   ),
                 ),
             ],
@@ -429,11 +469,28 @@ class _CodingAgentsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final found = ref.watch(_codingAgentsProvider).value ?? const <String>[];
+    final agents = ref.watch(_codingAgentsProvider);
+    final found = agents.value ?? const <String>[];
+    final checking = agents.isLoading;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionHeader(title: l10n.codingAgents),
+        SectionHeader(
+          title: l10n.codingAgents,
+          // Installed one after opening this page? Look again without restarting the app.
+          trailing: TextButton.icon(
+            key: const Key('refreshCodingAgents'),
+            onPressed: checking
+                ? null
+                : () async {
+                    ref.invalidate(_codingAgentsProvider);
+                    final n = (await ref.read(_codingAgentsProvider.future)).length;
+                    if (context.mounted) showSuccess(context, l10n.codingAgentsFound(n));
+                  },
+            icon: checking ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(LucideIcons.refreshCw, size: 16),
+            label: Text(l10n.refresh),
+          ),
+        ),
         if (found.isEmpty)
           AppCard(child: FormNote(l10n.codingAgentsNone, icon: LucideIcons.codeXml))
         else

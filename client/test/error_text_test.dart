@@ -34,14 +34,25 @@ void main() {
         errorText(ctx, noAnswer),
         "Couldn't reach your Casama server. Check your connection and try again.",
       );
-      // A real answer keeps its own message.
+      // An answer without Casama's error body never shows Dio's developer text.
       final answered = DioException(
         requestOptions: options,
         type: DioExceptionType.badResponse,
         response: Response(requestOptions: options, statusCode: 418),
         message: 'Teapot',
       );
-      expect(errorText(ctx, answered), 'Teapot');
+      expect(errorText(ctx, answered), 'Something went wrong');
+      // A 5xx from something in between (a proxy or tunnel while the server restarts).
+      final down = DioException(
+        requestOptions: options,
+        type: DioExceptionType.badResponse,
+        response: Response(requestOptions: options, statusCode: 502),
+        message: 'Bad gateway',
+      );
+      expect(
+        errorText(ctx, down),
+        "Your Casama server isn't responding right now. Try again in a moment.",
+      );
     },
   );
 }

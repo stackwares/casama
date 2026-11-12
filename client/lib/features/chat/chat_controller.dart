@@ -26,8 +26,12 @@ class MessageEntry extends ChatEntry {
     this.siblingCount = 1,
     this.botId,
     this.uploading = false,
+    this.failed = false,
   });
   final String id;
+
+  /// Yours, and it didn't reach the server: shown with Try Again instead of being lost.
+  final bool failed;
 
   /// Sent before its files finished uploading: shown at once, delivered when they are up.
   final bool uploading;
@@ -42,7 +46,7 @@ class MessageEntry extends ChatEntry {
   /// Edited versions of a message are siblings; arrows switch between them (D-108).
   final int siblingIndex;
   final int siblingCount;
-  MessageEntry copyWith({String? text, bool? streaming, List<AttachmentRef>? attachments, bool? uploading}) => MessageEntry(
+  MessageEntry copyWith({String? text, bool? streaming, List<AttachmentRef>? attachments, bool? uploading, bool? failed}) => MessageEntry(
         id: id,
         role: role,
         text: text ?? this.text,
@@ -52,6 +56,7 @@ class MessageEntry extends ChatEntry {
         siblingCount: siblingCount,
         botId: botId,
         uploading: uploading ?? this.uploading,
+        failed: failed ?? this.failed,
       );
 }
 
@@ -222,12 +227,41 @@ class ChatController extends Notifier<ChatState> {
   final String botId;
   StreamSubscription<RunEventItem>? _sub;
 
+  /// The open conversation's activity from other devices and triggers (D-224).
+  StreamSubscription<String?>? _watch;
+  String? _watching;
+
   Backend get _backend => ref.read(backendProvider);
 
   @override
   ChatState build() {
-    ref.onDispose(() => _sub?.cancel());
+    ref.onDispose(() {
+      _sub?.cancel();
+      _watch?.cancel();
+    });
     return const ChatState();
+  }
+
+  /// Follows runs that start in [id] from anywhere else (another phone, a routine, a group
+  /// @mention): the thread reloads and the new run streams in, as if it had started here.
+  void _follow(String id) {
+    if (_watching == id) return;
+    _watch?.cancel();
+    _watching = id;
+    _watch = _backend.watchConversation(id).listen((runId) async {
+      // A message sent here attaches its own run; a moment's wait keeps this from racing it.
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      if (state.conversationId != id || state.running) return;
+      // Already following it, or a reconnect while nothing changed: open() checks anyway.
+      if (runId != null && state.lastRunId == runId) return;
+      await open(id);
+    });
+  }
+
+  void _unfollow() {
+    _watch?.cancel();
+    _watch = null;
+    _watching = null;
   }
 
   /// Opens a conversation (or the most recent one when null).
@@ -399,6 +433,7 @@ class ChatController extends Notifier<ChatState> {
       ]),
     );
     _setIfChanged(_fromMessages(id, messages));
+    _follow(id);
     final active = await _backend.activeRun(id);
     if (active != null) _attach(active);
   }
@@ -425,6 +460,7 @@ class ChatController extends Notifier<ChatState> {
 
   Future<void> newChat() async {
     await _sub?.cancel();
+    _unfollow();
     state = const ChatState();
   }
 
@@ -445,34 +481,47 @@ class ChatController extends Notifier<ChatState> {
     final before = _sendQueue;
     _sendQueue = turn.future;
     final SendMessageResponse sent;
+    MessageEntry? optimistic;
     try {
       var conversationId = state.conversationId;
       if (conversationId == null) {
         await before;
         conversationId = state.conversationId ?? (await _backend.createConversation(botId)).id;
         state = state.copyWith(conversationId: conversationId);
+        _follow(conversationId);
         ref.invalidate(conversationsProvider(botId));
       }
-      final optimistic = MessageEntry(id: 'local-${DateTime.now().microsecondsSinceEpoch}', role: 'user', text: trimmed, attachments: attachments, uploading: uploads != null);
+      final local = MessageEntry(id: 'local-${DateTime.now().microsecondsSinceEpoch}', role: 'user', text: trimmed, attachments: attachments, uploading: uploads != null);
+      optimistic = local;
       state = state.copyWith(
-        entries: [...state.entries, optimistic],
+        entries: [...state.entries, local],
         lastUserText: trimmed,
         answeredUi: uiAction == null ? null : {...state.answeredUi, '${uiAction['surface_id']}'},
       );
       await before;
       if (uploads != null) {
         final ready = await uploads;
-        final i = state.entries.indexWhere((x) => x is MessageEntry && x.id == optimistic.id);
+        final i = state.entries.indexWhere((x) => x is MessageEntry && x.id == local.id);
         if (!ready) {
           if (i >= 0) state = state.copyWith(entries: [...state.entries]..removeAt(i));
+          optimistic = null;
           throw const UploadsFailed();
         }
-        if (i >= 0) state = state.copyWith(entries: [...state.entries]..[i] = optimistic.copyWith(uploading: false));
+        if (i >= 0) state = state.copyWith(entries: [...state.entries]..[i] = local.copyWith(uploading: false));
       }
       final sending = _backend.send(conversationId, trimmed, attachments: attachments, uiAction: uiAction, skills: skills);
       // The request is on its way; the next message may go.
       turn.complete();
       sent = await sending;
+    } catch (_) {
+      // It didn't reach the server: the bubble stays, marked, with what Try Again needs.
+      final o = optimistic;
+      final i = o == null ? -1 : state.entries.indexWhere((x) => x is MessageEntry && x.id == o.id);
+      if (o != null && i >= 0) {
+        state = state.copyWith(entries: [...state.entries]..[i] = o.copyWith(failed: true, uploading: false));
+        _unsent[o.id] = (skills: skills, uiAction: uiAction);
+      }
+      rethrow;
     } finally {
       if (!turn.isCompleted) turn.complete();
     }
@@ -480,6 +529,25 @@ class ChatController extends Notifier<ChatState> {
     if (sent.joined == true && state.activeRunId == sent.runId) return;
     unawaited(ref.read(runActivitiesProvider).started(sent.runId, ref.read(botProvider(botId))?.name ?? ''));
     _attach(sent.runId);
+  }
+
+  /// What failed messages were sent with, so Try Again sends exactly the same thing.
+  final _unsent = <String, ({List<String> skills, Map<String, Object?>? uiAction})>{};
+
+  /// Sends a message that didn't reach the server again, in place of its failed bubble.
+  Future<void> resend(String id) async {
+    final i = state.entries.indexWhere((x) => x is MessageEntry && x.id == id && x.failed);
+    if (i < 0) return;
+    final m = state.entries[i] as MessageEntry;
+    final extra = _unsent.remove(id);
+    state = state.copyWith(entries: [...state.entries]..removeAt(i));
+    await send(m.text, attachments: m.attachments, skills: extra?.skills ?? const [], uiAction: extra?.uiAction);
+  }
+
+  /// Drops a message that didn't reach the server.
+  void discardUnsent(String id) {
+    _unsent.remove(id);
+    state = state.copyWith(entries: [for (final e in state.entries) if (!(e is MessageEntry && e.id == id && e.failed)) e]);
   }
 
   Future<void> retry() async {

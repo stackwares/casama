@@ -125,6 +125,8 @@ Class | Method | HTTP request | Description
 [*ChannelsApi*](doc/ChannelsApi.md) | [**listChannels**](doc/ChannelsApi.md#listchannels) | **GET** /v1/channels | A bot&#39;s chat apps
 [*ChannelsApi*](doc/ChannelsApi.md) | [**updateChannel**](doc/ChannelsApi.md#updatechannel) | **PATCH** /v1/channels/{id} | 
 [*ChatApi*](doc/ChatApi.md) | [**createConversation**](doc/ChatApi.md#createconversation) | **POST** /v1/conversations | 
+[*ChatApi*](doc/ChatApi.md) | [**deleteBotConversations**](doc/ChatApi.md#deletebotconversations) | **DELETE** /v1/bots/{id}/conversations | Delete every direct conversation with a bot that you may delete
+[*ChatApi*](doc/ChatApi.md) | [**deleteConversation**](doc/ChatApi.md#deleteconversation) | **DELETE** /v1/conversations/{id} | Delete a conversation and its messages
 [*ChatApi*](doc/ChatApi.md) | [**editMessage**](doc/ChatApi.md#editmessage) | **POST** /v1/conversations/{id}/messages/{message_id}/edit | Edit a sent message: forks the conversation there and reruns it (the old branch stays)
 [*ChatApi*](doc/ChatApi.md) | [**getConversationThread**](doc/ChatApi.md#getconversationthread) | **GET** /v1/conversations/{id}/thread | The branch being shown, oldest first (what conversation_thread returns, with content opened)
 [*ChatApi*](doc/ChatApi.md) | [**listConversations**](doc/ChatApi.md#listconversations) | **GET** /v1/bots/{id}/conversations | 
@@ -137,6 +139,7 @@ Class | Method | HTTP request | Description
 [*CheckinsApi*](doc/CheckinsApi.md) | [**getForYou**](doc/CheckinsApi.md#getforyou) | **GET** /v1/for-you | Your feed in a workspace: the latest briefs, pending suggestions and approvals
 [*CheckinsApi*](doc/CheckinsApi.md) | [**setBotCheckins**](doc/CheckinsApi.md#setbotcheckins) | **PUT** /v1/bots/{id}/checkins | Turn a bot&#39;s morning brief and scans on or off, and set their times and daily cap
 [*ComputersApi*](doc/ComputersApi.md) | [**computerFilePdfPreview**](doc/ComputersApi.md#computerfilepdfpreview) | **GET** /v1/computers/{id}/files/pdf-preview | A document (Word, Excel, PowerPoint, OpenDocument, RTF) as a PDF, for previewing
+[*ComputersApi*](doc/ComputersApi.md) | [**computerFileThumbnail**](doc/ComputersApi.md#computerfilethumbnail) | **GET** /v1/computers/{id}/files/thumbnail | A small JPEG or PNG of a video&#39;s first frame, an image or a PDF&#39;s first page
 [*ComputersApi*](doc/ComputersApi.md) | [**computerScreenshot**](doc/ComputersApi.md#computerscreenshot) | **GET** /v1/computers/{id}/screenshot | PNG of the desktop, or of the bot&#39;s browser page on headless computers
 [*ComputersApi*](doc/ComputersApi.md) | [**computerStream**](doc/ComputersApi.md#computerstream) | **GET** /v1/computers/{id}/stream | WebSocket live-view signaling (Neko protocol). Authenticated by the stream-session token; input is accepted only in control mode while you hold the lease.
 [*ComputersApi*](doc/ComputersApi.md) | [**computerTerminal**](doc/ComputersApi.md#computerterminal) | **GET** /v1/computers/{id}/terminal | WebSocket terminal. Binary frames carry terminal bytes both ways. Browsers may pass the access token as ?access_token&#x3D;.
@@ -516,6 +519,8 @@ Class | Method | HTTP request | Description
  - [DeleteResult](doc/DeleteResult.md)
  - [DeletedChannel](doc/DeletedChannel.md)
  - [DeletedComputer](doc/DeletedComputer.md)
+ - [DeletedConversation](doc/DeletedConversation.md)
+ - [DeletedConversations](doc/DeletedConversations.md)
  - [DeletedDevice](doc/DeletedDevice.md)
  - [DeletedId](doc/DeletedId.md)
  - [DeletedKnowledgeSource](doc/DeletedKnowledgeSource.md)

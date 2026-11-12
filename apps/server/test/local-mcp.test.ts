@@ -142,6 +142,35 @@ describe("local MCP servers", () => {
     expect(r.tools).toEqual(["echo", "slow"]);
   }, 60_000);
 
+  it("lets a member test the servers on their own computer, and nobody else's", async () => {
+    const member = await h.user("mcp-member@example.com");
+    const other = await h.user("mcp-other-member@example.com");
+    await h.tdb.admin`insert into public.memberships (org_id, user_id, role)
+      values (${orgId}, ${member.id}, 'member'), (${orgId}, ${other.id}, 'member')`;
+    const own = await j(
+      await h.request("/v1/local-devices", {
+        method: "POST",
+        token: member.token,
+        json: { org_id: orgId, name: "Member laptop", platform: "macos" },
+      }),
+    );
+    const { items } = await j(
+      await h.request(`/v1/local-devices/${own.id}/mcp-servers`, {
+        method: "PUT",
+        token: member.token,
+        json: { servers: [{ key: "notes", label: "Notes", kind: "stdio", summary: "notes-mcp" }] },
+      }),
+    );
+    const test = (token: string, id: string) =>
+      h.request(`/v1/integrations/${id}/test`, { method: "POST", token });
+    // Their computer isn't connected, so the test runs and reports why it failed.
+    const res = await test(member.token, items[0].id);
+    expect(res.status).toBe(200);
+    expect((await j(res)).ok).toBe(false);
+    expect((await test(other.token, items[0].id)).status).toBe(403);
+    expect((await test(member.token, integrationId)).status).toBe(403);
+  }, 60_000);
+
   it("only the computer's owner attaches it to bots", async () => {
     const denied = await h.request(`/v1/bots/${otherBotId}/integrations`, {
       method: "POST",

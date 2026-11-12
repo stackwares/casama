@@ -37,7 +37,7 @@ class AppColors extends ThemeExtension<AppColors> {
     negative: Color(0xFFFF7A7A),
     warning: Color(0xFFF0A84A),
     info: Color(0xFF6E9BFF),
-    hairline: Color(0xFF25272B),
+    hairline: Color(0xFF3A3D42),
     working: Color(0xFF5FD49A),
     waiting: Color(0xFFF0A84A),
     idle: Color(0xFF6B7079),

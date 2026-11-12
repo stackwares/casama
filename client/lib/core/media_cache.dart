@@ -68,7 +68,8 @@ class MediaCache {
     }
   }
 
-  static Future<Uint8List?> read(String key) async {
+  /// [fresh]: skip a disk copy older than the maxAge it was written with.
+  static Future<Uint8List?> read(String key, {bool fresh = false}) async {
     final hit = _memory.remove(key);
     if (hit != null) {
       _memory[key] = hit; // most recent last
@@ -78,6 +79,7 @@ class MediaCache {
     try {
       final file = await manager.getFileFromCache(key);
       if (file == null) return null;
+      if (fresh && file.validTill.isBefore(DateTime.now())) return null;
       final bytes = await file.file.readAsBytes();
       _remember(key, bytes);
       return bytes;
@@ -86,11 +88,22 @@ class MediaCache {
     }
   }
 
-  static Future<void> write(String key, Uint8List bytes) async {
+  /// [maxAge]: how long the disk copy is trusted (thumbnails of files that can change, D-226).
+  static Future<void> write(
+    String key,
+    Uint8List bytes, {
+    Duration maxAge = const Duration(days: 30),
+  }) async {
     _remember(key, bytes);
     if (!diskEnabled) return;
     try {
-      await manager.putFile(key, bytes, key: key, fileExtension: 'bin');
+      await manager.putFile(
+        key,
+        bytes,
+        key: key,
+        maxAge: maxAge,
+        fileExtension: 'bin',
+      );
     } catch (_) {}
   }
 

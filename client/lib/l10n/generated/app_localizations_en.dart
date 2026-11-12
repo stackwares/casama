@@ -98,10 +98,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get magicLinkSent => 'Check your email for a sign-in link.';
 
   @override
-  String get confirmEmailSent =>
-      'Check your email to confirm your account, then sign in.';
-
-  @override
   String get continueWithGoogle => 'Continue with Google';
 
   @override
@@ -251,13 +247,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modelKey => 'Model key';
 
   @override
-  String get navBots => 'Bots';
-
-  @override
   String get navComputer => 'Computer';
-
-  @override
-  String get navSettings => 'Settings';
 
   @override
   String get navChats => 'Chats';
@@ -364,15 +354,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String runCost(String cost, int tokens) {
-    final intl.NumberFormat tokensNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String tokensString = tokensNumberFormat.format(tokens);
-
-    return '$cost · $tokensString tokens';
-  }
-
-  @override
   String get activity => 'Activity';
 
   @override
@@ -423,10 +404,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get checkpoints => 'Checkpoints';
-
-  @override
-  String get headlessScreenNote =>
-      'This computer has no desktop, so this shows its browser (blank until the bot opens a page). Switch to a desktop to watch and control apps live.';
 
   @override
   String get noScreen =>
@@ -538,15 +515,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get language => 'Language';
 
   @override
-  String get inviteMember => 'Invite a member';
-
-  @override
   String inviteSent(String email) {
     return 'Invite sent to $email.';
   }
-
-  @override
-  String get botSettings => 'Bot settings';
 
   @override
   String get botProfile => 'Bot profile';
@@ -572,9 +543,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get botSchedule => 'Schedule';
-
-  @override
-  String get botAdvanced => 'Advanced';
 
   @override
   String get chatComputerLive => 'Working on its computer';
@@ -728,9 +696,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add a model key first. Your bot uses it to think; it\'s stored encrypted and never shown again.';
 
   @override
-  String get botIntegrations => 'Integrations for this bot';
-
-  @override
   String get composioToolkits =>
       'Toolkits (comma-separated, for example github, gmail)';
 
@@ -748,9 +713,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deny => 'Deny';
-
-  @override
-  String get everyDayAt7 => 'Every day at 7:00';
 
   @override
   String get everyHour => 'Every hour';
@@ -784,20 +746,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get markAllRead => 'Mark All as Read';
 
   @override
-  String get mondaysAt9 => 'Mondays at 9:00';
-
-  @override
   String get newRoutine => 'New routine';
-
-  @override
-  String get noApprovals => 'Nothing needs your approval right now.';
 
   @override
   String get noIntegrationsForBot =>
       'Add integrations in Settings first, then turn them on for this bot here.';
-
-  @override
-  String get noNotifications => 'No notifications yet';
 
   @override
   String get noRoutines =>
@@ -1065,16 +1018,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get webhookUrl => 'URL';
 
   @override
-  String approvalsCount(int n) {
-    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
-      localeName,
-    );
-    final String nString = nNumberFormat.format(n);
-
-    return 'Approvals ($nString)';
-  }
-
-  @override
   String botWantsTo(String bot, String summary) {
     return '$bot: $summary';
   }
@@ -1142,9 +1085,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get weekdaysAt9 => 'Weekdays at 9:00';
-
-  @override
   String get botBackInControl => 'The bot is back in control';
 
   @override
@@ -1156,31 +1096,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get botInControl => 'Bot in control';
-
-  @override
-  String get liveScreenshots => 'Screenshots';
-
-  @override
-  String get liveScreenshotsHelp =>
-      'Live video can\'t get through this network, so the screen updates about once a second.';
-
-  @override
-  String get liveMore => 'More';
-
-  @override
-  String get liveSaveScreenshot => 'Save Screenshot';
-
-  @override
-  String get liveCopyFromComputer => 'Copy from the computer';
-
-  @override
-  String get livePasteToComputer => 'Paste onto the computer';
-
-  @override
-  String get liveRotateHint => 'Turn your phone sideways for a bigger screen';
-
-  @override
-  String get liveWatching => 'Watching';
 
   @override
   String get computerName => 'Name';
@@ -1234,6 +1149,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get liveScreenshot => 'Screenshot';
+
+  @override
+  String get liveScreenshots => 'Screenshots';
+
+  @override
+  String get liveScreenshotsHelp =>
+      'Live video can\'t get through this network, so the screen updates about once a second.';
+
+  @override
+  String get liveMore => 'More';
+
+  @override
+  String get liveSaveScreenshot => 'Save Screenshot';
+
+  @override
+  String get liveCopyFromComputer => 'Copy from the computer';
+
+  @override
+  String get livePasteToComputer => 'Paste onto the computer';
+
+  @override
+  String get liveRotateHint => 'Turn your phone sideways for a bigger screen';
+
+  @override
+  String get liveWatching => 'Watching';
 
   @override
   String get liveCopied => 'Copied from the computer.';
@@ -1484,6 +1424,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'files_write': 'Writing a file',
       'files_list': 'Looking through files',
       'files_search': 'Searching files',
+      'files_from_chat': 'Getting a file from the chat',
       'http': 'Contacting a service',
       'data_search': 'Looking for data',
       'data_call': 'Getting data',
@@ -1568,6 +1509,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'files_write': 'Wrote a file',
       'files_list': 'Looked through files',
       'files_search': 'Searched files',
+      'files_from_chat': 'Got a file from the chat',
       'http': 'Contacted a service',
       'data_search': 'Looked for data',
       'data_call': 'Got data',
@@ -1639,11 +1581,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toolDetails => 'Details';
-
-  @override
-  String toolNeedsOkTitle(String bot) {
-    return '$bot needs your OK';
-  }
 
   @override
   String approvalAsking(String bot) {
@@ -1881,8 +1818,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudModelsTitle => 'Cloud Models';
 
   @override
-  String get cloudModelsHelp =>
-      'Casama Cloud runs these. A change reaches every server within a few seconds. People on Cloud cannot pick their own.';
+  String get cloudModelsHelp => 'Applies to every Cloud server within seconds.';
 
   @override
   String get connectionsTitle => 'App Connections';
@@ -1899,7 +1835,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get connectionsOwnAccountsHelp =>
-      'People connect those apps with their own Composio, Pipedream or Zapier account.';
+      'Each person uses their own Composio, Pipedream or Zapier.';
 
   @override
   String get connectionsNoComposioKey =>
@@ -1913,14 +1849,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get connectionsGoogleComposioHelp =>
-      'Gmail, Calendar, Drive and the rest work right away. Google\'s own servers need Developer Preview enrollment.';
+      'Gmail, Calendar, Drive and more work right away.';
 
   @override
   String get connectionsGoogleDirect => 'Google\'s Own Servers';
 
   @override
   String get connectionsGoogleDirectHelp =>
-      'Uses this server\'s Google client. Only works once your Google Cloud project is enrolled in Google Workspace Developer Preview.';
+      'Needs Google Workspace Developer Preview enrollment.';
 
   @override
   String get notInstanceOwner =>
@@ -2032,6 +1968,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get connectionFailed =>
       'Couldn\'t reach your Casama server. Check your connection and try again.';
+
+  @override
+  String get serverNotResponding =>
+      'Your Casama server isn\'t responding right now. Try again in a moment.';
 
   @override
   String cannotReachServerHelp(String url) {
@@ -2218,7 +2158,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exportMyDataHelp =>
-      'A ZIP of everything you can see: bots, chats, runs, memories and settings. Secrets and keys are never included.';
+      'Bots, chats, runs, memories and settings. No secrets.';
 
   @override
   String exportReady(String kb) {
@@ -2252,7 +2192,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteAccountHelp =>
-      'Signs you out now and erases your data and the workspaces you solely own after a short grace period.';
+      'Erases your data after a short grace period.';
 
   @override
   String get deleteAccountQuestion => 'Delete your account?';
@@ -2337,6 +2277,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connectAppsTitle => 'Connect your apps';
 
   @override
+  String get moreApps => 'More';
+
+  @override
+  String addAppTile(String app) {
+    return 'Add $app to this bot';
+  }
+
+  @override
+  String appAddedToBot(String app, String bot) {
+    return '$app added to $bot';
+  }
+
+  @override
   String get connectAppsHint =>
       'Let me read and act in the tools you already use.';
 
@@ -2384,25 +2337,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsTurnOn => 'Turn On';
 
   @override
-  String get createMenuTitle => 'Add';
-
-  @override
-  String get createBotHelp =>
-      'A teammate with its own instructions, memory and tools';
-
-  @override
-  String get createGroupHelp =>
-      'Several bots in one chat; @mention who should answer';
-
-  @override
-  String get importBotHelp => 'From a Casama bot file someone shared';
-
-  @override
   String get importAgentHelp =>
       'Bring a bot over from OpenClaw or Hermes Agent: its persona, skills, schedules and memories. You\'ll review everything before it\'s created. Keys and settings files are never read.';
-
-  @override
-  String get archivedBotsHelp => 'Bring back a bot you archived';
 
   @override
   String get checkForUpdates => 'Check for updates';
@@ -2411,8 +2347,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autoUpdates => 'Update Automatically';
 
   @override
-  String get autoUpdatesHelp =>
-      'Download new versions in the background and install them when you quit.';
+  String get autoUpdatesHelp => 'Installs new versions when you quit.';
 
   @override
   String get upToDate => 'Casama Is Up to Date';
@@ -2455,8 +2390,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openAtLogin => 'Open at Login';
 
   @override
-  String get openAtLoginHelp =>
-      'Start Casama when you log in to this Mac, ready for the quick-ask shortcut.';
+  String get openAtLoginHelp => 'Ready for the quick-ask shortcut.';
 
   @override
   String get signInTagline =>
@@ -2486,12 +2420,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appearance => 'Appearance';
 
   @override
-  String get settingsBotsSection => 'What your bots can use';
-
-  @override
-  String get settingsMoreSection => 'Privacy and more';
-
-  @override
   String get modelKeysHelp =>
       'OpenRouter, OpenAI, Anthropic, Google, xAI or your own server';
 
@@ -2516,10 +2444,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeDark => 'Dark';
-
-  @override
-  String get noApprovalsHelp =>
-      'When a bot wants to do something risky, it asks here first.';
 
   @override
   String get createWorkspaceBody =>
@@ -2739,6 +2663,98 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uploadingAttachments => 'Uploading…';
 
   @override
+  String get notSent => 'Not sent';
+
+  @override
+  String get deleteChat => 'Delete Chat';
+
+  @override
+  String get deleteChatTitle => 'Delete this chat?';
+
+  @override
+  String deleteChatBody(String bot) {
+    return 'Its messages, photos and files are deleted for everyone who can see it. Usage records stay, and anything $bot remembered from it stays in its memory.';
+  }
+
+  @override
+  String get chatDeleted => 'Chat deleted';
+
+  @override
+  String get deleteAllChats => 'Delete All Chats';
+
+  @override
+  String get deleteAllChatsRow =>
+      'Start over with a clean history. Memories stay.';
+
+  @override
+  String deleteAllChatsTitle(String bot) {
+    return 'Delete all chats with $bot?';
+  }
+
+  @override
+  String deleteAllChatsBody(String bot) {
+    return 'Every chat with $bot that you can delete goes, with its messages, photos and files. Group chats stay. Usage records stay, and what $bot remembered stays in its memory.';
+  }
+
+  @override
+  String chatsDeleted(int n) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$nString chats deleted.',
+      one: '1 chat deleted.',
+      zero: 'No chats to delete.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String chatsKeptBusy(int n) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other:
+          '$nString chats were kept because the bot is still working in them.',
+      one: '1 chat was kept because the bot is still working in it.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupEmptySubtitle(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other:
+          '$n bots are in this chat. Each keeps its own memory and settings.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupTipMention => 'Type @ and a name to ask one bot directly.';
+
+  @override
+  String groupTipEveryone(String lead) {
+    return '@everyone asks $lead to plan the work and hand a part to each bot.';
+  }
+
+  @override
+  String groupTipNoMention(String lead) {
+    return 'Without a mention, the bot that spoke last answers ($lead at first).';
+  }
+
+  @override
   String get messageNotSent =>
       'Your files didn\'t upload, so the message wasn\'t sent. It\'s back in the box.';
 
@@ -2805,6 +2821,65 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get modelKeysIntro =>
       'Bots think with your own model provider keys. Keys are stored encrypted and never shown again.';
+
+  @override
+  String get casamaCloudKeyHint => 'Paid from your credits';
+
+  @override
+  String get casamaCloudIncluded => 'Included';
+
+  @override
+  String get casamaCloudModelLocked => 'Casama chooses this model.';
+
+  @override
+  String get serverVoiceSetUp =>
+      'This server provides voice, so there\'s no key to add. A workspace\'s own key is used first.';
+
+  @override
+  String modelKeysFor(String workspace) {
+    return 'Keys belong to one workspace. These are for $workspace.';
+  }
+
+  @override
+  String get yourKeys => 'Your Keys';
+
+  @override
+  String get keyWorking => 'Working';
+
+  @override
+  String get keyFailing => 'Failing';
+
+  @override
+  String get keyUntested => 'Not tested';
+
+  @override
+  String get skillsHelp =>
+      'A skill is a set of instructions a bot loads when a task calls for it, like your house style for reports.';
+
+  @override
+  String deleteSkillTitle(String name) {
+    return 'Delete the skill “$name”?';
+  }
+
+  @override
+  String get editSkill => 'Edit skill';
+
+  @override
+  String get deleteSkill => 'Delete Skill';
+
+  @override
+  String get skillDescriptionHelp =>
+      'Bots read this to decide when the skill applies.';
+
+  @override
+  String get skillBodyHint => '# Steps\n1. …';
+
+  @override
+  String get computersHelp =>
+      'Each bot works on a computer: the team computer everyone shares, or a private one. Files stay on it between chats.';
+
+  @override
+  String get thisDevice => 'This device';
 
   @override
   String get personalComputerConnected => 'Connected';
@@ -2884,61 +2959,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'This is your own computer, so you see a new screenshot every few seconds instead of a live view.';
 
   @override
-  String get casamaCloudKeyHint => 'Paid from your credits';
-
-  @override
-  String get casamaCloudIncluded => 'Included';
-
-  @override
-  String get casamaCloudModelLocked => 'Casama chooses this model.';
-
-  @override
-  String modelKeysFor(String workspace) {
-    return 'Keys belong to one workspace. These are for $workspace.';
-  }
-
-  @override
-  String get yourKeys => 'Your Keys';
-
-  @override
-  String get keyWorking => 'Working';
-
-  @override
-  String get keyFailing => 'Failing';
-
-  @override
-  String get keyUntested => 'Not tested';
-
-  @override
-  String get skillsHelp =>
-      'A skill is a set of instructions a bot loads when a task calls for it, like your house style for reports.';
-
-  @override
-  String deleteSkillTitle(String name) {
-    return 'Delete the skill “$name”?';
-  }
-
-  @override
-  String get editSkill => 'Edit skill';
-
-  @override
-  String get deleteSkill => 'Delete Skill';
-
-  @override
-  String get skillDescriptionHelp =>
-      'Bots read this to decide when the skill applies.';
-
-  @override
-  String get skillBodyHint => '# Steps\n1. …';
-
-  @override
-  String get computersHelp =>
-      'Each bot works on a computer: the team computer everyone shares, or a private one. Files stay on it between chats.';
-
-  @override
-  String get thisDevice => 'This device';
-
-  @override
   String get renameComputer => 'Rename Computer';
 
   @override
@@ -2958,14 +2978,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareAnalyticsHelp =>
-      'Help improve Casama by sharing how you use it, linked to your account on Casama Cloud, and crash reports. Message content, prompts, files and secrets are never shared.';
+      'Usage and crash reports. Never your messages or files.';
 
   @override
   String get workspaceAnalytics => 'Usage Data for This Workspace';
 
   @override
   String get workspaceAnalyticsHelp =>
-      'When off, Casama collects no usage data about this workspace\'s activity. Crash reports still work.';
+      'Usage data for this workspace. Crash reports stay on.';
 
   @override
   String get dangerZone => 'Danger Zone';
@@ -2983,28 +3003,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serviceOk => 'OK';
 
   @override
-  String get inviteMemberHelp =>
-      'They\'ll get an email with a link to join this workspace.';
-
-  @override
   String get sendInvite => 'Send Invite';
 
   @override
-  String get inviteReady => 'Invite ready';
-
-  @override
-  String inviteCodeHelp(String email) {
-    return 'Email isn\'t set up on this server, so share this code with $email. They paste it when joining.';
-  }
-
-  @override
-  String get copyCode => 'Copy code';
-
-  @override
   String get thinking0 => 'Model';
-
-  @override
-  String get computerAndTools => 'Computer and tools';
 
   @override
   String get saveChanges => 'Save Changes';
@@ -3096,10 +3098,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String quickAskHintBot(String bot) {
     return 'What should $bot do?';
   }
-
-  @override
-  String get noNotificationsHelp =>
-      'Routine results, budget alerts and requests from your bots show up here.';
 
   @override
   String get stateProvisioning => 'Setting up';
@@ -3235,9 +3233,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resetBackground => 'Reset to Default';
 
   @override
-  String get chatsOnly => 'Chats only';
-
-  @override
   String get copyMessage => 'Copy';
 
   @override
@@ -3277,13 +3272,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themes => 'Themes';
 
   @override
-  String get themesHelp =>
-      'A theme sets the color scheme, fonts and background together. Change any of them afterwards and save the result as your own.';
-
-  @override
-  String get themePresets => 'Presets';
-
-  @override
   String get myThemes => 'Your themes';
 
   @override
@@ -3321,9 +3309,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String deleteThemeTitle(String name) {
     return 'Delete $name?';
   }
-
-  @override
-  String get currentLook => 'Custom';
 
   @override
   String get fonts => 'Fonts';
@@ -3684,11 +3669,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'The sign-in is stored encrypted and never shown again. Disconnect anytime.';
 
   @override
-  String get moreWays => 'More ways to connect';
-
-  @override
-  String get composioHelp =>
-      'Hundreds of apps like Gmail, Salesforce and Shopify, with sign-in handled by Composio.';
+  String get composioHelp => 'Hundreds of apps, with sign-in handled for you.';
 
   @override
   String get pipedreamHelp => 'Thousands of apps through Pipedream Connect.';
@@ -3724,9 +3705,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statusChecking => 'Checking';
-
-  @override
-  String get toolsTitle => 'Tools';
 
   @override
   String get toolsHelp =>
@@ -3935,9 +3913,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPassword => 'Forgot password?';
 
   @override
-  String get passwordResetTitle => 'Reset your password';
-
-  @override
   String get newPassword => 'New password';
 
   @override
@@ -4122,7 +4097,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get requireTwoStepHelp =>
-      'Owners and admins without it keep member access only until they sign in with it. Turn it on for yourself first.';
+      'Owners and admins must use it. Turn yours on first.';
 
   @override
   String get twoStepNeededForAdmin =>
@@ -4238,6 +4213,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Bots can hand coding tasks to these agents on this computer. They use your own sign-ins and work in the folders you share.';
 
   @override
+  String codingAgentsFound(int n) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'Found $nString coding agents',
+      one: 'Found 1 coding agent',
+      zero: 'No coding agents found',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get localMcpNotSaved =>
+      'This server isn\'t saved to the workspace yet. Remove it and add it again.';
+
+  @override
   String get codingAgentsNone =>
       'No coding agents found. Install Claude Code, Codex or Cursor\'s command-line agent to hand them coding tasks.';
 
@@ -4247,9 +4243,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allowCommands => 'Turn On';
-
-  @override
-  String get navBoard => 'Board';
 
   @override
   String get board => 'Board';
@@ -4435,29 +4428,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inviteRole => 'Role';
 
   @override
-  String get inviteLinkReady => 'Your new invite link';
-
-  @override
-  String get inviteLinkOnce =>
-      'Copy or share it now. For security, the full link isn\'t shown again.';
-
-  @override
   String get shareLinkLabel => 'Share';
-
-  @override
-  String get joiningWorkspace => 'Joining the workspace…';
-
-  @override
-  String joinedWorkspace(String name) {
-    return 'You joined $name.';
-  }
-
-  @override
-  String get joinFailed =>
-      'This invite link doesn\'t work anymore. Ask for a new one.';
-
-  @override
-  String get joinWithLink => 'Join with a link';
 
   @override
   String get botFolder => 'Folder';
@@ -4509,26 +4480,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get restoreSettings => 'Restore These Settings';
-
-  @override
-  String secretWhat(String service) {
-    return '$service key';
-  }
-
-  @override
-  String totpWhat(String service) {
-    return '$service sign-in code';
-  }
-
-  @override
-  String takeoverHandedBackLine(String what) {
-    return 'Handed back: $what';
-  }
-
-  @override
-  String deviceAccessSkippedLine(String what) {
-    return 'Not shared: your $what';
-  }
 
   @override
   String restoreSettingsBody(String fields) {
@@ -4588,6 +4539,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get secretDeclined => 'Declined';
+
+  @override
+  String secretWhat(String service) {
+    return '$service key';
+  }
+
+  @override
+  String totpWhat(String service) {
+    return '$service sign-in code';
+  }
+
+  @override
+  String takeoverHandedBackLine(String what) {
+    return 'Handed back: $what';
+  }
+
+  @override
+  String deviceAccessSkippedLine(String what) {
+    return 'Not shared: your $what';
+  }
 
   @override
   String get decline => 'Decline';
@@ -4734,21 +4705,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get attachSkill => 'Attach a skill';
 
   @override
-  String setupTitle(String name) {
-    return 'Set up $name';
-  }
-
-  @override
-  String get setupBody =>
-      'Answer a few quick questions and it will propose its instructions, routines and the accounts to connect. Nothing changes until you approve.';
-
-  @override
-  String get startSetup => 'Start Setup';
-
-  @override
-  String get skipSetup => 'Skip for Now';
-
-  @override
   String get rerunSetup => 'Run Setup Again';
 
   @override
@@ -4830,7 +4786,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get includeMemoriesHelp =>
-      'What it has learned about you and your work. Leave off unless you trust who you share with.';
+      'What it has learned about you. Share with care.';
 
   @override
   String get saveAsFile => 'Save as File';
@@ -5217,10 +5173,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mcpApprovalsHelp =>
-      'Connected apps can approve or deny your bots\' actions. Off by default.';
-
-  @override
-  String get apiKeyOnce => 'Copy this key now; it won\'t be shown again.';
+      'Connected apps can approve your bots\' actions.';
 
   @override
   String get newApiKey => 'New API Key';
@@ -5882,9 +5835,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get add => 'Add';
 
   @override
-  String get skillIdeas => 'Skill ideas';
-
-  @override
   String skillIdeaFrom(String bot, String name) {
     return '$bot suggests a skill: $name';
   }
@@ -6438,7 +6388,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get botToBotHelp =>
-      'When off, bots can\'t @mention, message or hand work to each other. Each bot can still split its own work into subagents.';
+      'Bots can @mention, message and hand work to each other.';
 
   @override
   String get capMessages => 'Messages (iMessage)';
@@ -6720,8 +6670,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get a2a => 'Agent-to-Agent (A2A)';
 
   @override
-  String get a2aHelp =>
-      'Let outside AI agents give tasks to bots you publish, using workspace API keys. Tasks run with the bot\'s usual approvals and limits.';
+  String get a2aHelp => 'Outside agents can give tasks to bots you publish.';
 
   @override
   String get a2aPublish => 'Publish as an A2A Agent';
@@ -7272,8 +7221,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get showBotSteps => 'Show the Bot\'s Steps';
 
   @override
-  String get showBotStepsHelp =>
-      'Each step it takes, with commands and technical errors. Off, chats show what it\'s doing in a few words and its answer.';
+  String get showBotStepsHelp => 'Commands and technical errors in every chat.';
 
   @override
   String get activityReady => 'Getting ready…';
@@ -7355,7 +7303,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get askBeforeJoiningHelp =>
-      'People who use the link ask to join, and an admin approves them here.';
+      'An admin approves each person who uses the link.';
 
   @override
   String get askToJoin => 'Ask to join';
@@ -7478,8 +7426,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinByDomain => 'Join by Email Domain';
 
   @override
-  String get joinByDomainHelp =>
-      'They can join from the workspace list without an invite, once their email address is verified.';
+  String get joinByDomainHelp => 'Verified addresses join without an invite.';
 
   @override
   String joinByDomainSwitch(String domain) {
@@ -7726,7 +7673,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get learnAboutMeHelp =>
-      'Bots save facts about you here. Edit or delete them any time.';
+      'Bots save facts about you. Edit them any time.';
 
   @override
   String useInThisSpace(String workspace) {
@@ -7735,7 +7682,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get useInThisSpaceHelp =>
-      'Your name and reply style are used everywhere. About me and learned facts stay in spaces where you\'re the only member, unless you turn this on.';
+      'Off: only your name and reply style are used here.';
 
   @override
   String get learnedAboutYou => 'What Bots Learned';
@@ -7856,10 +7803,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get gallery => 'Gallery';
-
-  @override
-  String get galleryHelp =>
-      'Themes, color schemes, wallpapers and skills other people contribute. Using one saves it on this device.';
 
   @override
   String get galleryEmpty => 'Nothing in the gallery matches.';
@@ -8001,7 +7944,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fewerEffectsHelp =>
-      'No celebrations, bouncing tabs or animated bots. The Plain theme turns this on.';
+      'No celebrations, bouncing tabs or animated bots.';
 
   @override
   String get settingsAppSection => 'App';

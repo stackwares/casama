@@ -96,24 +96,22 @@ class _AppearanceScreenState extends ConsumerState<AppearanceScreen> {
       return;
     }
     if (!unsaved || !mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(l10n.appearanceSwitched(name)),
-          action: SnackBarAction(
-            key: const Key('undoTheme'),
-            label: l10n.undo,
-            onPressed: () => notifier.apply(
-              schemeId: before.schemeId,
-              headingFont: before.headingFont,
-              bodyFont: before.bodyFont,
-              wallpaper: before.wallpaper,
-              fewerEffects: before.fewerEffects,
-            ),
-          ),
+    showToast(
+      context,
+      l10n.appearanceSwitched(name),
+      replace: true,
+      action: SnackBarAction(
+        key: const Key('undoTheme'),
+        label: l10n.undo,
+        onPressed: () => notifier.apply(
+          schemeId: before.schemeId,
+          headingFont: before.headingFont,
+          bodyFont: before.bodyFont,
+          wallpaper: before.wallpaper,
+          fewerEffects: before.fewerEffects,
         ),
-      );
+      ),
+    );
   }
 
   Future<void> _import() async {

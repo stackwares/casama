@@ -93,6 +93,64 @@ void main() {
     expect(find.text('Sent'), findsOneWidget);
   });
 
+  testWidgets('radio and checkbox pickers from the basic catalog render (they need an SDK Material)', (tester) async {
+    await setSize(tester, const Size(500, 900));
+    List<Object?> picker(String id, String variant) => [
+      {
+        'version': '1.0',
+        'createSurface': {'surfaceId': id, 'catalogId': 'https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json'},
+      },
+      {
+        'version': '1.0',
+        'updateComponents': {
+          'surfaceId': id,
+          'components': [
+            {
+              'id': 'root',
+              'component': 'Column',
+              'children': ['pick', 'other'],
+            },
+            {'id': 'other', 'component': 'TextField', 'label': 'Other $variant', 'value': {'@path': '/other'}, 'variant': 'shortText'},
+            {
+              'id': 'pick',
+              'component': 'ChoicePicker',
+              'label': 'Pick $variant',
+              'variant': variant,
+              'value': {'@path': '/picked'},
+              'options': [
+                {'value': 'a', 'label': 'Apple $variant'},
+                {'value': 'b', 'label': 'Banana $variant'},
+              ],
+            },
+          ],
+        },
+      },
+    ];
+    final backend = FakeBackend()
+      ..storedMessages = [
+        ChatMessageView(
+          id: 'msg-1',
+          role: 'assistant',
+          text: 'Pick:',
+          createdAt: DateTime(2026),
+          ui: [
+            UiPart(surfaceId: 'radio', messages: picker('radio', 'mutuallyExclusive')),
+            UiPart(surfaceId: 'checks', messages: picker('checks', 'multipleSelection')),
+          ],
+        ),
+      ];
+    await tester.pumpWidget(harness(backend, const ChatScreen(botId: botId, conversationId: convId)));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Apple mutuallyExclusive'), findsOneWidget);
+    expect(find.text('Banana multipleSelection'), findsOneWidget);
+    expect(find.text('Other mutuallyExclusive'), findsOneWidget);
+    await tester.tap(find.text('Banana multipleSelection'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+  });
+
   test('the message for an action reads like the screen: picked labels, or the button tapped', () {
     const picks = BotUiAction(
       surfaceId: 's',

@@ -36,7 +36,9 @@ describe("attachments", () => {
       { type: "text", text: "Here you go." },
       { type: "file", path: "media:0b6f", name: "image.png", mime_type: "image/png", size: 10 },
     ]);
-    expect(text).toBe("Here you go.\n\n(You showed the person a generated image/png: image.png.)");
+    expect(text).toBe(
+      "Here you go.\n\n(You showed the person a generated image/png: image.png, media:0b6f.)",
+    );
     expect(text).not.toContain("Attached files");
   });
 

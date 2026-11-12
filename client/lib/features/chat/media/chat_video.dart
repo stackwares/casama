@@ -14,11 +14,13 @@ import '../../../core/providers.dart';
 import '../../../core/widgets.dart';
 import '../../../theme/app_tokens.dart';
 import '../../files/file_preview.dart';
+import 'computer_thumbnail.dart';
 import 'media_kind.dart';
 
 /// A video in a chat. A still card (its first frame, a play button, the length) until it's tapped;
 /// then it plays right there with play/pause, a scrubber, mute and full screen. Never plays by
-/// itself. Videos kept with the chat load their first frame up front; others show a dark tile.
+/// itself. Videos kept with the chat load their first frame up front; videos on the bot's computer
+/// show a thumbnail the computer makes (D-226) when it's awake, else a dark tile.
 /// Where the official player has no implementation (Windows, Linux) the card opens the system's
 /// player instead.
 class ChatVideo extends ConsumerStatefulWidget {
@@ -46,7 +48,19 @@ class _ChatVideoState extends ConsumerState<ChatVideo> {
   VideoPlayerController? _ready;
   var _loading = false;
 
+  /// A computer file's thumbnail (D-226): the poster until it plays.
+  Timer? _thumbTimer;
+  ImageProvider? _thumb;
+  Duration? _thumbDuration;
+  double? _thumbAspect;
+
   AttachmentRef get _a => widget.attachment;
+
+  /// The files API path of a video on the bot's computer, when a thumbnail can be asked for.
+  String? get _computerPath =>
+      _a.mediaId == null && widget.computerId != null
+      ? computerPathFromLink(_a.path)
+      : null;
 
   @override
   void initState() {
@@ -58,6 +72,44 @@ class _ChatVideoState extends ConsumerState<ChatVideo> {
         inlineVideoSupported &&
         !kIsWeb) {
       unawaited(_preload());
+    } else if (_computerPath != null) {
+      // Only cards that stay on screen ask: a chat scrolled past quickly requests nothing.
+      _thumbTimer = Timer(
+        const Duration(milliseconds: 250),
+        () => unawaited(_loadThumbnail()),
+      );
+    }
+  }
+
+  Future<void> _loadThumbnail() async {
+    final path = _computerPath;
+    if (!mounted || path == null) return;
+    final t = await ComputerThumbnails.load(
+      ref.read(backendProvider),
+      widget.computerId!,
+      path,
+    );
+    if (t == null || !mounted || _controller != null) return;
+    final image = MemoryImage(t.bytes);
+    setState(() {
+      _thumb = image;
+      _thumbDuration = t.duration;
+    });
+    // Its shape, for videos whose size the chat doesn't know.
+    if (_a.width == null || _a.height == null) {
+      final stream = image.resolve(ImageConfiguration.empty);
+      late final ImageStreamListener listener;
+      listener = ImageStreamListener(
+        (info, _) {
+          stream.removeListener(listener);
+          final w = info.image.width, h = info.image.height;
+          if (mounted && w > 0 && h > 0) {
+            setState(() => _thumbAspect = w / h);
+          }
+        },
+        onError: (_, _) => stream.removeListener(listener),
+      );
+      stream.addListener(listener);
     }
   }
 
@@ -84,6 +136,7 @@ class _ChatVideoState extends ConsumerState<ChatVideo> {
 
   @override
   void dispose() {
+    _thumbTimer?.cancel();
     _controller?.dispose();
     if (!identical(_ready, _controller)) _ready?.dispose();
     super.dispose();
@@ -159,7 +212,7 @@ class _ChatVideoState extends ConsumerState<ChatVideo> {
         ? shape.value.aspectRatio
         : (_a.width != null && _a.height != null && _a.height! > 0
               ? _a.width! / _a.height!
-              : 16 / 9);
+              : _thumbAspect ?? 16 / 9);
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = math.min(
@@ -180,6 +233,8 @@ class _ChatVideoState extends ConsumerState<ChatVideo> {
                     key: attachmentKey(_a.path),
                     attachment: _a,
                     frame: _ready,
+                    image: _thumb,
+                    duration: _thumbDuration,
                     loading: _loading,
                     systemPlayer: !inlineVideoSupported,
                     onPlay: () => runGuarded(context, _play),
@@ -200,6 +255,8 @@ class _Poster extends StatelessWidget {
     super.key,
     required this.attachment,
     this.frame,
+    this.image,
+    this.duration,
     required this.loading,
     required this.systemPlayer,
     required this.onPlay,
@@ -208,6 +265,12 @@ class _Poster extends StatelessWidget {
 
   /// A loaded player whose first frame fills the card.
   final VideoPlayerController? frame;
+
+  /// Otherwise a thumbnail from the bot's computer (D-226).
+  final ImageProvider? image;
+
+  /// The video's length from the computer, when the chat doesn't have it.
+  final Duration? duration;
   final bool loading;
   final bool systemPlayer;
   final VoidCallback onPlay;
@@ -215,7 +278,13 @@ class _Poster extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final seconds = attachment.durationS;
+    final seconds =
+        attachment.durationS ??
+        (duration == null ? null : duration!.inMilliseconds / 1000);
+    final picture = frame != null || image != null;
+    final fade = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 250);
     return Material(
       color: Colors.black,
       child: InkWell(
@@ -236,8 +305,27 @@ class _Poster extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              if (frame case final f?) ...[
-                Positioned.fill(child: VideoPlayer(f)),
+              if (frame case final f?)
+                Positioned.fill(child: VideoPlayer(f))
+              else if (image case final i?)
+                Positioned.fill(
+                  child: Image(
+                    key: const Key('videoThumbnail'),
+                    image: i,
+                    fit: BoxFit.cover,
+                    gaplessPlayback: true,
+                    frameBuilder: (context, child, shown, sync) => sync
+                        ? child
+                        : AnimatedOpacity(
+                            opacity: shown == null ? 0 : 1,
+                            duration: fade,
+                            curve: Curves.easeOut,
+                            child: child,
+                          ),
+                    errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  ),
+                ),
+              if (picture) ...[
                 // Keeps the label at the bottom readable on any frame.
                 const Positioned.fill(
                   child: DecoratedBox(

@@ -132,6 +132,55 @@ describe("sign-in", () => {
     expect(count?.n).toBe(1);
   });
 
+  it("retries a failed first exchange with the issued client, never registering again", async () => {
+    const retry = await h.user("plan-retry@example.com");
+    await h.tdb
+      .admin`insert into public.memberships (org_id, user_id, role) values (${orgId}, ${retry.id}, 'member')`;
+    const before = fake.state.authorizeRequests.length;
+    fake.state.failNextExchange = true;
+    const failed = await signIn(retry.token);
+    expect(failed.status).toBe(400);
+    expect((await j(failed)).code).toBe("chatgpt_sign_in_failed");
+    const [row] = await h.tdb.admin<
+      { error: string }[]
+    >`select error from public.integration_oauth_flows where created_by = ${retry.id} order by created_at desc limit 1`;
+    expect(row?.error).toContain("invalid_grant");
+
+    const ok = await signIn(retry.token);
+    expect(ok.status).toBe(200);
+    const [first, second] = fake.state.authorizeRequests.slice(before);
+    expect(first?.get("client_id")).toBe("dynamic_agent_client");
+    expect(second?.get("client_id")).toMatch(/^oaiapp_/);
+    expect(second?.get("agent_name_hint")).toBeNull();
+    await call(`/v1/credentials/${(await j(ok)).id}`, { method: "DELETE", token: retry.token });
+  });
+
+  it("registers again when the retry with the issued client never comes back", async () => {
+    const stuck = await h.user("plan-stuck@example.com");
+    await h.tdb
+      .admin`insert into public.memberships (org_id, user_id, role) values (${orgId}, ${stuck.id}, 'member')`;
+    const before = fake.state.authorizeRequests.length;
+    fake.state.failNextExchange = true;
+    expect((await signIn(stuck.token)).status).toBe(400);
+    // The retry reuses the issued client, but ChatGPT refuses it on its own page (another
+    // account or workspace was picked), so nothing comes back to the server.
+    const start = (token: string) =>
+      call("/v1/credentials/chatgpt/start", {
+        method: "POST",
+        token,
+        json: { org_id: orgId, redirect_port: 53682 },
+      }).then(j);
+    const retry = new URL((await start(stuck.token)).authorize_url);
+    expect(retry.searchParams.get("client_id")).toMatch(/^oaiapp_/);
+    // The next attempt starts a fresh registration, so the person can pick again.
+    const ok = await signIn(stuck.token);
+    expect(ok.status).toBe(200);
+    const last = fake.state.authorizeRequests.slice(before).at(-1);
+    expect(last?.get("client_id")).toBe("dynamic_agent_client");
+    expect(last?.get("agent_name_hint")).toBeTruthy();
+    await call(`/v1/credentials/${(await j(ok)).id}`, { method: "DELETE", token: stuck.token });
+  });
+
   it("reports a declined consent and never reuses a sign-in", async () => {
     fake.state.decline = true;
     const res = await signIn(teammate.token);

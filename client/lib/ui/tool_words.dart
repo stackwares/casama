@@ -63,6 +63,7 @@ const _known = {
   'files_write',
   'files_list',
   'files_search',
+  'files_from_chat',
   'http',
   'data_search',
   'data_call', //
@@ -174,6 +175,7 @@ String? toolWordsId(String tool) {
   'files_read' => (LucideIcons.fileText, ToolTone.files),
   'files_write' => (LucideIcons.filePen, ToolTone.files),
   'files_list' || 'files_search' => (LucideIcons.folderSearch, ToolTone.files),
+  'files_from_chat' => (LucideIcons.download, ToolTone.files),
   'pages_publish' || 'pages' => (LucideIcons.panelsTopLeft, ToolTone.files),
   'media' => (LucideIcons.sparkles, ToolTone.files),
   'media_video' => (LucideIcons.film, ToolTone.files),

@@ -263,6 +263,12 @@ export const PublicConfig = z
     /** Whether people can connect a ChatGPT plan here (desktop app and CLI sign-in). */
     chatgpt_sign_in: z.boolean().optional(),
     /**
+     * Voice features this server's own keys cover, as on Casama Cloud: live (Gemini Live) and
+     * read_aloud (Gemini) with GOOGLE_AI_API_KEY, dictation with the shared OpenRouter key. The
+     * apps hide the provider choice for these; a workspace's own key is still used first.
+     */
+    server_voice: z.array(z.enum(["live", "read_aloud", "dictation"])).optional(),
+    /**
      * Proofs a new account must carry in its user metadata (`signup_proof`), D-094. Empty: none.
      * app_check: a Firebase App Check token; pow: a solved GET /v1/signup/challenge puzzle.
      */

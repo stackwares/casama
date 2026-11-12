@@ -8,6 +8,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/backend.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -251,16 +252,33 @@ class _ProviderAppPickerState extends ConsumerState<_ProviderAppPicker> {
           .connectProviderApp(widget.integration.id, app.slug),
     );
     if (!mounted) return;
+    if (url == null) return setState(() => _opening = null);
+    // What's signed in before the browser opens, so the watch below spots the new sign-in.
+    final hubId = widget.integration.id;
+    final baseline = await connectedAccountsNow(
+      ref.read(backendProvider),
+      hubId,
+      app.slug,
+    );
+    if (!mounted) return;
     setState(() => _opening = null);
-    if (url == null) return;
     await launchUrl(
       Uri.parse(url),
       mode: LaunchMode.externalApplication,
       webOnlyWindowName: '_blank',
     );
-    ref.invalidate(providerAccountsProvider(widget.integration.id));
+    if (!mounted) return;
+    ref.invalidate(providerAccountsProvider(hubId));
     ref.invalidate(integrationsProvider);
-    if (mounted) Navigator.of(context).pop();
+    watchProviderSignIn(
+      ProviderScope.containerOf(context, listen: false),
+      hubId: hubId,
+      slug: app.slug,
+      baseline: baseline,
+      message: context.l10n.appConnected(app.name),
+      toastContext: Navigator.maybeOf(context, rootNavigator: true)?.context,
+    );
+    Navigator.of(context).pop();
   }
 
   @override
@@ -381,6 +399,76 @@ final providerAccountsProvider =
           ref.watch(backendProvider).providerAccounts(integrationId),
     );
 
+/// How many of [slug]'s accounts on a Composio or Pipedream connection are signed in. A sign-in
+/// finished when this goes up (older sign-ins left waiting or failed don't count either way).
+int connectedAccounts(List<ProviderAccount> items, String slug) => items
+    .where((a) => a.app == slug && a.status == ProviderAccountStatusEnum.connected)
+    .length;
+
+/// [connectedAccounts] right now, or null when the provider can't be reached.
+Future<int?> connectedAccountsNow(Backend backend, String hubId, String slug) async {
+  try {
+    return connectedAccounts(await backend.providerAccounts(hubId), slug);
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Keeps checking a Composio or Pipedream sign-in for [slug] after its sheet closed (the person is
+/// still in the browser), for up to [tries] checks. Once a new signed-in account shows up, the
+/// connection's tools are listed again, the lists refresh, and [message] shows as a toast on
+/// [toastContext] (the root navigator's, so it outlives the sheet).
+void watchProviderSignIn(
+  ProviderContainer container, {
+  required String hubId,
+  required String slug,
+  required int? baseline,
+  required String message,
+  BuildContext? toastContext,
+  Duration every = const Duration(seconds: 3),
+  int tries = 100,
+}) {
+  var left = tries;
+  var busy = false;
+  Timer.periodic(every, (t) async {
+    if (busy) return;
+    if (--left < 0) return t.cancel();
+    busy = true;
+    try {
+      final backend = container.read(backendProvider);
+      final now = connectedAccounts(await backend.providerAccounts(hubId), slug);
+      if (now <= (baseline ?? 0)) return;
+      t.cancel();
+      // The new app's tools, listed now rather than at the next run.
+      await backend.testIntegration(hubId).then<void>((_) {}, onError: (_) {});
+      container.invalidate(providerAccountsProvider(hubId));
+      container.invalidate(integrationsProvider);
+      final ctx = toastContext;
+      if (ctx != null && ctx.mounted) showSuccess(ctx, message);
+    } catch (_) {
+      // Try again on the next tick.
+    } finally {
+      busy = false;
+    }
+  });
+}
+
+/// One row per app: a finished sign-in wins over ones left waiting or failed, so an app that's
+/// connected doesn't also read "Waiting for sign-in" because of an earlier attempt.
+List<ProviderAccount> accountPerApp(List<ProviderAccount> items) {
+  int rank(ProviderAccountStatusEnum s) => switch (s) {
+    ProviderAccountStatusEnum.connected => 0,
+    ProviderAccountStatusEnum.pending => 1,
+    ProviderAccountStatusEnum.error => 2,
+  };
+  final best = <String, ProviderAccount>{};
+  for (final a in items) {
+    final seen = best[a.app];
+    if (seen == null || rank(a.status) < rank(seen.status)) best[a.app] = a;
+  }
+  return best.values.toList();
+}
+
 /// The apps signed in through Composio or Pipedream, and a button to add one.
 class ProviderAccountsCard extends ConsumerWidget {
   const ProviderAccountsCard({super.key, required this.integration});
@@ -402,7 +490,7 @@ class ProviderAccountsCard extends ConsumerWidget {
               ? FormNote(l10n.noProviderAccounts)
               : GroupedCard(
                   children: [
-                    for (final a in items)
+                    for (final a in accountPerApp(items))
                       GroupedTile(
                         icon: LucideIcons.appWindow,
                         leading: AppLogo(name: a.app, size: 32),

@@ -11,6 +11,8 @@ import {
   CreateCredentialRequest,
   Credential,
   CredentialTestResult,
+  DeletedConversation,
+  DeletedConversations,
   EditMessageRequest,
   Memory,
   MemoryBackend,
@@ -87,6 +89,38 @@ export const listConversations = createRoute({
     401: e401,
     404: e404,
   },
+});
+
+export const deleteConversation = createRoute({
+  operationId: "deleteConversation",
+  method: "delete",
+  path: "/v1/conversations/{id}",
+  tags: ["chat"],
+  security,
+  summary: "Delete a conversation and its messages",
+  description:
+    "Only the person who started it or someone who manages its bot. Usage records and what the bot remembered stay. Refused with 409 while the bot is working in it.",
+  request: { params: idParam },
+  responses: {
+    200: jsonResponse("Deleted", DeletedConversation),
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
+  },
+});
+
+export const deleteBotConversations = createRoute({
+  operationId: "deleteBotConversations",
+  method: "delete",
+  path: "/v1/bots/{id}/conversations",
+  tags: ["chat"],
+  security,
+  summary: "Delete every direct conversation with a bot that you may delete",
+  description:
+    "Yours, or all of them if you manage the bot. Group chats and conversations the bot is still working in are left alone.",
+  request: { params: idParam },
+  responses: { 200: jsonResponse("Deleted", DeletedConversations), 401: e401, 404: e404 },
 });
 
 export const sendMessage = createRoute({

@@ -120,6 +120,41 @@ void main() {
       expect(device.started, 2);
     });
 
+    testWidgets('Send while recording finishes the dictation and sends it; no second Stop', (tester) async {
+      await setSize(tester, const Size(500, 900));
+      final backend = FakeBackend();
+      await tester.pumpWidget(chat(backend, FakeDictation(), FakeDeviceDictation()));
+      await tester.pumpAndSettle();
+      await tapMic(tester);
+      // Recording with an empty box: the main button is Send, not the bot's Stop.
+      expect(find.byKey(const Key('stopButton')), findsNothing);
+      await tester.tap(find.byKey(const Key('sendButton')));
+      await settleSome(tester);
+      expect(backend.sent, ['water the plants']);
+      expect(messageText(tester), isEmpty);
+    });
+
+    testWidgets('Send while the device listens sends the words, and late ones never come back', (tester) async {
+      await setSize(tester, const Size(500, 900));
+      final backend = FakeBackend()..transcribeErrors.add(noService);
+      final device = FakeDeviceDictation();
+      await tester.pumpWidget(chat(backend, FakeDictation(), device));
+      await tester.pumpAndSettle();
+      await tapMic(tester);
+      await tapMic(tester);
+      await tester.tap(find.text('Say it again'));
+      await settleSome(tester);
+      device.onWords!('call the plumber');
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('sendButton')));
+      await settleSome(tester);
+      expect(backend.sent, ['call the plumber']);
+      // The recognizer reports once more after Send: the box stays empty.
+      device.onWords!('call the plumber tomorrow');
+      await tester.pump();
+      expect(messageText(tester), isEmpty);
+    });
+
     testWidgets('with no dictation service it says so once and offers the device', (tester) async {
       await setSize(tester, const Size(500, 900));
       final backend = FakeBackend()..transcribeErrors.add(noService);

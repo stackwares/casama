@@ -335,6 +335,7 @@ The API is versioned under `/v1`, described entirely in OpenAPI, and authenticat
 | DELETE   | /v1/computers/{id}/lease                     | Hand control back to the bot                            |
 | GET      | /v1/computers/{id}/terminal                  | WebSocket terminal session                              |
 | GET, PUT | /v1/computers/{id}/files?path=               | List, download, upload files                            |
+| GET      | /v1/computers/{id}/files/thumbnail?path=     | Video/image/PDF thumbnail; never wakes it (D-226)       |
 | POST     | /v1/computers/{id}/checkpoints/{cid}/restore | Undo to a checkpoint                                    |
 | POST     | /v1/credentials                              | Store a model key in Vault; returns metadata only       |
 | POST     | /v1/credentials/{id}/test                    | Validate a key with a 1-token call                      |

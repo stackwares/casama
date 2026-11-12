@@ -17,11 +17,17 @@ const base = {
 };
 
 describe("needsApproval", () => {
-  it("ask_risky: high risk always, medium only after untrusted input", () => {
+  it("ask_risky: high risk always, medium only when it sends data out after untrusted input (D-213)", () => {
     expect(needsApproval({ ...base, risk: "high" })).toBe(true);
     expect(needsApproval({ ...base, risk: "medium" })).toBe(false);
-    expect(needsApproval({ ...base, risk: "medium", untrustedSinceApproval: true })).toBe(true);
-    expect(needsApproval({ ...base, risk: "low", untrustedSinceApproval: true })).toBe(false);
+    expect(needsApproval({ ...base, risk: "medium", untrustedSinceApproval: true })).toBe(false);
+    expect(needsApproval({ ...base, risk: "medium", sendsOut: true })).toBe(false);
+    expect(
+      needsApproval({ ...base, risk: "medium", untrustedSinceApproval: true, sendsOut: true }),
+    ).toBe(true);
+    expect(
+      needsApproval({ ...base, risk: "low", untrustedSinceApproval: true, sendsOut: true }),
+    ).toBe(false);
     expect(needsApproval({ ...base, risk: "medium", confirmUnderDefault: true })).toBe(true);
   });
   it("self-only tools (the bot's own notes, schedule, tasks, messages to the person) never ask (D-155)", () => {
