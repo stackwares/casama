@@ -7578,4 +7578,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appearanceAboutTheme => 'About this theme';
+
+  @override
+  String settingsOnDevServer(String host) {
+    return 'Settings · development server $host';
+  }
 }

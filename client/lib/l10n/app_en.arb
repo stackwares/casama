@@ -2285,5 +2285,7 @@
   "@appearanceSwitched": {"placeholders": {"name": {"type": "String"}}},
   "appearanceSaved": "Saved {name} to your themes",
   "@appearanceSaved": {"placeholders": {"name": {"type": "String"}}},
-  "appearanceAboutTheme": "About this theme"
+  "appearanceAboutTheme": "About this theme",
+  "settingsOnDevServer": "Settings · development server {host}",
+  "@settingsOnDevServer": {"placeholders": {"host": {"type": "String"}}}
 }

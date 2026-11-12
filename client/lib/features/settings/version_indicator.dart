@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/dev_server.dart';
+import '../../core/providers.dart';
 import '../../core/updater.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -18,6 +20,9 @@ class VersionIndicator extends ConsumerWidget {
     if (version == null) return const SizedBox.shrink();
     final l10n = context.l10n;
     final label = l10n.casamaVersion(version);
+    // On a development server a second line names it, next to the amber dot on the avatar.
+    final url = ref.watch(backendProvider).apiUrl;
+    final dev = isDevServer(url);
     return Tooltip(
       message: l10n.copy,
       child: InkWell(
@@ -29,10 +34,22 @@ class VersionIndicator extends ConsumerWidget {
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm, vertical: AppSpace.sm),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: context.textTheme.labelMedium?.copyWith(fontFeatures: AppText.tabular, color: context.colorScheme.onSurfaceVariant.withValues(alpha: 0.75)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: context.textTheme.labelMedium?.copyWith(fontFeatures: AppText.tabular, color: context.colorScheme.onSurfaceVariant.withValues(alpha: 0.75)),
+              ),
+              if (dev)
+                Text(
+                  l10n.serverIs(serverHost(url)),
+                  key: const Key('devServerLine'),
+                  textAlign: TextAlign.center,
+                  style: context.textTheme.labelMedium?.copyWith(color: const Color(0xFFD97706), fontWeight: FontWeight.w600),
+                ),
+            ],
           ),
         ),
       ),

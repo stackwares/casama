@@ -12057,6 +12057,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'About this theme'**
   String get appearanceAboutTheme;
+
+  /// No description provided for @settingsOnDevServer.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings · development server {host}'**
+  String settingsOnDevServer(String host);
 }
 
 class _AppLocalizationsDelegate
