@@ -4118,10 +4118,12 @@ class FakeBackend implements Backend {
     String? name,
     String? profile,
     int? maxDesktops,
+    int? idleSleepMinutes,
   }) async {
     computerUpdates.add(
-      '${name ?? ''}${profile ?? ''}${maxDesktops == null ? '' : 'desktops:$maxDesktops'}',
+      '${name ?? ''}${profile ?? ''}${maxDesktops == null ? '' : 'desktops:$maxDesktops'}${idleSleepMinutes == null ? '' : 'sleep:$idleSleepMinutes'}',
     );
+    if (idleSleepMinutes != null) computerSleepMinutes = idleSleepMinutes;
     return (await computers(orgId)).first;
   }
 
@@ -4194,8 +4196,88 @@ class FakeBackend implements Backend {
       hasSnapshot: true,
       maxDesktops: 1,
       createdAt: DateTime(2026),
+      idleSleepMinutes: computerSleepMinutes,
+      operation: computerOperation,
     ),
   ];
+
+  // Managing a computer (D-239).
+  int computerSleepMinutes = 5;
+  ComputerOperation? computerOperation;
+  final computerActions = <String>[];
+  ComputerVitals? vitals;
+  ComputerStorage? storage;
+  List<ComputerProcess>? processes;
+  List<Checkpoint> restorePoints = const [];
+  ComputerUsage computerUsageData = ComputerUsage(monthStart: '2026-11-01', seconds: 0, costUsd: 0, days: const []);
+  List<ComputerHistoryEntry> history = const [];
+  List<ComputerBotUse> computerBotUses = const [];
+  Uint8List? archive;
+
+  @override
+  Future<Computer> restartComputer(String id) async {
+    computerActions.add('restart');
+    return (await computers(orgId)).first;
+  }
+
+  @override
+  Future<Computer> resetComputer(String id, {required bool erase, bool checkpoint = true}) async {
+    computerActions.add('${erase ? 'erase' : 'reset'}${checkpoint ? '+checkpoint' : ''}');
+    computerOperation = ComputerOperation(
+      kind: erase ? ComputerOperationKindEnum.erase : ComputerOperationKindEnum.resetSystem,
+      step: checkpoint ? ComputerOperationStepEnum.saving : ComputerOperationStepEnum.wiping,
+      checkpointId: null,
+      error: null,
+      startedAt: DateTime.now(),
+      finishedAt: null,
+    );
+    return (await computers(orgId)).first;
+  }
+
+  @override
+  Future<ComputerVitals?> computerVitals(String id) async => vitals;
+  @override
+  Future<ComputerStorage?> computerStorage(String id) async => storage;
+  @override
+  Future<CleanStorageResult> cleanComputerStorage(String id) async {
+    computerActions.add('clean');
+    final before = storage;
+    storage = ComputerStorage(
+      usedBytes: (before?.usedBytes ?? 0) - (before?.cleanableBytes ?? 0),
+      limitBytes: before?.limitBytes ?? 0,
+      categories: before?.categories ?? const [],
+      cleanableBytes: 0,
+    );
+    return CleanStorageResult(freedBytes: before?.cleanableBytes ?? 0, storage: storage!);
+  }
+
+  @override
+  Future<List<ComputerProcess>?> computerProcesses(String id) async => processes;
+  @override
+  Future<void> stopComputerProcess(String id, int pid) async {
+    computerActions.add('stop:$pid');
+    processes = processes?.where((p) => p.pid != pid).toList();
+  }
+
+  @override
+  Future<ComputerUsage> computerUsage(String id) async => computerUsageData;
+  @override
+  Future<List<ComputerHistoryEntry>> computerHistory(String id) async => history;
+  @override
+  Future<List<ComputerBotUse>> computerBots(String id) async => computerBotUses;
+  @override
+  Future<Checkpoint> createCheckpoint(String id, String label) async {
+    computerActions.add('checkpoint:$label');
+    final cp = Checkpoint(id: 'cp-${restorePoints.length + 1}', computerId: id, runId: null, label: label, size: 0, createdAt: DateTime.now());
+    restorePoints = [cp, ...restorePoints];
+    return cp;
+  }
+
+  @override
+  Future<Uint8List?> downloadComputerArchive(String id) async {
+    computerActions.add('archive');
+    return archive;
+  }
   @override
   Future<Computer> startComputer(String id) async =>
       (await computers(orgId)).first;
@@ -4248,12 +4330,12 @@ class FakeBackend implements Backend {
   @override
   Future<void> deleteFile(String computerId, String path) async {}
   @override
-  Future<List<Checkpoint>> checkpoints(String computerId) async => const [];
+  Future<List<Checkpoint>> checkpoints(String computerId) async => restorePoints;
   @override
   Future<void> restoreCheckpoint(
     String computerId,
     String checkpointId,
-  ) async {}
+  ) async => computerActions.add('restore:$checkpointId');
   @override
   Future<Uint8List?> screenshot(String computerId) async => null;
   @override

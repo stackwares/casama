@@ -1603,13 +1603,13 @@ abstract class AppLocalizations {
   /// No description provided for @computerAdvancedTabsShow.
   ///
   /// In en, this message translates to:
-  /// **'Show terminal and checkpoints'**
+  /// **'Show the terminal'**
   String get computerAdvancedTabsShow;
 
   /// No description provided for @computerAdvancedTabsHide.
   ///
   /// In en, this message translates to:
-  /// **'Hide terminal and checkpoints'**
+  /// **'Hide the terminal'**
   String get computerAdvancedTabsHide;
 
   /// No description provided for @headlessScreenNoteSettings.
@@ -2389,13 +2389,13 @@ abstract class AppLocalizations {
   /// What the bot is doing in a tool step, in everyday words (chats, calls, the computer view).
   ///
   /// In en, this message translates to:
-  /// **'{tool, select, memory_search{Searching your memories} memory_write{Saving that to memory} memory{Updating its memory} knowledge_search{Looking through your knowledge} web_search{Searching the web} web{Reading a web page} browser_open{Opening a website} browser_click{Clicking on the page} browser_type{Typing on the page} browser_press{Pressing a key} browser_scroll{Scrolling the page} browser_look{Looking at the page} desktop_click{Clicking on the screen} desktop_type{Typing} desktop_press{Pressing keys} desktop_launch{Opening an app} desktop_look{Looking at the screen} shell{Working on its computer} files_read{Reading a file} files_write{Writing a file} files_list{Looking through files} files_search{Searching files} files_from_chat{Getting a file from the chat} http{Contacting a service} data_search{Looking for data} data_call{Getting data} skills_load{Getting a skill ready} skills_create{Learning a new skill} skills_update{Improving a skill} checkpoint{Saving a restore point} takeover{Asking you to take over} delegate{Asking a helper} routines_list{Checking your routines} routines_create{Setting up a routine} routines_update{Updating a routine} routines_delete{Removing a routine} watchers_create{Setting up a watcher} watchers_list{Checking your watchers} watchers_delete{Removing a watcher} tasks_list{Checking your tasks} tasks_create{Adding a task} tasks{Updating your tasks} notify_user{Sending you a note} usage_report{Checking usage} device_read{Reading your device data} device_access{Asking for device access} pages_publish{Publishing a page} pages{Updating a page} media{Making an image} media_video{Making a video} bots_create{Making a new bot} bots_update{Updating a bot} bots_list{Checking your bots} bots_archive{Archiving a bot} channel_send{Sending a message} links_ask{Asking a contact\'s assistant} logins_list{Checking saved logins} replay_run{Repeating saved steps} replay_save{Saving these steps} setup_apply{Suggesting a setup} sidebar_organize{Organizing your sidebar} suggestions_add{Adding a suggestion} teach_save_draft{Saving a draft skill} welcome_name{Picking a name} secrets_request{Asking you for a secret} pages_list{Checking your pages} pages_share{Changing who can see a page} projects_create{Starting a project} projects_status{Checking a project} projects_update{Updating a project} projects{Planning a project} payments{Asking to make a payment} voice_call{Calling a business} voice_call_user{Calling you} tools_load{Getting ready} ui_show{Showing you something} start_task{Starting this in the chat} other{Working on it}}'**
+  /// **'{tool, select, memory_search{Searching your memories} memory_write{Saving that to memory} memory{Updating its memory} knowledge_search{Looking through your knowledge} web_search{Searching the web} web{Reading a web page} browser_open{Opening a website} browser_click{Clicking on the page} browser_type{Typing on the page} browser_press{Pressing a key} browser_scroll{Scrolling the page} browser_look{Looking at the page} desktop_click{Clicking on the screen} desktop_type{Typing} desktop_press{Pressing keys} desktop_launch{Opening an app} desktop_look{Looking at the screen} shell{Working on its computer} files_read{Reading a file} files_write{Writing a file} files_list{Looking through files} files_search{Searching files} files_from_chat{Getting a file from the chat} http{Contacting a service} data_search{Looking for data} data_call{Getting data} skills_load{Getting a skill ready} skills_create{Learning a new skill} skills_update{Improving a skill} checkpoint{Saving a restore point} computer_restart{Restarting its computer} takeover{Asking you to take over} delegate{Asking a helper} routines_list{Checking your routines} routines_create{Setting up a routine} routines_update{Updating a routine} routines_delete{Removing a routine} watchers_create{Setting up a watcher} watchers_list{Checking your watchers} watchers_delete{Removing a watcher} tasks_list{Checking your tasks} tasks_create{Adding a task} tasks{Updating your tasks} notify_user{Sending you a note} usage_report{Checking usage} device_read{Reading your device data} device_access{Asking for device access} pages_publish{Publishing a page} pages{Updating a page} media{Making an image} media_video{Making a video} bots_create{Making a new bot} bots_update{Updating a bot} bots_list{Checking your bots} bots_archive{Archiving a bot} channel_send{Sending a message} links_ask{Asking a contact\'s assistant} logins_list{Checking saved logins} replay_run{Repeating saved steps} replay_save{Saving these steps} setup_apply{Suggesting a setup} sidebar_organize{Organizing your sidebar} suggestions_add{Adding a suggestion} teach_save_draft{Saving a draft skill} welcome_name{Picking a name} secrets_request{Asking you for a secret} pages_list{Checking your pages} pages_share{Changing who can see a page} projects_create{Starting a project} projects_status{Checking a project} projects_update{Updating a project} projects{Planning a project} payments{Asking to make a payment} voice_call{Calling a business} voice_call_user{Calling you} tools_load{Getting ready} ui_show{Showing you something} start_task{Starting this in the chat} other{Working on it}}'**
   String toolDoing(String tool);
 
   /// The same step once it's done.
   ///
   /// In en, this message translates to:
-  /// **'{tool, select, memory_search{Searched your memories} memory_write{Saved to memory} memory{Updated its memory} knowledge_search{Looked through your knowledge} web_search{Searched the web} web{Read a web page} browser_open{Opened a website} browser_click{Clicked on the page} browser_type{Typed on the page} browser_press{Pressed a key} browser_scroll{Scrolled the page} browser_look{Looked at the page} desktop_click{Clicked on the screen} desktop_type{Typed} desktop_press{Pressed keys} desktop_launch{Opened an app} desktop_look{Looked at the screen} shell{Worked on its computer} files_read{Read a file} files_write{Wrote a file} files_list{Looked through files} files_search{Searched files} files_from_chat{Got a file from the chat} http{Contacted a service} data_search{Looked for data} data_call{Got data} skills_load{Used a skill} skills_create{Learned a new skill} skills_update{Improved a skill} checkpoint{Saved a restore point} takeover{Asked you to take over} delegate{Asked a helper} routines_list{Checked your routines} routines_create{Set up a routine} routines_update{Updated a routine} routines_delete{Removed a routine} watchers_create{Set up a watcher} watchers_list{Checked your watchers} watchers_delete{Removed a watcher} tasks_list{Checked your tasks} tasks_create{Added a task} tasks{Updated your tasks} notify_user{Sent you a note} usage_report{Checked usage} device_read{Read your device data} device_access{Asked for device access} pages_publish{Published a page} pages{Updated a page} media{Made an image} media_video{Made a video} bots_create{Made a new bot} bots_update{Updated a bot} bots_list{Checked your bots} bots_archive{Archived a bot} channel_send{Sent a message} links_ask{Asked a contact\'s assistant} logins_list{Checked saved logins} replay_run{Repeated saved steps} replay_save{Saved these steps} setup_apply{Suggested a setup} sidebar_organize{Organized your sidebar} suggestions_add{Added a suggestion} teach_save_draft{Saved a draft skill} welcome_name{Picked a name} secrets_request{Asked you for a secret} pages_list{Checked your pages} pages_share{Changed who can see a page} projects_create{Started a project} projects_status{Checked a project} projects_update{Updated a project} projects{Planned a project} payments{Asked to make a payment} voice_call{Called a business} voice_call_user{Called you} tools_load{Got ready} ui_show{Showed you something} start_task{Started in the chat} other{Done}}'**
+  /// **'{tool, select, memory_search{Searched your memories} memory_write{Saved to memory} memory{Updated its memory} knowledge_search{Looked through your knowledge} web_search{Searched the web} web{Read a web page} browser_open{Opened a website} browser_click{Clicked on the page} browser_type{Typed on the page} browser_press{Pressed a key} browser_scroll{Scrolled the page} browser_look{Looked at the page} desktop_click{Clicked on the screen} desktop_type{Typed} desktop_press{Pressed keys} desktop_launch{Opened an app} desktop_look{Looked at the screen} shell{Worked on its computer} files_read{Read a file} files_write{Wrote a file} files_list{Looked through files} files_search{Searched files} files_from_chat{Got a file from the chat} http{Contacted a service} data_search{Looked for data} data_call{Got data} skills_load{Used a skill} skills_create{Learned a new skill} skills_update{Improved a skill} checkpoint{Saved a restore point} computer_restart{Restarted its computer} takeover{Asked you to take over} delegate{Asked a helper} routines_list{Checked your routines} routines_create{Set up a routine} routines_update{Updated a routine} routines_delete{Removed a routine} watchers_create{Set up a watcher} watchers_list{Checked your watchers} watchers_delete{Removed a watcher} tasks_list{Checked your tasks} tasks_create{Added a task} tasks{Updated your tasks} notify_user{Sent you a note} usage_report{Checked usage} device_read{Read your device data} device_access{Asked for device access} pages_publish{Published a page} pages{Updated a page} media{Made an image} media_video{Made a video} bots_create{Made a new bot} bots_update{Updated a bot} bots_list{Checked your bots} bots_archive{Archived a bot} channel_send{Sent a message} links_ask{Asked a contact\'s assistant} logins_list{Checked saved logins} replay_run{Repeated saved steps} replay_save{Saved these steps} setup_apply{Suggested a setup} sidebar_organize{Organized your sidebar} suggestions_add{Added a suggestion} teach_save_draft{Saved a draft skill} welcome_name{Picked a name} secrets_request{Asked you for a secret} pages_list{Checked your pages} pages_share{Changed who can see a page} projects_create{Started a project} projects_status{Checked a project} projects_update{Updated a project} projects{Planned a project} payments{Asked to make a payment} voice_call{Called a business} voice_call_user{Called you} tools_load{Got ready} ui_show{Showed you something} start_task{Started in the chat} other{Done}}'**
   String toolDid(String tool);
 
   /// No description provided for @toolUsingApp.
@@ -12831,6 +12831,702 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That isn\'t valid JSON. Check the brackets, quotes and commas.'**
   String get adminAppSettingsBadJson;
+
+  /// No description provided for @manageTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get manageTab;
+
+  /// No description provided for @vitalsCpu.
+  ///
+  /// In en, this message translates to:
+  /// **'CPU'**
+  String get vitalsCpu;
+
+  /// No description provided for @vitalsMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory'**
+  String get vitalsMemory;
+
+  /// No description provided for @vitalsDisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Disk'**
+  String get vitalsDisk;
+
+  /// No description provided for @fixItTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not working right?'**
+  String get fixItTitle;
+
+  /// No description provided for @fixItSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Try these in order. Each one goes a bit further.'**
+  String get fixItSubtitle;
+
+  /// No description provided for @fixRestart.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart'**
+  String get fixRestart;
+
+  /// No description provided for @fixRestartHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'About 20 seconds · nothing is lost'**
+  String get fixRestartHelp;
+
+  /// No description provided for @fixResetSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset system'**
+  String get fixResetSystem;
+
+  /// No description provided for @fixResetSystemHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A fresh system · your files stay'**
+  String get fixResetSystemHelp;
+
+  /// No description provided for @fixErase.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase everything'**
+  String get fixErase;
+
+  /// No description provided for @fixEraseHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Like new · can be undone for 7 days'**
+  String get fixEraseHelp;
+
+  /// No description provided for @fixResetAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset…'**
+  String get fixResetAction;
+
+  /// No description provided for @fixEraseAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase…'**
+  String get fixEraseAction;
+
+  /// No description provided for @computerRestarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Restarting…'**
+  String get computerRestarting;
+
+  /// No description provided for @computerRestarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Restarted. Your files are all there.'**
+  String get computerRestarted;
+
+  /// No description provided for @resetSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset {name}'**
+  String resetSheetTitle(String name);
+
+  /// No description provided for @resetSheetBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'{bots} can\'t use it for about a minute.'**
+  String resetSheetBusy(String bots);
+
+  /// No description provided for @resetSheetBusyNone.
+  ///
+  /// In en, this message translates to:
+  /// **'It can\'t be used for about a minute.'**
+  String get resetSheetBusyNone;
+
+  /// No description provided for @resetOptionSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset system, keep my files'**
+  String get resetOptionSystem;
+
+  /// No description provided for @resetOptionSystemHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixes broken installs, settings and stuck programs.'**
+  String get resetOptionSystemHelp;
+
+  /// No description provided for @resetOptionErase.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase everything'**
+  String get resetOptionErase;
+
+  /// No description provided for @resetOptionEraseHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to a brand-new computer.'**
+  String get resetOptionEraseHelp;
+
+  /// No description provided for @resetKept.
+  ///
+  /// In en, this message translates to:
+  /// **'Kept'**
+  String get resetKept;
+
+  /// No description provided for @resetRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed'**
+  String get resetRemoved;
+
+  /// No description provided for @resetKeptFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Your files in workspace'**
+  String get resetKeptFiles;
+
+  /// No description provided for @resetKeptSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Name, settings and bots'**
+  String get resetKeptSettings;
+
+  /// No description provided for @resetKeptRestorePoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore points'**
+  String get resetKeptRestorePoints;
+
+  /// No description provided for @resetRemovedApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps and tools you installed'**
+  String get resetRemovedApps;
+
+  /// No description provided for @resetRemovedPrograms.
+  ///
+  /// In en, this message translates to:
+  /// **'Running programs'**
+  String get resetRemovedPrograms;
+
+  /// No description provided for @resetRemovedCaches.
+  ///
+  /// In en, this message translates to:
+  /// **'Caches and home folder settings'**
+  String get resetRemovedCaches;
+
+  /// No description provided for @resetRemovedFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Every file, workspace too'**
+  String get resetRemovedFiles;
+
+  /// No description provided for @resetSavePoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a restore point first'**
+  String get resetSavePoint;
+
+  /// No description provided for @resetSavePointHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'So you can undo this for 7 days'**
+  String get resetSavePointHelp;
+
+  /// No description provided for @eraseTypeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Type {name} to confirm'**
+  String eraseTypeName(String name);
+
+  /// No description provided for @resetConfirmSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset system'**
+  String get resetConfirmSystem;
+
+  /// No description provided for @resetConfirmErase.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase everything'**
+  String get resetConfirmErase;
+
+  /// No description provided for @resetStepSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving a restore point'**
+  String get resetStepSaving;
+
+  /// No description provided for @resetStepWipingSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Removing apps and settings'**
+  String get resetStepWipingSystem;
+
+  /// No description provided for @resetStepWipingErase.
+  ///
+  /// In en, this message translates to:
+  /// **'Erasing every file'**
+  String get resetStepWipingErase;
+
+  /// No description provided for @resetStepRestarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting a fresh system'**
+  String get resetStepRestarting;
+
+  /// No description provided for @resettingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Resetting… {step} of {total}'**
+  String resettingStatus(int step, int total);
+
+  /// No description provided for @erasingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Erasing… {step} of {total}'**
+  String erasingStatus(int step, int total);
+
+  /// No description provided for @resetLeaveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You can leave this screen. It keeps going on its own.'**
+  String get resetLeaveHint;
+
+  /// No description provided for @resetDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Fresh system ready'**
+  String get resetDone;
+
+  /// No description provided for @eraseDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Computer erased'**
+  String get eraseDone;
+
+  /// No description provided for @resetFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The reset didn\'t finish'**
+  String get resetFailed;
+
+  /// No description provided for @resetUndoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo puts everything back the way it was. The restore point stays for 7 days.'**
+  String get resetUndoHint;
+
+  /// No description provided for @restoredPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Put back the way it was'**
+  String get restoredPrevious;
+
+  /// No description provided for @usageThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get usageThisMonth;
+
+  /// No description provided for @usageDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} m'**
+  String usageDuration(int hours, int minutes);
+
+  /// No description provided for @usageCostNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Charged only while it\'s on. Asleep costs nothing.'**
+  String get usageCostNote;
+
+  /// No description provided for @usageNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Not used yet this month'**
+  String get usageNone;
+
+  /// No description provided for @sleepTimerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Goes to sleep after'**
+  String get sleepTimerTitle;
+
+  /// No description provided for @sleepTimerMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} min'**
+  String sleepTimerMinutes(int n);
+
+  /// No description provided for @sleepTimerHour.
+  ///
+  /// In en, this message translates to:
+  /// **'1 hour'**
+  String get sleepTimerHour;
+
+  /// No description provided for @sleepTimerHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Never while a bot is working or you\'re using it. A longer wait keeps it on longer, which costs more.'**
+  String get sleepTimerHelp;
+
+  /// No description provided for @sleepTimerSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleeps after {label} without activity'**
+  String sleepTimerSaved(String label);
+
+  /// No description provided for @storageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get storageTitle;
+
+  /// No description provided for @storageOf.
+  ///
+  /// In en, this message translates to:
+  /// **'of {total}'**
+  String storageOf(String total);
+
+  /// No description provided for @storageFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Your files'**
+  String get storageFiles;
+
+  /// No description provided for @storageApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps and tools'**
+  String get storageApps;
+
+  /// No description provided for @storageCaches.
+  ///
+  /// In en, this message translates to:
+  /// **'Caches'**
+  String get storageCaches;
+
+  /// No description provided for @storageBrowser.
+  ///
+  /// In en, this message translates to:
+  /// **'Browser'**
+  String get storageBrowser;
+
+  /// No description provided for @storageOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get storageOther;
+
+  /// No description provided for @storageFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free'**
+  String get storageFree;
+
+  /// No description provided for @storageFreeUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Free up {size}'**
+  String storageFreeUp(String size);
+
+  /// No description provided for @storageNothingToClean.
+  ///
+  /// In en, this message translates to:
+  /// **'No caches to clear'**
+  String get storageNothingToClean;
+
+  /// No description provided for @storageFreed.
+  ///
+  /// In en, this message translates to:
+  /// **'Freed {size}'**
+  String storageFreed(String size);
+
+  /// No description provided for @storageAsleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Wake the computer to see what takes up space.'**
+  String get storageAsleep;
+
+  /// No description provided for @processesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Running now'**
+  String get processesTitle;
+
+  /// No description provided for @processesNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is running besides the computer itself.'**
+  String get processesNone;
+
+  /// No description provided for @processesAsleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing runs while it sleeps.'**
+  String get processesAsleep;
+
+  /// No description provided for @processStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get processStop;
+
+  /// No description provided for @processStopTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop {name}?'**
+  String processStopTitle(String name);
+
+  /// No description provided for @processStopMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Anything it hasn\'t saved is lost.'**
+  String get processStopMessage;
+
+  /// No description provided for @processStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped {name}'**
+  String processStopped(String name);
+
+  /// No description provided for @processLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} · {cpu}% CPU · {memory}'**
+  String processLine(String duration, String cpu, String memory);
+
+  /// No description provided for @usedByTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Used by'**
+  String get usedByTitle;
+
+  /// No description provided for @usedByNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No bot uses this computer yet.'**
+  String get usedByNone;
+
+  /// No description provided for @botLastActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active {when}'**
+  String botLastActive(String when);
+
+  /// No description provided for @botNeverActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Not active yet'**
+  String get botNeverActive;
+
+  /// No description provided for @restorePointsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore points'**
+  String get restorePointsTitle;
+
+  /// No description provided for @restorePointsNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None yet. Bots save one before risky changes.'**
+  String get restorePointsNone;
+
+  /// No description provided for @restorePointSaveNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a restore point now'**
+  String get restorePointSaveNow;
+
+  /// No description provided for @restorePointSaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a restore point'**
+  String get restorePointSaveTitle;
+
+  /// No description provided for @restorePointDefaultLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved by hand'**
+  String get restorePointDefaultLabel;
+
+  /// No description provided for @restorePointSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore point saved'**
+  String get restorePointSaved;
+
+  /// No description provided for @restorePointsShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all {n}'**
+  String restorePointsShowAll(int n);
+
+  /// No description provided for @historyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get historyTitle;
+
+  /// No description provided for @historyNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing has happened yet.'**
+  String get historyNone;
+
+  /// No description provided for @historyStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Woke up'**
+  String get historyStarted;
+
+  /// No description provided for @historySlept.
+  ///
+  /// In en, this message translates to:
+  /// **'Went to sleep'**
+  String get historySlept;
+
+  /// No description provided for @historySleptIdle.
+  ///
+  /// In en, this message translates to:
+  /// **'Went to sleep (no activity)'**
+  String get historySleptIdle;
+
+  /// No description provided for @historyRestarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Restarted'**
+  String get historyRestarted;
+
+  /// No description provided for @historyReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset the system'**
+  String get historyReset;
+
+  /// No description provided for @historyErased.
+  ///
+  /// In en, this message translates to:
+  /// **'Erased everything'**
+  String get historyErased;
+
+  /// No description provided for @historyCheckpointCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved a restore point'**
+  String get historyCheckpointCreated;
+
+  /// No description provided for @historyCheckpointRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored a restore point'**
+  String get historyCheckpointRestored;
+
+  /// No description provided for @historyStorageCleaned.
+  ///
+  /// In en, this message translates to:
+  /// **'Freed up {size}'**
+  String historyStorageCleaned(String size);
+
+  /// No description provided for @historyStorageCleanedPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Freed up space'**
+  String get historyStorageCleanedPlain;
+
+  /// No description provided for @historyProcessStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped {name}'**
+  String historyProcessStopped(String name);
+
+  /// No description provided for @historyUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Changed its settings'**
+  String get historyUpdated;
+
+  /// No description provided for @historyYou.
+  ///
+  /// In en, this message translates to:
+  /// **'you'**
+  String get historyYou;
+
+  /// No description provided for @yourDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data'**
+  String get yourDataTitle;
+
+  /// No description provided for @downloadAllFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Download all files'**
+  String get downloadAllFiles;
+
+  /// No description provided for @downloadAllFilesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A .zip of everything in workspace'**
+  String get downloadAllFilesHelp;
+
+  /// No description provided for @downloadNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'There are no files to download yet.'**
+  String get downloadNothing;
+
+  /// No description provided for @deleteComputerHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes it and its restore points'**
+  String get deleteComputerHelp;
+
+  /// No description provided for @manageComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get manageComputer;
+
+  /// No description provided for @restartComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart'**
+  String get restartComputer;
+
+  /// No description provided for @resetComputerMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset…'**
+  String get resetComputerMenu;
+
+  /// No description provided for @moreFixes.
+  ///
+  /// In en, this message translates to:
+  /// **'More fixes'**
+  String get moreFixes;
+
+  /// No description provided for @durationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} min'**
+  String durationMinutes(int n);
+
+  /// No description provided for @durationHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} h'**
+  String durationHours(int n);
+
+  /// No description provided for @durationDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} d'**
+  String durationDays(int n);
 }
 
 class _AppLocalizationsDelegate

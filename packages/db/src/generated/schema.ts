@@ -464,6 +464,7 @@ export const auditLog = pgTable("audit_log", {
 }, (table) => [
 	index("audit_log_org_created_idx").using("btree", table.orgId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.asc().nullsLast().op("uuid_ops"), table.id.asc().nullsLast().op("uuid_ops")),
 	index("audit_log_org_time_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
+	index("audit_log_target_time_idx").using("btree", table.targetId.asc().nullsLast().op("uuid_ops"), table.createdAt.desc().nullsFirst().op("timestamptz_ops")).where(sql`(target_id IS NOT NULL)`),
 	foreignKey({
 			columns: [table.orgId],
 			foreignColumns: [organizations.id],
@@ -541,6 +542,8 @@ export const computers = pgTable("computers", {
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	maxDesktops: smallint("max_desktops").default(1).notNull(),
 	desktopForTakeover: boolean("desktop_for_takeover").default(false).notNull(),
+	idleSleepMinutes: smallint("idle_sleep_minutes"),
+	operation: jsonb(),
 }, (table) => [
 	uniqueIndex("computers_one_team_per_org").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")).where(sql`(kind = 'team'::text)`),
 	index("computers_org_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")),
@@ -563,6 +566,7 @@ export const computers = pgTable("computers", {
 	check("computers_check", sql`((kind = 'private'::text) = (owner_bot_id IS NOT NULL)) OR (kind = 'local'::text)`),
 	check("computers_provider_check", sql`provider = ANY (ARRAY['docker'::text, 'e2b'::text, 'daytona'::text, 'local'::text, 'casama-cloud'::text, 'novita'::text, 'kubernetes'::text, 'incus'::text, 'boat'::text, 'railway'::text])`),
 	check("computers_max_desktops_check", sql`(max_desktops >= 1) AND (max_desktops <= 10)`),
+	check("computers_idle_sleep_minutes_check", sql`idle_sleep_minutes = ANY (ARRAY[5, 15, 30, 60])`),
 ]);
 
 export const checkpoints = pgTable("checkpoints", {
@@ -2915,8 +2919,10 @@ export const usageLedger = pgTable("usage_ledger", {
 	billedAt: timestamp("billed_at", { withTimezone: true, mode: 'string' }),
 	meta: jsonb().default({}).notNull(),
 	source: text().default('key').notNull(),
+	computerId: uuid("computer_id"),
 }, (table) => [
 	index("usage_ledger_bot_time_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")),
+	index("usage_ledger_computer_time_idx").using("btree", table.computerId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")).where(sql`(computer_id IS NOT NULL)`),
 	index("usage_ledger_org_time_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops"), table.createdAt.asc().nullsLast().op("uuid_ops")),
 	index("usage_ledger_unbilled_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops")).where(sql`(billable AND (billed_at IS NULL))`),
 	foreignKey({
@@ -2933,6 +2939,11 @@ export const usageLedger = pgTable("usage_ledger", {
 			columns: [table.runId],
 			foreignColumns: [runs.id],
 			name: "usage_ledger_run_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.computerId],
+			foreignColumns: [computers.id],
+			name: "usage_ledger_computer_id_fkey"
 		}).onDelete("set null"),
 	pgPolicy("usage_ledger_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
 	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),

@@ -1,6 +1,14 @@
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
-import { type ComputerRow, type ComputerService, milestone } from "@casama/agent";
+import {
+  auditComputer,
+  COMPUTER_RATES,
+  type ComputerRow,
+  type ComputerService,
+  computerCostUsd,
+  IDLE_SLEEP_CHOICES,
+  milestone,
+} from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, schema, withUserSession } from "@casama/db";
 import { type FileThumbnail, SandboxError } from "@casama/sandbox";
@@ -14,6 +22,9 @@ import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
 
 const { computers, checkpoints, localDevices } = schema;
+const user = (claims: JwtClaims) => ({ type: "user" as const, id: claims.sub });
+type ComputerSize = { cpus?: number; memory_mb?: number; disk_gb?: number };
+type ComputerHandle = Awaited<ReturnType<ComputerService["ensureRunning"]>>;
 const MAX_UPLOAD = 100 * 1024 * 1024;
 
 function requireClaims(claims: JwtClaims | undefined): JwtClaims {
@@ -67,7 +78,18 @@ const out = (c: Row, d?: DeviceRow | null, online?: boolean) => ({
           capabilities: deviceCaps(d.capabilities),
         }
       : null,
+  idle_sleep_minutes: c.idleSleepMinutes ?? 5,
+  operation: (c.operation as ComputerOperationOut | null) ?? null,
 });
+
+type ComputerOperationOut = {
+  kind: "reset_system" | "erase";
+  step: "saving" | "wiping" | "restarting" | "done" | "failed";
+  checkpoint_id: string | null;
+  error: string | null;
+  started_at: string;
+  finished_at: string | null;
+};
 
 function deviceCaps(raw: unknown) {
   const v = (raw ?? {}) as Record<string, unknown>;
@@ -189,19 +211,24 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
   app.openapi(routes.stopComputer, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
-    await visible(claims, id);
+    const current = await visible(claims, id);
     await sandbox(() => service().stop(id));
+    if (current.kind !== "local")
+      await auditComputer(db, current.orgId, id, "computer.slept", user(claims), {
+        reason: "user",
+      });
     return c.json(await reload(id), 200);
   });
 
   app.openapi(routes.restartComputer, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
-    await visible(claims, id);
+    const current = await visible(claims, id);
     await sandbox(async () => {
       await service().stop(id);
       await service().ensureRunning(id);
     });
+    await auditComputer(db, current.orgId, id, "computer.restarted", user(claims));
     return c.json(await reload(id), 200);
   });
 
@@ -340,8 +367,9 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
     const { label } = c.req.valid("json");
-    await visible(claims, id);
+    const current = await visible(claims, id);
     const { checkpointId } = await sandbox(() => service().checkpoint(id, label, null));
+    await auditComputer(db, current.orgId, id, "checkpoint.created", user(claims), { label });
     const [row] = await db.select().from(checkpoints).where(eq(checkpoints.id, checkpointId));
     return c.json(cpOut(row as typeof checkpoints.$inferSelect), 201);
   });
@@ -459,6 +487,11 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const body = c.req.valid("json");
     const current = await visible(claims, id);
     await canManage(claims, current.orgId, current.ownerBotId);
+    if (
+      body.idle_sleep_minutes != null &&
+      !(IDLE_SLEEP_CHOICES as readonly number[]).includes(body.idle_sleep_minutes)
+    )
+      throw new ApiError(400, "bad_sleep_timer", "The sleep timer is 5, 15, 30 or 60 minutes");
     if (body.max_desktops != null && current.kind !== "team")
       throw new ApiError(
         400,
@@ -472,8 +505,20 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         // A profile someone picks stays (D-178).
         ...(body.profile ? { profile: body.profile, desktopForTakeover: false } : {}),
         ...(body.max_desktops != null ? { maxDesktops: body.max_desktops } : {}),
+        // Five minutes is the default, kept as null so a later default change reaches it.
+        ...(body.idle_sleep_minutes != null
+          ? { idleSleepMinutes: body.idle_sleep_minutes === 5 ? null : body.idle_sleep_minutes }
+          : {}),
       })
       .where(eq(computers.id, id));
+    const changed = Object.keys(body).filter((k) => body[k as keyof typeof body] !== undefined);
+    if (changed.length)
+      await auditComputer(db, current.orgId, id, "computer.updated", user(claims), {
+        fields: changed,
+        ...(body.name ? { name: body.name } : {}),
+        ...(body.profile ? { profile: body.profile } : {}),
+        ...(body.idle_sleep_minutes != null ? { idle_sleep_minutes: body.idle_sleep_minutes } : {}),
+      });
     // A new profile needs a new container: restart it if it is running (files are kept).
     if (
       body.profile &&
@@ -498,6 +543,263 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id)
       values (${current.orgId}::uuid, 'user', ${claims.sub}::uuid, 'computer.deleted', 'computer', ${id}::uuid)`);
     return c.json({ deleted: id }, 200);
+  });
+
+  // -------------------------------------------------------------------------------------------
+  // Managing a computer (D-240). Looking (vitals, storage, programs) never wakes a computer or
+  // counts as activity; doing something (clean up, reset, download) wakes it like any file action.
+
+  /** The handle of a cloud computer that is already running, else 409; personal ones refuse. */
+  const runningHandle = async (claims: JwtClaims, id: string) => {
+    const current = await visible(claims, id);
+    if (current.kind === "local")
+      throw new ApiError(400, "personal_computer", "Personal computers are managed on the device");
+    const h = await service()
+      .ifRunning(id)
+      .catch(() => null);
+    if (!h) throw new ApiError(409, "computer_not_running", "The computer is asleep");
+    return { h, current };
+  };
+  const cloudComputer = async (claims: JwtClaims, id: string) => {
+    const current = await visible(claims, id);
+    if (current.kind === "local")
+      throw new ApiError(400, "personal_computer", "Personal computers are managed on the device");
+    return current;
+  };
+  const run = async (h: { exec: ComputerHandle["exec"] }, script: string, timeoutMs = 30_000) => {
+    const { collectExec } = await import("@casama/sandbox");
+    return sandbox(() => collectExec(h.exec(script, { timeoutMs })));
+  };
+
+  app.openapi(routes.computerVitals, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const { h, current } = await runningHandle(claims, id);
+    const r = await run(h, VITALS_SCRIPT, 15_000);
+    return c.json(parseVitals(r.stdout, current.size as ComputerSize), 200);
+  });
+
+  app.openapi(routes.computerStorage, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const { h, current } = await runningHandle(claims, id);
+    const r = await run(h, STORAGE_SCRIPT, 45_000);
+    return c.json(parseStorage(r.stdout, current.size as ComputerSize), 200);
+  });
+
+  app.openapi(routes.cleanComputerStorage, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const current = await cloudComputer(claims, id);
+    const h = await sandbox(() => service().ensureRunning(id));
+    const before = parseStorage(
+      (await run(h, STORAGE_SCRIPT, 45_000)).stdout,
+      current.size as ComputerSize,
+    );
+    await run(h, CLEAN_SCRIPT, 60_000);
+    const storage = parseStorage(
+      (await run(h, STORAGE_SCRIPT, 45_000)).stdout,
+      current.size as ComputerSize,
+    );
+    const freed = Math.max(0, before.used_bytes - storage.used_bytes);
+    await auditComputer(db, current.orgId, id, "computer.storage_cleaned", user(claims), {
+      freed_bytes: freed,
+    });
+    return c.json({ freed_bytes: freed, storage }, 200);
+  });
+
+  app.openapi(routes.listComputerProcesses, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const { h } = await runningHandle(claims, id);
+    const r = await run(h, PROCESSES_SCRIPT, 15_000);
+    return c.json({ items: parseProcesses(r.stdout) }, 200);
+  });
+
+  app.openapi(routes.stopComputerProcess, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id, pid } = c.req.valid("param");
+    const { h, current } = await runningHandle(claims, id);
+    const r = await run(h, stopProcessScript(pid), 20_000);
+    if (r.code === 44)
+      throw new ApiError(404, "process_not_found", "That program has already stopped");
+    if (r.code === 45)
+      throw new ApiError(
+        400,
+        "system_process",
+        "That's part of the computer itself and can't be stopped",
+      );
+    if (r.code !== 0) throw new ApiError(503, "computer_unavailable", "Couldn't stop that program");
+    await auditComputer(db, current.orgId, id, "computer.process_stopped", user(claims), {
+      pid,
+      name: r.stdout.trim().split("\n").pop()?.slice(0, 80) ?? null,
+    });
+    return c.json({ stopped: pid }, 200);
+  });
+
+  app.openapi(routes.resetComputer, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const { mode, checkpoint = true } = c.req.valid("json");
+    const current = await cloudComputer(claims, id);
+    await canManage(claims, current.orgId, current.ownerBotId);
+    const svc = service();
+    if (!(await svc.claimReset(id, mode, checkpoint)))
+      throw new ApiError(409, "reset_in_progress", "This computer is already resetting");
+    await auditComputer(
+      db,
+      current.orgId,
+      id,
+      mode === "erase" ? "computer.erased" : "computer.reset",
+      user(claims),
+      { checkpoint },
+    );
+    // Runs on after the response (about a minute): the app follows `operation`.
+    const done = svc.reset(id, mode, { checkpoint });
+    deps.onBackgroundTask?.(done);
+    return c.json(await reload(id), 202);
+  });
+
+  app.openapi(routes.computerUsage, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const current = await visible(claims, id);
+    const rows = await db.execute<{ d: string; s: string; cost: string; m: string }>(sql`
+      select to_char(date_trunc('day', created_at at time zone 'utc'), 'YYYY-MM-DD') as d,
+        sum(quantity)::text as s, sum(cost_usd)::text as cost,
+        to_char(date_trunc('month', now() at time zone 'utc'), 'YYYY-MM-DD') as m
+      from public.usage_ledger
+      where computer_id = ${id}::uuid and kind = 'computer_seconds'
+        and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc'
+      group by 1`);
+    const now = new Date();
+    const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+    const days = new Map<string, number>();
+    for (let d = new Date(monthStart); d <= now; d.setUTCDate(d.getUTCDate() + 1))
+      days.set(d.toISOString().slice(0, 10), 0);
+    let seconds = 0;
+    let cost = 0;
+    for (const r of rows) {
+      days.set(r.d, (days.get(r.d) ?? 0) + Number(r.s));
+      seconds += Number(r.s);
+      cost += Number(r.cost);
+    }
+    // The time it has been on now is not in the ledger until it sleeps.
+    if (current.runningSince && current.kind !== "local") {
+      const from = Math.max(new Date(current.runningSince).getTime(), monthStart.getTime());
+      const live = Math.max(0, Math.round((now.getTime() - from) / 1000));
+      const today = now.toISOString().slice(0, 10);
+      days.set(today, (days.get(today) ?? 0) + live);
+      seconds += live;
+      cost += computerCostUsd(
+        current.provider,
+        current.size as ComputerSize,
+        live,
+        deps.computers?.rates ?? COMPUTER_RATES,
+      );
+    }
+    return c.json(
+      {
+        month_start: monthStart.toISOString().slice(0, 10),
+        seconds: Math.round(seconds),
+        cost_usd: Math.round(cost * 10_000) / 10_000,
+        days: [...days].map(([date, s]) => ({ date, seconds: Math.round(s) })),
+      },
+      200,
+    );
+  });
+
+  app.openapi(routes.computerHistory, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    await visible(claims, id);
+    const rows = await db.execute<{
+      id: string;
+      action: string;
+      actor_type: "user" | "bot" | "system";
+      actor_id: string | null;
+      actor_name: string | null;
+      metadata: Record<string, unknown>;
+      created_at: Date | string;
+    }>(sql`
+      select a.id, a.action, a.actor_type, a.actor_id, a.metadata, a.created_at,
+        case a.actor_type
+          when 'user' then (select p.display_name from public.profiles p where p.user_id = a.actor_id)
+          when 'bot' then (select b.name from public.bots b where b.id = a.actor_id)
+        end as actor_name
+      from public.audit_log a
+      where a.target_id = ${id}::uuid and a.target_type = 'computer'
+      order by a.created_at desc limit 50`);
+    return c.json(
+      {
+        items: rows.map((r) => ({
+          id: r.id,
+          action: r.action,
+          actor_type: r.actor_type,
+          actor_id: r.actor_id,
+          actor_name: r.actor_name,
+          metadata: r.metadata ?? {},
+          created_at: iso(r.created_at),
+        })),
+      },
+      200,
+    );
+  });
+
+  app.openapi(routes.computerBots, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    await visible(claims, id);
+    // The same choice as ComputerService.forBot: its default, else its private computer, else
+    // the team computer. Read as the person, so only bots they can see are listed.
+    const rows = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ bot_id: string; name: string; last_active_at: Date | string | null }>(sql`
+        select b.id as bot_id, b.name,
+          (select max(r.created_at) from public.runs r where r.bot_id = b.id) as last_active_at
+        from public.bots b
+        join public.computers c on c.id = ${id}::uuid and c.org_id = b.org_id
+        where b.archived_at is null and (
+          b.default_computer_id = c.id
+          or (b.default_computer_id is null and (
+            c.owner_bot_id = b.id
+            or (c.kind = 'team' and not exists (
+              select 1 from public.computers p where p.owner_bot_id = b.id)))))
+        order by last_active_at desc nulls last, b.name`),
+    );
+    return c.json(
+      {
+        items: rows.map((r) => ({
+          bot_id: r.bot_id,
+          name: r.name,
+          last_active_at: r.last_active_at ? iso(r.last_active_at) : null,
+        })),
+      },
+      200,
+    );
+  });
+
+  app.openapi(routes.downloadComputerArchive, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const current = await cloudComputer(claims, id);
+    const h = await sandbox(() => service().ensureRunning(id));
+    const r = await run(h, ARCHIVE_SCRIPT, 300_000);
+    if (r.code === 44)
+      throw new ApiError(422, "nothing_to_download", "There are no files on this computer yet");
+    const size = Number(r.stdout.trim().split("\n").pop());
+    if (r.code !== 0 || !Number.isFinite(size))
+      throw new ApiError(503, "computer_unavailable", "Couldn't make the zip. Try again shortly.");
+    if (size > MAX_ARCHIVE) {
+      await run(h, `rm -f ${ARCHIVE_PATH}`);
+      throw new ApiError(413, "archive_too_large", "Over 1 GB: download folders one at a time");
+    }
+    const data = await sandbox(() => h.readFile(ARCHIVE_PATH));
+    await run(h, `rm -f ${ARCHIVE_PATH}`).catch(() => {});
+    const name = `${current.name.replace(/[^\w.-]+/g, "-").replace(/^-|-$/g, "") || "computer"}-files.zip`;
+    return c.body(Buffer.from(data), 200, {
+      "content-type": "application/zip",
+      "content-disposition": `attachment; filename="${name}"`,
+    }) as never;
   });
 
   app.openapi(routes.computerTerminal, async () => {
@@ -633,3 +935,241 @@ export function pdfPreviewScript(file: string) {
     `echo "$out"`,
   ].join("\n");
 }
+
+// -------------------------------------------------------------------------------------------
+// Managing a computer (D-240): small shell scripts run on the computer, and their parsers.
+
+const GIB = 1024 ** 3;
+const MIB = 1024 ** 2;
+const MAX_ARCHIVE = GIB;
+const ARCHIVE_PATH = "/tmp/casama-files.zip";
+
+/** key=value lines → a map. */
+function kv(stdout: string) {
+  const m = new Map<string, string>();
+  for (const line of stdout.split("\n")) {
+    const i = line.indexOf("=");
+    if (i > 0) m.set(line.slice(0, i).trim(), line.slice(i + 1).trim());
+  }
+  return m;
+}
+const num = (v: string | undefined) => {
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+};
+
+/**
+ * CPU over 0.3 s and memory from the container's cgroup; disk is the home folder's size, cached
+ * for a minute in /tmp and refreshed in the background so looking stays cheap.
+ */
+export const VITALS_SCRIPT = [
+  "cg=/sys/fs/cgroup",
+  "cpu() { if [ -r $cg/cpu.stat ]; then awk '/^usage_usec/{print $2}' $cg/cpu.stat; else awk '/^cpu /{printf \"%d\\n\", ($2+$3+$4+$7+$8)*10000}' /proc/stat; fi; }",
+  "a=$(cpu); sleep 0.3; b=$(cpu)",
+  'echo "cpu_usec=$(( ${b:-0} - ${a:-0} ))"',
+  'echo "cpu_max=$(cat $cg/cpu.max 2>/dev/null)"',
+  'echo "mem=$(cat $cg/memory.current 2>/dev/null)"',
+  "echo \"mem_inactive=$(awk '/^inactive_file /{print $2}' $cg/memory.stat 2>/dev/null)\"",
+  'echo "mem_max=$(cat $cg/memory.max 2>/dev/null)"',
+  'f=/tmp/.casama-du; now=$(date +%s); disk=""; t=0',
+  "[ -f $f ] && read disk t < $f",
+  'if [ -z "$disk" ]; then disk=$(timeout 8 du -sb "$HOME" 2>/dev/null | cut -f1); echo "$disk $now" > $f',
+  `elif [ $((now - \${t:-0})) -gt 60 ]; then (nohup sh -c 'd=$(du -sb "$HOME" 2>/dev/null | cut -f1); echo "$d $(date +%s)" > /tmp/.casama-du.n && mv /tmp/.casama-du.n /tmp/.casama-du' >/dev/null 2>&1 &); fi`,
+  'echo "disk=${disk:-0}"',
+].join("\n");
+
+export function parseVitals(stdout: string, size: ComputerSize) {
+  const v = kv(stdout);
+  const [quota, period] = (v.get("cpu_max") ?? "").split(/\s+/);
+  const cores =
+    quota && quota !== "max" && num(period) > 0 ? num(quota) / num(period) : (size.cpus ?? 1);
+  const cpu = (num(v.get("cpu_usec")) / (300_000 * Math.max(cores, 0.1))) * 100;
+  const memMax = v.get("mem_max");
+  const memLimit =
+    memMax && memMax !== "max" && num(memMax) > 0 ? num(memMax) : (size.memory_mb ?? 1024) * MIB;
+  return {
+    cpu_percent: Math.round(Math.min(100, Math.max(0, cpu)) * 10) / 10,
+    memory_used_bytes: Math.round(Math.max(0, num(v.get("mem")) - num(v.get("mem_inactive")))),
+    memory_limit_bytes: Math.round(memLimit),
+    disk_used_bytes: Math.round(num(v.get("disk"))),
+    disk_limit_bytes: Math.round((size.disk_gb ?? 10) * GIB),
+    at: new Date().toISOString(),
+  };
+}
+
+const BROWSER_CACHES =
+  "find .browser-profile -maxdepth 3 -type d \\( -name Cache -o -name 'Code Cache' -o -name GPUCache \\) -prune";
+
+/** Sizes of the home folder's parts. Apps: what was installed into it; caches: safe to delete. */
+export const STORAGE_SCRIPT = [
+  'cd "$HOME" || exit 3',
+  'sz() { s=0; for d in "$@"; do if [ -e "$d" ]; then x=$(du -sb "$d" 2>/dev/null | cut -f1); s=$((s + ${x:-0})); fi; done; echo $s; }',
+  'echo "total=$(sz .)"',
+  'echo "files=$(sz workspace)"',
+  'echo "apps=$(sz .npm-global .local .cargo .rustup go .deno .nvm .pyenv .bun)"',
+  'echo "caches=$(sz .cache .npm .yarn .pnpm-store)"',
+  'echo "browser=$(sz .browser-profile)"',
+  `echo "browser_cache=$(${BROWSER_CACHES} -exec du -sbc {} + 2>/dev/null | awk '$2 == "total" {s += $1} END {print s + 0}')"`,
+].join("\n");
+
+export function parseStorage(stdout: string, size: ComputerSize) {
+  const v = kv(stdout);
+  const total = num(v.get("total"));
+  const parts = {
+    files: num(v.get("files")),
+    apps: num(v.get("apps")),
+    caches: num(v.get("caches")),
+    browser: num(v.get("browser")),
+  };
+  const known = parts.files + parts.apps + parts.caches + parts.browser;
+  return {
+    used_bytes: Math.round(total),
+    limit_bytes: Math.round((size.disk_gb ?? 10) * GIB),
+    categories: [
+      { id: "files" as const, bytes: Math.round(parts.files) },
+      { id: "apps" as const, bytes: Math.round(parts.apps) },
+      { id: "caches" as const, bytes: Math.round(parts.caches) },
+      { id: "browser" as const, bytes: Math.round(parts.browser) },
+      { id: "other" as const, bytes: Math.round(Math.max(0, total - known)) },
+    ],
+    cleanable_bytes: Math.round(parts.caches + num(v.get("browser_cache"))),
+  };
+}
+
+/** Caches only: never ~/workspace, installed tools, settings or the browser's sign-ins. */
+export const CLEAN_SCRIPT = [
+  'cd "$HOME" || exit 3',
+  "rm -rf .cache/* .cache/.[!.]* .npm/_cacache .yarn/cache .pnpm-store 2>/dev/null",
+  `${BROWSER_CACHES} -exec rm -rf {} + 2>/dev/null`,
+  "rm -f /tmp/.casama-du",
+  "exit 0",
+].join("\n");
+
+/** Every process but this script's own, busiest first; the first line is our user id. */
+export const PROCESSES_SCRIPT = [
+  'echo "uid=$(id -u)"',
+  "self=$$",
+  "ps -eo pid=,ppid=,etimes=,pcpu=,rss=,uid=,comm=,args= --sort=-pcpu 2>/dev/null | awk -v self=$self '$1 != self && $2 != self' | head -200",
+].join("\n");
+
+/** Parts of the computer itself: listed as system, never stopped. */
+const SYSTEM_PROCESSES = new Set([
+  "computerd",
+  "tini",
+  "dumb-init",
+  "Xvfb",
+  "Xorg",
+  "openbox",
+  "tint2",
+  "neko",
+  "pulseaudio",
+  "pipewire",
+  "dbus-daemon",
+  "dbus-launch",
+  "supervisord",
+  "x11vnc",
+  "desktop-start.s",
+]);
+
+const isSystem = (p: { pid: number; uid: number; name: string; command: string }, uid: number) =>
+  p.pid === 1 ||
+  p.uid !== uid ||
+  SYSTEM_PROCESSES.has(p.name) ||
+  p.command.includes("casama-proxy-relay") ||
+  p.command.includes("desktop-start.sh");
+
+/**
+ * Parses ps output. A process whose parent has the same name (Chrome's helpers, worker pools) is
+ * folded into that parent, so a browser shows once with its total CPU and memory.
+ */
+export function parseProcesses(stdout: string) {
+  const lines = stdout.split("\n");
+  const uid = num(kv(lines[0] ?? "").get("uid"));
+  type P = {
+    pid: number;
+    ppid: number;
+    elapsed: number;
+    cpu: number;
+    rss: number;
+    uid: number;
+    name: string;
+    command: string;
+  };
+  const all: P[] = [];
+  for (const line of lines.slice(1)) {
+    const m = line
+      .trim()
+      .match(/^(\d+)\s+(\d+)\s+(\d+)\s+([\d.]+)\s+(\d+)\s+(\d+)\s+(\S+)\s*(.*)$/);
+    if (!m) continue;
+    all.push({
+      pid: Number(m[1]),
+      ppid: Number(m[2]),
+      elapsed: Number(m[3]),
+      cpu: Number(m[4]),
+      rss: Number(m[5]) * 1024,
+      uid: Number(m[6]),
+      name: m[7] as string,
+      command: (m[8] || m[7]) as string,
+    });
+  }
+  const byPid = new Map(all.map((p) => [p.pid, p]));
+  const rootOf = (p: P): P => {
+    let r = p;
+    for (let i = 0; i < 20; i++) {
+      const parent = byPid.get(r.ppid);
+      if (!parent || parent.name !== r.name) break;
+      r = parent;
+    }
+    return r;
+  };
+  const groups = new Map<number, P & { root: P }>();
+  for (const p of all) {
+    const root = rootOf(p);
+    const g = groups.get(root.pid) ?? { ...root, cpu: 0, rss: 0, root };
+    g.cpu += p.cpu;
+    g.rss += p.rss;
+    groups.set(root.pid, g);
+  }
+  return [...groups.values()]
+    .map((g) => ({
+      pid: g.pid,
+      name: g.name,
+      command: g.command.slice(0, 300),
+      cpu_percent: Math.round(g.cpu * 10) / 10,
+      memory_bytes: Math.round(g.rss),
+      elapsed_seconds: g.elapsed,
+      system: isSystem(g, uid),
+    }))
+    .sort((a, b) => b.cpu_percent - a.cpu_percent || b.memory_bytes - a.memory_bytes);
+}
+
+/**
+ * Stops one process and its children: TERM, then KILL after 3 s. Prints its name. Exit 44: not
+ * running; 45: part of the computer itself.
+ */
+export function stopProcessScript(pid: number) {
+  const p = Math.trunc(pid);
+  const system = [...SYSTEM_PROCESSES].join("|");
+  return [
+    `p=${p}`,
+    '[ "$p" -gt 1 ] && [ -d /proc/$p ] || exit 44',
+    'c=$(cat /proc/$p/comm 2>/dev/null); a=$(tr "\\0" " " < /proc/$p/cmdline 2>/dev/null)',
+    `case "$c" in ${system}) exit 45;; esac`,
+    'case "$a" in *casama-proxy-relay*|*desktop-start.sh*) exit 45;; esac',
+    '[ "$(stat -c %u /proc/$p)" = "$(id -u)" ] || exit 45',
+    "kids=$(pgrep -P $p 2>/dev/null)",
+    "kill -TERM $p $kids 2>/dev/null",
+    "for i in 1 2 3 4 5 6; do [ -d /proc/$p ] || break; sleep 0.5; done",
+    "kill -KILL $p $kids 2>/dev/null",
+    'echo "$c"',
+  ].join("\n");
+}
+
+/** Zips ~/workspace into /tmp and prints the zip's size. Exit 44: no files. */
+export const ARCHIVE_SCRIPT = [
+  'cd "$HOME/workspace" 2>/dev/null || exit 44',
+  '[ -n "$(ls -A . 2>/dev/null)" ] || exit 44',
+  `rm -f ${ARCHIVE_PATH}`,
+  `zip -qry ${ARCHIVE_PATH} . -x '.casama-restore-*' || exit 46`,
+  `stat -c %s ${ARCHIVE_PATH}`,
+].join("\n");

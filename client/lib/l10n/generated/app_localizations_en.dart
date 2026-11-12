@@ -935,10 +935,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get computerAdvancedTabsShow => 'Show terminal and checkpoints';
+  String get computerAdvancedTabsShow => 'Show the terminal';
 
   @override
-  String get computerAdvancedTabsHide => 'Hide terminal and checkpoints';
+  String get computerAdvancedTabsHide => 'Hide the terminal';
 
   @override
   String get headlessScreenNoteSettings =>
@@ -1432,6 +1432,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'skills_create': 'Learning a new skill',
       'skills_update': 'Improving a skill',
       'checkpoint': 'Saving a restore point',
+      'computer_restart': 'Restarting its computer',
       'takeover': 'Asking you to take over',
       'delegate': 'Asking a helper',
       'routines_list': 'Checking your routines',
@@ -1517,6 +1518,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'skills_create': 'Learned a new skill',
       'skills_update': 'Improved a skill',
       'checkpoint': 'Saved a restore point',
+      'computer_restart': 'Restarted its computer',
       'takeover': 'Asked you to take over',
       'delegate': 'Asked a helper',
       'routines_list': 'Checked your routines',
@@ -8186,4 +8188,449 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminAppSettingsBadJson =>
       'That isn\'t valid JSON. Check the brackets, quotes and commas.';
+
+  @override
+  String get manageTab => 'Manage';
+
+  @override
+  String get vitalsCpu => 'CPU';
+
+  @override
+  String get vitalsMemory => 'Memory';
+
+  @override
+  String get vitalsDisk => 'Disk';
+
+  @override
+  String get fixItTitle => 'Not working right?';
+
+  @override
+  String get fixItSubtitle =>
+      'Try these in order. Each one goes a bit further.';
+
+  @override
+  String get fixRestart => 'Restart';
+
+  @override
+  String get fixRestartHelp => 'About 20 seconds · nothing is lost';
+
+  @override
+  String get fixResetSystem => 'Reset system';
+
+  @override
+  String get fixResetSystemHelp => 'A fresh system · your files stay';
+
+  @override
+  String get fixErase => 'Erase everything';
+
+  @override
+  String get fixEraseHelp => 'Like new · can be undone for 7 days';
+
+  @override
+  String get fixResetAction => 'Reset…';
+
+  @override
+  String get fixEraseAction => 'Erase…';
+
+  @override
+  String get computerRestarting => 'Restarting…';
+
+  @override
+  String get computerRestarted => 'Restarted. Your files are all there.';
+
+  @override
+  String resetSheetTitle(String name) {
+    return 'Reset $name';
+  }
+
+  @override
+  String resetSheetBusy(String bots) {
+    return '$bots can\'t use it for about a minute.';
+  }
+
+  @override
+  String get resetSheetBusyNone => 'It can\'t be used for about a minute.';
+
+  @override
+  String get resetOptionSystem => 'Reset system, keep my files';
+
+  @override
+  String get resetOptionSystemHelp =>
+      'Fixes broken installs, settings and stuck programs.';
+
+  @override
+  String get resetOptionErase => 'Erase everything';
+
+  @override
+  String get resetOptionEraseHelp => 'Back to a brand-new computer.';
+
+  @override
+  String get resetKept => 'Kept';
+
+  @override
+  String get resetRemoved => 'Removed';
+
+  @override
+  String get resetKeptFiles => 'Your files in workspace';
+
+  @override
+  String get resetKeptSettings => 'Name, settings and bots';
+
+  @override
+  String get resetKeptRestorePoints => 'Restore points';
+
+  @override
+  String get resetRemovedApps => 'Apps and tools you installed';
+
+  @override
+  String get resetRemovedPrograms => 'Running programs';
+
+  @override
+  String get resetRemovedCaches => 'Caches and home folder settings';
+
+  @override
+  String get resetRemovedFiles => 'Every file, workspace too';
+
+  @override
+  String get resetSavePoint => 'Save a restore point first';
+
+  @override
+  String get resetSavePointHelp => 'So you can undo this for 7 days';
+
+  @override
+  String eraseTypeName(String name) {
+    return 'Type $name to confirm';
+  }
+
+  @override
+  String get resetConfirmSystem => 'Reset system';
+
+  @override
+  String get resetConfirmErase => 'Erase everything';
+
+  @override
+  String get resetStepSaving => 'Saving a restore point';
+
+  @override
+  String get resetStepWipingSystem => 'Removing apps and settings';
+
+  @override
+  String get resetStepWipingErase => 'Erasing every file';
+
+  @override
+  String get resetStepRestarting => 'Starting a fresh system';
+
+  @override
+  String resettingStatus(int step, int total) {
+    final intl.NumberFormat stepNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String stepString = stepNumberFormat.format(step);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return 'Resetting… $stepString of $totalString';
+  }
+
+  @override
+  String erasingStatus(int step, int total) {
+    final intl.NumberFormat stepNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String stepString = stepNumberFormat.format(step);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return 'Erasing… $stepString of $totalString';
+  }
+
+  @override
+  String get resetLeaveHint =>
+      'You can leave this screen. It keeps going on its own.';
+
+  @override
+  String get resetDone => 'Fresh system ready';
+
+  @override
+  String get eraseDone => 'Computer erased';
+
+  @override
+  String get resetFailed => 'The reset didn\'t finish';
+
+  @override
+  String get resetUndoHint =>
+      'Undo puts everything back the way it was. The restore point stays for 7 days.';
+
+  @override
+  String get restoredPrevious => 'Put back the way it was';
+
+  @override
+  String get usageThisMonth => 'This month';
+
+  @override
+  String usageDuration(int hours, int minutes) {
+    final intl.NumberFormat hoursNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String hoursString = hoursNumberFormat.format(hours);
+    final intl.NumberFormat minutesNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String minutesString = minutesNumberFormat.format(minutes);
+
+    return '$hoursString h $minutesString m';
+  }
+
+  @override
+  String get usageCostNote =>
+      'Charged only while it\'s on. Asleep costs nothing.';
+
+  @override
+  String get usageNone => 'Not used yet this month';
+
+  @override
+  String get sleepTimerTitle => 'Goes to sleep after';
+
+  @override
+  String sleepTimerMinutes(int n) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+
+    return '$nString min';
+  }
+
+  @override
+  String get sleepTimerHour => '1 hour';
+
+  @override
+  String get sleepTimerHelp =>
+      'Never while a bot is working or you\'re using it. A longer wait keeps it on longer, which costs more.';
+
+  @override
+  String sleepTimerSaved(String label) {
+    return 'Sleeps after $label without activity';
+  }
+
+  @override
+  String get storageTitle => 'Storage';
+
+  @override
+  String storageOf(String total) {
+    return 'of $total';
+  }
+
+  @override
+  String get storageFiles => 'Your files';
+
+  @override
+  String get storageApps => 'Apps and tools';
+
+  @override
+  String get storageCaches => 'Caches';
+
+  @override
+  String get storageBrowser => 'Browser';
+
+  @override
+  String get storageOther => 'Other';
+
+  @override
+  String get storageFree => 'Free';
+
+  @override
+  String storageFreeUp(String size) {
+    return 'Free up $size';
+  }
+
+  @override
+  String get storageNothingToClean => 'No caches to clear';
+
+  @override
+  String storageFreed(String size) {
+    return 'Freed $size';
+  }
+
+  @override
+  String get storageAsleep => 'Wake the computer to see what takes up space.';
+
+  @override
+  String get processesTitle => 'Running now';
+
+  @override
+  String get processesNone => 'Nothing is running besides the computer itself.';
+
+  @override
+  String get processesAsleep => 'Nothing runs while it sleeps.';
+
+  @override
+  String get processStop => 'Stop';
+
+  @override
+  String processStopTitle(String name) {
+    return 'Stop $name?';
+  }
+
+  @override
+  String get processStopMessage => 'Anything it hasn\'t saved is lost.';
+
+  @override
+  String processStopped(String name) {
+    return 'Stopped $name';
+  }
+
+  @override
+  String processLine(String duration, String cpu, String memory) {
+    return '$duration · $cpu% CPU · $memory';
+  }
+
+  @override
+  String get usedByTitle => 'Used by';
+
+  @override
+  String get usedByNone => 'No bot uses this computer yet.';
+
+  @override
+  String botLastActive(String when) {
+    return 'Active $when';
+  }
+
+  @override
+  String get botNeverActive => 'Not active yet';
+
+  @override
+  String get restorePointsTitle => 'Restore points';
+
+  @override
+  String get restorePointsNone =>
+      'None yet. Bots save one before risky changes.';
+
+  @override
+  String get restorePointSaveNow => 'Save a restore point now';
+
+  @override
+  String get restorePointSaveTitle => 'Save a restore point';
+
+  @override
+  String get restorePointDefaultLabel => 'Saved by hand';
+
+  @override
+  String get restorePointSaved => 'Restore point saved';
+
+  @override
+  String restorePointsShowAll(int n) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+
+    return 'Show all $nString';
+  }
+
+  @override
+  String get historyTitle => 'History';
+
+  @override
+  String get historyNone => 'Nothing has happened yet.';
+
+  @override
+  String get historyStarted => 'Woke up';
+
+  @override
+  String get historySlept => 'Went to sleep';
+
+  @override
+  String get historySleptIdle => 'Went to sleep (no activity)';
+
+  @override
+  String get historyRestarted => 'Restarted';
+
+  @override
+  String get historyReset => 'Reset the system';
+
+  @override
+  String get historyErased => 'Erased everything';
+
+  @override
+  String get historyCheckpointCreated => 'Saved a restore point';
+
+  @override
+  String get historyCheckpointRestored => 'Restored a restore point';
+
+  @override
+  String historyStorageCleaned(String size) {
+    return 'Freed up $size';
+  }
+
+  @override
+  String get historyStorageCleanedPlain => 'Freed up space';
+
+  @override
+  String historyProcessStopped(String name) {
+    return 'Stopped $name';
+  }
+
+  @override
+  String get historyUpdated => 'Changed its settings';
+
+  @override
+  String get historyYou => 'you';
+
+  @override
+  String get yourDataTitle => 'Your data';
+
+  @override
+  String get downloadAllFiles => 'Download all files';
+
+  @override
+  String get downloadAllFilesHelp => 'A .zip of everything in workspace';
+
+  @override
+  String get downloadNothing => 'There are no files to download yet.';
+
+  @override
+  String get deleteComputerHelp => 'Removes it and its restore points';
+
+  @override
+  String get manageComputer => 'Manage';
+
+  @override
+  String get restartComputer => 'Restart';
+
+  @override
+  String get resetComputerMenu => 'Reset…';
+
+  @override
+  String get moreFixes => 'More fixes';
+
+  @override
+  String durationMinutes(int n) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+
+    return '$nString min';
+  }
+
+  @override
+  String durationHours(int n) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+
+    return '$nString h';
+  }
+
+  @override
+  String durationDays(int n) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+
+    return '$nString d';
+  }
 }

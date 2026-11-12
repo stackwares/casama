@@ -141,29 +141,39 @@ Class | Method | HTTP request | Description
 [*CheckinsApi*](doc/CheckinsApi.md) | [**getBotCheckins**](doc/CheckinsApi.md#getbotcheckins) | **GET** /v1/bots/{id}/checkins | 
 [*CheckinsApi*](doc/CheckinsApi.md) | [**getForYou**](doc/CheckinsApi.md#getforyou) | **GET** /v1/for-you | Your feed in a workspace: the latest briefs, pending suggestions and approvals
 [*CheckinsApi*](doc/CheckinsApi.md) | [**setBotCheckins**](doc/CheckinsApi.md#setbotcheckins) | **PUT** /v1/bots/{id}/checkins | Turn a bot&#39;s morning brief and scans on or off, and set their times and daily cap
+[*ComputersApi*](doc/ComputersApi.md) | [**cleanComputerStorage**](doc/ComputersApi.md#cleancomputerstorage) | **POST** /v1/computers/{id}/storage/clean | Free up space: removes caches and temporary files (never files in ~/workspace)
+[*ComputersApi*](doc/ComputersApi.md) | [**computerBots**](doc/ComputersApi.md#computerbots) | **GET** /v1/computers/{id}/bots | The bots that use this computer
 [*ComputersApi*](doc/ComputersApi.md) | [**computerFilePdfPreview**](doc/ComputersApi.md#computerfilepdfpreview) | **GET** /v1/computers/{id}/files/pdf-preview | A document (Word, Excel, PowerPoint, OpenDocument, RTF) as a PDF, for previewing
 [*ComputersApi*](doc/ComputersApi.md) | [**computerFileThumbnail**](doc/ComputersApi.md#computerfilethumbnail) | **GET** /v1/computers/{id}/files/thumbnail | A small JPEG or PNG of a video&#39;s first frame, an image or a PDF&#39;s first page
+[*ComputersApi*](doc/ComputersApi.md) | [**computerHistory**](doc/ComputersApi.md#computerhistory) | **GET** /v1/computers/{id}/history | What happened to the computer, newest first
 [*ComputersApi*](doc/ComputersApi.md) | [**computerScreenshot**](doc/ComputersApi.md#computerscreenshot) | **GET** /v1/computers/{id}/screenshot | PNG of the desktop, or of the bot&#39;s browser page on headless computers
+[*ComputersApi*](doc/ComputersApi.md) | [**computerStorage**](doc/ComputersApi.md#computerstorage) | **GET** /v1/computers/{id}/storage | What takes up the home folder. Never wakes the computer.
 [*ComputersApi*](doc/ComputersApi.md) | [**computerStream**](doc/ComputersApi.md#computerstream) | **GET** /v1/computers/{id}/stream | WebSocket live-view signaling (Neko protocol). Authenticated by the stream-session token; input is accepted only in control mode while you hold the lease.
 [*ComputersApi*](doc/ComputersApi.md) | [**computerTerminal**](doc/ComputersApi.md#computerterminal) | **GET** /v1/computers/{id}/terminal | WebSocket terminal. Binary frames carry terminal bytes both ways. Browsers may pass the access token as ?access_token&#x3D;.
+[*ComputersApi*](doc/ComputersApi.md) | [**computerUsage**](doc/ComputersApi.md#computerusage) | **GET** /v1/computers/{id}/usage | Time on and its cost this month, by day
+[*ComputersApi*](doc/ComputersApi.md) | [**computerVitals**](doc/ComputersApi.md#computervitals) | **GET** /v1/computers/{id}/vitals | CPU, memory and disk right now. Never wakes the computer or counts as activity.
 [*ComputersApi*](doc/ComputersApi.md) | [**createCheckpoint**](doc/ComputersApi.md#createcheckpoint) | **POST** /v1/computers/{id}/checkpoints | 
 [*ComputersApi*](doc/ComputersApi.md) | [**createComputer**](doc/ComputersApi.md#createcomputer) | **POST** /v1/computers | Create a private computer for a bot (or the team computer if it was removed)
 [*ComputersApi*](doc/ComputersApi.md) | [**createStreamSession**](doc/ComputersApi.md#createstreamsession) | **POST** /v1/computers/{id}/stream-session | Get a 5-minute live-view session (signaling URL, token, TURN credentials)
 [*ComputersApi*](doc/ComputersApi.md) | [**deleteComputer**](doc/ComputersApi.md#deletecomputer) | **DELETE** /v1/computers/{id} | Delete a computer and its files, snapshots and checkpoints
 [*ComputersApi*](doc/ComputersApi.md) | [**deleteComputerFile**](doc/ComputersApi.md#deletecomputerfile) | **DELETE** /v1/computers/{id}/files | 
 [*ComputersApi*](doc/ComputersApi.md) | [**dismissTakeover**](doc/ComputersApi.md#dismisstakeover) | **POST** /v1/takeovers/{id}/dismiss | Decline a takeover request; the bot continues without help
+[*ComputersApi*](doc/ComputersApi.md) | [**downloadComputerArchive**](doc/ComputersApi.md#downloadcomputerarchive) | **GET** /v1/computers/{id}/files/archive | Download every file in ~/workspace as one .zip (up to 1 GB)
 [*ComputersApi*](doc/ComputersApi.md) | [**downloadComputerFile**](doc/ComputersApi.md#downloadcomputerfile) | **GET** /v1/computers/{id}/files | Download a file
 [*ComputersApi*](doc/ComputersApi.md) | [**getComputer**](doc/ComputersApi.md#getcomputer) | **GET** /v1/computers/{id} | 
 [*ComputersApi*](doc/ComputersApi.md) | [**getLease**](doc/ComputersApi.md#getlease) | **GET** /v1/computers/{id}/lease | Who controls the screen (the bot unless a person took over)
 [*ComputersApi*](doc/ComputersApi.md) | [**listCheckpoints**](doc/ComputersApi.md#listcheckpoints) | **GET** /v1/computers/{id}/checkpoints | 
 [*ComputersApi*](doc/ComputersApi.md) | [**listComputerFiles**](doc/ComputersApi.md#listcomputerfiles) | **GET** /v1/computers/{id}/files/list | List a directory (default ~/workspace)
+[*ComputersApi*](doc/ComputersApi.md) | [**listComputerProcesses**](doc/ComputersApi.md#listcomputerprocesses) | **GET** /v1/computers/{id}/processes | Programs running now, busiest first. Never wakes the computer.
 [*ComputersApi*](doc/ComputersApi.md) | [**listComputers**](doc/ComputersApi.md#listcomputers) | **GET** /v1/computers | 
 [*ComputersApi*](doc/ComputersApi.md) | [**listTakeovers**](doc/ComputersApi.md#listtakeovers) | **GET** /v1/takeovers | Open requests from bots for a person to take over a screen
 [*ComputersApi*](doc/ComputersApi.md) | [**releaseLease**](doc/ComputersApi.md#releaselease) | **DELETE** /v1/computers/{id}/lease | Hand control back to the bot, optionally with a note
+[*ComputersApi*](doc/ComputersApi.md) | [**resetComputer**](doc/ComputersApi.md#resetcomputer) | **POST** /v1/computers/{id}/reset | Reset the computer in the background: a restore point, then a fresh system (and, to erase, an empty home folder). Follow &#x60;operation&#x60; on the computer.
 [*ComputersApi*](doc/ComputersApi.md) | [**restartComputer**](doc/ComputersApi.md#restartcomputer) | **POST** /v1/computers/{id}/restart | Sleep and start again with the same files
 [*ComputersApi*](doc/ComputersApi.md) | [**restoreCheckpoint**](doc/ComputersApi.md#restorecheckpoint) | **POST** /v1/computers/{id}/checkpoints/{cid}/restore | Undo to a checkpoint (replaces the home directory)
 [*ComputersApi*](doc/ComputersApi.md) | [**startComputer**](doc/ComputersApi.md#startcomputer) | **POST** /v1/computers/{id}/start | Start or restore the computer
 [*ComputersApi*](doc/ComputersApi.md) | [**stopComputer**](doc/ComputersApi.md#stopcomputer) | **POST** /v1/computers/{id}/stop | Save the home directory to storage and stop (sleep)
+[*ComputersApi*](doc/ComputersApi.md) | [**stopComputerProcess**](doc/ComputersApi.md#stopcomputerprocess) | **POST** /v1/computers/{id}/processes/{pid}/stop | Stop a program (asks it to quit, then forces it after 3 seconds)
 [*ComputersApi*](doc/ComputersApi.md) | [**takeLease**](doc/ComputersApi.md#takelease) | **POST** /v1/computers/{id}/lease | Take control (or renew it). The bot pauses screen actions; control returns after 15 minutes without renewal.
 [*ComputersApi*](doc/ComputersApi.md) | [**updateComputer**](doc/ComputersApi.md#updatecomputer) | **PATCH** /v1/computers/{id} | 
 [*ComputersApi*](doc/ComputersApi.md) | [**uploadComputerFile**](doc/ComputersApi.md#uploadcomputerfile) | **PUT** /v1/computers/{id}/files | Upload a file (request body is the raw contents, up to 100 MB)
@@ -464,16 +474,28 @@ Class | Method | HTTP request | Description
  - [CheckpointCreatedEvent](doc/CheckpointCreatedEvent.md)
  - [CheckpointCreatedEventPayload](doc/CheckpointCreatedEventPayload.md)
  - [CheckpointList](doc/CheckpointList.md)
+ - [CleanStorageResult](doc/CleanStorageResult.md)
  - [CloudModels](doc/CloudModels.md)
  - [Computer](doc/Computer.md)
+ - [ComputerBotList](doc/ComputerBotList.md)
+ - [ComputerBotUse](doc/ComputerBotUse.md)
  - [ComputerDevice](doc/ComputerDevice.md)
  - [ComputerFileEntry](doc/ComputerFileEntry.md)
  - [ComputerFileList](doc/ComputerFileList.md)
+ - [ComputerHistory](doc/ComputerHistory.md)
+ - [ComputerHistoryEntry](doc/ComputerHistoryEntry.md)
  - [ComputerList](doc/ComputerList.md)
+ - [ComputerOperation](doc/ComputerOperation.md)
+ - [ComputerProcess](doc/ComputerProcess.md)
+ - [ComputerProcessList](doc/ComputerProcessList.md)
  - [ComputerSize](doc/ComputerSize.md)
  - [ComputerState](doc/ComputerState.md)
  - [ComputerStateEvent](doc/ComputerStateEvent.md)
  - [ComputerStateEventPayload](doc/ComputerStateEventPayload.md)
+ - [ComputerStorage](doc/ComputerStorage.md)
+ - [ComputerUsage](doc/ComputerUsage.md)
+ - [ComputerUsageDay](doc/ComputerUsageDay.md)
+ - [ComputerVitals](doc/ComputerVitals.md)
  - [ConnectAppRequest](doc/ConnectAppRequest.md)
  - [ConnectAppResponse](doc/ConnectAppResponse.md)
  - [ConnectFlowStatus](doc/ConnectFlowStatus.md)
@@ -731,6 +753,7 @@ Class | Method | HTTP request | Description
  - [ReplayStepsInner](doc/ReplayStepsInner.md)
  - [ReportDeviceEvents200Response](doc/ReportDeviceEvents200Response.md)
  - [ReportDeviceEventsRequest](doc/ReportDeviceEventsRequest.md)
+ - [ResetComputerRequest](doc/ResetComputerRequest.md)
  - [RevertPageRequest](doc/RevertPageRequest.md)
  - [RevokedConnectKey](doc/RevokedConnectKey.md)
  - [RevokedKey](doc/RevokedKey.md)
@@ -810,6 +833,8 @@ Class | Method | HTTP request | Description
  - [StartSetupResponse](doc/StartSetupResponse.md)
  - [StartTeachRequest](doc/StartTeachRequest.md)
  - [StartWelcomeRequest](doc/StartWelcomeRequest.md)
+ - [StoppedProcess](doc/StoppedProcess.md)
+ - [StorageCategory](doc/StorageCategory.md)
  - [StreamMode](doc/StreamMode.md)
  - [StreamSession](doc/StreamSession.md)
  - [StreamSessionRequest](doc/StreamSessionRequest.md)

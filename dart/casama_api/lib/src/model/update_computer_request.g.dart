@@ -13,6 +13,8 @@ abstract class _$UpdateComputerRequestCWProxy {
 
   UpdateComputerRequest maxDesktops(int? maxDesktops);
 
+  UpdateComputerRequest idleSleepMinutes(int? idleSleepMinutes);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateComputerRequest(...).copyWith.fieldName(value)`.
@@ -25,6 +27,7 @@ abstract class _$UpdateComputerRequestCWProxy {
     String? name,
     UpdateComputerRequestProfileEnum? profile,
     int? maxDesktops,
+    int? idleSleepMinutes,
   });
 }
 
@@ -47,6 +50,10 @@ class _$UpdateComputerRequestCWProxyImpl
   UpdateComputerRequest maxDesktops(int? maxDesktops) =>
       call(maxDesktops: maxDesktops);
 
+  @override
+  UpdateComputerRequest idleSleepMinutes(int? idleSleepMinutes) =>
+      call(idleSleepMinutes: idleSleepMinutes);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateComputerRequest(...).copyWith.fieldName(value)`.
@@ -60,6 +67,7 @@ class _$UpdateComputerRequestCWProxyImpl
     Object? name = const $CopyWithPlaceholder(),
     Object? profile = const $CopyWithPlaceholder(),
     Object? maxDesktops = const $CopyWithPlaceholder(),
+    Object? idleSleepMinutes = const $CopyWithPlaceholder(),
   }) {
     return UpdateComputerRequest(
       name: name == const $CopyWithPlaceholder()
@@ -74,6 +82,10 @@ class _$UpdateComputerRequestCWProxyImpl
           ? _value.maxDesktops
           // ignore: cast_nullable_to_non_nullable
           : maxDesktops as int?,
+      idleSleepMinutes: idleSleepMinutes == const $CopyWithPlaceholder()
+          ? _value.idleSleepMinutes
+          // ignore: cast_nullable_to_non_nullable
+          : idleSleepMinutes as int?,
     );
   }
 }
@@ -92,17 +104,30 @@ extension $UpdateComputerRequestCopyWith on UpdateComputerRequest {
 
 UpdateComputerRequest _$UpdateComputerRequestFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate('UpdateComputerRequest', json, ($checkedConvert) {
-  final val = UpdateComputerRequest(
-    name: $checkedConvert('name', (v) => v as String?),
-    profile: $checkedConvert(
-      'profile',
-      (v) => $enumDecodeNullable(_$UpdateComputerRequestProfileEnumEnumMap, v),
-    ),
-    maxDesktops: $checkedConvert('max_desktops', (v) => (v as num?)?.toInt()),
-  );
-  return val;
-}, fieldKeyMap: const {'maxDesktops': 'max_desktops'});
+) => $checkedCreate(
+  'UpdateComputerRequest',
+  json,
+  ($checkedConvert) {
+    final val = UpdateComputerRequest(
+      name: $checkedConvert('name', (v) => v as String?),
+      profile: $checkedConvert(
+        'profile',
+        (v) =>
+            $enumDecodeNullable(_$UpdateComputerRequestProfileEnumEnumMap, v),
+      ),
+      maxDesktops: $checkedConvert('max_desktops', (v) => (v as num?)?.toInt()),
+      idleSleepMinutes: $checkedConvert(
+        'idle_sleep_minutes',
+        (v) => (v as num?)?.toInt(),
+      ),
+    );
+    return val;
+  },
+  fieldKeyMap: const {
+    'maxDesktops': 'max_desktops',
+    'idleSleepMinutes': 'idle_sleep_minutes',
+  },
+);
 
 Map<String, dynamic> _$UpdateComputerRequestToJson(
   UpdateComputerRequest instance,
@@ -110,6 +135,7 @@ Map<String, dynamic> _$UpdateComputerRequestToJson(
   'name': ?instance.name,
   'profile': ?_$UpdateComputerRequestProfileEnumEnumMap[instance.profile],
   'max_desktops': ?instance.maxDesktops,
+  'idle_sleep_minutes': ?instance.idleSleepMinutes,
 };
 
 const _$UpdateComputerRequestProfileEnumEnumMap = {

@@ -9,12 +9,20 @@ import {
 } from "../common.ts";
 import {
   Checkpoint,
+  CleanStorageResult,
   Computer,
+  ComputerBotUse,
   ComputerFileEntry,
+  ComputerHistoryEntry,
+  ComputerProcess,
+  ComputerStorage,
+  ComputerUsage,
+  ComputerVitals,
   CreateCheckpointRequest,
   CreateComputerRequest,
   Lease,
   ReleaseLeaseRequest,
+  ResetComputerRequest,
   StreamSession,
   StreamSessionRequest,
   TakeLeaseRequest,
@@ -424,4 +432,183 @@ export const dismissTakeover = createRoute({
   summary: "Decline a takeover request; the bot continues without help",
   request: { params: idParam, body: jsonBody(ReleaseLeaseRequest) },
   responses: { 200: jsonResponse("Dismissed", TakeoverRequest), 401: e401, 404: e404, 409: e409 },
+});
+
+// ---------------------------------------------------------------------------------------------
+// Managing a computer (D-240)
+
+const notRunning = {
+  description: "The computer is asleep or stopped (computer_not_running); it isn't woken for this",
+  content: { "application/problem+json": { schema: Problem } },
+};
+
+export const computerVitals = createRoute({
+  operationId: "computerVitals",
+  method: "get",
+  path: "/v1/computers/{id}/vitals",
+  tags: ["computers"],
+  security,
+  summary: "CPU, memory and disk right now. Never wakes the computer or counts as activity.",
+  request: { params: idParam },
+  responses: {
+    200: jsonResponse("Vitals", ComputerVitals),
+    401: e401,
+    404: e404,
+    409: notRunning,
+  },
+});
+
+export const computerStorage = createRoute({
+  operationId: "computerStorage",
+  method: "get",
+  path: "/v1/computers/{id}/storage",
+  tags: ["computers"],
+  security,
+  summary: "What takes up the home folder. Never wakes the computer.",
+  request: { params: idParam },
+  responses: {
+    200: jsonResponse("Storage", ComputerStorage),
+    401: e401,
+    404: e404,
+    409: notRunning,
+  },
+});
+
+export const cleanComputerStorage = createRoute({
+  operationId: "cleanComputerStorage",
+  method: "post",
+  path: "/v1/computers/{id}/storage/clean",
+  tags: ["computers"],
+  security,
+  summary: "Free up space: removes caches and temporary files (never files in ~/workspace)",
+  request: { params: idParam },
+  responses: { 200: jsonResponse("Cleaned", CleanStorageResult), 401: e401, 404: e404 },
+});
+
+export const listComputerProcesses = createRoute({
+  operationId: "listComputerProcesses",
+  method: "get",
+  path: "/v1/computers/{id}/processes",
+  tags: ["computers"],
+  security,
+  summary: "Programs running now, busiest first. Never wakes the computer.",
+  request: { params: idParam },
+  responses: {
+    200: jsonResponse(
+      "Processes",
+      z.object({ items: z.array(ComputerProcess) }).openapi("ComputerProcessList"),
+    ),
+    401: e401,
+    404: e404,
+    409: notRunning,
+  },
+});
+
+export const stopComputerProcess = createRoute({
+  operationId: "stopComputerProcess",
+  method: "post",
+  path: "/v1/computers/{id}/processes/{pid}/stop",
+  tags: ["computers"],
+  security,
+  summary: "Stop a program (asks it to quit, then forces it after 3 seconds)",
+  request: { params: z.object({ id: Uuid, pid: z.coerce.number().int().min(2) }) },
+  responses: {
+    200: jsonResponse("Stopped", z.object({ stopped: z.number().int() }).openapi("StoppedProcess")),
+    400: e400,
+    401: e401,
+    404: e404,
+    409: notRunning,
+  },
+});
+
+export const resetComputer = createRoute({
+  operationId: "resetComputer",
+  method: "post",
+  path: "/v1/computers/{id}/reset",
+  tags: ["computers"],
+  security,
+  summary:
+    "Reset the computer in the background: a restore point, then a fresh system (and, to erase, an empty home folder). Follow `operation` on the computer.",
+  request: { params: idParam, body: jsonBody(ResetComputerRequest) },
+  responses: {
+    202: jsonResponse("Started", Computer),
+    400: e400,
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
+  },
+});
+
+export const computerUsage = createRoute({
+  operationId: "computerUsage",
+  method: "get",
+  path: "/v1/computers/{id}/usage",
+  tags: ["computers"],
+  security,
+  summary: "Time on and its cost this month, by day",
+  request: { params: idParam },
+  responses: { 200: jsonResponse("Usage", ComputerUsage), 401: e401, 404: e404 },
+});
+
+export const computerHistory = createRoute({
+  operationId: "computerHistory",
+  method: "get",
+  path: "/v1/computers/{id}/history",
+  tags: ["computers"],
+  security,
+  summary: "What happened to the computer, newest first",
+  request: { params: idParam },
+  responses: {
+    200: jsonResponse(
+      "History",
+      z.object({ items: z.array(ComputerHistoryEntry) }).openapi("ComputerHistory"),
+    ),
+    401: e401,
+    404: e404,
+  },
+});
+
+export const computerBots = createRoute({
+  operationId: "computerBots",
+  method: "get",
+  path: "/v1/computers/{id}/bots",
+  tags: ["computers"],
+  security,
+  summary: "The bots that use this computer",
+  request: { params: idParam },
+  responses: {
+    200: jsonResponse(
+      "Bots",
+      z.object({ items: z.array(ComputerBotUse) }).openapi("ComputerBotList"),
+    ),
+    401: e401,
+    404: e404,
+  },
+});
+
+export const downloadComputerArchive = createRoute({
+  operationId: "downloadComputerArchive",
+  method: "get",
+  path: "/v1/computers/{id}/files/archive",
+  tags: ["computers"],
+  security,
+  summary: "Download every file in ~/workspace as one .zip (up to 1 GB)",
+  request: { params: idParam },
+  responses: {
+    200: {
+      description: "A zip file",
+      content: { "application/zip": { schema: z.string().openapi({ format: "binary" }) } },
+    },
+    401: e401,
+    404: e404,
+    413: {
+      description: "Over 1 GB (archive_too_large)",
+      content: { "application/problem+json": { schema: Problem } },
+    },
+    422: {
+      description: "There are no files (nothing_to_download)",
+      content: { "application/problem+json": { schema: Problem } },
+    },
+  },
 });

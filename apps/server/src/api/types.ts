@@ -35,6 +35,8 @@ export interface AppDeps {
   resolveTxt?: (domain: string) => Promise<string[][]>;
   /** Page PDFs (D-119); unset: PDF export is off. */
   pdf?: import("../services/pdf.ts").PdfRenderer | null;
+  /** Work that goes on after a response, such as a computer reset (D-240); tests await it. */
+  onBackgroundTask?: (task: Promise<unknown>) => void;
   /** Readiness checks by name; each throws when unhealthy. */
   readiness: Record<string, () => Promise<void>>;
 }

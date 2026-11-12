@@ -1416,6 +1416,7 @@ abstract class Backend {
     String? name,
     String? profile,
     int? maxDesktops,
+    int? idleSleepMinutes,
   });
   Future<void> deleteComputer(String computerId);
   Future<void> setBotComputer(String botId, String? computerId);
@@ -1512,4 +1513,23 @@ abstract class Backend {
     int cols,
     int rows,
   });
+
+  // Managing a computer (D-240). The reads return null while the computer sleeps: looking
+  // never wakes it.
+  Future<Computer> restartComputer(String id);
+
+  /// Starts a reset in the background; follow [Computer.operation].
+  Future<Computer> resetComputer(String id, {required bool erase, bool checkpoint = true});
+  Future<ComputerVitals?> computerVitals(String id);
+  Future<ComputerStorage?> computerStorage(String id);
+  Future<CleanStorageResult> cleanComputerStorage(String id);
+  Future<List<ComputerProcess>?> computerProcesses(String id);
+  Future<void> stopComputerProcess(String id, int pid);
+  Future<ComputerUsage> computerUsage(String id);
+  Future<List<ComputerHistoryEntry>> computerHistory(String id);
+  Future<List<ComputerBotUse>> computerBots(String id);
+  Future<Checkpoint> createCheckpoint(String id, String label);
+
+  /// Every file in ~/workspace as one zip; null when there are none.
+  Future<Uint8List?> downloadComputerArchive(String id);
 }

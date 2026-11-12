@@ -39,6 +39,10 @@ abstract class _$ComputerCWProxy {
 
   Computer device(ComputerDevice? device);
 
+  Computer idleSleepMinutes(int? idleSleepMinutes);
+
+  Computer operation(ComputerOperation? operation);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Computer(...).copyWith.fieldName(value)`.
@@ -64,6 +68,8 @@ abstract class _$ComputerCWProxy {
     DateTime createdAt,
     String? os,
     ComputerDevice? device,
+    int? idleSleepMinutes,
+    ComputerOperation? operation,
   });
 }
 
@@ -123,6 +129,14 @@ class _$ComputerCWProxyImpl implements _$ComputerCWProxy {
   @override
   Computer device(ComputerDevice? device) => call(device: device);
 
+  @override
+  Computer idleSleepMinutes(int? idleSleepMinutes) =>
+      call(idleSleepMinutes: idleSleepMinutes);
+
+  @override
+  Computer operation(ComputerOperation? operation) =>
+      call(operation: operation);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Computer(...).copyWith.fieldName(value)`.
@@ -149,6 +163,8 @@ class _$ComputerCWProxyImpl implements _$ComputerCWProxy {
     Object? createdAt = const $CopyWithPlaceholder(),
     Object? os = const $CopyWithPlaceholder(),
     Object? device = const $CopyWithPlaceholder(),
+    Object? idleSleepMinutes = const $CopyWithPlaceholder(),
+    Object? operation = const $CopyWithPlaceholder(),
   }) {
     return Computer(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -217,6 +233,14 @@ class _$ComputerCWProxyImpl implements _$ComputerCWProxy {
           ? _value.device
           // ignore: cast_nullable_to_non_nullable
           : device as ComputerDevice?,
+      idleSleepMinutes: idleSleepMinutes == const $CopyWithPlaceholder()
+          ? _value.idleSleepMinutes
+          // ignore: cast_nullable_to_non_nullable
+          : idleSleepMinutes as int?,
+      operation: operation == const $CopyWithPlaceholder()
+          ? _value.operation
+          // ignore: cast_nullable_to_non_nullable
+          : operation as ComputerOperation?,
     );
   }
 }
@@ -295,6 +319,16 @@ Computer _$ComputerFromJson(Map<String, dynamic> json) => $checkedCreate(
             ? null
             : ComputerDevice.fromJson(v as Map<String, dynamic>),
       ),
+      idleSleepMinutes: $checkedConvert(
+        'idle_sleep_minutes',
+        (v) => (v as num?)?.toInt(),
+      ),
+      operation: $checkedConvert(
+        'operation',
+        (v) => v == null
+            ? null
+            : ComputerOperation.fromJson(v as Map<String, dynamic>),
+      ),
     );
     return val;
   },
@@ -305,6 +339,7 @@ Computer _$ComputerFromJson(Map<String, dynamic> json) => $checkedCreate(
     'maxDesktops': 'max_desktops',
     'lastActiveAt': 'last_active_at',
     'createdAt': 'created_at',
+    'idleSleepMinutes': 'idle_sleep_minutes',
   },
 );
 
@@ -325,6 +360,8 @@ Map<String, dynamic> _$ComputerToJson(Computer instance) => <String, dynamic>{
   'created_at': instance.createdAt.toIso8601String(),
   'os': ?instance.os,
   'device': ?instance.device?.toJson(),
+  'idle_sleep_minutes': ?instance.idleSleepMinutes,
+  'operation': ?instance.operation?.toJson(),
 };
 
 const _$ComputerKindEnumEnumMap = {

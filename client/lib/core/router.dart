@@ -498,9 +498,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/computer',
-            // ?bot= opens that bot's computer (from its chat or profile).
+            // ?bot= opens that bot's computer (from its chat or profile); ?c= one computer, and
+            // ?tab=manage its Manage tab (D-240).
             pageBuilder: _page(
-              (_, s) => ComputerScreen(botId: s.uri.queryParameters['bot']),
+              (_, s) => ComputerScreen(
+                botId: s.uri.queryParameters['bot'],
+                computerId: s.uri.queryParameters['c'],
+                initialTab: s.uri.queryParameters['tab'],
+              ),
             ),
             routes: [
               GoRoute(

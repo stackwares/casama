@@ -5,6 +5,7 @@
 // ignore_for_file: unused_element
 import 'package:casama_api/src/model/computer_size.dart';
 import 'package:casama_api/src/model/computer_state.dart';
+import 'package:casama_api/src/model/computer_operation.dart';
 import 'package:casama_api/src/model/computer_device.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -54,6 +55,10 @@ class Computer {
      this.os,
 
      this.device,
+
+     this.idleSleepMinutes,
+
+     this.operation,
   });
 
   @JsonKey(
@@ -250,6 +255,31 @@ class Computer {
 
 
 
+      /// Minutes without activity before it sleeps (D-240); 5 unless changed
+  @JsonKey(
+    
+    name: r'idle_sleep_minutes',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? idleSleepMinutes;
+
+
+
+  @JsonKey(
+    
+    name: r'operation',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final ComputerOperation? operation;
+
+
+
 
 
     @override
@@ -269,7 +299,9 @@ class Computer {
       other.error == error &&
       other.createdAt == createdAt &&
       other.os == os &&
-      other.device == device;
+      other.device == device &&
+      other.idleSleepMinutes == idleSleepMinutes &&
+      other.operation == operation;
 
     @override
     int get hashCode =>
@@ -288,7 +320,9 @@ class Computer {
         (error == null ? 0 : error.hashCode) +
         createdAt.hashCode +
         (os == null ? 0 : os.hashCode) +
-        (device == null ? 0 : device.hashCode);
+        (device == null ? 0 : device.hashCode) +
+        idleSleepMinutes.hashCode +
+        (operation == null ? 0 : operation.hashCode);
 
   factory Computer.fromJson(Map<String, dynamic> json) => _$ComputerFromJson(json);
 

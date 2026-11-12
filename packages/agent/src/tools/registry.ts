@@ -17,6 +17,8 @@ export interface ToolContext {
   computer?: () => Promise<import("@casama/sandbox").SandboxHandle>;
   /** Saves an undo point of the computer's home directory and records it on the timeline. */
   checkpoint?: (label: string) => Promise<{ checkpointId: string; label: string }>;
+  /** Sleeps and wakes the bot's computer: a fresh system with the same files (D-240). */
+  restartComputer?: () => Promise<void>;
 }
 
 export interface ToolResult {

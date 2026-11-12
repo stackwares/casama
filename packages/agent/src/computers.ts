@@ -9,6 +9,10 @@ import { track } from "./analytics.ts";
  * commands and a person's input or presence keep them awake (D-195, apps/server/src/api/keep-awake.ts).
  */
 export const IDLE_SLEEP_MS = 5 * 60_000;
+/** The sleep timers a person can pick per computer (D-240), in minutes. */
+export const IDLE_SLEEP_CHOICES = [5, 15, 30, 60] as const;
+/** A reset that has not finished after this long is treated as abandoned (the API restarted). */
+export const RESET_STALE_MS = 20 * 60_000;
 export const CHECKPOINT_KEEP = 20;
 export const CHECKPOINT_MAX_AGE_DAYS = 7;
 
@@ -205,8 +209,8 @@ export class ComputerService {
     const provider = typeof c.provider === "string" ? c.provider : "docker";
     const cost = computerCostUsd(provider, c.size, seconds, this.rates);
     await this.db.execute(sql`
-      insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd)
-      values (${c.org_id}::uuid, ${c.owner_bot_id}::uuid, 'computer_seconds', ${seconds}, ${cost})`);
+      insert into public.usage_ledger (org_id, bot_id, computer_id, kind, quantity, cost_usd)
+      values (${c.org_id}::uuid, ${c.owner_bot_id}::uuid, ${c.id}::uuid, 'computer_seconds', ${seconds}, ${cost})`);
   }
 
   /**
@@ -270,6 +274,10 @@ export class ComputerService {
         };
         const h = await this.providerFor(c).resume(computerId, c.snapshot_ref ?? undefined, spec);
         await this.setState(computerId, "running", emit);
+        if (c.kind !== "local")
+          await auditComputer(this.db, c.org_id, computerId, "computer.started", null, {
+            mode: facts.mode,
+          });
         track(this.db, {
           event: "computer_ready",
           orgId: c.org_id,
@@ -365,7 +373,10 @@ export class ComputerService {
   async sleepIdle(idleMs = IDLE_SLEEP_MS) {
     const rows = await this.db.execute<ComputerRow>(sql`
       select * from public.computers
-      where state in ('running', 'idle') and kind <> 'local' and coalesce(last_active_at, created_at) < now() - (${idleMs} * interval '1 millisecond')`);
+      where state in ('running', 'idle') and kind <> 'local'
+        and coalesce(last_active_at, created_at) < now() - (coalesce(idle_sleep_minutes * 60000, ${idleMs}) * interval '1 millisecond')
+        and (operation is null or operation ->> 'step' in ('done', 'failed')
+          or (operation ->> 'started_at')::timestamptz < now() - (${RESET_STALE_MS} * interval '1 millisecond'))`);
     const slept: string[] = [];
     for (const c of rows) {
       const h = await this.providerFor(c)
@@ -378,9 +389,15 @@ export class ComputerService {
           continue;
         }
       }
-      await this.sleep(c.id).catch((err) =>
-        captureError(err, { service: "casama-worker", step: "idle-sleep", computer_id: c.id }),
+      const ok = await this.sleep(c.id).then(
+        () => true,
+        (err) => {
+          captureError(err, { service: "casama-worker", step: "idle-sleep", computer_id: c.id });
+          return false;
+        },
       );
+      if (ok)
+        await auditComputer(this.db, c.org_id, c.id, "computer.slept", null, { reason: "idle" });
       slept.push(c.id);
     }
     return slept;
@@ -423,6 +440,74 @@ export class ComputerService {
     return doomed.length;
   }
 
+  /**
+   * Claims the computer for a reset (D-240): fails with reset_in_progress while another one runs.
+   * Returns false when it is busy.
+   */
+  async claimReset(computerId: string, mode: ResetMode, checkpoint: boolean) {
+    const op: ComputerOperation = {
+      kind: mode === "erase" ? "erase" : "reset_system",
+      step: checkpoint ? "saving" : "wiping",
+      checkpoint_id: null,
+      error: null,
+      started_at: new Date().toISOString(),
+      finished_at: null,
+    };
+    const rows = await this.db.execute<{ id: string }>(sql`
+      update public.computers set operation = ${JSON.stringify(op)}::jsonb
+      where id = ${computerId}::uuid and (operation is null or operation ->> 'step' in ('done', 'failed')
+        or (operation ->> 'started_at')::timestamptz < now() - (${RESET_STALE_MS} * interval '1 millisecond'))
+      returning id`);
+    return rows.length > 0;
+  }
+
+  private async setOperation(computerId: string, patch: Partial<ComputerOperation>) {
+    await this.db.execute(sql`
+      update public.computers set operation = coalesce(operation, '{}'::jsonb) || ${JSON.stringify(patch)}::jsonb
+      where id = ${computerId}::uuid`);
+  }
+
+  /**
+   * Resets a computer (D-240), after [claimReset]. A restore point first (unless asked not to),
+   * then the home folder is cleared (all of it to erase; all but ~/workspace otherwise) and the
+   * computer sleeps and wakes, which is a brand-new system with what's left of the home folder.
+   * Progress goes to `operation` so the app can follow it; failures end there too, never thrown.
+   */
+  async reset(computerId: string, mode: ResetMode, opts: { checkpoint?: boolean } = {}) {
+    const c = await this.byId(computerId);
+    if (!c) return;
+    try {
+      let h = await this.ensureRunning(computerId);
+      if (opts.checkpoint !== false) {
+        const { checkpointId } = await this.checkpoint(
+          computerId,
+          mode === "erase" ? "Before erase" : "Before reset",
+          null,
+          h,
+        );
+        await this.setOperation(computerId, { checkpoint_id: checkpointId, step: "wiping" });
+      }
+      const { collectExec } = await import("@casama/sandbox");
+      const r = await collectExec(h.exec(resetScript(mode), { timeoutMs: 120_000 }));
+      if (r.code !== 0) throw new Error(`Couldn't clear the home folder (${r.code})`);
+      await this.setOperation(computerId, { step: "restarting" });
+      await this.sleep(computerId);
+      h = await this.ensureRunning(computerId);
+      await this.setOperation(computerId, {
+        step: "done",
+        finished_at: new Date().toISOString(),
+      });
+      return h;
+    } catch (err) {
+      captureError(err, { service: "casama-api", step: "computer-reset", computer_id: computerId });
+      await this.setOperation(computerId, {
+        step: "failed",
+        error: (err as Error).message.slice(0, 300),
+        finished_at: new Date().toISOString(),
+      });
+    }
+  }
+
   async restoreCheckpoint(checkpointId: string) {
     const [cp] = await this.db.execute<{ computer_id: string; storage_ref: CheckpointRef }>(
       sql`select computer_id, storage_ref from public.checkpoints where id = ${checkpointId}::uuid`,
@@ -433,4 +518,48 @@ export class ComputerService {
     await this.touch(cp.computer_id);
     return cp.computer_id;
   }
+}
+
+export type ResetMode = "system" | "erase";
+
+/** A reset on a computer (D-240), kept in `computers.operation`. */
+export interface ComputerOperation {
+  kind: "reset_system" | "erase";
+  step: "saving" | "wiping" | "restarting" | "done" | "failed";
+  checkpoint_id: string | null;
+  error: string | null;
+  started_at: string;
+  finished_at: string | null;
+}
+
+/**
+ * Clears the home folder for a reset: everything but ~/workspace, or everything to erase. The
+ * image's starting files (/etc/skel) go back, and ~/workspace always exists afterwards.
+ */
+export function resetScript(mode: ResetMode) {
+  const keep = mode === "erase" ? "" : " ! -name workspace";
+  return [
+    'cd "$HOME" || exit 3',
+    `find . -mindepth 1 -maxdepth 1${keep} ! -name '.casama-restore-*' -exec rm -rf {} + 2>/dev/null`,
+    // Anything rm could not remove (an open file, a root-owned leftover) must not fail the reset.
+    "true",
+    '[ -d /etc/skel ] && cp -a /etc/skel/. "$HOME"/ 2>/dev/null',
+    'mkdir -p "$HOME/workspace"',
+    "exit 0",
+  ].join("\n");
+}
+
+/** One line in a computer's history (D-240). Never fails the action it records. */
+export async function auditComputer(
+  db: Database,
+  orgId: string,
+  computerId: string,
+  action: string,
+  actor: { type: "user" | "bot"; id: string } | null,
+  metadata: Record<string, unknown> = {},
+) {
+  await db
+    .execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+      values (${orgId}::uuid, ${actor?.type ?? "system"}, ${actor?.id ?? null}::uuid, ${action}, 'computer', ${computerId}::uuid, ${JSON.stringify(metadata)}::jsonb)`)
+    .catch((err) => captureError(err, { step: "computer-audit", computer_id: computerId }));
 }

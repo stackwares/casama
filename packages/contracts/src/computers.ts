@@ -18,6 +18,20 @@ export const ComputerDevice = z
   })
   .openapi("ComputerDevice");
 
+/** A reset running on the computer, or the last one (D-240). */
+export const ComputerOperation = z
+  .object({
+    kind: z.enum(["reset_system", "erase"]),
+    step: z.enum(["saving", "wiping", "restarting", "done", "failed"]),
+    checkpoint_id: Uuid.nullable().openapi({
+      description: "The restore point saved first: restoring it undoes the reset",
+    }),
+    error: z.string().nullable(),
+    started_at: ts,
+    finished_at: ts.nullable(),
+  })
+  .openapi("ComputerOperation");
+
 export const Computer = z
   .object({
     id: Uuid,
@@ -46,6 +60,12 @@ export const Computer = z
     }),
     device: ComputerDevice.nullable().optional().openapi({
       description: "Personal computers only: the paired device",
+    }),
+    idle_sleep_minutes: z.number().int().optional().openapi({
+      description: "Minutes without activity before it sleeps (D-240); 5 unless changed",
+    }),
+    operation: ComputerOperation.nullable().optional().openapi({
+      description: "The last reset: in progress, done (with its undo point) or failed (D-240)",
     }),
   })
   .openapi("Computer");
@@ -115,8 +135,109 @@ export const UpdateComputerRequest = z
       .max(10)
       .optional()
       .openapi({ description: "Team computers only" }),
+    idle_sleep_minutes: z
+      .number()
+      .int()
+      .min(5)
+      .max(60)
+      .optional()
+      .openapi({ description: "Minutes without activity before it sleeps: 5, 15, 30 or 60" }),
   })
   .openapi("UpdateComputerRequest");
+
+/** CPU, memory and disk right now (D-240). Read only from a computer that is already running. */
+export const ComputerVitals = z
+  .object({
+    cpu_percent: z.number().openapi({ description: "Of the CPUs it has, 0-100" }),
+    memory_used_bytes: z.number().int(),
+    memory_limit_bytes: z.number().int(),
+    disk_used_bytes: z.number().int(),
+    disk_limit_bytes: z.number().int(),
+    at: ts,
+  })
+  .openapi("ComputerVitals");
+
+export const StorageCategory = z
+  .object({
+    id: z.enum(["files", "apps", "caches", "browser", "other"]),
+    bytes: z.number().int(),
+  })
+  .openapi("StorageCategory");
+
+/** What takes up the home folder (D-240). */
+export const ComputerStorage = z
+  .object({
+    used_bytes: z.number().int(),
+    limit_bytes: z.number().int(),
+    categories: z.array(StorageCategory),
+    cleanable_bytes: z
+      .number()
+      .int()
+      .openapi({ description: "Caches and temporary files that Free up space removes" }),
+  })
+  .openapi("ComputerStorage");
+
+export const CleanStorageResult = z
+  .object({ freed_bytes: z.number().int(), storage: ComputerStorage })
+  .openapi("CleanStorageResult");
+
+export const ComputerProcess = z
+  .object({
+    pid: z.number().int(),
+    name: z.string(),
+    command: z.string(),
+    cpu_percent: z.number(),
+    memory_bytes: z.number().int(),
+    elapsed_seconds: z.number().int(),
+    system: z.boolean().openapi({ description: "Part of the computer itself; can't be stopped" }),
+  })
+  .openapi("ComputerProcess");
+
+export const ResetComputerRequest = z
+  .object({
+    mode: z.enum(["system", "erase"]).openapi({
+      description:
+        "system: a fresh system, ~/workspace kept. erase: everything removed, like a new computer.",
+    }),
+    checkpoint: z
+      .boolean()
+      .optional()
+      .openapi({ description: "Save a restore point first (default true)" }),
+  })
+  .openapi("ResetComputerRequest");
+
+export const ComputerUsageDay = z
+  .object({ date: z.string().openapi({ example: "2026-11-12" }), seconds: z.number().int() })
+  .openapi("ComputerUsageDay");
+
+/** Time on and its cost this calendar month (UTC), including the time it has been on now. */
+export const ComputerUsage = z
+  .object({
+    month_start: z.string(),
+    seconds: z.number().int(),
+    cost_usd: z.number(),
+    days: z.array(ComputerUsageDay),
+  })
+  .openapi("ComputerUsage");
+
+export const ComputerHistoryEntry = z
+  .object({
+    id: Uuid,
+    action: z.string().openapi({
+      description:
+        "computer.started, computer.slept, computer.restarted, computer.reset, computer.erased, checkpoint.created, checkpoint.restored, computer.storage_cleaned, computer.process_stopped, computer.updated",
+    }),
+    actor_type: z.enum(["user", "bot", "system"]),
+    actor_id: Uuid.nullable(),
+    actor_name: z.string().nullable(),
+    metadata: z.record(z.string(), z.unknown()),
+    created_at: ts,
+  })
+  .openapi("ComputerHistoryEntry");
+
+export const ComputerBotUse = z
+  .object({ bot_id: Uuid, name: z.string(), last_active_at: ts.nullable() })
+  .openapi("ComputerBotUse");
 
 export const StreamMode = z.enum(["view", "control"]).openapi("StreamMode");
 

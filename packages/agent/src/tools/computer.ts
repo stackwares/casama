@@ -388,5 +388,26 @@ export function registerComputerTools(registry: ToolRegistry) {
     },
   });
 
+  registry.register({
+    name: "computer.restart",
+    description:
+      "Restart your computer when it is stuck: a program won't respond, the browser hangs or commands time out for no reason. Files in the home folder are kept; running programs stop. Takes about 20 seconds. Tell the user you restarted it.",
+    risk: "low",
+    requires,
+    schema: z.object({
+      reason: z.string().min(1).max(300).describe("What was wrong, in a few words"),
+    }),
+    async execute(_args, ctx) {
+      if (!ctx.restartComputer)
+        throw new ToolError("no_computer", "This bot has no computer available.");
+      await ctx.restartComputer();
+      return {
+        content:
+          "Restarted the computer. Files are kept; programs that were running have stopped, so start again anything you still need.",
+        preview: "restarted the computer",
+      };
+    },
+  });
+
   return registry;
 }

@@ -74,15 +74,27 @@ import 'package:casama_api/src/model/checkpoint.dart';
 import 'package:casama_api/src/model/checkpoint_created_event.dart';
 import 'package:casama_api/src/model/checkpoint_created_event_payload.dart';
 import 'package:casama_api/src/model/checkpoint_list.dart';
+import 'package:casama_api/src/model/clean_storage_result.dart';
 import 'package:casama_api/src/model/cloud_models.dart';
 import 'package:casama_api/src/model/computer.dart';
+import 'package:casama_api/src/model/computer_bot_list.dart';
+import 'package:casama_api/src/model/computer_bot_use.dart';
 import 'package:casama_api/src/model/computer_device.dart';
 import 'package:casama_api/src/model/computer_file_entry.dart';
 import 'package:casama_api/src/model/computer_file_list.dart';
+import 'package:casama_api/src/model/computer_history.dart';
+import 'package:casama_api/src/model/computer_history_entry.dart';
 import 'package:casama_api/src/model/computer_list.dart';
+import 'package:casama_api/src/model/computer_operation.dart';
+import 'package:casama_api/src/model/computer_process.dart';
+import 'package:casama_api/src/model/computer_process_list.dart';
 import 'package:casama_api/src/model/computer_size.dart';
 import 'package:casama_api/src/model/computer_state_event.dart';
 import 'package:casama_api/src/model/computer_state_event_payload.dart';
+import 'package:casama_api/src/model/computer_storage.dart';
+import 'package:casama_api/src/model/computer_usage.dart';
+import 'package:casama_api/src/model/computer_usage_day.dart';
+import 'package:casama_api/src/model/computer_vitals.dart';
 import 'package:casama_api/src/model/connect_app_request.dart';
 import 'package:casama_api/src/model/connect_app_response.dart';
 import 'package:casama_api/src/model/connect_flow_status.dart';
@@ -332,6 +344,7 @@ import 'package:casama_api/src/model/replay_param_info.dart';
 import 'package:casama_api/src/model/replay_steps_inner.dart';
 import 'package:casama_api/src/model/report_device_events200_response.dart';
 import 'package:casama_api/src/model/report_device_events_request.dart';
+import 'package:casama_api/src/model/reset_computer_request.dart';
 import 'package:casama_api/src/model/revert_page_request.dart';
 import 'package:casama_api/src/model/revoked_connect_key.dart';
 import 'package:casama_api/src/model/revoked_key.dart';
@@ -406,6 +419,8 @@ import 'package:casama_api/src/model/start_agent_import_request_files_inner.dart
 import 'package:casama_api/src/model/start_setup_response.dart';
 import 'package:casama_api/src/model/start_teach_request.dart';
 import 'package:casama_api/src/model/start_welcome_request.dart';
+import 'package:casama_api/src/model/stopped_process.dart';
+import 'package:casama_api/src/model/storage_category.dart';
 import 'package:casama_api/src/model/stream_session.dart';
 import 'package:casama_api/src/model/stream_session_request.dart';
 import 'package:casama_api/src/model/subrun_completed_event.dart';
@@ -686,18 +701,34 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CheckpointCreatedEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CheckpointList':
           return CheckpointList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CleanStorageResult':
+          return CleanStorageResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CloudModels':
           return CloudModels.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Computer':
           return Computer.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerBotList':
+          return ComputerBotList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerBotUse':
+          return ComputerBotUse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ComputerDevice':
           return ComputerDevice.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ComputerFileEntry':
           return ComputerFileEntry.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ComputerFileList':
           return ComputerFileList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerHistory':
+          return ComputerHistory.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerHistoryEntry':
+          return ComputerHistoryEntry.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ComputerList':
           return ComputerList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerOperation':
+          return ComputerOperation.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerProcess':
+          return ComputerProcess.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerProcessList':
+          return ComputerProcessList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ComputerSize':
           return ComputerSize.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ComputerState':
@@ -707,6 +738,14 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ComputerStateEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ComputerStateEventPayload':
           return ComputerStateEventPayload.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerStorage':
+          return ComputerStorage.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerUsage':
+          return ComputerUsage.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerUsageDay':
+          return ComputerUsageDay.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ComputerVitals':
+          return ComputerVitals.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ConnectAppRequest':
           return ConnectAppRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ConnectAppResponse':
@@ -1229,6 +1268,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ReportDeviceEvents200Response.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ReportDeviceEventsRequest':
           return ReportDeviceEventsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ResetComputerRequest':
+          return ResetComputerRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RevertPageRequest':
           return RevertPageRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RevokedConnectKey':
@@ -1392,6 +1433,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return StartTeachRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'StartWelcomeRequest':
           return StartWelcomeRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'StoppedProcess':
+          return StoppedProcess.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'StorageCategory':
+          return StorageCategory.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'StreamMode':
           
           

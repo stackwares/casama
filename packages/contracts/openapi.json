@@ -4515,6 +4515,248 @@
           }
         }
       },
+      "CleanStorageResult": {
+        "type": "object",
+        "properties": {
+          "freed_bytes": {
+            "type": "integer"
+          },
+          "storage": {
+            "$ref": "#/components/schemas/ComputerStorage"
+          }
+        },
+        "required": [
+          "freed_bytes",
+          "storage"
+        ]
+      },
+      "ComputerStorage": {
+        "type": "object",
+        "properties": {
+          "used_bytes": {
+            "type": "integer"
+          },
+          "limit_bytes": {
+            "type": "integer"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StorageCategory"
+            }
+          },
+          "cleanable_bytes": {
+            "type": "integer",
+            "description": "Caches and temporary files that Free up space removes"
+          }
+        },
+        "required": [
+          "used_bytes",
+          "limit_bytes",
+          "categories",
+          "cleanable_bytes"
+        ]
+      },
+      "StorageCategory": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "files",
+              "apps",
+              "caches",
+              "browser",
+              "other"
+            ]
+          },
+          "bytes": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "bytes"
+        ]
+      },
+      "ComputerBotList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComputerBotUse"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "ComputerBotUse": {
+        "type": "object",
+        "properties": {
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "last_active_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "bot_id",
+          "name",
+          "last_active_at"
+        ]
+      },
+      "ComputerHistory": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComputerHistoryEntry"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "ComputerHistoryEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string",
+            "description": "computer.started, computer.slept, computer.restarted, computer.reset, computer.erased, checkpoint.created, checkpoint.restored, computer.storage_cleaned, computer.process_stopped, computer.updated"
+          },
+          "actor_type": {
+            "type": "string",
+            "enum": [
+              "user",
+              "bot",
+              "system"
+            ]
+          },
+          "actor_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "actor_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "action",
+          "actor_type",
+          "actor_id",
+          "actor_name",
+          "metadata",
+          "created_at"
+        ]
+      },
+      "ComputerUsage": {
+        "type": "object",
+        "properties": {
+          "month_start": {
+            "type": "string"
+          },
+          "seconds": {
+            "type": "integer"
+          },
+          "cost_usd": {
+            "type": "number"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComputerUsageDay"
+            }
+          }
+        },
+        "required": [
+          "month_start",
+          "seconds",
+          "cost_usd",
+          "days"
+        ]
+      },
+      "ComputerUsageDay": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "2026-11-12"
+          },
+          "seconds": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "seconds"
+        ]
+      },
+      "ComputerVitals": {
+        "type": "object",
+        "properties": {
+          "cpu_percent": {
+            "type": "number",
+            "description": "Of the CPUs it has, 0-100"
+          },
+          "memory_used_bytes": {
+            "type": "integer"
+          },
+          "memory_limit_bytes": {
+            "type": "integer"
+          },
+          "disk_used_bytes": {
+            "type": "integer"
+          },
+          "disk_limit_bytes": {
+            "type": "integer"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "cpu_percent",
+          "memory_used_bytes",
+          "memory_limit_bytes",
+          "disk_used_bytes",
+          "disk_limit_bytes",
+          "at"
+        ]
+      },
       "Checkpoint": {
         "type": "object",
         "properties": {
@@ -4688,6 +4930,69 @@
               "capabilities"
             ],
             "description": "Personal computers only: the paired device"
+          },
+          "idle_sleep_minutes": {
+            "type": "integer",
+            "description": "Minutes without activity before it sleeps (D-240); 5 unless changed"
+          },
+          "operation": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "reset_system",
+                  "erase"
+                ]
+              },
+              "step": {
+                "type": "string",
+                "enum": [
+                  "saving",
+                  "wiping",
+                  "restarting",
+                  "done",
+                  "failed"
+                ]
+              },
+              "checkpoint_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "The restore point saved first: restoring it undoes the reset"
+              },
+              "error": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "started_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "finished_at": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "kind",
+              "step",
+              "checkpoint_id",
+              "error",
+              "started_at",
+              "finished_at"
+            ],
+            "description": "The last reset: in progress, done (with its undo point) or failed (D-240)"
           }
         },
         "required": [
@@ -5081,6 +5386,56 @@
           "modified"
         ]
       },
+      "ComputerProcessList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ComputerProcess"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "ComputerProcess": {
+        "type": "object",
+        "properties": {
+          "pid": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "command": {
+            "type": "string"
+          },
+          "cpu_percent": {
+            "type": "number"
+          },
+          "memory_bytes": {
+            "type": "integer"
+          },
+          "elapsed_seconds": {
+            "type": "integer"
+          },
+          "system": {
+            "type": "boolean",
+            "description": "Part of the computer itself; can't be stopped"
+          }
+        },
+        "required": [
+          "pid",
+          "name",
+          "command",
+          "cpu_percent",
+          "memory_bytes",
+          "elapsed_seconds",
+          "system"
+        ]
+      },
       "ComputerList": {
         "type": "object",
         "properties": {
@@ -5107,6 +5462,37 @@
         },
         "required": [
           "items"
+        ]
+      },
+      "ResetComputerRequest": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "system",
+              "erase"
+            ],
+            "description": "system: a fresh system, ~/workspace kept. erase: everything removed, like a new computer."
+          },
+          "checkpoint": {
+            "type": "boolean",
+            "description": "Save a restore point first (default true)"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "StoppedProcess": {
+        "type": "object",
+        "properties": {
+          "stopped": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "stopped"
         ]
       },
       "TakeLeaseRequest": {
@@ -5139,6 +5525,12 @@
             "minimum": 1,
             "maximum": 10,
             "description": "Team computers only"
+          },
+          "idle_sleep_minutes": {
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 60,
+            "description": "Minutes without activity before it sleeps: 5, 15, 30 or 60"
           }
         }
       },
@@ -19343,6 +19735,120 @@
         }
       }
     },
+    "/v1/computers/{id}/storage/clean": {
+      "post": {
+        "operationId": "cleanComputerStorage",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Free up space: removes caches and temporary files (never files in ~/workspace)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cleaned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CleanStorageResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/computers/{id}/bots": {
+      "get": {
+        "operationId": "computerBots",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "The bots that use this computer",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bots",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComputerBotList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/computers/{id}/files/pdf-preview": {
       "get": {
         "operationId": "computerFilePdfPreview",
@@ -19527,6 +20033,63 @@
         }
       }
     },
+    "/v1/computers/{id}/history": {
+      "get": {
+        "operationId": "computerHistory",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "What happened to the computer, newest first",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "History",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComputerHistory"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/computers/{id}/screenshot": {
       "get": {
         "operationId": "computerScreenshot",
@@ -19584,6 +20147,73 @@
           },
           "409": {
             "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/computers/{id}/storage": {
+      "get": {
+        "operationId": "computerStorage",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "What takes up the home folder. Never wakes the computer.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Storage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComputerStorage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The computer is asleep or stopped (computer_not_running); it isn't woken for this",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -19717,6 +20347,130 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/computers/{id}/usage": {
+      "get": {
+        "operationId": "computerUsage",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Time on and its cost this month, by day",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usage",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComputerUsage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/computers/{id}/vitals": {
+      "get": {
+        "operationId": "computerVitals",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "CPU, memory and disk right now. Never wakes the computer or counts as activity.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vitals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComputerVitals"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The computer is asleep or stopped (computer_not_running); it isn't woken for this",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -20579,6 +21333,84 @@
         }
       }
     },
+    "/v1/computers/{id}/files/archive": {
+      "get": {
+        "operationId": "downloadComputerArchive",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Download every file in ~/workspace as one .zip (up to 1 GB)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A zip file",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Over 1 GB (archive_too_large)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "There are no files (nothing_to_download)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/computers/{id}/lease": {
       "get": {
         "operationId": "getLease",
@@ -20842,6 +21674,73 @@
         }
       }
     },
+    "/v1/computers/{id}/processes": {
+      "get": {
+        "operationId": "listComputerProcesses",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Programs running now, busiest first. Never wakes the computer.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Processes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComputerProcessList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The computer is asleep or stopped (computer_not_running); it isn't woken for this",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/takeovers": {
       "get": {
         "operationId": "listTakeovers",
@@ -20878,6 +21777,103 @@
           },
           "401": {
             "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/computers/{id}/reset": {
+      "post": {
+        "operationId": "resetComputer",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Reset the computer in the background: a restore point, then a fresh system (and, to erase, an empty home folder). Follow `operation` on the computer.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetComputerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Computer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -21178,6 +22174,92 @@
           },
           "409": {
             "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/computers/{id}/processes/{pid}/stop": {
+      "post": {
+        "operationId": "stopComputerProcess",
+        "tags": [
+          "computers"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Stop a program (asks it to quit, then forces it after 3 seconds)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "required": true,
+            "name": "pid",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stopped",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoppedProcess"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The computer is asleep or stopped (computer_not_running); it isn't woken for this",
             "content": {
               "application/problem+json": {
                 "schema": {

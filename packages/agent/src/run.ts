@@ -40,7 +40,7 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { loadPerson, type PersonContext, savePersonFact } from "./about-you.ts";
 import { replyToChannel } from "./channels/service.ts";
-import type { ComputerService } from "./computers.ts";
+import { auditComputer, type ComputerService } from "./computers.ts";
 import { buildContext, offloadLargeResult } from "./context.ts";
 import {
   type CredentialResolver,
@@ -2180,6 +2180,28 @@ async function toolStep(
               label: label.slice(0, 200),
             });
             return { checkpointId, label };
+          }
+        : undefined,
+      restartComputer: deps.computers
+        ? async () => {
+            const svc = deps.computers as ComputerService;
+            const row = await svc.forBot(info.botId);
+            if (row.kind === "local")
+              throw new ToolError(
+                "personal_computer",
+                "This is someone's personal computer; only they can restart it.",
+              );
+            await svc.stop(row.id, emit);
+            computer = undefined;
+            await svc.ensureRunning(row.id, emit);
+            await auditComputer(
+              deps.db,
+              row.org_id,
+              row.id,
+              "computer.restarted",
+              { type: "bot", id: info.botId },
+              { run_id: info.runId },
+            );
           }
         : undefined,
     });

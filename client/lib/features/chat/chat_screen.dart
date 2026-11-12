@@ -1248,7 +1248,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             if (next is ToolEntry) {
               group.add(next);
               i++;
-            } else if (next is NoticeEntry && next.kind == NoticeKind.computer && i + 2 < entries.length && entries[i + 2] is ToolEntry) {
+            } else if (next is NoticeEntry && next.kind == NoticeKind.computer && next.text != 'error' && i + 2 < entries.length && entries[i + 2] is ToolEntry) {
               i++;
             } else {
               break;
@@ -1327,6 +1327,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 plain: !showSteps,
                 entry: n,
                 onRestore: computer == null ? null : (cp) => confirmRestore(context, ref, computer.id, cp),
+                // A broken computer (D-240): restart it from the chat, or open its fixes.
+                onRestartComputer: computer == null || n.kind != NoticeKind.computer
+                    ? null
+                    : () async {
+                        final l10n = context.l10n;
+                        HapticsHelper.medium();
+                        final done = await runGuarded(context, () => ref.read(backendProvider).restartComputer(computer.id));
+                        if (done != null && context.mounted) {
+                          ref.invalidate(computersProvider);
+                          showSuccess(context, l10n.computerRestarted);
+                        }
+                      },
+                onFixComputer: computer == null || n.kind != NoticeKind.computer ? null : () => context.push('/computer?c=${computer.id}&tab=manage'),
                 onUndo: (factId) async {
                   final l10n = context.l10n;
                   final ok = await runGuarded(context, () async {

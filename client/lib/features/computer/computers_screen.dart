@@ -19,6 +19,7 @@ import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../companion/companion_controller.dart';
 import 'computer_details.dart';
+import 'computer_manage.dart';
 import 'computer_screen.dart';
 
 /// Team and private computers: create, rename, switch between headless and desktop, delete.
@@ -126,6 +127,16 @@ class _ComputerCard extends ConsumerWidget {
         case 'live':
           context.push('/computer/live?c=${c.id}');
           return;
+        // Managing it (D-240): its Manage tab, a restart, or a reset.
+        case 'manage':
+          context.push('/computer?c=${c.id}&tab=manage');
+          return;
+        case 'restart':
+          HapticsHelper.medium();
+          final done = await runGuarded(context, () => backend.restartComputer(c.id));
+          if (done != null && context.mounted) showSuccess(context, l10n.computerRestarted);
+        case 'reset':
+          await showResetSheet(context, c, erase: false);
         case 'profile':
           await runGuarded(context, () => backend.updateComputer(c.id, profile: desktop ? 'headless' : 'desktop'));
         case 'desktops':
@@ -256,6 +267,19 @@ class _ComputerCard extends ConsumerWidget {
                   value: 'live',
                   child: ListTile(dense: true, leading: const Icon(LucideIcons.monitorPlay), title: Text(l10n.liveView)),
                 ),
+              if (!isPersonalComputer(c)) ...[
+                PopupMenuItem(
+                  value: 'manage',
+                  key: Key('manageComputer-${c.id}'),
+                  child: ListTile(dense: true, leading: const Icon(LucideIcons.settings2), title: Text(l10n.manageComputer)),
+                ),
+                if (running)
+                  PopupMenuItem(
+                    value: 'restart',
+                    key: Key('restartComputer-${c.id}'),
+                    child: ListTile(dense: true, leading: const Icon(LucideIcons.rotateCw), title: Text(l10n.restartComputer)),
+                  ),
+              ],
               if (!isPersonalComputer(c))
               PopupMenuItem(
                 value: 'profile',
@@ -274,6 +298,14 @@ class _ComputerCard extends ConsumerWidget {
                 value: 'rename',
                 child: ListTile(dense: true, leading: const Icon(LucideIcons.pencil), title: Text(l10n.rename)),
               ),
+              if (!isPersonalComputer(c)) ...[
+                const PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 'reset',
+                  key: Key('resetComputer-${c.id}'),
+                  child: ListTile(dense: true, leading: const Icon(LucideIcons.rotateCcw), title: Text(l10n.resetComputerMenu)),
+                ),
+              ],
               if (c.kind != ComputerKindEnum.team)
                 PopupMenuItem(
                   value: 'delete',

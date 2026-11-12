@@ -12,6 +12,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:xterm/xterm.dart';
 
+import 'computer_manage.dart';
 import 'live_view_screen.dart';
 
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -27,7 +28,6 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/edge_fade.dart';
 import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
-import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../chat/chat_screen.dart';
@@ -63,9 +63,15 @@ String computerStatusLabel(BuildContext context, Computer c) {
 
 /// The team computer (or a bot's private one): state, screen, terminal, files, checkpoints.
 class ComputerScreen extends ConsumerWidget {
-  const ComputerScreen({super.key, this.botId, this.embedded = false});
+  const ComputerScreen({super.key, this.botId, this.embedded = false, this.computerId, this.initialTab});
   final String? botId;
   final bool embedded;
+
+  /// Opens this computer instead of a bot's (Settings > Computers, D-240).
+  final String? computerId;
+
+  /// The tab to open first ('screen', 'files', 'manage').
+  final String? initialTab;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -79,18 +85,20 @@ class ComputerScreen extends ConsumerWidget {
       value: computers,
       onRetry: () => ref.invalidate(computersProvider),
       data: (list) {
-        final c = computerForBot(
-          list,
-          botId ?? '',
-          defaultComputerId: defaultComputerId,
-        );
+        final c = computerId != null
+            ? list.where((x) => x.id == computerId).firstOrNull
+            : computerForBot(
+                list,
+                botId ?? '',
+                defaultComputerId: defaultComputerId,
+              );
         if (c == null) {
           return EmptyState(
             icon: LucideIcons.laptop,
             message: l10n.somethingWentWrong,
           );
         }
-        return ComputerPanel(computer: c, embedded: embedded);
+        return ComputerPanel(computer: c, embedded: embedded, initialTab: initialTab);
       },
     );
     if (embedded) return body;
@@ -111,8 +119,12 @@ class ComputerPanel extends ConsumerStatefulWidget {
     super.key,
     required this.computer,
     this.embedded = false,
+    this.initialTab,
   });
   final Computer computer;
+
+  /// The tab to open first; Screen otherwise.
+  final String? initialTab;
 
   /// In the side panel next to the chat (large screens): a desktop's live view plays here once
   /// the person starts, wakes, or opens it, with a button to open it full screen.
@@ -131,8 +143,8 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
   // The side panel does not open the live stream just because the computer is already on (a bot
   // may have started it). It opens after this person wakes it or asks to watch.
   var _watchLive = false;
-  // The tab that's open, by name, so it keeps its place when Terminal and Checkpoints come and go.
-  var _tab = 'screen';
+  // The tab that's open, by name, so it keeps its place when the Terminal comes and goes.
+  late var _tab = widget.initialTab ?? 'screen';
   var _tabIds = const <String>[];
 
   @override
@@ -155,7 +167,22 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
       // It went to sleep on its own. A later wake (often a bot) should not reopen the stream.
       _watchLive = false;
     }
-    if (old.computer.state != widget.computer.state) _schedule();
+    if (old.computer.state != widget.computer.state ||
+        resetRunning(old.computer) != resetRunning(widget.computer)) {
+      _schedule();
+    }
+    // A reset this screen watched has finished: say so, with Undo (D-240).
+    final was = old.computer.operation;
+    final now = widget.computer.operation;
+    if (was != null &&
+        now != null &&
+        was.startedAt == now.startedAt &&
+        was.step != now.step &&
+        now.step == ComputerOperationStepEnum.done) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) announceResetDone(context, ref, widget.computer);
+      });
+    }
   }
 
   bool _computerAwake(ComputerState s) =>
@@ -164,7 +191,13 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
   void _schedule() {
     _poll?.cancel();
     _poll = Timer.periodic(
-      Duration(seconds: computerWaking(widget.computer.state) ? 3 : 10),
+      Duration(
+        seconds:
+            computerWaking(widget.computer.state) ||
+                resetRunning(widget.computer)
+            ? 3
+            : 10,
+      ),
       (_) => _refresh(),
     );
   }
@@ -199,16 +232,18 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
     final waking = computerWaking(computer.state) || _action == 'start';
     final failed = computer.state == ComputerState.error;
     final personal = isPersonalComputer(computer);
-    // Screen and Files always; Terminal and Checkpoints once Advanced is opened here (D-182).
-    // A personal computer has neither, and no files while it is offline (D-218).
+    final resetting = resetRunning(computer);
+    // Screen, Files and Manage always; Terminal once Advanced is opened here (D-182). Restore
+    // points live in Manage now (D-240). A personal computer has only Screen, and Files while
+    // it is online (D-218).
     final advanced = ref
         .watch(advancedOpenProvider)
         .contains(computerTabsAdvancedId);
     final tabIds = [
-      for (final t in const ['screen', 'terminal', 'files', 'checkpoints'])
+      for (final t in const ['screen', 'terminal', 'files', 'manage'])
         if (personal
             ? t == 'screen' || (t == 'files' && running)
-            : advanced || t == 'screen' || t == 'files')
+            : advanced || t != 'terminal')
           t,
     ];
     _tabIds = tabIds;
@@ -276,7 +311,9 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                               Flexible(
                                 child: StatusLabel(
                                   key: const Key('computerState'),
-                                  text: _action == 'start'
+                                  text: resetting
+                                      ? resetStatusText(context, computer.operation!)
+                                      : _action == 'start'
                                       ? l10n.stateStarting
                                       : _action == 'sleep'
                                       ? l10n.computerGoingToSleep
@@ -286,7 +323,7 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                                         ),
                                   color: failed
                                       ? context.appColors.negative
-                                      : (running || waking
+                                      : (running || waking || resetting
                                             ? context.appColors.working
                                             : context
                                                   .colorScheme
@@ -294,7 +331,7 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                                   pill: true,
                                 ),
                               ),
-                              if (waking || _action == 'sleep') ...[
+                              if (waking || _action == 'sleep' || resetting) ...[
                                 const SizedBox(width: 6),
                                 SizedBox(
                                   width: 12,
@@ -323,7 +360,8 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                       ),
                     ),
                     // A personal computer is on while the desktop app is connected (D-218).
-                    if (!personal)
+                    // No Sleep or Wake while a reset runs (D-240).
+                    if (!personal && !resetting)
                     Wrap(
                       spacing: 8,
                       children: [
@@ -386,6 +424,22 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                   ],
                 ),
               ),
+              // CPU, memory and disk while it's on; a tap opens Manage (D-240).
+              if (!personal && running && !resetting)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(AppSpace.md, 0, AppSpace.md, AppSpace.sm),
+                  child: Builder(
+                    builder: (tabContext) => ComputerVitalsStrip(
+                      computerId: computer.id,
+                      onTap: () {
+                        final i = _tabIds.indexOf('manage');
+                        if (i >= 0) {
+                          DefaultTabController.of(tabContext).animateTo(i);
+                        }
+                      },
+                    ),
+                  ),
+                ),
               Padding(
                 padding: const EdgeInsetsDirectional.only(end: AppSpace.sm),
                 child: Row(
@@ -412,9 +466,9 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                                     icon: LucideIcons.folder,
                                     text: l10n.files,
                                   ),
-                                  'checkpoints' => _IconTab(
-                                    icon: LucideIcons.history,
-                                    text: l10n.checkpoints,
+                                  'manage' => _IconTab(
+                                    icon: LucideIcons.settings2,
+                                    text: l10n.manageTab,
                                   ),
                                   _ => _IconTab(
                                     icon: LucideIcons.monitor,
@@ -442,9 +496,7 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                         switch (t) {
                           'terminal' => TerminalTab(computerId: computer.id),
                           'files' => FilesTab(computerId: computer.id),
-                          'checkpoints' => CheckpointsTab(
-                            computerId: computer.id,
-                          ),
+                          'manage' => ManageTab(computer: computer),
                           _ when personal => Column(
                             children: [
                               _ScreenNote(text: l10n.personalScreenNote),
@@ -500,10 +552,10 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
   }
 }
 
-/// The [AdvancedSection] id whose open state shows the Terminal and Checkpoints tabs (D-182).
+/// The [AdvancedSection] id whose open state shows the Terminal tab (D-182).
 const computerTabsAdvancedId = 'computer.tabs';
 
-/// At the end of the tab row: shows or hides Terminal and Checkpoints, remembered on this device
+/// At the end of the tab row: shows or hides the Terminal, remembered on this device
 /// like any Advanced section (D-182).
 class _AdvancedTabsToggle extends ConsumerWidget {
   const _AdvancedTabsToggle({required this.open});
@@ -1260,103 +1312,6 @@ class _Crumb extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class CheckpointsTab extends ConsumerStatefulWidget {
-  const CheckpointsTab({super.key, required this.computerId});
-  final String computerId;
-
-  @override
-  ConsumerState<CheckpointsTab> createState() => _CheckpointsTabState();
-}
-
-class _CheckpointsTabState extends ConsumerState<CheckpointsTab> {
-  Future<List<Checkpoint>>? _items;
-
-  @override
-  void initState() {
-    super.initState();
-    _items = ref.read(backendProvider).checkpoints(widget.computerId);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<List<Checkpoint>>(
-      future: _items,
-      builder: (context, snap) {
-        if (snap.hasError && snap.connectionState == ConnectionState.done) {
-          return EmptyState(
-            icon: LucideIcons.cloudOff,
-            title: context.l10n.somethingWentWrong,
-            message: errorText(context, snap.error!),
-            isError: true,
-            action: FilledButton.tonalIcon(
-              onPressed: () {
-                final items = ref
-                    .read(backendProvider)
-                    .checkpoints(widget.computerId);
-                setState(() {
-                  _items = items;
-                });
-              },
-              icon: const Icon(LucideIcons.rotateCw, size: 18),
-              label: Text(context.l10n.retry),
-            ),
-          );
-        }
-        if (!snap.hasData) return const SkeletonList();
-        final items = snap.data!;
-        if (items.isEmpty) {
-          return EmptyState(
-            icon: LucideIcons.history,
-            title: context.l10n.noCheckpointsTitle,
-            message: context.l10n.noCheckpoints,
-          );
-        }
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final side = pageSide(constraints.maxWidth);
-            return ListView(
-              padding: EdgeInsets.fromLTRB(
-                side,
-                AppSpace.xs,
-                side,
-                AppSpace.xl + MediaQuery.paddingOf(context).bottom,
-              ),
-              children: [
-                FormNote(context.l10n.checkpointsHelp),
-                const SizedBox(height: AppSpace.md),
-                GroupedCard(
-                  children: [
-                    for (final cp in items)
-                      GroupedTile(
-                        icon: LucideIcons.bookmark,
-                        iconColor: context.appColors.warning,
-                        title: cp.label,
-                        subtitle: relativeTime(cp.createdAt, context),
-                        trailing: OutlinedButton.icon(
-                          onPressed: () => confirmRestore(
-                            context,
-                            ref,
-                            widget.computerId,
-                            cp.id,
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            visualDensity: VisualDensity.compact,
-                          ),
-                          icon: const Icon(LucideIcons.rotateCcw, size: 16),
-                          label: Text(context.l10n.restore),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
-            );
-          },
-        );
-      },
     );
   }
 }

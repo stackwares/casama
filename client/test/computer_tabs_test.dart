@@ -1,5 +1,6 @@
-// The computer shows Screen and Files; Terminal and Checkpoints come with Advanced (D-182). The
-// desktop/headless switch lives only in Settings > Computers.
+// The computer shows Screen, Files and Manage; the Terminal comes with Advanced (D-182), and
+// restore points live in Manage (D-240). The desktop/headless switch lives only in Settings >
+// Computers.
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/features/computer/computer_screen.dart';
@@ -16,11 +17,11 @@ void main() {
   ];
   int selectedTab(WidgetTester tester) => DefaultTabController.of(tester.element(find.byType(TabBar))).index;
 
-  testWidgets('Terminal and Checkpoints show once Advanced is on, and the open tab keeps its place', (tester) async {
+  testWidgets('the Terminal shows once Advanced is on, and the open tab keeps its place', (tester) async {
     await setSize(tester, const Size(800, 1000));
     await tester.pumpWidget(harness(FakeBackend(), const Scaffold(body: ComputerScreen(embedded: true))));
     await tester.pumpAndSettle();
-    expect(tabLabels(tester), ['Screen', 'Files']);
+    expect(tabLabels(tester), ['Screen', 'Files', 'Manage']);
     expect(find.text('Terminal'), findsNothing);
     expect(find.text('Checkpoints'), findsNothing);
 
@@ -30,19 +31,19 @@ void main() {
 
     await tester.tap(find.byKey(const Key('advanced-computer.tabs')));
     await tester.pumpAndSettle();
-    expect(tabLabels(tester), ['Screen', 'Terminal', 'Files', 'Checkpoints']);
+    expect(tabLabels(tester), ['Screen', 'Terminal', 'Files', 'Manage']);
     expect(selectedTab(tester), 2, reason: 'Files stays open');
 
     // Remembered on this device.
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getStringList('advanced.open'), contains('computer.tabs'));
 
-    // On Checkpoints, turning Advanced off falls back to the first tab.
-    await tester.tap(find.text('Checkpoints'));
+    // On the Terminal, turning Advanced off falls back to the first tab.
+    await tester.tap(find.text('Terminal'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('advanced-computer.tabs')));
     await tester.pumpAndSettle();
-    expect(tabLabels(tester), ['Screen', 'Files']);
+    expect(tabLabels(tester), ['Screen', 'Files', 'Manage']);
     expect(selectedTab(tester), 0);
 
     await tester.pumpWidget(const SizedBox());

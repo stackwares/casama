@@ -1041,8 +1041,14 @@ class NoticeLine extends StatelessWidget {
     this.onDetails,
     this.onUndo,
     this.plain = false,
+    this.onRestartComputer,
+    this.onFixComputer,
   });
   final NoticeEntry entry;
+
+  /// A computer that broke (state "error", D-240): restart it here, or open its fixes.
+  final VoidCallback? onRestartComputer;
+  final VoidCallback? onFixComputer;
 
   /// "Saved to your profile" (D-169): takes the fact back out.
   final void Function(String factId)? onUndo;
@@ -1079,9 +1085,9 @@ class NoticeLine extends StatelessWidget {
         muted,
       ),
       NoticeKind.computer => (
-        LucideIcons.monitor,
+        entry.text == 'error' ? LucideIcons.monitorX : LucideIcons.monitor,
         l10n.computerState(entry.text),
-        muted,
+        entry.text == 'error' ? colors.negative : muted,
       ),
       NoticeKind.failed => (
         LucideIcons.circleAlert,
@@ -1119,6 +1125,7 @@ class NoticeLine extends StatelessWidget {
             entry.kind == NoticeKind.profileSaved && onUndo != null) &&
         entry.refId != null;
     final details = failed && onDetails != null;
+    final broken = entry.kind == NoticeKind.computer && entry.text == 'error' && (onRestartComputer != null || onFixComputer != null);
     return Center(
       child: Material(
         type: MaterialType.transparency,
@@ -1131,9 +1138,9 @@ class NoticeLine extends StatelessWidget {
           child: Container(
             padding: EdgeInsets.fromLTRB(
               12,
-              restorable ? 2 : 6,
-              restorable || details ? 4 : 12,
-              restorable ? 2 : 6,
+              restorable || broken ? 2 : 6,
+              restorable || details || broken ? 4 : 12,
+              restorable || broken ? 2 : 6,
             ),
             decoration: BoxDecoration(
               color: failed
@@ -1172,6 +1179,18 @@ class NoticeLine extends StatelessWidget {
                   TextButton(
                     onPressed: () => onRestore!(entry.refId!),
                     child: Text(l10n.restore),
+                  ),
+                if (broken && onRestartComputer != null)
+                  TextButton(
+                    key: const Key('noticeRestartComputer'),
+                    onPressed: onRestartComputer,
+                    child: Text(l10n.restartComputer),
+                  ),
+                if (broken && onFixComputer != null)
+                  TextButton(
+                    key: const Key('noticeMoreFixes'),
+                    onPressed: onFixComputer,
+                    child: Text(l10n.moreFixes),
                   ),
                 if (details) ...[
                   const SizedBox(width: 6),

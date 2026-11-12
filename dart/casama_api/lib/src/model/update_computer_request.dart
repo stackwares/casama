@@ -25,6 +25,8 @@ class UpdateComputerRequest {
      this.profile,
 
      this.maxDesktops,
+
+     this.idleSleepMinutes,
   });
 
   @JsonKey(
@@ -67,19 +69,36 @@ class UpdateComputerRequest {
 
 
 
+      /// Minutes without activity before it sleeps: 5, 15, 30 or 60
+          // minimum: 5
+          // maximum: 60
+  @JsonKey(
+    
+    name: r'idle_sleep_minutes',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? idleSleepMinutes;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is UpdateComputerRequest &&
       other.name == name &&
       other.profile == profile &&
-      other.maxDesktops == maxDesktops;
+      other.maxDesktops == maxDesktops &&
+      other.idleSleepMinutes == idleSleepMinutes;
 
     @override
     int get hashCode =>
         name.hashCode +
         profile.hashCode +
-        maxDesktops.hashCode;
+        maxDesktops.hashCode +
+        idleSleepMinutes.hashCode;
 
   factory UpdateComputerRequest.fromJson(Map<String, dynamic> json) => _$UpdateComputerRequestFromJson(json);
 

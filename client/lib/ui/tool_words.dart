@@ -71,6 +71,7 @@ const _known = {
   'skills_create',
   'skills_update',
   'checkpoint',
+  'computer_restart',
   'takeover',
   'delegate', //
   'routines_list',
@@ -171,6 +172,7 @@ String? toolWordsId(String tool) {
   'desktop_look' => (LucideIcons.monitor, ToolTone.computer),
   'shell' => (LucideIcons.cpu, ToolTone.computer),
   'checkpoint' => (LucideIcons.rotateCcw, ToolTone.computer),
+  'computer_restart' => (LucideIcons.rotateCw, ToolTone.computer),
   'takeover' => (LucideIcons.hand, ToolTone.people),
   'files_read' => (LucideIcons.fileText, ToolTone.files),
   'files_write' => (LucideIcons.filePen, ToolTone.files),

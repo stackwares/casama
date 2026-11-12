@@ -3499,11 +3499,13 @@ class SupabaseBackend implements Backend {
     String? name,
     String? profile,
     int? maxDesktops,
+    int? idleSleepMinutes,
   }) async => (await api.computers.updateComputer(
     id: computerId,
     updateComputerRequest: UpdateComputerRequest(
       name: name,
       maxDesktops: maxDesktops,
+      idleSleepMinutes: idleSleepMinutes,
       profile: profile == null
           ? null
           : UpdateComputerRequestProfileEnum.values.firstWhere(
@@ -3823,6 +3825,79 @@ class SupabaseBackend implements Backend {
     String computerId,
     String checkpointId,
   ) async => api.computers.restoreCheckpoint(id: computerId, cid: checkpointId);
+
+  /// Null when the computer is asleep (409): reading never wakes it.
+  Future<T?> _whileRunning<T>(Future<Response<T>> Function() call) async {
+    try {
+      return (await call()).data;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 409) return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Computer> restartComputer(String id) async =>
+      (await api.computers.restartComputer(id: id)).data!;
+
+  @override
+  Future<Computer> resetComputer(String id, {required bool erase, bool checkpoint = true}) async =>
+      (await api.computers.resetComputer(
+        id: id,
+        resetComputerRequest: ResetComputerRequest(
+          mode: erase ? ResetComputerRequestModeEnum.erase : ResetComputerRequestModeEnum.system,
+          checkpoint: checkpoint,
+        ),
+      )).data!;
+
+  @override
+  Future<ComputerVitals?> computerVitals(String id) =>
+      _whileRunning(() => api.computers.computerVitals(id: id));
+
+  @override
+  Future<ComputerStorage?> computerStorage(String id) =>
+      _whileRunning(() => api.computers.computerStorage(id: id));
+
+  @override
+  Future<CleanStorageResult> cleanComputerStorage(String id) async =>
+      (await api.computers.cleanComputerStorage(id: id)).data!;
+
+  @override
+  Future<List<ComputerProcess>?> computerProcesses(String id) async =>
+      (await _whileRunning(() => api.computers.listComputerProcesses(id: id)))?.items;
+
+  @override
+  Future<void> stopComputerProcess(String id, int pid) async =>
+      api.computers.stopComputerProcess(id: id, pid: pid);
+
+  @override
+  Future<ComputerUsage> computerUsage(String id) async =>
+      (await api.computers.computerUsage(id: id)).data!;
+
+  @override
+  Future<List<ComputerHistoryEntry>> computerHistory(String id) async =>
+      (await api.computers.computerHistory(id: id)).data!.items;
+
+  @override
+  Future<List<ComputerBotUse>> computerBots(String id) async =>
+      (await api.computers.computerBots(id: id)).data!.items;
+
+  @override
+  Future<Checkpoint> createCheckpoint(String id, String label) async =>
+      (await api.computers.createCheckpoint(
+        id: id,
+        createCheckpointRequest: CreateCheckpointRequest(label: label),
+      )).data!;
+
+  @override
+  Future<Uint8List?> downloadComputerArchive(String id) async {
+    try {
+      return (await api.computers.downloadComputerArchive(id: id)).data;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 422) return null;
+      rethrow;
+    }
+  }
 
   @override
   Future<Uint8List?> screenshot(String computerId) async {
