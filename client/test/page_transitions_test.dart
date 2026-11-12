@@ -1,6 +1,6 @@
 // The web and desktop are click and open: pages and tabs switch there with no transition, and pages still
 // paint the wallpaper. Android and iOS keep their own transitions.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/core/local_cache.dart';

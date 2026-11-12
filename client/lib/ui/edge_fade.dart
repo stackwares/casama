@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Fades the edges of a scroll view where it has more to show, so a row of chips or cards reads as
 /// scrollable even when no item is cut in half. Wrap the scroll view itself.

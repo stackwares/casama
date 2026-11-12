@@ -6,7 +6,7 @@ import 'package:casama_app/core/backend.dart';
 import 'package:casama_app/features/settings/gallery_previews.dart';
 import 'package:casama_app/theme/schemes.dart';
 import 'package:casama_app/theme/wallpaper.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 

@@ -1,5 +1,5 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Shrinks its child slightly while a finger is down, like a physical press. Uses a [Listener], so
 /// it never competes with the child's own tap handling; a drag past the touch slop releases it.

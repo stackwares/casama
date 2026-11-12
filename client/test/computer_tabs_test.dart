@@ -1,6 +1,6 @@
 // The computer shows Screen and Files; Terminal and Checkpoints come with Advanced (D-182). The
 // desktop/headless switch lives only in Settings > Computers.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/features/computer/computer_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';

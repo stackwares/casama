@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The line under the name on the welcome screen. It cycles through a few short taglines, sliding
 /// each one up as it fades in.

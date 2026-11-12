@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:lottie/lottie.dart';
 
 /// The Casama cloud bots. Art lives in assets/mascots, made from the SVGs in assets/bots:

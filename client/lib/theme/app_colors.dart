@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Colors that carry meaning. Surfaces stay neutral; these mark small things only (status dots,
 /// risk, results). Read them with `context.appColors`.

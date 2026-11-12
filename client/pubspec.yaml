@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  material_ui: ^1.10.0
+  cupertino_ui: ^1.1.6
   intl: ^0.20.3
   casama_sdk:
     path: ../dart/casama_sdk
@@ -38,9 +40,9 @@ dependencies:
   just_audio: ^0.10.6
   http: ^1.6.0
   flutter_secure_storage: ^11.2.0
-  window_manager: ^0.6.0
-  tray_manager: ^0.8.3
-  hotkey_manager: ^0.3.0
+  window_manager: ^0.7.0
+  tray_manager: ^0.9.0
+  hotkey_manager: ^0.4.0
   home_widget: ^0.10.0
   live_activities: ^2.6.0
   receive_sharing_intent: ^1.9.0
@@ -48,7 +50,7 @@ dependencies:
   url_launcher: ^6.3.3
   in_app_purchase_android: ^0.5.5
   shared_preferences: ^2.5.6
-  flex_color_scheme: ^8.4.0
+  flex_color_scheme: ^9.0.0
   image_picker: ^1.2.4
   desktop_drop: ^0.8.0
   path_parsing: ^1.1.0

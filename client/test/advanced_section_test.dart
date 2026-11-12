@@ -1,5 +1,5 @@
 // Expert options fold under one "Advanced" row per screen and stay open once opened (D-182).
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/features/settings/settings_screen.dart';

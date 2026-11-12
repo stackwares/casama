@@ -1,4 +1,5 @@
 {
+  "originHash" : "3491c98f540920034816d83ae9e40da65af0b1ca86551bbb0ce0651531694b41",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -14,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/google/app-check.git",
       "state" : {
-        "revision" : "c7eb17e5545f36e43dc50e70da09c2e999714e16",
-        "version" : "12.0.0"
+        "revision" : "b7c71458b70284cc0f5a87103f66f0b1d98b1873",
+        "version" : "12.1.0"
       }
     },
     {
@@ -131,8 +132,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/PostHog/posthog-ios",
       "state" : {
-        "revision" : "2df563fe65f8a502a0485a7f0707f97f63de70d8",
-        "version" : "3.94.1"
+        "revision" : "1cedba27405fa43afa6ddd02eb952c14f5357e23",
+        "version" : "3.94.4"
       }
     },
     {
@@ -154,5 +155,5 @@
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }

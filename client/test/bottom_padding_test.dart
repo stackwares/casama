@@ -1,6 +1,6 @@
 // The ends of lists and sheets clear the system navigation bar instead of being cut off above it
 // (BottomPadding at the end of the scrollable, not a SafeArea around it).
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/core/widgets.dart';
 import 'package:casama_app/ui/adaptive_modal.dart';

@@ -14,7 +14,7 @@ import 'package:casama_app/features/chat/media/preview_body.dart';
 import 'package:casama_app/features/chat/widgets/chat_markdown.dart';
 import 'package:casama_app/features/chat/widgets/chat_widgets.dart';
 import 'package:casama_app/features/files/file_preview.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 

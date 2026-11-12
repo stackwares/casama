@@ -1,7 +1,7 @@
 // The key is forwarded to the inner button on purpose (see below).
 // ignore_for_file: use_key_in_widget_constructors, prefer_initializing_formals
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// The app's main-action button: a [FilledButton] in one solid color, a touch lighter at the
 /// top, with a soft shadow in its own color that lifts on hover and settles when pressed. Tonal,

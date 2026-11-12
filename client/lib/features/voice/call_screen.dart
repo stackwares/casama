@@ -4,7 +4,7 @@ import 'dart:math' as math;
 
 import 'package:casama_sdk/casama_sdk.dart'
     show VoiceToolResultStatusEnum, problemOf;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';

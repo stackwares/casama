@@ -6,8 +6,8 @@
 # (so a moved tag fails the build). Cloning works on x64 and arm64 hosts alike: the Linux release
 # archive is x64-only. No third-party Flutter image.
 FROM debian:bookworm-slim AS build
-ARG FLUTTER_VERSION=3.47.9
-ARG FLUTTER_COMMIT=c197ca5199e9ee5661e865596c9c07294dfab51c
+ARG FLUTTER_VERSION=3.50.0
+ARG FLUTTER_COMMIT=ab2912035e160d9cad6306df307576da6128ebdb
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl git unzip xz-utils \
   && rm -rf /var/lib/apt/lists/* \
   && git clone --depth 1 --branch "${FLUTTER_VERSION}" https://github.com/flutter/flutter.git /opt/flutter \

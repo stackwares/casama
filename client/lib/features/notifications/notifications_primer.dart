@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../core/web_notification_prompt_web.dart' if (dart.library.io) '../../core/web_notification_prompt_stub.dart';
 import '../../core/widgets.dart';

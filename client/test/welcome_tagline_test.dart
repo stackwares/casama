@@ -1,5 +1,5 @@
 import 'package:casama_app/features/auth/welcome_tagline.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Widget _app({bool reduceMotion = false}) => MaterialApp(

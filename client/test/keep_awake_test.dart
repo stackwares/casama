@@ -2,7 +2,7 @@ import 'package:casama_app/core/providers.dart';
 import 'package:casama_app/core/user_activity.dart';
 import 'package:casama_app/features/computer/live_view_screen.dart';
 import 'package:casama_sdk/casama_sdk.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:casama_app/core/live.dart';
 import 'package:casama_app/l10n/generated/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

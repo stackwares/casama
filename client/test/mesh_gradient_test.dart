@@ -4,7 +4,7 @@ import 'package:casama_app/core/backend.dart';
 import 'package:casama_app/features/settings/gallery_previews.dart';
 import 'package:casama_app/theme/mesh_gradient.dart';
 import 'package:casama_app/theme/wallpaper.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 int _channelGap(Color a, Color b) => [

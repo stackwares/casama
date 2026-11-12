@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:casama_app/features/whats_new/whats_new.dart';
 import 'package:casama_app/l10n/generated/app_localizations.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';

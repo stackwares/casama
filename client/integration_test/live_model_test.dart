@@ -2,7 +2,7 @@
 // key with a temporary --dart-define-from-file and points the worker at the real provider.
 import 'dart:math';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:casama_app/core/config.dart';

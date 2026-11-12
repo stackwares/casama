@@ -1,5 +1,5 @@
 // A tapped tab in a horizontal row scrolls fully into view, and only the row scrolls.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/ui/reveal_when_selected.dart';
 

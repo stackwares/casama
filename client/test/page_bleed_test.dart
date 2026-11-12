@@ -1,5 +1,5 @@
 // A sideways list on a page reaches the page's edges while its first item lines up with the page.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/theme/app_tokens.dart';
 import 'package:casama_app/ui/page.dart';

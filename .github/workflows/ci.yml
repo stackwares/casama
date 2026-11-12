@@ -79,9 +79,9 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      # Pinned to the version the app ships with: 3.50 deprecates package:flutter/material.dart.
+      # Pinned to the version the app ships with (D-212).
       - uses: subosito/flutter-action@v2
-        with: { channel: stable, flutter-version: 3.47.9, cache: true }
+        with: { channel: stable, flutter-version: 3.50.0, cache: true }
       - name: Native build packages (cnativeapi builds against GTK 3, X11 and Xi on Linux)
         run: |
           if [ -f /etc/apt/apt-mirrors.txt ]; then

@@ -1,7 +1,7 @@
 // Expert options on the connection screens sit in one folded "Advanced" section (D-182): folded
 // by default, one tap opens it, and nothing is unreachable.
 import 'package:casama_sdk/casama_sdk.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/features/companion/companion_screen.dart';
 import 'package:casama_app/features/devices/device_connections_screen.dart';

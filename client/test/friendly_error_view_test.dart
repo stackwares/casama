@@ -1,7 +1,7 @@
 import 'package:casama_app/l10n/generated/app_localizations.dart';
 import 'package:casama_app/theme/app_theme.dart';
 import 'package:casama_app/ui/friendly_error_view.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 

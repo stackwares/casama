@@ -1,6 +1,6 @@
 // Simple chats (D-162): by default the chat shows what the bot is doing in a few words and its
 // answer, not each step, command or technical error.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/features/chat/chat_detail.dart';

@@ -1,6 +1,6 @@
 import 'package:casama_app/core/dev_server.dart';
 import 'package:casama_app/features/settings/me_avatar.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'app_test.dart' show harness;

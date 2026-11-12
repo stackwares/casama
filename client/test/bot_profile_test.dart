@@ -1,7 +1,7 @@
 // The bot profile (who it is, four big shortcuts, settings in short sections with Advanced folded
 // away and Archive at the end) and the slim chat header (call, new chat, … with conversations and
 // the profile).
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';

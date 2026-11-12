@@ -1,6 +1,6 @@
 // Every screen lays out on phones without overflow or errors (the 6.9" and the small 4.7"
 // iPhones). Catches clipped text, cut-off cards and broken navigation before they ship.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/core/local_cache.dart';

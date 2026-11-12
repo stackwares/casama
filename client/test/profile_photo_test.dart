@@ -7,7 +7,7 @@ import 'package:casama_app/features/settings/about_you_screen.dart';
 import 'package:casama_app/features/settings/me_avatar.dart';
 import 'package:casama_app/features/settings/profile_photo.dart';
 import 'package:casama_app/ui/person_avatar.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 

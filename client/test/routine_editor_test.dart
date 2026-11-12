@@ -1,6 +1,6 @@
 // The routine editor keeps GitHub, webhooks, cron and the timezone under Advanced (D-182), and
 // repeating routines are picked and shown in words.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/features/routines/routines_screen.dart';
 import 'package:casama_sdk/casama_sdk.dart';

@@ -1,5 +1,5 @@
 // Vertical lists show a scrollbar on phones too, so people see where they are and how much is left.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/app.dart';

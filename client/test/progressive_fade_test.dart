@@ -1,5 +1,5 @@
 // Pages without an app bar let content dissolve under the status bar instead of slicing it off.
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/features/auth/account_screen.dart';
 import 'package:casama_app/theme/app_tokens.dart';

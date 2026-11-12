@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Scrollbars on every vertical list, phones included (Flutter only adds them on desktop), so people
 /// see where they are in a list and how much is left. Horizontal rows (chips, galleries) stay without

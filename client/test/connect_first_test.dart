@@ -5,7 +5,7 @@ import 'package:casama_app/features/chat/local_actions.dart';
 import 'package:casama_app/features/chat/widgets/app_tiles.dart';
 import 'package:casama_app/features/chat/widgets/bot_ui.dart';
 import 'package:casama_sdk/casama_sdk.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
