@@ -337,7 +337,10 @@ export async function startWorker(opts: WorkerOptions) {
               model: videoId?.startsWith("gemini-") ? videoId : undefined,
             })
           : null;
-      const imageKey = or?.key || (assigned ? opts.platformOpenRouterKey : undefined);
+      // A workspace without its own OpenRouter key draws on the server's shared key, like chat,
+      // dictation and memory search (D-186, D-194): on any server that has one, not only with
+      // billing. Self-hosted, the usage row is at cost and nobody is charged.
+      const imageKey = or?.key || opts.platformOpenRouterKey;
       const openrouter = imageKey
         ? new OpenRouterMediaProvider(imageKey, {
             fetch: fetchOut,

@@ -2065,6 +2065,7 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 
 - **Why** (Oliver asked, 2026-11-11): pick the cheapest image model that still looks great. Qwen Image 3 Pro was $0.04 and 14th of 84 on LM Arena (8 Nov) and 20th on Artificial Analysis. Gemini Nano Banana 2.1 is about $0.034 at 1K, 7th on LM Arena and 6th on Artificial Analysis. GPT Image 2.6 at medium is about $0.043 and ranks 2nd–4th on LM Arena; its max tier leads both boards at about $0.21. Seedream 5.0 Pro is $0.045 at 1K and $0.09 at the 2K rate, and ranks behind both.
 - **Decision:** a workspace with an OpenRouter key gets images from `google/gemini-nano-banana-2.1` with `resolution: "1K"` (2K is $0.050, 4K is $0.113). The usage row records OpenRouter's `usage.cost`, or $0.0336 when the response has none (1,120 output tokens at $30 per million). Without an OpenRouter key, images stay on fal with Seedream 4.5. Video stays on fal.
+- **Shared key (2026-11-12):** a workspace without its own OpenRouter key generates images on the server's shared key (`CLOUD_MODEL_UPSTREAM_KEY`, D-186) whenever the server has one, like chat, dictation and memory search (D-194). Before, images used it only with billing on, so a self-hosted or local server with the key chatted fine but asked for an OpenRouter key to make a picture.
 - **Tests:** `packages/agent/test/media-prices.test.ts`, the OpenRouter image case in `apps/server/test/autonomy.test.ts`.
 
 ## D-186 Casama Cloud runs models on one shared OpenRouter key
