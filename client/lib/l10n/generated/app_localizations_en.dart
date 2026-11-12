@@ -1485,6 +1485,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'pages_publish': 'Publishing a page',
       'pages': 'Updating a page',
       'media': 'Making an image',
+      'media_video': 'Making a video',
+      'bots_create': 'Making a new bot',
+      'bots_update': 'Updating a bot',
+      'bots_list': 'Checking your bots',
+      'bots_archive': 'Archiving a bot',
+      'channel_send': 'Sending a message',
+      'links_ask': 'Asking a contact\'s assistant',
+      'logins_list': 'Checking saved logins',
+      'replay_run': 'Repeating saved steps',
+      'replay_save': 'Saving these steps',
+      'setup_apply': 'Suggesting a setup',
+      'sidebar_organize': 'Organizing your sidebar',
+      'suggestions_add': 'Adding a suggestion',
+      'teach_save_draft': 'Saving a draft skill',
+      'welcome_name': 'Picking a name',
+      'secrets_request': 'Asking you for a secret',
+      'pages_list': 'Checking your pages',
+      'pages_share': 'Changing who can see a page',
+      'projects_create': 'Starting a project',
+      'projects_status': 'Checking a project',
+      'projects_update': 'Updating a project',
       'projects': 'Planning a project',
       'payments': 'Asking to make a payment',
       'voice_call': 'Calling a business',
@@ -1548,6 +1569,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'pages_publish': 'Published a page',
       'pages': 'Updated a page',
       'media': 'Made an image',
+      'media_video': 'Made a video',
+      'bots_create': 'Made a new bot',
+      'bots_update': 'Updated a bot',
+      'bots_list': 'Checked your bots',
+      'bots_archive': 'Archived a bot',
+      'channel_send': 'Sent a message',
+      'links_ask': 'Asked a contact\'s assistant',
+      'logins_list': 'Checked saved logins',
+      'replay_run': 'Repeated saved steps',
+      'replay_save': 'Saved these steps',
+      'setup_apply': 'Suggested a setup',
+      'sidebar_organize': 'Organized your sidebar',
+      'suggestions_add': 'Added a suggestion',
+      'teach_save_draft': 'Saved a draft skill',
+      'welcome_name': 'Picked a name',
+      'secrets_request': 'Asked you for a secret',
+      'pages_list': 'Checked your pages',
+      'pages_share': 'Changed who can see a page',
+      'projects_create': 'Started a project',
+      'projects_status': 'Checked a project',
+      'projects_update': 'Updated a project',
       'projects': 'Planned a project',
       'payments': 'Asked to make a payment',
       'voice_call': 'Called a business',
@@ -1576,6 +1618,29 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String toolNeedsOkTitle(String bot) {
     return '$bot needs your OK';
+  }
+
+  @override
+  String approvalAsking(String bot) {
+    return '$bot is asking first';
+  }
+
+  @override
+  String get approvalLookClosely => 'Look closely before you allow this';
+
+  @override
+  String approvalAllowedLine(String what) {
+    return 'Allowed: $what';
+  }
+
+  @override
+  String approvalDeclinedLine(String what) {
+    return 'Declined: $what';
+  }
+
+  @override
+  String approvalExpiredLine(String what) {
+    return 'No answer in time: $what';
   }
 
   @override
@@ -6885,6 +6950,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get activityImage => 'Making an image…';
+
+  @override
+  String get activityVideo => 'Making a video…';
 
   @override
   String get activityMemory => 'Checking what it knows…';

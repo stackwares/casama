@@ -10,8 +10,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import 'package:dio/dio.dart' show DioException, DioExceptionType;
+
 import '../../core/backend.dart';
+import '../../core/device_dictation.dart';
 import '../../core/display_text.dart';
+import '../../core/haptics.dart';
 import '../../core/local_cache.dart';
 import '../../core/media_cache.dart';
 import '../../core/providers.dart';
@@ -80,6 +84,10 @@ List<(String, String)> _suggestions(BuildContext context) {
 }
 
 class ChatScreen extends ConsumerStatefulWidget {
+  /// Pause before dictation's automatic second try. Tests set it to zero.
+  @visibleForTesting
+  static Duration dictationRetryDelay = const Duration(milliseconds: 700);
+
   const ChatScreen({super.key, required this.botId, this.conversationId, this.focusMessageId, this.group = false});
 
   /// A group chat (D-118): replies show which bot wrote them.
@@ -156,6 +164,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _showJump = ValueNotifier(false);
   var _recording = false;
   var _transcribing = false;
+  /// The device's own recognizer is listening (words are typed live), not the recorder.
+  DeviceDictation? _listening;
+  Dictation? _recorder;
   var _stickToBottom = true;
   var _opening = true;
   late String? _focusPending = widget.focusMessageId;
@@ -353,6 +364,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   void dispose() {
+    _listening?.cancel();
+    if (_recording) _recorder?.cancel();
     _saveDraft();
     _botUi.dispose();
     _mentions.dispose();
@@ -483,24 +496,83 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     await runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).edit(e.id, text));
   }
 
-  /// Dictation: tap to record, tap again to transcribe into the message box.
+  /// Dictation: tap to start, tap again to stop. The recording goes to the server (Whisper, which
+  /// copes with mixed languages); if that fails, the clip is tried once more, and after that the
+  /// mic uses the device's own recognizer for a while, typing words as the person speaks.
   Future<void> _toggleDictation() async {
     Analytics.feature('dictation');
-    final dictation = ref.read(dictationProvider);
-    if (!_recording) {
-      try {
-        final ok = await dictation.start();
-        if (!mounted) return;
-        if (!ok) {
-          showWarning(context, context.l10n.micPermissionNeeded);
-          return;
-        }
-        setState(() => _recording = true);
-      } catch (e) {
-        if (mounted) showError(context, e);
-      }
+    final device = _listening;
+    if (device != null) {
+      await device.stop(); // onEnd finishes up.
       return;
     }
+    if (_recording) return _stopRecording();
+    final route = ref.read(dictationRouteProvider);
+    final deviceDictation = ref.read(deviceDictationProvider);
+    if (route.preferDevice && deviceDictation.supported) {
+      if (await _startDevice(deviceDictation)) return;
+      // Denied or missing: the server it is, and say nothing; the recorder may still work.
+      route.useServer();
+      if (!mounted) return;
+    }
+    await _startRecording();
+  }
+
+  Future<void> _startRecording() async {
+    final dictation = ref.read(dictationProvider);
+    try {
+      final ok = await dictation.start();
+      if (!mounted) return;
+      if (!ok) {
+        showWarning(context, context.l10n.micPermissionNeeded);
+        return;
+      }
+      _recorder = dictation;
+      setState(() => _recording = true);
+    } catch (e) {
+      if (mounted) showError(context, e);
+    }
+  }
+
+  Future<bool> _startDevice(DeviceDictation device) async {
+    final before = _input.text.trimRight();
+    String join(String words) => before.isEmpty ? words : '$before $words';
+    var latest = '';
+    final started = await device.start(
+      onWords: (words) {
+        if (!mounted) return;
+        latest = words;
+        final next = join(words);
+        _input.value = TextEditingValue(text: next, selection: TextSelection.collapsed(offset: next.length));
+      },
+      onEnd: (end) {
+        if (!mounted) return;
+        setState(() {
+          _listening = null;
+          _recording = false;
+        });
+        switch (end) {
+          case DeviceDictationEnd.done:
+            HapticsHelper.success();
+            _applyInput(join(latest));
+          case DeviceDictationEnd.nothingHeard:
+            showWarning(context, context.l10n.dictationEmpty);
+          case DeviceDictationEnd.failed:
+            ref.read(dictationRouteProvider).useServer();
+            showFailure(context, context.l10n.dictationDeviceFailed);
+        }
+      },
+    );
+    if (!started || !mounted) return false;
+    setState(() {
+      _listening = device;
+      _recording = true;
+    });
+    return true;
+  }
+
+  Future<void> _stopRecording() async {
+    final Dictation dictation = _recorder ?? ref.read(dictationProvider);
     setState(() {
       _recording = false;
       _transcribing = true;
@@ -512,14 +584,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         showWarning(context, context.l10n.dictationEmpty);
         return;
       }
-      final text = await runGuarded(context, () => ref.read(backendProvider).transcribe(widget.botId, clip.$1, clip.$2));
-      if (!mounted || text == null) return;
-      final spoken = text.trim();
-      if (spoken.isEmpty) {
-        showWarning(context, context.l10n.dictationEmpty);
-        return;
-      }
-      _typeDictation(spoken);
+      await _transcribe(clip);
     } catch (e) {
       if (mounted) showError(context, e);
     } finally {
@@ -527,13 +592,119 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  /// Sends [clip] to the server, once more on a failure that might pass, then falls back.
+  Future<void> _transcribe((Uint8List, String) clip, {bool retried = false}) async {
+    try {
+      final text = await ref.read(backendProvider).transcribe(widget.botId, clip.$1, clip.$2);
+      if (!mounted) return;
+      final spoken = text.trim();
+      if (spoken.isEmpty) {
+        showWarning(context, context.l10n.dictationEmpty);
+        return;
+      }
+      _typeDictation(spoken);
+    } catch (e) {
+      if (!mounted) return;
+      final status = e is DioException ? e.response?.statusCode : null;
+      final paywall = onPaymentRequired;
+      if (status == 402 && paywall != null) {
+        await paywall(context, errorText(context, e));
+        return;
+      }
+      final code = problemOf(e)?.code;
+      final device = ref.read(deviceDictationProvider);
+      final route = ref.read(dictationRouteProvider);
+      if (code == 'dictation_unavailable') {
+        // No service (or a key that was refused): nothing to retry. The device, if it can.
+        if (device.supported) {
+          route.useDevice(forSession: true);
+          _offerDevice(context.l10n.dictationNoServiceUseDevice);
+        } else {
+          showError(context, e);
+        }
+        return;
+      }
+      if (!_mightPass(e, status, code)) {
+        showError(context, e);
+        return;
+      }
+      if (!retried) {
+        await Future<void>.delayed(ChatScreen.dictationRetryDelay);
+        if (mounted) await _transcribe(clip, retried: true);
+        return;
+      }
+      if (device.supported) {
+        route.useDevice();
+        _offerDevice(context.l10n.dictationFailedUseDevice);
+        return;
+      }
+      HapticsHelper.error();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.dictationFailed),
+          duration: const Duration(seconds: 8),
+          action: SnackBarAction(label: context.l10n.dictationRetry, onPressed: () => _retryTranscribe(clip)),
+        ),
+      );
+    }
+  }
+
+  /// Says why the server's dictation didn't work, with a button that starts the device listening
+  /// right away. The snackbar floats over the composer, so "tap the mic" would mean reaching under it.
+  void _offerDevice(String message) {
+    HapticsHelper.warning();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 8),
+        action: SnackBarAction(label: context.l10n.dictationSayAgain, onPressed: _listenOnDevice),
+      ),
+    );
+  }
+
+  Future<void> _listenOnDevice() async {
+    if (!mounted || _recording || _transcribing) return;
+    if (await _startDevice(ref.read(deviceDictationProvider)) || !mounted) return;
+    // Speech permission denied, or no recognizer after all: the mic goes back to the server.
+    ref.read(dictationRouteProvider).useServer();
+    showWarning(context, context.l10n.dictationDevicePermission);
+  }
+
+  Future<void> _retryTranscribe((Uint8List, String) clip) async {
+    if (!mounted || _transcribing) return;
+    setState(() => _transcribing = true);
+    try {
+      await _transcribe(clip, retried: true);
+    } finally {
+      if (mounted) setState(() => _transcribing = false);
+    }
+  }
+
+  /// A failure another try (or the device) could get past: the service choked on the clip, the
+  /// server had a moment, or the connection dropped. Not a plan limit or a bad request.
+  bool _mightPass(Object e, int? status, String? code) {
+    if (code == 'transcription_failed') return true;
+    if (e is! DioException) return false;
+    if (status == null) {
+      return const {
+        DioExceptionType.connectionError,
+        DioExceptionType.connectionTimeout,
+        DioExceptionType.sendTimeout,
+        DioExceptionType.receiveTimeout,
+        DioExceptionType.unknown,
+      }.contains(e.type);
+    }
+    return status >= 500 || status == 429 || status == 408;
+  }
+
   /// Puts [spoken] in the message box. iOS and Android's keyboard writes the previous value back
   /// over a programmatic edit, so the transcript is applied again after that echo.
-  void _typeDictation(String spoken) {
-    final next = _input.text.isEmpty ? spoken : '${_input.text} $spoken';
+  void _typeDictation(String spoken) => _applyInput(_input.text.isEmpty ? spoken : '${_input.text} $spoken');
+
+  void _applyInput(String next) {
     final value = TextEditingValue(text: next, selection: TextSelection.collapsed(offset: next.length));
     void apply() {
-      if (!mounted || _input.text.contains(spoken)) return;
+      if (!mounted || _input.text.contains(next)) return;
       _input.value = value;
     }
 
@@ -811,6 +982,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           onStop: () => runGuarded(context, controller.cancel),
                           recording: _recording,
                           transcribing: _transcribing,
+                          onDevice: _listening != null || ref.read(dictationRouteProvider).preferDevice,
                           onDictate: _toggleDictation,
                           attachButton: _AttachButton(onFiles: _pickFiles, onPhotos: _pickPhotos, onCamera: _takePhoto),
                           hasAttachments: _pending.any((p) => !p.failed),
@@ -978,7 +1150,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           );
           // Files the reply links to (a report, a chart) show under it: images inline, others as cards.
-          final shared = m.streaming ? const <AttachmentRef>[] : (_sharedFiles[m] ??= sharedFilesIn(m.text));
+          final shared = m.streaming ? const <AttachmentRef>[] : (_sharedFiles[m] ??= sharedFilesIn(m.text, alreadyShown: m.attachments));
           if (shared.isNotEmpty) rows.add(_Row(ValueKey('files-${m.id}'), AppSpace.xs, () => SharedFiles(files: shared), inputs: shared));
         case ToolEntry():
           final group = <ToolEntry>[e];

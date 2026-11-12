@@ -171,7 +171,12 @@ class BotsNotifier extends AsyncNotifier<List<Bot>> {
   @override
   Future<List<Bot>> build() async {
     final org = ref.watch(currentOrgProvider);
-    if (org == null) return const [];
+    if (org == null) {
+      // Workspaces still loading (right after sign-in): stay loading instead of answering "no
+      // bots", so the list shows its skeleton rather than flashing the "No bots yet" screen.
+      await ref.watch(organizationsProvider.future);
+      return const [];
+    }
     final backend = ref.watch(backendProvider);
     final cache = ref.watch(localCacheProvider);
     final key = 'bots:${org.id}';

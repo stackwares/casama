@@ -16,7 +16,6 @@ import '../../../core/backend.dart';
 import '../../../theme/app_tokens.dart';
 import '../../files/file_preview.dart';
 import '../../settings/totp_scan.dart';
-import '../../../ui/app_card.dart';
 import '../../../ui/tool_words.dart';
 import '../../../ui/bot_avatar.dart';
 import '../../../ui/motion.dart';
@@ -24,6 +23,7 @@ import '../chat_controller.dart';
 import '../media/attachment_view.dart';
 import 'chat_markdown.dart';
 import 'message_actions.dart';
+import 'shared_files.dart';
 import '../../../ui/glow_button.dart';
 import '../../devices/device_labels.dart';
 import '../../../ui/effects.dart';
@@ -266,6 +266,8 @@ class _ThinkingWiggleState extends State<_ThinkingWiggle> with SingleTickerProvi
 
 /// The bot's reply in a bubble that reads on any wallpaper. Copy, read aloud, select and share
 /// live in the message menu (long-press, or right-click with a mouse).
+final _shownText = Expando<String>();
+
 class AssistantMessage extends StatelessWidget {
   const AssistantMessage({
     super.key,
@@ -324,7 +326,8 @@ class AssistantMessage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            ChatMarkdown(data: entry.text, selectable: false),
+            // Once finished, file links that show as cards under the reply leave the text.
+            ChatMarkdown(data: entry.streaming ? entry.text : (_shownText[entry] ??= textWithoutSharedLinks(entry.text, alreadyShown: entry.attachments)), selectable: false),
             // Its own layer: the dots animate every frame without repainting the reply's text.
             if (entry.streaming) ...[
               const SizedBox(height: AppSpace.xs),
@@ -508,7 +511,9 @@ String toolActivity(AppLocalizations l10n, String tool) {
   }
   if (tool.startsWith('browser')) return l10n.activityBrowsing;
   if (tool.startsWith('files')) return l10n.activityFiles;
-  if (tool.startsWith('media')) return l10n.activityImage;
+  if (tool.startsWith('media')) {
+    return tool.contains('video') ? l10n.activityVideo : l10n.activityImage;
+  }
   if (tool.startsWith('memory') || tool.startsWith('knowledge')) {
     return l10n.activityMemory;
   }
@@ -1192,64 +1197,101 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
     final e = widget.entry;
     final decision = e.decision ?? _localDecision;
     final high = e.risk == 'high';
-    final accent = high ? colors.negative : colors.warning;
     final words = toolWords(l10n, e.tool, e.args);
-    // Everyday words up front. The command stays on the card, because this is the moment
-    // someone decides; everything else technical stays behind Details.
+    // Once decided, the card folds into one quiet line: what it was and what you said.
+    if (decision != null) {
+      final (color, icon, line) = switch (decision) {
+        'approved' => (
+          colors.positive,
+          LucideIcons.circleCheck,
+          l10n.approvalAllowedLine(words.doing),
+        ),
+        'denied' => (
+          colors.negative,
+          LucideIcons.circleX,
+          l10n.approvalDeclinedLine(words.doing),
+        ),
+        _ => (
+          context.colorScheme.onSurfaceVariant,
+          LucideIcons.clock,
+          l10n.approvalExpiredLine(words.doing),
+        ),
+      };
+      return Padding(
+        key: const Key('chatApproval'),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: _Outcome(text: line, color: color, icon: icon),
+      );
+    }
+    // Everyday words: what the bot wants to do, and what it's about. The command stays on the
+    // card, because this is the moment someone decides; the raw request stays behind Details.
     final focus = words.detail ?? toolApprovalFocus(e.args);
+    final muted = context.colorScheme.onSurfaceVariant;
     return _ActionCard(
       key: const Key('chatApproval'),
-      accent: accent,
-      icon: high ? LucideIcons.shieldAlert : LucideIcons.shieldCheck,
-      title: l10n.toolNeedsOkTitle(widget.botName),
-      badge: StatusLabel(
-        text: high
-            ? l10n.riskHigh
-            : (e.risk == 'low' ? l10n.riskLow : l10n.riskMedium),
-        color: accent,
-        pill: true,
-      ),
-      subtitle: focus == null ? words.doing : '${words.doing}: $focus',
-      // The exact request, for anyone who wants to check it.
-      body: _TechnicalDetails(tool: e.tool, args: e.args),
-      footer: decision != null
-          ? _Outcome(
-              text: switch (decision) {
-                'approved' => l10n.approved,
-                'denied' => l10n.denied,
-                _ => l10n.expired,
-              },
-              color: decision == 'approved'
-                  ? colors.positive
-                  : (decision == 'denied'
-                        ? colors.negative
-                        : context.colorScheme.onSurfaceVariant),
-              icon: decision == 'approved'
-                  ? LucideIcons.circleCheck
-                  : (decision == 'denied'
-                        ? LucideIcons.circleX
-                        : LucideIcons.clock),
-            )
-          : Wrap(
-              alignment: WrapAlignment.end,
-              spacing: AppSpace.xs,
-              runSpacing: AppSpace.xs,
-              children: [
-                TextButton(
-                  onPressed: _busy ? null : () => _decide(true, always: true),
-                  child: Text(l10n.alwaysAllow),
-                ),
-                OutlinedButton(
-                  onPressed: _busy ? null : () => _decide(false),
-                  child: Text(l10n.deny),
-                ),
-                GlowButton(
-                  key: const Key('chatApprove'),
-                  onPressed: _busy ? null : () => _decide(true),
-                  child: Text(l10n.approve),
-                ),
-              ],
+      accent: high ? colors.negative : context.colorScheme.primary,
+      icon: words.icon,
+      title: words.doing,
+      subtitle: l10n.approvalAsking(widget.botName),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (focus != null)
+            Text(
+              focus,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: context.textTheme.bodyMedium?.copyWith(height: 1.4),
             ),
+          if (high)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpace.xs),
+              child: Row(
+                children: [
+                  Icon(
+                    LucideIcons.triangleAlert,
+                    size: 15,
+                    color: colors.negative,
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      l10n.approvalLookClosely,
+                      style: context.textTheme.labelMedium?.copyWith(
+                        color: colors.negative,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          _TechnicalDetails(tool: e.tool, args: e.args),
+        ],
+      ),
+      footer: Wrap(
+        alignment: WrapAlignment.end,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: AppSpace.xs,
+        runSpacing: AppSpace.xs,
+        children: [
+          TextButton(
+            onPressed: _busy ? null : () => _decide(true, always: true),
+            style: TextButton.styleFrom(foregroundColor: muted),
+            child: Text(l10n.alwaysAllow),
+          ),
+          OutlinedButton(
+            key: const Key('chatDeny'),
+            onPressed: _busy ? null : () => _decide(false),
+            child: Text(l10n.notNow),
+          ),
+          GlowButton(
+            key: const Key('chatApprove'),
+            onPressed: _busy ? null : () => _decide(true),
+            child: Text(l10n.allow),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1584,13 +1626,11 @@ class _ActionCard extends StatelessWidget {
     required this.body,
     required this.footer,
     this.subtitle,
-    this.badge,
   });
   final Color accent;
   final IconData icon;
   final String title;
   final String? subtitle;
-  final Widget? badge;
   final Widget body;
   final Widget footer;
 
@@ -1635,7 +1675,7 @@ class _ActionCard extends StatelessWidget {
                         height: 1.3,
                       ),
                     ),
-                    if (subtitle != null || badge != null)
+                    if (subtitle != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Wrap(
@@ -1643,7 +1683,6 @@ class _ActionCard extends StatelessWidget {
                           runSpacing: 4,
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
-                            ?badge,
                             if (subtitle != null)
                               Text(
                                 subtitle!,

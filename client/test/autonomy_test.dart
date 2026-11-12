@@ -631,8 +631,11 @@ void main() {
         }),
       );
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('Ada needs your OK'), findsOneWidget);
+    expect(find.text('Ada is asking first'), findsOneWidget);
     expect(find.textContaining('rm -rf /data/old'), findsOneWidget);
+    // Only a high-risk request gets the warning; no risk labels.
+    expect(find.text('Look closely before you allow this'), findsOneWidget);
+    expect(find.text('High risk'), findsNothing);
     expect(find.textContaining('shell.exec'), findsNothing);
     await tester.tap(find.byKey(const Key('chatApprove')));
     await tester.pump(const Duration(milliseconds: 100));
@@ -645,7 +648,9 @@ void main() {
       }),
     );
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('Approved'), findsWidgets);
+    // Decided: the card folds into one line.
+    expect(find.textContaining('Allowed: '), findsOneWidget);
+    expect(find.byKey(const Key('chatApprove')), findsNothing);
   });
 
   testWidgets(

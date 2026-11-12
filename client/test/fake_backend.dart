@@ -3775,10 +3775,13 @@ class FakeBackend implements Backend {
   int? savedSeconds;
   Map<String, Object?>? botVoice;
 
+  /// Thrown by the next calls to [transcribe], one per call, before it answers normally.
+  final transcribeErrors = <Object>[];
 
   @override
   Future<String> transcribe(String botId, Uint8List audio, String mime) async {
     transcribed.add(mime);
+    if (transcribeErrors.isNotEmpty) throw transcribeErrors.removeAt(0);
     return transcript;
   }
 

@@ -89,6 +89,27 @@ const _known = {
   'pages_publish',
   'pages',
   'media',
+  'media_video',
+  'bots_create',
+  'bots_update',
+  'bots_list',
+  'bots_archive',
+  'channel_send',
+  'links_ask',
+  'logins_list',
+  'replay_run',
+  'replay_save',
+  'setup_apply',
+  'sidebar_organize',
+  'suggestions_add',
+  'teach_save_draft',
+  'welcome_name',
+  'secrets_request',
+  'pages_list',
+  'pages_share',
+  'projects_create',
+  'projects_status',
+  'projects_update',
   'projects', //
   'payments',
   'voice_call',
@@ -105,6 +126,7 @@ String? toolWordsId(String tool) {
   if (_known.contains(flat)) return flat;
   if (t == 'browser.fill') return 'browser_type';
   if (t.startsWith('browser.')) return 'browser_look';
+  if (t == 'desktop.files.search') return 'files_search';
   if (t.startsWith('desktop.')) return 'desktop_look';
   if (t.startsWith('computer.request_takeover')) return 'takeover';
   if (t.startsWith('computer.')) return 'desktop_look';
@@ -116,6 +138,7 @@ String? toolWordsId(String tool) {
   if (t.startsWith('web')) return 'web';
   if (t.startsWith('tasks') || t.startsWith('tickets')) return 'tasks';
   if (t.startsWith('pages')) return 'pages';
+  if (t.startsWith('media.video')) return 'media_video';
   if (t.startsWith('media')) return 'media';
   if (t.startsWith('projects')) return 'projects';
   if (t.startsWith('payments')) return 'payments';
@@ -153,6 +176,22 @@ String? toolWordsId(String tool) {
   'files_list' || 'files_search' => (LucideIcons.folderSearch, ToolTone.files),
   'pages_publish' || 'pages' => (LucideIcons.panelsTopLeft, ToolTone.files),
   'media' => (LucideIcons.sparkles, ToolTone.files),
+  'media_video' => (LucideIcons.film, ToolTone.files),
+  'pages_list' || 'pages_share' => (LucideIcons.panelsTopLeft, ToolTone.files),
+  'bots_create' ||
+  'bots_update' ||
+  'bots_list' ||
+  'bots_archive' => (LucideIcons.bot, ToolTone.people),
+  'channel_send' => (LucideIcons.send, ToolTone.people),
+  'links_ask' => (LucideIcons.handshake, ToolTone.people),
+  'logins_list' => (LucideIcons.keyRound, ToolTone.data),
+  'secrets_request' => (LucideIcons.lockKeyhole, ToolTone.data),
+  'replay_run' || 'replay_save' => (LucideIcons.repeat, ToolTone.computer),
+  'teach_save_draft' => (LucideIcons.graduationCap, ToolTone.mind),
+  'setup_apply' => (LucideIcons.slidersHorizontal, ToolTone.other),
+  'sidebar_organize' => (LucideIcons.folderTree, ToolTone.other),
+  'suggestions_add' => (LucideIcons.lightbulb, ToolTone.other),
+  'welcome_name' => (LucideIcons.sparkles, ToolTone.other),
   'http' => (LucideIcons.cable, ToolTone.apps),
   'data_search' || 'data_call' => (LucideIcons.database, ToolTone.data),
   'usage_report' => (LucideIcons.chartColumn, ToolTone.data),
@@ -168,7 +207,10 @@ String? toolWordsId(String tool) {
   'tasks_list' ||
   'tasks_create' ||
   'tasks' ||
-  'projects' => (LucideIcons.listChecks, ToolTone.schedule),
+  'projects' ||
+  'projects_create' ||
+  'projects_status' ||
+  'projects_update' => (LucideIcons.listChecks, ToolTone.schedule),
   'notify_user' => (LucideIcons.bellRing, ToolTone.people),
   'delegate' => (LucideIcons.users, ToolTone.people),
   'voice_call' || 'voice_call_user' => (LucideIcons.phone, ToolTone.people),
@@ -180,9 +222,43 @@ String? toolWordsId(String tool) {
 
 String _human(String s) => s.replaceAll(RegExp(r'[_-]+'), ' ').trim();
 
+/// An app's name as a name: "gmail" reads "Gmail", Composio's "googlecalendar" "Google Calendar".
+String _appName(String s) =>
+    _appNames[s.toLowerCase().replaceAll(' ', '')] ??
+    (s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}');
+
+const _appNames = {
+  'googlecalendar': 'Google Calendar',
+  'googledrive': 'Google Drive',
+  'googlesheets': 'Google Sheets',
+  'googledocs': 'Google Docs',
+  'googlemeet': 'Google Meet',
+  'googlesuper': 'Google',
+  'googletasks': 'Google Tasks',
+  'googlephotos': 'Google Photos',
+  'github': 'GitHub',
+  'gitlab': 'GitLab',
+  'linkedin': 'LinkedIn',
+  'hubspot': 'HubSpot',
+  'youtube': 'YouTube',
+  'whatsapp': 'WhatsApp',
+  'clickup': 'ClickUp',
+  'outlook': 'Outlook',
+  'microsoftteams': 'Microsoft Teams',
+  'onedrive': 'OneDrive',
+  'sharepoint': 'SharePoint',
+  'quickbooks': 'QuickBooks',
+};
+
 /// "github" and "create issue" from `mcp.github.create_issue` (or `github.create_issue`).
 (String, String) _appTool(String tool) {
   final parts = tool.replaceAll('__', '.').split('.');
+  // Composio's tools are composio.apps.<toolkit>_<action>: the app is the toolkit.
+  if (parts.length >= 3 && parts[0] == 'composio') {
+    final slug = parts.sublist(2).join('_');
+    final cut = slug.indexOf('_');
+    if (cut > 0) return (_human(slug.substring(0, cut)), _human(slug.substring(cut + 1)));
+  }
   if (parts.length >= 3) {
     return (_human(parts[1]), _human(parts.sublist(2).join(' ')));
   }
@@ -284,7 +360,8 @@ ToolWords toolWords(
   final id = toolWordsId(tool);
   final (icon, tone) = _look(id);
   if (id == null) {
-    final (app, action) = _appTool(tool);
+    final (rawApp, action) = _appTool(tool);
+    final app = _appName(rawApp);
     return ToolWords(
       icon: icon,
       tone: tone,

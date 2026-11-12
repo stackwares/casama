@@ -27,6 +27,7 @@ class ChatComposer extends StatelessWidget {
     required this.recording,
     required this.transcribing,
     required this.onDictate,
+    this.onDevice = false,
     this.attachButton,
     this.attachments,
     this.hasAttachments = false,
@@ -50,6 +51,9 @@ class ChatComposer extends StatelessWidget {
   final bool recording;
   final bool transcribing;
   final VoidCallback onDictate;
+
+  /// The mic uses the device's own recognizer (the server's dictation failed or isn't set up).
+  final bool onDevice;
 
   /// The "+" button that adds files and photos.
   final Widget? attachButton;
@@ -154,7 +158,7 @@ class ChatComposer extends StatelessWidget {
                     ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 7, 2, 7),
-                      child: _DictateButton(recording: recording, transcribing: transcribing, onPressed: onDictate),
+                      child: _DictateButton(recording: recording, transcribing: transcribing, onDevice: onDevice, onPressed: onDictate),
                     ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 7, 7, 7),
@@ -196,8 +200,9 @@ class ChatComposer extends StatelessWidget {
 }
 
 class _DictateButton extends StatelessWidget {
-  const _DictateButton({required this.recording, required this.transcribing, required this.onPressed});
+  const _DictateButton({required this.recording, required this.transcribing, required this.onDevice, required this.onPressed});
   final bool recording;
+  final bool onDevice;
   final bool transcribing;
   final VoidCallback onPressed;
 
@@ -216,7 +221,9 @@ class _DictateButton extends StatelessWidget {
     if (recording) icon = Pulse(from: 0.9, to: 1.1, duration: const Duration(milliseconds: 600), child: icon);
     return IconButton(
       key: const Key('dictateButton'),
-      tooltip: recording ? l10n.stopDictation : l10n.dictate,
+      tooltip: recording
+          ? (onDevice ? l10n.stopListening : l10n.stopDictation)
+          : (onDevice ? l10n.dictateOnDevice : l10n.dictate),
       onPressed: transcribing ? null : onPressed,
       icon: icon,
       style: IconButton.styleFrom(

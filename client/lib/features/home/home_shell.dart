@@ -863,7 +863,10 @@ class _SelectBotPlaceholder extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final hasBots = (ref.watch(botsProvider).value ?? const []).isNotEmpty;
+    final bots = ref.watch(botsProvider);
+    // Still loading: a spinner, not "No bots yet" with a New bot button.
+    if (!bots.hasValue && !bots.hasError) return const Center(child: CircularProgressIndicator());
+    final hasBots = (bots.value ?? const []).isNotEmpty;
     return EmptyState(
       icon: LucideIcons.messagesSquare,
       illustration: hasBots ? null : const BlankBotImage(size: 132),

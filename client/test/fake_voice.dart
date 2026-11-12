@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:casama_app/core/call_audio.dart';
+import 'package:casama_app/core/device_dictation.dart';
 import 'package:casama_app/core/voice.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 
@@ -18,6 +19,37 @@ class FakeDictation implements Dictation {
   Future<(Uint8List, String)?> stop() async => clip;
   @override
   Future<void> cancel() async {}
+}
+
+class FakeDeviceDictation implements DeviceDictation {
+  FakeDeviceDictation({this.supported = true, this.starts = true});
+  @override
+  final bool supported;
+  final bool starts;
+  var started = 0;
+  void Function(String words)? onWords;
+  void Function(DeviceDictationEnd end)? onEnd;
+
+  @override
+  Future<bool> start({required void Function(String words) onWords, required void Function(DeviceDictationEnd end) onEnd}) async {
+    started++;
+    if (!starts) return false;
+    this.onWords = onWords;
+    this.onEnd = onEnd;
+    return true;
+  }
+
+  /// The recognizer stops by itself or after [stop].
+  void end(DeviceDictationEnd how) {
+    final cb = onEnd;
+    onEnd = null;
+    cb?.call(how);
+  }
+
+  @override
+  Future<void> stop() async => end(DeviceDictationEnd.done);
+  @override
+  Future<void> cancel() async => onEnd = null;
 }
 
 class FakePlayer implements SpeechPlayer {

@@ -34,6 +34,7 @@ dependencies:
   flutter_webrtc: ^1.6.3
   posthog_flutter: ^5.60.0
   record: ^7.1.2
+  speech_to_text: ^7.5.0
   just_audio: ^0.10.6
   http: ^1.6.0
   flutter_secure_storage: ^11.2.0

@@ -16,8 +16,9 @@ import '../../../theme/app_tokens.dart';
 import '../../files/file_preview.dart';
 import 'media_kind.dart';
 
-/// A video in a chat. A still card (dark tile, play button, length) until it's tapped; then it
-/// plays right there with play/pause, a scrubber, mute and full screen. Never plays by itself.
+/// A video in a chat. A still card (its first frame, a play button, the length) until it's tapped;
+/// then it plays right there with play/pause, a scrubber, mute and full screen. Never plays by
+/// itself. Videos kept with the chat load their first frame up front; others show a dark tile.
 /// Where the official player has no implementation (Windows, Linux) the card opens the system's
 /// player instead.
 class ChatVideo extends ConsumerStatefulWidget {
@@ -40,13 +41,51 @@ class ChatVideo extends ConsumerStatefulWidget {
 
 class _ChatVideoState extends ConsumerState<ChatVideo> {
   VideoPlayerController? _controller;
+
+  /// Loaded but not started: its first frame is the poster, and play starts it.
+  VideoPlayerController? _ready;
   var _loading = false;
 
   AttachmentRef get _a => widget.attachment;
 
   @override
+  void initState() {
+    super.initState();
+    // Streams from the API with range requests, so this reads little more than the first frame.
+    // Not on the web, where the player can't send the sign-in header.
+    if (_a.mediaId != null &&
+        mediaPluginsAvailable &&
+        inlineVideoSupported &&
+        !kIsWeb) {
+      unawaited(_preload());
+    }
+  }
+
+  Future<void> _preload() async {
+    final backend = ref.read(backendProvider);
+    final c = VideoPlayerController.networkUrl(
+      Uri.parse(backend.chatMediaUrl(_a.mediaId!)),
+      httpHeaders: backend.authHeaders,
+    );
+    try {
+      await c.initialize();
+      // Shows the first frame (iOS draws nothing until a seek).
+      await c.seekTo(Duration.zero);
+    } catch (_) {
+      await c.dispose();
+      return;
+    }
+    if (!mounted || _controller != null) {
+      await c.dispose();
+      return;
+    }
+    setState(() => _ready = c);
+  }
+
+  @override
   void dispose() {
     _controller?.dispose();
+    if (!identical(_ready, _controller)) _ready?.dispose();
     super.dispose();
   }
 
@@ -74,6 +113,11 @@ class _ChatVideoState extends ConsumerState<ChatVideo> {
     if (!inlineVideoSupported) {
       final bytes = await _bytes();
       if (mounted) await openFileBytes(context, _a.name, bytes);
+      return;
+    }
+    if (_ready case final ready?) {
+      setState(() => _controller = ready);
+      await ready.play();
       return;
     }
     setState(() => _loading = true);
@@ -110,8 +154,9 @@ class _ChatVideoState extends ConsumerState<ChatVideo> {
   @override
   Widget build(BuildContext context) {
     final c = _controller;
-    final aspect = c != null && c.value.isInitialized
-        ? c.value.aspectRatio
+    final shape = c ?? _ready;
+    final aspect = shape != null && shape.value.isInitialized
+        ? shape.value.aspectRatio
         : (_a.width != null && _a.height != null && _a.height! > 0
               ? _a.width! / _a.height!
               : 16 / 9);
@@ -134,6 +179,7 @@ class _ChatVideoState extends ConsumerState<ChatVideo> {
                 ? _Poster(
                     key: attachmentKey(_a.path),
                     attachment: _a,
+                    frame: _ready,
                     loading: _loading,
                     systemPlayer: !inlineVideoSupported,
                     onPlay: () => runGuarded(context, _play),
@@ -153,11 +199,15 @@ class _Poster extends StatelessWidget {
   const _Poster({
     super.key,
     required this.attachment,
+    this.frame,
     required this.loading,
     required this.systemPlayer,
     required this.onPlay,
   });
   final AttachmentRef attachment;
+
+  /// A loaded player whose first frame fills the card.
+  final VideoPlayerController? frame;
   final bool loading;
   final bool systemPlayer;
   final VoidCallback onPlay;
@@ -186,6 +236,21 @@ class _Poster extends StatelessWidget {
           ),
           child: Stack(
             children: [
+              if (frame case final f?) ...[
+                Positioned.fill(child: VideoPlayer(f)),
+                // Keeps the label at the bottom readable on any frame.
+                const Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.center,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, Color(0x99000000)],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
               Center(
                 child: Container(
                   width: 56,
