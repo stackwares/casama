@@ -1802,6 +1802,33 @@ class SupabaseBackend implements Backend {
         }
       });
 
+  @override
+  Stream<void> watchBotsChanged(String orgId) {
+    sb.RealtimeChannel? channel;
+    late final StreamController<void> out;
+    out = StreamController<void>(
+      onListen: () {
+        var joined = false;
+        channel = supabase
+            .channel('org:$orgId', opts: const sb.RealtimeChannelConfig(private: true))
+            .onBroadcast(event: 'bots_changed', callback: (_) => out.add(null))
+            .subscribe((status, _) {
+              if (status != sb.RealtimeSubscribeStatus.subscribed) return;
+              // Joined again after a dropped connection: something may have changed meanwhile.
+              // The first join needs nothing; the list was just loaded.
+              if (joined) out.add(null);
+              joined = true;
+            });
+      },
+      onCancel: () async {
+        final c = channel;
+        channel = null;
+        if (c != null) await supabase.removeChannel(c);
+      },
+    );
+    return out.stream;
+  }
+
   // One subscription to the person's private topic, shared by every event kind on it
   // (notifications, device requests): a second join of the same topic would replace the first.
   final _userTopic = <String, StreamController<Map>>{};

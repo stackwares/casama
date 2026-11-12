@@ -167,6 +167,10 @@ final currentOrgProvider = Provider<OrganizationWithRole?>((ref) {
 /// Bots, shown from the offline cache first and refreshed in the background (D-112).
 class BotsNotifier extends AsyncNotifier<List<Bot>> {
   var _generation = 0;
+  Timer? _soon;
+
+  /// How long a burst of changes (a reorder touches every bot) waits before one refetch.
+  static const changeSettle = Duration(milliseconds: 400);
 
   @override
   Future<List<Bot>> build() async {
@@ -181,6 +185,16 @@ class BotsNotifier extends AsyncNotifier<List<Bot>> {
     final cache = ref.watch(localCacheProvider);
     final key = 'bots:${org.id}';
     final gen = ++_generation;
+    // Live across devices (D-225): another device's change refetches the list in place, once per
+    // burst, without reloading the provider (no skeleton, no new subscription).
+    final changes = backend.watchBotsChanged(org.id).listen((_) {
+      _soon?.cancel();
+      _soon = Timer(changeSettle, () => unawaited(_refetch(org.id, key)));
+    });
+    ref.onDispose(() {
+      changes.cancel();
+      _soon?.cancel();
+    });
     final fresh = backend.bots(org.id).then((v) {
       unawaited(cacheWrite(cache, key, [for (final b in v) b.toJson()]));
       return v;
@@ -201,6 +215,20 @@ class BotsNotifier extends AsyncNotifier<List<Bot>> {
       } catch (_) {}
     }
     return fresh;
+  }
+
+  Future<void> _refetch(String orgId, String key) async {
+    final gen = _generation;
+    try {
+      final v = await ref.read(backendProvider).bots(orgId);
+      if (!ref.mounted || gen != _generation) return;
+      state = AsyncData(v);
+      unawaited(cacheWrite(ref.read(localCacheProvider), key, [for (final b in v) b.toJson()]));
+      // Archiving moves a bot between the two lists.
+      ref.invalidate(archivedBotsProvider);
+    } catch (_) {
+      // Offline: the next change or reconnect tries again.
+    }
   }
 }
 

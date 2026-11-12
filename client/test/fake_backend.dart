@@ -2834,6 +2834,15 @@ class FakeBackend implements Backend {
   @override
   Stream<NotificationView> watchNotifications() =>
       notificationsController.stream;
+
+  /// Another device changed the workspace's bots (D-225).
+  final botsChangedController = StreamController<void>.broadcast();
+  var botsChangedListeners = 0;
+  @override
+  Stream<void> watchBotsChanged(String orgId) {
+    botsChangedListeners++;
+    return botsChangedController.stream;
+  }
   @override
   Future<void> registerDevice(String platform, String token) async =>
       devices.add('$platform:$token');

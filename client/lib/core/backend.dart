@@ -896,6 +896,11 @@ abstract class Backend {
 
   /// New notifications for the signed-in user, live.
   Stream<NotificationView> watchNotifications();
+
+  /// One event each time the workspace's bots change on any device (added, renamed, archived,
+  /// moved, deleted, a status change), and after Realtime reconnects (D-225). No details: the
+  /// listener refetches its list.
+  Stream<void> watchBotsChanged(String orgId);
   Future<void> registerDevice(String platform, String token);
 
   // Routines
