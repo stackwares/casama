@@ -41,7 +41,7 @@ import { collectExec, type SandboxHandle } from "@casama/sandbox";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { loadPerson, type PersonContext, savePersonFact } from "./about-you.ts";
-import { replyToChannel } from "./channels/service.ts";
+import { postApprovalToChannel, replyToChannel } from "./channels/service.ts";
 import { auditComputer, type ComputerService, RunningLimitError } from "./computers.ts";
 import {
   buildContext,
@@ -3387,6 +3387,16 @@ async function approvalGate(
         deps.logger?.warn("approval notification failed", { error: (err as Error).message }),
       );
   }
+  // From a chat app with buttons (Slack): the approval goes into the thread too (D-277).
+  if (info.conversationId)
+    await postApprovalToChannel(
+      deps.db,
+      info.conversationId,
+      { id: approval.id, summary: summary.slice(0, 2000) },
+      deps.fetch ?? fetch,
+    ).catch((err) =>
+      deps.logger?.warn("approval to chat app failed", { error: (err as Error).message }),
+    );
   return { approvalId: approval.id };
 }
 

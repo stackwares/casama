@@ -426,3 +426,65 @@ export async function purgeSeenInbound(db: Database) {
     select count(*)::int as n from d`);
   return rows[0]?.n ?? 0;
 }
+
+/**
+ * Posts an approval request into the chat-app thread the run came from, when that app has buttons
+ * (Slack; D-277), so the person can approve without opening Casama. Best effort.
+ */
+export async function postApprovalToChannel(
+  db: Database,
+  conversationId: string,
+  approval: { id: string; summary: string },
+  f: typeof fetch,
+) {
+  const [t] = await db.execute<{ channel_id: string; reply: Record<string, unknown> }>(sql`
+    select channel_id, reply from public.channel_threads where conversation_id = ${conversationId}::uuid limit 1`);
+  if (!t) return false;
+  const c = await loadChannel(db, t.channel_id);
+  const adapter = c ? ADAPTERS[c.kind] : undefined;
+  if (!c?.enabled || !adapter?.sendApproval) return false;
+  await adapter.sendApproval(c.config, c.secrets, t.reply, approval, f);
+  return true;
+}
+
+/**
+ * A button press on an approval posted into a chat app (D-277). Accepted only from someone on the
+ * channel's allowed list, for an approval of this channel's bot in a thread of this channel.
+ * Decided as the person who connected the chat app. Returns the run to wake, or why it wasn't.
+ */
+export async function decideFromChannel(
+  db: Database,
+  c: ChannelRow,
+  action: import("./adapters.ts").ChannelAction,
+): Promise<{ ok: true; runId: string; decision: string } | { ok: false; reason: string }> {
+  if (!senderAllowed(c.allowed_senders, action.sender))
+    return { ok: false, reason: "Only people on this chat app's allowed list can decide." };
+  const [a] = await db.execute<{
+    id: string;
+    run_id: string;
+    status: string;
+    expired: boolean;
+  }>(sql`
+    select a.id, a.run_id, a.status, a.expires_at < now() as expired
+    from public.approvals a
+    join public.runs r on r.id = a.run_id
+    join public.channel_threads t on t.conversation_id = r.conversation_id and t.channel_id = ${c.id}::uuid
+    where a.id = ${action.approvalId}::uuid and a.bot_id = ${c.bot_id}::uuid`);
+  if (!a) return { ok: false, reason: "That approval isn't from this chat." };
+  if (a.status !== "pending") return { ok: false, reason: `It was already ${a.status}.` };
+  if (a.expired) {
+    await db.execute(sql`update public.approvals set status = 'expired' where id = ${a.id}::uuid`);
+    return { ok: false, reason: "It expired." };
+  }
+  await db.execute(sql`
+    update public.approvals set status = ${action.decision}, decided_by = ${c.created_by}::uuid,
+      decided_at = now(), always_allow = false
+    where id = ${a.id}::uuid and status = 'pending'`);
+  await log(db, c, {
+    direction: "in",
+    status: "accepted",
+    sender: action.sender,
+    detail: `${action.decision === "approved" ? "Approved" : "Denied"} approval ${a.id}`,
+  });
+  return { ok: true, runId: a.run_id, decision: action.decision };
+}

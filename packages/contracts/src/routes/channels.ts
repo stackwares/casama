@@ -74,3 +74,22 @@ export const listChannelEvents = createRoute({
     404: e404,
   },
 });
+
+export const startSlackInstall = createRoute({
+  operationId: "startSlackInstall",
+  method: "get",
+  path: "/v1/channels/slack/install",
+  tags,
+  security,
+  summary: "Add Casama's Slack app to a Slack workspace for this bot (D-277)",
+  description:
+    "Returns the Slack sign-in address to open. After the person allows it, the bot answers @mentions and direct messages in that Slack workspace, and approvals show buttons in the thread. 409 when this server has no Slack app (self-hosters connect their own app with a bot token instead).",
+  request: { query: z.object({ bot_id: Uuid }) },
+  responses: {
+    200: jsonResponse("Slack sign-in", z.object({ url: z.url() }).openapi("SlackInstallLink")),
+    401: e401,
+    403: e403,
+    404: e404,
+    409: problemResponses[409],
+  },
+});

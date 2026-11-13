@@ -252,6 +252,11 @@ export const EnvSchema = z.object({
   API_INTERNAL_URL: z.url().optional(),
   /** Shared secret for /internal/*; derived from DATABASE_URL when unset. */
   INTERNAL_TOKEN: z.string().min(32).optional(),
+  /** Casama's own Slack app (D-277): one-click install for every workspace. Unset: self-hosters paste a bot token. */
+  SLACK_CLIENT_ID: z.string().optional(),
+  SLACK_CLIENT_SECRET: z.string().optional(),
+  SLACK_SIGNING_SECRET: z.string().optional(),
+  SLACK_API_BASE: z.string().optional(),
   /** Days between an account deletion request and the purge (D-072). */
   ACCOUNT_DELETION_GRACE_DAYS: z.coerce.number().int().min(0).max(30).default(7),
   /** Opt-in anonymous telemetry (D-074): off unless set to "on". */

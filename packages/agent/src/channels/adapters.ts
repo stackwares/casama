@@ -39,6 +39,15 @@ export interface InboundMessage {
   fetchId?: string;
 }
 
+/** A person pressing Approve or Deny on an approval posted into a chat app (D-277). */
+export interface ChannelAction {
+  approvalId: string;
+  decision: "approved" | "denied";
+  sender: string;
+  /** Where to replace the buttons with the outcome (Slack's response_url). */
+  responseUrl?: string;
+}
+
 export type Config = Record<string, unknown>;
 export type Secrets = Record<string, string>;
 
@@ -48,6 +57,23 @@ export interface ChannelAdapter {
   maxText?: number;
   /** Turns an encrypted webhook body into the plain one, before handshakes and parsing (Feishu). */
   decode?(req: WebhookRequest, cfg: Config, secrets: Secrets): WebhookRequest;
+  /** Shows the sender the message arrived (a reaction), where the app has a way (D-277). */
+  acknowledge?(
+    cfg: Config,
+    secrets: Secrets,
+    message: InboundMessage,
+    f: typeof fetch,
+  ): Promise<void>;
+  /** Posts an approval request with Approve and Deny buttons into the thread (D-277). */
+  sendApproval?(
+    cfg: Config,
+    secrets: Secrets,
+    reply: Record<string, unknown>,
+    approval: { id: string; summary: string },
+    f: typeof fetch,
+  ): Promise<void>;
+  /** Reads a button press from the app's interactivity webhook (D-277). */
+  parseAction?(req: WebhookRequest): ChannelAction | null;
   /** Fills in what the webhook left out (an email's body), after the signature is checked. */
   enrich?(
     messages: InboundMessage[],
@@ -355,26 +381,28 @@ const slack: ChannelAdapter = {
     const b = json(req.body);
     const e = b.event as Record<string, unknown> | undefined;
     const files = Array.isArray(e?.files) && (e?.files as unknown[]).length > 0;
+    // Direct messages arrive as "message"; in channels the bot hears an @mention ("app_mention").
     if (
       b.type !== "event_callback" ||
       !e ||
-      e.type !== "message" ||
+      (e.type !== "message" && e.type !== "app_mention") ||
       e.bot_id ||
       (e.subtype && e.subtype !== "file_share") ||
       (typeof e.text !== "string" && !files)
     )
       return [];
     const thread = String(e.thread_ts ?? e.ts);
-    const text = [typeof e.text === "string" ? e.text : "", files ? ATTACHMENT_NOTE : ""]
-      .filter(Boolean)
-      .join("\n");
+    const said = typeof e.text === "string" ? e.text.replace(/<@[A-Z0-9]+>\s*/g, "").trim() : "";
+    const text = [said, files ? ATTACHMENT_NOTE : ""].filter(Boolean).join("\n");
+    if (!text) return [];
     return [
       {
-        messageId: String(b.event_id ?? e.client_msg_id ?? e.ts ?? "") || undefined,
+        // The same message can come as both "message" and "app_mention": one id for both.
+        messageId: e.ts ? `${e.channel}:${e.ts}` : String(b.event_id ?? "") || undefined,
         threadKey: `${e.channel}:${thread}`,
         sender: String(e.user),
         text,
-        reply: { channel: e.channel, thread_ts: thread },
+        reply: { channel: e.channel, thread_ts: thread, ts: e.ts },
       },
     ];
   },
@@ -392,6 +420,77 @@ const slack: ChannelAdapter = {
     );
     const r = (await res.json()) as { ok?: boolean; error?: string };
     if (r.ok === false) throw new Error(`Slack: ${r.error}`);
+  },
+  async acknowledge(cfg, s, m, f) {
+    if (!m.reply.ts) return;
+    await f(`${base(cfg, "https://slack.com")}/api/reactions.add`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json; charset=utf-8",
+        authorization: `Bearer ${s.bot_token}`,
+      },
+      body: JSON.stringify({ channel: m.reply.channel, timestamp: m.reply.ts, name: "eyes" }),
+    }).catch(() => {});
+  },
+  async sendApproval(cfg, s, reply, approval, f) {
+    const res = await ok(
+      await f(`${base(cfg, "https://slack.com")}/api/chat.postMessage`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json; charset=utf-8",
+          authorization: `Bearer ${s.bot_token}`,
+        },
+        body: JSON.stringify({
+          channel: reply.channel,
+          thread_ts: reply.thread_ts,
+          text: `Approval needed: ${approval.summary}`,
+          blocks: [
+            {
+              type: "section",
+              text: { type: "mrkdwn", text: `*Approval needed*\n${approval.summary}` },
+            },
+            {
+              type: "actions",
+              elements: [
+                {
+                  type: "button",
+                  style: "primary",
+                  text: { type: "plain_text", text: "Approve" },
+                  action_id: "casama_approve",
+                  value: `approve:${approval.id}`,
+                },
+                {
+                  type: "button",
+                  style: "danger",
+                  text: { type: "plain_text", text: "Deny" },
+                  action_id: "casama_deny",
+                  value: `deny:${approval.id}`,
+                },
+              ],
+            },
+          ],
+        }),
+      }),
+      "Slack",
+    );
+    const r = (await res.json()) as { ok?: boolean; error?: string };
+    if (r.ok === false) throw new Error(`Slack: ${r.error}`);
+  },
+  parseAction(req) {
+    // Slack posts interactions as a form with one field, payload (JSON).
+    const raw = new URLSearchParams(req.body).get("payload");
+    const p = raw ? json(raw) : {};
+    if (p.type !== "block_actions") return null;
+    const action = ((p.actions ?? []) as Array<Record<string, unknown>>)[0];
+    const m = /^(approve|deny):([0-9a-f-]{36})$/.exec(String(action?.value ?? ""));
+    const user = (p.user as Record<string, unknown> | undefined)?.id;
+    if (!m || !user) return null;
+    return {
+      approvalId: m[2] as string,
+      decision: m[1] === "approve" ? "approved" : "denied",
+      sender: String(user),
+      responseUrl: typeof p.response_url === "string" ? p.response_url : undefined,
+    };
   },
 };
 

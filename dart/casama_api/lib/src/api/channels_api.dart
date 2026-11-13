@@ -14,6 +14,7 @@ import 'package:casama_api/src/model/channel_event_list.dart';
 import 'package:casama_api/src/model/channel_list.dart';
 import 'package:casama_api/src/model/create_channel_request.dart';
 import 'package:casama_api/src/model/deleted_channel.dart';
+import 'package:casama_api/src/model/slack_install_link.dart';
 import 'package:casama_api/src/model/update_channel_request.dart';
 
 class ChannelsApi {
@@ -346,6 +347,89 @@ _responseData = rawData == null ? null : deserialize<ChannelList, ChannelList>(r
     }
 
     return Response<ChannelList>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Add Casama&#39;s Slack app to a Slack workspace for this bot (D-277)
+  /// Returns the Slack sign-in address to open. After the person allows it, the bot answers @mentions and direct messages in that Slack workspace, and approvals show buttons in the thread. 409 when this server has no Slack app (self-hosters connect their own app with a bot token instead).
+  ///
+  /// Parameters:
+  /// * [botId] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [SlackInstallLink] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<SlackInstallLink>> startSlackInstall({ 
+    required String botId,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/channels/slack/install';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      r'bot_id': botId,
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    SlackInstallLink? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<SlackInstallLink, SlackInstallLink>(rawData, 'SlackInstallLink', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<SlackInstallLink>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

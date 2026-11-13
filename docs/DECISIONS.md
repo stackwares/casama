@@ -3272,3 +3272,12 @@ Stage 5 of `docs/MASTER-PLAN-2026-11.md`; `docs/LIBRARY-PLAN.md` Phase 3, server
 - **Serving:** `GET /v1/creations/{id}/content` streams kept files (byte ranges; `sandbox` CSP so HTML can't run), and a kept picture is its own cover.
 - **Storage caps:** plans gain `storage_gb` (Free 1, Plus 10, Pro 50, Max 200; self-hosted none). At the cap a kept file, a generated picture or video, and a new page are refused with "the Library is full"; nothing is ever deleted for the person. The purge deletes kept files' bytes with their rows.
 - **Not done:** real covers for pages and documents (they need the PDF/screenshot service on, which is a production change), the Usage screen's storage row and the `storage_full` paywall source (app work), and moving `chat_media` bytes out of Postgres (Phase 5).
+
+## D-277 Slack as a place to work: one-click install, @mentions, a reaction on arrival, approvals with buttons
+
+Stage 6 of `docs/MASTER-PLAN-2026-11.md` (Add 1 in `docs/PRODUCT-REVIEW-2026-11-13.md`), Slack first.
+
+- **One-click install:** with `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET` and `SLACK_SIGNING_SECRET` set (Casama Cloud's own Slack app), `GET /v1/channels/slack/install?bot_id=` returns Slack's sign-in address; the callback `/hooks/slack/oauth` stores the workspace's bot token and makes the chat app, with the installing person allowed to talk to it. Its events and button presses arrive at `/hooks/slack/events` and `/hooks/slack/interact` and are routed by Slack workspace. One Casama bot per Slack workspace through Casama's app; installing again moves it. Without those settings the endpoint answers 409 and self-hosters keep connecting their own Slack app with a bot token (D-134).
+- **Where people talk:** @mentions in channels (`app_mention`, the mention stripped) as well as direct messages; the same message arriving as both events starts one run. An 👀 reaction shows the message arrived.
+- **Approvals in the thread:** when a run from a Slack thread needs approval, the request is posted into the thread with Approve and Deny buttons (as well as the usual push). A press is accepted only from someone on the chat app's allowed list, for an approval of that bot in that channel's thread; it's decided as the person who connected the app, the run wakes, and the message is replaced with "Approved by @…". Self-hosted Slack apps use `/hooks/channels/{id}/interact`.
+- **Needs from Oliver:** a Slack app listing for Casama Cloud (client id, secret, signing secret, and the three URLs above). Teams and Discord follow (D-278).
