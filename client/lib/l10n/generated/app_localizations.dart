@@ -1612,18 +1612,6 @@ abstract class AppLocalizations {
   /// **'{day, select, sun{Sunday} mon{Monday} tue{Tuesday} wed{Wednesday} thu{Thursday} fri{Friday} sat{Saturday} other{{day}}}'**
   String cronDay(String day);
 
-  /// No description provided for @computerAdvancedTabsShow.
-  ///
-  /// In en, this message translates to:
-  /// **'Show the terminal'**
-  String get computerAdvancedTabsShow;
-
-  /// No description provided for @computerAdvancedTabsHide.
-  ///
-  /// In en, this message translates to:
-  /// **'Hide the terminal'**
-  String get computerAdvancedTabsHide;
-
   /// No description provided for @headlessScreenNoteSettings.
   ///
   /// In en, this message translates to:

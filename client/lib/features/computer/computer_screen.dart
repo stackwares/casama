@@ -27,7 +27,6 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/edge_fade.dart';
-import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/app_menu.dart';
 import '../../ui/page.dart';
@@ -397,18 +396,12 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
     final failed = computer.state == ComputerState.error;
     final personal = isPersonalComputer(computer);
     final resetting = resetRunning(computer);
-    // Screen, Files and Manage always; Terminal once Advanced is opened here (D-182). Restore
-    // points live in Manage now (D-240). A personal computer has only Screen, and Files while
-    // it is online (D-218).
-    final advanced = ref
-        .watch(advancedOpenProvider)
-        .contains(computerTabsAdvancedId);
+    // Screen, Terminal, Files and Manage, always (the Terminal no longer waits behind an
+    // Advanced toggle). Restore points live in Manage (D-240). A personal computer has only
+    // Screen, and Files while it is online (D-218).
     final tabIds = [
       for (final t in const ['screen', 'terminal', 'files', 'manage'])
-        if (personal
-            ? t == 'screen' || (t == 'files' && running)
-            : advanced || t != 'terminal')
-          t,
+        if (!personal || t == 'screen' || (t == 'files' && running)) t,
     ];
     _tabIds = tabIds;
     final tabIndex = tabIds.indexOf(_tab);
@@ -495,10 +488,7 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                               },
                       ),
               ),
-              _ComputerTabs(
-                tabIds: tabIds,
-                advanced: personal ? null : advanced,
-              ),
+              _ComputerTabs(tabIds: tabIds),
               const SizedBox(height: AppSpace.xs),
               Expanded(
                 child: _TabWatch(
@@ -566,9 +556,6 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
     );
   }
 }
-
-/// The [AdvancedSection] id whose open state shows the Terminal and Checkpoints tabs (D-182).
-const computerTabsAdvancedId = 'computer.tabs';
 
 /// The computer at a glance: what it is, whether it's on, what it runs on, and the one thing to
 /// do about it (wake or sleep), in a single card.
@@ -892,12 +879,11 @@ class _HeaderAction extends StatelessWidget {
   }
 }
 
-/// Screen, Files, Manage (and Terminal with Advanced) as one segmented control that always
-/// fits the width, so nothing scrolls or clips on a phone. [advanced] null: no toggle.
+/// Screen, Terminal, Files and Manage as one segmented control that always fits the width, so
+/// nothing scrolls or clips on a phone.
 class _ComputerTabs extends StatelessWidget {
-  const _ComputerTabs({required this.tabIds, required this.advanced});
+  const _ComputerTabs({required this.tabIds});
   final List<String> tabIds;
-  final bool? advanced;
 
   @override
   Widget build(BuildContext context) {
@@ -978,66 +964,7 @@ class _ComputerTabs extends StatelessWidget {
               },
             ),
           ),
-          if (advanced != null) ...[
-            const SizedBox(width: AppSpace.xs),
-            _AdvancedTabsToggle(open: advanced!),
-          ],
         ],
-      ),
-    );
-  }
-}
-
-/// Beside the tabs: shows or hides the Terminal, remembered on this device like any
-/// Advanced section (D-182).
-class _AdvancedTabsToggle extends ConsumerWidget {
-  const _AdvancedTabsToggle({required this.open});
-  final bool open;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final scheme = context.colorScheme;
-    final label = open
-        ? l10n.computerAdvancedTabsHide
-        : l10n.computerAdvancedTabsShow;
-    return Semantics(
-      toggled: open,
-      label: l10n.advanced,
-      child: Tooltip(
-        message: label,
-        child: AnimatedContainer(
-          duration: AppMotion.fast,
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: open
-                ? scheme.primary.withValues(alpha: 0.2)
-                : scheme.onSurface.withValues(
-                    alpha: context.isDark ? 0.07 : 0.05,
-                  ),
-            border: Border.all(
-              color: open
-                  ? scheme.primary.withValues(alpha: 0.35)
-                  : context.appColors.hairline,
-            ),
-          ),
-          child: IconButton(
-            key: const Key('advanced-$computerTabsAdvancedId'),
-            onPressed: () {
-              HapticsHelper.light();
-              ref
-                  .read(advancedOpenProvider.notifier)
-                  .set(computerTabsAdvancedId, !open);
-            },
-            icon: Icon(
-              LucideIcons.slidersHorizontal,
-              size: 18,
-              color: open ? scheme.primary : scheme.onSurfaceVariant,
-            ),
-          ),
-        ),
       ),
     );
   }

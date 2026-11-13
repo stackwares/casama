@@ -285,8 +285,6 @@
   "@cronDays": {"placeholders": {"day": {"type": "String"}}},
   "cronDay": "{day, select, sun{Sunday} mon{Monday} tue{Tuesday} wed{Wednesday} thu{Thursday} fri{Friday} sat{Saturday} other{{day}}}",
   "@cronDay": {"placeholders": {"day": {"type": "String"}}},
-  "computerAdvancedTabsShow": "Show the terminal",
-  "computerAdvancedTabsHide": "Hide the terminal",
   "headlessScreenNoteSettings": "This computer has no desktop, so this shows its browser (blank until the bot opens a page). To watch and control apps live, switch it to a desktop in computer settings.",
   "openComputerSettings": "Open Computer Settings",
   "runNow": "Run Now",

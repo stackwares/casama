@@ -1,5 +1,5 @@
-// The computer shows Screen, Files and Manage; the Terminal comes with Advanced (D-182), and
-// restore points live in Manage (D-240). The desktop/headless switch lives only in Settings >
+// The computer shows Screen, Terminal, Files and Manage, always; restore points live in Manage
+// (D-240). The desktop/headless switch lives only in Settings >
 // Computers.
 import 'dart:convert';
 import 'dart:typed_data';
@@ -21,34 +21,17 @@ void main() {
   ];
   int selectedTab(WidgetTester tester) => DefaultTabController.of(tester.element(find.byType(TabBar))).index;
 
-  testWidgets('the Terminal shows once Advanced is on, and the open tab keeps its place', (tester) async {
+  testWidgets('the Terminal always shows, with no toggle', (tester) async {
     await setSize(tester, const Size(800, 1000));
     await tester.pumpWidget(harness(FakeBackend(), const Scaffold(body: ComputerScreen(embedded: true))));
     await tester.pumpAndSettle();
-    expect(tabLabels(tester), ['Screen', 'Files', 'Manage']);
-    expect(find.text('Terminal'), findsNothing);
+    expect(tabLabels(tester), ['Screen', 'Terminal', 'Files', 'Manage']);
+    expect(find.byKey(const Key('advanced-computer.tabs')), findsNothing);
     expect(find.text('Checkpoints'), findsNothing);
 
     await tester.tap(find.text('Files'));
     await tester.pumpAndSettle();
-    expect(selectedTab(tester), 1);
-
-    await tester.tap(find.byKey(const Key('advanced-computer.tabs')));
-    await tester.pumpAndSettle();
-    expect(tabLabels(tester), ['Screen', 'Terminal', 'Files', 'Manage']);
-    expect(selectedTab(tester), 2, reason: 'Files stays open');
-
-    // Remembered on this device.
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getStringList('advanced.open'), contains('computer.tabs'));
-
-    // On the Terminal, turning Advanced off falls back to the first tab.
-    await tester.tap(find.text('Terminal'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('advanced-computer.tabs')));
-    await tester.pumpAndSettle();
-    expect(tabLabels(tester), ['Screen', 'Files', 'Manage']);
-    expect(selectedTab(tester), 0);
+    expect(selectedTab(tester), 2);
 
     await tester.pumpWidget(const SizedBox());
   });

@@ -941,12 +941,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get computerAdvancedTabsShow => 'Show the terminal';
-
-  @override
-  String get computerAdvancedTabsHide => 'Hide the terminal';
-
-  @override
   String get headlessScreenNoteSettings =>
       'This computer has no desktop, so this shows its browser (blank until the bot opens a page). To watch and control apps live, switch it to a desktop in computer settings.';
 
