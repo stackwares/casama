@@ -115,6 +115,8 @@ x-casama: &casama
     GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
     MCP_OAUTH_CLIENTS: ${MCP_OAUTH_CLIENTS:-}
     COMPOSIO_API_KEY: ${COMPOSIO_API_KEY:-}
+    # Composio webhook signing secret: new mail and calendar changes start check-in scans (D-247).
+    COMPOSIO_WEBHOOK_SECRET: ${COMPOSIO_WEBHOOK_SECRET:-}
     UNSPLASH_ACCESS_KEY: ${UNSPLASH_ACCESS_KEY:-}
     # Tells the apps which Google client ids Auth accepts, for Google's own sign-in sheet (D-217).
     GOOGLE_AUTH_ENABLED: ${GOOGLE_AUTH_ENABLED:-false}
