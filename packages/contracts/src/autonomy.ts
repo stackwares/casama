@@ -162,15 +162,10 @@ export const RoutineTrigger = z
 export const CalendarTriggerConfig = z
   .object({
     integration_id: Uuid.openapi({ description: "A connected Google or Outlook calendar" }),
-    offset_minutes: z
-      .number()
-      .int()
-      .min(-1440)
-      .max(1440)
-      .openapi({
-        description:
-          "Relative to the event's start (or end, with anchor end); -15 is 15 minutes before",
-      }),
+    offset_minutes: z.number().int().min(-1440).max(1440).openapi({
+      description:
+        "Relative to the event's start (or end, with anchor end); -15 is 15 minutes before",
+    }),
     anchor: z.enum(["start", "end"]).optional().openapi({
       description: "What the offset counts from; end is for after a meeting (D-287)",
     }),

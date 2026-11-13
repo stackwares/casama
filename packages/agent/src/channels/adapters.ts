@@ -400,7 +400,7 @@ const slack: ChannelAdapter = {
   normalize(req) {
     const b = json(req.body);
     const e = b.event as Record<string, unknown> | undefined;
-    const files = Array.isArray(e?.files) && (e?.files as unknown[]).length > 0;
+    const files = Array.isArray(e?.files) && (e.files as unknown[]).length > 0;
     // Direct messages arrive as "message"; in channels the bot hears an @mention ("app_mention").
     if (
       b.type !== "event_callback" ||
@@ -599,7 +599,7 @@ const messenger: ChannelAdapter = {
         const msg = m.message as Record<string, unknown> | undefined;
         const sender = (m.sender as Record<string, unknown> | undefined)?.id;
         const attached =
-          Array.isArray(msg?.attachments) && (msg?.attachments as unknown[]).length > 0;
+          Array.isArray(msg?.attachments) && (msg.attachments as unknown[]).length > 0;
         if (!msg || msg.is_echo || !sender || (typeof msg.text !== "string" && !attached)) continue;
         out.push({
           messageId: msg.mid ? String(msg.mid) : undefined,
@@ -1094,12 +1094,10 @@ const jira: ChannelAdapter = {
             body: {
               type: "doc",
               version: 1,
-              content: text
-                .split(/\n{2,}/)
-                .map((p) => ({
-                  type: "paragraph",
-                  content: p.trim() ? [{ type: "text", text: p }] : [],
-                })),
+              content: text.split(/\n{2,}/).map((p) => ({
+                type: "paragraph",
+                content: p.trim() ? [{ type: "text", text: p }] : [],
+              })),
             },
           }),
         },

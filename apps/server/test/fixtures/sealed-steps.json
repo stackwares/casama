@@ -5,14 +5,24 @@
       "when": { "systemIncludes": "extract lasting memories" },
       "events": [
         { "type": "text", "text": "{\"memories\":[]}" },
-        { "type": "finish", "usage": { "inputTokens": 10, "outputTokens": 5 }, "finishReason": "stop", "model": "" }
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 10, "outputTokens": 5 },
+          "finishReason": "stop",
+          "model": ""
+        }
       ]
     },
     {
       "when": {},
       "events": [
         { "type": "text", "text": "Your vault phrase is marzipan-lighthouse." },
-        { "type": "finish", "usage": { "inputTokens": 10, "outputTokens": 8 }, "finishReason": "stop", "model": "" }
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 10, "outputTokens": 8 },
+          "finishReason": "stop",
+          "model": ""
+        }
       ]
     }
   ]

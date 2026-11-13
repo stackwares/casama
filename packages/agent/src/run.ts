@@ -1074,7 +1074,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
             ),
           ),
         );
-        batch.forEach(({ slot }, k) => applyResult(slot, results[k] as ToolOut));
+        for (const [k, { slot }] of batch.entries()) applyResult(slot, results[k] as ToolOut);
       };
       const parallelSafe = (name: string) => {
         const d = registry.get(name);

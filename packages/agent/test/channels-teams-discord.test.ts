@@ -58,8 +58,20 @@ describe("Discord", () => {
       return new Response("{}", { status: 200 });
     }) as unknown as typeof fetch;
     const cfg = { api_base: "http://discord.test" };
-    await a.send(cfg, { bot_token: "bt" }, { application_id: "app1", token: "tok", channel_id: "ch1", at: Date.now() }, "hi", f);
-    await a.send(cfg, { bot_token: "bt" }, { application_id: "app1", token: "tok", channel_id: "ch1", at: Date.now() - 20 * 60_000 }, "later", f);
+    await a.send(
+      cfg,
+      { bot_token: "bt" },
+      { application_id: "app1", token: "tok", channel_id: "ch1", at: Date.now() },
+      "hi",
+      f,
+    );
+    await a.send(
+      cfg,
+      { bot_token: "bt" },
+      { application_id: "app1", token: "tok", channel_id: "ch1", at: Date.now() - 20 * 60_000 },
+      "later",
+      f,
+    );
     expect(calls).toEqual([
       { url: "http://discord.test/webhooks/app1/tok", auth: undefined },
       { url: "http://discord.test/channels/ch1/messages", auth: "Bot bt" },
@@ -108,7 +120,12 @@ describe("Microsoft Teams", () => {
 
   it("accepts only tokens Microsoft signed for this bot, then reads and answers the message", async () => {
     const a = ADAPTERS.teams;
-    const cfg = { app_id: "bot-app", openid_url: `${base}/openid`, login_base: base, api_base: base };
+    const cfg = {
+      app_id: "bot-app",
+      openid_url: `${base}/openid`,
+      login_base: base,
+      api_base: base,
+    };
     const activity = JSON.stringify({
       type: "message",
       id: "act1",
@@ -118,13 +135,29 @@ describe("Microsoft Teams", () => {
       conversation: { id: "conv1" },
     });
     const good = await token("bot-app", "https://smba.trafficmanager.net/amer/");
-    expect(await a.verifyAsync?.(req(activity, { authorization: `Bearer ${good}` }), cfg, {}, fetch)).toBe(true);
+    expect(
+      await a.verifyAsync?.(req(activity, { authorization: `Bearer ${good}` }), cfg, {}, fetch),
+    ).toBe(true);
     const wrongBot = await token("someone-else", "https://smba.trafficmanager.net/amer/");
-    expect(await a.verifyAsync?.(req(activity, { authorization: `Bearer ${wrongBot}` }), cfg, {}, fetch)).toBe(false);
+    expect(
+      await a.verifyAsync?.(req(activity, { authorization: `Bearer ${wrongBot}` }), cfg, {}, fetch),
+    ).toBe(false);
     const wrongService = await token("bot-app", "https://evil.example/");
-    expect(await a.verifyAsync?.(req(activity, { authorization: `Bearer ${wrongService}` }), cfg, {}, fetch)).toBe(false);
+    expect(
+      await a.verifyAsync?.(
+        req(activity, { authorization: `Bearer ${wrongService}` }),
+        cfg,
+        {},
+        fetch,
+      ),
+    ).toBe(false);
     const [m] = a.normalize(req(activity), cfg);
-    expect(m).toMatchObject({ messageId: "act1", sender: "aad-1", text: "book the room", threadKey: "teams:conv1" });
+    expect(m).toMatchObject({
+      messageId: "act1",
+      sender: "aad-1",
+      text: "book the room",
+      threadKey: "teams:conv1",
+    });
     await a.send(cfg, { app_password: "pw" }, m!.reply, "Booked.", fetch);
     const post = sent.find((s) => s.path === "/v3/conversations/conv1/activities");
     expect(post?.auth).toBe("Bearer bf-token");

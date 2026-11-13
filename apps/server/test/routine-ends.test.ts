@@ -40,10 +40,13 @@ const row = async (id: string) =>
   )[0]!;
 const byName = async (name: string) =>
   (
-    await h.tdb.admin<{ id: string }[]>`select id from public.routines where bot_id = ${botId} and name = ${name}`
+    await h.tdb.admin<
+      { id: string }[]
+    >`select id from public.routines where bot_id = ${botId} and name = ${name}`
   )[0]!.id;
 const due = (id: string) =>
-  h.tdb.admin`update public.routines set next_run_at = now() - interval '1 minute' where id = ${id}`;
+  h.tdb
+    .admin`update public.routines set next_run_at = now() - interval '1 minute' where id = ${id}`;
 const runCount = async (id: string) =>
   (
     await h.tdb.admin<
@@ -202,9 +205,9 @@ describe("bot tools", () => {
     await claimDueRoutines(h.handle.db);
     let r = await row(id);
     expect([r.enabled, r.run_count, r.next_run_at]).toEqual([false, 1, null]);
-    await expect(call("routines.update", { routine_id: id, enabled: true })).rejects.toMatchObject(
-      { code: "routine_ended" },
-    );
+    await expect(call("routines.update", { routine_id: id, enabled: true })).rejects.toMatchObject({
+      code: "routine_ended",
+    });
     await call("routines.update", { routine_id: id, enabled: true, max_runs: 2 });
     r = await row(id);
     expect([r.enabled, r.run_count, r.max_runs]).toEqual([true, 0, 2]);
