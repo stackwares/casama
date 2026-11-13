@@ -442,6 +442,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMemories => 'Nothing remembered yet.';
 
   @override
+  String get searchMemories => 'Memories';
+
+  @override
+  String get noMemoriesMatch => 'No memories match.';
+
+  @override
+  String get clearSearch => 'Clear';
+
+  @override
+  String get addMemory => 'Add a Memory';
+
+  @override
+  String get addMemoryHelp =>
+      'Something the bot should always know about you or your work.';
+
+  @override
+  String get addMemoryFactHint =>
+      'For example: Our fiscal year starts in April.';
+
+  @override
+  String get addMemoryPreferenceHint =>
+      'For example: Keep summaries under five bullet points.';
+
+  @override
+  String get memoryAdded => 'Memory added';
+
+  @override
   String get pin => 'Pin';
 
   @override
@@ -4902,9 +4929,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchScopeAll => 'All';
 
   @override
-  String get searchMemories => 'Memories';
-
-  @override
   String get searchKeepTyping =>
       'Keep typing to search messages, memories and files.';
 
@@ -6891,13 +6915,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chAppId => 'App ID';
 
   @override
-  String get chPublicKey => 'Public key';
-
-  @override
   String get chEncryptKey => 'Encrypt key';
 
   @override
   String get chVerificationToken => 'Verification token';
+
+  @override
+  String get chPublicKey => 'Public key';
 
   @override
   String get routineMessage => 'When a matching message arrives';

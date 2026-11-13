@@ -2813,7 +2813,25 @@ class FakeBackend implements Backend {
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     ),
+    ...extraMemories,
   ];
+
+  /// Memories beyond the first, including ones added by hand: (kind, content).
+  final extraMemories = <Memory>[];
+  final addedMemories = <(String, String)>[];
+  @override
+  Future<void> addMemory(String botId, String content, {String kind = 'fact'}) async {
+    addedMemories.add((kind, content));
+    extraMemories.add(Memory(
+      id: 'added-${addedMemories.length}',
+      kind: kind == 'preference' ? MemoryKindEnum.preference : MemoryKindEnum.fact,
+      content: content,
+      importance: 0.6,
+      pinned: false,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    ));
+  }
   @override
   Future<void> updateMemory(
     String botId,

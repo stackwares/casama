@@ -868,6 +868,54 @@ abstract class AppLocalizations {
   /// **'Nothing remembered yet.'**
   String get noMemories;
 
+  /// No description provided for @searchMemories.
+  ///
+  /// In en, this message translates to:
+  /// **'Memories'**
+  String get searchMemories;
+
+  /// No description provided for @noMemoriesMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No memories match.'**
+  String get noMemoriesMatch;
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clearSearch;
+
+  /// No description provided for @addMemory.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a Memory'**
+  String get addMemory;
+
+  /// No description provided for @addMemoryHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Something the bot should always know about you or your work.'**
+  String get addMemoryHelp;
+
+  /// No description provided for @addMemoryFactHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: Our fiscal year starts in April.'**
+  String get addMemoryFactHint;
+
+  /// No description provided for @addMemoryPreferenceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: Keep summaries under five bullet points.'**
+  String get addMemoryPreferenceHint;
+
+  /// No description provided for @memoryAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Memory added'**
+  String get memoryAdded;
+
   /// No description provided for @pin.
   ///
   /// In en, this message translates to:
@@ -7702,12 +7750,6 @@ abstract class AppLocalizations {
   /// **'All'**
   String get searchScopeAll;
 
-  /// No description provided for @searchMemories.
-  ///
-  /// In en, this message translates to:
-  /// **'Memories'**
-  String get searchMemories;
-
   /// No description provided for @searchKeepTyping.
   ///
   /// In en, this message translates to:
@@ -10600,12 +10642,6 @@ abstract class AppLocalizations {
   /// **'App ID'**
   String get chAppId;
 
-  /// No description provided for @chPublicKey.
-  ///
-  /// In en, this message translates to:
-  /// **'Public key'**
-  String get chPublicKey;
-
   /// No description provided for @chEncryptKey.
   ///
   /// In en, this message translates to:
@@ -10617,6 +10653,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Verification token'**
   String get chVerificationToken;
+
+  /// No description provided for @chPublicKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Public key'**
+  String get chPublicKey;
 
   /// No description provided for @routineMessage.
   ///

@@ -953,6 +953,9 @@ abstract class Backend {
     bool? pinned,
   });
   Future<void> deleteMemory(String botId, String id);
+
+  /// A memory written by hand (Improve app 3): [kind] is `fact` or `preference`.
+  Future<void> addMemory(String botId, String content, {String kind = 'fact'});
   // Memory backends (D-137)
   Future<MemoryBackend> memoryBackend(String orgId);
   Future<MemoryBackend> setMemoryBackend(

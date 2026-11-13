@@ -13,12 +13,49 @@ import '../../ui/app_menu.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/route_focus.dart';
+import '../../ui/segmented.dart';
 import '../bots/agent_import.dart';
 
-/// What a bot remembers: view, edit, pin and delete (deleted memories are gone, not hidden).
-class MemoryScreen extends ConsumerWidget {
+/// What a bot remembers: search, add, view, edit, pin and delete (deleted memories are gone, not
+/// hidden).
+class MemoryScreen extends ConsumerStatefulWidget {
   const MemoryScreen({super.key, required this.botId});
   final String botId;
+
+  @override
+  ConsumerState<MemoryScreen> createState() => _MemoryScreenState();
+}
+
+/// Whether [m] matches what was typed in the search box: every word, in any order.
+bool memoryMatches(Memory m, String query) {
+  final words = query.toLowerCase().split(RegExp(r'\s+')).where((w) => w.isNotEmpty);
+  final text = m.content.toLowerCase();
+  return words.every(text.contains);
+}
+
+class _MemoryScreenState extends ConsumerState<MemoryScreen> {
+  String get botId => widget.botId;
+  final _search = TextEditingController();
+  var _query = '';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  /// Adds a fact or preference by hand (Improve app 3).
+  Future<void> _add(BuildContext context, WidgetRef ref) async {
+    final added = await showAdaptiveSheet<(String, String)>(context: context, builder: (_) => const _AddMemoryForm());
+    if (added == null || !context.mounted) return;
+    final (kind, text) = added;
+    final ok = await runGuarded(context, () async {
+      await ref.read(backendProvider).addMemory(botId, text, kind: kind);
+      return true;
+    });
+    ref.invalidate(memoriesProvider(botId));
+    if (ok == true && context.mounted) showSuccess(context, context.l10n.memoryAdded);
+  }
 
   Future<void> _edit(BuildContext context, WidgetRef ref, Memory m) async {
     final text = await showAdaptiveSheet<String>(
@@ -39,7 +76,7 @@ class MemoryScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final bot = ref.watch(botProvider(botId));
     final memories = ref.watch(memoriesProvider(botId));
@@ -62,26 +99,63 @@ class MemoryScreen extends ConsumerWidget {
       child: SubPage(
       title: l10n.memory,
       subtitle: bot?.name,
-      actions: [IconButton(key: const Key('importMemories'), tooltip: l10n.importMemoryTitle, icon: const Icon(LucideIcons.download), onPressed: importMemories)],
+      actions: [
+        IconButton(key: const Key('addMemory'), tooltip: l10n.addMemory, icon: const Icon(LucideIcons.plus), onPressed: () => _add(context, ref)),
+        IconButton(key: const Key('importMemories'), tooltip: l10n.importMemoryTitle, icon: const Icon(LucideIcons.download), onPressed: importMemories),
+      ],
       body: AsyncView(
         value: memories,
         onRetry: () => ref.invalidate(memoriesProvider(botId)),
         loading: const _MemoryListSkeleton(),
-        data: (items) => items.isEmpty
-            ? EmptyState(icon: LucideIcons.brain, title: l10n.noMemories, message: l10n.noMemoriesHelp)
-            : PageListView(
-                header: FormNote(l10n.memoryHelp),
-                itemCount: items.length,
-                itemBuilder: (context, i) => _MemoryCard(
-                  memory: items[i],
-                  onEdit: () => _edit(context, ref, items[i]),
-                  onDelete: () => _delete(context, ref, items[i]),
-                  onPin: () async {
-                    await runGuarded(context, () => ref.read(backendProvider).updateMemory(botId, items[i].id, pinned: !items[i].pinned));
-                    ref.invalidate(memoriesProvider(botId));
-                  },
-                ).appListItemEntrance(i),
-              ),
+        data: (all) {
+          if (all.isEmpty) return EmptyState(icon: LucideIcons.brain, title: l10n.noMemories, message: l10n.noMemoriesHelp);
+          final items = _query.trim().isEmpty ? all : all.where((m) => memoryMatches(m, _query)).toList();
+          return PageListView(
+            header: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FormNote(l10n.memoryHelp),
+                const SizedBox(height: AppSpace.sm),
+                TextField(
+                  key: const Key('memorySearch'),
+                  controller: _search,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: l10n.searchMemories,
+                    prefixIcon: const Icon(LucideIcons.search, size: 20),
+                    suffixIcon: _query.isEmpty
+                        ? null
+                        : IconButton(
+                            key: const Key('clearMemorySearch'),
+                            tooltip: l10n.clearSearch,
+                            icon: const Icon(LucideIcons.x, size: 18),
+                            onPressed: () => setState(() {
+                              _search.clear();
+                              _query = '';
+                            }),
+                          ),
+                  ),
+                  onChanged: (v) => setState(() => _query = v),
+                ),
+                if (items.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpace.lg),
+                    child: Text(l10n.noMemoriesMatch, key: const Key('noMemoriesMatch'), textAlign: TextAlign.center, style: context.textTheme.bodyMedium?.copyWith(color: context.colorScheme.onSurfaceVariant)),
+                  ),
+              ],
+            ),
+            itemCount: items.length,
+            itemBuilder: (context, i) => _MemoryCard(
+              memory: items[i],
+              onEdit: () => _edit(context, ref, items[i]),
+              onDelete: () => _delete(context, ref, items[i]),
+              onPin: () async {
+                await runGuarded(context, () => ref.read(backendProvider).updateMemory(botId, items[i].id, pinned: !items[i].pinned));
+                ref.invalidate(memoriesProvider(botId));
+              },
+            ).appListItemEntrance(i),
+          );
+        },
       ),
       ),
     );
@@ -217,6 +291,59 @@ class _MemoryCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// A memory written by hand: a fact or a preference (Improve app 3).
+class _AddMemoryForm extends StatefulWidget {
+  const _AddMemoryForm();
+
+  @override
+  State<_AddMemoryForm> createState() => _AddMemoryFormState();
+}
+
+class _AddMemoryFormState extends State<_AddMemoryForm> {
+  final _text = TextEditingController();
+  var _kind = 'fact';
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = _text.text.trim();
+    return FormSheet(
+      icon: LucideIcons.brain,
+      title: l10n.addMemory,
+      subtitle: l10n.addMemoryHelp,
+      submitLabel: l10n.save,
+      submitKey: const Key('saveNewMemory'),
+      onSubmit: text.isEmpty ? null : () => Navigator.pop(context, (_kind, text)),
+      children: [
+        AppSegmentedControl<String>(
+          key: const Key('newMemoryKind'),
+          values: const ['fact', 'preference'],
+          labels: {'fact': l10n.memoryFact, 'preference': l10n.memoryPreference},
+          groupValue: _kind,
+          onValueChanged: (v) => setState(() => _kind = v),
+        ),
+        TextField(
+          key: const Key('newMemoryText'),
+          controller: _text,
+          autofocus: true,
+          minLines: 3,
+          maxLines: 8,
+          maxLength: 2000,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: InputDecoration(hintText: _kind == 'fact' ? l10n.addMemoryFactHint : l10n.addMemoryPreferenceHint),
+          onChanged: (_) => setState(() {}),
+        ),
+      ],
     );
   }
 }

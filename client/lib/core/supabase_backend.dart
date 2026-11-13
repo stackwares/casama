@@ -2793,6 +2793,12 @@ class SupabaseBackend implements Backend {
         parseMemoryImportRequest: ParseMemoryImportRequest(text: text),
       )).data!.memories;
 
+  // Saved through the memory import route, which takes the same two kinds and seals the text.
+  @override
+  Future<void> addMemory(String botId, String content, {String kind = 'fact'}) async => saveImportedMemories(botId, [
+    ImportedMemoryItem(kind: kind == 'preference' ? ImportedMemoryItemKindEnum.preference : ImportedMemoryItemKindEnum.fact, content: content),
+  ]);
+
   @override
   Future<int> saveImportedMemories(
     String botId,
