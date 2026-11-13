@@ -1,0 +1,21 @@
+name: lucide_icons_flutter
+description: >
+  lucide_icons_flutter 4.0.2 (MIT, https://github.com/vqh2602/lucide-flutter-main) with only the
+  base Lucide font. The pub.dev package also bundles six weight fonts (about 3 MB) that the app
+  never uses and that every build would ship. Swapped in through dependency_overrides in
+  client/pubspec.yaml.
+version: 4.0.2
+publish_to: none
+
+environment:
+  sdk: ^3.0.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  fonts:
+    - family: Lucide
+      fonts:
+        - asset: assets/lucide.ttf

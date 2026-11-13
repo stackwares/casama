@@ -29,6 +29,11 @@
         android:label="Casama"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- mobile_scanner uses ML Kit from Play services (gradle.properties); fetch the barcode
+             model at install so the first scan doesn't wait for a download. -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="barcode" />
         <!-- Status-bar icon for FCM notifications: the white mascot silhouette, not the launcher
              icon (its background turns into a white square). Source: android/notification_icon.svg. -->
         <meta-data

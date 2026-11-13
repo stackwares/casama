@@ -110,7 +110,6 @@ flutter:
   generate: true
   assets:
     - assets/tray_icon.png
-    - assets/branding/casama_mascot_icon.png
     - assets/mascots/
     - assets/apps/
   # Type (D-087, D-163): Libre Baskerville for headings and Lato for text by default; Google Sans,
@@ -176,3 +175,10 @@ flutter:
 dependency_overrides:
   casama_api:
     path: ../dart/casama_api
+  # Size: the base Lucide font only, not six unused weight fonts (third_party/lucide_icons_flutter).
+  lucide_icons_flutter:
+    path: third_party/lucide_icons_flutter
+  # Size: no 25 MB SherpaOnnxC framework on iOS, where wake word doesn't run
+  # (third_party/sherpa_onnx_ios).
+  sherpa_onnx_ios:
+    path: third_party/sherpa_onnx_ios

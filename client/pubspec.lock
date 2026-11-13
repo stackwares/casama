@@ -1236,10 +1236,9 @@ packages:
   lucide_icons_flutter:
     dependency: "direct main"
     description:
-      name: lucide_icons_flutter
-      sha256: "96719b024196fd2fdb395f490e7e91bd6d2474f43f62800eb62920868e777ac5"
-      url: "https://pub.dev"
-    source: hosted
+      path: "third_party/lucide_icons_flutter"
+      relative: true
+    source: path
     version: "4.0.2"
   markdown:
     dependency: "direct main"
@@ -2018,12 +2017,11 @@ packages:
     source: hosted
     version: "2.0.1"
   sherpa_onnx_ios:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: sherpa_onnx_ios
-      sha256: "1858f3710c1d9da2ed880a65d7524fa5748c4f51b99740d9ca86ee210f74cada"
-      url: "https://pub.dev"
-    source: hosted
+      path: "third_party/sherpa_onnx_ios"
+      relative: true
+    source: path
     version: "2.0.1"
   sherpa_onnx_linux:
     dependency: transitive
