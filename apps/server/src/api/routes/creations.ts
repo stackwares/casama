@@ -3,6 +3,8 @@
  * Lists run in the person's own database session, so row-level security decides what they see
  * (a page by its visibility, anything else by the chat it was made in).
  */
+
+import { hashPageToken, newPageToken, setPageVisibility } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, withUserSession } from "@casama/db";
 import { readObject } from "@casama/sandbox";
@@ -16,6 +18,8 @@ import { parseRange, videoPoster } from "./chat-media.ts";
 
 /** Deleted creations can be restored for this long; then the worker purges them. */
 export const CREATION_UNDO_DAYS = 30;
+/** New public links a workspace may make a day (abuse limit, D-281). */
+export const PUBLIC_LINKS_PER_DAY = 20;
 
 type CreationRow = {
   id: string;
@@ -39,6 +43,7 @@ type CreationRow = {
   blob_key: string | null;
   preview_key: string | null;
   version: number;
+  visibility: "private" | "workspace" | "public";
   pinned_at: Date | null;
   last_opened_at: Date | null;
   can_change: boolean;
@@ -74,6 +79,7 @@ const out = (r: CreationRow) => ({
   has_preview:
     !!r.preview_key || (r.kind === "document" && r.mime === "application/pdf" && !!r.blob_key),
   version: r.version,
+  visibility: r.visibility,
   pinned: !!r.pinned_at,
   last_opened_at: r.last_opened_at ? iso(r.last_opened_at) : null,
   can_change: r.can_change,
@@ -86,7 +92,9 @@ const out = (r: CreationRow) => ({
 const columns = (_userId: string) => sql`
   c.id, c.org_id, c.bot_id, b.name as bot_name, c.made_for, c.conversation_id, c.run_id, c.kind,
   c.label, c.title, c.page_id, c.media_id, c.mime, c.size, c.width, c.height, c.duration_s,
-  c.cover_key, c.blob_key, c.preview_key, c.version, m.pinned_at, m.last_opened_at, public.can_change_creation(c.id) as can_change,
+  c.cover_key, c.blob_key, c.preview_key, c.version,
+  coalesce((select p.visibility from public.pages p where p.id = c.page_id), c.visibility) as visibility,
+  m.pinned_at, m.last_opened_at, public.can_change_creation(c.id) as can_change,
   c.deleted_at, c.created_at, c.updated_at`;
 const joins = (userId: string) => sql`
   from public.creations c
@@ -209,6 +217,12 @@ export function registerCreationRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
             sql`update public.pages set title = ${body.title} where id = ${row.page_id}::uuid`,
           );
       }
+      if (body.visibility !== undefined && !row.can_change)
+        throw new ApiError(
+          403,
+          "forbidden",
+          "Only the person it was made for, or the bot's managers, can share it",
+        );
       if (body.pinned !== undefined || body.opened) {
         await tx.execute(sql`
           insert into public.creation_marks (user_id, creation_id, org_id, pinned_at, last_opened_at)
@@ -219,7 +233,46 @@ export function registerCreationRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
             last_opened_at = ${body.opened ? sql`now()` : sql`creation_marks.last_opened_at`}`);
       }
     });
-    return c.json(out(await visible(claims, id)), 200);
+    // Sharing (D-281): a page through its own visibility; anything else on the creation.
+    let publicUrl: string | null = null;
+    if (body.visibility !== undefined) {
+      const pagesUrl = deps.env.PAGES_URL.replace(/\/$/, "");
+      if (body.visibility === "public") {
+        const [{ n } = { n: 0 }] = await db.execute<{ n: number }>(sql`
+          select count(*)::int as n from public.audit_log
+          where org_id = ${row.org_id}::uuid and action = 'creation.shared_public'
+            and created_at > now() - interval '1 day'`);
+        if (n >= PUBLIC_LINKS_PER_DAY)
+          throw new ApiError(
+            429,
+            "too_many_links",
+            "This workspace made many public links today. Try again tomorrow.",
+          );
+      }
+      if (row.page_id) {
+        publicUrl = await setPageVisibility(db, row.page_id, body.visibility, {
+          expiresInDays: body.expires_in_days,
+          pagesUrl,
+        });
+      } else {
+        const token = body.visibility === "public" ? newPageToken() : null;
+        await db.execute(sql`
+          update public.creations set visibility = ${body.visibility},
+            public_token_hash = ${token ? hashPageToken(token) : null},
+            share_expires_at = ${body.visibility === "public" && body.expires_in_days ? new Date(Date.now() + body.expires_in_days * 86_400_000).toISOString() : null}::timestamptz,
+            updated_at = now()
+          where id = ${id}::uuid`);
+        publicUrl = token ? `${pagesUrl}/c/${token}` : null;
+      }
+      await db.execute(sql`
+        insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+        values (${row.org_id}::uuid, 'user', ${claims.sub}::uuid, ${body.visibility === "public" ? "creation.shared_public" : "creation.shared"},
+                'creation', ${id}::uuid, ${JSON.stringify({ visibility: body.visibility })}::jsonb)`);
+    }
+    return c.json(
+      { ...out(await visible(claims, id)), ...(publicUrl ? { public_url: publicUrl } : {}) },
+      200,
+    );
   });
 
   const setDeleted = async (claims: JwtClaims, id: string, deleted: boolean) => {

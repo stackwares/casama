@@ -38,9 +38,15 @@ export const Creation = z
       description: "GET /v1/creations/{id}/preview returns a PDF of it (documents; D-280)",
     }),
     version: z.number().int(),
+    visibility: z.enum(["private", "workspace", "public"]).openapi({
+      description: "Who can open it (D-281); a page's follows the page",
+    }),
     pinned: z.boolean().openapi({ description: "Pinned by the person asking" }),
     last_opened_at: ts.nullable(),
     can_change: z.boolean(),
+    public_url: z.string().nullable().optional().openapi({
+      description: "The public link, only in the answer that made it public (D-281)",
+    }),
     deleted_at: ts.nullable(),
     created_at: ts,
     updated_at: ts,
@@ -72,6 +78,10 @@ export const UpdateCreationRequest = z
       .literal(true)
       .optional()
       .openapi({ description: "Marks it opened now (Recently opened)" }),
+    visibility: z.enum(["private", "workspace", "public"]).optional().openapi({
+      description: "Making it public returns public_url once; public again gives a new link",
+    }),
+    expires_in_days: z.number().int().min(1).max(365).optional(),
   })
   .openapi("UpdateCreationRequest");
 

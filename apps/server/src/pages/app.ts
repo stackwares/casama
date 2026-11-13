@@ -31,6 +31,8 @@ const PUBLIC_SUBMISSIONS_PER_HOUR = 20;
 export function createPagesApp(deps: {
   db: Database;
   pdf?: PdfRenderer | null;
+  /** Where the Library keeps files (D-276), for public creations (D-281). */
+  objects?: import("@casama/sandbox").ObjectStore | null;
   /** Starts a page's "when someone submits" routine (D-279). */
   workflows?: { startRun(runId: string): Promise<void> };
 }) {
@@ -48,12 +50,18 @@ export function createPagesApp(deps: {
       { status: 404, headers: { ...PAGE_HEADERS, "content-type": "text/html; charset=utf-8" } },
     );
 
-  const serve = async (page: PageRow, format: "html" | "pdf", collect?: string) => {
+  const serve = async (
+    page: PageRow,
+    format: "html" | "pdf",
+    collect?: string,
+    reportUrl?: string,
+  ) => {
     const html = renderPage({
       title: page.title,
       html: page.html,
       data: page.data,
       updatedAt: new Date(page.updated_at),
+      ...(reportUrl && format === "html" ? { reportUrl } : {}),
       ...(page.collects && collect && format === "html" ? { collect } : {}),
     });
     if (format === "pdf") {
@@ -192,9 +200,178 @@ export function createPagesApp(deps: {
         select id, title, html, data, updated_at, collects from public.pages
         where public_token_hash = ${hashPageToken(token)} and visibility = 'public'
           and (expires_at is null or expires_at > now())`);
-      return page ? serve(page, format, `/s/${token}/collect`) : notFound();
+      return page ? serve(page, format, `/s/${token}/collect`, `/s/${token}/report`) : notFound();
     });
   }
+
+  // Reporting a public page (D-281): a small form on this origin, since the page itself can't post.
+  const publicPage = async (token: string) => {
+    const [p] = await db.execute<{ id: string; org_id: string; title: string }>(sql`
+      select id, org_id, title from public.pages
+      where public_token_hash = ${hashPageToken(token)} and visibility = 'public'
+        and (expires_at is null or expires_at > now())`);
+    return p ?? null;
+  };
+  app.get("/s/:token/report", async (c) => {
+    const p = await publicPage(c.req.param("token"));
+    if (!p) return notFound();
+    return new Response(
+      `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Report</title><body style="font:16px system-ui;max-width:640px;margin:0 auto;padding:24px 16px"><h1 style="font-size:20px">Report “${p.title.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`)}”</h1><form method="post"><p><textarea name="reason" required maxlength="1000" rows="4" style="width:100%" placeholder="What's wrong with it?"></textarea></p><button type="submit">Send report</button></form></body>`,
+      {
+        headers: {
+          ...PAGE_HEADERS,
+          "content-security-policy":
+            "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
+          "content-type": "text/html; charset=utf-8",
+        },
+      },
+    );
+  });
+  app.post("/s/:token/report", async (c) => {
+    const token = c.req.param("token");
+    const p = await publicPage(token);
+    if (!p) return notFound();
+    const form = await c.req.parseBody().catch(() => ({}) as Record<string, unknown>);
+    const reason = String((form as Record<string, unknown>).reason ?? "")
+      .trim()
+      .slice(0, 1000);
+    const [cr] = await db.execute<{ id: string }>(
+      sql`select id from public.creations where page_id = ${p.id}::uuid`,
+    );
+    if (reason && cr) {
+      const ip =
+        c.req.header("cf-connecting-ip") ??
+        c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ??
+        "?";
+      const { createHash } = await import("node:crypto");
+      await db.execute(sql`
+        insert into public.creation_reports (creation_id, org_id, reason, reporter)
+        values (${cr.id}::uuid, ${p.org_id}::uuid, ${reason}, ${createHash("sha256").update(`${cr.id}:${ip}`).digest("hex").slice(0, 32)})`);
+      const [hidden] = await db.execute<{ id: string }>(sql`
+        update public.creations set taken_down_at = now()
+        where id = ${cr.id}::uuid and taken_down_at is null
+          and (select count(distinct reporter) from public.creation_reports where creation_id = ${cr.id}::uuid) >= 3
+        returning id`);
+      if (hidden)
+        await db.execute(
+          sql`update public.pages set visibility = 'private', public_token_hash = null where id = ${p.id}::uuid`,
+        );
+    }
+    return new Response(
+      `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Thanks</title><p style="font:16px system-ui;padding:24px">Thanks. Your report was sent.</p>`,
+      { headers: { ...PAGE_HEADERS, "content-type": "text/html; charset=utf-8" } },
+    );
+  });
+
+  // ------------------------------------------------------------ Public creations (D-281)
+  type SharedRow = {
+    id: string;
+    org_id: string;
+    kind: string;
+    title: string;
+    mime: string | null;
+    media_id: string | null;
+    blob_key: string | null;
+    preview_key: string | null;
+    size: string;
+  };
+  const shared = async (token: string) => {
+    const [r] = await db.execute<SharedRow>(sql`
+      select id, org_id, kind, title, mime, media_id, blob_key, preview_key, size::text from public.creations
+      where public_token_hash = ${hashPageToken(token)} and visibility = 'public' and deleted_at is null
+        and taken_down_at is null and (share_expires_at is null or share_expires_at > now())`);
+    return r ?? null;
+  };
+  const esc = (t: string) => t.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
+  const VIEWER_CSP =
+    "default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'";
+  // Shown inline only for kinds a browser can't run as code; everything else downloads.
+  const INLINE =
+    /^(image\/(png|jpeg|gif|webp)|video\/(mp4|webm|quicktime)|audio\/(mpeg|mp4|wav|ogg|webm)|application\/pdf)$/;
+
+  app.get("/c/:token", async (c) => {
+    const token = c.req.param("token");
+    const r = await shared(token);
+    if (!r) return notFound();
+    const raw = `/c/${token}/raw`;
+    const body =
+      r.kind === "image"
+        ? `<img src="${raw}" alt="${esc(r.title)}" style="max-width:100%;height:auto;border-radius:12px">`
+        : r.kind === "video"
+          ? `<video src="${raw}" controls playsinline style="max-width:100%;border-radius:12px"></video>`
+          : r.kind === "audio"
+            ? `<audio src="${raw}" controls style="width:100%"></audio>`
+            : `<p><a href="${raw}${r.preview_key ? "?preview=1" : ""}">Open ${esc(r.title)}</a></p>`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>${esc(r.title)}</title>
+<style>body{font:16px system-ui,-apple-system,sans-serif;max-width:860px;margin:0 auto;padding:24px 16px;color:#1d1b20;background:#fbf8fd}@media (prefers-color-scheme:dark){body{color:#e6e0e9;background:#141218}a{color:#d0bcff}}h1{font-size:20px}footer{margin-top:32px;font-size:13px;opacity:.7}details{margin-top:8px}</style></head>
+<body><h1>${esc(r.title)}</h1>${body}
+<footer>Made with Casama. <details><summary>Report this</summary><form method="post" action="/c/${token}/report"><p><textarea name="reason" required maxlength="1000" rows="3" style="width:100%" placeholder="What's wrong with it?"></textarea></p><button type="submit">Send report</button></form></details></footer></body></html>`;
+    return new Response(html, {
+      headers: {
+        ...PAGE_HEADERS,
+        "content-security-policy": VIEWER_CSP,
+        "content-type": "text/html; charset=utf-8",
+      },
+    });
+  });
+
+  app.get("/c/:token/raw", async (c) => {
+    const r = await shared(c.req.param("token"));
+    if (!r) return notFound();
+    let bytes: Uint8Array | null = null;
+    let type = r.mime ?? "application/octet-stream";
+    const { readObject } = await import("@casama/sandbox");
+    if (c.req.query("preview") && r.preview_key && deps.objects) {
+      bytes = await readObject(deps.objects, r.preview_key).catch(() => null);
+      type = "application/pdf";
+    } else if (r.media_id) {
+      const [m] = await db.execute<{ bytes: Buffer }>(
+        sql`select bytes from public.chat_media where id = ${r.media_id}::uuid`,
+      );
+      bytes = m ? new Uint8Array(m.bytes) : null;
+    } else if (r.blob_key && deps.objects) {
+      bytes = await readObject(deps.objects, r.blob_key).catch(() => null);
+    }
+    if (!bytes) return notFound();
+    const name = r.title.replace(/[^\w .-]+/g, "").slice(0, 80) || "file";
+    return new Response(bytes, {
+      headers: {
+        ...PAGE_HEADERS,
+        "content-security-policy": "default-src 'none'; sandbox",
+        "content-type": INLINE.test(type) ? type : "application/octet-stream",
+        "content-disposition": `${INLINE.test(type) ? "inline" : "attachment"}; filename="${name}"`,
+        "content-length": String(bytes.length),
+      },
+    });
+  });
+
+  app.post("/c/:token/report", async (c) => {
+    const r = await shared(c.req.param("token"));
+    if (!r) return notFound();
+    const form = await c.req.parseBody().catch(() => ({}) as Record<string, unknown>);
+    const reason = String((form as Record<string, unknown>).reason ?? "")
+      .trim()
+      .slice(0, 1000);
+    if (reason) {
+      const ip =
+        c.req.header("cf-connecting-ip") ??
+        c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ??
+        "?";
+      const { createHash } = await import("node:crypto");
+      await db.execute(sql`
+        insert into public.creation_reports (creation_id, org_id, reason, reporter)
+        values (${r.id}::uuid, ${r.org_id}::uuid, ${reason}, ${createHash("sha256").update(`${r.id}:${ip}`).digest("hex").slice(0, 32)})`);
+      // Three different people reporting it hide it until an admin looks.
+      await db.execute(sql`
+        update public.creations set taken_down_at = now()
+        where id = ${r.id}::uuid and taken_down_at is null
+          and (select count(distinct reporter) from public.creation_reports where creation_id = ${r.id}::uuid) >= 3`);
+    }
+    return new Response(
+      `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Thanks</title><p style="font:16px system-ui;padding:24px">Thanks. Your report was sent.</p>`,
+      { headers: { ...PAGE_HEADERS, "content-type": "text/html; charset=utf-8" } },
+    );
+  });
 
   type CollectRow = { id: string; org_id: string; title: string; submit_routine_id: string | null };
   app.post("/p/:id/collect", async (c) => {

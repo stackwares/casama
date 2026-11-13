@@ -5776,6 +5776,15 @@
           "version": {
             "type": "integer"
           },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "private",
+              "workspace",
+              "public"
+            ],
+            "description": "Who can open it (D-281); a page's follows the page"
+          },
           "pinned": {
             "type": "boolean",
             "description": "Pinned by the person asking"
@@ -5789,6 +5798,13 @@
           },
           "can_change": {
             "type": "boolean"
+          },
+          "public_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The public link, only in the answer that made it public (D-281)"
           },
           "deleted_at": {
             "type": [
@@ -5827,6 +5843,7 @@
           "has_cover",
           "has_preview",
           "version",
+          "visibility",
           "pinned",
           "last_opened_at",
           "can_change",
@@ -5923,6 +5940,20 @@
               true
             ],
             "description": "Marks it opened now (Recently opened)"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "private",
+              "workspace",
+              "public"
+            ],
+            "description": "Making it public returns public_url once; public again gives a new link"
+          },
+          "expires_in_days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 365
           }
         }
       },
@@ -8737,6 +8768,70 @@
           "orgs"
         ]
       },
+      "ReportedCreationList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportedCreation"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "ReportedCreation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "org_name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "reports": {
+            "type": "integer"
+          },
+          "reporters": {
+            "type": "integer"
+          },
+          "last_reason": {
+            "type": "string"
+          },
+          "taken_down": {
+            "type": "boolean"
+          },
+          "last_reported_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "org_id",
+          "org_name",
+          "title",
+          "kind",
+          "reports",
+          "reporters",
+          "last_reason",
+          "taken_down",
+          "last_reported_at"
+        ]
+      },
       "SaveCreditPackRequest": {
         "type": "object",
         "properties": {
@@ -8880,6 +8975,17 @@
         },
         "required": [
           "reason"
+        ]
+      },
+      "TakeDownRequest": {
+        "type": "object",
+        "properties": {
+          "down": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "down"
         ]
       },
       "RedirectUrl": {
@@ -27107,6 +27213,52 @@
         }
       }
     },
+    "/v1/admin/reports": {
+      "get": {
+        "operationId": "listReportedCreations",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Public links people reported, most reported first (owner only; D-281)",
+        "responses": {
+          "200": {
+            "description": "Reports",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportedCreationList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/admin/credit-packs/{code}": {
       "put": {
         "operationId": "saveCreditPack",
@@ -27499,6 +27651,83 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AdminOrg"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/creations/{id}/takedown": {
+      "post": {
+        "operationId": "takeDownCreation",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Stop a creation's public link at once, or lift that (owner only; D-281)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TakeDownRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Done",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportedCreation"
                 }
               }
             }

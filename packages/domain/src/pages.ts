@@ -67,6 +67,8 @@ export interface RenderablePage {
   updatedAt: Date;
   /** The address responses go to, for a page that takes input (D-279). */
   collect?: string;
+  /** Where a visitor reports a public page (D-281). */
+  reportUrl?: string;
 }
 
 /**
@@ -86,7 +88,7 @@ export function renderPage(p: RenderablePage) {
   const head = `<meta http-equiv="Content-Security-Policy" content="${csp}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><style id="casama-theme">${THEME}</style><script type="application/json" id="${PAGE_DATA_ID}">${scriptJson(p.data)}</script>${p.collect ? collectScript(p.collect) : ""}`;
   const foot = `<div id="casama-updated">Updated <time datetime="${p.updatedAt.toISOString()}">${escapeHtml(
     p.updatedAt.toISOString().slice(0, 16).replace("T", " "),
-  )} UTC</time></div>`;
+  )} UTC</time>${p.reportUrl ? ` · <a href="${escapeHtml(p.reportUrl)}" style="color:inherit">Report</a>` : ""}</div>`;
   let html = p.html;
   // A fragment gets a full document around it.
   if (!/<html[\s>]/i.test(html))

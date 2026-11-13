@@ -200,6 +200,57 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     suspended_reason: o.suspended_reason,
   });
 
+  // Reported public links (D-281).
+  const reportRows = (id?: string) =>
+    db.execute<{
+      id: string;
+      org_id: string;
+      org_name: string;
+      title: string;
+      kind: string;
+      reports: number;
+      reporters: number;
+      last_reason: string;
+      taken_down: boolean;
+      last_reported_at: Date;
+    }>(sql`
+      select c.id, c.org_id, o.name as org_name, c.title, c.kind, count(r.id)::int as reports,
+             count(distinct r.reporter)::int as reporters,
+             (array_agg(r.reason order by r.created_at desc))[1] as last_reason,
+             c.taken_down_at is not null as taken_down, max(r.created_at) as last_reported_at
+      from public.creation_reports r
+      join public.creations c on c.id = r.creation_id
+      join public.organizations o on o.id = c.org_id
+      ${id ? sql`where c.id = ${id}::uuid` : sql``}
+      group by c.id, o.name order by count(r.id) desc, max(r.created_at) desc limit 200`);
+  const reportOut = (r: Awaited<ReturnType<typeof reportRows>>[number]) => ({
+    ...r,
+    last_reported_at: new Date(r.last_reported_at).toISOString(),
+  });
+
+  app.openapi(routes.listReportedCreations, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    return c.json({ items: (await reportRows()).map(reportOut) }, 200);
+  });
+
+  app.openapi(routes.takeDownCreation, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const { id } = c.req.valid("param");
+    const { down } = c.req.valid("json");
+    const [row] = await db.execute<{ org_id: string; page_id: string | null }>(sql`
+      update public.creations set taken_down_at = ${down ? sql`now()` : sql`null`} where id = ${id}::uuid
+      returning org_id, page_id`);
+    if (!row) throw new ApiError(404, "creation_not_found", "Not found");
+    // A page's public link is the page's own: taking it down makes the page private.
+    if (down && row.page_id)
+      await db.execute(sql`
+        update public.pages set visibility = 'private', public_token_hash = null where id = ${row.page_id}::uuid`);
+    const [r] = await reportRows(id);
+    if (!r) throw new ApiError(404, "creation_not_found", "No reports for that");
+    return c.json(reportOut(r), 200);
+  });
+
   app.openapi(routes.suspendOrg, async (c) => {
     const claims = requireClaims(c.get("claims"));
     await requireOwner(claims);

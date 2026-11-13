@@ -15,6 +15,12 @@ abstract class _$UpdateCreationRequestCWProxy {
 
   UpdateCreationRequest opened(bool? opened);
 
+  UpdateCreationRequest visibility(
+    UpdateCreationRequestVisibilityEnum? visibility,
+  );
+
+  UpdateCreationRequest expiresInDays(int? expiresInDays);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateCreationRequest(...).copyWith.fieldName(value)`.
@@ -28,6 +34,8 @@ abstract class _$UpdateCreationRequestCWProxy {
     String? label,
     bool? pinned,
     bool? opened,
+    UpdateCreationRequestVisibilityEnum? visibility,
+    int? expiresInDays,
   });
 }
 
@@ -51,6 +59,15 @@ class _$UpdateCreationRequestCWProxyImpl
   @override
   UpdateCreationRequest opened(bool? opened) => call(opened: opened);
 
+  @override
+  UpdateCreationRequest visibility(
+    UpdateCreationRequestVisibilityEnum? visibility,
+  ) => call(visibility: visibility);
+
+  @override
+  UpdateCreationRequest expiresInDays(int? expiresInDays) =>
+      call(expiresInDays: expiresInDays);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateCreationRequest(...).copyWith.fieldName(value)`.
@@ -65,6 +82,8 @@ class _$UpdateCreationRequestCWProxyImpl
     Object? label = const $CopyWithPlaceholder(),
     Object? pinned = const $CopyWithPlaceholder(),
     Object? opened = const $CopyWithPlaceholder(),
+    Object? visibility = const $CopyWithPlaceholder(),
+    Object? expiresInDays = const $CopyWithPlaceholder(),
   }) {
     return UpdateCreationRequest(
       title: title == const $CopyWithPlaceholder()
@@ -83,6 +102,14 @@ class _$UpdateCreationRequestCWProxyImpl
           ? _value.opened
           // ignore: cast_nullable_to_non_nullable
           : opened as bool?,
+      visibility: visibility == const $CopyWithPlaceholder()
+          ? _value.visibility
+          // ignore: cast_nullable_to_non_nullable
+          : visibility as UpdateCreationRequestVisibilityEnum?,
+      expiresInDays: expiresInDays == const $CopyWithPlaceholder()
+          ? _value.expiresInDays
+          // ignore: cast_nullable_to_non_nullable
+          : expiresInDays as int?,
     );
   }
 }
@@ -107,9 +134,18 @@ UpdateCreationRequest _$UpdateCreationRequestFromJson(
     label: $checkedConvert('label', (v) => v as String?),
     pinned: $checkedConvert('pinned', (v) => v as bool?),
     opened: $checkedConvert('opened', (v) => v as bool?),
+    visibility: $checkedConvert(
+      'visibility',
+      (v) =>
+          $enumDecodeNullable(_$UpdateCreationRequestVisibilityEnumEnumMap, v),
+    ),
+    expiresInDays: $checkedConvert(
+      'expires_in_days',
+      (v) => (v as num?)?.toInt(),
+    ),
   );
   return val;
-});
+}, fieldKeyMap: const {'expiresInDays': 'expires_in_days'});
 
 Map<String, dynamic> _$UpdateCreationRequestToJson(
   UpdateCreationRequest instance,
@@ -118,4 +154,13 @@ Map<String, dynamic> _$UpdateCreationRequestToJson(
   'label': ?instance.label,
   'pinned': ?instance.pinned,
   'opened': ?instance.opened,
+  'visibility':
+      ?_$UpdateCreationRequestVisibilityEnumEnumMap[instance.visibility],
+  'expires_in_days': ?instance.expiresInDays,
+};
+
+const _$UpdateCreationRequestVisibilityEnumEnumMap = {
+  UpdateCreationRequestVisibilityEnum.private: 'private',
+  UpdateCreationRequestVisibilityEnum.workspace: 'workspace',
+  UpdateCreationRequestVisibilityEnum.public: 'public',
 };

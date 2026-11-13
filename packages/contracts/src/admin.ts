@@ -253,3 +253,19 @@ export const ServerCapacity = z
     alerts: z.array(z.object({ kind: AlertKind, day: z.string(), body: z.string() })),
   })
   .openapi("ServerCapacity");
+
+/** A public link someone reported (D-281). */
+export const ReportedCreation = z
+  .object({
+    id: Uuid,
+    org_id: Uuid,
+    org_name: z.string(),
+    title: z.string(),
+    kind: z.string(),
+    reports: z.number().int(),
+    reporters: z.number().int(),
+    last_reason: z.string(),
+    taken_down: z.boolean(),
+    last_reported_at: z.iso.datetime({ offset: true }),
+  })
+  .openapi("ReportedCreation");

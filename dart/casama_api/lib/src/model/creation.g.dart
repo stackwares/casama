@@ -47,11 +47,15 @@ abstract class _$CreationCWProxy {
 
   Creation version(int version);
 
+  Creation visibility(CreationVisibilityEnum visibility);
+
   Creation pinned(bool pinned);
 
   Creation lastOpenedAt(DateTime? lastOpenedAt);
 
   Creation canChange(bool canChange);
+
+  Creation publicUrl(String? publicUrl);
 
   Creation deletedAt(DateTime? deletedAt);
 
@@ -88,9 +92,11 @@ abstract class _$CreationCWProxy {
     bool hasCover,
     bool hasPreview,
     int version,
+    CreationVisibilityEnum visibility,
     bool pinned,
     DateTime? lastOpenedAt,
     bool canChange,
+    String? publicUrl,
     DateTime? deletedAt,
     DateTime createdAt,
     DateTime updatedAt,
@@ -166,6 +172,10 @@ class _$CreationCWProxyImpl implements _$CreationCWProxy {
   Creation version(int version) => call(version: version);
 
   @override
+  Creation visibility(CreationVisibilityEnum visibility) =>
+      call(visibility: visibility);
+
+  @override
   Creation pinned(bool pinned) => call(pinned: pinned);
 
   @override
@@ -174,6 +184,9 @@ class _$CreationCWProxyImpl implements _$CreationCWProxy {
 
   @override
   Creation canChange(bool canChange) => call(canChange: canChange);
+
+  @override
+  Creation publicUrl(String? publicUrl) => call(publicUrl: publicUrl);
 
   @override
   Creation deletedAt(DateTime? deletedAt) => call(deletedAt: deletedAt);
@@ -214,9 +227,11 @@ class _$CreationCWProxyImpl implements _$CreationCWProxy {
     Object? hasCover = const $CopyWithPlaceholder(),
     Object? hasPreview = const $CopyWithPlaceholder(),
     Object? version = const $CopyWithPlaceholder(),
+    Object? visibility = const $CopyWithPlaceholder(),
     Object? pinned = const $CopyWithPlaceholder(),
     Object? lastOpenedAt = const $CopyWithPlaceholder(),
     Object? canChange = const $CopyWithPlaceholder(),
+    Object? publicUrl = const $CopyWithPlaceholder(),
     Object? deletedAt = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
     Object? updatedAt = const $CopyWithPlaceholder(),
@@ -303,6 +318,11 @@ class _$CreationCWProxyImpl implements _$CreationCWProxy {
           ? _value.version
           // ignore: cast_nullable_to_non_nullable
           : version as int,
+      visibility:
+          visibility == const $CopyWithPlaceholder() || visibility == null
+          ? _value.visibility
+          // ignore: cast_nullable_to_non_nullable
+          : visibility as CreationVisibilityEnum,
       pinned: pinned == const $CopyWithPlaceholder() || pinned == null
           ? _value.pinned
           // ignore: cast_nullable_to_non_nullable
@@ -315,6 +335,10 @@ class _$CreationCWProxyImpl implements _$CreationCWProxy {
           ? _value.canChange
           // ignore: cast_nullable_to_non_nullable
           : canChange as bool,
+      publicUrl: publicUrl == const $CopyWithPlaceholder()
+          ? _value.publicUrl
+          // ignore: cast_nullable_to_non_nullable
+          : publicUrl as String?,
       deletedAt: deletedAt == const $CopyWithPlaceholder()
           ? _value.deletedAt
           // ignore: cast_nullable_to_non_nullable
@@ -369,6 +393,7 @@ Creation _$CreationFromJson(Map<String, dynamic> json) => $checkedCreate(
         'has_cover',
         'has_preview',
         'version',
+        'visibility',
         'pinned',
         'last_opened_at',
         'can_change',
@@ -401,12 +426,17 @@ Creation _$CreationFromJson(Map<String, dynamic> json) => $checkedCreate(
       hasCover: $checkedConvert('has_cover', (v) => v as bool),
       hasPreview: $checkedConvert('has_preview', (v) => v as bool),
       version: $checkedConvert('version', (v) => (v as num).toInt()),
+      visibility: $checkedConvert(
+        'visibility',
+        (v) => $enumDecode(_$CreationVisibilityEnumEnumMap, v),
+      ),
       pinned: $checkedConvert('pinned', (v) => v as bool),
       lastOpenedAt: $checkedConvert(
         'last_opened_at',
         (v) => v == null ? null : DateTime.parse(v as String),
       ),
       canChange: $checkedConvert('can_change', (v) => v as bool),
+      publicUrl: $checkedConvert('public_url', (v) => v as String?),
       deletedAt: $checkedConvert(
         'deleted_at',
         (v) => v == null ? null : DateTime.parse(v as String),
@@ -436,6 +466,7 @@ Creation _$CreationFromJson(Map<String, dynamic> json) => $checkedCreate(
     'hasPreview': 'has_preview',
     'lastOpenedAt': 'last_opened_at',
     'canChange': 'can_change',
+    'publicUrl': 'public_url',
     'deletedAt': 'deleted_at',
     'createdAt': 'created_at',
     'updatedAt': 'updated_at',
@@ -463,9 +494,11 @@ Map<String, dynamic> _$CreationToJson(Creation instance) => <String, dynamic>{
   'has_cover': instance.hasCover,
   'has_preview': instance.hasPreview,
   'version': instance.version,
+  'visibility': _$CreationVisibilityEnumEnumMap[instance.visibility]!,
   'pinned': instance.pinned,
   'last_opened_at': instance.lastOpenedAt?.toIso8601String(),
   'can_change': instance.canChange,
+  'public_url': ?instance.publicUrl,
   'deleted_at': instance.deletedAt?.toIso8601String(),
   'created_at': instance.createdAt.toIso8601String(),
   'updated_at': instance.updatedAt.toIso8601String(),
@@ -478,4 +511,10 @@ const _$CreationKindEnumMap = {
   CreationKind.audio: 'audio',
   CreationKind.document: 'document',
   CreationKind.file: 'file',
+};
+
+const _$CreationVisibilityEnumEnumMap = {
+  CreationVisibilityEnum.private: 'private',
+  CreationVisibilityEnum.workspace: 'workspace',
+  CreationVisibilityEnum.public: 'public',
 };

@@ -11,6 +11,7 @@ import {
   BillingSettings,
   CloudModels,
   ConnectionSettings,
+  ReportedCreation,
   SaveCreditPackRequest,
   SavePlanRequest,
   ServerCapacity,
@@ -188,4 +189,35 @@ export const setBillingSettings = createRoute({
   summary: "Change the markup on usage paid with Casama's keys",
   request: { body: jsonBody(BillingSettings) },
   responses: { 200: jsonResponse("Saved", BillingSettings), 401: e401, 403: e403 },
+});
+
+export const listReportedCreations = createRoute({
+  operationId: "listReportedCreations",
+  method: "get",
+  path: "/v1/admin/reports",
+  tags: ["admin"],
+  security,
+  summary: "Public links people reported, most reported first (owner only; D-281)",
+  responses: {
+    200: jsonResponse(
+      "Reports",
+      z.object({ items: z.array(ReportedCreation) }).openapi("ReportedCreationList"),
+    ),
+    401: e401,
+    403: e403,
+  },
+});
+
+export const takeDownCreation = createRoute({
+  operationId: "takeDownCreation",
+  method: "post",
+  path: "/v1/admin/creations/{id}/takedown",
+  tags: ["admin"],
+  security,
+  summary: "Stop a creation's public link at once, or lift that (owner only; D-281)",
+  request: {
+    params: z.object({ id: Uuid }),
+    body: jsonBody(z.object({ down: z.boolean() }).openapi("TakeDownRequest")),
+  },
+  responses: { 200: jsonResponse("Done", ReportedCreation), 401: e401, 403: e403, 404: e404 },
 });

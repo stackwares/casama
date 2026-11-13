@@ -95,6 +95,7 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**adminSetAppConfig**](doc/AdminApi.md#adminsetappconfig) | **PUT** /v1/admin/app-config | Replace the remote app settings (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminUpdates**](doc/AdminApi.md#adminupdates) | **GET** /v1/admin/updates | Whether a newer Casama release exists
 [*AdminApi*](doc/AdminApi.md) | [**adminUsers**](doc/AdminApi.md#adminusers) | **GET** /v1/admin/users | Everyone on this instance
+[*AdminApi*](doc/AdminApi.md) | [**listReportedCreations**](doc/AdminApi.md#listreportedcreations) | **GET** /v1/admin/reports | Public links people reported, most reported first (owner only; D-281)
 [*AdminApi*](doc/AdminApi.md) | [**saveCreditPack**](doc/AdminApi.md#savecreditpack) | **PUT** /v1/admin/credit-packs/{code} | Create or change a credit pack
 [*AdminApi*](doc/AdminApi.md) | [**savePlan**](doc/AdminApi.md#saveplan) | **PUT** /v1/admin/plans/{code} | Create or change a plan; workspaces on it get the new limits right away
 [*AdminApi*](doc/AdminApi.md) | [**setAdminCloudModels**](doc/AdminApi.md#setadmincloudmodels) | **PUT** /v1/admin/models | Change the models Casama Cloud runs (owner only)
@@ -102,6 +103,7 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**setBillingSettings**](doc/AdminApi.md#setbillingsettings) | **PATCH** /v1/admin/billing-settings | Change the markup on usage paid with Casama&#39;s keys
 [*AdminApi*](doc/AdminApi.md) | [**setOrgLimits**](doc/AdminApi.md#setorglimits) | **PATCH** /v1/admin/orgs/{id}/limits | Set a workspace&#39;s quotas
 [*AdminApi*](doc/AdminApi.md) | [**suspendOrg**](doc/AdminApi.md#suspendorg) | **POST** /v1/admin/orgs/{id}/suspend | Suspend a workspace: stops its computers and runs, keeps its data
+[*AdminApi*](doc/AdminApi.md) | [**takeDownCreation**](doc/AdminApi.md#takedowncreation) | **POST** /v1/admin/creations/{id}/takedown | Stop a creation&#39;s public link at once, or lift that (owner only; D-281)
 [*AdminApi*](doc/AdminApi.md) | [**unsuspendOrg**](doc/AdminApi.md#unsuspendorg) | **DELETE** /v1/admin/orgs/{id}/suspend | Lift a workspace&#39;s suspension
 [*AppearanceApi*](doc/AppearanceApi.md) | [**searchWallpapers**](doc/AppearanceApi.md#searchwallpapers) | **GET** /v1/wallpapers | Search wallpaper photos. Only when the server has a photo source configured (config.wallpapers_enabled); 404 otherwise
 [*AppearanceApi*](doc/AppearanceApi.md) | [**trackWallpaperDownload**](doc/AppearanceApi.md#trackwallpaperdownload) | **POST** /v1/wallpapers/download | Tell the photo source a photo was chosen (Unsplash requires this)
@@ -780,6 +782,8 @@ Class | Method | HTTP request | Description
  - [ReplayStepsInner](doc/ReplayStepsInner.md)
  - [ReportDeviceEvents200Response](doc/ReportDeviceEvents200Response.md)
  - [ReportDeviceEventsRequest](doc/ReportDeviceEventsRequest.md)
+ - [ReportedCreation](doc/ReportedCreation.md)
+ - [ReportedCreationList](doc/ReportedCreationList.md)
  - [ResetComputerRequest](doc/ResetComputerRequest.md)
  - [RevertPageRequest](doc/RevertPageRequest.md)
  - [RevokedConnectKey](doc/RevokedConnectKey.md)
@@ -883,6 +887,7 @@ Class | Method | HTTP request | Description
  - [SuspendOrgRequest](doc/SuspendOrgRequest.md)
  - [SwitchBranchRequest](doc/SwitchBranchRequest.md)
  - [SwitchBranchResponse](doc/SwitchBranchResponse.md)
+ - [TakeDownRequest](doc/TakeDownRequest.md)
  - [TakeLeaseRequest](doc/TakeLeaseRequest.md)
  - [TakeOverCallRequest](doc/TakeOverCallRequest.md)
  - [TakeoverRequest](doc/TakeoverRequest.md)

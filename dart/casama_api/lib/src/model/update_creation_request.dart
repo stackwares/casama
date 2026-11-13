@@ -27,6 +27,10 @@ class UpdateCreationRequest {
      this.pinned,
 
      this.opened,
+
+     this.visibility,
+
+     this.expiresInDays,
   });
 
   @JsonKey(
@@ -78,6 +82,33 @@ class UpdateCreationRequest {
 
 
 
+      /// Making it public returns public_url once; public again gives a new link
+  @JsonKey(
+    
+    name: r'visibility',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final UpdateCreationRequestVisibilityEnum? visibility;
+
+
+
+          // minimum: 1
+          // maximum: 365
+  @JsonKey(
+    
+    name: r'expires_in_days',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? expiresInDays;
+
+
+
 
 
     @override
@@ -85,14 +116,18 @@ class UpdateCreationRequest {
       other.title == title &&
       other.label == label &&
       other.pinned == pinned &&
-      other.opened == opened;
+      other.opened == opened &&
+      other.visibility == visibility &&
+      other.expiresInDays == expiresInDays;
 
     @override
     int get hashCode =>
         title.hashCode +
         (label == null ? 0 : label.hashCode) +
         pinned.hashCode +
-        opened.hashCode;
+        opened.hashCode +
+        visibility.hashCode +
+        expiresInDays.hashCode;
 
   factory UpdateCreationRequest.fromJson(Map<String, dynamic> json) => _$UpdateCreationRequestFromJson(json);
 
@@ -104,4 +139,25 @@ class UpdateCreationRequest {
   }
 
 }
+
+/// Making it public returns public_url once; public again gives a new link
+enum UpdateCreationRequestVisibilityEnum {
+    /// Making it public returns public_url once; public again gives a new link
+@JsonValue(r'private')
+private(r'private'),
+    /// Making it public returns public_url once; public again gives a new link
+@JsonValue(r'workspace')
+workspace(r'workspace'),
+    /// Making it public returns public_url once; public again gives a new link
+@JsonValue(r'public')
+public(r'public');
+
+const UpdateCreationRequestVisibilityEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
 

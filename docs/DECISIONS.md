@@ -3308,3 +3308,12 @@ Stage 8 of `docs/MASTER-PLAN-2026-11.md` (Add 2 in `docs/PRODUCT-REVIEW-2026-11-
 - **Decision:** when a kept file (D-276) is a PDF or an Office document, the computer makes a PDF of it with LibreOffice and a PNG of its first page with pdftoppm while it's still awake. Both are stored with the creation (`preview_key`, `cover_key`), so the Library shows the document's first page and `GET /v1/creations/{id}/preview` opens it as a PDF with the computer asleep or reset. Best effort: a document without them still opens as the original file.
 - Bots are told to make a real .pptx, .docx or .xlsx when someone wants slides, a document or a spreadsheet they'll edit, and to link it.
 - **Not done:** editing inside the app; the original file opens in the person's own apps.
+
+## D-281 Share anything in the Library: workspace and public links, reports and takedown
+
+Stage 7 of `docs/MASTER-PLAN-2026-11.md`; `docs/LIBRARY-PLAN.md` Phase 5 (sharing), with §14's default that public links are allowed on Free, rate-limited.
+
+- **Levels:** every creation has a visibility: private (as before: its chat's people, or its person and the bot's managers), workspace (every member), or public (anyone with the link). `PATCH /v1/creations/{id}` with `visibility` changes it; a page goes through its own visibility (D-119), so the two never disagree. Making something public returns `public_url` once; doing it again gives a new link and the old one stops working.
+- **Public viewer:** on the pages origin, `/c/{token}` shows a picture, a video, a sound or a link to open the document (its PDF preview when there is one), under a policy with no scripts at all. `/c/{token}/raw` serves the bytes inline only for picture, video, sound and PDF types; anything else (an HTML file, say) downloads, so a shared file can't run on Casama's origin.
+- **Abuse:** at most 20 new public links per workspace a day; every public creation and every public page has a Report link; three different reporters hide a link until an instance owner looks (`GET /v1/admin/reports`, `POST /v1/admin/creations/{id}/takedown`, which also turns a page private). Reporters are counted by a hash of their address, never the address.
+- **Not done here:** moving generated media's bytes out of Postgres (the other half of Phase 5).

@@ -61,11 +61,15 @@ class Creation {
 
     required  this.version,
 
+    required  this.visibility,
+
     required  this.pinned,
 
     required  this.lastOpenedAt,
 
     required  this.canChange,
+
+     this.publicUrl,
 
     required  this.deletedAt,
 
@@ -317,6 +321,19 @@ class Creation {
 
 
 
+      /// Who can open it (D-281); a page's follows the page
+  @JsonKey(
+    
+    name: r'visibility',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final CreationVisibilityEnum visibility;
+
+
+
       /// Pinned by the person asking
   @JsonKey(
     
@@ -351,6 +368,19 @@ class Creation {
 
 
   final bool canChange;
+
+
+
+      /// The public link, only in the answer that made it public (D-281)
+  @JsonKey(
+    
+    name: r'public_url',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? publicUrl;
 
 
 
@@ -414,9 +444,11 @@ class Creation {
       other.hasCover == hasCover &&
       other.hasPreview == hasPreview &&
       other.version == version &&
+      other.visibility == visibility &&
       other.pinned == pinned &&
       other.lastOpenedAt == lastOpenedAt &&
       other.canChange == canChange &&
+      other.publicUrl == publicUrl &&
       other.deletedAt == deletedAt &&
       other.createdAt == createdAt &&
       other.updatedAt == updatedAt;
@@ -443,9 +475,11 @@ class Creation {
         hasCover.hashCode +
         hasPreview.hashCode +
         version.hashCode +
+        visibility.hashCode +
         pinned.hashCode +
         (lastOpenedAt == null ? 0 : lastOpenedAt.hashCode) +
         canChange.hashCode +
+        (publicUrl == null ? 0 : publicUrl.hashCode) +
         (deletedAt == null ? 0 : deletedAt.hashCode) +
         createdAt.hashCode +
         updatedAt.hashCode;
@@ -460,4 +494,25 @@ class Creation {
   }
 
 }
+
+/// Who can open it (D-281); a page's follows the page
+enum CreationVisibilityEnum {
+    /// Who can open it (D-281); a page's follows the page
+@JsonValue(r'private')
+private(r'private'),
+    /// Who can open it (D-281); a page's follows the page
+@JsonValue(r'workspace')
+workspace(r'workspace'),
+    /// Who can open it (D-281); a page's follows the page
+@JsonValue(r'public')
+public(r'public');
+
+const CreationVisibilityEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
 

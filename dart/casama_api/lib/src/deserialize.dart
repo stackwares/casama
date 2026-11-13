@@ -353,6 +353,8 @@ import 'package:casama_api/src/model/replay_param_info.dart';
 import 'package:casama_api/src/model/replay_steps_inner.dart';
 import 'package:casama_api/src/model/report_device_events200_response.dart';
 import 'package:casama_api/src/model/report_device_events_request.dart';
+import 'package:casama_api/src/model/reported_creation.dart';
+import 'package:casama_api/src/model/reported_creation_list.dart';
 import 'package:casama_api/src/model/reset_computer_request.dart';
 import 'package:casama_api/src/model/revert_page_request.dart';
 import 'package:casama_api/src/model/revoked_connect_key.dart';
@@ -450,6 +452,7 @@ import 'package:casama_api/src/model/suggestion_proposed_action.dart';
 import 'package:casama_api/src/model/suspend_org_request.dart';
 import 'package:casama_api/src/model/switch_branch_request.dart';
 import 'package:casama_api/src/model/switch_branch_response.dart';
+import 'package:casama_api/src/model/take_down_request.dart';
 import 'package:casama_api/src/model/take_lease_request.dart';
 import 'package:casama_api/src/model/take_over_call_request.dart';
 import 'package:casama_api/src/model/takeover_request.dart';
@@ -1309,6 +1312,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ReportDeviceEvents200Response.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ReportDeviceEventsRequest':
           return ReportDeviceEventsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ReportedCreation':
+          return ReportedCreation.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ReportedCreationList':
+          return ReportedCreationList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ResetComputerRequest':
           return ResetComputerRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RevertPageRequest':
@@ -1521,6 +1528,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SwitchBranchRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SwitchBranchResponse':
           return SwitchBranchResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'TakeDownRequest':
+          return TakeDownRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'TakeLeaseRequest':
           return TakeLeaseRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'TakeOverCallRequest':
