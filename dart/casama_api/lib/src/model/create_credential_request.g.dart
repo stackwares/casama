@@ -17,6 +17,8 @@ abstract class _$CreateCredentialRequestCWProxy {
 
   CreateCredentialRequest baseUrl(String? baseUrl);
 
+  CreateCredentialRequest embeddingModel(String? embeddingModel);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateCredentialRequest(...).copyWith.fieldName(value)`.
@@ -31,6 +33,7 @@ abstract class _$CreateCredentialRequestCWProxy {
     String label,
     String? apiKey,
     String? baseUrl,
+    String? embeddingModel,
   });
 }
 
@@ -58,6 +61,10 @@ class _$CreateCredentialRequestCWProxyImpl
   @override
   CreateCredentialRequest baseUrl(String? baseUrl) => call(baseUrl: baseUrl);
 
+  @override
+  CreateCredentialRequest embeddingModel(String? embeddingModel) =>
+      call(embeddingModel: embeddingModel);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateCredentialRequest(...).copyWith.fieldName(value)`.
@@ -73,6 +80,7 @@ class _$CreateCredentialRequestCWProxyImpl
     Object? label = const $CopyWithPlaceholder(),
     Object? apiKey = const $CopyWithPlaceholder(),
     Object? baseUrl = const $CopyWithPlaceholder(),
+    Object? embeddingModel = const $CopyWithPlaceholder(),
   }) {
     return CreateCredentialRequest(
       orgId: orgId == const $CopyWithPlaceholder() || orgId == null
@@ -95,6 +103,10 @@ class _$CreateCredentialRequestCWProxyImpl
           ? _value.baseUrl
           // ignore: cast_nullable_to_non_nullable
           : baseUrl as String?,
+      embeddingModel: embeddingModel == const $CopyWithPlaceholder()
+          ? _value.embeddingModel
+          // ignore: cast_nullable_to_non_nullable
+          : embeddingModel as String?,
     );
   }
 }
@@ -127,6 +139,7 @@ CreateCredentialRequest _$CreateCredentialRequestFromJson(
       label: $checkedConvert('label', (v) => v as String),
       apiKey: $checkedConvert('api_key', (v) => v as String?),
       baseUrl: $checkedConvert('base_url', (v) => v as String?),
+      embeddingModel: $checkedConvert('embedding_model', (v) => v as String?),
     );
     return val;
   },
@@ -134,6 +147,7 @@ CreateCredentialRequest _$CreateCredentialRequestFromJson(
     'orgId': 'org_id',
     'apiKey': 'api_key',
     'baseUrl': 'base_url',
+    'embeddingModel': 'embedding_model',
   },
 );
 
@@ -145,6 +159,7 @@ Map<String, dynamic> _$CreateCredentialRequestToJson(
   'label': instance.label,
   'api_key': ?instance.apiKey,
   'base_url': ?instance.baseUrl,
+  'embedding_model': ?instance.embeddingModel,
 };
 
 const _$ProviderIdEnumMap = {

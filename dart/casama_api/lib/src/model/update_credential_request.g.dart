@@ -11,6 +11,8 @@ abstract class _$UpdateCredentialRequestCWProxy {
 
   UpdateCredentialRequest fallbackOnLimit(bool? fallbackOnLimit);
 
+  UpdateCredentialRequest embeddingModel(String? embeddingModel);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateCredentialRequest(...).copyWith.fieldName(value)`.
@@ -19,7 +21,11 @@ abstract class _$UpdateCredentialRequestCWProxy {
   /// ```dart
   /// UpdateCredentialRequest(...).copyWith(id: 12, name: "My name")
   /// ```
-  UpdateCredentialRequest call({String? label, bool? fallbackOnLimit});
+  UpdateCredentialRequest call({
+    String? label,
+    bool? fallbackOnLimit,
+    String? embeddingModel,
+  });
 }
 
 /// Callable proxy for `copyWith` functionality.
@@ -37,6 +43,10 @@ class _$UpdateCredentialRequestCWProxyImpl
   UpdateCredentialRequest fallbackOnLimit(bool? fallbackOnLimit) =>
       call(fallbackOnLimit: fallbackOnLimit);
 
+  @override
+  UpdateCredentialRequest embeddingModel(String? embeddingModel) =>
+      call(embeddingModel: embeddingModel);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateCredentialRequest(...).copyWith.fieldName(value)`.
@@ -49,6 +59,7 @@ class _$UpdateCredentialRequestCWProxyImpl
   UpdateCredentialRequest call({
     Object? label = const $CopyWithPlaceholder(),
     Object? fallbackOnLimit = const $CopyWithPlaceholder(),
+    Object? embeddingModel = const $CopyWithPlaceholder(),
   }) {
     return UpdateCredentialRequest(
       label: label == const $CopyWithPlaceholder()
@@ -59,6 +70,10 @@ class _$UpdateCredentialRequestCWProxyImpl
           ? _value.fallbackOnLimit
           // ignore: cast_nullable_to_non_nullable
           : fallbackOnLimit as bool?,
+      embeddingModel: embeddingModel == const $CopyWithPlaceholder()
+          ? _value.embeddingModel
+          // ignore: cast_nullable_to_non_nullable
+          : embeddingModel as String?,
     );
   }
 }
@@ -77,17 +92,27 @@ extension $UpdateCredentialRequestCopyWith on UpdateCredentialRequest {
 
 UpdateCredentialRequest _$UpdateCredentialRequestFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate('UpdateCredentialRequest', json, ($checkedConvert) {
-  final val = UpdateCredentialRequest(
-    label: $checkedConvert('label', (v) => v as String?),
-    fallbackOnLimit: $checkedConvert('fallback_on_limit', (v) => v as bool?),
-  );
-  return val;
-}, fieldKeyMap: const {'fallbackOnLimit': 'fallback_on_limit'});
+) => $checkedCreate(
+  'UpdateCredentialRequest',
+  json,
+  ($checkedConvert) {
+    final val = UpdateCredentialRequest(
+      label: $checkedConvert('label', (v) => v as String?),
+      fallbackOnLimit: $checkedConvert('fallback_on_limit', (v) => v as bool?),
+      embeddingModel: $checkedConvert('embedding_model', (v) => v as String?),
+    );
+    return val;
+  },
+  fieldKeyMap: const {
+    'fallbackOnLimit': 'fallback_on_limit',
+    'embeddingModel': 'embedding_model',
+  },
+);
 
 Map<String, dynamic> _$UpdateCredentialRequestToJson(
   UpdateCredentialRequest instance,
 ) => <String, dynamic>{
   'label': ?instance.label,
   'fallback_on_limit': ?instance.fallbackOnLimit,
+  'embedding_model': ?instance.embeddingModel,
 };

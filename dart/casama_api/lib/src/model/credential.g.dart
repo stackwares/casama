@@ -31,6 +31,8 @@ abstract class _$CredentialCWProxy {
 
   Credential fallbackOnLimit(bool fallbackOnLimit);
 
+  Credential embeddingModel(String? embeddingModel);
+
   Credential createdAt(DateTime createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -54,6 +56,7 @@ abstract class _$CredentialCWProxy {
     CredentialStatus status,
     String? account,
     bool fallbackOnLimit,
+    String? embeddingModel,
     DateTime createdAt,
   });
 }
@@ -104,6 +107,10 @@ class _$CredentialCWProxyImpl implements _$CredentialCWProxy {
       call(fallbackOnLimit: fallbackOnLimit);
 
   @override
+  Credential embeddingModel(String? embeddingModel) =>
+      call(embeddingModel: embeddingModel);
+
+  @override
   Credential createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
   /// Creates a new instance with the provided field values.
@@ -128,6 +135,7 @@ class _$CredentialCWProxyImpl implements _$CredentialCWProxy {
     Object? status = const $CopyWithPlaceholder(),
     Object? account = const $CopyWithPlaceholder(),
     Object? fallbackOnLimit = const $CopyWithPlaceholder(),
+    Object? embeddingModel = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
   }) {
     return Credential(
@@ -181,6 +189,10 @@ class _$CredentialCWProxyImpl implements _$CredentialCWProxy {
           ? _value.fallbackOnLimit
           // ignore: cast_nullable_to_non_nullable
           : fallbackOnLimit as bool,
+      embeddingModel: embeddingModel == const $CopyWithPlaceholder()
+          ? _value.embeddingModel
+          // ignore: cast_nullable_to_non_nullable
+          : embeddingModel as String?,
       createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
@@ -219,6 +231,7 @@ Credential _$CredentialFromJson(Map<String, dynamic> json) => $checkedCreate(
         'status',
         'account',
         'fallback_on_limit',
+        'embedding_model',
         'created_at',
       ],
     );
@@ -244,6 +257,7 @@ Credential _$CredentialFromJson(Map<String, dynamic> json) => $checkedCreate(
       ),
       account: $checkedConvert('account', (v) => v as String?),
       fallbackOnLimit: $checkedConvert('fallback_on_limit', (v) => v as bool),
+      embeddingModel: $checkedConvert('embedding_model', (v) => v as String?),
       createdAt: $checkedConvert(
         'created_at',
         (v) => DateTime.parse(v as String),
@@ -259,6 +273,7 @@ Credential _$CredentialFromJson(Map<String, dynamic> json) => $checkedCreate(
     'lastTestOk': 'last_test_ok',
     'ownerUserId': 'owner_user_id',
     'fallbackOnLimit': 'fallback_on_limit',
+    'embeddingModel': 'embedding_model',
     'createdAt': 'created_at',
   },
 );
@@ -277,6 +292,7 @@ Map<String, dynamic> _$CredentialToJson(Credential instance) =>
       'status': _$CredentialStatusEnumMap[instance.status]!,
       'account': instance.account,
       'fallback_on_limit': instance.fallbackOnLimit,
+      'embedding_model': instance.embeddingModel,
       'created_at': instance.createdAt.toIso8601String(),
     };
 

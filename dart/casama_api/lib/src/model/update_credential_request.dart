@@ -23,6 +23,8 @@ class UpdateCredentialRequest {
      this.label,
 
      this.fallbackOnLimit,
+
+     this.embeddingModel,
   });
 
   @JsonKey(
@@ -49,17 +51,32 @@ class UpdateCredentialRequest {
 
 
 
+      /// openai_compatible only; null or empty turns it off
+  @JsonKey(
+    
+    name: r'embedding_model',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? embeddingModel;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is UpdateCredentialRequest &&
       other.label == label &&
-      other.fallbackOnLimit == fallbackOnLimit;
+      other.fallbackOnLimit == fallbackOnLimit &&
+      other.embeddingModel == embeddingModel;
 
     @override
     int get hashCode =>
         label.hashCode +
-        fallbackOnLimit.hashCode;
+        fallbackOnLimit.hashCode +
+        (embeddingModel == null ? 0 : embeddingModel.hashCode);
 
   factory UpdateCredentialRequest.fromJson(Map<String, dynamic> json) => _$UpdateCredentialRequestFromJson(json);
 

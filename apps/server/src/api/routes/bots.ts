@@ -180,6 +180,7 @@ function cloudCredential(orgId: string) {
     status: "ok" as const,
     account: null,
     fallback_on_limit: false,
+    embedding_model: null,
     created_at: "2026-11-11T00:00:00.000Z",
   };
 }
@@ -199,6 +200,7 @@ export const credOut = (c: CredRow) => ({
     c.provider === "chatgpt" ? ((c.oauth as { email?: string } | null)?.email ?? null) : null,
   fallback_on_limit:
     (c.settings as { fallback_on_limit?: boolean } | null)?.fallback_on_limit === true,
+  embedding_model: (c.settings as { embedding_model?: string } | null)?.embedding_model || null,
   created_at: iso(c.createdAt),
 });
 
@@ -1169,6 +1171,9 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           vaultSecretId: secret?.id ?? null,
           keyHint: body.api_key ? body.api_key.slice(-4) : null,
           createdBy: claims.sub,
+          ...(body.provider === "openai_compatible" && body.embedding_model
+            ? { settings: { embedding_model: body.embedding_model } }
+            : {}),
         })
         .returning();
       return row;
@@ -1262,6 +1267,9 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       ...((cred.settings as Record<string, unknown> | null) ?? {}),
       ...(body.fallback_on_limit !== undefined
         ? { fallback_on_limit: body.fallback_on_limit }
+        : {}),
+      ...(body.embedding_model !== undefined && cred.provider === "openai_compatible"
+        ? { embedding_model: body.embedding_model || null }
         : {}),
     };
     const [row] = await db

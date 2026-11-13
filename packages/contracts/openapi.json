@@ -3233,6 +3233,13 @@
             "type": "boolean",
             "description": "chatgpt: use the bot's next model when the plan limit is reached"
           },
+          "embedding_model": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "openai_compatible: the server's embedding model, used for memory and knowledge search when there's no OpenAI key (D-271)"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -3251,6 +3258,7 @@
           "status",
           "account",
           "fallback_on_limit",
+          "embedding_model",
           "created_at"
         ]
       },
@@ -3737,6 +3745,12 @@
           "base_url": {
             "type": "string",
             "format": "uri"
+          },
+          "embedding_model": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "openai_compatible only: an embedding model on that server, for memory search"
           }
         },
         "required": [
@@ -4526,6 +4540,14 @@
           },
           "fallback_on_limit": {
             "type": "boolean"
+          },
+          "embedding_model": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 200,
+            "description": "openai_compatible only; null or empty turns it off"
           }
         }
       },

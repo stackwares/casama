@@ -30,6 +30,8 @@ class CreateCredentialRequest {
      this.apiKey,
 
      this.baseUrl,
+
+     this.embeddingModel,
   });
 
   @JsonKey(
@@ -93,6 +95,19 @@ class CreateCredentialRequest {
 
 
 
+      /// openai_compatible only: an embedding model on that server, for memory search
+  @JsonKey(
+    
+    name: r'embedding_model',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? embeddingModel;
+
+
+
 
 
     @override
@@ -101,7 +116,8 @@ class CreateCredentialRequest {
       other.provider == provider &&
       other.label == label &&
       other.apiKey == apiKey &&
-      other.baseUrl == baseUrl;
+      other.baseUrl == baseUrl &&
+      other.embeddingModel == embeddingModel;
 
     @override
     int get hashCode =>
@@ -109,7 +125,8 @@ class CreateCredentialRequest {
         provider.hashCode +
         label.hashCode +
         apiKey.hashCode +
-        baseUrl.hashCode;
+        baseUrl.hashCode +
+        embeddingModel.hashCode;
 
   factory CreateCredentialRequest.fromJson(Map<String, dynamic> json) => _$CreateCredentialRequestFromJson(json);
 

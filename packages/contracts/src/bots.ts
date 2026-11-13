@@ -305,6 +305,10 @@ export const Credential = z
     fallback_on_limit: z.boolean().openapi({
       description: "chatgpt: use the bot's next model when the plan limit is reached",
     }),
+    embedding_model: z.string().nullable().openapi({
+      description:
+        "openai_compatible: the server's embedding model, used for memory and knowledge search when there's no OpenAI key (D-271)",
+    }),
     created_at: ts,
   })
   .openapi("Credential");
@@ -313,6 +317,9 @@ export const UpdateCredentialRequest = z
   .object({
     label: z.string().trim().min(1).max(80).optional(),
     fallback_on_limit: z.boolean().optional(),
+    embedding_model: z.string().trim().max(200).nullable().optional().openapi({
+      description: "openai_compatible only; null or empty turns it off",
+    }),
   })
   .openapi("UpdateCredentialRequest");
 
@@ -363,6 +370,9 @@ export const CreateCredentialRequest = z
       .optional()
       .openapi({ description: "Stored in Vault; never returned" }),
     base_url: z.url().optional(),
+    embedding_model: z.string().trim().min(1).max(200).optional().openapi({
+      description: "openai_compatible only: an embedding model on that server, for memory search",
+    }),
   })
   .openapi("CreateCredentialRequest");
 

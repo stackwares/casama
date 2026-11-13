@@ -46,6 +46,8 @@ class Credential {
 
     required  this.fallbackOnLimit,
 
+    required  this.embeddingModel,
+
     required  this.createdAt,
   });
 
@@ -197,6 +199,19 @@ class Credential {
 
 
 
+      /// openai_compatible: the server's embedding model, used for memory and knowledge search when there's no OpenAI key (D-271)
+  @JsonKey(
+    
+    name: r'embedding_model',
+    required: true,
+    includeIfNull: true,
+  )
+
+
+  final String? embeddingModel;
+
+
+
   @JsonKey(
     
     name: r'created_at',
@@ -225,6 +240,7 @@ class Credential {
       other.status == status &&
       other.account == account &&
       other.fallbackOnLimit == fallbackOnLimit &&
+      other.embeddingModel == embeddingModel &&
       other.createdAt == createdAt;
 
     @override
@@ -241,6 +257,7 @@ class Credential {
         status.hashCode +
         (account == null ? 0 : account.hashCode) +
         fallbackOnLimit.hashCode +
+        (embeddingModel == null ? 0 : embeddingModel.hashCode) +
         createdAt.hashCode;
 
   factory Credential.fromJson(Map<String, dynamic> json) => _$CredentialFromJson(json);

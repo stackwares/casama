@@ -3221,7 +3221,7 @@ From the "alongside" list of `docs/MASTER-PLAN-2026-11.md` (Fix 20, 22 and 23 in
 - **Push tokens:** FCM 404 still forgets a token; a 400 only when its message names the token (`fcmTokenGone`). APNs VoIP 410 still does; a 400 only with `BadDeviceToken`. Before, any bad payload unsubscribed every phone it went to.
 - **Sign-in refresh:** refreshing a connection's OAuth token takes a per-connection advisory lock, re-reads the token inside it, and refreshes only if it's still expiring. Two runs at once used to refresh twice, and with providers that rotate refresh tokens the loser held a retired token.
 - **Local models:** calls on an `openai_compatible` credential (Ollama, LM Studio, vLLM) cost $0, whatever the model is called; a guessed $1/$3 price stopped local runs at the default $1 budget.
-- **Local memory search:** an `openai_compatible` credential whose `settings.embedding_model` is set is used for memory and knowledge search when there's no OpenAI key. Vectors shorter than the stored 1,536 dimensions are padded with zeros (cosine similarity unchanged); longer ones are cut and renormalized. The create-credential API gains the field after Stage 2's contract work lands.
+- **Local memory search:** an `openai_compatible` credential whose `settings.embedding_model` is set is used for memory and knowledge search when there's no OpenAI key. Vectors shorter than the stored 1,536 dimensions are padded with zeros (cosine similarity unchanged); longer ones are cut and renormalized. The credential API takes and returns `embedding_model` (create and update, `openai_compatible` only).
 
 ## D-272 A self-hosted server keeps itself up: a memory budget by default, capped logs, a worker health check, alerts by email
 
