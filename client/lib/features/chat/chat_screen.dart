@@ -54,10 +54,16 @@ import 'widgets/error_details.dart';
 import 'widgets/shared_files.dart';
 import '../../core/analytics.dart';
 
-/// The computer a bot uses: its private computer, else the team computer.
+/// The computer a bot uses, picked as the server picks it (`Computers.forBot`): its default
+/// computer when it has one (and nothing else then), else its private computer, else the team
+/// computer. Never some other computer in the workspace, so a file never lands on a computer the
+/// bot can't see (Fix 17).
 Computer? computerForBot(List<Computer> computers, String botId, {String? defaultComputerId}) {
-  for (final c in computers) {
-    if (defaultComputerId != null && c.id == defaultComputerId) return c;
+  if (defaultComputerId != null) {
+    for (final c in computers) {
+      if (c.id == defaultComputerId) return c;
+    }
+    return null;
   }
   for (final c in computers) {
     if (c.ownerBotId == botId) return c;
@@ -65,7 +71,7 @@ Computer? computerForBot(List<Computer> computers, String botId, {String? defaul
   for (final c in computers) {
     if (c.kind == ComputerKindEnum.team) return c;
   }
-  return computers.isEmpty ? null : computers.first;
+  return null;
 }
 
 Future<void> confirmRestore(BuildContext context, WidgetRef ref, String computerId, String checkpointId) async {
