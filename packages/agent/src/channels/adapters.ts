@@ -22,7 +22,9 @@ export type ChannelKind =
   | "feishu"
   | "imessage"
   | "teams"
-  | "discord";
+  | "discord"
+  | "linear"
+  | "jira";
 
 export interface WebhookRequest {
   method: string;
@@ -770,7 +772,11 @@ const discord: ChannelAdapter = {
       return verifySignature(
         null,
         Buffer.from(ts + req.body),
-        createPublicKey({ key: Buffer.concat([ED25519_SPKI, Buffer.from(key, "hex")]), format: "der", type: "spki" }),
+        createPublicKey({
+          key: Buffer.concat([ED25519_SPKI, Buffer.from(key, "hex")]),
+          format: "der",
+          type: "spki",
+        }),
         Buffer.from(sig, "hex"),
       );
     } catch {
@@ -806,8 +812,10 @@ const discord: ChannelAdapter = {
   respond(req) {
     const b = json(req.body);
     // PING is Discord checking the address; a command gets "thinking…" while the bot works.
-    if (b.type === 1) return { status: 200, body: JSON.stringify({ type: 1 }), type: "application/json" };
-    if (b.type === 2) return { status: 200, body: JSON.stringify({ type: 5 }), type: "application/json" };
+    if (b.type === 1)
+      return { status: 200, body: JSON.stringify({ type: 1 }), type: "application/json" };
+    if (b.type === 2)
+      return { status: 200, body: JSON.stringify({ type: 5 }), type: "application/json" };
     return null;
   },
   async send(cfg, s, reply, text, f) {
@@ -886,7 +894,10 @@ const teams: ChannelAdapter = {
     if (a.type !== "message" || typeof a.text !== "string") return [];
     const from = (a.from ?? {}) as Record<string, unknown>;
     const conv = (a.conversation ?? {}) as Record<string, unknown>;
-    const text = a.text.replace(/<at>[^<]*<\/at>\s*/g, "").replace(/<[^>]+>/g, "").trim();
+    const text = a.text
+      .replace(/<at>[^<]*<\/at>\s*/g, "")
+      .replace(/<[^>]+>/g, "")
+      .trim();
     if (!text || !conv.id) return [];
     return [
       {
@@ -911,10 +922,189 @@ const teams: ChannelAdapter = {
         {
           method: "POST",
           headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
-          body: JSON.stringify({ type: "message", text, ...(reply.activity_id ? { replyToId: reply.activity_id } : {}) }),
+          body: JSON.stringify({
+            type: "message",
+            text,
+            ...(reply.activity_id ? { replyToId: reply.activity_id } : {}),
+          }),
         },
       ),
       "Teams",
+    );
+  },
+};
+
+// ------------------------------------------------------------------ Linear and Jira (issues; D-285)
+/**
+ * An issue tracker as a chat app: assigning an issue to the bot's tracker user (or commenting on
+ * one it was given) is a message, and the bot's reply is a comment on the issue. One conversation
+ * per issue, so follow-up comments keep the context.
+ */
+const linear: ChannelAdapter = {
+  kind: "linear",
+  maxText: 50_000,
+  verify(req, _c, s) {
+    if (!s.webhook_secret) return false;
+    const want = createHmac("sha256", s.webhook_secret).update(req.body).digest("hex");
+    const ts = Number(json(req.body).webhookTimestamp ?? 0);
+    return (
+      same(h(req, "linear-signature"), want) && (!ts || Math.abs(Date.now() - ts) < 5 * 60_000)
+    );
+  },
+  normalize(req, cfg) {
+    const b = json(req.body);
+    const data = (b.data ?? {}) as Record<string, unknown>;
+    const actor = (b.actor ?? {}) as Record<string, unknown>;
+    const me = String(cfg.assignee_id ?? "");
+    if (!me || actor.id === me) return [];
+    if (b.type === "Issue" && (b.action === "create" || b.action === "update")) {
+      const assignedNow =
+        data.assigneeId === me &&
+        (b.action === "create" ||
+          (b.updatedFrom as Record<string, unknown> | undefined)?.assigneeId !== undefined);
+      if (!assignedNow) return [];
+      return [
+        {
+          messageId: `${data.id}:assigned:${b.webhookTimestamp ?? b.createdAt ?? ""}`,
+          threadKey: `linear:${data.id}`,
+          sender: String(actor.id ?? ""),
+          senderName: actor.name as string | undefined,
+          subject: `${data.identifier ?? ""} ${data.title ?? ""}`.trim(),
+          text: `You were assigned the Linear issue ${data.identifier ?? ""}: ${data.title ?? ""}\n\n${String(data.description ?? "").trim()}\n\nDo the work, then reply with what you did; your reply is posted as a comment on the issue.`.trim(),
+          reply: { issue_id: data.id },
+        },
+      ];
+    }
+    if (b.type === "Comment" && b.action === "create") {
+      const issue = (data.issue ?? {}) as Record<string, unknown>;
+      if (issue.assigneeId !== undefined && issue.assigneeId !== me) return [];
+      const text = String(data.body ?? "").trim();
+      if (!text || !data.issueId) return [];
+      return [
+        {
+          messageId: String(data.id ?? "") || undefined,
+          threadKey: `linear:${data.issueId}`,
+          sender: String(actor.id ?? data.userId ?? ""),
+          senderName: actor.name as string | undefined,
+          text,
+          reply: { issue_id: data.issueId },
+        },
+      ];
+    }
+    return [];
+  },
+  async send(cfg, s, reply, text, f) {
+    const res = await ok(
+      await f(`${base(cfg, "https://api.linear.app")}/graphql`, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: s.api_key ?? "" },
+        body: JSON.stringify({
+          query:
+            "mutation($input: CommentCreateInput!) { commentCreate(input: $input) { success } }",
+          variables: { input: { issueId: reply.issue_id, body: text } },
+        }),
+      }),
+      "Linear",
+    );
+    const r = (await res.json()) as { errors?: Array<{ message?: string }> };
+    if (r.errors?.length) throw new Error(`Linear: ${r.errors[0]?.message ?? "error"}`);
+  },
+};
+
+/** The plain text of a Jira description or comment (Atlassian Document Format, or a string). */
+export function adfText(node: unknown): string {
+  if (typeof node === "string") return node;
+  if (!node || typeof node !== "object") return "";
+  const n = node as { type?: string; text?: string; content?: unknown[] };
+  if (n.type === "text") return n.text ?? "";
+  const inner = (n.content ?? []).map(adfText).join("");
+  return ["paragraph", "heading", "listItem", "codeBlock", "blockquote"].includes(n.type ?? "")
+    ? `${inner}\n`
+    : inner;
+}
+const jira: ChannelAdapter = {
+  kind: "jira",
+  maxText: 30_000,
+  verify(req, _c, s) {
+    if (!s.webhook_secret) return false;
+    const want = `sha256=${createHmac("sha256", s.webhook_secret).update(req.body).digest("hex")}`;
+    return same(h(req, "x-hub-signature"), want);
+  },
+  normalize(req, cfg) {
+    const b = json(req.body);
+    const issue = (b.issue ?? {}) as Record<string, unknown>;
+    const fields = (issue.fields ?? {}) as Record<string, unknown>;
+    const me = String(cfg.assignee_account_id ?? "");
+    const user = (b.user ??
+      (b.comment as Record<string, unknown> | undefined)?.author ??
+      {}) as Record<string, unknown>;
+    if (!me || user.accountId === me || !issue.id) return [];
+    const assignee = (fields.assignee as Record<string, unknown> | undefined)?.accountId;
+    if (b.webhookEvent === "jira:issue_created" || b.webhookEvent === "jira:issue_updated") {
+      const items = ((b.changelog as Record<string, unknown> | undefined)?.items ?? []) as Array<
+        Record<string, unknown>
+      >;
+      const assignedNow =
+        assignee === me &&
+        (b.webhookEvent === "jira:issue_created" ||
+          items.some((i) => i.field === "assignee" && i.to === me));
+      if (!assignedNow) return [];
+      return [
+        {
+          messageId: `${issue.id}:assigned:${b.timestamp ?? ""}`,
+          threadKey: `jira:${issue.id}`,
+          sender: String(user.accountId ?? ""),
+          senderName: user.displayName as string | undefined,
+          subject: `${issue.key ?? ""} ${fields.summary ?? ""}`.trim(),
+          text: `You were assigned the Jira issue ${issue.key ?? ""}: ${fields.summary ?? ""}\n\n${adfText(fields.description).trim()}\n\nDo the work, then reply with what you did; your reply is posted as a comment on the issue.`.trim(),
+          reply: { issue_key: issue.key },
+        },
+      ];
+    }
+    if (b.webhookEvent === "comment_created" && assignee === me) {
+      const comment = (b.comment ?? {}) as Record<string, unknown>;
+      const text = adfText(comment.body).trim();
+      if (!text) return [];
+      return [
+        {
+          messageId: String(comment.id ?? "") || undefined,
+          threadKey: `jira:${issue.id}`,
+          sender: String(user.accountId ?? ""),
+          senderName: user.displayName as string | undefined,
+          text,
+          reply: { issue_key: issue.key },
+        },
+      ];
+    }
+    return [];
+  },
+  async send(cfg, s, reply, text, f) {
+    const site = String(cfg.site_url ?? "").replace(/\/$/, "");
+    if (!/^https:\/\//.test(site) && !cfg.api_base) throw new Error("Jira: set the site address");
+    await ok(
+      await f(
+        `${base(cfg, site)}/rest/api/3/issue/${encodeURIComponent(String(reply.issue_key))}/comment`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Basic ${Buffer.from(`${cfg.email}:${s.api_token}`).toString("base64")}`,
+          },
+          body: JSON.stringify({
+            body: {
+              type: "doc",
+              version: 1,
+              content: text
+                .split(/\n{2,}/)
+                .map((p) => ({
+                  type: "paragraph",
+                  content: p.trim() ? [{ type: "text", text: p }] : [],
+                })),
+            },
+          }),
+        },
+      ),
+      "Jira",
     );
   },
 };
@@ -930,6 +1120,8 @@ export const ADAPTERS: Record<ChannelKind, ChannelAdapter> = {
   imessage,
   teams,
   discord,
+  linear,
+  jira,
 };
 
 /** Whether a sender may talk to the bot (exact match, case-insensitive; "*@domain" for email). */

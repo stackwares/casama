@@ -41,6 +41,13 @@ const REQUIRED: Record<string, { secrets: string[]; config: string[] }> = {
   // key (signatures) and the bot token (replies after the 15-minute interaction window).
   teams: { secrets: ["app_password"], config: ["app_id"] },
   discord: { secrets: ["bot_token"], config: ["application_id", "public_key"] },
+  // D-285: the tracker user that stands for the bot (assign issues to it), a key to comment with,
+  // and the webhook's signing secret.
+  linear: { secrets: ["api_key", "webhook_secret"], config: ["assignee_id"] },
+  jira: {
+    secrets: ["api_token", "webhook_secret"],
+    config: ["site_url", "email", "assignee_account_id"],
+  },
 };
 
 type Row = {
@@ -287,7 +294,10 @@ export function registerChannelRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     // Discord expects its own answer (PING, or "thinking…" while the bot works).
     const custom = adapter.respond?.(req);
     if (custom)
-      return new Response(custom.body, { status: custom.status, headers: { "content-type": custom.type } });
+      return new Response(custom.body, {
+        status: custom.status,
+        headers: { "content-type": custom.type },
+      });
     // SMS (Twilio) wants TwiML; an empty response means "no reply now" — replies go out through the API.
     if (ch.kind === "sms")
       return new Response("<Response></Response>", {

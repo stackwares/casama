@@ -41,6 +41,8 @@ String channelKindName(ChannelKind k) => switch (k) {
   ChannelKind.imessage => 'iMessage',
   ChannelKind.teams => 'Microsoft Teams',
   ChannelKind.discord => 'Discord',
+  ChannelKind.linear => 'Linear',
+  ChannelKind.jira => 'Jira',
 };
 
 IconData channelIcon(ChannelKind k) => switch (k) {
@@ -73,6 +75,15 @@ final Map<ChannelKind, List<_Field>> _fields = {
     ('application_id', false, (l) => l.chAppId),
     ('public_key', false, (l) => l.chPublicKey),
     ('bot_token', true, (l) => l.chBotToken),
+  ],
+  // D-285: the tracker user that stands for the bot, a key to comment with, the webhook secret.
+  ChannelKind.linear: [('assignee_id', false, (l) => l.chTrackerUser), ('api_key', true, (l) => l.chApiKey), ('webhook_secret', true, (l) => l.chSigningSecret)],
+  ChannelKind.jira: [
+    ('site_url', false, (l) => l.chSiteUrl),
+    ('email', false, (l) => l.chAccountEmail),
+    ('assignee_account_id', false, (l) => l.chTrackerUser),
+    ('api_token', true, (l) => l.chApiKey),
+    ('webhook_secret', true, (l) => l.chSigningSecret),
   ],
 };
 

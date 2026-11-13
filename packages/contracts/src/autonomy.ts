@@ -190,6 +190,8 @@ export const MessageTriggerConfig = z
         "imessage",
         "teams",
         "discord",
+        "linear",
+        "jira",
       ])
       .optional(),
     sender: z

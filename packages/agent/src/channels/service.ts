@@ -45,6 +45,8 @@ const KIND_NAMES: Record<ChannelKind, string> = {
   imessage: "iMessage",
   teams: "Teams",
   discord: "Discord",
+  linear: "Linear",
+  jira: "Jira",
 };
 
 export async function loadChannel(db: Database, id: string): Promise<ChannelRow | null> {
@@ -306,7 +308,7 @@ export function registerChannelTools(
   registry.register({
     name: "channel.send",
     description:
-      "Send a new message through one of your chat apps (Telegram, email, SMS, Slack, Teams, Discord, WhatsApp, Messenger, Feishu, iMessage) to someone on its allowed list. Replies in a conversation that came from a chat app go back automatically; use this to start a new message.",
+      "Send a new message through one of your chat apps (Telegram, email, SMS, Slack, Teams, Discord, WhatsApp, Messenger, Feishu, iMessage, Linear, Jira) to someone on its allowed list. Replies in a conversation that came from a chat app go back automatically; use this to start a new message.",
     risk: "high",
     category: "send",
     schema: z.object({

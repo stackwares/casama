@@ -10726,6 +10726,24 @@ abstract class AppLocalizations {
   /// **'Verification token'**
   String get chVerificationToken;
 
+  /// No description provided for @chTrackerUser.
+  ///
+  /// In en, this message translates to:
+  /// **'The bot's user ID in the tracker'**
+  String get chTrackerUser;
+
+  /// No description provided for @chSiteUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Site address (https://…)'**
+  String get chSiteUrl;
+
+  /// No description provided for @chAccountEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Account email'**
+  String get chAccountEmail;
+
   /// No description provided for @chPublicKey.
   ///
   /// In en, this message translates to:

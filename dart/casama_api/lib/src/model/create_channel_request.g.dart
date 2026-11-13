@@ -173,4 +173,6 @@ const _$ChannelKindEnumMap = {
   ChannelKind.imessage: 'imessage',
   ChannelKind.teams: 'teams',
   ChannelKind.discord: 'discord',
+  ChannelKind.linear: 'linear',
+  ChannelKind.jira: 'jira',
 };

@@ -6963,6 +6963,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chPublicKey => 'Public key';
 
   @override
+  String get chTrackerUser => 'The bot\'s user ID in the tracker';
+
+  @override
+  String get chSiteUrl => 'Site address (https://…)';
+
+  @override
+  String get chAccountEmail => 'Account email';
+
+  @override
   String get routineMessage => 'When a matching message arrives';
 
   @override

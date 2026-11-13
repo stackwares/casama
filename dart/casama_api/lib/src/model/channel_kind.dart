@@ -26,7 +26,11 @@ enum ChannelKind {
       @JsonValue(r'teams')
       teams(r'teams'),
       @JsonValue(r'discord')
-      discord(r'discord');
+      discord(r'discord'),
+      @JsonValue(r'linear')
+      linear(r'linear'),
+      @JsonValue(r'jira')
+      jira(r'jira');
 
   const ChannelKind(this.value);
 

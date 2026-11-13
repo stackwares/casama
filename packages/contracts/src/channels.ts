@@ -14,6 +14,8 @@ export const ChannelKind = z
     "imessage",
     "teams",
     "discord",
+    "linear",
+    "jira",
   ])
   .openapi("ChannelKind");
 

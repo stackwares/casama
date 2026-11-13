@@ -3354,3 +3354,12 @@ Stage 8 of `docs/MASTER-PLAN-2026-11.md`; `docs/LIBRARY-PLAN.md` Phase 6 ("sound
 
 - **Decision:** `media.audio.generate` turns up to 4,000 characters into speech in a chosen Gemini voice, on the same OpenRouter speech service as read-aloud (D-261): the workspace's own key, else the server's. It shows under the reply, is saved on the computer when there is one, and is kept in the Library as audio. It asks first under the default autonomy, like pictures and videos, and is charged as `tts_chars` (with markup and a credit check on the server's key), so no new paid dependency.
 - **Not done:** music and sound effects. No provider on the keys Casama already uses makes them; adding one is a new paid dependency that needs its own decision and a row in `docs/COSTS.md`. Duplicating a creation is also not built yet.
+
+## D-285 Give a bot a Linear or Jira issue
+
+Stage 6 of `docs/MASTER-PLAN-2026-11.md` (Add 14 in `docs/PRODUCT-REVIEW-2026-11-13.md`).
+
+- **Decision:** Linear and Jira are chat-app kinds, so they reuse everything chat apps have: the signed webhook, the allowed-senders gate, repeats skipped (D-270), one conversation per issue, and routines started by a message. Assigning an issue to the tracker user that stands for the bot (or creating it assigned) starts a run with the issue's title and description; comments on an issue the bot holds continue the conversation; the bot's reply is posted as a comment on the issue. Changes the bot made itself are ignored.
+- **Linear:** webhooks signed with `Linear-Signature` (HMAC of the body, timestamp within 5 minutes); comments through the GraphQL API with an API key.
+- **Jira Cloud:** webhooks with a secret (`X-Hub-Signature: sha256=…`); descriptions and comments read from Atlassian's document format; comments posted with the account's email and API token.
+- **Not done:** moving the issue's status as the bot works (it says so in its comment instead).
