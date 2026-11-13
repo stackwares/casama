@@ -20,6 +20,7 @@ import {
   postTopicResults,
   projectHeartbeat,
   purgeDeviceData,
+  purgeSeenInbound,
   type RunDeps,
   refreshIntegration,
   revokeToken,
@@ -878,6 +879,10 @@ export const maintenanceWorkflow = DBOS.registerWorkflow(
     });
     // The engine keeps every step's result for replay. Once a workflow has ended nothing reads
     // them again, so they go after a week instead of growing forever (D-267).
+    await DBOS.runStep(
+      () => purgeSeenInbound(rt().db).catch(captureStep("purge-seen-inbound", 0)),
+      { name: "purge-seen-inbound" },
+    );
     await DBOS.runStep(
       () => purgeEndedWorkflows(rt().db).catch(captureStep("purge-workflows", 0)),
       {

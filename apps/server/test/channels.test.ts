@@ -93,11 +93,15 @@ describe("chat apps", () => {
     expect((await post(msg(7, "Hi, are you open today?"))).status).toBe(200);
     expect((await post(msg(7, "And tomorrow?"))).status).toBe(200);
     expect((await post(msg(99, "spam"))).status).toBe(200);
+    // The same update delivered twice starts one run (D-270).
+    const repeat = { update_id: 5001, ...msg(7, "Is parking free?") };
+    expect((await post(repeat)).status).toBe(200);
+    expect((await post(repeat)).status).toBe(200);
 
     const runs = await h.tdb.admin<
       { conversation_id: string; trigger: string }[]
     >`select conversation_id, trigger from public.runs where bot_id = ${botId} order by created_at`;
-    expect(runs.map((r) => r.trigger)).toEqual(["channel", "channel"]);
+    expect(runs.map((r) => r.trigger)).toEqual(["channel", "channel", "channel"]);
     expect(runs[0]!.conversation_id).toBe(runs[1]!.conversation_id);
     const [m] = await h.tdb.admin<{ content: Array<{ type: string; text?: string }> }[]>`
       select content from public.messages where conversation_id = ${runs[0]!.conversation_id} order by created_at limit 1`;
@@ -106,7 +110,7 @@ describe("chat apps", () => {
     const events = (await j(await h.request(`/v1/channels/${ch.id}/events`, { token: u.token })))
       .items as Array<{ status: string; sender: string }>;
     expect(events.find((e) => e.status === "ignored")?.sender).toBe("99");
-    expect(events.filter((e) => e.status === "accepted")).toHaveLength(2);
+    expect(events.filter((e) => e.status === "accepted")).toHaveLength(3);
 
     // The run's final answer goes back to the same chat.
     await replyToChannel(
@@ -125,7 +129,7 @@ describe("chat apps", () => {
       json: { enabled: false },
     });
     await post(msg(7, "still there?"));
-    expect((await h.tdb.admin`select 1 from public.runs where bot_id = ${botId}`).length).toBe(2);
+    expect((await h.tdb.admin`select 1 from public.runs where bot_id = ${botId}`).length).toBe(3);
     const [vs] = await h.tdb.admin<
       { vault_secret_id: string }[]
     >`select vault_secret_id from public.channels where id = ${ch.id}`;

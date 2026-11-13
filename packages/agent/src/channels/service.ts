@@ -18,6 +18,7 @@ import {
   previewOf,
   type Secrets,
   senderAllowed,
+  splitText,
 } from "./adapters.ts";
 
 export interface ChannelRow {
@@ -132,6 +133,14 @@ export async function handleInbound(
     select id, trigger from public.routines where bot_id = ${c.bot_id}::uuid and enabled and trigger ->> 'type' = 'message'
       and (ends_at is null or ends_at > now())`);
   for (const m of messages) {
+    // A webhook delivered twice is handled once (D-270).
+    if (m.messageId) {
+      const [fresh] = await db.execute<{ message_id: string }>(sql`
+        insert into public.channel_inbound_seen (channel_id, message_id)
+        values (${c.id}::uuid, ${m.messageId.slice(0, 300)})
+        on conflict do nothing returning message_id`);
+      if (!fresh) continue;
+    }
     // Routines with matching filters start on the message, whoever sent it.
     let routed = false;
     for (const r of routines)
@@ -245,7 +254,10 @@ export async function sendThrough(
         : c.secrets;
     if (c.kind === "imessage" && !local)
       throw new Error("iMessage needs the desktop app on your Mac");
-    await ADAPTERS[c.kind].send(cfg, secrets, reply, text, f);
+    // Longer than the app takes: sent in parts, in order (D-270).
+    const adapter = ADAPTERS[c.kind];
+    for (const part of adapter.maxText ? splitText(text, adapter.maxText) : [text])
+      await adapter.send(cfg, secrets, reply, part, f);
     await log(db, c, {
       direction: "out",
       status: "sent",
@@ -405,4 +417,12 @@ export async function pollIMessage(
     } catch {}
   }
   return runIds;
+}
+
+/** Forgets chat-app message ids older than a week (D-270). */
+export async function purgeSeenInbound(db: Database) {
+  const rows = await db.execute<{ n: number }>(sql`
+    with d as (delete from public.channel_inbound_seen where seen_at < now() - interval '7 days' returning 1)
+    select count(*)::int as n from d`);
+  return rows[0]?.n ?? 0;
 }

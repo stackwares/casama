@@ -192,7 +192,13 @@ describe("chat app adapters", () => {
       ),
     ).toBe(false);
     expect(a.normalize(req(body), {})).toEqual([
-      { threadKey: "C1:1.1", sender: "U1", text: "hi", reply: { channel: "C1", thread_ts: "1.1" } },
+      {
+        messageId: "1.1",
+        threadKey: "C1:1.1",
+        sender: "U1",
+        text: "hi",
+        reply: { channel: "C1", thread_ts: "1.1" },
+      },
     ]);
     expect(
       a.normalize(

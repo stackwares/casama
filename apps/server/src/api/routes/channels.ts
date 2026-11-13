@@ -230,23 +230,27 @@ export function registerChannelRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const url = deps.env.PUBLIC_API_URL
       ? `${deps.env.PUBLIC_API_URL.replace(/\/$/, "")}${u.pathname}${u.search}`
       : c.req.url;
-    const req = {
+    const raw = {
       method: c.req.method,
       url,
       headers,
       body: c.req.method === "GET" ? "" : await c.req.text(),
     };
+    // The signature covers the body as sent; handshakes and parsing read the decrypted one (D-270).
+    const req = adapter.decode?.(raw, ch.config, ch.secrets) ?? raw;
     const hs = adapter.handshake?.(req, ch.config, ch.secrets);
     if (hs)
       return new Response(hs.body, { status: hs.status, headers: { "content-type": hs.type } });
     if (c.req.method !== "POST")
       return new Response(JSON.stringify({ code: "not_found" }), { status: 404 });
-    if (!adapter.verify(req, ch.config, ch.secrets))
+    if (!adapter.verify(raw, ch.config, ch.secrets))
       return new Response(
         JSON.stringify({ code: "bad_signature", message: "Signature doesn't match" }),
         { status: 401, headers: { "content-type": "application/json" } },
       );
-    const messages = adapter.normalize(req, ch.config);
+    let messages = adapter.normalize(req, ch.config);
+    if (adapter.enrich)
+      messages = await adapter.enrich(messages, ch.config, ch.secrets, fetchOut());
     const { startRoutineForMessage } = await import("../../worker/routines.ts");
     const runIds = await handleInbound(db, ch, messages, {
       startRoutine: (rid, text) => startRoutineForMessage(db, rid, text),

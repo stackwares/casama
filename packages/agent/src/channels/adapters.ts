@@ -3,7 +3,7 @@
  * turns its payload into standard messages, and sends replies. Provider addresses can be pointed
  * elsewhere with `config.api_base` (tests, proxies, regional endpoints).
  */
-import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import { createDecipheriv, createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 export type ChannelKind =
   | "telegram"
@@ -30,6 +30,13 @@ export interface InboundMessage {
   subject?: string;
   /** How to reply in this thread. */
   reply: Record<string, unknown>;
+  /**
+   * The provider's id for this message, so a webhook delivered twice starts one run (D-270).
+   * Messages without one are never deduplicated.
+   */
+  messageId?: string;
+  /** The provider's id for fetching a body the webhook left out (Resend inbound email). */
+  fetchId?: string;
 }
 
 export type Config = Record<string, unknown>;
@@ -37,6 +44,17 @@ export type Secrets = Record<string, string>;
 
 export interface ChannelAdapter {
   kind: ChannelKind;
+  /** The longest message the provider takes; longer replies go out in parts (D-270). */
+  maxText?: number;
+  /** Turns an encrypted webhook body into the plain one, before handshakes and parsing (Feishu). */
+  decode?(req: WebhookRequest, cfg: Config, secrets: Secrets): WebhookRequest;
+  /** Fills in what the webhook left out (an email's body), after the signature is checked. */
+  enrich?(
+    messages: InboundMessage[],
+    cfg: Config,
+    secrets: Secrets,
+    f: typeof fetch,
+  ): Promise<InboundMessage[]>;
   /** Answers the provider's setup handshake (URL verification), when this request is one. */
   handshake?(
     req: WebhookRequest,
@@ -75,9 +93,42 @@ async function ok(res: Response, what: string) {
 }
 const plain = (s: string) => s.replace(/\s+/g, " ").trim();
 
+/** Said in place of a photo, file or voice note the bot can't receive from this app yet. */
+export const ATTACHMENT_NOTE =
+  "[They sent an attachment (a photo, file or voice note). It doesn't come through from this app yet: ask them to describe it or send it in the Casama app.]";
+
+/**
+ * Splits a reply into parts the provider accepts, at a paragraph, line, sentence or word break
+ * where it can (D-270). Before, long replies were cut off at the limit.
+ */
+export function splitText(text: string, max: number): string[] {
+  if (text.length <= max) return [text];
+  const parts: string[] = [];
+  let rest = text;
+  while (rest.length > max) {
+    const window = rest.slice(0, max);
+    let cut = -1;
+    for (const sep of ["\n\n", "\n", ". ", " "]) {
+      const at = window.lastIndexOf(sep);
+      if (at > max * 0.5) {
+        cut = at + sep.length;
+        break;
+      }
+    }
+    if (cut <= 0) cut = max;
+    parts.push(rest.slice(0, cut).trimEnd());
+    rest = rest.slice(cut).trimStart();
+  }
+  if (rest) parts.push(rest);
+  return parts;
+}
+
 // ------------------------------------------------------------------ Telegram (Bot API)
+const hasAny = (o: Record<string, unknown>, keys: string[]) => keys.some((k) => o[k] != null);
+
 const telegram: ChannelAdapter = {
   kind: "telegram",
+  maxText: 4096,
   verify: (req, _c, s) =>
     !!s.webhook_secret && same(h(req, "x-telegram-bot-api-secret-token"), s.webhook_secret),
   normalize(req) {
@@ -85,15 +136,28 @@ const telegram: ChannelAdapter = {
     const m = (u.message ?? u.edited_message) as Record<string, unknown> | undefined;
     const chat = m?.chat as Record<string, unknown> | undefined;
     const from = m?.from as Record<string, unknown> | undefined;
-    if (!m || typeof m.text !== "string" || !chat || from?.is_bot) return [];
+    if (!m || !chat || from?.is_bot) return [];
+    const text =
+      typeof m.text === "string"
+        ? m.text
+        : [
+            m.caption,
+            hasAny(m, ["photo", "document", "voice", "audio", "video", "sticker"])
+              ? ATTACHMENT_NOTE
+              : "",
+          ]
+            .filter((x) => typeof x === "string" && x)
+            .join("\n");
+    if (!text) return [];
     return [
       {
+        messageId: u.update_id !== undefined ? `u${u.update_id}` : undefined,
         threadKey: `chat:${chat.id}`,
         sender: String(from?.id ?? chat.id),
         senderName:
           [from?.first_name, from?.last_name].filter(Boolean).join(" ") ||
           (from?.username as string | undefined),
-        text: m.text,
+        text,
         reply: { chat_id: chat.id },
       },
     ];
@@ -103,7 +167,7 @@ const telegram: ChannelAdapter = {
       await f(`${base(cfg, "https://api.telegram.org")}/bot${s.bot_token}/sendMessage`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ chat_id: reply.chat_id, text: text.slice(0, 4096) }),
+        body: JSON.stringify({ chat_id: reply.chat_id, text }),
       }),
       "Telegram",
     );
@@ -125,9 +189,43 @@ const addr = (v: unknown) => {
   return (/<([^>]+)>/.exec(s)?.[1] ?? s).trim().toLowerCase();
 };
 const baseSubject = (s: string) => s.replace(/^\s*((re|fwd?|aw|sv)\s*:\s*)+/i, "").trim();
+const htmlText = (html: string) =>
+  html
+    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<br\s*\/?>|<\/p>|<\/div>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/[ \t]+/g, " ")
+    .trim();
 const email: ChannelAdapter = {
   kind: "email",
   verify: (req, _c, s) => !!s.signing_secret && svixValid(req, s.signing_secret),
+  async enrich(messages, cfg, s, f) {
+    const out: InboundMessage[] = [];
+    for (const m of messages) {
+      if (!m.fetchId) {
+        out.push(m);
+        continue;
+      }
+      // Resend's received-email API (written from its docs; checked only against a mock).
+      const res = await f(
+        `${base(cfg, "https://api.resend.com")}/emails/receiving/${encodeURIComponent(m.fetchId)}`,
+        { headers: { authorization: `Bearer ${s.api_key}` } },
+      ).catch(() => null);
+      const body = res?.ok ? ((await res.json().catch(() => ({}))) as Record<string, unknown>) : {};
+      const text =
+        String(body.text ?? "").trim() ||
+        htmlText(String(body.html ?? "")) ||
+        ((body.attachments as unknown[] | undefined)?.length ? ATTACHMENT_NOTE : "");
+      if (!text) continue;
+      const { fetchId: _f, ...rest } = m;
+      out.push({ ...rest, text });
+    }
+    return out;
+  },
   normalize(req) {
     const e = json(req.body);
     const d = (e.data ?? e) as Record<string, unknown>;
@@ -139,12 +237,16 @@ const email: ChannelAdapter = {
       String(d.html ?? "")
         .replace(/<[^>]+>/g, " ")
         .trim();
-    if (!from || !text) return [];
+    // Resend's inbound webhook carries only the envelope; the body is fetched in enrich (D-270).
+    const fetchId = String(d.email_id ?? d.id ?? "") || undefined;
+    if (!from || (!text && !fetchId)) return [];
     const headers = (d.headers ?? {}) as Record<string, unknown>;
     const messageId =
       String(d.message_id ?? headers["message-id"] ?? headers["Message-ID"] ?? "") || undefined;
     return [
       {
+        messageId: messageId ?? fetchId,
+        ...(text ? {} : { fetchId }),
         threadKey: `${from}|${baseSubject(subject).toLowerCase()}`,
         sender: from,
         subject,
@@ -190,6 +292,7 @@ export function twilioSignature(url: string, params: Record<string, string>, tok
 }
 const sms: ChannelAdapter = {
   kind: "sms",
+  maxText: 1600,
   verify: (req, cfg, s) =>
     !!s.auth_token &&
     same(
@@ -198,8 +301,17 @@ const sms: ChannelAdapter = {
     ),
   normalize(req) {
     const p = form(req.body);
-    if (!p.From || !p.Body) return [];
-    return [{ threadKey: `sms:${p.From}`, sender: p.From, text: p.Body, reply: { to: p.From } }];
+    const text = p.Body || (Number(p.NumMedia ?? 0) > 0 ? ATTACHMENT_NOTE : "");
+    if (!p.From || !text) return [];
+    return [
+      {
+        messageId: p.MessageSid || p.SmsSid || undefined,
+        threadKey: `sms:${p.From}`,
+        sender: p.From,
+        text,
+        reply: { to: p.From },
+      },
+    ];
   },
   async send(cfg, s, reply, text, f) {
     await ok(
@@ -214,7 +326,7 @@ const sms: ChannelAdapter = {
           body: new URLSearchParams({
             To: String(reply.to),
             From: String(cfg.phone_number),
-            Body: text.slice(0, 1600),
+            Body: text,
           }).toString(),
         },
       ),
@@ -226,6 +338,7 @@ const sms: ChannelAdapter = {
 // ------------------------------------------------------------------ Slack (Events API, Web API)
 const slack: ChannelAdapter = {
   kind: "slack",
+  maxText: 39_000,
   handshake(req) {
     const b = json(req.body);
     return b.type === "url_verification"
@@ -241,21 +354,26 @@ const slack: ChannelAdapter = {
   normalize(req) {
     const b = json(req.body);
     const e = b.event as Record<string, unknown> | undefined;
+    const files = Array.isArray(e?.files) && (e?.files as unknown[]).length > 0;
     if (
       b.type !== "event_callback" ||
       !e ||
       e.type !== "message" ||
       e.bot_id ||
-      e.subtype ||
-      typeof e.text !== "string"
+      (e.subtype && e.subtype !== "file_share") ||
+      (typeof e.text !== "string" && !files)
     )
       return [];
     const thread = String(e.thread_ts ?? e.ts);
+    const text = [typeof e.text === "string" ? e.text : "", files ? ATTACHMENT_NOTE : ""]
+      .filter(Boolean)
+      .join("\n");
     return [
       {
+        messageId: String(b.event_id ?? e.client_msg_id ?? e.ts ?? "") || undefined,
         threadKey: `${e.channel}:${thread}`,
         sender: String(e.user),
-        text: e.text,
+        text,
         reply: { channel: e.channel, thread_ts: thread },
       },
     ];
@@ -295,6 +413,7 @@ const metaVerify = (req: WebhookRequest, _c: Config, s: Secrets) =>
   );
 const whatsapp: ChannelAdapter = {
   kind: "whatsapp",
+  maxText: 4096,
   handshake: metaHandshake,
   verify: metaVerify,
   normalize(req) {
@@ -310,12 +429,23 @@ const whatsapp: ChannelAdapter = {
         );
         for (const m of (v.messages ?? []) as Array<Record<string, unknown>>) {
           const body = (m.text as Record<string, unknown> | undefined)?.body;
-          if (m.type !== "text" || typeof body !== "string") continue;
+          const media = ["image", "document", "audio", "video", "sticker"].includes(String(m.type));
+          const caption = (m[String(m.type)] as Record<string, unknown> | undefined)?.caption;
+          const text =
+            m.type === "text" && typeof body === "string"
+              ? body
+              : media
+                ? [typeof caption === "string" ? caption : "", ATTACHMENT_NOTE]
+                    .filter(Boolean)
+                    .join("\n")
+                : "";
+          if (!text) continue;
           out.push({
+            messageId: m.id ? String(m.id) : undefined,
             threadKey: `wa:${m.from}`,
             sender: String(m.from),
             senderName: names.get(String(m.from)),
-            text: body,
+            text,
             reply: { to: m.from },
           });
         }
@@ -331,7 +461,7 @@ const whatsapp: ChannelAdapter = {
           messaging_product: "whatsapp",
           to: reply.to,
           type: "text",
-          text: { body: text.slice(0, 4096) },
+          text: { body: text },
         }),
       }),
       "WhatsApp",
@@ -340,6 +470,7 @@ const whatsapp: ChannelAdapter = {
 };
 const messenger: ChannelAdapter = {
   kind: "messenger",
+  maxText: 2000,
   handshake: metaHandshake,
   verify: metaVerify,
   normalize(req) {
@@ -348,11 +479,14 @@ const messenger: ChannelAdapter = {
       for (const m of (entry.messaging ?? []) as Array<Record<string, unknown>>) {
         const msg = m.message as Record<string, unknown> | undefined;
         const sender = (m.sender as Record<string, unknown> | undefined)?.id;
-        if (!msg || msg.is_echo || typeof msg.text !== "string" || !sender) continue;
+        const attached =
+          Array.isArray(msg?.attachments) && (msg?.attachments as unknown[]).length > 0;
+        if (!msg || msg.is_echo || !sender || (typeof msg.text !== "string" && !attached)) continue;
         out.push({
+          messageId: msg.mid ? String(msg.mid) : undefined,
           threadKey: `fb:${sender}`,
           sender: String(sender),
-          text: msg.text,
+          text: typeof msg.text === "string" ? msg.text : ATTACHMENT_NOTE,
           reply: { recipient: sender },
         });
       }
@@ -368,7 +502,7 @@ const messenger: ChannelAdapter = {
           body: JSON.stringify({
             recipient: { id: reply.recipient },
             messaging_type: "RESPONSE",
-            message: { text: text.slice(0, 2000) },
+            message: { text },
           }),
         },
       ),
@@ -378,8 +512,27 @@ const messenger: ChannelAdapter = {
 };
 
 // ------------------------------------------------------------------ Feishu (open platform events v2)
+/** Feishu's "encrypt" bodies: AES-256-CBC, key = SHA-256 of the encrypt key, IV = first 16 bytes. */
+export function feishuDecrypt(encrypted: string, encryptKey: string) {
+  const raw = Buffer.from(encrypted, "base64");
+  const key = createHash("sha256").update(encryptKey).digest();
+  const d = createDecipheriv("aes-256-cbc", key, raw.subarray(0, 16));
+  return Buffer.concat([d.update(raw.subarray(16)), d.final()]).toString("utf8");
+}
 const feishu: ChannelAdapter = {
   kind: "feishu",
+  maxText: 10_000,
+  // With an encrypt key set (which Casama requires), every body arrives as {"encrypt": "..."}; it
+  // was parsed as if it were plain, so nothing ever came through (D-270).
+  decode(req, _c, s) {
+    const enc = json(req.body).encrypt;
+    if (typeof enc !== "string" || !s.encrypt_key) return req;
+    try {
+      return { ...req, body: feishuDecrypt(enc, s.encrypt_key) };
+    } catch {
+      return req;
+    }
+  },
   handshake(req, _c, s) {
     const b = json(req.body);
     if (b.type !== "url_verification") return null;
@@ -404,13 +557,19 @@ const feishu: ChannelAdapter = {
     const msg = ev.message as Record<string, unknown>;
     const sender = ((ev.sender as Record<string, unknown>)?.sender_id as Record<string, unknown>)
       ?.open_id;
-    if (msg?.message_type !== "text" || !sender) return [];
-    const text = String(json(String(msg.content ?? "{}")).text ?? "")
-      .replace(/@_user_\d+\s*/g, "")
-      .trim();
+    if (!msg || !sender) return [];
+    const text =
+      msg.message_type === "text"
+        ? String(json(String(msg.content ?? "{}")).text ?? "")
+            .replace(/@_user_\d+\s*/g, "")
+            .trim()
+        : ["image", "file", "audio", "media", "sticker"].includes(String(msg.message_type))
+          ? ATTACHMENT_NOTE
+          : "";
     if (!text) return [];
     return [
       {
+        messageId: String(header?.event_id ?? msg.message_id ?? "") || undefined,
         threadKey: `chat:${msg.chat_id}`,
         sender: String(sender),
         text,
