@@ -903,6 +903,9 @@ abstract class Backend {
   Future<Conversation> createConversation(String botId);
 
   /// Deletes a chat with its messages and media (the person who started it or a bot manager).
+  /// Renames a chat (an empty title goes back to the automatic one) or pins it (Improve app 2).
+  Future<Conversation> updateConversation(String conversationId, {String? title, bool? pinned});
+
   /// Deletes a chat; what was made there stays in the Library unless [withCreations] (D-274).
   Future<void> deleteConversation(String conversationId, {bool withCreations = false});
 

@@ -1125,6 +1125,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dismiss => 'Dismiss';
 
   @override
+  String get renameTopic => 'Rename';
+
+  @override
+  String get pinTopic => 'Pin';
+
+  @override
+  String get unpinTopic => 'Unpin';
+
+  @override
   String get inAppAlertReview => 'Review';
 
   @override
@@ -6880,6 +6889,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chAppId => 'App ID';
+
+  @override
+  String get chPublicKey => 'Public key';
 
   @override
   String get chEncryptKey => 'Encrypt key';

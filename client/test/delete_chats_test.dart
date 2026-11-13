@@ -56,12 +56,14 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('openConversations')));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('topicMenu-$convId')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('deleteConversation-$convId')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('confirmDeleteChat')));
     await tester.pumpAndSettle();
     expect(backend.deletedConversations, [convId]);
-    expect(find.byKey(const Key('deleteConversation-$convId')), findsNothing);
+    expect(find.byKey(const Key('topicMenu-$convId')), findsNothing);
   });
 
   testWidgets('bot settings deletes every chat with the bot', (tester) async {

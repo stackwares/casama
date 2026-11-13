@@ -1256,6 +1256,13 @@ class SupabaseBackend implements Backend {
       (await api.chat.listConversations(id: botId)).data!.items;
 
   @override
+  Future<Conversation> updateConversation(String conversationId, {String? title, bool? pinned}) async =>
+      (await api.chat.updateConversation(
+        id: conversationId,
+        updateConversationRequest: UpdateConversationRequest(title: title, pinned: pinned),
+      )).data!;
+
+  @override
   Future<void> deleteConversation(String conversationId, {bool withCreations = false}) async {
     await api.chat.deleteConversation(id: conversationId, withCreations: withCreations ? 'true' : null);
   }

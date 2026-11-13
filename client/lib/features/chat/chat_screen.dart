@@ -2199,6 +2199,20 @@ class _ConversationsSheet extends ConsumerWidget {
   /// Deletes a chat after asking (rows the person may delete: theirs, or all if they manage the bot).
   final ValueChanged<Conversation> onDelete;
 
+  /// Renames a topic (Improve app 2); an empty name goes back to the automatic one.
+  Future<void> _rename(BuildContext context, WidgetRef ref, Conversation c) async {
+    final title = await showAdaptiveSheet<String>(context: context, builder: (_) => _RenameTopicSheet(initial: c.title ?? ''));
+    if (title == null || !context.mounted) return;
+    await runGuarded(context, () => ref.read(backendProvider).updateConversation(c.id, title: title.trim()));
+    ref.invalidate(conversationsProvider(botId));
+  }
+
+  /// Pins a topic so it stays near the top of the list and among the chips (Improve app 2).
+  Future<void> _pin(BuildContext context, WidgetRef ref, Conversation c) async {
+    await runGuarded(context, () => ref.read(backendProvider).updateConversation(c.id, pinned: c.pinned != true));
+    ref.invalidate(conversationsProvider(botId));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -2243,6 +2257,8 @@ class _ConversationsSheet extends ConsumerWidget {
                               ? LucideIcons.house
                               : c.status == ConversationStatusEnum.needsYou
                               ? LucideIcons.circleAlert
+                              : c.pinned == true
+                              ? LucideIcons.pin
                               : LucideIcons.messagesSquare,
                           size: 20,
                         ),
@@ -2260,12 +2276,37 @@ class _ConversationsSheet extends ConsumerWidget {
                               style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
                             ),
                             if (c.canDelete == true)
-                              IconButton(
-                                key: Key('deleteConversation-${c.id}'),
-                                tooltip: l10n.deleteChat,
-                                visualDensity: VisualDensity.compact,
-                                icon: Icon(LucideIcons.trash2, size: 18, color: scheme.onSurfaceVariant),
-                                onPressed: () => onDelete(c),
+                              MenuAnchor(
+                                alignmentOffset: const Offset(-140, 0),
+                                menuChildren: [
+                                  if (c.isMain != true) ...[
+                                    MenuItemButton(
+                                      key: Key('renameConversation-${c.id}'),
+                                      leadingIcon: const Icon(LucideIcons.pencil, size: 20),
+                                      onPressed: () => _rename(context, ref, c),
+                                      child: Text(l10n.renameTopic),
+                                    ),
+                                    MenuItemButton(
+                                      key: Key('pinConversation-${c.id}'),
+                                      leadingIcon: Icon(c.pinned == true ? LucideIcons.pinOff : LucideIcons.pin, size: 20),
+                                      onPressed: () => _pin(context, ref, c),
+                                      child: Text(c.pinned == true ? l10n.unpinTopic : l10n.pinTopic),
+                                    ),
+                                  ],
+                                  MenuItemButton(
+                                    key: Key('deleteConversation-${c.id}'),
+                                    leadingIcon: Icon(LucideIcons.trash2, size: 20, color: scheme.error),
+                                    onPressed: () => onDelete(c),
+                                    child: Text(l10n.deleteChat, style: TextStyle(color: scheme.error)),
+                                  ),
+                                ],
+                                builder: (context, controller, _) => IconButton(
+                                  key: Key('topicMenu-${c.id}'),
+                                  tooltip: l10n.moreActions,
+                                  visualDensity: VisualDensity.compact,
+                                  icon: Icon(LucideIcons.ellipsis, size: 18, color: scheme.onSurfaceVariant),
+                                  onPressed: () => controller.isOpen ? controller.close() : controller.open(),
+                                ),
                               ),
                           ],
                         ),
@@ -2358,6 +2399,47 @@ class _SkillPicker extends ConsumerWidget {
   }
 }
 
+class _RenameTopicSheet extends StatefulWidget {
+  const _RenameTopicSheet({required this.initial});
+  final String initial;
+
+  @override
+  State<_RenameTopicSheet> createState() => _RenameTopicSheetState();
+}
+
+class _RenameTopicSheetState extends State<_RenameTopicSheet> {
+  late final _text = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return FormSheet(
+      icon: LucideIcons.pencil,
+      title: l10n.renameTopic,
+      submitLabel: l10n.save,
+      submitKey: const Key('saveTopicName'),
+      onSubmit: () => Navigator.pop(context, _text.text),
+      children: [
+        TextField(
+          key: const Key('topicNameField'),
+          controller: _text,
+          autofocus: true,
+          maxLength: 200,
+          textCapitalization: TextCapitalization.sentences,
+          decoration: InputDecoration(labelText: l10n.routineName, hintText: l10n.untitledChat),
+          onSubmitted: (v) => Navigator.pop(context, v),
+        ),
+      ],
+    );
+  }
+}
+
 class _EditSheet extends StatefulWidget {
   const _EditSheet({required this.initial});
   final String initial;
@@ -2391,8 +2473,8 @@ class _EditSheetState extends State<_EditSheet> {
 }
 
 
-/// General and topics (D-253): General first, then topics with something going on or a message in
-/// the last week (needs you, then working, then newest), then the rest as Older. Chats that aren't
+/// General and topics (D-253): General first, then pinned topics and topics with something going
+/// on or a message in the last week (needs you, then pinned, then working, then newest), then the rest as Older. Chats that aren't
 /// topics (a chat app's thread, a ticket, a watcher) are only listed under Older.
 ({List<Conversation> active, List<Conversation> older}) splitTopics(List<Conversation> all, {DateTime? now}) {
   final cutoff = (now ?? DateTime.now()).subtract(const Duration(days: 7));
@@ -2400,11 +2482,15 @@ class _EditSheetState extends State<_EditSheet> {
       ? 0
       : c.status == ConversationStatusEnum.needsYou
       ? 1
-      : c.status == ConversationStatusEnum.working
+      : c.pinned == true
       ? 2
-      : 3;
+      : c.status == ConversationStatusEnum.working
+      ? 3
+      : 4;
+  // Pinned chats (Improve app 2) never move to Older.
   bool live(Conversation c) =>
       c.isMain == true ||
+      c.pinned == true ||
       (c.parentConversationId != null && (c.status != null || (c.lastMessageAt ?? c.createdAt).isAfter(cutoff)));
   final active = all.where(live).toList()
     ..sort((a, b) {

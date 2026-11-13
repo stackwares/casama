@@ -1587,6 +1587,23 @@ class FakeBackend implements Backend {
       ),
     ...topics,
   ];
+  /// Renames and pins: (id, title, pinned).
+  final conversationUpdates = <(String, String?, bool?)>[];
+  @override
+  Future<Conversation> updateConversation(String conversationId, {String? title, bool? pinned}) async {
+    conversationUpdates.add((conversationId, title, pinned));
+    final i = topics.indexWhere((c) => c.id == conversationId);
+    if (i >= 0) {
+      topics[i] = Conversation.fromJson({
+        ...topics[i].toJson(),
+        if (title != null) 'title': title.trim().isEmpty ? null : title.trim(),
+        'pinned': ?pinned,
+      });
+      return topics[i];
+    }
+    return (await conversations(botId)).firstWhere((c) => c.id == conversationId);
+  }
+
   /// Chats deleted together with what was made in them (D-274).
   final deletedWithCreations = <String>[];
   @override

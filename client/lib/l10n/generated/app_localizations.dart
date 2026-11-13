@@ -1894,6 +1894,24 @@ abstract class AppLocalizations {
   /// **'Dismiss'**
   String get dismiss;
 
+  /// No description provided for @renameTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get renameTopic;
+
+  /// No description provided for @pinTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin'**
+  String get pinTopic;
+
+  /// No description provided for @unpinTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get unpinTopic;
+
   /// No description provided for @inAppAlertReview.
   ///
   /// In en, this message translates to:
@@ -10581,6 +10599,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'App ID'**
   String get chAppId;
+
+  /// No description provided for @chPublicKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Public key'**
+  String get chPublicKey;
 
   /// No description provided for @chEncryptKey.
   ///
