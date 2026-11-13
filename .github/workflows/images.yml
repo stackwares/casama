@@ -36,7 +36,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      # The docker driver builds into the local image store, so the second build can use the
+      # headless image the first one loaded (the default container driver can't see it).
       - uses: docker/setup-buildx-action@v4
+        with:
+          driver: docker
       - uses: docker/build-push-action@v7
         with:
           context: .

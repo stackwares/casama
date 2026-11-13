@@ -172,7 +172,8 @@ void main() {
         findsNWidgets(2),
       ); // zip + computer photo without a computer
       // Generic names show as their kind.
-      expect(find.text('Video'), findsOneWidget);
+      // Where the system player plays videos (Linux, Windows) the card says so instead.
+      expect(find.text(inlineVideoSupported ? 'Video' : 'Open in your video player'), findsOneWidget);
       expect(find.text('Audio'), findsOneWidget);
     },
   );
