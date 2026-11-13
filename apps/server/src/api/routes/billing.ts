@@ -127,6 +127,15 @@ export function registerBillingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return c.json({ url: r.url }, 200);
   });
 
+  app.openapi(routes.setBillingSeats, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const body = c.req.valid("json");
+    await role(claims, id, "admin");
+    requireEnabled();
+    return c.json(await billingCall(() => billing.setExtraSeats(id, body.extra)), 200);
+  });
+
   app.openapi(routes.verifyPurchase, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");

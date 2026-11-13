@@ -383,6 +383,7 @@ import 'package:casama_api/src/model/saved_count.dart';
 import 'package:casama_api/src/model/saved_imported_memories.dart';
 import 'package:casama_api/src/model/search_response.dart';
 import 'package:casama_api/src/model/search_result.dart';
+import 'package:casama_api/src/model/seats_request.dart';
 import 'package:casama_api/src/model/secret.dart';
 import 'package:casama_api/src/model/secret_list.dart';
 import 'package:casama_api/src/model/secret_requested_event.dart';
@@ -1364,6 +1365,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SearchResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SearchResult':
           return SearchResult.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SeatsRequest':
+          return SeatsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Secret':
           return Secret.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SecretKind':

@@ -44,7 +44,18 @@ type DodoSubscription = {
   next_billing_date?: string | null;
   cancel_at_next_billing_date?: boolean;
   metadata?: Record<string, unknown>;
+  /** Casama's only add-on is an extra person (D-249). */
+  addons?: Array<{ addon_id: string; quantity: number }> | null;
+  trial_period_days?: number | null;
+  created_at?: string | null;
 };
+
+/** Dodo has no trial status: a subscription is in its trial until created_at + trial_period_days. */
+function inTrial(s: DodoSubscription, now = Date.now()) {
+  const days = Number(s.trial_period_days ?? 0);
+  if (!(days > 0) || !s.created_at) return false;
+  return new Date(s.created_at).getTime() + days * 86_400_000 > now;
+}
 
 /** Standard Webhooks: HMAC-SHA256 over `id.timestamp.body` with the base64 secret after `whsec_`. */
 export function standardWebhookSignature(secret: string, id: string, ts: string, body: string) {
@@ -144,11 +155,12 @@ export class DodoProvider implements BillingProvider {
       source: "dodo",
       externalId: s.subscription_id,
       productId: s.product_id,
-      status: STATUS[s.status] ?? "pending",
+      status: s.status === "active" && inTrial(s) ? "trialing" : (STATUS[s.status] ?? "pending"),
       currentPeriodEnd: s.next_billing_date ? new Date(s.next_billing_date) : null,
       cancelAtPeriodEnd: !!s.cancel_at_next_billing_date,
       customerId: s.customer?.customer_id ?? null,
       orgId: typeof s.metadata?.org_id === "string" ? s.metadata.org_id : null,
+      extraSeats: (s.addons ?? []).reduce((n, a) => n + Math.max(0, Number(a.quantity) || 0), 0),
       raw: s,
     };
   }
@@ -180,6 +192,7 @@ export class DodoProvider implements BillingProvider {
     email?: string | null;
     customerId?: string | null;
     returnUrl: string;
+    trialDays?: number;
   }) {
     const r = await this.call<{ session_id: string; checkout_url: string | null }>("/checkouts", {
       method: "POST",
@@ -192,11 +205,31 @@ export class DodoProvider implements BillingProvider {
             : undefined,
         return_url: args.returnUrl,
         metadata: { org_id: args.orgId },
+        ...(args.trialDays ? { subscription_data: { trial_period_days: args.trialDays } } : {}),
       }),
     });
     if (!r.checkout_url)
       throw new BillingError("provider_error", "Dodo returned no checkout URL", 502);
     return { url: r.checkout_url, sessionId: r.session_id };
+  }
+
+  /** Sets the extra-person add-on's quantity on a subscription, keeping its product (D-249). */
+  async setAddon(args: {
+    subscriptionId: string;
+    productId: string;
+    addonId: string;
+    quantity: number;
+  }) {
+    await this.call(`/subscriptions/${encodeURIComponent(args.subscriptionId)}/change-plan`, {
+      method: "POST",
+      body: JSON.stringify({
+        product_id: args.productId,
+        quantity: 1,
+        addons: args.quantity > 0 ? [{ addon_id: args.addonId, quantity: args.quantity }] : [],
+        proration_billing_mode: "prorated_immediately",
+        on_payment_failure: "prevent_change",
+      }),
+    });
   }
 
   async customerPortal(args: { customerId: string; returnUrl: string }) {

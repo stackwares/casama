@@ -8583,6 +8583,14 @@
           "cancel_at_period_end": {
             "type": "boolean"
           },
+          "extra_seats": {
+            "type": "integer",
+            "description": "People paid for beyond the plan's seats (D-249)"
+          },
+          "trial_available": {
+            "type": "boolean",
+            "description": "The owner can still start a plan's free trial (D-249)"
+          },
           "credits_usd": {
             "type": "number"
           },
@@ -8791,6 +8799,20 @@
         },
         "required": [
           "revoked"
+        ]
+      },
+      "SeatsRequest": {
+        "type": "object",
+        "properties": {
+          "extra": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "People to pay for beyond the plan's seats"
+          }
+        },
+        "required": [
+          "extra"
         ]
       },
       "PurchaseRequest": {
@@ -26559,6 +26581,93 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{id}/billing/seats": {
+      "put": {
+        "operationId": "setBillingSeats",
+        "tags": [
+          "billing"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Pay for more or fewer people than the plan includes (web subscriptions on Pro or Max)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeatsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Billing after the change",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/problem+json": {
                 "schema": {

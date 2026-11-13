@@ -2726,3 +2726,33 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 - **Analytics:** `proactive_message_sent` (kind suggestion, timed or summary; reason), `suggestion_resolved` (accepted, dismissed, dismissed_forever; age in hours), `proactive_muted` (Less like this); `push_opened` has kind `suggestion`.
 - **Live:** deployed 2026-11-13 (server 522448435b01, migration 20270130000001). The Composio webhook subscription `ws_-eL6Jba8gJRP` posts to `https://api.casama.ai/hooks/composio`; `COMPOSIO_WEBHOOK_SECRET` is in prod `.env` and Vaultwarden.
 - **Tests:** `apps/server/test/proactive.test.ts` (plan limits, downgrade skip, setup summary, connection trigger, signed Composio events and the 30-minute gap, push wording, buttons, data-only Android pushes, timed suggestions, phone calendar, quiet hours and idle throttles, trigger removal, welcome default); `client/test/suggestion_push_test.dart`.
+
+## D-249 Pricing that fits every store; computers limited by how many run; extra people; a Pro trial
+
+Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot and ChatGPT Dots.
+
+- **Prices:** Free $0, Plus $15 ($150/yr), Pro $49 ($490/yr), Max $99 ($899/yr). Every price is at
+  most $899, so one list works on the web, the App Store (above about $899 needs Apple's approval)
+  and Google Play (capped at $999.99 without $1M in Play earnings).
+- **Credits and hours:** $1 / $5 / $15 / $30 a month; 5 / 30 / 100 / 300 computer hours.
+- **Computers:** hours cost little; what runs out is the server, so plans limit hosted computers
+  running at once (`max_running_computers` 1 / 1 / 2 / 3). Starting another puts the one nobody has
+  used for 2 minutes to sleep; if all are in use the start is refused (402 `plan_limit`, or the
+  `running_limit` tool error for a bot). `computer_size` (1 / 1 / 2 / 4) sets vCPUs and GB of memory
+  at each start and is saved on the computer, so usage is billed at that size.
+- **Bots:** 3 / 10 / unlimited / unlimited. A bot costs nothing until it uses credits or a computer,
+  which are limited already. No `max_bots` key means no limit.
+- **People:** seats 1 / 1 / 3 / 10. Pro and Max sell extra people at $12 a month ($120 a year) as a
+  Dodo add-on on the web subscription (`PUT /v1/orgs/{id}/billing/seats`, prorated now). Store
+  subscriptions can't carry a quantity, so they upgrade instead. Lowering below the people already
+  in the workspace is refused (`seats_in_use`). `subscriptions.extra_seats` holds the count.
+- **Trial:** Pro has 7 days free, once per person across all their workspaces and never after any
+  subscription (`trial_available` in the billing summary). Web checkouts pass the trial to Dodo; the
+  App Store and Google Play run their own introductory offer. While trialing the workspace gets $2
+  of credits and 10 computer hours; the first payment tops the month up to the plan's $15.
+- **One formula for limits:** `public.entitlement_limits(plan, subscription, overrides)` adds extra
+  people and trial allowances to the plan's limits, with owner overrides on top. The server's
+  recompute and the Admin screen's saves both use it.
+- **Why not $1,490 for Max yearly:** Apple would need a request and Play can't sell it, and $99 for
+  the top plan matches what Rakazo and MausBot charge.
+

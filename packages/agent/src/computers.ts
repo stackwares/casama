@@ -92,6 +92,18 @@ export type ComputerProvider = SandboxProvider & {
 
 type Emit = (type: string, payload: Record<string, unknown>) => Promise<void>;
 
+/** The plan's limit on hosted computers running at once was reached (D-249). */
+export class RunningLimitError extends Error {
+  readonly limit: number;
+  constructor(limit: number) {
+    super("running_limit");
+    this.limit = limit;
+  }
+}
+
+/** A computer someone used this recently is never put to sleep to make room for another. */
+export const MAKE_ROOM_IDLE_MS = 2 * 60_000;
+
 /**
  * Computer lifecycle on top of a SandboxProvider: provisioning on demand, idle sleep to object
  * storage, restore on the next use, checkpoints with retention, and computer-second usage.
@@ -265,6 +277,10 @@ export class ComputerService {
         });
         throw err;
       }
+      if (c.kind !== "local") {
+        const size = await this.fitPlan(c);
+        if (size) c.size = { ...c.size, ...size };
+      }
       await this.setState(computerId, c.snapshot_ref ? "starting" : "provisioning", emit);
       try {
         const spec = {
@@ -296,6 +312,44 @@ export class ComputerService {
         throw err;
       }
     });
+  }
+
+  /**
+   * Applies the plan's computer limits before a hosted computer starts (D-249). With
+   * max_running_computers reached, the computer nobody has used the longest goes to sleep to make
+   * room; if every running one is in use, the start is refused (RunningLimitError). With
+   * computer_size, the computer gets that many vCPUs and GB of memory; returns the new size when it
+   * changed.
+   */
+  private async fitPlan(c: ComputerRow) {
+    const [e] = await this.db.execute<{ running: unknown; size: unknown }>(sql`
+      select limits -> 'max_running_computers' as running, limits -> 'computer_size' as size
+      from public.entitlements where org_id = ${c.org_id}::uuid order by created_at desc limit 1`);
+    const limit = typeof e?.running === "number" ? e.running : null;
+    if (limit != null) {
+      const others = await this.db.execute<{ id: string; idle: boolean }>(sql`
+        select id, coalesce(last_active_at, running_since, now() - interval '1 day')
+                 < now() - (${MAKE_ROOM_IDLE_MS} * interval '1 millisecond') as idle
+        from public.computers
+        where org_id = ${c.org_id}::uuid and id <> ${c.id}::uuid and kind <> 'local'
+          and state in ('provisioning', 'starting', 'running', 'idle')
+        order by last_active_at asc nulls first`);
+      let over = others.length - limit + 1;
+      for (const o of others) {
+        if (over <= 0) break;
+        if (!o.idle) continue;
+        await this.sleep(o.id).catch(() => undefined);
+        over--;
+      }
+      if (over > 0) throw new RunningLimitError(limit);
+    }
+    const factor = typeof e?.size === "number" && e.size > 0 ? e.size : null;
+    if (factor == null) return null;
+    const size = { cpus: factor, memory_mb: Math.round(1024 * factor) };
+    if (c.size?.cpus === size.cpus && c.size?.memory_mb === size.memory_mb) return null;
+    await this.db.execute(sql`
+      update public.computers set size = size || ${JSON.stringify(size)}::jsonb where id = ${c.id}::uuid`);
+    return size;
   }
 
   /**

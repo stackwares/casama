@@ -10,6 +10,7 @@ import {
   PortalRequest,
   PurchaseRequest,
   RedirectUrl,
+  SeatsRequest,
 } from "../billing.ts";
 import { jsonBody, jsonResponse, problemResponses, Uuid } from "../common.ts";
 
@@ -65,6 +66,23 @@ export const billingPortal = createRoute({
   summary: "Open the customer portal for a web subscription",
   request: { params: orgParam, body: jsonBody(PortalRequest) },
   responses: { 200: jsonResponse("Portal", RedirectUrl), 401: e401, 403: e403, 409: e409 },
+});
+
+export const setBillingSeats = createRoute({
+  operationId: "setBillingSeats",
+  method: "put",
+  path: "/v1/orgs/{id}/billing/seats",
+  tags,
+  security,
+  summary: "Pay for more or fewer people than the plan includes (web subscriptions on Pro or Max)",
+  request: { params: orgParam, body: jsonBody(SeatsRequest) },
+  responses: {
+    200: jsonResponse("Billing after the change", BillingSummary),
+    400: e400,
+    401: e401,
+    403: e403,
+    409: e409,
+  },
 });
 
 export const verifyPurchase = createRoute({

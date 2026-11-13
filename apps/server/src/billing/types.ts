@@ -33,6 +33,8 @@ export interface SubscriptionSnapshot {
   customerId?: string | null;
   /** The workspace the purchase was made for (checkout metadata, appAccountToken, obfuscated id). */
   orgId?: string | null;
+  /** People bought on top of the plan's seats (a Dodo add-on, D-249). */
+  extraSeats?: number;
   raw: unknown;
 }
 
@@ -91,7 +93,16 @@ export interface BillingProvider {
     email?: string | null;
     customerId?: string | null;
     returnUrl: string;
+    /** A free trial on this checkout only (D-249). */
+    trialDays?: number;
   }): Promise<{ url: string; sessionId: string }>;
+  /** Dodo: sets how many extra people a subscription pays for (an add-on, prorated; D-249). */
+  setAddon?(args: {
+    subscriptionId: string;
+    productId: string;
+    addonId: string;
+    quantity: number;
+  }): Promise<void>;
   customerPortal?(args: { customerId: string; returnUrl: string }): Promise<{ url: string }>;
   /** Dodo: a payment and what it bought (credit packs, refunds). */
   fetchPayment?(paymentId: string): Promise<{

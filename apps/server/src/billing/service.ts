@@ -168,10 +168,10 @@ export class BillingService {
     const status = opts.refund ? "refunded" : snap.status;
     await this.db.execute(sql`
       insert into public.subscriptions (org_id, source, external_id, customer_id, plan_code, status,
-        current_period_end, cancel_at_period_end, raw)
+        current_period_end, cancel_at_period_end, raw, extra_seats)
       values (${orgId}::uuid, ${snap.source}, ${snap.externalId}, ${snap.customerId ?? null}, ${plan.code},
         ${status}, ${snap.currentPeriodEnd?.toISOString() ?? null}::timestamptz, ${snap.cancelAtPeriodEnd},
-        ${JSON.stringify(snap.raw ?? {})}::jsonb)
+        ${JSON.stringify(snap.raw ?? {})}::jsonb, ${snap.extraSeats ?? 0})
       on conflict (source, external_id) do update set
         plan_code = excluded.plan_code,
         -- A refund is final even if a later re-fetch still reports the old state.
@@ -180,6 +180,7 @@ export class BillingService {
         cancel_at_period_end = excluded.cancel_at_period_end,
         customer_id = coalesce(excluded.customer_id, public.subscriptions.customer_id),
         raw = excluded.raw,
+        extra_seats = excluded.extra_seats,
         updated_at = now()`);
     await this.trackSubscription(orgId, snap, plan, status, existing);
     return this.recompute(orgId);
@@ -369,9 +370,11 @@ export class BillingService {
       id: string;
       plan_code: string;
       source: string;
+      status: SubscriptionStatus;
       current_period_end: Date | null;
     }>(sql`
-      select s.id, s.plan_code, s.source, s.current_period_end from public.subscriptions s
+      select s.id, s.plan_code, s.source, s.status, s.current_period_end
+      from public.subscriptions s
       join public.plans p on p.code = s.plan_code
       where s.org_id = ${orgId}::uuid and s.status = any(${arr(ENTITLED)}::text[])
         and (s.current_period_end is null or s.current_period_end > now())
@@ -384,7 +387,10 @@ export class BillingService {
     const [current] = await this.db.execute<{ id: string; overrides: Record<string, unknown> }>(
       sql`select id, overrides from public.entitlements where org_id = ${orgId}::uuid order by created_at desc limit 1`,
     );
-    const limits = { ...plan.limits, ...(current?.overrides ?? {}) };
+    const [lim] = await this.db.execute<{ limits: Record<string, unknown> }>(
+      sql`select public.entitlement_limits(${planCode}, ${best?.id ?? null}::uuid, ${JSON.stringify(current?.overrides ?? {})}::jsonb) as limits`,
+    );
+    const limits = lim?.limits ?? plan.limits;
     const validUntil = best?.current_period_end
       ? new Date(best.current_period_end).toISOString()
       : null;
@@ -405,16 +411,20 @@ export class BillingService {
     // Included credits, once a month. A plan change tops the month up to the new plan's amount
     // rather than granting it again, and only a person's first free workspace gets free credits
     // (D-246). A zero grant still marks the month as done, so settlement doesn't retry it.
-    const monthly = Number(plan.limits.monthly_credits_usd ?? 0);
+    // A trial gets its own, smaller grant; paying tops the month up to the plan's amount (D-249).
+    const trial = best?.status === "trialing" && plan.limits.trial_credits_usd != null;
+    const monthly = Number(
+      (trial ? plan.limits.trial_credits_usd : plan.limits.monthly_credits_usd) ?? 0,
+    );
     if (this.enabled && monthly > 0) {
-      const ref = `monthly:${month()}:${planCode}`;
+      const ref = `monthly:${month()}:${planCode}${trial ? ":trial" : ""}`;
       const [done] = await this.db.execute<{ granted: string; this_plan: boolean }>(sql`
         select coalesce(sum(delta), 0)::text as granted, bool_or(reference = ${ref}) as this_plan
         from public.credit_ledger
         where org_id = ${orgId}::uuid and reason = 'grant' and reference like ${`monthly:${month()}:%`}`);
       if (!done?.this_plan) {
         let amount = Math.max(0, monthly - Number(done?.granted ?? 0));
-        let note = `${plan.name} monthly credits`;
+        let note = trial ? `${plan.name} trial credits` : `${plan.name} monthly credits`;
         if (planCode === "free" && amount > 0 && !(await this.firstFreeWorkspace(orgId))) {
           amount = 0;
           note = "Free credits go to your first free workspace";
@@ -444,8 +454,9 @@ export class BillingService {
       status: string;
       current_period_end: Date | null;
       cancel_at_period_end: boolean;
+      extra_seats: number;
     }>(sql`
-      select id, source, plan_code, status, current_period_end, cancel_at_period_end
+      select id, source, plan_code, status, current_period_end, cancel_at_period_end, extra_seats
       from public.subscriptions where org_id = ${orgId}::uuid order by updated_at desc limit 20`);
     const active = subs.find(
       (s) =>
@@ -464,6 +475,8 @@ export class BillingService {
       valid_until: ent?.valid_until ? new Date(ent.valid_until).toISOString() : null,
       source: (ent?.source ?? "default") as "default" | BillingSource,
       cancel_at_period_end: active?.cancel_at_period_end ?? false,
+      extra_seats: active?.extra_seats ?? 0,
+      trial_available: this.enabled ? await this.trialAvailable(orgId) : false,
       credits_usd: this.enabled ? await this.balance(orgId) : 0,
       subscriptions: subs.map((s) => ({
         id: s.id,
@@ -510,13 +523,94 @@ export class BillingService {
     const [sub] = await this.db.execute<{ customer_id: string | null }>(sql`
       select customer_id from public.subscriptions where org_id = ${orgId}::uuid and source = 'dodo' and customer_id is not null
       order by updated_at desc limit 1`);
+    const trialDays = what.planCode ? await this.trialDays(orgId, what.planCode) : 0;
     return (dodo.createCheckout as NonNullable<BillingProvider["createCheckout"]>)({
       productId,
       orgId,
       email,
       customerId: sub?.customer_id ?? null,
       returnUrl,
+      trialDays,
     });
+  }
+
+  /**
+   * Whether this workspace's owner can still start a free trial (D-249): one trial per person,
+   * across all their workspaces, and never after any subscription. The stores apply their own
+   * rule (one introductory offer per Apple ID or Google account) to store purchases.
+   */
+  async trialAvailable(orgId: string) {
+    const [r] = await this.db.execute<{ ok: boolean }>(sql`
+      select not exists (
+        select 1 from public.subscriptions s
+        join public.organizations o on o.id = s.org_id
+        join public.organizations me on me.id = ${orgId}::uuid
+        where o.created_by = me.created_by
+      ) as ok`);
+    return r?.ok ?? false;
+  }
+
+  /** The free-trial days a web checkout of this plan gets, or 0. */
+  private async trialDays(orgId: string, planCode: string) {
+    const plan = (await this.plans()).find((p) => p.code === planCode);
+    const days = Number(plan?.limits.trial_days ?? 0);
+    return days > 0 && (await this.trialAvailable(orgId)) ? days : 0;
+  }
+
+  /**
+   * Sets how many people the workspace pays for beyond its plan's seats (D-249). Only a web
+   * subscription can carry them (a Dodo add-on, prorated now); store subscriptions cannot.
+   */
+  async setExtraSeats(orgId: string, extra: number) {
+    const [cur] = await this.db.execute<{
+      external_id: string;
+      source: BillingSource;
+      plan_code: string;
+      status: SubscriptionStatus;
+    }>(sql`
+      select s.external_id, s.source, s.plan_code, s.status from public.subscriptions s
+      join public.plans p on p.code = s.plan_code
+      where s.org_id = ${orgId}::uuid and s.status = any(${arr(ENTITLED)}::text[])
+        and (s.current_period_end is null or s.current_period_end > now())
+      order by p.sort desc, s.current_period_end desc nulls last limit 1`);
+    if (!cur)
+      throw new BillingError("paid_plan_required", "Extra people come with Pro or Max", 402);
+    const plan = (await this.plans()).find((p) => p.code === cur.plan_code);
+    if (!plan || typeof plan.limits.extra_seat_usd !== "number")
+      throw new BillingError("paid_plan_required", "Extra people come with Pro or Max", 402);
+    if (cur.source !== "dodo")
+      throw new BillingError(
+        "subscribed_in_store",
+        "Extra people are bought with a web subscription. This workspace subscribes in the app store.",
+        409,
+      );
+    if (cur.status === "trialing" && extra > 0)
+      throw new BillingError("trialing", "Extra people can be added once the trial ends", 409);
+    const [m] = await this.db.execute<{ n: number }>(
+      sql`select count(*)::int as n from public.memberships where org_id = ${orgId}::uuid`,
+    );
+    const base = Number(plan.limits.seats ?? 0);
+    if ((m?.n ?? 0) > base + extra)
+      throw new BillingError(
+        "seats_in_use",
+        `This workspace has ${m?.n} people. Remove someone first.`,
+        409,
+      );
+    const [cfg] = await this.db.execute<{ month: string | null; year: string | null }>(
+      sql`select dodo_seat_addon_month as month, dodo_seat_addon_year as year from public.billing_settings where id`,
+    );
+    const addonId = plan.interval === "year" ? cfg?.year : cfg?.month;
+    if (!addonId || !plan.dodo_product_id)
+      throw new BillingError("unknown_product", "Extra people are not for sale yet", 400);
+    const dodo = this.provider("dodo");
+    await (dodo.setAddon as NonNullable<BillingProvider["setAddon"]>)({
+      subscriptionId: cur.external_id,
+      productId: plan.dodo_product_id,
+      addonId,
+      quantity: extra,
+    });
+    await this.applySnapshot(await dodo.fetchSubscription(cur.external_id), { orgId });
+    return this.summary(orgId);
   }
 
   async portal(orgId: string, returnUrl: string) {

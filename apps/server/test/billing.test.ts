@@ -101,8 +101,9 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
     h = await startHarness({ env: billingEnv(f), worker: { fixtures: CHAT } });
     // This suite makes many workspaces for one person; the default is 5 (D-246).
     await h.handle.db.execute(sql`update public.billing_settings set max_owned_workspaces = 100`);
+    // Trials have their own suite (pricing-d249.test.ts); here a purchase is paid at once.
     await h.handle.db.execute(
-      sql`update public.plans set dodo_product_id = 'pdt_sub_pro' where code = 'pro'`,
+      sql`update public.plans set dodo_product_id = 'pdt_sub_pro', limits = limits - 'trial_days' where code = 'pro'`,
     );
     await h.handle.db.execute(
       sql`update public.credit_packs set dodo_product_id = 'pdt_pack_10' where code = 'credits_10'`,
@@ -119,8 +120,8 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
     const orgId = await newOrg("Free tier");
     const b = await billing(orgId);
     expect(b).toMatchObject({ enabled: true, plan_code: "free", unlimited: false, credits_usd: 1 });
-    expect(b.limits.max_bots).toBe(2);
-    for (const name of ["One", "Two"])
+    expect(b.limits.max_bots).toBe(3);
+    for (const name of ["One", "Two", "Extra"])
       expect(
         (
           await h.request("/v1/bots", {
@@ -130,13 +131,13 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
           })
         ).status,
       ).toBe(201);
-    const third = await h.request("/v1/bots", {
+    const fourth = await h.request("/v1/bots", {
       method: "POST",
       token: owner.token,
       json: { org_id: orgId, name: "Three" },
     });
-    expect(third.status).toBe(402);
-    expect((await j(third)).code).toBe("plan_limit");
+    expect(fourth.status).toBe(402);
+    expect((await j(fourth)).code).toBe("plan_limit");
 
     // Archive one, add another, then bring the archived one back: the limit still holds (the app
     // unarchives straight through PostgREST, so the database enforces it).
@@ -185,7 +186,7 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
       "max_yearly",
     ]);
     expect(plans.plans.find((p: { code: string }) => p.code === "pro").price_label).toBe(
-      "$39 / month",
+      "$49 / month",
     );
     expect(plans.plans.find((p: { code: string }) => p.code === "pro").web).toBe(true);
   });
@@ -214,8 +215,8 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
     // The phone apps call the same endpoint with their own session: the plan is the workspace's.
     const onPhone = await billing(orgId, member.token);
     // Upgrading in the month tops the month's grant up to Pro's $10, not $1 + $10 (D-246).
-    expect(onPhone).toMatchObject({ plan_code: "pro", source: "dodo", credits_usd: 10 });
-    expect(onPhone.limits.max_bots).toBe(20);
+    expect(onPhone).toMatchObject({ plan_code: "pro", source: "dodo", credits_usd: 15 });
+    expect(onPhone.limits.max_bots).toBeUndefined();
     // Customer portal for the web subscription.
     const portal = await j(
       await h.request(`/v1/orgs/${orgId}/billing/portal`, {

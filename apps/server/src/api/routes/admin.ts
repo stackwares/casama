@@ -259,7 +259,7 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     // Owner overrides sit on top of the plan's limits and survive billing changes (D-070).
     const updated = await db.execute<{ id: string }>(sql`
       update public.entitlements set overrides = ${JSON.stringify(limits)}::jsonb,
-        limits = (select p.limits from public.plans p where p.code = plan_code) || ${JSON.stringify(limits)}::jsonb
+        limits = public.entitlement_limits(plan_code, subscription_id, ${JSON.stringify(limits)}::jsonb)
       where id = (select id from public.entitlements where org_id = ${id}::uuid order by created_at desc limit 1)
       returning id`);
     if (!updated.length) throw new ApiError(404, "org_not_found", "Workspace not found");
@@ -514,9 +514,9 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       if (limits)
         await tx.execute(sql`
           update public.entitlements e
-             set limits = p.limits || coalesce(e.overrides, '{}'::jsonb), updated_at = now()
-            from public.plans p
-           where p.code = e.plan_code and e.plan_code = ${code}`);
+             set limits = public.entitlement_limits(e.plan_code, e.subscription_id, e.overrides),
+                 updated_at = now()
+           where e.plan_code = ${code}`);
     });
     const [p] = await planRows(code);
     return c.json(planOut(p as PlanRow), 200);

@@ -458,6 +458,7 @@ lib/src/model/saved_imported_memories.dart
 lib/src/model/search_kind.dart
 lib/src/model/search_response.dart
 lib/src/model/search_result.dart
+lib/src/model/seats_request.dart
 lib/src/model/secret.dart
 lib/src/model/secret_kind.dart
 lib/src/model/secret_list.dart

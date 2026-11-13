@@ -114,6 +114,7 @@ Class | Method | HTTP request | Description
 [*BillingApi*](doc/BillingApi.md) | [**listConnectKeys**](doc/BillingApi.md#listconnectkeys) | **GET** /v1/orgs/{id}/cloud-connect/keys | Cloud Connect keys for self-hosted instances
 [*BillingApi*](doc/BillingApi.md) | [**listPlans**](doc/BillingApi.md#listplans) | **GET** /v1/billing/plans | Plans and credit packs on this server
 [*BillingApi*](doc/BillingApi.md) | [**revokeConnectKey**](doc/BillingApi.md#revokeconnectkey) | **DELETE** /v1/orgs/{id}/cloud-connect/keys/{key_id} | 
+[*BillingApi*](doc/BillingApi.md) | [**setBillingSeats**](doc/BillingApi.md#setbillingseats) | **PUT** /v1/orgs/{id}/billing/seats | Pay for more or fewer people than the plan includes (web subscriptions on Pro or Max)
 [*BillingApi*](doc/BillingApi.md) | [**verifyPurchase**](doc/BillingApi.md#verifypurchase) | **POST** /v1/orgs/{id}/billing/purchases | Verify an App Store or Google Play purchase (also used by Restore Purchases)
 [*BotsApi*](doc/BotsApi.md) | [**createBot**](doc/BotsApi.md#createbot) | **POST** /v1/bots | 
 [*BotsApi*](doc/BotsApi.md) | [**createBotShare**](doc/BotsApi.md#createbotshare) | **POST** /v1/bots/{id}/share | Make a share link for a bot template (a snapshot; anyone signed in with the link can import it)
@@ -800,6 +801,7 @@ Class | Method | HTTP request | Description
  - [SearchKind](doc/SearchKind.md)
  - [SearchResponse](doc/SearchResponse.md)
  - [SearchResult](doc/SearchResult.md)
+ - [SeatsRequest](doc/SeatsRequest.md)
  - [Secret](doc/Secret.md)
  - [SecretKind](doc/SecretKind.md)
  - [SecretList](doc/SecretList.md)

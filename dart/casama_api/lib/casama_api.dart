@@ -458,6 +458,7 @@ export 'package:casama_api/src/model/saved_imported_memories.dart';
 export 'package:casama_api/src/model/search_kind.dart';
 export 'package:casama_api/src/model/search_response.dart';
 export 'package:casama_api/src/model/search_result.dart';
+export 'package:casama_api/src/model/seats_request.dart';
 export 'package:casama_api/src/model/secret.dart';
 export 'package:casama_api/src/model/secret_kind.dart';
 export 'package:casama_api/src/model/secret_list.dart';

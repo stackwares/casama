@@ -93,6 +93,9 @@ type TransactionInfo = {
   revocationDate?: number;
   type?: string;
   environment?: string;
+  /** 1 = introductory offer; with offerDiscountType FREE_TRIAL it is a free trial (D-249). */
+  offerType?: number;
+  offerDiscountType?: string;
 };
 type RenewalInfo = { autoRenewStatus?: number; originalTransactionId?: string };
 
@@ -208,7 +211,13 @@ export class AppStoreProvider implements BillingProvider {
       source: "app_store",
       externalId: originalTransactionId,
       productId: tx.productId,
-      status: tx.revocationDate ? "refunded" : (STATUS[last.status] ?? "expired"),
+      status: tx.revocationDate
+        ? "refunded"
+        : STATUS[last.status] === "active" &&
+            tx.offerType === 1 &&
+            tx.offerDiscountType === "FREE_TRIAL"
+          ? "trialing"
+          : (STATUS[last.status] ?? "expired"),
       currentPeriodEnd: tx.expiresDate ? new Date(tx.expiresDate) : null,
       cancelAtPeriodEnd: renewal.autoRenewStatus === 0,
       customerId: null,

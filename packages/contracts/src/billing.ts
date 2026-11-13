@@ -60,6 +60,15 @@ export const BillingSummary = z
     valid_until: ts.nullable(),
     source: z.enum(["default", "dodo", "app_store", "google_play"]),
     cancel_at_period_end: z.boolean(),
+    extra_seats: z
+      .number()
+      .int()
+      .optional()
+      .openapi({ description: "People paid for beyond the plan's seats (D-249)" }),
+    trial_available: z
+      .boolean()
+      .optional()
+      .openapi({ description: "The owner can still start a plan's free trial (D-249)" }),
     credits_usd: z.number(),
     subscriptions: z.array(Subscription),
     providers: z.array(Source),
@@ -76,6 +85,17 @@ export const CheckoutRequest = z
     message: "Give exactly one of plan_code or pack_code",
   })
   .openapi("CheckoutRequest");
+
+export const SeatsRequest = z
+  .object({
+    extra: z
+      .number()
+      .int()
+      .min(0)
+      .max(100)
+      .openapi({ description: "People to pay for beyond the plan's seats" }),
+  })
+  .openapi("SeatsRequest");
 
 export const PortalRequest = z.object({ return_url: z.url().optional() }).openapi("PortalRequest");
 

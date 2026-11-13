@@ -119,6 +119,16 @@ export function createApp(deps: AppDeps) {
           "This workspace is suspended. Contact the instance owner.",
         ),
       );
+    // The plan's limit on computers running at once (D-249); SQL triggers use PT402 the same way.
+    if (err instanceof Error && err.message === "running_limit")
+      return problem(
+        c,
+        new ApiError(
+          402,
+          "plan_limit",
+          `Your plan runs ${(err as Error & { limit?: number }).limit ?? "a limited number of"} computers at once, and they're all in use. Stop one or upgrade.`,
+        ),
+      );
     if (err instanceof Error && err.message === "email_unverified")
       return problem(
         c,

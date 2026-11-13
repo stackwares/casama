@@ -43,7 +43,9 @@ type SubscriptionV2 = {
     productId: string;
     expiryTime?: string;
     autoRenewingPlan?: { autoRenewEnabled?: boolean };
-    offerDetails?: { basePlanId?: string };
+    offerDetails?: { basePlanId?: string; offerId?: string };
+    /** Which phase of the offer the item is in; freeTrial during a free trial (D-249). */
+    offerPhase?: { freeTrial?: object; basePrice?: object; introductoryPrice?: object };
   }>;
 };
 
@@ -180,7 +182,9 @@ export class GooglePlayProvider implements BillingProvider {
     const state = s.subscriptionState.replace("SUBSCRIPTION_STATE_", "");
     const status: SubscriptionStatus =
       state === "ACTIVE"
-        ? "active"
+        ? item?.offerPhase?.freeTrial
+          ? "trialing"
+          : "active"
         : state === "IN_GRACE_PERIOD"
           ? "grace"
           : state === "ON_HOLD"

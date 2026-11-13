@@ -41,7 +41,7 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { loadPerson, type PersonContext, savePersonFact } from "./about-you.ts";
 import { replyToChannel } from "./channels/service.ts";
-import { auditComputer, type ComputerService } from "./computers.ts";
+import { auditComputer, type ComputerService, RunningLimitError } from "./computers.ts";
 import { buildContext, offloadLargeResult } from "./context.ts";
 import {
   type CredentialResolver,
@@ -2098,6 +2098,11 @@ async function toolStep(
             throw new ToolError(
               "out_of_credits",
               "The workspace is out of credits. Add credits or change plans in Billing.",
+            );
+          if (err instanceof RunningLimitError)
+            throw new ToolError(
+              "running_limit",
+              `The workspace's plan runs ${err.limit} computers at once and they are all busy. Wait for one to finish, or ask the person to upgrade in Billing.`,
             );
           throw err;
         });

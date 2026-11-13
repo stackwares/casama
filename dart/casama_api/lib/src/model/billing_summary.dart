@@ -40,6 +40,10 @@ class BillingSummary {
 
     required  this.cancelAtPeriodEnd,
 
+     this.extraSeats,
+
+     this.trialAvailable,
+
     required  this.creditsUsd,
 
     required  this.subscriptions,
@@ -156,6 +160,32 @@ class BillingSummary {
 
 
 
+      /// People paid for beyond the plan's seats (D-249)
+  @JsonKey(
+    
+    name: r'extra_seats',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? extraSeats;
+
+
+
+      /// The owner can still start a plan's free trial (D-249)
+  @JsonKey(
+    
+    name: r'trial_available',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? trialAvailable;
+
+
+
   @JsonKey(
     
     name: r'credits_usd',
@@ -205,6 +235,8 @@ class BillingSummary {
       other.validUntil == validUntil &&
       other.source_ == source_ &&
       other.cancelAtPeriodEnd == cancelAtPeriodEnd &&
+      other.extraSeats == extraSeats &&
+      other.trialAvailable == trialAvailable &&
       other.creditsUsd == creditsUsd &&
       other.subscriptions == subscriptions &&
       other.providers == providers;
@@ -220,6 +252,8 @@ class BillingSummary {
         (validUntil == null ? 0 : validUntil.hashCode) +
         source_.hashCode +
         cancelAtPeriodEnd.hashCode +
+        extraSeats.hashCode +
+        trialAvailable.hashCode +
         creditsUsd.hashCode +
         subscriptions.hashCode +
         providers.hashCode;

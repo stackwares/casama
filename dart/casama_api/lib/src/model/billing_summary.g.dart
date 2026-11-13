@@ -25,6 +25,10 @@ abstract class _$BillingSummaryCWProxy {
 
   BillingSummary cancelAtPeriodEnd(bool cancelAtPeriodEnd);
 
+  BillingSummary extraSeats(int? extraSeats);
+
+  BillingSummary trialAvailable(bool? trialAvailable);
+
   BillingSummary creditsUsd(num creditsUsd);
 
   BillingSummary subscriptions(List<Subscription> subscriptions);
@@ -49,6 +53,8 @@ abstract class _$BillingSummaryCWProxy {
     DateTime? validUntil,
     BillingSummarySource_Enum source_,
     bool cancelAtPeriodEnd,
+    int? extraSeats,
+    bool? trialAvailable,
     num creditsUsd,
     List<Subscription> subscriptions,
     List<BillingSource> providers,
@@ -93,6 +99,13 @@ class _$BillingSummaryCWProxyImpl implements _$BillingSummaryCWProxy {
       call(cancelAtPeriodEnd: cancelAtPeriodEnd);
 
   @override
+  BillingSummary extraSeats(int? extraSeats) => call(extraSeats: extraSeats);
+
+  @override
+  BillingSummary trialAvailable(bool? trialAvailable) =>
+      call(trialAvailable: trialAvailable);
+
+  @override
   BillingSummary creditsUsd(num creditsUsd) => call(creditsUsd: creditsUsd);
 
   @override
@@ -122,6 +135,8 @@ class _$BillingSummaryCWProxyImpl implements _$BillingSummaryCWProxy {
     Object? validUntil = const $CopyWithPlaceholder(),
     Object? source_ = const $CopyWithPlaceholder(),
     Object? cancelAtPeriodEnd = const $CopyWithPlaceholder(),
+    Object? extraSeats = const $CopyWithPlaceholder(),
+    Object? trialAvailable = const $CopyWithPlaceholder(),
     Object? creditsUsd = const $CopyWithPlaceholder(),
     Object? subscriptions = const $CopyWithPlaceholder(),
     Object? providers = const $CopyWithPlaceholder(),
@@ -165,6 +180,14 @@ class _$BillingSummaryCWProxyImpl implements _$BillingSummaryCWProxy {
           ? _value.cancelAtPeriodEnd
           // ignore: cast_nullable_to_non_nullable
           : cancelAtPeriodEnd as bool,
+      extraSeats: extraSeats == const $CopyWithPlaceholder()
+          ? _value.extraSeats
+          // ignore: cast_nullable_to_non_nullable
+          : extraSeats as int?,
+      trialAvailable: trialAvailable == const $CopyWithPlaceholder()
+          ? _value.trialAvailable
+          // ignore: cast_nullable_to_non_nullable
+          : trialAvailable as bool?,
       creditsUsd:
           creditsUsd == const $CopyWithPlaceholder() || creditsUsd == null
           ? _value.creditsUsd
@@ -194,75 +217,77 @@ extension $BillingSummaryCopyWith on BillingSummary {
 // JsonSerializableGenerator
 // **************************************************************************
 
-BillingSummary _$BillingSummaryFromJson(Map<String, dynamic> json) =>
-    $checkedCreate(
-      'BillingSummary',
+BillingSummary _$BillingSummaryFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate(
+  'BillingSummary',
+  json,
+  ($checkedConvert) {
+    $checkKeys(
       json,
-      ($checkedConvert) {
-        $checkKeys(
-          json,
-          requiredKeys: const [
-            'enabled',
-            'plan_code',
-            'plan_name',
-            'interval',
-            'limits',
-            'unlimited',
-            'valid_until',
-            'source',
-            'cancel_at_period_end',
-            'credits_usd',
-            'subscriptions',
-            'providers',
-          ],
-        );
-        final val = BillingSummary(
-          enabled: $checkedConvert('enabled', (v) => v as bool),
-          planCode: $checkedConvert('plan_code', (v) => v as String),
-          planName: $checkedConvert('plan_name', (v) => v as String),
-          interval: $checkedConvert('interval', (v) => v as String),
-          limits: $checkedConvert(
-            'limits',
-            (v) => Map<String, num>.from(v as Map),
-          ),
-          unlimited: $checkedConvert('unlimited', (v) => v as bool),
-          validUntil: $checkedConvert(
-            'valid_until',
-            (v) => v == null ? null : DateTime.parse(v as String),
-          ),
-          source_: $checkedConvert(
-            'source',
-            (v) => $enumDecode(_$BillingSummarySource_EnumEnumMap, v),
-          ),
-          cancelAtPeriodEnd: $checkedConvert(
-            'cancel_at_period_end',
-            (v) => v as bool,
-          ),
-          creditsUsd: $checkedConvert('credits_usd', (v) => v as num),
-          subscriptions: $checkedConvert(
-            'subscriptions',
-            (v) => (v as List<dynamic>)
-                .map((e) => Subscription.fromJson(e as Map<String, dynamic>))
-                .toList(),
-          ),
-          providers: $checkedConvert(
-            'providers',
-            (v) => (v as List<dynamic>)
-                .map((e) => $enumDecode(_$BillingSourceEnumMap, e))
-                .toList(),
-          ),
-        );
-        return val;
-      },
-      fieldKeyMap: const {
-        'planCode': 'plan_code',
-        'planName': 'plan_name',
-        'validUntil': 'valid_until',
-        'source_': 'source',
-        'cancelAtPeriodEnd': 'cancel_at_period_end',
-        'creditsUsd': 'credits_usd',
-      },
+      requiredKeys: const [
+        'enabled',
+        'plan_code',
+        'plan_name',
+        'interval',
+        'limits',
+        'unlimited',
+        'valid_until',
+        'source',
+        'cancel_at_period_end',
+        'credits_usd',
+        'subscriptions',
+        'providers',
+      ],
     );
+    final val = BillingSummary(
+      enabled: $checkedConvert('enabled', (v) => v as bool),
+      planCode: $checkedConvert('plan_code', (v) => v as String),
+      planName: $checkedConvert('plan_name', (v) => v as String),
+      interval: $checkedConvert('interval', (v) => v as String),
+      limits: $checkedConvert('limits', (v) => Map<String, num>.from(v as Map)),
+      unlimited: $checkedConvert('unlimited', (v) => v as bool),
+      validUntil: $checkedConvert(
+        'valid_until',
+        (v) => v == null ? null : DateTime.parse(v as String),
+      ),
+      source_: $checkedConvert(
+        'source',
+        (v) => $enumDecode(_$BillingSummarySource_EnumEnumMap, v),
+      ),
+      cancelAtPeriodEnd: $checkedConvert(
+        'cancel_at_period_end',
+        (v) => v as bool,
+      ),
+      extraSeats: $checkedConvert('extra_seats', (v) => (v as num?)?.toInt()),
+      trialAvailable: $checkedConvert('trial_available', (v) => v as bool?),
+      creditsUsd: $checkedConvert('credits_usd', (v) => v as num),
+      subscriptions: $checkedConvert(
+        'subscriptions',
+        (v) => (v as List<dynamic>)
+            .map((e) => Subscription.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      ),
+      providers: $checkedConvert(
+        'providers',
+        (v) => (v as List<dynamic>)
+            .map((e) => $enumDecode(_$BillingSourceEnumMap, e))
+            .toList(),
+      ),
+    );
+    return val;
+  },
+  fieldKeyMap: const {
+    'planCode': 'plan_code',
+    'planName': 'plan_name',
+    'validUntil': 'valid_until',
+    'source_': 'source',
+    'cancelAtPeriodEnd': 'cancel_at_period_end',
+    'extraSeats': 'extra_seats',
+    'trialAvailable': 'trial_available',
+    'creditsUsd': 'credits_usd',
+  },
+);
 
 Map<String, dynamic> _$BillingSummaryToJson(BillingSummary instance) =>
     <String, dynamic>{
@@ -275,6 +300,8 @@ Map<String, dynamic> _$BillingSummaryToJson(BillingSummary instance) =>
       'valid_until': instance.validUntil?.toIso8601String(),
       'source': _$BillingSummarySource_EnumEnumMap[instance.source_]!,
       'cancel_at_period_end': instance.cancelAtPeriodEnd,
+      'extra_seats': ?instance.extraSeats,
+      'trial_available': ?instance.trialAvailable,
       'credits_usd': instance.creditsUsd,
       'subscriptions': instance.subscriptions.map((e) => e.toJson()).toList(),
       'providers': instance.providers

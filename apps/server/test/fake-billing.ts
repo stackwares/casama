@@ -131,6 +131,9 @@ type DodoSub = {
   next_billing_date: string;
   cancel_at_next_billing_date: boolean;
   metadata: Record<string, string>;
+  trial_period_days?: number;
+  created_at?: string;
+  addons?: Array<{ addon_id: string; quantity: number }>;
 };
 type DodoPayment = {
   payment_id: string;
@@ -172,8 +175,15 @@ export interface FakeBilling {
     payments: Map<string, DodoPayment>;
     checkouts: Map<
       string,
-      { product_id: string; metadata: Record<string, string>; email?: string }
+      {
+        product_id: string;
+        metadata: Record<string, string>;
+        email?: string;
+        trial_period_days?: number;
+      }
     >;
+    /** POST /subscriptions/{id}/change-plan bodies, in order. */
+    planChanges: Array<{ subscriptionId: string; body: Record<string, unknown> }>;
     usageEvents: Array<Record<string, unknown>>;
     /** Pays a checkout: creates the subscription (or one-time payment) and returns ids. */
     complete(sessionId: string): { subscriptionId: string | null; paymentId: string };
@@ -239,6 +249,7 @@ export async function startFakeBilling(
   const subs = new Map<string, DodoSub>();
   const payments = new Map<string, DodoPayment>();
   const checkouts: FakeBilling["dodo"]["checkouts"] = new Map();
+  const planChanges: FakeBilling["dodo"]["planChanges"] = [];
   const usageEvents: Array<Record<string, unknown>> = [];
   // ---- Apple
   const pki = makeTestPki("Fake Apple");
@@ -329,10 +340,21 @@ export async function startFakeBilling(
             product_id: b.product_cart[0].product_id,
             metadata: b.metadata ?? {},
             email: b.customer?.email,
+            trial_period_days: b.subscription_data?.trial_period_days,
           });
           return send(200, { session_id: id, checkout_url: `${url}/pay/${id}` });
         }
-        let m = p.match(/^\/subscriptions\/([^/]+)$/);
+        let m = p.match(/^\/subscriptions\/([^/]+)\/change-plan$/);
+        if (m && req.method === "POST") {
+          const s = subs.get(m[1] as string);
+          if (!s) return send(404, { code: "NOT_FOUND" });
+          const b = JSON.parse(body) as Record<string, unknown>;
+          planChanges.push({ subscriptionId: m[1] as string, body: b });
+          s.product_id = b.product_id as string;
+          s.addons = (b.addons as DodoSub["addons"]) ?? [];
+          return send(200, {});
+        }
+        m = p.match(/^\/subscriptions\/([^/]+)$/);
         if (m) {
           const s = subs.get(m[1] as string);
           return s ? send(200, s) : send(404, { code: "NOT_FOUND" });
@@ -489,6 +511,7 @@ export async function startFakeBilling(
       subs,
       payments,
       checkouts,
+      planChanges,
       usageEvents,
       complete(sessionId) {
         const ck = checkouts.get(sessionId);
@@ -509,6 +532,9 @@ export async function startFakeBilling(
             next_billing_date: new Date(Date.now() + 30 * 86400_000).toISOString(),
             cancel_at_next_billing_date: false,
             metadata: ck.metadata,
+            trial_period_days: ck.trial_period_days ?? 0,
+            created_at: new Date().toISOString(),
+            addons: [],
           });
         }
         payments.set(paymentId, {
