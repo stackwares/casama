@@ -440,8 +440,8 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           "This workspace is suspended. Contact the instance owner.",
         );
       const [conv] = await tx.execute<{ id: string }>(sql`
-        insert into public.conversations (org_id, bot_id, title, created_by, purpose, last_message_at)
-        values (${bot.org_id}::uuid, ${id}::uuid, 'Setup', ${claims.sub}::uuid, 'setup', now()) returning id`);
+        insert into public.conversations (org_id, bot_id, title, created_by, purpose, last_message_at, personal)
+        values (${bot.org_id}::uuid, ${id}::uuid, 'Setup', ${claims.sub}::uuid, 'setup', now(), true) returning id`);
       const [run] = await tx.execute<{ id: string }>(sql`
         insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger)
         values (${bot.org_id}::uuid, ${id}::uuid, ${conv?.id}::uuid, ${claims.sub}::uuid, 'chat') returning id`);
@@ -494,6 +494,8 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           title: body.title,
           createdBy: claims.sub,
           kind: ids.length ? "group" : "direct",
+          // A person's own chat with the bot: General or a topic under it (D-253).
+          personal: !ids.length,
         })
         .returning();
       for (const [i, b] of ids.entries())
@@ -623,8 +625,14 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     });
     return c.json(
       {
+        // Someone else's General (a manager sees it) is just a chat to you.
         items: rows.list.map((r) =>
-          convOut(r, [], rows.manage || r.createdBy === claims.sub, rows.states.get(r.id) ?? null),
+          convOut(
+            { ...r, isMain: r.isMain && r.createdBy === claims.sub },
+            [],
+            rows.manage || r.createdBy === claims.sub,
+            rows.states.get(r.id) ?? null,
+          ),
         ),
       },
       200,

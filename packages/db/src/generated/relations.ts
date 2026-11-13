@@ -13,8 +13,8 @@ export const organizationsRelations = relations(organizations, ({one, many}) => 
 	entitlements: many(entitlements),
 	memories: many(memories),
 	attachments: many(attachments),
-	conversations: many(conversations),
 	messages: many(messages),
+	conversations: many(conversations),
 	quotas: many(quotas),
 	runs: many(runs),
 	auditLogs: many(auditLog),
@@ -115,8 +115,8 @@ export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
 	invites_acceptedBy: many(invites, {
 		relationName: "invites_acceptedBy_usersInAuth_id"
 	}),
-	conversations: many(conversations),
 	messages: many(messages),
+	conversations: many(conversations),
 	runs: many(runs),
 	approvals: many(approvals),
 	toolGrants: many(toolGrants),
@@ -293,8 +293,8 @@ export const memoriesRelations = relations(memories, ({one}) => ({
 
 export const botsRelations = relations(bots, ({one, many}) => ({
 	memories: many(memories),
-	conversations: many(conversations),
 	messages: many(messages),
+	conversations: many(conversations),
 	runs: many(runs),
 	skills_botId: many(skills, {
 		relationName: "skills_botId_bots_id"
@@ -440,9 +440,6 @@ export const attachmentsRelations = relations(attachments, ({one}) => ({
 
 export const messagesRelations = relations(messages, ({one, many}) => ({
 	attachments: many(attachments),
-	conversations: many(conversations, {
-		relationName: "conversations_headMessageId_messages_id"
-	}),
 	organization: one(organizations, {
 		fields: [messages.orgId],
 		references: [organizations.id]
@@ -473,6 +470,9 @@ export const messagesRelations = relations(messages, ({one, many}) => ({
 		fields: [messages.botId],
 		references: [bots.id]
 	}),
+	conversations: many(conversations, {
+		relationName: "conversations_headMessageId_messages_id"
+	}),
 	runs: many(runs, {
 		relationName: "runs_triggerMessageId_messages_id"
 	}),
@@ -481,6 +481,9 @@ export const messagesRelations = relations(messages, ({one, many}) => ({
 }));
 
 export const conversationsRelations = relations(conversations, ({one, many}) => ({
+	messages: many(messages, {
+		relationName: "messages_conversationId_conversations_id"
+	}),
 	organization: one(organizations, {
 		fields: [conversations.orgId],
 		references: [organizations.id]
@@ -510,9 +513,6 @@ export const conversationsRelations = relations(conversations, ({one, many}) => 
 	}),
 	conversations: many(conversations, {
 		relationName: "conversations_parentConversationId_conversations_id"
-	}),
-	messages: many(messages, {
-		relationName: "messages_conversationId_conversations_id"
 	}),
 	runs: many(runs),
 	routines: many(routines),

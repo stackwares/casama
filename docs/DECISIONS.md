@@ -2894,6 +2894,26 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
   a `topic` part linking to it) after the run that did the work, and after later runs nobody asked
   for there (a routine, a watcher). `result_run_id` keeps it to once per run. The person's own
   back-and-forth in a topic stays in the topic. A topic made by hand ("New topic") doesn't post back.
+- **Personal chats only (audit, migration 20270131000602):** the first version treated every
+  direct chat with a person behind it as theirs. But chat apps link threads in `channel_threads`
+  and never set `conversations.channel_id`, so a WhatsApp thread, a ticket chat, a watcher or a
+  linked-bot, A2A, replay or teach chat could become General. `conversations.personal` now marks a
+  person's own chats; it's set by:
+  - the app's chat;
+  - the welcome chat;
+  - bot setup;
+  - accepted suggestions;
+  - calls;
+  - `main_conversation`.
+
+  The migration worked `personal` out from `channel_threads`, `watchers`, `tasks` and those chats'
+  title prefixes, then reassigned General. Other chats stay listed for the person, under Older in
+  All topics, but never as chips.
+- **Cards once:** suggestions pending before General existed keep `post_card = false` and stay in
+  Needs you, so the first sweep doesn't flood General. A card deleted with its chat isn't posted
+  again (a trigger clears `post_card` when `message_id` is cleared). The minute sweep reads two
+  partial indexes. A manager sees someone else's General as an ordinary chat. The suggestion card
+  only calls a suggestion closed when For You's list (at most 30) isn't full.
 - **Not done:** the bot opening a topic by itself for a long task. Projects already have their own
   chats, and routines post in General. Revisit if General gets noisy.
 - **App:**

@@ -1104,7 +1104,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
                   ),
                 // General and topics (D-253): what's going on in other topics, or the way back to General.
-                if (!widget.group)
+                if (!widget.group && !chat.loading && !(_opening && chat.empty))
                   _TopicsBar(
                     botId: widget.botId,
                     currentId: chat.conversationId,
@@ -2316,7 +2316,8 @@ class _EditSheetState extends State<_EditSheet> {
 
 
 /// General and topics (D-253): General first, then topics with something going on or a message in
-/// the last week (needs you, then working, then newest), then the rest as Older.
+/// the last week (needs you, then working, then newest), then the rest as Older. Chats that aren't
+/// topics (a chat app's thread, a ticket, a watcher) are only listed under Older.
 ({List<Conversation> active, List<Conversation> older}) splitTopics(List<Conversation> all, {DateTime? now}) {
   final cutoff = (now ?? DateTime.now()).subtract(const Duration(days: 7));
   int rank(Conversation c) => c.isMain == true
@@ -2326,7 +2327,9 @@ class _EditSheetState extends State<_EditSheet> {
       : c.status == ConversationStatusEnum.working
       ? 2
       : 3;
-  bool live(Conversation c) => c.isMain == true || c.status != null || (c.lastMessageAt ?? c.createdAt).isAfter(cutoff);
+  bool live(Conversation c) =>
+      c.isMain == true ||
+      (c.parentConversationId != null && (c.status != null || (c.lastMessageAt ?? c.createdAt).isAfter(cutoff)));
   final active = all.where(live).toList()
     ..sort((a, b) {
       final r = rank(a).compareTo(rank(b));

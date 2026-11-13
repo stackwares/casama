@@ -251,8 +251,18 @@ void main() {
       ),
       _topic('c', 'Old', at: DateTime(2026, 1, 1)),
       general,
+      // A chat app's thread is no topic: listed, but never a chip.
+      Conversation(
+        id: 'w',
+        botId: botId,
+        title: 'WhatsApp: Ana',
+        lastMessageAt: DateTime(2026, 11, 12, 23),
+        createdAt: DateTime(2026, 11, 1),
+        kind: ConversationKindEnum.direct,
+        botIds: const [botId],
+      ),
     ], now: now);
     expect(split.active.map((c) => c.id), ['g', 'b', 'a']);
-    expect(split.older.map((c) => c.id), ['c']);
+    expect(split.older.map((c) => c.id), ['c', 'w']);
   });
 }

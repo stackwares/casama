@@ -148,6 +148,7 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
                 botId: bot.id,
                 title: "Voice call",
                 createdBy: claims.sub,
+                personal: true,
               })
               .returning(),
           )

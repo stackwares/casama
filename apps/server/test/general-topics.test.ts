@@ -213,6 +213,39 @@ describe("General and topics", () => {
     ).toBe(true);
   });
 
+  it("a chat app's thread, a ticket or a watcher never becomes General or a topic", async () => {
+    const other = (
+      await j(
+        await h.request("/v1/bots", {
+          method: "POST",
+          token: owner.token,
+          json: { org_id: orgId, name: "Other" },
+        }),
+      )
+    ).id as string;
+    // Made the way the chat-app, ticket and watcher code makes them: no personal flag.
+    const [thread] = await h.tdb.admin<{ id: string; is_main: boolean; parent: string | null }[]>`
+      insert into public.conversations (org_id, bot_id, title, created_by)
+      values (${orgId}, ${other}, 'WhatsApp: Ana', ${owner.id})
+      returning id, is_main, parent_conversation_id as parent`;
+    expect(thread).toMatchObject({ is_main: false, parent: null });
+    // The person's first own chat with the bot is General.
+    const mine = await j(
+      await h.request("/v1/conversations", {
+        method: "POST",
+        token: owner.token,
+        json: { bot_id: other },
+      }),
+    );
+    expect(mine.is_main).toBe(true);
+  });
+
+  it("suggestions from before General stay out of it", async () => {
+    const id = await addSuggestion("An old idea", "Remember this?");
+    await h.tdb.admin`update public.suggestions set post_card = false where id = ${id}`;
+    expect(await postSuggestions(h.handle.db)).toBe(0);
+  });
+
   it("a result line is the reply's first sentence, without markdown", () => {
     expect(resultLine("**Done.** Booked it for 7:15.")).toBe("Done.");
     expect(resultLine("No full stop here")).toBe("No full stop here");

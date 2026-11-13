@@ -1247,8 +1247,8 @@ export async function startWelcome(
               ${`mascot:${a.mascot ?? "winky"}`}, 'private')
       returning id`);
     const [conv] = await tx.execute<{ id: string }>(sql`
-      insert into public.conversations (org_id, bot_id, title, created_by, last_message_at, purpose, welcome)
-      values (${a.orgId}::uuid, ${bot?.id}::uuid, 'Welcome', ${a.userId}::uuid, now(), 'welcome', ${JSON.stringify({ step: a.nameKnown ? (a.google ? "google" : "focus") : "name", focus: [], ...(a.google ? { google: a.google } : {}) })}::jsonb)
+      insert into public.conversations (org_id, bot_id, title, created_by, last_message_at, purpose, personal, welcome)
+      values (${a.orgId}::uuid, ${bot?.id}::uuid, 'Welcome', ${a.userId}::uuid, now(), 'welcome', true, ${JSON.stringify({ step: a.nameKnown ? (a.google ? "google" : "focus") : "name", focus: [], ...(a.google ? { google: a.google } : {}) })}::jsonb)
       returning id`);
     await tx.execute(sql`
       insert into public.messages (org_id, conversation_id, role, content, bot_id)

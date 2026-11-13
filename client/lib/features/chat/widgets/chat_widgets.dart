@@ -1886,7 +1886,9 @@ class _SuggestionPromptState extends ConsumerState<SuggestionPrompt> {
     final l10n = context.l10n;
     final colors = context.appColors;
     final s = widget.entry.suggestion;
-    final pending = ref.watch(forYouProvider).value?.suggestions.map((x) => x.id).toSet();
+    final open = ref.watch(forYouProvider).value?.suggestions;
+    // For you lists at most 30; a full list can't say a missing one is closed.
+    final pending = open == null || open.length >= 30 ? null : open.map((x) => x.id).toSet();
     // The topic this card opened, when it was accepted.
     final topic = (ref.watch(conversationsProvider(widget.botId)).value ?? const <Conversation>[])
         .where((c) => c.anchorMessageId == widget.entry.messageId)

@@ -94,7 +94,7 @@ export async function postSuggestions(db: Database, opts: { runId?: string; limi
     select s.id, s.org_id, s.bot_id, s.user_id, s.title, s.body_md, s.push_text
     from public.suggestions s
     left join public.runs r on r.id = s.run_id
-    where s.status = 'pending' and s.message_id is null and s.expires_at > now()
+    where s.status = 'pending' and s.message_id is null and s.post_card and s.expires_at > now()
       and (s.notify_at is null or s.notify_at <= now())
       and ${opts.runId ? sql`s.run_id = ${opts.runId}::uuid` : sql`(r.id is null or r.status in ('completed', 'failed', 'cancelled'))`}
     order by s.created_at
@@ -135,8 +135,8 @@ export async function postTopicResults(
     select r.id as run_id, r.org_id, r.bot_id, c.id as topic_id, c.parent_conversation_id as parent_id, c.title,
       (select m.content from public.messages m where m.run_id = r.id and m.role = 'assistant'
        order by m.created_at desc limit 1) as content
-    from public.runs r
-    join public.conversations c on c.id = r.conversation_id
+    from public.conversations c
+    join public.runs r on r.conversation_id = c.id
     where c.posts_result and c.parent_conversation_id is not null
       and r.status = 'completed' and r.ended_at > now() - interval '1 day'
       and (c.result_run_id is null or r.ended_at > (select ended_at from public.runs where id = c.result_run_id))

@@ -241,71 +241,6 @@ export const attachments = pgTable("attachments", {
 	check("attachments_size_check", sql`size >= 0`),
 ]);
 
-export const conversations = pgTable("conversations", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgId: uuid("org_id").notNull(),
-	botId: uuid("bot_id").notNull(),
-	channelId: uuid("channel_id"),
-	externalThreadId: text("external_thread_id"),
-	title: text(),
-	summary: text().default("").notNull(),
-	summaryThrough: timestamp("summary_through", { withTimezone: true, mode: 'string' }),
-	createdBy: uuid("created_by"),
-	lastMessageAt: timestamp("last_message_at", { withTimezone: true, mode: 'string' }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	purpose: text().default('chat').notNull(),
-	headMessageId: uuid("head_message_id"),
-	projectId: uuid("project_id"),
-	kind: text().default('direct').notNull(),
-	welcome: jsonb(),
-	private: boolean().default(false).notNull(),
-	isMain: boolean("is_main").default(false).notNull(),
-	parentConversationId: uuid("parent_conversation_id"),
-	anchorMessageId: uuid("anchor_message_id"),
-	postsResult: boolean("posts_result").default(false).notNull(),
-	resultRunId: uuid("result_run_id"),
-}, (table) => [
-	index("conversations_bot_id_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.lastMessageAt.desc().nullsFirst().op("timestamptz_ops")),
-	uniqueIndex("conversations_one_main").using("btree", table.botId.asc().nullsLast().op("uuid_ops"), table.createdBy.asc().nullsLast().op("uuid_ops")).where(sql`is_main`),
-	index("conversations_parent_idx").using("btree", table.parentConversationId.asc().nullsLast().op("uuid_ops")).where(sql`(parent_conversation_id IS NOT NULL)`),
-	index("conversations_title_trgm").using("gin", table.title.asc().nullsLast().op("gin_trgm_ops")),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "conversations_org_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.botId],
-			foreignColumns: [bots.id],
-			name: "conversations_bot_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.createdBy],
-			foreignColumns: [users.id],
-			name: "conversations_created_by_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.projectId],
-			foreignColumns: [projects.id],
-			name: "conversations_project_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.parentConversationId],
-			foreignColumns: [table.id],
-			name: "conversations_parent_conversation_id_fkey"
-		}).onDelete("set null"),
-	pgPolicy("conversations_insert", { as: "permissive", for: "insert", to: ["authenticated"], withCheck: sql`(can_access_bot(bot_id) AND (EXISTS ( SELECT 1
-   FROM bots b
-  WHERE ((b.id = conversations.bot_id) AND (b.org_id = conversations.org_id)))))`  }),
-	pgPolicy("conversations_update", { as: "permissive", for: "update", to: ["authenticated"] }),
-	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
-	pgPolicy("conversations_select", { as: "permissive", for: "select", to: ["authenticated"] }),
-	pgPolicy("conversations_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	check("conversations_title_check", sql`char_length(title) <= 200`),
-	check("conversations_kind_check", sql`kind = ANY (ARRAY['direct'::text, 'group'::text])`),
-	check("conversations_purpose_check", sql`purpose = ANY (ARRAY['chat'::text, 'setup'::text, 'welcome'::text])`),
-]);
-
 export const messages = pgTable("messages", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	orgId: uuid("org_id").notNull(),
@@ -357,6 +292,72 @@ export const messages = pgTable("messages", {
 	pgPolicy("messages_select", { as: "permissive", for: "select", to: ["authenticated"] }),
 	pgPolicy("messages_insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
 	check("messages_role_check", sql`role = ANY (ARRAY['user'::text, 'assistant'::text, 'system'::text, 'tool'::text])`),
+]);
+
+export const conversations = pgTable("conversations", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	channelId: uuid("channel_id"),
+	externalThreadId: text("external_thread_id"),
+	title: text(),
+	summary: text().default("").notNull(),
+	summaryThrough: timestamp("summary_through", { withTimezone: true, mode: 'string' }),
+	createdBy: uuid("created_by"),
+	lastMessageAt: timestamp("last_message_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	purpose: text().default('chat').notNull(),
+	headMessageId: uuid("head_message_id"),
+	projectId: uuid("project_id"),
+	kind: text().default('direct').notNull(),
+	welcome: jsonb(),
+	private: boolean().default(false).notNull(),
+	isMain: boolean("is_main").default(false).notNull(),
+	parentConversationId: uuid("parent_conversation_id"),
+	anchorMessageId: uuid("anchor_message_id"),
+	postsResult: boolean("posts_result").default(false).notNull(),
+	resultRunId: uuid("result_run_id"),
+	personal: boolean().default(false).notNull(),
+}, (table) => [
+	index("conversations_bot_id_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.lastMessageAt.desc().nullsFirst().op("timestamptz_ops")),
+	uniqueIndex("conversations_one_main").using("btree", table.botId.asc().nullsLast().op("uuid_ops"), table.createdBy.asc().nullsLast().op("uuid_ops")).where(sql`is_main`),
+	index("conversations_parent_idx").using("btree", table.parentConversationId.asc().nullsLast().op("uuid_ops")).where(sql`(parent_conversation_id IS NOT NULL)`),
+	index("conversations_title_trgm").using("gin", table.title.asc().nullsLast().op("gin_trgm_ops")),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "conversations_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "conversations_bot_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.createdBy],
+			foreignColumns: [users.id],
+			name: "conversations_created_by_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.projectId],
+			foreignColumns: [projects.id],
+			name: "conversations_project_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.parentConversationId],
+			foreignColumns: [table.id],
+			name: "conversations_parent_conversation_id_fkey"
+		}).onDelete("set null"),
+	pgPolicy("conversations_insert", { as: "permissive", for: "insert", to: ["authenticated"], withCheck: sql`(can_access_bot(bot_id) AND (EXISTS ( SELECT 1
+   FROM bots b
+  WHERE ((b.id = conversations.bot_id) AND (b.org_id = conversations.org_id)))))`  }),
+	pgPolicy("conversations_update", { as: "permissive", for: "update", to: ["authenticated"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
+	pgPolicy("conversations_select", { as: "permissive", for: "select", to: ["authenticated"] }),
+	pgPolicy("conversations_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	check("conversations_title_check", sql`char_length(title) <= 200`),
+	check("conversations_kind_check", sql`kind = ANY (ARRAY['direct'::text, 'group'::text])`),
+	check("conversations_purpose_check", sql`purpose = ANY (ARRAY['chat'::text, 'setup'::text, 'welcome'::text])`),
 ]);
 
 export const quotas = pgTable("quotas", {
@@ -1897,6 +1898,7 @@ export const suggestions = pgTable("suggestions", {
 	notifyAt: timestamp("notify_at", { withTimezone: true, mode: 'string' }),
 	notifiedAt: timestamp("notified_at", { withTimezone: true, mode: 'string' }),
 	messageId: uuid("message_id"),
+	postCard: boolean("post_card").default(true).notNull(),
 }, (table) => [
 	index("suggestions_notify_due_idx").using("btree", table.notifyAt.asc().nullsLast().op("timestamptz_ops")).where(sql`((status = 'pending'::text) AND (notified_at IS NULL) AND (notify_at IS NOT NULL))`),
 	index("suggestions_user_idx").using("btree", table.userId.asc().nullsLast().op("timestamptz_ops"), table.orgId.asc().nullsLast().op("timestamptz_ops"), table.status.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("text_ops")),

@@ -199,8 +199,8 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       // A topic under the person's General (D-253), started from the suggestion's card there; it
       // posts its result back when the work is done.
       const [conv] = await tx.execute<{ id: string }>(sql`
-        insert into public.conversations (org_id, bot_id, title, created_by, last_message_at, anchor_message_id, posts_result)
-        values (${s.org_id}::uuid, ${s.bot_id}::uuid, ${s.title.slice(0, 200)}, ${claims.sub}::uuid, now(), ${s.message_id}::uuid, true) returning id`);
+        insert into public.conversations (org_id, bot_id, title, created_by, last_message_at, anchor_message_id, posts_result, personal)
+        values (${s.org_id}::uuid, ${s.bot_id}::uuid, ${s.title.slice(0, 200)}, ${claims.sub}::uuid, now(), ${s.message_id}::uuid, true, true) returning id`);
       const [run] = await tx.execute<{ id: string }>(sql`
         insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger)
         values (${s.org_id}::uuid, ${s.bot_id}::uuid, ${conv?.id}::uuid, ${claims.sub}::uuid, 'chat') returning id`);
