@@ -8,6 +8,7 @@ import { execFile } from "node:child_process";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { readMedia } from "@casama/agent";
 import { type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
@@ -127,9 +128,8 @@ export function registerChatMediaRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
       let pending = making.get(id);
       if (!pending) {
         pending = (async () => {
-          const [row] = await db.execute<{ bytes: Buffer }>(sql`
-            select bytes from public.chat_media where id = ${id}::uuid`);
-          return row ? videoPoster(new Uint8Array(row.bytes), meta.duration_s) : null;
+          const bytes = await readMedia(db, deps.objects, id);
+          return bytes ? videoPoster(bytes, meta.duration_s) : null;
         })().finally(() => making.delete(id));
         making.set(id, pending);
       }
@@ -162,21 +162,17 @@ export function registerChatMediaRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
       const range = parseRange(rangeHeader, size);
       if (!range) return c.body(null, 416, { ...headers, "content-range": `bytes */${size}` });
       const length = range.end - range.start + 1;
-      // substring() on bytea is 1-based.
-      const [slice] = await db.execute<{ part: Buffer }>(sql`
-        select substring(bytes from ${range.start + 1}::int for ${length}::int) as part
-        from public.chat_media where id = ${id}::uuid`);
-      if (!slice) throw missing();
-      return c.body(new Uint8Array(slice.part), 206, {
+      const part = await readMedia(db, deps.objects, id, range);
+      if (!part) throw missing();
+      return c.body(new Uint8Array(part), 206, {
         ...headers,
         "content-range": `bytes ${range.start}-${range.end}/${size}`,
         "content-length": String(length),
       });
     }
-    const [row] = await db.execute<{ bytes: Buffer }>(sql`
-      select bytes from public.chat_media where id = ${id}::uuid`);
-    if (!row) throw missing();
-    return c.body(new Uint8Array(row.bytes), 200, {
+    const all = await readMedia(db, deps.objects, id);
+    if (!all) throw missing();
+    return c.body(new Uint8Array(all), 200, {
       ...headers,
       "content-length": String(size),
     });

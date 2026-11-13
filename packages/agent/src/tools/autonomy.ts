@@ -36,13 +36,13 @@ export interface AutonomyToolDeps {
   notifications?: NotificationService;
   mediaFor?: (orgId: string) => Promise<MediaProvider | null>;
   searchFor?: (orgId: string) => Promise<SearchProvider | null>;
+  /** Where generated media's bytes go (D-288); unset: Postgres. */
+  objects?: import("@casama/sandbox").ObjectStore;
   /**
    * The key for spoken audio (D-284): the workspace's own OpenRouter key, else the server's.
    * `billable` when the server's key pays and billing is on.
    */
-  speechFor?: (
-    orgId: string,
-  ) => Promise<{
+  speechFor?: (orgId: string) => Promise<{
     key: string;
     billable: boolean;
     model?: string;
@@ -999,15 +999,17 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     const id = /^media:([0-9a-f-]{36})$/.exec(ref.trim())?.[1];
     if (id) {
       const [row] = await db.execute<{
-        bytes: Buffer;
         content_type: string;
         name: string | null;
       }>(sql`
-        select bytes, content_type, name from public.chat_media
+        select content_type, name from public.chat_media
         where id = ${id}::uuid and org_id = ${ctx.orgId}::uuid`);
       if (!row) throw new ToolError("file_not_found", `There's no chat file ${ref}.`);
+      const { readMedia } = await import("../media-store.ts");
+      const data = await readMedia(db, deps.objects, id);
+      if (!data) throw new ToolError("file_not_found", `The chat file ${ref} is gone.`);
       return {
-        data: new Uint8Array(row.bytes),
+        data,
         contentType: row.content_type,
         name: row.name ?? `${id}.${row.content_type.split("/")[1] ?? "bin"}`,
       };
@@ -1054,11 +1056,17 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       ))
     )
       return null;
+    // The bytes go to the object store when the server has one (D-288); Postgres otherwise.
+    const { randomUUID } = await import("node:crypto");
+    const { mediaKey } = await import("../media-store.ts");
+    const id = randomUUID();
+    const key = deps.objects ? mediaKey(ctx.orgId, id) : null;
+    if (deps.objects && key) await deps.objects.put(key, bytes);
     const [row] = await db.execute<{ id: string }>(sql`
-      insert into public.chat_media (org_id, bot_id, run_id, conversation_id, name, content_type, bytes, size, width, height, duration_s)
-      values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid,
+      insert into public.chat_media (id, org_id, bot_id, run_id, conversation_id, name, content_type, bytes, blob_key, size, width, height, duration_s)
+      values (${id}::uuid, ${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid,
               (select conversation_id from public.runs where id = ${ctx.runId}::uuid),
-              ${name}, ${media.contentType}, ${Buffer.from(bytes)}, ${bytes.length},
+              ${name}, ${media.contentType}, ${key ? null : Buffer.from(bytes)}, ${key}, ${bytes.length},
               ${media.width ?? null}, ${media.height ?? null}, ${media.durationS ?? null})
       returning id`);
     const named = title ? titleFromText(title) : "";

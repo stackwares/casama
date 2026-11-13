@@ -319,6 +319,7 @@ export async function startWorker(opts: WorkerOptions) {
     db,
     fetch: fetchOut,
     notifications,
+    objects: opts.objects,
     // Images (Nano Banana 2.1 at 1K) and video (Gemini Omni Flash 1.2 at 720p) on OpenRouter
     // (D-185, D-189, D-261).
     mediaFor: async (orgId) => {

@@ -4,7 +4,7 @@
  * (a page by its visibility, anything else by the chat it was made in).
  */
 
-import { hashPageToken, newPageToken, setPageVisibility } from "@casama/agent";
+import { hashPageToken, newPageToken, readMedia, setPageVisibility } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, withUserSession } from "@casama/db";
 import { readObject } from "@casama/sandbox";
@@ -361,22 +361,19 @@ export function registerCreationRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       if (!range)
         return c.body(null, 416, { ...headers, "content-range": `bytes */${size}` }) as never;
       const length = range.end - range.start + 1;
-      const [slice] = await db.execute<{ part: Buffer }>(sql`
-        select substring(bytes from ${range.start + 1}::int for ${length}::int) as part
-        from public.chat_media where id = ${row.media_id}::uuid`);
+      const slice = await readMedia(db, deps.objects, row.media_id, range);
       if (!slice) throw new ApiError(404, "no_content", "The bytes are gone");
-      return c.body(new Uint8Array(slice.part), 206, {
+      return c.body(new Uint8Array(slice), 206, {
         ...headers,
         "content-range": `bytes ${range.start}-${range.end}/${size}`,
         "content-length": String(length),
       }) as never;
     }
-    const [m] = await db.execute<{ bytes: Buffer }>(sql`
-      select bytes from public.chat_media where id = ${row.media_id}::uuid`);
-    if (!m) throw new ApiError(404, "no_content", "The bytes are gone");
-    return c.body(new Uint8Array(m.bytes), 200, {
+    const all = await readMedia(db, deps.objects, row.media_id);
+    if (!all) throw new ApiError(404, "no_content", "The bytes are gone");
+    return c.body(new Uint8Array(all), 200, {
       ...headers,
-      "content-length": String(m.bytes.length),
+      "content-length": String(all.length),
     }) as never;
   });
 
@@ -413,16 +410,14 @@ export function registerCreationRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     let body: Buffer | null;
     let type: string;
     if (row.kind === "image") {
-      const [m] = await db.execute<{ bytes: Buffer }>(sql`
-        select bytes from public.chat_media where id = ${row.media_id}::uuid`);
-      body = m?.bytes ?? null;
+      const img = await readMedia(db, deps.objects, row.media_id);
+      body = img ? Buffer.from(img) : null;
       type = row.mime ?? "image/png";
     } else {
       body = posters.get(row.media_id) ?? null;
       if (!posters.has(row.media_id)) {
-        const [m] = await db.execute<{ bytes: Buffer }>(sql`
-          select bytes from public.chat_media where id = ${row.media_id}::uuid`);
-        body = m ? await videoPoster(new Uint8Array(m.bytes), row.duration_s) : null;
+        const clip = await readMedia(db, deps.objects, row.media_id);
+        body = clip ? await videoPoster(clip, row.duration_s) : null;
         posters.set(row.media_id, body);
         while (posters.size > 300) posters.delete(posters.keys().next().value as string);
       }

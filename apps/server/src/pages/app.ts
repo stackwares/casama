@@ -417,10 +417,8 @@ export function createPagesApp(deps: {
       bytes = await readObject(deps.objects, r.preview_key).catch(() => null);
       type = "application/pdf";
     } else if (r.media_id) {
-      const [m] = await db.execute<{ bytes: Buffer }>(
-        sql`select bytes from public.chat_media where id = ${r.media_id}::uuid`,
-      );
-      bytes = m ? new Uint8Array(m.bytes) : null;
+      const { readMedia } = await import("@casama/agent");
+      bytes = await readMedia(db, deps.objects, r.media_id);
     } else if (r.blob_key && deps.objects) {
       bytes = await readObject(deps.objects, r.blob_key).catch(() => null);
     }

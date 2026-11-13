@@ -3377,3 +3377,10 @@ Stage 8 of `docs/MASTER-PLAN-2026-11.md` (Add 6; meeting bots stay cut, D-123).
 - **After the meeting:** calendar routines take `anchor: "end"`, so the offset counts from the meeting's end ("5 minutes after each standup ends") instead of its start.
 - **A gallery routine idea, "Meeting notes":** each weekday evening the bot gathers the day's notes from whichever notes app is connected (Fireflies, Granola, Circleback, Otter, Fathom, Zoom or Google Meet, through the existing app connections) or from the calendar, and files one Markdown file per meeting in the team folder (`shared/meetings/`) with decisions and action items, asking before it sends anything. Gallery routine ideas are schedule-only, because shipped apps parse them strictly; the after-meeting version is made as a calendar routine.
 - **Not done:** the gallery change reaches the public gallery only when it's published (a production step for Oliver), and none of the notes apps were tried with a real account.
+
+## D-288 Generated media out of Postgres, and bytes deleted with their rows
+
+Stage 7 of `docs/MASTER-PLAN-2026-11.md`; the second half of `docs/LIBRARY-PLAN.md` Phase 5.
+
+- **Decision:** with an object store configured (the Library's volume by default, D-276), new pictures, videos and sounds are written there and `chat_media` keeps only the key; the hourly maintenance moves older rows' bytes out 50 at a time. Every reader goes through `readMedia`, which serves either place, byte ranges included, so nothing changes for the app. The nightly database dump stops growing with media.
+- **Deletion:** a trigger on `chat_media`, `creations`, `creation_versions` and `page_assets` queues the keys of any deleted row (`deleted_blobs`), whatever deleted it, including workspace and account deletion cascades; the maintenance deletes those bytes unless another row still uses the key.
