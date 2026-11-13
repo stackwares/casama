@@ -30,7 +30,10 @@ void main() {
     expect(find.byKey(const Key('memory-m2')), findsOneWidget);
     expect(find.byKey(const Key('memory-m3')), findsOneWidget);
 
-    await tester.enterText(find.byKey(const Key('memorySearch')), 'april fiscal');
+    await tester.enterText(
+      find.byKey(const Key('memorySearch')),
+      'april fiscal',
+    );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('memory-m2')), findsOneWidget);
     expect(find.byKey(const Key('memory-m3')), findsNothing);
@@ -52,9 +55,17 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('addMemory')));
     await tester.pumpAndSettle();
-    await tester.tap(find.descendant(of: find.byKey(const Key('newMemoryKind')), matching: find.text('Preference')));
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('newMemoryKind')),
+        matching: find.text('Preference'),
+      ),
+    );
     await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('newMemoryText')), 'Keep summaries short');
+    await tester.enterText(
+      find.byKey(const Key('newMemoryText')),
+      'Keep summaries short',
+    );
     await tester.pump();
     await tester.tap(find.byKey(const Key('saveNewMemory')));
     await tester.pumpAndSettle();

@@ -139,6 +139,8 @@ class Analytics {
   static const routeFeatures = {
     '/search': 'search',
     '/pages': 'pages',
+    // The Library took over Pages (D-274); it counts as the same feature.
+    '/library': 'pages',
     '/projects': 'projects',
     '/tasks': 'tasks_board',
     '/inbox': 'inbox',

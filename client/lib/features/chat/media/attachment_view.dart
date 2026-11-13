@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
+import 'package:casama_sdk/casama_sdk.dart' show CreationKind;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -10,6 +11,7 @@ import '../../../core/widgets.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
 import '../../files/file_preview.dart';
+import '../../library/library_links.dart';
 import '../../pages/pages_screen.dart';
 import 'chat_audio.dart';
 import 'chat_pdf.dart';
@@ -28,7 +30,21 @@ class AttachmentView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final a = attachment;
-    if (a.isPage) return PageCard(attachment: a);
+    if (a.isPage) return ShowInLibraryMenu(pageId: a.pageId, title: a.name, child: PageCard(attachment: a));
+    // Chat media is in the Library too (D-274): long-press or right-click finds it there.
+    if (a.isChatMedia) {
+      final kind = switch (attachmentKind(a)) {
+        MediaKind.video => CreationKind.video,
+        MediaKind.audio => CreationKind.audio,
+        MediaKind.image || MediaKind.gif || MediaKind.svg => CreationKind.image,
+        _ => null,
+      };
+      return ShowInLibraryMenu(mediaId: a.mediaId, kind: kind, child: _view(context, a));
+    }
+    return _view(context, a);
+  }
+
+  Widget _view(BuildContext context, AttachmentRef a) {
     final computerId = FileLinkScope.maybeOf(context)?.computerId;
     final path = a.isChatMedia
         ? a.path

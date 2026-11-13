@@ -1644,8 +1644,9 @@ abstract class Backend {
   /// One creation with the others from the same run.
   Future<CreationDetail> creation(String id);
 
-  /// Renames, pins or marks it opened (Recently opened).
-  Future<Creation> updateCreation(String id, {String? title, bool? pinned, bool? opened});
+  /// Renames, pins, marks it opened (Recently opened) or changes who can see it (D-281). Making it
+  /// public returns `public_url` once.
+  Future<Creation> updateCreation(String id, {String? title, bool? pinned, bool? opened, CreationVisibilityEnum? visibility});
 
   /// Hides it now; restorable for 30 days.
   Future<void> deleteCreation(String id);

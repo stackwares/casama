@@ -17,9 +17,10 @@ import '../timeline/timeline_screen.dart' show runStatusStyle;
 import 'cron_words.dart';
 
 /// A routine's latest runs, newest first (Improve app 1).
-final routineRunsProvider = FutureProvider.autoDispose.family<List<RunSummary>, String>(
-  (ref, routineId) => ref.watch(backendProvider).routineRuns(routineId),
-);
+final routineRunsProvider = FutureProvider.autoDispose
+    .family<List<RunSummary>, String>(
+      (ref, routineId) => ref.watch(backendProvider).routineRuns(routineId),
+    );
 
 /// Edit a routine: its name, instructions and when it runs, with its recent runs below
 /// (Improve app 1). Event routines (webhook, calendar, message, device) keep their trigger; only
@@ -34,10 +35,16 @@ class EditRoutineSheet extends ConsumerStatefulWidget {
 
 class _EditRoutineSheetState extends ConsumerState<EditRoutineSheet> {
   late final _name = TextEditingController(text: widget.routine.name);
-  late final _instructions = TextEditingController(text: widget.routine.instructionsMd);
-  late final _cron = TextEditingController(text: widget.routine.scheduleCron ?? '');
+  late final _instructions = TextEditingController(
+    text: widget.routine.instructionsMd,
+  );
+  late final _cron = TextEditingController(
+    text: widget.routine.scheduleCron ?? '',
+  );
   late final _timezone = TextEditingController(text: widget.routine.timezone);
-  late DateTime _runAt = (widget.routine.nextRunAt ?? DateTime.now().add(const Duration(hours: 1))).toLocal();
+  late DateTime _runAt =
+      (widget.routine.nextRunAt ?? DateTime.now().add(const Duration(hours: 1)))
+          .toLocal();
   var _runAtChanged = false;
   var _busy = false;
 
@@ -53,7 +60,8 @@ class _EditRoutineSheetState extends ConsumerState<EditRoutineSheet> {
     super.dispose();
   }
 
-  static bool _cronLooksValid(String cron) => cron.trim().split(RegExp(r'\s+')).length == 5;
+  static bool _cronLooksValid(String cron) =>
+      cron.trim().split(RegExp(r'\s+')).length == 5;
 
   Future<void> _pickTime() async {
     unfocusBeforeModal();
@@ -65,23 +73,37 @@ class _EditRoutineSheetState extends ConsumerState<EditRoutineSheet> {
       lastDate: now.add(const Duration(days: 365)),
     );
     if (date == null || !mounted) return;
-    final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(_runAt));
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_runAt),
+    );
     if (time == null) return;
     setState(() {
-      _runAt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      _runAt = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
       _runAtChanged = true;
     });
   }
 
   Future<void> _save() async {
     final r = widget.routine;
-    String? changed(String now, String before) => now.trim() == before.trim() ? null : now.trim();
+    String? changed(String now, String before) =>
+        now.trim() == before.trim() ? null : now.trim();
     final name = changed(_name.text, r.name);
     final instructions = changed(_instructions.text, r.instructionsMd);
     final cron = _schedule ? changed(_cron.text, r.scheduleCron ?? '') : null;
     final timezone = _schedule ? changed(_timezone.text, r.timezone) : null;
     final runAt = _once && _runAtChanged ? _runAt : null;
-    if (name == null && instructions == null && cron == null && timezone == null && runAt == null) {
+    if (name == null &&
+        instructions == null &&
+        cron == null &&
+        timezone == null &&
+        runAt == null) {
       Navigator.of(context).pop(false);
       return;
     }
@@ -89,7 +111,14 @@ class _EditRoutineSheetState extends ConsumerState<EditRoutineSheet> {
     final ok = await runGuarded(context, () async {
       await ref
           .read(backendProvider)
-          .updateRoutine(r.id, name: name, instructions: instructions, scheduleCron: cron, timezone: timezone, runAt: runAt);
+          .updateRoutine(
+            r.id,
+            name: name,
+            instructions: instructions,
+            scheduleCron: cron,
+            timezone: timezone,
+            runAt: runAt,
+          );
       return true;
     });
     if (!mounted) return;
@@ -107,7 +136,9 @@ class _EditRoutineSheetState extends ConsumerState<EditRoutineSheet> {
     final valid =
         _name.text.trim().isNotEmpty &&
         _instructions.text.trim().isNotEmpty &&
-        (!_schedule || (_cronLooksValid(_cron.text) && _timezone.text.trim().isNotEmpty)) &&
+        (!_schedule ||
+            (_cronLooksValid(_cron.text) &&
+                _timezone.text.trim().isNotEmpty)) &&
         (!_once || !_runAtChanged || _runAt.isAfter(DateTime.now()));
     final runs = ref.watch(routineRunsProvider(widget.routine.id));
     return FormSheet(
@@ -132,7 +163,11 @@ class _EditRoutineSheetState extends ConsumerState<EditRoutineSheet> {
           minLines: 3,
           maxLines: 8,
           textCapitalization: TextCapitalization.sentences,
-          decoration: InputDecoration(labelText: l10n.routineInstructions, hintText: l10n.routineInstructionsHint, alignLabelWithHint: true),
+          decoration: InputDecoration(
+            labelText: l10n.routineInstructions,
+            hintText: l10n.routineInstructionsHint,
+            alignLabelWithHint: true,
+          ),
           onChanged: (_) => setState(() {}),
         ),
         if (_schedule) ...[
@@ -141,7 +176,9 @@ class _EditRoutineSheetState extends ConsumerState<EditRoutineSheet> {
             controller: _cron,
             decoration: InputDecoration(
               labelText: l10n.cronExpression,
-              helperText: _cronLooksValid(_cron.text) ? scheduleWords(context, _cron.text.trim()) : l10n.cronHelp,
+              helperText: _cronLooksValid(_cron.text)
+                  ? scheduleWords(context, _cron.text.trim())
+                  : l10n.cronHelp,
             ),
             onChanged: (_) => setState(() {}),
           ),
@@ -160,20 +197,38 @@ class _EditRoutineSheetState extends ConsumerState<EditRoutineSheet> {
             title: Text(l10n.routineRunsAt),
             trailing: Text(
               '${_runAt.formattedWeekdayDate(context)} · ${_runAt.formattedTime(context)}',
-              style: context.textTheme.bodyLarge?.copyWith(color: scheme.primary, fontWeight: FontWeight.w600),
+              style: context.textTheme.bodyLarge?.copyWith(
+                color: scheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             onTap: _pickTime,
           ),
-        Text(l10n.routineRecentRuns, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+        Text(
+          l10n.routineRecentRuns,
+          style: context.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         runs.when(
           loading: () => const SkeletonText(widthFactor: 0.6),
-          error: (_, _) => Text(l10n.somethingWentWrong, style: TextStyle(color: scheme.error)),
+          error: (_, _) => Text(
+            l10n.somethingWentWrong,
+            style: TextStyle(color: scheme.error),
+          ),
           data: (list) => list.isEmpty
-              ? Text(l10n.routineNoRuns, key: const Key('routineNoRuns'), style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant))
+              ? Text(
+                  l10n.routineNoRuns,
+                  key: const Key('routineNoRuns'),
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                )
               : Column(
                   key: const Key('routineRuns'),
                   children: [
-                    for (final run in list) _RunRow(run: run, botId: widget.routine.botId),
+                    for (final run in list)
+                      _RunRow(run: run, botId: widget.routine.botId),
                   ],
                 ),
         ),
@@ -205,12 +260,26 @@ class _RunRow extends StatelessWidget {
           children: [
             StatusLabel(text: label, color: color, pill: true, icon: icon),
             const SizedBox(width: AppSpace.sm),
-            Expanded(child: TimeAgo(run.createdAt, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant))),
+            Expanded(
+              child: TimeAgo(
+                run.createdAt,
+                style: context.textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
             Text(
               formatUsd(run.costUsd, context.l10n.localeName),
-              style: context.textTheme.labelMedium?.copyWith(fontFeatures: AppText.tabular, color: scheme.onSurfaceVariant),
+              style: context.textTheme.labelMedium?.copyWith(
+                fontFeatures: AppText.tabular,
+                color: scheme.onSurfaceVariant,
+              ),
             ),
-            Icon(LucideIcons.chevronRight, size: 16, color: scheme.onSurfaceVariant),
+            Icon(
+              LucideIcons.chevronRight,
+              size: 16,
+              color: scheme.onSurfaceVariant,
+            ),
           ],
         ),
       ),

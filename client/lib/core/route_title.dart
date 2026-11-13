@@ -137,6 +137,8 @@ String tabTitleFor(String? fullPath, AppLocalizations l10n, {String? botName}) {
     '/password-managers' => l10n.passwordManagers,
     '/calls/:id' => l10n.outCall,
     '/pages' => l10n.pages,
+    '/library' => l10n.library,
+    '/library/:id' => l10n.library,
     '/groups/:id' => l10n.tabTitleGroupChat,
     '/approvals/:id' => l10n.approval,
     '/computer' => l10n.computerTitle,

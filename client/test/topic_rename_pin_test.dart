@@ -9,7 +9,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
 
-Conversation _topic(String id, String? title, {DateTime? at, bool pinned = false}) => Conversation(
+Conversation _topic(
+  String id,
+  String? title, {
+  DateTime? at,
+  bool pinned = false,
+}) => Conversation(
   id: id,
   botId: botId,
   title: title,
@@ -23,12 +28,17 @@ Conversation _topic(String id, String? title, {DateTime? at, bool pinned = false
   pinned: pinned,
 );
 
-Future<FakeBackend> _openTopics(WidgetTester tester, List<Conversation> topics) async {
+Future<FakeBackend> _openTopics(
+  WidgetTester tester,
+  List<Conversation> topics,
+) async {
   await setSize(tester, const Size(900, 1000));
   final backend = FakeBackend()
     ..fakeChatIsGeneral = true
     ..topics = topics;
-  await tester.pumpWidget(harness(backend, const ChatScreen(botId: botId, conversationId: convId)));
+  await tester.pumpWidget(
+    harness(backend, const ChatScreen(botId: botId, conversationId: convId)),
+  );
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(const Key('chatMoreMenu')));
   await tester.pumpAndSettle();
@@ -46,17 +56,26 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('renameConversation-t1')));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('topicNameField')), 'Japan trip');
+    await tester.enterText(
+      find.byKey(const Key('topicNameField')),
+      'Japan trip',
+    );
     await tester.tap(find.byKey(const Key('saveTopicName')));
     await tester.pumpAndSettle();
     expect(backend.conversationUpdates.single, ('t1', 'Japan trip', null));
     expect(find.text('Japan trip'), findsWidgets);
   });
 
-  testWidgets('pin a topic: it moves above newer ones and out of Older', (tester) async {
+  testWidgets('pin a topic: it moves above newer ones and out of Older', (
+    tester,
+  ) async {
     final backend = await _openTopics(tester, [
       _topic('t-new', 'Newest', at: DateTime.now()),
-      _topic('t-old', 'Month old', at: DateTime.now().subtract(const Duration(days: 30))),
+      _topic(
+        't-old',
+        'Month old',
+        at: DateTime.now().subtract(const Duration(days: 30)),
+      ),
     ]);
     // A month-old topic waits under Older until pinned.
     expect(find.byKey(const Key('olderTopics')), findsOneWidget);
@@ -93,7 +112,12 @@ void main() {
     final now = DateTime(2026, 11, 14);
     final all = [
       _topic('a', 'A', at: now.subtract(const Duration(hours: 1))),
-      _topic('p', 'P', at: now.subtract(const Duration(days: 40)), pinned: true),
+      _topic(
+        'p',
+        'P',
+        at: now.subtract(const Duration(days: 40)),
+        pinned: true,
+      ),
     ];
     final split = splitTopics(all, now: now);
     expect(split.active.map((c) => c.id), ['p', 'a']);

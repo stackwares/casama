@@ -1155,6 +1155,162 @@ class AppLocalizationsEn extends AppLocalizations {
   String get renameTopic => 'Rename';
 
   @override
+  String get library => 'Library';
+
+  @override
+  String get navLibrary => 'Library';
+
+  @override
+  String get librarySearchHint => 'Search the Library';
+
+  @override
+  String get libraryFilterAll => 'All';
+
+  @override
+  String get libraryFilterPages => 'Sites & games';
+
+  @override
+  String get libraryFilterImages => 'Images';
+
+  @override
+  String get libraryFilterVideos => 'Videos';
+
+  @override
+  String get libraryFilterAudio => 'Audio';
+
+  @override
+  String get libraryFilterDocuments => 'Documents';
+
+  @override
+  String get libraryFilterFiles => 'Files';
+
+  @override
+  String get creationKindPage => 'Page';
+
+  @override
+  String get creationKindImage => 'Image';
+
+  @override
+  String get creationKindVideo => 'Video';
+
+  @override
+  String get creationKindAudio => 'Audio';
+
+  @override
+  String get creationKindDocument => 'Document';
+
+  @override
+  String get creationKindFile => 'File';
+
+  @override
+  String get libraryPinned => 'Pinned';
+
+  @override
+  String get libraryToday => 'Today';
+
+  @override
+  String get libraryYesterday => 'Yesterday';
+
+  @override
+  String get libraryThisWeek => 'This week';
+
+  @override
+  String get libraryEarlier => 'Earlier';
+
+  @override
+  String get libraryEmptyTitle => 'Nothing made yet';
+
+  @override
+  String get libraryEmptyBody =>
+      'Sites, games, pictures, videos and files your bots make land here on their own.';
+
+  @override
+  String get libraryNoMatch => 'Nothing here matches.';
+
+  @override
+  String get libraryStarterGame => 'A small game';
+
+  @override
+  String get libraryStarterGamePrompt =>
+      'Make me a small game I can play in the browser.';
+
+  @override
+  String get libraryStarterLogo => 'A logo';
+
+  @override
+  String get libraryStarterLogoPrompt => 'Design a logo for my project.';
+
+  @override
+  String get libraryStarterSite => 'A one-page site';
+
+  @override
+  String get libraryStarterSitePrompt =>
+      'Make a one-page website for my business.';
+
+  @override
+  String get creationOpen => 'Open';
+
+  @override
+  String get creationPlay => 'Play';
+
+  @override
+  String get creationView => 'View';
+
+  @override
+  String get creationChangeIt => 'Change It';
+
+  @override
+  String creationChangeDraft(String title) {
+    return 'About “$title”: ';
+  }
+
+  @override
+  String creationMadeBy(String bot) {
+    return 'Made by $bot';
+  }
+
+  @override
+  String creationVersion(int n) {
+    return 'version $n';
+  }
+
+  @override
+  String creationFromChat(String bot) {
+    return 'From your chat with $bot';
+  }
+
+  @override
+  String creationFromBot(String bot) {
+    return 'Made by $bot';
+  }
+
+  @override
+  String get creationFromHelp => 'Go to the conversation';
+
+  @override
+  String get creationDetails => 'Details';
+
+  @override
+  String get creationAlongside => 'Made alongside';
+
+  @override
+  String creationDeleted(String title) {
+    return 'Deleted “$title”';
+  }
+
+  @override
+  String get showInLibrary => 'Show in Library';
+
+  @override
+  String get creationWhoCanSee => 'Who Can See It';
+
+  @override
+  String get libraryTile => 'Library';
+
+  @override
+  String get libraryTileHelp => 'What it made';
+
+  @override
   String get regenerateReply => 'Regenerate';
 
   @override

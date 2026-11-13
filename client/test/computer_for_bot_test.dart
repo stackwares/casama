@@ -26,7 +26,14 @@ void main() {
   final other = _c('other', ComputerKindEnum.private, ownerBotId: 'max');
 
   test('the default computer, else its own, else the team computer', () {
-    expect(computerForBot([team, mine, other], 'ada', defaultComputerId: 'other')?.id, 'other');
+    expect(
+      computerForBot(
+        [team, mine, other],
+        'ada',
+        defaultComputerId: 'other',
+      )?.id,
+      'other',
+    );
     expect(computerForBot([team, mine, other], 'ada')?.id, 'mine');
     expect(computerForBot([other, team], 'ada')?.id, 'team');
   });
@@ -36,6 +43,9 @@ void main() {
   });
 
   test('a default computer that is gone is not swapped for another', () {
-    expect(computerForBot([team, mine], 'ada', defaultComputerId: 'missing'), isNull);
+    expect(
+      computerForBot([team, mine], 'ada', defaultComputerId: 'missing'),
+      isNull,
+    );
   });
 }

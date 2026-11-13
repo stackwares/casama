@@ -1,4 +1,4 @@
-// Three places on every size (D-176): Chats, Inbox and Tasks. Settings sits behind the person's
+// Three places on every size: Chats, Library and Tasks (D-176, D-253, D-274). Settings sits behind the person's
 // avatar, search beside the phone tab bar, and a bot's computer inside its chat.
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,10 +22,10 @@ Future<void> _pumpApp(WidgetTester tester, Size size) async {
 }
 
 void main() {
-  testWidgets('phones have two tabs (D-253) and a search button beside them', (tester) async {
+  testWidgets('phones have three tabs (D-274) and a search button beside them', (tester) async {
     await _pumpApp(tester, const Size(400, 860));
     final bar = find.byType(FloatingTabChrome);
-    for (final label in ['Chats', 'Tasks']) {
+    for (final label in ['Chats', 'Library', 'Tasks']) {
       expect(
         find.descendant(of: bar, matching: find.text(label)),
         findsOneWidget,
@@ -62,17 +62,17 @@ void main() {
     expect(GoRouter.of(tester.element(find.byType(FloatingTabChrome))).state.uri.path, '/tasks');
   });
 
-  testWidgets('on phones only the two tabs show the tab bar; pages opened from them hide it', (tester) async {
+  testWidgets('on phones only the three tabs show the tab bar; pages opened from them hide it', (tester) async {
     await _pumpApp(tester, const Size(400, 860));
     final router = GoRouter.of(tester.element(find.byType(FloatingTabChrome)));
     Offset slide() => tester.widget<AnimatedSlide>(find.ancestor(of: find.byType(FloatingTabChrome), matching: find.byType(AnimatedSlide))).offset;
-    for (final path in ['/bots', '/tasks']) {
+    for (final path in ['/bots', '/library', '/tasks']) {
       router.go(path);
       await tester.pumpAndSettle();
       expect(slide(), Offset.zero, reason: path);
     }
     // What the Inbox held opens from Chats now, full screen (D-253).
-    for (final path in ['/inbox', '/password-managers', '/settings', '/search', '/pages', '/computer']) {
+    for (final path in ['/inbox', '/password-managers', '/settings', '/search', '/computer']) {
       router.go(path);
       await tester.pumpAndSettle();
       expect(slide(), isNot(Offset.zero), reason: path);
@@ -106,10 +106,10 @@ void main() {
     }
   });
 
-  testWidgets('tablets get a rail with the two places, search, and the avatar for Settings', (tester) async {
+  testWidgets('tablets get a rail with the three places, search, and the avatar for Settings', (tester) async {
     await _pumpApp(tester, const Size(900, 1000));
     final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
-    expect(rail.destinations, hasLength(2));
+    expect(rail.destinations, hasLength(3));
     expect(find.byKey(const Key('railSearch')), findsOneWidget);
     await tester.tap(find.byKey(const Key('railMe')));
     await tester.pumpAndSettle();
@@ -117,11 +117,16 @@ void main() {
     expect(tester.widget<NavigationRail>(find.byType(NavigationRail)).selectedIndex, isNull);
   });
 
-  testWidgets('wide windows list Needs you and Casama over the chats, Tasks and the person under them', (tester) async {
+  testWidgets('wide windows list Needs you and Casama over the chats, Library, Tasks and the person under them', (tester) async {
     await _pumpApp(tester, const Size(1600, 1000));
     expect(find.byKey(const Key('sidebar-needs-you')), findsOneWidget);
     expect(find.byKey(const Key('sidebar-updates')), findsOneWidget);
+    expect(find.byKey(const Key('sidebar-nav-/library')), findsOneWidget);
     expect(find.byKey(const Key('sidebar-nav-/tasks')), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.byKey(const Key('sidebar-nav-/library'))).dy,
+      lessThan(tester.getTopLeft(find.byKey(const Key('sidebar-nav-/tasks'))).dy),
+    );
     expect(find.byKey(const Key('sidebarMe')), findsOneWidget);
     for (final gone in ['sidebar-nav-/inbox', 'sidebarPages', 'sidebar-nav-/computer', 'sidebar-nav-/settings']) {
       expect(find.byKey(Key(gone)), findsNothing, reason: gone);

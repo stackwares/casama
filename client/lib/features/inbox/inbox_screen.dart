@@ -27,17 +27,17 @@ import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/form_sheet.dart';
+import '../library/library_links.dart';
 import '../pages/pages_screen.dart';
 import '../skills/skill_proposals.dart';
 import 'for_you.dart';
 
-/// What the Inbox shows: everything, only what waits on a decision, morning briefs, pages, or
-/// updates (D-253: what isn't already in a bot's chat).
+/// What the Inbox shows: everything, only what waits on a decision, morning briefs, or updates
+/// (D-253: what isn't already in a bot's chat). Pages moved to the Library (D-274).
 enum InboxFilter {
   all,
   needsYou,
   briefs,
-  pages,
   updates;
 
   /// From Chats (D-253): `/inbox?tab=0` is Needs you, `/inbox` the Updates row.
@@ -81,16 +81,15 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       InboxFilter.all => l10n.filterAll,
       InboxFilter.needsYou => needsYou == 0 ? l10n.inboxNeedsYou : l10n.inboxNeedsYouCount(needsYou),
       InboxFilter.briefs => l10n.inboxBriefs,
-      InboxFilter.pages => l10n.pages,
       InboxFilter.updates => l10n.inboxUpdates,
     };
-    // Opened from Chats (D-253): Needs you is one list; Updates switches between updates and pages.
+    // Opened from Chats (D-253): Needs you and Updates are one list each.
     final chips = switch (widget.initialFilter) {
       InboxFilter.needsYou when widget.title != null => const <InboxFilter>[],
-      InboxFilter.updates => const [InboxFilter.updates, InboxFilter.pages],
-      _ => const [InboxFilter.all, InboxFilter.needsYou, InboxFilter.briefs, InboxFilter.pages],
+      InboxFilter.updates => const <InboxFilter>[],
+      _ => const [InboxFilter.all, InboxFilter.needsYou, InboxFilter.briefs],
     };
-    // Tapping Inbox again scrolls the feed (or Pages) to the top (TabReselect); so does the iOS status bar.
+    // The iOS status bar scrolls the feed to the top.
     return PrimaryScrollController(
       controller: TabReselect.inbox,
       child: Scaffold(
@@ -122,7 +121,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
           ),
         ),
       ),
-      body: _filter == InboxFilter.pages ? const PagesList() : _InboxFeed(filter: _filter),
+      body: _InboxFeed(filter: _filter),
     ),
     );
   }
@@ -145,7 +144,7 @@ class _InboxFeed extends ConsumerWidget {
   const _InboxFeed({required this.filter});
   final InboxFilter filter;
 
-  /// How far back published pages show among the updates (the Pages filter lists them all).
+  /// How far back published pages show among the updates (the Library lists them all).
   static const _recentPages = Duration(days: 7);
 
   @override
@@ -302,7 +301,8 @@ class _InboxFeed extends ConsumerWidget {
   }
 }
 
-/// "Ada published Weekly sales" among the updates; opens the page the way the Pages list does.
+/// "Ada published Weekly sales" among the updates; opens it in the Library (D-274), or in the
+/// browser when the Library can't find it.
 class _PageUpdateRow extends ConsumerWidget {
   const _PageUpdateRow({required this.page, required this.botName});
   final BotPage page;
@@ -315,7 +315,15 @@ class _PageUpdateRow extends ConsumerWidget {
     final p = page;
     return InkWell(
       key: Key('pageUpdate-${p.id}'),
-      onTap: () => openBotPage(context, ref, p),
+      onTap: () async {
+        final c = await findCreation(ref, pageId: p.id, title: p.title);
+        if (!context.mounted) return;
+        if (c != null) {
+          unawaited(context.push('/library/${c.id}'));
+        } else {
+          await openBotPage(context, ref, p);
+        }
+      },
       child: Padding(
         padding: const EdgeInsets.fromLTRB(AppSpace.md, 12, AppSpace.md, 12),
         child: Row(

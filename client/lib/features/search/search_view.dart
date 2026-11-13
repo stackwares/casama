@@ -21,6 +21,7 @@ import '../../ui/shell_header.dart';
 import '../board/board_screen.dart' show TicketSheet;
 import '../bots/bots_screen.dart' show byRecentChat, chatListTime, lastMessagePreview;
 import '../files/file_preview.dart';
+import '../library/creation_tile.dart' show creationIcon, creationKindLabel;
 import '../home/home_shell.dart' show LayoutSize, layoutFor;
 import 'recent_searches.dart';
 import 'search_rows.dart';
@@ -61,13 +62,20 @@ enum SearchScope {
   skills(['skill']),
   routines(['routine']),
   tickets(['ticket']),
-  files(['file']);
+  files(['file']),
+
+  /// What bots made (the Library, D-274), searched by title and bot through `/v1/creations`.
+  library(['creation']);
 
   const SearchScope(this.kinds);
   final List<String> kinds;
 
   bool includes(SearchKind k) => this == all || kinds.contains(k.value);
   bool get coversFiles => this == all || this == files;
+  bool get coversLibrary => this == all || this == library;
+
+  /// The kinds sent to the server's search (the Library isn't one of them).
+  List<String>? get serverKinds => this == all ? null : kinds.where((k) => k != 'creation').toList();
 }
 
 /// A place to jump to, matched by its name or a few other words for it.
@@ -132,6 +140,9 @@ class _SearchViewState extends ConsumerState<SearchView> {
   final _list = ScrollController();
   Timer? _debounce;
   SearchResponse? _results;
+
+  /// Library matches for the same words (LIBRARY-PLAN §5.6).
+  List<Creation> _creations = const [];
   Object? _error;
   var _loading = false;
   var _seq = 0;
@@ -181,10 +192,16 @@ class _SearchViewState extends ConsumerState<SearchView> {
     final scope = _scope;
     setState(() => _loading = true);
     try {
-      final r = await ref.read(backendProvider).search(org.id, q, kinds: scope == SearchScope.all ? null : scope.kinds);
+      final backend = ref.read(backendProvider);
+      final library = scope.coversLibrary
+          ? backend.creations(org.id, q: q, limit: 20).then((l) => l.items).catchError((Object _) => const <Creation>[])
+          : Future.value(const <Creation>[]);
+      final r = scope == SearchScope.library ? SearchResponse(query: q, items: const [], files: const [], filesSearched: 0) : await backend.search(org.id, q, kinds: scope.serverKinds);
+      final creations = await library;
       if (!mounted || seq != _seq) return;
       setState(() {
         _results = r;
+        _creations = creations;
         _error = null;
         _loading = false;
         _resetSelection();
@@ -192,7 +209,7 @@ class _SearchViewState extends ConsumerState<SearchView> {
           _countsQuery = q;
           _counts = {
             for (final s in SearchScope.values.skip(1))
-              s: s == SearchScope.files ? r.files.length : r.items.where((i) => s.includes(i.kind)).length,
+              s: s == SearchScope.files ? r.files.length : s == SearchScope.library ? creations.length : r.items.where((i) => s.includes(i.kind)).length,
           };
         }
       });
@@ -265,6 +282,7 @@ class _SearchViewState extends ConsumerState<SearchView> {
       SearchScope.routines => l10n.routines,
       SearchScope.tickets => l10n.searchTickets,
       SearchScope.files => l10n.searchFiles,
+      SearchScope.library => l10n.library,
     };
   }
 
@@ -287,7 +305,7 @@ class _SearchViewState extends ConsumerState<SearchView> {
       _Place('inbox', LucideIcons.inbox, l10n.inbox, '/inbox', words: 'approvals notifications'),
       _Place('tasks', LucideIcons.listTodo, l10n.navTasks, '/tasks', words: 'tickets board todo'),
       _Place('projects', LucideIcons.folderKanban, l10n.projects, '/projects'),
-      _Place('pages', LucideIcons.fileText, l10n.pages, '/pages', words: 'documents'),
+      _Place('library', LucideIcons.library, l10n.library, '/library', words: 'pages sites games pictures images videos documents files made creations'),
       _Place('skills', LucideIcons.bookOpen, l10n.skills, '/settings/skills', words: 'catalog'),
       _Place('computers', LucideIcons.monitor, l10n.computers, '/settings/computers', words: 'machines'),
       _Place('usage', LucideIcons.chartColumn, l10n.usage, '/settings/usage', words: 'cost spend billing'),
@@ -370,8 +388,9 @@ class _SearchViewState extends ConsumerState<SearchView> {
       final of = items.where((i) => i.kind == kind).toList();
       if (of.isNotEmpty) groups[kind] = of;
     }
+    final creations = _scope.coversLibrary ? _creations : const <Creation>[];
     final searched = q.length >= 2 && r != null && _error == null;
-    final nothing = searched && items.isEmpty && files.isEmpty && botHits.isEmpty && placeHits.isEmpty;
+    final nothing = searched && items.isEmpty && files.isEmpty && creations.isEmpty && botHits.isEmpty && placeHits.isEmpty;
     final askBot = byRecentChat(bots).firstOrNull;
     final ask = askBot == null || q.length < 2
         ? null
@@ -407,6 +426,17 @@ class _SearchViewState extends ConsumerState<SearchView> {
         for (final entry in groups.entries) ...[
           _Header(_kind(entry.key).$2),
           for (final item in entry.value) _resultRow(item, botsById),
+        ],
+        if (creations.isNotEmpty) ...[
+          _Header(l10n.library),
+          for (final c in creations)
+            _Row(
+              key: Key('result-creation-${c.id}'),
+              leading: SearchIconTile(creationIcon(c.kind, label: c.label)),
+              title: c.title,
+              subtitle: TextSpan(text: [creationKindLabel(l10n, c), if ((c.botName ?? '').isNotEmpty) c.botName!, relativeTime(c.createdAt, context)].join(' · ')),
+              open: () => _go('/library/${c.id}', push: true),
+            ),
         ],
         if (files.isNotEmpty) ...[
           _Header(l10n.searchFiles),

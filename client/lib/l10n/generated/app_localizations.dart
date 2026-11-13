@@ -1948,6 +1948,288 @@ abstract class AppLocalizations {
   /// **'Rename'**
   String get renameTopic;
 
+  /// No description provided for @library.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get library;
+
+  /// No description provided for @navLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get navLibrary;
+
+  /// No description provided for @librarySearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search the Library'**
+  String get librarySearchHint;
+
+  /// No description provided for @libraryFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get libraryFilterAll;
+
+  /// No description provided for @libraryFilterPages.
+  ///
+  /// In en, this message translates to:
+  /// **'Sites & games'**
+  String get libraryFilterPages;
+
+  /// No description provided for @libraryFilterImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get libraryFilterImages;
+
+  /// No description provided for @libraryFilterVideos.
+  ///
+  /// In en, this message translates to:
+  /// **'Videos'**
+  String get libraryFilterVideos;
+
+  /// No description provided for @libraryFilterAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get libraryFilterAudio;
+
+  /// No description provided for @libraryFilterDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents'**
+  String get libraryFilterDocuments;
+
+  /// No description provided for @libraryFilterFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get libraryFilterFiles;
+
+  /// No description provided for @creationKindPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Page'**
+  String get creationKindPage;
+
+  /// No description provided for @creationKindImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get creationKindImage;
+
+  /// No description provided for @creationKindVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get creationKindVideo;
+
+  /// No description provided for @creationKindAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get creationKindAudio;
+
+  /// No description provided for @creationKindDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Document'**
+  String get creationKindDocument;
+
+  /// No description provided for @creationKindFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get creationKindFile;
+
+  /// No description provided for @libraryPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get libraryPinned;
+
+  /// No description provided for @libraryToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get libraryToday;
+
+  /// No description provided for @libraryYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get libraryYesterday;
+
+  /// No description provided for @libraryThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get libraryThisWeek;
+
+  /// No description provided for @libraryEarlier.
+  ///
+  /// In en, this message translates to:
+  /// **'Earlier'**
+  String get libraryEarlier;
+
+  /// No description provided for @libraryEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing made yet'**
+  String get libraryEmptyTitle;
+
+  /// No description provided for @libraryEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sites, games, pictures, videos and files your bots make land here on their own.'**
+  String get libraryEmptyBody;
+
+  /// No description provided for @libraryNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here matches.'**
+  String get libraryNoMatch;
+
+  /// No description provided for @libraryStarterGame.
+  ///
+  /// In en, this message translates to:
+  /// **'A small game'**
+  String get libraryStarterGame;
+
+  /// No description provided for @libraryStarterGamePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Make me a small game I can play in the browser.'**
+  String get libraryStarterGamePrompt;
+
+  /// No description provided for @libraryStarterLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'A logo'**
+  String get libraryStarterLogo;
+
+  /// No description provided for @libraryStarterLogoPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Design a logo for my project.'**
+  String get libraryStarterLogoPrompt;
+
+  /// No description provided for @libraryStarterSite.
+  ///
+  /// In en, this message translates to:
+  /// **'A one-page site'**
+  String get libraryStarterSite;
+
+  /// No description provided for @libraryStarterSitePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Make a one-page website for my business.'**
+  String get libraryStarterSitePrompt;
+
+  /// No description provided for @creationOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get creationOpen;
+
+  /// No description provided for @creationPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get creationPlay;
+
+  /// No description provided for @creationView.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get creationView;
+
+  /// No description provided for @creationChangeIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Change It'**
+  String get creationChangeIt;
+
+  /// No description provided for @creationChangeDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'About “{title}”: '**
+  String creationChangeDraft(String title);
+
+  /// No description provided for @creationMadeBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Made by {bot}'**
+  String creationMadeBy(String bot);
+
+  /// No description provided for @creationVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'version {n}'**
+  String creationVersion(int n);
+
+  /// No description provided for @creationFromChat.
+  ///
+  /// In en, this message translates to:
+  /// **'From your chat with {bot}'**
+  String creationFromChat(String bot);
+
+  /// No description provided for @creationFromBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Made by {bot}'**
+  String creationFromBot(String bot);
+
+  /// No description provided for @creationFromHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to the conversation'**
+  String get creationFromHelp;
+
+  /// No description provided for @creationDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get creationDetails;
+
+  /// No description provided for @creationAlongside.
+  ///
+  /// In en, this message translates to:
+  /// **'Made alongside'**
+  String get creationAlongside;
+
+  /// No description provided for @creationDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted “{title}”'**
+  String creationDeleted(String title);
+
+  /// No description provided for @showInLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in Library'**
+  String get showInLibrary;
+
+  /// No description provided for @creationWhoCanSee.
+  ///
+  /// In en, this message translates to:
+  /// **'Who Can See It'**
+  String get creationWhoCanSee;
+
+  /// No description provided for @libraryTile.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get libraryTile;
+
+  /// No description provided for @libraryTileHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'What it made'**
+  String get libraryTileHelp;
+
   /// No description provided for @regenerateReply.
   ///
   /// In en, this message translates to:
@@ -10726,10 +11008,16 @@ abstract class AppLocalizations {
   /// **'Verification token'**
   String get chVerificationToken;
 
+  /// No description provided for @chPublicKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Public key'**
+  String get chPublicKey;
+
   /// No description provided for @chTrackerUser.
   ///
   /// In en, this message translates to:
-  /// **'The bot's user ID in the tracker'**
+  /// **'The bot\'s user ID in the tracker'**
   String get chTrackerUser;
 
   /// No description provided for @chSiteUrl.
@@ -10743,12 +11031,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Account email'**
   String get chAccountEmail;
-
-  /// No description provided for @chPublicKey.
-  ///
-  /// In en, this message translates to:
-  /// **'Public key'**
-  String get chPublicKey;
 
   /// No description provided for @routineMessage.
   ///

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:casama_sdk/casama_sdk.dart' show CreationKind;
 import 'widgets.dart';
 
 import '../features/bots/bot_history_screen.dart';
@@ -20,7 +21,8 @@ import '../features/bots/sharing_screen.dart';
 import '../features/bots/watchers_screen.dart';
 import '../features/search/search_view.dart';
 import '../features/groups/group_chats.dart';
-import '../features/pages/pages_screen.dart';
+import '../features/library/creation_detail.dart';
+import '../features/library/library_screen.dart';
 import '../features/welcome/welcome_screen.dart';
 import '../features/settings/about_you_screen.dart';
 import '../features/settings/password_managers_screen.dart';
@@ -301,6 +303,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     botId: s.pathParameters['botId']!,
                     conversationId: s.uri.queryParameters['c'],
                     focusMessageId: s.uri.queryParameters['m'],
+                    draft: s.uri.queryParameters['draft'],
                   ),
                 ),
               ),
@@ -451,6 +454,26 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ),
           ),
+          // The Library (D-274): everything bots made. ?kind=, ?bot= and ?q= filter it.
+          GoRoute(
+            path: '/library',
+            pageBuilder: _tab(
+              (_, s) => LibraryScreen(
+                key: ValueKey(s.uri.query),
+                kind: CreationKind.values.where((k) => k.value == s.uri.queryParameters['kind']).firstOrNull,
+                botId: s.uri.queryParameters['bot'],
+                query: s.uri.queryParameters['q'] ?? '',
+              ),
+            ),
+            routes: [
+              GoRoute(
+                path: ':id',
+                pageBuilder: _page(
+                  (_, s) => CreationDetailScreen(creationId: s.pathParameters['id']!),
+                ),
+              ),
+            ],
+          ),
           GoRoute(
             path: '/tasks',
             pageBuilder: _tab((_, _) => const BoardScreen()),
@@ -487,11 +510,16 @@ final routerProvider = Provider<GoRouter>((ref) {
               (_, s) => OutboundCallScreen(callId: s.pathParameters['id']!),
             ),
           ),
+          // Pages became part of the Library (LIBRARY-PLAN §5.1): old links land on its Sites filter.
           GoRoute(
             path: '/pages',
-            pageBuilder: _page(
-              (_, s) => PagesScreen(botId: s.uri.queryParameters['bot']),
-            ),
+            redirect: (_, s) => Uri(
+              path: '/library',
+              queryParameters: {
+                'kind': 'page',
+                'bot': ?s.uri.queryParameters['bot'],
+              },
+            ).toString(),
           ),
           GoRoute(
             path: '/groups/:id',

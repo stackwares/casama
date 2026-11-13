@@ -16,7 +16,7 @@ Widget _longTab({bool reduceMotion = false}) => MaterialApp(
     builder: (context) => MediaQuery(
       data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion),
       child: PrimaryScrollController(
-        controller: TabReselect.inbox,
+        controller: TabReselect.library,
         child: Scaffold(
           body: ListView(children: [for (var i = 0; i < 100; i++) SizedBox(height: 80, child: Text('row $i'))]),
         ),
@@ -28,21 +28,21 @@ Widget _longTab({bool reduceMotion = false}) => MaterialApp(
 void main() {
   testWidgets('the tab list animates back to the top', (tester) async {
     await tester.pumpWidget(_longTab());
-    TabReselect.inbox.jumpTo(2000);
+    TabReselect.library.jumpTo(2000);
     await tester.pump();
     TabReselect.scrollToTop(tester.element(find.byType(ListView)), 1);
     await tester.pump();
-    expect(TabReselect.inbox.offset, greaterThan(0), reason: 'it animates rather than jumps');
+    expect(TabReselect.library.offset, greaterThan(0), reason: 'it animates rather than jumps');
     await tester.pumpAndSettle();
-    expect(TabReselect.inbox.offset, 0);
+    expect(TabReselect.library.offset, 0);
   });
 
   testWidgets('with reduced motion it jumps straight to the top', (tester) async {
     await tester.pumpWidget(_longTab(reduceMotion: true));
-    TabReselect.inbox.jumpTo(2000);
+    TabReselect.library.jumpTo(2000);
     await tester.pump();
     TabReselect.scrollToTop(tester.element(find.byType(ListView)), 1);
-    expect(TabReselect.inbox.offset, 0);
+    expect(TabReselect.library.offset, 0);
   });
 
   testWidgets('tapping the current tab stays on it; the tab pages use the tab controllers', (tester) async {

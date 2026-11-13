@@ -189,7 +189,7 @@ class ChatScreen extends ConsumerStatefulWidget {
   @visibleForTesting
   static Duration dictationRetryDelay = const Duration(milliseconds: 700);
 
-  const ChatScreen({super.key, required this.botId, this.conversationId, this.focusMessageId, this.group = false});
+  const ChatScreen({super.key, required this.botId, this.conversationId, this.focusMessageId, this.group = false, this.draft});
 
   /// A group chat (D-118): replies show which bot wrote them.
   final bool group;
@@ -198,6 +198,9 @@ class ChatScreen extends ConsumerStatefulWidget {
 
   /// A message to scroll to and highlight once the conversation loads (from search; D-103).
   final String? focusMessageId;
+
+  /// Text to put in the composer, not sent (Change it from the Library: "About “Space Dodger”: ").
+  final String? draft;
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -420,6 +423,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.initState();
     _readAloud = ref.read(readAloudProvider.notifier);
     _scroll.addListener(_onScroll);
+    // Change it (the Library): the request starts typed in, cursor at the end, ready to finish.
+    final draft = widget.draft;
+    if (draft != null && draft.isNotEmpty) {
+      _input.value = TextEditingValue(text: draft, selection: TextSelection.collapsed(offset: draft.length));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _focus.requestFocus();
+      });
+    }
     _input.addListener(_saveDraftSoon);
     // The chat's id changes without a reopen when the first send creates it or New chat clears it.
     ref.listenManual(chatControllerProvider(widget.botId).select((s) => s.conversationId), (_, next) {
@@ -1534,7 +1545,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           if (showSteps) {
             rows.add(_Row(ValueKey('tools-${e.callId}'), rows.last.header ? 0 : AppSpace.sm, () => ToolGroupCard(steps: group), inputs: _Same(group)));
           }
-          // A published page opens from Pages, in the browser (D-119).
+          // A published page is in the Library (D-274); the reply's page card opens it in the browser.
           if (published) {
             rows.add(
               _Row(
@@ -1544,9 +1555,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   alignment: AlignmentDirectional.centerStart,
                   child: OutlinedButton.icon(
                     key: Key('openPages-${e.callId}'),
-                    icon: const Icon(LucideIcons.fileText, size: 16),
-                    label: Text(context.l10n.openPages),
-                    onPressed: () => context.push('/pages?bot=${widget.botId}'),
+                    icon: const Icon(LucideIcons.library, size: 16),
+                    label: Text(context.l10n.showInLibrary),
+                    onPressed: () => context.push('/library?kind=page&bot=${widget.botId}'),
                   ),
                 ),
               ),

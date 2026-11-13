@@ -4003,10 +4003,15 @@ class SupabaseBackend implements Backend {
   Future<CreationDetail> creation(String id) async => (await api.creations.getCreation(id: id)).data!;
 
   @override
-  Future<Creation> updateCreation(String id, {String? title, bool? pinned, bool? opened}) async =>
+  Future<Creation> updateCreation(String id, {String? title, bool? pinned, bool? opened, CreationVisibilityEnum? visibility}) async =>
       (await api.creations.updateCreation(
         id: id,
-        updateCreationRequest: UpdateCreationRequest(title: title, pinned: pinned, opened: opened),
+        updateCreationRequest: UpdateCreationRequest(
+          title: title,
+          pinned: pinned,
+          opened: opened,
+          visibility: visibility == null ? null : UpdateCreationRequestVisibilityEnum.values.firstWhere((v) => v.value == visibility.value),
+        ),
       )).data!;
 
   @override

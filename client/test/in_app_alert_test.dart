@@ -13,7 +13,12 @@ import 'package:material_ui/material_ui.dart';
 import 'app_test.dart' show harness, setSize;
 import 'fake_backend.dart';
 
-NotificationView _n(String id, String kind, {String? link, String title = 'Ada needs approval'}) => NotificationView(
+NotificationView _n(
+  String id,
+  String kind, {
+  String? link,
+  String title = 'Ada needs approval',
+}) => NotificationView(
   id: id,
   kind: kind,
   title: title,
@@ -27,28 +32,44 @@ Widget _app(FakeBackend backend, {String start = '/'}) {
     initialLocation: start,
     routes: [
       ShellRoute(
-        builder: (_, s, child) => InAppAlertBanner(location: s.uri.path, child: child),
+        builder: (_, s, child) =>
+            InAppAlertBanner(location: s.uri.path, child: child),
         routes: [
-          GoRoute(path: '/', builder: (_, _) => const Scaffold(body: Text('home'))),
-          GoRoute(path: '/approvals/:id', builder: (_, s) => Scaffold(body: Text('approval ${s.pathParameters['id']}'))),
+          GoRoute(
+            path: '/',
+            builder: (_, _) => const Scaffold(body: Text('home')),
+          ),
+          GoRoute(
+            path: '/approvals/:id',
+            builder: (_, s) =>
+                Scaffold(body: Text('approval ${s.pathParameters['id']}')),
+          ),
         ],
       ),
     ],
   );
   return ProviderScope(
     overrides: [backendProvider.overrideWithValue(backend)],
-    child: MaterialApp.router(routerConfig: router, localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: AppLocalizations.supportedLocales),
+    child: MaterialApp.router(
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    ),
   );
 }
 
 void main() {
-  testWidgets('an approval that arrives shows a banner that opens it', (tester) async {
+  testWidgets('an approval that arrives shows a banner that opens it', (
+    tester,
+  ) async {
     await setSize(tester, const Size(1000, 800));
     final backend = FakeBackend();
     await tester.pumpWidget(_app(backend));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('inAppAlert')), findsNothing);
-    backend.notificationsController.add(_n('n9', 'approval_request', link: '/approvals/a9'));
+    backend.notificationsController.add(
+      _n('n9', 'approval_request', link: '/approvals/a9'),
+    );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('inAppAlert')), findsOneWidget);
     expect(find.text('Ada needs approval'), findsOneWidget);
@@ -59,24 +80,32 @@ void main() {
     expect(backend.readNotifications, contains('n9'));
   });
 
-  testWidgets('it hides itself, can be dismissed, and skips plain updates', (tester) async {
+  testWidgets('it hides itself, can be dismissed, and skips plain updates', (
+    tester,
+  ) async {
     await setSize(tester, const Size(1000, 800));
     final backend = FakeBackend();
     await tester.pumpWidget(_app(backend));
     await tester.pumpAndSettle();
     // A plain reply is a badge, not a banner.
-    backend.notificationsController.add(_n('n1', 'bot_message', title: 'Ada replied'));
+    backend.notificationsController.add(
+      _n('n1', 'bot_message', title: 'Ada replied'),
+    );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('inAppAlert')), findsNothing);
 
-    backend.notificationsController.add(_n('n2', 'takeover', title: 'Ada needs your hands'));
+    backend.notificationsController.add(
+      _n('n2', 'takeover', title: 'Ada needs your hands'),
+    );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('inAppAlert')), findsOneWidget);
     await tester.tap(find.byKey(const Key('inAppAlertDismiss')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('inAppAlert')), findsNothing);
 
-    backend.notificationsController.add(_n('n3', 'secret', title: 'Ada needs a key'));
+    backend.notificationsController.add(
+      _n('n3', 'secret', title: 'Ada needs a key'),
+    );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('inAppAlert')), findsOneWidget);
     await tester.pump(InAppAlertBanner.showFor + const Duration(seconds: 1));
@@ -89,7 +118,9 @@ void main() {
     final backend = FakeBackend();
     await tester.pumpWidget(_app(backend, start: '/approvals/a9'));
     await tester.pumpAndSettle();
-    backend.notificationsController.add(_n('n9', 'approval_request', link: '/approvals/a9'));
+    backend.notificationsController.add(
+      _n('n9', 'approval_request', link: '/approvals/a9'),
+    );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('inAppAlert')), findsNothing);
   });
@@ -97,9 +128,16 @@ void main() {
   testWidgets('the app shell carries the banner', (tester) async {
     await setSize(tester, const Size(1200, 900));
     final backend = FakeBackend();
-    await tester.pumpWidget(harness(backend, const HomeShell(location: '/settings/privacy', child: Text('screen'))));
+    await tester.pumpWidget(
+      harness(
+        backend,
+        const HomeShell(location: '/settings/privacy', child: Text('screen')),
+      ),
+    );
     await tester.pumpAndSettle();
-    backend.notificationsController.add(_n('n9', 'approval_request', link: '/approvals/a9'));
+    backend.notificationsController.add(
+      _n('n9', 'approval_request', link: '/approvals/a9'),
+    );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('inAppAlert')), findsOneWidget);
   });

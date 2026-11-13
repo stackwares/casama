@@ -1,6 +1,6 @@
 # Library: one place for everything bots make, and the shell around it
 
-Status: **in progress.** Phase 1 is built (D-274); every §14 default was taken. The rest follows `docs/MASTER-PLAN-2026-11.md`. The choices that are Oliver's are in §14,
+Status: **in progress.** Phase 1 is built (D-274), Phase 2 in the app (D-294); every §14 default was taken. The rest follows `docs/MASTER-PLAN-2026-11.md`. The choices that are Oliver's are in §14,
 each with a recommended default; the rest of the plan is written as if the defaults hold. When a
 phase lands, record its decisions in `docs/DECISIONS.md` (the highest number was D-265 on
 2026-11-13; check first).

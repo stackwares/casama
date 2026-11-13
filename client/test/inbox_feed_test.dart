@@ -1,4 +1,4 @@
-// The Inbox: one list with All, Needs you, Briefs and Pages filters.
+// The Inbox: one list with All, Needs you and Briefs filters. Pages moved to the Library (D-274).
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -87,9 +87,10 @@ void main() {
     await setSize(tester, const Size(375, 667));
     await tester.pumpWidget(harness(busyBackend(), const InboxScreen()));
     await tester.pumpAndSettle();
-    for (final f in ['all', 'needsYou', 'briefs', 'pages']) {
+    for (final f in ['all', 'needsYou', 'briefs']) {
       expect(find.byKey(Key('inboxFilter-$f')), findsOneWidget);
     }
+    expect(find.byKey(const Key('inboxFilter-pages')), findsNothing);
     // The approval, the takeover, the suggestion and the skill idea.
     expect(find.text('Needs you (4)'), findsOneWidget);
     expect(selected(tester, 'all'), isTrue);
@@ -116,11 +117,12 @@ void main() {
     expect(top(updates), lessThan(top(page)));
     expect(top(page), lessThan(top(note)));
     expect(top(note), lessThan(top(brief)));
-    // The pending approval's own notice isn't listed twice, and older pages stay under Pages.
+    // The pending approval's own notice isn't listed twice, and older pages stay in the Library.
     expect(find.byKey(const Key('notification-n1')), findsNothing);
     expect(find.byKey(const Key('pageUpdate-page-1')), findsNothing);
 
     expect(find.text('Ada published Launch tracker'), findsOneWidget);
+    // Not in the Library (the fake lists nothing there), so it opens in the browser as before.
     await tester.tap(page);
     await tester.pumpAndSettle();
     expect(opened.single.toString(), 'https://pages.example.com/v/tok-page-2');
@@ -162,21 +164,6 @@ void main() {
     }
   });
 
-  testWidgets('Pages lists every page and opens it through a view link', (tester) async {
-    await setSize(tester, const Size(900, 1200));
-    final opened = <Uri>[];
-    await tester.pumpWidget(harness(busyBackend(), const InboxScreen(), overrides: [pageOpenerProvider.overrideWithValue((Uri u) async => opened.add(u))]));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('inboxFilter-pages')));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('page-page-1')), findsOneWidget);
-    expect(find.byKey(const Key('page-page-2')), findsOneWidget);
-    expect(find.byKey(const Key('approval-appr1')), findsNothing);
-    await tester.tap(find.text('Weekly sales'));
-    await tester.pumpAndSettle();
-    expect(opened.single.toString(), 'https://pages.example.com/v/tok-page-1');
-  });
-
   testWidgets('each filter has its own empty state', (tester) async {
     await setSize(tester, const Size(500, 900));
     await tester.pumpWidget(harness(QuietBackend(), const InboxScreen()));
@@ -189,9 +176,6 @@ void main() {
     await tester.tap(find.byKey(const Key('inboxFilter-briefs')));
     await tester.pumpAndSettle();
     expect(find.text('No morning briefs yet'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('inboxFilter-pages')));
-    await tester.pumpAndSettle();
-    expect(find.text('No pages yet'), findsOneWidget);
   });
 
   testWidgets('/inbox?tab=0 opens Needs you; /inbox opens Updates', (tester) async {
@@ -220,10 +204,11 @@ void main() {
     expect(find.byKey(const Key('approval-appr1')), findsOneWidget);
     expect(find.byKey(const Key('brief-$botId')), findsNothing);
 
-    // Updates: no decisions and no briefs (those are in Needs you and General).
+    // Updates: one list with no chips; no decisions and no briefs (those are in Needs you and
+    // General).
     router.go('/inbox');
     await settle();
-    expect(selected(tester, 'updates'), isTrue);
+    expect(find.byKey(const Key('inboxFilter-updates')), findsNothing);
     expect(find.byKey(const Key('approval-appr1')), findsNothing);
     expect(find.byKey(const Key('brief-$botId')), findsNothing);
 

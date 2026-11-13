@@ -131,12 +131,13 @@ class HomeShell extends ConsumerWidget {
   /// The selected place, or -1 on screens outside them (settings, search, the computer).
   int get _index {
     if (location.startsWith('/tasks') || location.startsWith('/projects')) {
-      return 1;
+      return 2;
     }
+    // The Library (D-274): everything bots made, between Chats and Tasks.
+    if (location.startsWith('/library')) return 1;
     if (location == '/' ||
         location.startsWith('/inbox') ||
         location.startsWith('/approvals') ||
-        location == '/pages' ||
         location.startsWith('/bots') ||
         location.startsWith('/groups') ||
         location.startsWith('/quick-ask')) {
@@ -151,7 +152,7 @@ class HomeShell extends ConsumerWidget {
   /// The tab screens themselves. Only these show the tab bar on phones; everything opened from
   /// them (a chat, settings, the computer, search, password managers…) takes the whole screen,
   /// with a back button.
-  static const _tabRoots = {'/', '/bots', '/tasks'};
+  static const _tabRoots = {'/', '/bots', '/library', '/tasks'};
 
   bool get _isDetail => !_tabRoots.contains(location);
 
@@ -163,6 +164,12 @@ class HomeShell extends ConsumerWidget {
         LucideIcons.messagesSquare,
         LucideIcons.messagesSquare,
         l10n.navChats,
+      ),
+      _Dest(
+        '/library',
+        LucideIcons.library,
+        LucideIcons.library,
+        l10n.navLibrary,
       ),
       _Dest(
         '/tasks',

@@ -51,6 +51,8 @@ Sizes: S is a day or two of agent work, M several days, L a week or more.
 
 ### Stage 2: chat basics (M, app with small API changes)
 
+*Built (D-283; Fix 9–13 before it). Checked by the Flutter suite, not yet on a phone; the tester build is still to ask for.*
+
 - Fix 9: an error with Retry when a chat fails to load.
 - Fix 10: load earlier messages; stop downloading the whole thread on every open.
 - Fix 11–14: unsent messages survive a reload; Retry keeps attachments and skills; a just-sent
@@ -64,6 +66,8 @@ Sizes: S is a day or two of agent work, M several days, L a week or more.
   web. Needs one tester build (ask first).
 
 ### Stage 3: the Library, part one (L)
+
+*Built: Phase 1 (D-274), Phase 2 in the app (D-294). Not yet checked on a phone.*
 
 - Library plan Phase 1 (the index and the API), then Phase 2 (the Library in the app).
 - Shares the chat screen with Stage 2, so it follows it directly.

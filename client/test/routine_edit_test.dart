@@ -15,23 +15,42 @@ void main() {
   Future<(FakeBackend, String)> open(WidgetTester tester) async {
     await setSize(tester, const Size(600, 1400));
     final backend = FakeBackend();
-    await backend.createRoutine(botId, name: 'Daily check', instructions: 'Check in', trigger: 'schedule', cron: '0 9 * * *');
+    await backend.createRoutine(
+      botId,
+      name: 'Daily check',
+      instructions: 'Check in',
+      trigger: 'schedule',
+      cron: '0 9 * * *',
+    );
     final id = backend.routineList.single.id;
-    await tester.pumpWidget(harness(backend, const RoutinesScreen(botId: botId)));
+    await tester.pumpWidget(
+      harness(backend, const RoutinesScreen(botId: botId)),
+    );
     await tester.pumpAndSettle();
     return (backend, id);
   }
 
-  testWidgets('edit a repeating routine: name, instructions and schedule', (tester) async {
+  testWidgets('edit a repeating routine: name, instructions and schedule', (
+    tester,
+  ) async {
     final (backend, id) = await open(tester);
     await tester.tap(find.byKey(Key('routineMenu-$id')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(Key('editRoutine-$id')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('routineNoRuns')), findsOneWidget);
-    await tester.enterText(find.byKey(const Key('editRoutineName')), 'Morning check');
-    await tester.enterText(find.byKey(const Key('editRoutineInstructions')), 'Check in and list my meetings');
-    await tester.enterText(find.byKey(const Key('editRoutineCron')), '30 7 * * 1-5');
+    await tester.enterText(
+      find.byKey(const Key('editRoutineName')),
+      'Morning check',
+    );
+    await tester.enterText(
+      find.byKey(const Key('editRoutineInstructions')),
+      'Check in and list my meetings',
+    );
+    await tester.enterText(
+      find.byKey(const Key('editRoutineCron')),
+      '30 7 * * 1-5',
+    );
     await tester.pump();
     await tester.ensureVisible(find.byKey(const Key('saveRoutine')));
     await tester.tap(find.byKey(const Key('saveRoutine')));
@@ -62,12 +81,32 @@ void main() {
     await setSize(tester, const Size(600, 1400));
     final backend = FakeBackend()
       ..routineRunList = [
-        RunSummary(id: 'r1', status: 'completed', trigger: 'schedule', createdAt: DateTime.now(), costUsd: 0.02),
-        RunSummary(id: 'r2', status: 'failed', trigger: 'schedule', createdAt: DateTime.now().subtract(const Duration(days: 1)), costUsd: 0),
+        RunSummary(
+          id: 'r1',
+          status: 'completed',
+          trigger: 'schedule',
+          createdAt: DateTime.now(),
+          costUsd: 0.02,
+        ),
+        RunSummary(
+          id: 'r2',
+          status: 'failed',
+          trigger: 'schedule',
+          createdAt: DateTime.now().subtract(const Duration(days: 1)),
+          costUsd: 0,
+        ),
       ];
-    await backend.createRoutine(botId, name: 'Daily check', instructions: 'Check in', trigger: 'schedule', cron: '0 9 * * *');
+    await backend.createRoutine(
+      botId,
+      name: 'Daily check',
+      instructions: 'Check in',
+      trigger: 'schedule',
+      cron: '0 9 * * *',
+    );
     final id = backend.routineList.single.id;
-    await tester.pumpWidget(harness(backend, const RoutinesScreen(botId: botId)));
+    await tester.pumpWidget(
+      harness(backend, const RoutinesScreen(botId: botId)),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(Key('routine-$id')));
     await tester.pumpAndSettle();

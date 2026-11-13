@@ -36,7 +36,7 @@ const routes = [
   '/projects',
   '/search',
   '/password-managers',
-  '/pages',
+  '/library',
   '/computer',
   '/settings',
   '/settings/keys',

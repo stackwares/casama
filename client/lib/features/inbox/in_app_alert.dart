@@ -15,7 +15,11 @@ import '../../theme/app_tokens.dart';
 /// push: it comes from the live inbox. It hides itself after [showFor], and never shows for the
 /// screen the person is already on.
 class InAppAlertBanner extends ConsumerStatefulWidget {
-  const InAppAlertBanner({super.key, required this.location, required this.child});
+  const InAppAlertBanner({
+    super.key,
+    required this.location,
+    required this.child,
+  });
 
   /// Where the app is now; an alert that links here is not shown.
   final String location;
@@ -41,12 +45,20 @@ class _InAppAlertBannerState extends ConsumerState<InAppAlertBanner> {
     final link = n.link;
     if (link == null) return false;
     final path = Uri.tryParse(link)?.path;
-    return path != null && path.isNotEmpty && path != '/' && widget.location == path;
+    return path != null &&
+        path.isNotEmpty &&
+        path != '/' &&
+        widget.location == path;
   }
 
   void _open(NotificationView n) {
     ref.read(inAppAlertProvider.notifier).dismiss(n.id);
-    unawaited(ref.read(notificationsProvider.notifier).markRead(n.id).catchError((_) {}));
+    unawaited(
+      ref
+          .read(notificationsProvider.notifier)
+          .markRead(n.id)
+          .catchError((_) {}),
+    );
     final link = n.link;
     final router = GoRouter.maybeOf(context);
     if (router == null) return;
@@ -83,7 +95,9 @@ class _InAppAlertBannerState extends ConsumerState<InAppAlertBanner> {
           left: AppSpace.md,
           right: AppSpace.md,
           child: AnimatedSwitcher(
-            duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 220),
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 220),
             child: n == null
                 ? const SizedBox.shrink()
                 : Center(
@@ -101,30 +115,48 @@ class _InAppAlertBannerState extends ConsumerState<InAppAlertBanner> {
                             borderRadius: BorderRadius.circular(20),
                             onTap: () => _open(n),
                             child: Padding(
-                              padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.sm, AppSpace.xs, AppSpace.sm),
+                              padding: const EdgeInsets.fromLTRB(
+                                AppSpace.md,
+                                AppSpace.sm,
+                                AppSpace.xs,
+                                AppSpace.sm,
+                              ),
                               child: Row(
                                 children: [
                                   CircleAvatar(
                                     backgroundColor: scheme.primaryContainer,
-                                    child: Icon(
-                                      switch (n.kind) {
-                                        'takeover' => LucideIcons.hand,
-                                        'secret' => LucideIcons.keyRound,
-                                        'link_exchange' => LucideIcons.link,
-                                        _ => n.isRequest ? LucideIcons.shieldCheck : LucideIcons.bell,
-                                      },
-                                      color: scheme.onPrimaryContainer,
-                                    ),
+                                    child: Icon(switch (n.kind) {
+                                      'takeover' => LucideIcons.hand,
+                                      'secret' => LucideIcons.keyRound,
+                                      'link_exchange' => LucideIcons.link,
+                                      _ =>
+                                        n.isRequest
+                                            ? LucideIcons.shieldCheck
+                                            : LucideIcons.bell,
+                                    }, color: scheme.onPrimaryContainer),
                                   ),
                                   const SizedBox(width: AppSpace.md),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Text(n.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: text.titleSmall),
+                                        Text(
+                                          n.title,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: text.titleSmall,
+                                        ),
                                         if (n.body.isNotEmpty)
-                                          Text(n.body, maxLines: 2, overflow: TextOverflow.ellipsis, style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                                          Text(
+                                            n.body,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: text.bodySmall?.copyWith(
+                                              color: scheme.onSurfaceVariant,
+                                            ),
+                                          ),
                                       ],
                                     ),
                                   ),
@@ -138,7 +170,9 @@ class _InAppAlertBannerState extends ConsumerState<InAppAlertBanner> {
                                     key: const Key('inAppAlertDismiss'),
                                     tooltip: l10n.dismiss,
                                     icon: const Icon(LucideIcons.x, size: 18),
-                                    onPressed: () => ref.read(inAppAlertProvider.notifier).dismiss(n.id),
+                                    onPressed: () => ref
+                                        .read(inAppAlertProvider.notifier)
+                                        .dismiss(n.id),
                                   ),
                                 ],
                               ),

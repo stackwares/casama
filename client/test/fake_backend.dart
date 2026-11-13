@@ -4599,10 +4599,16 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<Creation> updateCreation(String id, {String? title, bool? pinned, bool? opened}) async {
-    creationUpdates.add((id, {'title': title, 'pinned': pinned, 'opened': opened}));
+  Future<Creation> updateCreation(String id, {String? title, bool? pinned, bool? opened, CreationVisibilityEnum? visibility}) async {
+    creationUpdates.add((id, {'title': title, 'pinned': pinned, 'opened': opened, 'visibility': visibility?.value}));
     final i = creationList.indexWhere((x) => x.id == id);
-    creationList[i] = Creation.fromJson({...creationList[i].toJson(), 'title': ?title, 'pinned': ?pinned});
+    creationList[i] = Creation.fromJson({
+      ...creationList[i].toJson(),
+      'title': ?title,
+      'pinned': ?pinned,
+      'visibility': ?visibility?.value,
+      if (visibility == CreationVisibilityEnum.public) 'public_url': 'https://pages.example.com/c/tok-$id',
+    });
     return creationList[i];
   }
 

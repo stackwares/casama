@@ -115,7 +115,7 @@ void main() {
       expect(find.text(section), findsOneWidget, reason: section);
     }
     // Every everyday control is in its section, and sharing and archiving need no digging.
-    for (final key in ['loadPersona', 'botFolder', 'botSharing', 'autonomy-ask_risky', 'botComputer', 'botVoice', 'botKnowledge', 'botPages', 'botCheckins', 'botQuiet', 'archiveBot']) {
+    for (final key in ['loadPersona', 'botFolder', 'botSharing', 'autonomy-ask_risky', 'botComputer', 'botVoice', 'botKnowledge', 'botTile-library', 'botCheckins', 'botQuiet', 'archiveBot']) {
       expect(find.byKey(Key(key)), findsOneWidget, reason: key);
     }
     // Sharing sits with the profile; Archive is alone at the very end, after Advanced.

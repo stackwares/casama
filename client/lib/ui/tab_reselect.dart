@@ -11,11 +11,12 @@ abstract final class TabReselect {
   static final ScrollController chats = ScrollController();
   static final ScrollController inbox = ScrollController();
   static final ScrollController tasks = ScrollController();
+  static final ScrollController library = ScrollController();
 
-  /// The controller of the tab at [index] in HomeShell's places: 0 Chats, 1 Inbox, 2 Tasks.
+  /// The controller of the tab at [index] in HomeShell's places: 0 Chats, 1 Library, 2 Tasks.
   static ScrollController of(int index) => switch (index) {
     0 => chats,
-    1 => inbox,
+    1 => library,
     _ => tasks,
   };
 

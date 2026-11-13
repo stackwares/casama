@@ -7,9 +7,16 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   test('the web cache keeps a draft across reloads', () async {
-    await cacheWrite(openLocalCache(web: true), 'draft:bot:conv', 'Call the bank');
+    await cacheWrite(
+      openLocalCache(web: true),
+      'draft:bot:conv',
+      'Call the bank',
+    );
     // A reload opens a fresh cache over the same browser storage.
-    expect(await cacheRead(openLocalCache(web: true), 'draft:bot:conv'), 'Call the bank');
+    expect(
+      await cacheRead(openLocalCache(web: true), 'draft:bot:conv'),
+      'Call the bank',
+    );
   });
 
   test('the web cache keeps nothing but drafts', () async {

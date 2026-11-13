@@ -325,7 +325,7 @@ void main() {
   );
 
   testWidgets(
-    'the Updates screen lists notices and Pages, not chat messages or decisions',
+    'the Updates screen lists notices and new pages, not chat messages or decisions',
     (tester) async {
       await setSize(tester, const Size(430, 932));
       final backend = FakeBackend()
@@ -359,8 +359,9 @@ void main() {
       expect(find.text('Your morning brief'), findsNothing);
       // No decisions here (the fake has a waiting approval and a suggestion; they're in Needs you).
       expect(find.byKey(const Key('inboxFilter-needsYou')), findsNothing);
-      expect(find.byKey(const Key('inboxFilter-updates')), findsOneWidget);
-      expect(find.byKey(const Key('inboxFilter-pages')), findsOneWidget);
+      // One list: pages moved to the Library (D-274), so Updates has no chips.
+      expect(find.byKey(const Key('inboxFilter-updates')), findsNothing);
+      expect(find.byKey(const Key('inboxFilter-pages')), findsNothing);
     },
   );
 

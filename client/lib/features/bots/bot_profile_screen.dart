@@ -232,6 +232,14 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
               label: l10n.appsTitle,
               onTap: () => context.push('/bots/${bot.id}/integrations'),
             ),
+            // What it made (the Library, D-274), in place of the old Pages row.
+            _BotTile(
+              key: const Key('botTile-library'),
+              accent: _Accent.violet,
+              icon: LucideIcons.library,
+              label: l10n.libraryTile,
+              onTap: () => context.go('/library?bot=${bot.id}'),
+            ),
           ],
         ),
 
@@ -522,13 +530,6 @@ class _BotProfileScreenState extends ConsumerState<BotProfileScreen> {
               title: l10n.knowledge,
               subtitle: l10n.knowledgeRow,
               onTap: () => context.push('/bots/${bot.id}/knowledge'),
-            ),
-            GroupedTile(
-              key: const Key('botPages'),
-              icon: LucideIcons.fileText,
-              title: l10n.pages,
-              subtitle: l10n.pagesRow,
-              onTap: () => context.push('/pages?bot=${bot.id}'),
             ),
           ],
         ),
@@ -888,7 +889,8 @@ enum _Accent {
   sky(Color(0xFF38BDF8), Color(0xFF0284C7)),
   pink(Color(0xFFF472B6), Color(0xFFDB2777)),
   amber(Color(0xFFFBBF24), Color(0xFFD97706)),
-  green(Color(0xFF34D399), Color(0xFF059669));
+  green(Color(0xFF34D399), Color(0xFF059669)),
+  violet(Color(0xFFA78BFA), Color(0xFF7C3AED));
 
   const _Accent(this.dark, this.light);
   final Color dark;
@@ -901,7 +903,7 @@ class _BotTiles extends StatelessWidget {
   final List<Widget> tiles;
 
   /// The narrowest a tile gets in a single row before the tiles wrap to two by two.
-  static const _minTileWidth = 68.0;
+  static const _minTileWidth = 60.0;
 
   @override
   Widget build(BuildContext context) {
