@@ -25,10 +25,22 @@ update public.conversations set is_main = false where is_main;
 update public.conversations c set parent_conversation_id = null
 where c.parent_conversation_id is not null and not public.is_personal_chat(c);
 
+-- General is the chat the person last typed in themselves (routine posts and briefs move
+-- last_message_at too), passing over the chats Do it opened before General existed (titled after
+-- their suggestion), which become topics.
 with ranked as (
-  select id,
-         row_number() over (partition by bot_id, created_by
-                            order by coalesce(last_message_at, created_at) desc, id) as n
+  select c.id,
+         row_number() over (
+           partition by c.bot_id, c.created_by
+           order by
+             exists (select 1 from public.suggestions s
+                     where s.bot_id = c.bot_id and s.user_id = c.created_by and s.status = 'accepted'
+                       and left(s.title, 200) = c.title),
+             coalesce((select max(r.created_at) from public.runs r
+                       where r.conversation_id = c.id and r.created_by = c.created_by
+                         and r.trigger in ('chat', 'welcome')),
+                      c.created_at) desc,
+             c.id) as n
   from public.conversations c
   where public.is_personal_chat(c)
 )
