@@ -20,6 +20,7 @@ import '../../ui/page.dart';
 import '../../ui/glow_button.dart';
 import '../chat/chat_screen.dart' show computerForBot;
 import '../desktop/desktop_context.dart';
+import '../files/file_preview.dart' show mimeFor;
 import '../../core/analytics.dart';
 
 /// Quick ask (global shortcut, share-to-bot target): pick a bot, type, send; opens the chat.
@@ -46,9 +47,14 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
   var _withSelection = true, _withWindow = true, _withTab = true;
   Uint8List? _shot;
 
+  /// Files shared in from another app (Android share; Fix 15), sent as attachments.
+  List<SharedAttachment> _files = const [];
+
   @override
   void initState() {
     super.initState();
+    _files = ref.read(pendingSharedFilesProvider);
+    if (_files.isNotEmpty) WidgetsBinding.instance.addPostFrameCallback((_) => ref.read(pendingSharedFilesProvider.notifier).take());
     _ctx = ref.read(pendingDesktopContextProvider);
     if (_ctx != null) WidgetsBinding.instance.addPostFrameCallback((_) => ref.read(pendingDesktopContextProvider.notifier).set(null));
     if (widget.fromShareExtension) {
@@ -65,10 +71,31 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
     super.dispose();
   }
 
+  static const _maxFileBytes = 25 * 1024 * 1024;
+
   Future<void> _send() async {
     final bot = _botId;
-    if (bot == null || (_text.text.trim().isEmpty && !(_ctx?.selection != null && _withSelection))) return;
+    if (bot == null || (_text.text.trim().isEmpty && _files.isEmpty && !(_ctx?.selection != null && _withSelection))) return;
+    final l10n = context.l10n;
+    // The screenshot and shared files go to the bot's computer, like a file attached in chat.
+    final b = ref.read(botsProvider).value?.where((x) => x.id == bot).firstOrNull;
+    final computer = computerForBot(ref.read(computersProvider).value ?? const [], bot, defaultComputerId: b?.defaultComputerId);
+    if (_files.isNotEmpty && computer == null) {
+      showWarning(context, l10n.noComputerForFiles);
+      return;
+    }
     setState(() => _busy = true);
+    final shared = <(SharedAttachment, Uint8List)>[];
+    for (final f in _files) {
+      final bytes = await f.read().catchError((_) => Uint8List(0));
+      if (!mounted) return;
+      if (bytes.length > _maxFileBytes) {
+        showWarning(context, l10n.fileTooLarge(f.name));
+        setState(() => _busy = false);
+        return;
+      }
+      shared.add((f, bytes));
+    }
     final backend = ref.read(backendProvider);
     final ctx = _ctx;
     final block = ctx == null ? '' : formatDesktopContext(ctx, selection: _withSelection, window: _withWindow, tab: _withTab);
@@ -77,15 +104,18 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
       final c = await backend.createConversation(bot);
       final attachments = <AttachmentRef>[];
       final shot = _shot;
-      if (shot != null) {
-        // The screenshot goes to the bot's computer, like a file attached in chat.
-        final b = ref.read(botsProvider).value?.where((x) => x.id == bot).firstOrNull;
-        final computer = computerForBot(ref.read(computersProvider).value ?? const [], bot, defaultComputerId: b?.defaultComputerId);
-        if (computer != null) {
-          final path = 'uploads/screenshot-${DateTime.now().millisecondsSinceEpoch}.png';
-          await backend.uploadFile(computer.id, path, shot);
-          attachments.add(AttachmentRef(path: 'workspace/$path', name: 'screenshot.png', mimeType: 'image/png', size: shot.length));
-        }
+      if (shot != null && computer != null) {
+        final path = 'uploads/screenshot-${DateTime.now().millisecondsSinceEpoch}.png';
+        await backend.uploadFile(computer.id, path, shot);
+        attachments.add(AttachmentRef(path: 'workspace/$path', name: 'screenshot.png', mimeType: 'image/png', size: shot.length));
+      }
+      for (final (f, bytes) in shared) {
+        final stamp = DateTime.now().millisecondsSinceEpoch;
+        final safe = f.name.replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '_');
+        final path = 'uploads/$stamp-$safe';
+        await backend.uploadFile(computer!.id, path, bytes);
+        final mime = f.mimeType;
+        attachments.add(AttachmentRef(path: 'workspace/$path', name: f.name, mimeType: (mime == null || mime.isEmpty) ? mimeFor(f.name) : mime, size: bytes.length));
       }
       await backend.send(c.id, text, attachments: attachments);
       return c;
@@ -117,9 +147,11 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
+    // Loaded ahead, so a screenshot or shared file has its computer when Send is tapped.
+    ref.watch(computersProvider);
     if (_botId != null && bots.isNotEmpty && !bots.any((b) => b.id == _botId)) _botId = null;
     _botId ??= bots.isEmpty ? null : bots.first.id;
-    final ready = _botId != null && (_text.text.trim().isNotEmpty || (_ctx?.selection != null && _withSelection));
+    final ready = _botId != null && (_text.text.trim().isNotEmpty || _files.isNotEmpty || (_ctx?.selection != null && _withSelection));
     return SubPage(
       title: l10n.quickAsk,
       children: [
@@ -177,6 +209,23 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
               padding: const EdgeInsets.only(top: AppSpace.xs),
               child: Text(_ctx!.selection!, maxLines: 4, overflow: TextOverflow.ellipsis, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, fontStyle: FontStyle.italic)),
             ),
+          const SizedBox(height: AppSpace.md),
+        ],
+        if (_files.isNotEmpty) ...[
+          Wrap(
+            key: const Key('quickAskFiles'),
+            spacing: AppSpace.xs,
+            runSpacing: AppSpace.xs,
+            children: [
+              for (final f in _files)
+                InputChip(
+                  key: Key('sharedFile-${f.name}'),
+                  avatar: Icon((f.mimeType ?? mimeFor(f.name)).startsWith('image/') ? LucideIcons.image : LucideIcons.file, size: 16),
+                  label: Text(f.name, overflow: TextOverflow.ellipsis),
+                  onDeleted: _busy ? null : () => setState(() => _files = [..._files]..remove(f)),
+                ),
+            ],
+          ),
           const SizedBox(height: AppSpace.md),
         ],
         TextField(

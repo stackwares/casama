@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:live_activities/live_activities.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
@@ -45,14 +46,64 @@ final homeWidgetSyncProvider = Provider<void>((ref) {
   }());
 });
 
-/// Share to bot: shared text and links open quick ask. Android uses receive_sharing_intent;
+/// A file shared into Casama from another app, waiting for quick ask to send it (Fix 15).
+class SharedAttachment {
+  const SharedAttachment({required this.name, this.mimeType, required this.read});
+  final String name;
+  final String? mimeType;
+
+  /// Reads the file's bytes (from the share's temporary copy on the device).
+  final Future<Uint8List> Function() read;
+}
+
+/// Files shared in that quick ask has not sent yet. Quick ask takes them when it opens.
+class PendingSharedFiles extends Notifier<List<SharedAttachment>> {
+  @override
+  List<SharedAttachment> build() => const [];
+
+  void set(List<SharedAttachment> files) => state = files;
+
+  /// Returns what was waiting and clears it.
+  List<SharedAttachment> take() {
+    final files = state;
+    state = const [];
+    return files;
+  }
+}
+
+final pendingSharedFilesProvider = NotifierProvider<PendingSharedFiles, List<SharedAttachment>>(PendingSharedFiles.new);
+
+/// Splits what another app shared into the text for the box and the files to attach: text and
+/// links are text; pictures, videos and files are attached as themselves, not as their names.
+(String, List<SharedAttachment>) splitSharedMedia(List<SharedMediaFile> items) {
+  final text = <String>[];
+  final files = <SharedAttachment>[];
+  for (final f in items) {
+    if (f.type == SharedMediaType.text || f.type == SharedMediaType.url) {
+      text.add(f.path);
+      continue;
+    }
+    final path = f.path;
+    files.add(SharedAttachment(
+      name: path.split('/').last,
+      mimeType: f.mimeType,
+      read: () => XFile(path).readAsBytes(),
+    ));
+    final caption = f.message;
+    if (caption != null && caption.trim().isNotEmpty && !text.contains(caption)) text.add(caption);
+  }
+  return (text.join('\n'), files);
+}
+
+/// Share to bot: shared text, links and files open quick ask. Android uses receive_sharing_intent;
 /// the iOS share extension writes to the App Group and opens casama://app/quick-ask?shared=1.
 final shareToBotProvider = Provider<void>((ref) {
   if (!_android) return;
   void open(List<SharedMediaFile> items) {
     if (items.isEmpty) return;
-    final text = items.map((f) => f.type == SharedMediaType.file || f.type == SharedMediaType.image ? f.path.split('/').last : f.path).join('\n');
-    ref.read(routerProvider).go(Uri(path: '/quick-ask', queryParameters: {'text': text}).toString());
+    final (text, files) = splitSharedMedia(items);
+    ref.read(pendingSharedFilesProvider.notifier).set(files);
+    ref.read(routerProvider).go(Uri(path: '/quick-ask', queryParameters: {if (text.isNotEmpty) 'text': text}).toString());
     ReceiveSharingIntent.instance.reset();
   }
 
