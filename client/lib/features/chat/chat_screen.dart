@@ -28,6 +28,7 @@ import '../../ui/bottom_padding.dart';
 import '../groups/empty_group.dart';
 import 'delete_chat.dart';
 import '../groups/group_chats.dart';
+import '../billing/out_of_credits.dart';
 import '../billing/paywall.dart';
 import '../../ui/edge_fade.dart';
 import '../../ui/form_sheet.dart';
@@ -1490,14 +1491,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         FilledButton.tonalIcon(
                           key: const Key('noticeFix'),
                           onPressed: () {
-                            // Out of credits opens the paywall: the paywall funnel's start (F6).
+                            // Out of credits: packs for a paying workspace, the paywall for a free
+                            // one (D-248); the paywall funnel's start (F6).
                             if (fix.route == '/settings/billing') {
-                              openPaywall(context, source: 'credits_depleted');
+                              openOutOfCredits(context);
+                              return;
+                            }
+                            if (fix.route == '/settings/plans') {
+                              openPaywall(context, source: 'limit');
                               return;
                             }
                             context.push(fix.route);
                           },
-                          icon: Icon(fix.route == '/settings/billing' ? LucideIcons.gem : LucideIcons.keyRound, size: 18),
+                          icon: Icon(fix.route.startsWith('/settings/billing') || fix.route == '/settings/plans' ? LucideIcons.gem : LucideIcons.keyRound, size: 18),
                           label: Text(fix.label),
                         ),
                       if (canRetry)

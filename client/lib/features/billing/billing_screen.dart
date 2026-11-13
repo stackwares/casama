@@ -26,13 +26,14 @@ import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/mascot.dart';
+import 'credits_meter.dart';
+import 'purchase_terms.dart';
 import 'paywall.dart';
 
+/// Model input and output, shown together.
+const _models = 'models';
+
 final planCatalogProvider = FutureProvider<PlanCatalog>((ref) => ref.watch(backendProvider).plans());
-final _usageProvider = FutureProvider<BillingUsage?>((ref) async {
-  final org = ref.watch(currentOrgProvider);
-  return org == null ? null : ref.watch(backendProvider).billingUsage(org.id);
-});
 final _connectKeysProvider = FutureProvider<List<ConnectKey>>((ref) async {
   final org = ref.watch(currentOrgProvider);
   return org == null ? const [] : ref.watch(backendProvider).connectKeys(org.id);
@@ -43,7 +44,11 @@ final storeProductsProvider = FutureProvider<Map<String, StoreProduct>>((ref) as
   final source = store.source;
   if (source == null) return const {};
   final catalog = await ref.watch(planCatalogProvider.future);
-  final ids = {for (final p in catalog.plans) ?p.storeProductIds[source]};
+  final ids = {
+    for (final p in catalog.plans) ?p.storeProductIds[source],
+    // Credit packs sold in the store are consumables (D-244).
+    for (final p in catalog.packs) ?p.storeProductIds?[source],
+  };
   return {for (final p in await store.products(ids)) p.id: p};
 });
 
@@ -93,17 +98,23 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
       ),
     );
     final url = await ref.read(backendProvider).checkoutUrl(_orgId, planCode: plan, packCode: pack);
+    if (url == null) {
+      // Moved to the new plan in place (D-248).
+      ref.invalidate(billingProvider);
+      if (mounted) showSuccess(context, context.l10n.planChanged);
+      return;
+    }
     await ref.read(openUrlProvider)(url);
   });
 
-  Future<void> _storeBuy(StoreProduct p) => _run(() {
+  Future<void> _storeBuy(StoreProduct p, {bool pack = false}) => _run(() {
     unawaited(
       Analytics.capture(
         'purchase_started',
-        properties: {'store': ref.read(storeProvider).source ?? 'store', 'kind': 'subscription', 'product_id': p.id},
+        properties: {'store': ref.read(storeProvider).source ?? 'store', 'kind': pack ? 'credit_pack' : 'subscription', 'product_id': p.id},
       ),
     );
-    return ref.read(storeProvider).buy(p, orgId: _orgId);
+    return ref.read(storeProvider).buy(p, orgId: _orgId, consumable: pack);
   });
 
   Future<void> _restore() => _run(() async {
@@ -130,6 +141,13 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final billing = ref.watch(billingProvider);
+    // Say what happened to a store purchase or restore that didn't simply go through (D-248).
+    ref.listen(purchaseOutcomeProvider, (_, next) {
+      final o = next.value;
+      final text = o == null ? null : purchaseOutcomeText(l10n, o);
+      if (text == null || !mounted) return;
+      showToast(context, text, kind: o == PurchaseOutcome.restored ? ToastKind.success : ToastKind.info);
+    });
     return SubPage(
       title: l10n.billing,
       actions: [
@@ -138,7 +156,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
           tooltip: l10n.refresh,
           onPressed: () {
             ref.invalidate(billingProvider);
-            ref.invalidate(_usageProvider);
+            ref.invalidate(billingUsageProvider);
           },
         ),
       ],
@@ -160,7 +178,9 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                 _CurrentPlan(summary: b, onManage: isAdmin && b.source_.value != 'default' ? () => _manage(b) : null).appCardEntrance(),
                 if (isAdmin && b.planCode == 'free') const _UpgradeBanner().appCardEntrance(),
                 if (isAdmin) ..._plans(context, b, channels),
-                if (isAdmin && channels.contains(PurchaseChannel.web)) ..._packs(context),
+                if (isAdmin && b.source_.value == 'dodo' && b.limits['extra_seat_usd'] != null) _ExtraPeople(summary: b),
+                // Credit packs come with a paid plan; a free workspace upgrades instead (D-246).
+                if (isAdmin && b.planCode != 'free') ..._packs(context, channels),
                 if (isAdmin && (channels.contains(PurchaseChannel.appStore) || channels.contains(PurchaseChannel.googlePlay)))
                   Padding(
                     padding: const EdgeInsets.only(top: AppSpace.sm),
@@ -196,6 +216,11 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     final products = ref.watch(storeProductsProvider).value ?? const {};
     final source = ref.watch(storeProvider).source;
     if (catalog == null) return const [];
+    // One subscription per workspace (D-248): change plans where you subscribed.
+    final paidVia = b.planCode != 'free' ? b.source_.value : null;
+    final storeSub = paidVia == 'app_store' || paidVia == 'google_play';
+    final elsewhere = storeSub && paidVia != source;
+    final webSub = paidVia == 'dodo';
     return [
       SectionHeader(title: l10n.plans),
       for (final p in catalog.plans.where((p) => p.interval.value != 'none'))
@@ -225,14 +250,19 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
                     spacing: AppSpace.xs,
                     runSpacing: AppSpace.xs,
                     children: [
-                      if (source != null && products[p.storeProductIds[source]] != null && channels.any((c) => c != PurchaseChannel.web))
+                      if (!webSub && !elsewhere && source != null && products[p.storeProductIds[source]] != null && channels.any((c) => c != PurchaseChannel.web))
                         GlowButton.icon(
                           key: Key('buyStore-${p.code}'),
                           onPressed: () => _storeBuy(products[p.storeProductIds[source]]!),
                           icon: const Icon(LucideIcons.shoppingBag, size: 18),
-                          label: Text(l10n.subscribeFor(products[p.storeProductIds[source]]!.price)),
+                          // The period goes with the price (App Store 3.1.2).
+                          label: Text(
+                            l10n.subscribeFor(
+                              '${products[p.storeProductIds[source]]!.price} ${p.interval.value == 'year' ? l10n.pricePerYear : l10n.pricePerMonth}',
+                            ),
+                          ),
                         ),
-                      if (channels.contains(PurchaseChannel.web) && p.web)
+                      if (!storeSub && channels.contains(PurchaseChannel.web) && p.web)
                         OutlinedButton.icon(
                           key: Key('buyWeb-${p.code}'),
                           onPressed: () => _webCheckout(plan: p.code),
@@ -246,28 +276,71 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
             ),
           ),
         ),
+      if (elsewhere)
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpace.xs),
+          child: FormNote(
+            l10n.subscribedInStoreNote(paidVia == 'app_store' ? 'the App Store' : 'Google Play'),
+            key: const Key('billingChannelNote'),
+          ),
+        ),
+      // Renewal and cancellation terms, Terms of Use and Privacy, under every way to subscribe.
+      Padding(
+        padding: const EdgeInsets.only(top: AppSpace.xs),
+        child: Column(
+          children: [
+            Text(
+              channels.any((c) => c != PurchaseChannel.web) && source != null ? l10n.paywallFineStore : l10n.paywallFineWeb,
+              textAlign: TextAlign.center,
+              style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+            const PurchaseTerms(price: null, yearly: false, store: null),
+          ],
+        ),
+      ),
     ];
   }
 
-  List<Widget> _packs(BuildContext context) {
+  /// Credit packs: bought in the store where the pack has a product there (at the store's price),
+  /// else through web checkout at its price label (D-244).
+  List<Widget> _packs(BuildContext context, List<PurchaseChannel> channels) {
     final l10n = context.l10n;
-    final packs = ref.watch(planCatalogProvider).value?.packs.where((p) => p.web).toList() ?? const [];
-    if (packs.isEmpty) return const [];
+    final scheme = context.colorScheme;
+    final source = ref.watch(storeProvider).source;
+    final products = ref.watch(storeProductsProvider).value ?? const {};
+    final storeChannel = source != null && channels.any((c) => c != PurchaseChannel.web);
+    final tiles = <Widget>[];
+    for (final p in ref.watch(planCatalogProvider).value?.packs ?? const <CreditPack>[]) {
+      final product = storeChannel ? products[p.storeProductIds?[source]] : null;
+      if (product != null) {
+        tiles.add(
+          GroupedTile(
+            key: Key('packStore-${p.code}'),
+            icon: LucideIcons.creditCard,
+            iconColor: context.appColors.positive,
+            title: p.name,
+            trailing: Text(product.price, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800, color: scheme.primary)),
+            onTap: () => _storeBuy(product, pack: true),
+          ),
+        );
+      } else if (channels.contains(PurchaseChannel.web) && p.web) {
+        tiles.add(
+          GroupedTile(
+            key: Key('pack-${p.code}'),
+            icon: LucideIcons.creditCard,
+            iconColor: context.appColors.positive,
+            title: p.name,
+            subtitle: p.priceLabel.isUsable ? p.priceLabel : null,
+            trailing: Icon(LucideIcons.squareArrowOutUpRight, size: 18, color: scheme.onSurfaceVariant),
+            onTap: () => _webCheckout(pack: p.code),
+          ),
+        );
+      }
+    }
+    if (tiles.isEmpty) return const [];
     return [
       SectionHeader(title: l10n.credits),
-      GroupedCard(
-        children: [
-          for (final p in packs)
-            GroupedTile(
-              key: Key('pack-${p.code}'),
-              icon: LucideIcons.creditCard,
-              iconColor: context.appColors.positive,
-              title: p.name,
-              trailing: Icon(LucideIcons.squareArrowOutUpRight, size: 18, color: context.colorScheme.onSurfaceVariant),
-              onTap: () => _webCheckout(pack: p.code),
-            ),
-        ],
-      ),
+      GroupedCard(children: tiles),
     ];
   }
 }
@@ -275,7 +348,8 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
 String _limitsText(BuildContext context, Map<String, num> limits) {
   final l10n = context.l10n;
   return [
-    if (limits['max_bots'] != null) l10n.limitBots(limits['max_bots']!.toInt()),
+    // A paid plan with no bot limit has unlimited bots (D-249).
+    if (limits['max_bots'] != null) l10n.limitBots(limits['max_bots']!.toInt()) else if (limits['monthly_credits_usd'] != null) l10n.limitBotsUnlimited,
     if (limits['computer_hours'] != null) l10n.limitComputerHours(limits['computer_hours']!.toInt()),
     if (limits['monthly_credits_usd'] != null) l10n.limitCredits(limits['monthly_credits_usd']!.humanizedCurrency(context.l10n.localeName, 'USD', decimalDigits: 0)),
   ].join(' · ');
@@ -517,6 +591,8 @@ class _CurrentPlan extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: AppSpace.md),
+          const CreditsMeter(showBalance: false),
           if (onManage != null) ...[
             const SizedBox(height: AppSpace.md),
             OutlinedButton.icon(
@@ -540,16 +616,35 @@ class _BilledItems extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
-    final usage = ref.watch(_usageProvider).value;
+    final usage = ref.watch(billingUsageProvider).value;
     if (usage == null) return const SizedBox.shrink();
     (String, IconData) describe(BillingUsageItem i) {
       final (what, icon) = switch (i.kind) {
         'computer_seconds' => (l10n.usageComputerHours((i.quantity / 3600).humanizedCount(context.l10n.localeName, decimalDigits: 2)), LucideIcons.monitor),
         'stream_seconds' => (l10n.usageLiveViewMinutes((i.quantity / 60).humanizedCount(context.l10n.localeName, decimalDigits: 0)), LucideIcons.monitorPlay),
-        'tokens_in' || 'tokens_out' => (l10n.usageTokens(i.quantity.toInt()), LucideIcons.sparkles),
+        _models => (l10n.kindModels, LucideIcons.sparkles),
         _ => (i.kind, LucideIcons.receiptText),
       };
       return (i.instance.isUsable ? '$what · ${i.instance}' : what, icon);
+    }
+
+    // Model input and output are one charge to people: "AI models", in dollars, no token counts (D-245).
+    final items = <BillingUsageItem>[];
+    for (final i in usage.items) {
+      final kind = i.kind == 'tokens_in' || i.kind == 'tokens_out' ? _models : i.kind;
+      final at = items.indexWhere((x) => x.kind == kind && x.instance == i.instance);
+      final prev = at < 0 ? null : items[at];
+      final merged = BillingUsageItem(
+        kind: kind,
+        instance: i.instance,
+        quantity: (prev?.quantity ?? 0) + i.quantity,
+        costUsd: (prev?.costUsd ?? 0) + i.costUsd,
+      );
+      if (prev == null) {
+        items.add(merged);
+      } else {
+        items[at] = merged;
+      }
     }
 
     return Column(
@@ -557,12 +652,12 @@ class _BilledItems extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SectionHeader(title: l10n.thisMonth, padding: const EdgeInsets.fromLTRB(AppSpace.xxs, AppSpace.xs, AppSpace.xxs, AppSpace.xs)),
-        if (usage.items.isEmpty)
+        if (items.isEmpty)
           AppCard(child: FormNote(l10n.noBillableUsage, icon: LucideIcons.receiptText))
         else
           GroupedCard(
             children: [
-              for (final i in usage.items)
+              for (final i in items)
                 GroupedTile(
                   icon: describe(i).$2,
                   title: describe(i).$1,
@@ -585,7 +680,7 @@ class _UsageRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final usage = ref.watch(_usageProvider).value;
+    final usage = ref.watch(billingUsageProvider).value;
     return Padding(
       padding: const EdgeInsets.only(top: AppSpace.lg),
       child: GroupedCard(
@@ -714,6 +809,82 @@ class _KeyCreatedSheet extends StatelessWidget {
           child: SelectableText(line, key: const Key('connectKeyValue'), style: AppText.mono.copyWith(fontSize: 13)),
         ),
       ],
+    );
+  }
+}
+
+/// Extra people on a Pro or Max web subscription (D-249): a stepper priced at the plan's
+/// `extra_seat_usd`, saved when it changes.
+class _ExtraPeople extends ConsumerStatefulWidget {
+  const _ExtraPeople({required this.summary});
+  final BillingSummary summary;
+
+  @override
+  ConsumerState<_ExtraPeople> createState() => _ExtraPeopleState();
+}
+
+class _ExtraPeopleState extends ConsumerState<_ExtraPeople> {
+  late int _extra = widget.summary.extraSeats ?? 0;
+  var _busy = false;
+
+  Future<void> _set(int n) async {
+    if (n < 0 || _busy) return;
+    final org = ref.read(currentOrgProvider);
+    if (org == null) return;
+    setState(() => _busy = true);
+    final saved = await runGuarded(context, () => ref.read(backendProvider).setExtraSeats(org.id, n));
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      if (saved != null) _extra = saved.extraSeats ?? n;
+    });
+    if (saved != null) {
+      ref.invalidate(billingProvider);
+      showSuccess(context, context.l10n.extraPeopleSaved);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final b = widget.summary;
+    final price = b.limits['extra_seat_usd']!.humanizedCurrency(l10n.localeName, 'USD', decimalDigits: 0);
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpace.md),
+      child: AppCard(
+        key: const Key('extraPeople'),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.extraPeople, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 2),
+                  Text(
+                    l10n.extraPeopleHelp(price, (b.limits['seats'] ?? 0).toInt()),
+                    style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              key: const Key('extraPeopleMinus'),
+              onPressed: _busy || _extra == 0 ? null : () => _set(_extra - 1),
+              icon: const Icon(LucideIcons.minus, size: 18),
+            ),
+            SizedBox(
+              width: 28,
+              child: Text('$_extra', key: const Key('extraPeopleCount'), textAlign: TextAlign.center, style: context.textTheme.titleMedium?.copyWith(fontFeatures: AppText.tabular)),
+            ),
+            IconButton(
+              key: const Key('extraPeoplePlus'),
+              onPressed: _busy ? null : () => _set(_extra + 1),
+              icon: const Icon(LucideIcons.plus, size: 18),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

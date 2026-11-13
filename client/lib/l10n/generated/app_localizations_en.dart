@@ -1981,6 +1981,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get serverUnreachableBody =>
+      'Check that you\'re online. If you are, the server may be restarting, so we\'ll keep trying.';
+
+  @override
+  String retryingIn(int seconds) {
+    return 'Trying again in ${seconds}s';
+  }
+
+  @override
+  String get retryingNow => 'Trying…';
+
+  @override
   String get upgradeTitle => 'Upgrade Your Plan';
 
   @override
@@ -2035,6 +2047,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get limitBotsUnlimited => 'Unlimited bots';
+
+  @override
+  String get unlimitedValue => 'Unlimited';
+
+  @override
+  String trialDaysFree(int n) {
+    return '$n days free';
+  }
+
+  @override
+  String get extraPeople => 'Extra People';
+
+  @override
+  String extraPeopleHelp(String price, int seats) {
+    return '$price per person a month, on top of the $seats your plan includes.';
+  }
+
+  @override
+  String get extraPeopleSaved => 'Extra people updated';
+
+  @override
   String limitComputerHours(int hours) {
     final intl.NumberFormat hoursNumberFormat =
         intl.NumberFormat.decimalPattern(localeName);
@@ -2086,15 +2120,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String usageLiveViewMinutes(String minutes) {
     return 'Live view: $minutes min';
-  }
-
-  @override
-  String usageTokens(int count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    return 'Model credits: $countString tokens';
   }
 
   @override
@@ -3447,6 +3472,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kindComputer => 'Cloud computer time';
+
+  @override
+  String get kindModels => 'AI models';
+
+  @override
+  String get creditsThisMonth => 'This month\'s credits';
+
+  @override
+  String creditsUsedPercent(int percent) {
+    return '$percent% used';
+  }
+
+  @override
+  String creditsRunsLeft(int n) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: 'About $nString more runs at your usual cost',
+      one: 'About 1 more run at your usual cost',
+      zero: 'Less than one more run at your usual cost',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get creditsOut =>
+      'You\'re out of credits. Add more to keep your bots running.';
+
+  @override
+  String creditsExplainer(String amount) {
+    return '1 credit = \$1. Your plan adds $amount every month; unused ones carry over for one more month.';
+  }
+
+  @override
+  String get creditsExplainerShort =>
+      '1 credit = \$1. Credits from packs last 12 months.';
 
   @override
   String get kindStream => 'Live view';
@@ -7654,7 +7720,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get usageAdvancedSummary => 'Tokens in and out, JSON export';
+  String get usageAdvancedSummary => 'Token counts, JSON export';
 
   @override
   String get peopleHelp => 'Invite people and decide who gets in.';
@@ -8178,9 +8244,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get paywallTitle => 'Grow your crew with Pro';
-
-  @override
   String get paywallSubtitle =>
       'More bots, more computer time and fresh credits every month, so your bots can keep working.';
 
@@ -8227,9 +8290,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paywallPerYear => '/ year';
 
   @override
-  String get paywallBestValue => 'BEST VALUE';
-
-  @override
   String get paywallContinue => 'Continue';
 
   @override
@@ -8247,11 +8307,109 @@ class AppLocalizationsEn extends AppLocalizations {
       'Renews automatically. Cancel anytime from Billing.';
 
   @override
-  String get paywallAskAdmin =>
-      'Only workspace owners and admins can change the plan. Ask one of them to upgrade.';
+  String paywallDisclosureStore(String price, String period, String store) {
+    return '$price $period, renewing automatically until you cancel. Payment is charged to your $store account. Cancel anytime in your $store account settings at least 24 hours before it renews.';
+  }
 
   @override
-  String get paywallWelcomePro => 'Welcome to Pro!';
+  String paywallDisclosureWeb(String price) {
+    return '$price, renewing automatically until you cancel. Cancel anytime from Billing; you keep the plan until the period ends.';
+  }
+
+  @override
+  String get pricePerMonth => 'per month';
+
+  @override
+  String get pricePerYear => 'per year';
+
+  @override
+  String get storeAccountApple => 'Apple ID';
+
+  @override
+  String get storeAccountGoogle => 'Google Play';
+
+  @override
+  String get termsOfUse => 'Terms of Use';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get planChanged => 'Plan changed';
+
+  @override
+  String get purchasesRestored => 'Purchases restored';
+
+  @override
+  String get creditsAdded => 'Credits added';
+
+  @override
+  String get purchasePending =>
+      'Waiting for the purchase to be approved. It\'s added as soon as it is.';
+
+  @override
+  String get purchaseFailed =>
+      'The purchase didn\'t go through, and you weren\'t charged.';
+
+  @override
+  String get purchaseVerifyFailed =>
+      'We couldn\'t confirm your purchase yet. It\'s retried on its own; if it doesn\'t show up soon, tap Restore Purchases.';
+
+  @override
+  String paywallTitleFor(String plan) {
+    return 'Grow your crew with $plan';
+  }
+
+  @override
+  String paywallWelcomePlan(String plan) {
+    return 'Welcome to $plan!';
+  }
+
+  @override
+  String paywallMonthsFree(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n months free',
+      one: '1 month free',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallSwitchTo(String plan) {
+    return 'Switch to $plan';
+  }
+
+  @override
+  String subscribedInStoreNote(String store) {
+    return 'You subscribe through $store. To change plans, use $store on the device you subscribed with.';
+  }
+
+  @override
+  String get subscribedOnWebNote =>
+      'You subscribe on the web. Change plans here with web checkout, or manage your subscription.';
+
+  @override
+  String get outOfCreditsTitle => 'You\'re out of credits';
+
+  @override
+  String get outOfCreditsPaidBody =>
+      'Your bots pause until you add credits. Credits from a pack last 12 months.';
+
+  @override
+  String get outOfCreditsFreeBody =>
+      'Upgrade for more credits every month, more bots and more computer time.';
+
+  @override
+  String get addCredits => 'Add Credits';
+
+  @override
+  String get seePlansButton => 'See Plans';
+
+  @override
+  String get paywallAskAdmin =>
+      'Only workspace owners and admins can change the plan. Ask one of them to upgrade.';
 
   @override
   String get upgradeToPro => 'Upgrade to Pro';
@@ -8753,4 +8911,152 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminAppSettingsBadJson =>
       'That isn\'t valid JSON. Check the brackets, quotes and commas.';
+
+  @override
+  String get paywallBillingPeriod => 'Billing period';
+
+  @override
+  String get adminPricing => 'Pricing';
+
+  @override
+  String get adminCreditPacks => 'Credit packs';
+
+  @override
+  String get adminOnSale => 'On sale';
+
+  @override
+  String get adminHidden => 'Hidden';
+
+  @override
+  String get adminNoPriceLabel => 'No price label';
+
+  @override
+  String get adminPlanSaveHelp =>
+      'Saving applies to every workspace on this plan straight away.';
+
+  @override
+  String get adminPackSaveHelp =>
+      'Saving changes the pack for everyone straight away.';
+
+  @override
+  String get adminPlanName => 'Name';
+
+  @override
+  String get adminPriceLabel => 'Price label';
+
+  @override
+  String get adminPriceLabelHelp =>
+      'Shown where the store has no price of its own';
+
+  @override
+  String get adminPlanActiveHelp =>
+      'A hidden plan stays with the workspaces already on it.';
+
+  @override
+  String get adminCreditGate => 'Stop at zero credits';
+
+  @override
+  String get adminCreditGateHelp =>
+      'Runs on Casama\'s keys stop when the workspace\'s credits run out.';
+
+  @override
+  String get adminPlanSort => 'Sort order';
+
+  @override
+  String get adminPlanLimits => 'Limits';
+
+  @override
+  String get adminLimitMonthlyCredits => 'Monthly credits (USD)';
+
+  @override
+  String get adminLimitMaxBots => 'Bots';
+
+  @override
+  String get adminLimitMaxComputers => 'Computers';
+
+  @override
+  String get adminLimitComputerHours => 'Computer hours a month';
+
+  @override
+  String get adminLimitSeats => 'People';
+
+  @override
+  String get adminLimitCloudDaily => 'Cloud spend a day (USD)';
+
+  @override
+  String get adminLimitMaxRunning => 'Computers running at once';
+
+  @override
+  String get adminLimitComputerSize => 'Computer size (vCPUs and GB)';
+
+  @override
+  String get adminLimitExtraSeat => 'Extra person a month (USD)';
+
+  @override
+  String get adminLimitTrialDays => 'Trial days';
+
+  @override
+  String get adminLimitTrialCredits => 'Trial credits (USD)';
+
+  @override
+  String get adminLimitTrialHours => 'Trial computer hours';
+
+  @override
+  String get adminAddLimit => 'Add a limit';
+
+  @override
+  String get adminLimitKey => 'Limit key';
+
+  @override
+  String get adminLimitKeyInvalid =>
+      'Use lowercase letters, digits and underscores';
+
+  @override
+  String get adminLimitValue => 'Value';
+
+  @override
+  String get adminStoreProducts => 'Store products';
+
+  @override
+  String get adminAppStoreId => 'App Store product id';
+
+  @override
+  String get adminGooglePlayId => 'Google Play product id';
+
+  @override
+  String get adminDodoId => 'Dodo product id';
+
+  @override
+  String get adminPackCredits => 'Credits (USD)';
+
+  @override
+  String get adminMarkup => 'Usage markup';
+
+  @override
+  String adminMarkupValue(String markup) {
+    return '×$markup';
+  }
+
+  @override
+  String get adminMarkupHelp => '1.3 = charge 30% over what Casama pays';
+
+  @override
+  String get adminMarkupTooLow =>
+      'Use 1 or more. 1 charges exactly what Casama pays.';
+
+  @override
+  String get adminNumberInvalid => 'Enter a number of 0 or more';
+
+  @override
+  String get adminNumberPositive => 'Enter a number above 0';
+
+  @override
+  String get adminWholeNumber => 'Enter a whole number';
+
+  @override
+  String get adminNameRequired => 'Enter a name';
+
+  @override
+  String get adminPricingBillingOff =>
+      'Billing is off on this server. These prices apply once it\'s on.';
 }

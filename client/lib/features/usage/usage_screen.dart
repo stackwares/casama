@@ -8,6 +8,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/billing.dart';
 import '../../core/display_text.dart';
 import '../../core/number_format.dart';
 import '../../core/date_format.dart';
@@ -23,6 +24,7 @@ import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/page.dart';
 import '../../ui/segmented.dart';
+import '../billing/credits_meter.dart';
 
 enum UsagePeriod { day, week, month, year }
 
@@ -59,6 +61,12 @@ class _UsageScreenState extends ConsumerState<UsageScreen> {
     return SubPage(
       title: l10n.usage,
       children: [
+        // Credits first: what's left and roughly what it buys, in dollars (D-245). Nothing on a
+        // server without billing.
+        if (ref.watch(billingProvider).value?.enabled == true) ...[
+          const AppCard(child: CreditsMeter()),
+          const SizedBox(height: AppSpace.md),
+        ],
         AppSegmentedControl<UsagePeriod>(
           values: UsagePeriod.values,
           labels: {for (final p in UsagePeriod.values) p: _periodLabel(p)},
@@ -91,7 +99,7 @@ class _Report extends StatelessWidget {
     final l10n = context.l10n;
     final days = report.byDay ?? const [];
     final models = report.byModel ?? const [];
-    final kinds = report.byKind ?? const [];
+    final kinds = _mergeModelKinds(report.byKind ?? const []);
     final empty = report.byBot.isEmpty && kinds.isEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -121,7 +129,7 @@ class _Report extends StatelessWidget {
             AppCard(
               child: _Bars(
                 rows: [
-                  for (final b in report.byBot) (b.name.orPlaceholder(l10n.deletedBot), b.costUsd.toDouble(), b.tokensIn + b.tokensOut == 0 ? '' : '${(b.tokensIn + b.tokensOut).humanizedCompact(context.l10n.localeName)} tokens'),
+                  for (final b in report.byBot) (b.name.orPlaceholder(l10n.deletedBot), b.costUsd.toDouble(), ''),
                 ],
               ),
             ),
@@ -514,7 +522,28 @@ class _Stat extends StatelessWidget {
   }
 }
 
+/// Model input and output as one "AI models" line, in dollars only; token counts stay under
+/// Advanced and in the exports (D-245).
+List<UsageReportByKindInner> _mergeModelKinds(List<UsageReportByKindInner> kinds) {
+  final out = <UsageReportByKindInner>[];
+  for (final k in kinds) {
+    final kind = k.kind == 'tokens_in' || k.kind == 'tokens_out' ? _models : k.kind;
+    final at = out.indexWhere((x) => x.kind == kind);
+    final prev = at < 0 ? null : out[at];
+    final merged = UsageReportByKindInner(kind: kind, quantity: (prev?.quantity ?? 0) + k.quantity, costUsd: (prev?.costUsd ?? 0) + k.costUsd);
+    if (prev == null) {
+      out.add(merged);
+    } else {
+      out[at] = merged;
+    }
+  }
+  return out;
+}
+
+const _models = 'models';
+
 IconData _kindIcon(String kind) => switch (kind) {
+  _models => LucideIcons.sparkles,
   'tokens_in' => LucideIcons.arrowDownToLine,
   'tokens_out' => LucideIcons.arrowUpFromLine,
   'computer_seconds' => LucideIcons.monitor,
@@ -524,6 +553,7 @@ IconData _kindIcon(String kind) => switch (kind) {
 };
 
 String _kindLabel(BuildContext context, String kind) => switch (kind) {
+  _models => context.l10n.kindModels,
   'tokens_in' => context.l10n.kindTokensIn,
   'tokens_out' => context.l10n.kindTokensOut,
   'computer_seconds' => context.l10n.kindComputer,
@@ -532,7 +562,8 @@ String _kindLabel(BuildContext context, String kind) => switch (kind) {
   _ => kind,
 };
 
-String _kindQuantity(String kind, num q, String locale) => switch (kind) {
+String? _kindQuantity(String kind, num q, String locale) => switch (kind) {
+  _models => null,
   'tokens_in' || 'tokens_out' => '${q.humanizedCompact(locale)} tokens',
   'computer_seconds' => '${(q / 3600).humanizedCount(locale, decimalDigits: 2)} h',
   'stream_seconds' => '${(q / 60).humanizedCount(locale, decimalDigits: 0)} min',

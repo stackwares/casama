@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lottie/lottie.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import 'app.dart';
 import 'core/local_cache.dart';
@@ -24,7 +23,7 @@ import 'theme/appearance.dart';
 import 'theme/fonts.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'ui/brand_splash.dart';
-import 'ui/glow_button.dart';
+import 'ui/server_unreachable_view.dart';
 import 'ui/text_scale.dart';
 import 'ui/friendly_error_view.dart';
 import 'core/analytics.dart';
@@ -121,13 +120,56 @@ class _StartupGateState extends State<StartupGate> {
   /// Stays up over the ready app until the cloud has faded out.
   var _splash = true;
 
+  /// A try from the error screen is under way; the error screen stays up while it runs.
+  var _retrying = false;
+
+  /// Failed tries in a row, for the wait before the next automatic one.
+  var _failures = 0;
+  Timer? _autoRetry;
+  DateTime? _nextRetryAt;
+
+  /// Tries again as soon as the app comes back to the front.
+  late final _lifecycle = AppLifecycleListener(onResume: () {
+    if (_error != null) _retry();
+  });
+
+  /// Waits between automatic tries, longest last.
+  static const _retryDelays = [5, 10, 20, 30, 60];
+
   @override
   void initState() {
     super.initState();
     // Self-hosters point the app at their own server (D-076); the choice is remembered.
     onChangeServer = _switchServer;
     unawaited(_loadBrand());
+    _lifecycle;
     _start();
+  }
+
+  @override
+  void dispose() {
+    _autoRetry?.cancel();
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
+  /// Tries again with the error screen still up, so a failure doesn't flash the splash.
+  Future<void> _retry() async {
+    if (_retrying) return;
+    _autoRetry?.cancel();
+    setState(() {
+      _retrying = true;
+      _nextRetryAt = null;
+    });
+    await _start(keepError: true);
+    if (mounted) setState(() => _retrying = false);
+  }
+
+  void _scheduleRetry() {
+    final seconds = _retryDelays[(_failures - 1).clamp(0, _retryDelays.length - 1)];
+    _autoRetry?.cancel();
+    _autoRetry = Timer(Duration(seconds: seconds), _retry);
+    _nextRetryAt = DateTime.now().add(Duration(seconds: seconds));
   }
 
   Future<void> _loadBrand() async {
@@ -143,20 +185,34 @@ class _StartupGateState extends State<StartupGate> {
     _assets ??= precacheStartupAssets(context);
   }
 
-  Future<void> _start() async {
-    setState(() => _error = null);
+  Future<void> _start({bool keepError = false}) async {
+    _autoRetry?.cancel();
+    if (!keepError) setState(() => _error = null);
     try {
       _config = await ServerAddress.load(fallback: widget.config);
       final connect = widget.connect ?? (c) async => (await bootstrap(c, onServerMoved: _reconnect)).$1;
       final app = await connect(_config).timeout(const Duration(seconds: 20));
       // The first screen opens with its pictures decoded; never more than half a second's wait.
       await (_assets ?? Future<void>.value()).timeout(const Duration(milliseconds: 500), onTimeout: () {});
-      if (mounted) setState(() => _app = app);
+      _failures = 0;
+      if (mounted) {
+        setState(() {
+          _app = app;
+          _error = null;
+          _nextRetryAt = null;
+        });
+      }
     } catch (e) {
       Analytics.log('app_startup_failed', {
         'reason': e is TimeoutException ? 'timeout' : (e is DioException && e.response == null ? 'unreachable' : 'error'),
       });
-      if (mounted) setState(() => _error = e);
+      _failures++;
+      if (mounted) {
+        setState(() {
+          _error = e;
+          _scheduleRetry();
+        });
+      }
     }
   }
 
@@ -220,33 +276,18 @@ class _StartupGateState extends State<StartupGate> {
             key: failed ? null : const Key('startupSplash'),
             backgroundColor: BrandSplash.backgroundOf(context),
             body: failed
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(LucideIcons.cloudOff, size: 48, color: Theme.of(context).colorScheme.outline),
-                          const SizedBox(height: 16),
-                          Text(l10n.cannotReachServer, style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center),
-                          const SizedBox(height: 8),
-                          Text(l10n.cannotReachServerHelp(_config.apiUrl), textAlign: TextAlign.center),
-                          const SizedBox(height: 16),
-                          GlowButton(key: const Key('startupRetry'), onPressed: _start, child: Text(l10n.retry)),
-                          TextButton(
-                            key: const Key('startupChangeServer'),
-                            onPressed: () => changeServerDialog(
-                              context,
-                              _config.apiUrl,
-                              title: l10n.server,
-                              label: l10n.serverAddress,
-                              cancel: l10n.cancel,
-                              connect: l10n.connect,
-                            ),
-                            child: Text(l10n.changeServer),
-                          ),
-                        ],
-                      ),
+                ? ServerUnreachableView(
+                    apiUrl: _config.apiUrl,
+                    retrying: _retrying,
+                    nextRetryAt: _nextRetryAt,
+                    onRetry: _retry,
+                    onChangeServer: () => changeServerDialog(
+                      context,
+                      _config.apiUrl,
+                      title: l10n.server,
+                      label: l10n.serverAddress,
+                      cancel: l10n.cancel,
+                      connect: l10n.connect,
                     ),
                   )
                 : BrandSplash(

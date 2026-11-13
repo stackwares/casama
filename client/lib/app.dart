@@ -11,7 +11,9 @@ import 'core/providers.dart';
 import 'core/shortcuts.dart';
 import 'core/widgets.dart';
 import 'core/analytics.dart';
+import 'core/billing.dart';
 import 'features/billing/billing_screen.dart';
+import 'features/billing/out_of_credits.dart';
 
 import 'core/mobile_extras.dart';
 import 'core/mac_bridge.dart';
@@ -41,10 +43,14 @@ class CasamaApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // 402 from the server (plan limit, out of credits) opens the paywall (Casama Cloud only).
     onPaymentRequired ??= showPaywall;
+    onOutOfCredits ??= openOutOfCredits;
     // Services kept running for the app's lifetime. Listened to rather than watched: none of them
     // changes what this widget builds, so a change in one mustn't rebuild the whole app.
     void keep(ProviderListenable<Object?> provider) => ref.listen(provider, (_, _) {});
     keep(pushProvider);
+    // Store purchases (Ask to Buy approvals, redelivered ones) are verified from launch, not only
+    // once Billing or the paywall opens.
+    keep(purchaseVerifierProvider);
     keep(macBridgeProvider);
     keep(updaterProvider);
     // Device connections (D-149): shared device data stays fresh and runs' requests get answers.

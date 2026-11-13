@@ -430,6 +430,10 @@ class _BotWithBadge extends StatelessWidget {
 /// out of credits, Casama Cloud only). The app sets it to the paywall at startup.
 Future<void> Function(BuildContext context, String message)? onPaymentRequired;
 
+/// Called instead of [onPaymentRequired] when the 402 is `out_of_credits`: a paying workspace is
+/// offered credit packs rather than other plans (D-248). Set by the app at startup.
+Future<void> Function(BuildContext context)? onOutOfCredits;
+
 Future<T?> runGuarded<T>(
   BuildContext context,
   Future<T> Function() action,
@@ -444,7 +448,11 @@ Future<T?> runGuarded<T>(
     final paymentRequired =
         (e is DioException && e.response?.statusCode == 402) ||
         (e is sb.PostgrestException && e.code == 'PT402');
-    if (paywall != null && paymentRequired) {
+    final outOfCredits = onOutOfCredits;
+    final code = e is DioException ? e.response?.data : null;
+    if (outOfCredits != null && paymentRequired && code is Map && code['code'] == 'out_of_credits') {
+      await outOfCredits(context);
+    } else if (paywall != null && paymentRequired) {
       await paywall(context, errorText(context, e));
     } else {
       showError(context, e, st);

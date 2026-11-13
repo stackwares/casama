@@ -2693,6 +2693,14 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 - **Not done:** refunds of store credit packs aren't taken back automatically (Dodo pack refunds are); Composio calls inside its free monthly allowance are still charged, on purpose, so the price doesn't jump.
 - **Tests:** `apps/server/test/admin-pricing.test.ts`; the plan list, seat limit and store pack cases in `apps/server/test/billing.test.ts`; the marked-up call cost in `apps/server/test/voice-cloud-calls.test.ts`.
 
+## D-245 Usage is shown in dollars, led by a plain credits meter
+
+- **Decision** (Oliver, 2026-11-13): no custom currency. Credits stay dollars (1 credit = $1), because every cost is already metered in USD (OpenRouter's reported cost × fee × markup, computer hours, voice, data calls), the referral copy and spend limits already say dollars, and a made-up unit would read as hiding the price of things bots spend on their own. Charging stays in USD; a local-currency hint can come later.
+- **What people see first:** a credits meter (`client/lib/features/billing/credits_meter.dart`) at the top of Usage and on the Billing plan card: the balance ("Credits: $7.80"), a bar of how much of this month's credits is used, and "About N more runs at your usual cost". The bar compares this month's billed spend with spend plus what's left, since monthly credits carry over (`BillingService` grants them on top of the balance). The bar turns amber at 80% and red when nothing is left, with a line saying so. The runs estimate is this month's average cost per run and is hidden under 3 runs. A line under it says "1 credit = $1" and how much the plan adds each month.
+- **Exact amounts one level down:** Usage's charts, per-bot and per-model amounts and Billing's charges stay in dollars. Model input and output show as one "AI models" line, without token counts; tokens stay under Advanced and in the CSV/JSON exports. Billing's "Model credits: N tokens" line is gone.
+- **Self-hosted:** no meter (billing off, or an unlimited plan).
+- **Tests:** `client/test/credits_meter_test.dart`; `client/test/workspace_advanced_test.dart` (Advanced summary).
+
 ## D-246 Billing holes closed; credit packs for paid plans; credits that expire
 
 - **Decision** (Oliver, 2026-11-13, from docs/MONETIZATION-AUDIT-2026-11-13.md): close the holes that let usage go unpaid, sell credit packs only to paying plans, and let credits expire.

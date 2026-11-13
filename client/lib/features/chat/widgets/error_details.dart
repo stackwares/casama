@@ -19,6 +19,8 @@ import '../../../ui/adaptive_modal.dart';
 import '../chat_controller.dart';
 import '../../../ui/glow_button.dart';
 import 'chat_widgets.dart' show CodePanel;
+import '../../billing/out_of_credits.dart';
+import '../../billing/paywall.dart';
 
 const _keyErrors = {
   'model_credential_not_found',
@@ -30,7 +32,7 @@ const _keyErrors = {
 };
 
 /// Failures that mean the workspace is out of credits or over its plan: the fix is the plans page.
-const limitErrors = {'out_of_credits', 'quota_exceeded', 'cloud_daily_cap', 'computer_hours_exceeded'};
+const limitErrors = {'out_of_credits', 'quota_exceeded', 'cloud_daily_cap', 'computer_hours_exceeded', 'plan_limit'};
 
 /// A one-tap fix for a failure people can fix themselves: no model, or a missing or rejected key.
 /// With no key at all, "no model" also leads to Model keys rather than a model list that's empty.
@@ -38,7 +40,9 @@ const limitErrors = {'out_of_credits', 'quota_exceeded', 'cloud_daily_cap', 'com
   final code = entry.errorCode;
   if (entry.kind != NoticeKind.failed || code == null) return null;
   final keys = (route: '/settings/keys', label: context.l10n.addModelKeyTitle);
-  if (limitErrors.contains(code)) return (route: '/settings/billing', label: context.l10n.seePlans);
+  // Out of credits offers packs to a paying workspace; the other limits are about the plan (D-248).
+  if (code == 'out_of_credits') return (route: '/settings/billing', label: context.l10n.seePlans);
+  if (limitErrors.contains(code)) return (route: '/settings/plans', label: context.l10n.seePlans);
   // Casama Cloud runs on its own key and model (D-188): there's nothing for a person to change.
   if (ref.read(billingProvider).value?.enabled == true) return null;
   if (_keyErrors.contains(code)) return keys;
@@ -155,8 +159,17 @@ class ErrorDetails extends ConsumerWidget {
                   ? GlowButton.icon(
                       key: const Key('errorFix'),
                       onPressed: () {
-                        Navigator.of(context).pop();
-                        context.push(fix.route);
+                        final nav = Navigator.of(context);
+                        final outer = nav.context;
+                        nav.pop();
+                        // Limits open the paywall or the out-of-credits sheet, not a page (D-248).
+                        if (fix.route == '/settings/billing') {
+                          openOutOfCredits(outer);
+                        } else if (fix.route == '/settings/plans') {
+                          openPaywall(outer, source: 'limit');
+                        } else {
+                          outer.push(fix.route);
+                        }
                       },
                       icon: const Icon(LucideIcons.keyRound, size: 18),
                       label: Text(fix.label),

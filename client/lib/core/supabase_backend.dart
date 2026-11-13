@@ -3120,6 +3120,17 @@ class SupabaseBackend implements Backend {
   Future<CloudModels> setAdminCloudModels(CloudModels models) async =>
       (await api.admin.setAdminCloudModels(cloudModels: models)).data!;
   @override
+  Future<AdminPricing> adminPricing() async => (await api.admin.adminPricing()).data!;
+  @override
+  Future<AdminPlan> saveAdminPlan(String code, SavePlanRequest plan) async =>
+      (await api.admin.savePlan(code: code, savePlanRequest: plan)).data!;
+  @override
+  Future<AdminCreditPack> saveAdminCreditPack(String code, SaveCreditPackRequest pack) async =>
+      (await api.admin.saveCreditPack(code: code, saveCreditPackRequest: pack)).data!;
+  @override
+  Future<BillingSettings> setAdminBillingSettings(BillingSettings settings) async =>
+      (await api.admin.setBillingSettings(billingSettings: settings)).data!;
+  @override
   Future<ConnectionSettings> setAdminConnectionSettings({
     bool? serverComposio,
     bool? googleDirect,
@@ -3302,14 +3313,20 @@ class SupabaseBackend implements Backend {
   @override
   Future<PlanCatalog> plans() async => (await api.billing.listPlans()).data!;
   @override
-  Future<String> checkoutUrl(
+  Future<String?> checkoutUrl(
     String orgId, {
     String? planCode,
     String? packCode,
-  }) async => (await api.billing.createCheckout(
-    id: orgId,
-    checkoutRequest: CheckoutRequest(planCode: planCode, packCode: packCode),
-  )).data!.url;
+  }) async {
+    final r = (await api.billing.createCheckout(
+      id: orgId,
+      checkoutRequest: CheckoutRequest(planCode: planCode, packCode: packCode),
+    )).data!;
+    return r.changed == true ? null : r.url;
+  }
+  @override
+  Future<BillingSummary> setExtraSeats(String orgId, int extra) async =>
+      (await api.billing.setBillingSeats(id: orgId, seatsRequest: SeatsRequest(extra: extra))).data!;
   @override
   Future<String> billingPortalUrl(String orgId) async =>
       (await api.billing.billingPortal(

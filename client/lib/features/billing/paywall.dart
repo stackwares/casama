@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:in_app_purchase/in_app_purchase.dart' show ProductDetails;
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -20,8 +21,8 @@ import '../../ui/effects.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/glow_button.dart';
 import '../../ui/mascot.dart';
-import '../../ui/pressable_scale.dart';
 import 'billing_screen.dart';
+import 'purchase_terms.dart';
 
 /// Opens the paywall over everything on screen, sheets and dialogs included, so it is never hidden
 /// under the sheet that hit the limit. Closing it goes back to exactly where the person was (the
@@ -50,7 +51,43 @@ Future<bool> openPaywall(
   return upgraded == true;
 }
 
-/// Casama Pro, sold with the mascots: who you get, what they can do, one plan to pick and one button.
+/// One paid tier: its monthly and yearly plans (`pro` and `pro_yearly`), either may be missing.
+class PaywallTier {
+  const PaywallTier(this.code, {this.monthly, this.yearly});
+  final String code;
+  final Plan? monthly;
+  final Plan? yearly;
+
+  String get name => (monthly ?? yearly)!.name;
+}
+
+/// The paid plans grouped into tiers by base code (`x` and `x_yearly` share one), in catalog order.
+List<PaywallTier> paywallTiers(Iterable<Plan> plans) {
+  final order = <String>[];
+  final monthly = <String, Plan>{};
+  final yearly = <String, Plan>{};
+  for (final p in plans) {
+    if (p.interval.value == 'none') continue;
+    final code = paywallTierOf(p.code);
+    if (!order.contains(code)) order.add(code);
+    (p.interval.value == 'year' ? yearly : monthly)[code] = p;
+  }
+  return [for (final c in order) PaywallTier(c, monthly: monthly[c], yearly: yearly[c])];
+}
+
+String paywallTierOf(String planCode) =>
+    planCode.endsWith('_yearly') ? planCode.substring(0, planCode.length - '_yearly'.length) : planCode;
+
+/// The tier the paywall opens on: the one just above the current plan, Pro from Free.
+String? defaultPaywallTier(List<PaywallTier> tiers, String? currentPlan) {
+  if (tiers.isEmpty) return null;
+  final i = currentPlan == null ? -1 : tiers.indexWhere((t) => t.code == paywallTierOf(currentPlan));
+  if (i < 0) return (tiers.where((t) => t.code == 'pro').firstOrNull ?? tiers.first).code;
+  return tiers[math.min(i + 1, tiers.length - 1)].code;
+}
+
+/// Casama's paid plans, sold with the mascots: who you get, what they can do, a tier and a billing
+/// period to pick, and one button (D-236, D-244).
 class PaywallScreen extends ConsumerStatefulWidget {
   const PaywallScreen({super.key, this.reason, this.source = 'limit'});
 
@@ -64,7 +101,9 @@ class PaywallScreen extends ConsumerStatefulWidget {
 
 class _PaywallScreenState extends ConsumerState<PaywallScreen>
     with WidgetsBindingObserver {
-  String? _selected;
+  String? _tier;
+  // Yearly first: the better deal.
+  var _yearly = true;
   var _busy = false;
   String? _startPlan;
 
@@ -75,6 +114,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     // Store purchases and restores are verified by the server as they arrive.
     ref.read(purchaseVerifierProvider);
     _startPlan = ref.read(billingProvider).value?.planCode;
+    // A store that failed to list its products last time gets another try (D-248).
+    final listed = ref.read(storeProductsProvider);
+    if (listed.hasError || (listed.value?.isEmpty ?? false)) ref.invalidate(storeProductsProvider);
   }
 
   @override
@@ -113,6 +155,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     final url = await ref
         .read(backendProvider)
         .checkoutUrl(_orgId, planCode: p.code);
+    if (url == null) {
+      // Moved to the new plan in place (D-248); the billing listener celebrates it.
+      ref.invalidate(billingProvider);
+      return;
+    }
     await ref.read(openUrlProvider)(url);
   });
 
@@ -143,10 +190,23 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     // The plan changed to a paid one while the paywall was open: celebrate and go back.
     ref.listen(billingProvider, (_, next) {
       final code = next.value?.planCode;
-      if (code == null || code == _startPlan || code == 'free') return;
+      if (code == null) return;
+      // Opened before billing loaded: the first answer is where they start, not an upgrade.
+      if (_startPlan == null) {
+        _startPlan = code;
+        return;
+      }
+      if (code == _startPlan || code == 'free') return;
       _startPlan = code;
-      showCelebration(context, l10n.paywallWelcomePro, mascot: Mascot.starry);
+      showCelebration(context, l10n.paywallWelcomePlan(next.value!.planName), mascot: Mascot.starry);
       Navigator.of(context).pop(true);
+    });
+    // Say what happened to a store purchase that didn't simply go through (D-248).
+    ref.listen(purchaseOutcomeProvider, (_, next) {
+      final o = next.value;
+      final text = o == null ? null : purchaseOutcomeText(l10n, o);
+      if (text == null || !mounted) return;
+      showToast(context, text, kind: o == PurchaseOutcome.restored ? ToastKind.success : ToastKind.info);
     });
 
     final billing = ref.watch(billingProvider).value;
@@ -164,15 +224,21 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     final isAdmin = org != null && org.role != OrgRole.member;
     final storeChannel = channels.any((c) => c != PurchaseChannel.web);
 
-    final paid = [
-      for (final p in catalog?.plans ?? const <Plan>[])
-        if (p.interval.value != 'none' && p.code != billing?.planCode) p,
-    ];
-    // Yearly first chosen: the better deal.
-    final selected =
-        paid.where((p) => p.code == _selected).firstOrNull ??
-        paid.where((p) => p.interval.value == 'year').firstOrNull ??
-        paid.firstOrNull;
+    // In a store with no web checkout, only plans the store sells are offered, so no tier or
+    // period leads to a button that does nothing (D-248). Until the store answers, all show.
+    final storeOnly = storeChannel && !channels.contains(PurchaseChannel.web) && source != null;
+    final sellable = (catalog?.plans ?? const <Plan>[]).where(
+      (p) => !storeOnly || products.isEmpty || products[p.storeProductIds[source]] != null,
+    );
+    final tiers = paywallTiers(sellable);
+    final tier =
+        tiers.where((t) => t.code == _tier).firstOrNull ??
+        tiers.where((t) => t.code == defaultPaywallTier(tiers, billing?.planCode)).firstOrNull;
+    final selected = tier == null
+        ? null
+        : (_yearly ? tier.yearly ?? tier.monthly : tier.monthly ?? tier.yearly);
+    final yearly = selected?.interval.value == 'year';
+    final isCurrent = selected != null && selected.code == billing?.planCode;
     final free = catalog?.plans
         .where((p) => p.interval.value == 'none')
         .firstOrNull;
@@ -185,22 +251,74 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
 
     String? priceFor(Plan p) => productFor(p)?.price ?? p.priceLabel;
 
+    /// What a plan costs as a number: the store's own price, else the web price label.
+    double? amountOf(Plan? p) {
+      if (p == null) return null;
+      final raw = productFor(p)?.raw;
+      if (raw is ProductDetails) return raw.rawPrice;
+      final m = RegExp(r'[0-9][0-9,]*(\.[0-9]+)?').firstMatch(p.priceLabel ?? '');
+      return m == null ? null : double.tryParse(m.group(0)!.replaceAll(',', ''));
+    }
+
+    // Months free on yearly, worked out from the prices shown (store prices differ by country).
+    final monthlyAmount = amountOf(tier?.monthly);
+    final yearlyAmount = amountOf(tier?.yearly);
+    final monthsFree = monthlyAmount == null || yearlyAmount == null || monthlyAmount <= 0
+        ? 0
+        : (12 - yearlyAmount / monthlyAmount).round();
+    final freeBadge = monthsFree >= 1 ? l10n.paywallMonthsFree(monthsFree) : null;
+
+    // One subscription per workspace (D-248): someone who already pays changes plans where they
+    // subscribed. A web subscriber is moved in place by web checkout; a store subscriber only in
+    // that store (another store, or the web, would start a second subscription).
+    final paidVia = billing != null && billing.planCode != 'free' ? billing.source_.value : null;
+    final storeSub = paidVia == 'app_store' || paidVia == 'google_play';
+    final elsewhere = storeSub && paidVia != source;
+    final webSub = paidVia == 'dodo';
+
+    // A paying workspace picking its own tier's other period, or a smaller tier, is switching, not
+    // upgrading: the button says so (D-248).
+    final currentTier = billing == null ? null : paywallTierOf(billing.planCode);
+    final tierRank = {for (final (i, t) in tiers.indexed) t.code: i};
+    String? switchLabel;
+    if (paidVia != null && selected != null && !isCurrent && currentTier != null) {
+      final selectedTier = paywallTierOf(selected.code);
+      if (selectedTier == currentTier) {
+        switchLabel = l10n.paywallSwitchTo(yearly ? l10n.paywallYearly : l10n.paywallMonthly);
+      } else if ((tierRank[selectedTier] ?? 0) < (tierRank[currentTier] ?? 0)) {
+        switchLabel = l10n.paywallSwitchTo(tier!.name);
+      }
+    }
+
     // What the main button does with the chosen plan: the store first, else web checkout.
     VoidCallback? buy;
     String buyLabel = l10n.paywallContinue;
-    if (selected != null && isAdmin) {
-      final product = productFor(selected);
-      if (product != null) {
+    String? note;
+    String? termsStore;
+    if (isCurrent) {
+      buyLabel = l10n.currentPlan;
+    } else if (selected != null && isAdmin) {
+      final product = webSub ? null : productFor(selected);
+      if (elsewhere) {
+        note = l10n.subscribedInStoreNote(paidVia == 'app_store' ? 'the App Store' : 'Google Play');
+      } else if (product != null) {
         buy = () => _store(product);
         buyLabel = l10n.subscribeFor(product.price);
+        termsStore = source;
+        if (switchLabel != null) buyLabel = switchLabel;
       } else if (channels.contains(PurchaseChannel.web) && selected.web) {
         buy = () => _web(selected);
-        buyLabel = l10n.paywallContinueCheckout;
+        buyLabel = switchLabel ?? l10n.paywallContinueCheckout;
+      } else if (webSub) {
+        note = l10n.subscribedOnWebNote;
       }
     }
     final webToo =
         selected != null &&
+        !isCurrent &&
         isAdmin &&
+        !storeSub &&
+        !webSub &&
         productFor(selected) != null &&
         channels.contains(PurchaseChannel.web) &&
         selected.web;
@@ -218,7 +336,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                 children: [
                   _TopBar(
                     onClose: _close,
-                    onRestore: isAdmin && storeChannel ? _restore : null,
+                    // Anyone can restore: it only re-links purchases the store already has.
+                    onRestore: storeChannel ? _restore : null,
                   ),
                   Expanded(
                     child: Center(
@@ -239,7 +358,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                               Center(child: _ReasonPill(reason)),
                             const SizedBox(height: AppSpace.sm),
                             Text(
-                              l10n.paywallTitle,
+                              l10n.paywallTitleFor(tier?.name ?? 'Pro'),
                               textAlign: TextAlign.center,
                               style: context.textTheme.headlineMedium?.copyWith(
                                 fontWeight: FontWeight.w900,
@@ -257,6 +376,55 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                               ),
                             ),
                             const SizedBox(height: AppSpace.xl),
+                            if (tiers.length > 1) ...[
+                              _Segmented(
+                                semanticLabel: l10n.plans,
+                                selected: tier?.code,
+                                options: [
+                                  for (final t in tiers)
+                                    _Segment(
+                                      t.code,
+                                      t.name,
+                                      // A first-time Pro subscriber tries it free (D-249).
+                                      badge: billing?.trialAvailable == true &&
+                                              (t.monthly ?? t.yearly)?.limits['trial_days'] != null
+                                          ? l10n.trialDaysFree((t.monthly ?? t.yearly)!.limits['trial_days']!.toInt())
+                                          : null,
+                                      key: Key('paywallTier-${t.code}'),
+                                    ),
+                                ],
+                                onSelect: (code) {
+                                  HapticsHelper.selection();
+                                  setState(() => _tier = code);
+                                },
+                              ),
+                              const SizedBox(height: AppSpace.sm),
+                            ],
+                            if (tier?.monthly != null &&
+                                tier?.yearly != null) ...[
+                              _Segmented(
+                                semanticLabel: l10n.paywallBillingPeriod,
+                                selected: yearly ? 'year' : 'month',
+                                options: [
+                                  _Segment(
+                                    'month',
+                                    l10n.paywallMonthly,
+                                    key: const Key('paywallInterval-month'),
+                                  ),
+                                  _Segment(
+                                    'year',
+                                    l10n.paywallYearly,
+                                    badge: freeBadge,
+                                    key: const Key('paywallInterval-year'),
+                                  ),
+                                ],
+                                onSelect: (v) {
+                                  HapticsHelper.selection();
+                                  setState(() => _yearly = v == 'year');
+                                },
+                              ),
+                              const SizedBox(height: AppSpace.md),
+                            ],
                             if (selected != null)
                               _Perks(pro: selected.limits, current: current),
                             if (!isAdmin) ...[
@@ -266,31 +434,42 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                                 icon: LucideIcons.shieldCheck,
                               ),
                             ],
+                            if (note != null) ...[
+                              const SizedBox(height: AppSpace.md),
+                              FormNote(
+                                note,
+                                key: const Key('paywallChannelNote'),
+                                icon: LucideIcons.info,
+                              ),
+                            ],
                           ],
                         ),
                       ),
                     ),
                   ),
                   _BuyBar(
-                    // The plans sit with the button, so the price is always in sight.
-                    picker: paid.isEmpty
+                    // The chosen plan's price sits with the button, so it is always in sight.
+                    price: selected == null
                         ? null
-                        : _PlanPicker(
-                            plans: paid,
-                            selected: selected?.code,
-                            priceFor: priceFor,
-                            onSelect: (p) {
-                              HapticsHelper.selection();
-                              setState(() => _selected = p.code);
-                            },
+                        : _PriceCard(
+                            plan: selected,
+                            name: tier!.name,
+                            yearly: yearly,
+                            price: priceFor(selected),
+                            // Price labels carry their own period ("$39 / month").
+                            withPeriod: productFor(selected) != null,
+                            freeBadge: freeBadge,
                           ),
-                    label: isAdmin ? buyLabel : l10n.close,
-                    onBuy: isAdmin ? buy : _close,
+                    label: isAdmin || isCurrent ? buyLabel : l10n.close,
+                    onBuy: isCurrent ? null : (isAdmin ? buy : _close),
                     busy: _busy,
                     onWeb: webToo ? () => _web(selected) : null,
-                    fine: storeChannel
-                        ? l10n.paywallFineStore
-                        : l10n.paywallFineWeb,
+                    terms: PurchaseTerms(
+                      price: selected == null || isCurrent ? null : priceFor(selected),
+                      yearly: yearly,
+                      store: termsStore,
+                      priceHasPeriod: termsStore == null,
+                    ),
                   ),
                 ],
               ),
@@ -543,14 +722,14 @@ class _Perks extends StatelessWidget {
     String money(num v) => v.humanizedCurrency(locale, 'USD', decimalDigits: 0);
     String count(num v) => v.humanizedCount(locale, decimalDigits: 0);
     final rows = [
-      if (pro['max_bots'] case final v?)
-        (
-          Mascot.thinker,
-          l10n.paywallPerkBots,
-          l10n.paywallPerkBotsBody,
-          count(v),
-          current['max_bots']?.let(count),
-        ),
+      // No bot limit on a plan means unlimited (D-249).
+      (
+        Mascot.thinker,
+        l10n.paywallPerkBots,
+        l10n.paywallPerkBotsBody,
+        pro['max_bots']?.let(count) ?? l10n.unlimitedValue,
+        current.isEmpty ? null : (current['max_bots']?.let(count) ?? l10n.unlimitedValue),
+      ),
       if (pro['computer_hours'] case final v?)
         (
           Mascot.focused,
@@ -702,196 +881,231 @@ class _PerkRow extends StatelessWidget {
   }
 }
 
-/// The paid plans side by side; yearly wears the Best value ribbon.
-class _PlanPicker extends StatelessWidget {
-  const _PlanPicker({
-    required this.plans,
-    required this.selected,
-    required this.priceFor,
-    required this.onSelect,
-  });
-  final List<Plan> plans;
-  final String? selected;
-  final String? Function(Plan) priceFor;
-  final ValueChanged<Plan> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final (i, p) in plans.indexed) ...[
-            if (i > 0) const SizedBox(width: AppSpace.sm),
-            Expanded(
-              child: _PlanCard(
-                plan: p,
-                selected: p.code == selected,
-                price: priceFor(p),
-                onTap: () => onSelect(p),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
+class _Segment {
+  const _Segment(this.value, this.label, {required this.key, this.badge});
+  final String value;
+  final String label;
+  final String? badge;
+  final Key key;
 }
 
-class _PlanCard extends StatelessWidget {
-  const _PlanCard({
-    required this.plan,
+/// A row of equal segments (the tiers, or Monthly / Yearly) that wraps its labels rather than
+/// overflowing at 320 px.
+class _Segmented extends StatelessWidget {
+  const _Segmented({
+    required this.options,
     required this.selected,
-    required this.price,
-    required this.onTap,
+    required this.onSelect,
+    required this.semanticLabel,
   });
-  final Plan plan;
-  final bool selected;
-  final String? price;
-  final VoidCallback onTap;
+  final List<_Segment> options;
+  final String? selected;
+  final ValueChanged<String> onSelect;
+  final String semanticLabel;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final scheme = context.colorScheme;
-    final yearly = plan.interval.value == 'year';
-    final base = context.isDark
-        ? scheme.surfaceContainer
-        : scheme.surfaceContainerLowest;
     return Semantics(
-      selected: selected,
-      button: true,
-      child: PressableScale(
-        child: GestureDetector(
-          key: Key('paywallPlan-${plan.code}'),
-          onTap: onTap,
-          child: Stack(
-            clipBehavior: Clip.none,
+      container: true,
+      label: semanticLabel,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: (context.isDark
+                  ? scheme.surfaceContainer
+                  : scheme.surfaceContainerHigh)
+              .withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: context.appColors.hairline),
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AnimatedContainer(
-                duration: AppMotion.of(context, AppMotion.fast),
-                curve: AppMotion.curve,
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpace.md,
-                  AppSpace.md + 2,
-                  AppSpace.md,
-                  AppSpace.sm,
-                ),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? Color.alphaBlend(
-                          scheme.primary.withValues(
-                            alpha: context.isDark ? 0.18 : 0.08,
-                          ),
-                          base,
-                        )
-                      : base,
-                  borderRadius: BorderRadius.circular(AppRadius.card),
-                  border: Border.all(
-                    color: selected
-                        ? scheme.primary
-                        : context.appColors.hairline,
-                    width: selected ? 2 : 1,
-                  ),
-                  boxShadow: selected
-                      ? [
-                          BoxShadow(
-                            color: scheme.primary.withValues(alpha: 0.18),
-                            blurRadius: 18,
-                            offset: const Offset(0, 6),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            yearly ? l10n.paywallYearly : l10n.paywallMonthly,
-                            style: context.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                        AnimatedSwitcher(
-                          duration: AppMotion.of(context, AppMotion.fast),
-                          child: Icon(
-                            selected
-                                ? LucideIcons.circleCheck
-                                : LucideIcons.circle,
-                            key: ValueKey(selected),
-                            size: 20,
-                            color: selected ? scheme.primary : scheme.outline,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    if (price != null) ...[
-                      Text.rich(
-                        TextSpan(
-                          children: [
-                            TextSpan(
-                              text: price!,
-                              style: context.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.4,
-                              ),
-                            ),
-                            TextSpan(
-                              text:
-                                  ' ${yearly ? l10n.paywallPerYear : l10n.paywallPerMonth}',
-                              style: context.textTheme.bodySmall?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ] else
-                      Text(
-                        plan.name,
-                        style: context.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              if (yearly)
-                PositionedDirectional(
-                  top: -10,
-                  start: AppSpace.md,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          scheme.primary,
-                          Color.lerp(scheme.primary, scheme.tertiary, 0.6)!,
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
-                    ),
-                    child: Text(
-                      l10n.paywallBestValue,
-                      style: context.textTheme.labelSmall?.copyWith(
-                        color: scheme.onPrimary,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
+              for (final o in options)
+                Expanded(
+                  child: _SegmentButton(
+                    segment: o,
+                    selected: o.value == selected,
+                    onTap: () => onSelect(o.value),
                   ),
                 ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SegmentButton extends StatelessWidget {
+  const _SegmentButton({
+    required this.segment,
+    required this.selected,
+    required this.onTap,
+  });
+  final _Segment segment;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final base = context.isDark
+        ? scheme.surfaceContainerHighest
+        : scheme.surfaceContainerLowest;
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: GestureDetector(
+        key: segment.key,
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: AppMotion.of(context, AppMotion.fast),
+          curve: AppMotion.curve,
+          constraints: const BoxConstraints(minHeight: 44),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected ? base : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppRadius.card - 4),
+            border: Border.all(
+              color: selected ? scheme.primary : Colors.transparent,
+              width: 1.5,
+            ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: scheme.primary.withValues(alpha: 0.14),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : null,
+          ),
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                segment.label,
+                textAlign: TextAlign.center,
+                style: context.textTheme.titleSmall?.copyWith(
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  color: selected ? scheme.onSurface : scheme.onSurfaceVariant,
+                ),
+              ),
+              if (segment.badge case final badge?)
+                Text(
+                  badge,
+                  textAlign: TextAlign.center,
+                  style: context.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: scheme.primary,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The chosen plan and its price: the store's when there is one, else the plan's price label.
+class _PriceCard extends StatelessWidget {
+  const _PriceCard({
+    required this.plan,
+    required this.name,
+    required this.yearly,
+    required this.price,
+    required this.withPeriod,
+    this.freeBadge,
+  });
+  final Plan plan;
+  final String name;
+  final bool yearly;
+  final String? price;
+  final bool withPeriod;
+
+  /// "2 months free", worked out from the prices; null when yearly saves less than a month.
+  final String? freeBadge;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final base = context.isDark
+        ? scheme.surfaceContainer
+        : scheme.surfaceContainerLowest;
+    return Container(
+      key: Key('paywallPrice-${plan.code}'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpace.md,
+        vertical: AppSpace.sm,
+      ),
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(
+          scheme.primary.withValues(alpha: context.isDark ? 0.18 : 0.08),
+          base,
+        ),
+        borderRadius: BorderRadius.circular(AppRadius.card),
+        border: Border.all(color: scheme.primary, width: 2),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: context.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                Text(
+                  yearly
+                      ? (freeBadge == null ? l10n.paywallYearly : '${l10n.paywallYearly} · $freeBadge')
+                      : l10n.paywallMonthly,
+                  style: context.textTheme.labelSmall?.copyWith(
+                    color: yearly ? scheme.primary : scheme.onSurfaceVariant,
+                    fontWeight: yearly ? FontWeight.w800 : null,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (price case final price?) ...[
+            const SizedBox(width: AppSpace.sm),
+            Flexible(
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: price,
+                      style: context.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.4,
+                        fontFeatures: AppText.tabular,
+                      ),
+                    ),
+                    if (withPeriod)
+                      TextSpan(
+                        text:
+                            ' ${yearly ? l10n.paywallPerYear : l10n.paywallPerMonth}',
+                        style: context.textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
+                textAlign: TextAlign.end,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -903,15 +1117,17 @@ class _BuyBar extends StatelessWidget {
     required this.label,
     required this.onBuy,
     required this.busy,
-    required this.fine,
+    required this.terms,
     this.onWeb,
-    this.picker,
+    this.price,
   });
-  final Widget? picker;
+  final Widget? price;
   final String label;
   final VoidCallback? onBuy;
   final bool busy;
-  final String fine;
+
+  /// Price, renewal and cancellation terms, with the Terms and Privacy links.
+  final Widget terms;
   final VoidCallback? onWeb;
 
   @override
@@ -945,8 +1161,8 @@ class _BuyBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (picker != null) ...[
-                  picker!,
+                if (price != null) ...[
+                  price!,
                   const SizedBox(height: AppSpace.md),
                 ],
                 GlowButton(
@@ -975,13 +1191,7 @@ class _BuyBar extends StatelessWidget {
                     child: Text(context.l10n.subscribeOnWeb),
                   ),
                 const SizedBox(height: AppSpace.xs),
-                Text(
-                  fine,
-                  textAlign: TextAlign.center,
-                  style: context.textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
+                terms,
               ],
             ),
           ),

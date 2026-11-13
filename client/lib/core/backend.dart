@@ -1284,6 +1284,12 @@ abstract class Backend {
   Future<CloudModels> adminCloudModels();
   Future<CloudModels> setAdminCloudModels(CloudModels models);
 
+  // Pricing editor (D-244): plans, credit packs and the usage markup, for the instance owner.
+  Future<AdminPricing> adminPricing();
+  Future<AdminPlan> saveAdminPlan(String code, SavePlanRequest plan);
+  Future<AdminCreditPack> saveAdminCreditPack(String code, SaveCreditPackRequest pack);
+  Future<BillingSettings> setAdminBillingSettings(BillingSettings settings);
+
   // Privacy and SSO (Phase 8)
   Future<Uint8List> exportMyData();
 
@@ -1325,12 +1331,17 @@ abstract class Backend {
   // Billing (Phase 7). `BillingSummary.enabled` is false on self-hosted servers (no paywall).
   Future<BillingSummary> billing(String orgId);
   Future<PlanCatalog> plans();
-  Future<String> checkoutUrl(
+  /// A checkout page to open, or null when an existing web subscription was moved to [planCode]
+  /// in place (D-248).
+  Future<String?> checkoutUrl(
     String orgId, {
     String? planCode,
     String? packCode,
   });
   Future<String> billingPortalUrl(String orgId);
+
+  /// Extra people beyond the plan's seats, on a Pro or Max web subscription (D-249).
+  Future<BillingSummary> setExtraSeats(String orgId, int extra);
   Future<BillingSummary> verifyPurchase(
     String orgId, {
     required String source,

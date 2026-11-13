@@ -3468,6 +3468,94 @@ class FakeBackend implements Backend {
   @override
   Future<CloudModels> setAdminCloudModels(CloudModels models) async =>
       cloudModels = models;
+  var pricing = AdminPricing(
+    billingEnabled: true,
+    plans: [
+      AdminPlan(
+        code: 'free',
+        name: 'Free',
+        interval: AdminPlanIntervalEnum.none,
+        active: true,
+        sort: 0,
+        priceLabel: null,
+        limits: const {'max_bots': 2, 'seats': 1, 'monthly_credits_usd': 1},
+        creditGate: true,
+        storeProductIds: const {},
+        dodoProductId: null,
+        workspaces: 12,
+      ),
+      AdminPlan(
+        code: 'pro',
+        name: 'Pro',
+        interval: AdminPlanIntervalEnum.month,
+        active: true,
+        sort: 20,
+        priceLabel: r'$39/mo',
+        limits: const {'max_bots': 20, 'seats': 5, 'monthly_credits_usd': 20, 'cloud_daily_usd': 5},
+        creditGate: false,
+        storeProductIds: const {'app_store': 'ai.casama.pro.monthly', 'google_play': 'casama_pro:monthly'},
+        dodoProductId: 'pdt_pro',
+        workspaces: 3,
+      ),
+    ],
+    packs: [
+      AdminCreditPack(
+        code: 'credits_10',
+        name: r'$10 of credits',
+        creditsUsd: 10,
+        active: true,
+        priceLabel: r'$10',
+        storeProductIds: const {'app_store': 'ai.casama.credits.10', 'google_play': 'casama_credits_10'},
+        dodoProductId: 'pdt_c10',
+      ),
+    ],
+    settings: BillingSettings(markup: 1.3),
+  );
+  final savedPlans = <String, SavePlanRequest>{};
+  final savedPacks = <String, SaveCreditPackRequest>{};
+  final savedMarkups = <num>[];
+  @override
+  Future<AdminPricing> adminPricing() async => pricing;
+  @override
+  Future<AdminPlan> saveAdminPlan(String code, SavePlanRequest plan) async {
+    savedPlans[code] = plan;
+    final old = pricing.plans.firstWhere((p) => p.code == code);
+    final next = old.copyWith(
+      name: plan.name ?? old.name,
+      active: plan.active ?? old.active,
+      sort: plan.sort ?? old.sort,
+      priceLabel: plan.priceLabel ?? old.priceLabel,
+      limits: plan.limits ?? old.limits,
+      creditGate: plan.creditGate ?? old.creditGate,
+      storeProductIds: plan.storeProductIds ?? old.storeProductIds,
+      dodoProductId: plan.dodoProductId ?? old.dodoProductId,
+    );
+    pricing = pricing.copyWith(plans: [for (final p in pricing.plans) p.code == code ? next : p]);
+    return next;
+  }
+
+  @override
+  Future<AdminCreditPack> saveAdminCreditPack(String code, SaveCreditPackRequest pack) async {
+    savedPacks[code] = pack;
+    final old = pricing.packs.firstWhere((p) => p.code == code);
+    final next = old.copyWith(
+      name: pack.name ?? old.name,
+      creditsUsd: pack.creditsUsd ?? old.creditsUsd,
+      active: pack.active ?? old.active,
+      priceLabel: pack.priceLabel ?? old.priceLabel,
+      storeProductIds: pack.storeProductIds ?? old.storeProductIds,
+      dodoProductId: pack.dodoProductId ?? old.dodoProductId,
+    );
+    pricing = pricing.copyWith(packs: [for (final p in pricing.packs) p.code == code ? next : p]);
+    return next;
+  }
+
+  @override
+  Future<BillingSettings> setAdminBillingSettings(BillingSettings settings) async {
+    savedMarkups.add(settings.markup);
+    pricing = pricing.copyWith(settings: settings);
+    return settings;
+  }
   @override
   Future<ConnectionSettings> setAdminConnectionSettings({
     bool? serverComposio,
@@ -3705,8 +3793,25 @@ class FakeBackend implements Backend {
   final verified = <String>[];
   final connectKeyNames = <String>[];
 
+  /// Replaces the plans and credit packs [plans] returns (null keeps the default free + pro).
+  List<Plan>? catalogPlans;
+  List<CreditPack>? catalogPacks;
+  num packCredits = 0;
+
   @override
-  Future<BillingSummary> billing(String orgId) async => BillingSummary(
+  Future<BillingSummary> billing(String orgId) async {
+    final plan = catalogPlans?.where((p) => p.code == planCode).firstOrNull;
+    if (plan != null) {
+      return (await _billing(orgId)).copyWith(
+        planName: plan.name,
+        interval: plan.interval.value,
+        limits: plan.limits,
+      );
+    }
+    return _billing(orgId);
+  }
+
+  Future<BillingSummary> _billing(String orgId) async => BillingSummary(
     enabled: billingEnabled,
     planCode: billingEnabled ? planCode : 'selfhost',
     planName: billingEnabled
@@ -3724,7 +3829,7 @@ class FakeBackend implements Backend {
     validUntil: planCode == 'pro' ? DateTime.utc(2026, 12, 10) : null,
     source_: billingSource,
     cancelAtPeriodEnd: false,
-    creditsUsd: billingEnabled ? 1.0 : 0,
+    creditsUsd: billingEnabled ? 1.0 + packCredits : 0,
     subscriptions: const [],
     providers: const [
       BillingSource.dodo,
@@ -3735,7 +3840,7 @@ class FakeBackend implements Backend {
   @override
   Future<PlanCatalog> plans() async => PlanCatalog(
     enabled: billingEnabled,
-    plans: [
+    plans: catalogPlans ?? [
       Plan(
         code: 'free',
         name: 'Free',
@@ -3762,7 +3867,7 @@ class FakeBackend implements Backend {
         },
       ),
     ],
-    packs: [
+    packs: catalogPacks ?? [
       CreditPack(
         code: 'credits_10',
         name: r'$10 of credits',
@@ -3772,13 +3877,26 @@ class FakeBackend implements Backend {
     ],
   );
   @override
-  Future<String> checkoutUrl(
+  Future<String?> checkoutUrl(
     String orgId, {
     String? planCode,
     String? packCode,
   }) async {
     checkouts.add(planCode ?? packCode!);
+    // A web subscriber changing plans is moved in place (D-248).
+    if (planCode != null && billingSource == BillingSummarySource_Enum.dodo && this.planCode != 'free') {
+      this.planCode = planCode;
+      return null;
+    }
     return 'https://checkout.example.com/${planCode ?? packCode}';
+  }
+
+  /// Extra people set through Billing (D-249).
+  var extraSeats = 0;
+  @override
+  Future<BillingSummary> setExtraSeats(String orgId, int extra) async {
+    extraSeats = extra;
+    return (await billing(orgId)).copyWith(extraSeats: extra);
   }
 
   @override
@@ -3793,7 +3911,13 @@ class FakeBackend implements Backend {
     String? purchaseToken,
   }) async {
     verified.add('$source:$productId:${transactionId ?? purchaseToken}');
-    planCode = 'pro';
+    // A credit pack adds credits and leaves the plan alone (D-244).
+    final pack = catalogPacks?.where((p) => p.storeProductIds?[source] == productId).firstOrNull;
+    if (pack != null) {
+      packCredits += pack.creditsUsd;
+      return billing(orgId);
+    }
+    planCode = catalogPlans?.where((p) => p.storeProductIds[source] == productId).firstOrNull?.code ?? 'pro';
     billingSource = source == 'app_store'
         ? BillingSummarySource_Enum.appStore
         : BillingSummarySource_Enum.googlePlay;

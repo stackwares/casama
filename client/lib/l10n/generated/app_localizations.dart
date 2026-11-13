@@ -2998,6 +2998,24 @@ abstract class AppLocalizations {
   /// **'Check your connection, or that the server at {url} is running.'**
   String cannotReachServerHelp(String url);
 
+  /// No description provided for @serverUnreachableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check that you\'re online. If you are, the server may be restarting, so we\'ll keep trying.'**
+  String get serverUnreachableBody;
+
+  /// No description provided for @retryingIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Trying again in {seconds}s'**
+  String retryingIn(int seconds);
+
+  /// No description provided for @retryingNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Trying…'**
+  String get retryingNow;
+
   /// No description provided for @upgradeTitle.
   ///
   /// In en, this message translates to:
@@ -3076,6 +3094,42 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 bot} other{{count} bots}}'**
   String limitBots(int count);
 
+  /// No description provided for @limitBotsUnlimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited bots'**
+  String get limitBotsUnlimited;
+
+  /// No description provided for @unlimitedValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited'**
+  String get unlimitedValue;
+
+  /// No description provided for @trialDaysFree.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} days free'**
+  String trialDaysFree(int n);
+
+  /// No description provided for @extraPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra People'**
+  String get extraPeople;
+
+  /// No description provided for @extraPeopleHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'{price} per person a month, on top of the {seats} your plan includes.'**
+  String extraPeopleHelp(String price, int seats);
+
+  /// No description provided for @extraPeopleSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra people updated'**
+  String get extraPeopleSaved;
+
   /// No description provided for @limitComputerHours.
   ///
   /// In en, this message translates to:
@@ -3147,12 +3201,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Live view: {minutes} min'**
   String usageLiveViewMinutes(String minutes);
-
-  /// No description provided for @usageTokens.
-  ///
-  /// In en, this message translates to:
-  /// **'Model credits: {count} tokens'**
-  String usageTokens(int count);
 
   /// No description provided for @thisMonth.
   ///
@@ -5337,6 +5385,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cloud computer time'**
   String get kindComputer;
+
+  /// No description provided for @kindModels.
+  ///
+  /// In en, this message translates to:
+  /// **'AI models'**
+  String get kindModels;
+
+  /// No description provided for @creditsThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'This month\'s credits'**
+  String get creditsThisMonth;
+
+  /// No description provided for @creditsUsedPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% used'**
+  String creditsUsedPercent(int percent);
+
+  /// No description provided for @creditsRunsLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =0{Less than one more run at your usual cost} =1{About 1 more run at your usual cost} other{About {n} more runs at your usual cost}}'**
+  String creditsRunsLeft(int n);
+
+  /// No description provided for @creditsOut.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re out of credits. Add more to keep your bots running.'**
+  String get creditsOut;
+
+  /// No description provided for @creditsExplainer.
+  ///
+  /// In en, this message translates to:
+  /// **'1 credit = \$1. Your plan adds {amount} every month; unused ones carry over for one more month.'**
+  String creditsExplainer(String amount);
+
+  /// No description provided for @creditsExplainerShort.
+  ///
+  /// In en, this message translates to:
+  /// **'1 credit = \$1. Credits from packs last 12 months.'**
+  String get creditsExplainerShort;
 
   /// No description provided for @kindStream.
   ///
@@ -11965,7 +12055,7 @@ abstract class AppLocalizations {
   /// No description provided for @usageAdvancedSummary.
   ///
   /// In en, this message translates to:
-  /// **'Tokens in and out, JSON export'**
+  /// **'Token counts, JSON export'**
   String get usageAdvancedSummary;
 
   /// No description provided for @peopleHelp.
@@ -12814,12 +12904,6 @@ abstract class AppLocalizations {
   /// **'{name}, open profile'**
   String mentionOpenProfile(String name);
 
-  /// No description provided for @paywallTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Grow your crew with Pro'**
-  String get paywallTitle;
-
   /// No description provided for @paywallSubtitle.
   ///
   /// In en, this message translates to:
@@ -12904,12 +12988,6 @@ abstract class AppLocalizations {
   /// **'/ year'**
   String get paywallPerYear;
 
-  /// No description provided for @paywallBestValue.
-  ///
-  /// In en, this message translates to:
-  /// **'BEST VALUE'**
-  String get paywallBestValue;
-
   /// No description provided for @paywallContinue.
   ///
   /// In en, this message translates to:
@@ -12940,17 +13018,161 @@ abstract class AppLocalizations {
   /// **'Renews automatically. Cancel anytime from Billing.'**
   String get paywallFineWeb;
 
+  /// No description provided for @paywallDisclosureStore.
+  ///
+  /// In en, this message translates to:
+  /// **'{price} {period}, renewing automatically until you cancel. Payment is charged to your {store} account. Cancel anytime in your {store} account settings at least 24 hours before it renews.'**
+  String paywallDisclosureStore(String price, String period, String store);
+
+  /// No description provided for @paywallDisclosureWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'{price}, renewing automatically until you cancel. Cancel anytime from Billing; you keep the plan until the period ends.'**
+  String paywallDisclosureWeb(String price);
+
+  /// No description provided for @pricePerMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'per month'**
+  String get pricePerMonth;
+
+  /// No description provided for @pricePerYear.
+  ///
+  /// In en, this message translates to:
+  /// **'per year'**
+  String get pricePerYear;
+
+  /// No description provided for @storeAccountApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple ID'**
+  String get storeAccountApple;
+
+  /// No description provided for @storeAccountGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Play'**
+  String get storeAccountGoogle;
+
+  /// No description provided for @termsOfUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Use'**
+  String get termsOfUse;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @planChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan changed'**
+  String get planChanged;
+
+  /// No description provided for @purchasesRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchases restored'**
+  String get purchasesRestored;
+
+  /// No description provided for @creditsAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits added'**
+  String get creditsAdded;
+
+  /// No description provided for @purchasePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the purchase to be approved. It\'s added as soon as it is.'**
+  String get purchasePending;
+
+  /// No description provided for @purchaseFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The purchase didn\'t go through, and you weren\'t charged.'**
+  String get purchaseFailed;
+
+  /// No description provided for @purchaseVerifyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t confirm your purchase yet. It\'s retried on its own; if it doesn\'t show up soon, tap Restore Purchases.'**
+  String get purchaseVerifyFailed;
+
+  /// No description provided for @paywallTitleFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Grow your crew with {plan}'**
+  String paywallTitleFor(String plan);
+
+  /// No description provided for @paywallWelcomePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to {plan}!'**
+  String paywallWelcomePlan(String plan);
+
+  /// No description provided for @paywallMonthsFree.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 month free} other{{n} months free}}'**
+  String paywallMonthsFree(int n);
+
+  /// No description provided for @paywallSwitchTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to {plan}'**
+  String paywallSwitchTo(String plan);
+
+  /// No description provided for @subscribedInStoreNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You subscribe through {store}. To change plans, use {store} on the device you subscribed with.'**
+  String subscribedInStoreNote(String store);
+
+  /// No description provided for @subscribedOnWebNote.
+  ///
+  /// In en, this message translates to:
+  /// **'You subscribe on the web. Change plans here with web checkout, or manage your subscription.'**
+  String get subscribedOnWebNote;
+
+  /// No description provided for @outOfCreditsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re out of credits'**
+  String get outOfCreditsTitle;
+
+  /// No description provided for @outOfCreditsPaidBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bots pause until you add credits. Credits from a pack last 12 months.'**
+  String get outOfCreditsPaidBody;
+
+  /// No description provided for @outOfCreditsFreeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade for more credits every month, more bots and more computer time.'**
+  String get outOfCreditsFreeBody;
+
+  /// No description provided for @addCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Credits'**
+  String get addCredits;
+
+  /// No description provided for @seePlansButton.
+  ///
+  /// In en, this message translates to:
+  /// **'See Plans'**
+  String get seePlansButton;
+
   /// No description provided for @paywallAskAdmin.
   ///
   /// In en, this message translates to:
   /// **'Only workspace owners and admins can change the plan. Ask one of them to upgrade.'**
   String get paywallAskAdmin;
-
-  /// No description provided for @paywallWelcomePro.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome to Pro!'**
-  String get paywallWelcomePro;
 
   /// No description provided for @upgradeToPro.
   ///
@@ -13743,6 +13965,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That isn\'t valid JSON. Check the brackets, quotes and commas.'**
   String get adminAppSettingsBadJson;
+
+  /// No description provided for @paywallBillingPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Billing period'**
+  String get paywallBillingPeriod;
+
+  /// No description provided for @adminPricing.
+  ///
+  /// In en, this message translates to:
+  /// **'Pricing'**
+  String get adminPricing;
+
+  /// No description provided for @adminCreditPacks.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit packs'**
+  String get adminCreditPacks;
+
+  /// No description provided for @adminOnSale.
+  ///
+  /// In en, this message translates to:
+  /// **'On sale'**
+  String get adminOnSale;
+
+  /// No description provided for @adminHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get adminHidden;
+
+  /// No description provided for @adminNoPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'No price label'**
+  String get adminNoPriceLabel;
+
+  /// No description provided for @adminPlanSaveHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving applies to every workspace on this plan straight away.'**
+  String get adminPlanSaveHelp;
+
+  /// No description provided for @adminPackSaveHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving changes the pack for everyone straight away.'**
+  String get adminPackSaveHelp;
+
+  /// No description provided for @adminPlanName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get adminPlanName;
+
+  /// No description provided for @adminPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Price label'**
+  String get adminPriceLabel;
+
+  /// No description provided for @adminPriceLabelHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown where the store has no price of its own'**
+  String get adminPriceLabelHelp;
+
+  /// No description provided for @adminPlanActiveHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A hidden plan stays with the workspaces already on it.'**
+  String get adminPlanActiveHelp;
+
+  /// No description provided for @adminCreditGate.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop at zero credits'**
+  String get adminCreditGate;
+
+  /// No description provided for @adminCreditGateHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs on Casama\'s keys stop when the workspace\'s credits run out.'**
+  String get adminCreditGateHelp;
+
+  /// No description provided for @adminPlanSort.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort order'**
+  String get adminPlanSort;
+
+  /// No description provided for @adminPlanLimits.
+  ///
+  /// In en, this message translates to:
+  /// **'Limits'**
+  String get adminPlanLimits;
+
+  /// No description provided for @adminLimitMonthlyCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly credits (USD)'**
+  String get adminLimitMonthlyCredits;
+
+  /// No description provided for @adminLimitMaxBots.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots'**
+  String get adminLimitMaxBots;
+
+  /// No description provided for @adminLimitMaxComputers.
+  ///
+  /// In en, this message translates to:
+  /// **'Computers'**
+  String get adminLimitMaxComputers;
+
+  /// No description provided for @adminLimitComputerHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Computer hours a month'**
+  String get adminLimitComputerHours;
+
+  /// No description provided for @adminLimitSeats.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get adminLimitSeats;
+
+  /// No description provided for @adminLimitCloudDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud spend a day (USD)'**
+  String get adminLimitCloudDaily;
+
+  /// No description provided for @adminLimitMaxRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Computers running at once'**
+  String get adminLimitMaxRunning;
+
+  /// No description provided for @adminLimitComputerSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Computer size (vCPUs and GB)'**
+  String get adminLimitComputerSize;
+
+  /// No description provided for @adminLimitExtraSeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra person a month (USD)'**
+  String get adminLimitExtraSeat;
+
+  /// No description provided for @adminLimitTrialDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial days'**
+  String get adminLimitTrialDays;
+
+  /// No description provided for @adminLimitTrialCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial credits (USD)'**
+  String get adminLimitTrialCredits;
+
+  /// No description provided for @adminLimitTrialHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial computer hours'**
+  String get adminLimitTrialHours;
+
+  /// No description provided for @adminAddLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a limit'**
+  String get adminAddLimit;
+
+  /// No description provided for @adminLimitKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit key'**
+  String get adminLimitKey;
+
+  /// No description provided for @adminLimitKeyInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Use lowercase letters, digits and underscores'**
+  String get adminLimitKeyInvalid;
+
+  /// No description provided for @adminLimitValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get adminLimitValue;
+
+  /// No description provided for @adminStoreProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Store products'**
+  String get adminStoreProducts;
+
+  /// No description provided for @adminAppStoreId.
+  ///
+  /// In en, this message translates to:
+  /// **'App Store product id'**
+  String get adminAppStoreId;
+
+  /// No description provided for @adminGooglePlayId.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Play product id'**
+  String get adminGooglePlayId;
+
+  /// No description provided for @adminDodoId.
+  ///
+  /// In en, this message translates to:
+  /// **'Dodo product id'**
+  String get adminDodoId;
+
+  /// No description provided for @adminPackCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits (USD)'**
+  String get adminPackCredits;
+
+  /// No description provided for @adminMarkup.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage markup'**
+  String get adminMarkup;
+
+  /// No description provided for @adminMarkupValue.
+  ///
+  /// In en, this message translates to:
+  /// **'×{markup}'**
+  String adminMarkupValue(String markup);
+
+  /// No description provided for @adminMarkupHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'1.3 = charge 30% over what Casama pays'**
+  String get adminMarkupHelp;
+
+  /// No description provided for @adminMarkupTooLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Use 1 or more. 1 charges exactly what Casama pays.'**
+  String get adminMarkupTooLow;
+
+  /// No description provided for @adminNumberInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number of 0 or more'**
+  String get adminNumberInvalid;
+
+  /// No description provided for @adminNumberPositive.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a number above 0'**
+  String get adminNumberPositive;
+
+  /// No description provided for @adminWholeNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole number'**
+  String get adminWholeNumber;
+
+  /// No description provided for @adminNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get adminNameRequired;
+
+  /// No description provided for @adminPricingBillingOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Billing is off on this server. These prices apply once it\'s on.'**
+  String get adminPricingBillingOff;
 }
 
 class _AppLocalizationsDelegate

@@ -16,6 +16,7 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import 'app_settings_card.dart';
+import 'pricing_tab.dart';
 
 /// Null when the signed-in user is not this instance's owner.
 final adminOverviewProvider = FutureProvider<AdminOverview?>((ref) async {
@@ -40,7 +41,7 @@ class AdminScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     return DefaultTabController(
-      length: 5,
+      length: 6,
       child: SubPage(
         title: l10n.adminConsole,
         bottom: PreferredSize(
@@ -59,13 +60,14 @@ class AdminScreen extends ConsumerWidget {
                   Tab(height: 40, text: l10n.adminUsers),
                   Tab(height: 40, text: l10n.adminWorkspaces),
                   Tab(height: 40, text: l10n.adminServices),
+                  Tab(height: 40, text: l10n.adminPricing),
                   Tab(height: 40, text: l10n.adminAbuse),
                 ],
               )),
             ),
           ),
         ),
-        body: const TabBarView(children: [_Overview(), _Users(), _Orgs(), _Services(), _Abuse()]),
+        body: const TabBarView(children: [_Overview(), _Users(), _Orgs(), _Services(), PricingTab(), _Abuse()]),
       ),
     );
   }

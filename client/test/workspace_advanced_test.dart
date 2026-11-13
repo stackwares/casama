@@ -134,7 +134,7 @@ void main() {
     expect(find.text('Claude Sonnet 5.5'), findsOneWidget);
     expect(find.text('anthropic/claude-sonnet-5.5'), findsNothing);
     expect(find.text('acme/unlisted-7'), findsOneWidget);
-    expect(find.text('Tokens in and out, JSON export'), findsOneWidget);
+    expect(find.text('Token counts, JSON export'), findsOneWidget);
     const moved = ['usageTokensIn', 'usageTokensOut', 'exportUsageJson'];
     for (final key in moved) {
       expect(find.byKey(Key(key)), findsNothing, reason: key);

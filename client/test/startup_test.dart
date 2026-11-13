@@ -26,7 +26,8 @@ void main() {
 
     await tester.pumpWidget(StartupGate(config: const AppConfig(apiUrl: 'http://casama.invalid'), connect: connect));
     await pumpUntil(tester, find.text("Can't reach your Casama server"));
-    expect(find.textContaining('http://casama.invalid'), findsOneWidget);
+    expect(find.text('casama.invalid'), findsOneWidget);
+    expect(find.text('Trying again in 5s'), findsOneWidget);
     await tester.tap(find.byKey(const Key('startupRetry')));
     await pumpUntil(tester, find.text('app ready'));
     for (var i = 0; i < 20 && find.byKey(const Key('startupSplash')).evaluate().isNotEmpty; i++) {
