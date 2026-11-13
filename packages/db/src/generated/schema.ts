@@ -3384,7 +3384,7 @@ export const profiles = pgTable("profiles", {
 	locale: text().default('en').notNull(),
 	timezone: text().default('UTC').notNull(),
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	quietHours: jsonb("quiet_hours"),
+	quietHours: jsonb("quiet_hours").default({"end":"07:00","start":"22:00","enabled":true}),
 	phoneNumber: text("phone_number"),
 	preferredName: text("preferred_name"),
 	pronouns: text(),

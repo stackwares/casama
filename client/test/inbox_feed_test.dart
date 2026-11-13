@@ -194,7 +194,7 @@ void main() {
     expect(find.text('No pages yet'), findsOneWidget);
   });
 
-  testWidgets('/inbox?tab=0 (the old Approvals tab) opens Needs you; /inbox opens All', (tester) async {
+  testWidgets('/inbox?tab=0 opens Needs you; /inbox opens Updates', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await setSize(tester, const Size(430, 932));
     final container = ProviderContainer(retry: (_, _) => null, overrides: [backendProvider.overrideWithValue(FakeBackend()), localCacheProvider.overrideWithValue(const NoCache())]);
@@ -213,16 +213,19 @@ void main() {
     }
 
     await settle();
+    // From Chats (D-253, D-254): Needs you is one list with no chips.
     router.go('/inbox?tab=0');
     await settle();
-    expect(selected(tester, 'needsYou'), isTrue);
+    expect(find.byKey(const Key('inboxFilter-needsYou')), findsNothing);
     expect(find.byKey(const Key('approval-appr1')), findsOneWidget);
     expect(find.byKey(const Key('brief-$botId')), findsNothing);
 
+    // Updates: no decisions and no briefs (those are in Needs you and General).
     router.go('/inbox');
     await settle();
-    expect(selected(tester, 'all'), isTrue);
-    expect(find.byKey(const Key('brief-$botId')), findsOneWidget);
+    expect(selected(tester, 'updates'), isTrue);
+    expect(find.byKey(const Key('approval-appr1')), findsNothing);
+    expect(find.byKey(const Key('brief-$botId')), findsNothing);
 
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(minutes: 1));

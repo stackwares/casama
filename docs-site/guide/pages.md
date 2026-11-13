@@ -23,7 +23,7 @@ see it. Bots can only change their own pages.
 
 ## Find and open pages
 
-- **All pages:** open the **Casama** row at the top of **Chats** and pick the **Pages** filter.
+- **All pages:** open **Updates** at the top of **Chats** and pick **Pages**.
 - **One bot's pages:** open its **Bot profile** → **Pages**.
 
 Select a page to open it. The app never shows pages inside itself:

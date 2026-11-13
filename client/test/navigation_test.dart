@@ -120,7 +120,7 @@ void main() {
   testWidgets('wide windows list Needs you and Casama over the chats, Tasks and the person under them', (tester) async {
     await _pumpApp(tester, const Size(1600, 1000));
     expect(find.byKey(const Key('sidebar-needs-you')), findsOneWidget);
-    expect(find.byKey(const Key('sidebar-casama')), findsOneWidget);
+    expect(find.byKey(const Key('sidebar-updates')), findsOneWidget);
     expect(find.byKey(const Key('sidebar-nav-/tasks')), findsOneWidget);
     expect(find.byKey(const Key('sidebarMe')), findsOneWidget);
     for (final gone in ['sidebar-nav-/inbox', 'sidebarPages', 'sidebar-nav-/computer', 'sidebar-nav-/settings']) {

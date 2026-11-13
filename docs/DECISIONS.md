@@ -2954,3 +2954,30 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
   `client/test/general_topics_test.dart` covers the chips (needs-you first, Older left out, the way
   back), the suggestion card's Do it and Not now, the topic link, the Needs you and Casama rows, and
   `splitTopics`. The navigation tests now expect two places.
+
+## D-254 Updates instead of the Casama row; quiet hours on by default
+
+- **Decision** (Oliver, 2026-11-13: "do fixes for what makes it weak and worse", after reviewing D-253's Casama row).
+- **Problems with the Casama row:**
+  - It shared its name and mascot with the welcome bot, so Chats could show two "Casama" rows.
+  - It repeated what General already shows (briefs, routine results, suggestions).
+  - Its unread count counted those again after you'd read them in the chat.
+  - Pages were buried in its feed.
+- **Updates:** the row is now **Updates**, with a bell, as a slim row under Needs you (which now
+  has an alert icon). Desktop has the same two rows over the bots.
+  - It lists notifications that aren't requests and don't open a bot's chat
+    (`isUpdateRowNotification`): people joining, missed calls, referrals, server alerts. Its
+    chips are **Updates** and **Pages**.
+  - Decisions stay in Needs you. Briefs and anything linking into a bot's chat are read there,
+    and opening the chat marks them read.
+  - The row's count and preview use the same rule, so nothing counts twice. `/inbox` opens
+    Updates and `/inbox?tab=0` opens Needs you.
+- **Quiet hours on by default:** `profiles.quiet_hours` defaults to 22:00–07:00, enabled, in the
+  person's timezone (D-250). Existing profiles without a choice got the same (migration
+  20270131000701). Before, nobody had quiet hours until they set them, so scheduled check-in scans
+  ran all night and normal-urgency pushes could arrive at 3 a.m.
+  - Urgent pushes still come through.
+  - The app's fallback for a missing value is "on" too.
+  - Test users start with quiet hours off (`createAuthUser`), so push tests pass at any hour.
+- **Tests:** `quiet-hours.test.ts` (a new sign-up gets 22:00–07:00 on); `general_topics_test.dart`
+  (Updates leaves out what's in a chat, the row's rename); the navigation tests use the new keys.

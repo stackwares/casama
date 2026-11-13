@@ -256,27 +256,27 @@ void main() {
     await unmount(tester);
   });
 
-  testWidgets('the Inbox opens again on what it showed, not on skeletons', (
+  testWidgets('Needs you opens again on what it showed, not on skeletons', (
     tester,
   ) async {
     final (router, _) = await pumpRouter(tester);
-    router.go('/inbox');
+    router.go('/inbox?tab=0');
     for (var i = 0; i < 10; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
-    expect(find.text('Today: 10:00 Standup.'), findsOneWidget);
+    expect(find.text('Reply to Ana'), findsOneWidget);
     router.go('/bots');
     for (var i = 0; i < 10; i++) {
       await tester.pump(const Duration(milliseconds: 100));
     }
     expect(find.byType(InboxScreen), findsNothing);
-    router.go('/inbox');
+    router.go('/inbox?tab=0');
     // The first frame the Inbox is built in (the router takes a frame to get there).
     while (find.byType(InboxScreen).evaluate().isEmpty) {
       await tester.pump();
     }
     expect(find.descendant(of: find.byType(InboxScreen), matching: find.byType(SkeletonScope)), findsNothing);
-    expect(find.text('Today: 10:00 Standup.'), findsOneWidget);
+    expect(find.text('Reply to Ana'), findsOneWidget);
     await unmount(tester);
   });
 }

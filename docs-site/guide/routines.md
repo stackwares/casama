@@ -195,12 +195,11 @@ chat, starts with them on. Other bots start with them off.
 
 Briefs and suggestions go to the person who turned check-ins on, in their timezone. They're posted
 in your **General** chat with the bot. A suggestion is a card there: **Do it** opens a topic where
-the bot does it and reports back in General, **Not now** puts it away. They're also collected
-under the **Casama** row at the top of **Chats**:
+the bot does it and reports back in General, **Not now** puts it away. Suggestions are also
+collected under **Needs you** at the top of **Chats**:
 
-- **Morning brief from {bot}**: the latest brief from each bot, under **Briefs**.
-- **Suggestions**: things the bot thinks you should act on, under **Needs you**, each with the
-  bot's own one-line take. Tap **Do it** to start a chat asking the bot to do it (its actions still
+- **Suggestions**: things the bot thinks you should act on, each with the
+  bot's own one-line take. Tap **Do it** to open a topic where the bot does it (its actions still
   go through approvals), or **Dismiss** and choose **Just this once** or **Don't suggest it
   again**.
 
@@ -208,7 +207,8 @@ A suggestion also arrives as a push from the bot, in its own words, following yo
 [attention rules](/guide/attention): low-urgency ones wait for your brief, and a suggestion tied to
 a time (leaving for the airport, booking a ride before a show) can wait until then. On iPhone and
 Android the push has **Do it** and **Not now** buttons. **Do it** opens the chat with the bot
-working on it; **Not now** clears the push and leaves the suggestion in your inbox.
+working on it in a topic; **Not now** clears the push and leaves the suggestion under
+**Needs you**.
 
 The bot also takes an extra look when there's something new to look at:
 

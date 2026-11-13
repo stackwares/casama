@@ -965,8 +965,9 @@ class SupabaseBackend implements Backend {
         .select('quiet_hours')
         .eq('user_id', _uid)
         .maybeSingle();
+    // On by default (D-254), the same as a new profile on the server.
     return QuietHoursView.fromJson(r?['quiet_hours']) ??
-        const QuietHoursView(enabled: false, start: '22:00', end: '07:00');
+        const QuietHoursView(enabled: true, start: '22:00', end: '07:00');
   }
 
   @override

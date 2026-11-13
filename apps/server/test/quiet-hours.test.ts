@@ -36,6 +36,16 @@ beforeAll(async () => {
 afterAll(async () => h?.stop());
 
 describe("quiet hours", () => {
+  it("are on by default, 22:00 to 07:00 (D-254)", async () => {
+    // A sign-up straight into auth, as Supabase Auth makes it (the harness's users start with them off).
+    const [u] = await h.tdb.admin<{ id: string }[]>`
+      insert into auth.users (id, email, aud, role)
+      values (gen_random_uuid(), 'new-quiet@example.com', 'authenticated', 'authenticated') returning id`;
+    const [p] = await h.tdb.admin<{ quiet_hours: unknown }[]>`
+      select quiet_hours from public.profiles where user_id = ${u!.id}`;
+    expect(p?.quiet_hours).toEqual({ enabled: true, start: "22:00", end: "07:00" });
+  });
+
   it("writes the inbox row now and holds the push", async () => {
     push.sent.length = 0;
     await svc.notify(user.id, orgId, "routine_result", { title: "Done", body: "x", bot_id: botId });

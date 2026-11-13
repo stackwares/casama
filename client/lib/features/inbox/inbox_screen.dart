@@ -31,15 +31,17 @@ import '../pages/pages_screen.dart';
 import '../skills/skill_proposals.dart';
 import 'for_you.dart';
 
-/// What the Inbox shows: everything, only what waits on a decision, morning briefs, or pages.
+/// What the Inbox shows: everything, only what waits on a decision, morning briefs, pages, or
+/// updates (D-253: what isn't already in a bot's chat).
 enum InboxFilter {
   all,
   needsYou,
   briefs,
-  pages;
+  pages,
+  updates;
 
-  /// `/inbox?tab=0` opened the Approvals tab before the filters; it opens Needs you now.
-  static InboxFilter fromTab(String? tab) => tab == '0' ? needsYou : all;
+  /// From Chats (D-253): `/inbox?tab=0` is Needs you, `/inbox` the Updates row.
+  static InboxFilter fromTab(String? tab) => tab == '0' ? needsYou : updates;
 }
 
 /// Requests waiting for you (approvals, takeovers, suggestions, skill ideas), then morning briefs,
@@ -80,6 +82,13 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       InboxFilter.needsYou => needsYou == 0 ? l10n.inboxNeedsYou : l10n.inboxNeedsYouCount(needsYou),
       InboxFilter.briefs => l10n.inboxBriefs,
       InboxFilter.pages => l10n.pages,
+      InboxFilter.updates => l10n.inboxUpdates,
+    };
+    // Opened from Chats (D-253): Needs you is one list; Updates switches between updates and pages.
+    final chips = switch (widget.initialFilter) {
+      InboxFilter.needsYou when widget.title != null => const <InboxFilter>[],
+      InboxFilter.updates => const [InboxFilter.updates, InboxFilter.pages],
+      _ => const [InboxFilter.all, InboxFilter.needsYou, InboxFilter.briefs, InboxFilter.pages],
     };
     // Tapping Inbox again scrolls the feed (or Pages) to the top (TabReselect); so does the iOS status bar.
     return PrimaryScrollController(
@@ -88,7 +97,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       appBar: ShellHeader(
         title: widget.title ?? l10n.inbox,
         phoneFallback: '/bots',
-        bottom: PreferredSize(
+        bottom: chips.isEmpty ? null : PreferredSize(
           preferredSize: const Size.fromHeight(52),
           child: SizedBox(
             height: 52,
@@ -99,7 +108,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
               child: Row(
                 spacing: AppSpace.xs,
                 children: [
-                  for (final f in InboxFilter.values)
+                  for (final f in chips)
                     RevealWhenSelected(selected: _filter == f, child: ChoiceChip(
                       key: Key('inboxFilter-${f.name}'),
                       showCheckmark: false,
@@ -143,17 +152,24 @@ class _InboxFeed extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final all = filter == InboxFilter.all;
+    // The Updates row (D-253): notices and pages that aren't already in a bot's chat; no decisions.
+    final updatesOnly = filter == InboxFilter.updates;
+    final withNotes = all || updatesOnly;
     final approvals = ref.watch(approvalsProvider);
     final forYou = ref.watch(forYouProvider);
     final notifications = ref.watch(notificationsProvider);
     final takeovers = ref.watch(takeoversProvider).value ?? const <TakeoverRequest>[];
     final proposals = ref.watch(skillProposalsProvider).value ?? const <SkillProposal>[];
-    final pages = all ? ref.watch(pagesProvider(null)).value ?? const <BotPage>[] : const <BotPage>[];
+    final pages = withNotes ? ref.watch(pagesProvider(null)).value ?? const <BotPage>[] : const <BotPage>[];
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
     String botName(String id) => bots.where((b) => b.id == id).firstOrNull?.name ?? '';
 
     // The lists this filter is made of; the rest fill in when they arrive.
-    final sources = <AsyncValue<Object?>>[if (filter != InboxFilter.briefs) approvals, forYou, if (all) notifications];
+    final sources = <AsyncValue<Object?>>[
+      if (filter != InboxFilter.briefs && !updatesOnly) approvals,
+      if (!updatesOnly) forYou,
+      if (withNotes) notifications,
+    ];
     final failed = sources.where((s) => s.hasError && !s.hasValue).toList();
     final AsyncValue<void> state = sources.any((s) => s.isLoading && !s.hasValue)
         ? const AsyncLoading()
@@ -166,7 +182,7 @@ class _InboxFeed extends ConsumerWidget {
       ref.invalidate(takeoversProvider);
       ref.invalidate(forYouProvider);
       ref.invalidate(skillProposalsProvider);
-      if (all) {
+      if (withNotes) {
         ref.invalidate(notificationsProvider);
         ref.invalidate(pagesProvider(null));
       }
@@ -179,7 +195,7 @@ class _InboxFeed extends ConsumerWidget {
       data: (_) {
         final pending = approvals.value ?? const <Approval>[];
         final suggestions = forYou.value?.suggestions ?? const <Suggestion>[];
-        final decisions = filter == InboxFilter.briefs
+        final decisions = filter == InboxFilter.briefs || updatesOnly
             ? const <Widget>[]
             : <Widget>[
                 for (final t in takeovers)
@@ -201,10 +217,15 @@ class _InboxFeed extends ConsumerWidget {
         // Updates: briefs, notifications and new pages, newest first.
         final approvalIds = {for (final a in pending) a.id};
         final takeoverIds = {for (final t in takeovers) t.id};
-        final notes = all ? [for (final n in notifications.value ?? const <NotificationView>[]) if (!_waitingAbove(n, approvalIds, takeoverIds)) n] : const <NotificationView>[];
+        final notes = withNotes
+            ? [
+                for (final n in notifications.value ?? const <NotificationView>[])
+                  if (!_waitingAbove(n, approvalIds, takeoverIds) && (!updatesOnly || isUpdateRowNotification(n))) n,
+              ]
+            : const <NotificationView>[];
         final since = DateTime.now().subtract(_recentPages);
         final updates = <(DateTime, Object)>[
-          if (filter != InboxFilter.needsYou)
+          if (filter != InboxFilter.needsYou && !updatesOnly)
             for (final b in forYou.value?.briefs ?? const <ForYouBrief>[]) (b.createdAt, b),
           for (final n in notes) (n.createdAt, n),
           for (final p in pages)
@@ -237,7 +258,7 @@ class _InboxFeed extends ConsumerWidget {
           if (failed.isNotEmpty) Padding(padding: const EdgeInsets.only(bottom: AppSpace.sm), child: InlineError(error: failed.first.error!, onRetry: refresh)),
           if (all && decisions.isNotEmpty) SectionHeader(title: l10n.inboxNeedsYou, count: decisions.length.humanizedCount(context.l10n.localeName), padding: const EdgeInsets.fromLTRB(AppSpace.xxs, AppSpace.xs, AppSpace.xxs, AppSpace.xs)),
           ...decisions,
-          if (all && updateWidgets.isNotEmpty)
+          if (withNotes && updateWidgets.isNotEmpty)
             SectionHeader(
               title: l10n.inboxUpdates,
               padding: EdgeInsets.fromLTRB(AppSpace.xxs, decisions.isEmpty ? AppSpace.xs : AppSpace.lg, AppSpace.xxs, AppSpace.xs),
@@ -256,6 +277,7 @@ class _InboxFeed extends ConsumerWidget {
           return switch (filter) {
             InboxFilter.needsYou => EmptyState(icon: LucideIcons.circleCheckBig, title: l10n.inboxNeedsYouEmpty, message: l10n.inboxNeedsYouEmptyHelp),
             InboxFilter.briefs => EmptyState(icon: LucideIcons.sun, title: l10n.noBriefs, message: l10n.forYouEmptyHelp),
+            InboxFilter.updates => EmptyState(icon: LucideIcons.bell, title: l10n.updatesEmpty, message: l10n.updatesEmptyHelp),
             _ => EmptyState(icon: LucideIcons.inbox, title: l10n.forYouEmpty, message: l10n.inboxEmptyHelp),
           };
         }

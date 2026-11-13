@@ -5,6 +5,8 @@ import 'package:casama_app/core/local_cache.dart';
 import 'package:casama_app/core/providers.dart';
 import 'package:casama_app/features/bots/bots_screen.dart';
 import 'package:casama_app/features/chat/chat_screen.dart';
+import 'package:casama_app/features/inbox/for_you.dart';
+import 'package:casama_app/features/inbox/inbox_screen.dart';
 import 'package:casama_app/l10n/generated/app_localizations.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -215,7 +217,7 @@ void main() {
     await setSize(tester, const Size(430, 932));
     await tester.pumpWidget(_app(FakeBackend(), _router('/bots')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('chatsCasama')), findsOneWidget);
+    expect(find.byKey(const Key('chatsUpdates')), findsOneWidget);
     // The fake has approvals and a suggestion waiting.
     expect(
       find.descendant(
@@ -228,6 +230,98 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('inbox 0'), findsOneWidget);
   });
+
+  NotificationView note(String id, String kind, String title, String? link) =>
+      NotificationView(
+        id: id,
+        kind: kind,
+        title: title,
+        body: '',
+        link: link,
+        createdAt: DateTime(2026, 11, 13),
+        botId: link == null ? null : botId,
+      );
+
+  test(
+    'Updates leaves out requests and what a bot\'s chat already shows (D-254)',
+    () {
+      expect(
+        isUpdateRowNotification(
+          note('a', 'member_joined', 'Ana joined', '/joined/o1'),
+        ),
+        isTrue,
+      );
+      expect(
+        isUpdateRowNotification(
+          note('b', 'call_missed', 'Missed call', '/bots/$botId/call'),
+        ),
+        isTrue,
+      );
+      expect(
+        isUpdateRowNotification(
+          note(
+            'c',
+            'routine_result',
+            'Morning brief',
+            '/bots/$botId/chat?c=$convId',
+          ),
+        ),
+        isFalse,
+      );
+      expect(
+        isUpdateRowNotification(
+          note('d', 'suggestion', 'Book a ride?', '/bots/$botId/chat'),
+        ),
+        isFalse,
+      );
+      expect(
+        isUpdateRowNotification(
+          note('e', 'approval', 'Ada needs approval', '/approvals/x'),
+        ),
+        isFalse,
+      );
+    },
+  );
+
+  testWidgets(
+    'the Updates screen lists notices and Pages, not chat messages or decisions',
+    (tester) async {
+      await setSize(tester, const Size(430, 932));
+      final backend = FakeBackend()
+        ..storedNotifications = [
+          note('n-join', 'member_joined', 'Ana joined Acme', '/joined/o1'),
+          note(
+            'n-brief',
+            'routine_result',
+            'Your morning brief',
+            '/bots/$botId/chat?c=$convId',
+          ),
+        ];
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            backendProvider.overrideWithValue(backend),
+            localCacheProvider.overrideWithValue(const NoCache()),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const InboxScreen(
+              initialFilter: InboxFilter.updates,
+              title: 'Updates',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Ana joined Acme'), findsOneWidget);
+      expect(find.text('Your morning brief'), findsNothing);
+      // No decisions here (the fake has a waiting approval and a suggestion; they're in Needs you).
+      expect(find.byKey(const Key('inboxFilter-needsYou')), findsNothing);
+      expect(find.byKey(const Key('inboxFilter-updates')), findsOneWidget);
+      expect(find.byKey(const Key('inboxFilter-pages')), findsOneWidget);
+    },
+  );
 
   test('topics split into live and older, General first', () {
     final now = DateTime(2026, 11, 13);

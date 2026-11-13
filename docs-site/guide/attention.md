@@ -7,20 +7,15 @@ interrupt you, and understand why a message did or didn't buzz your phone.
 
 ## Where notifications go
 
-Every notification lands in the **Casama** row pinned at the top of **Chats**, whatever else
-happens. It opens one feed:
-things that need a decision come first (approvals, take-over requests, suggestions and skill
-ideas), then updates newest first (briefs, routine results, messages from bots, missed calls,
-published pages). Filter it with:
+Every notification lands in one of three places at the top of **Chats**:
 
-| Filter | What's in it |
+| Where | What's in it |
 | --- | --- |
-| **All** | Everything |
-| **Needs you** | Approvals, take-over and secret requests, suggestions and skill ideas. See [Autonomy and approvals](/guide/autonomy). |
-| **Briefs** | Morning briefs from bots with check-ins on |
-| **Pages** | Pages your bots published. See [Pages](/guide/pages). |
+| A bot's chat | What a bot tells you: briefs, routine results, suggestions and its replies land in your **General** chat with it (or the topic they belong to). Opening the chat marks them read. |
+| **Needs you** | Approvals, take-over and secret requests, suggestions and skill ideas, across all your bots. It shows only while something is waiting. See [Autonomy and approvals](/guide/autonomy). |
+| **Updates** | Workspace notices that belong to no chat (someone joined, missed calls, referrals, server alerts) and, under **Pages**, the pages your bots published. See [Pages](/guide/pages). |
 
-Tap **Mark All as Read** to clear the unread count. Approvals, take-over requests and secret
+In **Updates**, tap **Mark All as Read** to clear its unread count. Approvals, take-over requests and secret
 requests are marked read automatically once anyone answers them, and opening a bot's chat marks
 its results read.
 
@@ -47,11 +42,15 @@ with the same project. Without it, the in-app inbox still works. See
 
 ## Set quiet hours
 
-Quiet hours hold pushes overnight (or whenever you choose). Your inbox still fills; the pushes
-arrive when the window ends.
+Quiet hours hold pushes overnight (or whenever you choose). The app still fills; the pushes
+arrive when the window ends. They're **on by default, from 22:00 to 07:00** in your timezone,
+which follows your phone. Bots don't run their scheduled check-ins during them either; your
+morning brief covers the night.
+
+To change them:
 
 1. Open **Settings**, and under **App**, tap **Quiet hours**.
-2. Turn quiet hours on.
+2. Turn quiet hours on or off.
 3. Set **From** and **Until**. The window can cross midnight, for example 22:00 to 07:00.
 4. Tap **Save**.
 

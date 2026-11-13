@@ -14344,17 +14344,29 @@ abstract class AppLocalizations {
   /// **'Billing is off on this server. These prices apply once it\'s on.'**
   String get adminPricingBillingOff;
 
-  /// No description provided for @casamaUpdates.
+  /// No description provided for @updatesRow.
   ///
   /// In en, this message translates to:
-  /// **'Casama'**
-  String get casamaUpdates;
+  /// **'Updates'**
+  String get updatesRow;
 
-  /// No description provided for @casamaUpdatesSubtitle.
+  /// No description provided for @updatesRowSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Updates and notices'**
-  String get casamaUpdatesSubtitle;
+  /// **'Workspace notices and pages'**
+  String get updatesRowSubtitle;
+
+  /// No description provided for @updatesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No updates'**
+  String get updatesEmpty;
+
+  /// No description provided for @updatesEmptyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace notices and new pages show up here. What your bots send you is in their chats.'**
+  String get updatesEmptyHelp;
 
   /// No description provided for @chatsNeedsYou.
   ///

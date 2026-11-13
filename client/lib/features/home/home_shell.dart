@@ -603,12 +603,12 @@ class _Sidebar extends ConsumerWidget {
                 primary: false,
                 padding: const EdgeInsets.only(bottom: 12),
                 children: [
-                  // What the Inbox held (D-253): decisions waiting across bots, then the pinned
-                  // Casama row with workspace updates and notices.
+                  // What the Inbox held (D-253): decisions waiting across bots, then Updates
+                  // (workspace notices and pages that no chat shows).
                   _SidebarItem(
                     key: const Key('sidebar-needs-you'),
                     leading: Icon(
-                      LucideIcons.bellRing,
+                      LucideIcons.circleAlert,
                       size: 21,
                       color: scheme.onSurfaceVariant,
                     ),
@@ -621,11 +621,9 @@ class _Sidebar extends ConsumerWidget {
                     onTap: () => context.go('/inbox?tab=0'),
                   ),
                   _SidebarItem(
-                    key: const Key('sidebar-casama'),
-                    height: 48,
-                    leading: const CasamaMark(size: 30),
-                    label: l10n.casamaUpdates,
-                    subtitle: l10n.casamaUpdatesSubtitle,
+                    key: const Key('sidebar-updates'),
+                    leading: Icon(LucideIcons.bell, size: 21, color: scheme.onSurfaceVariant),
+                    label: l10n.updatesRow,
                     selected: location == '/inbox' && GoRouter.maybeOf(context)?.state.uri.queryParameters['tab'] != '0',
                     trailing: switch (ref.watch(unreadUpdatesProvider)) {
                       0 => null,

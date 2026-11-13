@@ -26,7 +26,6 @@ import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/mascot.dart';
-import '../../ui/casama_mark.dart';
 import '../../ui/page.dart';
 import '../../ui/tab_reselect.dart';
 import '../../ui/shell_header.dart';
@@ -193,7 +192,7 @@ class BotsList extends ConsumerWidget {
                     separatorBuilder: (_, _) =>
                         const SizedBox(height: AppSpace.xs),
                     itemBuilder: (context, i) {
-                      // What the Inbox held comes first (D-253): Needs you, and the Casama row.
+                      // What the Inbox held comes first (D-253): Needs you, and the Updates row.
                       if (i == 0) return const _InboxRows();
                       i -= 1;
                       if (i == items.length) {
@@ -225,8 +224,8 @@ class BotsList extends ConsumerWidget {
   }
 }
 
-/// The top of the chats (D-253): decisions waiting across bots, when there are any, and the pinned
-/// Casama row with workspace updates and notices (what the Inbox tab showed).
+/// The top of the chats (D-253): decisions waiting across bots, when there are any, and the Updates
+/// row with workspace notices and pages (what the Inbox tab held that no chat shows).
 class _InboxRows extends ConsumerWidget {
   const _InboxRows();
 
@@ -237,7 +236,7 @@ class _InboxRows extends ConsumerWidget {
     final needsYou = ref.watch(needsYouCountProvider);
     final unread = ref.watch(unreadUpdatesProvider);
     final latest = (ref.watch(notificationsProvider).value ?? const <NotificationView>[])
-        .where((n) => !n.isRequest)
+        .where(isUpdateRowNotification)
         .firstOrNull;
     return Column(
       spacing: AppSpace.xs,
@@ -250,7 +249,7 @@ class _InboxRows extends ConsumerWidget {
             color: scheme.primaryContainer.withValues(alpha: 0.55),
             child: Row(
               children: [
-                Icon(LucideIcons.bellRing, color: scheme.onPrimaryContainer),
+                Icon(LucideIcons.circleAlert, color: scheme.onPrimaryContainer),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
@@ -265,60 +264,40 @@ class _InboxRows extends ConsumerWidget {
               ],
             ),
           ),
+        // Workspace notices and pages; a bot's own messages are in its chat.
         AppCard(
-          key: const Key('chatsCasama'),
+          key: const Key('chatsUpdates'),
           onTap: () => context.push('/inbox'),
-          padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.sm, 14),
+          padding: const EdgeInsets.fromLTRB(AppSpace.md, 12, AppSpace.sm, 12),
           child: Row(
             children: [
-              const CasamaMark(size: 46),
+              Icon(LucideIcons.bell, color: scheme.onSurfaceVariant),
               const SizedBox(width: 14),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            l10n.casamaUpdates,
-                            style: context.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.2,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpace.xs),
-                        Icon(LucideIcons.pin, size: 14, color: scheme.onSurfaceVariant),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      latest?.title ?? l10n.casamaUpdatesSubtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        height: 1.25,
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: l10n.updatesRow,
+                        style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                       ),
-                    ),
-                  ],
+                      TextSpan(
+                        text: '  ${latest?.title ?? l10n.updatesRowSubtitle}',
+                        style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              SizedBox(
-                height: 46,
-                child: Center(
-                  child: unread > 0
-                      ? Padding(
-                          padding: const EdgeInsets.only(right: AppSpace.xs),
-                          child: BotActivity(count: unread, working: false),
-                        )
-                      : Icon(
-                          LucideIcons.chevronRight,
-                          color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                        ),
-                ),
-              ),
+              if (unread > 0)
+                Padding(
+                  padding: const EdgeInsets.only(right: AppSpace.xs),
+                  child: BotActivity(count: unread, working: false),
+                )
+              else
+                Icon(LucideIcons.chevronRight, color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
             ],
           ),
         ),

@@ -130,6 +130,12 @@ final needsYouCountProvider = Provider<int>((ref) =>
     (ref.watch(forYouProvider).value?.suggestions.length ?? 0) +
     (ref.watch(skillProposalsProvider).value?.length ?? 0));
 
-/// Unread updates (D-253, the pinned Casama row): notifications that aren't requests.
+/// What the Updates row lists (D-253): notifications that aren't requests (those wait in Needs
+/// you) and don't open a bot's chat (briefs, routine results and suggestions are read there).
+bool isUpdateRowNotification(NotificationView n) =>
+    !n.isRequest && !(n.link != null && RegExp(r'^/bots/[^/]+/chat').hasMatch(n.link!));
+
+/// Unread updates (D-253, the Updates row's count): only what that list shows, so a brief read in
+/// its chat never counts twice.
 final unreadUpdatesProvider = Provider<int>((ref) =>
-    (ref.watch(notificationsProvider).value ?? const <NotificationView>[]).where((n) => n.readAt == null && !n.isRequest).length);
+    (ref.watch(notificationsProvider).value ?? const <NotificationView>[]).where((n) => n.readAt == null && isUpdateRowNotification(n)).length);

@@ -113,5 +113,8 @@ export async function createAuthUser(admin: postgres.Sql, email: string) {
     values (gen_random_uuid(), ${email}, 'authenticated', 'authenticated')
     returning id`;
   if (!row) throw new Error("user insert returned nothing");
+  // Quiet hours are on by default (D-254). Test users start with them off, so tests that push
+  // pass at any hour of the day; the quiet-hours tests set their own.
+  await admin`update public.profiles set quiet_hours = '{"enabled": false, "start": "22:00", "end": "07:00"}'::jsonb where user_id = ${row.id}`;
   return { id: row.id, email };
 }

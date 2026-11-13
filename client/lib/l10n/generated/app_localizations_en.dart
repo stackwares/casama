@@ -9142,10 +9142,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Billing is off on this server. These prices apply once it\'s on.';
 
   @override
-  String get casamaUpdates => 'Casama';
+  String get updatesRow => 'Updates';
 
   @override
-  String get casamaUpdatesSubtitle => 'Updates and notices';
+  String get updatesRowSubtitle => 'Workspace notices and pages';
+
+  @override
+  String get updatesEmpty => 'No updates';
+
+  @override
+  String get updatesEmptyHelp =>
+      'Workspace notices and new pages show up here. What your bots send you is in their chats.';
 
   @override
   String chatsNeedsYou(int n) {

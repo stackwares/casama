@@ -446,7 +446,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 ),
                 title: s.uri.queryParameters['tab'] == '0'
                     ? context.l10n.inboxNeedsYou
-                    : context.l10n.casamaUpdates,
+                    : context.l10n.updatesRow,
               ),
             ),
           ),
