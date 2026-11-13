@@ -107,7 +107,19 @@ export function toModelMessages(messages: ChatMessage[]): ModelMessage[] {
             type: "tool-result",
             toolCallId: m.callId,
             toolName: ToolRegistry.wireName(m.name),
-            output: { type: "text", value: m.content },
+            output: m.images?.length
+              ? {
+                  type: "content" as const,
+                  value: [
+                    { type: "text" as const, text: m.content },
+                    ...m.images.map((img) => ({
+                      type: "file" as const,
+                      data: { type: "data" as const, data: img.data },
+                      mediaType: img.mediaType,
+                    })),
+                  ],
+                }
+              : { type: "text" as const, value: m.content },
           },
         ],
       };

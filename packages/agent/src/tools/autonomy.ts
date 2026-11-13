@@ -429,6 +429,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     risk: "medium",
     // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,
+    schedulesWork: true,
     schema: z.object({
       bot: BOT_ARG,
       name: z.string().min(1).max(120),
@@ -581,6 +582,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     risk: "medium",
     // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,
+    schedulesWork: true,
     schema: z.object({
       bot: BOT_ARG,
       routine_id: z.uuid(),
@@ -857,6 +859,62 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       return {
         content: `Subagent ${r.status} (budget $${r.budget}).\n${r.note}`,
         preview: `subagent ${r.status}`,
+      };
+    },
+  });
+
+  registry.register({
+    name: "subagent.spawn_many",
+    description:
+      "Start up to 5 helpers at once, each a copy of you with a fresh context, and wait for all of them: for work that splits into independent parts (research several companies, check several sites, draft several sections). Each part gets an equal share of the budget (together 40% of what you have left, unless budget_usd is set). Returns every helper's summary in order. For research, ask each helper for the same fields with sources so you can merge them into one table.",
+    risk: "low",
+    schema: z.object({
+      tasks: z.array(z.string().min(1).max(20_000)).min(2).max(5),
+      tools: z.array(z.string().max(120)).max(50).optional(),
+      budget_usd: z.number().positive().max(100).optional(),
+      timeout_s: z.number().int().min(10).max(3600).optional(),
+    }),
+    async execute(args, ctx) {
+      // One share each, decided before any helper spends, so the first can't starve the rest.
+      let each = args.budget_usd
+        ? Math.round((args.budget_usd / args.tasks.length) * 10_000) / 10_000
+        : undefined;
+      if (!each) {
+        const [parent] = await db.execute<RunRow>(sql`
+          select r.id, r.org_id, r.bot_id, r.parent_run_id, r.budget, r.cost_usd, r.created_by, b.budget as bot_budget
+          from public.runs r join public.bots b on b.id = r.bot_id where r.id = ${ctx.runId}::uuid`);
+        const limit = Number(
+          (parent?.budget as { per_run_usd?: number } | undefined)?.per_run_usd ??
+            (parent?.bot_budget as { per_run_usd?: number } | undefined)?.per_run_usd ??
+            Number.NaN,
+        );
+        const pool =
+          subagentBudget(Number.isFinite(limit) ? limit : null, Number(parent?.cost_usd ?? 0)) * 2;
+        each = Math.max(0.01, Math.round((pool / args.tasks.length) * 100) / 100);
+      }
+      const results = await Promise.all(
+        args.tasks.map((task) =>
+          runChildTask(ctx, {
+            botId: ctx.botId,
+            task,
+            trigger: "subagent",
+            budgetUsd: each,
+            tools: args.tools,
+            timeoutS: args.timeout_s,
+          }).catch((err: unknown) => ({
+            childId: "",
+            status: "failed",
+            note: `Couldn't start: ${(err as Error).message}`,
+            budget: each as number,
+          })),
+        ),
+      );
+      const done = results.filter((r) => r.status === "completed").length;
+      return {
+        content: results
+          .map((r, n) => `## Helper ${n + 1} of ${results.length}: ${r.status}\n${r.note}`)
+          .join("\n\n"),
+        preview: `${done} of ${results.length} helpers finished`,
       };
     },
   });

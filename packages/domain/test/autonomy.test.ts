@@ -17,6 +17,18 @@ const base = {
 };
 
 describe("needsApproval", () => {
+  it("a routine set up after reading untrusted content asks first, unless the bot is autonomous (D-269)", () => {
+    const routine = { ...base, selfOnly: true, schedulesWork: true };
+    expect(needsApproval(routine)).toBe(false);
+    expect(needsApproval({ ...routine, untrustedSinceApproval: true })).toBe(true);
+    expect(needsApproval({ ...routine, untrustedSinceApproval: true, granted: true })).toBe(false);
+    expect(
+      needsApproval({ ...routine, untrustedSinceApproval: true, autonomy: "autonomous" }),
+    ).toBe(false);
+    // Other self-only tools still never ask.
+    expect(needsApproval({ ...base, selfOnly: true, untrustedSinceApproval: true })).toBe(false);
+  });
+
   it("ask_risky: high risk always, medium only when it sends data out after untrusted input (D-213)", () => {
     expect(needsApproval({ ...base, risk: "high" })).toBe(true);
     expect(needsApproval({ ...base, risk: "medium" })).toBe(false);

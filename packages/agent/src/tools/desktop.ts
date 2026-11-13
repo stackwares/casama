@@ -3,7 +3,7 @@ import { z } from "zod";
 import { wrapUntrusted } from "../context.ts";
 import { TAKEOVER_TOOL } from "../takeover.ts";
 import { shq } from "./computer.ts";
-import { type ToolContext, ToolError, type ToolRegistry } from "./registry.ts";
+import { type ToolContext, ToolError, type ToolRegistry, toolImage } from "./registry.ts";
 
 const need = async (ctx: ToolContext): Promise<SandboxHandle> => {
   if (!ctx.computer) throw new ToolError("no_computer", "This bot has no computer available.");
@@ -142,7 +142,7 @@ export function registerDesktopTools(registry: ToolRegistry) {
     screen: true,
     readOnly: true,
     description:
-      "Save a screenshot of the whole desktop to a file in your computer and return its path (for the user, or when the accessibility tree is empty).",
+      "Take a screenshot of the whole desktop: saved to a file in your computer, and attached so you can see it when your model reads images (for the user, or when the accessibility tree is empty).",
     risk: "low",
     requires,
     schema: z.object({ path: z.string().max(500).optional() }),
@@ -153,10 +153,12 @@ export function registerDesktopTools(registry: ToolRegistry) {
       const path = h.resolvePath?.(asked) ?? asked;
       const png = await h.screenshot();
       await h.writeFile(path.startsWith("/") ? path : `/home/casama/workspace/${path}`, png);
+      const image = toolImage(png, "image/png");
       return {
-        content: `Saved a desktop screenshot to ${path}.`,
+        content: `Saved a desktop screenshot to ${path}.${image ? " It's attached so you can see it." : ""}`,
         preview: `saved ${path}`,
         artifactPath: path,
+        ...(image ? { image } : {}),
       };
     },
   });

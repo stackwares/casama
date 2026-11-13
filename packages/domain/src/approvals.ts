@@ -25,6 +25,12 @@ export interface ApprovalInput {
   sendsOut?: boolean;
   /** "Always allow this tool for this bot" was ticked before. */
   granted: boolean;
+  /**
+   * The call sets up work that runs later on its own (a routine). Under ask_risky it asks after
+   * untrusted content even though it only changes the bot's own setup, so a web page can't plant a
+   * standing instruction (D-269).
+   */
+  schedulesWork?: boolean;
 }
 
 /**
@@ -34,7 +40,15 @@ export interface ApprovalInput {
  * that force approval for high risk.
  */
 export function needsApproval(i: ApprovalInput): boolean {
-  if (i.readOnly || i.selfOnly) return false;
+  if (i.readOnly) return false;
+  if (
+    i.schedulesWork &&
+    i.untrustedSinceApproval &&
+    !i.granted &&
+    (i.autonomy === "ask_risky" || i.autonomy === "ask_always")
+  )
+    return true;
+  if (i.selfOnly) return false;
   if (i.forceHighRisk && i.risk === "high") return true;
   if (i.granted) return false;
   switch (i.autonomy) {

@@ -1,7 +1,16 @@
 import { collectExec, type SandboxHandle } from "@casama/sandbox";
 import { z } from "zod";
 import { wrapUntrusted } from "../context.ts";
-import { type ToolContext, ToolError, type ToolRegistry } from "./registry.ts";
+import { type ToolContext, ToolError, type ToolRegistry, toolImage } from "./registry.ts";
+
+/** File endings read as pictures (files.read; D-269). */
+const IMAGE_TYPES: Record<string, string> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  webp: "image/webp",
+  gif: "image/gif",
+};
 
 /** Commands that destroy data get a checkpoint first. */
 export const DESTRUCTIVE_PATTERNS: RegExp[] = [
@@ -103,7 +112,8 @@ export function registerComputerTools(registry: ToolRegistry) {
     // Outside content (audit 2026-11): later risky calls ask first.
     untrustedOutput: true,
     readOnly: true,
-    description: "Read a text file from your computer. Relative paths are inside ~/workspace.",
+    description:
+      "Read a text file from your computer, or look at an image (png, jpg, webp, gif). Relative paths are inside ~/workspace.",
     risk: "low",
     requires,
     schema: z.object({
@@ -112,6 +122,17 @@ export function registerComputerTools(registry: ToolRegistry) {
     }),
     async execute(args, ctx) {
       const data = await (await needComputer(ctx)).readFile(args.path);
+      // A picture: attached for models that can see it (D-269).
+      const kind = IMAGE_TYPES[args.path.toLowerCase().split(".").pop() ?? ""];
+      if (kind) {
+        const image = toolImage(data, kind);
+        if (image)
+          return {
+            content: `${args.path} is an image (${data.length} bytes). It's attached so you can see it.`,
+            preview: `image, ${data.length} bytes`,
+            image,
+          };
+      }
       const slice = data.subarray(0, args.max_bytes ?? 200_000);
       if (slice.includes(0))
         throw new ToolError("binary_file", `${args.path} is a binary file (${data.length} bytes).`);
@@ -139,6 +160,50 @@ export function registerComputerTools(registry: ToolRegistry) {
       return {
         content: `Wrote ${args.content.length} characters to ${args.path}.`,
         preview: `wrote ${args.path}`,
+        artifactPath: h.resolvePath?.(args.path) ?? args.path,
+      };
+    },
+  });
+
+  registry.register({
+    name: "files.edit",
+    description:
+      "Change part of a text file in your computer without rewriting it: replaces old_text with new_text. old_text must match the file exactly (spaces and line breaks too) and appear once, unless replace_all is set. Use files.write for new files or full rewrites.",
+    risk: "low",
+    requires,
+    schema: z.object({
+      path: z.string().min(1).max(1000),
+      old_text: z.string().min(1).max(200_000),
+      new_text: z.string().max(2_000_000),
+      replace_all: z.boolean().optional(),
+    }),
+    async execute(args, ctx) {
+      const h = await needComputer(ctx);
+      const data = await h.readFile(args.path);
+      if (data.includes(0))
+        throw new ToolError(
+          "binary_file",
+          `${args.path} is a binary file; files.edit changes text.`,
+        );
+      const text = new TextDecoder().decode(data);
+      const count = text.split(args.old_text).length - 1;
+      if (count === 0)
+        throw new ToolError(
+          "not_found",
+          `old_text isn't in ${args.path}. Read the file again and copy the text exactly.`,
+        );
+      if (count > 1 && !args.replace_all)
+        throw new ToolError(
+          "not_unique",
+          `old_text appears ${count} times in ${args.path}. Add surrounding lines so it's unique, or set replace_all.`,
+        );
+      const next = args.replace_all
+        ? text.split(args.old_text).join(args.new_text)
+        : text.replace(args.old_text, () => args.new_text);
+      await h.writeFile(args.path, new TextEncoder().encode(next));
+      return {
+        content: `Replaced ${args.replace_all ? count : 1} place${count > 1 && args.replace_all ? "s" : ""} in ${args.path}.`,
+        preview: `edited ${args.path}`,
         artifactPath: h.resolvePath?.(args.path) ?? args.path,
       };
     },
@@ -342,7 +407,7 @@ export function registerComputerTools(registry: ToolRegistry) {
     name: "browser.screenshot",
     screen: true,
     description:
-      "Save a screenshot of the current page to a file in your computer and return its path.",
+      "Take a screenshot of the current page: saved to a file in your computer, and attached so you can see it when your model reads images.",
     risk: "low",
     requires,
     schema: z.object({ path: z.string().max(500).optional() }),
@@ -360,10 +425,12 @@ export function registerComputerTools(registry: ToolRegistry) {
         }),
       );
       await browser(ctx, `screenshot ${shq(full)}`);
+      const image = toolImage(await h.readFile(full).catch(() => new Uint8Array()), "image/png");
       return {
-        content: `Saved screenshot to ${path}.`,
+        content: `Saved screenshot to ${path}.${image ? " It's attached so you can see it." : ""}`,
         preview: `saved ${path}`,
         artifactPath: path,
+        ...(image ? { image } : {}),
       };
     },
   });

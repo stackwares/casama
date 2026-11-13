@@ -47,6 +47,7 @@ import {
   buildContext,
   estimateTokens,
   isContextOverflow,
+  keepNewestImages,
   messageTokens,
   offloadLargeResult,
   trimTurn,
@@ -80,7 +81,7 @@ import {
   refreshIntegration,
   wrapIntegrationOutput,
 } from "./integrations.ts";
-import { COMPACTION_SYSTEM, extractMemories } from "./memory.ts";
+import { COMPACTION_SYSTEM, extractMemories, memoryTranscript } from "./memory.ts";
 import type { NotificationService } from "./notifications.ts";
 import { hasLoginPlaceholders, resolveLoginPlaceholders } from "./password-managers.ts";
 import { computerMcpFor } from "./plugins.ts";
@@ -823,6 +824,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     let continuations = 0;
     let carried = "";
     let overflowHandled = false;
+    let verified = false;
     const windowTokens = Math.min(
       caps.contextWindow,
       deps.limits?.contextWindow ?? caps.contextWindow,
@@ -988,6 +990,40 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
             continue;
           }
         }
+        // A long task gets one look from the background model before it counts as done (D-269):
+        // a reply claiming work its steps don't show goes back once to be fixed or said plainly.
+        const stepsTaken = turn.filter((m) => m.role === "tool").length;
+        if (
+          !verified &&
+          stepsTaken >= VERIFY_AFTER_STEPS &&
+          info.conversationId &&
+          !info.group &&
+          !isCheckinKind(info.routine?.kind) &&
+          info.current
+        ) {
+          verified = true;
+          const draft = out;
+          const task = info.current.text;
+          const issue = await step(`verify-${i}`, () =>
+            verifyReply(deps, info, task, turn, draft.text, chainFor, bus).catch(() => null),
+          );
+          if (issue) {
+            await step(`verify-retract-${i}`, () =>
+              bus().then((b) =>
+                b.append(info.runId, "message.completed", {
+                  message_id: draft.messageId,
+                  content: [],
+                }),
+              ),
+            );
+            turn.push({ role: "assistant", content: draft.text });
+            turn.push({
+              role: "user",
+              content: `[Casama check before this reaches the person: ${issue} Fix it if you can; otherwise rewrite the reply to say plainly what is and isn't done. Don't mention this check.]`,
+            });
+            continue;
+          }
+        }
         final = { text: carried + out.text, messageId: out.messageId };
         break;
       }
@@ -1004,7 +1040,51 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       // One card at a time: after a card is shown the turn ends and the answer comes back as the
       // person's next message. Without this, a bot could stack several question cards at once.
       let cardShown = false;
+      // Read-only calls in a row run together in one step (D-269); their results keep their places.
+      type ToolOut = Awaited<ReturnType<typeof toolStep>>;
+      const pending: Array<{ call: ToolCall; slot: number }> = [];
+      const applyResult = (slot: number, res: ToolOut) => {
+        if (res.untrusted) untrusted = true;
+        failStreak = res.content.startsWith("Error (") ? failStreak + 1 : 0;
+        const prev = turn[slot] as Extract<ChatMessage, { role: "tool" }>;
+        turn[slot] = {
+          ...prev,
+          content: res.content,
+          ...(res.image && caps.vision ? { images: [res.image] } : {}),
+        };
+        if (res.image && caps.vision) keepNewestImages(turn);
+      };
+      const flush = async () => {
+        if (pending.length === 0) return;
+        const batch = pending.splice(0);
+        if (batch.length === 1) {
+          const { call, slot } = batch[0] as { call: ToolCall; slot: number };
+          const res = await step(`tool-${i}-${call.callId}`, () =>
+            toolStep(deps, registry, info, call, bus, redactor, secrets, `${i}-${call.callId}`),
+          );
+          applyResult(slot, res);
+          return;
+        }
+        const results = await step(`tools-${i}-${batch[0]?.call.callId}`, () =>
+          Promise.all(
+            batch.map(({ call }) =>
+              toolStep(deps, registry, info, call, bus, redactor, secrets, `${i}-${call.callId}`),
+            ),
+          ),
+        );
+        batch.forEach(({ slot }, k) => applyResult(slot, results[k] as ToolOut));
+      };
+      const parallelSafe = (name: string) => {
+        const d = registry.get(name);
+        return (
+          !!d?.readOnly &&
+          !d.screen &&
+          ![TOOLS_LOAD, SECRET_REQUEST_TOOL, TAKEOVER_TOOL, "ui.show"].includes(name)
+        );
+      };
       for (const call of out.toolCalls) {
+        // Anything that isn't a plain read waits for the reads before it to finish.
+        if (!parallelSafe(call.name)) await flush();
         // The same action a third time (not just looking: snapshots, reads, lists) isn't run; the
         // model is told to change approach or say what's blocking it.
         const looking =
@@ -1200,6 +1280,13 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
             handBack = handBackMessage(note);
           }
         }
+        if (!blocked && !handBack && !gate.approvalId && parallelSafe(call.name)) {
+          const slot =
+            turn.push({ role: "tool", callId: call.callId, name: call.name, content: "" }) - 1;
+          pending.push({ call, slot });
+          continue;
+        }
+        await flush();
         const res = blocked
           ? await step(`blocked-${i}-${call.callId}`, () =>
               blockedStep(deps, info, call, blocked as string, bus),
@@ -1211,13 +1298,19 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         failStreak = blocked || res.content.startsWith("Error (") ? failStreak + 1 : 0;
         if (!blocked && call.name === "ui.show" && res.content.startsWith(UI_SHOWN_RESULT))
           cardShown = true;
+        const image =
+          "image" in res ? (res.image as { data: string; mediaType: string }) : undefined;
         turn.push({
           role: "tool",
           callId: call.callId,
           name: call.name,
           content: handBack ? `${handBack}\n\n${res.content}` : res.content,
+          // The bot sees its own screenshots when its model can (D-269).
+          ...(image && caps.vision ? { images: [image] } : {}),
         });
+        if (image && caps.vision) keepNewestImages(turn);
       }
+      await flush();
       // Five failed steps in a row: stop rather than burn the budget retrying.
       if (failStreak >= STUCK_AFTER_FAILURES) {
         await step("stuck", () =>
@@ -1261,6 +1354,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         finalMessage.text,
         [...recalled.map((m) => m.content), ...(person?.facts ?? [])],
         person,
+        { work: turn, knownIds: recalled.map((m) => m.id) },
         chainFor,
         bus,
       ).catch((err) => {
@@ -2013,6 +2107,69 @@ async function onChatGptError(
   }
 }
 
+/** Runs with at least this many tool steps get a check before their reply counts as done. */
+const VERIFY_AFTER_STEPS = 4;
+const VERIFY_SYSTEM = `You check an AI teammate's final reply before the person sees it.
+You get the person's request, a digest of the steps the teammate took with their results, and the reply.
+Answer only JSON: {"ok":true} or {"ok":false,"issue":"one short sentence"}.
+Say ok:false only for a clear problem: the reply claims something was done, sent, saved or found that no step shows; it reports a step that failed as a success; or it says the request is finished when an obvious part of it wasn't attempted.
+Style, tone, length and things you would have done differently are never a problem. When unsure, answer {"ok":true}.`;
+
+/**
+ * Asks the background model whether a long run's reply claims more than its steps show (D-269).
+ * Returns the problem in one sentence, or null when the reply is fine (or the check can't run).
+ */
+async function verifyReply(
+  deps: RunDeps,
+  info: RunInfo,
+  task: string,
+  turn: ChatMessage[],
+  reply: string,
+  chainFor: (
+    c: Array<{ credential_id: string; model: string } | undefined>,
+  ) => Promise<ResolvedModel[]>,
+  busFn: () => Promise<EventBus>,
+): Promise<string | null> {
+  const chain = await backgroundChain(info.policy, chainFor);
+  if (!chain[0]) return null;
+  const digest = memoryTranscript([
+    { role: "user", content: task },
+    ...turn.filter((m) => m.role === "tool" || (m.role === "assistant" && m.toolCalls?.length)),
+    { role: "assistant", content: reply },
+  ]);
+  const r = await collect(
+    withFallback(
+      deps.gateway,
+      chain,
+      deps.fallback,
+    )({
+      system: [VERIFY_SYSTEM],
+      messages: [{ role: "user", content: digest }],
+      maxOutputTokens: 200,
+    }),
+  );
+  const usedModel = r.model || chain[0].model;
+  await recordUsage(
+    deps.db,
+    info,
+    usedModel,
+    r.usage,
+    await busFn(),
+    providerOf(r.provider, usedModel, chain),
+    deps.billCloudModels === true && onPlatformKey(chain, usedModel),
+  );
+  const start = r.text.indexOf("{");
+  const end = r.text.lastIndexOf("}");
+  if (start < 0 || end <= start) return null;
+  try {
+    const v = JSON.parse(r.text.slice(start, end + 1)) as { ok?: unknown; issue?: unknown };
+    if (v.ok !== false || typeof v.issue !== "string" || !v.issue.trim()) return null;
+    return v.issue.trim().slice(0, 300);
+  } catch {
+    return null;
+  }
+}
+
 /** How many times a model step is tried again after its stream broke part-way (D-268). */
 const MODEL_STEP_RETRIES = 2;
 const MAX_CONTINUATIONS = 3;
@@ -2277,7 +2434,7 @@ async function toolStep(
   secretsFn: () => Promise<NamedSecret[]>,
   /** Names this attempt within the run, so a second attempt after a restart is noticed (D-268). */
   attemptKey?: string,
-): Promise<{ content: string; untrusted: boolean }> {
+): Promise<{ content: string; untrusted: boolean; image?: { data: string; mediaType: string } }> {
   const bus = await busFn();
   const redactor = await redactorFn();
   const started = Date.now();
@@ -2515,7 +2672,7 @@ async function toolStep(
       duration_ms: Date.now() - started,
     });
     endRunSpan(span, { "casama.tool.outcome": "ok" });
-    return { content, untrusted };
+    return { content, untrusted, ...(res.image ? { image: res.image } : {}) };
   } catch (err) {
     const code = err instanceof ToolError ? err.code : "tool_error";
     const message = redactor.text(err instanceof Error ? err.message : String(err));
@@ -2803,6 +2960,8 @@ async function extractStep(
   finalText: string,
   known: string[],
   person: PersonContext | null,
+  /** The run's own steps, and the ids of the bot memories listed first in `known` (D-269). */
+  extra: { work: ChatMessage[]; knownIds: string[] },
   chainFor: (
     c: Array<{ credential_id: string; model: string } | undefined>,
   ) => Promise<ResolvedModel[]>,
@@ -2821,6 +2980,10 @@ async function extractStep(
     cheap,
     [
       { role: "user", content: info.current.text },
+      // Only the steps' results: the final text is the last message below.
+      ...extra.work.filter(
+        (m) => m.role === "tool" || (m.role === "assistant" && m.toolCalls?.length),
+      ),
       { role: "assistant", content: finalText },
     ],
     known,
@@ -2846,6 +3009,19 @@ async function extractStep(
           kind: m.kind,
           scope: "profile",
         });
+      continue;
+    }
+    // A correction of something the bot already knew updates it instead of sitting beside it.
+    const replacedId = m.replaces ? extra.knownIds[m.replaces - 1] : undefined;
+    if (
+      replacedId &&
+      (await memory.update(info.botId, replacedId, { content: m.content }).catch(() => null))
+    ) {
+      await bus.append(info.runId, "memory.written", {
+        memory_id: replacedId,
+        kind: m.kind,
+        replaced: true,
+      });
       continue;
     }
     const { id } = await memory.write({
@@ -3125,6 +3301,7 @@ async function approvalGate(
       sendsOut: def.sendsOutFor?.(args as never) ?? def.sendsOut === true,
       granted: !!grant,
       forceHighRisk: onLocal,
+      schedulesWork: def.schedulesWork === true,
     });
   if (!needed) return { approvalId: null };
   // Nobody is waiting on a check-in: what would need a yes becomes a suggestion (D-247).

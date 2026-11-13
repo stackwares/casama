@@ -39,7 +39,14 @@ export interface ResolvedModel {
 export type ChatMessage =
   | { role: "user"; content: string; images?: Array<{ data: Uint8Array; mediaType: string }> }
   | { role: "assistant"; content: string; toolCalls?: ToolCall[] }
-  | { role: "tool"; callId: string; name: string; content: string };
+  | {
+      role: "tool";
+      callId: string;
+      name: string;
+      content: string;
+      /** Pictures the tool returned, base64-encoded (screenshots; D-269). */
+      images?: Array<{ data: string; mediaType: string }>;
+    };
 
 export interface ToolCall {
   callId: string;

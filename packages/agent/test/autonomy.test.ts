@@ -720,6 +720,23 @@ describe("delegation", () => {
           say("The helper ran out of budget."),
           finish(),
         ),
+        // Several helpers at once (D-269)
+        turn(
+          { lastRole: "user", lastUserIncludes: "compare three vendors" },
+          call("sm1", "subagent__spawn_many", {
+            tasks: ["Research vendor Alpha", "Research vendor Beta", "Research vendor Gamma"],
+            budget_usd: 0.3,
+          }),
+          finish(),
+        ),
+        turn({ lastUserIncludes: "research vendor alpha" }, say("Alpha: $10, 2 days"), finish()),
+        turn({ lastUserIncludes: "research vendor beta" }, say("Beta: $12, 1 day"), finish()),
+        turn({ lastUserIncludes: "research vendor gamma" }, say("Gamma: $9, 5 days"), finish()),
+        turn(
+          { lastRole: "tool", lastToolName: "subagent.spawn_many" },
+          say("Here's the comparison."),
+          finish(),
+        ),
         // Delegation to a peer bot
         turn(
           { lastRole: "user", lastUserIncludes: "ask the writer" },
@@ -751,6 +768,25 @@ describe("delegation", () => {
       select status, parent_run_id, budget from public.runs where id = ${started?.payload.child_run_id as string}`;
     expect(child).toMatchObject({ status: "failed", parent_run_id: runId });
     expect(child?.budget.per_run_usd).toBe(0.01);
+  });
+
+  it("subagent.spawn_many runs the helpers together and returns each summary in order", async () => {
+    const botId = await makeBot("Researcher");
+    const runId = await startRun(botId, "Please compare three vendors");
+    const { deps, gateway } = makeDeps(fixtures);
+    expect((await runAgent(runId, deps)).status).toBe("completed");
+    const children = await tdb.admin<{ status: string; budget: { per_run_usd: number } }[]>`
+      select status, budget from public.runs where parent_run_id = ${runId}`;
+    expect(children).toHaveLength(3);
+    for (const c of children)
+      expect(c).toMatchObject({ status: "completed", budget: { per_run_usd: 0.1 } });
+    const result = gateway.requests
+      .filter((r) => r.messages.at(-1)?.role === "tool")
+      .at(-1)
+      ?.messages.at(-1)?.content;
+    expect(result).toMatch(
+      /Helper 1 of 3: completed\nAlpha.*Helper 2 of 3: completed\nBeta.*Helper 3 of 3: completed\nGamma/s,
+    );
   });
 
   it("bots.delegate runs a peer bot and returns its answer; cycles are rejected", async () => {

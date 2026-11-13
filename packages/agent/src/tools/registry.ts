@@ -27,6 +27,20 @@ export interface ToolResult {
   /** Short preview for the timeline. */
   preview?: string;
   artifactPath?: string | null;
+  /**
+   * A picture for the model to look at (a screenshot, an image file), base64-encoded. Sent only to
+   * models that can see; the newest two in a run are kept (D-269).
+   */
+  image?: { data: string; mediaType: string };
+}
+
+/** Pictures larger than this aren't sent to the model (providers refuse them, and they're costly). */
+export const MAX_TOOL_IMAGE_BYTES = 3_500_000;
+
+/** A tool result's picture, from raw bytes, when it's small enough to send. */
+export function toolImage(bytes: Uint8Array, mediaType: string): ToolResult["image"] {
+  if (bytes.length === 0 || bytes.length > MAX_TOOL_IMAGE_BYTES) return undefined;
+  return { data: Buffer.from(bytes).toString("base64"), mediaType };
 }
 
 export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
@@ -51,6 +65,8 @@ export interface ToolDefinition<S extends z.ZodType = z.ZodType> {
   selfOnly?: boolean;
   /** Asks for approval under the default autonomy whatever its risk (for example media generation). */
   confirm?: boolean;
+  /** Sets up work that runs later on its own: asks after untrusted content (D-269). */
+  schedulesWork?: boolean;
   /** Always asks, whatever the autonomy, grants or action rules (payments, D-142). */
   alwaysAsk?: boolean;
   /** Always asks for these arguments (for example loosening a rule but not tightening it, D-242). */
