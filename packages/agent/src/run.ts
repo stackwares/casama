@@ -462,7 +462,12 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           if (out.length) continue;
           throw denied;
         }
-        out.push(resolved);
+        // Check-ins think briefly (D-247): at the default effort the reasoning used up the output
+        // budget before the first suggestion; low effort gave better scans at half the cost.
+        const checkin = info.routine?.kind === "brief" || info.routine?.kind === "scan";
+        out.push(
+          checkin && resolved.reasoningEffort ? { ...resolved, reasoningEffort: "low" } : resolved,
+        );
       } catch (err) {
         if (!(err instanceof ModelCallError) || !err.code?.startsWith("chatgpt_")) throw err;
         firstError ??= err;

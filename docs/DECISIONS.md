@@ -2720,7 +2720,8 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
   - where Composio events cover email and calendar, scheduled scans are a 6-hour backstop;
   - a person idle 7 days gets at most one scan a day; idle 30 days, no briefs or scans until they're back (`public.user_last_active`: latest session refresh, device check-in or notification read);
   - Composio triggers are removed once nobody in the workspace checks in.
-  On Free (12-hour floor, one bot, no event scans) that's at most a brief plus two scans a day.
+  - briefs and scans use low reasoning effort. A live check on Casama Cloud's model (`meta/muse-ember`, a realistic weekend: concert, hotel, flight, an urgent invoice) found that at the default effort the reasoning used up the 4,096 output tokens before the setup scan's first suggestion. At low effort it found the urgent invoice, grouped the weekend into one Page offer and wrote the summary line, at about $0.0013 a setup scan, $0.0008 a busy scan and $0.0002 a quiet one, before markup.
+  On Free (12-hour floor, one bot, no event scans) that's at most a brief plus two scans a day: about $0.05 a month of model cost.
 - **For you:** suggestion cards show the bot's own line (`Suggestion.push_text`, optional in the API).
 - **Analytics:** `proactive_message_sent` (kind suggestion, timed or summary; reason), `suggestion_resolved` (accepted, dismissed, dismissed_forever; age in hours), `proactive_muted` (Less like this); `push_opened` has kind `suggestion`.
 - **Not done:** the Composio webhook subscription itself (NEEDS-FROM-OLIVER until set up).
