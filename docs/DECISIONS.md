@@ -2786,3 +2786,20 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
 - **Why not $1,490 for Max yearly:** Apple would need a request and Play can't sell it, and $99 for
   the top plan matches what Rakazo and MausBot charge.
 
+## D-250 Timezones follow the person
+
+- **Decision** (Oliver, 2026-11-13): found while turning on check-ins for existing people. The apps never saved a timezone, so every profile kept the `UTC` default and briefs, quiet hours and routines ran on UTC (an "08:00" brief came at 4 pm in Manila).
+- **Apps:** save the device's IANA timezone (`flutter_timezone`, every platform) to `profiles.timezone` after sign-in and whenever the app comes back to the front, only when it differs (`client/lib/core/timezone_sync.dart`, kept alive by the push provider). Abbreviations like "PST" are never sent.
+- **Server:** a trigger on `profiles.timezone` (`follow_profile_timezone`) refuses unknown names and moves the person's routines: the brief and scan of bots that check in for them, and their own scheduled routines that were on their previous timezone (a zone chosen on purpose stays). It marks them `retime_pending`; the worker recomputes `next_run_at` in the new zone within a minute (`retimeRoutines`).
+- **Existing accounts:** Oliver's two accounts were set to `Asia/Manila` by hand; everyone else gets theirs the next time they open the app.
+- **Tests:** the timezone case in `apps/server/test/proactive.test.ts`; `client/test/timezone_sync_test.dart`.
+
+## D-251 Bot computers' CLIs stay current through their images
+
+- **Decision** (Oliver asked, 2026-11-13: "how do we keep those CLIs updated for every bot's computer?", then "do all of those now"): agent-browser, Playwright and agent-desktop stay pinned in the computer images, and updates arrive as reviewed image changes, never by upgrading tools inside running computers (bots can't anyway: `/usr/local` is root's).
+- **How a computer gets them:** sleeping archives the home folder and deletes the container (D-178); waking creates a fresh container from the image and restores the home folder. So a new image reaches every computer on its next wake-up or restart, with its files, logins and settings kept. No extra cost: images are public on ghcr (free), and a version bump changes only the top layers.
+- **`scripts/computer-tools.sh`:** `check` compares the pins with npm. `bump` raises them in a separate checkout of `origin/main` (never the shared tree), builds both images for the local machine and checks each CLI starts (`agent-browser --version`, `playwright --version`, `chrome --version`, `agent-desktop version`), then opens a pull request with the steps after merging. It skips when everything is current or a `computer-tools/` pull request is already open. `prod-pull --yes` pulls both images on the VPS and prunes old layers; it changes production, so it runs only with Oliver's yes.
+- **Weekly:** `~/Library/LaunchAgents/ai.casama.computer-tools.plist` (Oliver's Mac) runs `bump` on Mondays at 10:00 and logs to `~/Library/Logs/casama-computer-tools.log`. If Docker isn't running, `bump` stops without opening a pull request.
+- **Warm pool:** `fillPool` (every minute) also replaces pool members whose image differs from what the headless tag now names, and `claim` never hands one out, so the first computer after an update is current too. When either image id can't be read, members are kept rather than churned.
+- **Not covered:** a computer that never idles for 5 minutes keeps its image until it restarts. The supervisor still doesn't pull images itself; `prod-pull` is the step.
+- **Tests:** `packages/sandbox/test/warm-pool-refresh.test.ts`.

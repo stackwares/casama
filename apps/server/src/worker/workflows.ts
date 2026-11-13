@@ -39,6 +39,7 @@ import {
   claimDueRoutines,
   fireDueCalendarRuns,
   handleRoutineWebhook,
+  retimeRoutines,
   startRoutineForMessage,
 } from "./routines.ts";
 import { type VoiceRuntime, voiceSession, voiceSpeak, voiceTranscribe } from "./voice.ts";
@@ -224,6 +225,10 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
         ),
       { name: "due-suggestions" },
     );
+    // Timezones that follow the person (D-250): routines that moved zone get their next run anew.
+    await DBOS.runStep(() => retimeRoutines(rt().db).catch(captureStep("retime-routines", 0)), {
+      name: "retime-routines",
+    });
     // App events start scans: subscribe Composio triggers for new connections, every 10 minutes,
     // once the Composio webhook is set up (COMPOSIO_WEBHOOK_SECRET).
     if (process.env.COMPOSIO_WEBHOOK_SECRET && new Date(scheduledAt).getUTCMinutes() % 10 === 0)

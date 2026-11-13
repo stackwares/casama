@@ -15,7 +15,7 @@ import {
   verifyComposioSignature,
 } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { claimDueRoutines } from "../src/worker/routines.ts";
+import { claimDueRoutines, retimeRoutines } from "../src/worker/routines.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
 const FIXTURES = fileURLToPath(new URL("./fixtures/proactive.json", import.meta.url));
@@ -326,6 +326,27 @@ describe("proactive bots", () => {
       select config -> 'triggers' as triggers from public.integrations where id = ${i!.id}`;
     expect(cfg?.triggers).toEqual({});
     await h.tdb.admin`update public.bot_checkins set enabled = true where bot_id = ${botId}`;
+  });
+
+  it("routines follow the person's timezone (D-250)", async () => {
+    await h.tdb
+      .admin`update public.profiles set timezone = 'Asia/Manila' where user_id = ${owner.id}`;
+    expect(await retimeRoutines(h.handle.db)).toBeGreaterThanOrEqual(2);
+    const rows = await h.tdb.admin<
+      { kind: string; timezone: string; local: string; pending: boolean }[]
+    >`
+      select kind, timezone, to_char(next_run_at at time zone 'Asia/Manila', 'HH24:MI') as local, retime_pending as pending
+      from public.routines where bot_id = ${botId} and kind in ('brief', 'scan') order by kind`;
+    expect(rows[0]).toMatchObject({
+      kind: "brief",
+      timezone: "Asia/Manila",
+      local: "08:00",
+      pending: false,
+    });
+    expect(rows[1]).toMatchObject({ kind: "scan", timezone: "Asia/Manila", pending: false });
+    await expect(
+      h.tdb.admin`update public.profiles set timezone = 'Mars/Olympus' where user_id = ${owner.id}`,
+    ).rejects.toThrow(/Unknown timezone/);
   });
 
   it("the welcome bot checks in by default", async () => {

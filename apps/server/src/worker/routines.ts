@@ -191,6 +191,32 @@ export async function claimDueRoutines(
   });
 }
 
+/**
+ * Routines whose timezone moved with their person (D-250, profiles_follow_timezone): their next
+ * run is recomputed in the new zone. Every minute, from the worker.
+ */
+export async function retimeRoutines(db: Database, now = new Date(), limit = 200) {
+  return db.transaction(async (tx) => {
+    const rows = await tx.execute<{ id: string; schedule_cron: string; timezone: string }>(sql`
+      select id, schedule_cron, timezone from public.routines
+      where retime_pending order by id limit ${limit} for update skip locked`);
+    for (const r of rows) {
+      let next: string | null = null;
+      try {
+        next = nextRunAt(r.schedule_cron, r.timezone, now).toISOString();
+      } catch {
+        next = null; // A bad cron keeps its old next run; claiming handles it as before.
+      }
+      await tx.execute(
+        next
+          ? sql`update public.routines set next_run_at = ${next}::timestamptz, retime_pending = false where id = ${r.id}::uuid`
+          : sql`update public.routines set retime_pending = false where id = ${r.id}::uuid`,
+      );
+    }
+    return rows.length;
+  });
+}
+
 /** Chat apps (D-134): a routine started by an inbound email or chat message. */
 export async function startRoutineForMessage(
   db: Database,

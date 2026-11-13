@@ -10,6 +10,7 @@ import '../features/voice/phone_calls.dart' show casamaBackgroundMessage;
 import 'backend.dart';
 import 'providers.dart';
 import 'router.dart';
+import 'timezone_sync.dart';
 import 'web_notification_prompt_web.dart' if (dart.library.io) 'web_notification_prompt_stub.dart';
 import 'analytics.dart';
 
@@ -285,6 +286,9 @@ final pushProvider = Provider<PushRegistrar>((ref) {
     onOpened: (id) => unawaited(ref.read(notificationsProvider.notifier).markRead(id).catchError((_) {})),
   );
   ref.onDispose(registrar.dispose);
+  // The profile's timezone follows this device (D-250); kept alive here, with push, for the
+  // app's lifetime.
+  ref.listen(timezoneSyncProvider, (_, _) {});
   ref.listen(signedInProvider, (_, next) {
     if (next.value == true) unawaited(registrar.start());
   }, fireImmediately: true);
