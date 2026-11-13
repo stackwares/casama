@@ -97,6 +97,7 @@ dependencies:
   cached_network_image: ^4.0.7
   flutter_cache_manager: ^3.5.0
   pro_image_editor: ^14.26.0
+  pasteboard: ^0.6.0
 dev_dependencies:
   integration_test:
     sdk: flutter

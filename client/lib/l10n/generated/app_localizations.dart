@@ -1948,6 +1948,78 @@ abstract class AppLocalizations {
   /// **'Rename'**
   String get renameTopic;
 
+  /// No description provided for @regenerateReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate'**
+  String get regenerateReply;
+
+  /// No description provided for @deleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Message'**
+  String get deleteMessage;
+
+  /// No description provided for @deleteMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this message?'**
+  String get deleteMessageTitle;
+
+  /// No description provided for @deleteMessageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It\'s removed for everyone in this chat. The messages around it stay.'**
+  String get deleteMessageBody;
+
+  /// No description provided for @messageDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Message deleted'**
+  String get messageDeleted;
+
+  /// No description provided for @findInChat.
+  ///
+  /// In en, this message translates to:
+  /// **'Find in Chat'**
+  String get findInChat;
+
+  /// No description provided for @findInChatHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Find in this chat'**
+  String get findInChatHint;
+
+  /// No description provided for @findInChatCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{index} of {count}'**
+  String findInChatCount(int index, int count);
+
+  /// No description provided for @findInChatNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get findInChatNone;
+
+  /// No description provided for @findPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous match'**
+  String get findPrevious;
+
+  /// No description provided for @findNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next match'**
+  String get findNext;
+
+  /// No description provided for @closeFind.
+  ///
+  /// In en, this message translates to:
+  /// **'Close find'**
+  String get closeFind;
+
   /// No description provided for @pinTopic.
   ///
   /// In en, this message translates to:

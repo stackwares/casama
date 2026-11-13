@@ -13,6 +13,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_webrtc
   geolocator_windows
   passkeys_windows
+  pasteboard
   permission_handler_windows
   record_windows
   sentry_flutter

@@ -575,6 +575,37 @@ class ChatController extends Notifier<ChatState> {
     await open(id);
   }
 
+  /// The message of yours that [replyId] answered, when it can be asked again (sent, with text).
+  MessageEntry? questionFor(String replyId) {
+    final entries = state.entries;
+    final i = entries.indexWhere((e) => e is MessageEntry && e.id == replyId);
+    for (var j = i - 1; j >= 0; j--) {
+      final e = entries[j];
+      if (e is MessageEntry && e.role == 'user') {
+        return e.id.startsWith('local-') || e.failed || e.text.trim().isEmpty ? null : e;
+      }
+    }
+    return null;
+  }
+
+  /// Asks for a reply again (Add 11): the message it answered reruns as a new version, so the
+  /// old reply stays one arrow away (the same fork an edit makes, D-108).
+  Future<void> regenerate(String replyId) async {
+    final id = state.conversationId;
+    final asked = questionFor(replyId);
+    if (id == null || state.running || asked == null) return;
+    await _backend.editMessage(id, asked.id, asked.text.trim());
+    await open(id);
+  }
+
+  /// Deletes one message (Add 11) and reloads the thread.
+  Future<void> deleteMessage(String messageId) async {
+    final id = state.conversationId;
+    if (id == null || state.running) return;
+    await _backend.deleteMessage(id, messageId);
+    await open(id);
+  }
+
   /// Shows the previous or next edited version of a message, with its own replies.
   Future<void> switchBranch(String messageId, int delta) async {
     final id = state.conversationId;

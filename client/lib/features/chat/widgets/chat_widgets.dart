@@ -51,9 +51,13 @@ class UserBubble extends StatelessWidget {
     this.uploading = false,
     this.onResend,
     this.onDiscard,
+    this.onDelete,
   });
   final String text;
   final List<AttachmentRef> attachments;
+
+  /// Delete this message (Add 11).
+  final VoidCallback? onDelete;
 
   /// Set when the message didn't reach the server: "Not sent" with Try Again and Remove.
   final VoidCallback? onResend;
@@ -181,6 +185,7 @@ class UserBubble extends StatelessWidget {
           child: MessageActions(
             text: text,
             onEdit: onEdit,
+            onDelete: onDelete,
             alignEnd: true,
             // Your messages: the accent, filled, even corners (D-256). Opaque on any wallpaper.
             child: DecoratedBox(
@@ -304,9 +309,15 @@ class AssistantMessage extends StatelessWidget {
     this.status,
     this.botName,
     this.botAvatar,
+    this.onRegenerate,
+    this.onDelete,
   });
   final MessageEntry entry;
   final VoidCallback? onSpeak;
+
+  /// Ask for this reply again, and delete it (Add 11).
+  final VoidCallback? onRegenerate;
+  final VoidCallback? onDelete;
 
   /// Who is replying, for the working line before the first word (D-256).
   final String? botName;
@@ -376,6 +387,8 @@ class AssistantMessage extends StatelessWidget {
                 child: MessageActions(
                   text: entry.text,
                   markdown: true,
+                  onRegenerate: onRegenerate,
+                  onDelete: onDelete,
                   onSpeak: onSpeak,
                   speakKey: Key('speak-${entry.id}'),
                   speaking: reading,

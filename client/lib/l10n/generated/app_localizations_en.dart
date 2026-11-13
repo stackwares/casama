@@ -1155,6 +1155,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get renameTopic => 'Rename';
 
   @override
+  String get regenerateReply => 'Regenerate';
+
+  @override
+  String get deleteMessage => 'Delete Message';
+
+  @override
+  String get deleteMessageTitle => 'Delete this message?';
+
+  @override
+  String get deleteMessageBody =>
+      'It\'s removed for everyone in this chat. The messages around it stay.';
+
+  @override
+  String get messageDeleted => 'Message deleted';
+
+  @override
+  String get findInChat => 'Find in Chat';
+
+  @override
+  String get findInChatHint => 'Find in this chat';
+
+  @override
+  String findInChatCount(int index, int count) {
+    return '$index of $count';
+  }
+
+  @override
+  String get findInChatNone => 'No matches';
+
+  @override
+  String get findPrevious => 'Previous match';
+
+  @override
+  String get findNext => 'Next match';
+
+  @override
+  String get closeFind => 'Close find';
+
+  @override
   String get pinTopic => 'Pin';
 
   @override

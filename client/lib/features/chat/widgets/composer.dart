@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:pasteboard/pasteboard.dart';
 
 import '../../../core/widgets.dart';
 import '../../../theme/app_colors.dart';
@@ -34,7 +35,16 @@ class ChatComposer extends StatelessWidget {
     this.uploading = false,
     this.keyHandler,
     this.allowSendWhileRunning = true,
+    this.onPasteImage,
   });
+
+  /// A picture pasted with Cmd/Ctrl+V on a keyboard (desktop and the web, Add 11): attached like a
+  /// picked photo. Text on the clipboard still pastes into the field as usual.
+  final ValueChanged<Uint8List>? onPasteImage;
+
+  /// Reads a picture from the clipboard; tests replace it.
+  @visibleForTesting
+  static Future<Uint8List?> Function() readClipboardImage = () => Pasteboard.image;
 
   /// Off where a message can't join a run in progress (group chats start one run per bot).
   final bool allowSendWhileRunning;
@@ -68,6 +78,14 @@ class ChatComposer extends StatelessWidget {
   KeyEventResult _onKey(FocusNode node, KeyEvent event) {
     final first = keyHandler?.call(event) ?? KeyEventResult.ignored;
     if (first != KeyEventResult.ignored) return first;
+    final paste = onPasteImage;
+    if (paste != null && event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyV && (HardwareKeyboard.instance.isMetaPressed || HardwareKeyboard.instance.isControlPressed)) {
+      // Not handled here, so text still pastes; a picture on the clipboard is attached as well.
+      readClipboardImage().then((bytes) {
+        if (bytes != null && bytes.isNotEmpty) paste(bytes);
+      }).catchError((_) {});
+      return KeyEventResult.ignored;
+    }
     if (!_enterSends || event is! KeyDownEvent) return KeyEventResult.ignored;
     final enter = event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter;
     if (!enter || HardwareKeyboard.instance.isShiftPressed) return KeyEventResult.ignored;

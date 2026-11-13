@@ -801,6 +801,10 @@ class SupabaseBackend implements Backend {
   )).data!;
 
   @override
+  Future<void> deleteMessage(String conversationId, String messageId) async =>
+      api.chat.deleteMessage(id: conversationId, messageId: messageId);
+
+  @override
   Future<void> switchBranch(String conversationId, String messageId) async {
     await api.chat.switchBranch(
       id: conversationId,

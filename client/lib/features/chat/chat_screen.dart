@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -282,6 +283,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   var _opening = true;
   late String? _focusPending = widget.focusMessageId;
   String? _highlight;
+
+  /// Find in this chat (Add 11): the bar above the thread.
+  var _findOpen = false;
+
+  void _openFind() => setState(() => _findOpen = true);
+
+  /// Scrolls to a found message and highlights it, as a search result does.
+  void _jumpToMessage(String id) => setState(() {
+    _highlight = null;
+    _focusPending = id;
+  });
   final _focusKey = GlobalKey();
   final _pending = <_Pending>[];
   /// Skills picked with / for the next message (D-104).
@@ -646,6 +658,42 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (!_touchFirst && mounted) _focus.requestFocus();
   }
 
+  ChatController controllerOf() => ref.read(chatControllerProvider(widget.botId).notifier);
+
+  /// Regenerate (Add 11): the reply is asked for again; the old one stays as another version.
+  Future<void> _regenerate(String replyId) async {
+    _stickToBottom = true;
+    await runGuarded(context, () => controllerOf().regenerate(replyId));
+  }
+
+  /// Delete one message (Add 11), after asking.
+  Future<void> _deleteMessage(String messageId) async {
+    final l10n = context.l10n;
+    final ok = await showConfirm(
+      context: context,
+      title: l10n.deleteMessageTitle,
+      message: l10n.deleteMessageBody,
+      confirmLabel: l10n.delete,
+      destructive: true,
+      icon: LucideIcons.trash2,
+      confirmKey: const Key('confirmDeleteMessage'),
+    );
+    if (!ok || !mounted) return;
+    final done = await runGuarded(context, () async {
+      await controllerOf().deleteMessage(messageId);
+      return true;
+    });
+    if (done == true && mounted) showSuccess(context, l10n.messageDeleted);
+  }
+
+  /// A picture pasted into the composer (Add 11): PNG unless its bytes say JPEG.
+  Future<void> _pasteImage(Uint8List bytes) async {
+    if (!mounted) return;
+    final jpeg = bytes.length > 2 && bytes[0] == 0xFF && bytes[1] == 0xD8;
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    await _addFiles([(jpeg ? 'pasted-$stamp.jpg' : 'pasted-$stamp.png', bytes, jpeg ? 'image/jpeg' : 'image/png')]);
+  }
+
   /// Edit and resend (D-108): the conversation forks at this message and reruns from it.
   Future<void> _editMessage(MessageEntry e) async {
     final text = await showAdaptiveSheet<String>(context: context, builder: (_) => _EditSheet(initial: e.text));
@@ -968,6 +1016,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       child: PrimaryScrollController(
         controller: _scroll,
         automaticallyInheritForPlatforms: const <TargetPlatform>{},
+        // Cmd/Ctrl+F finds in this chat (Add 11).
+        child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.keyF, meta: true): _openFind,
+          const SingleActivator(LogicalKeyboardKey.keyF, control: true): _openFind,
+        },
         child: Scaffold(
         appBar: ShellHeader(
         title: name,
@@ -1010,6 +1064,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             botId: widget.botId,
             showComputer: layout != LayoutSize.desktop,
             onConversations: () => _showConversations(context, chat.conversationId),
+            onFind: chat.empty ? null : _openFind,
             onDelete: chat.running || !_canDeleteCurrent(chat.conversationId) ? null : () => _deleteCurrent(chat.conversationId!, name),
           ),
           // Far right, next to the panel it opens and closes; the live dot shows while the bot works on its computer.
@@ -1115,6 +1170,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             }
             return Column(
               children: [
+                if (_findOpen)
+                  _FindBar(
+                    key: const Key('findBar'),
+                    botId: widget.botId,
+                    onJump: _jumpToMessage,
+                    onClose: () => setState(() => _findOpen = false),
+                  ),
                 if (chat.offline)
                   Padding(
                     key: const Key('offlineNote'),
@@ -1234,6 +1296,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           onDevice: _listening != null || ref.read(dictationRouteProvider).preferDevice,
                           onDictate: _toggleDictation,
                           attachButton: _AttachButton(onFiles: _pickFiles, onPhotos: _pickPhotos, onCamera: _takePhoto),
+                          onPasteImage: _pasteImage,
                           hasAttachments: _pending.any((p) => !p.failed),
                           attachments: _pending.isEmpty
                               ? null
@@ -1264,6 +1327,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             );
           },
         ),
+      ),
       ),
       ),
       ),
@@ -1419,6 +1483,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 siblingIndex: e.siblingIndex,
                 siblingCount: e.siblingCount,
                 onEdit: chat.running || e.id.startsWith('local-') ? null : () => _editMessage(e),
+                onDelete: chat.running || e.id.startsWith('local-') ? null : () => _deleteMessage(e.id),
                 onBranch: chat.running ? null : (d) { Analytics.feature('branch_switch'); runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).switchBranch(e.id, d)); },
               ),
               fresh: fresh,
@@ -1432,9 +1497,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             _Row(
               ValueKey(m.id),
               rows.last.header ? 0 : AppSpace.sm,
-              () => AssistantMessage(entry: m, status: workingStatus(), botName: workingBot().$1, botAvatar: workingBot().$2, onSpeak: !m.streaming ? () => _speak(m) : null),
-              // The status only shows while the reply is still empty.
-              inputs: (m, m.text.isEmpty && m.streaming ? workingStatus() : null),
+              () => AssistantMessage(
+                entry: m,
+                status: workingStatus(),
+                botName: workingBot().$1,
+                botAvatar: workingBot().$2,
+                onSpeak: !m.streaming ? () => _speak(m) : null,
+                onRegenerate: chat.running || m.streaming || widget.group || controllerOf().questionFor(m.id) == null ? null : () => _regenerate(m.id),
+                onDelete: chat.running || m.streaming || m.id.startsWith('local-') ? null : () => _deleteMessage(m.id),
+              ),
+              // The status only shows while the reply is still empty; Regenerate and Delete hide while
+              // the bot works.
+              inputs: (m, m.text.isEmpty && m.streaming ? workingStatus() : null, chat.running),
             ),
           );
           // Files the reply links to (a report, a chart) show under it: images inline, others as cards.
@@ -2048,10 +2122,13 @@ class _HeroMark extends StatelessWidget {
 /// The chat's … menu: its conversations, the computer (phones and tablets) and the bot's profile,
 /// where its memory, routines and apps live (and its activity, under Advanced).
 class _MoreMenu extends StatelessWidget {
-  const _MoreMenu({required this.botId, required this.showComputer, required this.onConversations, this.onDelete});
+  const _MoreMenu({required this.botId, required this.showComputer, required this.onConversations, this.onFind, this.onDelete});
   final String botId;
   final bool showComputer;
   final VoidCallback onConversations;
+
+  /// Find in this chat (Add 11); null while the chat is empty.
+  final VoidCallback? onFind;
 
   /// Set when this chat may be deleted now (it exists, it's yours or you manage the bot, and the
   /// bot isn't working in it).
@@ -2073,6 +2150,7 @@ class _MoreMenu extends StatelessWidget {
       style: const MenuStyle(minimumSize: WidgetStatePropertyAll(Size(menuWidth, 0)), maximumSize: WidgetStatePropertyAll(Size(menuWidth, double.infinity))),
       menuChildren: [
         item(LucideIcons.messagesSquare, l10n.topics, onConversations, key: const Key('openConversations')),
+        if (onFind != null) item(LucideIcons.textSearch, l10n.findInChat, onFind!, key: const Key('findInChat')),
         if (showComputer) item(LucideIcons.monitor, l10n.navComputer, () => context.push('/computer?bot=$botId'), key: const Key('openComputer')),
         const Divider(),
         item(LucideIcons.circleUser, l10n.botProfile, () => context.push('/bots/$botId/settings'), key: const Key('openBotProfile')),
@@ -2395,6 +2473,141 @@ class _SkillPicker extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Find in this chat (Add 11): matches the messages loaded so far, newest first; the arrows step
+/// through them and each one scrolls into view, highlighted. Enter goes to the next older match,
+/// Shift+Enter back, Esc closes.
+class _FindBar extends ConsumerStatefulWidget {
+  const _FindBar({super.key, required this.botId, required this.onJump, required this.onClose});
+  final String botId;
+  final ValueChanged<String> onJump;
+  final VoidCallback onClose;
+
+  @override
+  ConsumerState<_FindBar> createState() => _FindBarState();
+}
+
+/// The ids of messages in [entries] containing every word of [query], newest first.
+List<String> findInEntries(List<ChatEntry> entries, String query) {
+  final words = query.toLowerCase().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+  if (words.isEmpty) return const [];
+  return [
+    for (final e in entries.reversed)
+      if (e is MessageEntry && !e.streaming && words.every(e.text.toLowerCase().contains)) e.id,
+  ];
+}
+
+class _FindBarState extends ConsumerState<_FindBar> {
+  final _text = TextEditingController();
+  final _focus = FocusNode();
+  var _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focus.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _text.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  List<String> get _matches => findInEntries(ref.read(chatControllerProvider(widget.botId)).entries, _text.text);
+
+  void _go(int index) {
+    final matches = _matches;
+    if (matches.isEmpty) return setState(() => _index = 0);
+    final i = index % matches.length;
+    setState(() => _index = i < 0 ? i + matches.length : i);
+    widget.onJump(matches[_index]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    ref.watch(chatControllerProvider(widget.botId).select((c) => c.entries.length));
+    final matches = _matches;
+    final query = _text.text.trim();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.xs, AppSpace.md, 0),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: Material(
+            color: scheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(AppRadius.tile),
+            child: CallbackShortcuts(
+              bindings: {
+                const SingleActivator(LogicalKeyboardKey.escape): widget.onClose,
+                const SingleActivator(LogicalKeyboardKey.enter, shift: true): () => _go(_index - 1),
+              },
+              child: Row(
+                children: [
+                  const SizedBox(width: AppSpace.sm),
+                  Icon(LucideIcons.search, size: 18, color: scheme.onSurfaceVariant),
+                  Expanded(
+                    child: TextField(
+                      key: const Key('findInChatField'),
+                      controller: _text,
+                      focusNode: _focus,
+                      textInputAction: TextInputAction.search,
+                      decoration: InputDecoration(
+                        hintText: l10n.findInChatHint,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: AppSpace.sm, vertical: AppSpace.sm),
+                      ),
+                      onChanged: (_) => _go(0),
+                      onSubmitted: (_) {
+                        _go(_index + 1);
+                        _focus.requestFocus();
+                      },
+                    ),
+                  ),
+                  if (query.isNotEmpty)
+                    Text(
+                      matches.isEmpty ? l10n.findInChatNone : l10n.findInChatCount(_index + 1, matches.length),
+                      key: const Key('findCount'),
+                      style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant, fontFeatures: AppText.tabular),
+                    ),
+                  IconButton(
+                    key: const Key('findOlder'),
+                    tooltip: l10n.findPrevious,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(LucideIcons.chevronUp, size: 18),
+                    onPressed: matches.length < 2 ? null : () => _go(_index + 1),
+                  ),
+                  IconButton(
+                    key: const Key('findNewer'),
+                    tooltip: l10n.findNext,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(LucideIcons.chevronDown, size: 18),
+                    onPressed: matches.length < 2 ? null : () => _go(_index - 1),
+                  ),
+                  IconButton(
+                    key: const Key('closeFind'),
+                    tooltip: l10n.closeFind,
+                    visualDensity: VisualDensity.compact,
+                    icon: const Icon(LucideIcons.x, size: 18),
+                    onPressed: widget.onClose,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

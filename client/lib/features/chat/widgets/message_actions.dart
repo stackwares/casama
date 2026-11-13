@@ -23,12 +23,18 @@ bool get _pointerFirst =>
 /// Mouse: hovering shows a row of buttons under the message (its space is kept, so nothing moves),
 /// text selects by dragging, and right-click adds the same actions to the text menu.
 class MessageActions extends StatefulWidget {
-  const MessageActions({super.key, required this.text, required this.child, this.markdown = false, this.onSpeak, this.speakKey, this.speaking = false, this.onEdit, this.alignEnd = false});
+  const MessageActions({super.key, required this.text, required this.child, this.markdown = false, this.onSpeak, this.speakKey, this.speaking = false, this.onEdit, this.alignEnd = false, this.onRegenerate, this.onDelete});
   final String text;
   final Widget child;
 
   /// Edit and resend (your own messages; D-108).
   final VoidCallback? onEdit;
+
+  /// Ask for this reply again (Add 11): the earlier one stays as another version.
+  final VoidCallback? onRegenerate;
+
+  /// Delete this message (Add 11), after asking.
+  final VoidCallback? onDelete;
 
   /// Show the text as Markdown in "Select text".
   final bool markdown;
@@ -78,6 +84,8 @@ class _MessageActionsState extends State<MessageActions> with SingleTickerProvid
   String get text => widget.text;
   bool get markdown => widget.markdown;
   VoidCallback? get onEdit => widget.onEdit;
+  VoidCallback? get onRegenerate => widget.onRegenerate;
+  VoidCallback? get onDelete => widget.onDelete;
   VoidCallback? get onSpeak => widget.onSpeak;
   Key? get speakKey => widget.speakKey;
   IconData get _speakIcon => widget.speaking ? LucideIcons.volumeX : LucideIcons.volume2;
@@ -139,6 +147,8 @@ class _MessageActionsState extends State<MessageActions> with SingleTickerProvid
         if (onSpeak != null) item('speak', _speakIcon, _speakLabel(l10n), key: speakKey),
         item('select', LucideIcons.textCursorInput, l10n.selectText, key: const Key('msgSelect')),
         item('share', LucideIcons.share, l10n.shareMessage, key: const Key('msgShare')),
+        if (onRegenerate != null) item('regenerate', LucideIcons.refreshCw, l10n.regenerateReply, key: const Key('msgRegenerate')),
+        if (onDelete != null) item('delete', LucideIcons.trash2, l10n.deleteMessage, key: const Key('msgDelete')),
       ],
     );
     if (!context.mounted) return;
@@ -153,6 +163,10 @@ class _MessageActionsState extends State<MessageActions> with SingleTickerProvid
         _select(context);
       case 'share':
         await shareText(text, origin: origin);
+      case 'regenerate':
+        onRegenerate?.call();
+      case 'delete':
+        onDelete?.call();
     }
   }
 
@@ -195,6 +209,22 @@ class _MessageActionsState extends State<MessageActions> with SingleTickerProvid
                 shareText(text, origin: shareOrigin(context));
               },
             ),
+            if (onRegenerate != null)
+              ContextMenuButtonItem(
+                label: l10n.regenerateReply,
+                onPressed: () {
+                  ContextMenuController.removeAny();
+                  onRegenerate!();
+                },
+              ),
+            if (onDelete != null)
+              ContextMenuButtonItem(
+                label: l10n.deleteMessage,
+                onPressed: () {
+                  ContextMenuController.removeAny();
+                  onDelete!();
+                },
+              ),
           ],
         ),
         child: child,
@@ -288,6 +318,8 @@ class _MessageActionsState extends State<MessageActions> with SingleTickerProvid
               if (onEdit != null) button(LucideIcons.pencil, l10n.editMessage, onEdit!, key: const Key('hoverEdit')),
               if (onSpeak != null) button(_speakIcon, _speakLabel(l10n), onSpeak!, key: const Key('hoverSpeak')),
               button(LucideIcons.share, l10n.shareMessage, () => shareText(text, origin: shareOrigin(context)), key: const Key('hoverShare')),
+              if (onRegenerate != null) button(LucideIcons.refreshCw, l10n.regenerateReply, onRegenerate!, key: const Key('hoverRegenerate')),
+              if (onDelete != null) button(LucideIcons.trash2, l10n.deleteMessage, onDelete!, key: const Key('hoverDelete')),
             ],
           ),
         ),

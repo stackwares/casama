@@ -1043,6 +1043,13 @@ class FakeBackend implements Backend {
     );
   }
 
+  final deletedMessages = <String>[];
+  @override
+  Future<void> deleteMessage(String conversationId, String messageId) async {
+    deletedMessages.add(messageId);
+    storedMessages = [for (final m in storedMessages) if (m.id != messageId) m];
+  }
+
   @override
   Future<void> switchBranch(String conversationId, String messageId) async =>
       branchSwitches.add(messageId);
@@ -4746,7 +4753,9 @@ Creation fakeCreation(
   height: null,
   durationS: null,
   hasCover: hasCover,
+  hasPreview: false,
   version: 1,
+  visibility: CreationVisibilityEnum.private,
   pinned: pinned,
   lastOpenedAt: null,
   canChange: true,

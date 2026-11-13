@@ -935,6 +935,9 @@ abstract class Backend {
     String text,
   );
 
+  /// Deletes one message; the ones after it join the one before it (Add 11).
+  Future<void> deleteMessage(String conversationId, String messageId);
+
   /// Shows the branch containing [messageId].
   Future<void> switchBranch(String conversationId, String messageId);
 
