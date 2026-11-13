@@ -8,6 +8,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/providers.dart';
+import '../../core/sign_in_sheet.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
@@ -128,6 +129,7 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
             method: _method.value,
             apiKey: _method == CatalogAppAuthEnum.apiKey ? _key.text.trim() : null,
             integrationId: widget.reconnect?.id,
+            returnToApp: signInSheetAvailable,
           );
       if (!mounted) return;
       switch (r.status) {
@@ -163,11 +165,11 @@ class _ConnectAppSheetState extends ConsumerState<ConnectAppSheet> {
   Future<void> _openSignIn() async {
     final url = _authorizeUrl;
     if (url == null) return;
-    try {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication, webOnlyWindowName: '_blank');
-    } catch (_) {
-      // No browser handler (tests, locked-down devices): "Open the sign-in page again" stays available.
-    }
+    // On phones this is the sign-in sheet, which closes itself at the end: check straight away
+    // instead of waiting for the next poll. Closed early, this stays on "waiting", where
+    // "Open the sign-in page again" is.
+    final r = await openSignIn(url);
+    if (mounted && r != SignInSheetResult.browser) _check();
   }
 
   var _checking = false;

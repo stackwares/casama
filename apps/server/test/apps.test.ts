@@ -246,6 +246,48 @@ describe("built-in app connections", () => {
     expect(again.status).toBe(400);
   });
 
+  it("a sign-in from the app's sign-in sheet ends on casama-auth://done, which closes the sheet", async () => {
+    // Its own workspace, so its connections don't change the names other tests expect.
+    const orgId = (
+      await j(
+        await h.request("/v1/orgs", {
+          method: "POST",
+          token: owner.token,
+          json: { name: "Sheet" },
+        }),
+      )
+    ).id;
+    const start = await j(
+      await h.request("/v1/apps/connect", {
+        method: "POST",
+        token: owner.token,
+        json: { org_id: orgId, app_id: "acme", method: "oauth", return_to_app: true },
+      }),
+    );
+    expect(start.status).toBe("authorize");
+    const redirect = await fetch(new URL(start.authorize_url), { redirect: "manual" });
+    const back = new URL(redirect.headers.get("location") ?? "");
+    const page = await h.request(`${back.pathname}${back.search}`);
+    expect(page.status).toBe(302);
+    expect(page.headers.get("location")).toBe("casama-auth://done?status=ok");
+    const done = await j(
+      await h.request(`/v1/apps/connect/${start.flow_id}`, { token: owner.token }),
+    );
+    expect(done.status).toBe("connected");
+    // A cancelled sign-in closes the sheet too; the app reads the outcome from the flow.
+    const cancelled = await j(
+      await h.request("/v1/apps/connect", {
+        method: "POST",
+        token: owner.token,
+        json: { org_id: orgId, app_id: "acme", method: "oauth", return_to_app: true },
+      }),
+    );
+    const state = new URL(cancelled.authorize_url).searchParams.get("state");
+    const denied = await h.request(`/oauth/callback?state=${state}&error=access_denied`);
+    expect(denied.status).toBe(302);
+    expect(denied.headers.get("location")).toBe("casama-auth://done?status=error");
+  });
+
   it("Google apps use the Google client, ask only for their own scopes and come back to localhost", async () => {
     const start = await j(
       await h.request("/v1/apps/connect", {

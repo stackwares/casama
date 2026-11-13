@@ -9238,6 +9238,9 @@
           "integration_id": {
             "type": "string",
             "format": "uuid"
+          },
+          "return_to_app": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -9264,6 +9267,9 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 100
+          },
+          "return_to_app": {
+            "type": "boolean"
           }
         },
         "required": [

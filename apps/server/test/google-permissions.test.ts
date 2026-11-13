@@ -274,6 +274,35 @@ describe("Google permissions", () => {
     expect(calls.length).toBe(after);
   });
 
+  it("a Composio sign-in from the app's sign-in sheet returns to casama-auth://done", async () => {
+    const owner = await h.user("composio-sheet@example.com");
+    const orgId = (
+      await j(
+        await h.request("/v1/orgs", { method: "POST", token: owner.token, json: { name: "S" } }),
+      )
+    ).id;
+    const before = calls.length;
+    await h.request("/v1/apps/connect", {
+      method: "POST",
+      token: owner.token,
+      json: { org_id: orgId, app_id: "gmail", method: "managed", return_to_app: true },
+    });
+    const [i] = await h.tdb.admin<{ id: string }[]>`
+      select id from public.integrations where org_id = ${orgId} and kind = 'composio'`;
+    const id = i?.id as string;
+    const link = calls.slice(before).find((c) => c.path === "/api/v3/connected_accounts/link");
+    const callback = String((link?.body as { callback_url?: string })?.callback_url);
+    expect(callback).toMatch(new RegExp(`/oauth/done\\?app=1&integration=${id}$`));
+    // Composio adds its own query to the return address.
+    const ok = await h.request(`/oauth/done?app=1&integration=${id}?status=success`);
+    expect(ok.status).toBe(302);
+    expect(ok.headers.get("location")).toBe("casama-auth://done?status=ok");
+    const failed = await h.request(`/oauth/done?app=1&integration=${id}?status=failed`);
+    expect(failed.headers.get("location")).toBe("casama-auth://done?status=error");
+    // Without it (web, desktop), the page stays.
+    expect((await h.request(`/oauth/done?integration=${id}`)).status).toBe(200);
+  });
+
   it("a Composio sign-in reads as waiting until Composio says the account is active", async () => {
     const owner = await h.user("composio-pending@example.com");
     const orgId = (

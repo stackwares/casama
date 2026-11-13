@@ -2107,6 +2107,7 @@ class SupabaseBackend implements Backend {
     required String method,
     String? apiKey,
     String? integrationId,
+    bool returnToApp = false,
   }) async => (await api.integrations.connectApp(
     connectAppRequest: ConnectAppRequest(
       orgId: orgId,
@@ -2116,6 +2117,7 @@ class SupabaseBackend implements Backend {
       ),
       apiKey: apiKey,
       integrationId: integrationId,
+      returnToApp: returnToApp ? true : null,
     ),
   )).data!;
 
@@ -2153,10 +2155,10 @@ class SupabaseBackend implements Backend {
   )).data!.items;
 
   @override
-  Future<String> connectProviderApp(String integrationId, String app) async =>
+  Future<String> connectProviderApp(String integrationId, String app, {bool returnToApp = false}) async =>
       (await api.integrations.connectProviderApp(
         id: integrationId,
-        providerConnectRequest: ProviderConnectRequest(app: app),
+        providerConnectRequest: ProviderConnectRequest(app: app, returnToApp: returnToApp ? true : null),
       )).data!.redirectUrl;
 
   @override

@@ -61,6 +61,11 @@ export const ConnectAppRequest = z
     api_key: z.string().min(1).max(10_000).optional(),
     /** Reconnect this integration instead of adding a new one. */
     integration_id: Uuid.optional(),
+    /**
+     * Signing in from the app's sign-in sheet: when it finishes, send the browser to
+     * casama-auth://done so the sheet closes, instead of showing a "go back to Casama" page.
+     */
+    return_to_app: z.boolean().optional(),
   })
   .openapi("ConnectAppRequest");
 
@@ -101,5 +106,9 @@ export const ProviderAccount = z
   .openapi("ProviderAccount");
 
 export const ProviderConnectRequest = z
-  .object({ app: z.string().min(1).max(100) })
+  .object({
+    app: z.string().min(1).max(100),
+    /** As in ConnectAppRequest: finish on casama-auth://done so the app's sign-in sheet closes. */
+    return_to_app: z.boolean().optional(),
+  })
   .openapi("ProviderConnectRequest");

@@ -9,6 +9,8 @@ part of 'provider_connect_request.dart';
 abstract class _$ProviderConnectRequestCWProxy {
   ProviderConnectRequest app(String app);
 
+  ProviderConnectRequest returnToApp(bool? returnToApp);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `ProviderConnectRequest(...).copyWith.fieldName(value)`.
@@ -17,7 +19,7 @@ abstract class _$ProviderConnectRequestCWProxy {
   /// ```dart
   /// ProviderConnectRequest(...).copyWith(id: 12, name: "My name")
   /// ```
-  ProviderConnectRequest call({String app});
+  ProviderConnectRequest call({String app, bool? returnToApp});
 }
 
 /// Callable proxy for `copyWith` functionality.
@@ -31,6 +33,10 @@ class _$ProviderConnectRequestCWProxyImpl
   @override
   ProviderConnectRequest app(String app) => call(app: app);
 
+  @override
+  ProviderConnectRequest returnToApp(bool? returnToApp) =>
+      call(returnToApp: returnToApp);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `ProviderConnectRequest(...).copyWith.fieldName(value)`.
@@ -40,12 +46,19 @@ class _$ProviderConnectRequestCWProxyImpl
   /// ProviderConnectRequest(...).copyWith(id: 12, name: "My name")
   /// ```
   @override
-  ProviderConnectRequest call({Object? app = const $CopyWithPlaceholder()}) {
+  ProviderConnectRequest call({
+    Object? app = const $CopyWithPlaceholder(),
+    Object? returnToApp = const $CopyWithPlaceholder(),
+  }) {
     return ProviderConnectRequest(
       app: app == const $CopyWithPlaceholder() || app == null
           ? _value.app
           // ignore: cast_nullable_to_non_nullable
           : app as String,
+      returnToApp: returnToApp == const $CopyWithPlaceholder()
+          ? _value.returnToApp
+          // ignore: cast_nullable_to_non_nullable
+          : returnToApp as bool?,
     );
   }
 }
@@ -68,10 +81,14 @@ ProviderConnectRequest _$ProviderConnectRequestFromJson(
   $checkKeys(json, requiredKeys: const ['app']);
   final val = ProviderConnectRequest(
     app: $checkedConvert('app', (v) => v as String),
+    returnToApp: $checkedConvert('return_to_app', (v) => v as bool?),
   );
   return val;
-});
+}, fieldKeyMap: const {'returnToApp': 'return_to_app'});
 
 Map<String, dynamic> _$ProviderConnectRequestToJson(
   ProviderConnectRequest instance,
-) => <String, dynamic>{'app': instance.app};
+) => <String, dynamic>{
+  'app': instance.app,
+  'return_to_app': ?instance.returnToApp,
+};

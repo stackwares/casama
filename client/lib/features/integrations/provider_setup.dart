@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/backend.dart';
 import '../../core/providers.dart';
+import '../../core/sign_in_sheet.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
@@ -249,7 +250,7 @@ class _ProviderAppPickerState extends ConsumerState<_ProviderAppPicker> {
       context,
       () => ref
           .read(backendProvider)
-          .connectProviderApp(widget.integration.id, app.slug),
+          .connectProviderApp(widget.integration.id, app.slug, returnToApp: signInSheetAvailable),
     );
     if (!mounted) return;
     if (url == null) return setState(() => _opening = null);
@@ -262,11 +263,9 @@ class _ProviderAppPickerState extends ConsumerState<_ProviderAppPicker> {
     );
     if (!mounted) return;
     setState(() => _opening = null);
-    await launchUrl(
-      Uri.parse(url),
-      mode: LaunchMode.externalApplication,
-      webOnlyWindowName: '_blank',
-    );
+    // On phones the sign-in sheet: this returns once it has closed, so the watch below sees the
+    // new sign-in on its first check.
+    await openSignIn(url);
     if (!mounted) return;
     ref.invalidate(providerAccountsProvider(hubId));
     ref.invalidate(integrationsProvider);

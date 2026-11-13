@@ -81,6 +81,23 @@
                 <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
+        <!-- The end of a sign-in in the sign-in sheet (a Custom Tab, D-243): the server sends the
+             browser to casama-auth://done and this activity closes the tab. Its own scheme, so it
+             never takes casama:// deep links from MainActivity. -->
+        <activity
+            android:name=".SignInCallbackActivity"
+            android:exported="true"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="casama-auth" />
+            </intent-filter>
+        </activity>
         <!-- Suggestion pushes with Do it / Not now (D-247): drawn from data-only FCM messages. -->
         <receiver
             android:name=".SuggestionPushReceiver"

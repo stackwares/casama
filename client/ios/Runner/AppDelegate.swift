@@ -1,4 +1,5 @@
 import AppIntents
+import AuthenticationServices
 import Flutter
 import PushKit
 import UIKit
@@ -73,6 +74,64 @@ import native_geofence
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CasamaShortcuts") {
       ShortcutBridge.shared.attach(registrar.messenger())
     }
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CasamaSignInSheet") {
+      SignInSheet.shared.attach(registrar.messenger())
+    }
+  }
+}
+
+// MARK: - Sign-in sheet (D-243): connecting an app signs in through ASWebAuthenticationSession,
+// which shares Safari's sign-ins and closes itself when the server sends the browser to
+// casama-auth://done. Answers the URL it ended on, nil when the person closed it, or an error.
+
+final class SignInSheet: NSObject, ASWebAuthenticationPresentationContextProviding {
+  static let shared = SignInSheet()
+  private var session: ASWebAuthenticationSession?
+
+  func attach(_ messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(name: "casama/sign_in_sheet", binaryMessenger: messenger)
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard call.method == "open", let args = call.arguments as? [String: Any],
+            let raw = args["url"] as? String, let url = URL(string: raw),
+            let scheme = args["scheme"] as? String else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      self?.open(url, scheme: scheme, result: result)
+    }
+  }
+
+  private func open(_ url: URL, scheme: String, result: @escaping FlutterResult) {
+    session?.cancel()
+    let done: ASWebAuthenticationSession.CompletionHandler = { [weak self] back, error in
+      DispatchQueue.main.async {
+        self?.session = nil
+        if let back = back {
+          result(back.absoluteString)
+        } else if let e = error as? ASWebAuthenticationSessionError, e.code == .canceledLogin {
+          result(nil)
+        } else {
+          result(FlutterError(code: "failed", message: error?.localizedDescription, details: nil))
+        }
+      }
+    }
+    let s: ASWebAuthenticationSession
+    if #available(iOS 17.4, *) {
+      s = ASWebAuthenticationSession(url: url, callback: .customScheme(scheme), completionHandler: done)
+    } else {
+      s = ASWebAuthenticationSession(url: url, callbackURLScheme: scheme, completionHandler: done)
+    }
+    s.presentationContextProvider = self
+    session = s
+    if !s.start() {
+      session = nil
+      result(FlutterError(code: "failed", message: "The sign-in sheet didn't open", details: nil))
+    }
+  }
+
+  func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+    let windows = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap { $0.windows }
+    return windows.first { $0.isKeyWindow } ?? windows.first ?? ASPresentationAnchor()
   }
 }
 
