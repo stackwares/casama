@@ -11,7 +11,8 @@ import '../../core/widgets.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/bottom_padding.dart';
 
-/// The model Casama Cloud runs. Null on a self-hosted server, where the person chooses.
+/// The model Casama runs: on Casama Cloud (billing on) for every key, and on any server for
+/// Casama's own key, whose model the server fixes too. Null where the person chooses.
 String? casamaLockedModel(
   WidgetRef ref,
   String? credentialId, {
@@ -20,17 +21,33 @@ String? casamaLockedModel(
   final billing = listen
       ? ref.watch(billingProvider).value
       : ref.read(billingProvider).value;
-  if (billing?.enabled != true) return null;
+  if (billing?.enabled != true && credentialId != casamaCloudCredentialId) return null;
   final backend = listen
       ? ref.watch(backendProvider)
       : ref.read(backendProvider);
   return backend.defaultModelFor('openrouter');
 }
 
-/// True on Casama Cloud (billing on), where Casama chooses every model (D-188). The key and model
-/// fields are not shown there at all: there is nothing for a person to choose.
-bool casamaModelFixed(WidgetRef ref, {bool listen = true}) =>
-    (listen ? ref.watch(billingProvider) : ref.read(billingProvider)).value?.enabled == true;
+/// Keys that run chat models; search, image and voice keys can't drive a bot.
+const chatKeyProviders = {
+  ProviderId.openrouter,
+  ProviderId.openai,
+  ProviderId.anthropic,
+  ProviderId.google,
+  ProviderId.xai,
+  ProviderId.openaiCompatible,
+};
+
+/// True where Casama chooses every model (D-188): on Casama Cloud (billing on), and wherever
+/// Casama's own key is the only chat key, since the server fixes that key's model. The key and
+/// model fields are not shown there at all: there is nothing for a person to choose.
+bool casamaModelFixed(WidgetRef ref, {bool listen = true}) {
+  final billing = listen ? ref.watch(billingProvider) : ref.read(billingProvider);
+  if (billing.value?.enabled == true) return true;
+  final keys = (listen ? ref.watch(credentialsProvider) : ref.read(credentialsProvider)).value;
+  final chat = (keys ?? const <Credential>[]).where((k) => chatKeyProviders.contains(k.provider));
+  return chat.isNotEmpty && chat.every((k) => k.id == casamaCloudCredentialId);
+}
 
 /// On Casama Cloud the bot uses Casama's own key; elsewhere the first usable key.
 String? preferredKeyId(WidgetRef ref, List<Credential> keys, {bool listen = true}) {

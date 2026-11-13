@@ -7,7 +7,39 @@ import 'package:casama_app/features/bots/model_picker.dart';
 import 'package:casama_app/features/settings/model_keys_screen.dart';
 import 'package:casama_app/l10n/generated/app_localizations.dart';
 
+import 'package:casama_sdk/casama_sdk.dart' show Credential, CredentialStatus, ProviderId;
+
+import 'app_test.dart' show harness;
 import 'fake_backend.dart';
+
+Credential _key(String id, ProviderId provider) => Credential(
+  id: id,
+  orgId: 'org',
+  provider: provider,
+  label: id == casamaCloudCredentialId ? 'Casama Cloud' : 'Mine',
+  baseUrl: null,
+  keyHint: null,
+  lastTestedAt: null,
+  lastTestOk: null,
+  ownerUserId: null,
+  status: CredentialStatus.ok,
+  account: null,
+  fallbackOnLimit: false,
+  createdAt: DateTime(2026),
+);
+
+/// A server offering exactly [keys].
+class _KeysBackend extends FakeBackend {
+  _KeysBackend(this.keys);
+  final List<Credential> keys;
+  @override
+  Future<List<Credential>> credentials(String orgId) async => keys;
+}
+
+Widget _fixed(FakeBackend backend) => harness(
+  backend,
+  Scaffold(body: Consumer(builder: (_, ref, _) => Text('fixed: ${casamaModelFixed(ref)}'))),
+);
 
 Widget _picker(FakeBackend backend, String credentialId) {
   return ProviderScope(
@@ -85,5 +117,32 @@ void main() {
     expect(find.text('No service keys yet.'), findsOneWidget);
     expect(find.text('OpenRouter'), findsNothing);
     expect(find.text('Brave Search'), findsOneWidget);
+  });
+
+  testWidgets('without billing, Casama\'s key alone fixes the model too', (tester) async {
+    final backend = _KeysBackend([
+      _key(casamaCloudCredentialId, ProviderId.openrouter),
+      _key('brave', ProviderId.braveSearch),
+    ]);
+    await tester.pumpWidget(_fixed(backend));
+    await tester.pumpAndSettle();
+    expect(find.text('fixed: true'), findsOneWidget);
+  });
+
+  testWidgets('a chat key of your own next to Casama\'s keeps the choice', (tester) async {
+    final backend = FakeBackend()..extraCredentials = [_key(casamaCloudCredentialId, ProviderId.openrouter)];
+    await tester.pumpWidget(_fixed(backend));
+    await tester.pumpAndSettle();
+    expect(find.text('fixed: false'), findsOneWidget);
+  });
+
+  testWidgets('without billing, Casama\'s key still shows its model, locked', (tester) async {
+    final backend = FakeBackend();
+    await tester.pumpWidget(_picker(backend, casamaCloudCredentialId));
+    await tester.pumpAndSettle();
+    expect(find.text('Meta: Muse Ember'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('modelPicker')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('modelSearch')), findsNothing);
   });
 }
