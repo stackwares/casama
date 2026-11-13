@@ -103,7 +103,7 @@ class CloudModels {
 
 
 
-      /// Gemini text-to-speech model for read aloud.
+      /// OpenRouter text-to-speech model for read aloud (google/gemini-3.8-flash-lite-tts).
   @JsonKey(
     
     name: r'tts',
@@ -116,7 +116,7 @@ class CloudModels {
 
 
 
-      /// OpenAI transcription model for dictation.
+      /// OpenRouter transcription model for dictation (openai/whisper-large-v3-turbo).
   @JsonKey(
     
     name: r'stt',
@@ -142,7 +142,7 @@ class CloudModels {
 
 
 
-      /// Gemini video model (gemini-omni-1.2-flash) on a Google AI key.
+      /// OpenRouter video model (google/gemini-omni-1.2-flash).
   @JsonKey(
     
     name: r'video',

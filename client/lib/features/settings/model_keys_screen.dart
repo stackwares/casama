@@ -176,6 +176,7 @@ class _ChatGptConnectState extends ConsumerState<ChatGptConnect> {
 
 String? _providerHint(BuildContext context, ProviderId p) => switch (p) {
   ProviderId.openrouter => context.l10n.providerHintOpenRouter,
+  ProviderId.google => context.l10n.providerHintGoogle,
   ProviderId.openaiCompatible => context.l10n.providerHintCompatible,
   ProviderId.braveSearch ||
   ProviderId.tavily => context.l10n.providerHintSearch,

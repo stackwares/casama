@@ -7,7 +7,7 @@ import { type Harness, j, startHarness } from "./helpers.ts";
 
 const FIXTURES = fileURLToPath(new URL("./fixtures/chat.json", import.meta.url));
 
-/** One local server standing in for OpenAI dictation and Gemini (their REST shapes). */
+/** One local server standing in for OpenRouter (dictation, read-aloud) and Gemini Live tokens. */
 async function mockVoiceProviders() {
   const calls: Array<{ path: string; headers: IncomingMessage["headers"]; body: string }> = [];
   const server = createServer((req, res) => {
@@ -21,14 +21,12 @@ async function mockVoiceProviders() {
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify(o));
       };
-      if (path === "/v1/audio/transcriptions")
+      if (path === "/api/v1/audio/transcriptions")
         return json({ text: "remind me to water the plants", duration: 3.2 });
-      if (path.endsWith(":generateContent"))
-        return json({
-          candidates: [
-            { content: { parts: [{ inlineData: { data: Buffer.alloc(48).toString("base64") } }] } },
-          ],
-        });
+      if (path === "/api/v1/audio/speech") {
+        res.writeHead(200, { "content-type": "audio/pcm;rate=24000;channels=1" });
+        return res.end(Buffer.alloc(48));
+      }
       if (path === "/v1beta/auth_tokens") return json({ name: "auth_tokens/gemini-test-token" });
       res.writeHead(404);
       res.end();
@@ -94,7 +92,10 @@ describe("live calls on the server's key", () => {
   it("self-hosted: the server's key covers workspaces without one, and the call isn't billed", async () => {
     const h = await startHarness({
       env: { GOOGLE_AI_API_KEY: "server-gemini-key" },
-      worker: { fixtures: FIXTURES, providerBases: { gemini: mock.url, openai: mock.url } },
+      worker: {
+        fixtures: FIXTURES,
+        providerBases: { gemini: mock.url, openrouter: `${mock.url}/api/v1` },
+      },
     });
     stacks.push(h);
     const w = await workspace(h, "server-key@example.com");
@@ -120,7 +121,7 @@ describe("live calls on the server's key", () => {
     );
     expect(row?.billable).toBe(false);
 
-    // Read-aloud uses the same key with Gemini when the workspace has no voice key of its own.
+    // Read-aloud isn't on Google's key: it is Gemini TTS on the workspace's OpenRouter key (D-261).
     const [conv] = await h.handle.db.execute<{ id: string }>(
       sql`select id from public.conversations where org_id = ${w.orgId}::uuid limit 1`,
     );
@@ -131,7 +132,7 @@ describe("live calls on the server's key", () => {
     const speech = await h.request(`/v1/messages/${m?.id}/speech`, { token: w.owner.token });
     expect(speech.status).toBe(200);
     expect(
-      mock.calls.findLast((c) => c.path.endsWith(":generateContent"))?.headers["x-goog-api-key"],
-    ).toBe("server-gemini-key");
+      mock.calls.findLast((c) => c.path === "/api/v1/audio/speech")?.headers.authorization,
+    ).toBe("Bearer sk-llm");
   }, 120_000);
 });

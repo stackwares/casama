@@ -23,16 +23,28 @@ export const CLOUD_MODEL_DEFAULTS: CloudModelAssignment = {
   image: "google/gemini-nano-banana-2.1",
   image_resolution: "1K",
   live: "gemini-3.8-live",
-  tts: "gemini-3.8-flash-lite-tts",
-  stt: "gpt-4o-mini-transcribe",
+  // Read-aloud, dictation and video run on OpenRouter, so these are OpenRouter ids (D-261).
+  tts: "google/gemini-3.8-flash-lite-tts",
+  stt: "openai/whisper-large-v3-turbo",
   embedding: "text-embedding-3-small",
-  video: "gemini-omni-1.2-flash",
+  video: "google/gemini-omni-1.2-flash",
 };
 
 const RESOLUTIONS = new Set(["1K", "2K", "4K"]);
 
 function text(value: unknown, fallback: string): string {
   return typeof value === "string" && value.trim() ? value.trim().slice(0, 200) : fallback;
+}
+
+/**
+ * An OpenRouter id for a model saved before D-261 by its provider's own name: "gemini-…" becomes
+ * "google/gemini-…", "gpt-…" and "whisper-…" become "openai/…". Ids that name a vendor are kept.
+ */
+export function openRouterModelId(id: string): string {
+  if (id.includes("/")) return id;
+  if (id.startsWith("gemini-")) return `google/${id}`;
+  if (id.startsWith("gpt-") || id.startsWith("whisper-")) return `openai/${id}`;
+  return id;
 }
 
 /** Fills any missing or blank field from the built-in defaults. */
@@ -48,10 +60,10 @@ export function cloudModelAssignment(raw: unknown): CloudModelAssignment {
         ? (resolution as CloudModelAssignment["image_resolution"])
         : CLOUD_MODEL_DEFAULTS.image_resolution,
     live: text(row.live, CLOUD_MODEL_DEFAULTS.live),
-    tts: text(row.tts, CLOUD_MODEL_DEFAULTS.tts),
-    stt: text(row.stt, CLOUD_MODEL_DEFAULTS.stt),
+    tts: openRouterModelId(text(row.tts, CLOUD_MODEL_DEFAULTS.tts)),
+    stt: openRouterModelId(text(row.stt, CLOUD_MODEL_DEFAULTS.stt)),
     embedding: text(row.embedding, CLOUD_MODEL_DEFAULTS.embedding),
-    video: text(row.video, CLOUD_MODEL_DEFAULTS.video),
+    video: openRouterModelId(text(row.video, CLOUD_MODEL_DEFAULTS.video)),
   };
 }
 

@@ -7,7 +7,7 @@ import { type Harness, j, startHarness } from "./helpers.ts";
 
 const FIXTURES = fileURLToPath(new URL("./fixtures/chat.json", import.meta.url));
 
-/** One local server standing in for OpenAI dictation and Gemini (their REST shapes). */
+/** One local server standing in for OpenRouter dictation and Gemini Live tokens. */
 async function mockVoiceProviders() {
   const calls: Array<{ path: string; headers: IncomingMessage["headers"]; body: string }> = [];
   const server = createServer((req, res) => {
@@ -21,7 +21,7 @@ async function mockVoiceProviders() {
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify(o));
       };
-      if (path === "/v1/audio/transcriptions")
+      if (path === "/api/v1/audio/transcriptions")
         return json({ text: "remind me to water the plants", duration: 3.2 });
       if (path === "/v1beta/auth_tokens") return json({ name: "auth_tokens/gemini-test-token" });
       res.writeHead(404);
@@ -88,7 +88,10 @@ describe("live calls included on Casama Cloud", () => {
   it("Casama Cloud: calls on the server's key are paid from credits, and stop when they run out", async () => {
     const h = await startHarness({
       env: { GOOGLE_AI_API_KEY: "server-gemini-key", BILLING_ENABLED: "true" },
-      worker: { fixtures: FIXTURES, providerBases: { gemini: mock.url, openai: mock.url } },
+      worker: {
+        fixtures: FIXTURES,
+        providerBases: { gemini: mock.url, openrouter: `${mock.url}/api/v1` },
+      },
     });
     stacks.push(h);
     const w = await workspace(h, "cloud-calls@example.com");

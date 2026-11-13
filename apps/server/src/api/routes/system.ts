@@ -61,9 +61,11 @@ export function serverVoice(env: {
   GOOGLE_AI_API_KEY?: string;
   CLOUD_MODEL_UPSTREAM_KEY?: string;
 }): Array<"live" | "read_aloud" | "dictation"> {
+  // Calls are Gemini Live on Google's key; read-aloud and dictation run on the shared OpenRouter
+  // key (D-261).
   return [
-    ...(env.GOOGLE_AI_API_KEY ? (["live", "read_aloud"] as const) : []),
-    ...(env.CLOUD_MODEL_UPSTREAM_KEY ? (["dictation"] as const) : []),
+    ...(env.GOOGLE_AI_API_KEY ? (["live"] as const) : []),
+    ...(env.CLOUD_MODEL_UPSTREAM_KEY ? (["read_aloud", "dictation"] as const) : []),
   ];
 }
 

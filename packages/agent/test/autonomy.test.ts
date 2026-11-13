@@ -15,7 +15,6 @@ import {
   directSteps,
   type FixtureFile,
   type FixtureTurn,
-  GeminiVideoProvider,
   hashEmbedder,
   MediaRouter,
   NotificationService,
@@ -64,7 +63,7 @@ const turn = (when: FixtureTurn["when"], ...events: FixtureTurn["events"]): Fixt
   events,
 });
 
-/** A local stand-in for outside services: echo API, OpenAPI source, Composio, Pipedream, OpenRouter images, Gemini video, Brave, MCP. */
+/** A local stand-in for outside services: echo API, OpenAPI source, Composio, Pipedream, OpenRouter images and video, Brave, MCP. */
 async function startApi() {
   const mcp = async (req: IncomingMessage, res: ServerResponse, body: unknown) => {
     const server = new McpServer({ name: "calc", version: "1.0.0" });
@@ -151,11 +150,17 @@ async function startApi() {
         ],
         usage: { cost: 0.0336 },
       });
-    // Gemini video (D-189), including animating a picture.
-    if (url.pathname === "/v1beta/interactions" && req.method === "POST")
+    // OpenRouter video jobs (D-261), including animating a picture: done at the first poll.
+    if (url.pathname === "/or/videos" && req.method === "POST")
       return json(res, 200, {
-        output_video: { data: Buffer.from("mp4").toString("base64"), mime_type: "video/mp4" },
+        id: "gen-vid-1",
+        polling_url: "/or/videos/gen-vid-1",
+        status: "pending",
       });
+    if (url.pathname === "/or/videos/gen-vid-1")
+      return json(res, 200, { id: "gen-vid-1", status: "completed", usage: { cost: 0.3475 } });
+    if (url.pathname === "/or/videos/gen-vid-1/content")
+      return res.writeHead(200, { "content-type": "video/mp4" }).end(Buffer.from("mp4"));
     if (url.pathname === "/files/clip.mp4")
       return res.writeHead(200, { "content-type": "video/mp4" }).end(Buffer.from("mp4"));
     if (url.pathname === "/files/img.png")
@@ -192,7 +197,7 @@ beforeAll(async () => {
   const [cred] = await tdb.admin<{ id: string }[]>`
     insert into public.model_credentials (org_id, provider, label, vault_secret_id) values (${orgId}, 'openrouter', 'm', vault.create_secret('sk-model-key-xyz123')) returning id`;
   credId = cred!.id;
-  await tdb.admin`insert into public.model_credentials (org_id, provider, label, vault_secret_id) values (${orgId}, 'google', 'media', vault.create_secret('media-key-123456'))`;
+  await tdb.admin`insert into public.model_credentials (org_id, provider, label, vault_secret_id) values (${orgId}, 'openrouter', 'media', vault.create_secret('media-key-123456'))`;
   await tdb.admin`insert into public.model_credentials (org_id, provider, label, vault_secret_id) values (${orgId}, 'brave_search', 'brave', vault.create_secret('brave-key-123456'))`;
   await tdb.admin`insert into public.secrets (org_id, name, vault_secret_id, allowed_hosts) values (${orgId}, 'API_TOKEN', vault.create_secret(${SECRET_VALUE}), '{127.0.0.1}')`;
 }, 60_000);
@@ -232,10 +237,10 @@ function makeDeps(fixtures: FixtureFile[], extra: Partial<RunDeps> = {}) {
   const notifications = new NotificationService(h.db, push);
   const embedder = hashEmbedder();
   const credentials = new CredentialResolver(h.db);
-  const keyFor = async (provider: string) => {
+  const keyFor = async (provider: string, label?: string) => {
     const [r] = await h.db.execute<{ key: string }>(
       (await import("drizzle-orm"))
-        .sql`select v.decrypted_secret as key from public.model_credentials c join vault.decrypted_secrets v on v.id = c.vault_secret_id where c.org_id = ${orgId}::uuid and c.provider = ${provider} limit 1`,
+        .sql`select v.decrypted_secret as key from public.model_credentials c join vault.decrypted_secrets v on v.id = c.vault_secret_id where c.org_id = ${orgId}::uuid and c.provider = ${provider} and (${label ?? null}::text is null or c.label = ${label ?? null}) limit 1`,
     );
     return r?.key ?? null;
   };
@@ -261,15 +266,16 @@ function makeDeps(fixtures: FixtureFile[], extra: Partial<RunDeps> = {}) {
     db: h.db,
     fetch: testFetch,
     notifications,
-    // One test key stands in for both media services: OpenRouter images, Gemini video (D-260).
+    // Images and video both on OpenRouter (D-261), with the test's media key.
     mediaFor: async () => {
-      const key = await keyFor("google");
-      return key
-        ? new MediaRouter(
-            new OpenRouterMediaProvider(key, { base: `${apiUrl}/or`, fetch: testFetch }),
-            new GeminiVideoProvider(key, { base: apiUrl, fetch: testFetch }),
-          )
-        : null;
+      const key = await keyFor("openrouter", "media");
+      if (!key) return null;
+      const or = new OpenRouterMediaProvider(key, {
+        base: `${apiUrl}/or`,
+        fetch: testFetch,
+        pollMs: 1,
+      });
+      return new MediaRouter(or, or);
     },
     searchFor: async () => {
       const key = await keyFor("brave_search");
@@ -428,7 +434,7 @@ describe("approvals", () => {
   });
 
   it("without a media key nobody is asked to approve: the step says what's missing", async () => {
-    await tdb.admin`delete from public.model_credentials where org_id = ${orgId} and provider = 'google' and label = 'media'`;
+    await tdb.admin`delete from public.model_credentials where org_id = ${orgId} and provider = 'openrouter' and label = 'media'`;
     try {
       const botId = await makeBot("ArtistNoKey");
       const runId = await startRun(botId, "make an image of a robot");
@@ -439,7 +445,7 @@ describe("approvals", () => {
         error_code: "no_media_provider",
       });
     } finally {
-      await tdb.admin`insert into public.model_credentials (org_id, provider, label, vault_secret_id) values (${orgId}, 'google', 'media', vault.create_secret('media-key-123456'))`;
+      await tdb.admin`insert into public.model_credentials (org_id, provider, label, vault_secret_id) values (${orgId}, 'openrouter', 'media', vault.create_secret('media-key-123456'))`;
     }
   });
 
@@ -511,11 +517,16 @@ describe("approvals", () => {
       },
     ];
     expect((await runAgent(runId, makeDeps(fixtures).deps)).status).toBe("completed");
-    const posted = received.find((r) => r.url === "/v1beta/interactions");
+    const posted = received.find((r) => r.url === "/or/videos");
     expect(JSON.parse(posted!.body)).toMatchObject({
-      input: [
-        { type: "text", text: "the dog wags" },
-        { type: "image", data: "iVBORw==", mime_type: "image/png" },
+      model: "google/gemini-omni-1.2-flash",
+      prompt: "the dog wags",
+      frame_images: [
+        {
+          type: "image_url",
+          image_url: { url: "data:image/png;base64,iVBORw==" },
+          frame_type: "first_frame",
+        },
       ],
     });
     const done = (await events(runId)).find((e) => e.type === "tool.completed");

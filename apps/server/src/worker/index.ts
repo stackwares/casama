@@ -12,7 +12,6 @@ import {
   FcmPushSender,
   type FixtureFile,
   type FixtureTurn,
-  GeminiVideoProvider,
   hashEmbedder,
   LangfuseSink,
   MediaRouter,
@@ -311,44 +310,27 @@ export async function startWorker(opts: WorkerOptions) {
     db,
     fetch: fetchOut,
     notifications,
-    // Images on OpenRouter (Nano Banana 2.1 at 1K), video on Gemini Omni Flash 1.2 with a Google
-    // AI key; no other provider (D-185, D-189, D-260).
+    // Images (Nano Banana 2.1 at 1K) and video (Gemini Omni Flash 1.2 at 720p) on OpenRouter
+    // (D-185, D-189, D-261).
     mediaFor: async (orgId) => {
       const assigned = opts.billing ? await getCloudModels(db) : null;
-      const [or, g] = await Promise.all([
-        providerKey(orgId, ["openrouter"]),
-        providerKey(orgId, ["google"]),
-      ]);
-      const videoId = assigned?.video;
-      const geminiKey = g?.key || opts.serverGeminiKey;
-      const gemini = geminiKey
-        ? new GeminiVideoProvider(geminiKey, {
-            fetch: fetchOut,
-            base: opts.providerBases?.gemini,
-            model: videoId?.startsWith("gemini-") ? videoId : undefined,
-          })
-        : null;
+      const or = await providerKey(orgId, ["openrouter"]);
       // A workspace without its own OpenRouter key draws on the server's shared key, like chat,
       // dictation and memory search (D-186, D-194): on any server that has one, not only with
       // billing. Self-hosted, the usage row is at cost and nobody is charged.
-      const imageKey = or?.key || opts.platformOpenRouterKey;
-      const openrouter = imageKey
-        ? new OpenRouterMediaProvider(imageKey, {
-            fetch: fetchOut,
-            base: opts.providerBases?.openrouter,
-            imageModel: assigned?.image,
-            resolution: assigned?.image_resolution,
-          })
-        : null;
-      // With billing on, media made on the server's own keys is charged with markup and needs
+      const key = or?.key || opts.platformOpenRouterKey;
+      if (!key) return null;
+      const openrouter = new OpenRouterMediaProvider(key, {
+        fetch: fetchOut,
+        base: opts.providerBases?.openrouter,
+        imageModel: assigned?.image,
+        resolution: assigned?.image_resolution,
+        videoModel: assigned?.video,
+      });
+      // With billing on, media made on the server's own key is charged with markup and needs
       // credits (D-246).
-      const billed = opts.billing?.enabled === true;
-      return openrouter || gemini
-        ? new MediaRouter(openrouter, gemini, {
-            image: billed && openrouter && !or?.key ? "openrouter" : null,
-            video: billed && gemini && !g?.key ? "google" : null,
-          })
-        : null;
+      const payer = opts.billing?.enabled === true && !or?.key ? "openrouter" : null;
+      return new MediaRouter(openrouter, openrouter, { image: payer, video: payer });
     },
     searchFor: async (orgId) => {
       const k = await providerKey(orgId, ["brave_search", "tavily"]);

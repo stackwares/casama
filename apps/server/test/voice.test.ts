@@ -7,7 +7,7 @@ import { type Harness, j, startHarness } from "./helpers.ts";
 
 const FIXTURES = fileURLToPath(new URL("./fixtures/chat.json", import.meta.url));
 
-/** One local server standing in for OpenAI dictation and Gemini (their REST shapes). */
+/** One local server standing in for OpenRouter (dictation, read-aloud) and Gemini Live tokens. */
 async function mockVoiceProviders() {
   const calls: Array<{ path: string; headers: IncomingMessage["headers"]; body: string }> = [];
   const server = createServer((req, res) => {
@@ -21,22 +21,18 @@ async function mockVoiceProviders() {
         res.writeHead(200, { "content-type": "application/json" });
         res.end(JSON.stringify(o));
       };
-      if (path === "/v1/audio/transcriptions" && body.includes("BROKEN-CLIP")) {
+      if (path === "/api/v1/audio/transcriptions" && body.includes("BROKEN-CLIP")) {
         res.writeHead(400, { "content-type": "application/json" });
         return res.end(JSON.stringify({ error: { message: "Invalid file format." } }));
       }
-      if (path === "/v1/audio/transcriptions")
-        return json({ text: "remind me to water the plants", duration: 3.2 });
-      if (path.endsWith(":generateContent")) {
+      if (path === "/api/v1/audio/transcriptions")
         return json({
-          candidates: [
-            {
-              content: {
-                parts: [{ inlineData: { data: Buffer.alloc(48).toString("base64") } }],
-              },
-            },
-          ],
+          text: "remind me to water the plants",
+          usage: { seconds: 3.2, cost: 0.0000107 },
         });
+      if (path === "/api/v1/audio/speech") {
+        res.writeHead(200, { "content-type": "audio/pcm;rate=24000;channels=1" });
+        return res.end(Buffer.alloc(48));
       }
       if (path === "/v1beta/auth_tokens") return json({ name: "auth_tokens/gemini-test-token" });
       res.writeHead(404);
@@ -72,7 +68,7 @@ describe("voice (Phase 6)", () => {
       worker: {
         fixtures: FIXTURES,
         providerBases: {
-          openai: mock.url,
+          openrouter: `${mock.url}/api/v1`,
           gemini: mock.url,
         },
       },
@@ -169,15 +165,20 @@ describe("voice (Phase 6)", () => {
     expect(res.status).toBe(200);
     expect(await j(res)).toMatchObject({
       text: "remind me to water the plants",
-      provider: "openai",
+      provider: "openrouter",
       seconds: 4,
     });
-    const call = mock.calls.find((c) => c.path === "/v1/audio/transcriptions");
-    expect(call?.headers.authorization).toBe("Bearer sk-voice-openai-key");
-    const [u] = await h.handle.db.execute<{ q: string }>(
-      sql`select sum(quantity)::text as q from public.usage_ledger where kind = 'stt_seconds'`,
+    // On the workspace's own OpenRouter key, with Whisper, at the cost OpenRouter reported (D-261).
+    const call = mock.calls.find((c) => c.path === "/api/v1/audio/transcriptions");
+    expect(call?.headers.authorization).toBe("Bearer sk-voice-llm-key");
+    expect(call?.body).toContain("openai/whisper-large-v3-turbo");
+    const [u] = await h.handle.db.execute<{ q: string; cost: string; billable: boolean }>(
+      sql`select quantity::text as q, cost_usd::text as cost, billable from public.usage_ledger where kind = 'stt_seconds'`,
     );
     expect(Number(u?.q)).toBe(4);
+    expect(u?.billable).toBe(false);
+    // The ledger keeps six decimals.
+    expect(Number(u?.cost)).toBeCloseTo(0.000011, 6);
   }, 60_000);
 
   it("a clip the provider rejects comes back as transcription_failed, not a 500", async () => {
@@ -192,7 +193,7 @@ describe("voice (Phase 6)", () => {
   }, 60_000);
 
   it("a removed dictation service saved on a bot is ignored", async () => {
-    // Bots saved before D-260 may still prefer Deepgram; dictation stays on the OpenAI key.
+    // Bots saved before D-260 may still prefer Deepgram; dictation stays on OpenRouter.
     await h.handle.db.execute(
       sql`update public.bots set voice = '{"stt_provider":"deepgram","tts_provider":"elevenlabs"}' where id = ${botId}::uuid`,
     );
@@ -204,18 +205,33 @@ describe("voice (Phase 6)", () => {
         body: new Uint8Array([9, 9]),
       }),
     );
-    expect(res).toMatchObject({ text: "remind me to water the plants", provider: "openai" });
+    expect(res).toMatchObject({ text: "remind me to water the plants", provider: "openrouter" });
     await h.handle.db.execute(sql`update public.bots set voice = '{}' where id = ${botId}::uuid`);
   }, 60_000);
 
-  it("read aloud needs a Google AI key", async () => {
+  it("read aloud is Gemini TTS on the workspace's OpenRouter key, spoken once then cached", async () => {
     const [m] = await h.handle.db.execute<{ id: string }>(sql`
       insert into public.messages (org_id, conversation_id, role, content)
       values (${orgId}::uuid, ${convId}::uuid, 'assistant', '[{"type":"text","text":"Water the fern on Fridays."}]'::jsonb)
       returning id`);
-    const res = await h.request(`/v1/messages/${m?.id}/speech`, { token: owner.token });
-    expect(res.status).toBe(409);
-    expect(JSON.stringify(await j(res))).toContain("Google AI key");
+    const audio = await h.request(`/v1/messages/${m?.id}/speech`, { token: owner.token });
+    expect(audio.status).toBe(200);
+    expect(audio.headers.get("content-type")).toBe("audio/wav");
+    const bytes = new Uint8Array(await audio.arrayBuffer());
+    expect(Buffer.from(bytes.slice(0, 4)).toString()).toBe("RIFF");
+    const speech = mock.calls.filter((c) => c.path === "/api/v1/audio/speech");
+    expect(speech).toHaveLength(1);
+    expect(speech[0]?.headers.authorization).toBe("Bearer sk-voice-llm-key");
+    expect(JSON.parse(speech[0]?.body ?? "{}")).toEqual({
+      model: "google/gemini-3.8-flash-lite-tts",
+      input: "Water the fern on Fridays.",
+      voice: "Kore",
+      response_format: "pcm",
+    });
+    expect((await h.request(`/v1/messages/${m?.id}/speech`, { token: owner.token })).status).toBe(
+      200,
+    );
+    expect(mock.calls.filter((c) => c.path === "/api/v1/audio/speech")).toHaveLength(1);
   }, 60_000);
 
   it("a live call session carries the persona and the bot's tools; tool calls run with approvals", async () => {
@@ -355,27 +371,6 @@ describe("voice (Phase 6)", () => {
       slidingWindow: { targetTokens: 16000 },
     });
     expect(setup.realtimeInputConfig.turnCoverage).toBe("TURN_INCLUDES_ONLY_ACTIVITY");
-
-    const [spoken] = await h.handle.db.execute<{ id: string }>(sql`
-      insert into public.messages (org_id, conversation_id, role, content)
-      values (${orgId}::uuid, ${convId}::uuid, 'assistant', '[{"type":"text","text":"The fern is watered."}]'::jsonb)
-      returning id`);
-    const audio = await h.request(`/v1/messages/${spoken?.id}/speech`, { token: owner.token });
-    expect(audio.status).toBe(200);
-    expect(audio.headers.get("content-type")).toBe("audio/wav");
-    // Spoken once, then served from the cache.
-    const ttsCalls = mock.calls.filter((c) => c.path.endsWith(":generateContent")).length;
-    expect(
-      (await h.request(`/v1/messages/${spoken?.id}/speech`, { token: owner.token })).status,
-    ).toBe(200);
-    expect(mock.calls.filter((c) => c.path.endsWith(":generateContent"))).toHaveLength(ttsCalls);
-    const tts = mock.calls.findLast((c) => c.path.endsWith(":generateContent"));
-    expect(tts?.headers["x-goog-api-key"]).toBe("gemini-voice-key");
-    expect(
-      JSON.parse(Buffer.from(tts?.body ?? "{}", "latin1").toString("utf8")).generationConfig,
-    ).toMatchObject({
-      speechConfig: { voiceConfig: { voice: "Kore" } },
-    });
   }, 60_000);
 
   it("connected-app tools a bot chose for calls join the voice set", async () => {

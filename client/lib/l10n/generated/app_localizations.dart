@@ -2515,13 +2515,13 @@ abstract class AppLocalizations {
   /// No description provided for @callNeedsKeyTitle.
   ///
   /// In en, this message translates to:
-  /// **'Calls need a voice key'**
+  /// **'Calls need a Google AI key'**
   String get callNeedsKeyTitle;
 
   /// No description provided for @callNeedsKeyBody.
   ///
   /// In en, this message translates to:
-  /// **'Live calls run on Google\'s Gemini Live, so this workspace needs a Google AI key. Google gives you one free in AI Studio: create it there, then add it under Model keys and calls work right away. Only workspace owners and admins can add keys.'**
+  /// **'Live calls run on Google\'s Gemini Live, so this workspace needs a Google AI key. It\'s only used for calls: read aloud, dictation, images and video run on OpenRouter. Google gives you one free in AI Studio: create it there, then add it under Model keys and calls work right away. Only workspace owners and admins can add keys.'**
   String get callNeedsKeyBody;
 
   /// No description provided for @callAddKey.
@@ -3775,8 +3775,14 @@ abstract class AppLocalizations {
   /// No description provided for @providerHintOpenRouter.
   ///
   /// In en, this message translates to:
-  /// **'recommended'**
+  /// **'recommended: chat, images, video, voice'**
   String get providerHintOpenRouter;
+
+  /// No description provided for @providerHintGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'live calls only'**
+  String get providerHintGoogle;
 
   /// No description provided for @providerHintCompatible.
   ///

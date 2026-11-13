@@ -80,7 +80,7 @@ The full product is 40 features across 9 phases, built backend-first: Phases 0 t
 | Approvals               | Policy-driven approval for risky tools                                                               | Sending an email waits for approval; deny cancels that step only                                  | 4       |
 | Delegation              | Subagents and peer bots with budgets and timeouts; shared task board                                 | A subagent stops at its budget; the parent receives its summary                                   | 4       |
 | Integrations            | Remote MCP servers, OpenAPI tools, Composio, Pipedream Connect                                       | MCP and OpenAPI tools run; Composio and Pipedream tools run when org credentials are configured   | 4       |
-| Media generation        | Images on OpenRouter (Nano Banana 2.1), video on Gemini Omni (`MediaProvider`; D-260)                | A bot generates an image and a short video clip; usage is recorded; keys never leave Vault        | 4       |
+| Media generation        | Images (Nano Banana 2.1) and video (Gemini Omni) on OpenRouter (`MediaProvider`; D-261)              | A bot generates an image and a short video clip; usage is recorded; keys never leave Vault        | 4       |
 | Secrets                 | Named secrets used through `{{secret:NAME}}` placeholders                                            | Secret values never appear in model input, events or logs (test)                                  | 4       |
 | Notifications           | Push (FCM and APNs) plus an in-app inbox                                                             | An approval request reaches the phone within 5 s                                                  | 4       |
 | Templates               | Starter bots for common jobs                                                                         | A new user has a working bot from a template within 2 min                                         | 4       |
@@ -89,7 +89,7 @@ The full product is 40 features across 9 phases, built backend-first: Phases 0 t
 | Desktop control         | agent-desktop (accessibility tree) with screenshot fallback                                          | Bot operates a Linux desktop app                                                                  | 5       |
 | Providers               | Docker with gVisor, E2B, Daytona (more providers specified post-v1)                                  | The same computer test suite passes on Docker, E2B and Daytona                                    | 5       |
 | Channels                | Bot email inbox, SMS, Telegram, Slack, WhatsApp, Messenger (post-v1 build)                           | Specified in Channels; built in Wave 3 (D-134)                                                    | post-v1 |
-| Voice                   | Dictation (OpenAI), read aloud (Gemini TTS), live calls (Gemini Live; D-260)                         | Live-call reply starts within 1 s                                                                 | 6       |
+| Voice                   | Dictation and read aloud on OpenRouter, live calls on Gemini Live (D-260, D-261)                     | Live-call reply starts within 1 s                                                                 | 6       |
 | Local computer          | Flutter desktop companion runs tools on the user's own machine                                       | Bot opens an app on the user's Mac behind a visible consent overlay                               | 6       |
 | Flutter extras          | Home-screen widgets, iOS Live Activities, share to bot, desktop hotkey and tray, owner admin console | Each works on its platforms in the release build                                                  | 6       |
 | Dart SDK                | `casama_sdk` on pub.dev with typed events                                                            | An external sample app streams a run using only the published SDK                                 | 6       |
@@ -582,7 +582,7 @@ MCP is the one integration standard for v1. External messaging channels are spec
 - **Remote MCP servers** (Streamable HTTP, with OAuth or header auth): tools are listed on connect, cached, and exposed as `mcp.{server}.{tool}`. Re-list on demand and every 24 h.
 - **OpenAPI sources:** import an OpenAPI 3 JSON document; each operation becomes a tool with its schema. Auth through named secrets.
 - **Composio** and **Pipedream Connect** (v1): org-level adapters behind `integrations.kind = composio | pipedream`. Tools appear when credentials are set; same allowlist and risk model as MCP. Off on self-host until keys are configured.
-- **Media generation** (v1): `MediaProvider` interface; images on OpenRouter (Gemini Nano Banana 2.1) and video on Gemini Omni Flash with a Google AI key (D-185, D-189, D-260; keys in Vault). Tools `media.image.generate` and `media.video.generate` record usage in `usage_ledger`. Additional providers plug in without changing the tool schema.
+- **Media generation** (v1): `MediaProvider` interface; images (Gemini Nano Banana 2.1) and video (Gemini Omni Flash, a polled job) on OpenRouter, on the workspace's key or the server's shared one (D-185, D-189, D-261; keys in Vault). Tools `media.image.generate` and `media.video.generate` record usage in `usage_ledger`. Additional providers plug in without changing the tool schema.
 - Per-bot allowlists decide which integration tools each bot may call; each tool has a risk level the org admin can raise.
 - Integration credentials live only in Vault and are never returned by the API.
 - MCP servers on the user's own computer (a local command or a `127.0.0.1` address) cannot be reached from the server; they connect through the desktop companion (Post-v1 roadmap: Local MCP servers).
@@ -605,8 +605,8 @@ MCP is the one integration standard for v1. External messaging channels are spec
 
 ### Voice
 
-- **Dictation:** record with the `record` package, transcribe through the user's OpenAI key, or Whisper on the server's shared OpenRouter key, via the API (D-260).
-- **Read aloud:** Gemini Flash-Lite text-to-speech on the workspace's or the server's Google AI key (D-260). Cache audio per message.
+- **Dictation:** record with the `record` package, transcribe with Whisper on OpenRouter (the workspace's key or the server's shared one) via the API (D-261).
+- **Read aloud:** Gemini Flash-Lite text-to-speech on OpenRouter, on the workspace's or the server's shared key (D-261). Cache audio per message.
 - **Live calls:** Gemini Live over a WebSocket (D-260). The API mints a single-use, locked provider token (`POST /v1/voice/session`); the app connects directly; the call's tool calls are forwarded to `POST /v1/voice/tool` and run as a normal agent run with the same approvals. Transcripts are saved to the conversation.
 - Voice usage is recorded in `usage_ledger` like tokens.
 
@@ -1445,7 +1445,7 @@ Eleven decisions have defaults the coding agent can build on now; confirm each b
 | Final product name and domain | Decided: Casama on casama.ai (D-170); API `api.casama.ai`, auth `auth.casama.ai` (D-172)       | Phase 8        |
 | Who pays for model usage      | Bring-your-own model keys at launch; included credits later via Dodo Payments                 | Phase 7        |
 | Supabase hosting              | Decided: our own self-hosted Supabase for Casama Cloud (D-171); self-hosted in Compose        | Phase 0        |
-| Media generation provider     | OpenRouter images and Gemini video only (D-260)                                               | Phase 4        |
+| Media generation provider     | OpenRouter for images and video (D-261)                                                       | Phase 4        |
 | WebRTC streamer               | Decided: Neko (D-054)                                                                         | Phase 5        |
 | Hosted ChatGPT plan usage     | Off on Casama Cloud until OpenAI approves it through its interest form                        | Cloud launch   |
 | Name for workspaces in the UI | Keep "workspace"; switch to "space" if the product owner prefers                              | Post-v1 Wave 1 |

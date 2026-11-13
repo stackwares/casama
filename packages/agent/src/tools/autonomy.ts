@@ -1,7 +1,6 @@
 import type { Database } from "@casama/db";
 import { contentKeys } from "@casama/db";
 import {
-  cloudCharge,
   cloudOpenRouterCharge,
   isValidCron,
   isValidTimezone,
@@ -912,7 +911,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       if (!provider || provider.supports?.("video") === false)
         throw new ToolError(
           "no_media_provider",
-          "No video generation key is configured. Add a Google AI key in Model keys.",
+          "No video generation key is configured. Add an OpenRouter key in Model keys.",
         );
       const image = args.image ? await loadFile(ctx, args.image) : undefined;
       if (image && !image.contentType.startsWith("image/"))
@@ -1008,10 +1007,9 @@ function contentTypeOf(name: string) {
 const MAX_INPUT_BYTES = 25 * 1024 * 1024;
 
 /** What a workspace is charged for media Casama paid for: cost with markup (and OpenRouter's fee). */
-function mediaCharge(payer: MediaPayer, providerCostUsd: number) {
-  return payer === "openrouter"
-    ? cloudOpenRouterCharge(providerCostUsd)
-    : cloudCharge(providerCostUsd);
+/** Media on the server's key is OpenRouter's price with its fee and Casama's markup (D-261). */
+function mediaCharge(_payer: MediaPayer, providerCostUsd: number) {
+  return cloudOpenRouterCharge(providerCostUsd);
 }
 
 /** Refuses media on the server's key when a credit-gated workspace can't cover it (D-246). */

@@ -1,7 +1,6 @@
 /**
- * Image and video generation behind one interface (D-185, D-189, D-260): images on OpenRouter
- * (Gemini Nano Banana 2.1 at 1K), video on Gemini Omni Flash 1.2 with a Google AI key. There is no
- * other provider.
+ * Image and video generation behind one interface, both on OpenRouter (D-185, D-189, D-261):
+ * images are Gemini Nano Banana 2.1 at 1K, video is Gemini Omni Flash 1.2 at 720p.
  */
 export interface MediaResult {
   /** Where to download it; empty when the bytes come inline (`data`). */
@@ -72,26 +71,61 @@ export const OPENROUTER_IMAGE_PRICES: Record<string, number> = {
 
 const ASPECT = { square: "1:1", portrait: "3:4", landscape: "16:9" } as const;
 
+/** Default video model on OpenRouter: Gemini Omni Flash 1.2 at 720p, 3–15 seconds (D-189, D-261). */
+export const OPENROUTER_VIDEO_MODEL = "google/gemini-omni-1.2-flash";
+/** OpenRouter's 720p-with-audio price (2026-11-13), for when a finished job reports no cost. */
+export const OPENROUTER_VIDEO_PER_SECOND = 0.069504;
+
+export interface OpenRouterMediaOptions {
+  base?: string;
+  fetch?: typeof fetch;
+  imageModel?: string;
+  resolution?: string;
+  videoModel?: string;
+  /** How often to poll a video job, and how long to wait for it (tests shorten both). */
+  pollMs?: number;
+  videoTimeoutMs?: number;
+}
+
 export class OpenRouterMediaProvider implements MediaProvider {
   readonly id = "openrouter";
-  supports(kind: "image" | "video") {
-    return kind === "image";
+  supports(_kind: "image" | "video") {
+    return true;
   }
   private readonly key: string;
   private readonly base: string;
   private readonly fetchImpl: typeof fetch;
   private readonly imageModel: string;
   private readonly resolution: string;
-  constructor(
-    key: string,
-    opts: { base?: string; fetch?: typeof fetch; imageModel?: string; resolution?: string } = {},
-  ) {
+  private readonly videoModel: string;
+  private readonly pollMs: number;
+  private readonly videoTimeoutMs: number;
+  constructor(key: string, opts: OpenRouterMediaOptions = {}) {
     this.key = key;
     this.base = (opts.base ?? "https://openrouter.ai/api/v1").replace(/\/$/, "");
     this.fetchImpl = opts.fetch ?? fetch;
     // Nano Banana 2.1: LM Arena rank 7 and Artificial Analysis rank 6, about $0.034 at 1K.
     this.imageModel = opts.imageModel ?? OPENROUTER_IMAGE_MODEL;
     this.resolution = opts.resolution ?? OPENROUTER_IMAGE_RESOLUTION;
+    this.videoModel = opts.videoModel ?? OPENROUTER_VIDEO_MODEL;
+    this.pollMs = opts.pollMs ?? 5000;
+    this.videoTimeoutMs = opts.videoTimeoutMs ?? 10 * 60_000;
+  }
+
+  private async call(path: string, init: RequestInit = {}) {
+    const res = await this.fetchImpl(`${this.base}${path}`, {
+      ...init,
+      headers: { authorization: `Bearer ${this.key}`, "content-type": "application/json" },
+      signal: AbortSignal.timeout(60_000),
+    });
+    const body = (await res.json().catch(() => ({}))) as Record<string, unknown> & {
+      error?: { message?: string } | string;
+    };
+    if (!res.ok) {
+      const said = typeof body.error === "string" ? body.error : body.error?.message;
+      throw new Error(`OpenRouter returned ${res.status}: ${String(said ?? "").slice(0, 300)}`);
+    }
+    return body;
   }
 
   async generateImage(input: {
@@ -136,103 +170,78 @@ export class OpenRouterMediaProvider implements MediaProvider {
     }));
   }
 
-  async generateVideo(): Promise<MediaResult> {
-    throw new Error("Video needs a Google AI key in Model keys.");
-  }
-}
-
-/** Gemini Omni Flash 1.2 video (D-189): Interactions API, MP4 inline, 720p, 3–15 seconds. */
-export const GEMINI_VIDEO_MODEL = "gemini-omni-1.2-flash";
-/** 720p: 5,792 video tokens a second at $12 per million (Google, 2026-11-10). */
-export const GEMINI_VIDEO_PER_SECOND = 0.0695;
-
-export class GeminiVideoProvider implements MediaProvider {
-  readonly id = "gemini";
-  supports(kind: "image" | "video") {
-    return kind === "video";
-  }
-  private readonly key: string;
-  private readonly base: string;
-  private readonly fetchImpl: typeof fetch;
-  private readonly model: string;
-  constructor(key: string, opts: { base?: string; fetch?: typeof fetch; model?: string } = {}) {
-    this.key = key;
-    this.base = (opts.base ?? "https://generativelanguage.googleapis.com").replace(/\/$/, "");
-    this.fetchImpl = opts.fetch ?? fetch;
-    this.model = opts.model ?? GEMINI_VIDEO_MODEL;
-  }
-
-  async generateImage(): Promise<MediaResult[]> {
-    throw new Error("Images need an OpenRouter key in Model keys.");
-  }
-
+  /**
+   * A video job (D-261): submit, poll until it finishes, then download the clip. A starting
+   * picture goes in as the first frame.
+   */
   async generateVideo(input: {
     prompt: string;
     durationS?: number;
     model?: string;
     size?: "square" | "portrait" | "landscape";
     image?: MediaInput;
-  }) {
-    const model = input.model ?? this.model;
+  }): Promise<MediaResult> {
+    const model = input.model ?? this.videoModel;
     const seconds = Math.min(15, Math.max(3, input.durationS ?? 5));
-    const res = await this.fetchImpl(`${this.base}/v1beta/interactions`, {
+    const job = (await this.call("/videos", {
       method: "POST",
-      headers: { "x-goog-api-key": this.key, "content-type": "application/json" },
       body: JSON.stringify({
         model,
-        // A starting picture goes in with the prompt, as an image part.
-        input: input.image
-          ? [
-              { type: "text", text: input.prompt },
-              {
-                type: "image",
-                data: Buffer.from(input.image.data).toString("base64"),
-                mime_type: input.image.contentType,
-              },
-            ]
-          : input.prompt,
-        response_format: {
-          type: "video",
-          duration: `${seconds}s`,
-          aspect_ratio: input.size === "portrait" ? "9:16" : "16:9",
-          resolution: "720p",
-        },
+        prompt: input.prompt,
+        duration: seconds,
+        resolution: "720p",
+        aspect_ratio: input.size === "portrait" ? "9:16" : "16:9",
+        generate_audio: true,
+        ...(input.image
+          ? {
+              frame_images: [
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: `data:${input.image.contentType};base64,${Buffer.from(input.image.data).toString("base64")}`,
+                  },
+                  frame_type: "first_frame",
+                },
+              ],
+            }
+          : {}),
       }),
-      signal: AbortSignal.timeout(300_000),
-    });
-    const body = (await res.json().catch(() => ({}))) as {
-      error?: { message?: string };
-      usage?: { cost?: number };
-      output_video?: { data?: string; mime_type?: string; mimeType?: string };
-      steps?: Array<{
-        type?: string;
-        content?: Array<{ type?: string; data?: string; mime_type?: string; mimeType?: string }>;
-      }>;
-    };
-    if (!res.ok)
-      throw new Error(
-        `Gemini returned ${res.status}: ${String(body.error?.message ?? "").slice(0, 300)}`,
-      );
-    let data = body.output_video?.data;
-    let mime = body.output_video?.mime_type ?? body.output_video?.mimeType;
-    for (const step of [...(body.steps ?? [])].reverse()) {
-      if (data) break;
-      if (step.type !== "model_output") continue;
-      for (const part of [...(step.content ?? [])].reverse()) {
-        if (part.type === "video" && part.data) {
-          data = part.data;
-          mime = part.mime_type ?? part.mimeType;
-          break;
-        }
+    })) as VideoJob;
+    if (!job.id) throw new Error("OpenRouter returned no video job");
+    const until = Date.now() + this.videoTimeoutMs;
+    let done = job;
+    let misses = 0;
+    while (done.status !== "completed") {
+      if (done.status === "failed" || done.status === "cancelled" || done.status === "expired")
+        throw new Error(`OpenRouter video ${done.status}${done.error ? `: ${done.error}` : ""}`);
+      if (Date.now() > until) throw new Error("OpenRouter video timed out");
+      await new Promise((r) => setTimeout(r, this.pollMs));
+      try {
+        done = (await this.call(`/videos/${encodeURIComponent(job.id)}`)) as VideoJob;
+        misses = 0;
+      } catch (e) {
+        // A few failed polls in a row (a network blip) are tolerated; the job keeps running.
+        if (++misses >= 3) throw e;
       }
     }
-    if (!data) throw new Error("Gemini returned no video");
+    const res = await this.fetchImpl(
+      `${this.base}/videos/${encodeURIComponent(job.id)}/content?index=0`,
+      {
+        headers: { authorization: `Bearer ${this.key}` },
+        signal: AbortSignal.timeout(120_000),
+      },
+    );
+    if (!res.ok) throw new Error(`OpenRouter returned ${res.status} for the video file`);
+    const data = new Uint8Array(await res.arrayBuffer());
+    if (!data.length) throw new Error("OpenRouter returned an empty video");
     const cost =
-      typeof body.usage?.cost === "number" ? body.usage.cost : seconds * GEMINI_VIDEO_PER_SECOND;
+      typeof done.usage?.cost === "number"
+        ? done.usage.cost
+        : seconds * OPENROUTER_VIDEO_PER_SECOND;
     return {
       url: "",
-      data: Uint8Array.from(Buffer.from(data, "base64")),
-      contentType: mime ?? "video/mp4",
+      data,
+      contentType: res.headers.get("content-type")?.split(";")[0] || "video/mp4",
       durationS: seconds,
       model,
       costUsd: cost,
@@ -240,9 +249,17 @@ export class GeminiVideoProvider implements MediaProvider {
   }
 }
 
-/** Images from one provider, video from another (either may be missing). */
+type VideoJob = {
+  id?: string;
+  status?: "pending" | "in_progress" | "completed" | "failed" | "cancelled" | "expired";
+  error?: string;
+  usage?: { cost?: number | null };
+};
+
 /** The server account that pays for media made on its key. */
-export type MediaPayer = "openrouter" | "google";
+export type MediaPayer = "openrouter";
+
+/** Images and video, each from its provider (either may be missing). */
 
 export class MediaRouter implements MediaProvider {
   readonly id: string;
@@ -271,7 +288,7 @@ export class MediaRouter implements MediaProvider {
     return this.images.generateImage(input);
   }
   generateVideo(input: Parameters<MediaProvider["generateVideo"]>[0]) {
-    if (!this.video) throw new Error("Video needs a Google AI key in Model keys.");
+    if (!this.video) throw new Error("Video needs an OpenRouter key in Model keys.");
     return this.video.generateVideo(input);
   }
 }

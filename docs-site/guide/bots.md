@@ -82,7 +82,8 @@ These providers can run a bot:
 
 The same screen also takes keys that give bots other abilities but can't run a bot: Brave Search
 and Tavily (web search), Treg (paid data), and Google Maps and Mapbox (travel times). Images run
-on an OpenRouter key; video, read aloud and calls on a Google AI key; dictation on an OpenAI key.
+on an OpenRouter key, and so do video, read aloud and dictation. A Google AI key is only for live
+calls.
 
 From the CLI: `casama credential add --provider openrouter --label Default`.
 

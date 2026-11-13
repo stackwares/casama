@@ -663,11 +663,12 @@ class _CloudModelsSheetState extends State<_CloudModelsSheet> {
             if (v != null) setState(() => _resolution = v);
           }, haptic: HapticsHelper.selection),
         ),
-        box(const Key('cloudLive'), _live, 'Calls'),
-        box(const Key('cloudTts'), _tts, 'Read aloud'),
-        box(const Key('cloudStt'), _stt, 'Dictation'),
+        // Calls go to Google's Gemini Live; the rest are OpenRouter model ids (D-261).
+        box(const Key('cloudLive'), _live, 'Calls (Gemini Live on Google)'),
+        box(const Key('cloudTts'), _tts, 'Read aloud (OpenRouter)'),
+        box(const Key('cloudStt'), _stt, 'Dictation (OpenRouter)'),
         box(const Key('cloudEmbedding'), _embedding, 'Embeddings'),
-        box(const Key('cloudVideo'), _video, 'Video', last: true),
+        box(const Key('cloudVideo'), _video, 'Video (OpenRouter)', last: true),
       ],
     );
   }

@@ -7882,13 +7882,13 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 200,
-            "description": "Gemini text-to-speech model for read aloud."
+            "description": "OpenRouter text-to-speech model for read aloud (google/gemini-3.8-flash-lite-tts)."
           },
           "stt": {
             "type": "string",
             "minLength": 1,
             "maxLength": 200,
-            "description": "OpenAI transcription model for dictation."
+            "description": "OpenRouter transcription model for dictation (openai/whisper-large-v3-turbo)."
           },
           "embedding": {
             "type": "string",
@@ -7900,7 +7900,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 200,
-            "description": "Gemini video model (gemini-omni-1.2-flash) on a Google AI key."
+            "description": "OpenRouter video model (google/gemini-omni-1.2-flash)."
           }
         },
         "required": [

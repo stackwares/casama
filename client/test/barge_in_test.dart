@@ -85,7 +85,7 @@ void main() {
       );
       await tester.pump();
       await tester.pump();
-      expect(find.text('Calls need a voice key'), findsOneWidget);
+      expect(find.text('Calls need a Google AI key'), findsOneWidget);
       expect(find.byKey(const Key('callNeedsKey')), findsOneWidget);
       expect(find.byKey(const Key('callGetKey')), findsOneWidget);
       expect(find.byKey(const Key('callMascot-failed')), findsOneWidget);

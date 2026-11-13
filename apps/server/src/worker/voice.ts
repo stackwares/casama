@@ -1,6 +1,7 @@
 /**
  * Voice work that needs provider keys (only the worker reads Vault): transcription, read-aloud
- * audio (cached per message and voice) and Gemini Live call sessions (D-065, D-260).
+ * audio (cached per message and voice) and Gemini Live call sessions (D-065, D-260). Dictation and
+ * read-aloud run on OpenRouter; calls on a Google AI key (D-261).
  */
 
 import {
@@ -10,8 +11,6 @@ import {
   OPENROUTER_STT_MODEL,
   type RealtimeTool,
   START_TASK_TOOL,
-  STT_PROVIDERS,
-  type SttProviderId,
   synthesize,
   ToolRegistry,
   transcribe,
@@ -23,7 +22,7 @@ import {
 } from "@casama/agent";
 import type { Database } from "@casama/db";
 import type { CloudModelAssignment } from "@casama/domain";
-import { cloudCharge, cloudOpenRouterCharge } from "@casama/domain";
+import { cloudOpenRouterCharge, openRouterModelId } from "@casama/domain";
 import { sql } from "drizzle-orm";
 
 export interface VoiceRuntime {
@@ -39,13 +38,16 @@ export interface VoiceRuntime {
   /** Gemini Live model (default gemini-3.8-live). */
   geminiLiveModel?: string;
   /**
-   * The server's own Google AI key (GOOGLE_AI_API_KEY): live calls and read-aloud in workspaces
-   * without their own Google key use it. On Casama Cloud those are paid from credits.
+   * The server's own Google AI key (GOOGLE_AI_API_KEY): live calls in workspaces without their own
+   * Google key use it. On Casama Cloud those are paid from credits.
    */
   serverGeminiKey?: string;
   /** Casama Cloud's live assignment (D-188). Unset on a self-hosted server. */
   cloudModels?: () => Promise<CloudModelAssignment>;
-  /** The server's shared OpenRouter key (CLOUD_MODEL_UPSTREAM_KEY): dictation without a key of their own. */
+  /**
+   * The server's shared OpenRouter key (CLOUD_MODEL_UPSTREAM_KEY): dictation and read-aloud in
+   * workspaces without an OpenRouter key of their own (D-194, D-261).
+   */
   platformOpenRouterKey?: string;
   /** Casama Cloud: usage on the shared key is charged to credits. */
   billPlatform?: boolean;
@@ -53,12 +55,10 @@ export interface VoiceRuntime {
 
 /**
  * A bot's voice settings. Rows saved before D-260 may still name a removed read-aloud or dictation
- * service (`tts_provider`, an `stt_provider` like "deepgram", `realtime_provider`); those are
- * ignored.
+ * service (`tts_provider`, `stt_provider`, `realtime_provider`); those are ignored.
  */
 type BotVoice = {
   tts_voice?: string;
-  stt_provider?: string;
   realtime_voice?: string;
   /** Connected-app tools (full names) the bot also gets on calls, on top of the voice set. */
   call_tools?: string[];
@@ -111,12 +111,6 @@ async function botVoice(db: Database, botId: string) {
   return b;
 }
 
-/** The bot's preferred service first, when it is still one Casama offers. */
-const ordered = <T extends string>(preferred: string | undefined, all: T[]) =>
-  preferred && (all as string[]).includes(preferred)
-    ? [preferred as T, ...all.filter((p) => p !== preferred)]
-    : all;
-
 /** Whether a credit-gated workspace still has credits once unsettled usage is counted. */
 async function hasCredits(db: Database, orgId: string) {
   const [r] = await db.execute<{
@@ -156,23 +150,18 @@ export async function voiceTranscribe(
   const bot = await botVoice(rt.db, botId);
   if (bot.org_id !== orgId) throw new Error("bot_not_found");
   const assigned = await rt.cloudModels?.();
-  // On Casama Cloud, or with the server's shared key, the person cannot pick a dictation service.
-  const own = await rt.key(
-    orgId,
-    assigned || rt.platformOpenRouterKey
-      ? STT_PROVIDERS
-      : ordered(bot.voice.stt_provider, STT_PROVIDERS),
-  );
-  // No key of their own: the server's shared OpenRouter key, on the server's model (D-194).
+  // Dictation is OpenRouter (D-261): the workspace's own key, else the server's shared one (D-194).
+  const own = await rt.key(orgId, ["openrouter"]);
   const shared = !own?.key && !!rt.platformOpenRouterKey;
-  const k = shared ? { provider: "openrouter", key: rt.platformOpenRouterKey ?? null } : own;
+  const k = { provider: "openrouter" as const, key: own?.key ?? rt.platformOpenRouterKey ?? null };
+  const model = openRouterModelId(assigned?.stt ?? OPENROUTER_STT_MODEL);
   // The app reads these codes: with no service it switches to the phone's own dictation, and a
   // failed clip is offered again instead of a bare "Something went wrong".
   if (!k?.key)
     return {
       ok: false as const,
       code: "dictation_unavailable",
-      error: "Add an OpenAI key to use dictation.",
+      error: "Add an OpenRouter key to use dictation.",
     };
   // On the server's key with billing on, dictation needs credits; without them the app falls back
   // to the phone's own dictation (D-246).
@@ -184,18 +173,12 @@ export async function voiceTranscribe(
     };
   let r: Awaited<ReturnType<typeof transcribe>>;
   try {
-    r = await transcribe(
-      k.provider as SttProviderId,
-      k.key,
-      Buffer.from(audioB64, "base64"),
-      mime,
-      {
-        bases: rt.bases,
-        fetch: rt.fetch,
-        language,
-        model: k.provider === "openai" ? assigned?.stt : shared ? OPENROUTER_STT_MODEL : undefined,
-      },
-    );
+    r = await transcribe(k.provider, k.key, Buffer.from(audioB64, "base64"), mime, {
+      bases: rt.bases,
+      fetch: rt.fetch,
+      language,
+      model,
+    });
   } catch (e) {
     if (!(e instanceof VoiceError)) throw e;
     console.error(
@@ -217,28 +200,18 @@ export async function voiceTranscribe(
       ok: false as const,
       code: badKey ? "dictation_unavailable" : "transcription_failed",
       error: badKey
-        ? `Your ${k.provider} key was refused. Check it in Settings → Model keys.`
+        ? "Your OpenRouter key was refused. Check it in Settings → Model keys."
         : "Couldn't turn that recording into text.",
     };
   }
   const seconds = Math.ceil(r.seconds ?? 0);
-  if (shared) {
-    const cost = r.costUsd ?? (seconds / 60) * 0.0002;
-    const billable = rt.billPlatform === true;
-    await rt.db.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, billable, meta)
-      values (${orgId}::uuid, ${botId}::uuid, 'stt_seconds', ${seconds},
-              ${billable ? cloudOpenRouterCharge(cost) : cost}, ${billable},
-              ${JSON.stringify({ provider: "openrouter", model: OPENROUTER_STT_MODEL, provider_cost_usd: cost, ...(billable ? { key: "server" } : {}) })}::jsonb)`);
-    return { ok: true as const, text: r.text, provider: k.provider, seconds };
-  }
-  await ledger(
-    rt.db,
-    orgId,
-    botId,
-    "stt_seconds",
-    seconds,
-    (seconds / 60) * VOICE_PRICES.sttPerMinute,
-  );
+  // OpenRouter reports what the clip cost; the per-minute price is only the fallback.
+  const cost = r.costUsd ?? (seconds / 60) * VOICE_PRICES.sttPerMinute;
+  const billable = shared && rt.billPlatform === true;
+  await rt.db.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, billable, meta)
+    values (${orgId}::uuid, ${botId}::uuid, 'stt_seconds', ${seconds},
+            ${billable ? cloudOpenRouterCharge(cost) : cost}, ${billable},
+            ${JSON.stringify({ provider: "openrouter", model, provider_cost_usd: cost, ...(shared ? { key: "server" } : {}) })}::jsonb)`);
   return { ok: true as const, text: r.text, provider: k.provider, seconds };
 }
 
@@ -253,18 +226,16 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
   if (!m) return { ok: false as const, error: "Message not found." };
   const bot = await botVoice(rt.db, m.bot_id);
   const assigned = await rt.cloudModels?.();
-  // Gemini reads aloud: the workspace's Google key first, else the server's own (D-260).
-  const google = await rt.key(orgId, ["google"]);
-  const k = google?.key
-    ? { provider: "google" as const, key: google.key }
-    : rt.serverGeminiKey
-      ? { provider: "google" as const, key: rt.serverGeminiKey }
-      : null;
-  if (!k)
+  // Read-aloud is Gemini TTS on OpenRouter: the workspace's own key, else the server's shared
+  // one (D-261).
+  const own = await rt.key(orgId, ["openrouter"]);
+  const key = own?.key ?? rt.platformOpenRouterKey;
+  if (!key)
     return {
       ok: false as const,
-      error: "Add a Google AI key to read aloud.",
+      error: "Add an OpenRouter key to read aloud.",
     };
+  const k = { provider: "openrouter" as const, key };
   const voiceKey = `${k.provider}:${bot.voice.tts_voice ?? ""}`;
   const [cached] = await rt.db.execute<{ mime: string }>(sql`
     select mime from public.tts_cache where message_id = ${messageId}::uuid and voice_key = ${voiceKey}`);
@@ -276,8 +247,8 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
     .replace(/```[\s\S]*?```/g, " (code omitted) ")
     .slice(0, 4000);
   if (!text.trim()) return { ok: false as const, error: "This message has no text to read." };
-  // Read-aloud on the server's Google key is charged with markup and needs credits (D-246).
-  const onServerKey = k.provider === "google" && !google?.key && rt.billPlatform === true;
+  // Read-aloud on the server's key is charged with markup and needs credits (D-246).
+  const onServerKey = !own?.key && rt.billPlatform === true;
   if (onServerKey && !(await hasCredits(rt.db, orgId)))
     return {
       ok: false as const,
@@ -287,7 +258,7 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
   const r = await synthesize(k.provider, k.key, text, bot.voice.tts_voice, {
     bases: rt.bases,
     fetch: rt.fetch,
-    model: assigned?.tts,
+    model: assigned?.tts ? openRouterModelId(assigned.tts) : undefined,
   });
   await rt.db.execute(sql`insert into public.tts_cache (message_id, voice_key, mime, audio)
     values (${messageId}::uuid, ${voiceKey}, ${r.mime}, ${Buffer.from(r.audio)})
@@ -295,8 +266,8 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
   const cost = ttsCostUsd(k.provider, text.length, r.audio);
   if (onServerKey)
     await rt.db.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, billable, meta)
-      values (${orgId}::uuid, ${m.bot_id}::uuid, 'tts_chars', ${text.length}, ${cloudCharge(cost)}, true,
-              ${JSON.stringify({ provider: "google", provider_cost_usd: cost, key: "server" })}::jsonb)`);
+      values (${orgId}::uuid, ${m.bot_id}::uuid, 'tts_chars', ${text.length}, ${cloudOpenRouterCharge(cost)}, true,
+              ${JSON.stringify({ provider: "openrouter", provider_cost_usd: cost, key: "server", estimated: true })}::jsonb)`);
   else await ledger(rt.db, orgId, m.bot_id, "tts_chars", text.length, cost);
   return { ok: true as const, voiceKey, cached: false };
 }

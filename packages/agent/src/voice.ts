@@ -1,14 +1,15 @@
 /**
- * Voice (Phase 6, D-065): speech-to-text, text-to-speech and live call sessions. Read-aloud and
- * calls are Gemini only; dictation is OpenAI, or Whisper on OpenRouter (D-260). Request shapes
- * follow each provider's public REST API; base URLs can be overridden (tests use local mocks).
+ * Voice (Phase 6, D-065): speech-to-text, text-to-speech and live call sessions. Dictation and
+ * read-aloud go through OpenRouter; live calls are Gemini Live on a Google AI key (D-260, D-261).
+ * Request shapes follow each provider's public REST API; base URLs can be overridden (tests use
+ * local mocks).
  */
 
-export type SttProviderId = "openai" | "openrouter";
-/** Read-aloud is Gemini text-to-speech only (D-260). */
-export type TtsProviderId = "google";
-/** Read-aloud model (D-187). */
-export const GEMINI_TTS_MODEL = "gemini-3.8-flash-lite-tts";
+/** Dictation and read-aloud run on OpenRouter only (D-261). */
+export type SttProviderId = "openrouter";
+export type TtsProviderId = "openrouter";
+/** Read-aloud model on OpenRouter (D-187, D-261): Gemini 3.8 Flash-Lite TTS. */
+export const OPENROUTER_TTS_MODEL = "google/gemini-3.8-flash-lite-tts";
 
 /** Live calls, in the app and on the phone, are Gemini Live only (D-260). */
 export const DEFAULT_GEMINI_LIVE_MODEL = "gemini-3.8-live";
@@ -151,21 +152,16 @@ export const emptyGeminiUsage = (): GeminiLiveUsage => ({
   output_audio_tokens: 0,
   output_text_tokens: 0,
 });
-// Dictation stays on OpenAI. Gemini 3.5 Transcribe's own page puts a file at about $0.005 a
-// minute once the transcript text is included; gpt-4o-mini-transcribe is $0.003 (D-187).
-export const STT_PROVIDERS: SttProviderId[] = ["openai", "openrouter"];
+export const STT_PROVIDERS: SttProviderId[] = ["openrouter"];
 /**
- * Dictation on the server's shared OpenRouter key: Whisper Large V3 Turbo, $0.0002 a minute on
- * OpenRouter (2026-11-11), the cheapest OpenAI transcription model there.
+ * Dictation model: Whisper Large V3 Turbo, $0.0002 a minute on OpenRouter (2026-11-13), the
+ * cheapest good transcription model there (D-194, D-261).
  */
 export const OPENROUTER_STT_MODEL = "openai/whisper-large-v3-turbo";
 // Gemini Flash-Lite TTS: about $0.009 a minute of speech through 2026 (D-187).
-export const TTS_PROVIDERS: TtsProviderId[] = ["google"];
-
-export const DEFAULT_VOICES: Record<TtsProviderId, string> = { google: DEFAULT_GEMINI_VOICE };
+export const TTS_PROVIDERS: TtsProviderId[] = ["openrouter"];
 
 export interface VoiceBases {
-  openai?: string;
   /** Gemini API (https://generativelanguage.googleapis.com); its WebSocket host is derived from it. */
   gemini?: string;
   /** OpenRouter (https://openrouter.ai/api/v1). */
@@ -190,19 +186,16 @@ async function ok(res: Response, provider: string) {
   throw new VoiceError(`${provider} returned ${res.status}`, res.status, detail || undefined);
 }
 
-/** Transcribes audio with the user's key. */
+/** Transcribes audio on OpenRouter (an OpenAI-style multipart upload; D-261). */
 export async function transcribe(
-  provider: SttProviderId,
+  _provider: SttProviderId,
   apiKey: string,
   audio: Uint8Array,
   mime: string,
   opts: { bases?: VoiceBases; fetch?: typeof fetch; language?: string; model?: string } = {},
 ): Promise<{ text: string; seconds: number | null; costUsd?: number }> {
   const f = opts.fetch ?? fetch;
-  const openrouter = provider === "openrouter";
-  const base = openrouter
-    ? (opts.bases?.openrouter ?? "https://openrouter.ai/api/v1").replace(/\/$/, "")
-    : `${opts.bases?.openai ?? "https://api.openai.com"}/v1`;
+  const base = (opts.bases?.openrouter ?? "https://openrouter.ai/api/v1").replace(/\/$/, "");
   const form = new FormData();
   const ext = mime.includes("wav")
     ? "wav"
@@ -212,7 +205,7 @@ export async function transcribe(
         ? "ogg"
         : "webm";
   form.set("file", new Blob([new Uint8Array(audio)], { type: mime }), `audio.${ext}`);
-  form.set("model", opts.model ?? (openrouter ? OPENROUTER_STT_MODEL : "gpt-4o-mini-transcribe"));
+  form.set("model", opts.model ?? OPENROUTER_STT_MODEL);
   if (opts.language) form.set("language", opts.language);
   const res = await ok(
     await f(`${base}/audio/transcriptions`, {
@@ -220,7 +213,7 @@ export async function transcribe(
       headers: { authorization: `Bearer ${apiKey}` },
       body: form,
     }),
-    openrouter ? "OpenRouter" : "OpenAI",
+    "OpenRouter",
   );
   const j = (await res.json()) as {
     text?: string;
@@ -234,7 +227,10 @@ export async function transcribe(
   };
 }
 
-/** Speaks text with Gemini text-to-speech; it returns WAV. */
+/**
+ * Speaks text on OpenRouter's speech endpoint (D-261). Gemini TTS there only returns raw PCM
+ * (16-bit mono, 24 kHz unless the content type says otherwise), so it gets a WAV header.
+ */
 export async function synthesize(
   _provider: TtsProviderId,
   apiKey: string,
@@ -242,7 +238,27 @@ export async function synthesize(
   voice: string | undefined,
   opts: { bases?: VoiceBases; fetch?: typeof fetch; model?: string } = {},
 ): Promise<{ audio: Uint8Array; mime: string }> {
-  return synthesizeGemini(apiKey, text, voice || DEFAULT_GEMINI_VOICE, opts);
+  const f = opts.fetch ?? fetch;
+  const base = (opts.bases?.openrouter ?? "https://openrouter.ai/api/v1").replace(/\/$/, "");
+  const v = voice || DEFAULT_GEMINI_VOICE;
+  const voiceName = GEMINI_VOICES.includes(v) || v.startsWith("voice_") ? v : DEFAULT_GEMINI_VOICE;
+  const res = await ok(
+    await f(`${base}/audio/speech`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
+      body: JSON.stringify({
+        model: opts.model ?? OPENROUTER_TTS_MODEL,
+        input: text,
+        voice: voiceName,
+        response_format: "pcm",
+      }),
+    }),
+    "OpenRouter",
+  );
+  const rate = Number(/rate=(\d+)/.exec(res.headers.get("content-type") ?? "")?.[1] ?? 24_000);
+  const audio = new Uint8Array(await res.arrayBuffer());
+  if (!audio.length) throw new VoiceError("OpenRouter returned no audio");
+  return { audio: asWav(audio, rate || 24_000), mime: "audio/wav" };
 }
 
 export interface RealtimeTool {
@@ -405,13 +421,17 @@ export async function createGeminiLiveSession(
 
 /** Rough list prices for the ledger (USD); real bills come from the provider. */
 export const VOICE_PRICES = {
-  sttPerMinute: 0.003,
+  /** Whisper Large V3 Turbo on OpenRouter, when a response carries no cost (D-261). */
+  sttPerMinute: 0.0002,
   /** Gemini 3.8 Flash-Lite TTS, about 800 characters of speech a minute (D-187). */
   geminiTtsPerThousandChars: 0.011,
   geminiLivePerMinute: 0.02,
 };
 
-/** What one read-aloud cost. Gemini bills the audio, and that rate doubles on 2027-01-01. */
+/**
+ * What one read-aloud cost, estimated: OpenRouter's speech endpoint reports no cost, and Gemini
+ * TTS bills the audio ($6 per 1M audio tokens, 25 a second; doubles on 2027-01-01).
+ */
 export function ttsCostUsd(
   _provider: TtsProviderId,
   chars: number,
@@ -466,43 +486,6 @@ export function asWav(audio: Uint8Array, sampleRate = 24_000): Uint8Array {
   out.set(new Uint8Array(header), 0);
   out.set(audio, 44);
   return out;
-}
-
-async function synthesizeGemini(
-  apiKey: string,
-  text: string,
-  voice: string,
-  opts: { bases?: VoiceBases; fetch?: typeof fetch; model?: string },
-): Promise<{ audio: Uint8Array; mime: string }> {
-  const f = opts.fetch ?? fetch;
-  const base = (opts.bases?.gemini ?? "https://generativelanguage.googleapis.com").replace(
-    /\/$/,
-    "",
-  );
-  const voiceName =
-    GEMINI_VOICES.includes(voice) || voice.startsWith("voice_") ? voice : DEFAULT_GEMINI_VOICE;
-  const model = opts.model ?? GEMINI_TTS_MODEL;
-  const res = await ok(
-    await f(`${base}/v1beta/models/${model}:generateContent`, {
-      method: "POST",
-      headers: { "x-goog-api-key": apiKey, "content-type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text }] }],
-        generationConfig: {
-          responseModalities: ["AUDIO"],
-          speechConfig: { voiceConfig: { voice: voiceName } },
-        },
-      }),
-    }),
-    "Gemini",
-  );
-  const body = (await res.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ inlineData?: { data?: string } }> } }>;
-  };
-  const b64 = body.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data)?.inlineData
-    ?.data;
-  if (!b64) throw new VoiceError("Gemini returned no audio");
-  return { audio: asWav(Uint8Array.from(Buffer.from(b64, "base64"))), mime: "audio/wav" };
 }
 
 /** Telephony audio (8 kHz G.711 μ-law) ⇄ the 16-bit PCM Gemini Live speaks. */

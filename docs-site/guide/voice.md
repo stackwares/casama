@@ -15,9 +15,9 @@ Add keys in **Settings** → **Model keys** → **Add Key**.
 
 | Feature                      | Needs                                                                             |
 | ---------------------------- | --------------------------------------------------------------------------------- |
-| Dictation                    | An OpenAI key, or the server's shared OpenRouter key                               |
-| Read aloud                   | A Google AI key (Gemini Flash-Lite)                                                |
-| Live calls                   | A Google AI (Gemini) key. Included on Casama Cloud, and on servers whose admin set a server-wide key |
+| Dictation                    | An OpenRouter key, or the server's shared one                                      |
+| Read aloud                   | An OpenRouter key, or the server's shared one                                      |
+| Live calls                   | A Google AI (Gemini) key, used only for calls. Included on Casama Cloud, and on servers whose admin set a server-wide key |
 | Bot rings your phone         | A Google AI key for the call, plus push set up on the server for iOS and Android |
 | Wake word                    | No key: it runs on your device                                                     |
 
@@ -30,17 +30,17 @@ the provider bills your own account.
 2. Speak, then tap **Stop and transcribe**.
 3. The text lands in the message box. Edit it if you like, then send.
 
-Dictation uses OpenAI (`gpt-4o-mini-transcribe`), or Whisper Large V3 Turbo on the server's shared
-OpenRouter key when the workspace has no OpenAI key. Google's transcriber costs more once the
-transcript text is included, so it is not used.
+Dictation uses Whisper Large V3 Turbo on OpenRouter: the workspace's OpenRouter key, or the
+server's shared one when the workspace has none.
 
 If the dictation service fails or isn't available, the app falls back to your device's own speech
 recognition, where the device has one.
 
 ## Have a reply read aloud
 
-Open a bot message's actions and choose **Read aloud**. Audio is saved per message and voice, so
-replaying it doesn't call the provider again.
+Open a bot message's actions and choose **Read aloud**. It uses Gemini 3.8 Flash-Lite TTS on
+OpenRouter, on the workspace's OpenRouter key or the server's shared one. Audio is saved per message
+and voice, so replaying it doesn't call the provider again.
 
 ## Choose a bot's voice
 

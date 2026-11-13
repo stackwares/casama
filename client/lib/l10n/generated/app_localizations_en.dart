@@ -1648,11 +1648,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get callNeedsKeyTitle => 'Calls need a voice key';
+  String get callNeedsKeyTitle => 'Calls need a Google AI key';
 
   @override
   String get callNeedsKeyBody =>
-      'Live calls run on Google\'s Gemini Live, so this workspace needs a Google AI key. Google gives you one free in AI Studio: create it there, then add it under Model keys and calls work right away. Only workspace owners and admins can add keys.';
+      'Live calls run on Google\'s Gemini Live, so this workspace needs a Google AI key. It\'s only used for calls: read aloud, dictation, images and video run on OpenRouter. Google gives you one free in AI Studio: create it there, then add it under Model keys and calls work right away. Only workspace owners and admins can add keys.';
 
   @override
   String get callAddKey => 'Add a Google AI key';
@@ -2493,7 +2493,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get providerHintOpenRouter => 'recommended';
+  String get providerHintOpenRouter =>
+      'recommended: chat, images, video, voice';
+
+  @override
+  String get providerHintGoogle => 'live calls only';
 
   @override
   String get providerHintCompatible => 'Ollama, LM Studio, vLLM';

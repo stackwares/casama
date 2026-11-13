@@ -20,6 +20,22 @@ describe("cloud model assignment", () => {
     expect(cloudModelAssignment({ chat: "" }).chat).toBe(CLOUD_MODEL_DEFAULTS.chat);
   });
 
+  it("reads ids saved under a provider's own name as OpenRouter ids (D-261)", () => {
+    expect(
+      cloudModelAssignment({
+        tts: "gemini-3.8-flash-lite-tts",
+        stt: "gpt-4o-mini-transcribe",
+        video: "gemini-omni-1.2-flash",
+      }),
+    ).toMatchObject({
+      tts: "google/gemini-3.8-flash-lite-tts",
+      stt: "openai/gpt-4o-mini-transcribe",
+      video: "google/gemini-omni-1.2-flash",
+    });
+    // The live-call model stays a Gemini API id: calls go to Google directly.
+    expect(cloudModelAssignment({ live: "gemini-3.8-live" }).live).toBe("gemini-3.8-live");
+  });
+
   it("pins a Cloud bot to Casama's key and the assigned models", () => {
     const policy = cloudRunPolicy({ ...CLOUD_MODEL_DEFAULTS, chat: "a", background: "b" });
     expect(policy.primary).toEqual({
