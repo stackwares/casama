@@ -17,6 +17,7 @@
       "!**/*.md",
       "!site",
       "!gallery",
+      "!docs-site/public/brand",
       "!infra/helm/**/templates",
       "!infra/compose/selfhost/kong.yml"
     ]
