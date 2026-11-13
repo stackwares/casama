@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; font-src 'self'; media-src 'self'">
   <title>Casama — AI teammates with their own computers</title>
-  <meta name="description" content="Open-source AI bots that remember you, work on their own Linux computers, keep going while you're away, and ask before risky steps. Self-host it free or start on Casama Cloud.">
+  <meta name="description" content="AI bots that do real work for you on computers of their own: book trips, answer email, research, and keep going while you're away. They remember how you like things and ask before anything risky. Start free.">
   <meta name="theme-color" content="#fcf3fb">
   <link rel="canonical" href="https://casama.ai/">
   <link rel="icon" type="image/png" href="/favicon.png">
@@ -15,15 +15,15 @@
   <meta property="og:site_name" content="Casama">
   <meta property="og:url" content="https://casama.ai/">
   <meta property="og:title" content="Casama — AI teammates with their own computers">
-  <meta property="og:description" content="Bots that remember you, work on real Linux computers, keep going while you're away, and ask before risky steps. Apache-2.0 open source.">
+  <meta property="og:description" content="AI bots that do real work on computers of their own, remember how you like things, and ask before anything risky. Start free, or run it on your own server.">
   <meta property="og:image" content="https://casama.ai/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Casama — AI teammates with their own computers">
-  <meta name="twitter:description" content="Open-source AI bots with their own Linux computers, memory, routines and approval steps. Self-host in 15 minutes.">
+  <meta name="twitter:description" content="AI bots that do real work on computers of their own, remember how you like things, and ask before anything risky. Start free.">
   <meta name="twitter:image" content="https://casama.ai/og-image.png">
 
-  <link rel="preload" href="/assets/fonts/Figtree-Bold.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/assets/fonts/Figtree-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/GoogleSans-Bold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/GoogleSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/site.css">
   <script src="/boot.js"></script>
 
@@ -61,13 +61,13 @@
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="brand" href="/" aria-label="Casama home">
-        <img class="brand-mark" src="/assets/bots/casama-brand-animated.svg" alt="" width="36" height="36">
-        <span>casama</span>
+        <span class="brand-mark" data-casama-mark></span>
+        <span>Casama</span>
       </a>
 
       <nav class="site-nav" aria-label="Primary">
-        <a href="#looks">Looks</a>
         <a href="#team">Teammates</a>
+        <a href="#features">Features</a>
         <a href="#how">How it works</a>
         <a href="#pricing">Pricing</a>
         <a href="https://docs.casama.ai">Docs</a>
@@ -90,8 +90,8 @@
         <details class="menu">
           <summary aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></summary>
           <nav class="menu-sheet" aria-label="Menu">
-            <a href="#looks">Looks</a>
             <a href="#team">Teammates</a>
+            <a href="#features">Features</a>
             <a href="#how">How it works</a>
             <a href="#pricing">Pricing</a>
             <a href="https://docs.casama.ai">Docs</a>
@@ -110,29 +110,17 @@
       <div class="wrap hero-inner">
         <div class="hero-copy">
           <h1 id="hero-title">AI teammates with their own computers.</h1>
-          <p class="hero-lede" data-reveal style="--i:1">Casama bots remember you, work on real Linux computers, and ask before anything risky. Run it on your own server for free, or start in our cloud.</p>
+          <p class="hero-lede" data-reveal style="--i:1">Hand Casama bots real work. They use your apps on computers of their own, remember how you like things done, keep going while you're away, and check with you before anything risky.</p>
           <div class="hero-actions" data-reveal style="--i:2">
             <a class="btn primary" href="https://app.casama.ai">Start free</a>
-            <a class="text-link" href="https://docs.casama.ai/self-hosting/">Self-host in 15 minutes</a>
+            <a class="text-link" href="#team">Meet the bots</a>
           </div>
 
-          <div class="look-picker" data-reveal style="--i:3">
-            <p class="look-picker-line">This page is wearing <strong data-look-name>Casama</strong>, one of eight looks in the app.</p>
-            <div class="swatches" role="group" aria-label="Looks">
-              <button type="button" class="swatch" data-look="casama" aria-pressed="true"><svg aria-hidden="true"><use href="#cloud"/></svg><span class="visually-hidden">Casama</span></button>
-              <button type="button" class="swatch" data-look="editorial" aria-pressed="false"><svg aria-hidden="true"><use href="#cloud"/></svg><span class="visually-hidden">Editorial</span></button>
-              <button type="button" class="swatch" data-look="ocean" aria-pressed="false"><svg aria-hidden="true"><use href="#cloud"/></svg><span class="visually-hidden">Ocean</span></button>
-              <button type="button" class="swatch" data-look="forest" aria-pressed="false"><svg aria-hidden="true"><use href="#cloud"/></svg><span class="visually-hidden">Forest</span></button>
-              <button type="button" class="swatch" data-look="sakura" aria-pressed="false"><svg aria-hidden="true"><use href="#cloud"/></svg><span class="visually-hidden">Sakura</span></button>
-              <button type="button" class="swatch" data-look="sunset" aria-pressed="false"><svg aria-hidden="true"><use href="#cloud"/></svg><span class="visually-hidden">Sunset</span></button>
-              <button type="button" class="swatch" data-look="cosmos" aria-pressed="false"><svg aria-hidden="true"><use href="#cloud"/></svg><span class="visually-hidden">Cosmos</span></button>
-              <button type="button" class="swatch" data-look="graphite" aria-pressed="false"><svg aria-hidden="true"><use href="#cloud"/></svg><span class="visually-hidden">Graphite</span></button>
-            </div>
-          </div>
+          <p class="hero-note" data-reveal style="--i:3">Start in seconds on iPhone, Android, Mac, Windows, Linux or the web. Casama is open source, so you can also run it free on your own server.</p>
         </div>
 
         <div class="hero-stage">
-          <div class="chat shutter" data-ui aria-label="Example chat with Ada, an engineering bot">
+          <div class="chat shutter" data-ui aria-label="Example chat with Ada, a personal assistant bot">
             <div class="chat-top">
               <img src="/assets/bots/casama-focused-animated.svg" alt="" width="44" height="44">
               <div class="chat-who">
@@ -142,16 +130,16 @@
               <span class="chat-cost">$0.019 today</span>
             </div>
             <div class="chat-body">
-              <p class="bubble you">Fix the timezone bug in invoice exports and open a PR.</p>
-              <p class="bubble bot">Reproduced it on my computer: months that end at midnight UTC lost a day. I fixed <code>billing-period.ts</code> and added a test.</p>
+              <p class="bubble you">Find flights to Lisbon for May 8 to 12 and a hotel in the old town, under $1,200.</p>
+              <p class="bubble bot">I compared flights and hotels on my computer. Best fit: a direct TAP flight and Casa Lumen in Alfama, $1,104 in total.</p>
               <div class="run-card">
-                <span class="run-card-title">ada-computer</span>
-                <span class="run-ok">9 tests passed in 1.4 s</span>
-                <span class="run-meta">Checkpoint 19 saved</span>
+                <span class="run-card-title">Ada's computer</span>
+                <span class="run-ok">41 flights and 18 hotels checked</span>
+                <span class="run-meta">Checkpoint 7 saved</span>
               </div>
               <div class="ask-card" id="ask-card" data-state="ask" aria-live="polite">
                 <p class="ask-title">Ada needs your OK</p>
-                <p class="ask-what" data-ask-text>Push <code>fix/invoice-tz</code> and open pull request #418.</p>
+                <p class="ask-what" data-ask-text>Book both for $1,104 with your card ending 4242.</p>
                 <div class="ask-actions">
                   <button type="button" class="ask-yes" data-ask="yes">Approve</button>
                   <button type="button" class="ask-no" data-ask="no">Deny and roll back</button>
@@ -168,79 +156,24 @@
       </div>
     </section>
 
-    <!-- Looks: the live picker, shown as the app's own Appearance screen -->
-    <section class="looks section" id="looks" aria-labelledby="looks-title">
-      <div class="wrap looks-grid">
-        <div class="looks-plate" data-reveal>
-          <div class="appearance" data-ui aria-label="The Appearance screen in the Casama app">
-            <div class="ap-top"><span aria-hidden="true">‹</span><strong>Appearance</strong></div>
-            <div class="ap-preview">
-              <p class="ap-bubble you">Morning! What's on today?</p>
-              <div class="ap-row">
-                <img src="/assets/bots/casama-thinker.svg" alt="" width="34" height="34">
-                <p class="ap-bubble bot">Three meetings, and your brief is ready. I flagged one contract change.</p>
-              </div>
-            </div>
-            <p class="ap-label">Look</p>
-            <div class="ap-tiles" role="group" aria-label="Looks in the app">
-              <button type="button" class="ap-tile" data-look="casama"><span class="ap-dot"></span>Casama</button>
-              <button type="button" class="ap-tile" data-look="editorial"><span class="ap-dot"></span>Editorial</button>
-              <button type="button" class="ap-tile" data-look="ocean"><span class="ap-dot"></span>Ocean</button>
-              <button type="button" class="ap-tile" data-look="forest"><span class="ap-dot"></span>Forest</button>
-              <button type="button" class="ap-tile" data-look="sakura"><span class="ap-dot"></span>Sakura</button>
-              <button type="button" class="ap-tile" data-look="sunset"><span class="ap-dot"></span>Sunset</button>
-              <button type="button" class="ap-tile" data-look="cosmos"><span class="ap-dot"></span>Cosmos</button>
-              <button type="button" class="ap-tile" data-look="graphite"><span class="ap-dot"></span>Graphite</button>
-            </div>
-            <dl class="ap-fonts">
-              <div><dt>Headings</dt><dd data-look-head>Libre Baskerville</dd></div>
-              <div><dt>Text</dt><dd data-look-body>Lato</dd></div>
-            </dl>
-          </div>
-        </div>
-
-        <div class="looks-text">
-          <h2 id="looks-title" data-reveal>Eight looks ship in every app.</h2>
-          <div class="look-tabs" role="group" aria-label="Pick a look" data-reveal style="--i:1">
-            <button type="button" class="look-tab" data-look="casama">Casama</button>
-            <button type="button" class="look-tab" data-look="editorial">Editorial</button>
-            <button type="button" class="look-tab" data-look="ocean">Ocean</button>
-            <button type="button" class="look-tab" data-look="forest">Forest</button>
-            <button type="button" class="look-tab" data-look="sakura">Sakura</button>
-            <button type="button" class="look-tab" data-look="sunset">Sunset</button>
-            <button type="button" class="look-tab" data-look="cosmos">Cosmos</button>
-            <button type="button" class="look-tab" data-look="graphite">Graphite</button>
-          </div>
-          <div class="look-detail" data-reveal style="--i:2">
-            <h3 class="look-name" data-look-name>Casama</h3>
-            <p class="look-desc" data-look-desc>Plum and lilac with a bookish serif. The look a new workspace opens in.</p>
-          </div>
-          <div class="look-actions" data-reveal style="--i:3">
-            <button type="button" class="cell ink" id="keep-look">Keep this look</button>
-            <a class="cell soft" id="gallery-look" href="https://gallery.casama.ai/#theme/casama">More in the gallery</a>
-          </div>
-        </div>
-      </div>
-    </section>
-
     <!-- Teammates -->
     <section class="team section" id="team" aria-labelledby="team-title">
       <div class="wrap">
         <div class="team-head">
-          <h2 id="team-title" data-reveal>Give every bot a face and a job.</h2>
-          <p data-reveal style="--i:1">A bot is a teammate with its own name, model, tools, budget and computer. Here are four you could set up this afternoon, and what each did today.</p>
+          <h2 id="team-title" data-reveal>Give every bot a job.</h2>
+          <p data-reveal style="--i:1">Each bot has its own role, tools, budget and computer. Ask in chat, by voice or by email, and it comes back finished. Here are four you could set up this afternoon, and what each one did today.</p>
         </div>
 
         <ol class="team-list">
           <li class="mate" data-reveal>
             <img class="mate-face" src="/assets/bots/casama-focused-animated.svg" alt="" width="120" height="120" loading="lazy">
             <div class="mate-text">
-              <h3>Ada, engineering</h3>
-              <p>Clones your repos, runs the tests on her computer, hands big jobs to Claude Code or Codex, and opens the pull request.</p>
+              <h3>Ada, personal assistant</h3>
+              <p>Books trips and tables, compares prices in her own browser, fills in forms, and asks before paying for anything.</p>
             </div>
             <div class="mate-run" data-ui>
               <span class="mate-time">14:06</span>
-              <span class="mate-did">Opened PR #418 with 4 passing tests</span>
+              <span class="mate-did">Booked your Lisbon flights and hotel for $1,104</span>
               <span class="mate-cost">$0.019</span>
             </div>
           </li>
@@ -259,12 +192,12 @@
           <li class="mate" data-reveal>
             <img class="mate-face" src="/assets/bots/casama-cool-animated.svg" alt="" width="120" height="120" loading="lazy">
             <div class="mate-text">
-              <h3>Sora, on call</h3>
-              <p>Wakes on a Sentry alert, finds the commit that broke things, and asks you before rolling it back.</p>
+              <h3>Sora, customer support</h3>
+              <p>Answers customer emails from your help docs, looks up their orders, and asks you before giving any refund.</p>
             </div>
             <div class="mate-run" data-ui>
-              <span class="mate-time">02:14</span>
-              <span class="mate-did">Traced the errors to commit a49c12e. Waiting for your OK to revert</span>
+              <span class="mate-time">10:12</span>
+              <span class="mate-did">Answered 23 customer emails. One $48 refund waits for your OK</span>
               <span class="mate-cost">$0.008</span>
             </div>
           </li>
@@ -282,35 +215,20 @@
           </li>
         </ol>
 
-        <div class="faces">
-          <h3 class="faces-title" data-reveal>Ten faces to pick from</h3>
-          <ul class="faces-row">
-            <li data-reveal style="--i:0"><img src="/assets/bots/casama-winky.svg" alt="" width="96" height="96" loading="lazy"><span>Winky</span></li>
-            <li data-reveal style="--i:1"><img src="/assets/bots/casama-giggly.svg" alt="" width="96" height="96" loading="lazy"><span>Giggly</span></li>
-            <li data-reveal style="--i:2"><img src="/assets/bots/casama-thinker.svg" alt="" width="96" height="96" loading="lazy"><span>Thinker</span></li>
-            <li data-reveal style="--i:3"><img src="/assets/bots/casama-wow.svg" alt="" width="96" height="96" loading="lazy"><span>Wow</span></li>
-            <li data-reveal style="--i:4"><img src="/assets/bots/casama-focused.svg" alt="" width="96" height="96" loading="lazy"><span>Focused</span></li>
-            <li data-reveal style="--i:5"><img src="/assets/bots/casama-cool.svg" alt="" width="96" height="96" loading="lazy"><span>Cool</span></li>
-            <li data-reveal style="--i:6"><img src="/assets/bots/casama-starry.svg" alt="" width="96" height="96" loading="lazy"><span>Starry</span></li>
-            <li data-reveal style="--i:7"><img src="/assets/bots/casama-sleepy.svg" alt="" width="96" height="96" loading="lazy"><span>Sleepy</span></li>
-            <li data-reveal style="--i:8"><img src="/assets/bots/casama-lovey.svg" alt="" width="96" height="96" loading="lazy"><span>Lovey</span></li>
-            <li data-reveal style="--i:9"><img src="/assets/bots/casama-shy.svg" alt="" width="96" height="96" loading="lazy"><span>Shy</span></li>
-          </ul>
-        </div>
       </div>
     </section>
 
-    <!-- Capabilities as the bot's own switches -->
+    <!-- What a teammate does: each benefit is one of the bot's own switches -->
     <section class="switches section" id="features" aria-labelledby="switches-title">
       <div class="wrap">
-        <h2 id="switches-title" class="switches-title" data-reveal>Switch on what a teammate needs.</h2>
+        <h2 id="switches-title" class="switches-title" data-reveal>Everything you'd want in a teammate.</h2>
       </div>
       <div class="bands">
         <div class="band is-on" style="--band: var(--t1)">
           <div class="wrap band-inner">
             <div class="band-text">
-              <h3 id="sw-computer">Give every bot its own computer.</h3>
-              <p class="band-more">A sandboxed Linux desktop with a shell, files and a browser. Watch it live or take over the mouse. It sleeps after 5 idle minutes and wakes in seconds.</p>
+              <h3 id="sw-computer">Its own computer to work on.</h3>
+              <p class="band-more">A private computer with a browser, files and apps, kept apart from your own devices. Watch it work or take over the mouse. It sleeps when idle and wakes in seconds.</p>
             </div>
             <button type="button" class="toggle" role="switch" aria-checked="true" aria-labelledby="sw-computer"><span class="toggle-knob"></span></button>
           </div>
@@ -318,37 +236,46 @@
         <div class="band is-on" style="--band: var(--t2)">
           <div class="wrap band-inner">
             <div class="band-text">
-              <h3 id="sw-ask">Ask me before anything risky.</h3>
-              <p class="band-more">Rules per bot and per action: allow, allow within limits, or ask first. A checkpoint is saved before each risky step, so Deny rolls the computer back.</p>
+              <h3 id="sw-start">It starts on its own.</h3>
+              <p class="band-more">On a schedule, when an email arrives, before a meeting, or when a web page changes, like a price drop. It checks in when something needs you.</p>
+            </div>
+            <button type="button" class="toggle" role="switch" aria-checked="true" aria-labelledby="sw-start"><span class="toggle-knob"></span></button>
+          </div>
+        </div>
+        <div class="band is-on" style="--band: var(--t3)">
+          <div class="wrap band-inner">
+            <div class="band-text">
+              <h3 id="sw-ask">It asks before anything risky.</h3>
+              <p class="band-more">Sending, booking, paying or deleting waits for your OK. Its computer is saved first, so Deny undoes the work.</p>
             </div>
             <button type="button" class="toggle" role="switch" aria-checked="true" aria-labelledby="sw-ask"><span class="toggle-knob"></span></button>
           </div>
         </div>
-        <div class="band" style="--band: var(--t3)">
+        <div class="band is-on" style="--band: var(--pc)">
           <div class="wrap band-inner">
             <div class="band-text">
-              <h3 id="sw-remember">Remember what I tell you.</h3>
-              <p class="band-more">Facts, preferences and past runs carry across every chat. Your About you profile stays out of team spaces unless you share it.</p>
+              <h3 id="sw-remember">It remembers how you work.</h3>
+              <p class="band-more">Facts, preferences and past work carry across every chat. Show it a task once on its computer and it keeps it as a skill.</p>
             </div>
-            <button type="button" class="toggle" role="switch" aria-checked="false" aria-labelledby="sw-remember"><span class="toggle-knob"></span></button>
+            <button type="button" class="toggle" role="switch" aria-checked="true" aria-labelledby="sw-remember"><span class="toggle-knob"></span></button>
           </div>
         </div>
-        <div class="band" style="--band: var(--pc)">
+        <div class="band is-on" style="--band: var(--t1)">
           <div class="wrap band-inner">
             <div class="band-text">
-              <h3 id="sw-away">Keep working while I'm away.</h3>
-              <p class="band-more">Routines on a schedule, webhooks, email and calendar triggers, and watchers that spend nothing until a page changes.</p>
+              <h3 id="sw-team">It works with your team.</h3>
+              <p class="band-more">Group chats with family, coworkers and bots, bots handing work to each other, shared spaces, and a board anyone can add tasks to.</p>
             </div>
-            <button type="button" class="toggle" role="switch" aria-checked="false" aria-labelledby="sw-away"><span class="toggle-knob"></span></button>
+            <button type="button" class="toggle" role="switch" aria-checked="true" aria-labelledby="sw-team"><span class="toggle-knob"></span></button>
           </div>
         </div>
-        <div class="band" style="--band: var(--t1)">
+        <div class="band is-on" style="--band: var(--t2)">
           <div class="wrap band-inner">
             <div class="band-text">
-              <h3 id="sw-keys">Keep my keys away from the model.</h3>
-              <p class="band-more">Secrets live in an encrypted vault. The proxy adds them only for the right host, never to prompts, logs or run history.</p>
+              <h3 id="sw-anywhere">It reaches you anywhere.</h3>
+              <p class="band-more">Apps for your phone, computer and the web, live voice calls from your lock screen, and messages in WhatsApp, Telegram, Slack or email.</p>
             </div>
-            <button type="button" class="toggle" role="switch" aria-checked="false" aria-labelledby="sw-keys"><span class="toggle-knob"></span></button>
+            <button type="button" class="toggle" role="switch" aria-checked="true" aria-labelledby="sw-anywhere"><span class="toggle-knob"></span></button>
           </div>
         </div>
       </div>
@@ -359,42 +286,42 @@
       <div class="how-split" data-stage="1">
         <div class="how-words">
           <h2 class="how-clause" data-how-clause aria-live="polite">First, you ask in plain words.</h2>
-          <p class="how-note" data-how-note>Type it, say it, or forward an email. Assign it on the ticket board if it can wait.</p>
+          <p class="how-note" data-how-note>Type it, say it, or forward an email. Put it on the board if it can wait.</p>
         </div>
         <div class="how-pic">
           <div class="how-frag" data-ui aria-hidden="true">
             <div class="hf-top"><img src="/assets/bots/casama-focused.svg" alt="" width="32" height="32"><strong>Ada</strong><span class="hf-state" data-hf-state>Reading</span></div>
-            <p class="bubble you">Reproduce the timezone bug in invoice exports, add a test, and open a PR.</p>
+            <p class="bubble you">Book dinner for the team on Friday near the office, under $60 a head, and send the invite.</p>
             <div class="hf-step hf-1">
-              <p class="bubble bot">On it. I'll reproduce it on my computer first, then fix it.</p>
+              <p class="bubble bot">On it. I'll check everyone's calendar first, then look for a table.</p>
               <ul class="hf-list">
-                <li><span>Cloning</span> stackwares/billing</li>
-                <li><span>Reading</span> packages/domain/billing-period.ts</li>
-                <li><span>Remembered</span> Use Vitest, never mock Postgres</li>
+                <li><span>Checking</span> 8 calendars: Friday 7 pm works</li>
+                <li><span>Searching</span> places within a 10-minute walk</li>
+                <li><span>Remembered</span> Maya is vegetarian</li>
               </ul>
             </div>
             <div class="hf-step hf-2">
-<pre class="hf-term"><!-- taste-skill-ignore: real terminal output --><code>$ npx vitest run billing.test.ts
-  ✕ keeps the last day of March (UTC)<!-- taste-skill-ignore: vitest output -->
-$ git apply fix-utc-boundary.patch
-$ npx vitest run billing.test.ts
-  ✓ 9 tests passed (1.4 s)<!-- taste-skill-ignore: vitest output --></code></pre>
-              <p class="hf-meta">Sandboxed computer · checkpoint 19 saved</p>
+<pre class="hf-term"><!-- taste-skill-ignore: the bot's browser log --><code>Opening opentable.com  Fri 7:00 pm, 8 people
+  ✕ Lupa: fully booked
+Opening Osteria Nove's menu
+  ✓ Vegetarian dishes: 6
+  ✓ Set menu: $52 a head</code></pre>
+              <p class="hf-meta">Its own computer · checkpoint 12 saved</p>
             </div>
             <div class="hf-step hf-3">
               <div class="ask-card">
                 <p class="ask-title">Ada needs your OK</p>
-                <p class="ask-what">Push <code>fix/invoice-tz</code> and open pull request #418.</p>
+                <p class="ask-what">Book Osteria Nove for 8 at 7 pm and send the invite to the team.</p>
                 <div class="ask-actions"><span class="ask-yes">Approve</span><span class="ask-no">Deny and roll back</span></div>
               </div>
               <p class="hf-meta">Also sent to your phone</p>
             </div>
             <div class="hf-step hf-4">
-              <p class="bubble bot">PR #418 is open with 4 new passing tests.</p>
+              <p class="bubble bot">Booked for Friday at 7 pm. All 8 have the invite, with the menu attached.</p>
               <dl class="hf-bill">
-                <div><dt>Model, 3 steps</dt><dd>$0.016</dd></div>
-                <div><dt>Computer, 2.4 s</dt><dd>$0.003</dd></div>
-                <div class="total"><dt>This run</dt><dd>$0.019</dd></div>
+                <div><dt>AI model, 6 steps</dt><dd>$0.021</dd></div>
+                <div><dt>Computer, 3 min</dt><dd>$0.004</dd></div>
+                <div class="total"><dt>This task</dt><dd>$0.025</dd></div>
               </dl>
             </div>
           </div>
@@ -416,23 +343,23 @@ $ npx vitest run billing.test.ts
     <section class="tools section" id="tools" aria-labelledby="tools-title">
       <div class="wrap tiles">
         <div class="tile tile-head" data-reveal>
-          <h2 id="tools-title">Your tools. Any model.</h2>
-          <p>Connect your apps or any MCP server. Bring keys for Anthropic, OpenAI, Gemini, xAI or OpenRouter, sign in with your ChatGPT plan on your own server, or run local models with Ollama.</p>
+          <h2 id="tools-title">Your apps. The best AI models.</h2>
+          <p>Connect the apps you already use, from Gmail and Calendar to Notion, Slack and WhatsApp. On Casama Cloud we pick the right AI model for each job. On your own server, bring any provider or run models locally.</p>
         </div>
-        <div class="tile logo" data-reveal style="--i:1"><span class="mark" style="--logo: url(/assets/apps/github.svg)"></span><span class="visually-hidden">GitHub</span></div>
-        <div class="tile logo" data-reveal style="--i:2"><span class="mark" style="--logo: url(/assets/apps/slack.svg)"></span><span class="visually-hidden">Slack</span></div>
-        <div class="tile logo" data-reveal style="--i:3"><span class="mark" style="--logo: url(/assets/apps/linear.svg)"></span><span class="visually-hidden">Linear</span></div>
+        <div class="tile logo" data-reveal style="--i:1"><span class="mark" style="--logo: url(/assets/apps/gmail.svg)"></span><span class="visually-hidden">Gmail</span></div>
+        <div class="tile logo" data-reveal style="--i:2"><span class="mark" style="--logo: url(/assets/apps/google_calendar.svg)"></span><span class="visually-hidden">Google Calendar</span></div>
+        <div class="tile logo" data-reveal style="--i:3"><span class="mark" style="--logo: url(/assets/apps/slack.svg)"></span><span class="visually-hidden">Slack</span></div>
         <div class="tile logo" data-reveal style="--i:4"><span class="mark" style="--logo: url(/assets/apps/notion.svg)"></span><span class="visually-hidden">Notion</span></div>
-        <div class="tile name" data-reveal style="--i:5">Anthropic</div>
-        <div class="tile logo" data-reveal style="--i:6"><span class="mark" style="--logo: url(/assets/apps/gmail.svg)"></span><span class="visually-hidden">Gmail</span></div>
-        <div class="tile logo" data-reveal style="--i:7"><span class="mark" style="--logo: url(/assets/apps/google_calendar.svg)"></span><span class="visually-hidden">Google Calendar</span></div>
+        <div class="tile name" data-reveal style="--i:5">WhatsApp</div>
+        <div class="tile logo" data-reveal style="--i:6"><span class="mark" style="--logo: url(/assets/apps/google_drive.svg)"></span><span class="visually-hidden">Google Drive</span></div>
+        <div class="tile logo" data-reveal style="--i:7"><span class="mark" style="--logo: url(/assets/apps/hubspot.svg)"></span><span class="visually-hidden">HubSpot</span></div>
         <div class="tile name" data-reveal style="--i:8">OpenAI</div>
-        <div class="tile logo extra" data-reveal style="--i:9"><span class="mark" style="--logo: url(/assets/apps/google_drive.svg)"></span><span class="visually-hidden">Google Drive</span></div>
-        <div class="tile logo extra" data-reveal style="--i:10"><span class="mark" style="--logo: url(/assets/apps/sentry.svg)"></span><span class="visually-hidden">Sentry</span></div>
-        <div class="tile name extra" data-reveal style="--i:11">Gemini</div>
-        <div class="tile logo extra" data-reveal style="--i:12"><span class="mark" style="--logo: url(/assets/apps/stripe.svg)"></span><span class="visually-hidden">Stripe</span></div>
-        <div class="tile logo extra" data-reveal style="--i:13"><span class="mark" style="--logo: url(/assets/apps/mcp.svg)"></span><span class="visually-hidden">MCP</span></div>
-        <div class="tile name extra" data-reveal style="--i:14">Ollama</div>
+        <div class="tile logo extra" data-reveal style="--i:9"><span class="mark" style="--logo: url(/assets/apps/airtable.svg)"></span><span class="visually-hidden">Airtable</span></div>
+        <div class="tile logo extra" data-reveal style="--i:10"><span class="mark" style="--logo: url(/assets/apps/stripe.svg)"></span><span class="visually-hidden">Stripe</span></div>
+        <div class="tile name extra" data-reveal style="--i:11">Anthropic</div>
+        <div class="tile logo extra" data-reveal style="--i:12"><span class="mark" style="--logo: url(/assets/apps/asana.svg)"></span><span class="visually-hidden">Asana</span></div>
+        <div class="tile logo extra" data-reveal style="--i:13"><span class="mark" style="--logo: url(/assets/apps/github.svg)"></span><span class="visually-hidden">GitHub</span></div>
+        <div class="tile name extra" data-reveal style="--i:14">Gemini</div>
       </div>
     </section>
 
@@ -442,27 +369,27 @@ $ npx vitest run billing.test.ts
         <div class="trust-grid">
           <div class="trust-intro">
             <h2 id="trust-title" data-reveal>Safe enough to hand it real work.</h2>
-            <p data-reveal style="--i:1">Every boundary in Casama is enforced and tested, from database rows to container system calls and outbound traffic. Runs are durable: restart the server mid-task and they pick up from the last finished step.</p>
+            <p data-reveal style="--i:1">Every bot works on a locked-down computer of its own, reaches only the sites and accounts you allow, and saves a checkpoint before anything risky. If the server restarts mid-task, the work picks up where it left off.</p>
             <div class="box" data-ui data-reveal style="--i:2" aria-label="Ada's computer settings in the app">
               <div class="box-top"><img src="/assets/bots/casama-focused.svg" alt="" width="32" height="32"><strong>Ada's computer</strong><span class="box-state">Asleep</span></div>
               <dl class="box-rows">
-                <div><dt>Sandbox</dt><dd>gVisor, non-root, read-only system</dd></div>
-                <div><dt>Network</dt><dd>github.com, api.linear.app</dd></div>
-                <div><dt>Secrets</dt><dd>GITHUB_TOKEN, added by the proxy</dd></div>
+                <div><dt>Computer</dt><dd>Locked down, apart from your devices</dd></div>
+                <div><dt>Can visit</dt><dd>gmail.com, opentable.com</dd></div>
+                <div><dt>Passwords</dt><dd>From 1Password, never shown to the AI</dd></div>
                 <div><dt>Sleeps after</dt><dd>5 idle minutes</dd></div>
               </dl>
               <p class="box-label">Checkpoints</p>
               <ol class="box-checks">
-                <li><span>19</span>Before git push<time>14:05</time></li>
-                <li><span>18</span>Before rm -rf build/cache<time>13:41</time></li>
-                <li><span>17</span>Before npm install<time>13:12</time></li>
+                <li><span>12</span>Before booking dinner<time>14:05</time></li>
+                <li><span>11</span>Before deleting 212 old emails<time>13:41</time></li>
+                <li><span>10</span>Before sending the invoice<time>13:12</time></li>
               </ol>
             </div>
           </div>
           <dl class="trust-points">
-            <div data-reveal><dt>Row-level security on every table</dt><dd>Each workspace table has a Postgres policy and a test proving one workspace can never read another.</dd></div>
-            <div data-reveal style="--i:1"><dt>Hardened computers</dt><dd>Bots run as non-root on a read-only system with dropped Linux capabilities, memory limits, and gVisor on Linux hosts.</dd></div>
-            <div data-reveal style="--i:2"><dt>Keys the model never sees</dt><dd>API keys and 1Password or Bitwarden items are added at the network edge, only for the hosts you allow.</dd></div>
+            <div data-reveal><dt>Your workspace stays yours</dt><dd>Every table in the database has a rule, and a test proving that no other workspace can read your data.</dd></div>
+            <div data-reveal style="--i:1"><dt>Locked-down computers</dt><dd>Bots work on separate, restricted computers. They can't reach your own devices, or any file you didn't share.</dd></div>
+            <div data-reveal style="--i:2"><dt>Passwords the AI never sees</dt><dd>Logins from 1Password or Bitwarden are filled in on the way out, and only for the sites you allow.</dd></div>
             <div data-reveal style="--i:3"><dt>Your data, portable</dt><dd>Optional encryption at rest, retention you set, and a full workspace export whenever you want it.</dd></div>
           </dl>
         </div>
@@ -475,18 +402,18 @@ $ npx vitest run billing.test.ts
                 <tr>
                   <th scope="col"><span class="visually-hidden">Capability</span></th>
                   <th scope="col" class="us">Casama</th>
-                  <th scope="col">Closed agent apps</th>
-                  <th scope="col">DIY frameworks</th>
+                  <th scope="col">AI chat apps</th>
+                  <th scope="col">Other agent apps</th>
                 </tr>
               </thead>
               <tbody>
-                <tr><th scope="row">Run on your own server</th><td class="us" data-label="Casama">One command on any Linux server or Mac</td><td data-label="Closed agent apps">Vendor cloud only</td><td data-label="DIY frameworks">Possible, after you build auth, database and queues</td></tr>
-                <tr><th scope="row">Choice of models</th><td class="us" data-label="Casama">Any provider, your ChatGPT plan, or local Ollama, with fallbacks</td><td data-label="Closed agent apps">One provider, their markup</td><td data-label="DIY frameworks">Your keys, routing by hand</td></tr>
-                <tr><th scope="row">A computer per bot</th><td class="us" data-label="Casama">Isolated Linux desktop you can watch and take over</td><td data-label="Closed agent apps">Short-lived container or browser only</td><td data-label="DIY frameworks">Often runs unsandboxed on your machine</td></tr>
-                <tr><th scope="row">Approvals and rollback</th><td class="us" data-label="Casama">Rules per action, checkpoints, spend caps</td><td data-label="Closed agent apps">Coarse prompts, no rollback</td><td data-label="DIY frameworks">None by default</td></tr>
-                <tr><th scope="row">Runs that survive restarts</th><td class="us" data-label="Casama">Durable workflows with schedule, webhook, calendar and watcher triggers</td><td data-label="Closed agent apps">Timeouts and dropped sessions</td><td data-label="DIY frameworks">In-memory loops lost on a crash</td></tr>
-                <tr><th scope="row">Apps and voice</th><td class="us" data-label="Casama">iOS, Android, macOS, Windows, Linux, web, CLI, MCP and live calls</td><td data-label="Closed agent apps">A web tab or one phone app</td><td data-label="DIY frameworks">A terminal or a basic local page</td></tr>
-                <tr><th scope="row">License</th><td class="us" data-label="Casama">Apache-2.0, full export, no lock-in</td><td data-label="Closed agent apps">Proprietary</td><td data-label="DIY frameworks">Open source</td></tr>
+                <tr><th scope="row">Does the work itself</th><td class="us" data-label="Casama">Its own computer: browses, fills in forms, books and writes files</td><td data-label="AI chat apps">Answers and drafts, then you do the clicking</td><td data-label="Other agent apps">A short-lived browser, often unsupervised</td></tr>
+                <tr><th scope="row">Asks before risky steps</th><td class="us" data-label="Casama">Rules per action, checkpoints you can undo, spend caps</td><td data-label="AI chat apps">Can't act, so nothing to approve</td><td data-label="Other agent apps">Coarse prompts, no undo</td></tr>
+                <tr><th scope="row">Starts on its own</th><td class="us" data-label="Casama">Schedules, emails, calendar events and page watchers</td><td data-label="AI chat apps">Only when you open the app</td><td data-label="Other agent apps">Simple schedules, sessions that time out</td></tr>
+                <tr><th scope="row">Works with others</th><td class="us" data-label="Casama">Group chats with people and bots, shared spaces</td><td data-label="AI chat apps">One person per chat</td><td data-label="Other agent apps">Mostly one person</td></tr>
+                <tr><th scope="row">Apps and voice</th><td class="us" data-label="Casama">iPhone, Android, Mac, Windows, Linux, web and live calls</td><td data-label="AI chat apps">Web and phone apps</td><td data-label="Other agent apps">A web tab or one phone app</td></tr>
+                <tr><th scope="row">Choice of AI models</th><td class="us" data-label="Casama">The right model per job, or any provider on your own server</td><td data-label="AI chat apps">One provider</td><td data-label="Other agent apps">One provider, their markup</td></tr>
+                <tr><th scope="row">Run it yourself</th><td class="us" data-label="Casama">Open source, free on your own server, full export</td><td data-label="AI chat apps">Vendor cloud only</td><td data-label="Other agent apps">Vendor cloud only</td></tr>
               </tbody>
             </table>
           </div>
@@ -497,7 +424,7 @@ $ npx vitest run billing.test.ts
     <!-- Pricing: plan names are the index, one live figure -->
     <section class="pricing section" id="pricing" aria-labelledby="pricing-title">
       <div class="wrap">
-        <h2 id="pricing-title" class="pricing-title" data-reveal>Free to run yourself. Simple in our cloud.</h2>
+        <h2 id="pricing-title" class="pricing-title" data-reveal>Start free. Simple to grow.</h2>
         <div class="plans">
           <div class="plan-names" role="tablist" aria-label="Plans" data-reveal style="--i:1">
             <button type="button" role="tab" class="plan-name" id="plan-self" aria-controls="plan-stage" aria-selected="false" tabindex="-1" data-plan="self">Self-hosted</button>
@@ -521,13 +448,66 @@ $ npx vitest run billing.test.ts
       </div>
     </section>
 
+    <!-- Questions -->
+    <section class="faq section" id="faq" aria-labelledby="faq-title">
+      <div class="wrap faq-grid">
+        <h2 id="faq-title" class="faq-title" data-reveal>Questions, answered.</h2>
+        <div class="faq-list">
+          <details class="qa" data-reveal style="--i:0" open>
+            <summary><span>How is Casama different from a chatbot?</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+            <p>A chatbot answers in a text box. A Casama bot has its own computer, your tools, a memory and a schedule, so it does the work itself: books the table, fills in the form, drafts the email, and comes back when it is done or needs you.</p>
+          </details>
+          <details class="qa" data-reveal style="--i:1">
+            <summary><span>Will a bot do something I didn't want?</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+            <p>You decide what each bot may do, action by action: allow, allow within limits, or ask first. Risky steps such as sending, booking, paying or deleting wait for your OK, and the computer is saved first so you can roll back.</p>
+          </details>
+          <details class="qa" data-reveal style="--i:2">
+            <summary><span>Which AI models does it use?</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+            <p>On Casama Cloud, Casama picks and runs the models for you. When you self-host, bring keys for Anthropic, OpenAI, Google Gemini, xAI or OpenRouter, sign in with your ChatGPT plan, or run local models with Ollama. Each bot can have a main model and a fallback.</p>
+          </details>
+          <details class="qa" data-reveal style="--i:3">
+            <summary><span>Is my data used to train AI models?</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+            <p>No. Your chats, memories and files are used to run Casama for you and for nothing else. We don't sell data or show ads, your keys never reach the model, and you can export everything or delete your account at any time.</p>
+          </details>
+          <details class="qa" data-reveal style="--i:4">
+            <summary><span>What do credits pay for?</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+            <p>On Casama Cloud, credits are dollars. They pay for AI models, cloud computer time, live calls, images and other metered services. Every plan includes monthly credits, and paid plans can buy credit packs. A self-hosted server uses no credits: you pay your providers directly.</p>
+          </details>
+          <details class="qa" data-reveal style="--i:5">
+            <summary><span>Can I run it on my own server?</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></summary>
+            <p>Yes. Casama is open source under Apache-2.0. One command installs the whole stack with Docker on a Linux server, a home server or a Mac, or start it from the Mac and Linux app. Self-hosting is free, with no limit on users or bots.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- Make it yours: the looks, kept small -->
+    <section class="looks-strip section" id="looks" aria-labelledby="looks-title">
+      <div class="wrap looks-strip-inner">
+        <div>
+          <h2 id="looks-title" data-reveal>Make it yours.</h2>
+          <p data-reveal style="--i:1">Eight looks ship in the app. This page is wearing <strong data-look-name>Casama</strong> right now.</p>
+        </div>
+        <div class="swatches" role="group" aria-label="Looks" data-reveal style="--i:2">
+          <button type="button" class="swatch" data-look="casama" aria-pressed="true"><svg aria-hidden="true"><use href="#cloud"/></svg><span class="swatch-name">Casama</span></button>
+          <button type="button" class="swatch" data-look="editorial" aria-pressed="false"><svg aria-hidden="true"><use href="#cloud"/></svg><span class="swatch-name">Editorial</span></button>
+          <button type="button" class="swatch" data-look="ocean" aria-pressed="false"><svg aria-hidden="true"><use href="#cloud"/></svg><span class="swatch-name">Ocean</span></button>
+          <button type="button" class="swatch" data-look="forest" aria-pressed="false"><svg aria-hidden="true"><use href="#cloud"/></svg><span class="swatch-name">Forest</span></button>
+          <button type="button" class="swatch" data-look="sakura" aria-pressed="false"><svg aria-hidden="true"><use href="#cloud"/></svg><span class="swatch-name">Sakura</span></button>
+          <button type="button" class="swatch" data-look="sunset" aria-pressed="false"><svg aria-hidden="true"><use href="#cloud"/></svg><span class="swatch-name">Sunset</span></button>
+          <button type="button" class="swatch" data-look="cosmos" aria-pressed="false"><svg aria-hidden="true"><use href="#cloud"/></svg><span class="swatch-name">Cosmos</span></button>
+          <button type="button" class="swatch" data-look="graphite" aria-pressed="false"><svg aria-hidden="true"><use href="#cloud"/></svg><span class="swatch-name">Graphite</span></button>
+        </div>
+      </div>
+    </section>
+
     <!-- Close: the action tile in a cropped row -->
     <section class="close section" id="start" aria-labelledby="start-title">
       <div class="close-row">
         <div class="close-flank left" aria-hidden="true"><img src="/assets/bots/casama-winky-animated.svg" alt="" width="150" height="150" loading="lazy"></div>
         <div class="close-tile" data-reveal>
           <h2 id="start-title">Meet your first teammate today.</h2>
-          <p>Continue with Google or Apple on Casama Cloud, or run one command on your own machine.</p>
+          <p>Sign in with Google or Apple and meet your first bot in a minute. Prefer your own server? One command installs it.</p>
           <div class="install">
             <pre><code id="install-code">git clone https://github.com/stackwares/casama &amp;&amp; ./casama/install.sh --local</code></pre>
             <button type="button" class="copy" id="copy-install" aria-label="Copy the install command">Copy</button>
@@ -544,28 +524,19 @@ $ npx vitest run billing.test.ts
 
   <footer class="site-footer">
     <div class="wrap">
-      <div class="footer-mark" aria-hidden="true">
-        <svg class="mark-cloud" viewBox="20 60 214 168">
-          <ellipse cx="128" cy="158" rx="84" ry="44" style="fill: var(--m0)"/>
-          <circle cx="110" cy="112" r="50" style="fill: var(--accent)"/>
-          <circle cx="68" cy="130" r="23" style="fill: var(--m2)"/>
-          <circle cx="176" cy="130" r="36" style="fill: var(--m1)"/>
-          <circle cx="50" cy="158" r="28" style="fill: var(--m3)"/>
-          <circle cx="205" cy="163" r="27" style="fill: var(--m2)"/>
-          <circle cx="80" cy="189" r="29" style="fill: var(--m1)"/>
-          <circle cx="128" cy="197" r="28" style="fill: var(--accent)"/>
-          <circle cx="178" cy="190" r="29" style="fill: var(--m3)"/>
-        </svg>
-        <span class="mark-word">casama</span>
+      <div class="footer-mark">
+        <span class="mark-icon" data-casama-mark></span>
+        <span class="mark-word">Casama</span>
       </div>
 
       <div class="footer-grid">
         <nav class="footer-col" aria-label="Product">
           <h2>Product</h2>
           <a href="https://app.casama.ai">Casama Cloud</a>
-          <a href="#looks">Looks</a>
           <a href="#team">Teammates</a>
+          <a href="#features">Features</a>
           <a href="#pricing">Pricing</a>
+          <a href="#faq">Questions</a>
           <a href="https://gallery.casama.ai">Gallery</a>
         </nav>
         <nav class="footer-col" aria-label="Developers">
@@ -603,5 +574,6 @@ $ npx vitest run billing.test.ts
   </footer>
 
   <script src="/site.js"></script>
+  <script src="/assets/brand/casama-mark.js"></script>
 </body>
 </html>

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
-import '../../core/date_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_tokens.dart';
@@ -93,7 +92,7 @@ class _PasskeysScreenState extends ConsumerState<PasskeysScreen> {
                         icon: LucideIcons.keyRound,
                         title: p.name,
                         subtitle: p.lastUsedAt == null
-                            ? l10n.passkeyAddedOn(p.createdAt.toLocal().formattedDate(context))
+                            ? l10n.passkeyAddedOn(relativeTime(p.createdAt, context))
                             : l10n.passkeyLastUsed(relativeTime(p.lastUsedAt!, context)),
                         onTap: () => _rename(p),
                         trailing: Row(

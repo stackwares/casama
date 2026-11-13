@@ -8,7 +8,6 @@ import 'package:casama_app/core/providers.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:casama_app/features/chat/chat_screen.dart';
 import 'package:casama_app/features/chat/chat_detail.dart';
-import 'package:casama_app/theme/fonts.dart';
 import 'package:casama_app/features/settings/appearance_screen.dart';
 import 'package:casama_app/features/settings/gallery_screen.dart';
 import 'package:casama_app/features/settings/photo_picker.dart';
@@ -136,8 +135,8 @@ void main() {
       ThemeData theme() =>
           Theme.of(tester.element(find.byType(AppearanceScreen)));
       final lightSurface = theme().colorScheme.surface;
-      // Casama's own scheme is the default: orchid primary from the app icon.
-      expect(theme().colorScheme.primary, casamaScheme.light.primary);
+      // Plain's neutral scheme is the default (D-266).
+      expect(theme().colorScheme.primary, themeChoiceById(defaultSchemeId).data.light.primary);
 
       await tester.tap(find.text('Dark'));
       await tester.pumpAndSettle();
@@ -295,11 +294,8 @@ void main() {
       await tester.ensureVisible(find.byKey(const Key('resetFonts')));
       await tester.tap(find.byKey(const Key('resetFonts')));
       await tester.pumpAndSettle();
-      expect(
-        container.read(appearanceProvider).headingFont,
-        defaultHeadingFont,
-      );
-      expect(container.read(appearanceProvider).bodyFont, defaultBodyFont);
+      expect(container.read(appearanceProvider).headingFont, plainFont);
+      expect(container.read(appearanceProvider).bodyFont, plainFont);
     },
   );
 

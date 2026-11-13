@@ -3160,3 +3160,10 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
 ## D-265 The computer's Terminal tab is always there
 
 - **Decision** (Oliver: "can we just show the Terminal always and no need for the toggle?"): a bot's computer shows Screen, Terminal, Files and Manage with no Advanced toggle, replacing D-182's hidden Terminal. A personal computer still shows only Screen, and Files while online.
+
+## D-266 Plain is the default look
+
+- **Decision** (Oliver: "I want Plain as the default theme from now on"): the out-of-the-box look is the Plain theme instead of Casama's. The `Appearance` defaults (`client/lib/theme/appearance.dart`) are now Plain's: the `shadNeutral` scheme, Google Sans for headings and text (bundled, so nothing loads on first launch), a flat surface with no pattern, and fewer effects on. The Plain preset in `presets.dart` is built from the same constants, so the two can't drift.
+- **Who sees it:** new installs, and anyone whose device never saved a look; each setting falls back to Plain's when it isn't saved. A device that applied a theme or changed a setting keeps what it saved. Light or dark still follows the system.
+- **Resets:** "Use the Defaults" in Fonts and "Reset to Default" in Background go back to Plain's fonts and flat surface instead of Libre Baskerville, Lato and clouds.
+- **Casama stays** as a built-in theme in Settings → Appearance, unchanged.

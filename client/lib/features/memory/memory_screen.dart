@@ -194,7 +194,7 @@ class _MemoryCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: AppSpace.xs),
-                    Text(relativeTime(m.updatedAt, context), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+                    TimeAgo(m.updatedAt, style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
                   ],
                 ),
                 const SizedBox(height: AppSpace.xs),

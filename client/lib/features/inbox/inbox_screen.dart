@@ -339,7 +339,7 @@ class _PageUpdateRow extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: AppSpace.xs),
-                      Text(relativeTime(p.createdAt, context), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+                      TimeAgo(p.createdAt, style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
                     ],
                   ),
                   const SizedBox(height: 2),
@@ -727,7 +727,7 @@ class _NotificationRow extends ConsumerWidget {
                           onTap: () => showAdaptiveSheet<void>(context: context, builder: (_) => WhySheet(notification: n)),
                           child: Padding(padding: const EdgeInsets.all(4), child: Icon(LucideIcons.info, size: 16, color: scheme.onSurfaceVariant)),
                         ),
-                      Text(relativeTime(n.createdAt, context), style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+                      TimeAgo(n.createdAt, style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
                       if (unread) ...[
                         const SizedBox(width: 6),
                         Container(
@@ -803,7 +803,7 @@ class TakeoverCard extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Text(takeover.reason, style: context.textTheme.bodyMedium?.copyWith(height: 1.4)),
                     const SizedBox(height: 4),
-                    Text(relativeTime(takeover.createdAt, context), style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                    TimeAgo(takeover.createdAt, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
                   ],
                 ),
               ),

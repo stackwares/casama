@@ -13,7 +13,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/display_text.dart';
 import '../../core/number_format.dart';
-import '../../core/date_format.dart';
 import '../../core/phone_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -539,7 +538,7 @@ class EncryptionSection extends ConsumerWidget {
             key: const Key('rotateKey'),
             icon: LucideIcons.rotateCw,
             title: l10n.encryptionRotate,
-            subtitle: s.rotatedAt != null ? l10n.encryptionRotated(s.rotatedAt!.toLocal().formattedDate(context)) : l10n.encryptionRotateHelp,
+            subtitle: s.rotatedAt != null ? l10n.encryptionRotated(relativeTime(s.rotatedAt!, context)) : l10n.encryptionRotateHelp,
             onTap: () async {
               final ok = await showConfirm(
                 context: context,

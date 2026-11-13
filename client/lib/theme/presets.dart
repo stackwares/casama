@@ -96,27 +96,26 @@ extension on String {
   String characters(int max) => length <= max ? this : substring(0, max);
 }
 
-// The Plain theme: a flat surface with no pattern, neutral grays with one quiet accent, one clean
-// sans-serif, and no decorative motion. Light or dark follows the app's own switch.
-const _plainWallpaper = WallpaperSpec(pattern: WallpaperPattern.none, palette: WallpaperPalette.flat);
+// The Plain theme, the out-of-the-box look (D-266): a flat surface with no pattern, neutral grays
+// with one quiet accent, one clean sans-serif, and no decorative motion. Light or dark follows the
+// app's own switch. Its values are the Appearance defaults in appearance.dart.
 
 const builtInPresets = [
   ThemePreset(
     id: 'plain',
     name: 'Plain',
-    schemeId: 'shadNeutral',
-    headingFont: 'Google Sans',
-    bodyFont: 'Google Sans',
-    wallpaper: _plainWallpaper,
-    fewerEffects: true,
+    schemeId: defaultSchemeId,
+    headingFont: plainFont,
+    bodyFont: plainFont,
+    wallpaper: defaultWallpaper,
+    fewerEffects: defaultFewerEffects,
     builtIn: true,
   ),
   ThemePreset(
     id: 'casama',
     name: 'Casama',
     schemeId: 'casama',
-    // Exactly the out-of-the-box look, so a new install shows Casama in use rather than a custom
-    // look. Clouds on the theme's own colors: orchid, rose and periwinkle with Casama's scheme.
+    // Clouds on the theme's own colors: orchid, rose and periwinkle with Casama's scheme.
     wallpaper: WallpaperSpec(),
     builtIn: true,
   ),

@@ -471,3 +471,20 @@ String relativeTime(DateTime t, BuildContext context) {
   if (d.inDays < 7) return l10n.daysAgo(d.inDays);
   return t.toLocal().formattedDate(context);
 }
+
+/// [relativeTime] as text, with the exact date and time on hover or long press.
+class TimeAgo extends StatelessWidget {
+  const TimeAgo(this.at, {super.key, this.style, this.label});
+
+  final DateTime at;
+  final TextStyle? style;
+
+  /// Puts the relative time in a sentence, e.g. l10n.skillLastFailure ("Last problem: 2 days ago").
+  final String Function(String when)? label;
+
+  @override
+  Widget build(BuildContext context) {
+    final when = relativeTime(at, context);
+    return Tooltip(message: at.toLocal().formattedExact(context), child: Text(label?.call(when) ?? when, style: style));
+  }
+}

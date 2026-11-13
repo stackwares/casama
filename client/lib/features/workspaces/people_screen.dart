@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/date_format.dart';
 import '../../core/display_text.dart';
 import '../../core/number_format.dart';
 import '../../core/providers.dart';
@@ -718,7 +719,7 @@ class _PendingInvitesSection extends ConsumerWidget {
                 title: i.email,
                 subtitle: i.expiresAt.isBefore(DateTime.now())
                     ? l10n.inviteExpired
-                    : l10n.inviteExpires(relativeTime(i.expiresAt, context)),
+                    : l10n.inviteExpires(i.expiresAt.toLocal().formattedWeekdayDate(context)),
                 trailing: PopupMenuButton<String>(
                   key: Key('pendingMenu-${i.id}'),
                   onOpened: unfocusBeforeModal,

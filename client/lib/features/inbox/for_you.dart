@@ -45,7 +45,7 @@ class BriefCard extends ConsumerWidget {
             BotAvatar(name: bot?.name ?? '', avatar: bot?.avatarUrl, size: 28),
             const SizedBox(width: AppSpace.sm),
             Expanded(child: Text(l10n.morningBriefFrom(bot?.name ?? ''), style: context.textTheme.titleSmall)),
-            Text(relativeTime(b.createdAt, context), style: context.textTheme.labelSmall),
+            TimeAgo(b.createdAt, style: context.textTheme.labelSmall),
           ]),
           ChatMarkdown(data: b.text),
         ],

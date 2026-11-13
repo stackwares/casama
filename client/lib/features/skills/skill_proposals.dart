@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../core/date_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -177,14 +176,14 @@ class SkillStatsSheet extends ConsumerWidget {
                 key: const Key('skillStatsLine'),
                 s.uses == 0 ? l10n.skillNotUsedYet : l10n.skillStatsLine(s.uses, ((s.successRate ?? 0) * 100).round(), s.failures, s.corrections),
               ),
-              if (s.lastFailureAt != null) Text(l10n.skillLastFailure(s.lastFailureAt!.toLocal().formattedDate(context))),
+              if (s.lastFailureAt != null) TimeAgo(s.lastFailureAt!, label: l10n.skillLastFailure),
               if (s.revisions.isNotEmpty) Text(l10n.skillHistory, style: context.textTheme.labelLarge),
               for (final r in s.revisions)
                 ListTile(
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(r.byBot ? LucideIcons.bot : LucideIcons.user, size: 18),
-                  title: Text(r.createdAt.toLocal().formattedDate(context)),
+                  title: TimeAgo(r.createdAt),
                   subtitle: Text(r.bodyMd, maxLines: 3, overflow: TextOverflow.ellipsis),
                 ),
             ],

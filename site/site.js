@@ -338,7 +338,7 @@
       },
       waves: function (o, g) {
         var k = g.k, s = g.S, rows = g.small ? 3 : 4, colors = g.small ? ["t2", "pc", "accent"] : ["t3", "t2", "pc", "accent"];
-        var y0 = g.small ? g.C.y - k * 0.12 : s.y + k * 0.02;
+        var y0 = g.small ? g.C.y - k * 0.02 : s.y + k * 0.02;
         for (var r = 0; r < rows; r++) {
           var R = k * (0.11 + 0.045 * r), y = y0 + (g.H - y0) * (r / rows) * 1.05, step = R * 1.45;
           var x0 = (g.small ? -R * 0.4 : s.x + R + 8) + (r % 2) * step * 0.5, count = Math.min(10, Math.ceil((g.W - x0 + R) / step) + 1);
@@ -445,7 +445,7 @@
     }
 
     // Line boxes of the hero's words, so small shapes keep off them.
-    var textEls = $all(".hero h1, .hero-lede, .hero-actions, .look-picker");
+    var textEls = $all(".hero h1, .hero-lede, .hero-actions, .hero-note");
     function textBoxes(h) {
       var out = [];
       textEls.forEach(function (el) {
@@ -476,7 +476,7 @@
       return {
         W: W, H: H, S: S, C: C, k: k, small: small,
         F: small ? { x: W * 0.62, y: C.y + k * 0.46 } : { x: right - Math.min(60, (W - right) * 0.2) + k * 0.12, y: H - k * 0.1 },
-        TR: small ? { x: W - k * 0.06, y: S.y + k * 0.04 } : { x: W - k * 0.1, y: S.y + k * 0.03 },
+        TR: small ? { x: W - k * 0.06, y: S.y + k * 0.2 } : { x: W - k * 0.1, y: S.y + k * 0.03 },
         BL: { x: S.x + k * 0.16, y: H - k * 0.06 },
         // Free spots for the small pieces: beside and above the chat, never under the words.
         zones: small
@@ -495,6 +495,14 @@
       g.rx = function () { zone = g.zones[g.r() < 0.72 || g.zones.length < 2 ? 0 : 1]; return zone.x0 + g.r() * (zone.x1 - zone.x0); };
       g.ry = function () { return zone.y0 + g.r() * (zone.y1 - zone.y0); };
       BUILD[look.field](out, g);
+      // On a phone the stage sits close under the note, so the picture moves down until no big shape
+      // climbs above the stage and behind the words.
+      if (g.small) {
+        var top = Infinity;
+        out.forEach(function (sh) { if (Math.max(sh.rx, sh.ry) >= g.k * 0.09) top = Math.min(top, sh.y - sh.ry - sh.ay); });
+        var drop = g.S.y - top;
+        if (drop > 0) out.forEach(function (sh) { sh.y += drop; });
+      }
       // Nothing small sits on the words; big soft shapes may pass behind them.
       out.forEach(function (sh) {
         if (Math.max(sh.rx, sh.ry) < g.k * 0.09 && hitsText(sh, g.text)) { sh.rx = 0; sh.ry = 0; }
@@ -721,10 +729,11 @@
   }
 
   // ------------------------------------------------------------------ reveals
-  // The hero's chat opens right away; everything else rises as it scrolls in.
-  var shutters = $all(".shutter");
+  // The hero (its chat and its copy) opens right away; everything else rises as it scrolls in.
+  // The hero's note sits low enough that the scroll trigger below could miss it.
+  var shutters = $all(".shutter, .hero [data-reveal]");
   requestAnimationFrame(function () { setTimeout(function () { shutters.forEach(function (el) { el.classList.add("is-in"); }); }, 120); });
-  var revealEls = $all("[data-reveal]");
+  var revealEls = $all("[data-reveal]").filter(function (el) { return !el.closest(".hero"); });
   if ("IntersectionObserver" in window && !reduceMQ.matches) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
@@ -757,10 +766,10 @@
       b.addEventListener("click", function () {
         var yes = b.dataset.ask === "yes";
         ask.dataset.state = "done";
-        askText.textContent = yes ? "Approved. Pushed fix/invoice-tz." : "Denied. Checkpoint 19 restored.";
+        askText.textContent = yes ? "Approved. Booking flights and hotel." : "Denied. Checkpoint 7 restored.";
         askReply.textContent = yes
-          ? "PR #418 is open with 4 passing tests. That run cost $0.019."
-          : "Okay. I rolled my computer back to checkpoint 19, and nothing was pushed.";
+          ? "Booked. The confirmations are in your inbox and on your calendar. That task cost $0.019."
+          : "Okay, nothing was booked. I rolled my computer back to checkpoint 7.";
         askReply.hidden = false;
         clearTimeout(resetTimer);
         resetTimer = setTimeout(function () {
@@ -788,10 +797,10 @@
   if (range && split) {
     var STAGES = [
       null,
-      { clause: "First, you ask in plain words.", note: "Type it, say it, or forward an email. Put it on the ticket board if it can wait.", state: "Reading", stop: "Ask" },
-      { clause: "Then it works on its own computer.", note: "It opens a shell, runs the tests, browses, and writes files, all inside its own sandbox.", state: "Working", stop: "Work" },
-      { clause: "It stops before anything risky.", note: "Pushing code, sending, paying or deleting waits for your OK, on your phone or here.", state: "Waiting for you", stop: "Check" },
-      { clause: "Last, it reports back with the cost.", note: "Every step, every tool call, and what it cost, down to a tenth of a cent.", state: "Done", stop: "Report" }
+      { clause: "First, you ask in plain words.", note: "Type it, say it, or forward an email. Put it on the board if it can wait.", state: "Reading", stop: "Ask" },
+      { clause: "Then it works on its own computer.", note: "It browses, compares prices, fills in forms and writes files, without touching your own devices.", state: "Working", stop: "Work" },
+      { clause: "It stops before anything risky.", note: "Sending, booking, paying or deleting waits for your OK, on your phone or here.", state: "Waiting for you", stop: "Check" },
+      { clause: "Last, it reports back with the cost.", note: "Every step it took, and what it cost, down to a tenth of a cent.", state: "Done", stop: "Report" }
     ];
     var clause = split.querySelector("[data-how-clause]");
     var note = split.querySelector("[data-how-note]");

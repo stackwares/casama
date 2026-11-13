@@ -23,6 +23,9 @@ extension HumanDates on DateTime {
   // J — month labels under a chart (the language's own narrow month name).
   String formattedMonthInitial(BuildContext context) => DateFormat('LLLLL', _locale(context)).format(this);
 
+  // Sun, Jul 24, 2016 · 2:44 PM — the exact moment, behind a relative time ("3 hours ago").
+  String formattedExact(BuildContext context) => '${DateFormat.yMMMEd(_locale(context)).format(this)} · ${formattedTime(context)}';
+
   // Jul 2016 — a whole month.
   String formattedMonthYear(BuildContext context) => DateFormat.yMMM(_locale(context)).format(this);
 }

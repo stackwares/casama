@@ -126,7 +126,7 @@ class _RunCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 3),
-                Text(relativeTime(run.createdAt, context), style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                TimeAgo(run.createdAt, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
               ],
             ),
           ),

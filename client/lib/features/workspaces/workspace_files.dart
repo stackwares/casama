@@ -6,7 +6,6 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/display_text.dart';
-import '../../core/date_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../core/haptics.dart';
@@ -77,7 +76,7 @@ class WorkspaceFilesSection extends ConsumerWidget {
                       '${sync.repo}@${sync.branch}${sync.path.isUsable ? '/${sync.path}' : ''}',
                       if (!sync.hasToken) l10n.gitSyncNeedsToken,
                       if (sync.lastError.isUsable) sync.lastError!,
-                      if (sync.lastSyncedAt != null) l10n.gitSyncLast(sync.lastSyncedAt!.toLocal().formattedDate(context)),
+                      if (sync.lastSyncedAt != null) l10n.gitSyncLast(relativeTime(sync.lastSyncedAt!, context)),
                     ].join(' · '),
               onTap: configure,
             ),

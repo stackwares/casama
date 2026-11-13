@@ -8,7 +8,6 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/date_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_tokens.dart';
@@ -128,7 +127,7 @@ class PagesList extends ConsumerWidget {
                               _ => l10n.pagePrivate,
                             },
                             if (p.refreshRoutineId != null) l10n.pageRefreshes,
-                            l10n.pageUpdated(p.updatedAt.toLocal().formattedDate(context)),
+                            l10n.pageUpdated(relativeTime(p.updatedAt, context)),
                           ].where((s) => s.isNotEmpty).join(' · '),
                           onTap: () => open(p),
                           trailing: PopupMenuButton<String>(

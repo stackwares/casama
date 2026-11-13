@@ -44,7 +44,7 @@ class _FontsPanelState extends ConsumerState<FontsPanel> {
     final suggested = _role == _Role.heading ? curatedHeadingFonts : curatedBodyFonts;
     final List<String> shown = q.isEmpty ? suggested : [for (final f in _all) if (f.toLowerCase().contains(q)) f].take(60).toList();
     void pick(String family) => _role == _Role.heading ? notifier.setFonts(heading: family) : notifier.setFonts(body: family);
-    final isDefault = appearance.headingFont == defaultHeadingFont && appearance.bodyFont == defaultBodyFont;
+    final isDefault = appearance.headingFont == plainFont && appearance.bodyFont == plainFont;
 
     return PageColumn(
       children: [
@@ -111,7 +111,7 @@ class _FontsPanelState extends ConsumerState<FontsPanel> {
               if (!isDefault)
                 TextButton(
                   key: const Key('resetFonts'),
-                  onPressed: () => notifier.setFonts(heading: defaultHeadingFont, body: defaultBodyFont),
+                  onPressed: () => notifier.setFonts(heading: plainFont, body: plainFont),
                   child: Text(l10n.resetFonts),
                 ),
             ],

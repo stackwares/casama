@@ -152,7 +152,7 @@ code { font: 0.92em var(--mono); }
 .bar-inner { display: flex; align-items: center; height: 64px; gap: 10px; }
 .logo { display: inline-flex; align-items: center; gap: 8px; font-size: 22px; text-decoration: none; color: var(--text); }
 /* The animated brand mascot (assets/brand/casama-mark.js) fills these boxes; it fades in once drawn. */
-[data-casama-mark] { display: block; flex: none; width: 34px; height: 34px; opacity: 0; transition: opacity .4s ease; }
+[data-casama-mark] { display: block; flex: none; width: 34px; height: 34px; contain: layout paint style; opacity: 0; transition: opacity .4s ease; }
 [data-casama-mark].is-ready { opacity: 1; }
 [data-casama-mark] svg { display: block; }
 .crumb { color: var(--border-strong); font-size: 20px; }

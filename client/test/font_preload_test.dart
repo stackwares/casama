@@ -27,7 +27,7 @@ void main() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     container.listen(appearanceProvider, (_, _) {});
-    expect(container.read(appearanceProvider).bodyFont, defaultBodyFont);
+    expect(container.read(appearanceProvider).bodyFont, plainFont);
     await Future<void>.delayed(Duration.zero);
     await Future<void>.delayed(Duration.zero);
     expect(container.read(appearanceProvider).bodyFont, 'Figtree');

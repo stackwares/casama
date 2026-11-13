@@ -244,8 +244,8 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  test('a new install is the Casama theme, not a custom look', () {
-    expect(currentTheme(const Appearance(), const [])?.id, 'casama');
+  test('a new install is the Plain theme, not a custom look (D-266)', () {
+    expect(currentTheme(const Appearance(), const [])?.id, 'plain');
   });
 
   test('older links still name a part, and unknown ones open Colors', () {

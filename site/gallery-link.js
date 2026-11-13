@@ -72,7 +72,10 @@ function page(type, id, item) {
   a { color: inherit; }
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
   header { display: flex; align-items: center; gap: 10px; padding: 22px 0; }
-  .logo { font-weight: 700; letter-spacing: -0.02em; font-size: 20px; text-decoration: none; }
+  @font-face { font-family: "Libre Baskerville"; src: url("/assets/fonts/LibreBaskerville-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+  .logo { display: inline-flex; align-items: center; gap: 8px; font: 700 21px/1 "Libre Baskerville", Georgia, serif; letter-spacing: -0.03em; text-decoration: none; }
+  [data-casama-mark] { display: block; flex: none; width: 34px; height: 34px; contain: layout paint style; opacity: 0; transition: opacity .4s ease; }
+  [data-casama-mark].is-ready { opacity: 1; }
   .crumb { color: var(--muted); text-decoration: none; }
   .item { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 48px; align-items: center; padding: 40px 0 72px; }
   .pic { display: grid; gap: 12px; }
@@ -92,7 +95,7 @@ function page(type, id, item) {
 </head>
 <body>
 <div class="wrap">
-  <header><a class="logo" href="https://casama.ai">casama</a><span class="crumb" aria-hidden="true">/</span><a class="crumb" href="${GALLERY}/">Gallery</a></header>
+  <header><a class="logo" href="https://casama.ai" aria-label="Casama home"><span data-casama-mark></span>Casama</a><span class="crumb" aria-hidden="true">/</span><a class="crumb" href="${GALLERY}/">Gallery</a></header>
   <main class="item">
     <div class="pic" id="pic"></div>
     <div>
@@ -139,6 +142,7 @@ function page(type, id, item) {
     pic.appendChild(G.chat(look, { dark: dark, aspect: "16 / 10", label: item.name + " in a Casama chat" }));
   })();
 </script>
+<script src="/assets/brand/casama-mark.js"></script>
 </body>
 </html>`;
 }
@@ -176,7 +180,10 @@ async function invitePage(code) {
   * { box-sizing: border-box; }
   body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px; background: var(--bg); color: var(--ink); font: 17px/1.55 ui-sans-serif, -apple-system, "Segoe UI", Inter, system-ui, sans-serif; }
   main { width: 100%; max-width: 440px; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 32px 24px; text-align: center; }
-  .logo { font-weight: 700; letter-spacing: -0.02em; font-size: 20px; text-decoration: none; color: inherit; }
+  @font-face { font-family: "Libre Baskerville"; src: url("/assets/fonts/LibreBaskerville-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+  .logo { display: inline-flex; align-items: center; gap: 8px; font: 700 21px/1 "Libre Baskerville", Georgia, serif; letter-spacing: -0.03em; text-decoration: none; color: inherit; }
+  [data-casama-mark] { display: block; flex: none; width: 34px; height: 34px; contain: layout paint style; opacity: 0; transition: opacity .4s ease; }
+  [data-casama-mark].is-ready { opacity: 1; }
   h1 { font-size: 28px; line-height: 1.15; letter-spacing: -0.02em; margin: 20px 0 10px; }
   p { margin: 0 0 18px; color: var(--muted); }
   .code { display: inline-block; margin: 4px 0 22px; padding: 10px 18px; border-radius: 12px; border: 1px dashed var(--accent); font: 700 26px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 6px; user-select: all; }
@@ -187,7 +194,7 @@ async function invitePage(code) {
 </head>
 <body>
 <main>
-  <a class="logo" href="https://casama.ai">casama</a>
+  <a class="logo" href="https://casama.ai" aria-label="Casama home"><span data-casama-mark></span>Casama</a>
   <h1>${esc(who)}</h1>
   <p>${esc(about)}</p>
   <div class="code" aria-label="Invite code">${esc(code)}</div>
@@ -195,6 +202,7 @@ async function invitePage(code) {
   <a class="btn" href="https://casama.ai">Get Casama</a>
   <p class="small">Already have the app? It opens this invite by itself. Otherwise, after signing up go to Settings → Invite friends and enter the code within a week.</p>
 </main>
+<script src="/assets/brand/casama-mark.js"></script>
 </body>
 </html>`;
   return new Response(html, {

@@ -197,9 +197,9 @@ class BackgroundPanel extends ConsumerWidget {
         Center(
           child: TextButton.icon(
             key: const Key('resetBackground'),
-            onPressed: spec == const WallpaperSpec()
+            onPressed: spec == defaultWallpaper
                 ? null
-                : () => set(const WallpaperSpec()),
+                : () => set(defaultWallpaper),
             icon: const Icon(LucideIcons.rotateCcw, size: 18),
             label: Text(l10n.resetBackground),
           ),

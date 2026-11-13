@@ -50,7 +50,6 @@ class _MessageActionsState extends State<MessageActions> with SingleTickerProvid
 
   /// The hover buttons float under the message (D-256) instead of keeping space for themselves,
   /// so messages sit as close on a computer as on a phone and nothing moves when they show.
-  final _link = LayerLink();
   final _bar = OverlayPortalController();
   var _overMessage = false;
   var _overBar = false;
@@ -204,23 +203,29 @@ class _MessageActionsState extends State<MessageActions> with SingleTickerProvid
       return MouseRegion(
         onEnter: (_) => _pointer(message: true),
         onExit: (_) => _pointer(message: false),
-        child: OverlayPortal(
+        // Placed from the message's laid-out position rather than a CompositedTransformFollower:
+        // the buttons' tooltips need a paint transform during layout, which a follower layer
+        // can't give ("The paint transform cannot be reliably computed").
+        child: OverlayPortal.overlayChildLayoutBuilder(
           controller: _bar,
-          overlayChildBuilder: (_) => CompositedTransformFollower(
-            link: _link,
-            targetAnchor: end ? Alignment.bottomRight : Alignment.bottomLeft,
-            followerAnchor: end ? Alignment.topRight : Alignment.topLeft,
-            offset: Offset(end ? -6 : 6, -6),
-            child: Align(
-              alignment: end ? Alignment.topRight : Alignment.topLeft,
-              child: MouseRegion(
-                onEnter: (_) => _pointer(bar: true),
-                onExit: (_) => _pointer(bar: false),
-                child: _hoverBar(context),
-              ),
-            ),
-          ),
-          child: CompositedTransformTarget(link: _link, child: selectable),
+          overlayChildBuilder: (_, info) {
+            final rect = MatrixUtils.transformRect(info.childPaintTransform, Offset.zero & info.childSize);
+            return Stack(
+              children: [
+                Positioned(
+                  top: rect.bottom - 6,
+                  left: end ? null : rect.left + 6,
+                  right: end ? info.overlaySize.width - rect.right + 6 : null,
+                  child: MouseRegion(
+                    onEnter: (_) => _pointer(bar: true),
+                    onExit: (_) => _pointer(bar: false),
+                    child: _hoverBar(context),
+                  ),
+                ),
+              ],
+            );
+          },
+          child: selectable,
         ),
       );
     }

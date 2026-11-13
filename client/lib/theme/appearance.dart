@@ -4,9 +4,15 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'fonts.dart';
 import 'schemes.dart';
 import 'wallpaper.dart';
+
+// The out-of-the-box look is the Plain theme (D-266): neutral grays, Google Sans, a flat surface
+// with no pattern, and fewer effects. presets.dart builds Plain from these too.
+const defaultSchemeId = 'shadNeutral';
+const plainFont = 'Google Sans';
+const defaultWallpaper = WallpaperSpec(pattern: WallpaperPattern.none, palette: WallpaperPalette.flat);
+const defaultFewerEffects = true;
 
 /// Settings → Appearance: light or dark, the color scheme, the fonts and the wallpaper, kept on
 /// this device. A theme preset (see presets.dart) sets everything but [mode] at once.
@@ -14,11 +20,11 @@ import 'wallpaper.dart';
 class Appearance {
   const Appearance({
     this.mode = ThemeMode.system,
-    this.schemeId = 'casama',
-    this.headingFont = defaultHeadingFont,
-    this.bodyFont = defaultBodyFont,
-    this.wallpaper = const WallpaperSpec(),
-    this.fewerEffects = false,
+    this.schemeId = defaultSchemeId,
+    this.headingFont = plainFont,
+    this.bodyFont = plainFont,
+    this.wallpaper = defaultWallpaper,
+    this.fewerEffects = defaultFewerEffects,
   });
   final ThemeMode mode;
 
@@ -92,11 +98,11 @@ class AppearanceNotifier extends Notifier<Appearance> {
         mode:
             ThemeMode.values.asNameMap()[p.getString(_modeKey)] ??
             ThemeMode.system,
-        schemeId: themeChoiceById(p.getString(_schemeKey) ?? 'casama').id,
-        headingFont: p.getString(_headingKey) ?? defaultHeadingFont,
-        bodyFont: p.getString(_bodyKey) ?? defaultBodyFont,
+        schemeId: themeChoiceById(p.getString(_schemeKey) ?? defaultSchemeId).id,
+        headingFont: p.getString(_headingKey) ?? plainFont,
+        bodyFont: p.getString(_bodyKey) ?? plainFont,
         wallpaper: _loadWallpaper(p),
-        fewerEffects: p.getBool(_fewerEffectsKey) ?? false,
+        fewerEffects: p.getBool(_fewerEffectsKey) ?? defaultFewerEffects,
       );
     } catch (_) {
       return null;
@@ -161,6 +167,10 @@ class AppearanceNotifier extends Notifier<Appearance> {
           (jsonDecode(json) as Map).cast<String, Object?>(),
         );
       } catch (_) {}
+    }
+    // Nothing saved at all: the default look's flat surface.
+    if (![_patternKey, _paletteKey, _intensityKey, _everywhereKey].any(p.containsKey)) {
+      return defaultWallpaper;
     }
     return WallpaperSpec.fromJson({
       'pattern': p.getString(_patternKey),
