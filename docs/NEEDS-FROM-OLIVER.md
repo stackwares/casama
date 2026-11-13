@@ -119,7 +119,7 @@ Everything below is built and tested against mocks, fixtures or local stand-ins.
 
 ## Proactive bots (D-247)
 
-- **Composio webhook for app events:** create the Casama Composio project's webhook subscription (`POST https://backend.composio.dev/api/v3/webhook_subscriptions` with `{"webhook_url": "https://api.casama.ai/hooks/composio", "enabled_events": ["composio.trigger.message"], "version": "V3"}`, or in Composio's dashboard), then put the returned secret in prod's env as `COMPOSIO_WEBHOOK_SECRET` (and in Vaultwarden). Until then, scans keep their schedule and nothing else changes.
+- **Composio webhook for app events:** done 2026-11-13. Subscription `ws_-eL6Jba8gJRP` posts to `https://api.casama.ai/hooks/composio`; the secret is in prod `.env` and Vaultwarden ("Casama · Composio webhook signing secret (production)").
 - **Phone checks:** on an Android phone, a suggestion push shows Do it and Not now; Do it opens the chat where the bot does it. Same on iPhone (long-press the notification). Needs an app build with this change.
 
 ## Decisions only Oliver can make

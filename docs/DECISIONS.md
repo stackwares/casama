@@ -2724,5 +2724,5 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
   On Free (12-hour floor, one bot, no event scans) that's at most a brief plus two scans a day: about $0.05 a month of model cost.
 - **For you:** suggestion cards show the bot's own line (`Suggestion.push_text`, optional in the API).
 - **Analytics:** `proactive_message_sent` (kind suggestion, timed or summary; reason), `suggestion_resolved` (accepted, dismissed, dismissed_forever; age in hours), `proactive_muted` (Less like this); `push_opened` has kind `suggestion`.
-- **Not done:** the Composio webhook subscription itself (NEEDS-FROM-OLIVER until set up).
+- **Live:** deployed 2026-11-13 (server 522448435b01, migration 20270130000001). The Composio webhook subscription `ws_-eL6Jba8gJRP` posts to `https://api.casama.ai/hooks/composio`; `COMPOSIO_WEBHOOK_SECRET` is in prod `.env` and Vaultwarden.
 - **Tests:** `apps/server/test/proactive.test.ts` (plan limits, downgrade skip, setup summary, connection trigger, signed Composio events and the 30-minute gap, push wording, buttons, data-only Android pushes, timed suggestions, phone calendar, quiet hours and idle throttles, trigger removal, welcome default); `client/test/suggestion_push_test.dart`.
