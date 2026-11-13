@@ -36,6 +36,18 @@ export interface AutonomyToolDeps {
   notifications?: NotificationService;
   mediaFor?: (orgId: string) => Promise<MediaProvider | null>;
   searchFor?: (orgId: string) => Promise<SearchProvider | null>;
+  /**
+   * The key for spoken audio (D-284): the workspace's own OpenRouter key, else the server's.
+   * `billable` when the server's key pays and billing is on.
+   */
+  speechFor?: (
+    orgId: string,
+  ) => Promise<{
+    key: string;
+    billable: boolean;
+    model?: string;
+    bases?: { openrouter?: string };
+  } | null>;
   /** Runs a child run to completion (a child DBOS workflow in the worker). Late-bound. */
   runChild?: (runId: string) => Promise<{ status: string }>;
   /** Starts a run without waiting (a bot assigning a ticket to another bot). Late-bound. */
@@ -1114,6 +1126,63 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       return {
         content: `${where}${shown ? `\nThe person already sees it in the chat under your reply: don't link it or name the file. To use it again (animate it, convert it), pass media:${shown}.` : ""}${path ? `\nSaved to ~/workspace/${path}` : img.url || shown ? "" : " (no computer to save it to)"}`,
         preview: path ?? "image generated",
+        artifactPath: path,
+      };
+    },
+  });
+
+  registry.register({
+    name: "media.audio.generate",
+    description:
+      "Make spoken audio from text: a narration, a voiceover, a podcast intro, a message read in a voice. It shows under your reply and is kept in the person's Library. Up to 4,000 characters; for longer pieces make several and join them with ffmpeg.",
+    risk: "low",
+    confirm: true,
+    ready: async ({ orgId }) => !!(await deps.speechFor?.(orgId).catch(() => null)),
+    schema: z.object({
+      text: z.string().min(1).max(4000),
+      voice: z
+        .string()
+        .max(40)
+        .optional()
+        .describe("A Gemini voice name, such as Kore, Puck or Charon"),
+      title: z.string().max(120).optional(),
+    }),
+    async execute(args, ctx) {
+      const speech = await deps.speechFor?.(ctx.orgId);
+      if (!speech)
+        throw new ToolError(
+          "no_speech_key",
+          "Spoken audio needs an OpenRouter key. Add one in Settings → Model keys.",
+        );
+      const { synthesize, ttsCostUsd } = await import("../voice.ts");
+      const estimate = ttsCostUsd("openrouter", args.text.length);
+      if (speech.billable) await needCredits(db, ctx.orgId, cloudOpenRouterCharge(estimate));
+      const r = await synthesize("openrouter", speech.key, args.text, args.voice, {
+        fetch: deps.fetch,
+        model: speech.model,
+        bases: speech.bases,
+      });
+      const cost = ttsCostUsd("openrouter", args.text.length, r.audio);
+      await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, billable, meta)
+        values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, 'tts_chars', ${args.text.length},
+                ${speech.billable ? cloudOpenRouterCharge(cost) : cost}, ${speech.billable},
+                ${JSON.stringify(speech.billable ? { provider: "openrouter", provider_cost_usd: cost, key: "server", estimated: true } : {})}::jsonb)`);
+      const { wavDurationS } = await import("../voice.ts");
+      const path = await saveMedia(ctx, r.audio, "wav").catch(() => null);
+      const shown = await keepForChat(
+        ctx,
+        r.audio,
+        {
+          url: "",
+          contentType: r.mime,
+          durationS: wavDurationS(r.audio) ?? undefined,
+        } as MediaResult,
+        fileName(path, "audio.wav"),
+        args.title ?? args.text,
+      ).catch(() => null);
+      return {
+        content: `Made ${Math.round(wavDurationS(r.audio) ?? 0)} s of audio.${shown ? ` The person already hears it under your reply: don't link it. To reuse it, pass media:${shown}.` : ""}${path ? `\nSaved to ~/workspace/${path}` : ""}`,
+        preview: path ?? "audio made",
         artifactPath: path,
       };
     },

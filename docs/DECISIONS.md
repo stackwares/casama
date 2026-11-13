@@ -3347,3 +3347,10 @@ Stage 8 of `docs/MASTER-PLAN-2026-11.md`; `docs/LIBRARY-PLAN.md` Phase 6 ("sites
 - **Decision:** `pages.publish` takes `folder`, a folder on the bot's computer with an `index.html`. The other files (up to 300 and 25 MB in all) go to the object store per page version (`page_assets`), and the page is served with a `<base>` pointing at its own files and a policy that allows scripts, styles, images, sounds, fonts and fetches from the pages origin only (`PAGE_CSP_ASSETS`). Nothing beyond Casama's page address can load, as before. Publishing the page again as one HTML file drops the files.
 - Files are served from the live version only; a path with `..` or `.` is refused. The Library counts their size against the workspace's storage, and the purge deletes them with the page.
 - **Not done:** custom domains, server-side code for a site, and removing an older version's files when a site is republished (they stay until the page is deleted).
+
+## D-284 Bots make spoken audio
+
+Stage 8 of `docs/MASTER-PLAN-2026-11.md`; `docs/LIBRARY-PLAN.md` Phase 6 ("sound").
+
+- **Decision:** `media.audio.generate` turns up to 4,000 characters into speech in a chosen Gemini voice, on the same OpenRouter speech service as read-aloud (D-261): the workspace's own key, else the server's. It shows under the reply, is saved on the computer when there is one, and is kept in the Library as audio. It asks first under the default autonomy, like pictures and videos, and is charged as `tts_chars` (with markup and a credit check on the server's key), so no new paid dependency.
+- **Not done:** music and sound effects. No provider on the keys Casama already uses makes them; adding one is a new paid dependency that needs its own decision and a row in `docs/COSTS.md`. Duplicating a creation is also not built yet.

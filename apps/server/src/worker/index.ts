@@ -62,6 +62,7 @@ import {
   type VoipSender,
 } from "@casama/agent";
 import { contentKeys, createDb, type Database } from "@casama/db";
+import { openRouterModelId } from "@casama/domain";
 import type { Logger } from "@casama/observability";
 import { LocalProvider, SupervisorProvider, unavailableProvider } from "@casama/sandbox";
 import { DBOS, DBOSClient } from "@dbos-inc/dbos-sdk";
@@ -339,6 +340,21 @@ export async function startWorker(opts: WorkerOptions) {
       // credits (D-246).
       const payer = opts.billing?.enabled === true && !or?.key ? "openrouter" : null;
       return new MediaRouter(openrouter, openrouter, { image: payer, video: payer });
+    },
+    // Spoken audio (D-284): Gemini TTS on OpenRouter, like read-aloud (D-261).
+    speechFor: async (orgId) => {
+      const assigned = opts.billing ? await getCloudModels(db) : null;
+      const or = await providerKey(orgId, ["openrouter"]);
+      const key = or?.key || opts.platformOpenRouterKey;
+      if (!key) return null;
+      return {
+        key,
+        billable: opts.billing?.enabled === true && !or?.key,
+        model: assigned?.tts ? openRouterModelId(assigned.tts) : undefined,
+        bases: opts.providerBases?.openrouter
+          ? { openrouter: opts.providerBases.openrouter }
+          : undefined,
+      };
     },
     searchFor: async (orgId) => {
       const k = await providerKey(orgId, ["brave_search", "tavily"]);
