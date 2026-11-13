@@ -68,7 +68,7 @@ void main() {
     final backend = FakeBackend()..billingEnabled = true;
     await tester.pumpWidget(_picker(backend, casamaCloudCredentialId));
     await tester.pumpAndSettle();
-    expect(find.text('Meta: Muse Ember'), findsOneWidget);
+    expect(find.text('DeepSeek: DeepSeek V4.1 Flash 1017'), findsOneWidget);
     expect(find.text('Casama chooses this model.'), findsOneWidget);
     expect(find.text('anthropic/claude-sonnet-5.5'), findsNothing);
     await tester.tap(find.byKey(const Key('modelPicker')));
@@ -80,7 +80,7 @@ void main() {
     final backend = FakeBackend()..billingEnabled = true;
     await tester.pumpWidget(_picker(backend, 'cred'));
     await tester.pumpAndSettle();
-    expect(find.text('Meta: Muse Ember'), findsOneWidget);
+    expect(find.text('DeepSeek: DeepSeek V4.1 Flash 1017'), findsOneWidget);
     await tester.tap(find.byKey(const Key('modelPicker')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('modelSearch')), findsNothing);
@@ -140,7 +140,7 @@ void main() {
     final backend = FakeBackend();
     await tester.pumpWidget(_picker(backend, casamaCloudCredentialId));
     await tester.pumpAndSettle();
-    expect(find.text('Meta: Muse Ember'), findsOneWidget);
+    expect(find.text('DeepSeek: DeepSeek V4.1 Flash 1017'), findsOneWidget);
     await tester.tap(find.byKey(const Key('modelPicker')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('modelSearch')), findsNothing);

@@ -43,7 +43,19 @@ const DEFAULT: ModelCapabilities = {
 
 // Prices are list prices at the time of writing; the cost meter is checked against provider bills.
 const KNOWN: Array<[RegExp, Partial<ModelCapabilities>]> = [
-  // OpenRouter list prices (2026-11-11); default on OpenRouter is Muse Ember (D-064).
+  // OpenRouter list prices (2026-11-13); default on OpenRouter is DeepSeek V4.1 Flash 1017 (D-258).
+  [
+    /deepseek-v4\.1-flash-1017/,
+    {
+      contextWindow: 1_048_576,
+      vision: true,
+      caching: true,
+      inputPrice: 0.038,
+      outputPrice: 0.5,
+      cacheReadPrice: 0.01,
+    },
+  ],
+  // OpenRouter list prices (2026-11-11); the default before D-258.
   [
     /muse-ember/,
     { contextWindow: 1_048_576, vision: true, caching: true, inputPrice: 0.1, outputPrice: 0.5 },

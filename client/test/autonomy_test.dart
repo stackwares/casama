@@ -761,7 +761,7 @@ void main() {
   });
 
   testWidgets(
-    'blank bots start unnamed (Chief if left empty) and default to Muse Ember; the model comes from a searchable picker',
+    'blank bots start unnamed (Chief if left empty) and default to DeepSeek V4.1 Flash 1017; the model comes from a searchable picker',
     (tester) async {
       await setSize(tester, const Size(600, 1000));
       final backend = FakeBackend();
@@ -813,8 +813,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Model key'), findsOneWidget);
       // The picker shows the model's name only, not its raw id (D-182).
-      expect(find.text('Meta: Muse Ember'), findsOneWidget);
-      expect(find.text('meta/muse-ember'), findsNothing);
+      expect(find.text('DeepSeek: DeepSeek V4.1 Flash 1017'), findsOneWidget);
+      expect(find.text('deepseek/deepseek-v4.1-flash-1017'), findsNothing);
 
       // A template fills in its name; going back to Blank empties the field again.
       await tester.tap(find.byKey(const Key('personaPicker')));
@@ -918,7 +918,7 @@ void main() {
       expect(tester.widget<FilledButton>(create).onPressed, isNotNull);
       await tester.tap(create);
       await tester.pumpAndSettle();
-      expect(backend.createdBot?.model, 'meta/muse-ember');
+      expect(backend.createdBot?.model, 'deepseek/deepseek-v4.1-flash-1017');
       expect(find.text('chat opened'), findsOneWidget);
     },
   );

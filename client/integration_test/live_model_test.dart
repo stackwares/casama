@@ -40,7 +40,7 @@ void main() {
 
     // The model is preselected: Muse Ember for an OpenRouter key.
     await tester.pump(const Duration(milliseconds: 300));
-    expect(tester.widget<TextField>(find.byKey(const Key('model'))).controller!.text, 'meta/muse-ember');
+    expect(tester.widget<TextField>(find.byKey(const Key('model'))).controller!.text, 'deepseek/deepseek-v4.1-flash-1017');
     await tap(tester, find.byKey(const Key('createBot')));
 
     await waitFor(tester, find.byKey(const Key('messageInput')).hitTestable());

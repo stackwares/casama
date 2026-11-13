@@ -33,7 +33,7 @@ export function cloudCharge(providerCostUsd: number): number {
 export const PLATFORM_OPENROUTER_CREDENTIAL_ID = "00000000-0000-4000-8000-0000000000c1";
 
 /** The only model a Casama Cloud workspace runs on Casama's key. */
-export const CLOUD_LOCKED_MODEL = DEFAULT_MODELS.openrouter ?? "meta/muse-ember";
+export const CLOUD_LOCKED_MODEL = DEFAULT_MODELS.openrouter ?? "deepseek/deepseek-v4.1-flash-1017";
 
 /** Output cap on Casama's key. Reasoning models can write past a smaller cap. */
 export const CLOUD_MAX_OUTPUT_TOKENS = 4096;

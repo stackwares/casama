@@ -42,7 +42,7 @@ class FakeBackend implements Backend {
 
   @override
   String? defaultModelFor(String provider) =>
-      const {'openrouter': 'meta/muse-ember', 'openai': 'gpt-6-luna'}[provider];
+      const {'openrouter': 'deepseek/deepseek-v4.1-flash-1017', 'openai': 'gpt-6-luna'}[provider];
 
   @override
   Stream<bool> get signedInChanges => _auth.stream;
@@ -481,6 +481,11 @@ class FakeBackend implements Backend {
   @override
   Future<ModelOptionList> models(String credentialId) async => ModelOptionList(
     items: [
+      ModelOption(
+        id: 'deepseek/deepseek-v4.1-flash-1017',
+        name: 'DeepSeek: DeepSeek V4.1 Flash 1017',
+        featured: true,
+      ),
       ModelOption(
         id: 'meta/muse-ember',
         name: 'Meta: Muse Ember',
@@ -3459,8 +3464,8 @@ class FakeBackend implements Backend {
   Future<ConnectionSettings> adminConnectionSettings() async =>
       connectionSettings;
   CloudModels cloudModels = CloudModels(
-    chat: 'meta/muse-ember',
-    background: 'meta/muse-ember',
+    chat: 'deepseek/deepseek-v4.1-flash-1017',
+    background: 'deepseek/deepseek-v4.1-flash-1017',
     image: 'google/gemini-nano-banana-2.1',
     imageResolution: CloudModelsImageResolutionEnum.n1k,
     live: 'gemini-3.8-live',

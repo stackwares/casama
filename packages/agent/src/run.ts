@@ -200,7 +200,7 @@ export interface RunDeps {
    * which pays OpenRouter itself and does not charge credits.
    */
   billCloudModels?: boolean;
-  /** The one model Casama Cloud runs on its shared key. Defaults to Muse Ember. */
+  /** The one model Casama Cloud runs on its shared key. Defaults to DeepSeek V4.1 Flash 1017. */
   cloudLockedModel?: string;
   /**
    * Casama Cloud's live model assignment (D-188). Read on each run, so an admin change applies

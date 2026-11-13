@@ -1,22 +1,22 @@
-/** Default models (D-064): Muse Ember on OpenRouter, GPT-6 Luna on direct OpenAI; medium reasoning effort unless a bot overrides. */
+/** Default models (D-064, D-258): DeepSeek V4.1 Flash 1017 on OpenRouter, GPT-6 Luna on direct OpenAI; medium reasoning effort unless a bot overrides. */
 
 export const REASONING_EFFORTS = ["none", "low", "medium", "high", "xhigh", "max"] as const;
 export type ReasoningEffort = (typeof REASONING_EFFORTS)[number];
 
 /** Default model ids per provider (OpenRouter catalog, 2026-11-11). */
 export const DEFAULT_MODELS: Readonly<Record<string, string>> = {
-  openrouter: "meta/muse-ember",
+  openrouter: "deepseek/deepseek-v4.1-flash-1017",
   openai: "gpt-6-luna",
 };
 export const DEFAULT_REASONING_EFFORT: ReasoningEffort = "medium";
 
 /**
  * The model for a bot's background work (conversation summaries, memory, routine briefs) when it
- * hasn't picked a cheap model of its own (D-187). On OpenRouter that is Muse Ember. A direct
- * provider key can't call Muse Ember, so those use that provider's small model.
+ * hasn't picked a cheap model of its own (D-187). On OpenRouter that is DeepSeek V4.1 Flash 1017.
+ * A direct provider key can't call it, so those use that provider's small model.
  */
 export const SMALL_MODELS: Readonly<Record<string, string>> = {
-  openrouter: "meta/muse-ember",
+  openrouter: "deepseek/deepseek-v4.1-flash-1017",
   openai: "gpt-6-luna",
   anthropic: "claude-haiku-5-5",
   google: "gemini-3.5-flash-lite",
@@ -45,6 +45,7 @@ export interface ModelOption {
  */
 export const FEATURED_MODELS: Readonly<Record<string, readonly ModelOption[]>> = {
   openrouter: [
+    { id: "deepseek/deepseek-v4.1-flash-1017", name: "DeepSeek: DeepSeek V4.1 Flash 1017" },
     { id: "meta/muse-ember", name: "Meta: Muse Ember" },
     { id: "openai/gpt-6-luna", name: "OpenAI: GPT-6 Luna" },
     { id: "openai/gpt-6.1-sol", name: "OpenAI: GPT-6.1 Sol" },

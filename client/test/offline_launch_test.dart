@@ -39,7 +39,7 @@ PublicConfig _config({String supabaseUrl = 'https://db.example.com'}) => PublicC
   'supabase_url': supabaseUrl,
   'supabase_anon_key': 'anon',
   'billing_enabled': false,
-  'default_models': {'openrouter': 'meta/muse-ember'},
+  'default_models': {'openrouter': 'deepseek/deepseek-v4.1-flash-1017'},
   'default_reasoning_effort': 'medium',
 });
 

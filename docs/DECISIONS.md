@@ -3068,3 +3068,10 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
     dismissing it lets it in; three waiting come as one list card.
   - `welcome-google.test.ts`: no setup offer right after the catch-up.
   - `general_topics_test.dart`: the list card's rows and Not now.
+
+## D-258 Default model: DeepSeek V4.1 Flash 1017
+
+- **Decision** (Oliver): the default OpenRouter model moves from Muse Ember (`meta/muse-ember`) to DeepSeek V4.1 Flash 1017 (`deepseek/deepseek-v4.1-flash-1017`). This covers new bots and onboarding (`DEFAULT_MODELS`), background work (`SMALL_MODELS`, D-187), Casama Cloud's built-in chat and background assignment (`CLOUD_MODEL_DEFAULTS`, `CLOUD_LOCKED_MODEL`, D-188), the app's offline fallback, the live evals, and the top of the picker's short list. Muse Ember stays in the list.
+- **Price:** OpenRouter list price on 2026-11-13 is $0.038/M input, $0.50/M output and $0.01/M cached reads, against Muse Ember's $0.10/M / $0.50/M. The context window is the same 1M. Calls are billed from OpenRouter's reported `usage.cost`, and the registry entry (with the real cache-read price) is only the fallback. Without that entry, the generic `deepseek` rule would have priced the model at $0 with a 32k window.
+- **What's lost:** Muse Ember took images, video, audio and files. DeepSeek V4.1 Flash 1017 takes text and images only.
+- **Not changed:** bots that already have a model keep it (never applied over a person's choice). `DEFAULT_MODEL_OPENROUTER` still overrides the default per server. On Cloud, an assignment saved in the admin console (`instance_settings.cloud_models`) overrides the built-in default and has to be changed there.

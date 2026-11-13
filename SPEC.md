@@ -437,7 +437,7 @@ Tools are registered in one registry with a Zod schema, a risk level, a capabili
 ### Model gateway
 
 - Providers at launch: OpenAI, Anthropic, Google, xAI, OpenRouter, and any OpenAI-compatible endpoint (Ollama, vLLM), plus the user's ChatGPT plan (below).
-- Default model: Muse Ember on OpenRouter (`meta/muse-ember`) and GPT-6 Luna on a direct OpenAI key (`gpt-6-luna`), at medium reasoning effort. Preselected in onboarding, new bots and the CLI, configurable per server, and never applied over a model the user picked (D-064, D-187).
+- Default model: DeepSeek V4.1 Flash 1017 on OpenRouter (`deepseek/deepseek-v4.1-flash-1017`) and GPT-6 Luna on a direct OpenAI key (`gpt-6-luna`), at medium reasoning effort. Preselected in onboarding, new bots and the CLI, configurable per server, and never applied over a model the user picked (D-064, D-187, D-258).
 - Each bot has a primary model, an ordered fallback list and a cheap model for internal steps (memory extraction, summaries, titles). With no cheap model, OpenRouter bots use Muse Ember (D-187).
 - Failover on 429, 5xx or timeout, with exponential backoff; every attempt is logged to Langfuse.
 - Capabilities per model (tools, vision, context window, caching) live in a registry, which decides which tools and context strategy apply.

@@ -19,8 +19,8 @@ export interface CloudModelAssignment {
 }
 
 export const CLOUD_MODEL_DEFAULTS: CloudModelAssignment = {
-  chat: "meta/muse-ember",
-  background: "meta/muse-ember",
+  chat: "deepseek/deepseek-v4.1-flash-1017",
+  background: "deepseek/deepseek-v4.1-flash-1017",
   image: "google/gemini-nano-banana-2.1",
   image_resolution: "1K",
   live: "gemini-3.8-live",

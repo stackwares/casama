@@ -31,7 +31,7 @@ const { values: a } = parseArgs({
 });
 
 const live = a.mode === "live";
-const model = a.model ?? (live ? "meta/muse-ember" : "fixture-main");
+const model = a.model ?? (live ? "deepseek/deepseek-v4.1-flash-1017" : "fixture-main");
 const available = new Set((process.env.EVAL_CAPABILITIES ?? "").split(",").filter(Boolean));
 
 async function token() {

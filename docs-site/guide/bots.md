@@ -139,7 +139,7 @@ Wherever Casama suggests a model, it uses:
 
 | Key | Default model | Model id |
 | --- | --- | --- |
-| OpenRouter | Muse Ember | `meta/muse-ember` |
+| OpenRouter | DeepSeek V4.1 Flash 1017 | `deepseek/deepseek-v4.1-flash-1017` |
 | OpenAI | GPT-6 Luna | `gpt-6-luna` |
 
 Other providers have no default, so you pick a model. Casama never replaces a model you chose. A

@@ -44,7 +44,7 @@ class SupabaseBackend implements Backend {
 
   /// Used when the server is older than the default-model setting (D-064).
   static const _fallbackModels = {
-    'openrouter': 'meta/muse-ember',
+    'openrouter': 'deepseek/deepseek-v4.1-flash-1017',
     'openai': 'gpt-6-luna',
   };
 

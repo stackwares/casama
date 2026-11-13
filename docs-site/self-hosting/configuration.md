@@ -308,7 +308,7 @@ settings change server-wide defaults.
 
 | Name                        | Default            | What it does                                                                                                                     |
 | --------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| `DEFAULT_MODEL_OPENROUTER`  | `meta/muse-ember`  | Default model for new bots on OpenRouter.                                                                                        |
+| `DEFAULT_MODEL_OPENROUTER`  | `deepseek/deepseek-v4.1-flash-1017` | Default model for new bots on OpenRouter.                                                                                        |
 | `DEFAULT_MODEL_OPENAI`      | `gpt-6-luna`       | Default model for new bots on OpenAI.                                                                                            |
 | `DEFAULT_REASONING_EFFORT`  | `medium`           | `none`, `low`, `medium`, `high`, `xhigh` or `max`.                                                                               |
 | `LAZY_TOOLS_THRESHOLD`      | `30`               | Bots with more tools than this load the rest on demand. `0` turns it off.                                                       |

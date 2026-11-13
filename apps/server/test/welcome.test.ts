@@ -213,7 +213,7 @@ describe("welcome chat", () => {
     const [bot] = await h.tdb.admin<
       { model_policy: { primary: { model: string } } }[]
     >`select model_policy from public.bots where id = ${w.bot_id}`;
-    expect(bot?.model_policy.primary.model).toBe("meta/muse-ember");
+    expect(bot?.model_policy.primary.model).toBe("deepseek/deepseek-v4.1-flash-1017");
     const offer = await last();
     expect(offer[0]?.text).toContain("a few quick questions");
     await act(offer, "welcome.setup", {}, "Let's do it");

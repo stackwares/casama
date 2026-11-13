@@ -142,8 +142,8 @@ Ranked by saving. ✅ = done, ☐ = to do.
      cache matching prefixes on their own.
    - ✅ Cached and cache-write tokens are recorded and priced (`costOf`): reads at 0.1× input (0.25× on
      Gemini), Anthropic writes at 1.25×.
-   - ✅ Background work (conversation summaries, memory) runs on Muse Ember when the bot is on
-     OpenRouter, and on the provider's small model otherwise (Claude Haiku 5.5, GPT-6 Luna,
+   - ✅ Background work (conversation summaries, memory) runs on DeepSeek V4.1 Flash 1017 (Muse Ember before D-258) when the
+     bot is on OpenRouter, and on the provider's small model otherwise (Claude Haiku 5.5, GPT-6 Luna,
      Gemini 3.5 Flash-Lite), when the bot hasn't picked a cheap model (D-187). It falls back to
      the main model.
    - ✅ Onboarding already puts the person's own AI first (ChatGPT subscription, own key, local
