@@ -170,8 +170,10 @@ describe("welcome chat: Google first", () => {
     >`select content from public.messages where conversation_id = ${w.conversation_id} and role = 'user' order by created_at desc limit 1`;
     // Only the calendar is connected, so only the calendar is read.
     expect(asked?.content[0]?.text).toMatch(/14 days of calendar and tell me/);
-    // The first value leads on to the setup offer, as in the rest of the welcome chat.
-    expect((await last())[0]?.text).toContain("a few quick questions");
+    // The catch-up ends in its own quick tasks: the setup offer waits for the person's next turn
+    // (D-257), so two prompts never arrive back to back.
+    expect((await last())[0]?.text ?? "").not.toContain("a few quick questions");
+    expect(await step()).toBe("first_value");
   });
 
   it("connected from the card, the catch-up starts at once and the picks are skipped", async () => {

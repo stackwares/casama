@@ -1,6 +1,12 @@
 /** Check-ins (D-114): per-bot settings, the "For you" feed, and accepting or dismissing suggestions. */
 
-import { applyCheckins, checkinPlanError, handleComposioEvent, track } from "@casama/agent";
+import {
+  applyCheckins,
+  checkinPlanError,
+  handleComposioEvent,
+  postSuggestions,
+  track,
+} from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { contentKeys, type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
@@ -213,6 +219,8 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       sql`update public.suggestions set status = 'accepted', resolved_at = now() where id = ${s.id}::uuid`,
     );
     resolved(claims, s, "accepted");
+    // The card is answered: the next waiting suggestion can come into General (D-257).
+    void postSuggestions(db).catch(() => 0);
     await deps.workflows.startRun(created.run_id);
     return c.json(created, 202);
   });
@@ -225,6 +233,7 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       sql`update public.suggestions set status = 'dismissed', resolved_at = now() where id = ${s.id}::uuid`,
     );
     resolved(claims, s, dont_suggest_again ? "dismissed_forever" : "dismissed");
+    void postSuggestions(db).catch(() => 0);
     if (dont_suggest_again)
       await db.execute(sql`
         insert into public.memories (org_id, bot_id, kind, content, importance, pinned)

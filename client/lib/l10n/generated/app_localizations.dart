@@ -14469,6 +14469,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Question {n} of {total}'**
   String formStep(int n, int total);
+
+  /// No description provided for @cardSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestions'**
+  String get cardSuggestions;
+
+  /// No description provided for @suggestionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Found {n} things worth a look'**
+  String suggestionsTitle(int n);
+
+  /// No description provided for @suggestionsHandled.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 suggestion handled} other{{n} suggestions handled}}'**
+  String suggestionsHandled(int n);
 }
 
 class _AppLocalizationsDelegate

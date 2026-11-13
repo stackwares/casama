@@ -189,6 +189,47 @@ void main() {
     },
   );
 
+  testWidgets(
+    'several suggestions come as one card: a Do it per row, one Not now for the rest (D-257)',
+    (tester) async {
+      await setSize(tester, const Size(430, 932));
+      final backend = FakeBackend()
+        ..storedMessages = [
+          ChatMessageView(
+            id: 'm-list',
+            role: 'assistant',
+            text: '',
+            createdAt: DateTime(2026, 11, 13),
+            suggestionList: const [
+              MessageSuggestion(
+                id: 's1',
+                title: 'Reply to Ana',
+                body: 'She asked twice. Reply?',
+              ),
+              MessageSuggestion(
+                id: 's2',
+                title: 'Check the Cloud bill',
+                body: 'At 50% of the cap. Look?',
+              ),
+            ],
+          ),
+        ];
+      await tester.pumpWidget(
+        _app(backend, _router('/bots/$botId/chat?c=$convId')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('suggestionList-m-list')), findsOneWidget);
+      expect(find.text('Found 2 things worth a look'), findsOneWidget);
+      expect(find.byKey(const Key('suggestionRow-s1')), findsOneWidget);
+      expect(find.byKey(const Key('suggestionRow-s2')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('suggestionsNotNow-m-list')));
+      await tester.pumpAndSettle();
+      // s2 isn't in the fake's For you list, so it already counted as closed; s1 is dismissed now.
+      expect(backend.suggestionActions, contains('dismiss:s1'));
+      expect(find.byKey(const Key('suggestionsDone-m-list')), findsOneWidget);
+    },
+  );
+
   testWidgets('Not now folds the card into a line', (tester) async {
     await setSize(tester, const Size(430, 932));
     final backend = FakeBackend()

@@ -9220,4 +9220,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String formStep(int n, int total) {
     return 'Question $n of $total';
   }
+
+  @override
+  String get cardSuggestions => 'Suggestions';
+
+  @override
+  String suggestionsTitle(int n) {
+    return 'Found $n things worth a look';
+  }
+
+  @override
+  String suggestionsHandled(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n suggestions handled',
+      one: '1 suggestion handled',
+    );
+    return '$_temp0';
+  }
 }

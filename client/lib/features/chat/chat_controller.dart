@@ -146,6 +146,13 @@ class SuggestionEntry extends ChatEntry {
   final MessageSuggestion suggestion;
 }
 
+/// Several suggestions in one card (D-257): a Do it on each, one Not now for the rest.
+class SuggestionListEntry extends ChatEntry {
+  const SuggestionListEntry({required this.messageId, required this.items});
+  final String messageId;
+  final List<MessageSuggestion> items;
+}
+
 /// A topic's result posted back to General (D-253): a link into the topic.
 class TopicLinkEntry extends ChatEntry {
   const TopicLinkEntry({required this.messageId, required this.topic});
@@ -324,6 +331,7 @@ class ChatController extends Notifier<ChatState> {
               ),
             },
           if (m.suggestion case final s?) SuggestionEntry(messageId: m.id, suggestion: s),
+          if (m.suggestionList.isNotEmpty) SuggestionListEntry(messageId: m.id, items: m.suggestionList),
           if (m.topic case final t?) TopicLinkEntry(messageId: m.id, topic: t),
           for (final u in m.ui)
             UiEntry(surfaceId: u.surfaceId, messages: u.messages),

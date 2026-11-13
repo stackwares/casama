@@ -201,6 +201,7 @@ class ChatMessageView {
     this.botId,
     this.routineName,
     this.suggestion,
+    this.suggestionList = const [],
     this.topic,
   });
 
@@ -209,6 +210,9 @@ class ChatMessageView {
 
   /// A suggestion the bot posted in General (D-253), shown as a card with Do it / Not now.
   final MessageSuggestion? suggestion;
+
+  /// Several suggestions in one card (D-257), each with its own Do it.
+  final List<MessageSuggestion> suggestionList;
 
   /// A topic's result posted back to General (D-253), with a link to the topic.
   final MessageTopic? topic;
@@ -227,6 +231,7 @@ class ChatMessageView {
     'routine_name': routineName,
     if (suggestion case final s?) 'suggestion': {'id': s.id, 'title': s.title, 'body': s.body},
     if (topic case final t?) 'topic': {'conversation_id': t.conversationId, 'title': t.title},
+    if (suggestionList.isNotEmpty) 'suggestions': [for (final s in suggestionList) {'id': s.id, 'title': s.title, 'body': s.body}],
   };
   static ChatMessageView fromJson(Map<String, dynamic> j) => ChatMessageView(
     id: j['id'] as String,
@@ -246,6 +251,10 @@ class ChatMessageView {
       {'id': final String id, 'title': final String title} && final Map m => MessageSuggestion(id: id, title: title, body: m['body'] as String? ?? ''),
       _ => null,
     },
+    suggestionList: [
+      for (final i in (j['suggestions'] as List? ?? const []))
+        if (i case {'id': final String id, 'title': final String title}) MessageSuggestion(id: id, title: title, body: i['body'] as String? ?? ''),
+    ],
     topic: switch (j['topic']) {
       {'conversation_id': final String id, 'title': final String title} => MessageTopic(conversationId: id, title: title),
       _ => null,

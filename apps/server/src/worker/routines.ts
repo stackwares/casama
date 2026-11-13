@@ -51,7 +51,7 @@ export async function createRoutineRun(
     const task = scanTask(
       instructions,
       reason,
-      await scanContext(tx as Database, r.bot_id),
+      await scanContext(tx as Database, r.bot_id, reason),
       request?.note ? wrapUntrusted("app event", request.note) : null,
     );
     const [run] = await tx.execute<{ id: string }>(sql`

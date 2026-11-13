@@ -1460,6 +1460,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               inputs: (e, name),
             ),
           );
+        case final SuggestionListEntry e:
+          botSide('suggestions-${e.messageId}');
+          rows.add(
+            _Row(
+              ValueKey('suggestions-${e.messageId}'),
+              AppSpace.sm,
+              () => SuggestionListPrompt(entry: e, botId: widget.botId, onOpenTopic: _openConversation),
+              fresh: fresh,
+              inputs: e,
+            ),
+          );
         case final TopicLinkEntry e:
           botSide('topic-${e.messageId}');
           rows.add(

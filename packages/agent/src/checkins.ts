@@ -4,13 +4,14 @@
  * model, within a daily cap. Scans leave suggestions; a scan that finds nothing writes nothing and
  * sends nothing.
  */
-import type { Database } from "@casama/db";
+import { contentKeys, type Database } from "@casama/db";
 import { isValidTimezone, nextRunAt, type QuietHours, quietUntil } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
 import { track } from "./analytics.ts";
 import { deviceDataOfRun } from "./attention.ts";
+import { wrapUntrusted } from "./context.ts";
 import { mainConversation, postFromBot } from "./general.ts";
 import type { NotificationService } from "./notifications.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
@@ -366,6 +367,8 @@ export async function afterCheckinRun(
   const claimed = await db.execute<{ bot_id: string }>(sql`
     update public.bot_checkins set welcomed_at = now() where bot_id = ${run.botId}::uuid and welcomed_at is null returning bot_id`);
   if (!claimed.length || !notifications) return;
+  // The welcome's catch-up already was the summary (D-257): no second "You're all set".
+  if (await hadCatchup(db, run.botId)) return;
   const [c] = await db.execute<{ n: number }>(
     sql`select count(*)::int as n from public.suggestions where run_id = ${run.runId}::uuid`,
   );
@@ -492,14 +495,46 @@ export async function checkinCapReached(db: Database, botId: string) {
 }
 
 /** What a scan should not repeat: pending and recently dismissed suggestions. */
-export async function scanContext(db: Database, botId: string) {
+export async function scanContext(db: Database, botId: string, reason?: string | null) {
   const rows = await db.execute<{ title: string; status: string }>(sql`
     select title, status from public.suggestions
     where bot_id = ${botId}::uuid and (status = 'pending' or (status = 'dismissed' and created_at > now() - interval '14 days'))
     order by created_at desc limit 50`);
-  return rows.length
+  const already = rows.length
     ? `\n\nAlready suggested or dismissed:\n${rows.map((r) => `- ${r.title} (${r.status})`).join("\n")}`
     : "";
+  return already + (reason === "setup" ? await catchupContext(db, botId) : "");
+}
+
+/** The welcome catch-up the person already got (D-257), so the setup scan doesn't repeat it. */
+async function catchupContext(db: Database, botId: string) {
+  const rows = await db.execute<{ content: unknown }>(sql`
+    select m.content from public.messages m
+    join public.conversations c on c.id = m.conversation_id
+    where c.bot_id = ${botId}::uuid and c.purpose = 'welcome' and (c.welcome ->> 'catchup')::boolean is true
+      and m.role = 'assistant' and m.run_id is not null
+    order by m.created_at limit 6`);
+  const text = rows
+    .flatMap((r) => {
+      const parts = contentKeys.open(r.content);
+      return Array.isArray(parts)
+        ? parts.map((p) => (p && typeof p === "object" && "text" in p ? String(p.text ?? "") : ""))
+        : [];
+    })
+    .join("\n")
+    .trim()
+    .slice(0, 2000);
+  return text
+    ? `\n\nThe person already got this catch-up in the welcome chat. Don't suggest the same items again; only what it missed:\n${wrapUntrusted("welcome catch-up", text)}`
+    : "";
+}
+
+/** Whether the bot's welcome already gave a Google catch-up (D-257): then it is the summary. */
+async function hadCatchup(db: Database, botId: string) {
+  const [r] = await db.execute<{ yes: boolean }>(sql`
+    select exists (select 1 from public.conversations where bot_id = ${botId}::uuid and purpose = 'welcome'
+      and (welcome ->> 'catchup')::boolean is true) as yes`);
+  return r?.yes === true;
 }
 
 export function registerSuggestionTools(

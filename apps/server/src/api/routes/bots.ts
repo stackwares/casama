@@ -86,11 +86,23 @@ export function messagePreview(
 ): { text: string; file_name: string | null; file_mime: string | null } | null {
   if (!Array.isArray(content)) return null;
   const parts = content.filter((p): p is Record<string, unknown> => !!p && typeof p === "object");
+  // A suggestion card has no text of its own (D-257): its title (or titles) stands in.
+  const cards = parts.flatMap((p) =>
+    p.type === "suggestion" && typeof p.title === "string"
+      ? [p.title]
+      : p.type === "suggestions" && Array.isArray(p.items)
+        ? (p.items as Array<{ title?: unknown }>).flatMap((i) =>
+            typeof i?.title === "string" ? [i.title] : [],
+          )
+        : [],
+  );
   const text = previewText(
-    parts
-      .filter((p) => p.type === "text" && typeof p.text === "string")
-      .map((p) => p.text as string)
-      .join(" "),
+    [
+      ...parts
+        .filter((p) => p.type === "text" && typeof p.text === "string")
+        .map((p) => p.text as string),
+      ...cards,
+    ].join(" "),
   );
   const file = parts.find((p) => p.type === "file" && typeof p.path === "string");
   if (!text && !file) return null;

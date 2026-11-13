@@ -58,36 +58,80 @@ type Unposted = {
   push_text: string | null;
 };
 
-/** The suggestion as the bot's message in General: its line, then a card with Do it / Not now. */
-async function postSuggestion(db: Database, s: Unposted, afterRun?: string) {
-  const conversationId = await mainConversation(db, s.org_id, s.bot_id, s.user_id);
-  const line = s.push_text?.trim() || s.title;
+/** How many suggestions one message lists (D-257); the rest come with the next one. */
+const BATCH = 5;
+/** An open question older than this no longer holds new suggestions back: the person moved on. */
+const OPEN_FOR_MS = 24 * 3600_000;
+
+/**
+ * Whether General ends in a question nobody answered yet (D-257): a card (a bot form, quick
+ * tasks, the setup offer) or a suggestion that's still pending. New suggestions then wait, so
+ * prompts never stack; they stay under Needs you, and their pushes still follow the attention rules.
+ */
+async function openQuestion(db: Database, conversationId: string) {
+  const [m] = await db.execute<{ role: string; content: unknown; created_at: string }>(sql`
+    select role, content, created_at from public.messages where conversation_id = ${conversationId}::uuid
+    order by created_at desc limit 1`);
+  if (m?.role !== "assistant") return false;
+  if (Date.now() - new Date(m.created_at).getTime() > OPEN_FOR_MS) return false;
+  const parts = contentKeys.open(m.content);
+  if (!Array.isArray(parts)) return false;
+  if (parts.some((p) => p && typeof p === "object" && p.type === "ui")) return true;
+  const ids = parts.flatMap((p) =>
+    p && typeof p === "object"
+      ? p.type === "suggestion" && typeof p.suggestion_id === "string"
+        ? [p.suggestion_id as string]
+        : p.type === "suggestions" && Array.isArray(p.items)
+          ? (p.items as Array<{ suggestion_id?: unknown }>).flatMap((i) =>
+              typeof i?.suggestion_id === "string" ? [i.suggestion_id] : [],
+            )
+          : []
+      : [],
+  );
+  if (!ids.length) return false;
+  const [r] = await db.execute<{ open: boolean }>(sql`
+    select exists (select 1 from public.suggestions where status = 'pending' and expires_at > now()
+      and id in (select jsonb_array_elements_text(${JSON.stringify(ids)}::jsonb)::uuid)) as open`);
+  return r?.open === true;
+}
+
+/** A suggestion as a card item: its title, and the bot's own one line (else the start of the body). */
+const item = (s: Unposted) => ({
+  suggestion_id: s.id,
+  title: s.title,
+  body: (s.push_text?.trim() || s.body_md.trim()).slice(0, 400),
+});
+
+/**
+ * One message in General for a person's waiting suggestions (D-257): one card, or one list card
+ * with a Do it for each. No separate line above it.
+ */
+async function postBatch(db: Database, batch: Unposted[], afterRun?: string) {
+  const first = batch[0] as Unposted;
+  const conversationId = await mainConversation(db, first.org_id, first.bot_id, first.user_id);
+  if (await openQuestion(db, conversationId)) return null;
   const id = await postFromBot(db, {
-    orgId: s.org_id,
+    orgId: first.org_id,
     conversationId,
-    botId: s.bot_id,
+    botId: first.bot_id,
     afterRun,
-    parts: [
-      { type: "text", text: line },
-      {
-        type: "suggestion",
-        suggestion_id: s.id,
-        title: s.title,
-        ...(s.body_md ? { body: s.body_md.slice(0, 2000) } : {}),
-      },
-    ],
+    parts:
+      batch.length === 1
+        ? [{ type: "suggestion", ...item(first) }]
+        : [{ type: "suggestions", items: batch.map(item) }],
   });
   if (id)
-    await db.execute(
-      sql`update public.suggestions set message_id = ${id}::uuid where id = ${s.id}::uuid and message_id is null`,
-    );
+    await db.execute(sql`
+      update public.suggestions set message_id = ${id}::uuid
+      where message_id is null and id in (select jsonb_array_elements_text(${JSON.stringify(batch.map((b) => b.id))}::jsonb)::uuid)`);
   return id;
 }
 
 /**
  * Posts pending suggestions that aren't in General yet: those of one run (right after it ends), or
- * every one whose run has ended and whose time has come (the minute sweep). A run's own
- * suggestions wait for it to finish, so the cards come after what it said.
+ * every one whose run has ended and whose time has come (the minute sweep, which also posts what
+ * waited behind an open question). A run's own suggestions wait for it to finish, so the card comes
+ * after what it said. Returns how many suggestions were posted.
  */
 export async function postSuggestions(db: Database, opts: { runId?: string; limit?: number } = {}) {
   const rows = await db.execute<Unposted>(sql`
@@ -99,8 +143,26 @@ export async function postSuggestions(db: Database, opts: { runId?: string; limi
       and ${opts.runId ? sql`s.run_id = ${opts.runId}::uuid` : sql`(r.id is null or r.status in ('completed', 'failed', 'cancelled'))`}
     order by s.created_at
     limit ${opts.limit ?? 100}`);
+  const groups = new Map<string, Unposted[]>();
+  for (const s of rows) {
+    const key = `${s.bot_id}:${s.user_id}`;
+    groups.set(key, [...(groups.get(key) ?? []), s]);
+  }
   let posted = 0;
-  for (const s of rows) if (await postSuggestion(db, s, opts.runId)) posted++;
+  for (const [key, group] of groups) {
+    // One poster at a time per person and bot (the minute sweep and an answered card can meet):
+    // the batch is read again under the lock, so a suggestion is never posted twice.
+    posted += await db.transaction(async (tx) => {
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`general:${key}`}, 0))`);
+      const still = await tx.execute<{ id: string }>(sql`
+        select id from public.suggestions where message_id is null
+          and id in (select jsonb_array_elements_text(${JSON.stringify(group.map((g) => g.id))}::jsonb)::uuid)`);
+      const ids = new Set(still.map((r) => r.id));
+      const batch = group.filter((g) => ids.has(g.id)).slice(0, BATCH);
+      if (!batch.length) return 0;
+      return (await postBatch(tx as unknown as Database, batch, opts.runId)) ? batch.length : 0;
+    });
+  }
   return posted;
 }
 

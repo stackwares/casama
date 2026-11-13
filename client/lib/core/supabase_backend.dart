@@ -1334,12 +1334,27 @@ class SupabaseBackend implements Backend {
           uiActionSurface: _uiAction(r['content']),
           routineName: _routineName(r['content']),
           suggestion: _suggestion(r['content']),
+          suggestionList: _suggestionList(r['content']),
           topic: _topic(r['content']),
         ),
     ];
   }
 
   /// General and topics (D-253): a suggestion card or a topic's result in the message's parts.
+  static List<MessageSuggestion> _suggestionList(Object? content) {
+    if (content is! List) return const [];
+    for (final p in content) {
+      if (p case {'type': 'suggestions', 'items': final List<Object?> items}) {
+        return [
+          for (final i in items)
+            if (i case {'suggestion_id': final String id, 'title': final String title})
+              MessageSuggestion(id: id, title: title, body: (i as Map)['body'] as String? ?? ''),
+        ];
+      }
+    }
+    return const [];
+  }
+
   static MessageSuggestion? _suggestion(Object? content) {
     if (content is! List) return null;
     for (final p in content) {

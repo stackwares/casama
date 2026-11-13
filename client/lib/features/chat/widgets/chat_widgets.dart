@@ -1870,7 +1870,7 @@ class _SuggestionPromptState extends ConsumerState<SuggestionPrompt> {
       title: s.title,
       body: s.body.trim().isEmpty
           ? const SizedBox.shrink()
-          : Text(s.body.trim(), maxLines: 6, overflow: TextOverflow.ellipsis, style: context.textTheme.bodyMedium?.copyWith(height: 1.4)),
+          : Text(s.body.trim(), maxLines: 2, overflow: TextOverflow.ellipsis, style: context.textTheme.bodyMedium?.copyWith(height: 1.4)),
       footer: ActionButtons(
         actions: [
           OutlinedButton(
@@ -1907,6 +1907,126 @@ class TopicLinkLine extends StatelessWidget {
         avatar: Icon(LucideIcons.messagesSquare, size: 16, color: scheme.primary),
         label: Text(context.l10n.openTopic(title), maxLines: 1, overflow: TextOverflow.ellipsis),
         onPressed: onOpen,
+      ),
+    );
+  }
+}
+
+
+/// Several suggestions in one card (D-257): each row has its title, the bot's one line and its own
+/// Do it; Not now puts away the rest. Rows already handled show as done; once all are, one line.
+class SuggestionListPrompt extends ConsumerStatefulWidget {
+  const SuggestionListPrompt({super.key, required this.entry, required this.botId, required this.onOpenTopic});
+  final SuggestionListEntry entry;
+  final String botId;
+  final ValueChanged<String> onOpenTopic;
+
+  @override
+  ConsumerState<SuggestionListPrompt> createState() => _SuggestionListPromptState();
+}
+
+class _SuggestionListPromptState extends ConsumerState<SuggestionListPrompt> {
+  final _done = <String, bool>{};
+  var _busy = false;
+
+  Future<void> _accept(MessageSuggestion s) async {
+    setState(() => _busy = true);
+    final r = await runGuarded(context, () => ref.read(backendProvider).acceptSuggestion(s.id));
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      if (r != null) _done[s.id] = true;
+    });
+    ref.invalidate(forYouProvider);
+    ref.invalidate(conversationsProvider(widget.botId));
+    if (r != null) widget.onOpenTopic(r.conversationId);
+  }
+
+  Future<void> _dismissRest(List<MessageSuggestion> open) async {
+    setState(() => _busy = true);
+    await runGuarded(context, () async {
+      for (final s in open) {
+        await ref.read(backendProvider).dismissSuggestion(s.id);
+        _done[s.id] = false;
+      }
+      return true;
+    });
+    if (!mounted) return;
+    setState(() => _busy = false);
+    ref.invalidate(forYouProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.appColors;
+    final scheme = context.colorScheme;
+    final listed = ref.watch(forYouProvider).value?.suggestions;
+    // For you lists at most 30; a full list can't say a missing one is closed.
+    final pending = listed == null || listed.length >= 30 ? null : listed.map((x) => x.id).toSet();
+    bool open(MessageSuggestion s) => !_done.containsKey(s.id) && (pending == null || pending.contains(s.id));
+    final items = widget.entry.items;
+    final waiting = items.where(open).toList();
+    if (waiting.isEmpty) {
+      return _Folded(
+        key: Key('suggestionsDone-${widget.entry.messageId}'),
+        text: l10n.suggestionsHandled(items.length),
+        color: scheme.onSurfaceVariant,
+        icon: LucideIcons.circleCheck,
+      );
+    }
+    return _ActionCard(
+      key: Key('suggestionList-${widget.entry.messageId}'),
+      label: l10n.cardSuggestions,
+      accent: colors.working,
+      icon: LucideIcons.sparkles,
+      title: l10n.suggestionsTitle(items.length),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpace.xs,
+        children: [
+          for (final s in items)
+            Container(
+              key: Key('suggestionRow-${s.id}'),
+              padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+              decoration: BoxDecoration(color: ChatLook.fieldFill(context), borderRadius: BorderRadius.circular(14)),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(s.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)),
+                        if (s.body.trim().isNotEmpty)
+                          Text(s.body.trim(), maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpace.xs),
+                  if (open(s))
+                    FilledButton.tonal(
+                      key: Key('suggestionRowDoIt-${s.id}'),
+                      onPressed: _busy ? null : () => _accept(s),
+                      style: const ButtonStyle(visualDensity: VisualDensity.compact),
+                      child: Text(l10n.doIt),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
+                      child: Icon(_done[s.id] == false ? LucideIcons.circleMinus : LucideIcons.circleCheck, size: 18, color: scheme.onSurfaceVariant),
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ),
+      footer: Align(
+        alignment: AlignmentDirectional.centerEnd,
+        child: TextButton(
+          key: Key('suggestionsNotNow-${widget.entry.messageId}'),
+          onPressed: _busy ? null : () => _dismissRest(waiting),
+          child: Text(l10n.notNow),
+        ),
       ),
     );
   }

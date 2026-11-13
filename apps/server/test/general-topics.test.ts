@@ -136,8 +136,14 @@ describe("General and topics", () => {
     const card = (await thread(generalId)).at(-1);
     expect(card?.role).toBe("assistant");
     expect(card?.run_id).toBeNull();
-    expect(card?.content[0]?.text).toBe("Want me to book a ride to the concert at 7?");
-    expect(card?.content[1]).toMatchObject({ type: "suggestion", suggestion_id: id });
+    // Only the card (D-257): the bot's own line is its body, no separate bubble above it.
+    expect(card?.content).toHaveLength(1);
+    expect(card?.content[0]).toMatchObject({
+      type: "suggestion",
+      suggestion_id: id,
+      title: "Book a ride",
+      body: "Want me to book a ride to the concert at 7?",
+    });
     const [s] = await h.tdb.admin<{ message_id: string }[]>`
       select message_id from public.suggestions where id = ${id}`;
     expect(s?.message_id).toBe(card?.id);
@@ -183,6 +189,54 @@ describe("General and topics", () => {
     await h.tdb
       .admin`update public.runs set status = 'completed', ended_at = now() where id = ${busy?.id as string}`;
     expect(await postSuggestions(h.handle.db)).toBe(1);
+  });
+
+  it("an unanswered card holds new suggestions back; answering it lets the next in (D-257)", async () => {
+    const [acme] = await h.tdb.admin<{ id: string }[]>`
+      select id from public.suggestions where title = 'Pay the Acme invoice'`;
+    const next = await addSuggestion(
+      "Renew the domain",
+      "Your domain renews Friday. Renew it now?",
+    );
+    // General ends in the Acme card, still pending: nothing new stacks on it.
+    expect(await postSuggestions(h.handle.db)).toBe(0);
+    await h.request(`/v1/suggestions/${acme?.id}/dismiss`, {
+      method: "POST",
+      token: owner.token,
+      json: { dont_suggest_again: false },
+    });
+    let posted: string | null = null;
+    for (let i = 0; i < 50 && !posted; i++) {
+      await postSuggestions(h.handle.db);
+      const [r] = await h.tdb.admin<{ message_id: string | null }[]>`
+        select message_id from public.suggestions where id = ${next}`;
+      posted = r?.message_id ?? null;
+      if (!posted) await new Promise((res) => setTimeout(res, 100));
+    }
+    expect(posted).toBeTruthy();
+  });
+
+  it("several waiting suggestions come as one list card (D-257)", async () => {
+    const [renew] = await h.tdb.admin<{ id: string }[]>`
+      select id from public.suggestions where title = 'Renew the domain'`;
+    await h.request(`/v1/suggestions/${renew?.id}/dismiss`, {
+      method: "POST",
+      token: owner.token,
+      json: { dont_suggest_again: false },
+    });
+    await new Promise((res) => setTimeout(res, 300));
+    const ids = [
+      await addSuggestion("Reply to Ana", "Ana asked twice. Reply?"),
+      await addSuggestion("Check the Cloud bill", "Google Cloud is at 50% of its cap. Look?"),
+      await addSuggestion("File the receipt", "A receipt came in. File it?"),
+    ];
+    expect(await postSuggestions(h.handle.db)).toBe(3);
+    const card = (await thread(generalId)).at(-1) as {
+      content: Array<Part & { items?: Array<{ suggestion_id: string }> }>;
+    };
+    expect(card.content).toHaveLength(1);
+    expect(card.content[0]?.type).toBe("suggestions");
+    expect(card.content[0]?.items?.map((i) => i.suggestion_id)).toEqual(ids);
   });
 
   it("a status shows what each chat waits on", async () => {

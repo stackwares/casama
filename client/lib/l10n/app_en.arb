@@ -2777,5 +2777,10 @@
   "formNext": "Next",
   "formSkip": "Skip",
   "formStep": "Question {n} of {total}",
-  "@formStep": {"placeholders": {"n": {"type": "int"}, "total": {"type": "int"}}}
+  "@formStep": {"placeholders": {"n": {"type": "int"}, "total": {"type": "int"}}},
+  "cardSuggestions": "Suggestions",
+  "suggestionsTitle": "Found {n} things worth a look",
+  "@suggestionsTitle": {"placeholders": {"n": {"type": "int"}}},
+  "suggestionsHandled": "{n, plural, =1{1 suggestion handled} other{{n} suggestions handled}}",
+  "@suggestionsHandled": {"placeholders": {"n": {"type": "int"}}}
 }

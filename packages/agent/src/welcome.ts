@@ -64,6 +64,10 @@ export interface WelcomeState {
   connected?: boolean;
   /** After Calendar connected, the one follow-up asking about Gmail was shown (D-255). */
   gmailAsked?: boolean;
+  /** The first value is the Google catch-up (D-257): the setup offer waits for the person's next turn. */
+  catchup?: boolean;
+  /** The catch-up's own run has finished; the next finished turn brings the setup offer. */
+  catchupSeen?: boolean;
 }
 
 /** The Google apps the welcome chat connects and the catch-up reads. */
@@ -934,6 +938,7 @@ async function handleWelcomeActionInner(
       s.step = "model";
       return scripted([modelCard(true)]);
     }
+    s.catchup = true;
     return modelTurn(g.inbox ? CATCHUP_TEXT : CATCHUP_CALENDAR_TEXT);
   };
 
@@ -1090,6 +1095,7 @@ async function handleWelcomeActionInner(
           ...catchupMessage(g.inbox),
         ]);
       s.step = "first_value";
+      s.catchup = true;
       return modelTurn(g.inbox ? CATCHUP_TEXT : CATCHUP_CALENDAR_TEXT);
     }
     case "welcome.task": {
@@ -1124,6 +1130,8 @@ async function handleWelcomeActionInner(
     case "welcome.later":
       s.step = "done";
       await saveState(db, c.conversationId, s, "chat");
+      // The welcome is over: now the first look around (D-247), which waited for it (D-257).
+      await requestScan(db, c.botId, "setup").catch(() => false);
       return scripted([
         { type: "text", text: 'Sure. When you want, say "set me up". Ask me anything.' },
       ]);
@@ -1177,11 +1185,17 @@ export async function afterWelcomeRun(
     userId: run.userId,
   };
   if (s.step === "first_value") {
+    // The catch-up ends in its own quick tasks (D-257): the setup offer waits until the person has
+    // used one or replied, so two prompts never arrive back to back.
+    if (s.catchup && !s.catchupSeen) {
+      s.catchupSeen = true;
+      await saveState(db, run.conversationId, s);
+      return;
+    }
     s.step = "offer_setup";
     await postScripted(db, c, setupOfferMessage());
     await saveState(db, run.conversationId, s);
-    // Its first look around (D-247): a scan in a minute that ends in "You're all set. Found…".
-    await requestScan(db, run.botId, "setup").catch(() => false);
+    // The first look around (D-247) waits for the welcome to end: "Later", or after the interview.
   } else if (s.step === "interview") {
     const [b] = await db.execute<{ setup_status: string }>(
       sql`select setup_status from public.bots where id = ${run.botId}::uuid`,

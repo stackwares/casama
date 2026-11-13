@@ -3036,3 +3036,35 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
   - This is all on the app side; bots send the same A2UI as before.
 - **Tests:** `bot_ui_test.dart` (lettered answers, the second question after Next),
   `secret_request_test.dart` (title, reason, Save waits for a value). Analyze is clean.
+
+## D-257 One question at a time: suggestions don't stack, the welcome waits
+
+- **Decision** (Oliver, 2026-11-13, after a new account got about eight prompts in a row: "it goes to
+  the next one" before he answered).
+- **What happened:** the catch-up's quick tasks, then the setup offer straight away, then the setup
+  scan's "You're all set…", then each suggestion as a line plus a card. The suggestions repeated
+  emails the catch-up had already shown.
+- **No stacking in General:** a suggestion is only posted when General doesn't end in an unanswered
+  question (a card, or a suggestion still pending, newer than 24 hours: `openQuestion` in
+  `general.ts`). Otherwise it waits under Needs you, and its push still follows the attention rules.
+  Answering or dismissing a card, or the bot finishing a turn in General, lets the next one in;
+  the minute sweep catches anything else. Posting takes a lock per person and bot and reads the
+  batch again under it, so nothing is posted twice.
+- **One message per batch, no line above it:**
+  - A single suggestion is just its card: the title, then the bot's own line (`push_text`), else the
+    start of its body, at most two lines.
+  - Several waiting at once (up to 5) are one card: "Found N things worth a look", a row each
+    with its own **Do it**, and one **Not now** for the rest. It's a `suggestions` part with `items`.
+  - Chat-list previews use the titles.
+- **The welcome waits:**
+  - When the first value is the Google catch-up, the setup offer ("a few quick questions") comes
+    after the person's next finished turn (they used a quick task or replied), not straight after
+    the catch-up (`WelcomeState.catchup`, `catchupSeen`).
+  - The setup scan waits for the welcome to end: **Later**, or after the interview.
+  - Its instructions carry the catch-up's text, so it doesn't suggest the same things again.
+  - After a catch-up it sends no "You're all set" summary, push or line, since the catch-up was it.
+- **Tests:**
+  - `general-topics.test.ts`: a card-only suggestion; an unanswered card holds the next back and
+    dismissing it lets it in; three waiting come as one list card.
+  - `welcome-google.test.ts`: no setup offer right after the catch-up.
+  - `general_topics_test.dart`: the list card's rows and Not now.
