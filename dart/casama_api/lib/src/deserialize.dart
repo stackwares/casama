@@ -394,6 +394,10 @@ import 'package:casama_api/src/model/secret_resolved_event_payload.dart';
 import 'package:casama_api/src/model/secret_store_settings.dart';
 import 'package:casama_api/src/model/send_message_request.dart';
 import 'package:casama_api/src/model/send_message_response.dart';
+import 'package:casama_api/src/model/server_capacity.dart';
+import 'package:casama_api/src/model/server_capacity_alerts_inner.dart';
+import 'package:casama_api/src/model/server_capacity_days_inner.dart';
+import 'package:casama_api/src/model/server_capacity_latest.dart';
 import 'package:casama_api/src/model/set_analytics_opt_out_request.dart';
 import 'package:casama_api/src/model/set_bot_a2a_request.dart';
 import 'package:casama_api/src/model/set_bot_access_request.dart';
@@ -1391,6 +1395,14 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SendMessageRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SendMessageResponse':
           return SendMessageResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ServerCapacity':
+          return ServerCapacity.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ServerCapacityAlertsInner':
+          return ServerCapacityAlertsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ServerCapacityDaysInner':
+          return ServerCapacityDaysInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ServerCapacityLatest':
+          return ServerCapacityLatest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetAnalyticsOptOutRequest':
           return SetAnalyticsOptOutRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetBotA2aRequest':

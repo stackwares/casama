@@ -93,6 +93,8 @@ x-casama: &casama
     CLOUD_MODEL_MARKUP: ${CLOUD_MODEL_MARKUP:-}
     CLOUD_COMPUTER_USD_PER_HOUR: ${CLOUD_COMPUTER_USD_PER_HOUR:-}
     COMPUTER_RATES: ${COMPUTER_RATES:-}
+    # Memory hosted computers may use on this server, in GB (D-252); past it starts answer capacity_full.
+    COMPUTER_HOST_MEMORY_GB: ${COMPUTER_HOST_MEMORY_GB:-0}
     # Abuse controls (D-094): sign-up proofs, App Check project, OAuth redirect for app connections.
     SIGNUP_PROOFS: ${SIGNUP_PROOFS:-}
     SIGNUP_POW_DIFFICULTY: ${SIGNUP_POW_DIFFICULTY:-}

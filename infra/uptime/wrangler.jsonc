@@ -1,0 +1,15 @@
+{
+  // Outside uptime check for Casama Cloud (D-252): every 5 minutes it fetches the API's /readyz
+  // (API + database) and the web app, and emails the instance owner after two failures in a row,
+  // then again when it's back. It runs on Cloudflare, so it still works when the server is down.
+  // Secrets (wrangler secret put): SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM, ALERT_TO.
+  "name": "casama-uptime",
+  "compatibility_date": "2026-11-01",
+  "main": "uptime.js",
+  "workers_dev": false,
+  "triggers": { "crons": ["*/5 * * * *"] },
+  "kv_namespaces": [{ "binding": "STATE", "id": "e7c67c87df044c2a9b20ade3e55aae2a" }],
+  "vars": {
+    "CHECKS": "api=https://api.casama.ai/readyz,app=https://app.casama.ai/"
+  }
+}

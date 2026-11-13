@@ -8,6 +8,7 @@ import { verifyLicense } from "@casama/ee";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { suspendOrg, unsuspendOrg } from "../../services/abuse.ts";
+import { capacityReport } from "../../services/capacity.ts";
 import { getCloudModels, setCloudModels } from "../../services/cloud-models.ts";
 import {
   type ConnectionSettings,
@@ -457,6 +458,14 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     );
     return Number(r?.markup ?? 1.3);
   };
+
+  app.openapi(routes.adminCapacity, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    return c.json(
+      await capacityReport(db, Math.round((env.COMPUTER_HOST_MEMORY_GB ?? 0) * 1024)),
+      200,
+    );
+  });
 
   app.openapi(routes.adminPricing, async (c) => {
     await requireOwner(requireClaims(c.get("claims")));

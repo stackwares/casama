@@ -470,6 +470,10 @@ lib/src/model/secret_resolved_event_payload.dart
 lib/src/model/secret_store_settings.dart
 lib/src/model/send_message_request.dart
 lib/src/model/send_message_response.dart
+lib/src/model/server_capacity.dart
+lib/src/model/server_capacity_alerts_inner.dart
+lib/src/model/server_capacity_days_inner.dart
+lib/src/model/server_capacity_latest.dart
 lib/src/model/set_analytics_opt_out_request.dart
 lib/src/model/set_bot_a2a_request.dart
 lib/src/model/set_bot_access_request.dart

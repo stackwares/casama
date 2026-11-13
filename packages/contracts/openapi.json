@@ -7687,6 +7687,136 @@
           "created_at"
         ]
       },
+      "ServerCapacity": {
+        "type": "object",
+        "properties": {
+          "budget_mb": {
+            "type": "integer",
+            "description": "Memory hosted computers may use (COMPUTER_HOST_MEMORY_GB); 0 = none set"
+          },
+          "latest": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "at": {
+                "type": "string"
+              },
+              "mem_total_mb": {
+                "type": "integer"
+              },
+              "mem_available_mb": {
+                "type": "integer"
+              },
+              "load1": {
+                "type": "number"
+              },
+              "cpus": {
+                "type": "integer"
+              },
+              "disk_used_pct": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "computers_running": {
+                "type": "integer"
+              },
+              "computers_mem_mb": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "at",
+              "mem_total_mb",
+              "mem_available_mb",
+              "load1",
+              "cpus",
+              "disk_used_pct",
+              "computers_running",
+              "computers_mem_mb"
+            ]
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "day": {
+                  "type": "string"
+                },
+                "peak_computers_mem_mb": {
+                  "type": "integer"
+                },
+                "peak_computers": {
+                  "type": "integer"
+                },
+                "min_available_mb": {
+                  "type": "integer"
+                },
+                "peak_load1": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "day",
+                "peak_computers_mem_mb",
+                "peak_computers",
+                "min_available_mb",
+                "peak_load1"
+              ]
+            }
+          },
+          "refusals_30d": {
+            "type": "integer"
+          },
+          "full_in_weeks": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Weeks until daily peaks reach the budget at the 30-day trend"
+          },
+          "alerts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "early_warning",
+                    "capacity_full",
+                    "low_memory",
+                    "disk"
+                  ]
+                },
+                "day": {
+                  "type": "string"
+                },
+                "body": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "day",
+                "body"
+              ]
+            }
+          }
+        },
+        "required": [
+          "budget_mb",
+          "latest",
+          "days",
+          "refusals_30d",
+          "full_in_weeks",
+          "alerts"
+        ]
+      },
       "CloudModels": {
         "type": "object",
         "properties": {
@@ -25144,6 +25274,52 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AbuseEventList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/capacity": {
+      "get": {
+        "operationId": "adminCapacity",
+        "tags": [
+          "admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Server capacity: host memory, computers' share of their budget, 30-day peaks and a forecast (owner only)",
+        "responses": {
+          "200": {
+            "description": "Server capacity: host memory, computers' share of their budget, 30-day peaks and a forecast (owner only)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerCapacity"
                 }
               }
             }

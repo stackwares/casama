@@ -3,9 +3,12 @@ import { ComputerService } from "../src/computers.ts";
 
 /** Computer limits from the monetization audit (D-248): after a downgrade, a full server, credits. */
 describe("checkCanStart (D-248)", () => {
-  /** A db that answers the start check's one query, then the capacity count. */
-  const svc = (row: Record<string, unknown>, running?: number) => {
-    const answers: unknown[][] = [[row], ...(running == null ? [] : [[{ n: String(running) }]])];
+  /** A db that answers the start check's one query, then the server's memory in use (D-252). */
+  const svc = (row: Record<string, unknown>, usedMb?: number, mineMb = 4096) => {
+    const answers: unknown[][] = [
+      [row],
+      ...(usedMb == null ? [] : [[{ used: String(usedMb), mine: String(mineMb) }]]),
+    ];
     const execute = vi.fn(async () => answers.shift() ?? []);
     return { s: new ComputerService({ execute } as never, {} as never), execute };
   };
@@ -33,14 +36,15 @@ describe("checkCanStart (D-248)", () => {
     ).resolves.toBeUndefined();
   });
 
-  it("a full server says so instead of starting one more", async () => {
-    const full = svc({ ...ok, max_computers: null, rank: "0" }, 8);
-    full.s.maxRunning = 8;
+  it("a full server says so instead of starting one more, counting memory", async () => {
+    // 9 GB budget: two 4 GB computers run, a third 4 GB one doesn't fit; a 1 GB one does.
+    const full = svc({ ...ok, max_computers: null, rank: "0" }, 8192, 4096);
+    full.s.hostMemoryMb = 9216;
     await expect(full.s.checkCanStart("org", { credits: true, computerId: "c1" })).rejects.toThrow(
       "capacity_full",
     );
-    const room = svc({ ...ok, max_computers: null, rank: "0" }, 7);
-    room.s.maxRunning = 8;
+    const room = svc({ ...ok, max_computers: null, rank: "0" }, 8192, 1024);
+    room.s.hostMemoryMb = 9216;
     await expect(
       room.s.checkCanStart("org", { credits: true, computerId: "c1" }),
     ).resolves.toBeUndefined();

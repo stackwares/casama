@@ -13,6 +13,7 @@ import {
   ConnectionSettings,
   SaveCreditPackRequest,
   SavePlanRequest,
+  ServerCapacity,
   SetConnectionSettingsRequest,
   SetOrgLimitsRequest,
   SuspendOrgRequest,
@@ -141,6 +142,13 @@ export const unsuspendOrg = createRoute({
 });
 
 const PlanCode = z.object({ code: z.string().regex(/^[a-z0-9_]{1,40}$/) });
+
+export const adminCapacity = get(
+  "adminCapacity",
+  "/v1/admin/capacity",
+  "Server capacity: host memory, computers' share of their budget, 30-day peaks and a forecast (owner only)",
+  ServerCapacity,
+);
 
 export const adminPricing = get(
   "adminPricing",

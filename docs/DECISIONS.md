@@ -2752,7 +2752,7 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
   - **Refunds:** a refunded store pack (App Store consumable refund, Play voided one-time purchase) takes its credits back once. A refunded subscription takes back the credits its plan added that month.
   - **Cloud Connect:** model calls cost what Casama's own key charges (OpenRouter's fee × markup) unless `CLOUD_MODEL_MARKUP` is set. Calls need credits less unsettled usage and a call's reserve, stop at the plan's daily cap (402 `cloud_daily_cap`), and a stream cut short is metered from an estimate.
   - **Downgrades:** the workspace keeps everything, but only the plan's number of bots and hosted computers, oldest first, run or start (`plan_limit`). Starting a computer that's out of credits now answers 402, not 500.
-  - **Server capacity:** `COMPUTER_HOST_CAPACITY` (0 = off) caps hosted computers running at once on the server; past it a start answers 503 `capacity_full`.
+  - **Server capacity:** `COMPUTER_HOST_CAPACITY` (0 = off) caps hosted computers running at once on the server; past it a start answers 503 `capacity_full`. (Superseded by D-252: the room is counted in memory, `COMPUTER_HOST_MEMORY_GB`.)
   - **Referrals:** one inviter's friends earn the welcome bonus at most twice the reward cap (40 with the defaults).
 - **Not done:** Casama's own Terms of Use page (Oliver to decide; Apple's EULA stands in); the plan-change UI for a store subscriber who should move to the web.
 - **Tests:** `client/test/billing_test.dart` (the D-248 group), `apps/server/test/billing.test.ts` (plan change in place, refunds), `apps/server/test/voice-cloud-calls.test.ts` (hold and clock), `apps/server/test/billing-holes.test.ts` (welcome cap), `apps/server/test/cloud-connect.test.ts`, `packages/agent/test/computers-limits.test.ts`.
@@ -2803,3 +2803,27 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
 - **Warm pool:** `fillPool` (every minute) also replaces pool members whose image differs from what the headless tag now names, and `claim` never hands one out, so the first computer after an update is current too. When either image id can't be read, members are kept rather than churned.
 - **Not covered:** a computer that never idles for 5 minutes keeps its image until it restarts. The supervisor still doesn't pull images itself; `prod-pull` is the step.
 - **Tests:** `packages/sandbox/test/warm-pool-refresh.test.ts`.
+
+## D-252 Server capacity: counted in memory, watched every 5 minutes, checked from outside
+
+- **Room in GB, not computers:** computers come in plan sizes of 1, 2 and 4 GB (D-249), so a count
+  doesn't say whether the next one fits. `COMPUTER_HOST_MEMORY_GB` (0 = no limit) is the memory
+  hosted computers may use; a start whose plan size would go past it answers `capacity_full` and is
+  recorded in `capacity_events`. Replaces D-248's `COMPUTER_HOST_CAPACITY`. Production has about
+  9.7 GB free for computers on the 12 GB server, so it runs with 9, and Max runs 2 computers at once
+  (two 4 GB fit, three don't) until the bigger server.
+- **Samples:** the worker records host memory, load, root-disk use, and hosted computers up with
+  their memory, every 5 minutes in `capacity_samples` (kept 90 days).
+- **Alerts** to the instance owners (INSTANCE_ADMIN_EMAILS, else the first account) as an inbox
+  item with a push and an email, each kind at most once a day (`capacity_alerts`):
+  early warning when the daily peak of computer memory is over 60% of the budget on 3 of the last
+  7 days (order the bigger server); act now on any `capacity_full`; health when free host memory is
+  under 1.5 GB for 10 minutes or the disk is over 80%.
+- **Admin screen:** "Server capacity" card (`GET /v1/admin/capacity`): computers' memory against the
+  budget, free memory, disk and load, the 30-day daily peak with the budget line, refusals, recent
+  alerts, and "full in about N weeks" from a least-squares line through the daily peaks.
+- **Outside check:** the `casama-uptime` Cloudflare Worker (infra/uptime) fetches the API's
+  `/readyz` and the web app every 5 minutes and emails the owner after two failures in a row (again
+  hourly while down) and when it's back, through the same SMTP mailbox as the server. It runs on
+  Cloudflare, so it works when the server doesn't; no new account was needed.
+

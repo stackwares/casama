@@ -135,9 +135,6 @@ export const EnvSchema = z.object({
   MODEL_PRICES_URL: z.string().optional(),
   /** Computer prices by provider, overriding the defaults (D-180): {"docker":{"cpu_hour":0.003,"gb_hour":0.005}}. */
   COMPUTER_RATES: z.string().optional(),
-  // How many hosted computers may run at once on this server (D-248). Past it, starting one waits
-  // with "capacity_full" instead of starving the API and database of memory. 0 = no limit.
-  COMPUTER_HOST_CAPACITY: z.coerce.number().int().min(0).default(0),
   /** Cloud Connect, self-hosted side: use Casama Cloud computers with this key. Unset = off. */
   CASAMA_CLOUD_URL: z.url().optional(),
   /** GitHub API base for skill imports (tests point it at a fake). */
@@ -241,6 +238,11 @@ export const EnvSchema = z.object({
   TURN_TLS_PORT: z.coerce.number().int().optional(),
   /** Owner admin console: comma-separated emails; when unset, the first user to sign up. */
   INSTANCE_ADMIN_EMAILS: z.string().optional(),
+  /**
+   * Memory this server can give hosted computers, in GB (D-252): computer starts past it answer
+   * capacity_full, and the Admin screen's capacity card and alerts measure against it. 0 = no budget.
+   */
+  COMPUTER_HOST_MEMORY_GB: z.coerce.number().min(0).default(0),
   /** Where the console checks for newer releases (GitHub "latest release" API shape); unset = off. */
   UPDATE_CHECK_URL: z.url().optional(),
   /** Desktop companion (D-066): personal computers as bot computers. On by default. */

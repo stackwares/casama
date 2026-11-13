@@ -84,6 +84,7 @@ Class | Method | HTTP request | Description
 [*ActionRulesApi*](doc/ActionRulesApi.md) | [**listActionRules**](doc/ActionRulesApi.md#listactionrules) | **GET** /v1/action-rules | A bot&#39;s rules plus the workspace&#39;s (or only the workspace&#39;s without bot_id)
 [*AdminApi*](doc/AdminApi.md) | [**adminAbuseEvents**](doc/AdminApi.md#adminabuseevents) | **GET** /v1/admin/abuse | Recent abuse signals and actions (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminAppConfig**](doc/AdminApi.md#adminappconfig) | **GET** /v1/admin/app-config | Remote app settings (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminCapacity**](doc/AdminApi.md#admincapacity) | **GET** /v1/admin/capacity | Server capacity: host memory, computers&#39; share of their budget, 30-day peaks and a forecast (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminCloudModels**](doc/AdminApi.md#admincloudmodels) | **GET** /v1/admin/models | The models Casama Cloud runs (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminConnectionSettings**](doc/AdminApi.md#adminconnectionsettings) | **GET** /v1/admin/connections | How apps without their own sign-in connect (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminOrgs**](doc/AdminApi.md#adminorgs) | **GET** /v1/admin/orgs | Workspaces with their limits and spend
@@ -813,6 +814,10 @@ Class | Method | HTTP request | Description
  - [SecretStoreSettings](doc/SecretStoreSettings.md)
  - [SendMessageRequest](doc/SendMessageRequest.md)
  - [SendMessageResponse](doc/SendMessageResponse.md)
+ - [ServerCapacity](doc/ServerCapacity.md)
+ - [ServerCapacityAlertsInner](doc/ServerCapacityAlertsInner.md)
+ - [ServerCapacityDaysInner](doc/ServerCapacityDaysInner.md)
+ - [ServerCapacityLatest](doc/ServerCapacityLatest.md)
  - [SetAnalyticsOptOutRequest](doc/SetAnalyticsOptOutRequest.md)
  - [SetBotA2aRequest](doc/SetBotA2aRequest.md)
  - [SetBotAccessRequest](doc/SetBotAccessRequest.md)

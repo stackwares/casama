@@ -214,3 +214,44 @@ export const SaveCreditPackRequest = z
     dodo_product_id: z.string().max(200).nullable().optional(),
   })
   .openapi("SaveCreditPackRequest");
+
+const AlertKind = z.enum(["early_warning", "capacity_full", "low_memory", "disk"]);
+
+/** How full the server is and when it runs out of room for computers (D-252). */
+export const ServerCapacity = z
+  .object({
+    budget_mb: z
+      .number()
+      .int()
+      .openapi({
+        description: "Memory hosted computers may use (COMPUTER_HOST_MEMORY_GB); 0 = none set",
+      }),
+    latest: z
+      .object({
+        at: z.string(),
+        mem_total_mb: z.number().int(),
+        mem_available_mb: z.number().int(),
+        load1: z.number(),
+        cpus: z.number().int(),
+        disk_used_pct: z.number().nullable(),
+        computers_running: z.number().int(),
+        computers_mem_mb: z.number().int(),
+      })
+      .nullable(),
+    days: z.array(
+      z.object({
+        day: z.string(),
+        peak_computers_mem_mb: z.number().int(),
+        peak_computers: z.number().int(),
+        min_available_mb: z.number().int(),
+        peak_load1: z.number(),
+      }),
+    ),
+    refusals_30d: z.number().int(),
+    full_in_weeks: z
+      .number()
+      .nullable()
+      .openapi({ description: "Weeks until daily peaks reach the budget at the 30-day trend" }),
+    alerts: z.array(z.object({ kind: AlertKind, day: z.string(), body: z.string() })),
+  })
+  .openapi("ServerCapacity");

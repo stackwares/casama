@@ -359,8 +359,11 @@ export class ComputerService {
    * Throws workspace_suspended or email_unverified when a computer must not start (D-094).
    * With credits, a credit-gated workspace that has nothing left cannot start a hosted computer.
    */
-  /** Hosted computers that may run at once on this server; 0 = no limit (D-248). */
-  maxRunning = 0;
+  /**
+   * Memory this server can give hosted computers, in MB; 0 = no limit (D-252). Counted in memory,
+   * not computers, because computers come in plan sizes of 1, 2 and 4 GB (D-249).
+   */
+  hostMemoryMb = 0;
 
   async checkCanStart(orgId: string, opts: { credits?: boolean; computerId?: string } = {}) {
     const [o] = await this.db.execute<{
@@ -397,11 +400,30 @@ export class ComputerService {
     if (o?.max_computers != null && o.rank != null && Number(o.rank) >= Number(o.max_computers))
       throw new Error("plan_limit");
     // The server's own room: past it a start waits rather than starving the API and database.
-    if (this.maxRunning > 0 && opts.computerId) {
-      const [n] = await this.db.execute<{ n: string }>(sql`
-        select count(*)::text as n from public.computers
-        where kind <> 'local' and state in ('running', 'idle', 'starting', 'provisioning') and id <> ${opts.computerId}::uuid`);
-      if (Number(n?.n ?? 0) >= this.maxRunning) throw new Error("capacity_full");
+    // The new computer counts at its plan's size, which it gets when it starts (fitPlan).
+    if (this.hostMemoryMb > 0 && opts.computerId) {
+      const [m] = await this.db.execute<{ used: string; mine: string }>(sql`
+        select
+          (select coalesce(sum(coalesce((size ->> 'memory_mb')::int, 1024)), 0) from public.computers
+            where kind <> 'local' and state in ('running', 'idle', 'starting', 'provisioning')
+              and id <> ${opts.computerId}::uuid)::text as used,
+          (select coalesce(
+             1024 * (select (e.limits ->> 'computer_size')::numeric from public.entitlements e
+                     where e.org_id = me.org_id order by e.created_at desc limit 1),
+             (me.size ->> 'memory_mb')::int, 1024)
+           from public.computers me where me.id = ${opts.computerId}::uuid)::text as mine`);
+      const used = Number(m?.used ?? 0);
+      const mine = Number(m?.mine ?? 1024);
+      if (used + mine > this.hostMemoryMb) {
+        // Recorded for the Admin screen's capacity card and the act-now alert (D-252).
+        await this.db
+          .execute(sql`
+            insert into public.capacity_events (kind, org_id, computer_id, detail)
+            values ('capacity_full', ${orgId}::uuid, ${opts.computerId}::uuid,
+              ${JSON.stringify({ used_mb: used, needed_mb: mine, budget_mb: this.hostMemoryMb })}::jsonb)`)
+          .catch(() => undefined);
+        throw new Error("capacity_full");
+      }
     }
   }
 
