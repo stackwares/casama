@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Offline cache (D-112, replacing D-042's deferral): the last bots, conversations and recent
 /// messages the app saw, as JSON snapshots in a small drift (SQLite) table, so chats open
@@ -80,9 +81,50 @@ class DriftCache implements LocalCache {
   Future<void> close() => _db.close();
 }
 
-/// The device's cache on mobile and desktop; nothing on the web.
-LocalCache openLocalCache() {
-  if (kIsWeb) return const NoCache();
+/// The web's cache: only what the person was typing (`draft:` keys), in the browser's local
+/// storage, so switching bots or reloading keeps a half-written message. Messages and other
+/// snapshots stay uncached on the web, as before.
+class DraftsOnlyCache implements LocalCache {
+  const DraftsOnlyCache();
+  static const _prefix = 'casama_cache.';
+
+  static bool keeps(String key) => key.startsWith('draft:');
+
+  @override
+  Future<Object?> read(String key) async {
+    if (!keeps(key)) return null;
+    final raw = (await SharedPreferences.getInstance()).getString('$_prefix$key');
+    if (raw == null) return null;
+    try {
+      return jsonDecode(raw);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<void> write(String key, Object? value) async {
+    if (!keeps(key)) return;
+    final prefs = await SharedPreferences.getInstance();
+    if (value == null) {
+      await prefs.remove('$_prefix$key');
+    } else {
+      await prefs.setString('$_prefix$key', jsonEncode(value));
+    }
+  }
+
+  @override
+  Future<void> clear() async {
+    final prefs = await SharedPreferences.getInstance();
+    for (final k in prefs.getKeys().where((k) => k.startsWith(_prefix)).toList()) {
+      await prefs.remove(k);
+    }
+  }
+}
+
+/// The device's cache on mobile and desktop; on the web, drafts only.
+LocalCache openLocalCache({bool web = kIsWeb}) {
+  if (web) return const DraftsOnlyCache();
   try {
     return DriftCache.open();
   } catch (_) {
