@@ -13,6 +13,7 @@ import {
   nextRunAt,
   PAGE_AUTHORING_NOTE,
   PAGE_COLLECT_NOTE,
+  PAGE_FOLDER_NOTE,
 } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
@@ -78,9 +79,70 @@ const parseJson = (s: string | undefined) => {
   }
 };
 
+/** Limits for a site published from a folder (D-283). */
+export const SITE_MAX_FILES = 300;
+export const SITE_MAX_BYTES = 25 * 1024 * 1024;
+
+const ASSET_TYPES: Record<string, string> = {
+  html: "text/html; charset=utf-8",
+  htm: "text/html; charset=utf-8",
+  js: "text/javascript; charset=utf-8",
+  mjs: "text/javascript; charset=utf-8",
+  css: "text/css; charset=utf-8",
+  json: "application/json",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  webp: "image/webp",
+  svg: "image/svg+xml",
+  ico: "image/x-icon",
+  mp3: "audio/mpeg",
+  wav: "audio/wav",
+  ogg: "audio/ogg",
+  m4a: "audio/mp4",
+  mp4: "video/mp4",
+  webm: "video/webm",
+  woff: "font/woff",
+  woff2: "font/woff2",
+  ttf: "font/ttf",
+  otf: "font/otf",
+  txt: "text/plain; charset=utf-8",
+  csv: "text/csv; charset=utf-8",
+  wasm: "application/wasm",
+};
+export const assetType = (path: string) =>
+  ASSET_TYPES[path.toLowerCase().split(".").pop() ?? ""] ?? "application/octet-stream";
+
+/** Every file under a folder on the computer, relative paths, up to the site limits. */
+async function readSiteFolder(h: import("@casama/sandbox").SandboxHandle, folder: string) {
+  const root = folder.replace(/\/+$/, "");
+  const files: Array<{ path: string; bytes: Uint8Array }> = [];
+  let total = 0;
+  const walk = async (rel: string) => {
+    const entries = await h.listDir(rel ? `${root}/${rel}` : root);
+    for (const e of entries) {
+      if (e.name.startsWith(".") || e.name === "node_modules") continue;
+      const path = rel ? `${rel}/${e.name}` : e.name;
+      if (e.type === "dir") {
+        await walk(path);
+        continue;
+      }
+      if (e.type !== "file") continue;
+      if (files.length >= SITE_MAX_FILES)
+        throw new ToolError("too_many_files", `A site can have up to ${SITE_MAX_FILES} files.`);
+      total += e.size;
+      if (total > SITE_MAX_BYTES) throw new ToolError("too_large", "A site can be up to 25 MB.");
+      files.push({ path, bytes: await h.readFile(`${root}/${path}`) });
+    }
+  };
+  await walk("");
+  return files;
+}
+
 export function registerPageTools(
   registry: ToolRegistry,
-  deps: { db: Database; pagesUrl: string },
+  deps: { db: Database; pagesUrl: string; objects?: import("@casama/sandbox").ObjectStore },
 ) {
   const { db } = deps;
   const ownPage = async (botId: string, id: string) => {
@@ -92,7 +154,7 @@ export function registerPageTools(
 
   registry.register({
     name: "pages.publish",
-    description: `Publish a web page (a report, dashboard, plan or tracker) the person opens from Casama, or replace an existing page's layout with page_id. ${PAGE_AUTHORING_NOTE} Pass the HTML, or path to an HTML file on your computer. New pages are private to the person you're working for; pages.share changes that. refresh_cron (with refresh_instructions) has you refresh its data on a schedule. ${PAGE_COLLECT_NOTE}`,
+    description: `Publish a web page (a report, dashboard, plan or tracker) the person opens from Casama, or replace an existing page's layout with page_id. ${PAGE_AUTHORING_NOTE} Pass the HTML, or path to an HTML file on your computer. New pages are private to the person you're working for; pages.share changes that. refresh_cron (with refresh_instructions) has you refresh its data on a schedule. ${PAGE_FOLDER_NOTE} ${PAGE_COLLECT_NOTE}`,
     risk: "low",
     riskFor: (a) => (a.visibility === "workspace" ? "medium" : "low"),
     category: "publish",
@@ -104,6 +166,11 @@ export function registerPageTools(
         .max(1000)
         .optional()
         .describe("An HTML file on your computer instead of html"),
+      folder: z
+        .string()
+        .max(1000)
+        .optional()
+        .describe("A folder on your computer with an index.html and its files (a site or game)"),
       data: z.string().max(PAGE_DATA_MAX).optional().describe("JSON for the data block"),
       page_id: z.uuid().optional().describe("Replace this page's layout (and data, if given)"),
       visibility: z.enum(["private", "workspace"]).optional(),
@@ -130,6 +197,22 @@ export function registerPageTools(
     }),
     async execute(args, ctx) {
       let html = args.html;
+      // A site or game from a folder (D-283): index.html is the page, the rest are its files.
+      let site: Array<{ path: string; bytes: Uint8Array }> | null = null;
+      if (!html && args.folder) {
+        if (!ctx.computer)
+          throw new ToolError("no_computer", "This bot has no computer available.");
+        if (!deps.objects)
+          throw new ToolError(
+            "no_storage",
+            "This server keeps no files, so publish one HTML file instead.",
+          );
+        site = await readSiteFolder(await ctx.computer(), args.folder);
+        const index = site.find((f) => f.path === "index.html");
+        if (!index) throw new ToolError("no_index", "The folder needs an index.html.");
+        html = new TextDecoder().decode(index.bytes);
+        site = site.filter((f) => f.path !== "index.html");
+      }
       if (!html && args.path) {
         if (!ctx.computer)
           throw new ToolError("no_computer", "This bot has no computer available.");
@@ -175,6 +258,34 @@ export function registerPageTools(
         await db.execute(sql`
           insert into public.page_versions (page_id, version, org_id, html, data)
           select id, version, org_id, html, data from public.pages where id = ${id}::uuid`);
+      }
+      if (site && deps.objects) {
+        const total = site.reduce((n, f) => n + f.bytes.length, 0);
+        try {
+          await checkStorage(db, ctx.orgId, total);
+        } catch (err) {
+          if (err instanceof StorageFullError) throw new ToolError("storage_full", err.message);
+          throw err;
+        }
+        const [pv] = await db.execute<{ version: number }>(
+          sql`select version from public.pages where id = ${id}::uuid`,
+        );
+        const v = pv?.version ?? version;
+        for (const f of site) {
+          const key = `pages/${ctx.orgId}/${id}/${v}/${f.path}`;
+          await deps.objects.put(key, f.bytes);
+          await db.execute(sql`
+            insert into public.page_assets (page_id, version, path, org_id, mime, blob_key, size)
+            values (${id}::uuid, ${v}, ${f.path}, ${ctx.orgId}::uuid, ${assetType(f.path)}, ${key}, ${f.bytes.length})
+            on conflict (page_id, version, path) do update set blob_key = excluded.blob_key, size = excluded.size`);
+        }
+        await db.execute(sql`
+          update public.pages set assets_version = ${v} where id = ${id}::uuid`);
+        // The Library counts the files too.
+        await db.execute(sql`
+          update public.creations set size = size + ${total} where page_id = ${id}::uuid`);
+      } else if (html && !args.folder) {
+        await db.execute(sql`update public.pages set assets_version = null where id = ${id}::uuid`);
       }
       // Pages that take input (D-279).
       if (args.collect !== undefined)

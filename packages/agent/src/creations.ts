@@ -40,7 +40,9 @@ export async function purgeDeletedCreations(
       union select blob_key from public.creations where ${old} and blob_key is not null
       union select preview_key from public.creations where ${old} and preview_key is not null
       union select cover_key from public.creations where ${old} and cover_key is not null
-      limit 2000`);
+      union select a.blob_key from public.page_assets a
+        join public.creations c on c.page_id = a.page_id where c.${sql.raw("deleted_at")} < now() - make_interval(days => ${days})
+      limit 5000`);
     for (const b of blobs) await store.delete(b.blob_key).catch(() => {});
   }
   const rows = await db.execute<{ n: number }>(sql`

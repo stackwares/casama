@@ -479,7 +479,11 @@ export async function startWorker(opts: WorkerOptions) {
       return null;
     },
   });
-  registerPageTools(tools, { db, pagesUrl: opts.pagesUrl ?? "http://localhost:8790" });
+  registerPageTools(tools, {
+    db,
+    pagesUrl: opts.pagesUrl ?? "http://localhost:8790",
+    objects: opts.objects,
+  });
   // The Library (D-274, D-276): a bot finds its own earlier work and keeps files on purpose.
   registerLibraryTools(tools, { db, objects: opts.objects });
   // Projects (D-113): the tools start planning runs; the heartbeat lives in the minute tick.

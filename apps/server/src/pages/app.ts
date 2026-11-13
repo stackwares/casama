@@ -5,7 +5,7 @@
  */
 import { hashPageToken, newPageToken } from "@casama/agent";
 import { contentKeys, type Database, withUserSession } from "@casama/db";
-import { PAGE_CSP_COLLECT, PAGE_HEADERS, renderPage } from "@casama/domain";
+import { PAGE_CSP_ASSETS, PAGE_CSP_COLLECT, PAGE_HEADERS, renderPage } from "@casama/domain";
 import { captureError } from "@casama/observability";
 import { sql } from "drizzle-orm";
 import { Hono } from "hono";
@@ -22,6 +22,7 @@ type PageRow = {
   data: unknown;
   updated_at: string;
   collects?: boolean;
+  assets_version?: number | null;
 };
 
 /** A response is at most this big; a public page takes at most this many an hour per address. */
@@ -55,8 +56,11 @@ export function createPagesApp(deps: {
     format: "html" | "pdf",
     collect?: string,
     reportUrl?: string,
+    assetsBase?: string,
   ) => {
+    const withAssets = !!page.assets_version && !!assetsBase && format === "html";
     const html = renderPage({
+      ...(withAssets ? { assetsBase } : {}),
       title: page.title,
       html: page.html,
       data: page.data,
@@ -84,6 +88,7 @@ export function createPagesApp(deps: {
       headers: {
         ...PAGE_HEADERS,
         ...(page.collects && collect ? { "content-security-policy": PAGE_CSP_COLLECT } : {}),
+        ...(withAssets ? { "content-security-policy": PAGE_CSP_ASSETS } : {}),
         "content-type": "text/html; charset=utf-8",
       },
     });
@@ -182,7 +187,7 @@ export function createPagesApp(deps: {
     // Still allowed? (Access is checked again as the viewer, so removing them works at once.)
     const [page] = await withUserSession(db, { sub: s.user_id, role: "authenticated" }, (tx) =>
       tx.execute<PageRow>(
-        sql`select id, title, html, data, updated_at, collects from public.pages where id = ${id}::uuid`,
+        sql`select id, title, html, data, updated_at, collects, assets_version from public.pages where id = ${id}::uuid`,
       ),
     );
     return page ?? null;
@@ -192,17 +197,64 @@ export function createPagesApp(deps: {
     app.get(format === "html" ? "/p/:id" : "/p/:id/pdf", async (c) => {
       const id = c.req.param("id");
       const page = await signedIn(id, getCookie(c, COOKIE));
-      return page ? serve(page, format, `/p/${id}/collect`) : notFound();
+      return page ? serve(page, format, `/p/${id}/collect`, undefined, `/p/${id}/a/`) : notFound();
     });
     app.get(format === "html" ? "/s/:token" : "/s/:token/pdf", async (c) => {
       const token = c.req.param("token");
       const [page] = await db.execute<PageRow>(sql`
-        select id, title, html, data, updated_at, collects from public.pages
+        select id, title, html, data, updated_at, collects, assets_version from public.pages
         where public_token_hash = ${hashPageToken(token)} and visibility = 'public'
           and (expires_at is null or expires_at > now())`);
-      return page ? serve(page, format, `/s/${token}/collect`, `/s/${token}/report`) : notFound();
+      return page
+        ? serve(page, format, `/s/${token}/collect`, `/s/${token}/report`, `/s/${token}/a/`)
+        : notFound();
     });
   }
+
+  // A site's own files (D-283), from the version that's live.
+  const asset = async (
+    page: { id: string; assets_version: number | null } | null,
+    path: string,
+  ) => {
+    if (!page?.assets_version || !deps.objects) return notFound();
+    let clean = "";
+    try {
+      clean = decodeURIComponent(path).replace(/^\/+/, "");
+    } catch {
+      return notFound();
+    }
+    if (!clean || clean.split("/").some((seg) => seg === ".." || seg === ".")) return notFound();
+    const [a] = await db.execute<{ mime: string; blob_key: string }>(sql`
+      select mime, blob_key from public.page_assets
+      where page_id = ${page.id}::uuid and version = ${page.assets_version} and path = ${clean}`);
+    if (!a) return notFound();
+    const { readObject } = await import("@casama/sandbox");
+    const bytes = await readObject(deps.objects, a.blob_key).catch(() => null);
+    if (!bytes) return notFound();
+    return new Response(bytes, {
+      headers: {
+        ...PAGE_HEADERS,
+        "content-security-policy": PAGE_CSP_ASSETS,
+        "content-type": a.mime,
+        "content-length": String(bytes.length),
+        "cache-control": "private, max-age=300",
+      },
+    });
+  };
+  app.get("/p/:id/a/*", async (c) => {
+    const id = c.req.param("id");
+    const page = await signedIn(id, getCookie(c, COOKIE));
+    const path = c.req.path.slice(`/p/${id}/a/`.length);
+    return asset(page ? { id: page.id, assets_version: page.assets_version ?? null } : null, path);
+  });
+  app.get("/s/:token/a/*", async (c) => {
+    const token = c.req.param("token");
+    const [page] = await db.execute<{ id: string; assets_version: number | null }>(sql`
+      select id, assets_version from public.pages
+      where public_token_hash = ${hashPageToken(token)} and visibility = 'public'
+        and (expires_at is null or expires_at > now())`);
+    return asset(page ?? null, c.req.path.slice(`/s/${token}/a/`.length));
+  });
 
   // Reporting a public page (D-281): a small form on this origin, since the page itself can't post.
   const publicPage = async (token: string) => {

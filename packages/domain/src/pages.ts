@@ -25,6 +25,24 @@ export const PAGE_CSP = [
  */
 export const PAGE_CSP_COLLECT = PAGE_CSP.replace("connect-src 'none'", "connect-src 'self'");
 
+/**
+ * A page published from a folder (D-283) also loads its own files from its own origin: scripts,
+ * styles, images, sounds and fonts under its assets address, and data it fetches from there. The
+ * network beyond the pages origin stays closed.
+ */
+export const PAGE_CSP_ASSETS = [
+  "default-src 'none'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "media-src 'self' data: blob:",
+  "connect-src 'self'",
+  "form-action 'none'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+].join("; ");
+
 export const PAGE_HEADERS: Record<string, string> = {
   "content-security-policy": PAGE_CSP,
   "x-content-type-options": "nosniff",
@@ -40,6 +58,9 @@ export const PAGE_DATA_ID = "casama-data";
 
 /** How bots are told to build pages (in the pages.publish tool description). */
 /** How bots are told to take input on a page published with collect (D-279). */
+/** How bots are told to publish a site or game with files (D-283). */
+export const PAGE_FOLDER_NOTE = `For a site or game with its own images, sounds, scripts or styles, put them in a folder with an index.html and pass folder instead of html: relative links (img/hero.png, js/game.js) work, and nothing outside Casama's page address can be loaded. Up to 300 files and 25 MB.`;
+
 export const PAGE_COLLECT_NOTE = `With collect: true the page can take input: give a form the attribute data-casama-form (and optionally data-casama-sent="text to show after"), or call casama.submit({...}) from your script. Responses are stored; read them with pages.submissions. Never ask for passwords, card numbers or other secrets on a page.`;
 
 export const PAGE_AUTHORING_NOTE = `One self-contained HTML document: inline <style> and <script> only (no external scripts, styles, fonts, images or requests; images as data: URLs). Read your data with JSON.parse(document.getElementById("${PAGE_DATA_ID}").textContent) so pages.update_data can change it without rewriting the layout. Use the CSS variables --k-bg, --k-fg, --k-muted, --k-accent, --k-surface and --k-font so the page follows light and dark mode. Make it work at phone width.`;
@@ -69,6 +90,8 @@ export interface RenderablePage {
   collect?: string;
   /** Where a visitor reports a public page (D-281). */
   reportUrl?: string;
+  /** The folder its own files load from, for a page published from a folder (D-283). */
+  assetsBase?: string;
 }
 
 /**
@@ -84,8 +107,9 @@ document.addEventListener("submit",function(e){var f=e.target;if(!f||!f.hasAttri
 export function renderPage(p: RenderablePage) {
   // First in <head>, before anything the bot wrote. A later policy of the bot's own still applies
   // as well: a browser enforces every policy, so this one keeps blocking the network.
-  const csp = p.collect ? PAGE_CSP_COLLECT : PAGE_CSP;
-  const head = `<meta http-equiv="Content-Security-Policy" content="${csp}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><style id="casama-theme">${THEME}</style><script type="application/json" id="${PAGE_DATA_ID}">${scriptJson(p.data)}</script>${p.collect ? collectScript(p.collect) : ""}`;
+  const csp = p.assetsBase ? PAGE_CSP_ASSETS : p.collect ? PAGE_CSP_COLLECT : PAGE_CSP;
+  const base = p.assetsBase ? `<base href="${escapeHtml(p.assetsBase)}">` : "";
+  const head = `${base}<meta http-equiv="Content-Security-Policy" content="${csp}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><style id="casama-theme">${THEME}</style><script type="application/json" id="${PAGE_DATA_ID}">${scriptJson(p.data)}</script>${p.collect ? collectScript(p.collect) : ""}`;
   const foot = `<div id="casama-updated">Updated <time datetime="${p.updatedAt.toISOString()}">${escapeHtml(
     p.updatedAt.toISOString().slice(0, 16).replace("T", " "),
   )} UTC</time>${p.reportUrl ? ` · <a href="${escapeHtml(p.reportUrl)}" style="color:inherit">Report</a>` : ""}</div>`;
