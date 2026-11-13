@@ -229,6 +229,7 @@ export 'package:casama_api/src/model/deleted_device.dart';
 export 'package:casama_api/src/model/deleted_id.dart';
 export 'package:casama_api/src/model/deleted_knowledge_source.dart';
 export 'package:casama_api/src/model/deleted_memory.dart';
+export 'package:casama_api/src/model/deleted_message.dart';
 export 'package:casama_api/src/model/deleted_page.dart';
 export 'package:casama_api/src/model/deleted_password_manager.dart';
 export 'package:casama_api/src/model/deleted_plugin.dart';

@@ -146,6 +146,8 @@ export const UpdateConversationRequest = z
 
 export const DeletedConversation = z.object({ deleted: Uuid }).openapi("DeletedConversation");
 
+export const DeletedMessage = z.object({ deleted: Uuid }).openapi("DeletedMessage");
+
 export const DeletedConversations = z
   .object({
     deleted: z.number().int().openapi({ description: "How many conversations were deleted" }),

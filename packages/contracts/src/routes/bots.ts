@@ -13,6 +13,7 @@ import {
   CredentialTestResult,
   DeletedConversation,
   DeletedConversations,
+  DeletedMessage,
   EditMessageRequest,
   Memory,
   MemoryBackend,
@@ -380,6 +381,25 @@ export const startBotSetup = createRoute({
   summary: "Start (or rerun) the bot's setup interview in a new conversation",
   request: { params: idParam },
   responses: { 201: jsonResponse("Started", StartSetupResponse), 401: e401, 403: e403, 404: e404 },
+});
+
+export const deleteMessage = createRoute({
+  operationId: "deleteMessage",
+  method: "delete",
+  path: "/v1/conversations/{id}/messages/{message_id}",
+  tags: ["chat"],
+  security,
+  summary: "Delete one message from a conversation",
+  description:
+    "Your own message, or any message in a chat you may delete (you started it, or you manage its bot). The messages after it stay, joined to the one before it. What a bot made stays in the Library. Refused with 409 while the bot is working in the chat.",
+  request: { params: z.object({ id: Uuid, message_id: Uuid }) },
+  responses: {
+    200: jsonResponse("Deleted", DeletedMessage),
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
+  },
 });
 
 export const editMessage = createRoute({

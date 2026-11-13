@@ -15,6 +15,7 @@ import 'package:casama_api/src/model/conversation_thread.dart';
 import 'package:casama_api/src/model/create_conversation_request.dart';
 import 'package:casama_api/src/model/deleted_conversation.dart';
 import 'package:casama_api/src/model/deleted_conversations.dart';
+import 'package:casama_api/src/model/deleted_message.dart';
 import 'package:casama_api/src/model/edit_message_request.dart';
 import 'package:casama_api/src/model/group_chat_list.dart';
 import 'package:casama_api/src/model/send_message_request.dart';
@@ -287,6 +288,86 @@ _responseData = rawData == null ? null : deserialize<DeletedConversation, Delete
     }
 
     return Response<DeletedConversation>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Delete one message from a conversation
+  /// Your own message, or any message in a chat you may delete (you started it, or you manage its bot). The messages after it stay, joined to the one before it. What a bot made stays in the Library. Refused with 409 while the bot is working in the chat.
+  ///
+  /// Parameters:
+  /// * [id] 
+  /// * [messageId] 
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [DeletedMessage] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<DeletedMessage>> deleteMessage({ 
+    required String id,
+    required String messageId,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/v1/conversations/{id}/messages/{message_id}'.replaceAll('{' r'id' '}', id.toString()).replaceAll('{' r'message_id' '}', messageId.toString());
+    final _options = Options(
+      method: r'DELETE',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'bearerAuth',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    DeletedMessage? _responseData;
+
+    try {
+final rawData = _response.data;
+_responseData = rawData == null ? null : deserialize<DeletedMessage, DeletedMessage>(rawData, 'DeletedMessage', growable: true);
+
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<DeletedMessage>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

@@ -3841,6 +3841,18 @@
           "updated_at"
         ]
       },
+      "DeletedMessage": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      },
       "SendMessageResponse": {
         "type": "object",
         "properties": {
@@ -19584,6 +19596,93 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/conversations/{id}/messages/{message_id}": {
+      "delete": {
+        "operationId": "deleteMessage",
+        "tags": [
+          "chat"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Delete one message from a conversation",
+        "description": "Your own message, or any message in a chat you may delete (you started it, or you manage its bot). The messages after it stay, joined to the one before it. What a bot made stays in the Library. Refused with 409 while the bot is working in the chat.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "message_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedMessage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/problem+json": {
                 "schema": {

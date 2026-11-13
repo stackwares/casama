@@ -163,6 +163,7 @@ import 'package:casama_api/src/model/deleted_device.dart';
 import 'package:casama_api/src/model/deleted_id.dart';
 import 'package:casama_api/src/model/deleted_knowledge_source.dart';
 import 'package:casama_api/src/model/deleted_memory.dart';
+import 'package:casama_api/src/model/deleted_message.dart';
 import 'package:casama_api/src/model/deleted_page.dart';
 import 'package:casama_api/src/model/deleted_password_manager.dart';
 import 'package:casama_api/src/model/deleted_plugin.dart';
@@ -907,6 +908,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedKnowledgeSource.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedMemory':
           return DeletedMemory.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedMessage':
+          return DeletedMessage.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedPage':
           return DeletedPage.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedPasswordManager':

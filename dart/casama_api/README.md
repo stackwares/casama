@@ -137,6 +137,7 @@ Class | Method | HTTP request | Description
 [*ChatApi*](doc/ChatApi.md) | [**createConversation**](doc/ChatApi.md#createconversation) | **POST** /v1/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**deleteBotConversations**](doc/ChatApi.md#deletebotconversations) | **DELETE** /v1/bots/{id}/conversations | Delete every direct conversation with a bot that you may delete
 [*ChatApi*](doc/ChatApi.md) | [**deleteConversation**](doc/ChatApi.md#deleteconversation) | **DELETE** /v1/conversations/{id} | Delete a conversation and its messages
+[*ChatApi*](doc/ChatApi.md) | [**deleteMessage**](doc/ChatApi.md#deletemessage) | **DELETE** /v1/conversations/{id}/messages/{message_id} | Delete one message from a conversation
 [*ChatApi*](doc/ChatApi.md) | [**editMessage**](doc/ChatApi.md#editmessage) | **POST** /v1/conversations/{id}/messages/{message_id}/edit | Edit a sent message: forks the conversation there and reruns it (the old branch stays)
 [*ChatApi*](doc/ChatApi.md) | [**getConversationThread**](doc/ChatApi.md#getconversationthread) | **GET** /v1/conversations/{id}/thread | The branch being shown, oldest first (what conversation_thread returns, with content opened)
 [*ChatApi*](doc/ChatApi.md) | [**listConversations**](doc/ChatApi.md#listconversations) | **GET** /v1/bots/{id}/conversations | 
@@ -581,6 +582,7 @@ Class | Method | HTTP request | Description
  - [DeletedId](doc/DeletedId.md)
  - [DeletedKnowledgeSource](doc/DeletedKnowledgeSource.md)
  - [DeletedMemory](doc/DeletedMemory.md)
+ - [DeletedMessage](doc/DeletedMessage.md)
  - [DeletedPage](doc/DeletedPage.md)
  - [DeletedPasswordManager](doc/DeletedPasswordManager.md)
  - [DeletedPlugin](doc/DeletedPlugin.md)

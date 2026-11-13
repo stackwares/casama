@@ -742,6 +742,62 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return c.json({ items: out }, 200);
   });
 
+  // Delete one message (Add 11): the messages after it are joined to the one before it, so the
+  // branch it sat on stays whole. The sender, or whoever may delete the chat.
+  app.openapi(routes.deleteMessage, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id, message_id } = c.req.valid("param");
+    const found = await withUserSession(db, claims, async (tx) => {
+      const [m] = await tx.execute<{
+        org_id: string;
+        bot_id: string;
+        author: string | null;
+        role: string;
+        created_by: string | null;
+        manage: boolean;
+      }>(sql`
+        select m.org_id, c.bot_id, m.author_user_id as author, m.role, c.created_by,
+          public.can_manage_bot(c.bot_id) as manage
+        from public.messages m join public.conversations c on c.id = m.conversation_id
+        where m.id = ${message_id}::uuid and m.conversation_id = ${id}::uuid`);
+      if (!m) throw new ApiError(404, "message_not_found", "Message not found");
+      const mine = m.role === "user" && m.author === claims.sub;
+      if (!mine && m.created_by !== claims.sub && !m.manage)
+        throw new ApiError(
+          403,
+          "forbidden",
+          "Only the person who sent it, who started this chat, or who manages the bot can delete it",
+        );
+      if ((await busyIds([id])).size)
+        throw new ApiError(
+          409,
+          "conversation_busy",
+          "The bot is still working in this chat. Stop it first, then delete the message.",
+        );
+      return m;
+    });
+    // Messages have no delete policy for people; the checks above stand in for one.
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`
+        with gone as (select id, parent_message_id from public.messages
+          where id = ${message_id}::uuid and conversation_id = ${id}::uuid)
+        update public.messages m set parent_message_id = gone.parent_message_id
+        from gone where m.parent_message_id = gone.id`);
+      await tx.execute(sql`
+        update public.conversations c
+        set head_message_id = (select parent_message_id from public.messages where id = ${message_id}::uuid)
+        where c.id = ${id}::uuid and c.head_message_id = ${message_id}::uuid`);
+      await tx.execute(
+        sql`delete from public.messages where id = ${message_id}::uuid and conversation_id = ${id}::uuid`,
+      );
+    });
+    await audit(found.org_id, claims.sub, "message.deleted", "conversation", id, {
+      bot_id: found.bot_id,
+      role: found.role,
+    });
+    return c.json({ deleted: message_id }, 200);
+  });
+
   app.openapi(routes.editMessage, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id, message_id } = c.req.valid("param");
