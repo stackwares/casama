@@ -103,6 +103,8 @@ to type: buttons, option chips, a few fields. The setup interview and the welcom
 
 - Tap a button or fill in the fields and submit. Your answer is sent as a normal message that sums
   up what you chose.
+- A list of answers is lettered (A, B, C…). A card with two or more questions asks them one at a
+  time: answer and tap **Next**, or **Skip**; the last step has the card's own button.
 - An answered card stays in the thread, dimmed and marked **Sent**.
 - A bot shows one card at a time and waits for your answer before going on.
 - Links on a card open in your browser, and only for web addresses.

@@ -9194,4 +9194,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get allTopics => 'All topics';
+
+  @override
+  String get cardSecrets => 'Secrets';
+
+  @override
+  String get cardApproval => 'Approval';
+
+  @override
+  String get cardTakeover => 'Take over';
+
+  @override
+  String get cardDevice => 'Device access';
+
+  @override
+  String get cardSuggestion => 'Suggestion';
+
+  @override
+  String get formNext => 'Next';
+
+  @override
+  String get formSkip => 'Skip';
+
+  @override
+  String formStep(int n, int total) {
+    return 'Question $n of $total';
+  }
 }

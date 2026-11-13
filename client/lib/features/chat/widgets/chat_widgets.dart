@@ -22,6 +22,7 @@ import '../../../ui/motion.dart';
 import '../chat_controller.dart';
 import '../read_aloud.dart';
 import '../media/attachment_view.dart';
+import 'chat_look.dart';
 import 'chat_markdown.dart';
 import 'mentions.dart';
 import 'message_actions.dart';
@@ -170,11 +171,6 @@ class UserBubble extends StatelessWidget {
   }
 
   Widget _bubble(BuildContext context) {
-    final scheme = context.colorScheme;
-    // Opaque, so it reads the same on any wallpaper.
-    final base = context.isDark
-        ? scheme.surfaceContainerHigh
-        : scheme.surfaceContainerLowest;
     return LayoutBuilder(
       builder: (context, constraints) => Align(
         alignment: AlignmentDirectional.centerEnd,
@@ -186,36 +182,17 @@ class UserBubble extends StatelessWidget {
             text: text,
             onEdit: onEdit,
             alignEnd: true,
+            // Your messages: the accent, filled, even corners (D-256). Opaque on any wallpaper.
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: Color.alphaBlend(
-                  scheme.primary.withValues(alpha: context.isDark ? 0.3 : 0.16),
-                  base,
-                ),
-                borderRadius: const BorderRadiusDirectional.only(
-                  topStart: Radius.circular(20),
-                  topEnd: Radius.circular(20),
-                  bottomStart: Radius.circular(20),
-                  bottomEnd: Radius.circular(6),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(
-                      alpha: context.isDark ? 0.2 : 0.05,
-                    ),
-                    blurRadius: 6,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
+                color: ChatLook.userFill(context),
+                borderRadius: BorderRadius.circular(ChatLook.bubbleRadius),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpace.md,
-                  vertical: 11,
-                ),
+                padding: ChatLook.bubblePadding,
                 child: Builder(
                   builder: (context) {
-                    final style = context.textTheme.bodyLarge?.copyWith(height: 1.4);
+                    final style = context.textTheme.bodyLarge?.copyWith(height: 1.4, color: ChatLook.userText(context));
                     // In a group chat, @mentions of its bots stand out (D-118).
                     final mentions = MentionScope.maybeOf(context);
                     if (mentions == null) return Text(text, style: style);
@@ -325,9 +302,15 @@ class AssistantMessage extends StatelessWidget {
     required this.entry,
     this.onSpeak,
     this.status,
+    this.botName,
+    this.botAvatar,
   });
   final MessageEntry entry;
   final VoidCallback? onSpeak;
+
+  /// Who is replying, for the working line before the first word (D-256).
+  final String? botName;
+  final String? botAvatar;
 
   /// What the bot is doing while the reply is still empty.
   final String? status;
@@ -335,7 +318,7 @@ class AssistantMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (entry.text.isEmpty && entry.streaming) {
-      return WorkingIndicator(status: status ?? context.l10n.thinking);
+      return WorkingIndicator(status: status ?? context.l10n.thinking, botName: botName, botAvatar: botAvatar);
     }
     // Media the reply made (a generated image or video, D-205) shows under its text.
     final media = entry.attachments;
@@ -350,27 +333,14 @@ class AssistantMessage extends StatelessWidget {
     Widget bubble(bool reading) => AnimatedContainer(
       duration: AppMotion.of(context, AppMotion.duration),
       curve: AppMotion.curve,
+      // Filled, even corners, no border or shadow (D-256); an accent edge while it's read aloud.
       decoration: BoxDecoration(
-        color: context.isDark
-            ? scheme.surfaceContainer
-            : scheme.surfaceContainerLowest,
-        borderRadius: const BorderRadiusDirectional.only(
-          topStart: Radius.circular(6),
-          topEnd: Radius.circular(20),
-          bottomStart: Radius.circular(20),
-          bottomEnd: Radius.circular(20),
-        ),
+        color: ChatLook.botFill(context),
+        borderRadius: BorderRadius.circular(ChatLook.bubbleRadius),
         border: Border.all(
-          color: reading
-              ? scheme.primary.withValues(alpha: 0.6)
-              : context.appColors.hairline,
+          color: reading ? scheme.primary.withValues(alpha: 0.6) : Colors.transparent,
         ),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: context.isDark ? 0.2 : 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
           BoxShadow(
             color: scheme.primary.withValues(alpha: reading ? 0.2 : 0),
             blurRadius: 18,
@@ -378,12 +348,7 @@ class AssistantMessage extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpace.md,
-          AppSpace.sm,
-          AppSpace.md,
-          AppSpace.sm,
-        ),
+        padding: ChatLook.bubblePadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -497,43 +462,44 @@ class _TypingDotsState extends State<_TypingDots>
   }
 }
 
-/// What the bot is doing right now, over a shimmering placeholder for the reply.
+/// What the bot is doing right now, in one line (D-256): the bot's own icon (rocking while it
+/// thinks) and the status shimmering, its first word bright and the rest dimmer ("Checking
+/// Vaultwarden setup"). Without a bot to show, a sparkle stands in.
 class WorkingIndicator extends StatelessWidget {
-  const WorkingIndicator({super.key, required this.status});
+  const WorkingIndicator({super.key, required this.status, this.botName, this.botAvatar});
   final String status;
+  final String? botName;
+  final String? botAvatar;
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     final still = MediaQuery.disableAnimationsOf(context);
-    Widget sparkle = Icon(
-      LucideIcons.sparkles,
-      size: 18,
-      color: scheme.primary,
-    );
-    Widget text = Text(
-      status,
+    final base = context.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500, height: 1.3);
+    final space = status.indexOf(' ');
+    final verb = space < 0 ? status : status.substring(0, space);
+    final rest = space < 0 ? '' : status.substring(space);
+    Widget text = Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: verb, style: TextStyle(color: scheme.onSurface)),
+          if (rest.isNotEmpty) TextSpan(text: rest, style: TextStyle(color: scheme.onSurfaceVariant)),
+        ],
+      ),
       key: ValueKey(status),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: context.textTheme.bodyMedium?.copyWith(
-        color: scheme.onSurfaceVariant,
-        fontWeight: FontWeight.w500,
-      ),
+      style: base,
     );
+    final name = botName;
+    Widget icon = name == null
+        ? Icon(LucideIcons.sparkles, size: 18, color: scheme.primary)
+        : BotAvatar(name: name.isEmpty ? '?' : name, avatar: botAvatar, size: 24, animate: !still && Effects.decorative(context));
     if (!still) {
-      sparkle = Pulse(
-        from: 0.8,
-        to: 1.1,
-        fadeFrom: 0.55,
-        duration: const Duration(milliseconds: 700),
-        child: sparkle,
-      );
-      text = Shimmer(
-        key: ValueKey(status),
-        color: scheme.primary.withValues(alpha: 0.7),
-        child: text,
-      );
+      icon = name == null
+          ? Pulse(from: 0.8, to: 1.1, fadeFrom: 0.55, duration: const Duration(milliseconds: 700), child: icon)
+          : _ThinkingWiggle(child: icon);
+      text = Shimmer(key: ValueKey(status), color: scheme.onSurface.withValues(alpha: 0.9), child: text);
     }
     return Semantics(
       liveRegion: true,
@@ -542,13 +508,10 @@ class WorkingIndicator extends StatelessWidget {
       child: ExcludeSemantics(
         child: Row(
           children: [
-            sparkle,
-            const SizedBox(width: AppSpace.xs),
+            icon,
+            const SizedBox(width: 10),
             Flexible(
-              child: AnimatedSwitcher(
-                duration: AppMotion.of(context, AppMotion.fast),
-                child: text,
-              ),
+              child: AnimatedSwitcher(duration: AppMotion.of(context, AppMotion.fast), child: text),
             ),
           ],
         ),
@@ -1317,6 +1280,7 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
     final muted = context.colorScheme.onSurfaceVariant;
     return _ActionCard(
       key: const Key('chatApproval'),
+      label: context.l10n.cardApproval,
       accent: high ? colors.negative : context.colorScheme.primary,
       icon: words.icon,
       title: words.doing,
@@ -1418,6 +1382,7 @@ class TakeoverPrompt extends StatelessWidget {
     }
     return _ActionCard(
       key: const Key('chatTakeover'),
+      label: context.l10n.cardTakeover,
       accent: colors.info,
       icon: LucideIcons.hand,
       title: l10n.botNeedsHelp(botName),
@@ -1528,72 +1493,66 @@ class _SecretPromptState extends ConsumerState<SecretPrompt> {
         icon: saved ? LucideIcons.circleCheck : LucideIcons.circleMinus,
       );
     }
+    // The secret's own name as the title, why the bot wants it under it, one filled field (D-256).
     return _ActionCard(
       key: const Key('chatSecret'),
+      label: l10n.cardSecrets,
       accent: colors.warning,
       icon: LucideIcons.keyRound,
-      title: e.totp
-          ? l10n.totpRequestTitle(widget.botName, e.service)
-          : l10n.secretRequestTitle(widget.botName, e.service),
-      subtitle: l10n.secretRequestHosts(e.hosts.join(', ')),
+      title: e.totp ? l10n.totpRequestTitle(widget.botName, e.service) : e.name,
+      subtitle: e.reason.isNotEmpty ? e.reason : l10n.secretRequestTitle(widget.botName, e.service),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: AppSpace.sm,
+        spacing: AppSpace.xs,
         children: [
-          if (e.reason.isNotEmpty)
-            Text(
-              e.reason,
-              style: context.textTheme.bodyMedium?.copyWith(height: 1.4),
-            ),
           TextField(
-              key: const Key('secretValue'),
-              controller: _value,
-              obscureText: _obscure,
-              autocorrect: false,
-              enableSuggestions: false,
-              enableIMEPersonalizedLearning: false,
-              keyboardType: TextInputType.visiblePassword,
-              autofillHints: const <String>[],
-              decoration: InputDecoration(
-                labelText: e.totp
-                    ? '${e.name} · ${l10n.totpSeedLabel}'
-                    : e.name,
-                helperText: e.totp ? l10n.totpSeedHelp : l10n.secretRequestHelp,
-                prefixIcon: const Icon(LucideIcons.lock, size: 18),
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (e.totp)
-                      TotpScanButton(
-                        onScanned: (link) => setState(() => _value.text = link),
-                      ),
-                    IconButton(
-                      tooltip: _obscure ? l10n.show : l10n.hide,
-                      icon: Icon(
-                        _obscure ? LucideIcons.eye : LucideIcons.eyeOff,
-                        size: 18,
-                      ),
-                      onPressed: () => setState(() => _obscure = !_obscure),
-                    ),
-                  ],
-                ),
+            key: const Key('secretValue'),
+            controller: _value,
+            obscureText: _obscure,
+            autocorrect: false,
+            enableSuggestions: false,
+            enableIMEPersonalizedLearning: false,
+            keyboardType: TextInputType.visiblePassword,
+            autofillHints: const <String>[],
+            onChanged: (_) => setState(() {}),
+            style: context.textTheme.bodyLarge,
+            decoration: chatFieldDecoration(
+              context,
+              hint: e.totp ? '${e.name} · ${l10n.totpSeedLabel}' : e.name,
+              suffix: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (e.totp) TotpScanButton(onScanned: (link) => setState(() => _value.text = link)),
+                  IconButton(
+                    tooltip: _obscure ? l10n.show : l10n.hide,
+                    icon: Icon(_obscure ? LucideIcons.eye : LucideIcons.eyeOff, size: 20),
+                    onPressed: () => setState(() => _obscure = !_obscure),
+                  ),
+                ],
               ),
-              onSubmitted: (_) => _busy ? null : _answer(true),
             ),
+            onSubmitted: (_) => _busy ? null : _answer(true),
+          ),
+          // Where it may be used, and that the bot never sees it.
+          Text(
+            '${l10n.secretRequestHosts(e.hosts.join(', '))}. ${e.totp ? l10n.totpSeedHelp : l10n.secretRequestHelp}',
+            style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant),
+          ),
         ],
       ),
-      footer: ActionButtons(
-        actions: [
-          OutlinedButton(
+      footer: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        spacing: AppSpace.xs,
+        children: [
+          TextButton(
             key: const Key('secretDecline'),
             onPressed: _busy ? null : () => _answer(false),
             child: Text(l10n.decline),
           ),
-          GlowButton.icon(
+          FilledButton.tonal(
             key: const Key('secretSave'),
-            onPressed: _busy ? null : () => _answer(true),
-            icon: const Icon(LucideIcons.lock, size: 18),
-            label: Text(l10n.save),
+            onPressed: _busy || _value.text.trim().isEmpty ? null : () => _answer(true),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -1669,6 +1628,7 @@ class _DeviceAccessPromptState extends ConsumerState<DeviceAccessPrompt> {
     }
     return _ActionCard(
       key: const Key('chatDeviceAccess'),
+      label: context.l10n.cardDevice,
       accent: colors.working,
       icon: LucideIcons.smartphone,
       title: l10n.deviceAccessTitle(widget.botName, what),
@@ -1741,6 +1701,7 @@ class _Outcome extends StatelessWidget {
 class _ActionCard extends StatelessWidget {
   const _ActionCard({
     super.key,
+    required this.label,
     required this.accent,
     required this.icon,
     required this.title,
@@ -1748,6 +1709,9 @@ class _ActionCard extends StatelessWidget {
     required this.footer,
     this.subtitle,
   });
+
+  /// What kind of request it is ("Secrets", "Approval"), beside the icon.
+  final String label;
   final Color accent;
   final IconData icon;
   final String title;
@@ -1755,79 +1719,64 @@ class _ActionCard extends StatelessWidget {
   final Widget body;
   final Widget footer;
 
+  /// A card in the chat's look (D-256): the kind in a small header, a bold title, grey help text,
+  /// then what to fill in or decide.
   @override
   Widget build(BuildContext context) {
-    final dark = context.isDark;
+    final scheme = context.colorScheme;
     return Container(
-      padding: const EdgeInsets.all(AppSpace.md),
-      decoration: BoxDecoration(
-        color: Color.alphaBlend(
-          accent.withValues(alpha: dark ? 0.08 : 0.05),
-          context.colorScheme.surfaceContainerLow,
-        ),
-        borderRadius: AppRadius.cardAll,
-        border: Border.all(color: accent.withValues(alpha: dark ? 0.35 : 0.3)),
-      ),
+      padding: ChatLook.cardPadding,
+      decoration: ChatLook.card(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: dark ? 0.22 : 0.14),
-                  borderRadius: BorderRadius.circular(AppRadius.icon),
-                ),
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(color: ChatLook.fieldFill(context), borderRadius: BorderRadius.circular(9)),
                 alignment: Alignment.center,
-                child: Icon(icon, size: 19, color: accent),
+                child: Icon(icon, size: 17, color: accent),
               ),
-              const SizedBox(width: AppSpace.sm),
+              const SizedBox(width: 10),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: context.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        height: 1.3,
-                      ),
-                    ),
-                    if (subtitle != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Wrap(
-                          spacing: AppSpace.xs,
-                          runSpacing: 4,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            if (subtitle != null)
-                              Text(
-                                subtitle!,
-                                style: context.textTheme.bodySmall?.copyWith(
-                                  color: context.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
+                child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w500)),
               ),
             ],
           ),
-          const SizedBox(height: AppSpace.sm),
+          const SizedBox(height: 14),
+          Text(title, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700, height: 1.3)),
+          if (subtitle != null && subtitle!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(subtitle!, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
+            ),
+          const SizedBox(height: 14),
           body,
-          const SizedBox(height: AppSpace.sm),
+          const SizedBox(height: 14),
           footer,
         ],
       ),
     );
   }
 }
+
+/// A filled field inside a chat card (D-256): no outline, rounded, the hint in grey.
+InputDecoration chatFieldDecoration(BuildContext context, {String? hint, Widget? suffix}) => InputDecoration(
+  hintText: hint,
+  filled: true,
+  fillColor: ChatLook.fieldFill(context),
+  isDense: true,
+  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+  border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+  focusedBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(14),
+    borderSide: BorderSide(color: context.colorScheme.primary.withValues(alpha: 0.6)),
+  ),
+  suffixIcon: suffix,
+);
 
 /// A suggestion the bot posted in General (D-253): Do it opens a topic where the bot does it;
 /// Not now dismisses it. Once handled, a quiet line (with a link to the topic it opened).
@@ -1915,6 +1864,7 @@ class _SuggestionPromptState extends ConsumerState<SuggestionPrompt> {
     }
     return _ActionCard(
       key: Key('suggestionCard-${s.id}'),
+      label: context.l10n.cardSuggestion,
       accent: colors.working,
       icon: LucideIcons.sparkles,
       title: s.title,

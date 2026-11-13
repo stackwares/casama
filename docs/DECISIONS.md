@@ -3004,3 +3004,35 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
   - one text part with the offer and a card with two actions and no heading;
   - the Gmail question after Calendar connects;
   - Just my calendar runs the calendar-only catch-up.
+
+## D-256 Chat look: filled bubbles, one-line working status, forms one question at a time
+
+- **Decision** (Oliver, 2026-11-13, with screenshots of another chat app as the target: "same
+  rounded" bubbles, its forms and its one-line busy status).
+- **Bubbles** (`client/lib/features/chat/widgets/chat_look.dart`):
+  - Both sides are filled, with the same radius on every corner (22, no tail), no border or
+    shadow, and opaque on any wallpaper.
+  - The bot's bubble uses `surfaceContainerHigh`. Yours uses the accent (`primary`) with its own
+    text color.
+  - Reading aloud still lights the bot's bubble with an accent edge.
+- **No name over each turn** in a chat with one bot; the space between turns stays. Group chats
+  keep the header, so you can tell bots apart.
+- **Working status:** one line with the bot's own icon (rocking while it thinks) and the status
+  shimmering, its first word bright and the rest dimmer ("Checking Vaultwarden setup").
+- **Cards** (requests, suggestions, bot forms):
+  - The bubble's fill, a hairline edge, radius 24.
+  - Requests open with a small icon tile and their kind ("Secrets", "Approval", "Take over",
+    "Device access", "Suggestion"), then a bold title and grey help text.
+  - Fields are filled and rounded with no outline (`chatFieldDecoration`, and the same theme for
+    the basic catalog's SDK fields).
+  - A secret request's title is the secret's name, with the bot's reason under it. Save stays off
+    until there's a value.
+- **Bot forms (A2UI):**
+  - List questions (a ChoicePicker that isn't chips) show lettered answers (A, B, C…) with the
+    label as the question's title.
+  - A column with two or more questions (choice lists or text fields) shows them one at a time:
+    the question, dots for where you are, **Skip** and **Next**, and whatever followed the last
+    question (the submit button) on the last step.
+  - This is all on the app side; bots send the same A2UI as before.
+- **Tests:** `bot_ui_test.dart` (lettered answers, the second question after Next),
+  `secret_request_test.dart` (title, reason, Save waits for a value). Analyze is clean.

@@ -21,6 +21,20 @@ class SdkMaterialBridge extends StatelessWidget {
         textTheme: _text(theme.textTheme),
         materialTapTargetSize: sdk.MaterialTapTargetSize.shrinkWrap,
         splashFactory: sdk.InkSparkle.splashFactory,
+        // Fields in a bot's form: filled, rounded, no outline (D-256), like the app's own cards.
+        inputDecorationTheme: sdk.InputDecorationTheme(
+          filled: true,
+          fillColor: theme.colorScheme.surfaceContainerHighest,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          border: sdk.OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+          enabledBorder: sdk.OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+          focusedBorder: sdk.OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.6)),
+          ),
+          hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+        ),
       ),
       child: sdk.Material(type: sdk.MaterialType.transparency, child: child),
     );

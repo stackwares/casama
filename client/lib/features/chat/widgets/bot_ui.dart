@@ -8,6 +8,7 @@ import '../../../core/widgets.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
 import 'bot_ui_components.dart';
+import 'chat_look.dart';
 import 'sdk_material_bridge.dart';
 
 /// What a person did on a bot's interactive UI: the action's name and its resolved values.
@@ -152,24 +153,9 @@ class BotUiCard extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 520),
         child: Container(
           key: Key('botUi-$surfaceId'),
-          padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.md - 2, AppSpace.md, AppSpace.md),
-          decoration: BoxDecoration(
-            color: context.isDark ? scheme.surfaceContainer : scheme.surfaceContainerLowest,
-            borderRadius: const BorderRadiusDirectional.only(
-              topStart: Radius.circular(6),
-              topEnd: Radius.circular(20),
-              bottomStart: Radius.circular(20),
-              bottomEnd: Radius.circular(20),
-            ),
-            border: Border.all(color: answered ? context.appColors.hairline : scheme.outlineVariant.withValues(alpha: 0.7)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: context.isDark ? 0.18 : 0.04),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
+          // The chat's card look (D-256): the bubble's fill, a hairline edge, even corners.
+          padding: ChatLook.cardPadding,
+          decoration: ChatLook.card(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,

@@ -143,11 +143,22 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
+    // Lists are lettered (D-256), and two questions show one at a time with Skip and Next.
     expect(find.text('Apple mutuallyExclusive'), findsOneWidget);
     expect(find.text('Banana multipleSelection'), findsOneWidget);
-    expect(find.text('Other mutuallyExclusive'), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const Key('botUi-radio')), matching: find.text('A')), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const Key('botUi-checks')), matching: find.text('B')), findsOneWidget);
+    expect(find.text('Other mutuallyExclusive'), findsNothing);
     await tester.tap(find.text('Banana multipleSelection'));
     await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    // The text field (a basic SDK-Material component) is the next step.
+    final next = find.descendant(of: find.byKey(const Key('botUi-radio')), matching: find.byKey(const Key('formNext')));
+    await tester.ensureVisible(next);
+    await tester.pumpAndSettle();
+    await tester.tap(next);
+    await tester.pumpAndSettle();
+    expect(find.text('Other mutuallyExclusive'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

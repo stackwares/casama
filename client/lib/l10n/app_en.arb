@@ -2768,5 +2768,14 @@
   "topics": "Topics",
   "olderTopics": "Older",
   "generalChat": "General",
-  "allTopics": "All topics"
+  "allTopics": "All topics",
+  "cardSecrets": "Secrets",
+  "cardApproval": "Approval",
+  "cardTakeover": "Take over",
+  "cardDevice": "Device access",
+  "cardSuggestion": "Suggestion",
+  "formNext": "Next",
+  "formSkip": "Skip",
+  "formStep": "Question {n} of {total}",
+  "@formStep": {"placeholders": {"n": {"type": "int"}, "total": {"type": "int"}}}
 }

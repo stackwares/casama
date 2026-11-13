@@ -43,8 +43,11 @@ void main() {
   ) async {
     final backend = await openChat(tester);
     expect(find.byKey(const Key('chatSecret')), findsOneWidget);
-    expect(find.text('Ada needs a Stripe key'), findsOneWidget);
-    expect(find.text('Only for api.stripe.com'), findsOneWidget);
+    // The secret's own name as the title, the bot's reason under it, where it may be used (D-256).
+    expect(find.text('STRIPE_API_KEY'), findsWidgets);
+    expect(find.text('To create the charge.'), findsOneWidget);
+    expect(find.textContaining('Only for api.stripe.com'), findsOneWidget);
+    expect(tester.widget<FilledButton>(find.byKey(const Key('secretSave'))).onPressed, isNull, reason: 'Save waits for a value');
     final field = tester.widget<TextField>(
       find
           .descendant(
@@ -57,6 +60,7 @@ void main() {
     expect(field.obscureText, isTrue);
     expect(field.enableSuggestions, isFalse);
     await tester.enterText(find.byKey(const Key('secretValue')), 'sk_live_123');
+    await tester.pump();
     await tester.tap(find.byKey(const Key('secretSave')));
     await tester.pump(const Duration(milliseconds: 100));
     expect(backend.secretAnswers, [('sr1', 'sk_live_123')]);

@@ -1322,13 +1322,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           _Row(
             ValueKey('hdr-$key'),
             lastSide.isEmpty ? 0 : AppSpace.xl,
-            () => BotTurnHeader(name: speaker?.name ?? name, avatar: speaker?.avatarUrl ?? avatar),
+            // One bot (D-256): no name over each turn, only the space between turns. Group chats
+            // keep the header, so you can tell the bots apart.
+            widget.group ? () => BotTurnHeader(name: speaker?.name ?? name, avatar: speaker?.avatarUrl ?? avatar) : () => const SizedBox.shrink(),
             header: true,
             inputs: (speaker?.name ?? name, speaker?.avatarUrl ?? avatar),
           ),
         );
       }
       lastSide = side;
+    }
+
+    /// Who the working line shows: the bot whose turn is running.
+    (String, String?) workingBot() {
+      final b = widget.group ? allBots.where((x) => x.id == chat.activeBotId).firstOrNull : null;
+      return (b?.name ?? name, b?.avatarUrl ?? avatar);
     }
 
     String? workingStatus() {
@@ -1370,7 +1378,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             _Row(
               ValueKey(m.id),
               rows.last.header ? 0 : AppSpace.sm,
-              () => AssistantMessage(entry: m, status: workingStatus(), onSpeak: !m.streaming ? () => _speak(m) : null),
+              () => AssistantMessage(entry: m, status: workingStatus(), botName: workingBot().$1, botAvatar: workingBot().$2, onSpeak: !m.streaming ? () => _speak(m) : null),
               // The status only shows while the reply is still empty.
               inputs: (m, m.text.isEmpty && m.streaming ? workingStatus() : null),
             ),
@@ -1568,10 +1576,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // With the steps hidden, the working line also shows while a step runs.
     if (chat.running && !waitingOnPerson && !replying && (!toolRunning || !showSteps)) {
       botSide('working', chat.activeBotId);
-      rows.add(_Row(const ValueKey('working'), rows.last.header ? 0 : AppSpace.md, () => WorkingIndicator(status: workingStatus() ?? context.l10n.thinking)));
+      final (who, face) = workingBot();
+      final status = workingStatus() ?? context.l10n.thinking;
+      rows.add(_Row(const ValueKey('working'), rows.last.header ? 0 : AppSpace.md, () => WorkingIndicator(status: status, botName: who, botAvatar: face), inputs: (status, who, face)));
     }
     // The bot whose turn is running wiggles its avatar while it thinks.
-    if (chat.running && lastSide.startsWith('bot') && lastHeader >= 0) {
+    if (widget.group && chat.running && lastSide.startsWith('bot') && lastHeader >= 0) {
       final h = rows[lastHeader];
       final (who, face) = h.inputs! as (String, String?);
       rows[lastHeader] = _Row(h.key, h.gap, () => BotTurnHeader(name: who, avatar: face, working: true), header: true, inputs: (who, face, true));

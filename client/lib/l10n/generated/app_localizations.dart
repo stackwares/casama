@@ -14421,6 +14421,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'All topics'**
   String get allTopics;
+
+  /// No description provided for @cardSecrets.
+  ///
+  /// In en, this message translates to:
+  /// **'Secrets'**
+  String get cardSecrets;
+
+  /// No description provided for @cardApproval.
+  ///
+  /// In en, this message translates to:
+  /// **'Approval'**
+  String get cardApproval;
+
+  /// No description provided for @cardTakeover.
+  ///
+  /// In en, this message translates to:
+  /// **'Take over'**
+  String get cardTakeover;
+
+  /// No description provided for @cardDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Device access'**
+  String get cardDevice;
+
+  /// No description provided for @cardSuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggestion'**
+  String get cardSuggestion;
+
+  /// No description provided for @formNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get formNext;
+
+  /// No description provided for @formSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get formSkip;
+
+  /// No description provided for @formStep.
+  ///
+  /// In en, this message translates to:
+  /// **'Question {n} of {total}'**
+  String formStep(int n, int total);
 }
 
 class _AppLocalizationsDelegate
