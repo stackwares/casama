@@ -74,6 +74,7 @@ import 'package:casama_api/src/model/chat_gpt_sign_in_complete_request.dart';
 import 'package:casama_api/src/model/chat_gpt_sign_in_start.dart';
 import 'package:casama_api/src/model/chat_gpt_sign_in_start_request.dart';
 import 'package:casama_api/src/model/checkout_request.dart';
+import 'package:casama_api/src/model/checkout_result.dart';
 import 'package:casama_api/src/model/checkpoint.dart';
 import 'package:casama_api/src/model/checkpoint_created_event.dart';
 import 'package:casama_api/src/model/checkpoint_created_event_payload.dart';
@@ -708,6 +709,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ChatGptSignInStartRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CheckoutRequest':
           return CheckoutRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CheckoutResult':
+          return CheckoutResult.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Checkpoint':
           return Checkpoint.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CheckpointCreatedEvent':

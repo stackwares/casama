@@ -101,6 +101,14 @@ export const PortalRequest = z.object({ return_url: z.url().optional() }).openap
 
 export const RedirectUrl = z.object({ url: z.url() }).openapi("RedirectUrl");
 
+/**
+ * A checkout page, or `changed: true` when an existing web subscription was moved to the plan in
+ * place (D-248); `url` is then the return page, so older apps that open it still land somewhere.
+ */
+export const CheckoutResult = z
+  .object({ url: z.url(), changed: z.boolean().optional() })
+  .openapi("CheckoutResult");
+
 export const PurchaseRequest = z
   .object({
     source: z.enum(["app_store", "google_play"]),

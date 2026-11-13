@@ -161,6 +161,7 @@ if (env.MODE === "api") {
   // Casama Cloud (D-094): free workspaces start computers only with a verified owner email.
   if (deps.computers) deps.computers.requireVerifiedEmail = abuseControlsOn(env);
   if (deps.computers) deps.computers.rates = computerRates(env.COMPUTER_RATES);
+  if (deps.computers) deps.computers.maxRunning = env.COMPUTER_HOST_CAPACITY;
   const app = createApp(deps);
   const server = serve({ fetch: app.fetch, port: env.PORT }, (info) =>
     logger.info("api listening", { port: info.port }),
@@ -197,6 +198,7 @@ if (env.MODE === "api") {
     geminiLiveModel: env.GEMINI_LIVE_MODEL,
     livePrices: env.MODEL_PRICES_URL === "off" ? undefined : { url: env.MODEL_PRICES_URL },
     computerRates: env.COMPUTER_RATES,
+    computerHostCapacity: env.COMPUTER_HOST_CAPACITY,
     searxngUrl: env.SEARXNG_URL,
     serverGeminiKey: env.GOOGLE_AI_API_KEY,
     auditForwarding: await import("@casama/ee")

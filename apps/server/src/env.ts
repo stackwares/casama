@@ -128,12 +128,16 @@ export const EnvSchema = z.object({
   CLOUD_CONNECT: bool.default(true),
   CLOUD_MODEL_UPSTREAM_URL: z.url().default("https://openrouter.ai/api/v1"),
   CLOUD_MODEL_UPSTREAM_KEY: z.string().optional(),
-  CLOUD_MODEL_MARKUP: z.coerce.number().positive().default(1),
+  // Unset: Cloud Connect model calls cost what Casama's own key charges (OpenRouter's fee × markup).
+  CLOUD_MODEL_MARKUP: z.coerce.number().positive().optional(),
   CLOUD_COMPUTER_USD_PER_HOUR: z.coerce.number().nonnegative().default(0.05),
   /** Worker: live model prices (D-181). Default OpenRouter's public model list; "off" turns it off. */
   MODEL_PRICES_URL: z.string().optional(),
   /** Computer prices by provider, overriding the defaults (D-180): {"docker":{"cpu_hour":0.003,"gb_hour":0.005}}. */
   COMPUTER_RATES: z.string().optional(),
+  // How many hosted computers may run at once on this server (D-248). Past it, starting one waits
+  // with "capacity_full" instead of starving the API and database of memory. 0 = no limit.
+  COMPUTER_HOST_CAPACITY: z.coerce.number().int().min(0).default(0),
   /** Cloud Connect, self-hosted side: use Casama Cloud computers with this key. Unset = off. */
   CASAMA_CLOUD_URL: z.url().optional(),
   /** GitHub API base for skill imports (tests point it at a fake). */

@@ -130,6 +130,8 @@ export class BillingService {
         await this.applyPayment(provider, ev.paymentId);
       } else if (ev.kind === "refund") {
         await this.applyRefund(provider, ev.paymentId);
+      } else if (ev.kind === "pack_refund") {
+        await this.applyPackRefund(ev.references);
       }
       await this.db.execute(
         sql`update public.billing_events set processed_at = now(), error = null where id = ${stored?.id}::uuid`,
@@ -141,6 +143,25 @@ export class BillingService {
       throw err;
     }
     return { duplicate: false, type: ev.type };
+  }
+
+  /** Takes back the credits a refunded store pack added, once (D-248). */
+  async applyPackRefund(references: string[]) {
+    const [bought] = await this.db.execute<{
+      org_id: string;
+      delta: string;
+      reference: string;
+    }>(sql`
+      select org_id, delta::text, reference from public.credit_ledger
+      where reason = 'purchase' and reference = any(${arr(references)}::text[]) limit 1`);
+    if (!bought) return;
+    await this.credit(
+      bought.org_id,
+      -Number(bought.delta),
+      "refund",
+      bought.reference,
+      "Credit pack refunded",
+    );
   }
 
   /** Stores the provider's view of a subscription and recomputes the workspace's entitlement. */
@@ -183,6 +204,22 @@ export class BillingService {
         extra_seats = excluded.extra_seats,
         updated_at = now()`);
     await this.trackSubscription(orgId, snap, plan, status, existing);
+    // A refunded subscription doesn't keep the credits it brought this month (D-248). Once per
+    // subscription and month; it may leave the balance below zero, which stops paid usage.
+    if (opts.refund && existing?.status !== "refunded") {
+      const [g] = await this.db.execute<{ granted: string }>(sql`
+        select coalesce(sum(delta), 0)::text as granted from public.credit_ledger
+        where org_id = ${orgId}::uuid and reason = 'grant' and reference = ${`monthly:${month()}:${plan.code}`}`);
+      const granted = Number(g?.granted ?? 0);
+      if (granted > 0)
+        await this.credit(
+          orgId,
+          -granted,
+          "refund",
+          `refund-grant:${snap.source}:${snap.externalId}:${month()}`,
+          `${plan.name} refunded: its monthly credits come back out`,
+        );
+    }
     return this.recompute(orgId);
   }
 
@@ -492,6 +529,21 @@ export class BillingService {
     };
   }
 
+  /** The workspace's subscription that is paid up now, if any. */
+  async activeSubscription(orgId: string) {
+    const [s] = await this.db.execute<{
+      external_id: string;
+      source: BillingSource;
+      plan_code: string;
+      extra_seats: number | null;
+    }>(sql`
+      select external_id, source, plan_code, extra_seats from public.subscriptions
+      where org_id = ${orgId}::uuid and status = any(${arr(ENTITLED)}::text[])
+        and (current_period_end is null or current_period_end > now())
+      order by updated_at desc limit 1`);
+    return s ?? null;
+  }
+
   private async planOf(orgId: string) {
     const [e] = await this.db.execute<{ plan_code: string }>(
       sql`select plan_code from public.entitlements where org_id = ${orgId}::uuid order by created_at desc limit 1`,
@@ -512,6 +564,45 @@ export class BillingService {
       if (!plan || plan.interval === "none")
         throw new BillingError("unknown_plan", "That plan cannot be bought", 400);
       productId = plan.dodo_product_id;
+      // One subscription per workspace (D-248): a web subscriber changes plans in place, and a
+      // store subscriber changes plans in that store.
+      const current = await this.activeSubscription(orgId);
+      if (current) {
+        if (current.plan_code === what.planCode)
+          throw new BillingError("already_subscribed", "This workspace already has that plan", 409);
+        if (current.source !== "dodo")
+          throw new BillingError(
+            "subscribed_in_store",
+            `This workspace subscribes through ${current.source === "app_store" ? "the App Store" : "Google Play"}. Change plans there.`,
+            409,
+          );
+        if (!productId)
+          throw new BillingError("unknown_product", "That item is not for sale on the web", 400);
+        const dodo = this.provider("dodo");
+        // Extra people bought on the old plan move to the new one when it sells them (D-249).
+        const seats = Number(current.extra_seats ?? 0);
+        const [cfg] =
+          seats > 0
+            ? await this.db.execute<{ month: string | null; year: string | null }>(
+                sql`select dodo_seat_addon_month as month, dodo_seat_addon_year as year from public.billing_settings where id`,
+              )
+            : [];
+        const addonId = plan.interval === "year" ? cfg?.year : cfg?.month;
+        if (seats > 0 && addonId && typeof plan.limits.extra_seat_usd === "number")
+          await (dodo.setAddon as NonNullable<BillingProvider["setAddon"]>)({
+            subscriptionId: current.external_id,
+            productId,
+            addonId,
+            quantity: seats,
+          });
+        else
+          await (dodo.changePlan as NonNullable<BillingProvider["changePlan"]>)(
+            current.external_id,
+            productId,
+          );
+        await this.applySnapshot(await dodo.fetchSubscription(current.external_id), { orgId });
+        return { url: returnUrl, sessionId: null, changed: true };
+      }
     } else if (what.packCode) {
       // Credit packs are for paying plans; a free workspace upgrades instead (D-246).
       if ((await this.planOf(orgId)) === "free")
@@ -675,8 +766,9 @@ export class BillingService {
       const byOrg = new Map<string, number>();
       for (const r of rows) byOrg.set(r.org_id, (byOrg.get(r.org_id) ?? 0) + Number(r.cost_usd));
       const batch = randomUUID();
+      // Negative when a hold was larger than the usage it stood in for (D-248): money back.
       for (const [org, cost] of byOrg)
-        if (cost > 0)
+        if (cost !== 0)
           await tx.execute(
             sql`select public.credit_apply(${org}::uuid, ${-cost}, 'usage', ${`usage:${batch}`}, 'Usage')`,
           );

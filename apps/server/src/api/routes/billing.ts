@@ -110,11 +110,11 @@ export function registerBillingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       orgId: id,
       properties: {
         store: "dodo",
-        kind: body.pack_code ? "credit_pack" : "subscription",
+        kind: body.pack_code ? "credit_pack" : "changed" in r ? "plan_change" : "subscription",
         product_id: body.pack_code ?? body.plan_code ?? null,
       },
     });
-    return c.json({ url: r.url }, 200);
+    return c.json({ url: r.url, ...("changed" in r ? { changed: true } : {}) }, 200);
   });
 
   app.openapi(routes.billingPortal, async (c) => {

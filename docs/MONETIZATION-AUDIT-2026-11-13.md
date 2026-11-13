@@ -1,5 +1,11 @@
 # Monetization audit, 2026-11-13
 
+> **Status (2026-11-13, evening):** every item below has been fixed. Findings 1–4 and B1–B2 shipped
+> in D-246 (live). Findings 5, 6 and 8–17 and B3, B5 and B7, plus the paywall list, are in D-248.
+> D-249 repriced the plans (B6 became extra seats). Still open: Casama's own Terms of Use page
+> (Apple's standard EULA stands in), and setting `COMPUTER_HOST_CAPACITY` (or D-250's memory budget)
+> on the production server.
+
 Business model, pricing, metering, paywalls and store rules for Casama Cloud. Read-only: nothing
 was changed or deployed. Production was only read (queries, function grants).
 

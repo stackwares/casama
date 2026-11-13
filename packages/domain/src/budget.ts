@@ -34,7 +34,8 @@ export type BudgetVerdict =
         | "out_of_credits"
         | "cloud_daily_cap"
         | "cloud_model_not_allowed"
-        | "computer_hours_exceeded";
+        | "computer_hours_exceeded"
+        | "plan_limit";
       message: string;
     };
 

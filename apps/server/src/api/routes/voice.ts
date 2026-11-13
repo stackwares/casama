@@ -52,6 +52,24 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   };
   const billsCalls = (orgId: string) => billsCallsOn(deps, orgId);
 
+  /**
+   * Live calls are billed on what the server can see, not only what the app reports (D-248): a
+   * billable call starts with a hold of HOLD_MINUTES at the per-minute estimate, and the saved call
+   * is charged at least its length on the clock at Gemini's listening-only rate. A call that never
+   * reports keeps its hold.
+   */
+  const HOLD_MINUTES = 2;
+  const LISTEN_FLOOR_PER_MINUTE = 0.0045; // Gemini Live audio in: $3 per 1M tokens, 25 tokens a second
+  const TOKEN_LIFE_SECONDS = 30 * 60;
+
+  /** Credits left once usage not yet settled is counted. */
+  const creditsLeft = async (orgId: string) => {
+    const [r] = await db.execute<{ unbilled: string }>(sql`
+      select coalesce(sum(cost_usd), 0)::text as unbilled from public.usage_ledger
+      where org_id = ${orgId}::uuid and billable and billed_at is null`);
+    return ((await deps.billing?.balance(orgId)) ?? 0) - Number(r?.unbilled ?? 0);
+  };
+
   app.openapi(routes.transcribeAudio, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { bot_id, language } = c.req.valid("query");
@@ -143,17 +161,20 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       greeting = answerGreeting(p?.name);
     }
     // Calls included on Casama Cloud are paid from credits: none left, no call.
-    if (
-      deps.billing &&
-      (await billsCalls(bot.orgId)) &&
-      (await deps.billing.balance(bot.orgId)) <= 0
-    )
+    const billable = !!deps.billing && (await billsCalls(bot.orgId));
+    if (billable && (await creditsLeft(bot.orgId)) <= 0)
       throw new ApiError(
         402,
         "out_of_credits",
         "Live calls are paid from your workspace's credits, and there are none left.",
       );
     const s = unwrap(await deps.workflows.voiceSession(bot.orgId, bot.id, greeting));
+    if (billable) {
+      const hold = HOLD_MINUTES * VOICE_PRICES.geminiLivePerMinute;
+      await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, billable, meta)
+        values (${bot.orgId}::uuid, ${bot.id}::uuid, 'voice_seconds', 0, ${cloudCharge(hold)}, true,
+                ${JSON.stringify({ hold: true, conversation_id: conv.id, provider: s.provider, key: "server", provider_cost_usd: hold })}::jsonb)`);
+    }
     return c.json(
       {
         provider: s.provider,
@@ -291,12 +312,30 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     await db.execute(
       sql`update public.conversations set last_message_at = now() where id = ${conv.id}::uuid`,
     );
-    // Calls on the server's key on Casama Cloud come out of credits (Google's price × markup).
-    const billable = seconds > 0 && (await billsCalls(conv.orgId));
-    if (seconds > 0)
+    // Calls on the server's key on Casama Cloud come out of credits (Google's price × markup),
+    // at least the call's length on the clock, less the hold taken when it started (D-248).
+    const billable = await billsCalls(conv.orgId);
+    const [hold] = billable
+      ? await db.execute<{ id: string; cost_usd: string; elapsed: string }>(sql`
+          select id, cost_usd::text, extract(epoch from now() - created_at)::text as elapsed
+          from public.usage_ledger
+          where org_id = ${conv.orgId}::uuid and kind = 'voice_seconds' and (meta->>'hold')::boolean
+            and meta->>'conversation_id' = ${conv.id} and not coalesce((meta->>'settled')::boolean, false)
+          order by created_at desc limit 1`)
+      : [];
+    const clock = hold ? Math.min(Number(hold.elapsed), TOKEN_LIFE_SECONDS) : 0;
+    const providerCost = billable ? Math.max(cost, (clock / 60) * LISTEN_FLOOR_PER_MINUTE) : cost;
+    // Replaces the hold with the call's real price: negative when the call cost less than the
+    // hold, so a short call isn't charged the hold.
+    const charge = billable ? cloudCharge(providerCost) - Number(hold?.cost_usd ?? 0) : cost;
+    if (hold)
+      await db.execute(
+        sql`update public.usage_ledger set meta = meta || '{"settled": true}'::jsonb where id = ${hold.id}::uuid`,
+      );
+    if (seconds > 0 || charge !== 0)
       await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, billable, meta)
-        values (${conv.orgId}::uuid, ${conv.botId}::uuid, 'voice_seconds', ${seconds}, ${billable ? cloudCharge(cost) : cost}, ${billable},
-                ${JSON.stringify({ provider: provider ?? "openai", ...(usage ? { tokens: usage } : { estimated: true }), ...(billable ? { key: "server", provider_cost_usd: cost } : {}) })}::jsonb)`);
+        values (${conv.orgId}::uuid, ${conv.botId}::uuid, 'voice_seconds', ${seconds}, ${charge}, ${billable},
+                ${JSON.stringify({ provider: provider ?? "openai", ...(usage ? { tokens: usage } : { estimated: true }), ...(billable ? { key: "server", provider_cost_usd: providerCost, clock_seconds: Math.round(clock) } : {}) })}::jsonb)`);
     if (seconds > 0) {
       track(db, {
         event: "call_ended",

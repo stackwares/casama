@@ -178,6 +178,9 @@ export class AppStoreProvider implements BillingProvider {
     const base = { eventId: n.notificationUUID, type, payload: n };
     if (!n.data?.signedTransactionInfo) return { ...base, kind: "ignored" };
     const tx = await this.verified<TransactionInfo>(n.data.signedTransactionInfo);
+    // A refunded credit pack takes its credits back (D-248).
+    if (tx.type === "Consumable" && n.notificationType === "REFUND")
+      return { ...base, kind: "pack_refund", references: [`app_store:${tx.transactionId}`] };
     if (tx.type && tx.type !== "Auto-Renewable Subscription") return { ...base, kind: "ignored" };
     return {
       ...base,

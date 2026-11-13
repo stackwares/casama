@@ -144,18 +144,42 @@ describe("live calls included on Casama Cloud", () => {
       },
     });
     expect(saved.status, await saved.clone().text()).toBe(200);
-    const [row] = await h.handle.db.execute<{
+    const rows = await h.handle.db.execute<{
       billable: boolean;
       cost_usd: string;
-      meta: { key?: string; provider_cost_usd?: number };
+      meta: { key?: string; provider_cost_usd?: number; hold?: boolean; settled?: boolean };
     }>(
-      sql`select billable, cost_usd, meta from public.usage_ledger where org_id = ${w.orgId}::uuid and kind = 'voice_seconds'`,
+      sql`select billable, cost_usd, meta from public.usage_ledger where org_id = ${w.orgId}::uuid and kind = 'voice_seconds' order by created_at`,
     );
+    // A hold when the call started (D-248), settled by the saved call's real price.
+    const [hold, row] = rows;
+    expect(hold?.meta.hold).toBe(true);
+    expect(hold?.meta.settled).toBe(true);
     expect(row?.billable).toBe(true);
     expect(row?.meta.key).toBe("server");
     // Google's price times the markup (D-244); Google's price is kept in meta.
     const google = 1500 * 3e-6 + 1500 * 12e-6;
     expect(row?.meta.provider_cost_usd).toBeCloseTo(google, 6);
-    expect(Number(row?.cost_usd)).toBeCloseTo(google * 1.3, 6);
+    const total = rows.reduce((n, r) => n + Number(r.cost_usd), 0);
+    expect(total).toBeCloseTo(google * 1.3, 6);
+
+    // A call the app reports as nothing is still charged its time on the clock, at Gemini's
+    // listening rate: here 10 minutes.
+    const again = await j(await start(h, w.owner.token, w.botId));
+    await h.handle.db.execute(sql`
+      update public.usage_ledger set created_at = now() - interval '10 minutes'
+      where org_id = ${w.orgId}::uuid and (meta->>'hold')::boolean and meta->>'conversation_id' = ${again.conversation_id}`);
+    const fake = await h.request("/v1/voice/transcript", {
+      method: "POST",
+      token: w.owner.token,
+      json: { conversation_id: again.conversation_id, turns: [], seconds: 1, provider: "gemini" },
+    });
+    expect(fake.status).toBe(200);
+    const [sum] = await h.handle.db.execute<{ total: string }>(sql`
+      select sum(cost_usd)::text as total from public.usage_ledger
+      where org_id = ${w.orgId}::uuid and kind = 'voice_seconds' and created_at > now() - interval '11 minutes'
+        and (meta->>'conversation_id' = ${again.conversation_id} or meta->>'clock_seconds' is not null)
+        and not (meta->>'clock_seconds' is not null and (meta->>'clock_seconds')::int < 500)`);
+    expect(Number(sum?.total)).toBeGreaterThanOrEqual(10 * 0.0045 * 1.3 - 1e-6);
   }, 120_000);
 });
