@@ -500,6 +500,8 @@ export 'package:casama_api/src/model/set_profile_photo_request.dart';
 export 'package:casama_api/src/model/set_profile_space_request.dart';
 export 'package:casama_api/src/model/set_secret_store_request.dart';
 export 'package:casama_api/src/model/set_telephony_request.dart';
+export 'package:casama_api/src/model/share_conversation_request.dart';
+export 'package:casama_api/src/model/share_conversation_response.dart';
 export 'package:casama_api/src/model/signup_challenge.dart';
 export 'package:casama_api/src/model/skill_catalog.dart';
 export 'package:casama_api/src/model/skill_loaded_event.dart';

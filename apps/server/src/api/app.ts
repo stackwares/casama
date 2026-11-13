@@ -30,6 +30,7 @@ import { registerBotSharingRoutes } from "./routes/bot-sharing.ts";
 import { registerBotTemplateRoutes } from "./routes/bot-template.ts";
 import { registerBotRoutes } from "./routes/bots.ts";
 import { registerChannelRoutes } from "./routes/channels.ts";
+import { registerChatExportRoutes } from "./routes/chat-export.ts";
 import { registerChatMediaRoutes } from "./routes/chat-media.ts";
 import { registerChatGptRoutes } from "./routes/chatgpt.ts";
 import { registerCheckinRoutes } from "./routes/checkins.ts";
@@ -355,6 +356,7 @@ export function createApp(deps: AppDeps) {
   registerAboutYouRoutes(app, deps);
   registerChatMediaRoutes(app, deps);
   registerCreationRoutes(app, deps);
+  registerChatExportRoutes(app, deps);
   registerMcpRoutes(app, deps);
   // Enterprise features (ee/, commercial license, D-073); inert without a license key.
   registerEnterpriseRoutes(app as never, {

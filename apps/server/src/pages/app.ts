@@ -263,6 +263,46 @@ export function createPagesApp(deps: {
     );
   });
 
+  // ------------------------------------------------------------ Public chats (D-282)
+  app.get("/t/:token", async (c) => {
+    const [conv] = await db.execute<{
+      id: string;
+      title: string | null;
+      bot_name: string;
+      created_by: string | null;
+    }>(sql`
+      select c.id, c.title, b.name as bot_name, c.created_by from public.conversations c
+      join public.bots b on b.id = c.bot_id
+      where c.public_token_hash = ${hashPageToken(c.req.param("token"))} and not c.private`);
+    if (!conv) return notFound();
+    const { readableThread } = await import("../api/routes/chat-export.ts");
+    // Read as the person who started it: the link shows what they saw, nothing more.
+    const messages = conv.created_by
+      ? await withUserSession(db, { sub: conv.created_by, role: "authenticated" }, (tx) =>
+          readableThread(tx, conv.id, conv.bot_name),
+        )
+      : [];
+    const esc = (t: string) => t.replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
+    const title = conv.title?.trim() || `Chat with ${conv.bot_name}`;
+    const items = messages
+      .map(
+        (m) =>
+          `<article class="${m.role}"><h2>${esc(m.author)}</h2>${m.text ? `<p>${esc(m.text).replace(/\n/g, "<br>")}</p>` : ""}${m.attachments.map((a) => `<p class="att">📎 ${esc(a)}</p>`).join("")}</article>`,
+      )
+      .join("");
+    const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>${esc(title)}</title>
+<style>body{font:16px/1.5 system-ui,-apple-system,sans-serif;max-width:760px;margin:0 auto;padding:24px 16px;color:#1d1b20;background:#fbf8fd}@media (prefers-color-scheme:dark){body{color:#e6e0e9;background:#141218}article.user{background:#2b2930}}h1{font-size:20px}article{padding:12px 14px;border-radius:14px;margin:10px 0}article.user{background:#efe9f5;margin-left:15%}h2{font-size:13px;margin:0 0 4px;opacity:.7}p{margin:0 0 6px;overflow-wrap:anywhere}.att{font-size:14px;opacity:.8}footer{margin-top:32px;font-size:13px;opacity:.7}</style></head>
+<body><h1>${esc(title)}</h1>${items}<footer>A read-only copy of a chat on Casama.</footer></body></html>`;
+    return new Response(html, {
+      headers: {
+        ...PAGE_HEADERS,
+        "content-security-policy":
+          "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'",
+        "content-type": "text/html; charset=utf-8",
+      },
+    });
+  });
+
   // ------------------------------------------------------------ Public creations (D-281)
   type SharedRow = {
     id: string;

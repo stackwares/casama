@@ -11,6 +11,7 @@ import * as botSharing from "./bot-sharing.ts";
 import * as botTemplate from "./bot-template.ts";
 import * as bots from "./bots.ts";
 import * as channels from "./channels.ts";
+import * as chatExport from "./chat-export.ts";
 import * as checkins from "./checkins.ts";
 import * as computers from "./computers.ts";
 import * as creations from "./creations.ts";
@@ -48,6 +49,7 @@ export const routes = {
   ...bots,
   ...computers,
   ...creations,
+  ...chatExport,
   ...autonomy,
   ...voice,
   ...local,

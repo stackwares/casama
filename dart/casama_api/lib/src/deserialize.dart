@@ -422,6 +422,8 @@ import 'package:casama_api/src/model/set_profile_photo_request.dart';
 import 'package:casama_api/src/model/set_profile_space_request.dart';
 import 'package:casama_api/src/model/set_secret_store_request.dart';
 import 'package:casama_api/src/model/set_telephony_request.dart';
+import 'package:casama_api/src/model/share_conversation_request.dart';
+import 'package:casama_api/src/model/share_conversation_response.dart';
 import 'package:casama_api/src/model/signup_challenge.dart';
 import 'package:casama_api/src/model/skill_catalog.dart';
 import 'package:casama_api/src/model/skill_loaded_event.dart';
@@ -1465,6 +1467,10 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SetSecretStoreRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetTelephonyRequest':
           return SetTelephonyRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ShareConversationRequest':
+          return ShareConversationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'ShareConversationResponse':
+          return ShareConversationResponse.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SignupChallenge':
           return SignupChallenge.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SkillCatalog':

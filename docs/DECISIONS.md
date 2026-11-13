@@ -3317,3 +3317,10 @@ Stage 7 of `docs/MASTER-PLAN-2026-11.md`; `docs/LIBRARY-PLAN.md` Phase 5 (sharin
 - **Public viewer:** on the pages origin, `/c/{token}` shows a picture, a video, a sound or a link to open the document (its PDF preview when there is one), under a policy with no scripts at all. `/c/{token}/raw` serves the bytes inline only for picture, video, sound and PDF types; anything else (an HTML file, say) downloads, so a shared file can't run on Casama's origin.
 - **Abuse:** at most 20 new public links per workspace a day; every public creation and every public page has a Report link; three different reporters hide a link until an instance owner looks (`GET /v1/admin/reports`, `POST /v1/admin/creations/{id}/takedown`, which also turns a page private). Reporters are counted by a hash of their address, never the address.
 - **Not done here:** moving generated media's bytes out of Postgres (the other half of Phase 5).
+
+## D-282 Export a chat, and share a read-only link to it
+
+Stage 7 of `docs/MASTER-PLAN-2026-11.md` (the rest of Add 11).
+
+- **Export:** `GET /v1/conversations/{id}/export` downloads the shown branch as Markdown (default) or JSON: each message's author, time, text, and the names of what came with it. It reads in the person's own session, so it contains only what they can see.
+- **Public link:** `POST /v1/conversations/{id}/share` with `public: true` returns a link on the pages origin (`/t/{token}`) that shows the chat read-only, as its starter saw it, under a policy with no scripts; message text is escaped. Making it public again gives a new link; `public: false` stops it. Only the chat's starter or the bot's managers can share, and a private chat (personal device data, D-091) can't be made public. Attachments are listed by name, not served.

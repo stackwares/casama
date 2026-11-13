@@ -500,6 +500,8 @@ lib/src/model/set_profile_photo_request.dart
 lib/src/model/set_profile_space_request.dart
 lib/src/model/set_secret_store_request.dart
 lib/src/model/set_telephony_request.dart
+lib/src/model/share_conversation_request.dart
+lib/src/model/share_conversation_response.dart
 lib/src/model/signup_challenge.dart
 lib/src/model/skill_catalog.dart
 lib/src/model/skill_loaded_event.dart

@@ -141,10 +141,12 @@ Class | Method | HTTP request | Description
 [*ChatApi*](doc/ChatApi.md) | [**deleteConversation**](doc/ChatApi.md#deleteconversation) | **DELETE** /v1/conversations/{id} | Delete a conversation and its messages
 [*ChatApi*](doc/ChatApi.md) | [**deleteMessage**](doc/ChatApi.md#deletemessage) | **DELETE** /v1/conversations/{id}/messages/{message_id} | Delete one message from a conversation
 [*ChatApi*](doc/ChatApi.md) | [**editMessage**](doc/ChatApi.md#editmessage) | **POST** /v1/conversations/{id}/messages/{message_id}/edit | Edit a sent message: forks the conversation there and reruns it (the old branch stays)
+[*ChatApi*](doc/ChatApi.md) | [**exportConversation**](doc/ChatApi.md#exportconversation) | **GET** /v1/conversations/{id}/export | Download a chat as Markdown or JSON (D-282)
 [*ChatApi*](doc/ChatApi.md) | [**getConversationThread**](doc/ChatApi.md#getconversationthread) | **GET** /v1/conversations/{id}/thread | The branch being shown, oldest first (what conversation_thread returns, with content opened)
 [*ChatApi*](doc/ChatApi.md) | [**listConversations**](doc/ChatApi.md#listconversations) | **GET** /v1/bots/{id}/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**listGroupChats**](doc/ChatApi.md#listgroupchats) | **GET** /v1/group-chats | Group chats in a workspace that you can see
 [*ChatApi*](doc/ChatApi.md) | [**sendMessage**](doc/ChatApi.md#sendmessage) | **POST** /v1/conversations/{id}/messages | Send a message; starts a run
+[*ChatApi*](doc/ChatApi.md) | [**shareConversation**](doc/ChatApi.md#shareconversation) | **POST** /v1/conversations/{id}/share | Make or stop a public read-only link to a chat (D-282)
 [*ChatApi*](doc/ChatApi.md) | [**switchBranch**](doc/ChatApi.md#switchbranch) | **POST** /v1/conversations/{id}/branch | Show another branch of the conversation (its newest message under the given one)
 [*ChatApi*](doc/ChatApi.md) | [**updateConversation**](doc/ChatApi.md#updateconversation) | **PATCH** /v1/conversations/{id} | Rename or pin a conversation
 [*CheckinsApi*](doc/CheckinsApi.md) | [**acceptSuggestion**](doc/CheckinsApi.md#acceptsuggestion) | **POST** /v1/suggestions/{id}/accept | Have the bot do it, through normal approvals
@@ -856,6 +858,8 @@ Class | Method | HTTP request | Description
  - [SetProfileSpaceRequest](doc/SetProfileSpaceRequest.md)
  - [SetSecretStoreRequest](doc/SetSecretStoreRequest.md)
  - [SetTelephonyRequest](doc/SetTelephonyRequest.md)
+ - [ShareConversationRequest](doc/ShareConversationRequest.md)
+ - [ShareConversationResponse](doc/ShareConversationResponse.md)
  - [SignupChallenge](doc/SignupChallenge.md)
  - [SkillCatalog](doc/SkillCatalog.md)
  - [SkillLoadedEvent](doc/SkillLoadedEvent.md)
