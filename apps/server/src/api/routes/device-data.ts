@@ -157,7 +157,7 @@ export function registerDeviceDataRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
     const keep = b.readings.filter(
       (r) => (s.kinds[r.kind] as { retention_days?: number } | undefined)?.retention_days !== 0,
     );
-    let newSoon = false;
+    let newSoon: string | null = null;
     for (const r of keep) {
       const [row] = await db.execute<{ inserted: boolean }>(sql`
         insert into public.device_readings (user_id, source_id, kind, period_start, period_end, external_id, summary)
@@ -169,16 +169,20 @@ export function registerDeviceDataRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
         r.kind === "calendar" &&
         row?.inserted &&
         start > Date.now() &&
-        start - Date.now() < 7 * 86_400_000
-      )
-        newSoon = true;
+        start - Date.now() < 2 * 86_400_000
+      ) {
+        const sum = r.summary as { title?: unknown; events?: Array<{ title?: unknown }> };
+        const title = sum.events?.[0]?.title ?? sum.title;
+        newSoon = `Phone calendar: ${typeof title === "string" && title ? title : "a new event"} at ${new Date(start).toISOString()}`;
+      }
     }
-    // Proactive bots (D-247): a new event in the next week on the phone's calendar starts a scan
-    // (an app event, so at most every 30 minutes and only on plans with event scans).
+    // Proactive bots (D-247): a new event in the next two days on the phone's calendar starts a
+    // scan (an app event, so at most every 2 hours, a few a day, on plans with event scans).
     if (newSoon && !b.request_id) {
       const bots = await db.execute<{ bot_id: string }>(sql`
         select bot_id from public.bot_checkins where user_id = ${userId}::uuid and enabled`);
-      for (const bot of bots) await requestScan(db, bot.bot_id, "event").catch(() => false);
+      for (const bot of bots)
+        await requestScan(db, bot.bot_id, "event", newSoon).catch(() => false);
     }
     // Health uploads also tell wake-ups and finished workouts (D-151): last night's sleep ending
     // today, and workouts that ended in the last 6 hours (so a backfill doesn't fire old ones).

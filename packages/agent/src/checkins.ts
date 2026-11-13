@@ -24,6 +24,7 @@ export const SCAN_INSTRUCTIONS = [
   "Check-in scan. Look over what you can reach (connected accounts, calendar, email, tickets, projects, things you're watching) for anything new since your last scan that I'd want help with. Think ahead: what's coming up in the next couple of days, and what would make it go smoothly?",
   "Group things that belong together (a trip, an event, a deadline and its prep) into one suggestion instead of several. When a plan has parts spread across apps (tickets, rides, stays, flights), you can offer to pull them into one shareable Page (pages.publish).",
   "For each item, call suggestions.add with a short title, why it matters, the action you'd take (a tool and its arguments) when there is one, the sources, its urgency (urgent only if it can't wait for my next look), and push_text: one short first-person line, the way you'd text a friend, ending in a question when you're offering to do something (\"Want me to book a ride to the show at 7?\"). When an offer only makes sense close to a time (leaving for the airport, booking the ride an hour before the show), set notify_at to that time.",
+  "Keep the look light: recent mail (about 10 messages, newest first, without full bodies) and the next two days of calendar. Open a message only when it matters.",
   "Don't repeat anything already suggested or dismissed (listed below). Don't take actions yourself. If there's nothing new, reply with just NOTHING_NEW.",
 ].join("\n");
 /** Added to the first scan after setup, which ends in one summary push instead of one per suggestion. */
@@ -37,14 +38,66 @@ const REASON_NOTES: Record<string, string> = {
     "Something just changed in a connected app (a new email or a calendar change). Look at what's new first.",
 };
 /** The text of a scan run's task: the instructions, why it runs now, and what not to repeat. */
-export function scanTask(instructions: string, reason: string | null, context: string) {
+export function scanTask(
+  instructions: string,
+  reason: string | null,
+  context: string,
+  note: string | null = null,
+) {
   const extra =
     reason === "setup"
       ? `\n\n${SETUP_SCAN_INSTRUCTIONS}`
       : reason && REASON_NOTES[reason]
         ? `\n\n${REASON_NOTES[reason]}`
         : "";
-  return `${instructions}${extra}${context}`;
+  // What the app reported (sender and subject, event title and time), so the scan starts there.
+  const what = note ? `\nWhat changed:\n${note}` : "";
+  return `${instructions}${extra}${what}${context}`;
+}
+
+/**
+ * Check-in runs (D-247 costs): they read and suggest, nothing else. The first scans on prod read
+ * 38k–192k tokens over a dozen turns (lazy tool loading, listing connections and routines) and
+ * stopped on approvals nobody was there to give, so check-ins get a short list of tools, a few
+ * steps, capped app output, and never wait for an approval.
+ */
+export const isCheckinKind = (kind: string | null | undefined) =>
+  kind === "brief" || kind === "scan";
+export const CHECKIN_MAX_STEPS = 8;
+export const CHECKIN_TOOL_OUTPUT_CHARS = 8000;
+export const CHECKIN_APPROVAL_NOTE =
+  "Check-ins don't run actions that need approval. Offer it instead: call suggestions.add with this tool and its arguments as the action.";
+const CHECKIN_TOOLS = new Set([
+  "suggestions.add",
+  "memory.search",
+  "tasks.list",
+  "device.read",
+  "projects.status",
+]);
+/** The reads a check-in needs from apps with many tools; other apps offer all their reads. */
+const CHECKIN_APP_READS: Record<string, string[]> = {
+  gmail: [
+    "gmail_fetch_emails",
+    "gmail_fetch_message_by_message_id",
+    "gmail_fetch_message_by_thread_id",
+    "gmail_list_threads",
+  ],
+  googlecalendar: ["googlecalendar_events_list", "googlecalendar_find_event"],
+};
+
+/** Whether a check-in run offers this tool: no computer, only reads and suggestions.add. */
+export function checkinToolAllowed(def: {
+  name: string;
+  risk?: string;
+  requires?: { computer?: boolean };
+}) {
+  if (def.requires?.computer) return false;
+  if (CHECKIN_TOOLS.has(def.name)) return true;
+  const m = /^(?:mcp|openapi|composio|pipedream|app)\.[^.]+\.(.+)$/.exec(def.name);
+  if (!m || def.risk !== "low") return false;
+  const tool = m[1] as string;
+  const curated = CHECKIN_APP_READS[tool.split("_")[0] as string];
+  return curated ? curated.includes(tool) : true;
 }
 export const NOTHING_NEW = "NOTHING_NEW";
 
@@ -103,6 +156,8 @@ export async function proactiveLimits(db: Database, orgId: string) {
     minScanHours: n("min_scan_hours"),
     /** Whether app events (a new email, a calendar change) may start a scan. */
     eventScans: n("event_scans") === null ? true : (n("event_scans") as number) > 0,
+    /** At most this many event scans a day per bot (6 unless the plan says otherwise). */
+    eventScansPerDay: n("event_scans_day") ?? EVENT_SCANS_PER_DAY,
     cloudDailyUsd: n("cloud_daily_usd"),
   };
 }
@@ -225,27 +280,43 @@ export async function checkinAllowed(
   );
 }
 
-/** Event scans wait at least this long after the last scan. */
-const EVENT_SCAN_GAP_MS = 30 * 60_000;
+/**
+ * Event scans wait at least this long after the last scan, and a bot has a few a day (D-247
+ * costs: every new email asked for one, so a busy inbox meant a scan every 30 minutes).
+ */
+const EVENT_SCAN_GAP_MS = 2 * 60 * 60_000;
+const EVENT_SCANS_PER_DAY = 6;
+const SCAN_NOTE_CHARS = 800;
 
 /**
  * Asks for a scan soon (D-247): "setup" once after setup, "connection" for a new app, "event" when
- * a connected app reports something new. Event scans need a plan that allows them and come at most
- * every 30 minutes. Returns whether a scan is coming.
+ * a connected app reports something new. Event scans need a plan that allows them, come at most
+ * every 2 hours and a few times a day. The note (what changed: sender and subject, event and
+ * time) is handed to the scan so it starts there. Returns whether a scan is coming.
  */
 export async function requestScan(
   db: Database,
   botId: string,
   reason: "setup" | "connection" | "event",
+  note?: string | null,
 ) {
   let delay = reason === "setup" ? 60 : 120;
   if (reason === "event") {
-    const [b] = await db.execute<{ org_id: string; last_run_at: string | null }>(sql`
-      select ck.org_id, rt.last_run_at from public.bot_checkins ck
+    const [b] = await db.execute<{
+      org_id: string;
+      last_run_at: string | null;
+      today: number;
+    }>(sql`
+      select ck.org_id, rt.last_run_at,
+        (select count(*)::int from public.runs ru
+         where ru.bot_id = ck.bot_id and ru.budget ->> 'scan_reason' = 'event'
+           and ru.created_at > now() - interval '24 hours') as today
+      from public.bot_checkins ck
       left join public.routines rt on rt.bot_id = ck.bot_id and rt.kind = 'scan'
       where ck.bot_id = ${botId}::uuid and ck.enabled limit 1`);
     if (!b) return false;
-    if (!(await proactiveLimits(db, b.org_id)).eventScans) return false;
+    const limits = await proactiveLimits(db, b.org_id);
+    if (!limits.eventScans || b.today >= limits.eventScansPerDay) return false;
     if (b.last_run_at)
       delay = Math.max(
         delay,
@@ -254,18 +325,27 @@ export async function requestScan(
   }
   const [r] = await db.execute<{ ok: boolean }>(sql`
     select public.request_checkin_scan(${botId}::uuid, ${reason}, make_interval(secs => ${delay})) as ok`);
+  if (r?.ok === true && note)
+    await db.execute(sql`
+      update public.bot_checkins
+      set scan_note = left(concat_ws(E'\n', scan_note, ${note.replace(/\s+/g, " ").slice(0, 200)}::text), ${SCAN_NOTE_CHARS})
+      where bot_id = ${botId}::uuid and scan_requested_at is not null`);
   return r?.ok === true;
 }
 
-/** Takes a bot's pending scan request (when a scan run starts); returns its reason. */
-export async function takeScanRequest(db: Database, botId: string): Promise<string | null> {
-  const [r] = await db.execute<{ reason: string | null }>(sql`
-    select scan_reason as reason from public.bot_checkins
+/** Takes a bot's pending scan request (when a scan run starts): its reason and what changed. */
+export async function takeScanRequest(
+  db: Database,
+  botId: string,
+): Promise<{ reason: string; note: string | null } | null> {
+  const [r] = await db.execute<{ reason: string | null; note: string | null }>(sql`
+    select scan_reason as reason, scan_note as note from public.bot_checkins
     where bot_id = ${botId}::uuid and scan_requested_at is not null for update`);
   if (!r) return null;
   await db.execute(sql`
-    update public.bot_checkins set scan_requested_at = null, scan_reason = null where bot_id = ${botId}::uuid`);
-  return r.reason ?? "event";
+    update public.bot_checkins set scan_requested_at = null, scan_reason = null, scan_note = null
+    where bot_id = ${botId}::uuid`);
+  return { reason: r.reason ?? "event", note: r.note };
 }
 
 /**
