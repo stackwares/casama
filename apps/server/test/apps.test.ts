@@ -234,9 +234,13 @@ describe("built-in app connections", () => {
     expect(done.integration.tools.map((t: { name: string }) => t.name)).toEqual(["whoami"]);
     expect(done.integration.tools[0].risk).toBe("low");
 
-    // The token lasts a second; loading the connection refreshes it and saves the new one.
+    // The token lasts a second; loading the connection refreshes it and saves the new one. Two
+    // runs loading it at once refresh it once (D-271).
     await new Promise((r) => setTimeout(r, 1100));
-    const rec = await loadIntegration(h.deps.db, done.integration.id);
+    const [rec] = await Promise.all([
+      loadIntegration(h.deps.db, done.integration.id),
+      loadIntegration(h.deps.db, done.integration.id),
+    ]);
     expect(parseOAuthSecret(rec?.secret)?.access_token).toBe("at-2");
     expect(parseOAuthSecret(rec?.secret)?.refresh_token).toBe("rt-1");
     expect(issued.refreshed).toBe(1);

@@ -65,7 +65,7 @@ export class ApnsVoipSender implements VoipSender {
     const session = connect(this.o.url);
     try {
       for (const t of tokens) {
-        const status = await new Promise<number>((resolve, reject) => {
+        const status = await new Promise<{ code: number; body: string }>((resolve, reject) => {
           const req = session.request({
             ":method": "POST",
             ":path": `/3/device/${t}`,
@@ -77,16 +77,21 @@ export class ApnsVoipSender implements VoipSender {
             "content-type": "application/json",
           });
           let code = 0;
+          let body = "";
           req.on("response", (h) => {
             code = Number(h[":status"]);
           });
-          req.on("data", () => {});
-          req.on("end", () => resolve(code));
+          req.on("data", (d: Buffer) => {
+            body += d.toString();
+          });
+          req.on("end", () => resolve({ code, body }));
           req.on("error", reject);
           req.end(JSON.stringify({ aps: {}, kind: "call", ...call }));
         });
-        // 400 BadDeviceToken and 410 Unregistered mean the token is gone.
-        if (status === 410 || status === 400) invalidTokens.push(t);
+        // 410 Unregistered, and 400 only with BadDeviceToken, mean the token is gone; other 400s
+        // are about the request (D-271).
+        if (status.code === 410 || (status.code === 400 && /BadDeviceToken/.test(status.body)))
+          invalidTokens.push(t);
       }
     } finally {
       session.close();

@@ -276,25 +276,45 @@ export class CredentialResolver {
     return parseTokens(row?.key ?? null);
   }
 
-  /** First OpenAI credential of the org, used for embeddings. */
+  /**
+   * The credential used for memory and knowledge search: the org's first OpenAI key, otherwise an
+   * OpenAI-compatible server (Ollama, LM Studio, vLLM) whose settings name an `embedding_model`
+   * (D-271). Local servers often need no key.
+   */
   async embeddingCredential(orgId: string): Promise<ResolvedModel | null> {
     const rows = await this.db.execute<{
       id: string;
+      provider: string;
       base_url: string | null;
       key: string | null;
+      embedding_model: string | null;
     }>(sql`
-      select c.id, c.base_url, s.decrypted_secret as key
+      select c.id, c.provider, c.base_url, s.decrypted_secret as key,
+             c.settings ->> 'embedding_model' as embedding_model
       from public.model_credentials c
       left join vault.decrypted_secrets s on s.id = c.vault_secret_id
-      where c.org_id = ${orgId}::uuid and c.provider = 'openai'
-      order by c.created_at limit 1`);
+      where c.org_id = ${orgId}::uuid
+        and (c.provider = 'openai'
+             or (c.provider = 'openai_compatible' and coalesce(c.settings ->> 'embedding_model', '') <> ''))
+      order by (c.provider = 'openai') desc, c.created_at limit 1`);
     const row = rows[0];
-    if (!row?.key) return null;
+    if (!row) return null;
+    if (row.provider === "openai") {
+      if (!row.key) return null;
+      return {
+        provider: "openai",
+        model: "text-embedding-3-small",
+        apiKey: row.key,
+        baseUrl: row.base_url ?? undefined,
+        credentialId: row.id,
+      };
+    }
+    if (!row.base_url) return null;
     return {
-      provider: "openai",
-      model: "text-embedding-3-small",
-      apiKey: row.key,
-      baseUrl: row.base_url ?? undefined,
+      provider: "openai_compatible",
+      model: row.embedding_model as string,
+      apiKey: row.key || "local",
+      baseUrl: row.base_url,
       credentialId: row.id,
     };
   }

@@ -122,7 +122,7 @@ export class FcmPushSender implements PushSender {
           }),
         },
       );
-      if (res.status === 404 || res.status === 400) invalidTokens.push(token);
+      if (await fcmTokenGone(res)) invalidTokens.push(token);
     }
     return { invalidTokens };
   }
@@ -141,10 +141,22 @@ export class FcmPushSender implements PushSender {
           }),
         },
       );
-      if (res.status === 404 || res.status === 400) invalidTokens.push(token);
+      if (await fcmTokenGone(res)) invalidTokens.push(token);
     }
     return { invalidTokens };
   }
+}
+
+/**
+ * Whether FCM says the device token itself is dead. 404 (UNREGISTERED) always is; a 400 only when
+ * it names the token, because a bad payload also answers 400 and used to unsubscribe every phone
+ * it was sent to (D-271).
+ */
+export async function fcmTokenGone(res: Response) {
+  if (res.status === 404) return true;
+  if (res.status !== 400) return false;
+  const body = await res.text().catch(() => "");
+  return /UNREGISTERED|registration token|message\.token/i.test(body);
 }
 
 /** In-app inbox row plus push to the user's devices. */

@@ -153,6 +153,9 @@ export function capabilitiesOf(model: string, provider?: string): ModelCapabilit
       caching: caps.caching || price.cacheReadPrice !== undefined,
       contextWindow: price.contextWindow ?? caps.contextWindow,
     };
+  // An OpenAI-compatible server (Ollama, LM Studio, vLLM) is the person's own: its calls cost
+  // Casama nothing, and a guessed price stopped local runs at the default budget (D-271).
+  if (provider === "openai_compatible") return { ...caps, inputPrice: 0, outputPrice: 0 };
   if (
     provider === "openrouter" &&
     caps.inputPrice === 0 &&

@@ -25,9 +25,23 @@ export function openAiEmbedder(m: ResolvedModel): Embedder {
         // One deadline across the tries, so a hung provider can't hold up memory writes for minutes.
         abortSignal: AbortSignal.timeout(45_000),
       });
-      return embedding;
+      return fitDimensions(embedding);
     },
   };
+}
+
+/**
+ * Stored vectors have 1536 dimensions. A local embedding model's shorter vector is padded with
+ * zeros, which keeps cosine similarity exact; a longer one is cut and renormalized, which suits
+ * models trained to be cut (D-271). Vectors from different models still don't compare, so a
+ * workspace should keep one embedding model.
+ */
+export function fitDimensions(v: number[], dims = EMBEDDING_DIMENSIONS): number[] {
+  if (v.length === dims) return v;
+  if (v.length < dims) return [...v, ...new Array<number>(dims - v.length).fill(0)];
+  const cut = v.slice(0, dims);
+  const norm = Math.hypot(...cut) || 1;
+  return cut.map((x) => x / norm);
 }
 
 /**

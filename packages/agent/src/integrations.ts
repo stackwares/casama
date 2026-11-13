@@ -756,20 +756,33 @@ export async function loadIntegration(
     where i.id = ${id}::uuid`);
   if (!row) return null;
   const oauth = parseOAuthSecret(row.secret);
-  if (oauth?.refresh_token && oauth.expires_at && oauth.expires_at < Date.now() + 120_000) {
+  const expiring = (o: typeof oauth) =>
+    !!o?.refresh_token && !!o.expires_at && o.expires_at < Date.now() + 120_000;
+  if (expiring(oauth)) {
     try {
-      const tokens = await refreshAuthorization(oauth.auth_server, {
-        metadata: oauth.metadata as never,
-        clientInformation: oauth.client as never,
-        refreshToken: oauth.refresh_token,
-        resource: oauth.resource ? new URL(oauth.resource) : undefined,
-        fetchFn: fetchImpl as never,
+      // One refresh at a time per connection (D-271): many providers rotate the refresh token, so
+      // two runs refreshing together left one holding a token the provider had already retired.
+      // The second waits, then finds the fresh token and uses it.
+      row.secret = await db.transaction(async (tx) => {
+        await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`oauth-refresh:${id}`}))`);
+        const [now] = await tx.execute<{ secret: string | null }>(sql`
+          select v.decrypted_secret as secret from public.integrations i
+          left join vault.decrypted_secrets v on v.id = i.vault_secret_id where i.id = ${id}::uuid`);
+        const current = parseOAuthSecret(now?.secret ?? null);
+        if (!current || !expiring(current)) return now?.secret ?? row.secret;
+        const tokens = await refreshAuthorization(current.auth_server, {
+          metadata: current.metadata as never,
+          clientInformation: current.client as never,
+          refreshToken: current.refresh_token as string,
+          resource: current.resource ? new URL(current.resource) : undefined,
+          fetchFn: fetchImpl as never,
+        });
+        const { type: _t, access_token: _a, refresh_token: _r, expires_at: _e, ...ctx } = current;
+        const next = JSON.stringify(oauthSecretFrom(tokens, ctx, current));
+        if (row.vault_secret_id)
+          await tx.execute(sql`select vault.update_secret(${row.vault_secret_id}::uuid, ${next})`);
+        return next;
       });
-      const { type: _t, access_token: _a, refresh_token: _r, expires_at: _e, ...ctx } = oauth;
-      const next = JSON.stringify(oauthSecretFrom(tokens, ctx, oauth));
-      if (row.vault_secret_id)
-        await db.execute(sql`select vault.update_secret(${row.vault_secret_id}::uuid, ${next})`);
-      row.secret = next;
     } catch (err) {
       await db.execute(sql`
         update public.integrations set status = 'error', error = ${`Sign-in expired: ${(err as Error).message}`.slice(0, 500)}
