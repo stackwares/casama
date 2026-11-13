@@ -124,18 +124,25 @@ Owners and admins can change plans and buy credits. Members see the plan and usa
 
 ### Plans
 
-| Plan | Price | Credits a month | Bots | Computers | Computer hours a month | Seats |
+| Plan | Price | Credits a month | Bots | Computers (running at once) | Computer hours a month | People |
 | --- | --- | --- | --- | --- | --- | --- |
-| **Free** | $0 | $1 | 2 | 1 | 5 | 1 |
-| **Plus** | $15 a month or $150 a year | $5 | 5 | 2 | 30 | 2 |
-| **Pro** | $39 a month or $390 a year | $10 | 20 | 5 | 100 | 5 |
-| **Max** | $149 a month or $1,490 a year | $50 | 50 | 10 | 400 | 10 |
+| **Free** | $0 | $1 | 3 | 1 (1) | 5 | 1 |
+| **Plus** | $15 a month or $150 a year | $5 | 10 | 2 (1) | 30 | 1 |
+| **Pro** | $49 a month or $490 a year | $15 | Unlimited | 5 (2) | 100 | 3 |
+| **Max** | $99 a month or $899 a year | $30 | Unlimited | 10 (2) | 300 | 10 |
 
-Yearly plans cost ten months' price. Each plan also caps what its bots can spend on Casama's own
-model key in one day. Plans can change, so **Billing** always shows the current ones.
+Each plan also caps what its bots can spend on Casama's own model key in one day. Plans can
+change, so **Billing** always shows the current ones.
 
-A seat is a member of the workspace. Free has one seat, the owner, so inviting someone needs a paid
-plan. One person can own up to five workspaces on Casama Cloud.
+**Running at once:** starting another computer puts one nobody has used for 2 minutes to sleep. If
+they're all in use, the start is refused until one is free.
+
+**Pro trial:** Pro is free for 7 days, once per person, if you've never had a subscription. During
+the trial the workspace gets $2 of credits and 10 computer hours; the first payment tops the month
+up to $15.
+
+A person is a member of the workspace. Free and Plus have one, the owner, so inviting someone
+needs Pro or Max. On the web, Pro and Max can add more people at $12 a month each ($120 a year). One person can own up to five workspaces on Casama Cloud.
 
 ### Credits
 
