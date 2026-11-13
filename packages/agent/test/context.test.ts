@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { buildContext, offloadLargeResult, wrapUntrusted } from "../src/context.ts";
+import {
+  buildContext,
+  HISTORY_BUDGET,
+  HISTORY_KEEP,
+  messageTokens,
+  offloadLargeResult,
+  wrapUntrusted,
+} from "../src/context.ts";
 import type { ChatMessage } from "../src/gateway/types.ts";
 
 const base = {
@@ -66,6 +73,50 @@ describe("buildContext", () => {
     expect(ctx.toCompact.length).toBeGreaterThan(0);
     expect(ctx.messages[0]?.role).not.toBe("tool");
     expect(ctx.toCompact.length + ctx.messages.length - 1).toBe(history.length);
+  });
+});
+
+describe("history budget (D-253)", () => {
+  const turns = (n: number, chars: number): ChatMessage[] =>
+    Array.from({ length: n }, (_, i) => ({
+      role: i % 2 ? ("assistant" as const) : ("user" as const),
+      content: `${i} ${"y".repeat(chars)}`,
+    }));
+  const sum = (ms: ChatMessage[]) => ms.reduce((n, m) => n + messageTokens(m), 0);
+
+  it("sends a short chat word for word, even on a 1M window", () => {
+    const history = turns(20, 400);
+    const ctx = buildContext({ ...base, history, contextWindow: 1_048_576 });
+    expect(ctx.toCompact).toEqual([]);
+    expect(ctx.messages).toHaveLength(21);
+  });
+
+  it("caps a long chat at a fixed budget on a 1M window, not 70% of it", () => {
+    const history = turns(400, 2000); // ~200k tokens
+    const ctx = buildContext({ ...base, history, contextWindow: 1_048_576 });
+    const kept = ctx.messages.slice(0, -1);
+    expect(sum(kept)).toBeLessThanOrEqual(HISTORY_KEEP);
+    expect(ctx.toCompact.length + kept.length).toBe(history.length);
+    // The newest turns are the ones kept.
+    expect(kept.at(-1)).toEqual(history.at(-1));
+  });
+
+  it("compacts down to the keep size, so the next turns fit without compacting again", () => {
+    const history = turns(80, 1000); // ~20k tokens, over the budget
+    const first = buildContext({ ...base, history, contextWindow: 1_048_576 });
+    expect(first.toCompact.length).toBeGreaterThan(0);
+    // After compaction the next run sees only the kept turns plus a few new ones.
+    const next = [...first.messages.slice(0, -1), ...turns(6, 1000)];
+    expect(sum(next)).toBeLessThan(HISTORY_BUDGET);
+    const second = buildContext({ ...base, history: next, contextWindow: 1_048_576 });
+    expect(second.toCompact).toEqual([]);
+  });
+
+  it("keeps a single long last turn that fits the budget on its own", () => {
+    const history = [...turns(10, 4000), { role: "user" as const, content: "z".repeat(40_000) }];
+    const ctx = buildContext({ ...base, history, contextWindow: 1_048_576 });
+    expect(ctx.messages.at(-2)?.content).toBe("z".repeat(40_000));
+    expect(ctx.toCompact).toHaveLength(10);
   });
 });
 

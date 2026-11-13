@@ -20,6 +20,8 @@ export interface FixtureTurn {
     systemIncludes?: string;
     /** Exact model id the request is for. */
     model?: string;
+    /** Case-insensitive substring of any message sent (proves what history a request carried). */
+    messagesInclude?: string;
   };
   events: GatewayEvent[];
   /** Delay before each event, to exercise streaming, cancel and crash paths. */
@@ -62,6 +64,11 @@ export function matches(turn: FixtureTurn, req: ModelRequest) {
   )
     return false;
   if (w.model && req.model.model !== w.model) return false;
+  if (
+    w.messagesInclude &&
+    !req.messages.some((m) => m.content.toLowerCase().includes(w.messagesInclude!.toLowerCase()))
+  )
+    return false;
   return true;
 }
 

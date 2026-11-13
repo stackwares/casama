@@ -2,6 +2,14 @@ import { PRODUCT_NAME } from "@casama/contracts";
 import { type PersonContext, personBlock } from "./about-you.ts";
 import type { ChatMessage } from "./gateway/types.ts";
 
+/**
+ * History sent word for word (D-253). Past HISTORY_BUDGET tokens, older turns are folded into the
+ * conversation's summary until HISTORY_KEEP tokens remain. A fixed budget, not a share of the model's
+ * window: with 1M-token windows a share meant resending hundreds of thousands of tokens a message.
+ */
+export const HISTORY_BUDGET = 16_000;
+export const HISTORY_KEEP = 8_000;
+
 /** Rough token estimate (about 4 characters per token); good enough for budgeting. */
 export const estimateTokens = (text: string) => Math.ceil(text.length / 4);
 
@@ -51,6 +59,10 @@ export interface ContextInput {
   localComputer?: LocalComputerContext;
   /** Fraction of the window that triggers compaction. */
   compactAt?: number;
+  /** History tokens that trigger compaction, whatever the window (default HISTORY_BUDGET). */
+  historyBudget?: number;
+  /** History tokens kept word for word after compacting (default HISTORY_KEEP). */
+  historyKeep?: number;
   /** Set when one of the bot's routines started this run. */
   routine?: { id: string; name: string };
   /** The person this run acts for (About you, D-169). */
@@ -172,15 +184,28 @@ export function buildContext(input: ContextInput): BuiltContext {
     system.reduce((n, s) => n + estimateTokens(s), 0) +
     (input.current ? messageTokens(input.current) : 0);
   const limit = Math.floor(input.contextWindow * (input.compactAt ?? 0.7));
+  const room = Math.max(0, limit - fixed);
+  const budget = Math.min(input.historyBudget ?? HISTORY_BUDGET, room);
+  const keep = Math.min(input.historyKeep ?? HISTORY_KEEP, budget);
 
-  // Keep the newest history that fits; older turns go to compaction.
-  let budget = limit - fixed;
-  let keepFrom = input.history.length;
-  for (let i = input.history.length - 1; i >= 0; i--) {
-    const t = messageTokens(input.history[i] as ChatMessage);
-    if (t > budget) break;
-    budget -= t;
-    keepFrom = i;
+  // Under the budget: everything word for word. Over it: keep the newest turns that fit in `keep`
+  // and fold the rest into the summary. Keeping less than the budget means compaction runs once
+  // every several turns, not on every turn once a chat is long.
+  const all = input.history.reduce((n, m) => n + messageTokens(m), 0);
+  let keepFrom = 0;
+  if (all > budget) {
+    let left = keep;
+    keepFrom = input.history.length;
+    for (let i = input.history.length - 1; i >= 0; i--) {
+      const t = messageTokens(input.history[i] as ChatMessage);
+      if (t > left) break;
+      left -= t;
+      keepFrom = i;
+    }
+    // A single long last turn (a pasted document) stays while it fits the budget on its own.
+    const last = input.history.at(-1);
+    if (keepFrom === input.history.length && last && messageTokens(last) <= budget)
+      keepFrom = input.history.length - 1;
   }
   // Never start on a tool result without its assistant tool call.
   while (keepFrom < input.history.length && input.history[keepFrom]?.role === "tool") keepFrom++;

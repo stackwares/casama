@@ -2853,3 +2853,35 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
   hourly while down) and when it's back, through the same SMTP mailbox as the server. It runs on
   Cloudflare, so it works when the server doesn't; no new account was needed.
 
+
+## D-253 One main conversation per bot, work in topics; chat history on a fixed budget
+
+- **Decision** (Oliver, 2026-11-13, after comparing with Grok's single thread: "push then start building"):
+  a bot opens straight into its **General** conversation, one per person per bot, where quick
+  questions, briefs, routine results and proactive messages land. Work runs in **topics**
+  (conversations linked to the message that started them), opened by an accepted suggestion, a
+  project, a routine run or a long task, or by hand; each posts a one-line result back to General.
+  Active topics show as chips at the top of General (needs-you first), topics idle 7 days move to
+  Older, and the Inbox tab gives way to Chats with a Needs you filter and a pinned Casama
+  conversation for workspace notices. A person's latest direct chat with a bot becomes General;
+  the rest become topics. Group chats are unchanged.
+- **Order:** (1) history budget, built here; (2) General and topics on the server; (3) automatic
+  topics with results posted back; (4) the app.
+- **History budget (built):** chats used to send their whole history until it reached 70% of the
+  model's window. Casama Cloud's Muse Ember has a 1M window, so nothing was summarized before about
+  730k tokens, and every message resent it all. Now history over `HISTORY_BUDGET` (16k tokens) is
+  folded into the conversation's summary until `HISTORY_KEEP` (8k) of the newest turns remain, so
+  compaction runs once every couple of dozen turns, not on every turn. Small windows still cap at
+  70%. A single long last turn (a pasted document) stays while it fits the budget alone.
+- **Fixed with it:** compaction marked everything before the current message as summarized
+  (`summary_through`), though only the older turns went into the summary, so the turns a run kept
+  vanished from every later run. `summary_through` is now the newest folded message's own
+  timestamp, read in SQL by id (JavaScript dates drop the microseconds and would let it back in).
+- **Cost** (`docs/COSTS.md`): on Muse Ember a long chat's message drops from up to about $0.07–0.20
+  (225k–675k tokens of history, 3 model calls) to about $0.006; short chats are unchanged (prod
+  chat runs average 11.4k input tokens a call, $0.004 a run). A summary costs about $0.002 on the
+  background model and is also saved as an episode memory, so older details stay findable.
+- **Tests:** `packages/agent/test/context.test.ts` (short chat whole on a 1M window, long chat
+  capped, compacting down to the keep size, a long last turn kept), `apps/server/test/history-budget.test.ts`
+  (seeded 24k-token chat: the cut-off is a seeded turn, the next message still carries the kept
+  turns; fails on the old cut-off). The replay gateway gained `when.messagesInclude`.

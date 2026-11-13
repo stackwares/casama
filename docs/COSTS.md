@@ -132,6 +132,11 @@ Ranked by saving. ✅ = done, ☐ = to do.
      those at 1 vCPU / 1 GB (headless) and 2 vCPU / 4 GB (desktop).
    - A small warm pool (built); EU servers (US ones cost about twice as much).
 2. **Models on our keys:**
+   - ✅ Chat history on a fixed budget (D-253): 16k tokens of recent turns, older ones folded into
+     the conversation's summary down to 8k. Before, history grew to 70% of the window (about 730k
+     tokens on Muse Ember) before any summary, so a long chat's message cost up to about $0.07–0.20
+     on Muse Ember and 20× that on Sonnet-class models; now about $0.006 on Muse Ember, flat.
+     Summaries cost about $0.002 each, once every couple of dozen turns.
    - ✅ Anthropic prompt caching: Claude requests ask for caching, so the instructions, tools and
      conversation so far are read back at a tenth of the price next turn. OpenAI, Gemini and xAI
      cache matching prefixes on their own.

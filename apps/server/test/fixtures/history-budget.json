@@ -1,0 +1,56 @@
+{
+  "name": "history-budget",
+  "turns": [
+    {
+      "when": { "systemIncludes": "You summarize the earlier conversation" },
+      "events": [
+        {
+          "type": "text",
+          "text": "They planned a long trip together; early details were settled."
+        },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 9000, "outputTokens": 20 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "systemIncludes": "extract lasting memories" },
+      "events": [
+        { "type": "text", "text": "{\"memories\":[]}" },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 10, "outputTokens": 5 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastUserIncludes": "budget check two", "messagesInclude": "turn-59-marker" },
+      "events": [
+        { "type": "text", "text": "Recent turns kept." },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 100, "outputTokens": 5 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastUserIncludes": "budget check" },
+      "events": [
+        { "type": "text", "text": "Recent turns lost." },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 100, "outputTokens": 5 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

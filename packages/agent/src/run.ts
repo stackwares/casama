@@ -249,6 +249,8 @@ interface RunInfo {
   /** A group chat's bots and how many bot-to-bot hops led here (D-118). */
   group: { members: Array<{ id: string; name: string; role: string }>; hop: number } | null;
   history: ChatMessage[];
+  /** Each history message's id, for the summary's cut-off (D-253). */
+  historyIds: string[];
   skills: Array<{ name: string; description: string }>;
   botOwner: string | null;
   parentRunId: string | null;
@@ -765,7 +767,15 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     let ctx = contextFor(info.summary);
     if (ctx.toCompact.length > 0) {
       const summary = await step("compact", () =>
-        compact(db, deps, info, ctx.toCompact, chainFor, bus).catch((err) => {
+        compact(
+          db,
+          deps,
+          info,
+          ctx.toCompact,
+          info.historyIds[ctx.toCompact.length - 1],
+          chainFor,
+          bus,
+        ).catch((err) => {
           log?.warn("compaction failed", { run_id: runId, error: (err as Error).message });
           return info.summary;
         }),
@@ -1439,6 +1449,7 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
 
   let current: RunInfo["current"] = null;
   let history: ChatMessage[] = [];
+  let historyIds: string[] = [];
   if (row.conversation_id) {
     const msgs = await db.execute<{
       id: string;
@@ -1540,17 +1551,26 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
           );
       }
     }
-    history = earlier
+    const turns = earlier
       .map((m) => {
-        if (fromBot(m)) return { role: "user" as const, content: asChat(m, partsText(m.content)) };
+        if (fromBot(m))
+          return {
+            id: m.id,
+            msg: { role: "user" as const, content: asChat(m, partsText(m.content)) },
+          };
         const text = partsText(m.content);
         const note = m.role === "user" && m.run_id ? ended.get(m.run_id) : undefined;
         return {
-          role: m.role as "user" | "assistant",
-          content: note && text ? `${text}\n\n${note}` : text,
+          id: m.id,
+          msg: {
+            role: m.role as "user" | "assistant",
+            content: note && text ? `${text}\n\n${note}` : text,
+          },
         };
       })
-      .filter((m) => m.content.length > 0);
+      .filter((t) => t.msg.content.length > 0);
+    history = turns.map((t) => t.msg);
+    historyIds = turns.map((t) => t.id);
   }
   // Work this bot is doing in other chats right now: asked "are you working on it?" from another chat,
   // it can say so instead of claiming it's idle.
@@ -1626,6 +1646,7 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     summary: row.summary ?? "",
     current,
     history,
+    historyIds,
     skills: [...skills],
     botOwner: row.bot_owner,
     parentRunId: row.parent_run_id,
@@ -2353,6 +2374,8 @@ async function compact(
   deps: RunDeps,
   info: RunInfo,
   older: ChatMessage[],
+  /** The newest folded message: later turns stay word for word (D-253). */
+  through: string | undefined,
   chainFor: (
     c: Array<{ credential_id: string; model: string } | undefined>,
   ) => Promise<ResolvedModel[]>,
@@ -2381,12 +2404,11 @@ async function compact(
   );
   const summary = r.text.trim();
   if (!summary || !info.conversationId) return info.summary;
-  // Fold everything before the current message into the summary.
+  // Only the folded turns count as summarized; the newer ones this run kept stay in the history.
+  if (!through) return info.summary;
   await db.execute(sql`
     update public.conversations set summary = ${contentKeys.seal(info.orgId, summary)},
-      summary_through = (select max(created_at) from public.messages
-                         where conversation_id = ${info.conversationId}::uuid and (${info.current?.id ?? null}::uuid is null or id <> ${info.current?.id ?? null}::uuid)
-                           and created_at <= coalesce((select created_at from public.messages where id = ${info.current?.id ?? null}::uuid), now()))
+      summary_through = (select created_at from public.messages where id = ${through}::uuid)
     where id = ${info.conversationId}::uuid`);
   const memory = await memoryOf(deps, db, info.orgId);
   const bus = await busFn();
