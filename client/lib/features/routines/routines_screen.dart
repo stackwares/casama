@@ -17,6 +17,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/advanced_section.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/app_card.dart';
+import '../../ui/property_row.dart';
 import '../../ui/page.dart';
 import '../../ui/route_focus.dart';
 import '../../ui/segmented.dart';
@@ -456,23 +457,24 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
               runSpacing: 4,
               children: [for (final q in quick) ChoiceChip(label: Text(q.$1), selected: (_runAt.difference(q.$2).inMinutes).abs() < 1, onSelected: (_) => setState(() => _runAt = q.$2))],
             ),
-            const SizedBox(height: AppSpace.xs),
-            OutlinedButton.icon(key: const Key('routineRunAt'), onPressed: _pickTime, icon: const Icon(LucideIcons.calendar, size: 18), label: Text(_formatWhen(context, _runAt))),
+            const SizedBox(height: AppSpace.sm),
+            GroupedCard(
+              children: [
+                GroupedTile(
+                  key: const Key('routineRunAt'),
+                  icon: LucideIcons.calendarClock,
+                  title: l10n.routineRunsAt,
+                  onTap: _pickTime,
+                  trailing: _ValueText(_formatWhen(context, _runAt)),
+                ),
+              ],
+            ),
           ],
           if (_trigger == 'calendar_event') ...[
             const SizedBox(height: AppSpace.sm),
             if (calendars.isEmpty)
               Text(l10n.calendarTriggerNeedsCalendar, key: const Key('noCalendar'))
             else ...[
-              DropdownButtonFormField<String>(
-                isExpanded: true,
-                key: const Key('routineCalendar'),
-                initialValue: _calendarId,
-                decoration: InputDecoration(labelText: l10n.calendarTriggerCalendar),
-                items: [for (final c in calendars) DropdownMenuItem(value: c.id, child: Text(c.name))],
-                onChanged: hapticOnChanged((v) => setState(() => _calendarId = v), haptic: HapticsHelper.selection),
-              ),
-              const SizedBox(height: AppSpace.sm),
               Wrap(
                 spacing: 8,
                 runSpacing: 4,
@@ -481,14 +483,39 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
                     ChoiceChip(key: Key('offset$m'), label: Text(l10n.calendarOffset(m)), selected: _offset == m, onSelected: (_) => setState(() => _offset = m)),
                 ],
               ),
-              CheckboxListTile(
-                key: const Key('routineOutsideGuests'),
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.calendarOutsideGuests),
-                value: _outsideGuests,
-                onChanged: hapticOnChanged((v) => setState(() => _outsideGuests = v ?? false), haptic: HapticsHelper.soft),
+              const SizedBox(height: AppSpace.sm),
+              GroupedCard(
+                children: [
+                  PropertyRow<String>(
+                    key: const Key('routineCalendar'),
+                    icon: LucideIcons.calendar,
+                    title: l10n.calendarTriggerCalendar,
+                    value: calendars.where((c) => c.id == _calendarId).firstOrNull?.name ?? '',
+                    options: [for (final c in calendars) PropertyOption(value: c.id, label: c.name, selected: c.id == _calendarId)],
+                    onSelected: (v) => setState(() => _calendarId = v),
+                  ),
+                  GroupedTile(
+                    icon: LucideIcons.usersRound,
+                    title: l10n.calendarOutsideGuests,
+                    onTap: () => setState(() => _outsideGuests = !_outsideGuests),
+                    trailing: Switch(
+                      key: const Key('routineOutsideGuests'),
+                      value: _outsideGuests,
+                      onChanged: hapticOnChanged((v) => setState(() => _outsideGuests = v), haptic: HapticsHelper.soft),
+                    ),
+                  ),
+                  GroupedTile(
+                    icon: LucideIcons.video,
+                    title: l10n.calendarVideoLink,
+                    onTap: () => setState(() => _videoLink = !_videoLink),
+                    trailing: Switch(
+                      value: _videoLink,
+                      onChanged: hapticOnChanged((v) => setState(() => _videoLink = v), haptic: HapticsHelper.soft),
+                    ),
+                  ),
+                ],
               ),
-              CheckboxListTile(contentPadding: EdgeInsets.zero, title: Text(l10n.calendarVideoLink), value: _videoLink, onChanged: hapticOnChanged((v) => setState(() => _videoLink = v ?? false), haptic: HapticsHelper.soft)),
+              const SizedBox(height: AppSpace.sm),
               TextField(
                 controller: _titleMatch,
                 textInputAction: TextInputAction.done,
@@ -501,17 +528,22 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
             const SizedBox(height: AppSpace.sm),
             Text(l10n.messageTriggerHelp),
             const SizedBox(height: AppSpace.sm),
-            DropdownButtonFormField<MessageTriggerConfigChannelKindEnum?>(
-              isExpanded: true,
-              key: const Key('messageKind'),
-              initialValue: _msgKind,
-              decoration: InputDecoration(labelText: l10n.chatAppsKind),
-              items: [
-                DropdownMenuItem(value: null, child: Text(l10n.messageTriggerAnyApp)),
-                for (final k in MessageTriggerConfigChannelKindEnum.values) DropdownMenuItem(value: k, child: Text(channelKindName(ChannelKind.values.firstWhere((c) => c.value == k.value)))),
+            GroupedCard(
+              children: [
+                PropertyRow<MessageTriggerConfigChannelKindEnum?>(
+                  key: const Key('messageKind'),
+                  icon: LucideIcons.messagesSquare,
+                  title: l10n.chatAppsKind,
+                  value: _msgKind == null ? l10n.messageTriggerAnyApp : _kindName(_msgKind!),
+                  options: [
+                    PropertyOption(value: null, label: l10n.messageTriggerAnyApp, selected: _msgKind == null),
+                    for (final k in MessageTriggerConfigChannelKindEnum.values) PropertyOption(value: k, label: _kindName(k), selected: k == _msgKind),
+                  ],
+                  onSelected: (v) => setState(() => _msgKind = v),
+                ),
               ],
-              onChanged: hapticOnChanged((v) => setState(() => _msgKind = v), haptic: HapticsHelper.selection),
             ),
+            const SizedBox(height: AppSpace.sm),
             TextField(
               key: const Key('messageSender'),
               controller: _msgSender,
@@ -519,6 +551,7 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(labelText: l10n.messageTriggerSender),
             ),
+            const SizedBox(height: AppSpace.sm),
             TextField(
               key: const Key('messageSubject'),
               controller: _msgSubject,
@@ -526,6 +559,7 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(labelText: l10n.messageTriggerSubject),
             ),
+            const SizedBox(height: AppSpace.sm),
             TextField(
               key: const Key('messageText'),
               controller: _msgText,
@@ -562,33 +596,26 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
               ),
             ] else if (_repeat != 'hourly') ...[
               const SizedBox(height: AppSpace.sm),
-              Row(
+              GroupedCard(
                 children: [
-                  if (_repeat == 'weekly') ...[
-                    Expanded(
-                      // Keyed by the day, so a day read from a typed cron shows here too.
-                      child: KeyedSubtree(
-                        key: ValueKey('weekday-$_weekday'),
-                        child: DropdownButtonFormField<int>(
-                          key: const Key('routineWeekday'),
-                          isExpanded: true,
-                          initialValue: _weekday,
-                          decoration: InputDecoration(labelText: l10n.routineDay),
-                          items: [for (final d in const [1, 2, 3, 4, 5, 6, 0]) DropdownMenuItem(value: d, child: Text(l10n.cronDay(cronDayKey(d))))],
-                          onChanged: hapticOnChanged((v) => setState(() {
-                            _weekday = v ?? _weekday;
-                            _writeCron();
-                          }), haptic: HapticsHelper.selection),
-                        ),
-                      ),
+                  if (_repeat == 'weekly')
+                    PropertyRow<int>(
+                      key: const Key('routineWeekday'),
+                      icon: LucideIcons.calendarDays,
+                      title: l10n.routineDay,
+                      value: l10n.cronDay(cronDayKey(_weekday)),
+                      options: [for (final d in const [1, 2, 3, 4, 5, 6, 0]) PropertyOption(value: d, label: l10n.cronDay(cronDayKey(d)), selected: d == _weekday)],
+                      onSelected: (v) => setState(() {
+                        _weekday = v;
+                        _writeCron();
+                      }),
                     ),
-                    const SizedBox(width: AppSpace.sm),
-                  ],
-                  OutlinedButton.icon(
+                  GroupedTile(
                     key: const Key('routineTime'),
-                    onPressed: _pickRepeatTime,
-                    icon: const Icon(LucideIcons.clock, size: 18),
-                    label: Text(_time.format(context)),
+                    icon: LucideIcons.clock,
+                    title: l10n.routineTimeLabel,
+                    onTap: _pickRepeatTime,
+                    trailing: _ValueText(_time.format(context)),
                   ),
                 ],
               ),
@@ -687,6 +714,27 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
           ),
         ],
       ),
+    );
+  }
+}
+
+String _kindName(MessageTriggerConfigChannelKindEnum k) => channelKindName(ChannelKind.values.firstWhere((c) => c.value == k.value));
+
+/// The current value at the end of a tappable row, in the accent color with a chevron.
+class _ValueText extends StatelessWidget {
+  const _ValueText(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(text, style: context.textTheme.bodyLarge?.copyWith(color: scheme.primary, fontWeight: FontWeight.w600)),
+        const SizedBox(width: 4),
+        Icon(LucideIcons.chevronRight, size: 16, color: scheme.onSurfaceVariant.withValues(alpha: 0.7)),
+      ],
     );
   }
 }

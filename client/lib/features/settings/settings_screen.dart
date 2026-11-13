@@ -23,6 +23,7 @@ import '../../ui/form_sheet.dart';
 import '../voice/wake_word.dart';
 import '../voice/wake_word_sheet.dart';
 import '../../ui/page.dart';
+import '../../ui/property_row.dart';
 import 'about_you_screen.dart';
 import 'appearance_screen.dart';
 import 'me_avatar.dart';
@@ -59,6 +60,11 @@ class SettingsScreen extends ConsumerWidget {
     final colors = context.appColors;
     void open(String path) => pane ? context.go(path) : context.push(path);
     bool sel(String path) => pane && current.startsWith(path);
+    Future<void> setOpenAtLogin(bool v) async {
+      await runGuarded(context, () => setLaunchAtLogin(v));
+      ref.invalidate(launchAtLoginProvider);
+    }
+
     return Scaffold(
       // Opened from the person's avatar, not a tab (D-176): phones always get a way back.
       appBar: ShellHeader(title: l10n.settings, phoneFallback: pane ? null : '/bots'),
@@ -208,28 +214,33 @@ class SettingsScreen extends ConsumerWidget {
                       onTap: () => showAdaptiveSheet<void>(context: context, builder: (_) => const WakeWordSheet()),
                     ),
                   // Off by default: chats show what the bot is doing, not each step (D-162).
-                  SwitchListTile(
-                    key: const Key('showBotSteps'),
-                    secondary: Icon(LucideIcons.listTree, color: scheme.onSurfaceVariant),
-                    title: Text(l10n.showBotSteps),
-                    subtitle: Text(l10n.showBotStepsHelp),
-                    value: ref.watch(showBotStepsProvider),
-                    onChanged: hapticOnChanged(ref.read(showBotStepsProvider.notifier).set),
+                  GroupedTile(
+                    icon: LucideIcons.listTree,
+                    title: l10n.showBotSteps,
+                    subtitle: l10n.showBotStepsHelp,
+                    onTap: () {
+                      HapticsHelper.light();
+                      ref.read(showBotStepsProvider.notifier).set(!ref.read(showBotStepsProvider));
+                    },
+                    trailing: Switch(
+                      key: const Key('showBotSteps'),
+                      value: ref.watch(showBotStepsProvider),
+                      onChanged: hapticOnChanged(ref.read(showBotStepsProvider.notifier).set),
+                    ),
                   ),
                   // Desktop downloads update themselves (the stores update theirs); Linux is told.
                   if (selfUpdating || updateNoticeOnly) const _UpdatesRows(),
                   // Mac: start with the system, ready for the quick-ask shortcut and the menu bar icon.
                   if (ref.watch(launchAtLoginProvider).value case final on?)
-                    SwitchListTile(
-                      key: const Key('openAtLogin'),
-                      secondary: Icon(LucideIcons.power, color: scheme.onSurfaceVariant),
-                      title: Text(l10n.openAtLogin),
-                      subtitle: Text(l10n.openAtLoginHelp),
-                      value: on,
-                      onChanged: hapticOnChanged((v) async {
-                        await runGuarded(context, () => setLaunchAtLogin(v));
-                        ref.invalidate(launchAtLoginProvider);
-                      }),
+                    GroupedTile(
+                      icon: LucideIcons.power,
+                      title: l10n.openAtLogin,
+                      subtitle: l10n.openAtLoginHelp,
+                      onTap: () {
+                        HapticsHelper.light();
+                        setOpenAtLogin(!on);
+                      },
+                      trailing: Switch(key: const Key('openAtLogin'), value: on, onChanged: hapticOnChanged(setOpenAtLogin)),
                     ),
                   GroupedTile(
                     icon: LucideIcons.languages,
@@ -461,49 +472,53 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
             padding: const EdgeInsets.only(bottom: AppSpace.md),
             child: Text(l10n.serverVoiceSetUp),
           ),
-        if (!fixedTts)
-        DropdownButtonFormField<String?>(
-          isExpanded: true,
-          key: const Key('ttsProvider'),
-          initialValue: _tts,
-          decoration: InputDecoration(labelText: l10n.readAloudProvider, prefixIcon: const Icon(LucideIcons.volume2, size: 20)),
-          items: [
-            DropdownMenuItem(value: null, child: Text(l10n.automatic)),
-            for (final p in const ['google', 'elevenlabs', 'openai', 'cartesia', 'fish_audio']) DropdownMenuItem(value: p, child: Text(label(p))),
+        GroupedCard(
+          children: [
+            if (!fixedTts)
+              PropertyRow<String?>(
+                key: const Key('ttsProvider'),
+                icon: LucideIcons.volume2,
+                title: l10n.readAloudProvider,
+                value: _tts == null ? l10n.automatic : label(_tts!),
+                options: [
+                  PropertyOption(value: null, label: l10n.automatic, selected: _tts == null),
+                  for (final p in const ['google', 'elevenlabs', 'openai', 'cartesia', 'fish_audio']) PropertyOption(value: p, label: label(p), selected: _tts == p),
+                ],
+                onSelected: (v) => setState(() => _tts = v),
+              ),
+            if (!fixedStt)
+              PropertyRow<String?>(
+                key: const Key('sttProvider'),
+                icon: LucideIcons.mic,
+                title: l10n.dictationProvider,
+                value: _stt == null ? l10n.automatic : label(_stt!),
+                options: [
+                  PropertyOption(value: null, label: l10n.automatic, selected: _stt == null),
+                  for (final p in const ['openai', 'deepgram']) PropertyOption(value: p, label: label(p), selected: _stt == p),
+                ],
+                onSelected: (v) => setState(() => _stt = v),
+              ),
+            GroupedTile(
+              key: const Key('callToolsRow'),
+              icon: LucideIcons.wrench,
+              title: l10n.callTools,
+              subtitle: l10n.callToolsCount(_callTools.length),
+              showChevron: true,
+              onTap: !_loaded
+                  ? null
+                  : () async {
+                      final chosen = await showAdaptiveSheet<List<String>>(
+                        context: context,
+                        builder: (_) => CallToolsSheet(botId: widget.botId, initial: _callTools),
+                      );
+                      if (chosen != null && mounted) setState(() => _callTools = chosen);
+                    },
+            ),
           ],
-          onChanged: hapticOnChanged((v) => setState(() => _tts = v), haptic: HapticsHelper.selection),
         ),
         TextField(
           controller: _voice,
           decoration: InputDecoration(labelText: l10n.voiceId, helperText: l10n.voiceIdHelp, prefixIcon: const Icon(LucideIcons.audioLines, size: 20)),
-        ),
-        if (!fixedStt)
-        DropdownButtonFormField<String?>(
-          isExpanded: true,
-          key: const Key('sttProvider'),
-          initialValue: _stt,
-          decoration: InputDecoration(labelText: l10n.dictationProvider, prefixIcon: const Icon(LucideIcons.mic, size: 20)),
-          items: [
-            DropdownMenuItem(value: null, child: Text(l10n.automatic)),
-            for (final p in const ['openai', 'deepgram']) DropdownMenuItem(value: p, child: Text(label(p))),
-          ],
-          onChanged: hapticOnChanged((v) => setState(() => _stt = v), haptic: HapticsHelper.selection),
-        ),
-        ListTile(
-          key: const Key('callToolsRow'),
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(LucideIcons.wrench, size: 20),
-          title: Text(l10n.callTools),
-          subtitle: Text(l10n.callToolsCount(_callTools.length)),
-          trailing: const Icon(LucideIcons.chevronRight, size: 18),
-          enabled: _loaded,
-          onTap: () async {
-            final chosen = await showAdaptiveSheet<List<String>>(
-              context: context,
-              builder: (_) => CallToolsSheet(botId: widget.botId, initial: _callTools),
-            );
-            if (chosen != null && mounted) setState(() => _callTools = chosen);
-          },
         ),
       ],
     );
@@ -518,7 +533,6 @@ class _UpdatesRows extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final scheme = context.colorScheme;
     final version = ref.watch(appVersionProvider).value ?? '';
     if (updateNoticeOnly) {
       final newer = ref.watch(newerReleaseProvider).value;
@@ -532,6 +546,11 @@ class _UpdatesRows extends ConsumerWidget {
       );
     }
     final auto = ref.watch(autoUpdateChecksProvider).value;
+    Future<void> setAuto(bool v) async {
+      await runGuarded(context, () => setAutoUpdateChecks(v));
+      ref.invalidate(autoUpdateChecksProvider);
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -544,16 +563,15 @@ class _UpdatesRows extends ConsumerWidget {
           onTap: () => runGuarded(context, checkForUpdatesNow),
         ),
         if (auto != null)
-          SwitchListTile(
-            key: const Key('autoUpdates'),
-            secondary: Icon(LucideIcons.refreshCw, color: scheme.onSurfaceVariant),
-            title: Text(l10n.autoUpdates),
-            subtitle: Text(l10n.autoUpdatesHelp),
-            value: auto,
-            onChanged: hapticOnChanged((v) async {
-              await runGuarded(context, () => setAutoUpdateChecks(v));
-              ref.invalidate(autoUpdateChecksProvider);
-            }),
+          GroupedTile(
+            icon: LucideIcons.refreshCw,
+            title: l10n.autoUpdates,
+            subtitle: l10n.autoUpdatesHelp,
+            onTap: () {
+              HapticsHelper.light();
+              setAuto(!auto);
+            },
+            trailing: Switch(key: const Key('autoUpdates'), value: auto, onChanged: hapticOnChanged(setAuto)),
           ),
       ],
     );

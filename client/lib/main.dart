@@ -38,6 +38,7 @@ Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config, {VoidCallback? onS
   // The saved look and its Google Fonts load alongside the connection, so the app's first frame
   // already draws them and no text swaps fonts a moment later.
   final look = _savedLookWithFonts();
+  final selectedOrg = SelectedOrg.preload();
   final saved = await ServerConfigCache.read(config.apiUrl);
   final server = saved ?? (await CasamaClient.connect(config.apiUrl)).config;
   if (saved == null) unawaited(ServerConfigCache.write(config.apiUrl, server));
@@ -49,6 +50,7 @@ Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config, {VoidCallback? onS
   final backend = SupabaseBackend(supabase, api, config: server);
   if (saved != null) unawaited(_refreshServerConfig(config.apiUrl, api, backend, saved, onServerMoved));
   final appearance = await look;
+  await selectedOrg;
   final app = ProviderScope(
     overrides: [
       backendProvider.overrideWithValue(backend),

@@ -12,7 +12,6 @@ import '../../core/widgets.dart';
 import '../../core/haptics.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
-import '../../theme/wallpaper.dart';
 import '../../ui/bottom_padding.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/brand_sign_in_buttons.dart';
@@ -44,12 +43,9 @@ class SignInScreen extends ConsumerWidget {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
     final statusBar = MediaQuery.paddingOf(context).top;
-    // Always the brand look here, whatever the person picked in Settings → Background: the still
-    // clouds doodles on the Casama gradient, faint enough that the bots stay the only thing moving.
-    return Wallpaper(
-      force: true,
-      specOverride: WallpaperTheme.of(_welcomeWallpaper, scheme),
-      child: Scaffold(
+    // The app's own background (painted once behind every page in app.dart) shows through, so
+    // this screen looks like the rest of the app and nothing shifts when signing in.
+    return Scaffold(
       backgroundColor: Colors.transparent,
       body: FloatingMascots(
           child: ProgressiveFade(child: SafeArea(
@@ -133,16 +129,9 @@ class SignInScreen extends ConsumerWidget {
             ),
           )),
       ),
-      ),
     );
   }
 }
-
-const _welcomeWallpaper = WallpaperSpec(
-  pattern: WallpaperPattern.clouds,
-  palette: WallpaperPalette.casama,
-  intensity: 0.35,
-);
 
 /// Apple and Google up front; email and password, a magic link, SSO and self-hosting folded behind reveals.
 class SignInOptions extends ConsumerStatefulWidget {

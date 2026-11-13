@@ -132,8 +132,19 @@ final organizationsProvider = AsyncNotifierProvider<OrganizationsNotifier, List<
 class SelectedOrg extends Notifier<String?> {
   static const _key = 'casama.selected_org';
 
+  /// Read during startup (see [preload]) so the first frame already has the saved workspace,
+  /// instead of showing the first one and switching a moment later.
+  static String? _preloaded;
+
+  static Future<void> preload() async {
+    try {
+      _preloaded = (await SharedPreferences.getInstance()).getString(_key);
+    } catch (_) {}
+  }
+
   @override
   String? build() {
+    if (_preloaded case final saved?) return saved;
     SharedPreferences.getInstance()
         .then((p) {
           final saved = p.getString(_key);
@@ -145,6 +156,7 @@ class SelectedOrg extends Notifier<String?> {
 
   void select(String? id) {
     state = id;
+    _preloaded = id;
     SharedPreferences.getInstance().then((p) => id == null ? p.remove(_key) : p.setString(_key, id)).catchError((_) => false);
   }
 }
@@ -182,6 +194,11 @@ final currentOrgProvider = Provider<OrganizationWithRole?>((ref) {
   return orgs.firstWhere((o) => o.id == id, orElse: () => orgs.first);
 });
 
+/// The selected workspace's id. Lists scoped to a workspace watch this, not [currentOrgProvider],
+/// so the server's copy of the same workspace replacing the cached one at launch (or a rename)
+/// doesn't reload them and flash their skeletons.
+final currentOrgIdProvider = Provider<String?>((ref) => ref.watch(currentOrgProvider)?.id);
+
 /// Bots, shown from the offline cache first and refreshed in the background (D-112).
 class BotsNotifier extends AsyncNotifier<List<Bot>> {
   var _generation = 0;
@@ -192,8 +209,8 @@ class BotsNotifier extends AsyncNotifier<List<Bot>> {
 
   @override
   Future<List<Bot>> build() async {
-    final org = ref.watch(currentOrgProvider);
-    if (org == null) {
+    final orgId = ref.watch(currentOrgIdProvider);
+    if (orgId == null) {
       // Workspaces still loading (right after sign-in): stay loading instead of answering "no
       // bots", so the list shows its skeleton rather than flashing the "No bots yet" screen.
       await ref.watch(organizationsProvider.future);
@@ -201,19 +218,19 @@ class BotsNotifier extends AsyncNotifier<List<Bot>> {
     }
     final backend = ref.watch(backendProvider);
     final cache = ref.watch(localCacheProvider);
-    final key = 'bots:${org.id}';
+    final key = 'bots:$orgId';
     final gen = ++_generation;
     // Live across devices (D-225): another device's change refetches the list in place, once per
     // burst, without reloading the provider (no skeleton, no new subscription).
-    final changes = backend.watchBotsChanged(org.id).listen((_) {
+    final changes = backend.watchBotsChanged(orgId).listen((_) {
       _soon?.cancel();
-      _soon = Timer(changeSettle, () => unawaited(_refetch(org.id, key)));
+      _soon = Timer(changeSettle, () => unawaited(_refetch(orgId, key)));
     });
     ref.onDispose(() {
       changes.cancel();
       _soon?.cancel();
     });
-    final fresh = backend.bots(org.id).then((v) {
+    final fresh = backend.bots(orgId).then((v) {
       unawaited(cacheWrite(cache, key, [for (final b in v) b.toJson()]));
       return v;
     });
@@ -254,15 +271,15 @@ final botsProvider = AsyncNotifierProvider<BotsNotifier, List<Bot>>(BotsNotifier
 
 /// Sidebar folders (D-100).
 final botFoldersProvider = FutureProvider<List<BotFolder>>((ref) async {
-  final org = ref.watch(currentOrgProvider);
-  if (org == null) return const [];
-  return ref.watch(backendProvider).botFolders(org.id);
+  final orgId = ref.watch(currentOrgIdProvider);
+  if (orgId == null) return const [];
+  return ref.watch(backendProvider).botFolders(orgId);
 });
 
 final archivedBotsProvider = FutureProvider<List<Bot>>((ref) async {
-  final org = ref.watch(currentOrgProvider);
-  if (org == null) return const [];
-  return ref.watch(backendProvider).archivedBots(org.id);
+  final orgId = ref.watch(currentOrgIdProvider);
+  if (orgId == null) return const [];
+  return ref.watch(backendProvider).archivedBots(orgId);
 });
 
 final botProvider = Provider.family<Bot?, String>((ref, id) {
@@ -274,30 +291,30 @@ final botProvider = Provider.family<Bot?, String>((ref, id) {
 });
 
 final credentialsProvider = FutureProvider<List<Credential>>((ref) async {
-  final org = ref.watch(currentOrgProvider);
-  if (org == null) return const [];
-  return ref.watch(backendProvider).credentials(org.id);
+  final orgId = ref.watch(currentOrgIdProvider);
+  if (orgId == null) return const [];
+  return ref.watch(backendProvider).credentials(orgId);
 });
 
 /// Models a key can use for the bot model picker (cached by the server for 10 minutes).
 final modelOptionsProvider = FutureProvider.family<ModelOptionList, String>((ref, credentialId) => ref.watch(backendProvider).models(credentialId));
 
 final usageTodayProvider = FutureProvider<UsageReport?>((ref) async {
-  final org = ref.watch(currentOrgProvider);
-  if (org == null) return null;
-  return ref.watch(backendProvider).usage(org.id, period: 'day');
+  final orgId = ref.watch(currentOrgIdProvider);
+  if (orgId == null) return null;
+  return ref.watch(backendProvider).usage(orgId, period: 'day');
 });
 
 final usageMonthProvider = FutureProvider<UsageReport?>((ref) async {
-  final org = ref.watch(currentOrgProvider);
-  if (org == null) return null;
-  return ref.watch(backendProvider).usage(org.id, period: 'month');
+  final orgId = ref.watch(currentOrgIdProvider);
+  if (orgId == null) return null;
+  return ref.watch(backendProvider).usage(orgId, period: 'month');
 });
 
 final computersProvider = FutureProvider<List<Computer>>((ref) async {
-  final org = ref.watch(currentOrgProvider);
-  if (org == null) return const [];
-  return ref.watch(backendProvider).computers(org.id);
+  final orgId = ref.watch(currentOrgIdProvider);
+  if (orgId == null) return const [];
+  return ref.watch(backendProvider).computers(orgId);
 });
 
 final conversationsProvider = FutureProvider.family<List<Conversation>, String>((ref, botId) => ref.watch(backendProvider).conversations(botId));
@@ -305,9 +322,9 @@ final conversationsProvider = FutureProvider.family<List<Conversation>, String>(
 final memoriesProvider = FutureProvider.family<List<Memory>, String>((ref, botId) => ref.watch(backendProvider).memories(botId));
 
 final skillsProvider = FutureProvider<List<SkillView>>((ref) async {
-  final org = ref.watch(currentOrgProvider);
-  if (org == null) return const [];
-  return ref.watch(backendProvider).skills(org.id);
+  final orgId = ref.watch(currentOrgIdProvider);
+  if (orgId == null) return const [];
+  return ref.watch(backendProvider).skills(orgId);
 });
 
 final runsProvider = FutureProvider.family<List<RunSummary>, String>((ref, botId) => ref.watch(backendProvider).runs(botId));
@@ -319,9 +336,9 @@ final runEventsProvider = FutureProvider.family<List<RunEventItem>, String>((ref
 final templatesProvider = FutureProvider<List<Template>>((ref) => ref.watch(backendProvider).templates());
 
 final approvalsProvider = FutureProvider<List<Approval>>((ref) async {
-  final org = ref.watch(currentOrgProvider);
-  if (org == null) return const [];
-  return ref.watch(backendProvider).approvals(org.id);
+  final orgId = ref.watch(currentOrgIdProvider);
+  if (orgId == null) return const [];
+  return ref.watch(backendProvider).approvals(orgId);
 });
 
 /// The notification inbox: loaded once, then kept live from the user's Realtime topic.
@@ -415,30 +432,30 @@ final appCatalogProvider = FutureProvider<AppCatalog>((ref) async {
 });
 
 final integrationsProvider = FutureProvider<List<Integration>>((ref) async {
-  final org = ref.watch(currentOrgProvider);
-  if (org == null) return const [];
-  return ref.watch(backendProvider).integrations(org.id);
+  final orgId = ref.watch(currentOrgIdProvider);
+  if (orgId == null) return const [];
+  return ref.watch(backendProvider).integrations(orgId);
 });
 
 final botIntegrationIdsProvider = FutureProvider.family<Set<String>, String>((ref, botId) => ref.watch(backendProvider).botIntegrationIds(botId));
 
 final secretsProvider = FutureProvider<List<Secret>>((ref) async {
-  final org = ref.watch(currentOrgProvider);
-  if (org == null) return const [];
-  return ref.watch(backendProvider).secrets(org.id);
+  final orgId = ref.watch(currentOrgIdProvider);
+  if (orgId == null) return const [];
+  return ref.watch(backendProvider).secrets(orgId);
 });
 
 final tasksProvider = FutureProvider<List<Task>>((ref) async {
-  final org = ref.watch(currentOrgProvider);
-  if (org == null) return const [];
-  return ref.watch(backendProvider).tasks(org.id);
+  final orgId = ref.watch(currentOrgIdProvider);
+  if (orgId == null) return const [];
+  return ref.watch(backendProvider).tasks(orgId);
 });
 
 /// Open requests from bots for a person to take over a screen.
 final takeoversProvider = FutureProvider<List<TakeoverRequest>>((ref) async {
-  final org = ref.watch(currentOrgProvider);
-  if (org == null) return const [];
-  return ref.watch(backendProvider).takeovers(org.id);
+  final orgId = ref.watch(currentOrgIdProvider);
+  if (orgId == null) return const [];
+  return ref.watch(backendProvider).takeovers(orgId);
 });
 
 /// Formats US dollars for cost meters in the person's locale: two decimals from a dollar up and

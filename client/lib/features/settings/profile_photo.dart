@@ -9,6 +9,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/backend.dart';
 import '../../core/haptics.dart';
+import '../../core/local_cache.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -18,8 +19,28 @@ import 'about_you_screen.dart';
 
 /// The person's profile photo URL (D-202), or null when they have none.
 String? myPhotoUrl(WidgetRef ref) {
-  final id = ref.watch(aboutYouProvider).value?.photoId;
+  final about = ref.watch(aboutYouProvider);
+  final id = about.hasValue ? about.value?.photoId : ref.watch(savedMeProvider).value?.photoId;
   return id == null ? null : ref.watch(backendProvider).photoUrl(id);
+}
+
+/// The person's name and photo as the last launch saw them, so the avatar opens with them while
+/// [aboutYouProvider] loads, instead of their email's letter, then their name's, then the photo.
+typedef SavedMe = ({String name, String? photoId});
+
+final savedMeProvider = FutureProvider<SavedMe?>((ref) async {
+  final user = ref.watch(backendProvider).userId;
+  if (user == null) return null;
+  final saved = await cacheRead(ref.watch(localCacheProvider), 'me:$user');
+  if (saved is! Map) return null;
+  return (name: saved['name'] as String? ?? '', photoId: saved['photoId'] as String?);
+});
+
+/// Keeps what [savedMeProvider] reads next launch.
+Future<void> saveMeForLaunch(Ref ref, AboutYouView about) async {
+  final user = ref.read(backendProvider).userId;
+  if (user == null) return;
+  await cacheWrite(ref.read(localCacheProvider), 'me:$user', {'name': about.name, 'photoId': about.photoId});
 }
 
 /// A big avatar with a camera badge; a tap offers take, choose, use the Google photo, or remove.

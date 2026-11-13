@@ -825,6 +825,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get routineDay => 'Day';
 
   @override
+  String get routineTimeLabel => 'Time';
+
+  @override
+  String get routineRunsAt => 'Runs at';
+
+  @override
   String routineTimesIn(String timezone) {
     return 'Times are in $timezone';
   }
@@ -4492,6 +4498,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deleteTicket => 'Delete Ticket';
+
+  @override
+  String get ticketResult => 'Result';
+
+  @override
+  String get noCommentsYet =>
+      'No comments yet. Leave a note for the bot or your team.';
 
   @override
   String get noTickets => 'No tickets yet';

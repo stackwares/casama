@@ -48,7 +48,7 @@ void main() {
     final org = (await backend.organizations()).first;
     final url = await backend.checkoutUrl(org.id, planCode: 'pro');
     final client = HttpClient();
-    final res = await (await client.getUrl(Uri.parse(url))).close();
+    final res = await (await client.getUrl(Uri.parse(url!))).close();
     expect(res.statusCode, 200, reason: await res.transform(const SystemEncoding().decoder).join());
     client.close();
 

@@ -13,6 +13,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
+import '../../ui/app_menu.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
@@ -348,65 +349,53 @@ class _ComputerCard extends ConsumerWidget {
               ],
             ),
           ),
-          PopupMenuButton<String>(
+          AppMenuButton(
             key: Key('computerMenu-${c.id}'),
             tooltip: l10n.moreActions,
-            icon: Icon(LucideIcons.ellipsisVertical, color: scheme.onSurfaceVariant),
-            onSelected: action,
-            itemBuilder: (_) => [
+            entries: [
               if (desktop && !isPersonalComputer(c))
-                PopupMenuItem(
-                  value: 'live',
-                  child: ListTile(dense: true, leading: const Icon(LucideIcons.monitorPlay), title: Text(l10n.liveView)),
-                ),
+                AppMenuItem(icon: LucideIcons.monitorPlay, label: l10n.liveView, onTap: () => action('live')),
               if (!isPersonalComputer(c)) ...[
-                PopupMenuItem(
-                  value: 'manage',
+                AppMenuItem(
                   key: Key('manageComputer-${c.id}'),
-                  child: ListTile(dense: true, leading: const Icon(LucideIcons.settings2), title: Text(l10n.manageComputer)),
+                  icon: LucideIcons.settings2,
+                  label: l10n.manageComputer,
+                  onTap: () => action('manage'),
                 ),
                 if (running)
-                  PopupMenuItem(
-                    value: 'restart',
+                  AppMenuItem(
                     key: Key('restartComputer-${c.id}'),
-                    child: ListTile(dense: true, leading: const Icon(LucideIcons.rotateCw), title: Text(l10n.restartComputer)),
+                    icon: LucideIcons.rotateCw,
+                    label: l10n.restartComputer,
+                    onTap: () => action('restart'),
                   ),
               ],
+              const AppMenuDivider(),
               if (!isPersonalComputer(c))
-              PopupMenuItem(
-                value: 'profile',
-                child: ListTile(
-                  dense: true,
-                  leading: Icon(desktop ? LucideIcons.squareTerminal : LucideIcons.monitor),
-                  title: Text(desktop ? l10n.switchToHeadless : l10n.switchToDesktop),
+                AppMenuItem(
+                  icon: desktop ? LucideIcons.squareTerminal : LucideIcons.monitor,
+                  label: desktop ? l10n.switchToHeadless : l10n.switchToDesktop,
+                  onTap: () => action('profile'),
                 ),
-              ),
               if (c.kind == ComputerKindEnum.team)
-                PopupMenuItem(
-                  value: 'desktops',
-                  child: ListTile(dense: true, leading: const Icon(LucideIcons.users), title: Text(l10n.desktopUsers), subtitle: Text(l10n.desktopUsersCount(c.maxDesktops))),
+                AppMenuItem(
+                  icon: LucideIcons.users,
+                  label: l10n.desktopUsers,
+                  subtitle: l10n.desktopUsersCount(c.maxDesktops),
+                  onTap: () => action('desktops'),
                 ),
-              PopupMenuItem(
-                value: 'rename',
-                child: ListTile(dense: true, leading: const Icon(LucideIcons.pencil), title: Text(l10n.rename)),
-              ),
-              if (!isPersonalComputer(c)) ...[
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  value: 'reset',
+              AppMenuItem(icon: LucideIcons.pencil, label: l10n.rename, onTap: () => action('rename')),
+              const AppMenuDivider(),
+              if (!isPersonalComputer(c))
+                AppMenuItem(
                   key: Key('resetComputer-${c.id}'),
-                  child: ListTile(dense: true, leading: const Icon(LucideIcons.rotateCcw), title: Text(l10n.resetComputerMenu)),
+                  icon: LucideIcons.rotateCcw,
+                  label: l10n.resetComputerMenu,
+                  destructive: true,
+                  onTap: () => action('reset'),
                 ),
-              ],
               if (c.kind != ComputerKindEnum.team)
-                PopupMenuItem(
-                  value: 'delete',
-                  child: ListTile(
-                    dense: true,
-                    leading: Icon(LucideIcons.trash2, color: scheme.error),
-                    title: Text(l10n.delete, style: TextStyle(color: scheme.error)),
-                  ),
-                ),
+                AppMenuItem(icon: LucideIcons.trash2, label: l10n.delete, destructive: true, onTap: () => action('delete')),
             ],
           ),
         ],
