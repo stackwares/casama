@@ -426,6 +426,7 @@ class FakeBackend implements Backend {
             status: CredentialStatus.ok,
             account: null,
             fallbackOnLimit: false,
+            embeddingModel: null,
             createdAt: DateTime(2026),
           ),
           ...extraCredentials,
@@ -4529,6 +4530,7 @@ Credential chatGptCredential(
   status: status,
   account: 'me@example.com',
   fallbackOnLimit: fallbackOnLimit,
+  embeddingModel: null,
   createdAt: DateTime(2026),
 );
 

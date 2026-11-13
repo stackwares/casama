@@ -70,7 +70,12 @@ void main() {
       harness(backend, const BotProfileScreen(botId: botId)),
     );
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const Key('deleteAllChats')));
+    // The profile is a lazy list; scroll until the row at its end is built.
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('deleteAllChats')),
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('deleteAllChats')));
     await tester.pumpAndSettle();
