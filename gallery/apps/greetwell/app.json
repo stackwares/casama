@@ -1,0 +1,10 @@
+{
+  "description": "Find local experiences and tours in 500+ destinations with Greetwell.",
+  "category": "productivity",
+  "color": "26337A",
+  "homepage": "https://www.greetwell.com",
+  "url": "https://mcp.greetwell.com/mcp/",
+  "auth": ["none"],
+  "note": "Search only. Booking finishes on Greetwell. No sign-in needed.",
+  "capabilities": ["Search experiences by place and date", "Check availability", "Suggest activities that go together", "Get a booking link"]
+}

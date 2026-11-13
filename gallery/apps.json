@@ -2,6 +2,286 @@
   "schema": 1,
   "items": [
     {
+      "id": "amplitude",
+      "type": "app",
+      "name": "Amplitude",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "analytics"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "b9c929cee92ec39407713654ef54a1fe9bf306ee6055b8708372e24500ea4963",
+      "size": 496,
+      "description": "Ask questions about your product analytics in Amplitude.",
+      "document": {
+        "description": "Ask questions about your product analytics in Amplitude.",
+        "category": "data",
+        "color": "1E61F0",
+        "homepage": "https://amplitude.com",
+        "url": "https://mcp.amplitude.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Query charts and events",
+          "See dashboards",
+          "Look up cohorts"
+        ]
+      },
+      "files": [
+        "apps/amplitude/app.json",
+        "apps/amplitude/item.json"
+      ]
+    },
+    {
+      "id": "apify",
+      "type": "app",
+      "name": "Apify",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "scraping",
+        "web"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "70fbdf6fecddbc1ebbe6c4f99983607bc5acefabff10d4eea4cce632a97207f1",
+      "size": 514,
+      "description": "Run Apify's ready-made scrapers and web tools.",
+      "document": {
+        "description": "Run Apify's ready-made scrapers and web tools.",
+        "category": "automation",
+        "color": "246DFF",
+        "homepage": "https://apify.com",
+        "url": "https://mcp.apify.com",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "note": "Runs use your Apify plan.",
+        "capabilities": [
+          "Find a scraper",
+          "Run it on a site",
+          "Get the results"
+        ]
+      },
+      "files": [
+        "apps/apify/app.json",
+        "apps/apify/item.json"
+      ]
+    },
+    {
+      "id": "assemblyai",
+      "type": "app",
+      "name": "AssemblyAI",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "speech",
+        "transcripts"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "9bd0849e1a0677eff86d3225ba8087b7bf180195a38391c71e16cdfdbe0edf89",
+      "size": 556,
+      "description": "Transcribe audio and work with transcripts using AssemblyAI.",
+      "document": {
+        "description": "Transcribe audio and work with transcripts using AssemblyAI.",
+        "category": "developer",
+        "color": "3923C7",
+        "homepage": "https://www.assemblyai.com",
+        "url": "https://mcp.assemblyai.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "note": "Transcribing uses your AssemblyAI balance.",
+        "capabilities": [
+          "Transcribe audio",
+          "Read transcripts"
+        ]
+      },
+      "files": [
+        "apps/assemblyai/app.json",
+        "apps/assemblyai/item.json"
+      ]
+    },
+    {
+      "id": "attio",
+      "type": "app",
+      "name": "Attio",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "crm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "a80c411ec5f0441b7543fd8c7a8f6efb2d08534b1a702871f8210e007db67e3b",
+      "size": 493,
+      "description": "Find and update people, companies and deals in your Attio CRM.",
+      "document": {
+        "description": "Find and update people, companies and deals in your Attio CRM.",
+        "category": "sales",
+        "color": "242629",
+        "homepage": "https://attio.com",
+        "url": "https://mcp.attio.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Search records",
+          "Update people and companies",
+          "Add notes and tasks"
+        ]
+      },
+      "files": [
+        "apps/attio/app.json",
+        "apps/attio/item.json"
+      ]
+    },
+    {
+      "id": "beehiiv",
+      "type": "app",
+      "name": "beehiiv",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "newsletter"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "a2f1721abbdc4b98de6005cffef9304b3cc7bfc6de40dd9f6b6441f64e69a84c",
+      "size": 500,
+      "description": "See posts, subscribers and results for your beehiiv newsletter.",
+      "document": {
+        "description": "See posts, subscribers and results for your beehiiv newsletter.",
+        "category": "sales",
+        "color": "2F39BA",
+        "homepage": "https://www.beehiiv.com",
+        "url": "https://mcp.beehiiv.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Review posts",
+          "See subscribers",
+          "Check newsletter stats"
+        ]
+      },
+      "files": [
+        "apps/beehiiv/app.json",
+        "apps/beehiiv/item.json"
+      ]
+    },
+    {
+      "id": "bonsai",
+      "type": "app",
+      "name": "Bonsai",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "freelance",
+        "invoices"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "5c7bae96ddf33e8ccb571246757efd94479aada5bf8dee578f6ba7883fc2581e",
+      "size": 514,
+      "description": "Clients, projects, invoices and time in your Bonsai account.",
+      "document": {
+        "description": "Clients, projects, invoices and time in your Bonsai account.",
+        "category": "sales",
+        "color": "00B289",
+        "homepage": "https://www.hellobonsai.com",
+        "url": "https://mcp.hellobonsai.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "See clients and projects",
+          "Check invoices",
+          "Track time"
+        ]
+      },
+      "files": [
+        "apps/bonsai/app.json",
+        "apps/bonsai/item.json"
+      ]
+    },
+    {
+      "id": "cal-com",
+      "type": "app",
+      "name": "Cal.com",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "scheduling",
+        "calendar"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "7c80d335d024e1e9e7379019620a206b973acee5670f03dc9e2274737231d34d",
+      "size": 2017,
+      "description": "Share booking links and manage your Cal.com bookings.",
+      "document": {
+        "description": "Share booking links and manage your Cal.com bookings.",
+        "category": "productivity",
+        "color": "292929",
+        "homepage": "https://cal.com",
+        "url": "https://mcp.cal.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "See upcoming bookings",
+          "Find open times",
+          "Manage event types",
+          "Reschedule or cancel bookings"
+        ]
+      },
+      "files": [
+        "apps/cal-com/app.json",
+        "apps/cal-com/item.json",
+        "apps/cal-com/logo.svg"
+      ]
+    },
+    {
       "id": "canva",
       "type": "app",
       "name": "Canva",
@@ -44,6 +324,167 @@
       ]
     },
     {
+      "id": "circleback",
+      "type": "app",
+      "name": "Circleback",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "meetings",
+        "notes"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "5ab409b9d048328107af765afc1846205e736cb3894e447c1938e6a756b69f67",
+      "size": 527,
+      "description": "Search and read your Circleback meeting notes and action items.",
+      "document": {
+        "description": "Search and read your Circleback meeting notes and action items.",
+        "category": "productivity",
+        "color": "111111",
+        "homepage": "https://circleback.ai",
+        "url": "https://app.circleback.ai/api/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Search your meetings",
+          "Read meeting notes",
+          "Pull action items"
+        ]
+      },
+      "files": [
+        "apps/circleback/app.json",
+        "apps/circleback/item.json"
+      ]
+    },
+    {
+      "id": "close",
+      "type": "app",
+      "name": "Close",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "crm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "89c972e4cbab838744ded0a5d58be8db3b1f2216846e95df263e6d4024fc6636",
+      "size": 501,
+      "description": "Work with leads, contacts and opportunities in your Close CRM.",
+      "document": {
+        "description": "Work with leads, contacts and opportunities in your Close CRM.",
+        "category": "sales",
+        "color": "1A1A1A",
+        "homepage": "https://www.close.com",
+        "url": "https://mcp.close.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Search leads and contacts",
+          "Update opportunities",
+          "Log notes and tasks"
+        ]
+      },
+      "files": [
+        "apps/close/app.json",
+        "apps/close/item.json"
+      ]
+    },
+    {
+      "id": "coingecko",
+      "type": "app",
+      "name": "CoinGecko",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "crypto",
+        "prices"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "738f81c2f426e467ffa3347e987d9dc1a25d439a8e762e17871a2428f1bb356d",
+      "size": 544,
+      "description": "Crypto prices, market data, charts and trending coins from CoinGecko.",
+      "document": {
+        "description": "Crypto prices, market data, charts and trending coins from CoinGecko.",
+        "category": "data",
+        "color": "8DC63F",
+        "homepage": "https://www.coingecko.com",
+        "url": "https://mcp.coingecko.com/mcp",
+        "auth": [
+          "none"
+        ],
+        "note": "No sign-in needed.",
+        "capabilities": [
+          "Check coin prices",
+          "Compare coins",
+          "See price history",
+          "See trending coins"
+        ]
+      },
+      "files": [
+        "apps/coingecko/app.json",
+        "apps/coingecko/item.json"
+      ]
+    },
+    {
+      "id": "copilot-money",
+      "type": "app",
+      "name": "Copilot Money",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "budget",
+        "finance"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "c0ca5b9e94d075ccac1e67e7d04e0b4054cff3f1ead8286672cde6ccbbf98dcb",
+      "size": 576,
+      "description": "Ask about your spending, budgets and accounts in Copilot Money.",
+      "document": {
+        "description": "Ask about your spending, budgets and accounts in Copilot Money.",
+        "category": "payments",
+        "color": "00CC4B",
+        "homepage": "https://copilot.money",
+        "url": "https://mcp.copilot.money/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "note": "Needs a Copilot Money subscription.",
+        "capabilities": [
+          "Review spending by category",
+          "Check budgets",
+          "See account balances"
+        ]
+      },
+      "files": [
+        "apps/copilot-money/app.json",
+        "apps/copilot-money/item.json"
+      ]
+    },
+    {
       "id": "deepwiki",
       "type": "app",
       "name": "DeepWiki",
@@ -80,6 +521,1943 @@
       "files": [
         "apps/deepwiki/app.json",
         "apps/deepwiki/item.json"
+      ]
+    },
+    {
+      "id": "evernote",
+      "type": "app",
+      "name": "Evernote",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "notes"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "5480e0833d864e3de3ecb9a4e6c60a1a052d6371102155f30f5bc768ddbee3a5",
+      "size": 1918,
+      "description": "Search, read and create notes in your Evernote.",
+      "document": {
+        "description": "Search, read and create notes in your Evernote.",
+        "category": "productivity",
+        "color": "00A82D",
+        "homepage": "https://evernote.com",
+        "url": "https://mcp.evernote.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Search your notes",
+          "Read a note",
+          "Create notes"
+        ]
+      },
+      "files": [
+        "apps/evernote/app.json",
+        "apps/evernote/item.json",
+        "apps/evernote/logo.svg"
+      ]
+    },
+    {
+      "id": "excalidraw",
+      "type": "app",
+      "name": "Excalidraw",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "diagrams",
+        "whiteboard"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "81119781aa9f5fbb6137f4525dd308d3122dbec9a4dc62dfe0192c56cc0aff33",
+      "size": 5752,
+      "description": "Draw hand-drawn style diagrams and share them on excalidraw.com.",
+      "document": {
+        "description": "Draw hand-drawn style diagrams and share them on excalidraw.com.",
+        "category": "design",
+        "color": "6965DB",
+        "homepage": "https://excalidraw.com",
+        "url": "https://mcp.excalidraw.com/mcp",
+        "auth": [
+          "none"
+        ],
+        "note": "No sign-in needed.",
+        "capabilities": [
+          "Draw a diagram",
+          "Share it as an excalidraw.com link"
+        ]
+      },
+      "files": [
+        "apps/excalidraw/app.json",
+        "apps/excalidraw/item.json",
+        "apps/excalidraw/logo.svg"
+      ]
+    },
+    {
+      "id": "fathom",
+      "type": "app",
+      "name": "Fathom",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "meetings",
+        "notes"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "06146192671af4263723f0cc6cf9acdcd523774886ecdfb3f59256ddf102aebe",
+      "size": 515,
+      "description": "Search and read your Fathom meeting recordings, notes and summaries.",
+      "document": {
+        "description": "Search and read your Fathom meeting recordings, notes and summaries.",
+        "category": "productivity",
+        "color": "9600FF",
+        "homepage": "https://fathom.video",
+        "url": "https://api.fathom.ai/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Search your meetings",
+          "Read summaries",
+          "Pull action items"
+        ]
+      },
+      "files": [
+        "apps/fathom/app.json",
+        "apps/fathom/item.json"
+      ]
+    },
+    {
+      "id": "feedly",
+      "type": "app",
+      "name": "Feedly",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "news",
+        "rss"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "c9d1022c4a1949f9027252a6abf6875a98c8606338882d7409fa2ceca90884ea",
+      "size": 1396,
+      "description": "Read and search the news and feeds you follow in Feedly.",
+      "document": {
+        "description": "Read and search the news and feeds you follow in Feedly.",
+        "category": "productivity",
+        "color": "2BB24C",
+        "homepage": "https://feedly.com",
+        "url": "https://mcp.feedly.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Read your latest articles",
+          "Search your feeds",
+          "Save articles"
+        ]
+      },
+      "files": [
+        "apps/feedly/app.json",
+        "apps/feedly/item.json",
+        "apps/feedly/logo.svg"
+      ]
+    },
+    {
+      "id": "fireflies",
+      "type": "app",
+      "name": "Fireflies",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "meetings",
+        "transcripts"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "3f32023483d566e7ab850f7a7e77a7f19cb5ea67d27f78a7b5c28b3579756455",
+      "size": 539,
+      "description": "Search and read your Fireflies meeting transcripts and summaries.",
+      "document": {
+        "description": "Search and read your Fireflies meeting transcripts and summaries.",
+        "category": "productivity",
+        "color": "7A5AF8",
+        "homepage": "https://fireflies.ai",
+        "url": "https://api.fireflies.ai/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Search your meetings",
+          "Read transcripts",
+          "Get summaries and action items"
+        ]
+      },
+      "files": [
+        "apps/fireflies/app.json",
+        "apps/fireflies/item.json"
+      ]
+    },
+    {
+      "id": "gitlab",
+      "type": "app",
+      "name": "GitLab",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "code",
+        "git"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "81aa173987cb925d2912cc7e96a80ea50a0cfa44c5657a942bf21f222aabe17d",
+      "size": 1084,
+      "description": "Issues, merge requests and pipelines on GitLab.com.",
+      "document": {
+        "description": "Issues, merge requests and pipelines on GitLab.com.",
+        "category": "developer",
+        "color": "FC6D26",
+        "homepage": "https://gitlab.com",
+        "url": "https://gitlab.com/api/v4/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "note": "GitLab.com only.",
+        "capabilities": [
+          "Search issues and merge requests",
+          "Read and comment on issues",
+          "Check pipelines"
+        ]
+      },
+      "files": [
+        "apps/gitlab/app.json",
+        "apps/gitlab/item.json",
+        "apps/gitlab/logo.svg"
+      ]
+    },
+    {
+      "id": "grafana",
+      "type": "app",
+      "name": "Grafana Cloud",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "monitoring"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "c53d68ef330f1f0f0ede21a5e771b97dcdf1bedbfbc753c115ee87e684753d8e",
+      "size": 4320,
+      "description": "Search dashboards, query metrics and logs, and check alerts in Grafana Cloud.",
+      "document": {
+        "description": "Search dashboards, query metrics and logs, and check alerts in Grafana Cloud.",
+        "category": "developer",
+        "color": "F46800",
+        "homepage": "https://grafana.com",
+        "url": "https://mcp.grafana.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Search dashboards",
+          "Query metrics and logs",
+          "Check alerts and incidents"
+        ]
+      },
+      "files": [
+        "apps/grafana/app.json",
+        "apps/grafana/item.json",
+        "apps/grafana/logo.svg"
+      ]
+    },
+    {
+      "id": "granola",
+      "type": "app",
+      "name": "Granola",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "meetings",
+        "notes"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "78a972752374b10782bc122f376a9790ee91758d6b470ff69188afec0835818e",
+      "size": 514,
+      "description": "Search and read your Granola meeting notes and transcripts.",
+      "document": {
+        "description": "Search and read your Granola meeting notes and transcripts.",
+        "category": "productivity",
+        "color": "1F1F1F",
+        "homepage": "https://www.granola.ai",
+        "url": "https://mcp.granola.ai/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Search your meetings",
+          "Read meeting notes",
+          "Pull action items"
+        ]
+      },
+      "files": [
+        "apps/granola/app.json",
+        "apps/granola/item.json"
+      ]
+    },
+    {
+      "id": "greetwell",
+      "type": "app",
+      "name": "Greetwell",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "travel",
+        "activities"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "d1facbd0d56341aac3e7404889cea6cb75e0791b0e38a176f2aa2cbfcaa59347",
+      "size": 643,
+      "description": "Find local experiences and tours in 500+ destinations with Greetwell.",
+      "document": {
+        "description": "Find local experiences and tours in 500+ destinations with Greetwell.",
+        "category": "productivity",
+        "color": "26337A",
+        "homepage": "https://www.greetwell.com",
+        "url": "https://mcp.greetwell.com/mcp/",
+        "auth": [
+          "none"
+        ],
+        "note": "Search only. Booking finishes on Greetwell. No sign-in needed.",
+        "capabilities": [
+          "Search experiences by place and date",
+          "Check availability",
+          "Suggest activities that go together",
+          "Get a booking link"
+        ]
+      },
+      "files": [
+        "apps/greetwell/app.json",
+        "apps/greetwell/item.json"
+      ]
+    },
+    {
+      "id": "honeycomb",
+      "type": "app",
+      "name": "Honeycomb",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "observability"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "822fca6aea5c5a990df484313542d0e1123678791ea6f76305a82e965199d73f",
+      "size": 522,
+      "description": "Query traces and events and investigate issues in Honeycomb.",
+      "document": {
+        "description": "Query traces and events and investigate issues in Honeycomb.",
+        "category": "developer",
+        "color": "0278CD",
+        "homepage": "https://www.honeycomb.io",
+        "url": "https://mcp.honeycomb.io/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Query your data",
+          "Investigate slow requests",
+          "See boards and triggers"
+        ]
+      },
+      "files": [
+        "apps/honeycomb/app.json",
+        "apps/honeycomb/item.json"
+      ]
+    },
+    {
+      "id": "hootsuite",
+      "type": "app",
+      "name": "Hootsuite",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "social"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "32935351aca4a5f9861d21da38c2e37d4b17329f7e0751d6e710352da2859ef5",
+      "size": 1908,
+      "description": "Plan and review social posts in your Hootsuite account.",
+      "document": {
+        "description": "Plan and review social posts in your Hootsuite account.",
+        "category": "sales",
+        "color": "FF4C46",
+        "homepage": "https://www.hootsuite.com",
+        "url": "https://mcp.hootsuite.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "See scheduled posts",
+          "Draft and schedule posts",
+          "Review post results"
+        ]
+      },
+      "files": [
+        "apps/hootsuite/app.json",
+        "apps/hootsuite/item.json",
+        "apps/hootsuite/logo.svg"
+      ]
+    },
+    {
+      "id": "ideogram",
+      "type": "app",
+      "name": "Ideogram",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "images",
+        "ai"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "078fd74d3af493f8b2dd2aa6f1e655b56b520239260619d610d1847f7b71f703",
+      "size": 553,
+      "description": "Generate images with Ideogram, including clear text in images.",
+      "document": {
+        "description": "Generate images with Ideogram, including clear text in images.",
+        "category": "design",
+        "color": "272038",
+        "homepage": "https://ideogram.ai",
+        "url": "https://mcp.ideogram.ai/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "note": "Generating uses your Ideogram plan.",
+        "capabilities": [
+          "Generate images from a prompt",
+          "Make images with text in them"
+        ]
+      },
+      "files": [
+        "apps/ideogram/app.json",
+        "apps/ideogram/item.json"
+      ]
+    },
+    {
+      "id": "instacart",
+      "type": "app",
+      "name": "Instacart",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "shopping",
+        "groceries"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "ab9d5639b6b1b3dd89105264d70a4872a0422e85202344a0236d7c71207943da",
+      "size": 1162,
+      "description": "Turn recipes and lists into Instacart shopping pages you can order from.",
+      "document": {
+        "description": "Turn recipes and lists into Instacart shopping pages you can order from.",
+        "category": "productivity",
+        "color": "43B02A",
+        "homepage": "https://www.instacart.com",
+        "url": "https://mcp.instacart.com/mcp",
+        "auth": [
+          "none"
+        ],
+        "note": "Creates pages on Instacart. Ordering and payment finish on Instacart. No sign-in needed.",
+        "capabilities": [
+          "Make a shopping list page",
+          "Turn a recipe into a cart-ready page"
+        ]
+      },
+      "files": [
+        "apps/instacart/app.json",
+        "apps/instacart/item.json",
+        "apps/instacart/logo.svg"
+      ]
+    },
+    {
+      "id": "jam",
+      "type": "app",
+      "name": "Jam",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "bugs"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "bcd78be5935dd8039aee925a2320555272e948dda7f0fa191fdf4b1a9f52890d",
+      "size": 506,
+      "description": "Read Jam bug reports with their console logs, network requests and steps.",
+      "document": {
+        "description": "Read Jam bug reports with their console logs, network requests and steps.",
+        "category": "developer",
+        "color": "202020",
+        "homepage": "https://jam.dev",
+        "url": "https://mcp.jam.dev/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Read a bug report",
+          "See console and network logs",
+          "Follow repro steps"
+        ]
+      },
+      "files": [
+        "apps/jam/app.json",
+        "apps/jam/item.json"
+      ]
+    },
+    {
+      "id": "jina",
+      "type": "app",
+      "name": "Jina AI",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "web",
+        "search"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "6d630a36c6662c3d172c663524c19750f6272fe18d1660e295cac4981bb35502",
+      "size": 556,
+      "description": "Read any web page or PDF as clean text, and search the web and arXiv.",
+      "document": {
+        "description": "Read any web page or PDF as clean text, and search the web and arXiv.",
+        "category": "data",
+        "color": "111111",
+        "homepage": "https://jina.ai",
+        "url": "https://mcp.jina.ai/sse",
+        "auth": [
+          "none"
+        ],
+        "note": "No sign-in needed. Free use is rate limited.",
+        "capabilities": [
+          "Read a web page or PDF",
+          "Search the web",
+          "Search arXiv papers",
+          "Screenshot a page"
+        ]
+      },
+      "files": [
+        "apps/jina/app.json",
+        "apps/jina/item.json"
+      ]
+    },
+    {
+      "id": "jotform",
+      "type": "app",
+      "name": "Jotform",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "forms"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "eced7367e08200043ee534c90c5d7c56a4eb506d1df70881d09112af011e8976",
+      "size": 477,
+      "description": "Create Jotform forms and read their submissions.",
+      "document": {
+        "description": "Create Jotform forms and read their submissions.",
+        "category": "productivity",
+        "color": "FF6100",
+        "homepage": "https://www.jotform.com",
+        "url": "https://mcp.jotform.com/",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Create forms",
+          "See your forms",
+          "Read submissions"
+        ]
+      },
+      "files": [
+        "apps/jotform/app.json",
+        "apps/jotform/item.json"
+      ]
+    },
+    {
+      "id": "kiwi",
+      "type": "app",
+      "name": "Kiwi.com",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "travel",
+        "flights"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "9a76d9d11a8e74ddf233076ab835e0e52fce3b6d82dbacb040664d4fad291454",
+      "size": 599,
+      "description": "Search flights on Kiwi.com, including cheap routes that combine airlines.",
+      "document": {
+        "description": "Search flights on Kiwi.com, including cheap routes that combine airlines.",
+        "category": "productivity",
+        "color": "00A991",
+        "homepage": "https://www.kiwi.com",
+        "url": "https://mcp.kiwi.com",
+        "auth": [
+          "none"
+        ],
+        "note": "Search only. Booking finishes on Kiwi.com. No sign-in needed.",
+        "capabilities": [
+          "Search flights by city, airport and dates",
+          "Compare prices and stops",
+          "Get a booking link"
+        ]
+      },
+      "files": [
+        "apps/kiwi/app.json",
+        "apps/kiwi/item.json"
+      ]
+    },
+    {
+      "id": "klaviyo",
+      "type": "app",
+      "name": "Klaviyo",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "email",
+        "marketing"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "c5bebb8f43ce9cd03ef1b10481b8e3ebb287306942f9d5dfcefd00a003e6ebde",
+      "size": 511,
+      "description": "See campaigns, flows and results in your Klaviyo account.",
+      "document": {
+        "description": "See campaigns, flows and results in your Klaviyo account.",
+        "category": "sales",
+        "color": "232426",
+        "homepage": "https://www.klaviyo.com",
+        "url": "https://mcp.klaviyo.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Review campaign results",
+          "See flows and lists",
+          "Look up profiles"
+        ]
+      },
+      "files": [
+        "apps/klaviyo/app.json",
+        "apps/klaviyo/item.json"
+      ]
+    },
+    {
+      "id": "krisp",
+      "type": "app",
+      "name": "Krisp",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "meetings",
+        "notes"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "70c41899d6edad107fa002f9680495a2f93358ec3b36bf5fc34814b627095818",
+      "size": 500,
+      "description": "Search and read your Krisp meeting notes and transcripts.",
+      "document": {
+        "description": "Search and read your Krisp meeting notes and transcripts.",
+        "category": "productivity",
+        "color": "614EFA",
+        "homepage": "https://krisp.ai",
+        "url": "https://mcp.krisp.ai/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Search your meetings",
+          "Read transcripts",
+          "Get meeting notes"
+        ]
+      },
+      "files": [
+        "apps/krisp/app.json",
+        "apps/krisp/item.json"
+      ]
+    },
+    {
+      "id": "launchdarkly",
+      "type": "app",
+      "name": "LaunchDarkly",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "feature-flags"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "8b786fd2ab78063cadb14d80cbd2cefc4b3a061524d10b0e666a957f13a562e0",
+      "size": 508,
+      "description": "See and change feature flags in LaunchDarkly.",
+      "document": {
+        "description": "See and change feature flags in LaunchDarkly.",
+        "category": "developer",
+        "color": "191919",
+        "homepage": "https://launchdarkly.com",
+        "url": "https://mcp.launchdarkly.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "List feature flags",
+          "Turn flags on or off",
+          "Review flag changes"
+        ]
+      },
+      "files": [
+        "apps/launchdarkly/app.json",
+        "apps/launchdarkly/item.json"
+      ]
+    },
+    {
+      "id": "lucid",
+      "type": "app",
+      "name": "Lucid",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "diagrams"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "b738b1e33f3561304ebd90259cc80ad28dd3eb26491336a075e86e5ba4f41b4c",
+      "size": 614,
+      "description": "Find, read and create Lucidchart and Lucidspark documents.",
+      "document": {
+        "description": "Find, read and create Lucidchart and Lucidspark documents.",
+        "category": "design",
+        "color": "282C33",
+        "homepage": "https://lucid.co",
+        "url": "https://mcp.lucid.app/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Search your documents",
+          "Read a diagram",
+          "Create diagrams"
+        ]
+      },
+      "files": [
+        "apps/lucid/app.json",
+        "apps/lucid/item.json",
+        "apps/lucid/logo.svg"
+      ]
+    },
+    {
+      "id": "meetgeek",
+      "type": "app",
+      "name": "MeetGeek",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "meetings",
+        "notes"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "09a83940ba054d099bafb622fe047f9bfaaef5a6a4c73efd079c04e07c9f95e7",
+      "size": 511,
+      "description": "Search and read your MeetGeek meeting recordings and summaries.",
+      "document": {
+        "description": "Search and read your MeetGeek meeting recordings and summaries.",
+        "category": "productivity",
+        "color": "4264D1",
+        "homepage": "https://meetgeek.ai",
+        "url": "https://mcp.meetgeek.ai/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Search your meetings",
+          "Read transcripts",
+          "Get summaries"
+        ]
+      },
+      "files": [
+        "apps/meetgeek/app.json",
+        "apps/meetgeek/item.json"
+      ]
+    },
+    {
+      "id": "mercury",
+      "type": "app",
+      "name": "Mercury",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "banking",
+        "business"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "6b0b1d34761b3883e322df1dbfd280300a7067c614c66596f32cdec9ce758b55",
+      "size": 565,
+      "description": "See balances and transactions in your Mercury business bank account.",
+      "document": {
+        "description": "See balances and transactions in your Mercury business bank account.",
+        "category": "payments",
+        "color": "272735",
+        "homepage": "https://mercury.com",
+        "url": "https://mcp.mercury.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "note": "Needs a Mercury business account.",
+        "capabilities": [
+          "See account balances",
+          "Search transactions",
+          "Review spending"
+        ]
+      },
+      "files": [
+        "apps/mercury/app.json",
+        "apps/mercury/item.json"
+      ]
+    },
+    {
+      "id": "miro",
+      "type": "app",
+      "name": "Miro",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "whiteboard"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "ee9bd1223524a9d776f8568dd4ee3a3dc5f7c9db9ae358cac34476796b343e42",
+      "size": 689,
+      "description": "Read and add to your Miro boards.",
+      "document": {
+        "description": "Read and add to your Miro boards.",
+        "category": "design",
+        "color": "050038",
+        "homepage": "https://miro.com",
+        "url": "https://mcp.miro.com/",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Read a board",
+          "Add sticky notes and shapes",
+          "Create diagrams"
+        ]
+      },
+      "files": [
+        "apps/miro/app.json",
+        "apps/miro/item.json",
+        "apps/miro/logo.svg"
+      ]
+    },
+    {
+      "id": "mixpanel",
+      "type": "app",
+      "name": "Mixpanel",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "analytics"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "5c654b0ba9e7a68576f1d529aff2a2e1ec2543185acd9869fdd542a3e0457496",
+      "size": 1346,
+      "description": "Ask questions about your product analytics in Mixpanel.",
+      "document": {
+        "description": "Ask questions about your product analytics in Mixpanel.",
+        "category": "data",
+        "color": "7856FF",
+        "homepage": "https://mixpanel.com",
+        "url": "https://mcp.mixpanel.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Query events and funnels",
+          "See reports",
+          "Look up users"
+        ]
+      },
+      "files": [
+        "apps/mixpanel/app.json",
+        "apps/mixpanel/item.json",
+        "apps/mixpanel/logo.svg"
+      ]
+    },
+    {
+      "id": "motion",
+      "type": "app",
+      "name": "Motion",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "tasks",
+        "calendar"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "d1de143ba4ef515335ed373d4915d8bf1efff5336a707cffb6e20156abd44cba",
+      "size": 507,
+      "description": "Plan tasks and projects that Motion schedules into your calendar.",
+      "document": {
+        "description": "Plan tasks and projects that Motion schedules into your calendar.",
+        "category": "productivity",
+        "color": "3F6254",
+        "homepage": "https://www.usemotion.com",
+        "url": "https://mcp.motion.so/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Add tasks",
+          "See your schedule",
+          "Manage projects"
+        ]
+      },
+      "files": [
+        "apps/motion/app.json",
+        "apps/motion/item.json"
+      ]
+    },
+    {
+      "id": "netlify",
+      "type": "app",
+      "name": "Netlify",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "hosting",
+        "deploys"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "1d73217b5474e3847eb4331aa98e8e1bbc4eef2246b20a5bdff904e31de67f16",
+      "size": 1111,
+      "description": "Manage your Netlify sites and deploys.",
+      "document": {
+        "description": "Manage your Netlify sites and deploys.",
+        "category": "developer",
+        "color": "00C7B7",
+        "homepage": "https://www.netlify.com",
+        "url": "https://mcp.netlify.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "See sites and deploys",
+          "Start a deploy",
+          "Manage settings"
+        ]
+      },
+      "files": [
+        "apps/netlify/app.json",
+        "apps/netlify/item.json",
+        "apps/netlify/logo.svg"
+      ]
+    },
+    {
+      "id": "otter",
+      "type": "app",
+      "name": "Otter.ai",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "meetings",
+        "transcripts"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "c52d41e6a84773cdbd0bb79100836df13a4e55ca0531c36da2dd948a0de5dee1",
+      "size": 522,
+      "description": "Search and read your Otter meeting transcripts and summaries.",
+      "document": {
+        "description": "Search and read your Otter meeting transcripts and summaries.",
+        "category": "productivity",
+        "color": "1D25E2",
+        "homepage": "https://otter.ai",
+        "url": "https://mcp.otter.ai/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Search your conversations",
+          "Read transcripts",
+          "Get meeting summaries"
+        ]
+      },
+      "files": [
+        "apps/otter/app.json",
+        "apps/otter/item.json"
+      ]
+    },
+    {
+      "id": "paypal",
+      "type": "app",
+      "name": "PayPal",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "payments",
+        "invoices"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "148f30e713d7de598da96b55147955353831e014a8112fa79ff9240a8a857a20",
+      "size": 1134,
+      "description": "Create invoices, check transactions and manage PayPal payments.",
+      "document": {
+        "description": "Create invoices, check transactions and manage PayPal payments.",
+        "category": "payments",
+        "color": "003087",
+        "homepage": "https://www.paypal.com",
+        "url": "https://mcp.paypal.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Create and send invoices",
+          "Look up transactions",
+          "Check orders and refunds"
+        ]
+      },
+      "files": [
+        "apps/paypal/app.json",
+        "apps/paypal/item.json",
+        "apps/paypal/logo.svg"
+      ]
+    },
+    {
+      "id": "peek",
+      "type": "app",
+      "name": "Peek",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "travel",
+        "activities"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "90bdc562ce04400b2e6c68a2cb0ed02132c4fb2cf4841531c028ab88f17f57dc",
+      "size": 570,
+      "description": "Find tours, activities and things to do with Peek.",
+      "document": {
+        "description": "Find tours, activities and things to do with Peek.",
+        "category": "productivity",
+        "color": "111111",
+        "homepage": "https://www.peek.com",
+        "url": "https://mcp.peek.com/mcp",
+        "auth": [
+          "none"
+        ],
+        "note": "Search only. Booking finishes on Peek. No sign-in needed.",
+        "capabilities": [
+          "Search activities by place",
+          "See dates, times and prices",
+          "Get an activity's details"
+        ]
+      },
+      "files": [
+        "apps/peek/app.json",
+        "apps/peek/item.json"
+      ]
+    },
+    {
+      "id": "plaud",
+      "type": "app",
+      "name": "Plaud",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "recordings",
+        "notes"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "b648189e32cb8714810c82567299e1f6ca6bc3d98794bdf3c829382d0a93ec39",
+      "size": 521,
+      "description": "Search and read the recordings, transcripts and summaries from your Plaud.",
+      "document": {
+        "description": "Search and read the recordings, transcripts and summaries from your Plaud.",
+        "category": "productivity",
+        "color": "111111",
+        "homepage": "https://www.plaud.ai",
+        "url": "https://mcp.plaud.ai/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Search your recordings",
+          "Read transcripts",
+          "Get summaries"
+        ]
+      },
+      "files": [
+        "apps/plaud/app.json",
+        "apps/plaud/item.json"
+      ]
+    },
+    {
+      "id": "postman",
+      "type": "app",
+      "name": "Postman",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "api"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "e8cf6a62fc7503e8270fd67ccfbb6f545568fb75ad2c10ab104fbd0ca02c8d70",
+      "size": 1833,
+      "description": "Work with your Postman workspaces, collections and APIs.",
+      "document": {
+        "description": "Work with your Postman workspaces, collections and APIs.",
+        "category": "developer",
+        "color": "FF6C37",
+        "homepage": "https://www.postman.com",
+        "url": "https://mcp.postman.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Search collections",
+          "Read and edit requests",
+          "Manage workspaces"
+        ]
+      },
+      "files": [
+        "apps/postman/app.json",
+        "apps/postman/item.json",
+        "apps/postman/logo.svg"
+      ]
+    },
+    {
+      "id": "prisma",
+      "type": "app",
+      "name": "Prisma Postgres",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "database"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "23a476330209898d89f4bd92eb4ca09ed6aab6cfc43f72acb8475f29a3aee0a8",
+      "size": 1015,
+      "description": "Create and manage Prisma Postgres databases.",
+      "document": {
+        "description": "Create and manage Prisma Postgres databases.",
+        "category": "developer",
+        "color": "2D3748",
+        "homepage": "https://www.prisma.io",
+        "url": "https://mcp.prisma.io/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Create databases",
+          "Run queries",
+          "Manage backups"
+        ]
+      },
+      "files": [
+        "apps/prisma/app.json",
+        "apps/prisma/item.json",
+        "apps/prisma/logo.svg"
+      ]
+    },
+    {
+      "id": "ramp",
+      "type": "app",
+      "name": "Ramp",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "expenses",
+        "business"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "75b91be0900d4e7b220a94cb214b7c86d54892bc15247a1a461b07ff6c375984",
+      "size": 554,
+      "description": "Review spending, cards and reimbursements in your Ramp account.",
+      "document": {
+        "description": "Review spending, cards and reimbursements in your Ramp account.",
+        "category": "payments",
+        "color": "1F1F1D",
+        "homepage": "https://ramp.com",
+        "url": "https://mcp.ramp.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "note": "Needs a Ramp business account.",
+        "capabilities": [
+          "Search transactions",
+          "Review card spending",
+          "Check reimbursements"
+        ]
+      },
+      "files": [
+        "apps/ramp/app.json",
+        "apps/ramp/item.json"
+      ]
+    },
+    {
+      "id": "replicate",
+      "type": "app",
+      "name": "Replicate",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "ai",
+        "models"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "c4aa2f405f39e344d49f7b858ec7d26bbea71644cebcbee38bdda4a2550b2eda",
+      "size": 709,
+      "description": "Find and run AI models on Replicate.",
+      "document": {
+        "description": "Find and run AI models on Replicate.",
+        "category": "developer",
+        "color": "111111",
+        "homepage": "https://replicate.com",
+        "url": "https://mcp.replicate.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "note": "Running models uses your Replicate credit.",
+        "capabilities": [
+          "Search models",
+          "Run a model",
+          "Check predictions"
+        ]
+      },
+      "files": [
+        "apps/replicate/app.json",
+        "apps/replicate/item.json",
+        "apps/replicate/logo.svg"
+      ]
+    },
+    {
+      "id": "resend",
+      "type": "app",
+      "name": "Resend",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "email"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "72211eea8e6d22f36f5b41ca558a47740f9c79190f383c47c7676f719b54df6e",
+      "size": 963,
+      "description": "Send email and manage domains, contacts and broadcasts in Resend.",
+      "document": {
+        "description": "Send email and manage domains, contacts and broadcasts in Resend.",
+        "category": "developer",
+        "color": "111111",
+        "homepage": "https://resend.com",
+        "url": "https://mcp.resend.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Send email",
+          "Manage contacts",
+          "Check domains and logs"
+        ]
+      },
+      "files": [
+        "apps/resend/app.json",
+        "apps/resend/item.json",
+        "apps/resend/logo.svg"
+      ]
+    },
+    {
+      "id": "runway",
+      "type": "app",
+      "name": "Runway",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "video",
+        "ai"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "cc908bc1073f21b66f155af8e90791cd94182f4c3a98707ac2ab39972d3f5c3b",
+      "size": 515,
+      "description": "Generate videos and images with Runway.",
+      "document": {
+        "description": "Generate videos and images with Runway.",
+        "category": "design",
+        "color": "0C0C0C",
+        "homepage": "https://runwayml.com",
+        "url": "https://mcp.runwayml.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "note": "Generating uses your Runway credits.",
+        "capabilities": [
+          "Generate video from a prompt",
+          "Generate images"
+        ]
+      },
+      "files": [
+        "apps/runway/app.json",
+        "apps/runway/item.json"
+      ]
+    },
+    {
+      "id": "tally",
+      "type": "app",
+      "name": "Tally",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "forms"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "d08361bfbda9f0bcc4bb9049d7af94794596386b6d0a8a0aa589eae4963a02ef",
+      "size": 462,
+      "description": "Create Tally forms and read their responses.",
+      "document": {
+        "description": "Create Tally forms and read their responses.",
+        "category": "productivity",
+        "color": "37352F",
+        "homepage": "https://tally.so",
+        "url": "https://api.tally.so/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Create forms",
+          "See your forms",
+          "Read responses"
+        ]
+      },
+      "files": [
+        "apps/tally/app.json",
+        "apps/tally/item.json"
+      ]
+    },
+    {
+      "id": "tavily",
+      "type": "app",
+      "name": "Tavily",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "search",
+        "web"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "31a8e2c8d2ac8972814dfe2f8b354f8acc84ff05c2ac1f9bce41f5f4b4c42445",
+      "size": 498,
+      "description": "Search the web and pull clean content from pages with Tavily.",
+      "document": {
+        "description": "Search the web and pull clean content from pages with Tavily.",
+        "category": "data",
+        "color": "0B0907",
+        "homepage": "https://www.tavily.com",
+        "url": "https://mcp.tavily.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Search the web",
+          "Extract a page's content",
+          "Crawl a site"
+        ]
+      },
+      "files": [
+        "apps/tavily/app.json",
+        "apps/tavily/item.json"
+      ]
+    },
+    {
+      "id": "tldv",
+      "type": "app",
+      "name": "tl;dv",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "meetings",
+        "transcripts"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "dde00af6cca2a9f4365c827c11a3eeeecbe11f8674bbe4a518afb2516ce9741f",
+      "size": 503,
+      "description": "Search and read your tl;dv meeting recordings and notes.",
+      "document": {
+        "description": "Search and read your tl;dv meeting recordings and notes.",
+        "category": "productivity",
+        "color": "8585FF",
+        "homepage": "https://tldv.io",
+        "url": "https://mcp.tldv.io/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Search your meetings",
+          "Read transcripts",
+          "Get meeting notes"
+        ]
+      },
+      "files": [
+        "apps/tldv/app.json",
+        "apps/tldv/item.json"
+      ]
+    },
+    {
+      "id": "todoist",
+      "type": "app",
+      "name": "Todoist",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "tasks",
+        "todo"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "58922c211eeb5845dc970920034a94c5010074b3914dbc4f4c9a87d909e96ee8",
+      "size": 1383,
+      "description": "Add, find and complete your Todoist tasks and projects.",
+      "document": {
+        "description": "Add, find and complete your Todoist tasks and projects.",
+        "category": "productivity",
+        "color": "E44332",
+        "homepage": "https://www.todoist.com",
+        "url": "https://ai.todoist.net/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Add tasks with due dates",
+          "See today's and upcoming tasks",
+          "Complete and update tasks",
+          "Organize projects"
+        ]
+      },
+      "files": [
+        "apps/todoist/app.json",
+        "apps/todoist/item.json",
+        "apps/todoist/logo.svg"
+      ]
+    },
+    {
+      "id": "trivago",
+      "type": "app",
+      "name": "trivago",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "travel",
+        "hotels"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "2e0b01b85e6a4e63756d127570e952632db50166b7b12939114a628bb6ccfc6c",
+      "size": 1310,
+      "description": "Search hotels and stays across major booking sites with trivago.",
+      "document": {
+        "description": "Search hotels and stays across major booking sites with trivago.",
+        "category": "productivity",
+        "color": "E32851",
+        "homepage": "https://www.trivago.com",
+        "url": "https://mcp.trivago.com/mcp",
+        "auth": [
+          "none"
+        ],
+        "note": "Search only. Booking finishes on the site with the deal. No sign-in needed.",
+        "capabilities": [
+          "Search hotels near a place",
+          "Search hotels by name",
+          "Compare prices across sites",
+          "See when a destination is cheapest"
+        ]
+      },
+      "files": [
+        "apps/trivago/app.json",
+        "apps/trivago/item.json",
+        "apps/trivago/logo.svg"
+      ]
+    },
+    {
+      "id": "turkish-airlines",
+      "type": "app",
+      "name": "Turkish Airlines",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "travel",
+        "flights"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "971e2b6718e865678d579ddf25274dd1811a38b7f37013e5f024e9657e4d0d73",
+      "size": 1236,
+      "description": "Search Turkish Airlines flights, check flight status and see your bookings.",
+      "document": {
+        "description": "Search Turkish Airlines flights, check flight status and see your bookings.",
+        "category": "productivity",
+        "color": "C70A0C",
+        "homepage": "https://www.turkishairlines.com",
+        "url": "https://mcp.turkishtechlab.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "note": "Sign in with your Miles&Smiles account. Booking finishes on Turkish Airlines' site.",
+        "capabilities": [
+          "Search Turkish Airlines flights",
+          "Check flight status",
+          "See your bookings and check-in",
+          "Look up your Miles&Smiles profile"
+        ]
+      },
+      "files": [
+        "apps/turkish-airlines/app.json",
+        "apps/turkish-airlines/item.json",
+        "apps/turkish-airlines/logo.svg"
+      ]
+    },
+    {
+      "id": "unsplash",
+      "type": "app",
+      "name": "Unsplash",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "photos"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "c8bdaa2af91cc3f6195d6bf4c5c85912681bcbed81c42b639e55db5b644604ae",
+      "size": 606,
+      "description": "Search Unsplash for free, high-quality photos.",
+      "document": {
+        "description": "Search Unsplash for free, high-quality photos.",
+        "category": "design",
+        "color": "111111",
+        "homepage": "https://unsplash.com",
+        "url": "https://mcp.unsplash.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "cimd",
+        "capabilities": [
+          "Search photos",
+          "Get photo details and credits"
+        ]
+      },
+      "files": [
+        "apps/unsplash/app.json",
+        "apps/unsplash/item.json",
+        "apps/unsplash/logo.svg"
+      ]
+    },
+    {
+      "id": "wise",
+      "type": "app",
+      "name": "Wise",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "money",
+        "transfers"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "15339927b9ca3a2d5ca0f2c70c53b7fbc96ffb2d5b2e1ec9f54107d91a74b9e5",
+      "size": 720,
+      "description": "See your Wise balances and exchange rates, and prepare money transfers.",
+      "document": {
+        "description": "See your Wise balances and exchange rates, and prepare money transfers.",
+        "category": "payments",
+        "color": "9FE870",
+        "homepage": "https://wise.com",
+        "url": "https://mcp.wise.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "cimd",
+        "capabilities": [
+          "See your balances",
+          "Check exchange rates",
+          "Prepare a transfer"
+        ]
+      },
+      "files": [
+        "apps/wise/app.json",
+        "apps/wise/item.json",
+        "apps/wise/logo.svg"
+      ]
+    },
+    {
+      "id": "wix",
+      "type": "app",
+      "name": "Wix",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "websites"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "5b006ab744238c9cde113645881ddc59e04ef2e4dd977b722e44b599545f9da2",
+      "size": 1259,
+      "description": "Manage your Wix sites, content and store.",
+      "document": {
+        "description": "Manage your Wix sites, content and store.",
+        "category": "productivity",
+        "color": "0C6EFC",
+        "homepage": "https://www.wix.com",
+        "url": "https://mcp.wix.com/mcp",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "capabilities": [
+          "Manage site content",
+          "Work with your store products",
+          "See bookings and contacts"
+        ]
+      },
+      "files": [
+        "apps/wix/app.json",
+        "apps/wix/item.json",
+        "apps/wix/logo.svg"
+      ]
+    },
+    {
+      "id": "wordpress",
+      "type": "app",
+      "name": "WordPress.com",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "websites",
+        "blog"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "6570820245ee9548315a3d165e65da989d2a3f5f2122d92ce54e7c3dcd72cbab",
+      "size": 1628,
+      "description": "Manage posts, pages and site settings on your WordPress.com sites.",
+      "document": {
+        "description": "Manage posts, pages and site settings on your WordPress.com sites.",
+        "category": "productivity",
+        "color": "21759B",
+        "homepage": "https://wordpress.com",
+        "url": "https://public-api.wordpress.com/wpcom/v2/mcp/v1",
+        "auth": [
+          "oauth"
+        ],
+        "oauthClient": "dcr",
+        "note": "WordPress.com sites only, not self-hosted WordPress.",
+        "capabilities": [
+          "Draft and edit posts",
+          "Manage pages",
+          "See site stats"
+        ]
+      },
+      "files": [
+        "apps/wordpress/app.json",
+        "apps/wordpress/item.json",
+        "apps/wordpress/logo.svg"
+      ]
+    },
+    {
+      "id": "zillow",
+      "type": "app",
+      "name": "Zillow",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "home",
+        "real-estate"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "sha256": "9e171d1317bff1d87a72ee5912971cb1e67b204fd033ecbf45346ade456dcfcf",
+      "size": 1167,
+      "description": "Search U.S. homes for sale or rent, see Zestimates and estimate mortgage payments.",
+      "document": {
+        "description": "Search U.S. homes for sale or rent, see Zestimates and estimate mortgage payments.",
+        "category": "data",
+        "color": "006AFF",
+        "homepage": "https://www.zillow.com",
+        "url": "https://mcp.zillow.com/api/v2",
+        "auth": [
+          "none"
+        ],
+        "note": "U.S. homes only. No sign-in needed.",
+        "capabilities": [
+          "Search homes for sale or rent",
+          "Get a home's details",
+          "See a Zestimate and its history",
+          "Estimate monthly mortgage payments"
+        ]
+      },
+      "files": [
+        "apps/zillow/app.json",
+        "apps/zillow/item.json",
+        "apps/zillow/logo.svg"
       ]
     }
   ]

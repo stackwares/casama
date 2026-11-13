@@ -1,0 +1,10 @@
+{
+  "description": "Create and manage Prisma Postgres databases.",
+  "category": "developer",
+  "color": "2D3748",
+  "homepage": "https://www.prisma.io",
+  "url": "https://mcp.prisma.io/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Create databases", "Run queries", "Manage backups"]
+}

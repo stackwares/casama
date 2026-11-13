@@ -1,0 +1,10 @@
+{
+  "description": "Search Unsplash for free, high-quality photos.",
+  "category": "design",
+  "color": "111111",
+  "homepage": "https://unsplash.com",
+  "url": "https://mcp.unsplash.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "cimd",
+  "capabilities": ["Search photos", "Get photo details and credits"]
+}

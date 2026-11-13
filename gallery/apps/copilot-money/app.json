@@ -1,0 +1,11 @@
+{
+  "description": "Ask about your spending, budgets and accounts in Copilot Money.",
+  "category": "payments",
+  "color": "00CC4B",
+  "homepage": "https://copilot.money",
+  "url": "https://mcp.copilot.money/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "note": "Needs a Copilot Money subscription.",
+  "capabilities": ["Review spending by category", "Check budgets", "See account balances"]
+}

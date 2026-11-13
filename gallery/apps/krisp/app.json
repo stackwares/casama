@@ -1,0 +1,10 @@
+{
+  "description": "Search and read your Krisp meeting notes and transcripts.",
+  "category": "productivity",
+  "color": "614EFA",
+  "homepage": "https://krisp.ai",
+  "url": "https://mcp.krisp.ai/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Search your meetings", "Read transcripts", "Get meeting notes"]
+}

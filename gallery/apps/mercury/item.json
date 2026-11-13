@@ -1,0 +1,10 @@
+{
+  "name": "Mercury",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "CC0-1.0",
+  "tags": ["banking", "business"],
+  "version": 1
+}

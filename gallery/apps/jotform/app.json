@@ -1,0 +1,10 @@
+{
+  "description": "Create Jotform forms and read their submissions.",
+  "category": "productivity",
+  "color": "FF6100",
+  "homepage": "https://www.jotform.com",
+  "url": "https://mcp.jotform.com/",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Create forms", "See your forms", "Read submissions"]
+}

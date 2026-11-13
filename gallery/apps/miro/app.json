@@ -1,0 +1,10 @@
+{
+  "description": "Read and add to your Miro boards.",
+  "category": "design",
+  "color": "050038",
+  "homepage": "https://miro.com",
+  "url": "https://mcp.miro.com/",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Read a board", "Add sticky notes and shapes", "Create diagrams"]
+}

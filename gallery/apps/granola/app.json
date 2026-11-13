@@ -1,0 +1,10 @@
+{
+  "description": "Search and read your Granola meeting notes and transcripts.",
+  "category": "productivity",
+  "color": "1F1F1F",
+  "homepage": "https://www.granola.ai",
+  "url": "https://mcp.granola.ai/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Search your meetings", "Read meeting notes", "Pull action items"]
+}

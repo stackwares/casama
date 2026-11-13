@@ -1,0 +1,10 @@
+{
+  "name": "Copilot Money",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "CC0-1.0",
+  "tags": ["budget", "finance"],
+  "version": 1
+}

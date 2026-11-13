@@ -1,0 +1,10 @@
+{
+  "description": "Draw hand-drawn style diagrams and share them on excalidraw.com.",
+  "category": "design",
+  "color": "6965DB",
+  "homepage": "https://excalidraw.com",
+  "url": "https://mcp.excalidraw.com/mcp",
+  "auth": ["none"],
+  "note": "No sign-in needed.",
+  "capabilities": ["Draw a diagram", "Share it as an excalidraw.com link"]
+}

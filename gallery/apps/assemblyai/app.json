@@ -1,0 +1,11 @@
+{
+  "description": "Transcribe audio and work with transcripts using AssemblyAI.",
+  "category": "developer",
+  "color": "3923C7",
+  "homepage": "https://www.assemblyai.com",
+  "url": "https://mcp.assemblyai.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "note": "Transcribing uses your AssemblyAI balance.",
+  "capabilities": ["Transcribe audio", "Read transcripts"]
+}

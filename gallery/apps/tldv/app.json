@@ -1,0 +1,10 @@
+{
+  "description": "Search and read your tl;dv meeting recordings and notes.",
+  "category": "productivity",
+  "color": "8585FF",
+  "homepage": "https://tldv.io",
+  "url": "https://mcp.tldv.io/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Search your meetings", "Read transcripts", "Get meeting notes"]
+}

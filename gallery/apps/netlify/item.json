@@ -1,0 +1,10 @@
+{
+  "name": "Netlify",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "CC0-1.0",
+  "tags": ["hosting", "deploys"],
+  "version": 1
+}

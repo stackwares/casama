@@ -1,0 +1,11 @@
+{
+  "description": "See balances and transactions in your Mercury business bank account.",
+  "category": "payments",
+  "color": "272735",
+  "homepage": "https://mercury.com",
+  "url": "https://mcp.mercury.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "note": "Needs a Mercury business account.",
+  "capabilities": ["See account balances", "Search transactions", "Review spending"]
+}

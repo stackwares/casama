@@ -1,0 +1,10 @@
+{
+  "description": "Search flights on Kiwi.com, including cheap routes that combine airlines.",
+  "category": "productivity",
+  "color": "00A991",
+  "homepage": "https://www.kiwi.com",
+  "url": "https://mcp.kiwi.com",
+  "auth": ["none"],
+  "note": "Search only. Booking finishes on Kiwi.com. No sign-in needed.",
+  "capabilities": ["Search flights by city, airport and dates", "Compare prices and stops", "Get a booking link"]
+}

@@ -1,0 +1,10 @@
+{
+  "description": "Add, find and complete your Todoist tasks and projects.",
+  "category": "productivity",
+  "color": "E44332",
+  "homepage": "https://www.todoist.com",
+  "url": "https://ai.todoist.net/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Add tasks with due dates", "See today's and upcoming tasks", "Complete and update tasks", "Organize projects"]
+}
