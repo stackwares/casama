@@ -3469,7 +3469,6 @@ class FakeBackend implements Backend {
     image: 'google/gemini-nano-banana-2.1',
     imageResolution: CloudModelsImageResolutionEnum.n1k,
     live: 'gemini-3.8-live',
-    realtime: 'gpt-realtime-2.1',
     tts: 'gemini-3.8-flash-lite-tts',
     stt: 'gpt-4o-mini-transcribe',
     embedding: 'text-embedding-3-small',
@@ -4168,11 +4167,11 @@ class FakeBackend implements Backend {
     final error = voiceSessionError;
     if (error != null) throw error;
     return VoiceSession(
-      provider: VoiceSessionProviderEnum.openai,
-      model: 'gpt-realtime-2.1',
-      clientSecret: 'ek_test',
+      provider: VoiceSessionProviderEnum.gemini,
+      model: 'gemini-3.8-live',
+      clientSecret: 'auth_tokens/test',
       expiresAt: DateTime.now().add(const Duration(minutes: 10)),
-      connectUrl: 'https://example.invalid/v1/realtime/calls',
+      connectUrl: 'wss://example.invalid/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained',
       setup: null,
       conversationId: conversationId ?? convId,
       tools: 3,

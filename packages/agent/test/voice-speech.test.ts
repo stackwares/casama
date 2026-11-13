@@ -48,9 +48,8 @@ describe("read aloud", () => {
     );
   });
 
-  it("keeps a WAV Gemini already wrapped, and prices other providers per character", () => {
+  it("keeps a WAV Gemini already wrapped", () => {
     const wav = asWav(new Uint8Array(4));
     expect(asWav(wav)).toBe(wav);
-    expect(ttsCostUsd("openai", 2000)).toBeCloseTo(0.03, 6);
   });
 });

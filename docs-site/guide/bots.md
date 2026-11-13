@@ -80,9 +80,9 @@ These providers can run a bot:
 | OpenAI-compatible server | Ollama, LM Studio, vLLM or any server with an OpenAI-style API. Needs a **Base URL**. |
 | ChatGPT | Your ChatGPT plan, connected by signing in instead of a key. See below. |
 
-The same screen also takes keys that give bots other abilities but can't run a bot: fal.ai
-(images), Brave Search and Tavily (web search), Treg (paid data), Google Maps and Mapbox (travel
-times), and Deepgram, ElevenLabs, Cartesia and Fish Audio (voice).
+The same screen also takes keys that give bots other abilities but can't run a bot: Brave Search
+and Tavily (web search), Treg (paid data), and Google Maps and Mapbox (travel times). Images run
+on an OpenRouter key; video, read aloud and calls on a Google AI key; dictation on an OpenAI key.
 
 From the CLI: `casama credential add --provider openrouter --label Default`.
 

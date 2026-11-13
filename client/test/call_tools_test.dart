@@ -57,30 +57,30 @@ void main() {
       expect(backend.botVoice?['call_tools'], ['mcp.github.create_issue']);
       expect(find.text('1 connected-app tool added'), findsOneWidget);
 
-      // Saving the sheet keeps the other voice settings, including ones it doesn't show.
+      // Saving the sheet keeps the other voice settings, including ones it doesn't show, and
+      // clears a read-aloud service picked before there was only Gemini (D-260).
       await tester.tap(find.byKey(const Key('saveVoice')));
       await tester.pumpAndSettle();
       expect(backend.botVoice, {
-        'tts_provider': 'openai',
         'realtime_voice': 'Puck',
         'call_tools': ['mcp.github.create_issue'],
       });
     },
   );
 
-  testWidgets('voice providers the server covers have no picker; the rest still do', (tester) async {
+  testWidgets('there is no voice service to pick; a server that provides voice says so', (tester) async {
     await setSize(tester, const Size(700, 1400));
     final backend = FakeBackend()..serverVoice = {'live', 'read_aloud'};
     await tester.pumpWidget(harness(backend, const Scaffold(body: VoiceSettingsDialog(botId: botId))));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('ttsProvider')), findsNothing);
-    expect(find.byKey(const Key('sttProvider')), findsOneWidget);
+    expect(find.byKey(const Key('sttProvider')), findsNothing);
     expect(find.textContaining('This server provides voice'), findsOneWidget);
 
     final none = FakeBackend();
     await tester.pumpWidget(harness(none, const Scaffold(body: VoiceSettingsDialog(botId: botId))));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('ttsProvider')), findsOneWidget);
+    expect(find.byKey(const Key('ttsProvider')), findsNothing);
     expect(find.textContaining('This server provides voice'), findsNothing);
   });
 }

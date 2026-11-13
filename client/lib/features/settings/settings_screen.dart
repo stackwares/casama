@@ -23,7 +23,6 @@ import '../../ui/form_sheet.dart';
 import '../voice/wake_word.dart';
 import '../voice/wake_word_sheet.dart';
 import '../../ui/page.dart';
-import '../../ui/property_row.dart';
 import 'about_you_screen.dart';
 import 'appearance_screen.dart';
 import 'me_avatar.dart';
@@ -393,8 +392,6 @@ class VoiceSettingsDialog extends ConsumerStatefulWidget {
 }
 
 class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
-  String? _tts;
-  String? _stt;
   final _voice = TextEditingController();
   var _busy = false;
   var _callTools = <String>[];
@@ -407,8 +404,6 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
     ref.read(backendProvider).loadBotVoice(widget.botId).then((v) {
       if (!mounted) return;
       setState(() {
-        _tts = v['tts_provider'] as String?;
-        _stt = v['stt_provider'] as String?;
         _voice.text = (v['tts_voice'] as String?) ?? '';
         _callTools = [for (final t in (v['call_tools'] as List?) ?? const []) '$t'];
         _loaded = true;
@@ -427,8 +422,9 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
   Future<void> _save() async {
     setState(() => _busy = true);
     final ok = await runGuarded(context, () async {
-      // Null clears a setting (Automatic); the bot's other voice settings are kept.
-      await ref.read(backendProvider).updateBotVoice(widget.botId, {'tts_provider': _tts, 'stt_provider': _stt, 'tts_voice': _voice.text.trim().isEmpty ? null : _voice.text.trim()});
+      // Read-aloud and calls are Gemini, dictation is OpenAI (D-260): there's no service to pick,
+      // so a choice saved before is cleared. The bot's other voice settings are kept.
+      await ref.read(backendProvider).updateBotVoice(widget.botId, {'tts_provider': null, 'stt_provider': null, 'tts_voice': _voice.text.trim().isEmpty ? null : _voice.text.trim()});
       return true;
     });
     if (!mounted) return;
@@ -440,19 +436,8 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final cloud = ref.watch(billingProvider).value?.enabled == true;
-    // The server's own keys cover these, as on Casama Cloud, so there's nothing to choose.
-    final serverVoice = ref.watch(backendProvider).serverVoice;
-    final fixedTts = cloud || serverVoice.contains('read_aloud');
-    final fixedStt = cloud || serverVoice.contains('dictation');
-    String label(String p) => switch (p) {
-      'google' => 'Google',
-      'elevenlabs' => 'ElevenLabs',
-      'openai' => 'OpenAI',
-      'cartesia' => 'Cartesia',
-      'fish_audio' => 'Fish Audio',
-      'deepgram' => 'Deepgram',
-      _ => p,
-    };
+    // The server's own keys cover voice, as on Casama Cloud, so there's no key to add.
+    final serverVoice = ref.watch(backendProvider).serverVoice.isNotEmpty;
     return FormSheet(
       icon: LucideIcons.speech,
       title: l10n.voiceSettings,
@@ -467,37 +452,13 @@ class _VoiceSettingsDialogState extends ConsumerState<VoiceSettingsDialog> {
             padding: const EdgeInsets.only(bottom: AppSpace.md),
             child: Text(l10n.casamaCloudModelLocked),
           )
-        else if (fixedTts || fixedStt)
+        else if (serverVoice)
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpace.md),
             child: Text(l10n.serverVoiceSetUp),
           ),
         GroupedCard(
           children: [
-            if (!fixedTts)
-              PropertyRow<String?>(
-                key: const Key('ttsProvider'),
-                icon: LucideIcons.volume2,
-                title: l10n.readAloudProvider,
-                value: _tts == null ? l10n.automatic : label(_tts!),
-                options: [
-                  PropertyOption(value: null, label: l10n.automatic, selected: _tts == null),
-                  for (final p in const ['google', 'elevenlabs', 'openai', 'cartesia', 'fish_audio']) PropertyOption(value: p, label: label(p), selected: _tts == p),
-                ],
-                onSelected: (v) => setState(() => _tts = v),
-              ),
-            if (!fixedStt)
-              PropertyRow<String?>(
-                key: const Key('sttProvider'),
-                icon: LucideIcons.mic,
-                title: l10n.dictationProvider,
-                value: _stt == null ? l10n.automatic : label(_stt!),
-                options: [
-                  PropertyOption(value: null, label: l10n.automatic, selected: _stt == null),
-                  for (final p in const ['openai', 'deepgram']) PropertyOption(value: p, label: label(p), selected: _stt == p),
-                ],
-                onSelected: (v) => setState(() => _stt = v),
-              ),
             GroupedTile(
               key: const Key('callToolsRow'),
               icon: LucideIcons.wrench,

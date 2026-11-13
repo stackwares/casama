@@ -1,42 +1,10 @@
-/** Media providers and prices (D-185). */
+/** Media providers and prices (D-185, D-189, D-260). */
 import { describe, expect, it } from "vitest";
-import {
-  FalMediaProvider,
-  falImageCost,
-  falImageToVideoModel,
-  GeminiVideoProvider,
-  MEDIA_PRICES,
-  MediaRouter,
-  OpenRouterMediaProvider,
-} from "../src/media.ts";
+import { GeminiVideoProvider, MediaRouter, OpenRouterMediaProvider } from "../src/media.ts";
 
 const PNG = Buffer.from([137, 80, 78, 71]).toString("base64");
 
 describe("media prices", () => {
-  it("bills fal images per megapixel (1024×1024, rounded up) or per image", () => {
-    expect(falImageCost("fal-ai/flux-2/klein/4b", 1024, 1024)).toBeCloseTo(0.005, 6);
-    expect(falImageCost("fal-ai/flux-2/klein/4b", 1024, 576)).toBeCloseTo(0.005, 6);
-    expect(falImageCost("fal-ai/flux-2/klein/4b", 2048, 2048)).toBeCloseTo(0.02, 6);
-    expect(falImageCost("fal-ai/flux/schnell")).toBeCloseTo(0.003, 6);
-    expect(falImageCost("fal-ai/bytedance/seedream/v4.5/text-to-image", 4096, 4096)).toBe(0.04);
-    // Unknown models are priced high, never low.
-    expect(falImageCost("fal-ai/something-new", 1024, 1024)).toBe(MEDIA_PRICES.image);
-  });
-
-  it("fal's default image model is Seedream 4.5 and results carry their price", async () => {
-    let path = "";
-    const fake = (async (url: string) => {
-      path = new URL(url).pathname;
-      return Response.json({ images: [{ url: "https://x/i.png", width: 2048, height: 2048 }] });
-    }) as unknown as typeof fetch;
-    const [img] = await new FalMediaProvider({ apiKey: "k", fetch: fake }).generateImage({
-      prompt: "a cloud",
-    });
-    expect(path).toBe("/fal-ai/bytedance/seedream/v4.5/text-to-image");
-    expect(img).toMatchObject({ model: "fal-ai/bytedance/seedream/v4.5/text-to-image" });
-    expect(img?.costUsd).toBeCloseTo(0.04, 6);
-  });
-
   it("OpenRouter images: Nano Banana 2.1 at 1K, inline bytes, the cost OpenRouter reports", async () => {
     let sent: Record<string, unknown> = {};
     let auth = "";
@@ -89,7 +57,9 @@ describe("media prices", () => {
     expect((await onlyImages.generateImage({ prompt: "x" }))[0]?.model).toBe(
       "google/gemini-nano-banana-2.1",
     );
-    expect(() => onlyImages.generateVideo({ prompt: "x" })).toThrow("Google AI or fal.ai key");
+    expect(() => onlyImages.generateVideo({ prompt: "x" })).toThrow("Video needs a Google AI key");
+    const onlyVideo = new MediaRouter(null, new GeminiVideoProvider("g"));
+    expect(() => onlyVideo.generateImage({ prompt: "x" })).toThrow("Images need an OpenRouter key");
   });
 
   it("Gemini video is Omni Flash 1.2 at 720p, saved inline, priced per second", async () => {
@@ -125,36 +95,8 @@ describe("media prices", () => {
     expect(Buffer.from(video.data ?? []).toString()).toBe("mp4");
   });
 
-  it("animating a picture: fal uses the image-to-video model, Gemini gets the picture with the prompt", async () => {
-    expect(falImageToVideoModel("fal-ai/ltx-video")).toBe("fal-ai/ltx-video/image-to-video");
-    expect(falImageToVideoModel("fal-ai/pixverse/v6/text-to-video")).toBe(
-      "fal-ai/pixverse/v6/image-to-video",
-    );
+  it("animating a picture: Gemini gets the picture with the prompt", async () => {
     const image = { data: new Uint8Array([137, 80, 78, 71]), contentType: "image/png" };
-    const posted: Array<{ path: string; body: Record<string, unknown> }> = [];
-    const fal = (async (url: string, init?: RequestInit) => {
-      const path = new URL(url).pathname;
-      if (init?.method === "POST") {
-        posted.push({ path, body: JSON.parse(String(init.body)) });
-        return Response.json({ request_id: "q1" });
-      }
-      if (path.endsWith("/status")) return Response.json({ status: "COMPLETED" });
-      return Response.json({ video: { url: "https://x/v.mp4" } });
-    }) as unknown as typeof fetch;
-    const clip = await new FalMediaProvider({
-      apiKey: "k",
-      fetch: fal,
-      queueBase: "http://fal.test",
-      videoModel: "fal-ai/pixverse/v6/text-to-video",
-      pollMs: 1,
-    }).generateVideo({ prompt: "make it wag", durationS: 4, image });
-    expect(posted[0]).toEqual({
-      path: "/fal-ai/pixverse/v6/image-to-video",
-      body: { prompt: "make it wag", duration: 4, image_url: `data:image/png;base64,${PNG}` },
-    });
-    // An image-to-video endpoint without its own price is recorded high, never low.
-    expect(clip.costUsd).toBeCloseTo(4 * 0.1, 6);
-
     let sent: Record<string, unknown> = {};
     const gemini = (async (_url: string, init: RequestInit) => {
       sent = JSON.parse(String(init.body));

@@ -9,7 +9,6 @@ import {
   computerRates,
   createSafeFetch,
   type Embedder,
-  FalMediaProvider,
   FcmPushSender,
   type FixtureFile,
   type FixtureTurn,
@@ -120,16 +119,11 @@ export interface WorkerOptions {
   providerBases?: {
     google_maps?: string;
     mapbox?: string;
-    fal?: string;
     brave?: string;
     tavily?: string;
     openrouter?: string;
     openai?: string;
     gemini?: string;
-    deepgram?: string;
-    elevenlabs?: string;
-    cartesia?: string;
-    fish_audio?: string;
     cursor?: string;
     treg?: string;
     twilio?: string;
@@ -160,8 +154,6 @@ export interface WorkerOptions {
   telemetry?: { url: string; version: string };
   /** Cloud Connect (self-hosted side): the `casama-cloud` computer provider. */
   cloud?: { url: string; key: string };
-  /** Realtime voice model (default gpt-realtime-2.1). */
-  realtimeModel?: string;
   /** Gemini Live model for live calls (default gemini-3.8-live). */
   geminiLiveModel?: string;
   /** Refresh model prices from a live list daily (D-181); off unless set. */
@@ -317,36 +309,23 @@ export async function startWorker(opts: WorkerOptions) {
     db,
     fetch: fetchOut,
     notifications,
-    // Images on OpenRouter (Nano Banana 2.1 at 1K), else fal. Video on Gemini Omni Flash 1.2
-    // when a Google AI key exists, else fal (D-185, D-189).
+    // Images on OpenRouter (Nano Banana 2.1 at 1K), video on Gemini Omni Flash 1.2 with a Google
+    // AI key; no other provider (D-185, D-189, D-260).
     mediaFor: async (orgId) => {
       const assigned = opts.billing ? await getCloudModels(db) : null;
-      const [or, f, g] = await Promise.all([
+      const [or, g] = await Promise.all([
         providerKey(orgId, ["openrouter"]),
-        providerKey(orgId, ["fal"]),
         providerKey(orgId, ["google"]),
       ]);
       const videoId = assigned?.video;
-      const falVideo =
-        videoId?.startsWith("fal-ai/") || videoId?.includes("/") ? videoId : undefined;
-      const fal = f?.key
-        ? new FalMediaProvider({
-            apiKey: f.key,
+      const geminiKey = g?.key || opts.serverGeminiKey;
+      const gemini = geminiKey
+        ? new GeminiVideoProvider(geminiKey, {
             fetch: fetchOut,
-            syncBase: opts.providerBases?.fal,
-            queueBase: opts.providerBases?.fal,
-            videoModel: falVideo,
+            base: opts.providerBases?.gemini,
+            model: videoId?.startsWith("gemini-") ? videoId : undefined,
           })
         : null;
-      const geminiKey = g?.key || opts.serverGeminiKey;
-      const gemini =
-        geminiKey && !falVideo
-          ? new GeminiVideoProvider(geminiKey, {
-              fetch: fetchOut,
-              base: opts.providerBases?.gemini,
-              model: videoId?.startsWith("gemini-") ? videoId : undefined,
-            })
-          : null;
       // A workspace without its own OpenRouter key draws on the server's shared key, like chat,
       // dictation and memory search (D-186, D-194): on any server that has one, not only with
       // billing. Self-hosted, the usage row is at cost and nobody is charged.
@@ -359,13 +338,11 @@ export async function startWorker(opts: WorkerOptions) {
             resolution: assigned?.image_resolution,
           })
         : null;
-      const images = openrouter ?? fal;
-      const video = gemini ?? fal;
       // With billing on, media made on the server's own keys is charged with markup and needs
       // credits (D-246).
       const billed = opts.billing?.enabled === true;
-      return images || video
-        ? new MediaRouter(images, video, {
+      return openrouter || gemini
+        ? new MediaRouter(openrouter, gemini, {
             image: billed && openrouter && !or?.key ? "openrouter" : null,
             video: billed && gemini && !g?.key ? "google" : null,
           })
@@ -539,7 +516,6 @@ export async function startWorker(opts: WorkerOptions) {
       fetch: opts.providerBases ? fetch : fetchOut,
       tools,
       computers: !!computers,
-      realtimeModel: opts.realtimeModel,
       geminiLiveModel: opts.geminiLiveModel,
       serverGeminiKey: opts.serverGeminiKey,
       cloudModels: opts.billing ? () => getCloudModels(db) : undefined,

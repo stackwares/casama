@@ -137,8 +137,8 @@ Model keys are stored in the server's vault and never shown again. `key` is an a
 | `casama credential remove <id>` | Delete a key (a ChatGPT sign-in is revoked first) |
 
 `add`, `list` and `chatgpt` take `--org`. `--provider` is one of: `openai`, `anthropic`, `google`,
-`xai`, `openrouter`, `openai_compatible`, `fal`, `brave_search`, `tavily`, `deepgram`, `elevenlabs`,
-`cartesia`, `fish_audio`, `chatgpt`, `treg`, `google_maps`, `mapbox`. For `openai_compatible`, pass
+`xai`, `openrouter`, `openai_compatible`, `brave_search`, `tavily`, `chatgpt`, `treg`,
+`google_maps`, `mapbox`. For `openai_compatible`, pass
 `--base-url` (for example `http://localhost:11434/v1`); the key is optional. Connect `chatgpt` with
 `credential chatgpt`, not `credential add`.
 

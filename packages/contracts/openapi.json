@@ -3263,13 +3263,8 @@
           "xai",
           "openrouter",
           "openai_compatible",
-          "fal",
           "brave_search",
           "tavily",
-          "deepgram",
-          "elevenlabs",
-          "cartesia",
-          "fish_audio",
           "chatgpt",
           "treg",
           "google_maps",
@@ -7127,17 +7122,16 @@
           "provider": {
             "type": "string",
             "enum": [
-              "gemini",
-              "openai"
+              "gemini"
             ],
-            "description": "gemini: Gemini Live over a WebSocket; openai: OpenAI Realtime over WebRTC. Gemini is used when the workspace has a Google AI key"
+            "description": "Gemini Live over a WebSocket, the only live-call provider (D-260)"
           },
           "model": {
             "type": "string"
           },
           "client_secret": {
             "type": "string",
-            "description": "Short-lived credential: Gemini's single-use token (the access_token query parameter) or OpenAI's ephemeral key"
+            "description": "Gemini's single-use token (the access_token query parameter)"
           },
           "expires_at": {
             "type": "string",
@@ -7145,7 +7139,7 @@
           },
           "connect_url": {
             "type": "string",
-            "description": "gemini: open a WebSocket here with ?access_token=<client_secret>; openai: POST the WebRTC offer SDP here with the ephemeral key"
+            "description": "Open a WebSocket here with ?access_token=<client_secret>"
           },
           "setup": {
             "type": [
@@ -7153,7 +7147,7 @@
               "null"
             ],
             "additionalProperties": {},
-            "description": "gemini: send {setup: <this>} as the first message (add sessionResumption to reconnect); null for openai"
+            "description": "Send {setup: <this>} as the first message (add sessionResumption to reconnect)"
           },
           "conversation_id": {
             "type": "string",
@@ -7267,7 +7261,7 @@
               "gemini",
               "openai"
             ],
-            "description": "Which live-call provider the call used, for the usage estimate"
+            "description": "Which live-call provider the call used. Every call is Gemini Live now (D-260); openai is still accepted from older apps."
           },
           "usage": {
             "type": "object",
@@ -7884,12 +7878,6 @@
             "maxLength": 200,
             "description": "Gemini Live model for calls."
           },
-          "realtime": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 200,
-            "description": "OpenAI Realtime model, used only with no Google key."
-          },
           "tts": {
             "type": "string",
             "minLength": 1,
@@ -7912,7 +7900,7 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 200,
-            "description": "Video model. Gemini Omni Flash (gemini-omni-1.2-flash) on a Google AI key, or a fal model id when that is the only video key."
+            "description": "Gemini video model (gemini-omni-1.2-flash) on a Google AI key."
           }
         },
         "required": [
@@ -7921,7 +7909,6 @@
           "image",
           "image_resolution",
           "live",
-          "realtime",
           "tts",
           "stt",
           "embedding",

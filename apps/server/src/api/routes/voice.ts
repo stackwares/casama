@@ -296,10 +296,9 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.saveVoiceTranscript, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { conversation_id, turns, seconds, provider, usage } = c.req.valid("json");
-    const perMinute =
-      provider === "gemini" ? VOICE_PRICES.geminiLivePerMinute : VOICE_PRICES.realtimePerMinute;
-    // Gemini reports what the call used; price that rather than estimating by the minute.
-    const cost = usage ? geminiLiveCost(usage) : (seconds / 60) * perMinute;
+    // Every call is Gemini Live (D-260). Gemini reports what the call used; price that rather than
+    // estimating by the minute.
+    const cost = usage ? geminiLiveCost(usage) : (seconds / 60) * VOICE_PRICES.geminiLivePerMinute;
     const [conv] = await withUserSession(db, claims, (tx) =>
       tx.select().from(conversations).where(eq(conversations.id, conversation_id)),
     );
@@ -336,13 +335,13 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (seconds > 0 || charge !== 0)
       await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, billable, meta)
         values (${conv.orgId}::uuid, ${conv.botId}::uuid, 'voice_seconds', ${seconds}, ${charge}, ${billable},
-                ${JSON.stringify({ provider: provider ?? "openai", ...(usage ? { tokens: usage } : { estimated: true }), ...(billable ? { key: "server", provider_cost_usd: providerCost, clock_seconds: Math.round(clock) } : {}) })}::jsonb)`);
+                ${JSON.stringify({ provider: provider ?? "gemini", ...(usage ? { tokens: usage } : { estimated: true }), ...(billable ? { key: "server", provider_cost_usd: providerCost, clock_seconds: Math.round(clock) } : {}) })}::jsonb)`);
     if (seconds > 0) {
       track(db, {
         event: "call_ended",
         userId: claims.sub,
         orgId: conv.orgId,
-        properties: { provider: provider ?? "openai", duration_s: Math.round(seconds), billable },
+        properties: { provider: provider ?? "gemini", duration_s: Math.round(seconds), billable },
       });
       milestone(db, claims.sub, "first_voice_call", conv.orgId);
     }

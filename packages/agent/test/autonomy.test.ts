@@ -13,11 +13,13 @@ import {
   CredentialResolver,
   createSafeFetch,
   directSteps,
-  FalMediaProvider,
   type FixtureFile,
   type FixtureTurn,
+  GeminiVideoProvider,
   hashEmbedder,
+  MediaRouter,
   NotificationService,
+  OpenRouterMediaProvider,
   PostgresMemoryStore,
   RecordingPushSender,
   ReplayGateway,
@@ -62,7 +64,7 @@ const turn = (when: FixtureTurn["when"], ...events: FixtureTurn["events"]): Fixt
   events,
 });
 
-/** A local stand-in for outside services: echo API, OpenAPI source, Composio, Pipedream, fal.ai, Brave, MCP. */
+/** A local stand-in for outside services: echo API, OpenAPI source, Composio, Pipedream, OpenRouter images, Gemini video, Brave, MCP. */
 async function startApi() {
   const mcp = async (req: IncomingMessage, res: ServerResponse, body: unknown) => {
     const server = new McpServer({ name: "calc", version: "1.0.0" });
@@ -141,23 +143,19 @@ async function startApi() {
     }
     if (url.pathname === "/v1/connect/proj_1/actions/run")
       return json(res, 200, { ret: { sent: body?.configured_props?.text, action: body?.id } });
-    // fal.ai
-    if (url.pathname === "/fal-ai/bytedance/seedream/v4.5/text-to-image")
+    // OpenRouter images (D-185).
+    if (url.pathname === "/or/images" && req.method === "POST")
       return json(res, 200, {
-        images: [
-          { url: `${apiUrl}/files/img.png`, content_type: "image/png", width: 1024, height: 1024 },
+        data: [
+          { b64_json: Buffer.from([137, 80, 78, 71]).toString("base64"), media_type: "image/png" },
         ],
+        usage: { cost: 0.0336 },
       });
-    // fal's queue: animating a picture (image-to-video).
-    if (url.pathname === "/fal-ai/ltx-video/image-to-video" && req.method === "POST")
+    // Gemini video (D-189), including animating a picture.
+    if (url.pathname === "/v1beta/interactions" && req.method === "POST")
       return json(res, 200, {
-        request_id: "v1",
-        status_url: `${apiUrl}/queue/v1/status`,
-        response_url: `${apiUrl}/queue/v1`,
+        output_video: { data: Buffer.from("mp4").toString("base64"), mime_type: "video/mp4" },
       });
-    if (url.pathname === "/queue/v1/status") return json(res, 200, { status: "COMPLETED" });
-    if (url.pathname === "/queue/v1")
-      return json(res, 200, { video: { url: `${apiUrl}/files/clip.mp4` } });
     if (url.pathname === "/files/clip.mp4")
       return res.writeHead(200, { "content-type": "video/mp4" }).end(Buffer.from("mp4"));
     if (url.pathname === "/files/img.png")
@@ -194,7 +192,7 @@ beforeAll(async () => {
   const [cred] = await tdb.admin<{ id: string }[]>`
     insert into public.model_credentials (org_id, provider, label, vault_secret_id) values (${orgId}, 'openrouter', 'm', vault.create_secret('sk-model-key-xyz123')) returning id`;
   credId = cred!.id;
-  await tdb.admin`insert into public.model_credentials (org_id, provider, label, vault_secret_id) values (${orgId}, 'fal', 'fal', vault.create_secret('fal-key-123456'))`;
+  await tdb.admin`insert into public.model_credentials (org_id, provider, label, vault_secret_id) values (${orgId}, 'google', 'media', vault.create_secret('media-key-123456'))`;
   await tdb.admin`insert into public.model_credentials (org_id, provider, label, vault_secret_id) values (${orgId}, 'brave_search', 'brave', vault.create_secret('brave-key-123456'))`;
   await tdb.admin`insert into public.secrets (org_id, name, vault_secret_id, allowed_hosts) values (${orgId}, 'API_TOKEN', vault.create_secret(${SECRET_VALUE}), '{127.0.0.1}')`;
 }, 60_000);
@@ -263,15 +261,14 @@ function makeDeps(fixtures: FixtureFile[], extra: Partial<RunDeps> = {}) {
     db: h.db,
     fetch: testFetch,
     notifications,
+    // One test key stands in for both media services: OpenRouter images, Gemini video (D-260).
     mediaFor: async () => {
-      const key = await keyFor("fal");
+      const key = await keyFor("google");
       return key
-        ? new FalMediaProvider({
-            apiKey: key,
-            fetch: testFetch,
-            syncBase: apiUrl,
-            queueBase: apiUrl,
-          })
+        ? new MediaRouter(
+            new OpenRouterMediaProvider(key, { base: `${apiUrl}/or`, fetch: testFetch }),
+            new GeminiVideoProvider(key, { base: apiUrl, fetch: testFetch }),
+          )
         : null;
     },
     searchFor: async () => {
@@ -431,7 +428,7 @@ describe("approvals", () => {
   });
 
   it("without a media key nobody is asked to approve: the step says what's missing", async () => {
-    await tdb.admin`delete from public.model_credentials where org_id = ${orgId} and provider = 'fal'`;
+    await tdb.admin`delete from public.model_credentials where org_id = ${orgId} and provider = 'google' and label = 'media'`;
     try {
       const botId = await makeBot("ArtistNoKey");
       const runId = await startRun(botId, "make an image of a robot");
@@ -442,7 +439,7 @@ describe("approvals", () => {
         error_code: "no_media_provider",
       });
     } finally {
-      await tdb.admin`insert into public.model_credentials (org_id, provider, label, vault_secret_id) values (${orgId}, 'fal', 'fal', vault.create_secret('fal-key-123456'))`;
+      await tdb.admin`insert into public.model_credentials (org_id, provider, label, vault_secret_id) values (${orgId}, 'google', 'media', vault.create_secret('media-key-123456'))`;
     }
   });
 
@@ -459,16 +456,16 @@ describe("approvals", () => {
       { n: string }[]
     >`select count(*) as n from public.usage_ledger where run_id = ${runId} and kind = 'media_images'`;
     expect(Number(u?.n)).toBe(1);
-    // Priced per model: Seedream 4.5 at $0.04 an image on fal (D-182, D-183).
+    // Priced at what OpenRouter reports: Nano Banana 2.1 at 1K (D-185).
     const [priced] = await tdb.admin<{ cost_usd: string; model: string }[]>`
       select cost_usd, model from public.usage_ledger where run_id = ${runId} and kind = 'media_images'`;
-    expect(priced).toMatchObject({ model: "fal-ai/bytedance/seedream/v4.5/text-to-image" });
-    expect(Number(priced?.cost_usd)).toBeCloseTo(0.04, 6);
+    expect(priced).toMatchObject({ model: "google/gemini-nano-banana-2.1" });
+    expect(Number(priced?.cost_usd)).toBeCloseTo(0.0336, 6);
     // Kept for the chat (D-205) even without a computer, and shown under the reply.
     const [kept] = await tdb.admin<
       { id: string; content_type: string; size: number; width: number | null; n: number }[]
     >`select id, content_type, size, width, octet_length(bytes) as n from public.chat_media where run_id = ${runId}`;
-    expect(kept).toMatchObject({ content_type: "image/png", width: 1024 });
+    expect(kept).toMatchObject({ content_type: "image/png", width: null });
     expect(kept!.n).toBe(kept!.size);
     const [reply] = await tdb.admin<{ content: Array<Record<string, unknown>> }[]>`
       select content from public.messages where run_id = ${runId} and role = 'assistant' order by created_at desc limit 1`;
@@ -478,8 +475,6 @@ describe("approvals", () => {
       name: "image.png",
       mime_type: "image/png",
       size: kept!.size,
-      width: 1024,
-      height: 1024,
     });
     const completed = (await events(runId)).filter((e) => e.type === "message.completed").at(-1);
     expect(JSON.stringify(completed?.payload)).toContain(`media:${kept!.id}`);
@@ -516,10 +511,12 @@ describe("approvals", () => {
       },
     ];
     expect((await runAgent(runId, makeDeps(fixtures).deps)).status).toBe("completed");
-    const posted = received.find((r) => r.url === "/fal-ai/ltx-video/image-to-video");
+    const posted = received.find((r) => r.url === "/v1beta/interactions");
     expect(JSON.parse(posted!.body)).toMatchObject({
-      prompt: "the dog wags",
-      image_url: "data:image/png;base64,iVBORw==",
+      input: [
+        { type: "text", text: "the dog wags" },
+        { type: "image", data: "iVBORw==", mime_type: "image/png" },
+      ],
     });
     const done = (await events(runId)).find((e) => e.type === "tool.completed");
     expect(String(done?.payload.result_preview)).toContain("video generated");

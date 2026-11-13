@@ -7,7 +7,7 @@ import { type Harness, j, startHarness } from "./helpers.ts";
 
 const FIXTURES = fileURLToPath(new URL("./fixtures/chat.json", import.meta.url));
 
-/** One local server standing in for OpenAI, Deepgram and ElevenLabs (their REST shapes). */
+/** One local server standing in for OpenAI dictation and Gemini (their REST shapes). */
 async function mockVoiceProviders() {
   const calls: Array<{ path: string; headers: IncomingMessage["headers"]; body: string }> = [];
   const server = createServer((req, res) => {
@@ -23,15 +23,6 @@ async function mockVoiceProviders() {
       };
       if (path === "/v1/audio/transcriptions")
         return json({ text: "remind me to water the plants", duration: 3.2 });
-      if (path === "/v1/listen")
-        return json({
-          metadata: { duration: 2 },
-          results: { channels: [{ alternatives: [{ transcript: "deepgram heard you" }] }] },
-        });
-      if (path.startsWith("/v1/text-to-speech/") || path === "/v1/audio/speech") {
-        res.writeHead(200, { "content-type": "audio/mpeg" });
-        return res.end(Buffer.from("ID3-fake-mp3"));
-      }
       if (path.endsWith(":generateContent"))
         return json({
           candidates: [
@@ -39,11 +30,6 @@ async function mockVoiceProviders() {
           ],
         });
       if (path === "/v1beta/auth_tokens") return json({ name: "auth_tokens/gemini-test-token" });
-      if (path === "/v1/realtime/client_secrets")
-        return json({
-          value: "ek_test_ephemeral",
-          expires_at: Math.floor(Date.now() / 1000) + 600,
-        });
       res.writeHead(404);
       res.end();
     });

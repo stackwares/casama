@@ -1,4 +1,4 @@
-/** Calls for you (D-141): Twilio places the call, its media stream bridges to realtime voice. */
+/** Calls for you (D-141): Twilio places the call, its media stream bridges to Gemini Live (D-260). */
 import { once } from "node:events";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
@@ -14,15 +14,15 @@ const TOKEN = "twilio-auth-token-0123456789";
 let h: Harness;
 let fake: Server;
 let fakeUrl = "";
-let realtime: WebSocketServer;
-let realtimeUrl = "";
+let gemini: WebSocketServer;
 const twilioCalls: Array<{ params: Record<string, string> }> = [];
 const twilioUpdates: Array<Record<string, string>> = [];
 const aiSeen: string[] = [];
-let aiAuth = "";
+let aiToken = "";
+let tokenRequest: Record<string, unknown> = {};
 
 beforeAll(async () => {
-  // A fake Twilio (REST + Lookup) and OpenAI client-secret endpoint.
+  // A fake Twilio (REST + Lookup) and Gemini's token endpoint.
   fake = createServer(async (req, res) => {
     const chunks: Buffer[] = [];
     for await (const c of req) chunks.push(c as Buffer);
@@ -46,57 +46,50 @@ beforeAll(async () => {
           caller_type: decodeURIComponent(url.pathname).endsWith("0100") ? "CONSUMER" : "BUSINESS",
         },
       });
-    if (url.pathname === "/v1/realtime/client_secrets") {
-      aiSeen.push(`secret:${body}`);
-      return send(200, { value: "ek_phone", expires_at: Math.floor(Date.now() / 1000) + 600 });
+    if (url.pathname === "/v1beta/auth_tokens") {
+      tokenRequest = JSON.parse(body);
+      return send(200, { name: "auth_tokens/phone" });
     }
     send(404, {});
   }).listen(0, "127.0.0.1");
   await once(fake, "listening");
   fakeUrl = `http://127.0.0.1:${(fake.address() as AddressInfo).port}`;
-  // A fake OpenAI realtime WebSocket: greets, hears "yes", confirms and ends the call.
-  realtime = new WebSocketServer({ port: 0, host: "127.0.0.1" });
-  await once(realtime, "listening");
-  realtimeUrl = `ws://127.0.0.1:${(realtime.address() as AddressInfo).port}/v1/realtime`;
-  realtime.on("connection", (ws, req) => {
-    aiAuth = String(req.headers.authorization);
+  // A fake Gemini Live WebSocket on the same address: greets, hears "yes", confirms and ends the call.
+  gemini = new WebSocketServer({ noServer: true });
+  fake.on("upgrade", (req, socket, head) =>
+    gemini.handleUpgrade(req, socket, head, (ws) => gemini.emit("connection", ws, req)),
+  );
+  const say = (ws: WebSocket, serverContent: Record<string, unknown>) =>
+    ws.send(JSON.stringify({ serverContent }));
+  // 24 kHz 16-bit PCM, as Gemini speaks.
+  const speech = Buffer.alloc(480, 1).toString("base64");
+  gemini.on("connection", (ws, req) => {
+    aiToken = new URL(req.url ?? "/", "http://x").searchParams.get("access_token") ?? "";
     let heard = 0;
     ws.on("message", (raw) => {
-      const e = JSON.parse(String(raw)) as { type: string };
-      aiSeen.push(e.type);
-      if (e.type === "response.create") {
+      const e = JSON.parse(String(raw)) as Record<string, unknown>;
+      aiSeen.push(Object.keys(e)[0] ?? "");
+      if (e.setup) ws.send(JSON.stringify({ setupComplete: {} }));
+      if (e.clientContent)
+        say(ws, {
+          modelTurn: {
+            parts: [{ inlineData: { mimeType: "audio/pcm;rate=24000", data: speech } }],
+          },
+          outputTranscription: {
+            text: "Hi, I'm Max, an AI assistant calling on behalf of Ana to book a table.",
+          },
+          turnComplete: true,
+        });
+      if (e.realtimeInput && ++heard === 2) {
+        say(ws, { interrupted: true });
+        say(ws, {
+          inputTranscription: { text: "Sure, 7pm for two works." },
+          outputTranscription: { text: "Wonderful, thank you. Goodbye!" },
+          turnComplete: true,
+        });
         ws.send(
           JSON.stringify({
-            type: "response.output_audio.delta",
-            delta: Buffer.from("hello-audio").toString("base64"),
-          }),
-        );
-        ws.send(
-          JSON.stringify({
-            type: "response.output_audio_transcript.done",
-            transcript: "Hi, I'm Max, an AI assistant calling on behalf of Ana to book a table.",
-          }),
-        );
-      }
-      if (e.type === "input_audio_buffer.append" && ++heard === 2) {
-        ws.send(JSON.stringify({ type: "input_audio_buffer.speech_started" }));
-        ws.send(
-          JSON.stringify({
-            type: "conversation.item.input_audio_transcription.completed",
-            transcript: "Sure, 7pm for two works.",
-          }),
-        );
-        ws.send(
-          JSON.stringify({
-            type: "response.output_audio_transcript.done",
-            transcript: "Wonderful, thank you. Goodbye!",
-          }),
-        );
-        ws.send(
-          JSON.stringify({
-            type: "response.function_call_arguments.done",
-            name: "end_call",
-            arguments: "{}",
+            toolCall: { functionCalls: [{ id: "f1", name: "end_call", args: {} }] },
           }),
         );
       }
@@ -104,11 +97,11 @@ beforeAll(async () => {
   });
   h = await startHarness({
     serve: true,
-    env: { TWILIO_API_URL: fakeUrl, OPENAI_REALTIME_URL: realtimeUrl },
+    env: { TWILIO_API_URL: fakeUrl },
     worker: {
       fixtures: FIXTURES,
       egressExemptCidrs: ["127.0.0.1/32"],
-      providerBases: { twilio: fakeUrl, twilioLookups: fakeUrl, openai: fakeUrl },
+      providerBases: { twilio: fakeUrl, twilioLookups: fakeUrl, gemini: fakeUrl },
       publicApiUrl: "self",
     },
   });
@@ -116,7 +109,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await h?.stop();
   fake?.close();
-  realtime?.close();
+  gemini?.close();
 });
 
 const waitFor = async <T>(
@@ -150,6 +143,12 @@ async function setup(email: string) {
       }),
     )
   ).id;
+  // The call's voice is Gemini Live, on the workspace's Google AI key.
+  await h.request("/v1/credentials", {
+    method: "POST",
+    token: u.token,
+    json: { org_id: orgId, provider: "google", label: "g", api_key: "gemini-calls-key" },
+  });
   const bot = await j(
     await h.request("/v1/bots", {
       method: "POST",
@@ -231,19 +230,21 @@ describe("calls for you", () => {
     await once(bad, "close");
 
     const tw = await answer(placed.params.Twiml!);
-    // The bot speaks first; its audio reaches Twilio.
+    // The bot speaks first; its audio reaches Twilio as 8 kHz μ-law (a third as many samples).
     await waitFor(async () => tw.fromBridge.find((m) => m.event === "media"), "bot audio");
     expect(
-      Buffer.from(
-        tw.fromBridge.find((m) => m.event === "media")!.media!.payload,
-        "base64",
-      ).toString(),
-    ).toBe("hello-audio");
-    expect(aiAuth).toBe("Bearer ek_phone");
-    const secretReq = JSON.parse(aiSeen.find((s) => s.startsWith("secret:"))!.slice(7));
-    expect(secretReq.session.audio.input.format).toEqual({ type: "audio/pcmu" });
-    expect(secretReq.session.instructions).toContain("AI assistant calling on behalf of Ana");
-    expect(secretReq.session.tools.map((t: { name: string }) => t.name)).toEqual(["end_call"]);
+      Buffer.from(tw.fromBridge.find((m) => m.event === "media")!.media!.payload, "base64").length,
+    ).toBe(80);
+    expect(aiToken).toBe("auth_tokens/phone");
+    expect(aiSeen.slice(0, 2)).toEqual(["setup", "clientContent"]);
+    const setupSent = (tokenRequest.bidiGenerateContentSetup ?? {}) as {
+      systemInstruction: { parts: Array<{ text: string }> };
+      tools: Array<{ functionDeclarations: Array<{ name: string }> }>;
+    };
+    expect(setupSent.systemInstruction.parts[0]!.text).toContain(
+      "AI assistant calling on behalf of Ana",
+    );
+    expect(setupSent.tools[0]!.functionDeclarations.map((t) => t.name)).toEqual(["end_call"]);
     // The other side talks; barge-in clears the bot's audio; then end_call hangs up.
     for (let i = 0; i < 2; i++)
       tw.ws.send(

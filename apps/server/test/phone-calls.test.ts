@@ -164,10 +164,12 @@ describe("phone calls", () => {
       greeting = g;
       return {
         ok: true,
-        model: "gpt-realtime",
-        clientSecret: "ek_1",
+        provider: "gemini",
+        model: "gemini-3.8-live",
+        clientSecret: "auth_tokens/1",
         expiresAt: new Date().toISOString(),
-        connectUrl: "http://x",
+        connectUrl: "ws://x",
+        setup: {},
         tools: 3,
       };
     };

@@ -30,8 +30,6 @@ class CloudModels {
 
     required  this.live,
 
-    required  this.realtime,
-
     required  this.tts,
 
     required  this.stt,
@@ -105,19 +103,6 @@ class CloudModels {
 
 
 
-      /// OpenAI Realtime model, used only with no Google key.
-  @JsonKey(
-    
-    name: r'realtime',
-    required: true,
-    includeIfNull: false,
-  )
-
-
-  final String realtime;
-
-
-
       /// Gemini text-to-speech model for read aloud.
   @JsonKey(
     
@@ -157,7 +142,7 @@ class CloudModels {
 
 
 
-      /// Video model. Gemini Omni Flash (gemini-omni-1.2-flash) on a Google AI key, or a fal model id when that is the only video key.
+      /// Gemini video model (gemini-omni-1.2-flash) on a Google AI key.
   @JsonKey(
     
     name: r'video',
@@ -179,7 +164,6 @@ class CloudModels {
       other.image == image &&
       other.imageResolution == imageResolution &&
       other.live == live &&
-      other.realtime == realtime &&
       other.tts == tts &&
       other.stt == stt &&
       other.embedding == embedding &&
@@ -192,7 +176,6 @@ class CloudModels {
         image.hashCode +
         imageResolution.hashCode +
         live.hashCode +
-        realtime.hashCode +
         tts.hashCode +
         stt.hashCode +
         embedding.hashCode +

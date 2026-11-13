@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:material_ui/material_ui.dart';
@@ -7,7 +6,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_sdk/casama_sdk.dart'
     show VoiceToolResult, VoiceToolResultStatusEnum;
 import 'package:casama_app/core/call_audio.dart';
-import 'package:casama_app/core/voice.dart';
 import 'package:casama_app/features/voice/call_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,26 +17,6 @@ import 'voice_test.dart' show voiceHarness;
 /// Voice upgrades (D-144): barge-in and the call orb.
 void main() {
   CallScreen.motion = false;
-  test('speaking over the bot cancels its reply and clears its audio', () {
-    final sent = <String>[];
-    final ev = RealtimeEvents((e) => sent.add(e['type'] as String));
-    void get(Map<String, Object?> e) => ev.handle(jsonEncode(e));
-    get({'type': 'response.created'});
-    get({'type': 'output_audio_buffer.started'});
-    expect(ev.speaking.value, isTrue);
-    get({'type': 'input_audio_buffer.speech_started'});
-    expect(sent, ['response.cancel', 'output_audio_buffer.clear']);
-    expect(ev.speaking.value, isFalse);
-    // Talking while the bot is quiet changes nothing.
-    get({'type': 'input_audio_buffer.speech_started'});
-    expect(sent, hasLength(2));
-    get({
-      'type': 'response.output_audio_transcript.done',
-      'transcript': 'Sure.',
-    });
-    expect(ev.transcript.value.single.text, 'Sure.');
-  });
-
   testWidgets(
     'the orb follows the call, and captions can be hidden and stay hidden',
     (tester) async {

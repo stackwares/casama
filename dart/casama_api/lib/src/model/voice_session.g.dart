@@ -225,5 +225,4 @@ Map<String, dynamic> _$VoiceSessionToJson(VoiceSession instance) =>
 
 const _$VoiceSessionProviderEnumEnumMap = {
   VoiceSessionProviderEnum.gemini: 'gemini',
-  VoiceSessionProviderEnum.openai: 'openai',
 };

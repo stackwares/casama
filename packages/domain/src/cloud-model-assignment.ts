@@ -11,7 +11,6 @@ export interface CloudModelAssignment {
   image: string;
   image_resolution: "1K" | "2K" | "4K";
   live: string;
-  realtime: string;
   tts: string;
   stt: string;
   embedding: string;
@@ -24,7 +23,6 @@ export const CLOUD_MODEL_DEFAULTS: CloudModelAssignment = {
   image: "google/gemini-nano-banana-2.1",
   image_resolution: "1K",
   live: "gemini-3.8-live",
-  realtime: "gpt-realtime-2.1",
   tts: "gemini-3.8-flash-lite-tts",
   stt: "gpt-4o-mini-transcribe",
   embedding: "text-embedding-3-small",
@@ -50,7 +48,6 @@ export function cloudModelAssignment(raw: unknown): CloudModelAssignment {
         ? (resolution as CloudModelAssignment["image_resolution"])
         : CLOUD_MODEL_DEFAULTS.image_resolution,
     live: text(row.live, CLOUD_MODEL_DEFAULTS.live),
-    realtime: text(row.realtime, CLOUD_MODEL_DEFAULTS.realtime),
     tts: text(row.tts, CLOUD_MODEL_DEFAULTS.tts),
     stt: text(row.stt, CLOUD_MODEL_DEFAULTS.stt),
     embedding: text(row.embedding, CLOUD_MODEL_DEFAULTS.embedding),

@@ -71,7 +71,7 @@ class VoiceTranscriptRequest {
 
 
 
-      /// Which live-call provider the call used, for the usage estimate
+      /// Which live-call provider the call used. Every call is Gemini Live now (D-260); openai is still accepted from older apps.
   @JsonKey(
     
     name: r'provider',
@@ -125,12 +125,12 @@ class VoiceTranscriptRequest {
 
 }
 
-/// Which live-call provider the call used, for the usage estimate
+/// Which live-call provider the call used. Every call is Gemini Live now (D-260); openai is still accepted from older apps.
 enum VoiceTranscriptRequestProviderEnum {
-    /// Which live-call provider the call used, for the usage estimate
+    /// Which live-call provider the call used. Every call is Gemini Live now (D-260); openai is still accepted from older apps.
 @JsonValue(r'gemini')
 gemini(r'gemini'),
-    /// Which live-call provider the call used, for the usage estimate
+    /// Which live-call provider the call used. Every call is Gemini Live now (D-260); openai is still accepted from older apps.
 @JsonValue(r'openai')
 openai(r'openai');
 

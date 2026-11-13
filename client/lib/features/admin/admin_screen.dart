@@ -594,7 +594,6 @@ class _CloudModelsSheetState extends State<_CloudModelsSheet> {
   late final _background = TextEditingController(text: widget.current.background);
   late final _image = TextEditingController(text: widget.current.image);
   late final _live = TextEditingController(text: widget.current.live);
-  late final _realtime = TextEditingController(text: widget.current.realtime);
   late final _tts = TextEditingController(text: widget.current.tts);
   late final _stt = TextEditingController(text: widget.current.stt);
   late final _embedding = TextEditingController(text: widget.current.embedding);
@@ -603,7 +602,7 @@ class _CloudModelsSheetState extends State<_CloudModelsSheet> {
 
   @override
   void dispose() {
-    for (final c in [_chat, _background, _image, _live, _realtime, _tts, _stt, _embedding, _video]) {
+    for (final c in [_chat, _background, _image, _live, _tts, _stt, _embedding, _video]) {
       c.dispose();
     }
     super.dispose();
@@ -631,7 +630,7 @@ class _CloudModelsSheetState extends State<_CloudModelsSheet> {
       submitKey: const Key('saveCloudModels'),
       // Also run by the keyboard's Done key on the last field.
       onSubmit: submit = () {
-        final values = [_chat, _background, _image, _live, _realtime, _tts, _stt, _embedding, _video];
+        final values = [_chat, _background, _image, _live, _tts, _stt, _embedding, _video];
         if (values.any((c) => c.text.trim().isEmpty)) return;
         Navigator.pop(
           context,
@@ -641,7 +640,6 @@ class _CloudModelsSheetState extends State<_CloudModelsSheet> {
             image: _image.text.trim(),
             imageResolution: _resolution,
             live: _live.text.trim(),
-            realtime: _realtime.text.trim(),
             tts: _tts.text.trim(),
             stt: _stt.text.trim(),
             embedding: _embedding.text.trim(),
@@ -666,7 +664,6 @@ class _CloudModelsSheetState extends State<_CloudModelsSheet> {
           }, haptic: HapticsHelper.selection),
         ),
         box(const Key('cloudLive'), _live, 'Calls'),
-        box(const Key('cloudRealtime'), _realtime, 'Call fallback'),
         box(const Key('cloudTts'), _tts, 'Read aloud'),
         box(const Key('cloudStt'), _stt, 'Dictation'),
         box(const Key('cloudEmbedding'), _embedding, 'Embeddings'),

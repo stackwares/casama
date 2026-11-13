@@ -30,16 +30,11 @@ String providerLabel(ProviderId p) => switch (p) {
   ProviderId.google => 'Google Gemini',
   ProviderId.xai => 'xAI',
   ProviderId.openaiCompatible => 'OpenAI-compatible server',
-  ProviderId.fal => 'fal.ai',
   ProviderId.braveSearch => 'Brave Search',
   ProviderId.tavily => 'Tavily',
   ProviderId.treg => 'Treg',
   ProviderId.googleMaps => 'Google Maps',
   ProviderId.mapbox => 'Mapbox',
-  ProviderId.deepgram => 'Deepgram',
-  ProviderId.elevenlabs => 'ElevenLabs',
-  ProviderId.cartesia => 'Cartesia',
-  ProviderId.fishAudio => 'Fish Audio',
   ProviderId.chatgpt => 'ChatGPT',
 };
 
@@ -53,20 +48,15 @@ const chatKeyProviders = [
 ];
 
 const _moreKeyOrder = [
-  ProviderId.deepgram,
-  ProviderId.elevenlabs,
-  ProviderId.cartesia,
-  ProviderId.fishAudio,
   ProviderId.braveSearch,
   ProviderId.tavily,
   ProviderId.googleMaps,
   ProviderId.mapbox,
-  ProviderId.fal,
   ProviderId.treg,
   ProviderId.openaiCompatible,
 ];
 
-/// Voice, search, maps, media, data and a self-hosted server, under "More providers". A provider
+/// Search, maps, data and a self-hosted server, under "More providers". A provider
 /// added later lands here too, so none is left out of the form.
 final moreKeyProviders = [
   ..._moreKeyOrder,
@@ -187,15 +177,10 @@ class _ChatGptConnectState extends ConsumerState<ChatGptConnect> {
 String? _providerHint(BuildContext context, ProviderId p) => switch (p) {
   ProviderId.openrouter => context.l10n.providerHintOpenRouter,
   ProviderId.openaiCompatible => context.l10n.providerHintCompatible,
-  ProviderId.fal => context.l10n.providerHintImages,
   ProviderId.braveSearch ||
   ProviderId.tavily => context.l10n.providerHintSearch,
   ProviderId.treg => context.l10n.providerHintData,
   ProviderId.googleMaps || ProviderId.mapbox => context.l10n.providerHintMaps,
-  ProviderId.deepgram ||
-  ProviderId.elevenlabs ||
-  ProviderId.cartesia ||
-  ProviderId.fishAudio => context.l10n.providerHintVoice,
   _ => null,
 };
 

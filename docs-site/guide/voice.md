@@ -15,10 +15,10 @@ Add keys in **Settings** → **Model keys** → **Add Key**.
 
 | Feature                      | Needs                                                                             |
 | ---------------------------- | --------------------------------------------------------------------------------- |
-| Dictation                    | An OpenAI or Deepgram key                                                          |
-| Read aloud                   | A Google AI key (Gemini Flash-Lite), or an OpenAI, ElevenLabs, Cartesia or Fish Audio key |
-| Live calls                   | A Google AI (Gemini) key. OpenAI Realtime is used only when there is no Google key. Included on Casama Cloud, and on servers whose admin set a server-wide key |
-| Bot rings your phone         | A live-call key (Gemini or OpenAI), plus push set up on the server for iOS and Android |
+| Dictation                    | An OpenAI key, or the server's shared OpenRouter key                               |
+| Read aloud                   | A Google AI key (Gemini Flash-Lite)                                                |
+| Live calls                   | A Google AI (Gemini) key. Included on Casama Cloud, and on servers whose admin set a server-wide key |
+| Bot rings your phone         | A Google AI key for the call, plus push set up on the server for iOS and Android |
 | Wake word                    | No key: it runs on your device                                                     |
 
 Every minute, second or character of voice is recorded in [Usage](/guide/usage). On your own keys,
@@ -30,7 +30,9 @@ the provider bills your own account.
 2. Speak, then tap **Stop and transcribe**.
 3. The text lands in the message box. Edit it if you like, then send.
 
-Dictation uses OpenAI (`gpt-4o-mini-transcribe`) or Deepgram (`nova-3`). Google's transcriber costs more once the transcript text is included, so it is not the default.
+Dictation uses OpenAI (`gpt-4o-mini-transcribe`), or Whisper Large V3 Turbo on the server's shared
+OpenRouter key when the workspace has no OpenAI key. Google's transcriber costs more once the
+transcript text is included, so it is not used.
 
 If the dictation service fails or isn't available, the app falls back to your device's own speech
 recognition, where the device has one.
@@ -42,22 +44,18 @@ replaying it doesn't call the provider again.
 
 ## Choose a bot's voice
 
-On Casama Cloud, Casama chooses the voice providers, and this screen only holds **Tools on calls**
-(below).
+Read aloud and calls always use Gemini, and dictation uses OpenAI, so there's no service to pick.
 
 1. Open **Bot profile** → **Voice**.
-2. Pick a **Read-aloud provider**: Google, ElevenLabs, OpenAI, Cartesia or Fish Audio. Automatic uses Google when that key exists.
-3. Optionally enter a **Voice id** from that provider. Leave it empty for a default voice.
-4. Pick a **Dictation provider**: OpenAI or Deepgram.
-5. Tap **Save**.
-
-**Automatic (first key found)** uses whichever matching key the workspace has.
+2. Optionally enter a **Voice id**: one of Gemini's built-in voices, such as Kore or Puck. Leave it
+   empty for Kore.
+3. Tap **Save**.
 
 ## Call a bot live
 
-Live calls and phone calls use **Gemini Live** when the workspace has a Google AI key, and the
-server's own Google key when the workspace has none. **OpenAI Realtime** is used only when neither
-exists. The bot's voice on Gemini is one of Gemini's built-in voices (Kore by default).
+Live calls and phone calls use **Gemini Live**, on the workspace's Google AI key, or the server's
+own Google key when the workspace has none. The bot's voice is one of Gemini's built-in voices
+(Kore by default).
 
 1. In a chat, tap **Start a voice call** (the phone icon in the header).
 2. The bot picks up and speaks first, like someone answering the phone: it says hi, by your name
@@ -157,14 +155,12 @@ through the banner while the app is open. See [Configuration](/self-hosting/conf
 
 ## Limits
 
-- Live calls run on Gemini Live or OpenAI Realtime; other realtime voice providers aren't
-  supported. With both keys, Gemini is used.
+- Live calls run on Gemini Live only; other realtime voice providers aren't supported.
 - On Gemini Live, use headphones on desktop computers if the bot seems to hear itself: echo
   cancellation depends on the device.
 - The wake word isn't available on iOS or on the web, and on Android it listens only while the app
   is open.
 - Bots can't phone other numbers, such as a business, yet.
-- On OpenAI Realtime calls the mascot follows whether the bot is speaking, not how loud it is.
 - Provider connections follow each provider's public docs and have been tested against stand-ins,
   not yet against every live provider.
 

@@ -855,7 +855,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       if (!provider || provider.supports?.("image") === false)
         throw new ToolError(
           "no_media_provider",
-          "No image generation key is configured. Add an OpenRouter or fal.ai key in Model keys.",
+          "No image generation key is configured. Add an OpenRouter key in Model keys.",
         );
       const payer = provider.paidBy?.("image") ?? null;
       if (payer) await needCredits(db, ctx.orgId, mediaCharge(payer, MEDIA_PRICES.image));
@@ -912,7 +912,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       if (!provider || provider.supports?.("video") === false)
         throw new ToolError(
           "no_media_provider",
-          "No video generation key is configured. Add a Google AI or fal.ai key in Model keys.",
+          "No video generation key is configured. Add a Google AI key in Model keys.",
         );
       const image = args.image ? await loadFile(ctx, args.image) : undefined;
       if (image && !image.contentType.startsWith("image/"))

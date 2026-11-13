@@ -74,7 +74,7 @@ void main() {
 
   group('dictation falls back without dead ends', () {
     final failed = transcribeProblem(409, 'transcription_failed', "Couldn't turn that recording into text.");
-    final noService = transcribeProblem(409, 'dictation_unavailable', 'Add an OpenAI or Deepgram key to use dictation.');
+    final noService = transcribeProblem(409, 'dictation_unavailable', 'Add an OpenAI key to use dictation.');
     Widget chat(FakeBackend backend, FakeDictation dictation, FakeDeviceDictation device) =>
         voiceHarness(backend, dictation: dictation, device: device, home: const ChatScreen(botId: botId, conversationId: convId));
 
@@ -378,7 +378,7 @@ void main() {
     final calls = FakeCallConnector();
     await tester.pumpWidget(voiceHarness(backend, calls: calls, home: const CallScreen(botId: botId, conversationId: convId)));
     await tester.pumpAndSettle();
-    expect(calls.session?.clientSecret, 'ek_test');
+    expect(calls.session?.clientSecret, 'auth_tokens/test');
     expect(find.text('Live'), findsOneWidget);
 
     calls.call.say('user', 'What do you know about my plants?');

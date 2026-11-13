@@ -1688,7 +1688,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voiceSettings => 'Voice';
 
   @override
-  String get voiceSettingsHelp => 'Read-aloud voice and dictation provider';
+  String get voiceSettingsHelp =>
+      'Read-aloud voice and the tools a bot has on calls';
 
   @override
   String get callTools => 'Tools on Calls';
@@ -1718,20 +1719,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get readAloudProvider => 'Read-aloud provider';
-
-  @override
-  String get automatic => 'Automatic (first key found)';
-
-  @override
   String get voiceId => 'Voice id (optional)';
 
   @override
   String get voiceIdHelp =>
-      'The provider\'s voice id; empty uses a default voice';
-
-  @override
-  String get dictationProvider => 'Dictation provider';
+      'A Gemini voice name, such as Kore or Puck; empty uses Kore';
 
   @override
   String get useThisComputer => 'Use this computer for bots';
@@ -2507,13 +2499,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get providerHintCompatible => 'Ollama, LM Studio, vLLM';
 
   @override
-  String get providerHintImages => 'images';
-
-  @override
   String get providerHintSearch => 'web search';
-
-  @override
-  String get providerHintVoice => 'voice';
 
   @override
   String get noRoutinesHelp =>

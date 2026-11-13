@@ -1,24 +1,19 @@
 /**
  * Voice work that needs provider keys (only the worker reads Vault): transcription, read-aloud
- * audio (cached per message and voice) and realtime call sessions (D-065).
+ * audio (cached per message and voice) and Gemini Live call sessions (D-065, D-260).
  */
 
 import {
   createGeminiLiveSession,
-  createRealtimeSession,
   DEFAULT_GEMINI_LIVE_MODEL,
-  DEFAULT_REALTIME_MODEL,
   integrationToolName,
   OPENROUTER_STT_MODEL,
-  type RealtimeProviderId,
   type RealtimeTool,
   START_TASK_TOOL,
   STT_PROVIDERS,
   type SttProviderId,
   synthesize,
   ToolRegistry,
-  TTS_PROVIDERS,
-  type TtsProviderId,
   transcribe,
   ttsCostUsd,
   VOICE_CALL_TOOLS,
@@ -41,12 +36,11 @@ export interface VoiceRuntime {
   fetch?: typeof fetch;
   tools: ToolRegistry;
   computers: boolean;
-  realtimeModel?: string;
   /** Gemini Live model (default gemini-3.8-live). */
   geminiLiveModel?: string;
   /**
-   * The server's own Google AI key (GOOGLE_AI_API_KEY): live calls in workspaces without their own
-   * Gemini or OpenAI key use it. On Casama Cloud those calls are paid from credits.
+   * The server's own Google AI key (GOOGLE_AI_API_KEY): live calls and read-aloud in workspaces
+   * without their own Google key use it. On Casama Cloud those are paid from credits.
    */
   serverGeminiKey?: string;
   /** Casama Cloud's live assignment (D-188). Unset on a self-hosted server. */
@@ -57,13 +51,15 @@ export interface VoiceRuntime {
   billPlatform?: boolean;
 }
 
+/**
+ * A bot's voice settings. Rows saved before D-260 may still name a removed read-aloud or dictation
+ * service (`tts_provider`, an `stt_provider` like "deepgram", `realtime_provider`); those are
+ * ignored.
+ */
 type BotVoice = {
-  tts_provider?: TtsProviderId;
   tts_voice?: string;
-  stt_provider?: SttProviderId;
+  stt_provider?: string;
   realtime_voice?: string;
-  /** Prefer one live-call provider when the workspace has keys for both. */
-  realtime_provider?: RealtimeProviderId;
   /** Connected-app tools (full names) the bot also gets on calls, on top of the voice set. */
   call_tools?: string[];
 };
@@ -115,8 +111,11 @@ async function botVoice(db: Database, botId: string) {
   return b;
 }
 
-const ordered = <T extends string>(preferred: T | undefined, all: T[]) =>
-  preferred ? [preferred, ...all.filter((p) => p !== preferred)] : all;
+/** The bot's preferred service first, when it is still one Casama offers. */
+const ordered = <T extends string>(preferred: string | undefined, all: T[]) =>
+  preferred && (all as string[]).includes(preferred)
+    ? [preferred as T, ...all.filter((p) => p !== preferred)]
+    : all;
 
 /** Whether a credit-gated workspace still has credits once unsettled usage is counted. */
 async function hasCredits(db: Database, orgId: string) {
@@ -173,7 +172,7 @@ export async function voiceTranscribe(
     return {
       ok: false as const,
       code: "dictation_unavailable",
-      error: "Add an OpenAI or Deepgram key to use dictation.",
+      error: "Add an OpenAI key to use dictation.",
     };
   // On the server's key with billing on, dictation needs credits; without them the app falls back
   // to the phone's own dictation (D-246).
@@ -254,21 +253,17 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
   if (!m) return { ok: false as const, error: "Message not found." };
   const bot = await botVoice(rt.db, m.bot_id);
   const assigned = await rt.cloudModels?.();
-  // Casama Cloud, or any server with its own Google AI key: Gemini reads aloud (the workspace's
-  // Google key first) and the bot's provider choice doesn't apply, as with live calls.
-  const managed = !!assigned || !!rt.serverGeminiKey;
-  const google = managed ? await rt.key(orgId, ["google"]) : null;
-  const k =
-    managed && (google?.key || rt.serverGeminiKey)
-      ? { provider: "google", key: google?.key ?? rt.serverGeminiKey ?? null }
-      : await rt.key(
-          orgId,
-          assigned ? TTS_PROVIDERS : ordered(bot.voice.tts_provider, TTS_PROVIDERS),
-        );
-  if (!k?.key)
+  // Gemini reads aloud: the workspace's Google key first, else the server's own (D-260).
+  const google = await rt.key(orgId, ["google"]);
+  const k = google?.key
+    ? { provider: "google" as const, key: google.key }
+    : rt.serverGeminiKey
+      ? { provider: "google" as const, key: rt.serverGeminiKey }
+      : null;
+  if (!k)
     return {
       ok: false as const,
-      error: "Add a Google AI, OpenAI, ElevenLabs, Cartesia or Fish Audio key to read aloud.",
+      error: "Add a Google AI key to read aloud.",
     };
   const voiceKey = `${k.provider}:${bot.voice.tts_voice ?? ""}`;
   const [cached] = await rt.db.execute<{ mime: string }>(sql`
@@ -289,15 +284,15 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
       code: "out_of_credits",
       error: "The workspace is out of credits. Add credits or change plans in Billing.",
     };
-  const r = await synthesize(k.provider as TtsProviderId, k.key, text, bot.voice.tts_voice, {
+  const r = await synthesize(k.provider, k.key, text, bot.voice.tts_voice, {
     bases: rt.bases,
     fetch: rt.fetch,
-    model: k.provider === "google" ? assigned?.tts : undefined,
+    model: assigned?.tts,
   });
   await rt.db.execute(sql`insert into public.tts_cache (message_id, voice_key, mime, audio)
     values (${messageId}::uuid, ${voiceKey}, ${r.mime}, ${Buffer.from(r.audio)})
     on conflict do nothing`);
-  const cost = ttsCostUsd(k.provider as TtsProviderId, text.length, r.audio);
+  const cost = ttsCostUsd(k.provider, text.length, r.audio);
   if (onServerKey)
     await rt.db.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, billable, meta)
       values (${orgId}::uuid, ${m.bot_id}::uuid, 'tts_chars', ${text.length}, ${cloudCharge(cost)}, true,
@@ -306,8 +301,9 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
   return { ok: true as const, voiceKey, cached: false };
 }
 
-/** Mints an ephemeral realtime key with the bot's persona and tools. */
 /**
+ * Mints a single-use Gemini Live token with the bot's persona and tools.
+ *
  * `greeting`: an answered phone call (D-135); the bot speaks first.
  * `phone`: an outbound call for the person (D-141): μ-law audio, the call's instructions, and only
  * an end_call function.
@@ -322,22 +318,16 @@ export async function voiceSession(
   const bot = await botVoice(rt.db, botId);
   if (bot.org_id !== orgId) throw new Error("bot_not_found");
   const assigned = await rt.cloudModels?.();
-  // Every call, including a phone call, uses Gemini Live when a Google key exists: the
-  // workspace's own, otherwise the server's. OpenAI Realtime is only the last resort (D-187).
+  // Every call, including a phone call, is Gemini Live: the workspace's Google key, otherwise the
+  // server's own (D-260).
   const google = await rt.key(orgId, ["google"]);
-  const openai = await rt.key(orgId, ["openai"]);
-  const k = google?.key
-    ? google
-    : rt.serverGeminiKey
-      ? { provider: "google", key: rt.serverGeminiKey }
-      : openai;
-  if (!k?.key)
+  const key = google?.key ?? rt.serverGeminiKey;
+  if (!key)
     return {
       ok: false as const,
       code: "voice_key_missing",
-      error: "Live calls need a Google AI (Gemini) or OpenAI key.",
+      error: "Live calls need a Google AI (Gemini) key. Add one in Settings → Model keys.",
     };
-  const provider = k.provider === "google" ? "gemini" : "openai";
   // Calls get a small conversational tool set (each definition goes with the session and may
   // count on every turn); bigger jobs go to a normal chat run through start_task.
   const defs = rt.tools
@@ -372,26 +362,13 @@ export async function voiceSession(
   ]
     .filter(Boolean)
     .join("\n\n");
-  if (provider === "gemini") {
-    const s = await createGeminiLiveSession(k.key, {
-      model: assigned?.live ?? rt.geminiLiveModel ?? DEFAULT_GEMINI_LIVE_MODEL,
-      voice: bot.voice.realtime_voice,
-      instructions,
-      tools,
-      bases: rt.bases,
-      fetch: rt.fetch,
-    });
-    return { ok: true as const, ...s, tools: tools.length };
-  }
-  const s = await createRealtimeSession(k.key, {
-    model: assigned?.realtime ?? rt.realtimeModel ?? DEFAULT_REALTIME_MODEL,
+  const s = await createGeminiLiveSession(key, {
+    model: assigned?.live ?? rt.geminiLiveModel ?? DEFAULT_GEMINI_LIVE_MODEL,
     voice: bot.voice.realtime_voice,
     instructions,
     tools,
     bases: rt.bases,
     fetch: rt.fetch,
-    phone,
-    transcriptionModel: assigned?.stt,
   });
-  return { ok: true as const, ...s, setup: null, tools: tools.length };
+  return { ok: true as const, ...s, tools: tools.length };
 }

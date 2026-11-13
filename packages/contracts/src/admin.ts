@@ -125,15 +125,11 @@ export const CloudModels = z
     image: modelId.openapi({ description: "OpenRouter image model." }),
     image_resolution: z.enum(["1K", "2K", "4K"]),
     live: modelId.openapi({ description: "Gemini Live model for calls." }),
-    realtime: modelId.openapi({
-      description: "OpenAI Realtime model, used only with no Google key.",
-    }),
     tts: modelId.openapi({ description: "Gemini text-to-speech model for read aloud." }),
     stt: modelId.openapi({ description: "OpenAI transcription model for dictation." }),
     embedding: modelId.openapi({ description: "OpenAI embedding model." }),
     video: modelId.openapi({
-      description:
-        "Video model. Gemini Omni Flash (gemini-omni-1.2-flash) on a Google AI key, or a fal model id when that is the only video key.",
+      description: "Gemini video model (gemini-omni-1.2-flash) on a Google AI key.",
     }),
   })
   .openapi("CloudModels");

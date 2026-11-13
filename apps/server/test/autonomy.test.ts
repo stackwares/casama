@@ -51,10 +51,6 @@ async function startServices() {
         ],
         usage: { cost: 0.0336 },
       });
-    if (url.pathname === "/fal-ai/bytedance/seedream/v4.5/text-to-image")
-      return json(res, 200, {
-        images: [{ url: `${servicesUrl}/img.png`, content_type: "image/png" }],
-      });
     json(res, 404, {});
   }).listen(0, "127.0.0.1");
   await once(services, "listening");
@@ -123,7 +119,7 @@ beforeAll(async () => {
       fixtures: FIXTURES,
       push,
       egressExemptCidrs: ["127.0.0.1/32"],
-      providerBases: { fal: servicesUrl, openrouter: servicesUrl },
+      providerBases: { openrouter: servicesUrl },
     },
   });
   owner = await h.user("phase4@example.com");
@@ -403,12 +399,7 @@ describe("Phase 4 gate", () => {
     expect(test).toEqual({ ok: true, tools: ["add"] });
   }, 60_000);
 
-  it("image generation succeeds with a test provider key and is recorded", async () => {
-    await h.request("/v1/credentials", {
-      method: "POST",
-      token: owner.token,
-      json: { org_id: orgId, provider: "fal", label: "fal", api_key: "fal-test-key-123" },
-    });
+  it("image generation succeeds on the workspace's OpenRouter key and is recorded", async () => {
     const bot = await makeBot("Painter", "autonomous");
     const runId = await chat(bot.id, "Please draw a teal robot");
     await waitFor(async () => (await runStatus(runId)) === "completed", "media run");

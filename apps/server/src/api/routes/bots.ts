@@ -11,7 +11,7 @@ import {
   trackWelcomeStepView,
   welcomeStep,
 } from "@casama/agent";
-import { routes } from "@casama/contracts";
+import { ProviderId, routes } from "@casama/contracts";
 import { contentKeys, type JwtClaims, schema, withUserSession } from "@casama/db";
 import {
   CLOUD_LOCKED_MODEL,
@@ -1211,8 +1211,12 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         .where(eq(modelCredentials.orgId, org_id))
         .orderBy(modelCredentials.createdAt),
     );
-    const items: Array<ReturnType<typeof credOut> | ReturnType<typeof cloudCredential>> =
-      rows.map(credOut);
+    // Keys for services Casama no longer uses (fal, Deepgram, ElevenLabs, Cartesia, Fish Audio;
+    // D-260) stay stored but aren't listed.
+    const offered = new Set<string>(ProviderId.options);
+    const items: Array<ReturnType<typeof credOut> | ReturnType<typeof cloudCredential>> = rows
+      .filter((r) => offered.has(r.provider))
+      .map(credOut);
     // Own keys stay first. Casama's key is last so a new bot prefers a key the workspace added.
     if (deps.env.CLOUD_MODEL_UPSTREAM_KEY) items.push(cloudCredential(org_id));
     return c.json({ items }, 200);

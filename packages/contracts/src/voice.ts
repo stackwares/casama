@@ -20,23 +20,19 @@ export const VoiceSessionRequest = z
 
 export const VoiceSession = z
   .object({
-    provider: z.enum(["gemini", "openai"]).openapi({
-      description:
-        "gemini: Gemini Live over a WebSocket; openai: OpenAI Realtime over WebRTC. Gemini is used when the workspace has a Google AI key",
+    provider: z.enum(["gemini"]).openapi({
+      description: "Gemini Live over a WebSocket, the only live-call provider (D-260)",
     }),
     model: z.string(),
     client_secret: z.string().openapi({
-      description:
-        "Short-lived credential: Gemini's single-use token (the access_token query parameter) or OpenAI's ephemeral key",
+      description: "Gemini's single-use token (the access_token query parameter)",
     }),
     expires_at: ts,
     connect_url: z.string().openapi({
-      description:
-        "gemini: open a WebSocket here with ?access_token=<client_secret>; openai: POST the WebRTC offer SDP here with the ephemeral key",
+      description: "Open a WebSocket here with ?access_token=<client_secret>",
     }),
     setup: z.record(z.string(), z.unknown()).nullable().openapi({
-      description:
-        "gemini: send {setup: <this>} as the first message (add sessionResumption to reconnect); null for openai",
+      description: "Send {setup: <this>} as the first message (add sessionResumption to reconnect)",
     }),
     conversation_id: Uuid,
     tools: z.number().int(),
@@ -90,10 +86,10 @@ export const VoiceTranscriptRequest = z
       .int()
       .min(0)
       .max(24 * 3600),
-    provider: z
-      .enum(["gemini", "openai"])
-      .optional()
-      .openapi({ description: "Which live-call provider the call used, for the usage estimate" }),
+    provider: z.enum(["gemini", "openai"]).optional().openapi({
+      description:
+        "Which live-call provider the call used. Every call is Gemini Live now (D-260); openai is still accepted from older apps.",
+    }),
     usage: z
       .object({
         input_audio_tokens: z.number().int().min(0),

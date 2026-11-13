@@ -3,8 +3,8 @@
  * - workspace telephony settings (the workspace's Twilio account; admins)
  * - a call's live transcript, ending it, or taking it over to the person's own phone
  * - Twilio's status webhook (signed)
- * - the media stream bridge: Twilio Media Streams (μ-law audio over WebSocket) to a realtime voice
- *   session minted by the worker, with the bot speaking first.
+ * - the media stream bridge: Twilio Media Streams (μ-law audio over WebSocket) to a Gemini Live
+ *   session minted by the worker, with the bot speaking first (D-260).
  */
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
@@ -284,7 +284,7 @@ export function registerTelephonyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
   });
 }
 
-/** Twilio Media Streams ⇄ realtime voice (D-141). */
+/** Twilio Media Streams ⇄ Gemini Live (D-141, D-260). */
 export function attachTelephony(server: Server, deps: AppDeps) {
   const wss = new WebSocketServer({ noServer: true });
   server.on("upgrade", (req: IncomingMessage, socket: Duplex, head: Buffer) => {
@@ -308,7 +308,6 @@ function bridge(deps: AppDeps, id: string, twilio: WebSocket) {
   let ai: WebSocket | null = null;
   let streamSid = "";
   let started = false;
-  let gemini = false;
   const close = () => {
     bridges.delete(id);
     if (ai && ai.readyState <= WebSocket.OPEN) ai.close();
@@ -384,66 +383,19 @@ function bridge(deps: AppDeps, id: string, twilio: WebSocket) {
         );
         return close();
       }
-      if (s.provider === "gemini") {
-        gemini = true;
-        ai = geminiBridge(deps, id, s, twilio, () => streamSid, close);
-        bridges.set(id, close);
-        return;
-      }
-      const wsUrl = `${(deps.env.OPENAI_REALTIME_URL ?? "wss://api.openai.com/v1/realtime").replace(/\/$/, "")}?model=${encodeURIComponent(s.model)}`;
-      ai = new WebSocket(wsUrl, { headers: { authorization: `Bearer ${s.clientSecret}` } });
+      // Phone calls are Gemini Live (D-260).
+      ai = geminiBridge(deps, id, s, twilio, () => streamSid, close);
       bridges.set(id, close);
-      ai.on("open", () => ai?.send(JSON.stringify({ type: "response.create" })));
-      ai.on("close", close);
-      ai.on("error", close);
-      ai.on("message", async (data) => {
-        let e: { type?: string; delta?: string; transcript?: string; name?: string };
-        try {
-          e = JSON.parse(String(data));
-        } catch {
-          return;
-        }
-        switch (e.type) {
-          case "response.output_audio.delta":
-            if (e.delta && twilio.readyState === WebSocket.OPEN)
-              twilio.send(
-                JSON.stringify({ event: "media", streamSid, media: { payload: e.delta } }),
-              );
-            break;
-          case "input_audio_buffer.speech_started":
-            // Barge-in: the other person talks over the bot, so stop its audio.
-            if (twilio.readyState === WebSocket.OPEN)
-              twilio.send(JSON.stringify({ event: "clear", streamSid }));
-            ai?.send(JSON.stringify({ type: "response.cancel" }));
-            break;
-          case "conversation.item.input_audio_transcription.completed":
-            await appendLine(db, id, "callee", e.transcript ?? "");
-            break;
-          case "response.output_audio_transcript.done":
-            await appendLine(db, id, "bot", e.transcript ?? "");
-            break;
-          case "response.function_call_arguments.done":
-            // end_call: let the goodbye finish playing, then leave the stream (Twilio hangs up).
-            if (e.name === "end_call") setTimeout(close, 2500);
-            break;
-        }
-      });
     } else if (m.event === "media" && ai?.readyState === WebSocket.OPEN && m.media?.payload) {
-      if (gemini) {
-        // 8 kHz μ-law from the phone → 16 kHz PCM for Gemini.
-        const pcm = resamplePcm16(
-          mulawToPcm16(Buffer.from(m.media.payload, "base64")),
-          8000,
-          16000,
-        );
-        ai.send(
-          JSON.stringify({
-            realtimeInput: {
-              audio: { data: pcm16ToBase64(pcm), mimeType: "audio/pcm;rate=16000" },
-            },
-          }),
-        );
-      } else ai.send(JSON.stringify({ type: "input_audio_buffer.append", audio: m.media.payload }));
+      // 8 kHz μ-law from the phone → 16 kHz PCM for Gemini.
+      const pcm = resamplePcm16(mulawToPcm16(Buffer.from(m.media.payload, "base64")), 8000, 16000);
+      ai.send(
+        JSON.stringify({
+          realtimeInput: {
+            audio: { data: pcm16ToBase64(pcm), mimeType: "audio/pcm;rate=16000" },
+          },
+        }),
+      );
     } else if (m.event === "stop") close();
   });
 }

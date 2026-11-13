@@ -17,8 +17,6 @@ abstract class _$CloudModelsCWProxy {
 
   CloudModels live(String live);
 
-  CloudModels realtime(String realtime);
-
   CloudModels tts(String tts);
 
   CloudModels stt(String stt);
@@ -41,7 +39,6 @@ abstract class _$CloudModelsCWProxy {
     String image,
     CloudModelsImageResolutionEnum imageResolution,
     String live,
-    String realtime,
     String tts,
     String stt,
     String embedding,
@@ -73,9 +70,6 @@ class _$CloudModelsCWProxyImpl implements _$CloudModelsCWProxy {
   CloudModels live(String live) => call(live: live);
 
   @override
-  CloudModels realtime(String realtime) => call(realtime: realtime);
-
-  @override
   CloudModels tts(String tts) => call(tts: tts);
 
   @override
@@ -102,7 +96,6 @@ class _$CloudModelsCWProxyImpl implements _$CloudModelsCWProxy {
     Object? image = const $CopyWithPlaceholder(),
     Object? imageResolution = const $CopyWithPlaceholder(),
     Object? live = const $CopyWithPlaceholder(),
-    Object? realtime = const $CopyWithPlaceholder(),
     Object? tts = const $CopyWithPlaceholder(),
     Object? stt = const $CopyWithPlaceholder(),
     Object? embedding = const $CopyWithPlaceholder(),
@@ -132,10 +125,6 @@ class _$CloudModelsCWProxyImpl implements _$CloudModelsCWProxy {
           ? _value.live
           // ignore: cast_nullable_to_non_nullable
           : live as String,
-      realtime: realtime == const $CopyWithPlaceholder() || realtime == null
-          ? _value.realtime
-          // ignore: cast_nullable_to_non_nullable
-          : realtime as String,
       tts: tts == const $CopyWithPlaceholder() || tts == null
           ? _value.tts
           // ignore: cast_nullable_to_non_nullable
@@ -177,7 +166,6 @@ CloudModels _$CloudModelsFromJson(Map<String, dynamic> json) =>
           'image',
           'image_resolution',
           'live',
-          'realtime',
           'tts',
           'stt',
           'embedding',
@@ -193,7 +181,6 @@ CloudModels _$CloudModelsFromJson(Map<String, dynamic> json) =>
           (v) => $enumDecode(_$CloudModelsImageResolutionEnumEnumMap, v),
         ),
         live: $checkedConvert('live', (v) => v as String),
-        realtime: $checkedConvert('realtime', (v) => v as String),
         tts: $checkedConvert('tts', (v) => v as String),
         stt: $checkedConvert('stt', (v) => v as String),
         embedding: $checkedConvert('embedding', (v) => v as String),
@@ -210,7 +197,6 @@ Map<String, dynamic> _$CloudModelsToJson(CloudModels instance) =>
       'image_resolution':
           _$CloudModelsImageResolutionEnumEnumMap[instance.imageResolution]!,
       'live': instance.live,
-      'realtime': instance.realtime,
       'tts': instance.tts,
       'stt': instance.stt,
       'embedding': instance.embedding,

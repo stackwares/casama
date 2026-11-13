@@ -518,19 +518,7 @@ export async function testCredential(
     );
     return outcome;
   }
-  if (
-    cred &&
-    [
-      "fal",
-      "brave_search",
-      "tavily",
-      "deepgram",
-      "elevenlabs",
-      "cartesia",
-      "fish_audio",
-      "treg",
-    ].includes(cred.provider)
-  ) {
+  if (cred && ["brave_search", "tavily", "treg"].includes(cred.provider)) {
     return {
       ok: true,
       model: cred.provider,

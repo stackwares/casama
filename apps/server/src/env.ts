@@ -149,11 +149,10 @@ export const EnvSchema = z.object({
   TREG_API_KEY: z.string().optional(),
   TREG_RESALE: z.enum(["on", "off"]).default("off"),
   TREG_API_URL: z.url().optional(),
-  /** Calls for you (D-141): overrides for Twilio's API and OpenAI's realtime WebSocket (tests, proxies). */
+  /** Calls for you (D-141): override for Twilio's API (tests, proxies). */
   TWILIO_API_URL: z.url().optional(),
   /** Phone calls through Twilio are off for now: bots get no voice.call tool unless this is on. */
   PHONE_CALLS: bool.default(false),
-  OPENAI_REALTIME_URL: z.string().optional(),
   /** Live calls on Gemini Live (when a workspace has a Google AI key); default gemini-3.8-live. */
   GEMINI_LIVE_MODEL: z.string().optional(),
   /**

@@ -1,22 +1,16 @@
 /**
- * Voice (Phase 6, D-065): speech-to-text, text-to-speech and realtime call sessions, each with the
- * org's own provider key. Request shapes follow each provider's public REST API; base URLs can be
- * overridden (tests use local mocks).
+ * Voice (Phase 6, D-065): speech-to-text, text-to-speech and live call sessions. Read-aloud and
+ * calls are Gemini only; dictation is OpenAI, or Whisper on OpenRouter (D-260). Request shapes
+ * follow each provider's public REST API; base URLs can be overridden (tests use local mocks).
  */
 
-export type SttProviderId = "openai" | "deepgram" | "openrouter";
-export type TtsProviderId = "google" | "openai" | "elevenlabs" | "cartesia" | "fish_audio";
-/** Read-aloud model (D-187). Cheaper than gpt-4o-mini-tts and ElevenLabs Flash. */
+export type SttProviderId = "openai" | "openrouter";
+/** Read-aloud is Gemini text-to-speech only (D-260). */
+export type TtsProviderId = "google";
+/** Read-aloud model (D-187). */
 export const GEMINI_TTS_MODEL = "gemini-3.8-flash-lite-tts";
 
-export const DEFAULT_REALTIME_MODEL = "gpt-realtime-2.1";
-/** Live calls: Gemini Live when the workspace has a Google AI key, else OpenAI Realtime. */
-export type RealtimeProviderId = "gemini" | "openai";
-/** The model credential each live-call provider uses, in the order they're tried. */
-export const REALTIME_CREDENTIALS: Array<{ provider: RealtimeProviderId; credential: string }> = [
-  { provider: "gemini", credential: "google" },
-  { provider: "openai", credential: "openai" },
-];
+/** Live calls, in the app and on the phone, are Gemini Live only (D-260). */
 export const DEFAULT_GEMINI_LIVE_MODEL = "gemini-3.8-live";
 /** Gemini's prebuilt voices (the Live API uses the same ones as its text-to-speech). */
 export const GEMINI_VOICES = [
@@ -159,38 +153,21 @@ export const emptyGeminiUsage = (): GeminiLiveUsage => ({
 });
 // Dictation stays on OpenAI. Gemini 3.5 Transcribe's own page puts a file at about $0.005 a
 // minute once the transcript text is included; gpt-4o-mini-transcribe is $0.003 (D-187).
-export const STT_PROVIDERS: SttProviderId[] = ["openai", "deepgram", "openrouter"];
+export const STT_PROVIDERS: SttProviderId[] = ["openai", "openrouter"];
 /**
  * Dictation on the server's shared OpenRouter key: Whisper Large V3 Turbo, $0.0002 a minute on
  * OpenRouter (2026-11-11), the cheapest OpenAI transcription model there.
  */
 export const OPENROUTER_STT_MODEL = "openai/whisper-large-v3-turbo";
-// Gemini Flash-Lite TTS first: about $0.009 a minute of speech through 2026, against about
-// $0.018 for gpt-4o-mini-tts and $0.032 for ElevenLabs Flash (D-187).
-export const TTS_PROVIDERS: TtsProviderId[] = [
-  "google",
-  "openai",
-  "elevenlabs",
-  "cartesia",
-  "fish_audio",
-];
+// Gemini Flash-Lite TTS: about $0.009 a minute of speech through 2026 (D-187).
+export const TTS_PROVIDERS: TtsProviderId[] = ["google"];
 
-export const DEFAULT_VOICES: Record<TtsProviderId, string> = {
-  google: DEFAULT_GEMINI_VOICE,
-  openai: "alloy",
-  elevenlabs: "21m00Tcm4TlvDq8EAChM", // "Rachel", a stock ElevenLabs voice
-  cartesia: "a0e99841-438c-4a64-b679-ae501e7d6091",
-  fish_audio: "",
-};
+export const DEFAULT_VOICES: Record<TtsProviderId, string> = { google: DEFAULT_GEMINI_VOICE };
 
 export interface VoiceBases {
   openai?: string;
   /** Gemini API (https://generativelanguage.googleapis.com); its WebSocket host is derived from it. */
   gemini?: string;
-  deepgram?: string;
-  elevenlabs?: string;
-  cartesia?: string;
-  fish_audio?: string;
   /** OpenRouter (https://openrouter.ai/api/v1). */
   openrouter?: string;
 }
@@ -222,27 +199,6 @@ export async function transcribe(
   opts: { bases?: VoiceBases; fetch?: typeof fetch; language?: string; model?: string } = {},
 ): Promise<{ text: string; seconds: number | null; costUsd?: number }> {
   const f = opts.fetch ?? fetch;
-  if (provider === "deepgram") {
-    const base = opts.bases?.deepgram ?? "https://api.deepgram.com";
-    const q = new URLSearchParams({ model: "nova-3", smart_format: "true" });
-    if (opts.language) q.set("language", opts.language);
-    const res = await ok(
-      await f(`${base}/v1/listen?${q}`, {
-        method: "POST",
-        headers: { authorization: `Token ${apiKey}`, "content-type": mime },
-        body: new Uint8Array(audio),
-      }),
-      "Deepgram",
-    );
-    const j = (await res.json()) as {
-      metadata?: { duration?: number };
-      results?: { channels?: Array<{ alternatives?: Array<{ transcript?: string }> }> };
-    };
-    return {
-      text: j.results?.channels?.[0]?.alternatives?.[0]?.transcript ?? "",
-      seconds: j.metadata?.duration ?? null,
-    };
-  }
   const openrouter = provider === "openrouter";
   const base = openrouter
     ? (opts.bases?.openrouter ?? "https://openrouter.ai/api/v1").replace(/\/$/, "")
@@ -278,133 +234,21 @@ export async function transcribe(
   };
 }
 
-/** Speaks text with the user's key. Gemini returns WAV; the others return MP3. */
+/** Speaks text with Gemini text-to-speech; it returns WAV. */
 export async function synthesize(
-  provider: TtsProviderId,
+  _provider: TtsProviderId,
   apiKey: string,
   text: string,
   voice: string | undefined,
   opts: { bases?: VoiceBases; fetch?: typeof fetch; model?: string } = {},
 ): Promise<{ audio: Uint8Array; mime: string }> {
-  const f = opts.fetch ?? fetch;
-  const v = voice || DEFAULT_VOICES[provider];
-  if (provider === "google") return synthesizeGemini(apiKey, text, v, opts);
-  let res: Response;
-  switch (provider) {
-    case "openai":
-      res = await f(`${opts.bases?.openai ?? "https://api.openai.com"}/v1/audio/speech`, {
-        method: "POST",
-        headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
-        body: JSON.stringify({
-          model: "gpt-4o-mini-tts",
-          voice: v,
-          input: text,
-          response_format: "mp3",
-        }),
-      });
-      break;
-    case "elevenlabs":
-      res = await f(
-        `${opts.bases?.elevenlabs ?? "https://api.elevenlabs.io"}/v1/text-to-speech/${encodeURIComponent(v)}?output_format=mp3_44100_128`,
-        {
-          method: "POST",
-          headers: { "xi-api-key": apiKey, "content-type": "application/json" },
-          body: JSON.stringify({ text, model_id: "eleven_flash_v2_5" }),
-        },
-      );
-      break;
-    case "cartesia":
-      res = await f(`${opts.bases?.cartesia ?? "https://api.cartesia.ai"}/tts/bytes`, {
-        method: "POST",
-        headers: {
-          "X-API-Key": apiKey,
-          "Cartesia-Version": "2025-04-16",
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          model_id: "sonic-2",
-          transcript: text,
-          voice: { mode: "id", id: v },
-          output_format: { container: "mp3", sample_rate: 44100, bit_rate: 128000 },
-        }),
-      });
-      break;
-    case "fish_audio":
-      res = await f(`${opts.bases?.fish_audio ?? "https://api.fish.audio"}/v1/tts`, {
-        method: "POST",
-        headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
-        body: JSON.stringify({ text, format: "mp3", ...(v ? { reference_id: v } : {}) }),
-      });
-      break;
-  }
-  await ok(res, provider);
-  return { audio: new Uint8Array(await res.arrayBuffer()), mime: "audio/mpeg" };
+  return synthesizeGemini(apiKey, text, voice || DEFAULT_GEMINI_VOICE, opts);
 }
 
 export interface RealtimeTool {
   name: string;
   description: string;
   parameters: Record<string, unknown>;
-}
-
-/** Mints an ephemeral key for a realtime voice call; the app then connects to OpenAI directly. */
-export async function createRealtimeSession(
-  apiKey: string,
-  opts: {
-    model?: string;
-    voice?: string;
-    instructions: string;
-    tools: RealtimeTool[];
-    bases?: VoiceBases;
-    fetch?: typeof fetch;
-    /** A phone call (D-141): 8 kHz G.711 μ-law audio in and out, as telephony carries. */
-    phone?: boolean;
-    /** OpenAI transcription model for the caller's speech. */
-    transcriptionModel?: string;
-  },
-) {
-  const f = opts.fetch ?? fetch;
-  const base = opts.bases?.openai ?? "https://api.openai.com";
-  const pcmu = opts.phone ? { format: { type: "audio/pcmu" } } : {};
-  const model = opts.model ?? DEFAULT_REALTIME_MODEL;
-  const res = await ok(
-    await f(`${base}/v1/realtime/client_secrets`, {
-      method: "POST",
-      headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
-      body: JSON.stringify({
-        expires_after: { anchor: "created_at", seconds: 600 },
-        session: {
-          type: "realtime",
-          model,
-          instructions: opts.instructions,
-          audio: {
-            // Barge-in (D-144): the person talking over the bot interrupts its reply.
-            input: {
-              transcription: { model: opts.transcriptionModel ?? "gpt-4o-mini-transcribe" },
-              turn_detection: {
-                type: "server_vad",
-                interrupt_response: true,
-                create_response: true,
-              },
-              ...pcmu,
-            },
-            output: { voice: opts.voice ?? "marin", ...pcmu },
-          },
-          tools: opts.tools.map((t) => ({ type: "function", ...t })),
-          tool_choice: "auto",
-        },
-      }),
-    }),
-    "OpenAI",
-  );
-  const j = (await res.json()) as { value: string; expires_at: number };
-  return {
-    provider: "openai" as const,
-    model,
-    clientSecret: j.value,
-    expiresAt: new Date(j.expires_at * 1000).toISOString(),
-    connectUrl: `${base}/v1/realtime/calls`,
-  };
 }
 
 /**
@@ -562,21 +406,18 @@ export async function createGeminiLiveSession(
 /** Rough list prices for the ledger (USD); real bills come from the provider. */
 export const VOICE_PRICES = {
   sttPerMinute: 0.003,
-  ttsPerThousandChars: 0.015,
   /** Gemini 3.8 Flash-Lite TTS, about 800 characters of speech a minute (D-187). */
   geminiTtsPerThousandChars: 0.011,
-  realtimePerMinute: 0.06,
   geminiLivePerMinute: 0.02,
 };
 
 /** What one read-aloud cost. Gemini bills the audio, and that rate doubles on 2027-01-01. */
 export function ttsCostUsd(
-  provider: TtsProviderId,
+  _provider: TtsProviderId,
   chars: number,
   audio?: Uint8Array,
   now = new Date(),
 ): number {
-  if (provider !== "google") return (chars / 1000) * VOICE_PRICES.ttsPerThousandChars;
   const perMillion = now >= new Date("2027-01-01T00:00:00Z") ? 12 : 6;
   const seconds = wavDurationS(audio);
   if (seconds != null) return seconds * 25 * (perMillion / 1_000_000);

@@ -3084,3 +3084,25 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
 - **Price:** OpenRouter list price on 2026-11-13 is $0.038/M input, $0.50/M output and $0.01/M cached reads, against Muse Ember's $0.10/M / $0.50/M. The context window is the same 1M. Calls are billed from OpenRouter's reported `usage.cost`, and the registry entry (with the real cache-read price) is only the fallback. Without that entry, the generic `deepseek` rule would have priced the model at $0 with a 32k window.
 - **What's lost:** Muse Ember took images, video, audio and files. DeepSeek V4.1 Flash 1017 takes text and images only.
 - **Not changed:** bots that already have a model keep it (never applied over a person's choice). `DEFAULT_MODEL_OPENROUTER` still overrides the default per server. On Cloud, an assignment saved in the admin console (`instance_settings.cloud_models`) overrides the built-in default and has to be changed there.
+
+## D-260 One provider per voice and media job
+
+- **Decision** (Oliver: "remove the gpt realtime fallback, let's use gemini live only … remove the other fallbacks"): each job has one service, and the fallbacks are deleted from the code, not just hidden:
+  - **Live calls**, in the app and on the phone: Gemini Live only, on the workspace's Google AI key or else the server's `GOOGLE_AI_API_KEY`. With neither, `POST /v1/voice/session` answers 409 `voice_key_missing` ("Live calls need a Google AI (Gemini) key"), and a phone call fails with that error.
+  - **Read aloud:** Gemini Flash-Lite TTS only, on the same keys.
+  - **Dictation:** OpenAI (`gpt-4o-mini-transcribe`) on the workspace's key, else Whisper on the server's shared OpenRouter key (D-194).
+  - **Images:** OpenRouter only (Nano Banana 2.1, D-185), on the workspace's key or the shared one.
+  - **Video:** Gemini Omni Flash only (D-189), on a Google AI key.
+- **Removed:**
+  - OpenAI Realtime: `createRealtimeSession`, `DEFAULT_REALTIME_MODEL`, the phone bridge's OpenAI branch, `OPENAI_REALTIME_URL`, the `realtime` field of Cloud Models (contracts, domain defaults, the admin sheet's "Call fallback" box), and the app's WebRTC call client (`OpenAiRealtimeConnector`, `RealtimeEvents`). The app still uses `flutter_webrtc` for live view.
+  - Read-aloud through OpenAI TTS, ElevenLabs, Cartesia and Fish Audio. Dictation through Deepgram.
+  - fal for images and video (`FalMediaProvider`, its price tables, the Seedream and LTX defaults).
+  - The provider ids `fal`, `deepgram`, `elevenlabs`, `cartesia` and `fish_audio` from `ProviderId`, so new keys for them can't be added (API or CLI). The Model keys form and its "images" and "voice" hints drop them. The bot Voice sheet loses its read-aloud and dictation pickers and keeps the voice name and Tools on calls.
+- **Embeddings unchanged:** OpenAI `text-embedding-3-small` at $0.02 per 1M tokens is 7–10× cheaper than Gemini Embedding ($0.15–0.20), and every stored vector is one of its 1536-dimension vectors.
+- **Compatibility, no migration:**
+  - Stored keys for removed services stay in Vault and in `model_credentials` (the check constraint still allows them), but `GET /v1/credentials` leaves them out and nothing reads them.
+  - A bot's saved `tts_provider`, `realtime_provider` or an `stt_provider` such as `deepgram` is ignored; saving the Voice sheet clears the first two.
+  - A saved `cloud_models.realtime` is dropped when the assignment is read.
+  - `POST /v1/voice/transcript` still accepts `provider: "openai"` from older apps and prices every call at Gemini's rate.
+  - An older app's admin sheet expects `realtime` in the Cloud Models response and can't parse it until the app is updated (admin-only).
+- **Tests:** `packages/agent/test/media-prices.test.ts`, `voice-speech.test.ts` and `autonomy.test.ts` (media now runs on OpenRouter and Gemini stand-ins); `apps/server/test/voice.test.ts` (calls on Gemini, no Google key refused, a saved Deepgram preference ignored, read aloud needs a Google key and is cached), `calls.test.ts` (a phone call bridged to a fake Gemini Live), `autonomy.test.ts`, `phone-calls.test.ts`; `client/test/call_tools_test.dart`, `voice_test.dart`, `barge_in_test.dart`, `advanced_connections_test.dart`.

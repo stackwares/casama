@@ -2575,7 +2575,7 @@ abstract class AppLocalizations {
   /// No description provided for @voiceSettingsHelp.
   ///
   /// In en, this message translates to:
-  /// **'Read-aloud voice and dictation provider'**
+  /// **'Read-aloud voice and the tools a bot has on calls'**
   String get voiceSettingsHelp;
 
   /// No description provided for @callTools.
@@ -2602,18 +2602,6 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{Only the built-in voice tools} =1{1 connected-app tool added} other{{count} connected-app tools added}}'**
   String callToolsCount(int count);
 
-  /// No description provided for @readAloudProvider.
-  ///
-  /// In en, this message translates to:
-  /// **'Read-aloud provider'**
-  String get readAloudProvider;
-
-  /// No description provided for @automatic.
-  ///
-  /// In en, this message translates to:
-  /// **'Automatic (first key found)'**
-  String get automatic;
-
   /// No description provided for @voiceId.
   ///
   /// In en, this message translates to:
@@ -2623,14 +2611,8 @@ abstract class AppLocalizations {
   /// No description provided for @voiceIdHelp.
   ///
   /// In en, this message translates to:
-  /// **'The provider\'s voice id; empty uses a default voice'**
+  /// **'A Gemini voice name, such as Kore or Puck; empty uses Kore'**
   String get voiceIdHelp;
-
-  /// No description provided for @dictationProvider.
-  ///
-  /// In en, this message translates to:
-  /// **'Dictation provider'**
-  String get dictationProvider;
 
   /// No description provided for @useThisComputer.
   ///
@@ -3802,23 +3784,11 @@ abstract class AppLocalizations {
   /// **'Ollama, LM Studio, vLLM'**
   String get providerHintCompatible;
 
-  /// No description provided for @providerHintImages.
-  ///
-  /// In en, this message translates to:
-  /// **'images'**
-  String get providerHintImages;
-
   /// No description provided for @providerHintSearch.
   ///
   /// In en, this message translates to:
   /// **'web search'**
   String get providerHintSearch;
-
-  /// No description provided for @providerHintVoice.
-  ///
-  /// In en, this message translates to:
-  /// **'voice'**
-  String get providerHintVoice;
 
   /// No description provided for @noRoutinesHelp.
   ///

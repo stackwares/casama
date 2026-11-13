@@ -50,9 +50,9 @@ void main() {
     final openRouter = y(find.textContaining('OpenRouter'));
     final xai = y(find.text('xAI'));
     final more = y(find.byKey(const Key('moreProviders')));
-    final deepgram = y(find.textContaining('Deepgram'));
+    final brave = y(find.textContaining('Brave Search'));
     final compatible = y(find.textContaining('OpenAI-compatible server'));
-    expect(openRouter < xai && xai < more && more < deepgram && deepgram < compatible, isTrue, reason: '$openRouter $xai $more $deepgram $compatible');
+    expect(openRouter < xai && xai < more && more < brave && brave < compatible, isTrue, reason: '$openRouter $xai $more $brave $compatible');
     expect(find.text('More providers'), findsOneWidget);
 
     // The heading isn't a choice; a provider under it still works as before.

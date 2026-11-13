@@ -70,14 +70,11 @@ export async function startHarness(
       push?: import("@casama/agent").PushSender;
       egressExemptCidrs?: string[];
       providerBases?: {
-        fal?: string;
         openrouter?: string;
         brave?: string;
         tavily?: string;
         openai?: string;
         gemini?: string;
-        deepgram?: string;
-        elevenlabs?: string;
         treg?: string;
         google_maps?: string;
         mapbox?: string;
