@@ -51,8 +51,14 @@ jobs:
       - name: Generated code is up to date (OpenAPI, Dart client, Drizzle schema)
         run: |
           pnpm gen
+          cp -r packages/db/src/generated "$RUNNER_TEMP/drizzle-before"
           pnpm --filter @casama/db pull
-          git diff --exit-code -- packages/contracts/openapi.json dart/casama_api/lib dart/casama_sdk/lib/src/generated packages/db/src/generated
+          git diff --exit-code -- packages/contracts/openapi.json dart/casama_api/lib dart/casama_sdk/lib/src/generated
+          # drizzle-kit pull doesn't order tables, relations and constraints the same way on every
+          # machine, so the Drizzle files are compared by content, not order.
+          for f in schema.ts relations.ts; do
+            diff <(sort "$RUNNER_TEMP/drizzle-before/$f") <(sort "packages/db/src/generated/$f")
+          done
       # computerd's tests run below, once the sandbox images exist; here they hung the job.
       - name: Dart analyze and test
         working-directory: dart
