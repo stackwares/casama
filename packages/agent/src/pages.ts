@@ -7,11 +7,18 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { Database } from "@casama/db";
 import { contentKeys } from "@casama/db";
-import { isValidCron, isValidTimezone, nextRunAt, PAGE_AUTHORING_NOTE } from "@casama/domain";
+import {
+  isValidCron,
+  isValidTimezone,
+  nextRunAt,
+  PAGE_AUTHORING_NOTE,
+  PAGE_COLLECT_NOTE,
+} from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
 import { track } from "./analytics.ts";
+import { wrapUntrusted } from "./context.ts";
 import { checkStorage, StorageFullError } from "./creations.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
 
@@ -85,7 +92,7 @@ export function registerPageTools(
 
   registry.register({
     name: "pages.publish",
-    description: `Publish a web page (a report, dashboard, plan or tracker) the person opens from Casama, or replace an existing page's layout with page_id. ${PAGE_AUTHORING_NOTE} Pass the HTML, or path to an HTML file on your computer. New pages are private to the person you're working for; pages.share changes that. refresh_cron (with refresh_instructions) has you refresh its data on a schedule.`,
+    description: `Publish a web page (a report, dashboard, plan or tracker) the person opens from Casama, or replace an existing page's layout with page_id. ${PAGE_AUTHORING_NOTE} Pass the HTML, or path to an HTML file on your computer. New pages are private to the person you're working for; pages.share changes that. refresh_cron (with refresh_instructions) has you refresh its data on a schedule. ${PAGE_COLLECT_NOTE}`,
     risk: "low",
     riskFor: (a) => (a.visibility === "workspace" ? "medium" : "low"),
     category: "publish",
@@ -102,6 +109,17 @@ export function registerPageTools(
       visibility: z.enum(["private", "workspace"]).optional(),
       refresh_cron: z.string().max(100).optional().describe("Refresh schedule, five-field cron"),
       refresh_instructions: z.string().max(4000).optional(),
+      collect: z
+        .boolean()
+        .optional()
+        .describe("The page takes input: forms and casama.submit send responses you can read"),
+      on_submit: z
+        .string()
+        .max(4000)
+        .optional()
+        .describe(
+          "With collect: what to do each time someone answers (starts a run with the response)",
+        ),
       label: z
         .string()
         .max(24)
@@ -158,6 +176,13 @@ export function registerPageTools(
           insert into public.page_versions (page_id, version, org_id, html, data)
           select id, version, org_id, html, data from public.pages where id = ${id}::uuid`);
       }
+      // Pages that take input (D-279).
+      if (args.collect !== undefined)
+        await db.execute(
+          sql`update public.pages set collects = ${args.collect} where id = ${id}::uuid`,
+        );
+      if (args.collect && args.on_submit?.trim())
+        await linkSubmitRoutine(db, ctx, id, args.title, args.on_submit.trim());
       // The Library's copy (D-274) is made by a trigger; this adds what only the tool knows.
       await db.execute(sql`
         update public.creations set run_id = coalesce(run_id, ${ctx.runId}::uuid)
@@ -168,6 +193,46 @@ export function registerPageTools(
       return {
         content: `Published "${args.title}" (page ${id}, version ${version}). A card that opens it shows under your reply: don't tell the person where to find it or link it.`,
         preview: args.title,
+      };
+    },
+  });
+
+  registry.register({
+    name: "pages.submissions",
+    // Responses come from whoever had the page: outside content (later risky calls ask first).
+    untrustedOutput: true,
+    readOnly: true,
+    description:
+      "Read the responses to a page that takes input (published with collect), newest first.",
+    risk: "low",
+    schema: z.object({
+      page_id: z.uuid(),
+      limit: z.number().int().min(1).max(200).optional(),
+      since: z.string().max(40).optional().describe("Only responses after this ISO time"),
+    }),
+    async execute(args, ctx) {
+      const p = await ownPage(ctx.botId, args.page_id);
+      const rows = await db.execute<{ data: unknown; created_at: Date; signed_in: boolean }>(sql`
+        select data, created_at, submitted_by is not null as signed_in from public.page_submissions
+        where page_id = ${p.id}::uuid
+          ${args.since && !Number.isNaN(Date.parse(args.since)) ? sql`and created_at > ${new Date(args.since).toISOString()}::timestamptz` : sql``}
+        order by created_at desc limit ${args.limit ?? 50}`);
+      const [n] = await db.execute<{ n: number }>(
+        sql`select count(*)::int as n from public.page_submissions where page_id = ${p.id}::uuid`,
+      );
+      if (!rows.length)
+        return { content: `No responses to "${p.title}" yet.`, preview: "no responses" };
+      return {
+        content: wrapUntrusted(
+          `page "${p.title}" responses`,
+          `${n?.n ?? rows.length} responses in all; newest ${rows.length}:\n${rows
+            .map(
+              (r) =>
+                `- ${new Date(r.created_at).toISOString()}${r.signed_in ? " (signed in)" : ""}: ${JSON.stringify(r.data).slice(0, 2000)}`,
+            )
+            .join("\n")}`,
+        ),
+        preview: `${rows.length} responses`,
       };
     },
   });
@@ -245,6 +310,38 @@ export function registerPageTools(
 }
 
 /** A routine that refreshes the page's data on schedule, linked to the page. */
+/**
+ * The routine a page's responses start (D-279). It uses the existing "webhook" trigger, which
+ * shipped apps already know, and is started by the pages origin, never on a schedule.
+ */
+async function linkSubmitRoutine(
+  db: Database,
+  ctx: { runId: string; orgId: string; botId: string },
+  pageId: string,
+  title: string,
+  instructions: string,
+) {
+  const user = await actingUserOf(db, ctx.runId);
+  const text = `Someone answered the page "${title}" (page_id ${pageId}); their response is below. ${instructions}`;
+  const [existing] = await db.execute<{ submit_routine_id: string | null }>(
+    sql`select submit_routine_id from public.pages where id = ${pageId}::uuid`,
+  );
+  if (existing?.submit_routine_id) {
+    await db.execute(sql`
+      update public.routines set instructions_md = ${text}, enabled = true
+      where id = ${existing.submit_routine_id}::uuid`);
+    return;
+  }
+  const [r] = await db.execute<{ id: string }>(sql`
+    insert into public.routines (org_id, bot_id, created_by, name, instructions_md, trigger, notify)
+    values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${user ?? null}::uuid, ${`When someone answers: ${title}`.slice(0, 120)}, ${text},
+            ${JSON.stringify({ type: "webhook", source: "page", page_id: pageId })}::jsonb, true)
+    returning id`);
+  await db.execute(
+    sql`update public.pages set submit_routine_id = ${r?.id}::uuid where id = ${pageId}::uuid`,
+  );
+}
+
 async function linkRefresh(
   db: Database,
   ctx: { runId: string; orgId: string; botId: string },

@@ -19,6 +19,12 @@ export const PAGE_CSP = [
   "base-uri 'none'",
 ].join("; ");
 
+/**
+ * A page that takes input (D-279) may also send to its own origin, and only there: form responses
+ * go to the page's collect address. Everything else stays as strict as PAGE_CSP.
+ */
+export const PAGE_CSP_COLLECT = PAGE_CSP.replace("connect-src 'none'", "connect-src 'self'");
+
 export const PAGE_HEADERS: Record<string, string> = {
   "content-security-policy": PAGE_CSP,
   "x-content-type-options": "nosniff",
@@ -33,6 +39,9 @@ export const PAGE_HEADERS: Record<string, string> = {
 export const PAGE_DATA_ID = "casama-data";
 
 /** How bots are told to build pages (in the pages.publish tool description). */
+/** How bots are told to take input on a page published with collect (D-279). */
+export const PAGE_COLLECT_NOTE = `With collect: true the page can take input: give a form the attribute data-casama-form (and optionally data-casama-sent="text to show after"), or call casama.submit({...}) from your script. Responses are stored; read them with pages.submissions. Never ask for passwords, card numbers or other secrets on a page.`;
+
 export const PAGE_AUTHORING_NOTE = `One self-contained HTML document: inline <style> and <script> only (no external scripts, styles, fonts, images or requests; images as data: URLs). Read your data with JSON.parse(document.getElementById("${PAGE_DATA_ID}").textContent) so pages.update_data can change it without rewriting the layout. Use the CSS variables --k-bg, --k-fg, --k-muted, --k-accent, --k-surface and --k-font so the page follows light and dark mode. Make it work at phone width.`;
 
 /** JSON that's safe inside a <script> element. */
@@ -56,13 +65,25 @@ export interface RenderablePage {
   html: string;
   data: unknown;
   updatedAt: Date;
+  /** The address responses go to, for a page that takes input (D-279). */
+  collect?: string;
 }
+
+/**
+ * The small runtime a collecting page gets: `casama.submit(object)` sends a response, and any
+ * <form data-casama-form> sends its fields, then shows its data-casama-sent text (D-279).
+ */
+const collectScript = (endpoint: string) => `<script>(function(){var u=${scriptJson(endpoint)};
+window.casama=window.casama||{};
+window.casama.submit=function(d){return fetch(u,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(d||{}),credentials:"same-origin"}).then(function(r){if(!r.ok)throw new Error("Couldn't send ("+r.status+")");return r.json()})};
+document.addEventListener("submit",function(e){var f=e.target;if(!f||!f.hasAttribute||!f.hasAttribute("data-casama-form"))return;e.preventDefault();var o={};new FormData(f).forEach(function(v,k){if(typeof v!=="string")return;if(k in o){o[k]=[].concat(o[k],v)}else{o[k]=v}});var b=f.querySelector("[type=submit]");if(b)b.disabled=true;window.casama.submit(o).then(function(){var t=f.getAttribute("data-casama-sent")||"Thanks, it's sent.";var p=document.createElement("p");p.textContent=t;p.setAttribute("role","status");f.replaceWith(p)}).catch(function(err){if(b)b.disabled=false;alert(err.message)})},true)})();</script>`;
 
 /** The served document: the bot's HTML with the head and foot additions. */
 export function renderPage(p: RenderablePage) {
   // First in <head>, before anything the bot wrote. A later policy of the bot's own still applies
   // as well: a browser enforces every policy, so this one keeps blocking the network.
-  const head = `<meta http-equiv="Content-Security-Policy" content="${PAGE_CSP}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><style id="casama-theme">${THEME}</style><script type="application/json" id="${PAGE_DATA_ID}">${scriptJson(p.data)}</script>`;
+  const csp = p.collect ? PAGE_CSP_COLLECT : PAGE_CSP;
+  const head = `<meta http-equiv="Content-Security-Policy" content="${csp}"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><style id="casama-theme">${THEME}</style><script type="application/json" id="${PAGE_DATA_ID}">${scriptJson(p.data)}</script>${p.collect ? collectScript(p.collect) : ""}`;
   const foot = `<div id="casama-updated">Updated <time datetime="${p.updatedAt.toISOString()}">${escapeHtml(
     p.updatedAt.toISOString().slice(0, 16).replace("T", " "),
   )} UTC</time></div>`;

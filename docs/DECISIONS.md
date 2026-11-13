@@ -3290,3 +3290,12 @@ Stage 6 of `docs/MASTER-PLAN-2026-11.md` (Add 1), after Slack (D-277).
 - **Discord** (HTTP interactions): Discord bots hear ordinary messages only over a gateway connection a webhook server doesn't keep, so people talk to the bot through its `/ask` command. Requests are checked with the application's Ed25519 public key; PING is answered, a command gets Discord's "thinking…" at once (adapters gained `respond`), and the reply goes to the interaction's follow-up address within its 15 minutes, then as a channel message with the bot token.
 - Both are new channel kinds (migration, contract, the app's chat-apps screen with their setup fields, and routine message triggers). Long replies are split at Teams' and Discord's limits (D-270). Buttons for approvals in Teams and Discord are not built; those approvals arrive in the app as before.
 - **Needs from Oliver:** an Azure bot registration and a Discord application to try them for real; both are built against signed test requests.
+
+## D-279 Pages that take input: forms and responses, on the page's own origin only
+
+Stage 8 of `docs/MASTER-PLAN-2026-11.md` (Add 3; plan decision 8: yes, changing D-119 for pages that opt in).
+
+- **Opting in:** `pages.publish` takes `collect: true`. Only such a page gets a small runtime (`casama.submit(object)`, and any `<form data-casama-form>` sends its fields and shows `data-casama-sent`) and a policy that allows `connect-src 'self'`; `form-action` stays `'none'` (the runtime sends with fetch), and every other source stays as strict as before. A page that doesn't collect is served exactly as before.
+- **Responses** go to the page's own address (`/p/{id}/collect` for signed-in viewers, `/s/{token}/collect` for a public link), at most 64 KB, JSON objects only, and at most 20 an hour per address on a public page. They're stored in `page_submissions` (sealed in workspaces that encrypt; readable by the page's person and the bot's managers) and the Library's page counts them.
+- **The bot** reads them with `pages.submissions` (marked as outside content), and `on_submit` instructions make a routine that starts with each response. It uses the existing "webhook" trigger, because shipped apps refuse unknown trigger types when listing routines.
+- Bots are told never to ask for passwords, card numbers or other secrets on a page.
