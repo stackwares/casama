@@ -315,9 +315,30 @@ class ChatController extends Notifier<ChatState> {
       offline: offline,
       hasEarlier: hasEarlier,
       loadingEarlier: state.conversationId == id && state.loadingEarlier,
-      entries: _entriesOf(id, messages),
+      entries: [..._entriesOf(id, messages), ..._notDelivered(id)],
       answeredUi: {for (final m in messages) ?m.uiActionSurface},
     );
+  }
+
+  /// Messages the server doesn't have yet, so a reload can't bring them back (Fix 11): ones that
+  /// failed to send (kept for Try Again) and ones still waiting for their files.
+  static bool _local(ChatEntry e) => e is MessageEntry && (e.failed || e.uploading);
+
+  List<ChatEntry> _notDelivered(String id) =>
+      state.conversationId == id ? [for (final e in state.entries) if (_local(e)) e] : (_parked[id] ?? const []);
+
+  /// The same, for chats this controller has moved away from: they come back with the chat.
+  final _parked = <String, List<ChatEntry>>{};
+
+  void _park() {
+    final id = state.conversationId;
+    if (id == null) return;
+    final mine = [for (final e in state.entries) if (_local(e)) e];
+    if (mine.isEmpty) {
+      _parked.remove(id);
+    } else {
+      _parked[id] = mine;
+    }
   }
 
   /// The chat's entries for [messages]; a message that hasn't changed keeps its entry, so its row
@@ -457,6 +478,7 @@ class ChatController extends Notifier<ChatState> {
     final keepCurrent =
         state.entries.isNotEmpty &&
         (conversationId == null || conversationId == state.conversationId);
+    _park();
     if (!keepCurrent) {
       state = const ChatState(loading: true);
     }
@@ -561,6 +583,7 @@ class ChatController extends Notifier<ChatState> {
   Future<void> newChat() async {
     await _sub?.cancel();
     _unfollow();
+    _park();
     state = const ChatState();
   }
 
