@@ -1,12 +1,18 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import {
   AbuseEvent,
+  AdminCreditPack,
   AdminOrg,
   AdminOverview,
+  AdminPlan,
+  AdminPricing,
   AdminService,
   AdminUser,
+  BillingSettings,
   CloudModels,
   ConnectionSettings,
+  SaveCreditPackRequest,
+  SavePlanRequest,
   SetConnectionSettingsRequest,
   SetOrgLimitsRequest,
   SuspendOrgRequest,
@@ -132,4 +138,46 @@ export const unsuspendOrg = createRoute({
   summary: "Lift a workspace's suspension",
   request: { params: z.object({ id: Uuid }) },
   responses: { 200: jsonResponse("Unsuspended", AdminOrg), 401: e401, 403: e403, 404: e404 },
+});
+
+const PlanCode = z.object({ code: z.string().regex(/^[a-z0-9_]{1,40}$/) });
+
+export const adminPricing = get(
+  "adminPricing",
+  "/v1/admin/pricing",
+  "Plans, credit packs and the usage markup (owner only)",
+  AdminPricing,
+);
+
+export const savePlan = createRoute({
+  operationId: "savePlan",
+  method: "put",
+  path: "/v1/admin/plans/{code}",
+  tags: ["admin"],
+  security,
+  summary: "Create or change a plan; workspaces on it get the new limits right away",
+  request: { params: PlanCode, body: jsonBody(SavePlanRequest) },
+  responses: { 200: jsonResponse("Saved", AdminPlan), 401: e401, 403: e403, 404: e404 },
+});
+
+export const saveCreditPack = createRoute({
+  operationId: "saveCreditPack",
+  method: "put",
+  path: "/v1/admin/credit-packs/{code}",
+  tags: ["admin"],
+  security,
+  summary: "Create or change a credit pack",
+  request: { params: PlanCode, body: jsonBody(SaveCreditPackRequest) },
+  responses: { 200: jsonResponse("Saved", AdminCreditPack), 401: e401, 403: e403, 404: e404 },
+});
+
+export const setBillingSettings = createRoute({
+  operationId: "setBillingSettings",
+  method: "patch",
+  path: "/v1/admin/billing-settings",
+  tags: ["admin"],
+  security,
+  summary: "Change the markup on usage paid with Casama's keys",
+  request: { body: jsonBody(BillingSettings) },
+  responses: { 200: jsonResponse("Saved", BillingSettings), 401: e401, 403: e403 },
 });

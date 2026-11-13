@@ -145,6 +145,20 @@ export function createApp(deps: AppDeps) {
         ),
       );
     }
+    // Plan limits raised inside the database (seats, workspaces per person) open the paywall.
+    if (pgErrorCode(err) === "PT402") {
+      const what = pgErrorMessage(err) ?? "plan_limit";
+      return problem(
+        c,
+        new ApiError(
+          402,
+          what === "workspace_limit" ? "workspace_limit" : "plan_limit",
+          what === "workspace_limit"
+            ? "You own as many workspaces as you can."
+            : "Your plan's limit is reached.",
+        ),
+      );
+    }
     deps.logger.error("unhandled error", {
       request_id: c.get("requestId"),
       path: c.req.path,

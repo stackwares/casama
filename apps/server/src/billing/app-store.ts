@@ -228,4 +228,16 @@ export class AppStoreProvider implements BillingProvider {
       throw new BillingError("bad_purchase", "The transaction is for another product", 400);
     return this.fetchSubscription(tx.originalTransactionId);
   }
+
+  async verifyConsumable(args: { productId: string; transactionId?: string }) {
+    if (!args.transactionId)
+      throw new BillingError("bad_purchase", "transaction_id is required for App Store", 400);
+    const r = await this.call<{ signedTransactionInfo: string }>(
+      `/inApps/v1/transactions/${encodeURIComponent(args.transactionId)}`,
+    );
+    const tx = await this.verified<TransactionInfo>(r.signedTransactionInfo);
+    if (tx.productId !== args.productId)
+      throw new BillingError("bad_purchase", "The transaction is for another product", 400);
+    return { purchaseId: tx.transactionId, revoked: !!tx.revocationDate };
+  }
 }

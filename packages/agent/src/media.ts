@@ -21,6 +21,11 @@ export interface MediaProvider {
   readonly id: string;
   /** Whether it can make this kind of media (a router may have only one side). */
   supports?(kind: "image" | "video"): boolean;
+  /**
+   * Whose account pays when this kind runs on the server's own key with billing on: the usage is
+   * then billable with markup and needs credits (D-246). Null on the workspace's own key.
+   */
+  paidBy?(kind: "image" | "video"): MediaPayer | null;
   generateImage(input: {
     prompt: string;
     size?: "square" | "portrait" | "landscape";
@@ -412,14 +417,26 @@ export class GeminiVideoProvider implements MediaProvider {
 }
 
 /** Images from one provider, video from another (either may be missing). */
+/** The server account that pays for media made on its key. */
+export type MediaPayer = "openrouter" | "google" | "fal";
+
 export class MediaRouter implements MediaProvider {
   readonly id: string;
   private readonly images: MediaProvider | null;
   private readonly video: MediaProvider | null;
-  constructor(images: MediaProvider | null, video: MediaProvider | null) {
+  private readonly payers: { image?: MediaPayer | null; video?: MediaPayer | null };
+  constructor(
+    images: MediaProvider | null,
+    video: MediaProvider | null,
+    payers: { image?: MediaPayer | null; video?: MediaPayer | null } = {},
+  ) {
     this.images = images;
     this.video = video;
+    this.payers = payers;
     this.id = images?.id ?? video?.id ?? "none";
+  }
+  paidBy(kind: "image" | "video") {
+    return this.payers[kind] ?? null;
   }
   supports(kind: "image" | "video") {
     const side = kind === "image" ? this.images : this.video;

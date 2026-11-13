@@ -3,12 +3,30 @@ import { DEFAULT_MODELS } from "./models.ts";
 /** OpenRouter keeps 5.5% when credits are bought. */
 export const OPENROUTER_CREDIT_FEE = 1.055;
 
-/** docs/COSTS.md: charge at least cost × 1.3. */
+/** docs/COSTS.md: charge at least cost × 1.3. The default until billing_settings is loaded. */
 export const CLOUD_OPENROUTER_MARKUP = 1.3;
+
+let markup = CLOUD_OPENROUTER_MARKUP;
+
+/**
+ * The markup on usage paid with Casama's own keys (D-244). The server loads it from
+ * billing_settings and refreshes it every minute, so the Admin screen can change it live.
+ */
+export function setCloudMarkup(value: number) {
+  if (Number.isFinite(value) && value >= 1) markup = value;
+}
+export function cloudMarkup(): number {
+  return markup;
+}
 
 /** What a workspace is charged for one OpenRouter call on Casama's key. */
 export function cloudOpenRouterCharge(providerCostUsd: number): number {
-  return providerCostUsd * OPENROUTER_CREDIT_FEE * CLOUD_OPENROUTER_MARKUP;
+  return providerCostUsd * OPENROUTER_CREDIT_FEE * markup;
+}
+
+/** What a workspace is charged for usage on another of Casama's keys (Google, OpenAI). */
+export function cloudCharge(providerCostUsd: number): number {
+  return providerCostUsd * markup;
 }
 
 /** Casama's shared OpenRouter key. Not a row in model_credentials (D-186). */
@@ -23,8 +41,12 @@ export const CLOUD_MAX_OUTPUT_TOKENS = 4096;
 const PAID_DAILY_USD = 10;
 const FREE_DAILY_USD = 0.25;
 
-/** How much one workspace may be charged for Casama's key in a UTC day. */
-export function cloudModelDailyCap(plan: string | null | undefined): number {
+/**
+ * How much one workspace may be charged for Casama's key in a UTC day: the plan's
+ * `cloud_daily_usd` limit when it has one (D-244), else $0.25 free and $10 paid.
+ */
+export function cloudModelDailyCap(plan: string | null | undefined, limit?: unknown): number {
+  if (typeof limit === "number" && limit >= 0) return limit;
   if (!plan || plan === "free") return FREE_DAILY_USD;
   return PAID_DAILY_USD;
 }

@@ -11,8 +11,10 @@ import {
 } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { contentKeys, type JwtClaims, schema, withUserSession } from "@casama/db";
+import { cloudCharge } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { eq, sql } from "drizzle-orm";
+import { billsCalls as billsCallsOn } from "../../billing/calls.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 
@@ -48,18 +50,7 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (!r.ok) throw new ApiError(409, r.code ?? "voice_unavailable", r.error);
     return r;
   };
-  /**
-   * Whether a workspace's live calls run on the server's own Google AI key (it has no Gemini or
-   * OpenAI key of its own). On Casama Cloud those calls are paid from the workspace's credits.
-   */
-  const onServerKey = async (orgId: string) => {
-    if (!deps.env.GOOGLE_AI_API_KEY) return false;
-    const [own] = await db.execute(sql`
-      select 1 from public.model_credentials
-      where org_id = ${orgId}::uuid and provider in ('google', 'openai') and vault_secret_id is not null limit 1`);
-    return !own;
-  };
-  const billsCalls = async (orgId: string) => !!deps.billing?.enabled && (await onServerKey(orgId));
+  const billsCalls = (orgId: string) => billsCallsOn(deps, orgId);
 
   app.openapi(routes.transcribeAudio, async (c) => {
     const claims = requireClaims(c.get("claims"));
@@ -300,12 +291,12 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     await db.execute(
       sql`update public.conversations set last_message_at = now() where id = ${conv.id}::uuid`,
     );
-    // Calls on the server's key on Casama Cloud come out of credits (at Google's price).
+    // Calls on the server's key on Casama Cloud come out of credits (Google's price × markup).
     const billable = seconds > 0 && (await billsCalls(conv.orgId));
     if (seconds > 0)
       await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, billable, meta)
-        values (${conv.orgId}::uuid, ${conv.botId}::uuid, 'voice_seconds', ${seconds}, ${cost}, ${billable},
-                ${JSON.stringify({ provider: provider ?? "openai", ...(usage ? { tokens: usage } : { estimated: true }), ...(billable ? { key: "server" } : {}) })}::jsonb)`);
+        values (${conv.orgId}::uuid, ${conv.botId}::uuid, 'voice_seconds', ${seconds}, ${billable ? cloudCharge(cost) : cost}, ${billable},
+                ${JSON.stringify({ provider: provider ?? "openai", ...(usage ? { tokens: usage } : { estimated: true }), ...(billable ? { key: "server", provider_cost_usd: cost } : {}) })}::jsonb)`);
     if (seconds > 0) {
       track(db, {
         event: "call_ended",

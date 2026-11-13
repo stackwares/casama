@@ -147,12 +147,15 @@ describe("live calls included on Casama Cloud", () => {
     const [row] = await h.handle.db.execute<{
       billable: boolean;
       cost_usd: string;
-      meta: { key?: string };
+      meta: { key?: string; provider_cost_usd?: number };
     }>(
       sql`select billable, cost_usd, meta from public.usage_ledger where org_id = ${w.orgId}::uuid and kind = 'voice_seconds'`,
     );
     expect(row?.billable).toBe(true);
     expect(row?.meta.key).toBe("server");
-    expect(Number(row?.cost_usd)).toBeCloseTo(1500 * 3e-6 + 1500 * 12e-6, 6);
+    // Google's price times the markup (D-244); Google's price is kept in meta.
+    const google = 1500 * 3e-6 + 1500 * 12e-6;
+    expect(row?.meta.provider_cost_usd).toBeCloseTo(google, 6);
+    expect(Number(row?.cost_usd)).toBeCloseTo(google * 1.3, 6);
   }, 120_000);
 });

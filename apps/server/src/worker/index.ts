@@ -357,7 +357,15 @@ export async function startWorker(opts: WorkerOptions) {
         : null;
       const images = openrouter ?? fal;
       const video = gemini ?? fal;
-      return images || video ? new MediaRouter(images, video) : null;
+      // With billing on, media made on the server's own keys is charged with markup and needs
+      // credits (D-246).
+      const billed = opts.billing?.enabled === true;
+      return images || video
+        ? new MediaRouter(images, video, {
+            image: billed && openrouter && !or?.key ? "openrouter" : null,
+            video: billed && gemini && !g?.key ? "google" : null,
+          })
+        : null;
     },
     searchFor: async (orgId) => {
       const k = await providerKey(orgId, ["brave_search", "tavily"]);
@@ -532,7 +540,7 @@ export async function startWorker(opts: WorkerOptions) {
       serverGeminiKey: opts.serverGeminiKey,
       cloudModels: opts.billing ? () => getCloudModels(db) : undefined,
       platformOpenRouterKey: opts.platformOpenRouterKey,
-      billPlatform: Boolean(opts.billing),
+      billPlatform: opts.billing?.enabled === true,
     },
     voip,
     auditForwarding: opts.auditForwarding,

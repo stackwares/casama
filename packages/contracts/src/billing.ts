@@ -24,6 +24,9 @@ export const CreditPack = z
     name: z.string(),
     credits_usd: z.number(),
     web: z.boolean(),
+    /** The web price (D-244); store prices come from the store and are higher. */
+    price_label: z.string().nullable().optional(),
+    store_product_ids: z.record(z.string(), z.string()).optional(),
   })
   .openapi("CreditPack");
 

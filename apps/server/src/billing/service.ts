@@ -6,6 +6,7 @@
 import { randomUUID } from "node:crypto";
 import { milestone, track } from "@casama/agent";
 import type { Database } from "@casama/db";
+import { setCloudMarkup } from "@casama/domain";
 import { deterministicUuid, getProductAnalytics } from "@casama/observability";
 import { sql } from "drizzle-orm";
 import { PAID_CHANGES, subscriptionChange } from "./analytics.ts";
@@ -27,6 +28,7 @@ type PlanRow = {
   dodo_product_id: string | null;
   store_product_ids: Record<string, string>;
   sort: number;
+  price_label?: string | null;
 };
 
 export interface BillingServiceOptions {
@@ -72,7 +74,7 @@ export class BillingService {
 
   async plans() {
     return this.db.execute<PlanRow>(
-      sql`select code, name, interval, limits, dodo_product_id, store_product_ids, sort from public.plans where active order by sort`,
+      sql`select code, name, interval, limits, dodo_product_id, store_product_ids, sort, price_label from public.plans where active order by sort`,
     );
   }
 
@@ -83,8 +85,9 @@ export class BillingService {
       credits_usd: string;
       dodo_product_id: string | null;
       store_product_ids: Record<string, string>;
+      price_label: string | null;
     }>(
-      sql`select code, name, credits_usd, dodo_product_id, store_product_ids from public.credit_packs where active order by credits_usd`,
+      sql`select code, name, credits_usd, dodo_product_id, store_product_ids, price_label from public.credit_packs where active order by credits_usd`,
     );
   }
 
@@ -308,6 +311,22 @@ export class BillingService {
     args: { productId: string; transactionId?: string; purchaseToken?: string },
   ) {
     const provider = this.provider(source);
+    // A credit pack is a one-time purchase, not a subscription (D-244).
+    const pack = (await this.packs()).find((p) => p.store_product_ids?.[source] === args.productId);
+    if (pack) {
+      if (!provider.verifyConsumable)
+        throw new BillingError("unsupported", `${source} cannot verify purchases`, 400);
+      const { purchaseId, revoked } = await provider.verifyConsumable(args);
+      if (revoked) throw new BillingError("purchase_refunded", "This purchase was refunded", 409);
+      const reference = `${source}:${purchaseId}`;
+      // A purchase credits one workspace once, whichever workspace reports it first.
+      const [other] = await this.db.execute<{ org_id: string }>(sql`
+        select org_id from public.credit_ledger where reason = 'purchase' and reference = ${reference} limit 1`);
+      if (other && other.org_id !== orgId)
+        throw new BillingError("purchase_used", "This purchase was already used", 409);
+      await this.credit(orgId, Number(pack.credits_usd), "purchase", reference, pack.name);
+      return this.recompute(orgId);
+    }
     if (!provider.verifyPurchase)
       throw new BillingError("unsupported", `${source} cannot verify purchases`, 400);
     const snap = await provider.verifyPurchase(args);
@@ -330,6 +349,18 @@ export class BillingService {
       sql`select balance_after as b from public.credit_ledger where org_id = ${orgId}::uuid order by seq desc limit 1`,
     );
     return Number(r?.b ?? 0);
+  }
+
+  /** Whether this is its owner's oldest workspace on the free plan (the one that gets free credits). */
+  private async firstFreeWorkspace(orgId: string) {
+    const [r] = await this.db.execute<{ first: boolean }>(sql`
+      select not exists (
+        select 1 from public.organizations o
+        join public.organizations me on me.id = ${orgId}::uuid
+        where o.created_by = me.created_by and o.id <> me.id and o.plan = 'free'
+          and (o.created_at, o.id) < (me.created_at, me.id)
+      ) as first`);
+    return r?.first ?? true;
   }
 
   /** Picks the best entitled subscription (or the default plan) and writes the entitlement. */
@@ -371,16 +402,26 @@ export class BillingService {
     await this.db.execute(
       sql`update public.organizations set plan = ${planCode} where id = ${orgId}::uuid`,
     );
-    // Included credits, once per month per plan.
+    // Included credits, once a month. A plan change tops the month up to the new plan's amount
+    // rather than granting it again, and only a person's first free workspace gets free credits
+    // (D-246). A zero grant still marks the month as done, so settlement doesn't retry it.
     const monthly = Number(plan.limits.monthly_credits_usd ?? 0);
-    if (this.enabled && monthly > 0)
-      await this.credit(
-        orgId,
-        monthly,
-        "grant",
-        `monthly:${month()}:${planCode}`,
-        `${plan.name} monthly credits`,
-      );
+    if (this.enabled && monthly > 0) {
+      const ref = `monthly:${month()}:${planCode}`;
+      const [done] = await this.db.execute<{ granted: string; this_plan: boolean }>(sql`
+        select coalesce(sum(delta), 0)::text as granted, bool_or(reference = ${ref}) as this_plan
+        from public.credit_ledger
+        where org_id = ${orgId}::uuid and reason = 'grant' and reference like ${`monthly:${month()}:%`}`);
+      if (!done?.this_plan) {
+        let amount = Math.max(0, monthly - Number(done?.granted ?? 0));
+        let note = `${plan.name} monthly credits`;
+        if (planCode === "free" && amount > 0 && !(await this.firstFreeWorkspace(orgId))) {
+          amount = 0;
+          note = "Free credits go to your first free workspace";
+        }
+        await this.credit(orgId, amount, "grant", ref, note);
+      }
+    }
     return { planCode, limits, validUntil };
   }
 
@@ -438,6 +479,13 @@ export class BillingService {
     };
   }
 
+  private async planOf(orgId: string) {
+    const [e] = await this.db.execute<{ plan_code: string }>(
+      sql`select plan_code from public.entitlements where org_id = ${orgId}::uuid order by created_at desc limit 1`,
+    );
+    return e?.plan_code ?? this.defaultPlan;
+  }
+
   async checkout(
     orgId: string,
     what: { planCode?: string; packCode?: string },
@@ -452,6 +500,9 @@ export class BillingService {
         throw new BillingError("unknown_plan", "That plan cannot be bought", 400);
       productId = plan.dodo_product_id;
     } else if (what.packCode) {
+      // Credit packs are for paying plans; a free workspace upgrades instead (D-246).
+      if ((await this.planOf(orgId)) === "free")
+        throw new BillingError("paid_plan_required", "Credit packs come with a paid plan", 402);
       productId = (await this.packs()).find((p) => p.code === what.packCode)?.dodo_product_id;
     }
     if (!productId)
@@ -493,8 +544,24 @@ export class BillingService {
    * Bills running cloud computers, turns billable usage into credit deductions, reports usage of
    * metered Dodo plans, and refreshes entitlements that expired or are due a monthly grant.
    */
+  /** Loads server-wide settings changed from the Admin screen (D-244): the usage markup. */
+  async loadSettings() {
+    // The database needs to know whether this server bills, so a workspace made any way starts on
+    // the free plan rather than the unlimited self-hosted one (D-246).
+    await this.db
+      .execute(
+        sql`update public.billing_settings set enabled = ${this.enabled} where id and enabled <> ${this.enabled}`,
+      )
+      .catch(() => undefined);
+    const [r] = await this.db
+      .execute<{ markup: string }>(sql`select markup from public.billing_settings where id`)
+      .catch(() => [] as Array<{ markup: string }>);
+    if (r) setCloudMarkup(Number(r.markup));
+  }
+
   async settle() {
     if (!this.enabled) return { orgs: 0, usd: 0 };
+    await this.loadSettings();
     await this.flushCloudComputers();
     const usd = await this.db.transaction(async (tx) => {
       const rows = await tx.execute<{
@@ -548,11 +615,14 @@ export class BillingService {
     const due = await this.db.execute<{ org_id: string }>(sql`
       select e.org_id from public.entitlements e join public.plans p on p.code = e.plan_code
       where (e.valid_until is not null and e.valid_until < now())
+         or e.plan_code = 'selfhost'
          or ((p.limits->>'monthly_credits_usd')::numeric > 0 and not exists (
               select 1 from public.credit_ledger c where c.org_id = e.org_id and c.reason = 'grant'
                 and c.reference = 'monthly:' || ${month()} || ':' || e.plan_code))
       limit 500`);
     for (const d of due) await this.recompute(d.org_id);
+    // Included credits lapse after the following month; packs and rewards after 12 months (D-246).
+    await this.db.execute(sql`select public.expire_credits()`);
     return { orgs: usd.size, usd: [...usd.values()].reduce((a, b) => a + b, 0) };
   }
 

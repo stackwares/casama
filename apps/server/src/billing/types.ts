@@ -76,6 +76,15 @@ export interface BillingProvider {
     transactionId?: string;
     purchaseToken?: string;
   }): Promise<SubscriptionSnapshot>;
+  /**
+   * Mobile: checks a one-time purchase (a credit pack) and marks it used, so it can be bought
+   * again. Returns the store's id for that purchase, which credits are keyed by (D-244).
+   */
+  verifyConsumable?(args: {
+    productId: string;
+    transactionId?: string;
+    purchaseToken?: string;
+  }): Promise<{ purchaseId: string; revoked: boolean }>;
   createCheckout?(args: {
     productId: string;
     orgId: string;

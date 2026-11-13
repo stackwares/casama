@@ -3,6 +3,7 @@
 import { replaceAllDataKeys } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import type { JwtClaims } from "@casama/db";
+import { setCloudMarkup } from "@casama/domain";
 import { verifyLicense } from "@casama/ee";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
@@ -400,5 +401,158 @@ export function registerAdminRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       },
       200,
     );
+  });
+
+  // ---------------------------------------------------------------------------
+  // Pricing (D-244): plans, credit packs and the markup, changed live without a deploy.
+  // ---------------------------------------------------------------------------
+
+  type PlanRow = {
+    code: string;
+    name: string;
+    interval: "none" | "month" | "year";
+    active: boolean;
+    sort: number;
+    price_label: string | null;
+    limits: Record<string, number | boolean>;
+    store_product_ids: Record<string, string> | null;
+    dodo_product_id: string | null;
+    workspaces: number;
+  };
+  type PackRow = {
+    code: string;
+    name: string;
+    credits_usd: string;
+    active: boolean;
+    price_label: string | null;
+    store_product_ids: Record<string, string> | null;
+    dodo_product_id: string | null;
+  };
+  const planRows = (code?: string) =>
+    db.execute<PlanRow>(sql`
+      select p.code, p.name, p.interval, p.active, p.sort, p.price_label, p.limits, p.store_product_ids,
+             p.dodo_product_id,
+             (select count(*)::int from public.organizations o where o.plan = p.code) as workspaces
+      from public.plans p ${code ? sql`where p.code = ${code}` : sql``} order by p.sort, p.code`);
+  const planOut = (p: PlanRow) => ({
+    ...p,
+    limits: Object.fromEntries(
+      Object.entries(p.limits ?? {}).filter(([, v]) => typeof v === "number"),
+    ) as Record<string, number>,
+    credit_gate: p.limits?.credit_gate === true,
+    store_product_ids: p.store_product_ids ?? {},
+  });
+  const packRows = (code?: string) =>
+    db.execute<PackRow>(sql`
+      select code, name, credits_usd, active, price_label, store_product_ids, dodo_product_id
+      from public.credit_packs ${code ? sql`where code = ${code}` : sql``} order by credits_usd`);
+  const packOut = (p: PackRow) => ({
+    ...p,
+    credits_usd: Number(p.credits_usd),
+    store_product_ids: p.store_product_ids ?? {},
+  });
+  const markup = async () => {
+    const [r] = await db.execute<{ markup: string }>(
+      sql`select markup from public.billing_settings where id`,
+    );
+    return Number(r?.markup ?? 1.3);
+  };
+
+  app.openapi(routes.adminPricing, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    return c.json(
+      {
+        billing_enabled: env.BILLING_ENABLED,
+        plans: (await planRows()).map(planOut),
+        packs: (await packRows()).map(packOut),
+        settings: { markup: await markup() },
+      },
+      200,
+    );
+  });
+
+  app.openapi(routes.savePlan, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    const { code } = c.req.valid("param");
+    const b = c.req.valid("json");
+    if (code === "selfhost")
+      throw new ApiError(400, "plan_locked", "The self-hosted plan can't be changed");
+    const [existing] = await planRows(code);
+    if (!existing && (!b.name || !b.interval))
+      throw new ApiError(400, "plan_incomplete", "A new plan needs a name and an interval");
+    if (existing && b.active === false && existing.code === "free")
+      throw new ApiError(400, "plan_locked", "The free plan is every workspace's default");
+    const ids = b.store_product_ids === undefined ? null : JSON.stringify(b.store_product_ids);
+    // credit_gate is stored with the limits; a save that leaves it out keeps the current value.
+    const gate = b.credit_gate ?? existing?.limits?.credit_gate === true;
+    const limits =
+      b.limits === undefined && b.credit_gate === undefined
+        ? null
+        : JSON.stringify({
+            ...(b.limits ??
+              Object.fromEntries(
+                Object.entries(existing?.limits ?? {}).filter(([, v]) => typeof v === "number"),
+              )),
+            ...(gate ? { credit_gate: true } : {}),
+          });
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`
+        insert into public.plans (code, name, interval, active, sort, price_label, limits, store_product_ids, dodo_product_id)
+        values (${code}, ${b.name ?? code}, ${b.interval ?? "month"}, ${b.active ?? true}, ${b.sort ?? 100},
+                ${b.price_label ?? null}, coalesce(${limits}::jsonb, '{}'::jsonb), coalesce(${ids}::jsonb, '{}'::jsonb),
+                ${b.dodo_product_id ?? null})
+        on conflict (code) do update set
+          name = coalesce(${b.name ?? null}, plans.name),
+          interval = coalesce(${b.interval ?? null}, plans.interval),
+          active = coalesce(${b.active ?? null}::boolean, plans.active),
+          sort = coalesce(${b.sort ?? null}::int, plans.sort),
+          price_label = case when ${b.price_label !== undefined}::boolean then ${b.price_label ?? null} else plans.price_label end,
+          limits = coalesce(${limits}::jsonb, plans.limits),
+          store_product_ids = coalesce(${ids}::jsonb, plans.store_product_ids),
+          dodo_product_id = case when ${b.dodo_product_id !== undefined}::boolean then ${b.dodo_product_id ?? null} else plans.dodo_product_id end`);
+      // Every workspace on the plan gets the new limits now; owner overrides stay on top.
+      if (limits)
+        await tx.execute(sql`
+          update public.entitlements e
+             set limits = p.limits || coalesce(e.overrides, '{}'::jsonb), updated_at = now()
+            from public.plans p
+           where p.code = e.plan_code and e.plan_code = ${code}`);
+    });
+    const [p] = await planRows(code);
+    return c.json(planOut(p as PlanRow), 200);
+  });
+
+  app.openapi(routes.saveCreditPack, async (c) => {
+    await requireOwner(requireClaims(c.get("claims")));
+    const { code } = c.req.valid("param");
+    const b = c.req.valid("json");
+    const [existing] = await packRows(code);
+    if (!existing && (!b.name || b.credits_usd === undefined))
+      throw new ApiError(400, "pack_incomplete", "A new pack needs a name and an amount");
+    const ids = b.store_product_ids === undefined ? null : JSON.stringify(b.store_product_ids);
+    await db.execute(sql`
+      insert into public.credit_packs (code, name, credits_usd, active, price_label, store_product_ids, dodo_product_id)
+      values (${code}, ${b.name ?? code}, ${b.credits_usd ?? 1}, ${b.active ?? true}, ${b.price_label ?? null},
+              coalesce(${ids}::jsonb, '{}'::jsonb), ${b.dodo_product_id ?? null})
+      on conflict (code) do update set
+        name = coalesce(${b.name ?? null}, credit_packs.name),
+        credits_usd = coalesce(${b.credits_usd ?? null}::numeric, credit_packs.credits_usd),
+        active = coalesce(${b.active ?? null}::boolean, credit_packs.active),
+        price_label = case when ${b.price_label !== undefined}::boolean then ${b.price_label ?? null} else credit_packs.price_label end,
+        store_product_ids = coalesce(${ids}::jsonb, credit_packs.store_product_ids),
+        dodo_product_id = case when ${b.dodo_product_id !== undefined}::boolean then ${b.dodo_product_id ?? null} else credit_packs.dodo_product_id end`);
+    const [p] = await packRows(code);
+    return c.json(packOut(p as PackRow), 200);
+  });
+
+  app.openapi(routes.setBillingSettings, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    await requireOwner(claims);
+    const { markup: m } = c.req.valid("json");
+    await db.execute(sql`
+      update public.billing_settings set markup = ${m}, updated_at = now(), updated_by = ${claims.sub}::uuid where id`);
+    // This process takes it now; the worker picks it up within a minute.
+    setCloudMarkup(m);
+    return c.json({ markup: await markup() }, 200);
   });
 }

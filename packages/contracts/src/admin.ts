@@ -137,3 +137,80 @@ export const CloudModels = z
     }),
   })
   .openapi("CloudModels");
+
+/** A plan as the instance owner edits it (D-244). */
+export const AdminPlan = z
+  .object({
+    code: z.string(),
+    name: z.string(),
+    interval: z.enum(["none", "month", "year"]),
+    active: z.boolean(),
+    sort: z.number().int(),
+    price_label: z.string().nullable(),
+    limits: z.record(z.string(), z.number()),
+    credit_gate: z.boolean().openapi({
+      description: "Runs on Casama's keys stop when the workspace's credits run out",
+    }),
+    store_product_ids: z.record(z.string(), z.string()),
+    dodo_product_id: z.string().nullable(),
+    workspaces: z.number().int().openapi({ description: "Workspaces on this plan now" }),
+  })
+  .openapi("AdminPlan");
+
+export const AdminCreditPack = z
+  .object({
+    code: z.string(),
+    name: z.string(),
+    credits_usd: z.number(),
+    active: z.boolean(),
+    price_label: z.string().nullable(),
+    store_product_ids: z.record(z.string(), z.string()),
+    dodo_product_id: z.string().nullable(),
+  })
+  .openapi("AdminCreditPack");
+
+export const BillingSettings = z
+  .object({
+    markup: z.number().min(1).openapi({
+      description: "Multiplier on what Casama pays for usage on its own keys (1.3 = 30% over cost)",
+    }),
+  })
+  .openapi("BillingSettings");
+
+export const AdminPricing = z
+  .object({
+    billing_enabled: z.boolean(),
+    plans: z.array(AdminPlan),
+    packs: z.array(AdminCreditPack),
+    settings: BillingSettings,
+  })
+  .openapi("AdminPricing");
+
+const productIds = z.record(z.string(), z.string().min(1).max(200));
+
+export const SavePlanRequest = z
+  .object({
+    name: z.string().min(1).max(80).optional(),
+    interval: z.enum(["none", "month", "year"]).optional(),
+    active: z.boolean().optional(),
+    sort: z.number().int().optional(),
+    price_label: z.string().max(80).nullable().optional(),
+    limits: z.record(z.string(), z.number().min(0)).optional().openapi({
+      description: "Replaces the plan's limits; every workspace on the plan gets them right away",
+    }),
+    credit_gate: z.boolean().optional(),
+    store_product_ids: productIds.optional(),
+    dodo_product_id: z.string().max(200).nullable().optional(),
+  })
+  .openapi("SavePlanRequest");
+
+export const SaveCreditPackRequest = z
+  .object({
+    name: z.string().min(1).max(80).optional(),
+    credits_usd: z.number().positive().max(10000).optional(),
+    active: z.boolean().optional(),
+    price_label: z.string().max(80).nullable().optional(),
+    store_product_ids: productIds.optional(),
+    dodo_product_id: z.string().max(200).nullable().optional(),
+  })
+  .openapi("SaveCreditPackRequest");

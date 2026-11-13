@@ -66,7 +66,7 @@ export function registerBillingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           limits: Object.fromEntries(
             Object.entries(p.limits).filter(([, v]) => typeof v === "number"),
           ) as Record<string, number>,
-          price_label: (p as { price_label?: string | null }).price_label ?? null,
+          price_label: p.price_label ?? null,
           web: !!p.dodo_product_id && !!billing.providers.dodo,
           store_product_ids: p.store_product_ids ?? {},
         })),
@@ -75,6 +75,8 @@ export function registerBillingRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           name: p.name,
           credits_usd: Number(p.credits_usd),
           web: !!p.dodo_product_id && !!billing.providers.dodo,
+          price_label: p.price_label ?? null,
+          store_product_ids: p.store_product_ids ?? {},
         })),
       },
       200,

@@ -52,10 +52,10 @@ Pro, mailboxes, domain, Apple). Computers run on the same server, so there's no 
 | **Voice calls, Gemini Live** | $3 in / $12 out per 1M audio tokens ≈ $0.005 + $0.018 per min | `voice_seconds`, priced from the call's own token counts | ✅ |
 | **Dictation (speech to text)** | **On the shared OpenRouter key: Whisper Large V3 Turbo $0.0002 / min** (OpenRouter list price 2026-11-11; a 2.8 s test clip cost $0.0000093), charged at cost × 1.055 × 1.3 from OpenRouter's reported cost (D-194). A workspace's own key: OpenAI `gpt-4o-mini-transcribe` $0.003 / min. Gemini 3.5 Transcribe is about $0.005 / min once the transcript is included, so dictation stays on OpenAI (D-187). Deepgram Nova-3 $0.0077 / min | `stt_seconds`, $0.003 / min | ✅ for OpenAI mini; ❌ if Deepgram is used on our key |
 | **Read aloud (text to speech)** | Gemini 3.8 Flash-Lite TTS about $0.011 per 1k characters through 2026-12-31 ($6 per 1M audio tokens, 25 tokens a second), then about $0.022. OpenAI `gpt-4o-mini-tts` about $0.018 a minute of speech. ElevenLabs Flash $40 per 1M characters | Gemini at the audio rate above; other providers $0.015 per 1k characters (D-187) | ✅ |
-| **Phone calls (Twilio)** | Outbound $0.014 / min, inbound $0.0085 / min, **Media Streams +$0.0044 / min**, plus the voice model per minute | `phone_minutes`, $0.014 / min only | ❌ Missing Media Streams and the voice model's cost in the same call |
-| **Phone numbers** | $1.15 / month (local US), $2.15 (toll-free) | Not charged | ❌ Charge monthly per number held |
-| **SMS** | $0.0083 per segment plus carrier fees ($0.0025–0.007) | Not metered separately | ❌ |
-| **Apps through Composio** (our account) | Free up to 20k calls and 1k connected accounts a month. Then (Pro) **$0.002 per call** (Slack, Gmail, Calendar, Sheets, Jira, HubSpot), $0.01 (Salesforce, YouTube, Reddit), $0.0005 (others); **$0.10 once** per connected account past 1k | Not metered | ❌ Add a `app_calls` kind and cap it per plan |
+| **Phone calls (Twilio)** | Outbound $0.014 / min, inbound $0.0085 / min, Media Streams +$0.0044 / min, **on the workspace's own Twilio account** (D-141), plus the voice model per minute | `phone_minutes` recorded, not billable (the workspace pays Twilio). The voice model inside the call is `voice_seconds`, billable at Google's price × markup on the server's key (D-244) | ✅ |
+| **Phone numbers** | $1.15 / month (local US), $2.15 (toll-free) | The workspace's own Twilio account | ✅ Not ours |
+| **SMS** | $0.0083 per segment plus carrier fees ($0.0025–0.007) | The workspace's own Twilio account (SMS channel) | ✅ Not ours |
+| **Apps through Composio** (our account) | Free up to 20k calls and 1k connected accounts a month. Then (Pro) **$0.002 per call** (Slack, Gmail, Calendar, Sheets, Jira, HubSpot), $0.01 (Salesforce, YouTube, Reddit), $0.0005 (others); **$0.10 once** per connected account past 1k | `app_calls`, $0.002 per call × markup, billable, paid from credits (D-244) | ✅ Charged even inside the free allowance |
 | **Web search** | Brave $5 per 1k searches; Tavily $0.008 per search; Exa $4–7 per 1k; our own SearXNG $0 (runs on the API server) | `search_queries`, priced per provider (D-179) | ✅ Metered. Workspace keys pay their own; without one, SearXNG (free). Cloud never pays per search today |
 | **Invite rewards** (D-211) | **$2 of credits to the inviter** (at most 20 friends, $40 per person) **plus a $2 welcome bonus to the friend**, both once the friend verifies and finishes a first chat: up to **$4 per friend**. Credits are spent at marked-up prices (× 1.055 × 1.3 on Casama's key), so each $2 costs about **$1.46** in model spend at most (about **$2.92 per friend**), less if never fully used | `credit_ledger` rows with reason `grant` and references `referral:<friend>` / `referral-welcome:<friend>`; `REFERRAL_REWARD_USD`, `REFERRAL_WELCOME_USD`, `REFERRAL_REWARD_CAP` | ⚠️ A growth cost, not usage. Fake accounts could farm it: each needs a verified address, a sign-up proof and a first run, and the cap limits one person to $40 |
 | **Images** | Per image at 1K: Gemini Nano Banana 2.1 $0.034 on OpenRouter (default with an OpenRouter key; LM Arena rank 7, Artificial Analysis rank 6). GPT Image 2.6 medium about $0.043 (LM Arena ranks 2–4); its max tier about $0.21 (ranks 1–4). Seedream 4.5 $0.04 is the fal fallback (rank 38). Budget: fal FLUX.2 klein 4B or Z-Image Turbo $0.005 per megapixel (ranks 72 and 61) | `media_images` at OpenRouter's reported cost or fal's list price per model (D-185); unknown models at $0.04 | ✅ Per model |
@@ -78,18 +78,23 @@ Pro, mailboxes, domain, Apple). Computers run on the same server, so there's no 
 So a $20 subscription becomes about **$18.70 on the web** (outside the US: about $18.40) and **$17 on
 iOS or Android**. Small prices lose the most to the $0.40 fixed fee: a $5 credit pack keeps about $4.40.
 
-## What the current placeholder plans would cost us
+## Plans (D-244, live 2026-11)
 
-The plans in the database (`20261115000001_billing.sql`, no prices set yet):
+Plans, packs and the markup live in the database and change from the Admin screen without a deploy.
+Credits are spent at cost × markup (1.3; OpenRouter also × 1.055), so each $1 of included credits
+costs Casama about **$0.77** at most. Computers run on Docker at about $0.008 an hour.
 
-| Plan | Includes | Our cost if fully used (E2B or Daytona computers) | Minimum price to break even with a 30% margin |
-|---|---|---|---|
-| Free | $1 credits, 5 computer hours, 2 bots | $1 + 5 × $0.166 ≈ **$1.83 a month per active user** | Free users must be capped hard; budget it as marketing |
-| Pro | $20 credits, 100 computer hours, 20 bots, 5 seats | $20 + 100 × $0.166 ≈ **$36.60 a month** | about **$56 a month on iOS** ($36.60 × 1.3 ÷ 0.85), about $51 on the web |
+| Plan | Price | Includes | Our cost if fully used | Margin after fees (web / iOS) |
+|---|---|---|---|---|
+| Free | $0 | $1 credits, 2 bots, 1 computer, 5 h, 1 seat | about $0.80 a month (plus invite credits) | marketing |
+| Plus | **$15** / $150 a year | $5 credits, 5 bots, 2 computers, 30 h, 2 seats | about $4.10 | about 70% / 68% |
+| Pro | **$39** / $390 | $10 credits, 20 bots, 5 computers, 100 h, 5 seats | about $8.50 | about 77% / 74% |
+| Max | **$149** / $1,490 | $50 credits, 50 bots, 10 computers, 400 h, 10 seats | about $41.70 | about 70% / 67% |
+| Credit packs | $10 / $25 web; **$12.99 / $29.99** in the stores | $10 / $25 of credits | $7.70 / $19.25 | about 16% web; 13–30% stores |
 
-With our own Hetzner servers for computers (about $0.025 an hour each, if kept busy) Pro's 100
-hours cost about $2.50, and the break-even price drops to about **$31 a month on the web, $35 on iOS**. **Computers are the
-biggest lever:** either run them on our own servers or include far fewer hours per plan.
+Most people won't use everything included, so real margins are higher. The step to watch is server
+capacity: the $11 VPS fits 6–7 running computers; past that, a larger server (about €159 a month,
+about 28 computers) is the next fixed cost.
 
 ## Lowering costs (so prices can come down)
 
@@ -162,13 +167,14 @@ discussion); with it, $15 / $39 / $149 undercuts every product that gives bots t
 2. ✅ **Model prices:** OpenRouter's live per-model prices (refreshed daily) win over the
    hand-written table, and nothing on OpenRouter is priced at $0 unless it's a `:free` model
    (D-181). ☐ Add OpenRouter's 5.5% credit fee through the markup setting (item 5).
-3. **Meter what isn't metered:** Composio calls and connected accounts, phone numbers per month, SMS,
-   Twilio Media Streams, and the voice model inside phone calls. (Web search ✅, D-179.)
+3. ✅ **Meter what isn't metered** (D-244): Composio calls (`app_calls`) and the voice model inside
+   phone calls. Twilio minutes, numbers and SMS are the workspace's own account. (Web search ✅, D-179.)
 4. ✅ **Per-model media prices** for images and video (D-182).
-5. **A markup setting** (default 1.3) applied to every metered cost, and plan prices that account for
-   store and payment fees.
+5. ✅ **A markup setting** (`billing_settings.markup`, default 1.3, Admin screen; D-244) applied to
+   usage on Casama's keys, and plan prices that account for store and payment fees.
 6. **Caps per plan** for Composio calls, search, storage and computer hours, so one heavy bot can't
-   run up the bill.
+   run up the bill. Computer hours ✅ and a daily cap on Casama's key ✅ (`cloud_daily_usd`); every
+   metered cost is paid from credits, so credits bound the rest.
 
 ## Sources (checked 2026-11-11)
 

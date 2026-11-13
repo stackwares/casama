@@ -28,7 +28,7 @@ import {
 } from "@casama/agent";
 import type { Database } from "@casama/db";
 import type { CloudModelAssignment } from "@casama/domain";
-import { cloudOpenRouterCharge } from "@casama/domain";
+import { cloudCharge, cloudOpenRouterCharge } from "@casama/domain";
 import { sql } from "drizzle-orm";
 
 export interface VoiceRuntime {
@@ -118,6 +118,22 @@ async function botVoice(db: Database, botId: string) {
 const ordered = <T extends string>(preferred: T | undefined, all: T[]) =>
   preferred ? [preferred, ...all.filter((p) => p !== preferred)] : all;
 
+/** Whether a credit-gated workspace still has credits once unsettled usage is counted. */
+async function hasCredits(db: Database, orgId: string) {
+  const [r] = await db.execute<{
+    credits: string | null;
+    unbilled: string;
+    gate: boolean | null;
+  }>(sql`
+    select
+      (select balance_after from public.credit_ledger where org_id = ${orgId}::uuid order by seq desc limit 1) as credits,
+      (select coalesce(sum(cost_usd), 0) from public.usage_ledger
+        where org_id = ${orgId}::uuid and billable and billed_at is null) as unbilled,
+      (select (limits->>'credit_gate')::boolean from public.entitlements
+        where org_id = ${orgId}::uuid order by created_at desc limit 1) as gate`);
+  return !r?.gate || Number(r.credits ?? 0) - Number(r.unbilled) > 0;
+}
+
 async function ledger(
   db: Database,
   orgId: string,
@@ -158,6 +174,14 @@ export async function voiceTranscribe(
       ok: false as const,
       code: "dictation_unavailable",
       error: "Add an OpenAI or Deepgram key to use dictation.",
+    };
+  // On the server's key with billing on, dictation needs credits; without them the app falls back
+  // to the phone's own dictation (D-246).
+  if (shared && rt.billPlatform === true && !(await hasCredits(rt.db, orgId)))
+    return {
+      ok: false as const,
+      code: "dictation_unavailable",
+      error: "The workspace is out of credits, so dictation uses your device for now.",
     };
   let r: Awaited<ReturnType<typeof transcribe>>;
   try {
@@ -257,6 +281,14 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
     .replace(/```[\s\S]*?```/g, " (code omitted) ")
     .slice(0, 4000);
   if (!text.trim()) return { ok: false as const, error: "This message has no text to read." };
+  // Read-aloud on the server's Google key is charged with markup and needs credits (D-246).
+  const onServerKey = k.provider === "google" && !google?.key && rt.billPlatform === true;
+  if (onServerKey && !(await hasCredits(rt.db, orgId)))
+    return {
+      ok: false as const,
+      code: "out_of_credits",
+      error: "The workspace is out of credits. Add credits or change plans in Billing.",
+    };
   const r = await synthesize(k.provider as TtsProviderId, k.key, text, bot.voice.tts_voice, {
     bases: rt.bases,
     fetch: rt.fetch,
@@ -265,14 +297,12 @@ export async function voiceSpeak(rt: VoiceRuntime, orgId: string, messageId: str
   await rt.db.execute(sql`insert into public.tts_cache (message_id, voice_key, mime, audio)
     values (${messageId}::uuid, ${voiceKey}, ${r.mime}, ${Buffer.from(r.audio)})
     on conflict do nothing`);
-  await ledger(
-    rt.db,
-    orgId,
-    m.bot_id,
-    "tts_chars",
-    text.length,
-    ttsCostUsd(k.provider as TtsProviderId, text.length, r.audio),
-  );
+  const cost = ttsCostUsd(k.provider as TtsProviderId, text.length, r.audio);
+  if (onServerKey)
+    await rt.db.execute(sql`insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, billable, meta)
+      values (${orgId}::uuid, ${m.bot_id}::uuid, 'tts_chars', ${text.length}, ${cloudCharge(cost)}, true,
+              ${JSON.stringify({ provider: "google", provider_cost_usd: cost, key: "server" })}::jsonb)`);
+  else await ledger(rt.db, orgId, m.bot_id, "tts_chars", text.length, cost);
   return { ok: true as const, voiceKey, cached: false };
 }
 

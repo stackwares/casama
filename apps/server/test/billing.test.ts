@@ -58,9 +58,20 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
   let owner: { id: string; token: string };
   let member: { id: string; token: string };
 
-  const newOrg = async (name: string) =>
-    (await j(await h.request("/v1/orgs", { method: "POST", token: owner.token, json: { name } })))
-      .id as string;
+  // Each workspace is made by its own person, because only someone's first free workspace gets free
+  // credits (D-246); `owner` takes over the maker's seat so the tests can act on it.
+  let made = 0;
+  const newOrg = async (name: string) => {
+    const maker = await h.user(`cloud-maker-${++made}@example.com`);
+    const id = (
+      await j(await h.request("/v1/orgs", { method: "POST", token: maker.token, json: { name } }))
+    ).id as string;
+    // Hand the maker's seat to `owner` (the free plan has one seat).
+    await h.handle.db.execute(
+      sql`update public.memberships set user_id = ${owner.id}::uuid where org_id = ${id}::uuid and user_id = ${maker.id}::uuid`,
+    );
+    return id;
+  };
   const billing = async (orgId: string, token = owner.token) =>
     j(await h.request(`/v1/orgs/${orgId}/billing`, { token }));
   const hook = (source: string, body: string, headers: Record<string, string> = {}, query = "") =>
@@ -88,6 +99,8 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
   beforeAll(async () => {
     f = await startFakeBilling();
     h = await startHarness({ env: billingEnv(f), worker: { fixtures: CHAT } });
+    // This suite makes many workspaces for one person; the default is 5 (D-246).
+    await h.handle.db.execute(sql`update public.billing_settings set max_owned_workspaces = 100`);
     await h.handle.db.execute(
       sql`update public.plans set dodo_product_id = 'pdt_sub_pro' where code = 'pro'`,
     );
@@ -162,7 +175,18 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
       ),
     );
     const plans = await j(await h.request("/v1/billing/plans", { token: owner.token }));
-    expect(plans.plans.map((p: { code: string }) => p.code)).toEqual(["free", "pro", "pro_yearly"]);
+    expect(plans.plans.map((p: { code: string }) => p.code)).toEqual([
+      "free",
+      "plus",
+      "plus_yearly",
+      "pro",
+      "pro_yearly",
+      "max",
+      "max_yearly",
+    ]);
+    expect(plans.plans.find((p: { code: string }) => p.code === "pro").price_label).toBe(
+      "$39 / month",
+    );
     expect(plans.plans.find((p: { code: string }) => p.code === "pro").web).toBe(true);
   });
 
@@ -173,9 +197,12 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
       token: owner.token,
       json: { email: "cloud-member@example.com" },
     });
-    await h.handle.db.execute(
-      sql`insert into public.memberships (org_id, user_id, role) values (${orgId}::uuid, ${member.id}::uuid, 'member') on conflict do nothing`,
-    );
+    const join = () =>
+      h.handle.db.execute(
+        sql`insert into public.memberships (org_id, user_id, role) values (${orgId}::uuid, ${member.id}::uuid, 'member') on conflict do nothing`,
+      );
+    // Free has one seat (D-244): the owner. A second person needs a paid plan.
+    await expect(join()).rejects.toMatchObject({ cause: { code: "PT402" } });
     const { subscriptionId } = await buyOnWeb(orgId, { plan_code: "pro" });
     expect(f.dodo.checkouts.size).toBeGreaterThan(0);
     const res = await dodoHook("subscription.active", {
@@ -183,9 +210,11 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
       subscription_id: subscriptionId,
     });
     expect(res.status).toBe(200);
+    await join();
     // The phone apps call the same endpoint with their own session: the plan is the workspace's.
     const onPhone = await billing(orgId, member.token);
-    expect(onPhone).toMatchObject({ plan_code: "pro", source: "dodo", credits_usd: 21 });
+    // Upgrading in the month tops the month's grant up to Pro's $10, not $1 + $10 (D-246).
+    expect(onPhone).toMatchObject({ plan_code: "pro", source: "dodo", credits_usd: 10 });
     expect(onPhone.limits.max_bots).toBe(20);
     // Customer portal for the web subscription.
     const portal = await j(
@@ -261,6 +290,17 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
 
   it("credit packs add credits once and refunds take them back", async () => {
     const orgId = await newOrg("Credits");
+    // Credit packs come with a paid plan (D-246): a free workspace is sent to upgrade.
+    const refused = await h.request(`/v1/orgs/${orgId}/billing/checkout`, {
+      method: "POST",
+      token: owner.token,
+      json: { pack_code: "credits_10" },
+    });
+    expect(refused.status).toBe(402);
+    expect((await j(refused)).code).toBe("paid_plan_required");
+    await h.handle.db.execute(
+      sql`update public.entitlements set plan_code = 'pro' where org_id = ${orgId}::uuid`,
+    );
     const p = await buyOnWeb(orgId, { pack_code: "credits_10" });
     await dodoHook("payment.succeeded", { payload_type: "Payment", payment_id: p.paymentId });
     await dodoHook("payment.succeeded", { payload_type: "Payment", payment_id: p.paymentId });
@@ -368,6 +408,58 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
       expect(r.status).toBe(200);
     }
     expect((await billing(mine)).subscriptions).toHaveLength(1);
+  });
+
+  it("credit packs bought in the stores credit the workspace once (D-244)", async () => {
+    const orgId = await newOrg("Pack buyer");
+    const buy = (json: Record<string, unknown>, org = orgId) =>
+      h.request(`/v1/orgs/${org}/billing/purchases`, { method: "POST", token: owner.token, json });
+    const tx = f.apple.add({ productId: "ai.casama.credits.10" });
+    const ios = {
+      source: "app_store",
+      product_id: "ai.casama.credits.10",
+      transaction_id: tx.transactionId,
+    };
+    expect((await buy(ios)).status).toBe(200);
+    expect((await billing(orgId)).credits_usd).toBe(11);
+    // Reporting the same purchase again changes nothing; another workspace can't reuse it.
+    expect((await buy(ios)).status).toBe(200);
+    expect((await billing(orgId)).credits_usd).toBe(11);
+    const other = await newOrg("Pack thief");
+    expect((await buy(ios, other)).status).toBe(409);
+
+    f.google.products.set("pack-token-1", {
+      productId: "casama_credits_25",
+      orderId: "GPA.1234-5678",
+      purchaseState: 0,
+      consumptionState: 0,
+    });
+    const android = {
+      source: "google_play",
+      product_id: "casama_credits_25",
+      purchase_token: "pack-token-1",
+    };
+    expect((await buy(android)).status).toBe(200);
+    expect(f.google.consumed).toContain("pack-token-1");
+    expect((await billing(orgId)).credits_usd).toBe(36);
+    expect((await buy(android)).status).toBe(200);
+    expect((await billing(orgId)).credits_usd).toBe(36);
+    // A pending purchase isn't credited yet.
+    f.google.products.set("pack-token-2", {
+      productId: "casama_credits_10",
+      orderId: "GPA.9",
+      purchaseState: 2,
+      consumptionState: 0,
+    });
+    expect(
+      (
+        await buy({
+          source: "google_play",
+          product_id: "casama_credits_10",
+          purchase_token: "pack-token-2",
+        })
+      ).status,
+    ).toBe(409);
   });
 
   it("Google Play purchases are verified and acknowledged; RTDN refunds remove access", async () => {

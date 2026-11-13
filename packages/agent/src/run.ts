@@ -6,6 +6,7 @@ import {
   CLOUD_LOCKED_MODEL,
   type CloudModelAssignment,
   checkBudget,
+  cloudCharge,
   cloudModelAllowed,
   cloudModelDailyCap,
   cloudOpenRouterCharge,
@@ -534,7 +535,15 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       }),
     );
     const registry = deps.tools.with(
-      integrationDefs(db, integrationSpecs, deps.fetch ?? safeFetch, secrets, info, deps.local),
+      integrationDefs(
+        db,
+        integrationSpecs,
+        deps.fetch ?? safeFetch,
+        secrets,
+        info,
+        deps.local,
+        deps.billCloudModels === true,
+      ),
     );
 
     const primaryModel = info.policy.primary?.model ?? "unknown";
@@ -1634,7 +1643,8 @@ async function spend(
       (select coalesce(sum(cost_usd), 0) from public.usage_ledger
         where org_id = ${info.orgId}::uuid and billable and billed_at is null) as unbilled,
       (select coalesce(sum(cost_usd), 0) from public.usage_ledger
-        where org_id = ${info.orgId}::uuid and billable and kind in ('tokens_in', 'tokens_out')
+        where org_id = ${info.orgId}::uuid and billable
+          and kind <> all('{computer_seconds,stream_seconds}'::text[])
           and created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc') as cloud_today,
       (select coalesce(sum(quantity), 0) from public.usage_ledger
         where org_id = ${info.orgId}::uuid and kind = 'computer_seconds'
@@ -1669,11 +1679,17 @@ async function spend(
     dailyLimit: info.dailyLimit,
     orgPeriod: Number(row?.org_period ?? 0),
     quotaLimit: caps.length ? Math.min(...caps) : null,
-    credits: onPlatform && gate ? Number(row?.credits ?? 0) : null,
-    unbilledUsd: onPlatform && gate ? Number(row?.unbilled ?? 0) : 0,
+    // On a credit-gated plan every run needs credits, whatever key its model is on: fallbacks,
+    // app calls, paid data, media and computers all bill Casama's accounts (D-246).
+    credits: gate ? Number(row?.credits ?? 0) : null,
+    unbilledUsd: gate ? Number(row?.unbilled ?? 0) : 0,
     reserveUsd: onPlatform && gate && primary ? cloudCallReserveUsd(primary.model) : undefined,
-    cloudToday: onPlatform && billCloudModels ? Number(row?.cloud_today ?? 0) : 0,
-    cloudDailyCap: onPlatform && billCloudModels ? cloudModelDailyCap(row?.plan_code) : null,
+    // The daily cap covers all spend on the server's keys (models, media, voice, apps), not only
+    // model tokens.
+    cloudToday: billCloudModels ? Number(row?.cloud_today ?? 0) : 0,
+    cloudDailyCap: billCloudModels
+      ? cloudModelDailyCap(row?.plan_code, limits.cloud_daily_usd)
+      : null,
     computerSeconds: Number(row?.computer_seconds ?? 0),
     computerHours: num(limits.computer_hours),
   });
@@ -3093,6 +3109,13 @@ async function loadIntegrationTools(
   return out;
 }
 
+/**
+ * What one call through the server's Composio account costs (Pro: $0.002 for Gmail, Slack,
+ * Calendar and the like; docs/COSTS.md). Free calls inside Composio's monthly allowance are
+ * charged too, so the price doesn't jump when the allowance runs out.
+ */
+const COMPOSIO_CALL_USD = 0.002;
+
 /** Tool definitions that call integrations; output is untrusted. */
 function integrationDefs(
   db: Database,
@@ -3101,6 +3124,7 @@ function integrationDefs(
   secretsFn: () => Promise<NamedSecret[]>,
   info?: RunInfo,
   local?: RunDeps["local"],
+  billApps = false,
 ): ToolDefinition[] {
   return specs.map((spec) => ({
     name: spec.fullName,
@@ -3147,6 +3171,17 @@ function integrationDefs(
           signal: ctrl.signal,
           onProgress: (t) => void ctx.output(`${t}\n`).catch(() => {}),
         });
+        // A call through the server's own Composio account costs Casama per call (D-244).
+        if (rec.kind === "composio" && rec.config.managed === true) {
+          const cost = COMPOSIO_CALL_USD;
+          await db
+            .execute(sql`
+              insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, billable, meta)
+              values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, 'app_calls', 1,
+                      ${billApps ? cloudCharge(cost) : cost}, ${billApps},
+                      ${JSON.stringify({ provider: "composio", tool: spec.tool, provider_cost_usd: cost, ...(billApps ? { key: "server" } : {}) })}::jsonb)`)
+            .catch(() => {});
+        }
         return {
           content: wrapIntegrationOutput(rec, text),
           preview: text.replace(/\s+/g, " ").slice(0, 200),

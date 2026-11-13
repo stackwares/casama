@@ -12,9 +12,12 @@ import 'package:casama_api/src/model/action_rule_target.dart';
 import 'package:casama_api/src/model/add_teach_step_request.dart';
 import 'package:casama_api/src/model/add_user_facts_request.dart';
 import 'package:casama_api/src/model/add_user_facts_request_items_inner.dart';
+import 'package:casama_api/src/model/admin_credit_pack.dart';
 import 'package:casama_api/src/model/admin_org.dart';
 import 'package:casama_api/src/model/admin_org_list.dart';
 import 'package:casama_api/src/model/admin_overview.dart';
+import 'package:casama_api/src/model/admin_plan.dart';
+import 'package:casama_api/src/model/admin_pricing.dart';
 import 'package:casama_api/src/model/admin_service.dart';
 import 'package:casama_api/src/model/admin_service_list.dart';
 import 'package:casama_api/src/model/admin_user.dart';
@@ -34,6 +37,7 @@ import 'package:casama_api/src/model/approval_requested_event_payload.dart';
 import 'package:casama_api/src/model/approval_resolved_event.dart';
 import 'package:casama_api/src/model/approval_resolved_event_payload.dart';
 import 'package:casama_api/src/model/attach_integration_request.dart';
+import 'package:casama_api/src/model/billing_settings.dart';
 import 'package:casama_api/src/model/billing_summary.dart';
 import 'package:casama_api/src/model/billing_usage.dart';
 import 'package:casama_api/src/model/billing_usage_item.dart';
@@ -367,10 +371,12 @@ import 'package:casama_api/src/model/run_replay_response.dart';
 import 'package:casama_api/src/model/run_started.dart';
 import 'package:casama_api/src/model/run_started_event.dart';
 import 'package:casama_api/src/model/run_started_event_payload.dart';
+import 'package:casama_api/src/model/save_credit_pack_request.dart';
 import 'package:casama_api/src/model/save_device_place_request.dart';
 import 'package:casama_api/src/model/save_device_source_request.dart';
 import 'package:casama_api/src/model/save_device_source_request_kinds.dart';
 import 'package:casama_api/src/model/save_imported_memories_request.dart';
+import 'package:casama_api/src/model/save_plan_request.dart';
 import 'package:casama_api/src/model/save_teach_request.dart';
 import 'package:casama_api/src/model/save_teach_response.dart';
 import 'package:casama_api/src/model/saved_count.dart';
@@ -568,12 +574,18 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AddUserFactsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AddUserFactsRequestItemsInner':
           return AddUserFactsRequestItemsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminCreditPack':
+          return AdminCreditPack.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminOrg':
           return AdminOrg.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminOrgList':
           return AdminOrgList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminOverview':
           return AdminOverview.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminPlan':
+          return AdminPlan.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AdminPricing':
+          return AdminPricing.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminService':
           return AdminService.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AdminServiceList':
@@ -615,6 +627,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
         case 'Autonomy':
           
           
+        case 'BillingSettings':
+          return BillingSettings.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'BillingSource':
           
           
@@ -1323,6 +1337,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
         case 'RunStatus':
           
           
+        case 'SaveCreditPackRequest':
+          return SaveCreditPackRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SaveDevicePlaceRequest':
           return SaveDevicePlaceRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SaveDeviceSourceRequest':
@@ -1331,6 +1347,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SaveDeviceSourceRequestKinds.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SaveImportedMemoriesRequest':
           return SaveImportedMemoriesRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SavePlanRequest':
+          return SavePlanRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SaveTeachRequest':
           return SaveTeachRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SaveTeachResponse':

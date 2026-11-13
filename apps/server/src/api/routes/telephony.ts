@@ -24,9 +24,11 @@ import {
 } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { type JwtClaims, withUserSession } from "@casama/db";
+import { cloudCharge } from "@casama/domain";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { WebSocket, WebSocketServer } from "ws";
+import { billsCalls } from "../../billing/calls.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { iso } from "../util.ts";
@@ -353,6 +355,17 @@ function bridge(deps: AppDeps, id: string, twilio: WebSocket) {
       const [who] = await db.execute<{ name: string; bot: string }>(sql`
         select coalesce(p.display_name, split_part(u.email, '@', 1), 'the person') as name, b.name as bot
         from public.bots b, auth.users u left join public.profiles p on p.user_id = u.id where b.id = ${call.bot_id}::uuid and u.id = ${call.user_id}::uuid`);
+      // A call on the server's voice key needs credits, like an in-app call.
+      if (
+        deps.billing &&
+        (await billsCalls(deps, call.org_id)) &&
+        (await deps.billing.balance(call.org_id)) <= 0
+      ) {
+        await db.execute(
+          sql`update public.outbound_calls set status = 'failed', error = 'out_of_credits', ended_at = now() where id = ${id}::uuid`,
+        );
+        return close();
+      }
       const s = await deps.workflows.voiceSession(
         call.org_id,
         call.bot_id,
@@ -459,10 +472,17 @@ function geminiBridge(
     if (recorded || startedAt === null) return;
     recorded = true;
     const seconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+    // The voice model inside a phone call is paid from credits like an in-app call (D-244). The
+    // phone line itself is the workspace's own Twilio account.
+    const cost = geminiLiveCost(usage);
+    const [call] = await db.execute<{ org_id: string }>(
+      sql`select org_id from public.outbound_calls where id = ${id}::uuid`,
+    );
+    const billable = !!call && (await billsCalls(deps, call.org_id));
     await db.execute(sql`
-      insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, meta)
-      select org_id, bot_id, 'voice_seconds', ${seconds}, ${geminiLiveCost(usage)},
-             ${JSON.stringify({ provider: "gemini", phone_call: id, tokens: usage })}::jsonb
+      insert into public.usage_ledger (org_id, bot_id, kind, quantity, cost_usd, billable, meta)
+      select org_id, bot_id, 'voice_seconds', ${seconds}, ${billable ? cloudCharge(cost) : cost}, ${billable},
+             ${JSON.stringify({ provider: "gemini", phone_call: id, tokens: usage, ...(billable ? { key: "server", provider_cost_usd: cost } : {}) })}::jsonb
       from public.outbound_calls where id = ${id}::uuid`);
   };
   const flush = async () => {

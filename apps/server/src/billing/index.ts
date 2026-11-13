@@ -61,13 +61,18 @@ export function billingFromEnv(
         rtdnEmail: env.GOOGLE_PLAY_RTDN_EMAIL,
       });
   }
-  return new BillingService({
+  const service = new BillingService({
     db,
     enabled: env.BILLING_ENABLED,
     providers,
     cloudComputerUsdPerHour: env.CLOUD_COMPUTER_USD_PER_HOUR,
     logger,
   });
+  // The markup can change from the Admin screen (D-244): load it now and every minute. Every
+  // server writes whether it bills, so the database picks the right plan for new workspaces (D-246).
+  void service.loadSettings();
+  if (env.BILLING_ENABLED) setInterval(() => void service.loadSettings(), 60_000).unref();
+  return service;
 }
 
 /** Cloud side: what the Cloud Connect proxy forwards to. */

@@ -1,6 +1,8 @@
 import type { Database } from "@casama/db";
 import { contentKeys } from "@casama/db";
 import {
+  cloudCharge,
+  cloudOpenRouterCharge,
   isValidCron,
   isValidTimezone,
   MAX_DELEGATION_DEPTH,
@@ -12,7 +14,13 @@ import { z } from "zod";
 import { actingUserOf, personForRun } from "../acting.ts";
 import { wrapUntrusted } from "../context.ts";
 import { sealRunPayload } from "../events.ts";
-import { MEDIA_PRICES, type MediaInput, type MediaProvider, type MediaResult } from "../media.ts";
+import {
+  MEDIA_PRICES,
+  type MediaInput,
+  type MediaPayer,
+  type MediaProvider,
+  type MediaResult,
+} from "../media.ts";
 import type { NotificationService } from "../notifications.ts";
 import type { SearchProvider } from "../search.ts";
 import { startTicketWork } from "../tickets.ts";
@@ -849,10 +857,19 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
           "no_media_provider",
           "No image generation key is configured. Add an OpenRouter or fal.ai key in Model keys.",
         );
+      const payer = provider.paidBy?.("image") ?? null;
+      if (payer) await needCredits(db, ctx.orgId, mediaCharge(payer, MEDIA_PRICES.image));
       const [img] = await provider.generateImage({ prompt: args.prompt, size: args.size });
       if (!img) throw new ToolError("media_failed", "No image was returned.");
-      await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, model)
-        values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, 'media_images', 1, ${img.costUsd ?? MEDIA_PRICES.image}, ${img.model ?? provider.id})`);
+      await recordMedia(
+        db,
+        ctx,
+        "media_images",
+        1,
+        img.costUsd ?? MEDIA_PRICES.image,
+        img.model ?? provider.id,
+        payer,
+      );
       const ext = img.contentType.includes("png")
         ? "png"
         : img.contentType.includes("webp")
@@ -903,14 +920,28 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
           "invalid_arguments",
           `${args.image} is ${image.contentType}, not a picture. Pass an image to animate.`,
         );
+      const payer = provider.paidBy?.("video") ?? null;
+      if (payer)
+        await needCredits(
+          db,
+          ctx.orgId,
+          mediaCharge(payer, (args.duration_s ?? 5) * MEDIA_PRICES.videoPerSecond),
+        );
       const video = await provider.generateVideo({
         prompt: args.prompt,
         durationS: args.duration_s,
         ...(image ? { image } : {}),
       });
       const seconds = video.durationS ?? args.duration_s ?? 5;
-      await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, model)
-        values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, 'media_video_seconds', ${seconds}, ${video.costUsd ?? seconds * MEDIA_PRICES.videoPerSecond}, ${video.model ?? provider.id})`);
+      await recordMedia(
+        db,
+        ctx,
+        "media_video_seconds",
+        seconds,
+        video.costUsd ?? seconds * MEDIA_PRICES.videoPerSecond,
+        video.model ?? provider.id,
+        payer,
+      );
       const bytes = await mediaBytes(video).catch(() => null);
       const path = await saveMedia(ctx, bytes, "mp4").catch(() => null);
       const shown = await keepForChat(
@@ -975,3 +1006,47 @@ function contentTypeOf(name: string) {
 
 /** Largest file a tool reads into memory as input. */
 const MAX_INPUT_BYTES = 25 * 1024 * 1024;
+
+/** What a workspace is charged for media Casama paid for: cost with markup (and OpenRouter's fee). */
+function mediaCharge(payer: MediaPayer, providerCostUsd: number) {
+  return payer === "openrouter"
+    ? cloudOpenRouterCharge(providerCostUsd)
+    : cloudCharge(providerCostUsd);
+}
+
+/** Refuses media on the server's key when a credit-gated workspace can't cover it (D-246). */
+async function needCredits(db: Database, orgId: string, chargeUsd: number) {
+  const [r] = await db.execute<{
+    credits: string | null;
+    unbilled: string;
+    gate: boolean | null;
+  }>(sql`
+    select
+      (select balance_after from public.credit_ledger where org_id = ${orgId}::uuid order by seq desc limit 1) as credits,
+      (select coalesce(sum(cost_usd), 0) from public.usage_ledger
+        where org_id = ${orgId}::uuid and billable and billed_at is null) as unbilled,
+      (select (limits->>'credit_gate')::boolean from public.entitlements
+        where org_id = ${orgId}::uuid order by created_at desc limit 1) as gate`);
+  if (!r?.gate) return;
+  if (Number(r.credits ?? 0) - Number(r.unbilled) < chargeUsd)
+    throw new ToolError(
+      "out_of_credits",
+      "The workspace doesn't have enough credits for this. Add credits or change plans in Billing.",
+    );
+}
+
+/** A usage row for generated media; billable with markup when Casama's key paid for it. */
+async function recordMedia(
+  db: Database,
+  ctx: ToolContext,
+  kind: "media_images" | "media_video_seconds",
+  quantity: number,
+  providerCostUsd: number,
+  model: string,
+  payer: MediaPayer | null,
+) {
+  await db.execute(sql`insert into public.usage_ledger (org_id, bot_id, run_id, kind, quantity, cost_usd, model, billable, meta)
+    values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid, ${kind}, ${quantity},
+            ${payer ? mediaCharge(payer, providerCostUsd) : providerCostUsd}, ${model}, ${payer != null},
+            ${JSON.stringify(payer ? { provider: payer, provider_cost_usd: providerCostUsd, key: "server" } : {})}::jsonb)`);
+}

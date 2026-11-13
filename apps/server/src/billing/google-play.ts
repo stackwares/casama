@@ -225,4 +225,23 @@ export class GooglePlayProvider implements BillingProvider {
     }
     return snap;
   }
+
+  async verifyConsumable(args: { productId: string; purchaseToken?: string }) {
+    if (!args.purchaseToken)
+      throw new BillingError("bad_purchase", "purchase_token is required for Google Play", 400);
+    const path = `/purchases/products/${encodeURIComponent(args.productId)}/tokens/${encodeURIComponent(args.purchaseToken)}`;
+    const p = await this.call<{
+      purchaseState?: number;
+      consumptionState?: number;
+      orderId?: string;
+    }>(path);
+    // 0 purchased, 1 cancelled, 2 pending.
+    if (p.purchaseState !== 0)
+      throw new BillingError("purchase_pending", "The purchase hasn't gone through yet", 409);
+    // Consuming lets the same pack be bought again; credits are keyed by the order, so a retry
+    // after consuming doesn't credit twice.
+    if (p.consumptionState !== 1)
+      await this.call(`${path}:consume`, { method: "POST", body: "{}" });
+    return { purchaseId: p.orderId ?? args.purchaseToken, revoked: false };
+  }
 }

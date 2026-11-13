@@ -27,6 +27,10 @@ class CreditPack {
     required  this.creditsUsd,
 
     required  this.web,
+
+     this.priceLabel,
+
+     this.storeProductIds,
   });
 
   @JsonKey(
@@ -77,6 +81,30 @@ class CreditPack {
 
 
 
+  @JsonKey(
+    
+    name: r'price_label',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? priceLabel;
+
+
+
+  @JsonKey(
+    
+    name: r'store_product_ids',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final Map<String, String>? storeProductIds;
+
+
+
 
 
     @override
@@ -84,14 +112,18 @@ class CreditPack {
       other.code == code &&
       other.name == name &&
       other.creditsUsd == creditsUsd &&
-      other.web == web;
+      other.web == web &&
+      other.priceLabel == priceLabel &&
+      other.storeProductIds == storeProductIds;
 
     @override
     int get hashCode =>
         code.hashCode +
         name.hashCode +
         creditsUsd.hashCode +
-        web.hashCode;
+        web.hashCode +
+        (priceLabel == null ? 0 : priceLabel.hashCode) +
+        storeProductIds.hashCode;
 
   factory CreditPack.fromJson(Map<String, dynamic> json) => _$CreditPackFromJson(json);
 

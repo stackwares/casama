@@ -88,13 +88,17 @@ Class | Method | HTTP request | Description
 [*AdminApi*](doc/AdminApi.md) | [**adminConnectionSettings**](doc/AdminApi.md#adminconnectionsettings) | **GET** /v1/admin/connections | How apps without their own sign-in connect (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminOrgs**](doc/AdminApi.md#adminorgs) | **GET** /v1/admin/orgs | Workspaces with their limits and spend
 [*AdminApi*](doc/AdminApi.md) | [**adminOverview**](doc/AdminApi.md#adminoverview) | **GET** /v1/admin/overview | Instance totals (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**adminPricing**](doc/AdminApi.md#adminpricing) | **GET** /v1/admin/pricing | Plans, credit packs and the usage markup (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminReplaceDataKeys**](doc/AdminApi.md#adminreplacedatakeys) | **POST** /v1/admin/encryption/replace-keys | Replace every data key on this server (instance owner), after a database leak; rows are resealed in the background
 [*AdminApi*](doc/AdminApi.md) | [**adminServices**](doc/AdminApi.md#adminservices) | **GET** /v1/admin/services | Configured providers and system health
 [*AdminApi*](doc/AdminApi.md) | [**adminSetAppConfig**](doc/AdminApi.md#adminsetappconfig) | **PUT** /v1/admin/app-config | Replace the remote app settings (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**adminUpdates**](doc/AdminApi.md#adminupdates) | **GET** /v1/admin/updates | Whether a newer Casama release exists
 [*AdminApi*](doc/AdminApi.md) | [**adminUsers**](doc/AdminApi.md#adminusers) | **GET** /v1/admin/users | Everyone on this instance
+[*AdminApi*](doc/AdminApi.md) | [**saveCreditPack**](doc/AdminApi.md#savecreditpack) | **PUT** /v1/admin/credit-packs/{code} | Create or change a credit pack
+[*AdminApi*](doc/AdminApi.md) | [**savePlan**](doc/AdminApi.md#saveplan) | **PUT** /v1/admin/plans/{code} | Create or change a plan; workspaces on it get the new limits right away
 [*AdminApi*](doc/AdminApi.md) | [**setAdminCloudModels**](doc/AdminApi.md#setadmincloudmodels) | **PUT** /v1/admin/models | Change the models Casama Cloud runs (owner only)
 [*AdminApi*](doc/AdminApi.md) | [**setAdminConnectionSettings**](doc/AdminApi.md#setadminconnectionsettings) | **PUT** /v1/admin/connections | Choose how apps without their own sign-in connect (owner only)
+[*AdminApi*](doc/AdminApi.md) | [**setBillingSettings**](doc/AdminApi.md#setbillingsettings) | **PATCH** /v1/admin/billing-settings | Change the markup on usage paid with Casama&#39;s keys
 [*AdminApi*](doc/AdminApi.md) | [**setOrgLimits**](doc/AdminApi.md#setorglimits) | **PATCH** /v1/admin/orgs/{id}/limits | Set a workspace&#39;s quotas
 [*AdminApi*](doc/AdminApi.md) | [**suspendOrg**](doc/AdminApi.md#suspendorg) | **POST** /v1/admin/orgs/{id}/suspend | Suspend a workspace: stops its computers and runs, keeps its data
 [*AdminApi*](doc/AdminApi.md) | [**unsuspendOrg**](doc/AdminApi.md#unsuspendorg) | **DELETE** /v1/admin/orgs/{id}/suspend | Lift a workspace&#39;s suspension
@@ -409,9 +413,12 @@ Class | Method | HTTP request | Description
  - [AddTeachStepRequest](doc/AddTeachStepRequest.md)
  - [AddUserFactsRequest](doc/AddUserFactsRequest.md)
  - [AddUserFactsRequestItemsInner](doc/AddUserFactsRequestItemsInner.md)
+ - [AdminCreditPack](doc/AdminCreditPack.md)
  - [AdminOrg](doc/AdminOrg.md)
  - [AdminOrgList](doc/AdminOrgList.md)
  - [AdminOverview](doc/AdminOverview.md)
+ - [AdminPlan](doc/AdminPlan.md)
+ - [AdminPricing](doc/AdminPricing.md)
  - [AdminService](doc/AdminService.md)
  - [AdminServiceList](doc/AdminServiceList.md)
  - [AdminUser](doc/AdminUser.md)
@@ -432,6 +439,7 @@ Class | Method | HTTP request | Description
  - [ApprovalResolvedEventPayload](doc/ApprovalResolvedEventPayload.md)
  - [AttachIntegrationRequest](doc/AttachIntegrationRequest.md)
  - [Autonomy](doc/Autonomy.md)
+ - [BillingSettings](doc/BillingSettings.md)
  - [BillingSource](doc/BillingSource.md)
  - [BillingSummary](doc/BillingSummary.md)
  - [BillingUsage](doc/BillingUsage.md)
@@ -779,10 +787,12 @@ Class | Method | HTTP request | Description
  - [RunStartedEvent](doc/RunStartedEvent.md)
  - [RunStartedEventPayload](doc/RunStartedEventPayload.md)
  - [RunStatus](doc/RunStatus.md)
+ - [SaveCreditPackRequest](doc/SaveCreditPackRequest.md)
  - [SaveDevicePlaceRequest](doc/SaveDevicePlaceRequest.md)
  - [SaveDeviceSourceRequest](doc/SaveDeviceSourceRequest.md)
  - [SaveDeviceSourceRequestKinds](doc/SaveDeviceSourceRequestKinds.md)
  - [SaveImportedMemoriesRequest](doc/SaveImportedMemoriesRequest.md)
+ - [SavePlanRequest](doc/SavePlanRequest.md)
  - [SaveTeachRequest](doc/SaveTeachRequest.md)
  - [SaveTeachResponse](doc/SaveTeachResponse.md)
  - [SavedCount](doc/SavedCount.md)

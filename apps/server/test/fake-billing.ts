@@ -203,6 +203,12 @@ export interface FakeBilling {
     rtdnToken: string;
     subs: Map<string, PlaySub>;
     acknowledged: string[];
+    /** One-time products (credit packs): purchase token → purchase, and the consumed tokens. */
+    products: Map<
+      string,
+      { productId: string; orderId: string; purchaseState: number; consumptionState: number }
+    >;
+    consumed: string[];
     add(
       token: string,
       sub: { productId: string; basePlanId: string; orgId?: string; state?: string },
@@ -245,6 +251,11 @@ export async function startFakeBilling(
   const accessTokens = new Set<string>();
   const playSubs = new Map<string, PlaySub>();
   const acknowledged: string[] = [];
+  const consumed: string[] = [];
+  const playProducts = new Map<
+    string,
+    { productId: string; orderId: string; purchaseState: number; consumptionState: number }
+  >();
   const modelCalls: Array<Record<string, unknown>> = [];
 
   let url = "";
@@ -417,6 +428,16 @@ export async function startFakeBilling(
           const s = playSubs.get(decodeURIComponent(m[2] as string));
           return s ? send(200, s) : send(404, { error: { code: 404 } });
         }
+        const pr = path.match(/purchases\/products\/([^/]+)\/tokens\/([^/:]+)(:consume)?$/);
+        if (pr) {
+          const token = decodeURIComponent(pr[2] as string);
+          const p = playProducts.get(token);
+          if (!p || p.productId !== decodeURIComponent(pr[1] as string)) return send(404, {});
+          if (!pr[3]) return send(200, p);
+          p.consumptionState = 1;
+          consumed.push(token);
+          return send(200);
+        }
         const a = path.match(/purchases\/subscriptions\/([^/]+)\/tokens\/([^/]+):acknowledge$/);
         if (a && req.method === "POST") {
           const token = decodeURIComponent(a[2] as string);
@@ -579,6 +600,8 @@ export async function startFakeBilling(
       rtdnToken: randomBytes(16).toString("hex"),
       subs: playSubs,
       acknowledged,
+      products: playProducts,
+      consumed,
       add(token, s) {
         const sub: PlaySub = {
           subscriptionState: s.state ?? "SUBSCRIPTION_STATE_ACTIVE",

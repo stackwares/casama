@@ -71,9 +71,12 @@ lib/src/model/action_rule_target.dart
 lib/src/model/add_teach_step_request.dart
 lib/src/model/add_user_facts_request.dart
 lib/src/model/add_user_facts_request_items_inner.dart
+lib/src/model/admin_credit_pack.dart
 lib/src/model/admin_org.dart
 lib/src/model/admin_org_list.dart
 lib/src/model/admin_overview.dart
+lib/src/model/admin_plan.dart
+lib/src/model/admin_pricing.dart
 lib/src/model/admin_service.dart
 lib/src/model/admin_service_list.dart
 lib/src/model/admin_user.dart
@@ -94,6 +97,7 @@ lib/src/model/approval_resolved_event.dart
 lib/src/model/approval_resolved_event_payload.dart
 lib/src/model/attach_integration_request.dart
 lib/src/model/autonomy.dart
+lib/src/model/billing_settings.dart
 lib/src/model/billing_source.dart
 lib/src/model/billing_summary.dart
 lib/src/model/billing_usage.dart
@@ -441,10 +445,12 @@ lib/src/model/run_started.dart
 lib/src/model/run_started_event.dart
 lib/src/model/run_started_event_payload.dart
 lib/src/model/run_status.dart
+lib/src/model/save_credit_pack_request.dart
 lib/src/model/save_device_place_request.dart
 lib/src/model/save_device_source_request.dart
 lib/src/model/save_device_source_request_kinds.dart
 lib/src/model/save_imported_memories_request.dart
+lib/src/model/save_plan_request.dart
 lib/src/model/save_teach_request.dart
 lib/src/model/save_teach_response.dart
 lib/src/model/saved_count.dart
