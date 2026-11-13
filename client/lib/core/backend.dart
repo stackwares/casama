@@ -378,6 +378,11 @@ class NotificationView {
   bool get isRequest =>
       kind == 'approval_request' || kind == 'approval' || kind == 'takeover';
 
+  /// Waits on the person: a request, a secret the bot asked for, a link to accept, or anything
+  /// sent as urgent. These get the in-app banner when they arrive while the app is open.
+  bool get needsAction =>
+      isRequest || kind == 'secret' || kind == 'link_exchange' || urgency == 'urgent';
+
   /// Attention rules (D-153): why a proactive message was sent, and whether it waited for the brief.
   final String? whyRule;
   final List<String> whyData;

@@ -41,6 +41,7 @@ import '../inbox/for_you.dart';
 import '../settings/profile_photo.dart';
 import '../../ui/glow_button.dart';
 import '../workspaces/spaces.dart';
+import '../inbox/in_app_alert.dart';
 import '../voice/phone_calls.dart';
 import '../voice/wake_word.dart';
 import '../../ui/mascot.dart';
@@ -203,7 +204,7 @@ class HomeShell extends ConsumerWidget {
     final inner = ref.watch(currentOrgProvider)?.suspended == true
         ? _SuspendedBanner(child: this.child)
         : this.child;
-    final child = IncomingCallBanner(child: inner);
+    final child = IncomingCallBanner(child: InAppAlertBanner(location: location, child: inner));
     // The wake word listens while the app is open (D-144).
     if (wakeWordSupported) ref.watch(wakeWordProvider);
     final dests = _destinations(context);

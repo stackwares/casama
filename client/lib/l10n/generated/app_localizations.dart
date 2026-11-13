@@ -1864,6 +1864,12 @@ abstract class AppLocalizations {
   /// **'Dismiss'**
   String get dismiss;
 
+  /// No description provided for @inAppAlertReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get inAppAlertReview;
+
   /// No description provided for @forBot.
   ///
   /// In en, this message translates to:

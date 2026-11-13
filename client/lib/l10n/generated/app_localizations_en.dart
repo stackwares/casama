@@ -1110,6 +1110,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dismiss => 'Dismiss';
 
   @override
+  String get inAppAlertReview => 'Review';
+
+  @override
   String get forBot => 'For bot';
 
   @override

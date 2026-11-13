@@ -357,6 +357,8 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationView>> {
       final current = state.value ?? const <NotificationView>[];
       if (current.any((c) => c.id == n.id)) return;
       state = AsyncData([n, ...current]);
+      // Something to act on arrived while the app is open: the banner over the app (Fix 16).
+      if (n.readAt == null && n.needsAction) ref.read(inAppAlertProvider.notifier).show(n);
       if (n.kind == 'approval' || n.kind == 'approval_request') ref.invalidate(approvalsProvider);
       if (n.kind == 'takeover') ref.invalidate(takeoversProvider);
     });
@@ -398,6 +400,22 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationView>> {
 }
 
 final notificationsProvider = AsyncNotifierProvider<NotificationsNotifier, List<NotificationView>>(NotificationsNotifier.new);
+
+/// The notification the in-app banner shows now (Fix 16): the latest one that needs the person,
+/// arrived live while the app is open. Every platform, push or not.
+class InAppAlert extends Notifier<NotificationView?> {
+  @override
+  NotificationView? build() => null;
+
+  void show(NotificationView n) => state = n;
+
+  /// Hides [id] (or whatever shows when null).
+  void dismiss([String? id]) {
+    if (id == null || state?.id == id) state = null;
+  }
+}
+
+final inAppAlertProvider = NotifierProvider<InAppAlert, NotificationView?>(InAppAlert.new);
 
 /// Phone calls ringing for this person now (D-135), refreshed when a `call` notification arrives.
 final ringingCallsProvider = FutureProvider<List<PhoneCall>>((ref) async {
