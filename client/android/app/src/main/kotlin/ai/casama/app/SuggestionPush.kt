@@ -59,7 +59,7 @@ class SuggestionPushReceiver : BroadcastReceiver() {
             Notification.Action.Builder(null, label, intent).build()
         }
         val notification = Notification.Builder(context, CHANNEL)
-            .setSmallIcon(context.applicationInfo.icon)
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(Notification.BigTextStyle().bigText(body))

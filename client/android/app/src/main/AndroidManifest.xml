@@ -29,6 +29,11 @@
         android:label="Casama"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Status-bar icon for FCM notifications: the white mascot silhouette, not the launcher
+             icon (its background turns into a white square). Source: android/notification_icon.svg. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
