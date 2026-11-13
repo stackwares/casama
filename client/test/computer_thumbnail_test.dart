@@ -6,6 +6,7 @@ import 'package:casama_app/features/chat/media/chat_pdf.dart';
 import 'package:casama_app/features/chat/media/chat_video.dart';
 import 'package:casama_app/features/chat/media/computer_thumbnail.dart';
 import 'package:casama_app/features/files/file_preview.dart';
+import 'package:casama_app/features/chat/media/media_kind.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -150,7 +151,8 @@ void main() {
       expect(backend.thumbnailRequests, ['/Users/me/Desktop/Passports/x.mp4']);
       expect(find.byKey(const Key('videoThumbnail')), findsNothing);
       expect(find.byType(SnackBar), findsNothing);
-      expect(find.text('x.mp4'), findsOneWidget);
+      // Where the system player plays videos (Linux, Windows) the card says so instead of the name.
+      expect(find.text(inlineVideoSupported ? 'x.mp4' : 'Open in your video player'), findsOneWidget);
 
       // Opening the chat again right away doesn't ask again.
       await tester.pumpWidget(const SizedBox());
