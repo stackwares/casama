@@ -1,12 +1,17 @@
 # Voice and calls
 
 Talk to your bots instead of typing. Dictate messages, have replies read aloud, call a bot live,
-and let a bot ring your phone when something needs you. Voice runs on your workspace's own provider
-keys.
+and let a bot ring your phone when something needs you.
+
+On Casama Cloud, voice runs on Casama's own keys and is paid from your
+[credits](/guide/usage#credits), so there are no keys to add and no voice providers to pick. If
+you're out of credits, dictation uses your device's own speech recognition instead. The rest of
+this section is for self-hosted servers, where voice runs on your workspace's own provider keys
+(or keys the server's admin set up for everyone).
 
 ## Which keys you need
 
-Add keys in **Settings** → **Model keys** → **Add key**.
+Add keys in **Settings** → **Model keys** → **Add Key**.
 
 | Feature                      | Needs                                                                             |
 | ---------------------------- | --------------------------------------------------------------------------------- |
@@ -16,8 +21,8 @@ Add keys in **Settings** → **Model keys** → **Add key**.
 | Bot rings your phone         | A live-call key (Gemini or OpenAI), plus push set up on the server for iOS and Android |
 | Wake word                    | No key: it runs on your device                                                     |
 
-Every minute, second or character of voice is recorded in [Usage](/guide/usage). The provider bills
-your own account.
+Every minute, second or character of voice is recorded in [Usage](/guide/usage). On your own keys,
+the provider bills your own account.
 
 ## Dictate a message
 
@@ -27,6 +32,9 @@ your own account.
 
 Dictation uses OpenAI (`gpt-4o-mini-transcribe`) or Deepgram (`nova-3`). Google's transcriber costs more once the transcript text is included, so it is not the default.
 
+If the dictation service fails or isn't available, the app falls back to your device's own speech
+recognition, where the device has one.
+
 ## Have a reply read aloud
 
 Open a bot message's actions and choose **Read aloud**. Audio is saved per message and voice, so
@@ -34,7 +42,10 @@ replaying it doesn't call the provider again.
 
 ## Choose a bot's voice
 
-1. Open **Bot settings** → **Voice**.
+On Casama Cloud, Casama chooses the voice providers, and this screen only holds **Tools on calls**
+(below).
+
+1. Open **Bot profile** → **Voice**.
 2. Pick a **Read-aloud provider**: Google, ElevenLabs, OpenAI, Cartesia or Fish Audio. Automatic uses Google when that key exists.
 3. Optionally enter a **Voice id** from that provider. Leave it empty for a default voice.
 4. Pick a **Dictation provider**: OpenAI or Deepgram.
@@ -49,9 +60,12 @@ server's own Google key when the workspace has none. **OpenAI Realtime** is used
 exists. The bot's voice on Gemini is one of Gemini's built-in voices (Kore by default).
 
 1. In a chat, tap **Start a voice call** (the phone icon in the header).
-2. Wait for **Live**, then talk. Use **Mute** and **Hang up** as on a phone call.
+2. The bot picks up and speaks first, like someone answering the phone: it says hi, by your name
+   when it knows it, and asks what it can do. Then talk. Use **Mute** and **Hang up** as on a
+   phone call.
 
-If the workspace has no live-call key, the call screen says so, with **Get a free key from Google**
+On Casama Cloud, calls are included and paid from credits; a workspace with no credits left sees
+the paywall instead. On a self-hosted server with no live-call key, the call screen says so, with **Get a free key from Google**
 (Google AI Studio) and **Add a Google AI key** (opens **Model keys** with Google picked). Only
 owners and admins can add keys.
 

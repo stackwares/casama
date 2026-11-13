@@ -190,7 +190,8 @@ Open **Settings → Admin console**. It has these tabs:
 | **Overview** | Totals such as bots, **Computers running** and **Personal computers online**; the Casama version and update notices |
 | **Users** | Every user, their workspaces and when they last signed in |
 | **Workspaces** | Each workspace's members and bots; **Edit quotas** (**Max bots**, **Monthly spend limit (USD)**); **Suspend** a workspace (its computers and bots stop, nothing is deleted) and **Lift suspension** |
-| **Services** | Which optional services are configured, and whether each is **OK**, **Down** or **Off** |
+| **Services** | Which optional services are configured, and whether each is **OK**, **Down** or **Off**. **App settings** sets minimum app versions, a maintenance notice, announcements and feature switches for every app connected to this server, without an app release. |
+| **Pricing** | With billing on: each plan's name, price label, limits and store products, and the credit packs. Saving a plan applies to every workspace on it straight away. |
 | **Abuse** | Suspicious activity on the server |
 
 Update notices appear only when the server sets `UPDATE_CHECK_URL`; otherwise the server never
@@ -213,6 +214,8 @@ See [Configuration](/self-hosting/configuration).
   workspace isn't available in the app or the CLI yet.
 - Joining by email domain needs a verified email address, and accepts members only.
 - Wrong invites are limited to 10 tries in 10 minutes per person (or address, when signed out).
+- On Casama Cloud, the plan's seats cap how many people a workspace can have. Free has one seat.
+  See [Usage, budgets and plans](/guide/usage#plans).
 - Signing in with SSO doesn't add anyone to a workspace. Invite people as usual.
 - SSO setup and audit log export have no screens in the app; use the API.
 

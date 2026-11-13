@@ -17,7 +17,7 @@ If you run your own server, provider setup (Docker, gVisor, E2B, Daytona) lives 
 | Your own computer | Bots you allow, through the desktop app. See [Your own computer](/guide/companion). | **This device** |
 
 A bot with no setting uses its private computer if it has one, otherwise the team computer. To
-pick a different one, open the bot's **Bot settings → Computer** and choose **Automatic** or a
+pick a different one, open the bot's **Bot profile → Computer** and choose **Automatic** or a
 specific computer.
 
 Workspace admins manage the team computer. Whoever manages a bot manages its private computer.
@@ -25,15 +25,18 @@ Bots never share a computer across workspaces.
 
 ## Create a private computer
 
-1. Open **Settings → Computers**.
+1. Open **Settings → Advanced → Computers**.
 2. Tap **New computer**.
 3. Choose the bot under **For bot** and give the computer a **Name**.
 4. Turn on **With a desktop** if you want a screen you can watch live. It uses more memory.
 5. Tap **Create**.
 
-From the same list, each computer's **More** menu offers **Live view** (desktop computers),
-**Switch to desktop** or **Switch to headless**, **Rename** and **Delete**. Deleting a computer
-also deletes its files, snapshots and checkpoints. The team computer has no **Delete** option.
+Each computer's card says what the machine is: whose it is, its system and size (for example
+`Ubuntu 24.04 · 1 CPU · 1 GB RAM · 10 GB disk`), a **Saved** pill when its files are kept while
+it's stopped, and when it was last used. From the same list, each computer's **More** menu offers
+**Manage**, **Restart**, **Reset…**, **Live view** (desktop computers), **Switch to Desktop** or
+**Switch to Headless**, **Rename** and **Delete**. Deleting a computer also deletes its files,
+snapshots and restore points. The team computer has no **Delete** option.
 
 ## What's on a computer
 
@@ -41,7 +44,7 @@ Every computer starts from Casama's image, based on Ubuntu 24.04:
 
 | Area | Included |
 | --- | --- |
-| Shell and tools | bash, git, curl, wget, jq, ripgrep, zip and unzip, nano, vim, OpenSSH client, build tools |
+| Shell and tools | bash, git, curl, wget, jq, ripgrep, zip and unzip, nano, vim, OpenSSH client, ffmpeg, build tools |
 | Languages | Node.js 24, Python 3 with pip and venv |
 | Documents | LibreOffice, pandoc, Poppler, qpdf and Tesseract, for the PDF, Word, Excel and PowerPoint skills |
 | Browser | Chromium, driven by the bot through agent-browser |
@@ -65,24 +68,29 @@ A **Desktop** computer adds a real screen that you can watch and control live, a
 desktop apps. On a desktop computer the bot's browser runs as a visible window, so when you take
 over you see exactly what the bot sees.
 
-To switch, tap **Switch to desktop** on the Screen tab, or use **Switch to desktop** or **Switch to
-headless** in the computer's **More** menu. A running computer restarts into the new profile, and
+To switch, tap **Switch to Desktop** on the Screen tab, or use **Switch to Desktop** or **Switch to
+Headless** in the computer's **More** menu. A running computer restarts into the new profile, and
 its files are kept.
 
 If a bot on a headless computer asks you to take over, for example to sign in, Casama switches that
-computer to the desktop profile for you and reopens the bot's current page in a visible window.
+computer to the desktop profile for you and reopens the bot's current page in a visible window. The
+next time it sleeps after the takeover, it goes back to headless, since a desktop uses more memory.
+A desktop you chose yourself stays a desktop.
 
 ## The computer panel
 
 Open a bot's computer in any of these ways:
 
-- **Computer** in the main navigation shows the team computer.
 - In a chat on a wide screen, tap **Show computer** at the far right of the header. The panel
   opens beside the chat.
-- In a chat on a phone or narrow window, open the **More** menu and tap **Computer**.
+- In a chat on a phone or narrow window, open the **More** menu and tap **Computer**. While the bot
+  is working on its computer, a computer button with a live dot also shows in the chat header.
+- From **Settings → Advanced → Computers**, choose **Manage** in a computer's menu.
 
-The panel shows the computer's name and state, with **Sleep** or **Wake up**, and four tabs:
-**Screen**, **Terminal**, **Files** and **Checkpoints**.
+The panel shows the computer's name and state, with **Sleep** or **Wake up**, and three tabs:
+**Screen**, **Files** and **Manage**. The **Terminal** is under **Advanced** (**Show the
+terminal**). While the computer is on, the header shows small CPU, memory and disk meters; disk
+turns amber at 80% and red at 90%, and tapping a meter opens **Manage**.
 
 On wide screens you can resize the side panel: drag its left edge. It stays between 360 px and 60%
 of the window, and the chat always keeps at least 420 px. Double-click the edge to reset it. The
@@ -106,9 +114,12 @@ seconds while the computer wakes, otherwise every 10 seconds, and again when you
 
 ## Sleep and wake
 
-A computer goes to sleep after 10 minutes with no tool calls, open terminals, running commands or
-live viewers. Sleeping saves the home folder (your files, the bot's workspace and its browser
-profile) to storage and stops the computer, so an asleep computer costs nothing to keep.
+A computer goes to sleep after 5 minutes with no bot working on it, no running commands and no one
+using it. Using it means typing or clicking in the terminal or live view while you're in the app;
+a live view or terminal left open in the background doesn't count. To pick a longer wait (15, 30
+or 60 minutes) for one computer, set **Goes to sleep after** under **Manage**. A longer wait costs
+more. Sleeping saves the home folder (your files, the bot's workspace and its browser profile) to
+storage and stops the computer, so an asleep computer costs nothing to keep.
 
 It wakes on its own the next time a bot needs it or you open the live view. You can also tap
 **Wake up** in the panel, or **Sleep** to put it to sleep now. Everything in the home folder comes
@@ -136,58 +147,93 @@ When a site needs you, for example a password or a two-step code, the bot can as
 You sign in yourself in the live view, and nothing you type reaches the bot. See
 [Take control](#take-control-and-hand-back).
 
-## Checkpoints and restore
+## Manage a computer
 
-A checkpoint saves the computer's home folder so you can undo a change. The bot saves one
-automatically before commands that destroy data, such as `rm -r` or `rm -f`, `git reset --hard`,
-`git clean -f`, force pushes, package uninstalls, `dd`, `mkfs` and `truncate -s 0`. Bots can also
-save one on purpose before risky work.
+The **Manage** tab is where you fix a computer, see what it costs and holds, and set when it
+sleeps. Looking at it never wakes the computer or keeps it awake; some parts only fill in while
+it's on.
+
+| Section | What it does |
+| --- | --- |
+| **Not working right?** | Fixes to try in order: **Restart** (about 20 seconds, nothing is lost), **Reset system** (a fresh system; `~/workspace` stays) and **Erase everything** (like new). |
+| **Restore points** | Saved copies of the home folder. Tap **Restore** on one, or **Save a restore point now**. |
+| **Storage** | What fills the disk: your files, apps and tools, caches, the browser and other. **Free up** removes caches only, never your files, tools, settings or sign-ins. |
+| **Running now** | Programs on the computer, busiest first. **Stop** ends one; the computer's own parts can't be stopped. |
+| **Goes to sleep after** | 5, 15, 30 or 60 minutes without use. |
+| **This month** | How long the computer was on, what it cost and a bar per day. |
+| **Used by** | The bots that use this computer. |
+| **History** | What happened, in sentences: woke up, went to sleep, restarted, reset, restore point saved, and who did it. |
+| **Download all files** | A zip of `~/workspace`, up to 1 GB. |
+
+A reset saves a "Before reset" restore point first (on by default) and shows what's kept and what's
+removed. Erasing also asks you to type the computer's name. The reset runs in the background and
+shows its steps; when it's done, **Undo** puts everything back from that restore point. Only the
+people who manage the bot (or admins, for the team computer) can reset it.
+
+When a computer breaks, the chat shows **Restart** and more fixes. A bot can also restart its own
+computer if it gets stuck.
+
+## Restore points
+
+A restore point (also called a checkpoint) saves the computer's home folder so you can undo a
+change. The bot saves one automatically before commands that destroy data, such as `rm -r` or
+`rm -f`, `git reset --hard`, `git clean -f`, force pushes, package uninstalls, `dd`, `mkfs` and
+`truncate -s 0`. Bots can also save one on purpose before risky work.
 
 To restore one:
 
-1. Open the computer panel and go to **Checkpoints**.
-2. Tap **Restore** next to the checkpoint.
+1. Open the computer panel and go to **Manage**.
+2. Under **Restore points**, tap **Restore** next to the one you want.
 3. Confirm. Files changed since then are replaced.
 
 Checkpoints also appear in the chat and run timeline with a **Restore** button.
 
-Each computer keeps its last 20 checkpoints or 7 days of them, whichever is fewer. Older ones are
-deleted.
+Each computer keeps its last 20 restore points or 7 days of them, whichever is fewer. Older ones
+are deleted.
 
 ## Live view
 
 Live view streams a desktop computer's screen to the app over WebRTC. Open it
-from the **Screen** tab (**Open live view**, or **Wake up and watch live** if it's asleep), from
+from the **Screen** tab (**Open Live View**, or **Wake Up and Watch Live** if it's asleep), from
 **Live view** in a computer's menu, or from a bot's request for help. Opening it wakes a sleeping
-computer, and watching keeps it awake.
+computer.
 
-On wide screens the live view plays right inside the side panel. Tap **Full screen** to expand it
-and **Back to the side panel** to return. The header shows the latency in milliseconds.
+The computer's screen comes first. A status chip in the header shows **Live**, **Screenshots**,
+**Connecting…** or **Paused**, with the latency while live; tap it for details. On wide screens
+the live view plays right inside the side panel. Tap **Full screen** to expand it and **Back to
+the side panel** to return. Turn a phone sideways for a bigger screen: the controls move into the
+black bars beside it.
 
-If your network blocks live video, the view falls back to screenshots and says **Screenshots (live
-video unavailable on this network)**.
+If your network blocks live video, the view falls back to **Screenshots**, which update about once
+a second.
 
-### Quick actions
+After 5 minutes without input, and with no bot working on the computer, the live view asks
+**Still watching?**. With no answer it shows **Paused to save power**, so the computer can sleep;
+**Resume** wakes it again. The stream also pauses while the app is in the background.
 
-Under the live status, in the side panel and full screen:
+### The dock
 
-| Action | What it does | Needs control |
-| --- | --- | --- |
-| **Copy** | Presses Ctrl+C on the computer and puts the copied text on your device's clipboard. | Yes |
-| **Paste** | Sends your device's clipboard to the computer and presses Ctrl+V. | Yes |
-| **Screenshot** | Saves or shares a screenshot from your device. | No |
-| **Keyboard** | Opens your phone's keyboard. Enter types Return on the computer. | Phones, yes |
+The controls sit in a dock at the bottom, in reach of your thumb. While you watch, it shows who
+has the screen and **Take Control**. While you're in control:
 
-While in control you can also turn on **Right-click on next tap** for touch screens.
+| Action | What it does |
+| --- | --- |
+| **Keyboard** | Opens your phone's keyboard. Enter types Return on the computer. Touch screens only. |
+| **Right-click on next tap** | Makes your next tap a right-click. Touch screens only. |
+| **Paste** | Sends your device's clipboard to the computer and presses Ctrl+V. |
+| **Copy** | Presses Ctrl+C on the computer and puts the copied text on your device's clipboard. |
+| **Hand Back** | Gives control back to the bot. |
+
+**More** (**⋯**) holds **Save Screenshot**, and **Teach a task** while you're in control.
 
 ## Take control and hand back
 
 At any time you can take the mouse and keyboard from the bot.
 
-1. In the live view, tap **Take control**. The status changes to **You're in control**.
+1. In the live view, tap **Take Control**. The status changes to **You're in control**.
 2. Do what you need to, such as signing in.
-3. Tap **Hand back**. Optionally add a **Note for the bot**, for example "I signed in, carry on".
-4. Confirm with **Hand back**.
+3. Tap **Hand Back**. Optionally add a **Note for the bot**, for example "I signed in, carry on".
+4. Confirm with **Hand Back**.
 
 While you're in control, the bot is paused. Its browser and desktop actions wait, and so do its
 shell and file commands. Nothing you type or see is sent to the bot. When you hand back, the bot
@@ -199,7 +245,7 @@ be in control at a time. Others see **Someone else is in control** and can only 
 ### When a bot asks for help
 
 A bot can ask you to take over, for example at a sign-in page or a CAPTCHA. You get a notification,
-and the chat shows the request with **Take control**. The live view shows "The bot asks: ..." with
+and the chat shows the request with **Take Control**. The live view shows "The bot asks: ..." with
 the reason. Take control and hand back as above, or tap **Dismiss** to decline. A request that no
 one answers expires after 24 hours.
 
@@ -221,7 +267,7 @@ them.
 A team computer has one screen. **Desktop users at once** (1 to 10, default 1) limits how many bots
 use desktop tools at the same time. When the screen is in use, other bots keep working with the
 shell, files and browser. Admins change it from the team computer's **More** menu in
-**Settings → Computers**.
+**Settings → Advanced → Computers**.
 
 ## Network and egress
 
@@ -254,7 +300,9 @@ casama computer restore <checkpoint-id>
 ## Limits
 
 - The 10 GB disk size isn't enforced yet on the Docker provider.
-- Checkpoints save the whole home folder each time rather than only what changed.
+- Restore points save the whole home folder each time rather than only what changed.
+- Personal computers (your own, through the desktop app) have no **Manage** tab. See
+  [Your own computer](/guide/companion).
 - Bots work from the screen's accessibility tree and page snapshots. Screenshots they take are saved
   as files for you and aren't sent to the model as images.
 - On E2B and Daytona, computers have their own internet access, so the egress proxy's private-range

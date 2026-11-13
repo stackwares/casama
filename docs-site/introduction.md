@@ -105,7 +105,8 @@ in a vault and are never shown to the model. See [Apps and connections](/guide/c
 
 Casama is licensed under Apache-2.0, except the `ee/` folder (enterprise features such as SAML
 single sign-on and audit-log export), which is source-available under the Casama Enterprise License
-and needs a license key in production. Telemetry is off unless you turn it on.
+and needs a license key in production. A self-hosted server sends no telemetry unless you turn it
+on.
 The code is on [GitHub](https://github.com/stackwares/casama), and contributions are welcome.
 
 ## Related

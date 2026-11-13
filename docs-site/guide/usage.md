@@ -11,17 +11,17 @@ set your own limits.
 2. Tap **Usage**.
 3. Pick a period: **Today**, **This week**, **This month** or **This year**.
 
-The screen shows:
+On Casama Cloud, a credits meter sits at the top (see [Credits](#credits)). The screen shows:
 
 | Section | What it shows |
 | --- | --- |
-| **Spend**, **Tokens in**, **Tokens out**, **Runs** | Totals for the period |
-| **Spend by day** | Spend per day (per month when you pick **This year**) |
-| **By bot** | Spend per bot. **Not tied to a bot** covers usage without one. |
-| **By model** | Spend per model. **Computers and other** covers non-model usage. |
-| **Everything metered** | Each metered kind: **Model input**, **Model output**, **Cloud computer time**, **Live view** and **Read aloud** |
+| **Spend**, **Runs** | Totals for the period, in dollars |
+| **Spend by Day** | Spend per day (per month when you pick **This year**) |
+| **By Bot** | Spend per bot. **Not tied to a bot** covers usage without one. |
+| **By Model** | Spend per model. **Computers and other** covers non-model usage. |
+| **Everything Metered** | Each metered kind, such as **AI models** (input and output together), **Cloud computer time**, **Live view** and **Read aloud** |
 
-To keep a copy, tap **Export CSV** or **Export JSON**.
+To keep a copy, tap **Export CSV**. Token counts and **Export JSON** are under **Advanced**.
 
 ::: tip
 Costs are estimates from token counts and published prices. Your model provider's bill is the
@@ -39,7 +39,7 @@ before the command: `casama --json usage`.
 
 ## Ask a bot about your usage
 
-1. On the **Usage** screen, tap **Ask a bot about this**.
+1. On the **Usage** screen, tap **Ask a Bot About This**.
 2. Under **Which bot should look at this?**, pick a bot.
 
 Casama starts a new chat with that bot and sends a summary of the period. The bot can also check
@@ -105,52 +105,98 @@ failed with a clear message and a stable code:
 | `max_steps_exceeded` | The run used all its steps |
 | `wall_time_exceeded` | The run ran out of time |
 | `stuck_looping` | The bot kept failing the same way and stopped |
-| `no_model_configured` | The bot has no model. Add a model key and pick a model in **Bot settings**. |
+| `no_model_configured` | The bot has no model. Add a model key and pick a model in **Bot profile**. |
 
 ## Casama Cloud plans and credits
 
 On Casama Cloud, each workspace has a plan. Open **Settings → Billing** to see it.
 
 - **Your plan** shows the plan, how it's billed (**Billed on the web**, **Billed through the App
-  Store** or **Billed through Google Play**), when it renews or ends, and your **Credits**
-  balance.
+  Store** or **Billed through Google Play**), when it renews or ends, your **Credits** balance and
+  the credits meter.
 - **Plans** lists what each plan includes: a number of bots, computer hours a month and credits a
   month.
-- **This month** lists billable usage: cloud computers, live view and model credits.
+- **Credits** (paid plans only) lists the credit packs you can buy.
+- The usage row shows what bots used this month and what it cost. Each charge, with the server it
+  came from, is under **Advanced**.
 
 Owners and admins can change plans and buy credits. Members see the plan and usage.
 
-### What credits pay for
+### Plans
 
-Credits pay for what Casama Cloud provides: cloud computer time, live view time, live voice calls
-(when the workspace has no Gemini or OpenAI key of its own, at Google's price), and model calls
-through [Cloud Connect](/guide/cloud-connect). Usage is deducted from the balance every minute.
-Model calls on your own model keys are never charged; you pay your provider directly.
+| Plan | Price | Credits a month | Bots | Computers | Computer hours a month | Seats |
+| --- | --- | --- | --- | --- | --- | --- |
+| **Free** | $0 | $1 | 2 | 1 | 5 | 1 |
+| **Plus** | $15 a month or $150 a year | $5 | 5 | 2 | 30 | 2 |
+| **Pro** | $39 a month or $390 a year | $10 | 20 | 5 | 100 | 5 |
+| **Max** | $149 a month or $1,490 a year | $50 | 50 | 10 | 400 | 10 |
 
-Each plan adds its included credits once a month. Purchases and credits belong to the workspace,
-not to a person.
+Yearly plans cost ten months' price. Each plan also caps what its bots can spend on Casama's own
+model key in one day. Plans can change, so **Billing** always shows the current ones.
+
+A seat is a member of the workspace. Free has one seat, the owner, so inviting someone needs a paid
+plan. One person can own up to five workspaces on Casama Cloud.
+
+### Credits
+
+Credits are dollars: 1 credit = $1. The credits meter at the top of **Usage** and on the **Billing**
+plan card shows your balance (for example **Credits: $7.80**), a bar of how much of this month's
+credits you've used, and roughly how many more runs that buys at your usual cost. The bar turns
+amber at 80% and red when nothing is left.
+
+Credits pay for everything Casama Cloud runs for you: AI models on Casama's key, cloud computer
+time, live view, live calls, images and video, read-aloud and dictation, and apps connected
+through Casama's own connector account. Usage is deducted from the balance every minute. Every run
+on Casama Cloud needs credits, because even a short run can use some of these.
+
+Credits belong to the workspace, not to a person, and they don't last forever:
+
+| Credits | Last until |
+| --- | --- |
+| A month's included credits | The end of the following month |
+| Credit packs and rewards | 12 months |
+
+Credits that run out soonest are spent first. Only your oldest Free workspace gets Free's monthly
+credits.
 
 ### Paywalls
 
-When a workspace runs out of something its plan includes, the app shows **Upgrade your plan**
-with a short reason. Tap **See plans** to open **Billing**, or **Not now**. This happens when:
+When a workspace runs out of something its plan includes, the paywall opens on top of whatever
+you were doing, with the reason (for example "Your plan allows 2 bots.") and the paid plans side
+by side. Close it to go back to where you were, such as a half-filled **New bot** sheet. Members
+are asked to get an owner or admin to upgrade. This happens when:
 
 - The credit balance is at or below zero. New runs are refused until you add credits or change
   plans.
 - The workspace used its computer hours for the month.
-- Creating another bot or computer would go over the plan's limit.
+- Creating another bot or computer, or adding another member, would go over the plan's limit.
+
+On the Free plan, **Billing** also shows an **Upgrade to Pro** banner that opens the paywall.
 
 ### Where you can buy
 
 | Where you use the app | Subscriptions | Credit packs |
 | --- | --- | --- |
-| iPhone, iPad and the Mac App Store app | In-app purchase. In the US, a web checkout link too. | Not sold here |
-| Android | Google Play | Not sold here |
+| iPhone, iPad and the Mac App Store app | In-app purchase. In the US, a web checkout link too. | In-app purchase |
+| Android | Google Play | Google Play |
 | Web, Windows, Linux and the Mac app from the web | Web checkout | Web checkout |
 
-To manage or cancel a subscription, tap **Manage subscription**. If you bought on a phone and
-reinstalled, tap **Restore purchases**. Cancelling a store subscription keeps access until the end
+Credit packs come in $10 and $25 of credits, for workspaces on a paid plan. On the web they cost
+their face value. In the App Store and Google Play they cost a little more, because the stores keep
+a share.
+
+To manage or cancel a subscription, tap **Manage Subscription**. If you bought on a phone and
+reinstalled, tap **Restore Purchases**. Cancelling a store subscription keeps access until the end
 of the paid period; a refund ends it.
+
+### Invite friends
+
+On Casama Cloud, everyone has a personal invite code and link under **Settings → Invite Friends**.
+When a friend signs up with your code and finishes their first chat, you each get $2 of free usage
+as credits. You can earn rewards for up to 20 friends.
+
+A friend who signed up without your link can still enter your code under **Got a Friend's
+Code?**, within a week of signing up. Self-hosted servers don't show invites.
 
 ## Self-hosting: no paywall
 
@@ -166,6 +212,7 @@ owner sets still apply.
   CLI.
 - `casama usage` supports `day` and `month` only. Use the app for weeks and years.
 - Usage costs are estimates, not invoices.
+- Prices are in US dollars only.
 
 ## Related
 

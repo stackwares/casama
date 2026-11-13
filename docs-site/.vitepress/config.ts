@@ -61,6 +61,7 @@ export default defineConfig({
           { text: "Pages", link: "/guide/pages" },
           { text: "Voice and calls", link: "/guide/voice" },
           { text: "Chat apps", link: "/guide/chat-apps" },
+          { text: "Appearance and themes", link: "/guide/appearance" },
         ],
       },
       {

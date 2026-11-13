@@ -9,35 +9,41 @@ stored encrypted, and each bot gets only the connections you give it.
 Casama ships with a catalog of apps that run their own hosted MCP servers, so you connect them
 directly with no middleman. Owners and admins connect apps for the workspace.
 
-1. Open **Settings** → **Integrations**. The screen is called **Apps**.
+1. Open **Settings** → **Integrations**. The screen is called **Apps**. On a phone, the round
+   button beside the tabs opens it too.
 2. Pick the **Browse** tab, then search or filter by category.
 3. Tap an app. The connect sheet shows what bots can do with it.
 4. Connect it one of these ways, depending on the app:
-   - **Continue with** the app: one-click sign-in. Your browser opens the vendor's sign-in page.
-     Approve access there and the sheet updates by itself.
+   - **Continue with** the app: one-click sign-in. The vendor's sign-in page opens: on iPhone and
+     Android in the system's sign-in sheet, which closes by itself when you're done; on computers
+     and the web in your browser. Approve access there and the sheet updates by itself.
    - **API key**: follow the steps on the sheet, which link to the vendor's key page. Casama tests
      the key when you save it.
    - No sign-in: some apps work as soon as you add them.
 5. Under **Which bots can use it?**, pick the bots, then tap **Done**.
 
 The connection now shows on the **Connected** tab. You can also give a connection to a bot later
-from the bot's settings: **Bot settings** → **Integrations for this bot**. Its tools show up the next
+from the bot's settings: **Bot profile** → **Integrations for this bot**. Its tools show up the next
 time the bot runs.
 
 ### The catalog
 
 Each app tile shows how it connects: **One click**, **API key**, **No sign-in** or **Needs setup**.
 
-| Category     | Apps                                                                                  |
-| ------------ | ------------------------------------------------------------------------------------- |
-| Developer    | GitHub, Sentry, Linear, Vercel, Supabase, Neon, Cloudflare Docs, Context7              |
-| Data         | PostHog, Hugging Face, Airtable, Exa                                                   |
-| Productivity | Notion, Jira & Confluence, Asana, monday.com, Box, Slack                               |
-| Google       | Gmail, Google Calendar, Drive, Docs, Sheets, Slides, Contacts                          |
-| Payments     | Stripe                                                                                 |
-| Design       | Figma, Webflow                                                                         |
-| Sales        | HubSpot, Intercom                                                                      |
-| Automation   | Zapier, Composio, Pipedream                                                            |
+The **Popular** row leads with everyday apps: Gmail, Google Calendar, Google Drive, Google Docs,
+Google Sheets, Notion, Slack and Zapier (the Google apps only where this server can connect
+Google). Then the categories, in this order:
+
+| Category        | Apps                                                                                  |
+| --------------- | ------------------------------------------------------------------------------------- |
+| Google          | Gmail, Google Calendar, Drive, Docs, Sheets, Slides, Contacts                          |
+| Productivity    | Notion, Slack, Asana, monday.com, Box, Jira & Confluence                               |
+| Data & search   | Exa, Airtable                                                                          |
+| Automation      | Zapier, Composio, Pipedream                                                            |
+| Design          | Figma, Webflow                                                                         |
+| Sales & support | HubSpot, Intercom                                                                      |
+| Payments        | Stripe                                                                                 |
+| Developer       | GitHub, Linear, Sentry, Vercel, Supabase, Neon, Cloudflare Docs, Context7, PostHog, Hugging Face |
 
 Cloudflare Docs works without signing in. Hugging Face, Context7 and Exa work without signing in
 and also take an optional API key.
@@ -103,7 +109,7 @@ Tap a connection on the **Connected** tab to open its page. From there you can:
 | Level             | What happens                                                                        |
 | ----------------- | ----------------------------------------------------------------------------------- |
 | **Read-only**     | Runs on its own.                                                                    |
-| **Makes changes** | Asks first when the bot has read something untrusted, per the bot's autonomy level. |
+| **Makes changes** | Under the default autonomy, runs on its own, but asks first after the bot has read something untrusted, since it could send data out. Asks every time under **Ask before acting**. |
 | **Always asks**   | Waits for you every time.                                                           |
 
 - **Disconnect**. Bots lose its tools right away, and the saved sign-in is deleted.
@@ -178,7 +184,7 @@ Connect any MCP server, an OpenAPI spec or another AI agent.
 4. Tap **Save**, then give it to bots from its page or from **Integrations for this bot**.
 
 MCP servers can use Streamable HTTP or legacy SSE. For OpenAPI, the secret's name refers to a
-secret from **Settings** → **Secrets** and is sent as a bearer token.
+secret from **Settings** → **Advanced** → **Secrets** and is sent as a bearer token.
 
 A bot can also add an MCP server for itself, see [Bots that change their own setup](/guide/bots#bots-that-change-their-own-setup).
 
@@ -190,7 +196,7 @@ MCP servers that run on your own computer are added from the desktop app. See
 A secret is a token or password a bot can put into a request without ever seeing it. Each secret
 is sent only to the hosts you allow.
 
-1. Open **Settings** → **Secrets** and tap **Add secret**.
+1. Open **Settings** → **Advanced** → **Secrets** and tap **Add secret**.
 2. Choose **Key or password**.
 3. Enter a **Name** in uppercase, such as `GITHUB_TOKEN`, and the **Value**.
 4. Under **Allowed hosts**, list where it may go, comma-separated, such as `api.github.com`.
@@ -223,7 +229,7 @@ exists, only an admin can replace it.
 
 Bots can sign in to sites that use two-step codes, without holding the two-step key.
 
-1. Open **Settings** → **Secrets** → **Add secret** and choose **Sign-in code**.
+1. Open **Settings** → **Advanced** → **Secrets** → **Add secret** and choose **Sign-in code**.
 2. Paste the site's **Two-step key or otpauth:// link**. On a phone, tap **Scan QR code** instead.
    The name is suggested from the site.
 3. Add the **Allowed hosts** and tap **Save**.
@@ -265,7 +271,7 @@ own routines.
 
 Bots can buy single calls to paid data APIs (places, emails, SEO and more) through Treg's catalog.
 
-1. Open **Settings** → **Model keys** → **Add key**.
+1. Open **Settings** → **Model keys** (**Service keys** on Casama Cloud) → **Add Key**.
 2. Choose **Treg** as the **Provider** and paste your Treg key.
 
 A bot searches the catalog, and each result shows its price. Buying a call asks first under the
@@ -276,7 +282,7 @@ aren't charged.
 
 ## Plugins
 
-A plugin bundles skills and MCP tools in one install from GitHub. Open **Bot settings** →
+A plugin bundles skills and MCP tools in one install from GitHub. Open **Bot profile** →
 **Plugins** to add one. Plugin servers run on the bot's computer, never on Casama's servers. To
 build one, see [Building plugins](/develop/plugins).
 

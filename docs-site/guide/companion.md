@@ -10,7 +10,7 @@ until you turn it on.
 
 ## Turn it on
 
-1. In the desktop app, open **Settings → Use this computer for bots**.
+1. In the desktop app, open **Settings → Advanced → Use this computer for bots**.
 2. Tap **Use this computer for bots** to pair this machine with your account.
 3. Under **What bots may do**, turn on only the capabilities you want (see below).
 4. Under **Shared folders**, tap **Add a folder** and pick each folder bots may reach.
@@ -22,7 +22,17 @@ or **Off**.
 
 Allowing a bot makes this computer that bot's computer, so its commands, files and browsing happen
 here from then on. Unchecking it sends the bot back to its usual computer. The computer appears in
-your computer lists as **This device**.
+your computer lists as **This device**, with its system (for example `macOS 26.2 · This device`)
+and what bots may use on it.
+
+### In the app
+
+From any of your devices, the computer's panel shows **Connected** or **Offline** instead of awake
+or asleep. While it's connected you see a screenshot that refreshes every 5 seconds, and **Files**
+for your shared folders. You can open, play and list files there yourself, without a bot; changing
+files still needs a bot you allowed. The panel offers only what works on your own computer, so
+there's no live view, terminal, restore points or sleep. When it's offline, it says to open Casama
+on that computer and turn the setting on.
 
 To stop for good, tap **Stop using this computer and unpair it** at the bottom of the screen.
 
@@ -84,6 +94,8 @@ How it works:
   Progress shows in the bot's timeline, and cancelling the run cancels the call.
 - If your computer is offline, the bot gets a clear error and the server stays connected for next
   time.
+- Bots can use local MCP servers from any device, including phones and the web, while this
+  computer is online. Adding one works only in the desktop app.
 
 For hosted MCP servers and connecting AI apps to Casama, see [MCP](/guide/mcp).
 
@@ -130,7 +142,7 @@ sees them.
 
 ## Watched folders and activity
 
-Two related features live under **Settings → Device connections**:
+Two related features live under **Settings → Advanced → Device connections**:
 
 - **Watched folders**: a new file in a folder you pick can start a routine, such as "file new PDFs
   in Downloads". The app waits until the file stops growing and skips partial downloads and hidden
@@ -143,7 +155,8 @@ Two related features live under **Settings → Device connections**:
 
 iMessage has no bot API, so your own Mac does the work.
 
-1. On your Mac, in **Settings → Use this computer for bots**, turn on **Messages (iMessage)**.
+1. On your Mac, in **Settings → Advanced → Use this computer for bots**, turn on **Messages
+   (iMessage)**.
 2. Give Casama Full Disk Access in macOS System Settings, so it can read your Messages history.
 3. Connect an iMessage chat app on the bot. See [Chat apps](/guide/chat-apps).
 

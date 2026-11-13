@@ -26,7 +26,7 @@ docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env
 
 `casama selfhost down` stops the stack but leaves running bot computers alone, because the
 supervisor creates them outside Compose. After the next `up`, the worker archives and stops any that
-sat idle for 10 minutes.
+sat idle for 5 minutes.
 
 ::: danger Don't delete the volumes
 `docker compose down -v` deletes the database, computer archives and certificates. The CLI never
@@ -48,17 +48,20 @@ passes `-v`.
    ```
 
    This runs `git pull --ff-only` in the checkout, then `./install.sh`. The installer keeps
-   `infra/compose/.env`, adds any settings the new release introduced, pulls and rebuilds the images,
-   applies new database migrations and restarts the services that changed.
+   `infra/compose/.env`, adds any settings the new release introduced, rebuilds the images (or, if
+   you installed with `--pull`, pulls the published ones for `CASAMA_VERSION`), applies new database
+   migrations and restarts the services that changed. A server pinned to one image tag stays on it:
+   run `./install.sh --pull` (or `--pull <tag>`) to move it.
 
 3. Check the result with `casama selfhost status` and the admin console.
 
 `casama selfhost upgrade` runs the installer with no options. If you installed with
-`--with-desktop`, `--monitoring` or `--web`, upgrade by hand instead so those parts are rebuilt too:
+`--with-desktop`, `--monitoring`, `--web` or `--search`, upgrade by hand instead so those parts are
+updated too:
 
 ```sh
 git pull --ff-only
-./install.sh --with-desktop --monitoring --web
+./install.sh --with-desktop --monitoring --web --search
 ```
 
 The installer doesn't rebuild an existing web image. After an upgrade with `--web`, rebuild it:
@@ -74,6 +77,9 @@ Notes:
   order. They're tracked in `public.casama_migrations`.
 - Running computers keep the image they started with. They pick up the new image the next time
   they sleep and wake.
+- Runs waiting for an approval, a key or a takeover pick up again after the upgrade. A run whose
+  recorded steps no longer match the new code ends as failed, with a note that Casama was updated
+  while it waited.
 - If `git pull --ff-only` fails, you have local changes to tracked files (for example an edited
   `docker-compose.yml`). Commit them on a local branch or stash them, then try again.
 
@@ -326,7 +332,7 @@ docker ps --filter name=casama-c-
 ```
 
 Set the API and worker's detail with `LOG_LEVEL` (see
-[Advanced settings](/self-hosting/configuration#advanced-settings)). For run-level traces, use
+[Telemetry and observability](/self-hosting/configuration#telemetry-and-observability)). For run-level traces, use
 Langfuse or an OpenTelemetry collector (see
 [Telemetry and observability](/self-hosting/configuration#telemetry-and-observability)).
 
@@ -386,8 +392,9 @@ computer starts in seconds instead of booting. A new computer with the default s
 the pool refills after each claim and every minute. Desktop and custom-size computers always start
 cold. Each pool member uses memory while it waits. It works with the Docker provider only.
 
-**Idle computers.** The worker archives computers to object storage and stops them after 10 minutes
-without activity, so only computers in use take memory.
+**Idle computers.** The worker archives computers to object storage and stops them after 5 minutes
+without activity, so only computers in use take memory. Open terminals, running commands and live
+viewers keep a computer awake.
 
 ### Run computers on a separate host
 

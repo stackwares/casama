@@ -10,7 +10,7 @@ relevant.
 | What it holds | Short notes: facts, preferences, summaries of past work | Your documents, split into passages |
 | Where it comes from | The bot writes it as you chat | You add sources; Casama reads them |
 | How the bot uses it | The most relevant notes are in every run | The bot searches it when a question calls for it, and cites the source |
-| Where to manage it | **Memory** | **Bot settings** → **Knowledge** |
+| Where to manage it | **Memory** | **Bot profile** → **Knowledge** |
 
 ## What bots remember
 
@@ -46,7 +46,7 @@ recall matches words only. ChatGPT plan sign-in doesn't provide embeddings.
 ## View and edit memory
 
 1. Open a bot's chat and select **More** (the **…** button) → **Memory**. You can also open it
-   from **Bot settings** → **Memory**.
+   from **Bot profile** → **Memory**.
 2. Each memory shows its kind. Open a memory's menu for:
    - **Pin** or **Unpin**: pinned memories are always in the bot's context.
    - **Edit**: change the text. The bot uses the new version the next time it's relevant.
@@ -66,6 +66,11 @@ casama memory list Ada --search "timezone"
 
 Bot memory belongs to one bot. **About you** belongs to you, and every bot you use reads it, in
 every workspace. Open it from the card at the top of **Settings**.
+
+Your profile photo is set here too: tap it to **Take a Photo**, **Choose a Photo** or **Remove
+Photo**. If you signed in with Google, your Google photo is copied the first time, and **Use My
+Google Photo** brings it back. Your photo shows on your avatar and in the workspace's member
+list.
 
 | Field | Where bots use it |
 | --- | --- |
@@ -129,7 +134,7 @@ Deleting your account deletes each bot's whole Honcho session.
 
 Give a bot documents to search and it answers from them and names the source.
 
-1. Open **Bot settings** → **Knowledge**, then **Add knowledge**.
+1. Open **Bot profile** → **Knowledge**, then **Add knowledge**.
 2. Choose what to add:
    - **Files**: select **Choose files** and pick PDF, Word (`.docx`), Markdown, HTML, CSV or text
      files, up to 50 at a time.

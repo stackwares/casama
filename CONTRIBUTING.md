@@ -20,7 +20,7 @@ how to get set up, how the code is organized, the rules every change follows, an
 | Docker                                | recent                                  | Supabase, computers, the self-host stack   |
 | Supabase CLI                          | recent                                  | Local Postgres, Auth, Realtime and Storage |
 | Dart                                  | 3 (stable)                              | CLI, SDK, computerd                        |
-| Flutter                               | stable                                  | The app                                    |
+| Flutter                               | 3.50 (Dart 3.14)                        | The app                                    |
 | PostgreSQL 17 with pgvector and pgTAP | 17                                      | Server tests start a throwaway database    |
 
 On macOS: `brew install node pnpm supabase/tap/supabase postgresql@17 pgvector pgtap`, plus

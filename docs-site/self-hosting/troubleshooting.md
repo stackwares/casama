@@ -130,6 +130,15 @@ codes and password resets don't.
 [Email](/self-hosting/configuration#email)), then `casama selfhost up`. Check delivery problems in
 `casama selfhost logs auth`.
 
+### Email links open a page that doesn't exist
+
+**Cause:** Older compose files built Auth's links as `<address>/verify`, but Auth is served under
+`/auth/v1`. Or the links land on the API's address when you expected your web app.
+
+**Fix:** Upgrade: the bundled compose file now sends links to `<address>/auth/v1/verify`. To land
+people on your web app after they open a link, set `AUTH_SITE_URL` to its address (see
+[Email](/self-hosting/configuration#email)), then `casama selfhost up`.
+
 ### Invites show a code instead of sending an email
 
 **Cause:** Neither SMTP (`SMTP_HOST`) nor Resend (`RESEND_API_KEY`) is set, so Casama can't send email.
@@ -185,21 +194,24 @@ in `CORS_ORIGINS`.
 
 ### OAuth connections, hosted MCP or agent-to-agent calls return 502 or the web app
 
-**Cause:** Caddy forwards only some paths to the API: `/v1`, `/hooks`, `/connect`, `/telemetry`,
-`/openapi.json`, `/docs`, `/healthz` and `/readyz`. The API also serves `/oauth/*` (the
-redirect target for app connections), `/mcp`, `/a2a/*`, `/links/*`, `/.well-known/*` and
-`/telephony/*`. If your `infra/compose/selfhost/Caddyfile` doesn't list those, those requests go to
-the web app instead.
+**Cause:** Caddy forwards only the paths in the `@api` matcher of
+`infra/compose/selfhost/Caddyfile` to the API; everything else goes to the web app. Caddyfiles from
+before November 13, 2026 left out `/oauth/*` (the redirect target for app connections), `/mcp`,
+`/a2a/*` and `/links/*`. The current one still leaves out `/telephony/*`, which phone calls need
+when you turn them on.
 
-**Fix:** Add the missing paths to the `@api` matcher in `infra/compose/selfhost/Caddyfile`, for
-example:
-
-```text
-@api path /v1/* /hooks/* /connect/* /telemetry/* /openapi.json /docs /docs/* /healthz /readyz /oauth/* /mcp /mcp/* /a2a/* /links/* /.well-known/* /telephony/*
-```
-
-Then restart Caddy:
+**Fix:** Upgrade (`casama selfhost upgrade`), or add the missing paths to the `@api` matcher
+yourself, for example `/oauth/* /mcp /mcp/* /a2a/* /links/*`, plus `/telephony/*` if you use phone
+calls. Then restart Caddy:
 `docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env restart caddy`.
+
+### Signed-out requests get "rate_limited" behind a tunnel
+
+**Cause:** Behind a tunnel on the same machine (Cloudflare Tunnel, for example), every request
+reaches Caddy from the tunnel's address, so all signed-out callers share one rate limit.
+
+**Fix:** Set `TRUSTED_CLIENT_IP_HEADER` to the header that carries the caller's real address
+(`cf-connecting-ip` for Cloudflare), then `casama selfhost up`.
 
 ## Computers
 
@@ -218,18 +230,27 @@ remove `DEFAULT_PROVIDER`.
 
 **Cause:** Common ones:
 
-- The computer image is missing. The headless image is built by the installer; the desktop image
-  only with `--with-desktop`.
+- The computer image is missing. The installer builds (or with `--pull`, downloads) the headless
+  image; the desktop image only with `--with-desktop`.
 - `SANDBOX_RUNTIME=runsc` is set but gVisor isn't installed or registered with Docker.
 - The host is out of memory or disk.
 
 **Fix:**
 
-1. Check the images: `docker images | grep casama/computer`. Build the desktop one with
+1. Check the images: `docker images | grep computer-`. Get the desktop one with
    `./install.sh --with-desktop`.
 2. Check `docker info | grep -i runsc`. If it's missing, set `SANDBOX_RUNTIME=` (empty) and run
    `casama selfhost up`, or install gVisor.
 3. Check `free -h` and `df -h`, and the supervisor's logs.
+
+### "The computer could not be reached"
+
+**Cause:** The API answers `503` with `computer_unavailable` when it can't reach a computer, for
+example while it's stopping, restarting or waking, or when the supervisor is down. A personal
+computer whose desktop app isn't connected answers `409` with `device_offline` instead.
+
+**Fix:** Wait a moment and try again. If it keeps happening, check `casama selfhost logs supervisor`
+and `docker ps --filter name=casama-c-`.
 
 ### A computer can't reach a website
 
@@ -263,7 +284,7 @@ providers, rebuild your templates or snapshots from the new images.
 ### Many old computer containers are still running
 
 **Cause:** The supervisor creates computers outside Compose, so `casama selfhost down` leaves them.
-The worker stops idle computers after 10 minutes, but only while it's running.
+The worker stops idle computers after 5 minutes, but only while it's running.
 
 **Fix:** Start the stack again with `casama selfhost up`. To see them: `docker ps --filter name=casama-c-`.
 
