@@ -172,7 +172,7 @@ it creates a routine without asking you first. The routine's results come back t
 with a notification. In the thread, a run started by a routine shows as **Routine "…" ran**
 instead of a message from you.
 
-Routines made in Settings post to your latest chat with that bot. See
+Routines made in Settings, and morning briefs, post to your **General** chat with that bot. See
 [Routines](/guide/routines).
 
 ## Search
