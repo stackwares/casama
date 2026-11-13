@@ -220,12 +220,9 @@ const AlertKind = z.enum(["early_warning", "capacity_full", "low_memory", "disk"
 /** How full the server is and when it runs out of room for computers (D-252). */
 export const ServerCapacity = z
   .object({
-    budget_mb: z
-      .number()
-      .int()
-      .openapi({
-        description: "Memory hosted computers may use (COMPUTER_HOST_MEMORY_GB); 0 = none set",
-      }),
+    budget_mb: z.number().int().openapi({
+      description: "Memory hosted computers may use (COMPUTER_HOST_MEMORY_GB); 0 = none set",
+    }),
     latest: z
       .object({
         at: z.string(),

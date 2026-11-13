@@ -1,0 +1,10 @@
+{
+  "description": "Search dashboards, query metrics and logs, and check alerts in Grafana Cloud.",
+  "category": "developer",
+  "color": "F46800",
+  "homepage": "https://grafana.com",
+  "url": "https://mcp.grafana.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Search dashboards", "Query metrics and logs", "Check alerts and incidents"]
+}

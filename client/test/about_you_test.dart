@@ -47,7 +47,7 @@ void main() {
 
     // Off by default in a team space; turning it on is per workspace.
     final sw = find.byKey(const Key('useInThisSpace'));
-    expect(tester.widget<SwitchListTile>(sw).value, isFalse);
+    expect(tester.widget<Switch>(sw).value, isFalse);
     await tester.ensureVisible(sw);
     await tester.tap(sw);
     await tester.pumpAndSettle();

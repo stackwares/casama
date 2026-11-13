@@ -206,53 +206,74 @@ class _InviteLinkCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final link = ref.watch(_defaultInviteProvider(org.id));
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpace.lg),
-      child: link.when(
-        loading: () => const _InviteLinkSkeleton(),
-        error: (e, _) => Text(errorText(context, e)),
-        data: (l) {
-          final approval = l.requiresApproval ?? false;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: AppSpace.sm,
-            children: [
-              Text(
-                l10n.inviteLink,
-                style: context.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
+    return link.when(
+      loading: () => const _InviteLinkSkeleton(),
+      error: (e, _) => AppCard(
+        padding: const EdgeInsets.all(AppSpace.lg),
+        child: Text(errorText(context, e)),
+      ),
+      data: (l) {
+        final approval = l.requiresApproval ?? false;
+        Future<void> setApproval(bool v) async {
+          await runGuarded(
+            context,
+            () => ref
+                .read(backendProvider)
+                .updateDefaultInvite(org.id, requiresApproval: v),
+          );
+          ref.invalidate(_defaultInviteProvider(org.id));
+        }
+
+        // The link and its buttons in one card; its settings in a grouped card under it.
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: AppSpace.sm,
+          children: [
+            AppCard(
+              padding: const EdgeInsets.all(AppSpace.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: AppSpace.sm,
+                children: [
+                  Text(
+                    l10n.inviteLink,
+                    style: context.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    approval ? l10n.inviteLinkApprovalHelp : l10n.inviteLinkHelp,
+                    style: context.textTheme.bodyMedium?.copyWith(
+                      color: context.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  _LinkBox(key: ValueKey(l.url), url: l.url, workspace: org.name),
+                ],
+              ),
+            ),
+            GroupedCard(
+              children: [
+                GroupedTile(
+                  icon: LucideIcons.userCheck,
+                  title: l10n.askBeforeJoining,
+                  subtitle: l10n.askBeforeJoiningHelp,
+                  onTap: () {
+                    HapticsHelper.light();
+                    setApproval(!approval);
+                  },
+                  trailing: Switch(
+                    key: const Key('inviteApproval'),
+                    value: approval,
+                    onChanged: hapticOnChanged(setApproval),
+                  ),
                 ),
-              ),
-              Text(
-                approval ? l10n.inviteLinkApprovalHelp : l10n.inviteLinkHelp,
-                style: context.textTheme.bodyMedium?.copyWith(
-                  color: context.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              _LinkBox(key: ValueKey(l.url), url: l.url, workspace: org.name),
-              SwitchListTile(
-                key: const Key('inviteApproval'),
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.askBeforeJoining),
-                subtitle: Text(l10n.askBeforeJoiningHelp),
-                value: approval,
-                onChanged: hapticOnChanged((v) async {
-                  await runGuarded(
-                    context,
-                    () => ref
-                        .read(backendProvider)
-                        .updateDefaultInvite(org.id, requiresApproval: v),
-                  );
-                  ref.invalidate(_defaultInviteProvider(org.id));
-                }),
-              ),
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: TextButton.icon(
+                GroupedTile(
                   key: const Key('resetInvite'),
-                  icon: const Icon(LucideIcons.refreshCw, size: 16),
-                  label: Text(l10n.resetLink),
-                  onPressed: () async {
+                  icon: LucideIcons.refreshCw,
+                  title: l10n.resetLink,
+                  destructive: true,
+                  showChevron: false,
+                  onTap: () async {
                     final ok = await showConfirm(
                       context: context,
                       title: l10n.resetLink,
@@ -270,11 +291,11 @@ class _InviteLinkCard extends ConsumerWidget {
                     ref.invalidate(_defaultInviteProvider(org.id));
                   },
                 ),
-              ),
-            ],
-          );
-        },
-      ),
+              ],
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -298,8 +319,8 @@ class _MembersSkeleton extends StatelessWidget {
   }
 }
 
-/// The invite link card's content before it loads: title, help, the link box with its buttons,
-/// the approval switch and the reset button. The card around it is already there.
+/// The invite link before it loads: the card with its title, help, the link box and buttons, then
+/// the grouped card with the approval switch and the reset row.
 class _InviteLinkSkeleton extends StatelessWidget {
   const _InviteLinkSkeleton();
 
@@ -311,40 +332,44 @@ class _InviteLinkSkeleton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: AppSpace.sm,
         children: [
-          SkeletonText(style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800), widthFactor: 0.35),
-          SkeletonText(style: text.bodyMedium, lines: 2, widthFactor: 0.8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.sm),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.tile),
-              border: Border.all(color: context.appColors.hairline),
+          SkeletonCard(
+            padding: const EdgeInsets.all(AppSpace.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: AppSpace.sm,
+              children: [
+                SkeletonText(style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800), widthFactor: 0.35),
+                SkeletonText(style: text.bodyMedium, lines: 2, widthFactor: 0.8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.sm),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppRadius.tile),
+                    border: Border.all(color: context.appColors.hairline),
+                  ),
+                  child: const SkeletonText(style: AppText.mono, widthFactor: 0.85),
+                ),
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      spacing: AppSpace.xs,
+                      children: [
+                        Expanded(child: SkeletonBone(height: 44, radius: AppRadius.pill)),
+                        Expanded(child: SkeletonBone(height: 44, radius: AppRadius.pill)),
+                      ],
+                    ),
+                    SizedBox(height: AppSpace.xxs),
+                    SizedBox(height: 48, child: Center(child: SkeletonBone(width: 80, height: 12))),
+                  ],
+                ),
+              ],
             ),
-            child: const SkeletonText(style: AppText.mono, widthFactor: 0.85),
           ),
-          const Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                spacing: AppSpace.xs,
-                children: [
-                  Expanded(child: SkeletonBone(height: 44, radius: AppRadius.pill)),
-                  Expanded(child: SkeletonBone(height: 44, radius: AppRadius.pill)),
-                ],
-              ),
-              SizedBox(height: AppSpace.xxs),
-              SizedBox(height: 48, child: Center(child: SkeletonBone(width: 80, height: 12))),
+          const SkeletonGroupedCard(
+            rows: [
+              SkeletonRow(trailing: SkeletonTrailing.toggle),
+              SkeletonRow(trailing: SkeletonTrailing.none, subtitle: false),
             ],
-          ),
-          SkeletonRow(
-            leading: SkeletonLeading.none,
-            trailing: SkeletonTrailing.toggle,
-            padding: const EdgeInsets.symmetric(vertical: AppSpace.xs),
-            titleStyle: text.bodyLarge,
-            subtitleStyle: text.bodyMedium,
-          ),
-          const Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: SizedBox(height: 48, width: 110, child: Center(child: SkeletonBone(width: 90, height: 12))),
           ),
         ],
       ),
@@ -550,49 +575,57 @@ class _EmailInviteCardState extends ConsumerState<_EmailInviteCard> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final count = parseEmails(_emails.text).length;
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpace.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: AppSpace.sm,
-        children: [
-          TextField(
-            key: const Key('inviteEmails'),
-            controller: _emails,
-            minLines: 2,
-            maxLines: 6,
-            keyboardType: TextInputType.emailAddress,
-            autocorrect: false,
-            decoration: InputDecoration(
-              labelText: l10n.emailAddresses,
-              hintText: 'ana@company.com, ben@company.com',
-              helperText: l10n.emailAddressesHelp,
+    // The addresses and the admin switch in one grouped card, Send under it.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpace.sm,
+      children: [
+        GroupedCard(
+          dividerIndent: 0,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.md, AppSpace.md, AppSpace.sm),
+              child: TextField(
+                key: const Key('inviteEmails'),
+                controller: _emails,
+                minLines: 2,
+                maxLines: 6,
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+                decoration: InputDecoration(
+                  labelText: l10n.emailAddresses,
+                  hintText: 'ana@company.com, ben@company.com',
+                  helperText: l10n.emailAddressesHelp,
+                ),
+              ),
+            ),
+            GroupedTile(
+              icon: LucideIcons.shieldUser,
+              title: l10n.inviteAsAdmin,
+              onTap: () {
+                HapticsHelper.light();
+                setState(() => _admin = !_admin);
+              },
+              trailing: Switch(
+                key: const Key('inviteAsAdmin'),
+                value: _admin,
+                onChanged: hapticOnChanged((v) => setState(() => _admin = v)),
+              ),
+            ),
+          ],
+        ),
+        Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: FilledButton.icon(
+            key: const Key('sendInvites'),
+            onPressed: count == 0 || _busy ? null : _send,
+            icon: const Icon(LucideIcons.send, size: 18),
+            label: Text(
+              count > 1 ? l10n.sendInvitesCount(count) : l10n.sendInvite,
             ),
           ),
-          Row(
-            children: [
-              Expanded(
-                child: SwitchListTile(
-                  key: const Key('inviteAsAdmin'),
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(l10n.inviteAsAdmin),
-                  value: _admin,
-                  onChanged: hapticOnChanged((v) => setState(() => _admin = v)),
-                ),
-              ),
-              const SizedBox(width: AppSpace.sm),
-              FilledButton.icon(
-                key: const Key('sendInvites'),
-                onPressed: count == 0 || _busy ? null : _send,
-                icon: const Icon(LucideIcons.send, size: 18),
-                label: Text(
-                  count > 1 ? l10n.sendInvitesCount(count) : l10n.sendInvite,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -744,21 +777,30 @@ class _DomainCard extends ConsumerWidget {
     final mine = d.myDomain;
     final on = mine != null && d.items.contains(mine);
     final others = d.items.where((x) => x != mine).toList();
+    Future<void> setDomain(bool v) async {
+      await runGuarded(
+        context,
+        () => ref.read(backendProvider).setJoinDomain(orgId, v),
+      );
+      ref.invalidate(_domainsProvider(orgId));
+    }
+
     return GroupedCard(
       children: [
         if (d.canUse && mine != null)
-          SwitchListTile(
-            key: const Key('joinDomain'),
-            title: Text(l10n.joinByDomainSwitch(mine)),
-            subtitle: Text(l10n.joinByDomainHelp),
-            value: on,
-            onChanged: hapticOnChanged((v) async {
-              await runGuarded(
-                context,
-                () => ref.read(backendProvider).setJoinDomain(orgId, v),
-              );
-              ref.invalidate(_domainsProvider(orgId));
-            }),
+          GroupedTile(
+            icon: LucideIcons.atSign,
+            title: l10n.joinByDomainSwitch(mine),
+            subtitle: l10n.joinByDomainHelp,
+            onTap: () {
+              HapticsHelper.light();
+              setDomain(!on);
+            },
+            trailing: Switch(
+              key: const Key('joinDomain'),
+              value: on,
+              onChanged: hapticOnChanged(setDomain),
+            ),
           )
         else
           Padding(

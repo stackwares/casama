@@ -17,8 +17,8 @@ import 'page.dart';
     scheme.surfaceContainerHigh,
   );
   final highlight = Color.alphaBlend(
-    scheme.primary.withValues(alpha: dark ? 0.10 : 0.05),
-    Color.lerp(bone, dark ? scheme.onSurface : Colors.white, dark ? 0.10 : 0.65)!,
+    scheme.primary.withValues(alpha: dark ? 0.06 : 0.03),
+    Color.lerp(bone, dark ? scheme.onSurface : Colors.white, dark ? 0.05 : 0.35)!,
   );
   return (bone: bone, highlight: highlight);
 }
@@ -61,7 +61,7 @@ class SkeletonScope extends StatelessWidget {
     final highlight = skeletonColors(context).highlight;
     return Semantics(
       label: AppLocalizations.of(context).loading,
-      child: Shimmer(color: highlight, child: child),
+      child: Shimmer(color: highlight, duration: const Duration(milliseconds: 2200), child: child),
     );
   }
 }

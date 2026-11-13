@@ -1,0 +1,10 @@
+{
+  "description": "Manage your Netlify sites and deploys.",
+  "category": "developer",
+  "color": "00C7B7",
+  "homepage": "https://www.netlify.com",
+  "url": "https://mcp.netlify.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["See sites and deploys", "Start a deploy", "Manage settings"]
+}

@@ -1,0 +1,10 @@
+{
+  "description": "Send email and manage domains, contacts and broadcasts in Resend.",
+  "category": "developer",
+  "color": "111111",
+  "homepage": "https://resend.com",
+  "url": "https://mcp.resend.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Send email", "Manage contacts", "Check domains and logs"]
+}

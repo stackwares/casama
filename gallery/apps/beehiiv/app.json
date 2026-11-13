@@ -1,0 +1,10 @@
+{
+  "description": "See posts, subscribers and results for your beehiiv newsletter.",
+  "category": "sales",
+  "color": "2F39BA",
+  "homepage": "https://www.beehiiv.com",
+  "url": "https://mcp.beehiiv.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Review posts", "See subscribers", "Check newsletter stats"]
+}

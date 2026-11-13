@@ -17,6 +17,8 @@ abstract class _$ConnectAppRequestCWProxy {
 
   ConnectAppRequest integrationId(String? integrationId);
 
+  ConnectAppRequest returnToApp(bool? returnToApp);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `ConnectAppRequest(...).copyWith.fieldName(value)`.
@@ -31,6 +33,7 @@ abstract class _$ConnectAppRequestCWProxy {
     ConnectAppRequestMethodEnum method,
     String? apiKey,
     String? integrationId,
+    bool? returnToApp,
   });
 }
 
@@ -58,6 +61,10 @@ class _$ConnectAppRequestCWProxyImpl implements _$ConnectAppRequestCWProxy {
   ConnectAppRequest integrationId(String? integrationId) =>
       call(integrationId: integrationId);
 
+  @override
+  ConnectAppRequest returnToApp(bool? returnToApp) =>
+      call(returnToApp: returnToApp);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `ConnectAppRequest(...).copyWith.fieldName(value)`.
@@ -73,6 +80,7 @@ class _$ConnectAppRequestCWProxyImpl implements _$ConnectAppRequestCWProxy {
     Object? method = const $CopyWithPlaceholder(),
     Object? apiKey = const $CopyWithPlaceholder(),
     Object? integrationId = const $CopyWithPlaceholder(),
+    Object? returnToApp = const $CopyWithPlaceholder(),
   }) {
     return ConnectAppRequest(
       orgId: orgId == const $CopyWithPlaceholder() || orgId == null
@@ -95,6 +103,10 @@ class _$ConnectAppRequestCWProxyImpl implements _$ConnectAppRequestCWProxy {
           ? _value.integrationId
           // ignore: cast_nullable_to_non_nullable
           : integrationId as String?,
+      returnToApp: returnToApp == const $CopyWithPlaceholder()
+          ? _value.returnToApp
+          // ignore: cast_nullable_to_non_nullable
+          : returnToApp as bool?,
     );
   }
 }
@@ -126,6 +138,7 @@ ConnectAppRequest _$ConnectAppRequestFromJson(Map<String, dynamic> json) =>
           ),
           apiKey: $checkedConvert('api_key', (v) => v as String?),
           integrationId: $checkedConvert('integration_id', (v) => v as String?),
+          returnToApp: $checkedConvert('return_to_app', (v) => v as bool?),
         );
         return val;
       },
@@ -134,6 +147,7 @@ ConnectAppRequest _$ConnectAppRequestFromJson(Map<String, dynamic> json) =>
         'appId': 'app_id',
         'apiKey': 'api_key',
         'integrationId': 'integration_id',
+        'returnToApp': 'return_to_app',
       },
     );
 
@@ -144,6 +158,7 @@ Map<String, dynamic> _$ConnectAppRequestToJson(ConnectAppRequest instance) =>
       'method': _$ConnectAppRequestMethodEnumEnumMap[instance.method]!,
       'api_key': ?instance.apiKey,
       'integration_id': ?instance.integrationId,
+      'return_to_app': ?instance.returnToApp,
     };
 
 const _$ConnectAppRequestMethodEnumEnumMap = {

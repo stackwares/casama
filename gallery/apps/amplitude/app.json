@@ -1,0 +1,10 @@
+{
+  "description": "Ask questions about your product analytics in Amplitude.",
+  "category": "data",
+  "color": "1E61F0",
+  "homepage": "https://amplitude.com",
+  "url": "https://mcp.amplitude.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Query charts and events", "See dashboards", "Look up cohorts"]
+}

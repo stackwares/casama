@@ -50,7 +50,8 @@ class MeAvatar extends ConsumerWidget {
 
 /// The name bots use for the signed-in person, else their email.
 String meLabel(WidgetRef ref) {
-  final name = ref.watch(aboutYouProvider).value?.name ?? '';
+  final about = ref.watch(aboutYouProvider);
+  final name = (about.hasValue ? about.value?.name : ref.watch(savedMeProvider).value?.name) ?? '';
   return name.isNotEmpty ? name : (ref.watch(backendProvider).userEmail ?? '');
 }
 

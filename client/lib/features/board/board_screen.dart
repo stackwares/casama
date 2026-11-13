@@ -17,6 +17,7 @@ import '../../ui/edge_fade.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../../ui/property_row.dart';
 import '../../ui/tab_reselect.dart';
 import '../projects/projects_screen.dart' show projectsProvider;
 
@@ -914,11 +915,23 @@ class _Card extends ConsumerWidget {
         ? null
         : ref.watch(botProvider(task.assigneeBotId!));
     final me = ref.watch(backendProvider).userId;
+    final scheme = context.colorScheme;
+    final colors = context.appColors;
+    final meta = context.textTheme.labelMedium?.copyWith(
+      color: scheme.onSurfaceVariant,
+      fontWeight: FontWeight.w600,
+    );
+    final done = task.status == TaskStatus.done;
     return Card(
       key: Key('ticket-${task.id}'),
       margin: const EdgeInsets.only(bottom: AppSpace.sm),
+      color: scheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.tile),
+        side: BorderSide(color: colors.hairline),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
         onTap: () => showAdaptiveSheet<void>(
           context: context,
           contentPadsBottom: true,
@@ -926,47 +939,101 @@ class _Card extends ConsumerWidget {
         ),
         onLongPress: onLongPress,
         child: Padding(
-          padding: const EdgeInsets.all(AppSpace.md),
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 6,
             children: [
-              Text(
-                task.title,
-                style: context.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (task.priority != TaskPriority.none)
-                    StatusLabel(
-                      text: priorityLabel(context, task.priority),
-                      color: task.priority == TaskPriority.urgent
-                          ? context.appColors.negative
-                          : context.colorScheme.primary,
-                      pill: true,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 3, right: AppSpace.xs),
+                    child: Icon(
+                      done ? LucideIcons.circleCheck : LucideIcons.circleDot,
+                      size: 16,
+                      color: _statusColor(context, task.status),
                     ),
-                  if (bot != null)
-                    StatusLabel(
-                      text: bot.name,
-                      color: context.appColors.working,
-                      pill: true,
+                  ),
+                  Expanded(
+                    child: Text(
+                      task.title,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
+                        color: done ? scheme.onSurfaceVariant : null,
+                      ),
                     ),
-                  if (task.assigneeUserId != null && task.assigneeUserId == me)
-                    StatusLabel(
-                      text: l10n.assignToMe,
-                      color: context.colorScheme.secondary,
-                      pill: true,
-                    ),
-                  if (task.comments > 0)
-                    Text(
-                      '💬 ${task.comments}',
-                      style: context.textTheme.bodySmall,
-                    ),
+                  ),
                 ],
+              ),
+              if (task.detailsMd.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(left: 24, top: 2),
+                  child: Text(
+                    task.detailsMd,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.only(left: 24, top: AppSpace.xs),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          if (task.priority != TaskPriority.none)
+                            StatusLabel(
+                              text: priorityLabel(context, task.priority),
+                              color: _priorityColor(context, task.priority),
+                              icon: LucideIcons.flag,
+                              pill: true,
+                            ),
+                          if (bot != null)
+                            StatusLabel(
+                              text: bot.name,
+                              color: colors.working,
+                              icon: LucideIcons.bot,
+                              pill: true,
+                            ),
+                          if (task.assigneeUserId != null &&
+                              task.assigneeUserId == me)
+                            StatusLabel(
+                              text: l10n.assignToMe,
+                              color: scheme.secondary,
+                              icon: LucideIcons.user,
+                              pill: true,
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (task.reviewRequired)
+                      Padding(
+                        padding: const EdgeInsets.only(left: AppSpace.xs),
+                        child: Tooltip(
+                          message: l10n.reviewRequired,
+                          child: Icon(LucideIcons.eye, size: 15, color: colors.waiting),
+                        ),
+                      ),
+                    if (task.comments > 0) ...[
+                      const SizedBox(width: AppSpace.xs),
+                      Icon(LucideIcons.messageCircle, size: 14, color: scheme.onSurfaceVariant),
+                      const SizedBox(width: 3),
+                      Text(
+                        task.comments.humanizedCount(l10n.localeName),
+                        style: meta,
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -1007,8 +1074,7 @@ class _TicketFormState extends ConsumerState<_TicketForm> {
       title: l10n.newTicket,
       submitLabel: l10n.newTicket,
       submitKey: const Key('createTicket'),
-      onSubmit: () async {
-        if (_title.text.trim().isEmpty) return;
+      onSubmit: _title.text.trim().isEmpty ? null : () async {
         final ok = await runGuarded(
           context,
           () => ref
@@ -1028,56 +1094,87 @@ class _TicketFormState extends ConsumerState<_TicketForm> {
         TextField(
           key: const Key('ticketTitle'),
           controller: _title,
+          autofocus: true,
+          textCapitalization: TextCapitalization.sentences,
           textInputAction: TextInputAction.next,
+          onChanged: (_) => setState(() {}),
           decoration: InputDecoration(labelText: l10n.ticketTitle),
         ),
         TextField(
           key: const Key('ticketDetails'),
           controller: _details,
+          textCapitalization: TextCapitalization.sentences,
           minLines: 2,
           maxLines: 6,
           decoration: InputDecoration(labelText: l10n.ticketDetails),
         ),
-        DropdownButtonFormField<TaskPriority>(
-          isExpanded: true,
-          initialValue: _priority,
-          decoration: InputDecoration(labelText: l10n.priority),
-          items: [
-            for (final p in TaskPriority.values)
-              DropdownMenuItem(
-                value: p,
-                child: Text(priorityLabel(context, p)),
-              ),
-          ],
-          onChanged: hapticOnChanged(
-            (p) => setState(() => _priority = p ?? _priority),
-            haptic: HapticsHelper.selection,
-          ),
-        ),
-        DropdownButtonFormField<String?>(
-          isExpanded: true,
-          key: const Key('ticketBot'),
-          initialValue: _bot,
-          decoration: InputDecoration(labelText: l10n.assignee),
-          items: [
-            DropdownMenuItem<String?>(
-              value: null,
-              child: Text(l10n.unassigned),
+        GroupedCard(
+          children: [
+            PropertyRow<TaskPriority>(
+              key: const Key('ticketPriority'),
+              icon: LucideIcons.flag,
+              iconColor: _priorityColor(context, _priority),
+              title: l10n.priority,
+              value: priorityLabel(context, _priority),
+              valueColor: _priority == TaskPriority.none
+                  ? null
+                  : _priorityColor(context, _priority),
+              options: [
+                for (final p in TaskPriority.values)
+                  PropertyOption(
+                    value: p,
+                    label: priorityLabel(context, p),
+                    icon: LucideIcons.flag,
+                    color: _priorityColor(context, p),
+                    selected: p == _priority,
+                  ),
+              ],
+              onSelected: (p) => setState(() => _priority = p),
             ),
-            for (final b in bots)
-              DropdownMenuItem(value: b.id, child: Text(b.name)),
+            PropertyRow<String>(
+              key: const Key('ticketBot'),
+              icon: _bot == null ? LucideIcons.userX : LucideIcons.bot,
+              iconColor: _bot == null
+                  ? context.colorScheme.onSurfaceVariant
+                  : context.appColors.working,
+              title: l10n.assignee,
+              value: bots.where((b) => b.id == _bot).firstOrNull?.name ??
+                  l10n.unassigned,
+              valueColor: _bot == null ? null : context.appColors.working,
+              options: [
+                PropertyOption(
+                  value: '',
+                  label: l10n.unassigned,
+                  icon: LucideIcons.userX,
+                  selected: _bot == null,
+                ),
+                for (final b in bots)
+                  PropertyOption(
+                    value: b.id,
+                    label: b.name,
+                    icon: LucideIcons.bot,
+                    color: context.appColors.working,
+                    selected: b.id == _bot,
+                  ),
+              ],
+              onSelected: (v) => setState(() => _bot = v.isEmpty ? null : v),
+            ),
+            GroupedTile(
+              icon: LucideIcons.eye,
+              iconColor: context.appColors.waiting,
+              title: l10n.reviewRequired,
+              subtitle: l10n.reviewRequiredHelp,
+              onTap: () {
+                HapticsHelper.selection();
+                setState(() => _review = !_review);
+              },
+              trailing: Switch(
+                key: const Key('ticketReview'),
+                value: _review,
+                onChanged: hapticOnChanged((v) => setState(() => _review = v)),
+              ),
+            ),
           ],
-          onChanged: hapticOnChanged(
-            (v) => setState(() => _bot = v),
-            haptic: HapticsHelper.selection,
-          ),
-        ),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(l10n.reviewRequired),
-          subtitle: Text(l10n.reviewRequiredHelp),
-          value: _review,
-          onChanged: hapticOnChanged((v) => setState(() => _review = v)),
         ),
       ],
     );
@@ -1142,9 +1239,28 @@ class _TicketSheetState extends ConsumerState<TicketSheet> {
     ref.invalidate(tasksProvider);
   }
 
+  Future<void> _delete() async {
+    final l10n = context.l10n;
+    final ok = await showConfirm(
+      context: context,
+      title: l10n.deleteTicket,
+      confirmLabel: l10n.deleteTicket,
+      destructive: true,
+    );
+    if (!ok || !mounted) return;
+    await runGuarded(
+      context,
+      () => ref.read(backendProvider).deleteTask(widget.taskId),
+    );
+    ref.invalidate(tasksProvider);
+    if (mounted) Navigator.of(context).maybePop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final colors = context.appColors;
     final task = ref
         .watch(tasksProvider)
         .value
@@ -1158,183 +1274,274 @@ class _TicketSheetState extends ConsumerState<TicketSheet> {
         ref.watch(_commentsProvider(widget.taskId)).value ??
         const <TaskComment>[];
     final me = ref.watch(backendProvider).userId;
+    final bot = bots.where((b) => b.id == task.assigneeBotId).firstOrNull;
+    final assignedToMe = me != null && task.assigneeUserId == me;
+    final assigneeText = bot?.name ??
+        (task.assigneeBotId != null
+            ? l10n.aBot
+            : assignedToMe
+            ? l10n.assignToMe
+            : l10n.unassigned);
+    final assigneeColor = bot != null || task.assigneeBotId != null
+        ? colors.working
+        : assignedToMe
+        ? scheme.secondary
+        : scheme.onSurfaceVariant;
+
     return SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: EdgeInsets.fromLTRB(
         AppSpace.lg,
-        AppSpace.lg,
+        AppSpace.xs,
         AppSpace.lg,
         BottomPadding.of(context, minimum: AppSpace.lg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: AppSpace.md,
         children: [
+          // Header: where the ticket stands, then what it asks.
+          Row(
+            children: [
+              StatusLabel(
+                text: statusLabel(context, task.status),
+                color: _statusColor(context, task.status),
+                icon: LucideIcons.circleDot,
+                pill: true,
+              ),
+              if (task.priority != TaskPriority.none) ...[
+                const SizedBox(width: 6),
+                StatusLabel(
+                  text: priorityLabel(context, task.priority),
+                  color: _priorityColor(context, task.priority),
+                  icon: LucideIcons.flag,
+                  pill: true,
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: AppSpace.sm),
           Text(
             task.title,
-            style: context.textTheme.titleLarge?.copyWith(
+            style: context.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
+              letterSpacing: -0.4,
+              height: 1.2,
             ),
           ),
-          if (task.detailsMd.isNotEmpty) Text(task.detailsMd),
-          if (task.resultMd.isUsable) AppCard(child: Text(task.resultMd!)),
-          Wrap(
-            spacing: AppSpace.md,
-            runSpacing: AppSpace.sm,
+          if (task.detailsMd.isNotEmpty) ...[
+            const SizedBox(height: AppSpace.xs),
+            Text(
+              task.detailsMd,
+              style: context.textTheme.bodyLarge?.copyWith(
+                color: scheme.onSurfaceVariant,
+                height: 1.45,
+              ),
+            ),
+          ],
+          if (task.resultMd.isUsable) ...[
+            const SizedBox(height: AppSpace.lg),
+            _ResultCard(text: task.resultMd!, done: task.status == TaskStatus.done),
+          ],
+          const SizedBox(height: AppSpace.lg),
+
+          // Properties: one grouped card, each row opens its own menu.
+          GroupedCard(
+            dividerIndent: 60,
             children: [
-              SizedBox(
-                width: 220,
-                child: DropdownButtonFormField<TaskStatus>(
-                  key: const Key('sheetStatus'),
-                  isExpanded: true,
-                  initialValue: task.status,
-                  decoration: InputDecoration(labelText: l10n.ticketStatus),
-                  items: [
-                    for (final s in BoardScreen.statuses)
-                      DropdownMenuItem(
-                        value: s,
-                        child: Text(statusLabel(context, s)),
-                      ),
-                  ],
-                  onChanged: hapticOnChanged(
-                    (s) => s == null ? null : _update(status: s.value),
-                    haptic: HapticsHelper.selection,
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 220,
-                child: DropdownButtonFormField<TaskPriority>(
-                  isExpanded: true,
-                  initialValue: task.priority,
-                  decoration: InputDecoration(labelText: l10n.priority),
-                  items: [
-                    for (final p in TaskPriority.values)
-                      DropdownMenuItem(
-                        value: p,
-                        child: Text(priorityLabel(context, p)),
-                      ),
-                  ],
-                  onChanged: hapticOnChanged(
-                    (p) => p == null ? null : _update(priority: p.value),
-                    haptic: HapticsHelper.selection,
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 220,
-                child: DropdownButtonFormField<String?>(
-                  key: const Key('sheetBot'),
-                  isExpanded: true,
-                  initialValue: task.assigneeBotId,
-                  decoration: InputDecoration(labelText: l10n.assignee),
-                  items: [
-                    DropdownMenuItem<String?>(
-                      value: null,
-                      child: Text(l10n.unassigned),
+              PropertyRow<TaskStatus>(
+                key: const Key('sheetStatus'),
+                icon: LucideIcons.circleDot,
+                iconColor: _statusColor(context, task.status),
+                title: l10n.ticketStatus,
+                value: statusLabel(context, task.status),
+                valueColor: _statusColor(context, task.status),
+                options: [
+                  for (final s in BoardScreen.statuses)
+                    PropertyOption(
+                      value: s,
+                      label: statusLabel(context, s),
+                      color: _statusColor(context, s),
+                      selected: s == task.status,
                     ),
-                    for (final b in bots)
-                      DropdownMenuItem(value: b.id, child: Text(b.name)),
-                  ],
-                  onChanged: hapticOnChanged(
-                    (v) => v == null ? null : _update(bot: v),
-                    haptic: HapticsHelper.selection,
-                  ),
-                ),
+                ],
+                onSelected: (s) => _update(status: s.value),
               ),
-            ],
-          ),
-          Row(
-            children: [
-              if (me != null && task.assigneeUserId != me)
-                TextButton.icon(
-                  onPressed: () => _update(user: me),
-                  icon: const Icon(LucideIcons.user, size: 18),
-                  label: Text(l10n.assignToMe),
-                ),
-              const Spacer(),
-              if (task.assigneeBotId != null && task.conversationId != null)
-                TextButton.icon(
-                  key: const Key('openThread'),
-                  onPressed: () {
-                    Navigator.of(context).maybePop();
-                    context.push('/bots/${task.assigneeBotId}/chat');
-                  },
-                  icon: const Icon(LucideIcons.messageCircle, size: 18),
-                  label: Text(l10n.openThread),
-                ),
-            ],
-          ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.reviewRequired),
-            value: task.reviewRequired,
-            onChanged: hapticOnChanged((v) => _update(review: v)),
-          ),
-          SectionHeader(title: l10n.comments),
-          for (final c in comments)
-            ListTile(
-              key: Key('comment-${c.id}'),
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(
-                c.authorType == TaskCommentAuthorTypeEnum.bot
+              PropertyRow<TaskPriority>(
+                key: const Key('sheetPriority'),
+                icon: LucideIcons.flag,
+                iconColor: _priorityColor(context, task.priority),
+                title: l10n.priority,
+                value: priorityLabel(context, task.priority),
+                valueColor: _priorityColor(context, task.priority),
+                options: [
+                  for (final p in TaskPriority.values)
+                    PropertyOption(
+                      value: p,
+                      label: priorityLabel(context, p),
+                      color: _priorityColor(context, p),
+                      selected: p == task.priority,
+                    ),
+                ],
+                onSelected: (p) => _update(priority: p.value),
+              ),
+              PropertyRow<String>(
+                key: const Key('sheetBot'),
+                icon: bot != null || task.assigneeBotId != null
                     ? LucideIcons.bot
                     : LucideIcons.user,
-                size: 20,
+                iconColor: assigneeColor,
+                title: l10n.assignee,
+                value: assigneeText,
+                valueColor: assigneeColor,
+                options: [
+                  if (me != null)
+                    PropertyOption(
+                      value: '',
+                      label: l10n.assignToMe,
+                      color: scheme.secondary,
+                      icon: LucideIcons.user,
+                      selected: assignedToMe && task.assigneeBotId == null,
+                    ),
+                  for (final b in bots)
+                    PropertyOption(
+                      value: b.id,
+                      label: b.name,
+                      color: colors.working,
+                      icon: LucideIcons.bot,
+                      selected: b.id == task.assigneeBotId,
+                    ),
+                ],
+                onSelected: (v) => v.isEmpty ? _update(user: me) : _update(bot: v),
               ),
-              title: Text(c.bodyMd),
-              subtitle: Text(
-                c.authorType == TaskCommentAuthorTypeEnum.bot
-                    ? (bots
-                              .where((b) => b.id == c.authorBotId)
-                              .firstOrNull
-                              ?.name ??
-                          l10n.aBot)
-                    : (c.authorUserId == me ? l10n.assignToMe : ''),
-              ),
-            ),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  key: const Key('commentField'),
-                  controller: _comment,
-                  minLines: 1,
-                  maxLines: 4,
-                  decoration: InputDecoration(hintText: l10n.addComment),
-                  onSubmitted: (_) => _send(),
+              GroupedTile(
+                icon: LucideIcons.eye,
+                iconColor: colors.waiting,
+                title: l10n.reviewRequired,
+                subtitle: l10n.reviewRequiredHelp,
+                onTap: () {
+                  HapticsHelper.selection();
+                  _update(review: !task.reviewRequired);
+                },
+                trailing: Switch(
+                  key: const Key('sheetReview'),
+                  value: task.reviewRequired,
+                  onChanged: hapticOnChanged((v) => _update(review: v)),
                 ),
-              ),
-              IconButton(
-                key: const Key('sendComment'),
-                tooltip: l10n.sendComment,
-                icon: const Icon(LucideIcons.send),
-                onPressed: _send,
               ),
             ],
           ),
-          TextButton.icon(
-            key: const Key('deleteTicket'),
-            style: TextButton.styleFrom(
-              foregroundColor: context.appColors.negative,
+
+          if (task.assigneeBotId != null && task.conversationId != null) ...[
+            const SizedBox(height: AppSpace.sm),
+            FilledButton.tonalIcon(
+              key: const Key('openThread'),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(52),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.tile),
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).maybePop();
+                context.push('/bots/${task.assigneeBotId}/chat');
+              },
+              icon: const Icon(LucideIcons.messageCircle, size: 18),
+              label: Text(l10n.openThread),
             ),
-            onPressed: () async {
-              final ok = await showConfirm(
-                context: context,
-                title: l10n.deleteTicket,
-                confirmLabel: l10n.deleteTicket,
-                destructive: true,
-              );
-              if (!ok || !context.mounted) return;
-              await runGuarded(
-                context,
-                () => ref.read(backendProvider).deleteTask(widget.taskId),
-              );
-              ref.invalidate(tasksProvider);
-              if (context.mounted) Navigator.of(context).maybePop();
-            },
-            icon: const Icon(LucideIcons.trash2, size: 18),
-            label: Text(l10n.deleteTicket),
+          ],
+
+          // Comments: a small conversation, newest at the bottom, the composer under it.
+          SectionHeader(
+            title: l10n.comments,
+            count: comments.isEmpty
+                ? null
+                : comments.length.humanizedCount(l10n.localeName),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.xxs,
+              AppSpace.xl,
+              AppSpace.xxs,
+              AppSpace.sm,
+            ),
+          ),
+          if (comments.isEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.xxs,
+                0,
+                AppSpace.xxs,
+                AppSpace.md,
+              ),
+              child: Text(
+                l10n.noCommentsYet,
+                style: context.textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          for (final c in comments)
+            _CommentBubble(
+              key: Key('comment-${c.id}'),
+              comment: c,
+              author: c.authorType == TaskCommentAuthorTypeEnum.bot
+                  ? (bots.where((b) => b.id == c.authorBotId).firstOrNull?.name ??
+                        l10n.aBot)
+                  : (c.authorUserId == me ? l10n.assignToMe : ''),
+            ),
+          const SizedBox(height: AppSpace.xxs),
+          TextField(
+            key: const Key('commentField'),
+            controller: _comment,
+            minLines: 1,
+            maxLines: 4,
+            textCapitalization: TextCapitalization.sentences,
+            textInputAction: TextInputAction.send,
+            decoration: InputDecoration(
+              hintText: l10n.addComment,
+              filled: true,
+              fillColor: scheme.surfaceContainerHigh,
+              contentPadding: const EdgeInsets.fromLTRB(20, 14, 8, 14),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(28),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(28),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(28),
+                borderSide: BorderSide(color: scheme.primary, width: 1.5),
+              ),
+              suffixIcon: Padding(
+                padding: const EdgeInsets.all(6),
+                child: IconButton.filled(
+                  key: const Key('sendComment'),
+                  tooltip: l10n.sendComment,
+                  iconSize: 18,
+                  icon: Icon(LucideIcons.arrowUp, color: scheme.onPrimary),
+                  onPressed: _send,
+                ),
+              ),
+            ),
+            onSubmitted: (_) => _send(),
+          ),
+
+          const SizedBox(height: AppSpace.xl),
+          Divider(color: colors.hairline, height: 1),
+          const SizedBox(height: AppSpace.xs),
+          Center(
+            child: TextButton.icon(
+              key: const Key('deleteTicket'),
+              style: TextButton.styleFrom(
+                foregroundColor: colors.negative,
+                textStyle: context.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onPressed: _delete,
+              icon: const Icon(LucideIcons.trash2, size: 16),
+              label: Text(l10n.deleteTicket),
+            ),
           ),
         ],
       ),
@@ -1342,8 +1549,106 @@ class _TicketSheetState extends ConsumerState<TicketSheet> {
   }
 }
 
-/// A [TicketSheet] still loading: the title, details, the status, priority and assignee fields,
-/// the review switch and the comments header.
+/// What the bot reported back, set apart from the brief: green once the ticket is done.
+class _ResultCard extends StatelessWidget {
+  const _ResultCard({required this.text, required this.done});
+  final String text;
+  final bool done;
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = done ? context.appColors.positive : context.colorScheme.primary;
+    return AppCard(
+      color: tint.withValues(alpha: context.isDark ? 0.1 : 0.07),
+      borderColor: tint.withValues(alpha: 0.28),
+      padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.md, AppSpace.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 6,
+        children: [
+          StatusLabel(
+            text: context.l10n.ticketResult,
+            color: tint,
+            icon: done ? LucideIcons.circleCheck : LucideIcons.sparkles,
+          ),
+          Text(
+            text,
+            style: context.textTheme.bodyLarge?.copyWith(height: 1.4),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A comment as a chat line: the author's avatar, then their name over the text in a soft bubble.
+class _CommentBubble extends StatelessWidget {
+  const _CommentBubble({super.key, required this.comment, required this.author});
+  final TaskComment comment;
+  final String author;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final isBot = comment.authorType == TaskCommentAuthorTypeEnum.bot;
+    final tint = isBot ? context.appColors.working : scheme.secondary;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpace.sm),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: tint.withValues(alpha: context.isDark ? 0.2 : 0.14),
+            child: Icon(
+              isBot ? LucideIcons.bot : LucideIcons.user,
+              size: 16,
+              color: tint,
+            ),
+          ),
+          const SizedBox(width: AppSpace.sm),
+          Flexible(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHigh,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(6),
+                  topRight: Radius.circular(18),
+                  bottomLeft: Radius.circular(18),
+                  bottomRight: Radius.circular(18),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 2,
+                  children: [
+                    if (author.isNotEmpty)
+                      Text(
+                        author,
+                        style: context.textTheme.labelMedium?.copyWith(
+                          color: tint,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    Text(
+                      comment.bodyMd,
+                      style: context.textTheme.bodyLarge?.copyWith(height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A [TicketSheet] still loading: the pills, title, details, the properties card and the comments
+/// header.
 class _TicketSheetSkeleton extends StatelessWidget {
   const _TicketSheetSkeleton();
 
@@ -1352,32 +1657,25 @@ class _TicketSheetSkeleton extends StatelessWidget {
     final text = context.textTheme;
     return SkeletonScope(
       child: Padding(
-        padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg, AppSpace.lg, BottomPadding.of(context, minimum: AppSpace.lg)),
+        padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.xs, AppSpace.lg, BottomPadding.of(context, minimum: AppSpace.lg)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
-          spacing: AppSpace.md,
           children: [
-            SkeletonText(style: text.titleLarge?.copyWith(fontWeight: FontWeight.w700), widthFactor: 0.6),
-            SkeletonText(style: text.bodyMedium, lines: 2, widthFactor: 0.8),
-            const Wrap(
-              spacing: AppSpace.md,
-              runSpacing: AppSpace.sm,
+            const Row(
+              spacing: 6,
               children: [
-                SkeletonBone(width: 220, height: 56, radius: 12),
-                SkeletonBone(width: 220, height: 56, radius: 12),
-                SkeletonBone(width: 220, height: 56, radius: 12),
+                SkeletonBone(width: 72, height: 24, radius: AppRadius.pill),
+                SkeletonBone(width: 56, height: 24, radius: AppRadius.pill),
               ],
             ),
-            SizedBox(
-              height: 56,
-              child: Row(
-                children: [
-                  Expanded(child: SkeletonText(style: text.bodyLarge, widthFactor: 0.4)),
-                  const SkeletonBone(width: 52, height: 32, radius: AppRadius.pill),
-                ],
-              ),
-            ),
+            const SizedBox(height: AppSpace.sm),
+            SkeletonText(style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w700), widthFactor: 0.6),
+            const SizedBox(height: AppSpace.xs),
+            SkeletonText(style: text.bodyLarge, lines: 2, widthFactor: 0.8),
+            const SizedBox(height: AppSpace.lg),
+            const SkeletonBone(height: 4 * 57, radius: AppRadius.card),
+            const SizedBox(height: AppSpace.xl),
             const SkeletonSectionHeader(width: 88),
           ],
         ),

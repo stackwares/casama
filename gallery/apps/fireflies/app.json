@@ -1,0 +1,10 @@
+{
+  "description": "Search and read your Fireflies meeting transcripts and summaries.",
+  "category": "productivity",
+  "color": "7A5AF8",
+  "homepage": "https://fireflies.ai",
+  "url": "https://api.fireflies.ai/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Search your meetings", "Read transcripts", "Get summaries and action items"]
+}

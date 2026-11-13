@@ -1,0 +1,10 @@
+{
+  "description": "Search and read the recordings, transcripts and summaries from your Plaud.",
+  "category": "productivity",
+  "color": "111111",
+  "homepage": "https://www.plaud.ai",
+  "url": "https://mcp.plaud.ai/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Search your recordings", "Read transcripts", "Get summaries"]
+}

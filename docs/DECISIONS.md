@@ -2672,6 +2672,17 @@ The full audit is in `docs/AUDIT-2026-11.md`. These are the decisions it made:
 - **Not covered:** a stdio server takes plain env values, not secrets (use a plugin for one that needs a key). A key copied into a connection doesn't follow later changes to the secret. New tools arrive from the bot's next message, not mid-run.
 - **Tests:** `apps/server/test/bot-settings.test.ts`, `client/test/suggested_look_test.dart`, the suggested-plugin case in `client/test/plugins_test.dart`.
 
+## D-243 Phone sign-ins open in the system sign-in sheet and come back on their own
+
+- **Decision** (Oliver asked, 2026-11-13: "don't we have composio sign in callbacks so after we sign in via browser we get back to the app?", then "go and build it"): connecting an app on iOS and Android opens the system's sign-in sheet instead of the browser app: `ASWebAuthenticationSession` on iOS (`SignInSheet` in `AppDelegate.swift`), a Custom Tab on Android (`SignInSheet` and `SignInCallbackActivity` in `MainActivity.kt`), over the `casama/sign_in_sheet` channel (`client/lib/core/sign_in_sheet.dart`). The sheet shares the browser's sign-ins, Google accepts it (embedded WebViews get `disallowed_useragent`, and the app has none), and it closes itself when the sign-in ends, so nobody has to switch back to Casama.
+- **Own code, not `flutter_web_auth_2`:** that package brings `desktop_webview_window` to Windows and Linux, an embedded WebView that also needs webkit2gtk to build on Linux.
+- **How it ends:** the connect requests take `return_to_app` (`ConnectAppRequest`, `ProviderConnectRequest`). For Composio and Pipedream the return address becomes `/oauth/done?app=1&integration=<id>` ("app=1" first, because providers append their own "?status=…"); for direct OAuth the flow row's `oauth` records it. Then `/oauth/done` and `/oauth/callback` finish the connection as before and answer with a 302 to `casama-auth://done?status=ok|error`, a fixed address, so it can't be used as an open redirect. Without the flag (web, desktop) the "You're signed in" page stays.
+- **Own scheme:** `casama-auth`, caught on Android by `SignInCallbackActivity`, so it never competes with the `casama://` deep links `MainActivity` handles. iOS needs no URL type for it. The Android tab opens with no history, so it closes once the callback activity shows; coming back to the app without the callback reads as "closed".
+- **Still checking:** the app checks once when the sheet closes and keeps its polling and resume checks, and the server still finishes Composio and Pipedream sign-ins itself (495d20ff), for when the person closes the sheet early or Android stops the app.
+- **Where it doesn't apply:** macOS, Windows, Linux and web keep opening the browser. If the sheet can't open on a phone, the sign-in falls back to the browser; it still connects, but on iOS the browser then ends on an address it can't open.
+- **Not changed:** the Supabase account sign-in (its iOS in-app view works around the blank Safari sheet) and the AI-app consent screen, which hands off to the other app's own address.
+- **Tests:** the sign-in sheet cases in `apps/server/test/apps.test.ts` and `apps/server/test/google-permissions.test.ts`, `client/test/sign_in_sheet_test.dart`. The native halves need a device check.
+
 ## D-244 Casama Cloud pricing: Free, Plus, Pro and Max, editable live
 
 - **Decision** (Oliver, 2026-11-13: plan lineup, store pack prices, live editor, and the go-ahead to roll it out): four plans, yearly at ten months' price.

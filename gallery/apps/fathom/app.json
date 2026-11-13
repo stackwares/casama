@@ -1,0 +1,10 @@
+{
+  "description": "Search and read your Fathom meeting recordings, notes and summaries.",
+  "category": "productivity",
+  "color": "9600FF",
+  "homepage": "https://fathom.video",
+  "url": "https://api.fathom.ai/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Search your meetings", "Read summaries", "Pull action items"]
+}

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart' show kDoubleTapTimeout;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +9,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/media_cache.dart';
 import '../../core/backend.dart';
 import '../search/search_view.dart';
 import '../groups/group_chats.dart';
@@ -34,6 +37,7 @@ import '../computer/computer_screen.dart';
 import '../notifications/checkins_sheet.dart';
 import '../notifications/quiet_hours.dart';
 import '../settings/about_you_screen.dart';
+import '../settings/profile_photo.dart';
 import '../../ui/glow_button.dart';
 import '../workspaces/spaces.dart';
 import '../voice/phone_calls.dart';
@@ -172,6 +176,11 @@ class HomeShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.listen(aboutYouProvider, (_, _) {});
+    // Last launch's photo, decoded while the splash fades, so the avatar opens with it.
+    ref.listen(savedMeProvider, (_, next) {
+      final id = next.value?.photoId;
+      if (id != null) unawaited(precacheImage(cachedNetworkImage(ref.read(backendProvider).photoUrl(id)), context, onError: (_, _) {}));
+    });
     ref.listen(quietHoursProvider, (_, _) {});
     ref.listen(authMethodsProvider, (_, _) {});
     ref.listen(usageMonthProvider, (_, _) {});

@@ -1,0 +1,10 @@
+{
+  "description": "Plan and review social posts in your Hootsuite account.",
+  "category": "sales",
+  "color": "FF4C46",
+  "homepage": "https://www.hootsuite.com",
+  "url": "https://mcp.hootsuite.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["See scheduled posts", "Draft and schedule posts", "Review post results"]
+}

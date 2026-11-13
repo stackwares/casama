@@ -1,0 +1,10 @@
+{
+  "name": "Grafana Cloud",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "CC0-1.0",
+  "tags": ["monitoring"],
+  "version": 1
+}

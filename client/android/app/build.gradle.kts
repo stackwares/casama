@@ -101,3 +101,8 @@ tasks.matching { it.name == "compileReleaseJavaWithJavac" || it.name == "compile
             }
         }
     }
+
+dependencies {
+    // The sign-in sheet's Custom Tab (MainActivity.kt, D-243).
+    implementation("androidx.browser:browser:1.9.0")
+}

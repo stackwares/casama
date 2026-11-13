@@ -110,10 +110,14 @@ class BotsList extends ConsumerWidget {
     final l10n = context.l10n;
     final bots = ref.watch(botsProvider);
     final archived = ref.watch(archivedBotsProvider).value ?? const <Bot>[];
-    final groups = ref.watch(groupChatsProvider).value ?? const <Conversation>[];
+    final groupsAsync = ref.watch(groupChatsProvider);
+    final groups = groupsAsync.value ?? const <Conversation>[];
+    // The group chats set the preview length and add a section, so the list waits for their
+    // first answer too (from the cache, a moment) rather than changing shape when they arrive.
+    final groupsPending = !groupsAsync.hasValue && !groupsAsync.hasError;
 
     return AsyncView(
-      value: bots,
+      value: bots.hasValue && groupsPending ? const AsyncLoading<List<Bot>>() : bots,
       onRetry: () => ref.invalidate(botsProvider),
       loading: const _BotsListSkeleton(),
       data: (all) {

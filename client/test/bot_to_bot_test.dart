@@ -11,10 +11,10 @@ void main() {
     final backend = FakeBackend();
     await tester.pumpWidget(harness(backend, const Scaffold(body: BotToBotSwitch(orgId: orgId))));
     await tester.pumpAndSettle();
-    expect(tester.widget<SwitchListTile>(find.byKey(const Key('botToBot'))).value, isTrue);
+    expect(tester.widget<Switch>(find.byKey(const Key('botToBot'))).value, isTrue);
     await tester.tap(find.byKey(const Key('botToBot')));
     await tester.pumpAndSettle();
     expect(backend.botToBot, isFalse);
-    expect(tester.widget<SwitchListTile>(find.byKey(const Key('botToBot'))).value, isFalse);
+    expect(tester.widget<Switch>(find.byKey(const Key('botToBot'))).value, isFalse);
   });
 }

@@ -980,6 +980,8 @@ abstract class Backend {
     required String method,
     String? apiKey,
     String? integrationId,
+    // Signing in from the sign-in sheet: the server ends on casama-auth://done so the sheet closes.
+    bool returnToApp = false,
   });
   Future<ConnectFlowStatus> connectStatus(String flowId);
   Future<void> deleteIntegration(String integrationId);
@@ -988,7 +990,7 @@ abstract class Backend {
     Map<String, String> risks,
   );
   Future<List<ProviderApp>> providerApps(String integrationId, {String? query});
-  Future<String> connectProviderApp(String integrationId, String app);
+  Future<String> connectProviderApp(String integrationId, String app, {bool returnToApp = false});
   Future<List<ProviderAccount>> providerAccounts(String integrationId);
   Future<List<Secret>> secrets(String orgId);
 

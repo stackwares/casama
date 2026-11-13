@@ -1,0 +1,10 @@
+{
+  "name": "PayPal",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "CC0-1.0",
+  "tags": ["payments", "invoices"],
+  "version": 1
+}

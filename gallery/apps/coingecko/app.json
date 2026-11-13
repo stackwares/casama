@@ -1,0 +1,10 @@
+{
+  "description": "Crypto prices, market data, charts and trending coins from CoinGecko.",
+  "category": "data",
+  "color": "8DC63F",
+  "homepage": "https://www.coingecko.com",
+  "url": "https://mcp.coingecko.com/mcp",
+  "auth": ["none"],
+  "note": "No sign-in needed.",
+  "capabilities": ["Check coin prices", "Compare coins", "See price history", "See trending coins"]
+}

@@ -152,10 +152,11 @@ Future<void> showSpacesSheet(BuildContext context, WidgetRef ref) => showAdaptiv
             GroupedCard(
               children: [
                 for (final o in orgs)
-                  ListTile(
+                  GroupedTile(
                     key: Key('space-${o.id}'),
+                    icon: LucideIcons.building2,
                     leading: SpaceAvatar(name: o.name, icon: o.icon, color: o.color),
-                    title: Text(o.name),
+                    title: o.name,
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -430,7 +431,7 @@ class _WorkspaceSettingsScreenState extends ConsumerState<WorkspaceSettingsScree
 }
 
 /// One workspace setting still loading: a grouped card holding a [GroupedTile] row, or a
-/// three-line [SwitchListTile] for [threeLineSwitch].
+/// [GroupedTile] with a three-line subtitle and a [Switch] for [threeLineSwitch].
 class _SettingSkeleton extends StatelessWidget {
   const _SettingSkeleton({this.threeLineSwitch = false});
   final bool threeLineSwitch;
@@ -441,31 +442,8 @@ class _SettingSkeleton extends StatelessWidget {
     return SkeletonScope(
       child: threeLineSwitch
           ? SkeletonGroupedCard(
-              rows: [
-                // A three-line ListTile: 88 points, 16-point sides, the switch beside the text.
-                SizedBox(
-                  height: 88,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              SkeletonText(style: text.bodyLarge, widthFactor: 0.4),
-                              SkeletonText(style: text.bodyMedium, widthFactor: 0.8, lines: 2),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        const SkeletonBone(width: 52, height: 32, radius: AppRadius.pill),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+              row: SkeletonRow(trailing: SkeletonTrailing.toggle, subtitleLines: 3, subtitleStyle: text.bodySmall),
+              count: 1,
             )
           : const SkeletonGroupedCard(count: 1),
     );
@@ -483,17 +461,22 @@ class BotToBotSwitch extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final on = ref.watch(_botToBotProvider(orgId)).value ?? true;
+    Future<void> set(bool v) async {
+      await runGuarded(context, () => ref.read(backendProvider).setAllowBotToBot(orgId, v));
+      ref.invalidate(_botToBotProvider(orgId));
+    }
+
     return GroupedCard(
       children: [
-        SwitchListTile(
-          key: const Key('botToBot'),
-          title: Text(l10n.botToBot),
-          subtitle: Text(l10n.botToBotHelp),
-          value: on,
-          onChanged: hapticOnChanged((v) async {
-            await runGuarded(context, () => ref.read(backendProvider).setAllowBotToBot(orgId, v));
-            ref.invalidate(_botToBotProvider(orgId));
-          }),
+        GroupedTile(
+          icon: LucideIcons.messagesSquare,
+          title: l10n.botToBot,
+          subtitle: l10n.botToBotHelp,
+          onTap: () {
+            HapticsHelper.light();
+            set(!on);
+          },
+          trailing: Switch(key: const Key('botToBot'), value: on, onChanged: hapticOnChanged(set)),
         ),
       ],
     );
@@ -523,18 +506,15 @@ class EncryptionSection extends ConsumerWidget {
     Future<void> toggle(bool v) async {
       if (v) {
         unfocusBeforeModal();
-        final ok = await showDialog<bool>(
+        final ok = await showConfirm(
           context: context,
-          builder: (d) => AlertDialog(
-            title: Text(l10n.encryption),
-            content: Text(l10n.encryptionConfirm),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(d, false), child: Text(l10n.cancel)),
-              FilledButton(key: const Key('confirmEncryption'), onPressed: () => Navigator.pop(d, true), child: Text(l10n.encryptionTurnOn)),
-            ],
-          ),
+          title: l10n.encryption,
+          message: l10n.encryptionConfirm,
+          confirmLabel: l10n.encryptionTurnOn,
+          icon: LucideIcons.lockKeyhole,
+          confirmKey: const Key('confirmEncryption'),
         );
-        if (ok != true || !context.mounted) return;
+        if (!ok || !context.mounted) return;
       }
       await runGuarded(context, () => ref.read(backendProvider).setEncryption(orgId, v));
       ref.invalidate(_encryptionProvider(orgId));
@@ -542,13 +522,17 @@ class EncryptionSection extends ConsumerWidget {
 
     return GroupedCard(
       children: [
-        SwitchListTile(
-          key: const Key('encryption'),
-          title: Text(l10n.encryption),
-          subtitle: Text('$status\n${l10n.encryptionHelp}${on ? '\n${l10n.encryptionKeyManaged}' : ''}'),
-          isThreeLine: true,
-          value: on,
-          onChanged: hapticOnChanged(s.available || on ? toggle : null),
+        GroupedTile(
+          icon: LucideIcons.lockKeyhole,
+          title: l10n.encryption,
+          subtitle: '$status\n${l10n.encryptionHelp}${on ? '\n${l10n.encryptionKeyManaged}' : ''}',
+          onTap: s.available || on
+              ? () {
+                  HapticsHelper.light();
+                  toggle(!on);
+                }
+              : null,
+          trailing: Switch(key: const Key('encryption'), value: on, onChanged: hapticOnChanged(s.available || on ? toggle : null)),
         ),
         if (on)
           GroupedTile(
@@ -737,17 +721,23 @@ class A2aSwitch extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final on = ref.watch(_a2aProvider(orgId)).value ?? false;
+    Future<void> set(bool v) async {
+      await runGuarded(context, () => ref.read(backendProvider).setA2aEnabled(orgId, v));
+      ref.invalidate(_a2aProvider(orgId));
+    }
+
     return GroupedCard(
       children: [
-        SwitchListTile(
-          key: const Key('a2aSwitch'),
-          title: Text(l10n.a2a),
-          subtitle: Text(l10n.a2aHelp),
-          value: ref.watch(_a2aProvider(orgId)).value ?? false,
-          onChanged: hapticOnChanged((v) async {
-            await runGuarded(context, () => ref.read(backendProvider).setA2aEnabled(orgId, v));
-            ref.invalidate(_a2aProvider(orgId));
-          }),
+        GroupedTile(
+          icon: LucideIcons.network,
+          title: l10n.a2a,
+          subtitle: l10n.a2aHelp,
+          onTap: () {
+            HapticsHelper.light();
+            set(!on);
+          },
+          trailing: Switch(key: const Key('a2aSwitch'), value: on, onChanged: hapticOnChanged(set)),
         ),
       ],
     );

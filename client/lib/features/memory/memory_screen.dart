@@ -9,6 +9,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
+import '../../ui/app_menu.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/route_focus.dart';
@@ -201,31 +202,17 @@ class _MemoryCard extends StatelessWidget {
               ],
             ),
           ),
-          PopupMenuButton<String>(
+          AppMenuButton(
             tooltip: l10n.moreActions,
-            icon: Icon(LucideIcons.ellipsisVertical, color: scheme.onSurfaceVariant),
-            onSelected: (v) => switch (v) {
-              'edit' => onEdit(),
-              'pin' => onPin(),
-              _ => onDelete(),
-            },
-            itemBuilder: (_) => [
-              PopupMenuItem(
-                value: 'edit',
-                child: ListTile(leading: const Icon(LucideIcons.pencil), title: Text(l10n.edit), dense: true),
+            entries: [
+              AppMenuItem(icon: LucideIcons.pencil, label: l10n.edit, onTap: onEdit),
+              AppMenuItem(
+                icon: m.pinned ? LucideIcons.pinOff : LucideIcons.pin,
+                label: m.pinned ? l10n.unpin : l10n.pin,
+                onTap: onPin,
               ),
-              PopupMenuItem(
-                value: 'pin',
-                child: ListTile(leading: Icon(m.pinned ? LucideIcons.pinOff : LucideIcons.pin), title: Text(m.pinned ? l10n.unpin : l10n.pin), dense: true),
-              ),
-              PopupMenuItem(
-                value: 'delete',
-                child: ListTile(
-                  leading: Icon(LucideIcons.trash2, color: scheme.error),
-                  title: Text(l10n.delete, style: TextStyle(color: scheme.error)),
-                  dense: true,
-                ),
-              ),
+              const AppMenuDivider(),
+              AppMenuItem(icon: LucideIcons.trash2, label: l10n.delete, destructive: true, onTap: onDelete),
             ],
           ),
         ],

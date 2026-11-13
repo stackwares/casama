@@ -21,6 +21,8 @@ class ProviderConnectRequest {
   ProviderConnectRequest({
 
     required  this.app,
+
+     this.returnToApp,
   });
 
   @JsonKey(
@@ -35,15 +37,29 @@ class ProviderConnectRequest {
 
 
 
+  @JsonKey(
+    
+    name: r'return_to_app',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? returnToApp;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is ProviderConnectRequest &&
-      other.app == app;
+      other.app == app &&
+      other.returnToApp == returnToApp;
 
     @override
     int get hashCode =>
-        app.hashCode;
+        app.hashCode +
+        returnToApp.hashCode;
 
   factory ProviderConnectRequest.fromJson(Map<String, dynamic> json) => _$ProviderConnectRequestFromJson(json);
 

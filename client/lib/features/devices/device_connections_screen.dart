@@ -14,6 +14,7 @@ import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
+import '../../ui/property_row.dart';
 import '../desktop/desktop_watch.dart';
 import 'device_labels.dart';
 import 'device_sync.dart';
@@ -192,21 +193,10 @@ class _DeviceConnectionsSkeleton extends StatelessWidget {
         ),
         const SizedBox(height: AppSpace.md),
         for (var i = 0; i < kinds; i++) ...[
-          // _KindCard: a one-line SwitchListTile (56 points) with an icon, inside the card's padding.
+          // _KindCard: a one-line GroupedTile with its icon tile and a switch.
           SkeletonCard(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.xs),
-            child: SizedBox(
-              height: 56,
-              child: Row(
-                children: [
-                  const SkeletonBone(width: 24, height: 24, radius: 6),
-                  const SizedBox(width: 16),
-                  Expanded(child: SkeletonText(style: text.bodyLarge, widthFactor: _titles[i % _titles.length])),
-                  const SizedBox(width: 16),
-                  const SkeletonBone(width: 52, height: 32, radius: AppRadius.pill),
-                ],
-              ),
-            ),
+            padding: EdgeInsets.zero,
+            child: SkeletonRow(trailing: SkeletonTrailing.toggle, subtitle: false, titleWidth: _titles[i % _titles.length]),
           ),
           const SizedBox(height: AppSpace.sm),
         ],
@@ -235,21 +225,28 @@ class _KindCard extends StatelessWidget {
     final on = settings != null;
     return AppCard(
       key: Key('deviceKind-${kind.value}'),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.xs),
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SwitchListTile(
-            key: Key('deviceSwitch-${kind.value}'),
-            contentPadding: EdgeInsets.zero,
-            secondary: Icon(deviceKindIcon(kind)),
-            title: Text(_kindTitle(l10n, kind)),
-            value: on,
-            onChanged: hapticOnChanged(busy ? null : onToggle),
+          GroupedTile(
+            icon: deviceKindIcon(kind),
+            title: _kindTitle(l10n, kind),
+            onTap: busy
+                ? null
+                : () {
+                    HapticsHelper.light();
+                    onToggle(!on);
+                  },
+            trailing: Switch(
+              key: Key('deviceSwitch-${kind.value}'),
+              value: on,
+              onChanged: hapticOnChanged(busy ? null : onToggle),
+            ),
           ),
           if (on && (kind == DeviceKind.health || extra != null))
             Padding(
-              padding: const EdgeInsets.only(bottom: AppSpace.sm),
+              padding: const EdgeInsets.fromLTRB(AppSpace.md, 0, AppSpace.md, AppSpace.sm),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -278,79 +275,82 @@ class _KindAdvanced extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final keep = settings.retentionDays ?? defaultRetentionDays(kind);
-    return AppCard(
+    DeviceKindSettings with_({int? retentionDays, bool? privateModel, List<DeviceKindSettingsExtrasEnum>? extras}) => DeviceKindSettings(
+      retentionDays: retentionDays ?? settings.retentionDays,
+      privateModel: privateModel ?? settings.privateModel,
+      extras: extras ?? settings.extras,
+    );
+    final private = settings.privateModel ?? false;
+    return Column(
       key: Key('deviceAdvanced-${kind.value}'),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.xs),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpace.sm),
-            child: Row(
-              children: [
-                Icon(deviceKindIcon(kind), size: 18, color: context.colorScheme.onSurfaceVariant),
-                const SizedBox(width: AppSpace.sm),
-                Expanded(child: Text(_kindTitle(l10n, kind), style: context.textTheme.titleSmall)),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(title: _kindTitle(l10n, kind), padding: const EdgeInsets.fromLTRB(AppSpace.xxs, AppSpace.xs, AppSpace.xxs, AppSpace.xs)),
+        GroupedCard(
+          children: [
+            PropertyRow<int>(
+              key: Key('deviceKeep-${kind.value}'),
+              icon: LucideIcons.history,
+              title: l10n.deviceKeepFor,
+              value: switch (const [0, 7, 30, 90, 365].contains(keep) ? keep : 365) {
+                0 => l10n.deviceKeepLiveOnly,
+                final d => l10n.deviceKeepDays(d),
+              },
+              options: [
+                for (final d in const [0, 7, 30, 90, 365])
+                  if (d <= defaultRetentionDays(kind)) PropertyOption(value: d, label: d == 0 ? l10n.deviceKeepLiveOnly : l10n.deviceKeepDays(d), selected: d == keep),
               ],
+              onSelected: (d) => onSettings(with_(retentionDays: d)),
             ),
-          ),
-          Row(
-            children: [
-              Expanded(child: Text(l10n.deviceKeepFor, style: context.textTheme.bodyMedium)),
-              DropdownButton<int>(
-                key: Key('deviceKeep-${kind.value}'),
-                value: const [0, 7, 30, 90, 365].contains(keep) ? keep : 365,
-                underline: const SizedBox.shrink(),
-                items: [
-                  for (final d in const [0, 7, 30, 90, 365])
-                    if (d <= defaultRetentionDays(kind)) DropdownMenuItem(value: d, child: Text(d == 0 ? l10n.deviceKeepLiveOnly : l10n.deviceKeepDays(d))),
-                ],
-                onChanged: hapticOnChanged((d) => d == null ? null : onSettings(DeviceKindSettings(retentionDays: d, privateModel: settings.privateModel, extras: settings.extras)), haptic: HapticsHelper.selection),
+            GroupedTile(
+              icon: LucideIcons.shieldCheck,
+              title: l10n.devicePrivateModel,
+              subtitle: l10n.devicePrivateModelHelp,
+              onTap: () {
+                HapticsHelper.light();
+                onSettings(with_(privateModel: !private));
+              },
+              trailing: Switch(
+                key: Key('devicePrivate-${kind.value}'),
+                value: private,
+                onChanged: hapticOnChanged((v) => onSettings(with_(privateModel: v))),
               ),
-            ],
-          ),
-          SwitchListTile(
-            key: Key('devicePrivate-${kind.value}'),
-            contentPadding: EdgeInsets.zero,
-            dense: true,
-            title: Text(l10n.devicePrivateModel),
-            subtitle: Text(l10n.devicePrivateModelHelp),
-            value: settings.privateModel ?? false,
-            onChanged: hapticOnChanged((v) => onSettings(DeviceKindSettings(retentionDays: settings.retentionDays, privateModel: v, extras: settings.extras))),
-          ),
-          // Health (D-150): sensitive extras are separate switches, off by default.
-          if (kind == DeviceKind.health)
-            for (final x in DeviceKindSettingsExtrasEnum.values)
-              SwitchListTile(
-                key: Key('healthExtra-${x.value}'),
-                contentPadding: EdgeInsets.zero,
-                dense: true,
-                title: Text(switch (x) {
-                  DeviceKindSettingsExtrasEnum.cycle => l10n.healthExtraCycle,
-                  DeviceKindSettingsExtrasEnum.glucose => l10n.healthExtraGlucose,
-                  DeviceKindSettingsExtrasEnum.bloodPressure => l10n.healthExtraBloodPressure,
-                }),
-                value: settings.extras?.contains(x) ?? false,
-                onChanged: hapticOnChanged((v) => onSettings(
-                  DeviceKindSettings(
-                    retentionDays: settings.retentionDays,
-                    privateModel: settings.privateModel,
-                    extras: [...?settings.extras?.where((e) => e != x), if (v) x],
-                  ),
-                )),
-              ),
-          Padding(
-            padding: const EdgeInsets.only(top: AppSpace.xs, bottom: AppSpace.sm),
-            child: grants.isEmpty
-                ? Text(l10n.deviceNoBots, style: context.textTheme.bodySmall)
-                : Wrap(
-                    spacing: AppSpace.xs,
-                    runSpacing: AppSpace.xs,
-                    children: [for (final g in grants) InputChip(key: Key('grant-${g.botId}-${kind.value}'), label: Text(g.botName), onDeleted: () => onRevoke(g))],
-                  ),
-          ),
-        ],
-      ),
+            ),
+            // Health (D-150): sensitive extras are separate switches, off by default.
+            if (kind == DeviceKind.health)
+              for (final x in DeviceKindSettingsExtrasEnum.values)
+                Builder(
+                  builder: (context) {
+                    final extraOn = settings.extras?.contains(x) ?? false;
+                    void setExtra(bool v) => onSettings(with_(extras: [...?settings.extras?.where((e) => e != x), if (v) x]));
+                    return GroupedTile(
+                      icon: LucideIcons.heartPulse,
+                      title: switch (x) {
+                        DeviceKindSettingsExtrasEnum.cycle => l10n.healthExtraCycle,
+                        DeviceKindSettingsExtrasEnum.glucose => l10n.healthExtraGlucose,
+                        DeviceKindSettingsExtrasEnum.bloodPressure => l10n.healthExtraBloodPressure,
+                      },
+                      onTap: () {
+                        HapticsHelper.light();
+                        setExtra(!extraOn);
+                      },
+                      trailing: Switch(key: Key('healthExtra-${x.value}'), value: extraOn, onChanged: hapticOnChanged(setExtra)),
+                    );
+                  },
+                ),
+            Padding(
+              padding: const EdgeInsets.all(AppSpace.md),
+              child: grants.isEmpty
+                  ? Text(l10n.deviceNoBots, style: context.textTheme.bodySmall)
+                  : Wrap(
+                      spacing: AppSpace.xs,
+                      runSpacing: AppSpace.xs,
+                      children: [for (final g in grants) InputChip(key: Key('grant-${g.botId}-${kind.value}'), label: Text(g.botName), onDeleted: () => onRevoke(g))],
+                    ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -521,14 +521,20 @@ class _WatchedFoldersState extends ConsumerState<_WatchedFolders> {
           ),
         ),
         FormNote(l10n.watchedFoldersHelp),
-        for (final f in _folders)
-          ListTile(
-            key: Key('watched-$f'),
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(LucideIcons.folderOpen),
-            title: Text(f, overflow: TextOverflow.ellipsis),
-            trailing: IconButton(tooltip: l10n.delete, icon: const Icon(LucideIcons.x, size: 18), onPressed: () => _save([..._folders]..remove(f))),
+        if (_folders.isNotEmpty) ...[
+          const SizedBox(height: AppSpace.sm),
+          GroupedCard(
+            children: [
+              for (final f in _folders)
+                GroupedTile(
+                  key: Key('watched-$f'),
+                  icon: LucideIcons.folderOpen,
+                  title: f,
+                  trailing: IconButton(tooltip: l10n.delete, icon: const Icon(LucideIcons.x, size: 18), onPressed: () => _save([..._folders]..remove(f))),
+                ),
+            ],
           ),
+        ],
       ],
     );
   }

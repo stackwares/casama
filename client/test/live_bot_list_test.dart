@@ -69,4 +69,34 @@ void main() {
       BotStatusEnum.working,
     );
   });
+
+  test(
+    'the same workspace coming back changed does not reload the bots',
+    () async {
+      final backend = FakeBackend();
+      final container = ProviderContainer(
+        overrides: [backendProvider.overrideWithValue(backend)],
+      );
+      addTearDown(container.dispose);
+      final sub = container.listen(botsProvider, (_, _) {});
+      addTearDown(sub.close);
+      await container.read(organizationsProvider.future);
+      await container.read(botsProvider.future);
+
+      // At launch the server's copy of the workspace replaces the cached one, renamed here.
+      var reloaded = false;
+      final watch = container.listen(botsProvider, (_, next) {
+        if (next.isLoading) reloaded = true;
+      });
+      addTearDown(watch.close);
+      backend.orgName = 'Renamed';
+      container.invalidate(organizationsProvider);
+      await container.read(organizationsProvider.future);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(container.read(currentOrgProvider)?.name, 'Renamed');
+      expect(reloaded, isFalse, reason: 'no skeleton flash at launch');
+      expect(container.read(botsProvider).value?.map((b) => b.name), ['Ada']);
+    },
+  );
 }

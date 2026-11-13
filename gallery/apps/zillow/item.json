@@ -1,0 +1,10 @@
+{
+  "name": "Zillow",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "CC0-1.0",
+  "tags": ["home", "real-estate"],
+  "version": 1
+}

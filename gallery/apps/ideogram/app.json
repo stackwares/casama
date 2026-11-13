@@ -1,0 +1,11 @@
+{
+  "description": "Generate images with Ideogram, including clear text in images.",
+  "category": "design",
+  "color": "272038",
+  "homepage": "https://ideogram.ai",
+  "url": "https://mcp.ideogram.ai/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "note": "Generating uses your Ideogram plan.",
+  "capabilities": ["Generate images from a prompt", "Make images with text in them"]
+}

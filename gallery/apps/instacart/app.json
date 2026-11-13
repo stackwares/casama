@@ -1,0 +1,10 @@
+{
+  "description": "Turn recipes and lists into Instacart shopping pages you can order from.",
+  "category": "productivity",
+  "color": "43B02A",
+  "homepage": "https://www.instacart.com",
+  "url": "https://mcp.instacart.com/mcp",
+  "auth": ["none"],
+  "note": "Creates pages on Instacart. Ordering and payment finish on Instacart. No sign-in needed.",
+  "capabilities": ["Make a shopping list page", "Turn a recipe into a cart-ready page"]
+}

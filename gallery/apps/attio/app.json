@@ -1,0 +1,10 @@
+{
+  "description": "Find and update people, companies and deals in your Attio CRM.",
+  "category": "sales",
+  "color": "242629",
+  "homepage": "https://attio.com",
+  "url": "https://mcp.attio.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Search records", "Update people and companies", "Add notes and tasks"]
+}

@@ -1,0 +1,10 @@
+{
+  "description": "Create invoices, check transactions and manage PayPal payments.",
+  "category": "payments",
+  "color": "003087",
+  "homepage": "https://www.paypal.com",
+  "url": "https://mcp.paypal.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Create and send invoices", "Look up transactions", "Check orders and refunds"]
+}

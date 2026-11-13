@@ -3127,6 +3127,7 @@ class FakeBackend implements Backend {
     required String method,
     String? apiKey,
     String? integrationId,
+    bool returnToApp = false,
   }) async {
     connectCalls.add((appId, method, apiKey));
     if (method == 'managed') {
@@ -3190,7 +3191,7 @@ class FakeBackend implements Backend {
   ];
   final providerConnects = <String>[];
   @override
-  Future<String> connectProviderApp(String integrationId, String app) async {
+  Future<String> connectProviderApp(String integrationId, String app, {bool returnToApp = false}) async {
     providerConnects.add(app);
     return 'https://connect.example.com/$app';
   }

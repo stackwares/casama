@@ -157,9 +157,12 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
     (env.PUBLIC_API_URL ?? new URL(c.req.url).origin).replace(/\/$/, "");
   const redirectUri = (c: Context) => env.OAUTH_REDIRECT_URL ?? oauthRedirectFor(apiBase(c));
   const cimdUrl = (c: Context) => `${apiBase(c)}/oauth/client.json`;
-  /** Where Composio and Pipedream send the browser after a sign-in; names the connection to finish. */
-  const doneUrl = (c: Context, integrationId: string) =>
-    `${apiBase(c)}/oauth/done?integration=${encodeURIComponent(integrationId)}`;
+  /**
+   * Where Composio and Pipedream send the browser after a sign-in; names the connection to finish.
+   * "app=1" comes first: a provider may append its own "?status=…" to the end of this address.
+   */
+  const doneUrl = (c: Context, integrationId: string, toApp = false) =>
+    `${apiBase(c)}/oauth/done?${toApp ? "app=1&" : ""}integration=${encodeURIComponent(integrationId)}`;
   /** OAuth 2.1 servers only accept a return address on https, or on this machine (loopback). */
   const secureRedirect = (c: Context) => {
     const u = new URL(redirectUri(c));
@@ -356,7 +359,10 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
       if (!rec) throw new Error("managed integration missing");
       let out: { redirect_url: string };
       try {
-        out = await composioDirectory(rec, fetchImpl).connect(slug, doneUrl(c, row?.id as string));
+        out = await composioDirectory(rec, fetchImpl).connect(
+          slug,
+          doneUrl(c, row?.id as string, body.return_to_app === true),
+        );
       } catch (err) {
         throw new ApiError(400, "provider_error", (err as Error).message.slice(0, 300));
       }
@@ -479,6 +485,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
             code_verifier: codeVerifier,
             redirect_uri: redirectUri(c),
             resource,
+            ...(body.return_to_app ? { return_to_app: true } : {}),
           })}::jsonb, ${body.integration_id ?? null})
         returning id`);
       return c.json(
@@ -560,6 +567,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
         code_verifier: string;
         redirect_uri: string;
         resource?: string;
+        return_to_app?: boolean;
       };
       integration_id: string | null;
     }>(sql`
@@ -582,6 +590,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
         orgId: flow.org_id,
         properties: { app_id: a.id, method: "oauth", reason },
       });
+      if (flow.oauth.return_to_app) return c.redirect(appReturn("error"), 302);
       return c.html(resultPage(message, false), 400);
     };
     const denied = c.req.query("error");
@@ -621,6 +630,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
       await db.execute(sql`
         update public.integration_oauth_flows set status = 'connected', error = null, integration_id = ${integration.id}::uuid,
           oauth = oauth - 'code_verifier' - 'client' where id = ${flow.id}::uuid`);
+      if (flow.oauth.return_to_app) return c.redirect(appReturn("ok"), 302);
       return c.html(
         resultPage(
           `${a.name} is connected. You can close this window and go back to Casama.`,
@@ -707,9 +717,9 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
   app.openapi(routes.connectProviderApp, async (c) => {
     const { id } = c.req.valid("param");
     const { row, dir } = await directory(c, id, true);
-    const { app: slug } = c.req.valid("json");
+    const { app: slug, return_to_app } = c.req.valid("json");
     try {
-      const out = await dir.connect(slug, doneUrl(c, id));
+      const out = await dir.connect(slug, doneUrl(c, id, return_to_app === true));
       // The app's tools become available to bots once it's on the list.
       const config = row.config as Record<string, unknown>;
       const key = row.kind === "composio" ? "toolkits" : "apps";
@@ -738,6 +748,7 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
   // nothing would list the new app's tools and the connection would stay "pending". So the
   // server finishes it here too. Only a connection still waiting for its tools is refreshed, so
   // this unauthenticated page can't be used to make the server call the provider at will.
+  // From the app's sign-in sheet ("app=1"), it ends on casama-auth://done, which closes the sheet.
   app.get("/oauth/done", async (c) => {
     // Leading match: a provider may append its own "?status=…" to a return address that has a query.
     const id = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i.exec(
@@ -758,10 +769,23 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
           }),
         );
     }
+    if (c.req.query("app")?.startsWith("1")) {
+      // A provider may add its own "?status=failed" after our address; the app checks either way.
+      const failed = /status=(failed|error)/i.test(new URL(c.req.url).search);
+      return c.redirect(appReturn(failed ? "error" : "ok"), 302);
+    }
     return c.html(
       resultPage("You're signed in. You can close this window and go back to Casama.", true),
     );
   });
+}
+
+/**
+ * The end of a sign-in started from the app's sign-in sheet (ASWebAuthenticationSession, Custom
+ * Tabs): reaching this address closes the sheet. A fixed address, so this is never an open redirect.
+ */
+function appReturn(status: "ok" | "error") {
+  return `casama-auth://done?status=${status}`;
 }
 
 /** A small page shown in the browser after a sign-in; it tries to close itself. */

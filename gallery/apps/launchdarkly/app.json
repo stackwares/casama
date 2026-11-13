@@ -1,0 +1,10 @@
+{
+  "description": "See and change feature flags in LaunchDarkly.",
+  "category": "developer",
+  "color": "191919",
+  "homepage": "https://launchdarkly.com",
+  "url": "https://mcp.launchdarkly.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["List feature flags", "Turn flags on or off", "Review flag changes"]
+}

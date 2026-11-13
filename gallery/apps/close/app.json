@@ -1,0 +1,10 @@
+{
+  "description": "Work with leads, contacts and opportunities in your Close CRM.",
+  "category": "sales",
+  "color": "1A1A1A",
+  "homepage": "https://www.close.com",
+  "url": "https://mcp.close.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Search leads and contacts", "Update opportunities", "Log notes and tasks"]
+}

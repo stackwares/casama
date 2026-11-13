@@ -1,0 +1,11 @@
+{
+  "description": "Search Turkish Airlines flights, check flight status and see your bookings.",
+  "category": "productivity",
+  "color": "C70A0C",
+  "homepage": "https://www.turkishairlines.com",
+  "url": "https://mcp.turkishtechlab.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "note": "Sign in with your Miles&Smiles account. Booking finishes on Turkish Airlines' site.",
+  "capabilities": ["Search Turkish Airlines flights", "Check flight status", "See your bookings and check-in", "Look up your Miles&Smiles profile"]
+}

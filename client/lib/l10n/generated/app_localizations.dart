@@ -1516,6 +1516,18 @@ abstract class AppLocalizations {
   /// **'Day'**
   String get routineDay;
 
+  /// No description provided for @routineTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get routineTimeLabel;
+
+  /// No description provided for @routineRunsAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs at'**
+  String get routineRunsAt;
+
   /// No description provided for @routineTimesIn.
   ///
   /// In en, this message translates to:
@@ -7059,6 +7071,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete Ticket'**
   String get deleteTicket;
+
+  /// No description provided for @ticketResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get ticketResult;
+
+  /// No description provided for @noCommentsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No comments yet. Leave a note for the bot or your team.'**
+  String get noCommentsYet;
 
   /// No description provided for @noTickets.
   ///

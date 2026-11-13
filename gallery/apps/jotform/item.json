@@ -1,0 +1,10 @@
+{
+  "name": "Jotform",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "CC0-1.0",
+  "tags": ["forms"],
+  "version": 1
+}

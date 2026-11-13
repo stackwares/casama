@@ -29,6 +29,8 @@ class ConnectAppRequest {
      this.apiKey,
 
      this.integrationId,
+
+     this.returnToApp,
   });
 
   @JsonKey(
@@ -91,6 +93,18 @@ class ConnectAppRequest {
 
 
 
+  @JsonKey(
+    
+    name: r'return_to_app',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? returnToApp;
+
+
+
 
 
     @override
@@ -99,7 +113,8 @@ class ConnectAppRequest {
       other.appId == appId &&
       other.method == method &&
       other.apiKey == apiKey &&
-      other.integrationId == integrationId;
+      other.integrationId == integrationId &&
+      other.returnToApp == returnToApp;
 
     @override
     int get hashCode =>
@@ -107,7 +122,8 @@ class ConnectAppRequest {
         appId.hashCode +
         method.hashCode +
         apiKey.hashCode +
-        integrationId.hashCode;
+        integrationId.hashCode +
+        returnToApp.hashCode;
 
   factory ConnectAppRequest.fromJson(Map<String, dynamic> json) => _$ConnectAppRequestFromJson(json);
 

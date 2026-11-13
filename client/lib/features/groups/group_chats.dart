@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +9,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/display_text.dart';
+import '../../core/local_cache.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../core/haptics.dart';
@@ -21,11 +24,52 @@ import '../../ui/shell_header.dart';
 import '../chat/chat_screen.dart';
 
 /// Group chats (D-118): 2 to 10 bots in one conversation, woken by @Name or @everyone.
-final groupChatsProvider = FutureProvider<List<Conversation>>((ref) async {
-  final org = ref.watch(currentOrgProvider);
-  if (org == null) return const [];
-  return ref.watch(backendProvider).groupChats(org.id);
-});
+/// Group chats, shown from the offline cache first at launch and refreshed in the background,
+/// like bots (D-112), so the chats list has its final shape on its first frame.
+class GroupChatsNotifier extends AsyncNotifier<List<Conversation>> {
+  var _launched = false;
+  var _generation = 0;
+
+  @override
+  Future<List<Conversation>> build() async {
+    final orgId = ref.watch(currentOrgIdProvider);
+    if (orgId == null) {
+      // Workspaces still loading: stay loading, as the bots do.
+      await ref.watch(organizationsProvider.future);
+      return const [];
+    }
+    final backend = ref.watch(backendProvider);
+    final cache = ref.watch(localCacheProvider);
+    final key = 'groups:$orgId';
+    final gen = ++_generation;
+    final fresh = backend.groupChats(orgId).then((v) {
+      unawaited(cacheWrite(cache, key, [for (final c in v) c.toJson()]));
+      return v;
+    });
+    fresh.ignore();
+    // Only at launch: after a change (an invalidate) the server's list is awaited.
+    if (!_launched) {
+      _launched = true;
+      final cached = await cacheRead(cache, key);
+      if (cached is List) {
+        try {
+          final list = [for (final j in cached) Conversation.fromJson(Map<String, dynamic>.from(j as Map))];
+          unawaited(
+            fresh
+                .then((v) {
+                  if (ref.mounted && gen == _generation) state = AsyncData(v);
+                })
+                .catchError((_) {}),
+          );
+          return list;
+        } catch (_) {}
+      }
+    }
+    return fresh;
+  }
+}
+
+final groupChatsProvider = AsyncNotifierProvider<GroupChatsNotifier, List<Conversation>>(GroupChatsNotifier.new);
 
 /// A group chat's title, or its bots' names.
 String groupTitle(Conversation c, List<Bot> bots) => c.title.isUsable

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -20,16 +22,17 @@ import 'profile_photo.dart';
 final aboutYouProvider = FutureProvider<AboutYouView>((ref) async {
   if (ref.watch(signedInProvider).value == false) return const AboutYouView();
   final backend = ref.watch(backendProvider);
-  final about = await backend.aboutYou();
+  var about = await backend.aboutYou();
   // Signed in with Google and no photo yet (D-202): copy the Google photo once. The server does
   // it only the first time, so a removed photo stays removed.
   if (about.photoId == null && about.providerPhoto && !about.photoImportTried) {
     try {
-      return await backend.importProfilePhoto();
-    } catch (_) {
-      return about;
-    }
+      about = await backend.importProfilePhoto();
+    } catch (_) {}
   }
+  // Signing in or out while this loaded rebuilds the provider and disposes this ref: the newer
+  // build saves its own copy.
+  if (ref.mounted) unawaited(saveMeForLaunch(ref, about));
   return about;
 });
 final userFactsProvider = FutureProvider<List<UserFactView>>((ref) => ref.watch(backendProvider).userFacts());
@@ -121,7 +124,6 @@ class _AboutYouScreenState extends ConsumerState<AboutYouScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = context.colorScheme;
     final about = ref.watch(aboutYouProvider);
     final facts = ref.watch(userFactsProvider);
     final org = ref.watch(currentOrgProvider);
@@ -198,25 +200,42 @@ class _AboutYouScreenState extends ConsumerState<AboutYouScreen> {
         const SizedBox(height: AppSpace.lg),
         GroupedCard(
           children: [
-            SwitchListTile(
-              key: const Key('learnAboutMe'),
-              secondary: Icon(LucideIcons.sparkles, color: scheme.onSurfaceVariant),
-              title: Text(l10n.learnAboutMe),
-              subtitle: Text(l10n.learnAboutMeHelp),
-              value: learn,
-              onChanged: hapticOnChanged(_busy ? null : (on) => _save(learn: on)),
+            GroupedTile(
+              icon: LucideIcons.sparkles,
+              title: l10n.learnAboutMe,
+              subtitle: l10n.learnAboutMeHelp,
+              onTap: _busy
+                  ? null
+                  : () {
+                      HapticsHelper.light();
+                      _save(learn: !learn);
+                    },
+              trailing: Switch(
+                key: const Key('learnAboutMe'),
+                value: learn,
+                onChanged: hapticOnChanged(_busy ? null : (on) => _save(learn: on)),
+              ),
             ),
             if (org != null)
-              SwitchListTile(
-                key: const Key('useInThisSpace'),
-                secondary: Icon(LucideIcons.boxes, color: scheme.onSurfaceVariant),
-                title: Text(l10n.useInThisSpace(org.name)),
-                subtitle: Text(l10n.useInThisSpaceHelp),
-                value: ref.watch(profileSharedProvider(org.id)).value ?? false,
-                onChanged: hapticOnChanged((on) async {
-                  await runGuarded(context, () => ref.read(backendProvider).setProfileSharedIn(org.id, on));
-                  ref.invalidate(profileSharedProvider(org.id));
-                }),
+              Builder(
+                builder: (context) {
+                  final shared = ref.watch(profileSharedProvider(org.id)).value ?? false;
+                  Future<void> setShared(bool on) async {
+                    await runGuarded(context, () => ref.read(backendProvider).setProfileSharedIn(org.id, on));
+                    ref.invalidate(profileSharedProvider(org.id));
+                  }
+
+                  return GroupedTile(
+                    icon: LucideIcons.boxes,
+                    title: l10n.useInThisSpace(org.name),
+                    subtitle: l10n.useInThisSpaceHelp,
+                    onTap: () {
+                      HapticsHelper.light();
+                      setShared(!shared);
+                    },
+                    trailing: Switch(key: const Key('useInThisSpace'), value: shared, onChanged: hapticOnChanged(setShared)),
+                  );
+                },
               ),
           ],
         ),
@@ -253,21 +272,17 @@ class _AboutYouScreenState extends ConsumerState<AboutYouScreen> {
   }
 }
 
-/// The About you page before it loads: photo, note, the profile form, the two switches and the facts.
+/// The About you page before it loads: photo, note, the profile form, the two switch rows and the facts.
 class _AboutYouSkeleton extends StatelessWidget {
   const _AboutYouSkeleton();
 
   @override
   Widget build(BuildContext context) {
     final text = context.textTheme;
+    // The two switches are GroupedTiles: icon tile, title, a two-line subtitle, the switch.
     final switchRow = SkeletonRow(
-      leading: SkeletonLeading.square,
-      leadingSize: 24,
-      gap: AppSpace.md,
       trailing: SkeletonTrailing.toggle,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: AppSpace.xs),
-      titleStyle: text.bodyLarge,
-      subtitleStyle: text.bodyMedium,
+      subtitleStyle: text.bodySmall,
       subtitleLines: 2,
     );
     return SkeletonPage(

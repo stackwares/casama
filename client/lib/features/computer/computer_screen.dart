@@ -29,6 +29,7 @@ import '../../ui/adaptive_modal.dart';
 import '../../ui/edge_fade.dart';
 import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
+import '../../ui/app_menu.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
 import '../chat/chat_screen.dart';
@@ -1915,47 +1916,23 @@ class _FilesTabState extends ConsumerState<FilesTab> {
                                 ),
                                 trailing: Builder(
                                   // The share sheet points at this button on iPad and macOS.
-                                  builder: (anchor) => PopupMenuButton<String>(
+                                  builder: (anchor) => AppMenuButton(
                                     tooltip: l10n.moreActions,
-                                    icon: Icon(
-                                      LucideIcons.ellipsisVertical,
-                                      color: scheme.onSurfaceVariant,
-                                    ),
-                                    onSelected: (v) async {
-                                      if (v == 'download') {
-                                        await _download(
+                                    entries: [
+                                      AppMenuItem(
+                                        icon: LucideIcons.share,
+                                        label: l10n.download,
+                                        onTap: () => _download(
                                           e,
                                           origin: shareOrigin(anchor),
-                                        );
-                                      }
-                                      if (v == 'delete') await _delete(e);
-                                    },
-                                    itemBuilder: (_) => [
-                                      PopupMenuItem(
-                                        value: 'download',
-                                        child: ListTile(
-                                          dense: true,
-                                          leading: const Icon(
-                                            LucideIcons.share,
-                                          ),
-                                          title: Text(l10n.download),
                                         ),
                                       ),
-                                      PopupMenuItem(
-                                        value: 'delete',
-                                        child: ListTile(
-                                          dense: true,
-                                          leading: Icon(
-                                            LucideIcons.trash2,
-                                            color: scheme.error,
-                                          ),
-                                          title: Text(
-                                            l10n.delete,
-                                            style: TextStyle(
-                                              color: scheme.error,
-                                            ),
-                                          ),
-                                        ),
+                                      const AppMenuDivider(),
+                                      AppMenuItem(
+                                        icon: LucideIcons.trash2,
+                                        label: l10n.delete,
+                                        destructive: true,
+                                        onTap: () => _delete(e),
                                       ),
                                     ],
                                   ),
