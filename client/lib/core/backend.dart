@@ -48,6 +48,12 @@ class AttachmentRef {
   /// The chat media id for a `media:` path.
   String? get mediaId => isChatMedia ? path.substring('media:'.length) : null;
 
+  /// A page the bot published (`page:<id>`), shown as a card that opens it; [name] is its title.
+  bool get isPage => path.startsWith('page:');
+
+  /// The page id for a `page:` path.
+  String? get pageId => isPage ? path.substring('page:'.length) : null;
+
   Map<String, Object?> toJson() => {
     'path': path,
     'name': name,
@@ -83,6 +89,14 @@ List<AttachmentRef> attachmentsOf(Object? content) {
           width: (p['width'] as num?)?.toInt(),
           height: (p['height'] as num?)?.toInt(),
           durationS: (p['duration_s'] as num?)?.toDouble(),
+        )
+      // A page the bot published during the run: a card under its reply that opens it.
+      else if (p['type'] == 'page' && p['page_id'] is String)
+        AttachmentRef(
+          path: 'page:${p['page_id']}',
+          name: '${p['title'] ?? ''}',
+          mimeType: 'text/html',
+          size: 0,
         ),
   ];
 }

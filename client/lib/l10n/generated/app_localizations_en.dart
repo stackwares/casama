@@ -5533,6 +5533,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pageRefreshes => 'Refreshes on schedule';
 
   @override
+  String get pageCardOpen => 'Page · Tap to open';
+
+  @override
   String pageUpdated(String date) {
     return 'Updated $date';
   }

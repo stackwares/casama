@@ -2,12 +2,15 @@ import 'dart:math' as math;
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/backend.dart';
+import '../../../core/providers.dart';
 import '../../../core/widgets.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
 import '../../files/file_preview.dart';
+import '../../pages/pages_screen.dart';
 import 'chat_audio.dart';
 import 'chat_pdf.dart';
 import 'chat_picture.dart';
@@ -25,6 +28,7 @@ class AttachmentView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final a = attachment;
+    if (a.isPage) return PageCard(attachment: a);
     final computerId = FileLinkScope.maybeOf(context)?.computerId;
     final path = a.isChatMedia
         ? a.path
@@ -165,6 +169,76 @@ class FileCard extends StatelessWidget {
                   ],
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A page the bot published (`page:<id>`): its title, and a tap opens it in the browser through a
+/// single-use view link, the same way Pages does.
+class PageCard extends ConsumerWidget {
+  const PageCard({super.key, required this.attachment});
+  final AttachmentRef attachment;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = context.colorScheme;
+    final title = attachment.name.trim().isEmpty ? context.l10n.pages : attachment.name.trim();
+    Future<void> open() async {
+      final url = await runGuarded(context, () => ref.read(backendProvider).pageViewLink(attachment.pageId!));
+      if (url != null) await ref.read(pageOpenerProvider)(Uri.parse(url));
+    }
+
+    return Material(
+      color: scheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: AppRadius.rowAll,
+        side: BorderSide(color: context.appColors.hairline),
+      ),
+      child: InkWell(
+        key: Key('pageCard-${attachment.pageId}'),
+        onTap: open,
+        customBorder: RoundedRectangleBorder(borderRadius: AppRadius.rowAll),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(10, 8, 14, 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.icon),
+                ),
+                alignment: Alignment.center,
+                child: Icon(LucideIcons.globe, size: 18, color: scheme.primary),
+              ),
+              const SizedBox(width: AppSpace.xs),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 240),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      context.l10n.pageCardOpen,
+                      style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpace.xs),
+              Icon(LucideIcons.externalLink, size: 16, color: scheme.onSurfaceVariant),
             ],
           ),
         ),

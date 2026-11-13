@@ -12,7 +12,7 @@ import 'commands_files.dart';
 import 'commands_selfhost.dart';
 import 'store.dart';
 
-const defaultApiUrl = 'http://localhost:8787';
+const defaultApiUrl = 'https://api.casama.ai';
 
 /// Runs the CLI and returns the process exit code.
 Future<int> runCli(List<String> args, {StringSink? out, StringSink? err, Directory? configDir}) async {

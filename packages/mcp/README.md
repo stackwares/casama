@@ -13,5 +13,5 @@ claude mcp add casama -- npx -y @casama/mcp
 Tools: `list_workspaces`, `list_bots`, `ask_bot` (sends a message and waits for the reply; pass
 `conversation_id` to continue), `get_run`, `list_approvals`, `decide_approval`.
 
-Settings: `CASAMA_API_URL` (defaults to the CLI's saved server, else `http://localhost:8787`) and
+Settings: `CASAMA_API_URL` (defaults to the CLI's saved server, else `https://api.casama.ai`) and
 either the CLI login (refreshed automatically) or `CASAMA_TOKEN`.

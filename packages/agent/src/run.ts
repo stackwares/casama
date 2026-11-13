@@ -345,6 +345,10 @@ export function partsText(content: unknown): string {
     // D-086: interactive UI the bot showed, and what the person did on it.
     if (part.type === "ui")
       notes.push(`(You showed an interactive UI, ${String(part.surface_id)}.)`);
+    if (part.type === "page")
+      notes.push(
+        `(A card that opens your page "${String((p as { title?: unknown }).title ?? "")}" showed under your reply, page ${String((p as { page_id?: unknown }).page_id)}.)`,
+      );
     if (part.type === "ui_action") {
       notes.push(
         `On your UI ${String(part.surface_id)} I chose "${String(part.name)}" with: ${JSON.stringify(part.context ?? {})}`,
@@ -2616,10 +2620,20 @@ async function saveFinalMessage(
     ...(m.height != null ? { height: m.height } : {}),
     ...(m.duration_s != null ? { duration_s: Number(m.duration_s) } : {}),
   }));
+  // Pages the bot published or changed during the run show under the reply as a card that opens
+  // them, so the person never has to go looking for them in Pages.
+  const pages = await db.execute<{ id: string; title: string }>(sql`
+    select p.id, p.title from public.pages p, public.runs r
+    where r.id = ${info.runId}::uuid and p.bot_id = ${info.botId}::uuid
+      and p.updated_at >= coalesce(r.started_at, r.created_at)
+      and exists (select 1 from public.run_events e where e.run_id = r.id and e.type = 'tool.started'
+                  and e.payload->>'tool' in ('pages.publish', 'pages.update_data', 'pages.share'))
+    order by p.updated_at, p.id limit 5`);
   const content: Array<Record<string, unknown>> = [
     { type: "text", text: final.text },
     ...ui,
     ...files,
+    ...[...pages].map((p) => ({ type: "page", page_id: p.id, title: p.title })),
   ];
   if (info.conversationId) {
     await db.execute(sql`

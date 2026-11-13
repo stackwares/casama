@@ -1655,6 +1655,7 @@
   "pageWorkspace": "Workspace",
   "pagePublic": "Anyone with the link",
   "pageRefreshes": "Refreshes on schedule",
+  "pageCardOpen": "Page · Tap to open",
   "pageUpdated": "Updated {date}",
   "@pageUpdated": {"placeholders": {"date": {"type": "String"}}},
   "exportPdf": "Export PDF",

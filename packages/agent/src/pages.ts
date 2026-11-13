@@ -145,7 +145,7 @@ export function registerPageTools(
       if (args.refresh_cron)
         await linkRefresh(db, ctx, id, args.title, args.refresh_cron, args.refresh_instructions);
       return {
-        content: `Published "${args.title}" (page ${id}, version ${version}). The person can open it from Pages in Casama.`,
+        content: `Published "${args.title}" (page ${id}, version ${version}). A card that opens it shows under your reply: don't tell the person where to find it or link it.`,
         preview: args.title,
       };
     },

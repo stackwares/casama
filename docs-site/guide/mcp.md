@@ -105,7 +105,7 @@ The local server runs on your machine and uses the same sign-in as the Casama CL
 
 | Environment variable | What it does |
 | --- | --- |
-| `CASAMA_API_URL` | Your Casama API. Default: the address from `casama config`, else `http://localhost:8787`. |
+| `CASAMA_API_URL` | Your Casama API. Default: the address from `casama config`, else `https://api.casama.ai`. |
 | `CASAMA_TOKEN` | An access token to use instead of the CLI's saved session |
 | `CASAMA_CONFIG_DIR` | Where to find the CLI's saved session and config |
 

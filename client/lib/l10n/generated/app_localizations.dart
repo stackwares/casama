@@ -8740,6 +8740,12 @@ abstract class AppLocalizations {
   /// **'Refreshes on schedule'**
   String get pageRefreshes;
 
+  /// No description provided for @pageCardOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Page · Tap to open'**
+  String get pageCardOpen;
+
   /// No description provided for @pageUpdated.
   ///
   /// In en, this message translates to:
