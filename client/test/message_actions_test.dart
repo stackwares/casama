@@ -41,7 +41,9 @@ void main() {
       );
       await tester.pumpAndSettle();
       final before = tester.getTopLeft(find.byKey(const Key('bubble')));
-      expect(_opacity(tester), 0);
+      // No space kept for the buttons (D-256): they float over the chat while the mouse is here.
+      expect(find.byKey(const Key('messageHoverBar')), findsNothing);
+      expect(tester.getSize(find.byType(MessageActions)).height, tester.getSize(find.byKey(const Key('bubble'))).height + 32);
 
       final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
       await mouse.addPointer(location: Offset.zero);

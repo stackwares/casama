@@ -1312,6 +1312,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final freshFrom = entries.length - 1;
 
     final allBots = ref.read(botsProvider).value ?? const <Bot>[];
+    // Between turns: close with one bot (D-256); group chats leave room for each bot's name.
+    final turnGap = widget.group ? AppSpace.xl : AppSpace.md;
     void botSide(String key, [String? fromBot]) {
       // In a group chat each bot's turn gets its own header (D-118).
       final speaker = widget.group && fromBot != null ? allBots.where((b) => b.id == fromBot).firstOrNull : null;
@@ -1321,7 +1323,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         rows.add(
           _Row(
             ValueKey('hdr-$key'),
-            lastSide.isEmpty ? 0 : AppSpace.xl,
+            lastSide.isEmpty ? 0 : turnGap,
             // One bot (D-256): no name over each turn, only the space between turns. Group chats
             // keep the header, so you can tell the bots apart.
             widget.group ? () => BotTurnHeader(name: speaker?.name ?? name, avatar: speaker?.avatarUrl ?? avatar) : () => const SizedBox.shrink(),
@@ -1355,7 +1357,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           rows.add(
             _Row(
               ValueKey(e.id),
-              lastSide.isEmpty ? 0 : AppSpace.xl,
+              lastSide.isEmpty ? 0 : turnGap,
               () => UserBubble(
                 text: e.text,
                 attachments: e.attachments,

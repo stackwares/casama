@@ -2,11 +2,13 @@ import 'package:a2ui_core/a2ui_core.dart';
 import 'package:a2ui_flutter/a2ui_flutter.dart';
 import 'package:a2ui_flutter/basic_catalog.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../core/widgets.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
+import '../../integrations/app_logo.dart';
 import 'chat_markdown.dart';
 
 /// The basic A2UI catalog (D-086) with Casama's own look for the parts bots use most: buttons,
@@ -35,7 +37,29 @@ CatalogImplementation casamaUiCatalog({OpenUrlCallback? openUrl}) {
 Widget _button(BuildContext context, ComponentNode<ComponentImplementation> node, ComponentProps props, ChildWidgetBuilder buildChild) {
   final child = props.child('child');
   final scheme = context.colorScheme;
-  final label = child == null ? const SizedBox.shrink() : buildChild(child);
+  final text0 = child == null ? const SizedBox.shrink() : buildChild(child);
+  // A button that connects an app (D-256) carries the app's mark, tinted like the label.
+  final app = _connectApp(node);
+  final label = app == null
+      ? text0
+      : Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Builder(
+              builder: (context) => SvgPicture.asset(
+                'assets/apps/$app.svg',
+                width: 17,
+                height: 17,
+                colorFilter: ColorFilter.mode(
+                  IconTheme.of(context).color ?? DefaultTextStyle.of(context).style.color ?? scheme.onSurface,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(child: text0),
+          ],
+        );
   final VoidCallback? onPressed = props.isValid ? props.action('action') : null;
   final variant = props.string('variant');
   final text = context.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600, height: 1.2);
@@ -62,6 +86,16 @@ Widget _button(BuildContext context, ComponentNode<ComponentImplementation> node
   };
   final reason = props.isValid ? null : props.validationErrors.firstOrNull;
   return reason == null ? button : Tooltip(message: reason, child: button);
+}
+
+/// The app a button connects ("app:connect" with an `app` in its context), when its mark is bundled.
+String? _connectApp(ComponentNode<ComponentImplementation> node) {
+  // The resolved props hold the action as a callback; its definition is on the component model.
+  final raw = node.context?.componentModel.properties;
+  if (raw case {'action': {'event': {'name': 'app:connect', 'context': {'app': final String app}}}}) {
+    return hasBundledAppLogo(app) ? app : null;
+  }
+  return null;
 }
 
 // A row of only buttons wraps onto more lines instead of squeezing each label into an equal share.

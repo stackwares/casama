@@ -19,6 +19,9 @@ const _bundledLogos = {
   'slack', 'stripe', 'supabase', 'vercel', 'webflow', 'zapier',
 };
 
+/// Whether [appId] has a bundled mark (a connect button shows it, D-256).
+bool hasBundledAppLogo(String? appId) => appId != null && _bundledLogos.contains(appId);
+
 /// The bundled marks' files, so startup can parse them before the Connections screens open.
 List<String> get bundledLogoAssets => [for (final id in _bundledLogos) 'assets/apps/$id.svg'];
 

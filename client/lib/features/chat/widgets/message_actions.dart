@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart' show kLongPressTimeout;
 import 'package:material_ui/material_ui.dart';
@@ -46,6 +48,31 @@ class MessageActions extends StatefulWidget {
 class _MessageActionsState extends State<MessageActions> with SingleTickerProviderStateMixin {
   var _hover = false;
 
+  /// The hover buttons float under the message (D-256) instead of keeping space for themselves,
+  /// so messages sit as close on a computer as on a phone and nothing moves when they show.
+  final _link = LayerLink();
+  final _bar = OverlayPortalController();
+  var _overMessage = false;
+  var _overBar = false;
+  Timer? _hide;
+
+  void _pointer({bool? message, bool? bar}) {
+    _overMessage = message ?? _overMessage;
+    _overBar = bar ?? _overBar;
+    _hide?.cancel();
+    if (_overMessage || _overBar) {
+      if (!_bar.isShowing) _bar.show();
+      if (!_hover) setState(() => _hover = true);
+    } else {
+      // A moment to cross from the message to its buttons.
+      _hide = Timer(const Duration(milliseconds: 150), () {
+        if (!mounted) return;
+        setState(() => _hover = false);
+        if (_bar.isShowing) _bar.hide();
+      });
+    }
+  }
+
   /// 0 to 1 while a finger holds the bubble, reaching 1 as the long-press fires.
   late final _hold = AnimationController(vsync: this, duration: kLongPressTimeout);
 
@@ -60,6 +87,7 @@ class _MessageActionsState extends State<MessageActions> with SingleTickerProvid
 
   @override
   void dispose() {
+    _hide?.cancel();
     _hold.dispose();
     super.dispose();
   }
@@ -172,13 +200,27 @@ class _MessageActionsState extends State<MessageActions> with SingleTickerProvid
         ),
         child: child,
       );
+      final end = widget.alignEnd;
       return MouseRegion(
-        onEnter: (_) => setState(() => _hover = true),
-        onExit: (_) => setState(() => _hover = false),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: widget.alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          children: [selectable, _hoverBar(context)],
+        onEnter: (_) => _pointer(message: true),
+        onExit: (_) => _pointer(message: false),
+        child: OverlayPortal(
+          controller: _bar,
+          overlayChildBuilder: (_) => CompositedTransformFollower(
+            link: _link,
+            targetAnchor: end ? Alignment.bottomRight : Alignment.bottomLeft,
+            followerAnchor: end ? Alignment.topRight : Alignment.topLeft,
+            offset: Offset(end ? -6 : 6, -6),
+            child: Align(
+              alignment: end ? Alignment.topRight : Alignment.topLeft,
+              child: MouseRegion(
+                onEnter: (_) => _pointer(bar: true),
+                onExit: (_) => _pointer(bar: false),
+                child: _hoverBar(context),
+              ),
+            ),
+          ),
+          child: CompositedTransformTarget(link: _link, child: selectable),
         ),
       );
     }
@@ -217,13 +259,21 @@ class _MessageActionsState extends State<MessageActions> with SingleTickerProvid
           onPressed: onPressed,
           icon: Icon(icon),
         );
+    final scheme = context.colorScheme;
     return IgnorePointer(
       ignoring: !_hover,
       child: AnimatedOpacity(
         opacity: _hover ? 1 : 0,
         duration: const Duration(milliseconds: 120),
-        child: Padding(
-          padding: const EdgeInsets.only(top: 2),
+        // A small floating pill, legible over whatever it overlaps.
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: context.appColors.hairline),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 10, offset: const Offset(0, 2))],
+          ),
           child: Row(
             key: const Key('messageHoverBar'),
             mainAxisSize: MainAxisSize.min,

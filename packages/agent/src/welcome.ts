@@ -296,7 +296,8 @@ export const GOOGLE_PITCH =
 export function googleCard(route: GoogleRoute) {
   return card(
     column(
-      ["row", "via"],
+      // The small print first (D-256): read before tapping, the buttons close the card.
+      ["via", "row"],
       [
         { id: "row", component: "Row", children: ["cal", "skip"] },
         ...button(

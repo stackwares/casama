@@ -3036,6 +3036,15 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
   - This is all on the app side; bots send the same A2UI as before.
 - **Tests:** `bot_ui_test.dart` (lettered answers, the second question after Next),
   `secret_request_test.dart` (title, reason, Save waits for a value). Analyze is clean.
+- **Follow-up (2026-11-13):**
+  - **Hover buttons float:** on a computer, the message hover buttons (Copy, Edit, Read aloud,
+    Share) float in a small pill under the message (`OverlayPortal`) instead of keeping 34 px of
+    space under every message. Messages sit as close as on a phone, and nothing moves on hover.
+  - **Tighter turns:** the gap between turns is 16 with one bot, 24 in group chats.
+  - **App logos:** a bot-card button that connects an app (`app:connect` with an `app`) shows the
+    app's bundled mark, tinted like its label.
+  - **Small print first:** the welcome's Google card puts its small print above the buttons, so
+    it's read before tapping.
 
 ## D-257 One question at a time: suggestions don't stack, the welcome waits
 
