@@ -1,4 +1,4 @@
-/** Generated media out of Postgres (D-288): moved, read from either place, deleted with its row. */
+/** Generated media out of Postgres (D-290): moved, read from either place, deleted with its row. */
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

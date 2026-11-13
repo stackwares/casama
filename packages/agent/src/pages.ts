@@ -79,7 +79,7 @@ const parseJson = (s: string | undefined) => {
   }
 };
 
-/** Limits for a site published from a folder (D-283). */
+/** Limits for a site published from a folder (D-289). */
 export const SITE_MAX_FILES = 300;
 export const SITE_MAX_BYTES = 25 * 1024 * 1024;
 
@@ -197,7 +197,7 @@ export function registerPageTools(
     }),
     async execute(args, ctx) {
       let html = args.html;
-      // A site or game from a folder (D-283): index.html is the page, the rest are its files.
+      // A site or game from a folder (D-289): index.html is the page, the rest are its files.
       let site: Array<{ path: string; bytes: Uint8Array }> | null = null;
       if (!html && args.folder) {
         if (!ctx.computer)

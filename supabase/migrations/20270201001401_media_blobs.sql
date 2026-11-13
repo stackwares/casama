@@ -1,4 +1,4 @@
--- Generated media out of Postgres (D-288, LIBRARY-PLAN Phase 5): new pictures, videos and sounds
+-- Generated media out of Postgres (D-290, LIBRARY-PLAN Phase 5): new pictures, videos and sounds
 -- go to the object store and keep only their key here; the worker moves the old ones a batch at a
 -- time. Bytes whose row is deleted (by any path, cascades included) are queued for deletion.
 alter table public.chat_media alter column bytes drop not null;

@@ -893,7 +893,7 @@ export const maintenanceWorkflow = DBOS.registerWorkflow(
     });
     // The engine keeps every step's result for replay. Once a workflow has ended nothing reads
     // them again, so they go after a week instead of growing forever (D-267).
-    // Media bytes move out of Postgres, and bytes whose rows are gone are deleted (D-288).
+    // Media bytes move out of Postgres, and bytes whose rows are gone are deleted (D-290).
     await DBOS.runStep(
       async () => {
         const store = rt().agent.objects;

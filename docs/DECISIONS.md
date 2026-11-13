@@ -3340,7 +3340,7 @@ Stage 2 of `docs/MASTER-PLAN-2026-11.md` (the review's Fix 14–17, Improve app 
 - **Deleting a chat:** the confirmation counts what was made there and offers "Also delete the N things made here", off by default (`with_creations=true`).
 - **Not verified on devices:** Android share-in, the banner on Windows and Linux, and paste on each desktop OS and browser need a real build to confirm.
 
-## D-283 Sites and games with their own files
+## D-289 Sites and games with their own files
 
 Stage 8 of `docs/MASTER-PLAN-2026-11.md`; `docs/LIBRARY-PLAN.md` Phase 6 ("sites and games with real assets").
 
@@ -3378,7 +3378,7 @@ Stage 8 of `docs/MASTER-PLAN-2026-11.md` (Add 6; meeting bots stay cut, D-123).
 - **A gallery routine idea, "Meeting notes":** each weekday evening the bot gathers the day's notes from whichever notes app is connected (Fireflies, Granola, Circleback, Otter, Fathom, Zoom or Google Meet, through the existing app connections) or from the calendar, and files one Markdown file per meeting in the team folder (`shared/meetings/`) with decisions and action items, asking before it sends anything. Gallery routine ideas are schedule-only, because shipped apps parse them strictly; the after-meeting version is made as a calendar routine.
 - **Not done:** the gallery change reaches the public gallery only when it's published (a production step for Oliver), and none of the notes apps were tried with a real account.
 
-## D-288 Generated media out of Postgres, and bytes deleted with their rows
+## D-290 Generated media out of Postgres, and bytes deleted with their rows
 
 Stage 7 of `docs/MASTER-PLAN-2026-11.md`; the second half of `docs/LIBRARY-PLAN.md` Phase 5.
 

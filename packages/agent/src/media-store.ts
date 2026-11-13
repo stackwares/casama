@@ -1,5 +1,5 @@
 /**
- * Where generated media's bytes live (D-288): the object store when the server has one, Postgres
+ * Where generated media's bytes live (D-290): the object store when the server has one, Postgres
  * otherwise (and for rows not moved yet). Every reader goes through readMedia, so both work.
  */
 import type { Database } from "@casama/db";

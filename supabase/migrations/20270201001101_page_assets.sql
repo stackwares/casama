@@ -1,4 +1,4 @@
--- Sites and games with real files (D-283): a page published from a folder keeps its other files
+-- Sites and games with real files (D-289): a page published from a folder keeps its other files
 -- (images, sounds, scripts, styles) in the object store, listed here per page version.
 alter table public.pages add column if not exists assets_version int;
 create table public.page_assets (

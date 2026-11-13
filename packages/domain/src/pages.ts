@@ -26,7 +26,7 @@ export const PAGE_CSP = [
 export const PAGE_CSP_COLLECT = PAGE_CSP.replace("connect-src 'none'", "connect-src 'self'");
 
 /**
- * A page published from a folder (D-283) also loads its own files from its own origin: scripts,
+ * A page published from a folder (D-289) also loads its own files from its own origin: scripts,
  * styles, images, sounds and fonts under its assets address, and data it fetches from there. The
  * network beyond the pages origin stays closed.
  */
@@ -58,7 +58,7 @@ export const PAGE_DATA_ID = "casama-data";
 
 /** How bots are told to build pages (in the pages.publish tool description). */
 /** How bots are told to take input on a page published with collect (D-279). */
-/** How bots are told to publish a site or game with files (D-283). */
+/** How bots are told to publish a site or game with files (D-289). */
 export const PAGE_FOLDER_NOTE = `For a site or game with its own images, sounds, scripts or styles, put them in a folder with an index.html and pass folder instead of html: relative links (img/hero.png, js/game.js) work, and nothing outside Casama's page address can be loaded. Up to 300 files and 25 MB.`;
 
 export const PAGE_COLLECT_NOTE = `With collect: true the page can take input: give a form the attribute data-casama-form (and optionally data-casama-sent="text to show after"), or call casama.submit({...}) from your script. Responses are stored; read them with pages.submissions. Never ask for passwords, card numbers or other secrets on a page.`;
@@ -90,7 +90,7 @@ export interface RenderablePage {
   collect?: string;
   /** Where a visitor reports a public page (D-281). */
   reportUrl?: string;
-  /** The folder its own files load from, for a page published from a folder (D-283). */
+  /** The folder its own files load from, for a page published from a folder (D-289). */
   assetsBase?: string;
 }
 

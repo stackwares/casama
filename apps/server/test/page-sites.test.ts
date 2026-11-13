@@ -1,4 +1,4 @@
-/** Sites and games with their own files (D-283), published from a folder on the computer. */
+/** Sites and games with their own files (D-289), published from a folder on the computer. */
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

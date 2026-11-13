@@ -211,7 +211,7 @@ export function createPagesApp(deps: {
     });
   }
 
-  // A site's own files (D-283), from the version that's live.
+  // A site's own files (D-289), from the version that's live.
   const asset = async (
     page: { id: string; assets_version: number | null } | null,
     path: string,

@@ -36,7 +36,7 @@ export interface AutonomyToolDeps {
   notifications?: NotificationService;
   mediaFor?: (orgId: string) => Promise<MediaProvider | null>;
   searchFor?: (orgId: string) => Promise<SearchProvider | null>;
-  /** Where generated media's bytes go (D-288); unset: Postgres. */
+  /** Where generated media's bytes go (D-290); unset: Postgres. */
   objects?: import("@casama/sandbox").ObjectStore;
   /**
    * The key for spoken audio (D-284): the workspace's own OpenRouter key, else the server's.
@@ -1056,7 +1056,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       ))
     )
       return null;
-    // The bytes go to the object store when the server has one (D-288); Postgres otherwise.
+    // The bytes go to the object store when the server has one (D-290); Postgres otherwise.
     const { randomUUID } = await import("node:crypto");
     const { mediaKey } = await import("../media-store.ts");
     const id = randomUUID();
