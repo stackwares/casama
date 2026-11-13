@@ -3299,3 +3299,12 @@ Stage 8 of `docs/MASTER-PLAN-2026-11.md` (Add 3; plan decision 8: yes, changing 
 - **Responses** go to the page's own address (`/p/{id}/collect` for signed-in viewers, `/s/{token}/collect` for a public link), at most 64 KB, JSON objects only, and at most 20 an hour per address on a public page. They're stored in `page_submissions` (sealed in workspaces that encrypt; readable by the page's person and the bot's managers) and the Library's page counts them.
 - **The bot** reads them with `pages.submissions` (marked as outside content), and `on_submit` instructions make a routine that starts with each response. It uses the existing "webhook" trigger, because shipped apps refuse unknown trigger types when listing routines.
 - Bots are told never to ask for passwords, card numbers or other secrets on a page.
+
+## D-280 Documents are finished outputs: kept with a PDF preview and a cover
+
+Stage 8 of `docs/MASTER-PLAN-2026-11.md` (Add 2 in `docs/PRODUCT-REVIEW-2026-11-13.md`).
+
+- **What was already there:** bot computers have LibreOffice, pptxgenjs, docx, python-pptx and openpyxl, and the catalog's document skills; bots could always make real Office files. What competitors do better is treat them as finished outputs that open anywhere.
+- **Decision:** when a kept file (D-276) is a PDF or an Office document, the computer makes a PDF of it with LibreOffice and a PNG of its first page with pdftoppm while it's still awake. Both are stored with the creation (`preview_key`, `cover_key`), so the Library shows the document's first page and `GET /v1/creations/{id}/preview` opens it as a PDF with the computer asleep or reset. Best effort: a document without them still opens as the original file.
+- Bots are told to make a real .pptx, .docx or .xlsx when someone wants slides, a document or a spreadsheet they'll edit, and to link it.
+- **Not done:** editing inside the app; the original file opens in the person's own apps.

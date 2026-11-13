@@ -34,6 +34,9 @@ export const Creation = z
     has_cover: z.boolean().openapi({
       description: "GET /v1/creations/{id}/cover returns a picture; otherwise the app draws one",
     }),
+    has_preview: z.boolean().openapi({
+      description: "GET /v1/creations/{id}/preview returns a PDF of it (documents; D-280)",
+    }),
     version: z.number().int(),
     pinned: z.boolean().openapi({ description: "Pinned by the person asking" }),
     last_opened_at: ts.nullable(),

@@ -58,6 +58,8 @@ class CreationDetail {
 
     required  this.hasCover,
 
+    required  this.hasPreview,
+
     required  this.version,
 
     required  this.pinned,
@@ -293,6 +295,19 @@ class CreationDetail {
 
 
 
+      /// GET /v1/creations/{id}/preview returns a PDF of it (documents; D-280)
+  @JsonKey(
+    
+    name: r'has_preview',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final bool hasPreview;
+
+
+
   @JsonKey(
     
     name: r'version',
@@ -413,6 +428,7 @@ class CreationDetail {
       other.height == height &&
       other.durationS == durationS &&
       other.hasCover == hasCover &&
+      other.hasPreview == hasPreview &&
       other.version == version &&
       other.pinned == pinned &&
       other.lastOpenedAt == lastOpenedAt &&
@@ -442,6 +458,7 @@ class CreationDetail {
         (height == null ? 0 : height.hashCode) +
         (durationS == null ? 0 : durationS.hashCode) +
         hasCover.hashCode +
+        hasPreview.hashCode +
         version.hashCode +
         pinned.hashCode +
         (lastOpenedAt == null ? 0 : lastOpenedAt.hashCode) +

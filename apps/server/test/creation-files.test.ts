@@ -119,3 +119,37 @@ it("the purge removes a deleted file's bytes", async () => {
     await h.tdb.admin`select 1 from public.creations where id = ${k?.creation_id as string}`,
   ).toHaveLength(0);
 });
+
+it("a kept document gets a PDF preview and its first page as the cover (D-280)", async () => {
+  const { keepDocumentPreview } = await import("@casama/agent");
+  const k = await keep("decks/pitch.pptx", "PK fake pptx bytes");
+  expect(k).toBeTruthy();
+  // A computer whose LibreOffice and pdftoppm answer with a PDF and a 640×360 PNG.
+  const png = Buffer.alloc(32);
+  png.set([0x89, 0x50, 0x4e, 0x47]);
+  png.writeUInt32BE(640, 16);
+  png.writeUInt32BE(360, 20);
+  const files: Record<string, Uint8Array> = {
+    "/tmp/x/pitch.pdf": new TextEncoder().encode("%PDF-1.7 deck"),
+    "/tmp/x/cover.png": png,
+  };
+  const handle = {
+    exec: async function* (script: string) {
+      expect(script).toContain("/home/casama/workspace/decks/pitch.pptx");
+      yield { type: "stdout", data: "/tmp/x/pitch.pdf\n/tmp/x/cover.png\n" };
+      yield { type: "exit", code: 0 };
+    },
+    readFile: async (p: string) => files[p] as Uint8Array,
+  };
+  expect(await keepDocumentPreview(h.handle.db, store, handle as never, k!)).toBe(true);
+  const c = await j(await h.request(`/v1/creations/${k!.creation_id}`, { token: owner.token }));
+  expect(c).toMatchObject({ has_preview: true, has_cover: true });
+  const pdf = await h.request(`/v1/creations/${k!.creation_id}/preview`, { token: owner.token });
+  expect(pdf.headers.get("content-type")).toBe("application/pdf");
+  expect(await pdf.text()).toBe("%PDF-1.7 deck");
+  const cover = await h.request(`/v1/creations/${k!.creation_id}/cover`, { token: owner.token });
+  expect(cover.headers.get("content-type")).toBe("image/png");
+  const [row] = await h.tdb.admin<{ cover_w: number; cover_h: number }[]>`
+    select cover_w, cover_h from public.creations where id = ${k!.creation_id}`;
+  expect(row).toEqual({ cover_w: 640, cover_h: 360 });
+});

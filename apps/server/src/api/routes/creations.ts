@@ -37,6 +37,7 @@ type CreationRow = {
   duration_s: number | null;
   cover_key: string | null;
   blob_key: string | null;
+  preview_key: string | null;
   version: number;
   pinned_at: Date | null;
   last_opened_at: Date | null;
@@ -70,6 +71,8 @@ const out = (r: CreationRow) => ({
     !!r.cover_key ||
     (!!r.media_id && (r.kind === "image" || r.kind === "video")) ||
     (!!r.blob_key && r.kind === "image"),
+  has_preview:
+    !!r.preview_key || (r.kind === "document" && r.mime === "application/pdf" && !!r.blob_key),
   version: r.version,
   pinned: !!r.pinned_at,
   last_opened_at: r.last_opened_at ? iso(r.last_opened_at) : null,
@@ -83,7 +86,7 @@ const out = (r: CreationRow) => ({
 const columns = (_userId: string) => sql`
   c.id, c.org_id, c.bot_id, b.name as bot_name, c.made_for, c.conversation_id, c.run_id, c.kind,
   c.label, c.title, c.page_id, c.media_id, c.mime, c.size, c.width, c.height, c.duration_s,
-  c.cover_key, c.blob_key, c.version, m.pinned_at, m.last_opened_at, public.can_change_creation(c.id) as can_change,
+  c.cover_key, c.blob_key, c.preview_key, c.version, m.pinned_at, m.last_opened_at, public.can_change_creation(c.id) as can_change,
   c.deleted_at, c.created_at, c.updated_at`;
 const joins = (userId: string) => sql`
   from public.creations c
@@ -331,6 +334,17 @@ export function registerCreationRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const { id } = c.req.valid("param");
     const row = await visible(claims, id);
     const none = () => new ApiError(404, "no_cover", "This one has no cover; the app draws one");
+    // A stored cover (a document's first page, D-280).
+    if (row.cover_key && deps.objects) {
+      const bytes = await readObject(deps.objects, row.cover_key).catch(() => null);
+      if (bytes)
+        return c.body(new Uint8Array(bytes), 200, {
+          "content-type": row.cover_key.endsWith(".png") ? "image/png" : "image/jpeg",
+          "content-length": String(bytes.length),
+          "cache-control": "private, max-age=86400",
+          "content-security-policy": "default-src 'none'",
+        }) as never;
+    }
     // A kept picture is its own cover.
     if (row.blob_key && row.kind === "image" && deps.objects) {
       const bytes = await readObject(deps.objects, row.blob_key).catch(() => null);
@@ -367,6 +381,22 @@ export function registerCreationRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       "content-length": String(body.length),
       "cache-control": "private, max-age=86400",
       "content-security-policy": "default-src 'none'",
+    }) as never;
+  });
+
+  app.openapi(routes.getCreationPreview, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const row = await visible(claims, id);
+    const key = row.preview_key ?? (row.mime === "application/pdf" ? row.blob_key : null);
+    if (!key || !deps.objects) throw new ApiError(404, "no_preview", "No preview for this one");
+    const bytes = await readObject(deps.objects, key).catch(() => null);
+    if (!bytes) throw new ApiError(404, "no_preview", "The preview is gone");
+    return c.body(new Uint8Array(bytes), 200, {
+      "content-type": "application/pdf",
+      "content-length": String(bytes.length),
+      "cache-control": "private, max-age=3600",
+      "content-security-policy": "default-src 'none'; sandbox",
     }) as never;
   });
 }

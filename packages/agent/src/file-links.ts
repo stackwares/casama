@@ -181,7 +181,12 @@ export async function keepLinkedFiles(
           path: clean,
           bytes,
         });
-        if (k) kept.push(k);
+        if (k) {
+          kept.push(k);
+          // Documents get a PDF preview and a cover while the computer is awake (D-280).
+          const { keepDocumentPreview } = await import("./creations.ts");
+          await keepDocumentPreview(db, store, h, k).catch(() => false);
+        }
       } catch {
         // A full Library or an unreadable file leaves it as a link.
       }

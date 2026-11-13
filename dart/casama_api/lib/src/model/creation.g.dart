@@ -43,6 +43,8 @@ abstract class _$CreationCWProxy {
 
   Creation hasCover(bool hasCover);
 
+  Creation hasPreview(bool hasPreview);
+
   Creation version(int version);
 
   Creation pinned(bool pinned);
@@ -84,6 +86,7 @@ abstract class _$CreationCWProxy {
     int? height,
     num? durationS,
     bool hasCover,
+    bool hasPreview,
     int version,
     bool pinned,
     DateTime? lastOpenedAt,
@@ -157,6 +160,9 @@ class _$CreationCWProxyImpl implements _$CreationCWProxy {
   Creation hasCover(bool hasCover) => call(hasCover: hasCover);
 
   @override
+  Creation hasPreview(bool hasPreview) => call(hasPreview: hasPreview);
+
+  @override
   Creation version(int version) => call(version: version);
 
   @override
@@ -206,6 +212,7 @@ class _$CreationCWProxyImpl implements _$CreationCWProxy {
     Object? height = const $CopyWithPlaceholder(),
     Object? durationS = const $CopyWithPlaceholder(),
     Object? hasCover = const $CopyWithPlaceholder(),
+    Object? hasPreview = const $CopyWithPlaceholder(),
     Object? version = const $CopyWithPlaceholder(),
     Object? pinned = const $CopyWithPlaceholder(),
     Object? lastOpenedAt = const $CopyWithPlaceholder(),
@@ -287,6 +294,11 @@ class _$CreationCWProxyImpl implements _$CreationCWProxy {
           ? _value.hasCover
           // ignore: cast_nullable_to_non_nullable
           : hasCover as bool,
+      hasPreview:
+          hasPreview == const $CopyWithPlaceholder() || hasPreview == null
+          ? _value.hasPreview
+          // ignore: cast_nullable_to_non_nullable
+          : hasPreview as bool,
       version: version == const $CopyWithPlaceholder() || version == null
           ? _value.version
           // ignore: cast_nullable_to_non_nullable
@@ -355,6 +367,7 @@ Creation _$CreationFromJson(Map<String, dynamic> json) => $checkedCreate(
         'height',
         'duration_s',
         'has_cover',
+        'has_preview',
         'version',
         'pinned',
         'last_opened_at',
@@ -386,6 +399,7 @@ Creation _$CreationFromJson(Map<String, dynamic> json) => $checkedCreate(
       height: $checkedConvert('height', (v) => (v as num?)?.toInt()),
       durationS: $checkedConvert('duration_s', (v) => v as num?),
       hasCover: $checkedConvert('has_cover', (v) => v as bool),
+      hasPreview: $checkedConvert('has_preview', (v) => v as bool),
       version: $checkedConvert('version', (v) => (v as num).toInt()),
       pinned: $checkedConvert('pinned', (v) => v as bool),
       lastOpenedAt: $checkedConvert(
@@ -419,6 +433,7 @@ Creation _$CreationFromJson(Map<String, dynamic> json) => $checkedCreate(
     'mediaId': 'media_id',
     'durationS': 'duration_s',
     'hasCover': 'has_cover',
+    'hasPreview': 'has_preview',
     'lastOpenedAt': 'last_opened_at',
     'canChange': 'can_change',
     'deletedAt': 'deleted_at',
@@ -446,6 +461,7 @@ Map<String, dynamic> _$CreationToJson(Creation instance) => <String, dynamic>{
   'height': instance.height,
   'duration_s': instance.durationS,
   'has_cover': instance.hasCover,
+  'has_preview': instance.hasPreview,
   'version': instance.version,
   'pinned': instance.pinned,
   'last_opened_at': instance.lastOpenedAt?.toIso8601String(),

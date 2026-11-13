@@ -97,3 +97,18 @@ export const getCreationCover = createRoute({
     404: e404,
   },
 });
+
+export const getCreationPreview = createRoute({
+  operationId: "getCreationPreview",
+  method: "get",
+  path: "/v1/creations/{id}/preview",
+  tags: ["creations"],
+  security,
+  summary: "A PDF of a document, made when it was kept, so it opens without its computer (D-280)",
+  request: { params: idParam },
+  responses: {
+    200: { description: "PDF", content: binary(["application/pdf"]) },
+    401: e401,
+    404: e404,
+  },
+});

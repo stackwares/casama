@@ -38,6 +38,8 @@ export async function purgeDeletedCreations(
       select v.blob_key from public.creation_versions v
       join public.creations c on c.id = v.creation_id where c.${sql.raw("deleted_at")} < now() - make_interval(days => ${days})
       union select blob_key from public.creations where ${old} and blob_key is not null
+      union select preview_key from public.creations where ${old} and preview_key is not null
+      union select cover_key from public.creations where ${old} and cover_key is not null
       limit 2000`);
     for (const b of blobs) await store.delete(b.blob_key).catch(() => {});
   }
@@ -375,4 +377,95 @@ export async function keepFile(
     path: input.path,
     version,
   };
+}
+
+/** File endings that get a PDF preview and a cover when kept (D-280). */
+const PREVIEWABLE = new Set([
+  "pdf",
+  "docx",
+  "doc",
+  "odt",
+  "rtf",
+  "pptx",
+  "ppt",
+  "odp",
+  "xlsx",
+  "xls",
+  "ods",
+]);
+export const previewable = (name: string) =>
+  PREVIEWABLE.has(name.toLowerCase().split(".").pop() ?? "");
+
+const shellQuote = (s: string) => `'${s.replace(/'/g, "'\\''")}'`;
+
+/**
+ * Prints a PDF of the document and a PNG of its first page (about 640 px wide), one path per line.
+ * Office files go through LibreOffice; a PDF is used as it is. Exit 44: no file; 45: no tools.
+ */
+export function documentPreviewScript(file: string) {
+  return [
+    `f=${shellQuote(file)}`,
+    `[ -f "$f" ] || exit 44`,
+    "command -v pdftoppm >/dev/null 2>&1 || exit 45",
+    "t=$(mktemp -d)",
+    `case "$f" in`,
+    `  *.pdf|*.PDF) pdf="$f" ;;`,
+    `  *) command -v soffice >/dev/null 2>&1 || exit 45`,
+    `     timeout 90 soffice --headless --norestore "-env:UserInstallation=file:///tmp/casama-lo-profile" --convert-to pdf --outdir "$t" "$f" >/dev/null 2>&1 || exit 46`,
+    `     pdf=$(ls "$t"/*.pdf 2>/dev/null | head -n 1); [ -n "$pdf" ] || exit 46 ;;`,
+    "esac",
+    `timeout 30 pdftoppm -png -singlefile -scale-to 640 -f 1 -l 1 "$pdf" "$t/cover" >/dev/null 2>&1 || exit 47`,
+    `echo "$pdf"`,
+    `echo "$t/cover.png"`,
+  ].join("\n");
+}
+
+/**
+ * Makes a kept document's PDF preview and cover on its computer and stores both (D-280). Best
+ * effort: a document without them still opens, as the original file.
+ */
+export async function keepDocumentPreview(
+  db: Database,
+  store: import("@casama/sandbox").ObjectStore,
+  h: import("@casama/sandbox").SandboxHandle,
+  kept: { creation_id: string; version: number; path: string; name: string },
+) {
+  if (!previewable(kept.name)) return false;
+  const { collectExec } = await import("@casama/sandbox");
+  const abs = kept.path.startsWith("/")
+    ? kept.path
+    : kept.path.startsWith("~/")
+      ? `/home/casama/${kept.path.slice(2)}`
+      : `/home/casama/workspace/${kept.path.replace(/^\.\//, "")}`;
+  const r = await collectExec(h.exec(documentPreviewScript(abs), { timeoutMs: 150_000 }));
+  if (r.code !== 0) return false;
+  const [pdfPath, coverPath] = r.stdout
+    .trim()
+    .split("\n")
+    .map((l: string) => l.trim());
+  if (!pdfPath || !coverPath) return false;
+  const pdf = await h.readFile(pdfPath);
+  const cover = await h.readFile(coverPath);
+  const [org] = await db.execute<{ org_id: string }>(
+    sql`select org_id from public.creations where id = ${kept.creation_id}::uuid`,
+  );
+  if (!org) return false;
+  const previewKey = `previews/${org.org_id}/${kept.creation_id}/${kept.version}.pdf`;
+  const coverKey = `covers/${org.org_id}/${kept.creation_id}/${kept.version}.png`;
+  if (pdf.length <= KEEP_FILE_MAX_BYTES) await store.put(previewKey, pdf);
+  await store.put(coverKey, cover);
+  const size = pngSize(cover);
+  await db.execute(sql`
+    update public.creations set
+      preview_key = ${pdf.length <= KEEP_FILE_MAX_BYTES ? previewKey : null},
+      cover_key = ${coverKey}, cover_w = ${size?.w ?? null}, cover_h = ${size?.h ?? null}
+    where id = ${kept.creation_id}::uuid and version = ${kept.version}`);
+  return true;
+}
+
+/** A PNG's width and height from its header. */
+export function pngSize(b: Uint8Array): { w: number; h: number } | null {
+  if (b.length < 24 || b[0] !== 0x89 || b[1] !== 0x50) return null;
+  const v = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  return { w: v.getUint32(16), h: v.getUint32(20) };
 }

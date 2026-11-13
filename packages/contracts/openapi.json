@@ -5769,6 +5769,10 @@
             "type": "boolean",
             "description": "GET /v1/creations/{id}/cover returns a picture; otherwise the app draws one"
           },
+          "has_preview": {
+            "type": "boolean",
+            "description": "GET /v1/creations/{id}/preview returns a PDF of it (documents; D-280)"
+          },
           "version": {
             "type": "integer"
           },
@@ -5821,6 +5825,7 @@
           "height",
           "duration_s",
           "has_cover",
+          "has_preview",
           "version",
           "pinned",
           "last_opened_at",
@@ -23684,6 +23689,64 @@
                 }
               },
               "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/creations/{id}/preview": {
+      "get": {
+        "operationId": "getCreationPreview",
+        "tags": [
+          "creations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "A PDF of a document, made when it was kept, so it opens without its computer (D-280)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PDF",
+            "content": {
+              "application/pdf": {
                 "schema": {
                   "type": "string",
                   "format": "binary"

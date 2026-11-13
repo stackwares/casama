@@ -190,6 +190,7 @@ Class | Method | HTTP request | Description
 [*CreationsApi*](doc/CreationsApi.md) | [**getCreation**](doc/CreationsApi.md#getcreation) | **GET** /v1/creations/{id} | 
 [*CreationsApi*](doc/CreationsApi.md) | [**getCreationContent**](doc/CreationsApi.md#getcreationcontent) | **GET** /v1/creations/{id}/content | The bytes (pictures, videos, sound; one byte range honoured). Pages open by view link
 [*CreationsApi*](doc/CreationsApi.md) | [**getCreationCover**](doc/CreationsApi.md#getcreationcover) | **GET** /v1/creations/{id}/cover | The picture for its card, when it has one (has_cover)
+[*CreationsApi*](doc/CreationsApi.md) | [**getCreationPreview**](doc/CreationsApi.md#getcreationpreview) | **GET** /v1/creations/{id}/preview | A PDF of a document, made when it was kept, so it opens without its computer (D-280)
 [*CreationsApi*](doc/CreationsApi.md) | [**listCreations**](doc/CreationsApi.md#listcreations) | **GET** /v1/creations | The Library: things bots made that you can open, newest first (D-274)
 [*CreationsApi*](doc/CreationsApi.md) | [**restoreCreation**](doc/CreationsApi.md#restorecreation) | **POST** /v1/creations/{id}/restore | 
 [*CreationsApi*](doc/CreationsApi.md) | [**updateCreation**](doc/CreationsApi.md#updatecreation) | **PATCH** /v1/creations/{id} | Rename, relabel, pin or mark opened
