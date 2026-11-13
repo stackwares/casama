@@ -9,9 +9,8 @@
  * Computers are metered on the proxy (running time); model calls by the upstream's reported usage.
  */
 import { createHash, randomBytes } from "node:crypto";
-import { cloudCallReserveUsd, costOf } from "@casama/agent";
+import { costOf } from "@casama/agent";
 import type { Database } from "@casama/db";
-import { cloudModelDailyCap, cloudOpenRouterCharge } from "@casama/domain";
 import { captureError } from "@casama/observability";
 import { sql } from "drizzle-orm";
 import type { Context, Hono } from "hono";
@@ -70,38 +69,12 @@ export function registerConnectRoutes(app: Hono, opts: ConnectOptions) {
   });
   const caller = (c: Context) => callers.get(c.req.raw) as Caller;
 
-  /**
-   * Credit-gated plans need credits to start paid work: the balance less usage not yet settled,
-   * and at least [reserve] of it (a model call's worth for the model proxy; D-248).
-   */
-  const hasCredits = async (orgId: string, reserve = 0) => {
-    const [e] = await db.execute<{ gate: boolean | null; unbilled: string }>(sql`
-      select
-        (select (limits->>'credit_gate')::boolean from public.entitlements
-          where org_id = ${orgId}::uuid order by created_at desc limit 1) as gate,
-        (select coalesce(sum(cost_usd), 0) from public.usage_ledger
-          where org_id = ${orgId}::uuid and billable and billed_at is null)::text as unbilled`);
-    if (!e?.gate) return true;
-    const left = (await billing.balance(orgId)) - Number(e.unbilled);
-    return left > 0 && left >= reserve;
-  };
-
-  /** Model spend through the proxy today, against the plan's daily cap on Casama's key (D-248). */
-  const overDailyCap = async (orgId: string) => {
-    const [r] = await db.execute<{
-      plan_code: string | null;
-      limits: Record<string, unknown> | null;
-      today: string;
-    }>(sql`
-      select
-        (select plan_code from public.entitlements where org_id = ${orgId}::uuid order by created_at desc limit 1) as plan_code,
-        (select limits from public.entitlements where org_id = ${orgId}::uuid order by created_at desc limit 1) as limits,
-        (select coalesce(sum(cost_usd), 0) from public.usage_ledger
-          where org_id = ${orgId}::uuid and billable and meta->>'source' = 'cloud_connect'
-            and kind in ('tokens_in', 'tokens_out')
-            and created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc')::text as today`);
-    const cap = cloudModelDailyCap(r?.plan_code ?? undefined, r?.limits?.cloud_daily_usd);
-    return cap != null && Number(r?.today ?? 0) >= cap;
+  /** Credit-gated plans need a positive balance to start paid work. */
+  const hasCredits = async (orgId: string) => {
+    const [e] = await db.execute<{ gate: boolean | null }>(sql`
+      select (limits->>'credit_gate')::boolean as gate from public.entitlements
+      where org_id = ${orgId}::uuid order by created_at desc limit 1`);
+    return !e?.gate || (await billing.balance(orgId)) > 0;
   };
 
   app.get("/connect/v1/whoami", async (c) => {
@@ -225,21 +198,13 @@ export function registerConnectRoutes(app: Hono, opts: ConnectOptions) {
     const k = caller(c);
     if (!opts.models || !k.scopes.includes("models"))
       return err(c, 403, "models_unavailable", "Model credits are not available for this key");
+    if (!(await hasCredits(k.orgId)))
+      return err(c, 402, "out_of_credits", "The cloud workspace is out of credits");
     const req = (await c.req.json()) as Record<string, unknown> & {
       model?: string;
       stream?: boolean;
-      messages?: unknown;
     };
     if (typeof req.model !== "string") return err(c, 400, "bad_request", "model is required");
-    if (!(await hasCredits(k.orgId, cloudCallReserveUsd(req.model))))
-      return err(c, 402, "out_of_credits", "The cloud workspace is out of credits");
-    if (await overDailyCap(k.orgId))
-      return err(
-        c,
-        402,
-        "cloud_daily_cap",
-        "The cloud workspace reached today's limit for model credits",
-      );
     const upstreamBody = {
       ...req,
       ...(req.stream
@@ -287,31 +252,9 @@ export function registerConnectRoutes(app: Hono, opts: ConnectOptions) {
         headers: { "content-type": res.headers.get("content-type") ?? "application/json" },
       });
     }
-    // Streaming: pass every chunk through and read the final usage chunk on the way. A stream that
-    // ends without one (the client went away first) is metered from an estimate (D-248).
+    // Streaming: pass every chunk through and read the final usage chunk on the way.
     let usage: Usage | undefined;
     let buf = "";
-    let outChars = 0;
-    let metered = false;
-    const promptTokens = Math.ceil(JSON.stringify(req.messages ?? "").length / 4);
-    const meterOnce = async () => {
-      if (metered) return;
-      metered = true;
-      await meter(
-        usage ??
-          (outChars > 0
-            ? { prompt_tokens: promptTokens, completion_tokens: Math.ceil(outChars / 4) }
-            : undefined),
-      ).catch((e) => {
-        captureError(e, {
-          service: "casama-api",
-          step: "connect-meter-stream-flush",
-          key_id: k.keyId,
-          org_id: k.orgId,
-        });
-      });
-    };
-    c.req.raw.signal.addEventListener("abort", () => void meterOnce(), { once: true });
     const decoder = new TextDecoder();
     const tap = new TransformStream<Uint8Array, Uint8Array>({
       transform(chunk, ctrl) {
@@ -323,15 +266,8 @@ export function registerConnectRoutes(app: Hono, opts: ConnectOptions) {
           buf = buf.slice(i + 1);
           if (line.startsWith("data:") && line !== "data: [DONE]") {
             try {
-              const j = JSON.parse(line.slice(5)) as {
-                usage?: Usage;
-                choices?: Array<{ delta?: { content?: string | null; tool_calls?: unknown } }>;
-              };
+              const j = JSON.parse(line.slice(5)) as { usage?: Usage };
               if (j.usage) usage = j.usage;
-              for (const ch of j.choices ?? []) {
-                outChars += ch.delta?.content?.length ?? 0;
-                if (ch.delta?.tool_calls) outChars += JSON.stringify(ch.delta.tool_calls).length;
-              }
             } catch (e) {
               captureError(e, {
                 service: "casama-api",
@@ -345,7 +281,14 @@ export function registerConnectRoutes(app: Hono, opts: ConnectOptions) {
         }
       },
       async flush() {
-        await meterOnce();
+        await meter(usage).catch((e) => {
+          captureError(e, {
+            service: "casama-api",
+            step: "connect-meter-stream-flush",
+            key_id: k.keyId,
+            org_id: k.orgId,
+          });
+        });
       },
     });
     return new Response(res.body.pipeThrough(tap), {
@@ -362,14 +305,11 @@ export function registerConnectRoutes(app: Hono, opts: ConnectOptions) {
     if (!usage) return;
     const tin = usage.prompt_tokens ?? 0;
     const tout = usage.completion_tokens ?? 0;
-    const cost =
-      typeof usage.cost === "number"
-        ? usage.cost
-        : costOf(model, { inputTokens: tin, outputTokens: tout }, "openrouter");
-    // The same price as Casama's own key: OpenRouter's fee and the markup from Admin (D-248),
-    // unless CLOUD_MODEL_MARKUP sets one for this server.
+    const markup = opts.models?.markup ?? 1;
     const total =
-      opts.models?.markup != null ? cost * opts.models.markup : cloudOpenRouterCharge(cost);
+      (typeof usage.cost === "number"
+        ? usage.cost
+        : costOf(model, { inputTokens: tin, outputTokens: tout }, "openrouter")) * markup;
     const share = tin + tout > 0 ? tin / (tin + tout) : 1;
     const meta = JSON.stringify({ source: "cloud_connect", instance: k.instance });
     await db.execute(sql`

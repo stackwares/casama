@@ -22,8 +22,8 @@ The agent works in your shared folders with your own sign-ins, and the on-screen
 working.
 
 1. Install the agent's command-line tool on your computer: `claude`, `codex` or `cursor-agent`.
-2. In the desktop app, open **Settings → Advanced → Use this computer for bots**, allow the bot
-   under **Bots allowed**, and share the project folder under **Shared folders**.
+2. In the desktop app, open **Settings → Use this computer for bots**, allow the bot under **Bots
+   allowed**, and share the project folder under **Shared folders**.
 3. Under **Coding agents**, check that your agent is listed. If you see "Coding agents run as
    commands, so they need Run commands turned on", tap **Turn on**.
 4. Ask the bot, for example: "Use Claude Code on my computer to fix the failing tests in
@@ -37,7 +37,7 @@ The app looks for the agents on your `PATH` and in the usual install folders, su
 The first time, the bot installs the agent's command-line tool on its computer. It passes the API
 key only to that one command, and the key is redacted from output like every secret.
 
-1. Open **Settings → Advanced → Secrets** and add a secret the bot can use, named for the agent:
+1. Open **Settings → Secrets** and add a secret the bot can use, named for the agent:
 
    | Agent | Secret name |
    | --- | --- |
@@ -55,7 +55,7 @@ If the secret is missing, the bot is told which one to add.
 Cursor's cloud agents work on a GitHub repository in Cursor's cloud and can open a pull request
 when they finish.
 
-1. Add a secret named `CURSOR_API_KEY` in **Settings → Advanced → Secrets**.
+1. Add a secret named `CURSOR_API_KEY` in **Settings → Secrets**.
 2. Ask the bot with the repository URL, for example: "Have a Cursor cloud agent fix issue 42 in
    `https://github.com/example/app` and open a pull request."
 

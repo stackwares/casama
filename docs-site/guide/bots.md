@@ -10,7 +10,7 @@ coder, and give each the model and limits that fit the work.
 | --- | --- |
 | Name and icon | A cloud mascot or initials, shown in the sidebar and on every reply. |
 | Instructions | Standing instructions (its system prompt): its role, how it works, its style and limits. |
-| Model | A model key from your workspace plus a model id. A bot can also have fallback models and a cheaper model for internal steps. On Casama Cloud, Casama chooses the model and you don't need a key. |
+| Model | A model key from your workspace plus a model id. A bot can also have fallback models and a cheaper model for internal steps. |
 | Autonomy | How often it asks before acting. See [Autonomy and approvals](/guide/autonomy). |
 | Budget | A cost cap per run and per day. See [Budgets and run limits](#budgets-and-run-limits). |
 | Computer | Where it runs commands, browses and keeps files. See [Computers](/guide/computers). |
@@ -18,20 +18,18 @@ coder, and give each the model and limits that fit the work.
 
 ## Create a bot
 
-On Casama Cloud, bots run on Casama's own models, so there's nothing to set up first. On a
-self-hosted server you need a model key; if your workspace has none, the **New bot** sheet shows
-the add-key form in place.
+You need a model key first. If your workspace has none, the **New bot** sheet shows the add-key form
+in place.
 
 1. In the sidebar, select **Add** (the **+** button), then **New bot**.
-2. Under **Persona**, tap one of the quick picks, or **Browse all** to see every persona (see
-   [Personas and starter bots](#personas-and-starter-bots)). Leave it on **Blank** to start from
-   scratch. The card under the picks shows the persona and holds its **Instructions**; edit them
-   as you like.
-3. Under **Name and icon**, enter a **Bot name** and pick a cloud mascot or **Initials**. If you
-   leave the name empty, the bot is named Chief.
-4. Self-hosted only: the model key and model Casama picked for you are under **Advanced**. Change
-   them there if you like.
-5. Select **Create**. The bot's chat opens, ready for your first message.
+2. Optional: tap **Persona** to start from a ready-made persona (see
+   [Personas and starter bots](#personas-and-starter-bots)), or leave it on **Blank**.
+3. Enter a **Bot name**. If you leave it empty, the bot is named Chief.
+4. Pick an **Icon**: a cloud mascot or **Initials**.
+5. Choose a **Model key** and a **Model**. Casama preselects the default model for the key's
+   provider, if it has one.
+6. Write or edit the **Instructions**.
+7. Select **Create**. The bot's chat opens.
 
 New bots start with **Ask for risky actions** autonomy (unless a persona sets another level), are
 visible to everyone in the workspace, and get a budget of $1 per run and $10 per day.
@@ -51,18 +49,14 @@ Leave out `--model` to use the server's default model for the key's provider. Se
 
 ## Add a model key
 
-On a self-hosted server, bots think with your own model provider keys. Keys belong to one
-workspace, are stored encrypted, and are never shown again after you save them.
-
-On Casama Cloud this screen is called **Service keys** instead. It takes only your own keys for
-search, maps and paid data (Brave Search, Tavily, Google Maps, Mapbox and Treg); models, voice and
-images run on Casama's keys and are paid from your [credits](/guide/usage#credits).
+Bots think with your own model provider keys. Keys belong to one workspace, are stored encrypted,
+and are never shown again after you save them.
 
 1. Go to **Settings** → **Model keys**.
-2. Under **Add Key**, pick a **Provider**, give the key a **Label** and paste the **API key**.
+2. Under **Add key**, pick a **Provider**, give the key a **Label** and paste the **API key**.
    For your own server, also enter its **Base URL**, for example `http://localhost:11434/v1`.
-3. Select **Add Key**.
-4. To check it, open the key's **More** menu and choose **Test Key**. Casama makes a one-token
+3. Select **Add key**.
+4. To check it, open the key's **More** menu and choose **Test key**. Casama makes a one-token
    call and shows **Key works** with the model and the time it took.
 
 Each key shows **Working**, **Failing** or **Not tested**. **Remove** deletes a key; bots that use
@@ -120,8 +114,8 @@ server's admin controls this with `CHATGPT_SIGN_IN` (see
 
 ## Choose a model
 
-On a self-hosted server, the **Model** field opens **Choose a model**, a searchable list of the
-models the selected key can use. Casama Cloud shows no model fields.
+The **Model** field opens **Choose a model**, a searchable list of the models the selected key can
+use.
 
 - **Recommended** models come first, then **All models**.
 - The list comes live from the provider: OpenRouter's catalog; the OpenAI, xAI, Anthropic and
@@ -130,8 +124,8 @@ models the selected key can use. Casama Cloud shows no model fields.
 - If the provider can't be reached, you see "Showing suggested models" with the reason.
 - You can always type any model id and pick **Use "…"**.
 
-To change a bot's model later, open its profile and change **Model key** or **Model**, then
-select **Save Changes**.
+To change a bot's model later, open its settings and change **Model key** or **Model**, then
+select **Save changes**.
 
 ### The default model
 
@@ -165,12 +159,12 @@ Set fallbacks and the cheap model with `casama bot create` or the API (`model_po
 A persona fills in a bot's name, mascot and instructions in one tap. You can edit all of it before
 and after creating the bot. Some personas also bring skills or routines.
 
-1. In the **New bot** sheet, tap a quick pick under **Persona**, or **Browse all**.
+1. In the **New bot** sheet, tap **Persona**.
 2. In **Choose a persona**, search or browse by group, and select **Preview** to read a persona's
    **Instructions** and what to **Try asking**.
 3. Select **Use …**.
 
-To swap the instructions of an existing bot, open its profile and select **Load a Persona**. Only
+To swap the instructions of an existing bot, open its settings and select **Load a persona**. Only
 the instructions change; skills and routines stay as they are.
 
 | Group | Personas |
@@ -194,26 +188,20 @@ a gallery persona asks before acting, at least before risky actions.
 When you sign in for the first time and don't belong to a workspace yet, Casama creates a
 workspace called "&lt;your first name&gt;'s space" and a private bot named Casama, and opens a chat
 with it. People who join by invite skip this. To set things up by hand instead, choose
-**Set Up Manually**.
+**Set up manually**.
 
 The welcome chat is scripted, so it costs nothing until a model runs:
 
-1. **Start with your Google account.** Right after your name, the bot offers **Connect Google
-   Calendar**, **Gmail too** or **Not now** (when the server can connect Google). Once Google is
-   connected, the bot catches you up on your next two weeks straight away and skips the questions
-   below. It only reads; it sends, changes and deletes nothing.
-2. With **Not now**: **What should I help with first?** Pick up to three areas, or describe
-   something else. Then **Just me, my team or my business?** Both questions can be skipped.
-3. On a self-hosted server with no usable model yet, a card offers **Continue with ChatGPT**,
+1. **What should I help with first?** Pick up to three areas, or describe something else.
+2. **Just me, my team or my business?** Both questions can be skipped.
+3. If the workspace has no usable model yet, a card offers **Continue with ChatGPT**,
    **Add a model key** or **Use a local model**. The bot uses the first key that has a default
    model as soon as one exists.
 4. The bot suggests one app to connect for your picks (for example GitHub for coding), with
    **More apps** and **Done, next**. **My team** and **My business** add an invite card.
-5. Your first task starts a real run.
+5. Your first task starts a real run. If you connected Google Calendar or Gmail, the bot can offer
+   a catch-up of your next two weeks instead; it reads only, and sends or changes nothing.
 6. The bot then offers the setup interview (**Let's do it**).
-
-The welcome bot also starts with [check-ins](/guide/routines#check-ins) turned on, so it can reach
-out when something needs you.
 
 Your picks become pinned memories and a section of the bot's instructions. After the interview, a
 **What I learned** card lists the memories saved in the welcome chat; untick any that are wrong,
@@ -221,29 +209,28 @@ or choose **Edit in Memory**.
 
 ## The setup interview
 
-The setup interview is a few quick questions, after which the bot proposes its own instructions,
-routines and the accounts to connect. A new bot opens straight into an empty chat, so you can just
-start typing; run the interview whenever you like.
+A new bot's empty chat shows **Set up …**: answer a few quick questions and the bot proposes its
+own instructions, routines and the accounts to connect.
 
-1. Open the bot's profile and select **Run Setup Again**. The welcome chat also offers it.
+1. Select **Start setup** (or **Skip for now**).
 2. Answer three to six questions on interactive cards: the work, how you like things written, the
    tools and accounts it should use, and any schedule.
 3. Review the proposal on its approval card: new instructions, up to five memories, up to five
    routines (scheduled in your timezone) and the connections to add.
 4. Approve it. The bot can't sign in to accounts for you, so it tells you which ones to connect.
 
-You can run it as often as you like. Bots created by other bots start with setup pending too.
+To run it again, open the bot's settings and select **Run setup again**. Bots created by other
+bots start with setup pending too.
 
 ::: tip
 The proposal is high risk, so it waits for you under **Ask before acting** and **Ask for risky
 actions**. A bot set to **Act on its own** applies it without asking.
 :::
 
-## Bot profile
+## Bot settings
 
-Open a bot's chat and tap its name, or select **More** (the **…** button), then **Bot profile**.
-Change the name, icon, instructions, model (self-hosted only) or autonomy, then select **Save
-Changes**.
+Open a bot's chat, select **More** (the **…** button), then **Bot settings**. Change the name,
+icon, instructions, model or autonomy, then select **Save changes**.
 
 | Row | What it does |
 | --- | --- |
@@ -258,12 +245,11 @@ Changes**.
 | **Knowledge** | Documents it can search and cite. |
 | **Plugins** | Skills and tools from plugin packages. See [Plugins](/develop/plugins). |
 | **Pages** | Reports and dashboards it published. See [Pages](/guide/pages). |
-| **Watchers**, **Action rules**, **Check-Ins**, **Notifications from this bot** | What it keeps an eye on, what it may do without asking, its morning brief and suggestions, and quiet hours. |
-| **Run Setup Again** | Starts a new setup interview. |
-| **Share as Template** | A file or link with its instructions, skills and routines. |
-| **Settings history** | Every change to its settings and who made it, with **Restore These Settings**. |
-| **Delete All Chats** | Deletes every chat with the bot that you may delete. Group chats and chats it's working in stay, and so do its memories and usage records. See [Delete a chat](/guide/chat#delete-a-chat). |
-| **Archive Bot** | Removes it from the sidebar and stops it running. Its chats and history are kept; bring it back from **Add** → **Archived bots**. |
+| **Watchers**, **Action rules**, **Check-ins**, **Notifications from this bot** | What it keeps an eye on, what it may do without asking, its morning brief, and quiet hours. |
+| **Run setup again** | Starts a new setup interview. |
+| **Share as template** | A file or link with its instructions, skills and routines. |
+| **Settings history** | Every change to its settings and who made it, with **Restore these settings**. |
+| **Archive bot** | Removes it from the sidebar and stops it running. Its chats and history are kept; bring it back from **Add** → **Archived bots**. |
 
 ## Budgets and run limits
 
@@ -281,9 +267,6 @@ that hits a limit stops, fails with a clear message, and keeps everything it did
 
 On hosted plans, a run can also stop with `out_of_credits` or `computer_hours_exceeded`. See
 [Usage, budgets and plans](/guide/usage) for quotas and spend.
-
-When a chat run runs out of steps or time, the bot doesn't go quiet: it replies once more, without
-tools, with what it got done, what blocked it and what it suggests.
 
 Because the check runs between steps, one step can take a run slightly past its cap. A bot's cost
 today shows on its card in the bot list.
@@ -315,9 +298,9 @@ it more careful or quieter happens straight away.
 | Stop notifying you, or set its own quiet hours | Quieter applies at once. Going back to your usual hours asks |
 | Remove a server it added, stop using a connection, remove its own knowledge | Never asks |
 
-A key for a server goes in as `{{secret:NAME}}` from **Settings** → **Advanced** → **Secrets**.
-If the secret doesn't exist yet, the bot asks you for it in the chat first, and it must be allowed
-for the server's host. New tools arrive from the bot's next message.
+A key for a server goes in as `{{secret:NAME}}` from **Settings** → **Secrets**. If the secret
+doesn't exist yet, the bot asks you for it in the chat first, and it must be allowed for the
+server's host. New tools arrive from the bot's next message.
 
 Bots can't change billing, members, encryption keys, secrets, sharing, or their own autonomy or
 budget.

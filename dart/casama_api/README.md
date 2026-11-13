@@ -479,7 +479,6 @@ Class | Method | HTTP request | Description
  - [ChatGptSignInStart](doc/ChatGptSignInStart.md)
  - [ChatGptSignInStartRequest](doc/ChatGptSignInStartRequest.md)
  - [CheckoutRequest](doc/CheckoutRequest.md)
- - [CheckoutResult](doc/CheckoutResult.md)
  - [Checkpoint](doc/Checkpoint.md)
  - [CheckpointCreatedEvent](doc/CheckpointCreatedEvent.md)
  - [CheckpointCreatedEventPayload](doc/CheckpointCreatedEventPayload.md)

@@ -182,13 +182,9 @@ export interface FakeBilling {
         trial_period_days?: number;
       }
     >;
+    /** POST /subscriptions/{id}/change-plan bodies, in order. */
+    planChanges: Array<{ subscriptionId: string; body: Record<string, unknown> }>;
     usageEvents: Array<Record<string, unknown>>;
-    /** Plan changes asked for (D-248): subscription id and the new product. */
-    planChanges: Array<{
-      subscriptionId: string;
-      productId: string;
-      body: Record<string, unknown>;
-    }>;
     /** Pays a checkout: creates the subscription (or one-time payment) and returns ids. */
     complete(sessionId: string): { subscriptionId: string | null; paymentId: string };
     /** A signed Standard Webhooks delivery. */
@@ -253,8 +249,8 @@ export async function startFakeBilling(
   const subs = new Map<string, DodoSub>();
   const payments = new Map<string, DodoPayment>();
   const checkouts: FakeBilling["dodo"]["checkouts"] = new Map();
-  const usageEvents: Array<Record<string, unknown>> = [];
   const planChanges: FakeBilling["dodo"]["planChanges"] = [];
+  const usageEvents: Array<Record<string, unknown>> = [];
   // ---- Apple
   const pki = makeTestPki("Fake Apple");
   const appleKeys = await generateKeyPair("ES256", { extractable: true });
@@ -353,13 +349,9 @@ export async function startFakeBilling(
           const s = subs.get(m[1] as string);
           if (!s) return send(404, { code: "NOT_FOUND" });
           const b = JSON.parse(body) as Record<string, unknown>;
+          planChanges.push({ subscriptionId: m[1] as string, body: b });
           s.product_id = b.product_id as string;
           s.addons = (b.addons as DodoSub["addons"]) ?? [];
-          planChanges.push({
-            subscriptionId: m[1] as string,
-            productId: b.product_id as string,
-            body: b,
-          });
           return send(200, {});
         }
         m = p.match(/^\/subscriptions\/([^/]+)$/);

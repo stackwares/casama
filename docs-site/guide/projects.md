@@ -1,6 +1,6 @@
 # Projects and the ticket board
 
-**Tasks** is a shared ticket board for people and bots. Assign a ticket to a bot and it starts
+The **Board** is a shared ticket board for people and bots. Assign a ticket to a bot and it starts
 working, reports back in comments and moves the ticket along. A **project** goes further: give a
 lead bot a goal, approve the plan it drafts, and it works through milestones and tickets in
 sessions until the goal is done, within the budget and deadline you set.
@@ -10,8 +10,7 @@ days.
 
 ## The ticket board
 
-Open **Tasks** in the main navigation. On tablets and computers it has one column per status; on
-phones, tickets are a list grouped by status:
+Open **Board** in the main navigation. It has one column per status:
 
 | Column | Meaning |
 | --- | --- |
@@ -21,13 +20,12 @@ phones, tickets are a list grouped by status:
 | **Blocked** | Stuck. A failed bot run lands here with a comment saying why. |
 | **Done** | Finished. |
 
-Filter the board with **All**, **Mine** or **Bots**, by **Priority**, and by project with the
-project picker (**All projects** or one project). To change a ticket's status, long-press it and
-drag it to another column; on a phone, long-press it and pick where to move it.
+Filter the board with **All**, **Mine** or **Bots**, and by **Priority**. Long-press a ticket and
+drag it to another column to change its status.
 
 ## Create a ticket
 
-1. In **Tasks**, tap **New ticket**.
+1. In **Board**, tap **New ticket**.
 2. Enter a **Title** and **Details**.
 3. Pick a **Priority**: **Urgent**, **High**, **Medium**, **Low** or **No priority**.
 4. Under **Assigned to**, pick a bot, or leave it **Unassigned**.
@@ -70,7 +68,7 @@ work as milestones, each with tickets, and nothing starts until you approve the 
 
 ### Start a project
 
-1. In **Tasks**, open the project picker and tap **Manage projects**, then **New project**.
+1. In **Board**, tap **Projects** (the target icon), then **New project**.
 2. Enter a **Title** and the **Goal**.
 3. Describe **Done when**: how you'll know the project is finished.
 4. Pick the **Lead bot**.
@@ -83,7 +81,7 @@ Until you approve it, asking the bot to plan again replaces the proposed tickets
 
 ### Approve and follow along
 
-Open the project from **Tasks**: project picker → **Manage projects**. The project screen shows:
+Open the project from **Board → Projects**. The project screen shows:
 
 - the status (**Planning**, **Active**, **Paused**, **Blocked**, **Done** or **Cancelled**) and,
   when there is one, the reason,

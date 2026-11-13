@@ -6,8 +6,8 @@ sign-in. It also explains what Casama never sends to a model or anywhere else.
 
 ## Export your data
 
-1. Open **Settings**, and under **Sign-in & Security**, tap **Privacy**.
-2. Under **Your Data**, tap **Export My Data**.
+1. Open **Settings**, and under **Privacy and more**, tap **Privacy**.
+2. Under **Your data**, tap **Export my data**.
 3. Save or share the ZIP file. The app shows **Export ready** with its size.
 
 From the CLI:
@@ -29,7 +29,7 @@ voice audio. Secrets and keys appear by name only.
 ## Delete your account
 
 1. Open **Settings → Privacy**.
-2. Under **Danger Zone**, tap **Delete My Account**.
+2. Under **Danger zone**, tap **Delete my account**.
 3. Type your email to confirm.
 
 You're signed out everywhere at once, your devices stop receiving push notifications, and the app
@@ -62,7 +62,7 @@ Every run keeps a timeline of events: tool calls, outputs and errors. Workspace 
 choose how long to keep it.
 
 1. Open **Settings → Privacy**.
-2. Under **Workspace**, set **Keep Run History For**: 30, 90, 180, 365 or 730 days.
+2. Under **Workspace**, set **Keep run history for**: 30, 90, 180, 365 or 730 days.
 
 The default is 180 days. Older run events are deleted automatically every day. Through the API you
 can set any value from 7 to 3650 days (`run_event_retention_days`).
@@ -73,11 +73,11 @@ Workspace owners can encrypt content before it's stored in the database, using a
 to the workspace.
 
 1. Open **Settings → Workspace settings**.
-2. Under **Encrypt Content**, tap **Turn On** and confirm.
+2. Under **Encrypt content**, tap **Turn on** and confirm.
 
 The status shows **Turning on: encrypting what's already stored** while existing content is
 encrypted in the background, then **On, with the server's key** or **On, with AWS KMS**. Turning it
-off decrypts everything the same way, then deletes the key once nothing uses it any more.
+off decrypts everything the same way, then deletes the key.
 
 What's encrypted: messages, run event details, memories, conversation summaries, tickets and their
 comments, pages (with their versions) and knowledge text.
@@ -90,15 +90,8 @@ What changes when it's on:
 - You don't keep or copy any key. Casama creates the workspace's key and wraps it with the
   server's key.
 
-To rotate, tap **Rotate Key**. This rewraps the workspace key with the server's current key;
+To rotate, tap **Rotate key**. This rewraps the workspace key with the server's current key;
 content stays readable and nothing is re-encrypted.
-
-If you think a copy of the database has leaked, rotating isn't enough: whoever has the copy and the
-old server key could still open it. An owner can instead replace the workspace's key through the
-API (`POST /v1/orgs/{id}/encryption/replace-key`). New content uses the new key at once, and
-existing content moves onto it in the background; everything stays readable meanwhile. This also
-replaces the About you keys of the workspace's members. On a self-hosted server, the instance owner
-can replace every key on the server at once. There's no button for this in the app yet.
 
 ::: tip Self-hosting
 Encryption needs `CONTENT_ENCRYPTION_KEY` (32 bytes, base64) or an AWS KMS key on the server.
@@ -158,12 +151,12 @@ input and output, with secrets and model keys removed. Workspaces can opt out wi
   whether it's on.
 - **Product analytics:** On Casama Cloud, the official app and server capture usage metrics (screen
   views, milestone completions, daily activity rollups) to PostHog to improve the app. You can opt
-  out at any time in **Settings → Privacy → Share Usage Data**. On self-hosted servers, product
+  out at any time in **Settings → Privacy → Share usage data**. On self-hosted servers, product
   analytics is completely disabled unless the server owner explicitly sets `PRODUCT_ANALYTICS=on`
   and supplies a `POSTHOG_API_KEY`.
 - **Who is counted:** a person is identified only by their account id, only on Casama Cloud, and only
   while their switch is on. Workspace admins can also turn usage data off for a whole workspace in
-  **Settings → Privacy → Usage Data for This Workspace**. Automated work (routines, watchers, chat apps) is counted per
+  **Settings → Privacy → Workspace**. Automated work (routines, watchers, chat apps) is counted per
   workspace, never as a person being active. Deleting your account also deletes your analytics.
 - **On someone else's server:** the official app connected to a self-hosted server sends crash
   reports and one anonymous "the app was used today" ping a day. No screens, no events, no account id.

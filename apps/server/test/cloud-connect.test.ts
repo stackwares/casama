@@ -307,11 +307,9 @@ describe.skipIf(!enabled)("Cloud Connect (Phase 7 gate)", () => {
         i.kind.startsWith("tokens") && i.instance === "home-server",
     );
     expect(tokens.reduce((a: number, b: { quantity: number }) => a + b.quantity, 0)).toBe(300);
-    // The upstream's $0.0018 at the same price as Casama's own key: OpenRouter's 5.5% fee and the
-    // 1.3 markup (D-248).
     expect(tokens.reduce((a: number, b: { cost_usd: number }) => a + b.cost_usd, 0)).toBeCloseTo(
-      0.0018 * 1.055 * 1.3,
-      5,
+      0.0018,
+      6,
     );
 
     // Out of credits: 402.

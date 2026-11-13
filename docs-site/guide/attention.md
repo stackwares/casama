@@ -7,19 +7,16 @@ interrupt you, and understand why a message did or didn't buzz your phone.
 
 ## Where notifications go
 
-Every notification lands in **Inbox** in the app, whatever else happens. The inbox is one feed:
-things that need a decision come first (approvals, take-over requests, suggestions and skill
-ideas), then updates newest first (briefs, routine results, messages from bots, missed calls,
-published pages). Filter it with:
+Every notification lands in **Inbox** in the app, whatever else happens. The inbox has three
+tabs:
 
-| Filter | What's in it |
+| Tab | What's in it |
 | --- | --- |
-| **All** | Everything |
-| **Needs you** | Approvals, take-over and secret requests, suggestions and skill ideas. See [Autonomy and approvals](/guide/autonomy). |
-| **Briefs** | Morning briefs from bots with check-ins on |
-| **Pages** | Pages your bots published. See [Pages](/guide/pages). |
+| **For you** | Your morning brief, suggestions and skill ideas from bots with check-ins on |
+| **Approvals** | Actions waiting for your OK. See [Autonomy and approvals](/guide/autonomy). |
+| **Notifications** | Routine results, messages from bots, requests to take over or add a secret, missed calls and other updates |
 
-Tap **Mark All as Read** to clear the unread count. Approvals, take-over requests and secret
+Tap **Mark all as read** to clear the unread count. Approvals, take-over requests and secret
 requests are marked read automatically once anyone answers them, and opening a bot's chat marks
 its results read.
 
@@ -49,7 +46,7 @@ with the same project. Without it, the in-app inbox still works. See
 Quiet hours hold pushes overnight (or whenever you choose). Your inbox still fills; the pushes
 arrive when the window ends.
 
-1. Open **Settings**, and under **App**, tap **Quiet hours**.
+1. Open **Settings**, and under **Privacy and more**, tap **Quiet hours**.
 2. Turn quiet hours on.
 3. Set **From** and **Until**. The window can cross midnight, for example 22:00 to 07:00.
 4. Tap **Save**.
@@ -59,9 +56,7 @@ app.
 
 ### Choose per bot
 
-1. Open the bot's chat, tap its name, and tap **Notifications from this bot**. You can also ask
-   the bot to go quiet; turning itself quieter happens at once, but going back to your usual hours
-   asks you first.
+1. Open the bot's chat, tap its name, and tap **Notifications from this bot**.
 2. Pick one:
 
 | Option | What it does |
@@ -87,9 +82,7 @@ messages a bot sends you, take-over and secret requests, and similar. They push 
 your quiet hours end.
 
 **Proactive messages follow attention rules.** These are messages you didn't ask for in the
-moment: routine results, suggestions from check-ins and similar. A suggestion's push comes from
-the bot, in its own words ("Want me to book a ride to the show at 7?"), and some wait until the
-time they matter, such as an hour before an event. Each has an urgency:
+moment: routine results, suggestions from check-ins and similar. Each has an urgency:
 
 | Urgency | What happens |
 | --- | --- |
@@ -109,13 +102,13 @@ inbox and waits for your next brief instead.
 | You're in a meeting | A timed event on the calendar you share from your devices is happening now |
 | The bot has said enough today | That bot already sent 5 non-urgent pushes in the last 24 hours |
 
-Focus, driving and calendar data come from what you share under **Settings → Advanced → Device
+Focus, driving and calendar data come from what you share under **Settings → Device
 connections**. See [Your devices](/guide/devices). The daily limit counts per bot, so one chatty
 bot doesn't use up another's.
 
 ### Your brief carries what waited
 
-Your morning brief comes from a bot's **Check-Ins** (in its **Bot profile**). When a brief runs, it
+Your morning brief comes from a bot's **Check-ins** (in **Bot settings**). When a brief runs, it
 includes the messages that waited in the last 36 hours, each with the reason it waited, so
 nothing is lost. See [Routines](/guide/routines).
 
@@ -139,7 +132,7 @@ notifications.
 
 - Quiet hours use the time zone stored on your profile, which is UTC unless it was set
   otherwise. The app doesn't have a time zone setting yet, so set your window in UTC for now.
-- Messages that wait for a brief are only delivered by a brief. If no bot has **Check-Ins** on,
+- Messages that wait for a brief are only delivered by a brief. If no bot has **Check-ins** on,
   they stay in your inbox without a push.
 - Focus and driving need a device that reports them. See [Your devices](/guide/devices) for
   which platforms do.

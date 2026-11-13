@@ -6,16 +6,11 @@ in one chat it can recall in the others.
 
 ## Start a conversation
 
-1. Select a bot in the sidebar (on a phone, tap it in **Chats**).
+1. Select a bot in the sidebar (on a phone, tap it in **Bots**).
 2. Type in the message field and send.
 
 To start fresh, select **New chat**. To go back to an earlier one, select **Conversations** (the
 history button) and pick it. New conversations get a title from their first messages.
-
-An open chat stays live on every device. A message you send from your phone shows up, with the
-bot's reply streaming in, on your laptop with the same chat open, and the same goes for a teammate
-in a shared chat or a routine that posts into it. The bot list updates live too, so a bot made on
-one device appears on the others.
 
 On the desktop and the web, **Enter** sends and **Shift+Enter** starts a new line. On phones, use
 the send button.
@@ -28,14 +23,9 @@ longer runs collapse earlier steps behind **Show … earlier steps**. Any text t
 between steps stays in the thread as its own message.
 
 - **Stop** ends the current run. It shows in place of **Send** while the message field is empty.
-  A stopped request stays stopped: the bot won't pick it back up on your next message unless you
-  ask again.
 - **Activity** (in the **More** menu) lists every run of the bot. Each run opens a
   **Run timeline** with every event, its cost and tokens.
 - If a run fails, the chat says why in plain words, with **Details** and **Open run timeline**.
-- If a run uses all its steps or time, the bot still replies with what it got done, what blocked
-  it and what it suggests.
-- Ask a bot what it's doing from another chat and it knows about its work elsewhere.
 
 ### Send more while it works
 
@@ -72,14 +62,9 @@ When a bot makes a file, it links it by its path on the bot's computer, like
 WebP) as thumbnails, and documents, data, code, archives, audio and video as file cards, up to 8
 per reply.
 
-Images and videos a bot generates show under its reply by themselves, even when the bot has no
-computer. Videos on a bot's computer show a first frame and their length once the computer is
-awake; looking at them never wakes a sleeping computer.
-
 Tap a file to open the preview, then choose **Open**, **Save** or **Share**. Files without a
-preview can still be opened or saved. Everything a bot makes on its computer also stays in its
-**Files**; see [Computers](/guide/computers). If a bot's reply links to a file that isn't there,
-Casama makes the bot fix the reply before you see it.
+preview can still be opened or saved. Everything a bot makes also stays in its computer's
+**Files**; see [Computers](/guide/computers).
 
 ## Interactive cards
 
@@ -122,9 +107,7 @@ Edit works on your own messages in chats with one bot, and not while a run is go
 
 ## Message actions
 
-With a mouse, hover over a message to see **Copy**, **Edit** (your own), **Read aloud** and
-**Share** under it. Right-click adds them to the text menu. On a touch screen, long-press a
-message: the bubble shrinks a little as you hold, then the menu opens.
+Long-press a message, or right-click it with a mouse, for:
 
 | Action | What it does |
 | --- | --- |
@@ -133,21 +116,6 @@ message: the bubble shrinks a little as you hold, then the menu opens.
 | **Read aloud** | Reads a reply with the bot's voice. See [Voice and calls](/guide/voice). |
 | **Select text** | Opens the text so you can select part of it. |
 | **Share** | Opens your system's share sheet. |
-
-## Delete a chat
-
-1. In the chat, open the **More** menu (**…**) and choose **Delete Chat**. You can also delete a
-   chat from **Conversations**: use its delete button, or long-press it.
-2. Confirm.
-
-The chat's messages, photos and files are deleted for everyone who can see it. Usage records stay,
-and anything the bot remembered from the chat stays in its memory. A deleted chat with one bot
-starts fresh; a deleted group chat takes you back to your chats. You can't delete a chat while the
-bot is working in it.
-
-You can delete chats you started. People who manage a bot can delete any chat with it. To clear
-everything at once, open the bot's profile and choose **Delete All Chats**; group chats and chats
-the bot is busy in are left alone. Single messages can't be deleted; edit and resend instead.
 
 ## Routines in your chat
 
@@ -165,22 +133,10 @@ Search finds messages, chats, memories, skills, routines, tickets and files acro
 
 - **Desktop and web:** press **Cmd+K** (macOS) or **Ctrl+K**, or use the search button in the
   sidebar.
-- **Phones:** the search button in the **Chats** header, next to **+**.
+- **Phones:** the **Search** tab.
 
-Before you type, search suggests where to go: **Recent** searches (kept on this device), **Jump
-back in** with the bots you talked to last, **Needs you** when something is waiting in your inbox,
-and **Go to** for Quick ask, Tasks, Skills and Settings.
-
-From the first letter, matching bots and places show under **Top hits**. From two letters, the
-server's results join them, grouped by type. Tap a chip under the field (**All**, **Chats**,
-**Memories**, **Skills**, **Routines**, **Tickets** or **Files**) to search only that kind; each
-chip shows how many it found. If nothing matches, **Ask … about "…"** starts a Quick ask with the
-bot you talked to last.
-
-Results open the item itself: a message opens its chat scrolled to it, a memory opens its editor,
-a routine is highlighted in its list, a ticket opens its sheet, and files open in the preview. On a
-tablet or computer, use the arrow keys and **Enter** to open a result, and **Esc** to clear or
-close. Search covers only bots and chats you can see.
+Type at least two characters. Results are grouped by type. A message opens its chat scrolled to
+it; files open in the preview. Search covers only bots and chats you can see.
 
 File search looks at names and contents under `~/workspace` on up to three computers that are
 awake. Sleeping computers aren't woken for a search; start one to include its files. With

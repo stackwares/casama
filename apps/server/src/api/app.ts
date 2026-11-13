@@ -134,34 +134,6 @@ export function createApp(deps: AppDeps) {
         c,
         new ApiError(403, "email_unverified", "Confirm your email address to start a computer."),
       );
-    // A computer that can't start for billing or room reasons (D-248).
-    if (err instanceof Error && err.message === "out_of_credits")
-      return problem(
-        c,
-        new ApiError(
-          402,
-          "out_of_credits",
-          "The workspace is out of credits. Add credits or change plans in Billing.",
-        ),
-      );
-    if (err instanceof Error && err.message === "plan_limit")
-      return problem(
-        c,
-        new ApiError(
-          402,
-          "plan_limit",
-          "Your plan runs fewer computers than this workspace has. Upgrade to use this one.",
-        ),
-      );
-    if (err instanceof Error && err.message === "capacity_full")
-      return problem(
-        c,
-        new ApiError(
-          503,
-          "capacity_full",
-          "Casama's computers are all busy right now. Try again in a few minutes.",
-        ),
-      );
     // A computer that can't be reached is an expected state (stopped, restarting, offline device),
     // not a server bug: answer with what happened instead of a 500.
     if (err instanceof SandboxError) {

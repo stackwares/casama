@@ -62,8 +62,6 @@ export type ParsedEvent = {
   | { kind: "subscription"; externalId: string; refund?: boolean; revoke?: boolean }
   | { kind: "payment"; paymentId: string }
   | { kind: "refund"; paymentId: string; refundId: string }
-  /** A store credit pack was refunded; `references` are the credit_ledger references it may be under. */
-  | { kind: "pack_refund"; references: string[] }
   | { kind: "ignored" }
 );
 
@@ -106,8 +104,6 @@ export interface BillingProvider {
     quantity: number;
   }): Promise<void>;
   customerPortal?(args: { customerId: string; returnUrl: string }): Promise<{ url: string }>;
-  /** Dodo: moves an existing subscription to another product, prorated (D-248). */
-  changePlan?(subscriptionId: string, productId: string): Promise<void>;
   /** Dodo: a payment and what it bought (credit packs, refunds). */
   fetchPayment?(paymentId: string): Promise<{
     paymentId: string;

@@ -46,8 +46,7 @@ How a request flows:
 Apps, CLI, browser
         |
         v
-  Caddy :80/:443 --- /v1, /hooks, /connect, /oauth, /mcp, /a2a, --> api :8787
-        |      |     /links, /healthz, /readyz, /.well-known/...
+  Caddy :80/:443 --- /v1, /hooks, /connect, /healthz, /readyz ---> api :8787
         |      \---- /auth/v1, /rest/v1, /realtime/v1 --------> kong ---> auth, rest, realtime
         |       \--- everything else ------------------------> web (profile "web")
   Caddy :8790 ------ Pages (bots' web pages, own origin) ------> api :8790
@@ -70,7 +69,7 @@ for details and for running computers on E2B, Daytona, Kubernetes and others.
 | Docker      | Docker Engine with Docker Compose v2 (`docker compose`). Your user must be able to run `docker`.           |
 | Tools       | `git`, `bash`, `openssl` and `curl`                                                                        |
 | CPU and RAM | 4 vCPU and 8 GB RAM for a few computers at once. Plan on about 2 GB RAM per running computer.             |
-| Disk        | 40 GB or more. The images take about 10 GB; home folders and snapshots take the rest.                      |
+| Disk        | 40 GB or more. The images take about 6 GB; home folders and snapshots take the rest.                       |
 | Domain      | For a public server, a DNS name (for example `casama.example.com`) pointing at the machine.               |
 
 The installer warns when the machine has less than about 8 GB of memory, because computers may not
@@ -129,15 +128,12 @@ The installer:
 1. Checks that Docker, Docker Compose v2 and OpenSSL are available and that Docker is running.
 2. On Linux, uses gVisor (`runsc`) for computers if Docker lists it as a runtime.
 3. Generates every secret with OpenSSL and writes `infra/compose/.env` (mode 600). This includes the
-   database passwords, the Supabase JWT secret and keys, a SAML signing key, the tokens the
-   services use to talk to each other, and the server key for encryption at rest
-   (`CONTENT_ENCRYPTION_KEY`, unless AWS KMS is set). Back that key up: encrypted data can't be read
-   without it.
+   database passwords, the Supabase JWT secret and keys, a SAML signing key, and the tokens the
+   services use to talk to each other.
 4. Pulls the Supabase, Caddy and other images (two at a time, with up to five retries, because
    public registries rate-limit anonymous pulls).
 5. Builds the Casama images: `api` (shared by the worker), `supervisor`, `egress`, `turn` and the
-   headless computer image. With `--pull`, it downloads the published images from
-   `ghcr.io/stackwares/casama` instead.
+   headless computer image.
 6. Starts the stack and waits up to three minutes for `/readyz` to answer.
 
 A fresh install that builds every image from scratch takes a few minutes, plus the time to download
@@ -242,8 +238,7 @@ You can also pass the address for a single command with the global `--api` optio
 
 ## Run a server on your own computer
 
-The desktop app on macOS and Linux (not the Mac App Store version) can install and start a local
-server for you:
+The desktop app (macOS and Linux) can install and start a local server for you:
 
 1. Start Docker Desktop.
 2. On the sign-in screen, tap **More options** → **Run Casama on this computer**.
@@ -254,7 +249,7 @@ server for you:
 The app checks that Docker and Compose v2 are running, downloads the source of the release whose
 images are published (the `selfhost` tag) into its support folder, and runs
 `install.sh --local --pull <that release>`, which pulls the published images instead of building
-them. The first start downloads about 10 GB of images, so it needs that much free disk. Then it waits for the server and connects to
+them. The first start downloads a few GB of images. Then it waits for the server and connects to
 `http://localhost:8080`. If a port is taken (8080, 8443, 8790 or TURN's 3478), it picks the next
 free one and keeps it. Every port listens on `127.0.0.1` only, so only this computer can reach it.
 If a server already answers there, it connects right away. Closing the sheet while it installs

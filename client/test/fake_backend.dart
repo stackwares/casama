@@ -4338,8 +4338,10 @@ class FakeBackend implements Backend {
     String computerId,
     String checkpointId,
   ) async => computerActions.add('restore:$checkpointId');
+  /// What [screenshot] returns: null fails, empty bytes means nothing on screen.
+  Uint8List? screen;
   @override
-  Future<Uint8List?> screenshot(String computerId) async => null;
+  Future<Uint8List?> screenshot(String computerId) async => screen;
   @override
   Future<(Uri, Map<String, String>)> terminal(
     String computerId, {

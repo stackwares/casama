@@ -3,8 +3,7 @@
 # Run ./install.sh from the repository root (it writes infra/compose/.env and starts this file).
 #   docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env up -d
 # Optional profiles: s3 (SeaweedFS object storage), monitoring (Prometheus, Grafana),
-# web (the Flutter web app), images (build-only computer images), search (SearXNG web search),
-# pdf (page PDFs in an isolated Chromium; set PDF_RENDERER_URL=http://pdf:3000).
+# web (the Flutter web app), images (build-only computer images), search (SearXNG web search).
 name: casama
 
 x-casama: &casama
@@ -22,13 +21,6 @@ x-casama: &casama
     SUPABASE_JWT_SECRET: ${JWT_SECRET}
     PUBLIC_APP_URL: ${CASAMA_PUBLIC_URL}
     PUBLIC_API_URL: ${CASAMA_PUBLIC_URL}
-    # Invite links open the app (D-167): iOS app ids and Android signing fingerprints for the
-    # /.well-known files, plus the store pages shown on the join page. Empty: the join page only.
-    APPLE_APP_IDS: ${APPLE_APP_IDS:-}
-    ANDROID_APP_PACKAGE: ${ANDROID_APP_PACKAGE:-ai.casama.app}
-    ANDROID_CERT_SHA256: ${ANDROID_CERT_SHA256:-}
-    APP_STORE_URL: ${APP_STORE_URL:-}
-    PLAY_STORE_URL: ${PLAY_STORE_URL:-}
     # Pages (D-119) live on their own origin: a separate domain, or another port for trials.
     PAGES_URL: ${CASAMA_PAGES_URL:-http://localhost:8790}
     SUPERVISOR_URL: http://casama-supervisor:8788
@@ -334,14 +326,10 @@ services:
 
   api:
     <<: *casama
-    # pdf: the private network to the PDF sidecar (profile pdf); it exists either way.
-    networks: [internal, pdf]
     environment:
       <<: *casama-env
       MODE: api
       PAGES_PORT: "8790"
-      # Page PDFs (D-119): http://pdf:3000 with the pdf profile. Empty: PDF export is off.
-      PDF_RENDERER_URL: ${PDF_RENDERER_URL:-}
     depends_on: { migrate: { condition: service_completed_successfully } }
 
   worker:
@@ -364,23 +352,6 @@ services:
     depends_on: { migrate: { condition: service_completed_successfully } }
     # The worker serves no HTTP, so the image's /healthz check would always fail here.
     healthcheck: { disable: true }
-
-  # Page PDFs (profile pdf). Chromium can't keep its sandbox in a normal container, so it runs here:
-  # no secrets, no internet, and its only network holds nothing but the API. It loads only the page
-  # it was sent (and its inline images), never a URL or another file.
-  pdf:
-    image: gotenberg/gotenberg:8.39.0-chromium
-    profiles: [pdf]
-    restart: unless-stopped
-    networks: [pdf]
-    command:
-      - gotenberg
-      - --api-port=3000
-      - --chromium-deny-list=^file:(?!//\/tmp/).*|^(https?|wss?|ftp):.*
-      - --api-disable-health-check-logging
-      - --log-level=warn
-    security_opt: [no-new-privileges:true]
-    cap_drop: [ALL]
 
   # The only service with Docker access. It joins each computer's private network to reach computerd.
   supervisor:
@@ -600,8 +571,6 @@ services:
 networks:
   internal: {}
   egress: {}
-  # The API and the PDF sidecar only; no route out.
-  pdf: { internal: true }
 
 volumes:
   db-data: {}

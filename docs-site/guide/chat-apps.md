@@ -22,7 +22,7 @@ conversation also shows up in the Casama app.
 
 You need to manage the bot to connect a chat app.
 
-1. Open the bot, then **Bot profile** → **Chat apps**.
+1. Open the bot, then **Bot settings** → **Chat apps**.
 2. Tap **Connect a chat app**.
 3. Choose the **App** and give the connection a **Name**.
 4. Paste the credentials from the app's developer settings (see the table below). They're stored

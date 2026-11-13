@@ -76,8 +76,8 @@ install gVisor, register it with Docker, set `SANDBOX_RUNTIME=runsc` in `infra/c
 | Name                      | Compose default                         | What it does                                                                 |
 | ------------------------- | --------------------------------------- | ---------------------------------------------------------------------------- |
 | `SANDBOX_RUNTIME`         | Set by the installer                    | Docker runtime for computers (`runsc` for gVisor). Empty: Docker's default.  |
-| `COMPUTER_IMAGE_HEADLESS` | `<CASAMA_REGISTRY>/computer-headless:<CASAMA_VERSION>` | Image for headless computers. `casama/computer-headless:local` unless you installed with `--pull`. |
-| `COMPUTER_IMAGE_DESKTOP`  | `<CASAMA_REGISTRY>/computer-desktop:<CASAMA_VERSION>`  | Image for desktop computers.                                                 |
+| `COMPUTER_IMAGE_HEADLESS` | `casama/computer-headless:local`        | Image for headless computers.                                                |
+| `COMPUTER_IMAGE_DESKTOP`  | `casama/computer-desktop:local`         | Image for desktop computers.                                                 |
 | `COMPUTER_MEMORY_MB`      | `2048`                                  | Memory for each new computer.                                                |
 | `COMPUTER_CPUS`           | `1` (not passed by Compose)             | CPUs for each new computer.                                                  |
 | `WARM_POOL_SIZE`          | `0`                                     | Started headless computers kept waiting. See [Scaling](/self-hosting/operations#scaling). |
@@ -225,16 +225,15 @@ Casama has two computer images, both built from `infra/images/computer/`:
 | `computer-headless`         | Ubuntu 24.04, `computerd`, shell tools, git, Node.js 24, Python 3, Chromium, agent-browser, LibreOffice, pandoc, Poppler, qpdf and Tesseract |
 | `computer-desktop`          | The headless image plus an X server, a window manager, accessibility tools, a text editor and the Neko WebRTC streamer for live view |
 
-The installer always builds the headless image, or pulls it with `--pull`. Get the desktop image
-with `./install.sh --with-desktop`, or build it on its own:
+The installer always builds the headless image. Build the desktop image with
+`./install.sh --with-desktop`, or on its own:
 
 ```sh
 COMPOSE_PROFILES=images docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env build computer-desktop
 ```
 
-Compose tags them `${CASAMA_REGISTRY}/computer-headless:${CASAMA_VERSION}` and
-`${CASAMA_REGISTRY}/computer-desktop:${CASAMA_VERSION}` (by default `casama/...:local`; with
-`--pull`, `ghcr.io/stackwares/casama/...` at the pulled tag). To build them outside Compose:
+Compose tags them `casama/computer-headless:${CASAMA_VERSION}` and
+`casama/computer-desktop:${CASAMA_VERSION}` (default tag `local`). To build them outside Compose:
 
 ```sh
 docker build -f infra/images/computer/Dockerfile.headless -t casama/computer-headless:dev .
@@ -245,8 +244,8 @@ docker build -f infra/images/computer/Dockerfile.desktop \
 Both build on x86-64 and ARM64. `computerd` listens on port 7070; the headless image starts it
 with `CMD ["computerd"]`, and the desktop image with `desktop-start`.
 
-Rebuild or pull the images after each upgrade (the installer does this for the headless image, and
-for the desktop image with `--with-desktop`). A computer picks up a new image the next time it sleeps and
+Rebuild the images after each upgrade (the installer does this for the headless image, and for the
+desktop image with `--with-desktop`). A computer picks up a new image the next time it sleeps and
 wakes. For hosted providers, rebuild your templates, snapshots or registry images too.
 
 ## The egress proxy
@@ -293,7 +292,7 @@ block UDP and port 3478 can't connect.
 | Processes          | 512                               | Fixed                                        |
 | `/tmp`             | 1 GB in memory                    | Fixed                                        |
 | Shared memory      | 512 MB                            | Fixed                                        |
-| Idle before sleep  | 5 minutes                         | Fixed                                        |
+| Idle before sleep  | 10 minutes                        | Fixed                                        |
 
 Home folders live on a Docker volume per computer, with no size limit of their own; watch disk use
 on the host. Team computers have one screen, so a workspace admin sets how many bots can use

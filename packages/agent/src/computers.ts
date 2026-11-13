@@ -268,10 +268,7 @@ export class ComputerService {
       };
       track(this.db, { event: "computer_start_requested", orgId: c.org_id, properties: facts });
       try {
-        await this.checkCanStart(c.org_id, {
-          credits: c.kind !== "local",
-          computerId: c.kind !== "local" ? c.id : undefined,
-        });
+        await this.checkCanStart(c.org_id, { credits: c.kind !== "local" });
       } catch (err) {
         track(this.db, {
           event: "computer_start_failed",
@@ -359,10 +356,7 @@ export class ComputerService {
    * Throws workspace_suspended or email_unverified when a computer must not start (D-094).
    * With credits, a credit-gated workspace that has nothing left cannot start a hosted computer.
    */
-  /** Hosted computers that may run at once on this server; 0 = no limit (D-248). */
-  maxRunning = 0;
-
-  async checkCanStart(orgId: string, opts: { credits?: boolean; computerId?: string } = {}) {
+  async checkCanStart(orgId: string, opts: { credits?: boolean } = {}) {
     const [o] = await this.db.execute<{
       suspended: boolean;
       plan: string | null;
@@ -370,83 +364,19 @@ export class ComputerService {
       gate: boolean | null;
       credits: string | null;
       unbilled: string | null;
-      max_computers: string | null;
-      rank: string | null;
     }>(sql`
       select o.suspended_at is not null as suspended,
              (select e.plan_code from public.entitlements e where e.org_id = o.id order by e.created_at desc limit 1) as plan,
              public.worker_owner_email_verified(o.id) as verified,
              (select (e.limits->>'credit_gate')::boolean from public.entitlements e where e.org_id = o.id order by e.created_at desc limit 1) as gate,
              (select balance_after from public.credit_ledger where org_id = o.id order by seq desc limit 1) as credits,
-             (select coalesce(sum(cost_usd), 0) from public.usage_ledger where org_id = o.id and billable and billed_at is null) as unbilled,
-             (select e.limits->>'max_computers' from public.entitlements e where e.org_id = o.id order by e.created_at desc limit 1) as max_computers,
-             ${
-               opts.computerId
-                 ? sql`(select count(*) from public.computers x join public.computers me on me.id = ${opts.computerId}::uuid
-                     where x.org_id = me.org_id and x.provider <> 'local' and x.id <> me.id
-                       and (x.created_at, x.id) < (me.created_at, me.id))`
-                 : sql`null`
-             } as rank
+             (select coalesce(sum(cost_usd), 0) from public.usage_ledger where org_id = o.id and billable and billed_at is null) as unbilled
       from public.organizations o where o.id = ${orgId}::uuid`);
     if (o?.suspended) throw new Error("workspace_suspended");
     if (this.requireVerifiedEmail && (o?.plan ?? "free") === "free" && !o?.verified)
       throw new Error("email_unverified");
     if (opts.credits && o?.gate && Number(o.credits ?? 0) - Number(o.unbilled ?? 0) <= 0)
       throw new Error("out_of_credits");
-    // After a downgrade only the plan's number of hosted computers (the oldest) start (D-248).
-    if (o?.max_computers != null && o.rank != null && Number(o.rank) >= Number(o.max_computers))
-      throw new Error("plan_limit");
-    // The server's own room: past it a start waits rather than starving the API and database.
-    if (this.maxRunning > 0 && opts.computerId) {
-      const [n] = await this.db.execute<{ n: string }>(sql`
-        select count(*)::text as n from public.computers
-        where kind <> 'local' and state in ('running', 'idle', 'starting', 'provisioning') and id <> ${opts.computerId}::uuid`);
-      if (Number(n?.n ?? 0) >= this.maxRunning) throw new Error("capacity_full");
-    }
-  }
-
-  /**
-   * Bills running hosted computers as they run, not only when they stop, and puts to sleep the
-   * ones whose credit-gated workspace has no credits left (D-248). Run every few minutes.
-   */
-  async meterRunning(minIntervalMs = 5 * 60_000) {
-    const rows = await this.db.execute<ComputerRow>(sql`
-      select * from public.computers
-      where kind <> 'local' and state in ('running', 'idle') and running_since is not null
-        and running_since < now() - (${minIntervalMs} * interval '1 millisecond')`);
-    for (const c of rows) {
-      // Claims the interval: only one worker writes it, and the next one starts now.
-      const [claimed] = await this.db.execute<{ id: string }>(sql`
-        update public.computers set running_since = now()
-        where id = ${c.id}::uuid and running_since = ${new Date(c.running_since as Date).toISOString()}::timestamptz
-        returning id`);
-      if (claimed) await this.recordUsage(c);
-    }
-    const broke = await this.db.execute<{ id: string; org_id: string }>(sql`
-      select c.id, c.org_id from public.computers c
-      where c.kind <> 'local' and c.state in ('running', 'idle')
-        and (select (e.limits->>'credit_gate')::boolean from public.entitlements e
-              where e.org_id = c.org_id order by e.created_at desc limit 1)
-        and coalesce((select balance_after from public.credit_ledger where org_id = c.org_id order by seq desc limit 1), 0)
-          - (select coalesce(sum(cost_usd), 0) from public.usage_ledger where org_id = c.org_id and billable and billed_at is null) <= 0`);
-    for (const c of broke) {
-      const ok = await this.sleep(c.id).then(
-        () => true,
-        (err) => {
-          captureError(err, {
-            service: "casama-worker",
-            step: "out-of-credits-sleep",
-            computer_id: c.id,
-          });
-          return false;
-        },
-      );
-      if (ok)
-        await auditComputer(this.db, c.org_id, c.id, "computer.slept", null, {
-          reason: "out_of_credits",
-        });
-    }
-    return { metered: rows.length, slept: broke.length };
   }
 
   async touch(computerId: string) {

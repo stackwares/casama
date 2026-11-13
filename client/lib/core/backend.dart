@@ -1510,6 +1510,8 @@ abstract class Backend {
   Future<void> deleteFile(String computerId, String path);
   Future<List<Checkpoint>> checkpoints(String computerId);
   Future<void> restoreCheckpoint(String computerId, String checkpointId);
+  /// What's on the computer's screen as a PNG. Empty bytes when there is nothing to show (a
+  /// headless computer with no page open); null when it could not be fetched.
   Future<Uint8List?> screenshot(String computerId);
   Future<(Uri, Map<String, String>)> terminal(
     String computerId, {

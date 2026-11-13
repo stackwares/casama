@@ -1165,7 +1165,7 @@ class _ScreenStageState extends ConsumerState<_ScreenStage> {
     final id = widget.computer.id;
     final png = await ref.read(backendProvider).screenshot(id);
     if (!mounted || png == null || !_awake || widget.computer.id != id) return;
-    setState(() => _shot = png);
+    setState(() => _shot = png.isEmpty ? null : png);
   }
 
   @override
@@ -1566,7 +1566,9 @@ class _ScreenTabState extends ConsumerState<_ScreenTab> {
     if (!mounted) return;
     setState(() {
       _loading = false;
-      if (png != null) _png = png;
+      // Empty: the screen went blank (the bot closed its page), so the placeholder returns.
+      // Null: the request failed, so the last picture stays.
+      if (png != null) _png = png.isEmpty ? null : png;
     });
   }
 

@@ -59,10 +59,8 @@ curl -s https://casama.example.com/v1/config
 | `chatgpt_sign_in` | Whether people can connect a ChatGPT plan here |
 | `wallpapers_enabled` | Whether wallpaper photo search is available |
 | `trace_url_template` | Where a run's trace opens, with `{trace_id}` in it, or `null` |
-| `server_voice` | Voice features the server's own keys cover: `live`, `read_aloud`, `dictation` |
-| `google_client_ids` | Google client ids Auth accepts, for Google's own sign-in sheet in the apps |
 
-The fields after `default_reasoning_effort` are optional and may be missing on some servers.
+The last four are optional and may be missing on some servers.
 
 ## Authentication
 
@@ -119,8 +117,7 @@ the token as shown above.
 
 ### Endpoints without a token
 
-A few endpoints need no bearer token: `GET /v1/config`, `GET /v1/app-config` (the owner's
-[remote app settings](/self-hosting/operations#remote-app-settings)), `GET /v1/signup/challenge`, `/healthz`,
+A few endpoints need no bearer token: `GET /v1/config`, `GET /v1/signup/challenge`, `/healthz`,
 `/readyz`, and the inbound [webhooks](/develop/webhooks) under `/hooks/`, which check a signature
 instead.
 
@@ -157,17 +154,15 @@ Common codes:
 | 400 | `validation_failed` | The body, query or path didn't match the schema |
 | 401 | `unauthorized` | No bearer token on a route that needs one |
 | 401 | `invalid_token` | The token is malformed, expired or not a user token |
-| 402 | `plan_limit`, `workspace_limit`, `paid_plan_required` | A plan limit was reached (only when billing is on) |
+| 402 | `plan_limit` | A plan limit was reached (only when billing is on) |
 | 403 | `forbidden` | You're signed in but not allowed to do this |
 | 403 | `mfa_required` | The workspace requires two-step sign-in for this |
 | 404 | `not_found` | No such route |
 | 404 | `bot_not_found`, `org_not_found`, `conversation_not_found`, ... | The thing doesn't exist or you can't see it |
 | 409 | `run_finished` | You tried to cancel a run that already ended |
-| 409 | `device_offline` | A personal computer's desktop app isn't connected |
 | 422 | `idempotency_key_reused` | The `Idempotency-Key` was used for a different request |
 | 429 | `rate_limited` | Too many requests; see `Retry-After` |
 | 500 | `internal_error` | A server bug. Retry later; the server logged it. |
-| 503 | `computer_unavailable` | The bot's computer couldn't be reached (stopping, waking or restarting). Retry shortly. |
 
 Every response carries an `x-request-id` header. Send your own `x-request-id` to tie a request to
 your logs, and include it when you report a problem.

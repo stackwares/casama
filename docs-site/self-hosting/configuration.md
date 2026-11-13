@@ -28,11 +28,10 @@ only at start, so every change needs this step. `docker compose restart` is not 
 containers with their old settings.
 
 ::: tip Optional profiles
-`casama selfhost up` doesn't name any Compose profiles. If you changed a setting for the web app,
-monitoring, search or backups, add the profile: `docker compose ... --profile monitoring up -d`.
-Docker Compose also reads `COMPOSE_PROFILES` from the env file, so `COMPOSE_PROFILES=monitoring,web`
-in `.env` keeps them on for every command. Re-running `./install.sh` adds the `backup` profile by
-itself once you installed with `--backups`.
+`casama selfhost up` doesn't name any Compose profiles. If you changed a setting for the web app or
+monitoring, add the profile: `docker compose ... --profile monitoring up -d`. Docker Compose also
+reads `COMPOSE_PROFILES` from the env file, so `COMPOSE_PROFILES=monitoring,web` in `.env` keeps
+them on for every command.
 :::
 
 Some settings are read by the server but not passed through by the bundled compose file. They're
@@ -52,10 +51,7 @@ listed under [Advanced settings](#advanced-settings), with how to add them.
 | `CORS_ORIGINS`           | (empty)                         | Extra comma-separated web origins allowed to call the API from a browser. The public address is always allowed.                       |
 | `RATE_LIMIT_PER_MINUTE`  | `120`                           | Requests per minute on the API and webhooks, per signed-in user or else per IP address. Cloud Connect endpoints get ten times as much. |
 | `UPDATE_CHECK_URL`       | (empty: no update checks)       | Where the admin console checks for new releases, in the shape of GitHub's latest-release API.                                         |
-| `CASAMA_REGISTRY`        | `casama` (build locally)        | Where the Casama images come from. `./install.sh --pull` sets `ghcr.io/stackwares/casama`, and re-runs then pull instead of build.     |
-| `CASAMA_VERSION`         | `local`                         | The tag of the Casama images Compose builds or pulls. `--pull [tag]` sets it (default `latest`).                                      |
-| `HTTP_BIND`              | `0.0.0.0`                       | The address Caddy's HTTP, HTTPS and Pages ports listen on. `--behind-proxy` and `--local` set `127.0.0.1`.                              |
-| `TRUSTED_CLIENT_IP_HEADER` | (empty: `X-Forwarded-For`)    | A header your edge sets with the caller's address, for rate limits on signed-out requests. Behind Cloudflare, `cf-connecting-ip`.      |
+| `CASAMA_VERSION`         | `local`                         | The tag of the Casama images Compose builds and runs.                                                                                 |
 
 **Pages on their own domain.** Bots' web pages are served from a separate origin so a page's
 scripts never share an origin with Casama. On a public server, give them their own name:
@@ -86,7 +82,6 @@ If a load balancer or another reverse proxy terminates TLS:
 3. Route your proxy to Caddy's HTTP port (`HTTP_PORT`), including WebSocket upgrades.
 4. Set `HTTP_BIND=127.0.0.1` (the installer does this with `--behind-proxy`). Docker-published ports skip the host firewall, so `0.0.0.0` would serve plain HTTP to anyone who can reach the server's IP.
 5. Keep port 3478 (UDP and TCP) reachable directly for live view, and set `TURN_PUBLIC_HOST` (`--turn-host`) to a name that points at the server with DNS only, not through the HTTP proxy. Media stays inside coturn, so the relay range 49160–49260 does not need to be open.
-6. If the proxy is a tunnel on the same machine (Cloudflare Tunnel, for example), every request reaches Caddy from the tunnel's own address. Set `TRUSTED_CLIENT_IP_HEADER` to the header that carries the real address (`cf-connecting-ip` for Cloudflare), or all signed-out callers share one rate limit.
 
 ## Generated secrets
 
@@ -109,12 +104,8 @@ table says it's safe: several are baked into the database or into each other.
 | `EGRESS_CONTROL_TOKEN`   | The supervisor's token for the egress proxy's control API                      | Yes, with a full `casama selfhost up`                                   |
 | `INTERNAL_TOKEN`         | Shared secret for the API's internal endpoints (32+ characters)                | Yes, with a full `casama selfhost up`                                   |
 | `TURN_SECRET`            | coturn's shared secret for short-lived live view credentials (16+ characters)   | Yes, with a full `casama selfhost up`                                   |
-| `SEARXNG_SECRET`         | SearXNG's own secret (search profile)                                          | Yes, with a full `casama selfhost up`                                   |
 | `METRICS_TOKEN`          | Bearer token for `/metrics` (16+ characters)                                   | Yes. Prometheus picks it up when it restarts.                           |
 | `GRAFANA_ADMIN_PASSWORD` | Grafana's `admin` password (monitoring profile)                                | Only before Grafana's first start; afterwards change it in Grafana.     |
-
-The installer also generates `CONTENT_ENCRYPTION_KEY` unless you use AWS KMS. See
-[Encryption keys](#encryption-keys): it can't be changed like the others.
 
 ## Database and auth
 
@@ -141,24 +132,6 @@ Helm, a platform like Render, or a custom setup.
 | `SUPERVISOR_URL`            | (unset: no computers)         | The sandbox supervisor's address. Compose uses `http://casama-supervisor:8788`.                               |
 | `SUPERVISOR_TOKEN`          | (unset)                       | Token for the supervisor.                                                                                      |
 
-## Page PDFs
-
-**Export PDF** on a page prints it with headless Chromium. Chromium can't keep its own sandbox inside
-a normal container, so it runs in a container of its own (Gotenberg, about 500 MB) that holds no
-secrets and sits on a private network with only the API on it: no internet, no database. Pages are
-printed from what the API sends; outside URLs and other files are blocked.
-
-1. Add `pdf` to `COMPOSE_PROFILES` in `infra/compose/.env` (or pass `--profile pdf`).
-2. Set `PDF_RENDERER_URL=http://pdf:3000` in the same file.
-3. Run `docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env up -d`.
-
-| Name               | Default                 | What it does                                          |
-| ------------------ | ----------------------- | ----------------------------------------------------- |
-| `PDF_RENDERER_URL` | (empty: PDF export off) | The PDF sidecar's address. Compose: `http://pdf:3000`. |
-
-On Helm, run `gotenberg/gotenberg:8.39.0-chromium` as its own Deployment with a NetworkPolicy that only
-lets the API in and nothing out, and set `PDF_RENDERER_URL` with `extraEnv`.
-
 ## Invite links
 
 Invite links are `<PUBLIC_APP_URL>/join/<token>`. With the web app running, it shows the invite;
@@ -179,23 +152,18 @@ invite page, whose **Open in Casama** button opens the app and points it at your
 ## Email
 
 Supabase Auth sends sign-in links, confirmations and password resets through SMTP. Casama sends
-invites through the same SMTP server, or through Resend when `RESEND_API_KEY` is set. Email is
-optional: without it, people sign in with a password and invites return a code to share.
+invites through the same SMTP server, or through Resend when `RESEND_API_KEY` is set.
 
 | Name                | Default                        | What it does                                                                                          |
 | ------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------- |
 | `SMTP_HOST`         | (empty: Auth sends no email)   | Your SMTP server.                                                                                     |
-| `SMTP_PORT`         | `587`                          | SMTP port. `465` uses TLS from the start; other ports need STARTTLS.                                  |
+| `SMTP_PORT`         | `587`                          | SMTP port.                                                                                            |
 | `SMTP_USER`         | (empty)                        | SMTP user name.                                                                                       |
 | `SMTP_PASS`         | (empty)                        | SMTP password.                                                                                        |
 | `SMTP_ADMIN_EMAIL`  | (empty)                        | The address Auth emails come from.                                                                    |
 | `EMAIL_AUTOCONFIRM` | `true`                         | Confirm new accounts without an email. Set `false` once SMTP works.                                   |
 | `RESEND_API_KEY`    | (empty)                        | Resend key for invite emails, used instead of SMTP. With neither, an invite returns a code to share.  |
 | `EMAIL_FROM`        | `Casama <no-reply@localhost>`  | Sender for Casama's own emails.                                                                       |
-| `AUTH_SITE_URL`     | `CASAMA_PUBLIC_URL`            | Where Auth's email links land when the app didn't ask for a place. Set it to your web app's address.  |
-| `EMAIL_TEMPLATE_*`  | Casama's branded templates     | URLs of Auth's email templates (`_MAGIC_LINK`, `_CONFIRMATION`, `_INVITE`, `_RECOVERY`, `_EMAIL_CHANGE`, `_REAUTHENTICATION`). Override one to use your own. |
-
-Links in Auth's emails go to `<CASAMA_PUBLIC_URL>/auth/v1/verify`, which Caddy sends to Auth.
 
 To turn on email confirmation and sign-in links:
 
@@ -269,8 +237,7 @@ use to enter Casama. A Google client for Gmail, Calendar and Drive is a differen
 
 Apple and Google both send people back to `https://<your domain>/auth/v1/callback`. Register that
 exact address. On Apple it is the return URL of the Services ID. On Google it is an authorized
-redirect URI of the web client. If Apple and Google reach Auth under another name than
-`CASAMA_PUBLIC_URL`, set that full address in `AUTH_CALLBACK_URL`.
+redirect URI of the web client.
 
 1. In the Apple Developer account, turn on Sign in with Apple for the app id `ai.casama.app`.
    Create a Services ID and a key. Put the Services ID first in `APPLE_AUTH_CLIENT_IDS`, then
@@ -316,7 +283,6 @@ settings change server-wide defaults.
 | `RUN_CONCURRENCY`           | `20`               | How many runs one worker processes at once. See [Scaling](/self-hosting/operations#scaling).                                    |
 | `AI_GATEWAY_URL`            | (empty)            | Send model calls through Cloudflare AI Gateway: `https://gateway.ai.cloudflare.com/v1/<account>/<gateway>`.                     |
 | `AI_GATEWAY_TOKEN`          | (empty)            | Token for an authenticated gateway, sent as `cf-aig-authorization`.                                                              |
-| `GOOGLE_AI_API_KEY`         | (empty)            | A server-wide Google AI key: live calls in workspaces without a Gemini or OpenAI key of their own use it. You pay Google for those calls. |
 
 With `AI_GATEWAY_URL` set, calls for OpenAI, Anthropic, Google, xAI and OpenRouter keys go through
 the gateway, for caching, logs and rate limits. A credential with its own base URL keeps it.
@@ -404,8 +370,6 @@ These go to the supervisor. Hosted providers and their settings are on
 | ----------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `OUTBOUND_ALLOW_CIDRS`  | (empty)           | Private networks the API and worker may call, comma-separated CIDRs, for example `192.168.1.0/24`. Everything private is blocked otherwise.     |
 | `TURN_PUBLIC_HOST`      | Set by the installer | The host name viewers use to reach the TURN relay. The domain, or `localhost` for `--local`.                                                 |
-| `TURN_HOST_PORT`        | `3478`            | Host port the TURN relay is published on, and the port viewers are given. "Run Casama on this computer" moves it when 3478 is taken.              |
-| `TURN_BIND`             | `0.0.0.0`         | The address the TURN port listens on. `--local` sets `127.0.0.1`.                                                                              |
 
 `OUTBOUND_ALLOW_CIDRS` covers calls the server makes for bots and people: model endpoints such as
 Ollama, password managers such as Vaultwarden, connections, MCP servers and memory backends. It
@@ -427,7 +391,6 @@ To ring iPhones for calls through PushKit, the worker needs an APNs token key fo
 | `APNS_KEY_P8`   | (empty)   | The APNs token key: the `.p8` file's contents.     |
 | `APNS_KEY_ID`   | (empty)   | The key's id.                                      |
 | `APNS_TEAM_ID`  | (empty)   | Your Apple team id.                                |
-| `APNS_VOIP_TOPIC` | `ai.casama.app.voip` | The app's VoIP push topic.              |
 
 ## Push notifications
 
@@ -445,11 +408,10 @@ the in-app inbox still shows every notification.
 | `GOOGLE_OAUTH_CLIENT_ID`      | (empty)   | Your Google OAuth client, for Gmail, Calendar and Drive connections.                                                                                            |
 | `GOOGLE_OAUTH_CLIENT_SECRET`  | (empty)   | Its secret.                                                                                                                                                     |
 | `MCP_OAUTH_CLIENTS`           | (empty)   | OAuth clients for apps that don't support automatic registration, as JSON by app id: `{"slack":{"client_id":"...","client_secret":"..."}}`.                     |
-| `COMPOSIO_API_KEY`            | (empty)   | A server-wide Composio key. Apps whose own sign-in needs a client the server doesn't have (GitHub, Slack, Asana, Google's apps without a Google client, and others) then offer **Sign in through Composio**. The admin console's Services tab can switch back to people's own accounts. |
-| `OAUTH_REDIRECT_URL`          | `<PUBLIC_API_URL>/oauth/callback` | Where vendors send people back after an app sign-in. Change it only if vendors must use another address.                                 |
+| `COMPOSIO_API_KEY`            | (empty)   | A server-wide Composio key that enables Composio's managed sign-in for inbox apps such as Gmail.                                                                |
 | `SEARXNG_URL`                 | (empty)   | A SearXNG instance for web search in workspaces without a Brave Search or Tavily key. Free: `./install.sh --search` runs one (`http://searxng:8080`). Its settings must allow JSON results. |
 | `UNSPLASH_ACCESS_KEY`         | (empty)   | Wallpaper photo search in Appearance. Without it, the app offers its own patterns and photos.                                                                   |
-| `GALLERY_URL`                 | `https://gallery.casama.ai` | The open gallery of themes, color schemes, wallpapers, skills, apps, starter bots, routine ideas and reviewed plugins. Set to `off` to turn it off; a fork can point here instead. When it can't be reached, the built-in looks, skills, apps and bots stay. |
+| `GALLERY_URL`                 | `https://gallery.casama.ai` | The open gallery of themes, color schemes, wallpapers, skills and apps. Set to `off` to turn it off; a fork can point here instead. When it can't be reached, the built-in looks, skills and apps stay. |
 
 Register `https://casama.example.com/oauth/callback` as the redirect URI in each OAuth app. See
 [Connections](/guide/connections).
@@ -458,13 +420,7 @@ Register `https://casama.example.com/oauth/callback` as the redirect URI in each
 
 Billing is for Casama Cloud. The bundled compose file sets `BILLING_ENABLED=false` for the API and
 worker, so there's no paywall and no usage limit, and none of the payment settings apply. Settings
-that switch on with billing (`ABUSE_CONTROLS=auto`, `HEALTH_REQUIRES_ENCRYPTION=auto`,
-`REFERRALS=auto`) stay off.
-
-The compose file also passes settings only Casama Cloud uses. Leave them empty: `DODO_*`,
-`APP_STORE_*`, `GOOGLE_PLAY_*`, `CLOUD_CONNECT`, `CLOUD_MODEL_*`, `CLOUD_COMPUTER_USD_PER_HOUR`,
-`REFERRAL_*`, `SIGNUP_PROOFS`, `SIGNUP_POW_DIFFICULTY`, `APP_CHECK_PROJECT_NUMBER` and
-`TREG_API_KEY`.
+that switch on with billing (`ABUSE_CONTROLS=auto`, `HEALTH_REQUIRES_ENCRYPTION=auto`) stay off.
 
 Computer time is recorded at what it costs whoever runs it: E2B and Daytona at their published
 prices, Docker at a share of the server. Change the prices with `COMPUTER_RATES`, as JSON by
@@ -499,8 +455,6 @@ Cloud Connect key.
 | `POSTHOG_PERSONAL_API_KEY`     | (empty)                                   | Optional. A PostHog personal API key with person write scope: when an account is purged, its PostHog person and events are deleted too. |
 | `POSTHOG_PROJECT_ID`           | (empty)                                   | The PostHog project the key above belongs to.                                                                        |
 | `POSTHOG_APP_HOST`             | `https://us.posthog.com`                  | PostHog's app address for person deletion (your region or self-hosted address).                                      |
-| `POSTHOG_HOST`                 | `https://us.i.posthog.com`                | PostHog's ingest address, for another region or a self-hosted PostHog.                                               |
-| `LOG_LEVEL`                    | `info`                                    | The API and worker's log detail: `debug`, `info`, `warn` or `error`.                                                 |
 | `OTEL_EXPORTER_OTLP_ENDPOINT`  | (empty)                                   | Send traces to an OpenTelemetry collector.                                                                           |
 | `LANGFUSE_BASE_URL`            | (empty)                                   | Langfuse address. With all three Langfuse settings, runs send LLM traces (workspaces can opt out).                   |
 | `LANGFUSE_PUBLIC_KEY`          | (empty)                                   | Langfuse public key.                                                                                                 |
@@ -603,7 +557,7 @@ x-casama: &casama
   # ...
   environment: &casama-env
     # ...
-    EMBEDDINGS: ${EMBEDDINGS:-auto}
+    LOG_LEVEL: ${LOG_LEVEL:-info}
 ```
 
 Then set the value in `.env` and run `casama selfhost up`. Keep your edit when you upgrade: `git
@@ -613,16 +567,19 @@ pull` refuses to overwrite a changed file, so commit it on a local branch or re-
 
 | Name                       | Default             | What it does                                                                                  |
 | -------------------------- | ------------------- | --------------------------------------------------------------------------------------------- |
+| `LOG_LEVEL`                | `info`              | `debug`, `info`, `warn` or `error`.                                                           |
 | `LOCAL_COMPUTERS`          | `true`              | People's own machines as bot computers through the desktop companion.                         |
 | `EMBEDDINGS`               | `auto`              | `auto` embeds memories with the workspace's OpenAI key when it has one; `none` uses full-text search only. |
 | `AI_GATEWAY_PROVIDERS`     | (all)               | Limit AI Gateway to some providers, comma-separated: `openai`, `anthropic`, `google`, `xai`, `openrouter`. |
+| `POSTHOG_HOST`             | (PostHog's default) | PostHog address, for another region or a self-hosted PostHog.                                 |
 | `TRACE_URL_TEMPLATE`       | (empty)             | A trace viewer link containing `{trace_id}`, shown on run timelines.                          |
+| `TURN_PORT`                | `3478`              | The TURN port given to viewers.                                                               |
 | `TURN_TLS_PORT`            | (empty)             | Also offer a `turns:` address on this port. The bundled relay doesn't serve TLS.              |
 | `CONTENT_KMS_ENDPOINT`     | (AWS's)             | A custom KMS endpoint, for example a VPC endpoint.                                            |
+| `APNS_VOIP_TOPIC`          | `ai.casama.app.voip` | The app's VoIP push topic.                                                                  |
 | `MODEL_PRICES_URL`         | OpenRouter's model list | Where the worker reads model prices once a day, for the cost shown on runs and budgets. `off` uses only the built-in table. |
 | `GEMINI_LIVE_MODEL`        | `gemini-3.8-live`   | The Gemini Live model for live calls (used when a workspace has a Google AI key).   |
-| `PDF_CHROMIUM_PATH`        | (empty: PDF export off) | A Chromium binary in the API's own image, used when `PDF_RENDERER_URL` is empty. Chromium can't keep its sandbox in a normal container, so prefer [the sidecar](#page-pdfs). |
-| `COMPOSIO_WEBHOOK_SECRET`  | (empty)             | The signing secret of a Composio webhook subscription to `<PUBLIC_API_URL>/hooks/composio`. With it, new mail and calendar changes in Composio-connected apps start a bot's check-in scan early; without it, scans keep their schedule. |
+| `GOOGLE_AI_API_KEY`        | (empty)             | A server-wide Google AI key: live calls in workspaces without a Gemini or OpenAI key of their own use it. You pay Google for those calls. With `BILLING_ENABLED` they're paid from the workspace's credits. |
 
 **Supervisor:**
 

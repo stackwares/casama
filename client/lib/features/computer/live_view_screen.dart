@@ -243,7 +243,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
   void _startFallback() {
     _shotTimer ??= Timer.periodic(const Duration(seconds: 1), (_) async {
       final png = await ref.read(backendProvider).screenshot(widget.computerId);
-      if (mounted && png != null) setState(() => _shot = png);
+      if (mounted && png != null) setState(() => _shot = png.isEmpty ? null : png);
     });
   }
 
@@ -342,7 +342,8 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
   /// A screenshot of the computer, saved or shared from this device.
   Future<void> _screenshot(BuildContext button) async {
     final origin = shareOrigin(button);
-    final png = await runGuarded(context, () => ref.read(backendProvider).screenshot(widget.computerId)) ?? _shot;
+    final fetched = await runGuarded(context, () => ref.read(backendProvider).screenshot(widget.computerId));
+    final png = (fetched == null || fetched.isEmpty) ? _shot : fetched;
     if (png == null || !mounted) return;
     final name = 'computer-${DateTime.now().toIso8601String().replaceAll(RegExp(r'[:.]'), '-')}.png';
     await shareFiles([XFile.fromData(png, name: name, mimeType: 'image/png')], names: [name], origin: origin);

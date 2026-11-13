@@ -12,7 +12,6 @@ import 'package:dio/dio.dart';
 import 'package:casama_api/src/model/billing_summary.dart';
 import 'package:casama_api/src/model/billing_usage.dart';
 import 'package:casama_api/src/model/checkout_request.dart';
-import 'package:casama_api/src/model/checkout_result.dart';
 import 'package:casama_api/src/model/connect_key_list.dart';
 import 'package:casama_api/src/model/create_connect_key_request.dart';
 import 'package:casama_api/src/model/created_connect_key.dart';
@@ -218,9 +217,9 @@ _responseData = rawData == null ? null : deserialize<BillingUsage, BillingUsage>
   /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
   /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
   ///
-  /// Returns a [Future] containing a [Response] with a [CheckoutResult] as data
+  /// Returns a [Future] containing a [Response] with a [RedirectUrl] as data
   /// Throws [DioException] if API call or serialization fails
-  Future<Response<CheckoutResult>> createCheckout({ 
+  Future<Response<RedirectUrl>> createCheckout({ 
     required String id,
     required CheckoutRequest checkoutRequest,
     CancelToken? cancelToken,
@@ -275,11 +274,11 @@ _bodyData=jsonEncode(checkoutRequest);
       onReceiveProgress: onReceiveProgress,
     );
 
-    CheckoutResult? _responseData;
+    RedirectUrl? _responseData;
 
     try {
 final rawData = _response.data;
-_responseData = rawData == null ? null : deserialize<CheckoutResult, CheckoutResult>(rawData, 'CheckoutResult', growable: true);
+_responseData = rawData == null ? null : deserialize<RedirectUrl, RedirectUrl>(rawData, 'RedirectUrl', growable: true);
 
     } catch (error, stackTrace) {
       throw DioException(
@@ -291,7 +290,7 @@ _responseData = rawData == null ? null : deserialize<CheckoutResult, CheckoutRes
       );
     }
 
-    return Response<CheckoutResult>(
+    return Response<RedirectUrl>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

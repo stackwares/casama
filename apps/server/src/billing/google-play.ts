@@ -148,11 +148,7 @@ export class GooglePlayProvider implements BillingProvider {
     const n = JSON.parse(Buffer.from(msg.data, "base64").toString("utf8")) as {
       packageName?: string;
       subscriptionNotification?: { notificationType: number; purchaseToken: string };
-      voidedPurchaseNotification?: {
-        purchaseToken: string;
-        orderId?: string;
-        productType?: number;
-      };
+      voidedPurchaseNotification?: { purchaseToken: string; productType?: number };
     };
     if (n.packageName && n.packageName !== this.opts.packageName)
       throw new BillingError("wrong_app", "Notification for another app", 400);
@@ -165,20 +161,6 @@ export class GooglePlayProvider implements BillingProvider {
         externalId: n.voidedPurchaseNotification.purchaseToken,
         refund: true,
       };
-    // 2 = a one-time product: a refunded credit pack takes its credits back (D-248). Packs are
-    // credited under the order id (or the token when there was none).
-    if (n.voidedPurchaseNotification?.productType === 2) {
-      const v = n.voidedPurchaseNotification;
-      return {
-        ...base,
-        type: "voided.product",
-        kind: "pack_refund",
-        references: [
-          ...(v.orderId ? [`google_play:${v.orderId}`] : []),
-          `google_play:${v.purchaseToken}`,
-        ],
-      };
-    }
     if (n.subscriptionNotification)
       return {
         ...base,

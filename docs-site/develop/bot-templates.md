@@ -90,7 +90,7 @@ How much the bot may do without asking. See [Autonomy and approvals](/guide/auto
 | Value | Meaning |
 | --- | --- |
 | `ask_always` | Asks before any action with side effects |
-| `ask_risky` | The default. Asks before high-risk actions, paid data lookups and payments, and before a medium-risk action that sends data out after reading outside content |
+| `ask_risky` | Asks before high-risk actions, and medium-risk ones after reading untrusted content |
 | `autonomous` | Asks only before high-risk actions on personal computers |
 
 ### `avatar`

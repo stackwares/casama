@@ -16,7 +16,7 @@ over from another agent app.
 A template is a copy of a bot's setup: its instructions, skills, routines and the services it
 uses. It never holds keys, secrets or sign-ins.
 
-1. Open the bot's **Bot profile** → **Share as Template**.
+1. Open the bot's **Bot settings** → **Share as template**.
 2. Optional: tick **Include memories**. Leave it off unless you trust who you share with, since it
    carries what the bot has learned about you and your work.
 3. Choose how to share it:
@@ -49,9 +49,8 @@ accepts. See [Bot templates](/develop/bot-templates) for the file format.
 2. Review **What comes with it**: the instructions, skills, routines, the apps to
    **Connect after importing**, and how many memories it has.
 3. Choose whether to **Schedule its routines** and **Keep its memories**.
-4. On a self-hosted server, under **Model**, pick a **Model key** from your workspace and a
-   **Model**. The key's default model is filled in. Casama Cloud picks the model for you and skips
-   this step.
+4. Under **Model**, pick a **Model key** from your workspace and a **Model**. The key's default
+   model is filled in.
 5. Select **Import a bot**.
 
 The new bot belongs to you, and its routines run in your timezone. Casama can't sign in to apps for
@@ -63,7 +62,7 @@ toward your workspace's bot limit.
 By default, everyone in the workspace can chat with a bot. Make it private to choose exactly who
 can see it, or add people who should be able to change it.
 
-1. Open the bot's **Bot profile** → **Sharing**.
+1. Open the bot's **Bot settings** → **Sharing**.
 2. Turn on **Private** to hide the bot from everyone except you and the people you list.
 3. Under **People**, add workspace members. Each starts with **Can chat**.
 4. Change each person's access, or remove them with **×**.
@@ -105,7 +104,7 @@ files are never read.
    both work).
 3. Review what was found. Edit the **Name**, read the persona, and untick any skill, routine or
    memory you don't want. Files that weren't imported are listed with the reason.
-4. On a self-hosted server, pick a **Model key** and **Model**. Then select **Import an agent**.
+4. Pick a **Model key** and **Model**, then select **Import an agent**.
 
 What becomes what:
 

@@ -34,7 +34,6 @@ const LIMIT_CODES = new Set([
   "budget_exceeded",
   "cloud_daily_cap",
   "computer_hours_exceeded",
-  "plan_limit",
 ]);
 
 import { collectExec, type SandboxHandle } from "@casama/sandbox";
@@ -43,7 +42,7 @@ import { z } from "zod";
 import { loadPerson, type PersonContext, savePersonFact } from "./about-you.ts";
 import { replyToChannel } from "./channels/service.ts";
 import { auditComputer, type ComputerService, RunningLimitError } from "./computers.ts";
-import { buildContext, estimateTokens, messageTokens, offloadLargeResult } from "./context.ts";
+import { buildContext, offloadLargeResult } from "./context.ts";
 import {
   type CredentialResolver,
   type ModelPolicy,
@@ -1649,7 +1648,6 @@ async function spend(
     unbilled: string;
     cloud_today: string;
     computer_seconds: string;
-    bot_rank: string;
   }>(sql`
     select
       (select cost_usd from public.runs where id = ${info.runId}::uuid) as run_cost,
@@ -1669,25 +1667,13 @@ async function spend(
           and created_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc') as cloud_today,
       (select coalesce(sum(quantity), 0) from public.usage_ledger
         where org_id = ${info.orgId}::uuid and kind = 'computer_seconds'
-          and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc') as computer_seconds,
-      (select count(*) from public.bots o join public.bots me on me.id = ${info.botId}::uuid
-        where o.org_id = me.org_id and o.archived_at is null and o.id <> me.id
-          and (o.created_at, o.id) < (me.created_at, me.id)) as bot_rank`);
+          and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc') as computer_seconds`);
   // Entitlements are the only billing input (D-070): a monthly cost cap, credits, computer hours.
   const limits = row?.limits ?? {};
   const num = (v: unknown) => (typeof v === "number" ? v : null);
   const caps = [row?.quota == null ? null : Number(row.quota), num(limits.monthly_usd)].filter(
     (v): v is number => v != null,
   );
-  // After a downgrade the workspace keeps its bots, but only the plan's number of them (the oldest)
-  // run; the rest wait until it upgrades or archives some (D-248).
-  const maxBots = num(limits.max_bots);
-  if (maxBots != null && Number(row?.bot_rank ?? 0) >= maxBots)
-    return {
-      ok: false as const,
-      code: "plan_limit" as const,
-      message: `Your plan runs ${maxBots} bots. Upgrade, or archive a bot, to use this one.`,
-    };
   const primary = info.policy.primary;
   const onPlatform = primary?.credential_id === PLATFORM_OPENROUTER_CREDENTIAL_ID;
   const gate = limits.credit_gate === true;
@@ -1929,31 +1915,6 @@ async function modelStep(
   let text = "";
   const toolCalls: ToolCall[] = [];
   let usage: Usage = { inputTokens: 0, outputTokens: 0 };
-  let first = true;
-  /**
-   * Usage of a reply that stopped before the provider's final usage report (cancelled, or the
-   * stream broke): the provider has charged for the prompt and what it produced, so it's recorded
-   * from an estimate (about 4 characters a token). Nothing is recorded when nothing was produced.
-   */
-  const recordPartial = async () => {
-    if (usage.inputTokens > 0 || first) return;
-    const estimate: Usage = {
-      inputTokens:
-        req.system.reduce((n, s) => n + estimateTokens(s), 0) +
-        req.messages.reduce((n, m) => n + messageTokens(m), 0),
-      outputTokens:
-        estimateTokens(text) + (toolCalls.length ? estimateTokens(JSON.stringify(toolCalls)) : 0),
-    };
-    await recordUsage(
-      deps.db,
-      info,
-      model,
-      estimate,
-      bus,
-      provider,
-      deps.billCloudModels === true && onPlatformKey(chain, model),
-    );
-  };
   let model = chain[0]?.model ?? "unknown";
   let provider: ProviderId | undefined = chain[0]?.provider;
   // One span per model step: model, tokens, cost, failovers; never prompt or reply text (D-107).
@@ -1999,6 +1960,7 @@ async function modelStep(
         void onChatGptError(deps, bus, info, a.model, a.err, a.attempt < chain.length - 1);
       },
     })({ system: req.system, messages: req.messages, tools: req.tools, abortSignal: ctrl.signal });
+    let first = true;
     for await (const ev of stream) {
       // Time to first token (text or tool call), for dashboards and the load test.
       if (first && (ev.type === "text" || ev.type === "tool_call")) {
@@ -2030,8 +1992,6 @@ async function modelStep(
         },
       );
       await coalescer.drain().catch(() => {});
-      // A stream that broke after it started producing was paid for (D-248).
-      await recordPartial().catch(() => {});
       throw err;
     }
   } finally {
@@ -2052,8 +2012,6 @@ async function modelStep(
   };
   if (cancelled) {
     endRunSpan(span, spanEnd, { type: "cancelled" });
-    // Stopping a reply doesn't make what the model already produced free (D-248).
-    await recordPartial().catch(() => {});
     return { cancelled: true as const, text: "", toolCalls: [] as ToolCall[], messageId };
   }
   endRunSpan(span, spanEnd);
@@ -2140,17 +2098,6 @@ async function toolStep(
             throw new ToolError(
               "out_of_credits",
               "The workspace is out of credits. Add credits or change plans in Billing.",
-            );
-          // After a downgrade, and when the server is full (D-248).
-          if ((err as Error).message === "plan_limit")
-            throw new ToolError(
-              "plan_limit",
-              "This workspace's plan runs fewer computers than it has. Upgrade, or remove a computer, to use this one.",
-            );
-          if ((err as Error).message === "capacity_full")
-            throw new ToolError(
-              "capacity_full",
-              "Casama's computers are all busy right now. Try again in a few minutes.",
             );
           if (err instanceof RunningLimitError)
             throw new ToolError(

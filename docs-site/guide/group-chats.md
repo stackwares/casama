@@ -9,14 +9,9 @@ and a designer working on the same launch.
 You need at least two bots in the workspace.
 
 1. In the sidebar, select **Add** (the **+** button), then **New group chat**.
-2. Under **Bots**, pick 2 to 10 bots. Each shows what it's doing now, and a number shows the order
-   they join in. With more than six bots, a search field helps you find them. Archived bots
-   aren't offered.
-3. The strip at the top shows the group so far. The first bot you pick **Leads the group** and
-   wears a crown. Tap another bot in the strip to make it the lead, or its **x** to take it out.
-4. Optional: give it a **Name (optional)**. The field shows the name an unnamed group goes by,
-   made from its bots.
-5. Select **Create group chat**.
+2. Optional: give it a **Name**. Without one, the chat is named after its bots.
+3. Under **Bots**, pick 2 to 10 bots. The first one you pick **Leads the group**.
+4. Select **Create**.
 
 Group chats are listed under **Group chats** in the sidebar, each with its number of bots.
 

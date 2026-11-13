@@ -8441,21 +8441,6 @@
           "created_at"
         ]
       },
-      "CheckoutResult": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "format": "uri"
-          },
-          "changed": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "url"
-        ]
-      },
       "CheckoutRequest": {
         "type": "object",
         "properties": {
@@ -26245,11 +26230,11 @@
         },
         "responses": {
           "200": {
-            "description": "Checkout page, or the plan changed in place",
+            "description": "Checkout page",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CheckoutResult"
+                  "$ref": "#/components/schemas/RedirectUrl"
                 }
               }
             }

@@ -23,8 +23,8 @@ see it. Bots can only change their own pages.
 
 ## Find and open pages
 
-- **All pages:** open **Inbox** and pick the **Pages** filter.
-- **One bot's pages:** open its **Bot profile** → **Pages**.
+- **All pages:** select **Pages** in the sidebar.
+- **One bot's pages:** open its **Bot settings** → **Pages**.
 
 Select a page to open it. The app never shows pages inside itself:
 
@@ -93,12 +93,13 @@ the app, public links and PDF export.
 
 Pages are served from their own address, separate from the app, so a page can never touch your
 Casama session. Set `PAGES_URL` to its public address and `PAGES_PORT` to serve it from the API
-process. PDF export runs in a separate container: turn on the `pdf` Compose profile and set
-`PDF_RENDERER_URL=http://pdf:3000`. See [Page PDFs](/self-hosting/configuration#page-pdfs).
+process. PDF export needs headless Chromium: set `PDF_CHROMIUM_PATH`. See
+[Configuration](/self-hosting/configuration).
 
 ## Limits
 
-- On a self-hosted server, **Export PDF** fails until the server admin turns on the `pdf` profile.
+- The default server image doesn't include Chromium, so **Export PDF** fails until your server
+  admin installs it and sets `PDF_CHROMIUM_PATH`.
 - The app doesn't set an expiry on public links or restore old versions. Both are available
   through the API (`PATCH /v1/pages/{id}` with `expires_in_days`, and
   `POST /v1/pages/{id}/revert`).

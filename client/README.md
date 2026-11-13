@@ -5,10 +5,6 @@ through the generated Dart SDK (`dart/casama_sdk`) and Supabase (sign-in and liv
 
 ## Run it
 
-The app needs Flutter 3.50 (Dart 3.14), the version CI and the web image use. Don't mix Flutter
-versions in one checkout, and run one Flutter command in `client/` at a time: they share `build/` and
-`.dart_tool/`.
-
 Start a local server first (see [CONTRIBUTING.md](../CONTRIBUTING.md#development-setup)), then:
 
 ```sh
@@ -18,7 +14,7 @@ flutter run -d macos --dart-define=CASAMA_API_URL=http://localhost:8787
 
 Any Flutter device works: `-d chrome`, an iOS simulator, an Android emulator, `-d windows` or
 `-d linux`. The app reads the Supabase address and key from the server, so the server address is
-the only setting. People can also change it at sign-in (**More Options** → **Server**).
+the only setting. People can also change it at sign-in (**More options** → **Server**).
 
 On a physical iPhone or Android phone, point it at an address the phone can reach, such as an https
 tunnel to your machine (see [CONTRIBUTING.md](../CONTRIBUTING.md#run-the-app)):
@@ -44,7 +40,7 @@ Pass these with `--dart-define=NAME=value`. All are optional.
 | `CASAMA_DISTRIBUTION` | `direct` (default; a signed download with every feature) or `appstore` (the sandboxed Mac App Store build, which turns off features that reach outside the app) |
 | `CASAMA_HELP_URL` | Where **Help** in the macOS menu bar points (default: the docs on GitHub) |
 | `CASAMA_SELFHOST_BUNDLE` | A fixed bundle for **Run Casama on this computer** (with `latest` images). Unset, it downloads the commit tagged `selfhost` and pulls that commit's published images |
-| `SENTRY_DSN`, `POSTHOG_API_KEY`, `POSTHOG_HOST`, `ERROR_REPORTING` | Error reporting and screen analytics (off unless set). Official builds (the `scripts/package-*` scripts with `CASAMA_OFFICIAL_BUILD=1`) pass `--dart-define-from-file=config/telemetry.json`, which is gitignored (template: `config/telemetry.example.json`): Sentry project `casama-app` and the Stackwares PostHog project. Self-hosters building their own apps leave it out or point it at their own projects |
+| `SENTRY_DSN`, `POSTHOG_API_KEY`, `POSTHOG_HOST`, `ERROR_REPORTING` | Error reporting and screen analytics (off unless set). Official builds pass `--dart-define-from-file=config/telemetry.json`: Sentry project `casama-app` and the Stackwares PostHog project. Self-hosters building their own apps leave it out or point it at their own projects |
 | `FIREBASE_*` | Push notifications for official builds (see `config/firebase.json`) |
 
 ## Layout
@@ -73,8 +69,6 @@ responses. Format only the files you change (`dart format <files>`).
 ## Conventions
 
 - State with Riverpod (no code generation); navigation with go_router.
-- Import `package:material_ui/material_ui.dart` and `package:cupertino_ui/cupertino_ui.dart`, not
-  Flutter's deprecated `material.dart` and `cupertino.dart`.
 - Every user-facing string goes in `lib/l10n/app_en.arb`.
 - The app stays fully native: no embedded web views.
 - New screens use the shared page layout and form components in `lib/ui/`.

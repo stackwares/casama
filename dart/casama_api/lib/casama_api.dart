@@ -136,7 +136,6 @@ export 'package:casama_api/src/model/chat_gpt_sign_in_complete_request.dart';
 export 'package:casama_api/src/model/chat_gpt_sign_in_start.dart';
 export 'package:casama_api/src/model/chat_gpt_sign_in_start_request.dart';
 export 'package:casama_api/src/model/checkout_request.dart';
-export 'package:casama_api/src/model/checkout_result.dart';
 export 'package:casama_api/src/model/checkpoint.dart';
 export 'package:casama_api/src/model/checkpoint_created_event.dart';
 export 'package:casama_api/src/model/checkpoint_created_event_payload.dart';

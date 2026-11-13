@@ -798,7 +798,6 @@ export const computersIdleWorkflow = DBOS.registerWorkflow(
     const computers = rt().computers;
     if (!computers) return;
     await DBOS.runStep(() => computers.sleepIdle(), { name: "sleep-idle" });
-    await DBOS.runStep(() => computers.meterRunning(), { name: "meter-running-computers" });
   },
   { name: "computersIdle" },
 );

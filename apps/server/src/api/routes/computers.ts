@@ -401,12 +401,16 @@ export function registerComputerRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       png = await h.screenshot();
     } catch (err) {
       if (!(err instanceof SandboxError) || err.status !== 501) throw err;
-      // Headless: capture the bot's browser page instead, if a browser is open.
+      // Headless: capture the bot's browser page instead, if a browser is open. An empty tab
+      // (about:blank, a new-tab page) is a plain white picture, so it counts as nothing to show
+      // and the app keeps its own placeholder.
       const { collectExec } = await import("@casama/sandbox");
       const r = await collectExec(
-        h.exec("agent-browser screenshot /tmp/casama-screen.png >/dev/null 2>&1 && echo ok", {
-          timeoutMs: 20_000,
-        }),
+        h.exec(
+          `u=$(agent-browser get url 2>/dev/null); case "$u" in ""|about:*|chrome:*|data:,) exit 0;; esac; ` +
+            "agent-browser screenshot /tmp/casama-screen.png >/dev/null 2>&1 && echo ok",
+          { timeoutMs: 20_000 },
+        ),
       );
       if (!r.stdout.includes("ok"))
         throw new ApiError(409, "nothing_to_show", "No desktop or open browser page to capture");

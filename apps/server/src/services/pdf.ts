@@ -63,25 +63,3 @@ export function chromiumPdf(executable: string): PdfRenderer {
     },
   };
 }
-
-/**
- * A Gotenberg sidecar (compose profile `pdf`). Chromium can't keep its sandbox inside a normal
- * container, so it runs in a container of its own that holds no secrets and sits on a private
- * network with nothing else on it: no internet, no database, only the API calling in.
- */
-export function remotePdf(baseUrl: string, fetcher: typeof fetch = fetch): PdfRenderer {
-  const url = `${baseUrl.replace(/\/$/, "")}/forms/chromium/convert/html`;
-  return {
-    async render(html) {
-      const form = new FormData();
-      form.append("files", new Blob([html], { type: "text/html" }), "index.html");
-      const res = await fetcher(url, {
-        method: "POST",
-        body: form,
-        signal: AbortSignal.timeout(60_000),
-      });
-      if (!res.ok) throw new Error(`PDF renderer answered ${res.status}`);
-      return new Uint8Array(await res.arrayBuffer());
-    },
-  };
-}

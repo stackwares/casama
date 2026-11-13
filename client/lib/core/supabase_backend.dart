@@ -3917,6 +3917,10 @@ class SupabaseBackend implements Backend {
   Future<Uint8List?> screenshot(String computerId) async {
     try {
       return (await api.computers.computerScreenshot(id: computerId)).data;
+    } on DioException catch (e) {
+      // Nothing on screen (no desktop, no page open): say so, so the last picture is cleared.
+      if (e.response?.statusCode == 409) return Uint8List(0);
+      return null;
     } catch (_) {
       return null;
     }
