@@ -9,7 +9,7 @@ import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 
-/// "Casama 0.8.0 (8)" at the foot of Settings: the version and build, so anyone can say which one
+/// "Casama 0.1.0 (10)" at the foot of Settings: the version and build, so anyone can say which one
 /// they're on in a bug report. Dim on purpose; a tap copies it.
 class VersionIndicator extends ConsumerWidget {
   const VersionIndicator({super.key});

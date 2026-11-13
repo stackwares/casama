@@ -80,11 +80,11 @@ Future<void> setAutoUpdateChecks(bool on) async {
 
 final autoUpdateChecksProvider = FutureProvider<bool?>((ref) async => selfUpdating ? autoUpdateChecks() : null);
 
-/// This app's version ("0.8.0").
+/// This app's version ("0.1.0").
 final appVersionProvider = FutureProvider<String>((ref) async => (await PackageInfo.fromPlatform()).version);
 
-/// This build's version and build number, "0.8.0 (8)", for the line at the foot of Settings (just
-/// "0.8.0" where a platform reports no build number). Null when it can't be read (widget tests).
+/// This build's version and build number, "0.1.0 (10)", for the line at the foot of Settings (just
+/// "0.1.0" where a platform reports no build number). Null when it can't be read (widget tests).
 final appVersionLabelProvider = FutureProvider<String?>((ref) async {
   try {
     final info = await PackageInfo.fromPlatform();
@@ -112,7 +112,7 @@ final newerReleaseProvider = FutureProvider<({String version, Uri page})?>((ref)
   }
 });
 
-/// Whether [candidate] ("0.9.0") is a newer release than [current] ("0.8.0").
+/// Whether [candidate] ("0.9.0") is a newer release than [current] ("0.1.0").
 bool isNewerVersion(String candidate, String current) {
   List<int> parts(String v) => [for (final p in v.split('+').first.split('.')) int.tryParse(p) ?? 0];
   final a = parts(candidate), b = parts(current);

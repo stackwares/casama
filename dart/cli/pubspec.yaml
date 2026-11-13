@@ -1,6 +1,6 @@
 name: casama_cli
 description: Command-line client for Casama.
-version: 0.8.0
+version: 0.1.0
 publish_to: none
 resolution: workspace
 environment:
@@ -10,8 +10,8 @@ executables:
 dependencies:
   args: ^2.7.0
   dio: ^5.11.1
-  casama_api: ^0.8.0
-  casama_sdk: ^0.8.0
+  casama_api: ^0.1.0
+  casama_sdk: ^0.1.0
   path: ^1.9.1
 dev_dependencies:
   test: ^1.33.0

@@ -22,7 +22,7 @@ const env = process.env;
 
 initObservability({
   service: "casama-supervisor",
-  version: "0.8.0",
+  version: "0.1.0",
   environment: env.ANALYTICS_ENVIRONMENT ?? env.NODE_ENV,
   errorReporting: env.ERROR_REPORTING as never,
   sentryDsn: env.SENTRY_DSN,

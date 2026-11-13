@@ -27,7 +27,7 @@ has a native binary for each platform, with a SHA-256 checksum file next to it:
 | Windows, x64 | `casama-<version>-windows-x64.zip` |
 
 ```sh
-v=0.8.0
+v=0.1.0
 curl -LO "https://github.com/stackwares/casama/releases/download/cli-v$v/casama-$v-linux-x64.tar.gz"
 curl -LO "https://github.com/stackwares/casama/releases/download/cli-v$v/casama-$v-linux-x64.tar.gz.sha256"
 shasum -a 256 -c "casama-$v-linux-x64.tar.gz.sha256"

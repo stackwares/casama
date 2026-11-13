@@ -1,4 +1,4 @@
-## 0.8.0
+## 0.1.0
 
 - Billing and Cloud Connect (Phase 7), privacy and organization settings (Phase 8).
 

@@ -1,6 +1,6 @@
 {
   "name": "@casama/mcp",
-  "version": "0.8.0",
+  "version": "0.1.0",
   "description": "Casama MCP server: control your Casama bots from AI coding tools (Claude Code, Cursor, Codex, and others).",
   "type": "module",
   "license": "Apache-2.0",

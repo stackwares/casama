@@ -10,7 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app_test.dart' show harness;
 import 'fake_backend.dart';
 
-/// The app's version from pubspec.yaml ("0.8.0" from "version: 0.8.0+8").
+/// The app's version from pubspec.yaml ("0.1.0" from "version: 0.1.0+10").
 final _appVersion = RegExp(r'^version:\s*([^+\s]+)', multiLine: true).firstMatch(File('pubspec.yaml').readAsStringSync())!.group(1)!;
 
 void main() {

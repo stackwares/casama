@@ -21,7 +21,7 @@ import '../settings/name_step.dart';
 /// up, add that version at the top with three to five lines, each a string in app_en.arb named
 /// `whatsNew<version><Topic>`. test/whats_new_test.dart fails until the current version has lines.
 Map<String, List<String>> whatsNewByVersion(AppLocalizations l10n) => {
-  '0.8.0': [l10n.whatsNew080Calls, l10n.whatsNew080Looks, l10n.whatsNew080AboutYou, l10n.whatsNew080SignIn],
+  '0.1.0': [l10n.whatsNew010Calls, l10n.whatsNew010Looks, l10n.whatsNew010AboutYou, l10n.whatsNew010SignIn],
 };
 
 /// The version whose lines were shown last, or the version first opened.

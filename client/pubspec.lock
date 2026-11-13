@@ -175,7 +175,7 @@ packages:
       path: "../dart/casama_api"
       relative: true
     source: path
-    version: "0.8.0"
+    version: "0.1.0"
   casama_computerd:
     dependency: "direct main"
     description:
@@ -189,7 +189,7 @@ packages:
       path: "../dart/casama_sdk"
       relative: true
     source: path
-    version: "0.8.0"
+    version: "0.1.0"
   characters:
     dependency: transitive
     description:

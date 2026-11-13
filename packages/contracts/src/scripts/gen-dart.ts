@@ -42,7 +42,7 @@ execFileSync(
     "-o",
     apiDir,
     "--global-property=apiTests=false,modelTests=false,apiDocs=false,modelDocs=false",
-    "--additional-properties=pubName=casama_api,pubVersion=0.8.0,serializationLibrary=json_serializable",
+    "--additional-properties=pubName=casama_api,pubVersion=0.1.0,serializationLibrary=json_serializable",
     // An enum member named `value` would clash with the generated enum's own `value` field.
     "--enum-name-mappings=value=plain",
   ],

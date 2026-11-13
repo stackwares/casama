@@ -40,7 +40,7 @@ curl -s https://casama.example.com/v1/config
 ```json
 {
   "product_name": "Casama",
-  "api_version": "0.8.0",
+  "api_version": "0.1.0",
   "supabase_url": "https://auth.casama.example.com",
   "supabase_anon_key": "eyJhbGciOi...",
   "billing_enabled": false,

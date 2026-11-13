@@ -1,4 +1,4 @@
-## 0.8.0
+## 0.1.0
 
 - Billing (plans, entitlements, purchases, Cloud Connect keys): `client.billing`.
 - Privacy (data export, account deletion, workspace retention): `client.privacy`.

@@ -62,7 +62,7 @@ Future<int> runCli(List<String> args, {StringSink? out, StringSink? err, Directo
 }
 
 /// Kept in step with pubspec.yaml by scripts/release-cli.sh.
-const cliVersion = '0.8.0';
+const cliVersion = '0.1.0';
 
 class CliError implements Exception {
   CliError(this.code, this.message);

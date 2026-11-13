@@ -2639,19 +2639,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whatsNewGotIt => 'Got It';
 
   @override
-  String get whatsNew080Calls =>
+  String get whatsNew010Calls =>
       'Call your bots and talk things through. They answer out loud, with captions.';
 
   @override
-  String get whatsNew080Looks =>
+  String get whatsNew010Looks =>
       'Make Casama yours: themes, color schemes, fonts and wallpapers in Settings → Appearance, with more from the gallery.';
 
   @override
-  String get whatsNew080AboutYou =>
+  String get whatsNew010AboutYou =>
       'Tell your bots about yourself once, in Settings → About you: what to call you and how you like replies.';
 
   @override
-  String get whatsNew080SignIn =>
+  String get whatsNew010SignIn =>
       'Sign in with a passkey, Apple, Google or a code from your email.';
 
   @override
