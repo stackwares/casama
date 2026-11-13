@@ -3117,6 +3117,8 @@ class SupabaseBackend implements Backend {
   Future<CloudModels> adminCloudModels() async =>
       (await api.admin.adminCloudModels()).data!;
   @override
+  Future<ServerCapacity> adminCapacity() async => (await api.admin.adminCapacity()).data!;
+  @override
   Future<CloudModels> setAdminCloudModels(CloudModels models) async =>
       (await api.admin.setAdminCloudModels(cloudModels: models)).data!;
   @override

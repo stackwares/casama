@@ -16,6 +16,7 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import 'app_settings_card.dart';
+import 'capacity_card.dart';
 import 'pricing_tab.dart';
 
 /// Null when the signed-in user is not this instance's owner.
@@ -190,6 +191,7 @@ class _Overview extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: AppSpace.md),
+                const CapacityCard(),
                 FormNote(l10n.casamaVersion(o.version), icon: LucideIcons.badgeCheck),
               ],
             );

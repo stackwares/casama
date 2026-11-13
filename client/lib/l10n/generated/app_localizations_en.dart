@@ -4194,6 +4194,74 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adminAbuse => 'Abuse';
 
   @override
+  String get adminCapacityTitle => 'Server capacity';
+
+  @override
+  String adminCapacityComputers(String used, String budget) {
+    return 'Computers: $used of $budget';
+  }
+
+  @override
+  String adminCapacityComputersNoBudget(String used) {
+    return 'Computers: $used';
+  }
+
+  @override
+  String adminCapacityFree(String free, String total) {
+    return 'Free memory $free of $total';
+  }
+
+  @override
+  String adminCapacityDisk(int percent) {
+    return 'Disk $percent% full';
+  }
+
+  @override
+  String adminCapacityLoad(String load, int cpus) {
+    return 'Load $load on $cpus CPUs';
+  }
+
+  @override
+  String get adminCapacityPeakChart => 'Computers\' daily peak, last 30 days';
+
+  @override
+  String adminCapacityFullIn(int weeks) {
+    String _temp0 = intl.Intl.pluralLogic(
+      weeks,
+      locale: localeName,
+      other: 'Full in about $weeks weeks at this trend',
+      one: 'Full in about a week at this trend',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get adminCapacityFullNow => 'Full now: order the bigger server';
+
+  @override
+  String get adminCapacityNoGrowth => 'Not filling up at the current trend';
+
+  @override
+  String get adminCapacityNoBudget =>
+      'Set COMPUTER_HOST_MEMORY_GB on the server to measure computers against its room.';
+
+  @override
+  String get adminCapacityNoData =>
+      'The first sample arrives within 5 minutes of the server starting.';
+
+  @override
+  String adminCapacityRefusals(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count computer starts refused in 30 days',
+      one: '1 computer start refused in 30 days',
+      zero: 'No computer starts refused in 30 days',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get adminNoAbuse => 'Nothing suspicious so far.';
 
   @override

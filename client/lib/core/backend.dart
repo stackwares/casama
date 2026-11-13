@@ -1282,6 +1282,9 @@ abstract class Backend {
 
   /// The models Casama Cloud runs. The instance owner can change them without a restart (D-188).
   Future<CloudModels> adminCloudModels();
+
+  /// Server capacity for the Admin screen (D-252): memory, computers' share of the budget, 30-day peaks.
+  Future<ServerCapacity> adminCapacity();
   Future<CloudModels> setAdminCloudModels(CloudModels models);
 
   // Pricing editor (D-244): plans, credit packs and the usage markup, for the instance owner.

@@ -3465,6 +3465,11 @@ class FakeBackend implements Backend {
   );
   @override
   Future<CloudModels> adminCloudModels() async => cloudModels;
+
+  /// What the Admin screen's capacity card shows (D-252).
+  ServerCapacity capacity = ServerCapacity(budgetMb: 9216, latest: null, days: const [], refusals30d: 0, fullInWeeks: null, alerts: const []);
+  @override
+  Future<ServerCapacity> adminCapacity() async => capacity;
   @override
   Future<CloudModels> setAdminCloudModels(CloudModels models) async =>
       cloudModels = models;

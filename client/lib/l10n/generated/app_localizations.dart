@@ -6574,6 +6574,84 @@ abstract class AppLocalizations {
   /// **'Abuse'**
   String get adminAbuse;
 
+  /// No description provided for @adminCapacityTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Server capacity'**
+  String get adminCapacityTitle;
+
+  /// No description provided for @adminCapacityComputers.
+  ///
+  /// In en, this message translates to:
+  /// **'Computers: {used} of {budget}'**
+  String adminCapacityComputers(String used, String budget);
+
+  /// No description provided for @adminCapacityComputersNoBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Computers: {used}'**
+  String adminCapacityComputersNoBudget(String used);
+
+  /// No description provided for @adminCapacityFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Free memory {free} of {total}'**
+  String adminCapacityFree(String free, String total);
+
+  /// No description provided for @adminCapacityDisk.
+  ///
+  /// In en, this message translates to:
+  /// **'Disk {percent}% full'**
+  String adminCapacityDisk(int percent);
+
+  /// No description provided for @adminCapacityLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Load {load} on {cpus} CPUs'**
+  String adminCapacityLoad(String load, int cpus);
+
+  /// No description provided for @adminCapacityPeakChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Computers\' daily peak, last 30 days'**
+  String get adminCapacityPeakChart;
+
+  /// No description provided for @adminCapacityFullIn.
+  ///
+  /// In en, this message translates to:
+  /// **'{weeks, plural, =1{Full in about a week at this trend} other{Full in about {weeks} weeks at this trend}}'**
+  String adminCapacityFullIn(int weeks);
+
+  /// No description provided for @adminCapacityFullNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Full now: order the bigger server'**
+  String get adminCapacityFullNow;
+
+  /// No description provided for @adminCapacityNoGrowth.
+  ///
+  /// In en, this message translates to:
+  /// **'Not filling up at the current trend'**
+  String get adminCapacityNoGrowth;
+
+  /// No description provided for @adminCapacityNoBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Set COMPUTER_HOST_MEMORY_GB on the server to measure computers against its room.'**
+  String get adminCapacityNoBudget;
+
+  /// No description provided for @adminCapacityNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'The first sample arrives within 5 minutes of the server starting.'**
+  String get adminCapacityNoData;
+
+  /// No description provided for @adminCapacityRefusals.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No computer starts refused in 30 days} =1{1 computer start refused in 30 days} other{{count} computer starts refused in 30 days}}'**
+  String adminCapacityRefusals(int count);
+
   /// No description provided for @adminNoAbuse.
   ///
   /// In en, this message translates to:
