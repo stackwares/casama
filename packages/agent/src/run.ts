@@ -59,7 +59,7 @@ import {
 } from "./credentials.ts";
 import type { Embedder } from "./embeddings.ts";
 import { DeltaCoalescer, EventBus } from "./events.ts";
-import { missingFilesNote, missingLinkedFiles } from "./file-links.ts";
+import { keepLinkedFiles, missingFilesNote, missingLinkedFiles } from "./file-links.ts";
 import { type FallbackOptions, withFallback } from "./gateway/fallback.ts";
 import { capabilitiesOf, cloudCallReserveUsd, costOf } from "./gateway/registry.ts";
 import {
@@ -186,6 +186,8 @@ export interface RunDeps {
   /** Payments (D-142): resolves {{card:...}} placeholders. */
   payments?: import("./payments.ts").PaymentDeps;
   /** Computers (Phase 2). Without it, computer tools are not offered. */
+  /** Where the Library keeps files copied off computers (D-276); unset: they stay links. */
+  objects?: import("@casama/sandbox").ObjectStore;
   computers?: ComputerService;
   step: StepRunner;
   logger?: Logger;
@@ -1337,7 +1339,29 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
 
     const finalMessage = final;
     const after = lastSaid;
-    const wakes = await step("finish", () => saveFinalMessage(db, info, finalMessage, bus, after));
+    // Files the reply links to are kept in the Library while the computer is awake (D-276).
+    const kept =
+      info.conversationId && deps.objects
+        ? await step("keep-files", () =>
+            keepLinkedFiles(
+              deps.computers,
+              deps.objects,
+              db,
+              {
+                runId: info.runId,
+                orgId: info.orgId,
+                botId: info.botId,
+                botName: info.botName,
+                conversationId: info.conversationId,
+                madeFor: info.actingUserId ?? info.createdBy ?? null,
+              },
+              finalMessage.text,
+            ),
+          )
+        : [];
+    const wakes = await step("finish", () =>
+      saveFinalMessage(db, info, finalMessage, bus, after, kept),
+    );
     // Bots this reply @mentioned in a group chat (D-118); starting a run twice is harmless.
     for (const id of wakes) await deps.startRun?.(id).catch(() => {});
     // A message that arrived after the last model step gets its own run, so nothing is dropped.
@@ -2888,6 +2912,7 @@ async function saveFinalMessage(
   final: { text: string; messageId: string },
   busFn: () => Promise<EventBus>,
   after: string | null = null,
+  kept: import("./creations.ts").KeptFile[] = [],
 ) {
   let wakes: string[] = [];
   const bus = await busFn();
@@ -2936,6 +2961,8 @@ async function saveFinalMessage(
     ...ui,
     ...files,
     ...[...pages].map((p) => ({ type: "page", page_id: p.id, title: p.title })),
+    // Files kept in the Library (D-276). Shipped apps skip unknown parts and keep showing the link.
+    ...kept.map((k) => ({ type: "creation", ...k })),
   ];
   if (info.conversationId) {
     await db.execute(sql`

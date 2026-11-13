@@ -15,7 +15,12 @@ import {
   initProductAnalytics,
   shutdownObservability,
 } from "@casama/observability";
-import { LocalProvider, SupervisorProvider, unavailableProvider } from "@casama/sandbox";
+import {
+  LocalProvider,
+  objectStoreFromEnv,
+  SupervisorProvider,
+  unavailableProvider,
+} from "@casama/sandbox";
 import { serve } from "@hono/node-server";
 import { sql } from "drizzle-orm";
 import { createApp } from "./api/app.ts";
@@ -124,6 +129,7 @@ if (env.MODE === "api") {
   const deps = {
     workflows,
     hub,
+    objects: objectStoreFromEnv(process.env),
     computers:
       (env.SUPERVISOR_URL && env.SUPERVISOR_TOKEN) || env.LOCAL_COMPUTERS || cloud
         ? new ComputerService(
@@ -270,6 +276,7 @@ if (env.MODE === "api") {
         ? { url: env.SUPERVISOR_URL, token: env.SUPERVISOR_TOKEN }
         : undefined,
     local: env.LOCAL_COMPUTERS ? localOpts : undefined,
+    objects: objectStoreFromEnv(process.env) ?? undefined,
     chatgpt: { authUrl: env.CHATGPT_AUTH_URL, apiUrl: env.CHATGPT_API_URL },
     requireVerifiedEmail: abuseControlsOn(env),
   });

@@ -15,6 +15,8 @@ export interface AppDeps {
   workflows: Workflows;
   /** Computers (Phase 2); unset when no supervisor is configured. */
   computers?: import("@casama/agent").ComputerService;
+  /** Where the Library keeps files copied off computers (D-276); unset: none are kept. */
+  objects?: import("@casama/sandbox").ObjectStore | null;
   hub: RunEventHub;
   /** Connected desktop companions (Phase 6, D-066). */
   devices?: import("./routes/local.ts").DeviceRegistry;

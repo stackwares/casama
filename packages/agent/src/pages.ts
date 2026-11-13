@@ -3,6 +3,7 @@
  * document with its data in a separate JSON block; later updates change only the data. Pages are
  * private to the person the bot was working for until shared. Sharing publicly is high risk.
  */
+
 import { createHash, randomBytes } from "node:crypto";
 import type { Database } from "@casama/db";
 import { contentKeys } from "@casama/db";
@@ -11,6 +12,7 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
 import { track } from "./analytics.ts";
+import { checkStorage, StorageFullError } from "./creations.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
 
 export const PAGE_HTML_MAX = 2_000_000;
@@ -116,6 +118,13 @@ export function registerPageTools(
         html = new TextDecoder().decode(await (await ctx.computer()).readFile(args.path));
       }
       if (!html) throw new ToolError("missing_html", "Give the page's html or a path to it.");
+      // A full Library takes no new pages (D-276).
+      try {
+        await checkStorage(db, ctx.orgId, Buffer.byteLength(html));
+      } catch (err) {
+        if (err instanceof StorageFullError) throw new ToolError("storage_full", err.message);
+        throw err;
+      }
       if (Buffer.byteLength(html) > PAGE_HTML_MAX)
         throw new ToolError("too_large", "Pages are limited to 2 MB of HTML.");
       const data = parseJson(args.data);

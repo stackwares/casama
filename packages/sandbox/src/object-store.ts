@@ -175,3 +175,34 @@ export class S3ObjectStore implements ObjectStore {
     return out;
   }
 }
+
+/**
+ * The object store a server process is configured with: S3 when OBJECT_STORE=s3, else a directory
+ * when OBJECT_STORE_DIR is set, else none (D-276: the API and the worker keep Library files here).
+ */
+export function objectStoreFromEnv(env: Record<string, string | undefined>): ObjectStore | null {
+  if (env.OBJECT_STORE === "s3") {
+    if (!env.S3_BUCKET) throw new Error("S3_BUCKET is required when OBJECT_STORE=s3");
+    return new S3ObjectStore({
+      bucket: env.S3_BUCKET,
+      endpoint: env.S3_ENDPOINT,
+      region: env.S3_REGION,
+      accessKeyId: env.S3_ACCESS_KEY_ID,
+      secretAccessKey: env.S3_SECRET_ACCESS_KEY,
+      prefix: env.S3_PREFIX,
+    });
+  }
+  return env.OBJECT_STORE_DIR ? new FsObjectStore(env.OBJECT_STORE_DIR) : null;
+}
+
+/** Reads a whole object into memory (Library files are capped at 50 MB). */
+export async function readObject(store: ObjectStore, key: string): Promise<Uint8Array> {
+  const chunks: Uint8Array[] = [];
+  const reader = (await store.get(key)).getReader();
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) chunks.push(value);
+  }
+  return new Uint8Array(Buffer.concat(chunks));
+}

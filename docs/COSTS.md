@@ -64,7 +64,7 @@ Pro, mailboxes, domain, Apple). Computers run on the same server, so there's no 
 | **Memory embeddings** | OpenAI text-embedding-3-small $0.02 per 1M tokens, also on the shared OpenRouter key when a workspace has no OpenAI key (D-194); about $0.0000006 per memory | Not metered | ✅ Negligible; meter if volume ever matters |
 | **Live view and take control** (TURN relay) | Our own coturn on the server: bandwidth only (about €1 / TB over 20 TB). Cloudflare TURN $0.05 / GB if we switch | `stream_seconds` (not priced) | ✅ For now |
 | **Sign-in and other email** | Zoho: within the mailbox. Resend: $0.90 per 1k past the plan | Not metered | ✅ Negligible per user |
-| **File storage** | Cloudflare R2 $0.015 per GB-month (no egress fee); Supabase $0.0213 per GB | Not metered | ✅ Cap per plan (`limits`) |
+| **File storage** (the Library, D-274, D-276) | Cloudflare R2 $0.015 per GB-month (no egress fee); on the production VPS today, its own disk (D-199) | Counted per workspace (`organizations.storage_bytes`: pages, generated media, kept files); capped by plan `storage_gb`: Free 1, Plus 10, Pro 50, Max 200 GB. A full Max workspace costs about $3 a month on R2. Older versions of a kept file (up to 5) aren't counted | ✅ Capped; at the cap nothing new is kept and nothing is deleted |
 | **Abuse checks** (App Check, reCAPTCHA) | Free to 10k assessments / month, then about $1 per 1k | n/a | ✅ |
 
 ## Fees on revenue

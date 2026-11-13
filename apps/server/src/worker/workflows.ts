@@ -893,7 +893,10 @@ export const maintenanceWorkflow = DBOS.registerWorkflow(
     // them again, so they go after a week instead of growing forever (D-267).
     // The Library's deleted items go after 30 days (D-274).
     await DBOS.runStep(
-      () => purgeDeletedCreations(rt().db).catch(captureStep("purge-creations", 0)),
+      () =>
+        purgeDeletedCreations(rt().db, undefined, rt().agent.objects).catch(
+          captureStep("purge-creations", 0),
+        ),
       { name: "purge-creations" },
     );
     await DBOS.runStep(

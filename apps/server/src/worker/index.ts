@@ -81,6 +81,8 @@ import {
 } from "./workflows.ts";
 
 export interface WorkerOptions {
+  /** Where the Library keeps files copied off computers (D-276). */
+  objects?: import("@casama/sandbox").ObjectStore;
   databaseUrl: string;
   /** The pages origin's public address, for public page links (D-119). */
   pagesUrl?: string;
@@ -478,8 +480,8 @@ export async function startWorker(opts: WorkerOptions) {
     },
   });
   registerPageTools(tools, { db, pagesUrl: opts.pagesUrl ?? "http://localhost:8790" });
-  // The Library (D-274): a bot finds its own earlier work.
-  registerLibraryTools(tools, { db });
+  // The Library (D-274, D-276): a bot finds its own earlier work and keeps files on purpose.
+  registerLibraryTools(tools, { db, objects: opts.objects });
   // Projects (D-113): the tools start planning runs; the heartbeat lives in the minute tick.
   registerProjectTools(tools, {
     db,
@@ -533,6 +535,7 @@ export async function startWorker(opts: WorkerOptions) {
       embedderFor,
       tools,
       computers,
+      objects: opts.objects,
       notifications,
       fetch: fetchOut,
       logger: opts.logger,

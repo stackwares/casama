@@ -6,7 +6,8 @@
 #   casama-backup list       list the backups in the bucket
 #
 # Each backup is a folder <prefix>/<UTC timestamp>/ holding postgres.dump (pg_dump custom format),
-# objects.tar.gz (computer archives, when BACKUP_OBJECTS=true), and, only when encrypted, env and
+# objects.tar.gz (computer archives, when BACKUP_OBJECTS=true), library.tar.gz (the Library's kept
+# files, D-276), and, only when encrypted, env and
 # vault-key (the database's Vault root key: without it the secrets in the dump can't be read on
 # another machine, D-267).
 # With BACKUP_AGE_RECIPIENTS every file is encrypted with age (".age"); the .env holds every key of
@@ -76,6 +77,11 @@ run_once() {
   if [[ "${BACKUP_OBJECTS:-false}" == true && -d /objects ]]; then
     log "archiving computer archives"
     tar czf "$dir/objects.tar.gz" -C /objects . || { rm -rf "$dir"; log "archiving computer archives failed"; return 1; }
+  fi
+  # The Library's kept files (D-276) are what people made: always backed up when present.
+  if [[ -d /library ]] && [[ -n "$(ls -A /library 2>/dev/null)" ]]; then
+    log "archiving the Library's files"
+    tar czf "$dir/library.tar.gz" -C /library . || { rm -rf "$dir"; log "archiving the Library failed"; return 1; }
   fi
   if [[ ${#ENC[@]} -gt 0 ]]; then
     [[ -f /env ]] && cp /env "$dir/env"

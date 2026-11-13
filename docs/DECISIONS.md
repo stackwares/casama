@@ -3261,3 +3261,14 @@ Stage 5 (cost clarity, server side) of `docs/MASTER-PLAN-2026-11.md` (Add 4 in `
 - **Usage report:** `GET /v1/usage` leaves waived charges out of its totals and reports them as `waived_usd`, and gives admins and owners `by_person`: what each member's work cost and how many runs.
 - **Low credits:** after each settlement, owners of a workspace whose balance fell under $1 (and above zero) with billable usage in the last day get a `credits_low` notification, at most once a week.
 - **Not done here:** "a price before a long run". Casama can't know a run's length in advance; the run and day budgets (now settable in the app, Stage 5 app work) are the control that answers it.
+
+## D-276 The Library, Phase 3 (server): files a reply links to are kept, with versions and storage caps
+
+Stage 5 of `docs/MASTER-PLAN-2026-11.md`; `docs/LIBRARY-PLAN.md` Phase 3, server side.
+
+- **Kept files:** when a chat reply links to files on the bot's computer, up to 8 of them (each up to 50 MB) are copied to the object store before the reply is saved, while the computer is still awake. Each becomes a creation keyed by bot, computer and path; handing the same file over again with new bytes makes a new version (the same bytes don't), and the last 5 versions are kept (`creation_versions`). The reply gains a `creation` part per kept file; shipped apps skip unknown parts and keep showing the link. Personal computers are skipped: the person's own files stay on their machine.
+- **`library.save`:** a bot keeps a file it didn't link, with a title and label.
+- **Where the bytes go:** the API and worker read `OBJECT_STORE` / `OBJECT_STORE_DIR` (`objectStoreFromEnv`). Compose gives both a `library` volume at `/data/library` (the server image creates the folder as its own user so the volume is writable), or S3 with `LIBRARY_OBJECT_STORE=s3` and `LIBRARY_S3_*`. Backups always include it (`library.tar.gz`).
+- **Serving:** `GET /v1/creations/{id}/content` streams kept files (byte ranges; `sandbox` CSP so HTML can't run), and a kept picture is its own cover.
+- **Storage caps:** plans gain `storage_gb` (Free 1, Plus 10, Pro 50, Max 200; self-hosted none). At the cap a kept file, a generated picture or video, and a new page are refused with "the Library is full"; nothing is ever deleted for the person. The purge deletes kept files' bytes with their rows.
+- **Not done:** real covers for pages and documents (they need the PDF/screenshot service on, which is a production change), the Usage screen's storage row and the `storage_full` paywall source (app work), and moving `chat_media` bytes out of Postgres (Phase 5).

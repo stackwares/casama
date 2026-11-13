@@ -101,6 +101,8 @@ export async function startHarness(
     cloud?: { url: string; key: string };
     /** Built-in app connections: catalog and fetch overrides. */
     apps?: import("../src/api/routes/apps.ts").AppsOptions;
+    /** Where the Library keeps files (D-276). */
+    objects?: import("@casama/sandbox").ObjectStore;
   } = {},
 ): Promise<Harness> {
   const tdb = await startTestDatabase();
@@ -203,6 +205,7 @@ export async function startHarness(
     billing,
     connect: opts.connect,
     apps: opts.apps,
+    objects: opts.objects,
     env,
     db: handle.db,
     logger: createLogger("test", "error"),

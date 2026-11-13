@@ -5,6 +5,7 @@
  */
 import { routes } from "@casama/contracts";
 import { type JwtClaims, withUserSession } from "@casama/db";
+import { readObject } from "@casama/sandbox";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import { ApiError } from "../errors.ts";
@@ -35,6 +36,7 @@ type CreationRow = {
   height: number | null;
   duration_s: number | null;
   cover_key: string | null;
+  blob_key: string | null;
   version: number;
   pinned_at: Date | null;
   last_opened_at: Date | null;
@@ -64,7 +66,10 @@ const out = (r: CreationRow) => ({
   height: r.height,
   duration_s: r.duration_s,
   // Pictures are their own cover and videos get a frame; the rest get theirs in Phase 3.
-  has_cover: !!r.cover_key || (!!r.media_id && (r.kind === "image" || r.kind === "video")),
+  has_cover:
+    !!r.cover_key ||
+    (!!r.media_id && (r.kind === "image" || r.kind === "video")) ||
+    (!!r.blob_key && r.kind === "image"),
   version: r.version,
   pinned: !!r.pinned_at,
   last_opened_at: r.last_opened_at ? iso(r.last_opened_at) : null,
@@ -78,7 +83,7 @@ const out = (r: CreationRow) => ({
 const columns = (_userId: string) => sql`
   c.id, c.org_id, c.bot_id, b.name as bot_name, c.made_for, c.conversation_id, c.run_id, c.kind,
   c.label, c.title, c.page_id, c.media_id, c.mime, c.size, c.width, c.height, c.duration_s,
-  c.cover_key, c.version, m.pinned_at, m.last_opened_at, public.can_change_creation(c.id) as can_change,
+  c.cover_key, c.blob_key, c.version, m.pinned_at, m.last_opened_at, public.can_change_creation(c.id) as can_change,
   c.deleted_at, c.created_at, c.updated_at`;
 const joins = (userId: string) => sql`
   from public.creations c
@@ -247,6 +252,38 @@ export function registerCreationRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
     const row = await visible(claims, id);
+    // A file kept off a computer (D-276): from the object store.
+    if (row.blob_key) {
+      if (!deps.objects) throw new ApiError(404, "no_content", "This server keeps no files");
+      const bytes = await readObject(deps.objects, row.blob_key).catch(() => null);
+      if (!bytes) throw new ApiError(404, "no_content", "The bytes are gone");
+      const name = row.blob_key.split("/").pop() ?? "file";
+      const headers: Record<string, string> = {
+        "content-type": row.mime ?? "application/octet-stream",
+        "cache-control": "private, max-age=3600",
+        "accept-ranges": "bytes",
+        "content-security-policy": "default-src 'none'; sandbox",
+        "content-disposition": `inline; filename="${name.replace(/[^\w.-]/g, "_")}"`,
+      };
+      const rangeHeader = c.req.header("range");
+      if (rangeHeader) {
+        const range = parseRange(rangeHeader, bytes.length);
+        if (!range)
+          return c.body(null, 416, {
+            ...headers,
+            "content-range": `bytes */${bytes.length}`,
+          }) as never;
+        return c.body(new Uint8Array(bytes.subarray(range.start, range.end + 1)), 206, {
+          ...headers,
+          "content-range": `bytes ${range.start}-${range.end}/${bytes.length}`,
+          "content-length": String(range.end - range.start + 1),
+        }) as never;
+      }
+      return c.body(new Uint8Array(bytes), 200, {
+        ...headers,
+        "content-length": String(bytes.length),
+      }) as never;
+    }
     if (!row.media_id)
       throw new ApiError(
         404,
@@ -294,6 +331,17 @@ export function registerCreationRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const { id } = c.req.valid("param");
     const row = await visible(claims, id);
     const none = () => new ApiError(404, "no_cover", "This one has no cover; the app draws one");
+    // A kept picture is its own cover.
+    if (row.blob_key && row.kind === "image" && deps.objects) {
+      const bytes = await readObject(deps.objects, row.blob_key).catch(() => null);
+      if (!bytes) throw none();
+      return c.body(new Uint8Array(bytes), 200, {
+        "content-type": row.mime ?? "image/png",
+        "content-length": String(bytes.length),
+        "cache-control": "private, max-age=86400",
+        "content-security-policy": "default-src 'none'",
+      }) as never;
+    }
     if (!row.media_id || (row.kind !== "image" && row.kind !== "video")) throw none();
     let body: Buffer | null;
     let type: string;

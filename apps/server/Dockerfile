@@ -35,6 +35,9 @@ COPY ee/LICENSE ee/LICENSE
 COPY apps/server/src apps/server/src
 # Migrations, applied by the one-shot `migrate` service in the self-host stack.
 COPY supabase/migrations /app/supabase/migrations
+# The Library's kept files (D-276), when OBJECT_STORE_DIR points here: a named volume mounted on
+# this path takes the folder's owner, so the server can write to it.
+RUN mkdir -p /data/library && chown node:node /data/library
 USER node
 WORKDIR /app/apps/server
 EXPOSE 8787

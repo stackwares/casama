@@ -38,7 +38,7 @@ export function computerPathFromLink(link: string): string | null {
 }
 
 /** The file paths a reply links to with Markdown links or images, at most `max`, in order. */
-export function linkedFilePaths(text: string, max = 5): string[] {
+export function linkedFilePaths(text: string, max = 8): string[] {
   const out: string[] = [];
   // [label](target) and ![alt](target), with an optional "title"; code spans are skipped.
   const prose = text.replace(/```[\s\S]*?```/g, "").replace(/`[^`\n]*`/g, "");
@@ -125,4 +125,76 @@ export async function missingLinkedFiles(
 export function missingFilesNote(missing: string[]): string {
   const list = missing.map((p) => `"${p}"`).join(", ");
   return `[Casama: your reply links to ${list}, but there's no file there on your computer, so the link won't open. Don't say you made or saved something you didn't. Either make it now with your tools and then reply, or reply again without that link and say plainly what you did and didn't do.]`;
+}
+
+/**
+ * Keeps the files a reply links to in the Library (D-276), while the computer is still awake:
+ * up to 8, each up to 50 MB. Personal computers are skipped: the person's own files stay on their
+ * machine. Fails open, like the check above: a file that can't be read is left as a plain link.
+ */
+export async function keepLinkedFiles(
+  computers: ComputerService | undefined,
+  store: import("@casama/sandbox").ObjectStore | undefined,
+  db: import("@casama/db").Database,
+  run: {
+    runId: string;
+    orgId: string;
+    botId: string;
+    botName: string;
+    conversationId: string | null;
+    madeFor: string | null;
+  },
+  text: string,
+  timeoutMs = 30_000,
+): Promise<import("./creations.ts").KeptFile[]> {
+  const paths = linkedFilePaths(text);
+  if (!computers || !store || paths.length === 0) return [];
+  const { keepFile, KEEP_FILE_MAX_BYTES } = await import("./creations.ts");
+  const work = async () => {
+    const row = await computers.forBot(run.botId);
+    if (row.kind === "local") return [];
+    const raw = await computers.ensureRunning(row.id);
+    const h =
+      raw.withActivity?.({
+        run_id: run.runId,
+        bot: run.botName,
+        tool: "files.read",
+        summary: "Keeping the files in its reply",
+      }) ?? raw;
+    const kept: import("./creations.ts").KeptFile[] = [];
+    for (const p of paths) {
+      try {
+        const clean = p.replace(/\/+$/, "");
+        const cut = clean.lastIndexOf("/");
+        const entry = (await h.listDir(cut < 0 ? "" : cut === 0 ? "/" : clean.slice(0, cut))).find(
+          (e) => e.name === clean.slice(cut + 1),
+        );
+        if (!entry || entry.type === "dir" || (entry.size ?? 0) > KEEP_FILE_MAX_BYTES) continue;
+        const bytes = await h.readFile(clean);
+        const k = await keepFile(db, store, {
+          orgId: run.orgId,
+          botId: run.botId,
+          computerId: row.id,
+          runId: run.runId,
+          conversationId: run.conversationId,
+          madeFor: run.madeFor,
+          path: clean,
+          bytes,
+        });
+        if (k) kept.push(k);
+      } catch {
+        // A full Library or an unreadable file leaves it as a link.
+      }
+    }
+    return kept;
+  };
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<import("./creations.ts").KeptFile[]>((r) => {
+    timer = setTimeout(() => r([]), timeoutMs);
+  });
+  try {
+    return await Promise.race([work().catch(() => []), timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
 }

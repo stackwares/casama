@@ -12,7 +12,7 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf, personForRun } from "../acting.ts";
 import { wrapUntrusted } from "../context.ts";
-import { titleFromText } from "../creations.ts";
+import { checkStorage, titleFromText } from "../creations.ts";
 import { sealRunPayload } from "../events.ts";
 import {
   MEDIA_PRICES,
@@ -1034,6 +1034,14 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     title?: string,
   ) {
     if (!bytes || bytes.length === 0 || bytes.length > CHAT_MEDIA_MAX_BYTES) return null;
+    // A full Library keeps nothing new (D-276); the file is still on the computer.
+    if (
+      !(await checkStorage(db, ctx.orgId, bytes.length).then(
+        () => true,
+        () => false,
+      ))
+    )
+      return null;
     const [row] = await db.execute<{ id: string }>(sql`
       insert into public.chat_media (org_id, bot_id, run_id, conversation_id, name, content_type, bytes, size, width, height, duration_s)
       values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${ctx.runId}::uuid,
