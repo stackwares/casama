@@ -3222,3 +3222,13 @@ From the "alongside" list of `docs/MASTER-PLAN-2026-11.md` (Fix 20, 22 and 23 in
 - **Sign-in refresh:** refreshing a connection's OAuth token takes a per-connection advisory lock, re-reads the token inside it, and refreshes only if it's still expiring. Two runs at once used to refresh twice, and with providers that rotate refresh tokens the loser held a retired token.
 - **Local models:** calls on an `openai_compatible` credential (Ollama, LM Studio, vLLM) cost $0, whatever the model is called; a guessed $1/$3 price stopped local runs at the default $1 budget.
 - **Local memory search:** an `openai_compatible` credential whose `settings.embedding_model` is set is used for memory and knowledge search when there's no OpenAI key. Vectors shorter than the stored 1,536 dimensions are padded with zeros (cosine similarity unchanged); longer ones are cut and renormalized. The create-credential API gains the field after Stage 2's contract work lands.
+
+## D-272 A self-hosted server keeps itself up: a memory budget by default, capped logs, a worker health check, alerts by email
+
+From the "alongside" list of `docs/MASTER-PLAN-2026-11.md` (Fix 21 and Improve (agent) 9 in `docs/PRODUCT-REVIEW-2026-11-13.md`).
+
+- **Memory budget:** the installer sets `COMPUTER_HOST_MEMORY_GB` when it's missing, to the machine's memory less 4 GB (at least 2). Before, a fresh install allowed computers to start until the server ran out of memory. A computer with no recorded size now counts as `COMPUTER_MEMORY_MB` (2,048, the supervisor's default) instead of 1 GB.
+- **Logs:** every Compose service keeps 5 files of 20 MB; each bot computer 3 files of 10 MB.
+- **Worker health:** the minute tick touches `/tmp/worker-alive`; the worker container is unhealthy when it's over 3 minutes old.
+- **Alerts:** the monitoring profile gains Alertmanager, emailing `ALERT_EMAIL` through Auth's SMTP settings, and a disk-over-85% rule. Found on the way: `prometheus.yml` read the metrics token from `/etc/prometheus/metrics_token` while the entrypoint wrote `/tmp/metrics_token`, so every scrape failed and `CasamaApiDown` fired on a healthy server.
+- **Not done:** a hard disk cap per computer (needs XFS project quotas on the sandbox host; already in NEEDS-FROM-OLIVER).

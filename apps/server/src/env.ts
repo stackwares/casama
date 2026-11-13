@@ -242,6 +242,8 @@ export const EnvSchema = z.object({
    * capacity_full, and the Admin screen's capacity card and alerts measure against it. 0 = no budget.
    */
   COMPUTER_HOST_MEMORY_GB: z.coerce.number().min(0).default(0),
+  /** A computer's memory when its size isn't recorded (matches the supervisor's default). */
+  COMPUTER_MEMORY_MB: z.coerce.number().int().min(256).default(2048),
   /** Where the console checks for newer releases (GitHub "latest release" API shape); unset = off. */
   UPDATE_CHECK_URL: z.url().optional(),
   /** Desktop companion (D-066): personal computers as bot computers. On by default. */

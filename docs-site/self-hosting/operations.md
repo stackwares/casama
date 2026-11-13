@@ -268,9 +268,24 @@ each scrape.
 | `CasamaTimeToFirstTokenSlow`   | p95 time to first token is above 3 seconds for 15 minutes          | warn     |
 | `CasamaQueueBacklog`           | More than 200 runs are waiting, for 10 minutes                     | warn     |
 | `CasamaApiDown`                | Prometheus can't scrape the API for 2 minutes                      | page     |
+| `CasamaDiskFilling`            | A disk is over 85% full for 15 minutes                             | page     |
 
-The stack doesn't include Alertmanager. Route alerts to email or chat with your own Alertmanager or
-with Grafana alerting.
+The profile includes Alertmanager. Set `ALERT_EMAIL` in `infra/compose/.env` and alerts are emailed
+there through the same SMTP server as sign-in emails (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`,
+`SMTP_PASS`, sent from `SMTP_ADMIN_EMAIL`). Without `ALERT_EMAIL`, alerts show only in Prometheus.
+
+### Limits that keep the server up
+
+- **Bot computers' memory:** the installer sets `COMPUTER_HOST_MEMORY_GB` to the machine's memory
+  less 4 GB (at least 2 GB). Past it, a computer waits to start instead of starving the database.
+  Change the number in `infra/compose/.env`; a computer without a recorded size counts as
+  `COMPUTER_MEMORY_MB` (2,048 by default).
+- **Logs:** every Casama container keeps at most 5 log files of 20 MB, and each bot computer 3 of
+  10 MB.
+- **The worker's health:** the worker container is unhealthy when its minute tick hasn't run for 3
+  minutes; `casama selfhost status` shows it.
+- **Disk per computer:** not capped on ordinary Docker storage. A hard limit needs XFS project
+  quotas on the sandbox host; `CasamaDiskFilling` warns before the disk is full.
 
 ### The admin console
 

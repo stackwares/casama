@@ -221,6 +221,17 @@ if [[ -z "$(env_value CONTENT_ENCRYPTION_KEY)" && -z "$(env_value CONTENT_KMS_KE
   set_env CONTENT_ENCRYPTION_KEY "$(openssl rand -base64 32 | tr -d '\n')"
   say "Generated CONTENT_ENCRYPTION_KEY: back it up with $ENV_FILE, encrypted data can't be read without it"
 fi
+# Room for bot computers (D-252, D-272): without a number every start was allowed until the server
+# ran out of memory. Default: the machine's memory less 4 GB for Casama itself, at least 2 GB.
+# Only set when missing, so an owner's own number stays.
+if [[ -z "$(env_value COMPUTER_HOST_MEMORY_GB)" ]]; then
+  total_kb=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo 2>/dev/null || true)
+  [[ -z "$total_kb" ]] && total_kb=$(( $(sysctl -n hw.memsize 2>/dev/null || echo 8589934592) / 1024 ))
+  room=$(( total_kb / 1048576 - 4 ))
+  (( room < 2 )) && room=2
+  set_env COMPUTER_HOST_MEMORY_GB "$room"
+  say "Bot computers may use up to ${room} GB of memory (COMPUTER_HOST_MEMORY_GB in $ENV_FILE)"
+fi
 [[ -n "$turn_host_opt" ]] && set_env TURN_PUBLIC_HOST "$turn_host_opt"
 # Behind a tunnel or proxy on this machine, Caddy listens on loopback only: Docker's published
 # ports skip ufw, so 0.0.0.0 would serve plain HTTP to the internet.

@@ -33,3 +33,9 @@ groups:
         labels: { severity: page }
         annotations:
           summary: "The Casama API is not answering /metrics"
+      - alert: CasamaDiskFilling
+        expr: (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"}) > 0.85
+        for: 15m
+        labels: { severity: page }
+        annotations:
+          summary: "Disk {{ $labels.mountpoint }} on {{ $labels.instance }} is over 85% full"

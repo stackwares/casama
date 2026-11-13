@@ -308,6 +308,8 @@ export class DockerProvider implements SandboxProvider {
         CapDrop: ["ALL"],
         SecurityOpt: ["no-new-privileges"],
         RestartPolicy: { Name: "no" },
+        // A bot printing in a loop can't fill the host's disk (D-272).
+        LogConfig: { Type: "json-file", Config: { "max-size": "10m", "max-file": "3" } },
       },
     });
     await this.connect(n.network, this.opts.egress.containerName);

@@ -1,3 +1,4 @@
+import { writeFile } from "node:fs/promises";
 import {
   type ChatGptConfig,
   type ComputerService,
@@ -288,6 +289,11 @@ function captureStep<T>(stepName: string, fallback: T): (err: unknown) => T {
 /** Every minute: start runs for routines that are due. */
 export const routinesTickWorkflow = DBOS.registerWorkflow(
   async (scheduledAt: Date, _context: unknown) => {
+    // The container's health check reads this (D-272): a worker whose tick stopped is unhealthy.
+    await DBOS.runStep(
+      () => writeFile("/tmp/worker-alive", new Date().toISOString()).catch(() => {}),
+      { name: "heartbeat" },
+    );
     // Pushes held back by quiet hours go out once the window ends (D-109).
     await DBOS.runStep(
       () =>

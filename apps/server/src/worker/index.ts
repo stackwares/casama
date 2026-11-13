@@ -162,6 +162,8 @@ export interface WorkerOptions {
   /** Hosted computers that may run at once (D-248); 0 or unset = no limit. */
   /** COMPUTER_HOST_MEMORY_GB in MB (D-252). */
   computerHostMemoryMb?: number;
+  /** A computer's memory when its size isn't recorded (D-272). */
+  computerDefaultMemoryMb?: number;
   /** The server's SearXNG (SEARXNG_URL, D-179): web search for workspaces without their own key. */
   searxngUrl?: string;
   /** The server's own Google AI key for live calls (GOOGLE_AI_API_KEY). */
@@ -262,7 +264,10 @@ export async function startWorker(opts: WorkerOptions) {
       : undefined;
   if (computers) computers.requireVerifiedEmail = opts.requireVerifiedEmail ?? false;
   if (computers) computers.rates = computerRates(opts.computerRates);
-  if (computers) computers.hostMemoryMb = opts.computerHostMemoryMb ?? 0;
+  if (computers) {
+    computers.hostMemoryMb = opts.computerHostMemoryMb ?? 0;
+    computers.defaultMemoryMb = opts.computerDefaultMemoryMb ?? 2048;
+  }
   const tools = builtinTools({
     db,
     memory: async (orgId) =>

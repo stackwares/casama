@@ -7,7 +7,13 @@
 # pdf (page PDFs in an isolated Chromium; set PDF_RENDERER_URL=http://pdf:3000).
 name: casama
 
+# Every container's log is capped (D-272): 5 files of 20 MB, so logs can't fill the disk.
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "20m", max-file: "5" }
+
 x-casama: &casama
+  logging: *logging
   image: ${CASAMA_REGISTRY:-casama}/server:${CASAMA_VERSION:-local}
   build:
     context: ../..
@@ -95,6 +101,8 @@ x-casama: &casama
     COMPUTER_RATES: ${COMPUTER_RATES:-}
     # Memory hosted computers may use on this server, in GB (D-252); past it starts answer capacity_full.
     COMPUTER_HOST_MEMORY_GB: ${COMPUTER_HOST_MEMORY_GB:-0}
+    # What a computer without a recorded size takes, for the room check above (the supervisor's default).
+    COMPUTER_MEMORY_MB: ${COMPUTER_MEMORY_MB:-2048}
     # Abuse controls (D-094): sign-up proofs, App Check project, OAuth redirect for app connections.
     SIGNUP_PROOFS: ${SIGNUP_PROOFS:-}
     SIGNUP_POW_DIFFICULTY: ${SIGNUP_POW_DIFFICULTY:-}
@@ -148,6 +156,7 @@ x-casama: &casama
 services:
   # ---------------------------------------------------------------- Supabase
   db:
+    logging: *logging
     image: public.ecr.aws/supabase/postgres:17.11.0.011
     restart: unless-stopped
     networks: [internal]
@@ -182,6 +191,7 @@ services:
       retries: 30
 
   auth:
+    logging: *logging
     image: public.ecr.aws/supabase/gotrue:v2.197.0
     restart: unless-stopped
     networks: [internal]
@@ -264,6 +274,7 @@ services:
       GOTRUE_SAML_PRIVATE_KEY: ${SAML_PRIVATE_KEY}
 
   rest:
+    logging: *logging
     image: public.ecr.aws/supabase/postgrest:v16.5
     restart: unless-stopped
     networks: [internal]
@@ -277,6 +288,7 @@ services:
       PGRST_DB_USE_LEGACY_GUCS: "false"
 
   realtime:
+    logging: *logging
     # The tenant id comes from this name (realtime-dev); keep it.
     container_name: realtime-dev.supabase-realtime
     image: public.ecr.aws/supabase/realtime:v2.151.3
@@ -303,6 +315,7 @@ services:
       RUN_JANITOR: "true"
 
   kong:
+    logging: *logging
     image: public.ecr.aws/supabase/kong:2.8.1
     restart: unless-stopped
     networks: [internal]
@@ -322,6 +335,7 @@ services:
 
   # ---------------------------------------------------------------- Casama
   migrate:
+    logging: *logging
     image: public.ecr.aws/supabase/postgres:17.11.0.011
     networks: [internal]
     depends_on: { db: { condition: service_healthy } }
@@ -364,13 +378,26 @@ services:
       # Web search without a workspace key (D-179): http://searxng:8080 with the search profile.
       SEARXNG_URL: ${SEARXNG_URL:-}
     depends_on: { migrate: { condition: service_completed_successfully } }
-    # The worker serves no HTTP, so the image's /healthz check would always fail here.
-    healthcheck: { disable: true }
+    # The worker serves no HTTP: it touches /tmp/worker-alive every minute tick, and is unhealthy
+    # when that's over 3 minutes old (D-272).
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "const s=require('fs').statSync('/tmp/worker-alive',{throwIfNoEntry:false});process.exit(s&&Date.now()-s.mtimeMs<180000?0:1)",
+        ]
+      interval: 60s
+      timeout: 5s
+      start_period: 180s
+      retries: 2
 
   # Page PDFs (profile pdf). Chromium can't keep its sandbox in a normal container, so it runs here:
   # no secrets, no internet, and its only network holds nothing but the API. It loads only the page
   # it was sent (and its inline images), never a URL or another file.
   pdf:
+    logging: *logging
     image: gotenberg/gotenberg:8.39.0-chromium
     profiles: [pdf]
     restart: unless-stopped
@@ -386,6 +413,7 @@ services:
 
   # The only service with Docker access. It joins each computer's private network to reach computerd.
   supervisor:
+    logging: *logging
     image: ${CASAMA_REGISTRY:-casama}/supervisor:${CASAMA_VERSION:-local}
     build:
       context: ../..
@@ -415,6 +443,7 @@ services:
 
   # The only route from computers to the internet; blocks private and metadata addresses.
   egress:
+    logging: *logging
     image: ${CASAMA_REGISTRY:-casama}/egress-proxy:${CASAMA_VERSION:-local}
     build:
       context: ../..
@@ -431,6 +460,7 @@ services:
 
   # TURN relay for live view (D-055). Production also wants TLS on 5349 (turns:).
   turn:
+    logging: *logging
     image: ${CASAMA_REGISTRY:-casama}/turn:${CASAMA_VERSION:-local}
     build:
       context: ../..
@@ -449,6 +479,7 @@ services:
   # and optionally computer archives, to any S3-compatible bucket. install.sh --backups turns it on.
   # Run one now: docker compose ... --profile backup run --rm backup now
   backup:
+    logging: *logging
     image: ${CASAMA_REGISTRY:-casama}/backup:${CASAMA_VERSION:-local}
     build:
       context: ../..
@@ -484,6 +515,7 @@ services:
   # Free web search for bots (D-179, profile "search"). Set SEARXNG_URL=http://searxng:8080 too.
   # Internal only: no published port; it needs outbound internet to ask the search engines.
   searxng:
+    logging: *logging
     image: searxng/searxng:2026.10.29-c15647b5a
     profiles: [search]
     restart: unless-stopped
@@ -496,6 +528,7 @@ services:
     cap_add: [CHOWN, SETGID, SETUID]
 
   caddy:
+    logging: *logging
     image: caddy:2.10.2-alpine
     restart: unless-stopped
     networks: [internal]
@@ -516,6 +549,7 @@ services:
 
   # ---------------------------------------------------------------- optional
   web:
+    logging: *logging
     image: ${CASAMA_REGISTRY:-casama}/web:${CASAMA_VERSION:-local}
     profiles: [web]
     build:
@@ -525,6 +559,7 @@ services:
     networks: [internal]
 
   s3:
+    logging: *logging
     image: chrislusf/seaweedfs:4.53
     container_name: casama-s3
     profiles: [s3]
@@ -543,6 +578,7 @@ services:
     restart: unless-stopped
 
   prometheus:
+    logging: *logging
     image: prom/prometheus:v3.5.0
     profiles: [monitoring]
     restart: unless-stopped
@@ -560,7 +596,30 @@ services:
       - ../monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
       - prometheus-data:/prometheus
 
+  # Sends Prometheus alerts to ALERT_EMAIL through the same SMTP server as Auth (D-272). With no
+  # address set, alerts show only in Prometheus.
+  alertmanager:
+    logging: *logging
+    image: prom/alertmanager:v0.28.1
+    profiles: [monitoring]
+    restart: unless-stopped
+    networks: [internal]
+    entrypoint:
+      [
+        "/bin/sh",
+        "-c",
+        'if [ -n "$$ALERT_EMAIL" ]; then printf ''route:\n  receiver: owner\n  group_wait: 1m\n  repeat_interval: 4h\nreceivers:\n  - name: owner\n    email_configs:\n      - to: "%s"\n        from: "%s"\n        smarthost: "%s:%s"\n        auth_username: "%s"\n        auth_password: "%s"\n'' "$$ALERT_EMAIL" "$$SMTP_ADMIN_EMAIL" "$$SMTP_HOST" "$$SMTP_PORT" "$$SMTP_USER" "$$SMTP_PASS" > /tmp/am.yml; else printf ''route:\n  receiver: none\nreceivers:\n  - name: none\n'' > /tmp/am.yml; fi; exec /bin/alertmanager --config.file=/tmp/am.yml --storage.path=/alertmanager',
+      ]
+    environment:
+      ALERT_EMAIL: ${ALERT_EMAIL:-}
+      SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+
   node-exporter:
+    logging: *logging
     image: prom/node-exporter:v1.9.1
     profiles: [monitoring]
     restart: unless-stopped
@@ -570,6 +629,7 @@ services:
       - /:/host:ro,rslave
 
   grafana:
+    logging: *logging
     image: grafana/grafana:12.1.1
     profiles: [monitoring]
     restart: unless-stopped
@@ -586,6 +646,7 @@ services:
 
   # Build-only services so `compose --profile images build` builds the computer images.
   computer-headless:
+    logging: *logging
     build:
       context: ../..
       dockerfile: infra/images/computer/Dockerfile.headless
@@ -593,6 +654,7 @@ services:
     profiles: [images]
 
   computer-desktop:
+    logging: *logging
     build:
       context: ../..
       dockerfile: infra/images/computer/Dockerfile.desktop

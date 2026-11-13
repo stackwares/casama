@@ -169,7 +169,10 @@ if (env.MODE === "api") {
   // Casama Cloud (D-094): free workspaces start computers only with a verified owner email.
   if (deps.computers) deps.computers.requireVerifiedEmail = abuseControlsOn(env);
   if (deps.computers) deps.computers.rates = computerRates(env.COMPUTER_RATES);
-  if (deps.computers) deps.computers.hostMemoryMb = Math.round(env.COMPUTER_HOST_MEMORY_GB * 1024);
+  if (deps.computers) {
+    deps.computers.hostMemoryMb = Math.round(env.COMPUTER_HOST_MEMORY_GB * 1024);
+    deps.computers.defaultMemoryMb = env.COMPUTER_MEMORY_MB;
+  }
   const app = createApp(deps);
   const server = serve({ fetch: app.fetch, port: env.PORT }, (info) =>
     logger.info("api listening", { port: info.port }),
@@ -209,6 +212,7 @@ if (env.MODE === "api") {
     livePrices: env.MODEL_PRICES_URL === "off" ? undefined : { url: env.MODEL_PRICES_URL },
     computerRates: env.COMPUTER_RATES,
     computerHostMemoryMb: Math.round(env.COMPUTER_HOST_MEMORY_GB * 1024),
+    computerDefaultMemoryMb: env.COMPUTER_MEMORY_MB,
     searxngUrl: env.SEARXNG_URL,
     serverGeminiKey: env.GOOGLE_AI_API_KEY,
     auditForwarding: await import("@casama/ee")

@@ -364,6 +364,8 @@ export class ComputerService {
    * not computers, because computers come in plan sizes of 1, 2 and 4 GB (D-249).
    */
   hostMemoryMb = 0;
+  /** What a computer with no recorded size takes (the supervisor's COMPUTER_MEMORY_MB, D-272). */
+  defaultMemoryMb = 2048;
 
   async checkCanStart(orgId: string, opts: { credits?: boolean; computerId?: string } = {}) {
     const [o] = await this.db.execute<{
@@ -404,16 +406,16 @@ export class ComputerService {
     if (this.hostMemoryMb > 0 && opts.computerId) {
       const [m] = await this.db.execute<{ used: string; mine: string }>(sql`
         select
-          (select coalesce(sum(coalesce((size ->> 'memory_mb')::int, 1024)), 0) from public.computers
+          (select coalesce(sum(coalesce((size ->> 'memory_mb')::int, ${this.defaultMemoryMb}::int)), 0) from public.computers
             where kind <> 'local' and state in ('running', 'idle', 'starting', 'provisioning')
               and id <> ${opts.computerId}::uuid)::text as used,
           (select coalesce(
              1024 * (select (e.limits ->> 'computer_size')::numeric from public.entitlements e
                      where e.org_id = me.org_id order by e.created_at desc limit 1),
-             (me.size ->> 'memory_mb')::int, 1024)
+             (me.size ->> 'memory_mb')::int, ${this.defaultMemoryMb}::int)
            from public.computers me where me.id = ${opts.computerId}::uuid)::text as mine`);
       const used = Number(m?.used ?? 0);
-      const mine = Number(m?.mine ?? 1024);
+      const mine = Number(m?.mine ?? this.defaultMemoryMb);
       if (used + mine > this.hostMemoryMb) {
         // Recorded for the Admin screen's capacity card and the act-now alert (D-252).
         await this.db
