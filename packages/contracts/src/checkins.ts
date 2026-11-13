@@ -21,6 +21,8 @@ export const Suggestion = z
     bot_id: Uuid,
     title: z.string(),
     body_md: z.string(),
+    /** The bot's own line for it, as its push showed it ("Want me to…?"; D-247). */
+    push_text: z.string().nullable().optional(),
     proposed_action: z
       .object({ tool: z.string(), args: z.record(z.string(), z.unknown()).optional() })
       .nullable(),

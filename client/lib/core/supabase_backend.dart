@@ -1976,12 +1976,23 @@ class SupabaseBackend implements Backend {
   Future<void> registerDevice(String platform, String token) async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return;
-    await supabase.from('devices').upsert({
+    final row = {
       'user_id': userId,
       'platform': platform,
       'fcm_token': token,
       'last_seen_at': DateTime.now().toUtc().toIso8601String(),
-    }, onConflict: 'fcm_token');
+    };
+    // Android draws suggestion pushes itself, with Do it / Not now buttons (D-247). A server
+    // from before that has no such column, so it gets the plain row.
+    if (platform != 'android') {
+      await supabase.from('devices').upsert(row, onConflict: 'fcm_token');
+      return;
+    }
+    try {
+      await supabase.from('devices').upsert({...row, 'data_pushes': true}, onConflict: 'fcm_token');
+    } catch (_) {
+      await supabase.from('devices').upsert(row, onConflict: 'fcm_token');
+    }
   }
 
   // --- routines -------------------------------------------------------------

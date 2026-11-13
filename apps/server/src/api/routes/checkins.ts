@@ -1,6 +1,6 @@
 /** Check-ins (D-114): per-bot settings, the "For you" feed, and accepting or dismissing suggestions. */
 
-import { applyCheckins } from "@casama/agent";
+import { applyCheckins, checkinPlanError, handleComposioEvent, track } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { contentKeys, type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
@@ -60,6 +60,15 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         "forbidden",
         "Only people who manage this bot can change its check-ins",
       );
+    // Proactive bots (D-247): the plan sets how many bots check in and how often.
+    if (body.enabled) {
+      const why = await checkinPlanError(db, {
+        orgId: b.org_id,
+        botId: id,
+        scanEveryHours: body.scan_every_hours,
+      });
+      if (why) throw new ApiError(402, "plan_limit", why);
+    }
     // Briefs and suggestions go to whoever turned check-ins on, in their timezone.
     await applyCheckins(db, {
       orgId: b.org_id,
@@ -94,13 +103,14 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         bot_id: string;
         title: string;
         body_md: string;
+        push_text: string | null;
         proposed_action: { tool: string; args?: Record<string, unknown> } | null;
         sources: string[];
         urgency: "normal";
         expires_at: string;
         created_at: string;
       }>(sql`
-        select id, bot_id, title, body_md, proposed_action, sources, urgency, expires_at, created_at from public.suggestions
+        select id, bot_id, title, body_md, push_text, proposed_action, sources, urgency, expires_at, created_at from public.suggestions
         where org_id = ${org_id}::uuid and user_id = ${claims.sub}::uuid and status = 'pending' and expires_at > now()
         order by case urgency when 'urgent' then 0 when 'normal' then 1 else 2 end, created_at desc limit 30`);
       const approvals = await tx.execute<{
@@ -147,14 +157,30 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         body_md: string;
         proposed_action: unknown;
         status: string;
+        created_at: string;
       }>(sql`
-        select id, org_id, bot_id, title, body_md, proposed_action, status from public.suggestions where id = ${id}::uuid`),
+        select id, org_id, bot_id, title, body_md, proposed_action, status, created_at from public.suggestions where id = ${id}::uuid`),
     );
     if (!s) throw new ApiError(404, "suggestion_not_found", "Suggestion not found");
     if (s.status !== "pending")
       throw new ApiError(409, "suggestion_closed", `This suggestion was already ${s.status}`);
     return s;
   };
+  // Proactive bots (D-247): how often suggestions are taken up, and how fast.
+  const resolved = (
+    claims: JwtClaims,
+    s: { org_id: string; created_at: string },
+    result: "accepted" | "dismissed" | "dismissed_forever",
+  ) =>
+    track(db, {
+      event: "suggestion_resolved",
+      userId: claims.sub,
+      orgId: s.org_id,
+      properties: {
+        result,
+        age_hours: Math.round((Date.now() - new Date(s.created_at).getTime()) / 360_000) / 10,
+      },
+    });
 
   app.openapi(routes.acceptSuggestion, async (c) => {
     const claims = claimsOf(c);
@@ -182,6 +208,7 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     await db.execute(
       sql`update public.suggestions set status = 'accepted', resolved_at = now() where id = ${s.id}::uuid`,
     );
+    resolved(claims, s, "accepted");
     await deps.workflows.startRun(created.run_id);
     return c.json(created, 202);
   });
@@ -193,10 +220,31 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     await db.execute(
       sql`update public.suggestions set status = 'dismissed', resolved_at = now() where id = ${s.id}::uuid`,
     );
+    resolved(claims, s, dont_suggest_again ? "dismissed_forever" : "dismissed");
     if (dont_suggest_again)
       await db.execute(sql`
         insert into public.memories (org_id, bot_id, kind, content, importance, pinned)
         values (${s.org_id}::uuid, ${s.bot_id}::uuid, 'preference', ${contentKeys.seal(s.org_id, `Don't suggest this again: ${s.title}`.slice(0, 8000))}, 0.9, true)`);
     return c.json({ ok: true }, 200);
+  });
+
+  // App events start scans (D-247): Composio posts new mail and calendar changes here.
+  app.post("/hooks/composio", async (c) => {
+    const secret = deps.env.COMPOSIO_WEBHOOK_SECRET;
+    if (!secret) return c.json({ error: "not_configured" }, 404);
+    const body = await c.req.text();
+    if (body.length > 1_000_000) return c.json({ error: "too_large" }, 413);
+    const out = await handleComposioEvent(
+      db,
+      secret,
+      {
+        id: c.req.header("webhook-id"),
+        timestamp: c.req.header("webhook-timestamp"),
+        signature: c.req.header("webhook-signature"),
+      },
+      body,
+    );
+    if (!out.ok) return c.json({ error: out.reason }, out.reason === "bad_signature" ? 401 : 400);
+    return c.json({ ok: true, scans: out.scans ?? 0 }, 200);
   });
 }

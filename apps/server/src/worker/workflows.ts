@@ -24,7 +24,9 @@ import {
   rewrapAllKeys,
   runAgent,
   safeFetch,
+  sendDueSuggestions,
   sweepEncryption,
+  syncComposioTriggers,
 } from "@casama/agent";
 import { type Database, liftTimeouts } from "@casama/db";
 import { DEFAULT_MODELS } from "@casama/domain";
@@ -214,6 +216,24 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
         name: "deferred-pushes",
       },
     );
+    // Proactive bots (D-247): suggestions that waited for their time ("an hour before the show").
+    await DBOS.runStep(
+      () =>
+        sendDueSuggestions(rt().db, rt().agent.notifications).catch(
+          captureStep("due-suggestions", 0),
+        ),
+      { name: "due-suggestions" },
+    );
+    // App events start scans: subscribe Composio triggers for new connections, every 10 minutes,
+    // once the Composio webhook is set up (COMPOSIO_WEBHOOK_SECRET).
+    if (process.env.COMPOSIO_WEBHOOK_SECRET && new Date(scheduledAt).getUTCMinutes() % 10 === 0)
+      await DBOS.runStep(
+        () =>
+          syncComposioTriggers(rt().db, rt().agent.fetch ?? fetch).catch(
+            captureStep("composio-triggers", 0),
+          ),
+        { name: "composio-triggers" },
+      );
     // New sign-ups become `signed_up` events (the sign-up is a database trigger the API never sees).
     await DBOS.runStep(() => sweepSignups(rt().db).catch(captureStep("analytics-signups", 0)), {
       name: "analytics-signups",

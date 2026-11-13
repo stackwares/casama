@@ -113,6 +113,7 @@ const handOffMessage = (why: string) =>
 import { contentKeys } from "@casama/db";
 import { endRunSpan, recordRunSpan, runTraceId, startRunChildSpan } from "@casama/observability";
 import { deviceDataOfRun } from "./attention.ts";
+import { afterCheckinRun } from "./checkins.ts";
 import {
   DEFAULT_LAZY_THRESHOLD,
   isCoreTool,
@@ -1245,6 +1246,19 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           );
       });
     }
+    // Proactive bots (D-247): the first scan after setup ends in one "You're all set" push.
+    if (info.routine?.kind === "scan")
+      await step("checkin-summary", () =>
+        afterCheckinRun(db, deps.notifications, {
+          runId: info.runId,
+          orgId: info.orgId,
+          botId: info.botId,
+          botName: info.botName,
+          finalText: finalMessage.text,
+        }).catch((err) => {
+          log?.warn("check-in summary failed", { run_id: runId, error: (err as Error).message });
+        }),
+      );
     return { status: "completed" };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

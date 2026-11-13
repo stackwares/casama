@@ -128,6 +128,7 @@ String tabTitleFor(String? fullPath, AppLocalizations l10n, {String? botName}) {
     '/bots/:botId/integrations' => l10n.integrations,
     '/quick-ask' => l10n.quickAsk,
     '/inbox' => l10n.inbox,
+    '/suggestions/:id/accept' => l10n.inbox,
     '/tasks' => l10n.navTasks,
     '/projects' => l10n.projects,
     '/projects/:id' => l10n.tabTitleProject,

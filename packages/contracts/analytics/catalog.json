@@ -920,6 +920,52 @@
       "funnels": []
     },
     {
+      "name": "proactive_message_sent",
+      "by": ["server"],
+      "description": "A bot reached out first (D-247): a suggestion push, a timed one, or the summary after setup.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "values": ["suggestion", "timed", "summary"]
+        },
+        "reason": {
+          "type": "string",
+          "values": ["setup", "connection", "event", "schedule", "other"]
+        },
+        "found": {
+          "type": "number"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "suggestion_resolved",
+      "by": ["server"],
+      "description": "A suggestion was accepted or dismissed (D-247).",
+      "properties": {
+        "result": {
+          "type": "string",
+          "values": ["accepted", "dismissed", "dismissed_forever"]
+        },
+        "age_hours": {
+          "type": "number"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "proactive_muted",
+      "by": ["server"],
+      "description": "Someone tapped Less like this on a proactive message (D-153, D-247).",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "values": ["suggestions", "routine results"]
+        }
+      },
+      "funnels": []
+    },
+    {
       "name": "push_permission_result",
       "by": ["client"],
       "description": "The notification prompt was answered.",
@@ -938,7 +984,7 @@
       "properties": {
         "kind": {
           "type": "string",
-          "values": ["approval", "run", "call", "checkin", "mention", "other"]
+          "values": ["approval", "run", "call", "checkin", "suggestion", "mention", "other"]
         }
       },
       "funnels": []

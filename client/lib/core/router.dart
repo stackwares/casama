@@ -33,6 +33,7 @@ import '../features/computer/computer_screen.dart';
 import '../features/computer/computers_screen.dart';
 import '../features/computer/live_view_screen.dart';
 import '../features/home/home_shell.dart';
+import '../features/inbox/accept_suggestion_screen.dart';
 import '../features/inbox/inbox_screen.dart';
 import '../features/integrations/integration_detail_screen.dart';
 import '../features/integrations/integrations_screen.dart';
@@ -419,6 +420,17 @@ final routerProvider = Provider<GoRouter>((ref) {
                 initialText: s.uri.queryParameters['text'] ?? '',
                 fromShareExtension: s.uri.queryParameters['shared'] == '1',
                 initialBotId: s.uri.queryParameters['bot'],
+              ),
+            ),
+          ),
+          // "Do it" on a suggestion's notification (D-247): casama://app/suggestions/{id}/accept?bot={botId}.
+          GoRoute(
+            path: '/suggestions/:id/accept',
+            pageBuilder: _page(
+              (_, s) => AcceptSuggestionScreen(
+                key: ValueKey(s.uri.toString()),
+                suggestionId: s.pathParameters['id']!,
+                botId: s.uri.queryParameters['bot'],
               ),
             ),
           ),

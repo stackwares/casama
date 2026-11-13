@@ -245,11 +245,28 @@ class PushRegistrar {
 
   void _open(RemoteMessage message) {
     final link = message.data['link'];
-    Analytics.log('push_opened', {'kind': pushKind(link is String ? link : null)});
+    Analytics.log('push_opened', {'kind': message.data['kind'] == 'suggestion' ? 'suggestion' : pushKind(link is String ? link : null)});
     final id = message.data['notification_id'];
     if (id is String && id.isNotEmpty) onOpened?.call(id);
-    if (link is String && link.startsWith('/')) _openLink(link);
+    final target = openTarget(message.data, message.actionIdentifier);
+    if (target != null) _openLink(target);
   }
+
+  /// Where a tapped push goes. "Do it" on a suggestion (the iOS SUGGESTION category's `accept`
+  /// action, D-247) accepts it; "Not now" never opens the app; anything else follows its link.
+  @visibleForTesting
+  static String? openTarget(Map<String, dynamic> data, String? actionIdentifier) {
+    final suggestion = data['suggestion_id'];
+    if (actionIdentifier == suggestionAccept && suggestion is String && suggestion.isNotEmpty) {
+      final bot = data['bot_id'];
+      return '/suggestions/${Uri.encodeComponent(suggestion)}/accept${bot is String && bot.isNotEmpty ? '?bot=${Uri.encodeQueryComponent(bot)}' : ''}';
+    }
+    final link = data['link'];
+    return link is String && link.startsWith('/') ? link : null;
+  }
+
+  /// The "Do it" action on suggestion notifications (iOS category and Android buttons, D-247).
+  static const suggestionAccept = 'accept';
 
   void dispose() {
     needsAsk.dispose();

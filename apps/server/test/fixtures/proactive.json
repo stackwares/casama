@@ -1,0 +1,167 @@
+{
+  "name": "proactive",
+  "turns": [
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[]}"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "suggestions.add",
+        "lastUserIncludes": "first look since I set you up"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "You're all set. Found 1 thing to start on, like booking a ride to the concert tomorrow night."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "first look since I set you up"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "s1",
+            "name": "suggestions__add",
+            "args": {
+              "title": "Book a ride to the concert",
+              "body": "The show starts at 8 tomorrow.",
+              "push_text": "Want me to book a ride to the concert tomorrow at 7?",
+              "urgency": "normal"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "suggestions.add"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Two suggestions."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "Something just changed in a connected app"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "e1",
+            "name": "suggestions__add",
+            "args": {
+              "title": "Weekend plan as one page",
+              "push_text": "Want me to make a shareable Page for your weekend with the show time, ride plan, lodging and Sunday flight?",
+              "action": {
+                "tool": "pages.publish",
+                "args": {
+                  "title": "Weekend"
+                }
+              },
+              "urgency": "normal"
+            }
+          }
+        },
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "e2",
+            "name": "suggestions__add",
+            "args": {
+              "title": "Leave for the airport",
+              "push_text": "Your flight's in 3 hours. Want me to book a ride now?",
+              "notify_at": "2099-01-01T15:00:00Z",
+              "urgency": "normal"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "Check-in scan"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "NOTHING_NEW"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

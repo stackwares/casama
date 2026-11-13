@@ -1,9 +1,13 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import {
+  checkinAllowed,
   checkinCapReached,
   describeEvent,
+  SCAN_INSTRUCTIONS,
   scanContext,
+  scanTask,
   takeHeldForBrief,
+  takeScanRequest,
   wrapUntrusted,
 } from "@casama/agent";
 import type { Database } from "@casama/db";
@@ -37,10 +41,16 @@ export async function createRoutineRun(
   // Check-in scans (D-114) keep no conversation: a quiet scan writes nothing. Their instructions
   // travel as the run's task, with what was already suggested.
   if (r.kind === "scan") {
-    const task = `${r.instructions_md}${await scanContext(tx as Database, r.bot_id)}`;
+    // Proactive bots (D-247): why this scan runs now (setup, a new app, an app event, or its
+    // schedule), and today's wording for scans made with the original instructions.
+    const reason = await takeScanRequest(tx as Database, r.bot_id);
+    const instructions = r.instructions_md.startsWith("Check-in scan.")
+      ? SCAN_INSTRUCTIONS
+      : r.instructions_md;
+    const task = scanTask(instructions, reason, await scanContext(tx as Database, r.bot_id));
     const [run] = await tx.execute<{ id: string }>(sql`
       insert into public.runs (org_id, bot_id, created_by, trigger, routine_id, budget)
-      values (${r.org_id}::uuid, ${r.bot_id}::uuid, ${r.created_by}::uuid, ${trigger}, ${r.id}::uuid, ${JSON.stringify({ task })}::jsonb)
+      values (${r.org_id}::uuid, ${r.bot_id}::uuid, ${r.created_by}::uuid, ${trigger}, ${r.id}::uuid, ${JSON.stringify({ task, ...(reason ? { scan_reason: reason } : {}) })}::jsonb)
       returning id`);
     await tx.execute(
       sql`update public.routines set last_run_id = ${run?.id}::uuid, last_run_at = now() where id = ${r.id}::uuid`,
@@ -118,9 +128,14 @@ export async function claimDueRoutines(
         const made = await tx.transaction(async (tx) => {
           let made: string | null = null;
           // Check-ins over today's cap skip this time (the schedule still moves on).
+          // Bots past the plan's number that check in, and scheduled scans more often than its
+          // floor, skip too (D-247).
           const capped =
             (r.kind === "brief" || r.kind === "scan") &&
-            (await checkinCapReached(tx as Database, r.bot_id));
+            ((await checkinCapReached(tx as Database, r.bot_id)) ||
+              !(await checkinAllowed(tx as Database, r, now, {
+                eventsCoverMail: !!process.env.COMPOSIO_WEBHOOK_SECRET,
+              })));
           // A brief that already ran this morning on wake-up (D-151) skips its scheduled time.
           // Only a wake-up brief counts: a brief scheduled twice a day keeps both runs.
           let briefed = false;

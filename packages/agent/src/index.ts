@@ -7,6 +7,7 @@ export * from "./calendar-triggers.ts";
 export * from "./channels/index.ts";
 export * from "./chatgpt-auth.ts";
 export * from "./checkins.ts";
+export * from "./composio-triggers.ts";
 export * from "./computers.ts";
 export * from "./context.ts";
 export * from "./credentials.ts";

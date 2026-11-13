@@ -29,6 +29,8 @@ class Suggestion {
 
     required  this.bodyMd,
 
+     this.pushText,
+
     required  this.proposedAction,
 
     required  this.sources,
@@ -85,6 +87,18 @@ class Suggestion {
 
 
   final String bodyMd;
+
+
+
+  @JsonKey(
+    
+    name: r'push_text',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? pushText;
 
 
 
@@ -156,6 +170,7 @@ class Suggestion {
       other.botId == botId &&
       other.title == title &&
       other.bodyMd == bodyMd &&
+      other.pushText == pushText &&
       other.proposedAction == proposedAction &&
       other.sources == sources &&
       other.urgency == urgency &&
@@ -168,6 +183,7 @@ class Suggestion {
         botId.hashCode +
         title.hashCode +
         bodyMd.hashCode +
+        (pushText == null ? 0 : pushText.hashCode) +
         (proposedAction == null ? 0 : proposedAction.hashCode) +
         sources.hashCode +
         urgency.hashCode +

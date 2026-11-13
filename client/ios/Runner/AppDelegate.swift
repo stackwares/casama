@@ -2,6 +2,7 @@ import AppIntents
 import Flutter
 import PushKit
 import UIKit
+import UserNotifications
 import flutter_callkit_incoming
 import native_geofence
 
@@ -18,6 +19,18 @@ import native_geofence
     registry.delegate = self
     registry.desiredPushTypes = [.voIP]
     voipRegistry = registry
+    // Suggestion pushes (D-247): "Do it" opens the app and accepts; "Not now" just clears it.
+    // The server sends them with aps.category = SUGGESTION.
+    UNUserNotificationCenter.current().setNotificationCategories([
+      UNNotificationCategory(
+        identifier: "SUGGESTION",
+        actions: [
+          UNNotificationAction(identifier: "accept", title: "Do it", options: [.foreground]),
+          UNNotificationAction(identifier: "later", title: "Not now", options: []),
+        ],
+        intentIdentifiers: [],
+        options: []),
+    ])
     // Device triggers (D-151): a geofence can wake the app in the background, without a UI scene.
     NativeGeofencePlugin.setPluginRegistrantCallback { registry in
       GeneratedPluginRegistrant.register(with: registry)

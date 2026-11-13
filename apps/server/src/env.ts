@@ -284,6 +284,11 @@ export const EnvSchema = z.object({
    */
   COMPOSIO_API_KEY: z.string().optional(),
   COMPOSIO_API_URL: z.url().optional(),
+  /**
+   * Signing secret of the Composio project's webhook subscription to {PUBLIC_API_URL}/hooks/composio
+   * (D-247). Set: new mail and calendar changes start check-in scans. Unset: scans keep their schedule.
+   */
+  COMPOSIO_WEBHOOK_SECRET: z.string().optional(),
   /** Headless Chromium for page PDFs (unset: PDF export is off). */
   PDF_CHROMIUM_PATH: z.string().optional(),
 });

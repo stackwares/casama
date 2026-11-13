@@ -15,6 +15,8 @@ abstract class _$SuggestionCWProxy {
 
   Suggestion bodyMd(String bodyMd);
 
+  Suggestion pushText(String? pushText);
+
   Suggestion proposedAction(SuggestionProposedAction? proposedAction);
 
   Suggestion sources(List<String> sources);
@@ -38,6 +40,7 @@ abstract class _$SuggestionCWProxy {
     String botId,
     String title,
     String bodyMd,
+    String? pushText,
     SuggestionProposedAction? proposedAction,
     List<String> sources,
     SuggestionUrgencyEnum urgency,
@@ -64,6 +67,9 @@ class _$SuggestionCWProxyImpl implements _$SuggestionCWProxy {
 
   @override
   Suggestion bodyMd(String bodyMd) => call(bodyMd: bodyMd);
+
+  @override
+  Suggestion pushText(String? pushText) => call(pushText: pushText);
 
   @override
   Suggestion proposedAction(SuggestionProposedAction? proposedAction) =>
@@ -95,6 +101,7 @@ class _$SuggestionCWProxyImpl implements _$SuggestionCWProxy {
     Object? botId = const $CopyWithPlaceholder(),
     Object? title = const $CopyWithPlaceholder(),
     Object? bodyMd = const $CopyWithPlaceholder(),
+    Object? pushText = const $CopyWithPlaceholder(),
     Object? proposedAction = const $CopyWithPlaceholder(),
     Object? sources = const $CopyWithPlaceholder(),
     Object? urgency = const $CopyWithPlaceholder(),
@@ -118,6 +125,10 @@ class _$SuggestionCWProxyImpl implements _$SuggestionCWProxy {
           ? _value.bodyMd
           // ignore: cast_nullable_to_non_nullable
           : bodyMd as String,
+      pushText: pushText == const $CopyWithPlaceholder()
+          ? _value.pushText
+          // ignore: cast_nullable_to_non_nullable
+          : pushText as String?,
       proposedAction: proposedAction == const $CopyWithPlaceholder()
           ? _value.proposedAction
           // ignore: cast_nullable_to_non_nullable
@@ -176,6 +187,7 @@ Suggestion _$SuggestionFromJson(Map<String, dynamic> json) => $checkedCreate(
       botId: $checkedConvert('bot_id', (v) => v as String),
       title: $checkedConvert('title', (v) => v as String),
       bodyMd: $checkedConvert('body_md', (v) => v as String),
+      pushText: $checkedConvert('push_text', (v) => v as String?),
       proposedAction: $checkedConvert(
         'proposed_action',
         (v) => v == null
@@ -204,6 +216,7 @@ Suggestion _$SuggestionFromJson(Map<String, dynamic> json) => $checkedCreate(
   fieldKeyMap: const {
     'botId': 'bot_id',
     'bodyMd': 'body_md',
+    'pushText': 'push_text',
     'proposedAction': 'proposed_action',
     'expiresAt': 'expires_at',
     'createdAt': 'created_at',
@@ -216,6 +229,7 @@ Map<String, dynamic> _$SuggestionToJson(Suggestion instance) =>
       'bot_id': instance.botId,
       'title': instance.title,
       'body_md': instance.bodyMd,
+      'push_text': ?instance.pushText,
       'proposed_action': instance.proposedAction?.toJson(),
       'sources': instance.sources,
       'urgency': _$SuggestionUrgencyEnumEnumMap[instance.urgency]!,

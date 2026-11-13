@@ -81,6 +81,23 @@
                 <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
+        <!-- Suggestion pushes with Do it / Not now (D-247): drawn from data-only FCM messages. -->
+        <receiver
+            android:name=".SuggestionPushReceiver"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </receiver>
+        <receiver android:name=".SuggestionDismissReceiver" android:exported="false" />
+        <activity
+            android:name=".SuggestionActionActivity"
+            android:exported="false"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <receiver android:name=".BotStatusWidget" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

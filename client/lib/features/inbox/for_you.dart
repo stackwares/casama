@@ -76,6 +76,8 @@ class SuggestionCard extends ConsumerWidget {
               const SizedBox(width: AppSpace.xs),
               Expanded(child: Text(s.title, style: context.textTheme.titleSmall)),
             ]),
+            // The bot's own offer, as its push said it (D-247).
+            if ((s.pushText ?? '').trim().isNotEmpty) Text(s.pushText!.trim(), style: context.textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic)),
             if (s.bodyMd.isNotEmpty) Text(s.bodyMd),
             Text(l10n.suggestedBy(botName), style: context.textTheme.labelSmall?.copyWith(color: context.colorScheme.onSurfaceVariant)),
             Row(

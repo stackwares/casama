@@ -10536,6 +10536,12 @@
           "body_md": {
             "type": "string"
           },
+          "push_text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "proposed_action": {
             "type": [
               "object",

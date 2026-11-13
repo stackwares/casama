@@ -4,6 +4,7 @@
  * which bots may read which kinds. Everything here is the signed-in person's own data.
  */
 
+import { requestScan } from "@casama/agent";
 import { ActivitySummary, HealthSummary, routes } from "@casama/contracts";
 import { contentKeys, type JwtClaims, withUserSession } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
@@ -156,11 +157,29 @@ export function registerDeviceDataRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps
     const keep = b.readings.filter(
       (r) => (s.kinds[r.kind] as { retention_days?: number } | undefined)?.retention_days !== 0,
     );
-    for (const r of keep)
-      await db.execute(sql`
+    let newSoon = false;
+    for (const r of keep) {
+      const [row] = await db.execute<{ inserted: boolean }>(sql`
         insert into public.device_readings (user_id, source_id, kind, period_start, period_end, external_id, summary)
         values (${userId}::uuid, ${s.id}::uuid, ${r.kind}, ${r.period_start}::timestamptz, ${r.period_end}::timestamptz, ${r.external_id}, ${contentKeys.sealJson(sealWith, r.summary)}::jsonb)
-        on conflict (source_id, kind, external_id) do update set period_start = excluded.period_start, period_end = excluded.period_end, summary = excluded.summary, collected_at = now()`);
+        on conflict (source_id, kind, external_id) do update set period_start = excluded.period_start, period_end = excluded.period_end, summary = excluded.summary, collected_at = now()
+        returning (xmax = 0) as inserted`);
+      const start = Date.parse(r.period_start);
+      if (
+        r.kind === "calendar" &&
+        row?.inserted &&
+        start > Date.now() &&
+        start - Date.now() < 7 * 86_400_000
+      )
+        newSoon = true;
+    }
+    // Proactive bots (D-247): a new event in the next week on the phone's calendar starts a scan
+    // (an app event, so at most every 30 minutes and only on plans with event scans).
+    if (newSoon && !b.request_id) {
+      const bots = await db.execute<{ bot_id: string }>(sql`
+        select bot_id from public.bot_checkins where user_id = ${userId}::uuid and enabled`);
+      for (const bot of bots) await requestScan(db, bot.bot_id, "event").catch(() => false);
+    }
     // Health uploads also tell wake-ups and finished workouts (D-151): last night's sleep ending
     // today, and workouts that ended in the last 6 hours (so a backfill doesn't fire old ones).
     const derived: DeviceEvent[] = [];

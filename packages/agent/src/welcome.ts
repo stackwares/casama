@@ -15,6 +15,7 @@ import { contentKeys } from "@casama/db";
 import { defaultModelFor } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { track } from "./analytics.ts";
+import { enableDefaultCheckins, requestScan } from "./checkins.ts";
 import { PLATFORM_OPENROUTER_CREDENTIAL_ID } from "./credentials.ts";
 import { composioDirectory, loadIntegration } from "./integrations.ts";
 import { surfaceMessages } from "./tools/ui.ts";
@@ -1144,6 +1145,8 @@ export async function afterWelcomeRun(
     s.step = "offer_setup";
     await postScripted(db, c, setupOfferMessage());
     await saveState(db, run.conversationId, s);
+    // Its first look around (D-247): a scan in a minute that ends in "You're all set. Found…".
+    await requestScan(db, run.botId, "setup").catch(() => false);
   } else if (s.step === "interview") {
     const [b] = await db.execute<{ setup_status: string }>(
       sql`select setup_status from public.bots where id = ${run.botId}::uuid`,
@@ -1156,6 +1159,7 @@ export async function afterWelcomeRun(
     s.learned = mems.map((m) => m.id);
     await postScripted(db, c, learnedMessage(mems, run.botId));
     await saveState(db, run.conversationId, s);
+    await requestScan(db, run.botId, "setup").catch(() => false);
   }
 }
 
@@ -1236,7 +1240,7 @@ export async function startWelcome(
     google?: GoogleRoute | null;
   },
 ): Promise<{ orgId: string; botId: string; conversationId: string }> {
-  return db.transaction(async (tx) => {
+  const out = await db.transaction(async (tx) => {
     const [bot] = await tx.execute<{ id: string }>(sql`
       insert into public.bots (org_id, created_by, name, persona_md, avatar_url, visibility)
       values (${a.orgId}::uuid, ${a.userId}::uuid, ${a.botName}, ${`You are ${a.botName}, this person's personal assistant. Be warm, brief and practical.`},
@@ -1251,4 +1255,9 @@ export async function startWelcome(
       values (${a.orgId}::uuid, ${conv?.id}::uuid, 'assistant', ${contentKeys.sealJson(a.orgId, openingMessage(a.botName, a.firstName, a.nameKnown, a.google ?? undefined))}::jsonb, ${bot?.id}::uuid)`);
     return { orgId: a.orgId, botId: bot?.id as string, conversationId: conv?.id as string };
   });
+  // Proactive from the first minute (D-247): the welcome bot checks in by default, within the plan.
+  await enableDefaultCheckins(db, { orgId: out.orgId, botId: out.botId, userId: a.userId }).catch(
+    () => false,
+  );
+  return out;
 }

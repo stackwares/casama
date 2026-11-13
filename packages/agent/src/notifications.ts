@@ -10,6 +10,13 @@ export interface PushMessage {
   /** Deep link path in the app, for example /approvals/{id} or /bots/{id}/chat. */
   link?: string;
   data?: Record<string, string>;
+  /**
+   * Buttons on the notification (D-247): the iOS category the app registered ("SUGGESTION": Do it,
+   * Not now). Android apps that draw such pushes themselves get them as data messages instead.
+   */
+  category?: string;
+  /** Send as a data-only, high-priority message the app draws itself (Android, D-247). */
+  dataOnly?: boolean;
 }
 
 /** Sends push notifications to device tokens. */
@@ -87,12 +94,31 @@ export class FcmPushSender implements PushSender {
           method: "POST",
           headers: { authorization: `Bearer ${access}`, "content-type": "application/json" },
           body: JSON.stringify({
-            message: {
-              token,
-              notification: { title: message.title, body: message.body },
-              data: { ...message.data, ...(message.link ? { link: message.link } : {}) },
-              apns: { payload: { aps: { sound: "default" } } },
-            },
+            message: message.dataOnly
+              ? {
+                  token,
+                  data: {
+                    ...message.data,
+                    title: message.title,
+                    body: message.body,
+                    ...(message.link ? { link: message.link } : {}),
+                    ...(message.category ? { category: message.category } : {}),
+                  },
+                  android: { priority: "HIGH" },
+                }
+              : {
+                  token,
+                  notification: { title: message.title, body: message.body },
+                  data: { ...message.data, ...(message.link ? { link: message.link } : {}) },
+                  apns: {
+                    payload: {
+                      aps: {
+                        sound: "default",
+                        ...(message.category ? { category: message.category } : {}),
+                      },
+                    },
+                  },
+                },
           }),
         },
       );
@@ -182,21 +208,52 @@ export class NotificationService {
     return quietUntil(now, p.timezone ?? "UTC", hours);
   }
 
-  private async pushTo(userId: string, notificationId: string, kind: string, message: PushMessage) {
-    const devices = await this.db.execute<{ fcm_token: string }>(
-      sql`select fcm_token from public.devices where user_id = ${userId}::uuid`,
+  private async pushTo(
+    userId: string,
+    notificationId: string,
+    kind: string,
+    message: PushMessage & { suggestion_id?: unknown; bot_id?: unknown },
+  ) {
+    const devices = await this.db.execute<{
+      fcm_token: string;
+      platform: string;
+      data_pushes: boolean;
+    }>(
+      sql`select fcm_token, platform, data_pushes from public.devices where user_id = ${userId}::uuid`,
     );
     if (!devices.length) return;
-    const { invalidTokens } = await this.push.send(
-      devices.map((d) => d.fcm_token),
-      {
-        title: message.title,
-        body: message.body,
-        link: message.link,
-        data: { notification_id: notificationId, kind },
+    // A suggestion carries its id and the buttons to act on it from the notification (D-247).
+    const suggestionId =
+      kind === "suggestion" && typeof message.suggestion_id === "string"
+        ? message.suggestion_id
+        : null;
+    const base: PushMessage = {
+      title: message.title,
+      body: message.body,
+      link: message.link,
+      data: {
+        notification_id: notificationId,
+        kind,
+        ...(suggestionId ? { suggestion_id: suggestionId } : {}),
+        ...(suggestionId && typeof message.bot_id === "string" ? { bot_id: message.bot_id } : {}),
       },
-    );
-    for (const t of invalidTokens)
+      ...(suggestionId ? { category: "SUGGESTION" } : {}),
+    };
+    const drawsItself = (d: { platform: string; data_pushes: boolean }) =>
+      suggestionId !== null && d.platform === "android" && d.data_pushes;
+    const invalid: string[] = [];
+    for (const [list, msg] of [
+      [devices.filter((d) => !drawsItself(d)), base],
+      [devices.filter(drawsItself), { ...base, dataOnly: true }],
+    ] as const) {
+      if (!list.length) continue;
+      const { invalidTokens } = await this.push.send(
+        list.map((d) => d.fcm_token),
+        msg,
+      );
+      invalid.push(...invalidTokens);
+    }
+    for (const t of invalid)
       await this.db.execute(sql`delete from public.devices where fcm_token = ${t}`);
   }
 

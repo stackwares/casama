@@ -117,6 +117,11 @@ Everything below is built and tested against mocks, fixtures or local stand-ins.
 | Apple Team ID and the Android release signing certificate's SHA-256 | The app-link files the server publishes          | `APPLE_APP_IDS=V8V5US964Z.ai.casama.app` (team known; can be set now), `ANDROID_CERT_SHA256=<fingerprint>` (Play App Signing's key, from Play Console → App integrity)                                                                                                                                                                                     | Unset: links open the join page, whose **Open in Casama** button works                                                      |
 | Store listing URLs                                                  | Store buttons on the invite page                 | `APP_STORE_URL`, `PLAY_STORE_URL`                                                                                                                                                                                                                                                                                           | Optional                                                                                                                    |
 
+## Proactive bots (D-247)
+
+- **Composio webhook for app events:** create the Casama Composio project's webhook subscription (`POST https://backend.composio.dev/api/v3/webhook_subscriptions` with `{"webhook_url": "https://api.casama.ai/hooks/composio", "enabled_events": ["composio.trigger.message"], "version": "V3"}`, or in Composio's dashboard), then put the returned secret in prod's env as `COMPOSIO_WEBHOOK_SECRET` (and in Vaultwarden). Until then, scans keep their schedule and nothing else changes.
+- **Phone checks:** on an Android phone, a suggestion push shows Do it and Not now; Do it opens the chat where the bot does it. Same on iPhone (long-press the notification). Needs an app build with this change.
+
 ## Decisions only Oliver can make
 
 | Decision                      | Default used                                                              |

@@ -1,5 +1,6 @@
 /** Attention rules (D-153): "Less like this" on a proactive message becomes a memory for its bot. */
 
+import { track } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { contentKeys } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
@@ -32,6 +33,12 @@ export function registerAttentionRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
     await db.execute(sql`
       insert into public.memories (org_id, bot_id, kind, content, importance, pinned)
       values (${n.org_id}::uuid, ${botId}::uuid, 'preference', ${contentKeys.seal(n.org_id, text)}, 0.7, false)`);
+    track(db, {
+      event: "proactive_muted",
+      userId: claims.sub,
+      orgId: n.org_id,
+      properties: { kind },
+    });
     return c.json({ ok: true }, 200);
   });
 }
