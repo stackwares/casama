@@ -20,6 +20,8 @@ let runId: string;
 const reg = new ToolRegistry();
 const seenAuth: string[] = [];
 const events: Array<{ type: string; payload: Record<string, unknown> }> = [];
+/** Accounts the fake Composio (https://composio.test) reports as signed in. */
+let composioAccounts: Array<{ toolkit: { slug: string }; status: string }> = [];
 
 const computer = { servers: {} as Record<string, McpServerSpec>, commands: [] as string[] };
 const handle = {
@@ -115,11 +117,12 @@ beforeAll(async () => {
     values (${orgId}, ${botId}, 'chat', 'running', ${owner.id}) returning id`;
   runId = run!.id;
   // "https://mcp.test" is the local fake server.
-  const fakeFetch = ((u: string | URL | Request, init?: RequestInit) =>
-    fetch(
-      String(u instanceof Request ? u.url : u).replace("https://mcp.test", servicesUrl),
-      init,
-    )) as typeof fetch;
+  const fakeFetch = (async (u: string | URL | Request, init?: RequestInit) => {
+    const url = String(u instanceof Request ? u.url : u);
+    if (url.startsWith("https://composio.test/api/v3/connected_accounts?"))
+      return Response.json({ items: composioAccounts });
+    return fetch(url.replace("https://mcp.test", servicesUrl), init);
+  }) as typeof fetch;
   registerSettingsTools(reg, { db: h.handle.db, fetch: fakeFetch });
 }, 60_000);
 afterAll(async () => {
@@ -224,6 +227,57 @@ describe("bot settings tools", () => {
     expect(() =>
       def("plugins.suggest").schema.parse({ url: "https://evil.test/x", name: "x", why: "x" }),
     ).toThrow();
+  });
+
+  it("offers connect buttons for apps, skipping ones already connected (D-259)", async () => {
+    events.length = 0;
+    const r = await call("connections.offer", {
+      apps: ["google_calendar", "gmail"],
+      why: "So I can see your schedule and inbox",
+    });
+    expect(r.content).toMatch(/connect Google Calendar and Gmail is in the chat/);
+    const ui = JSON.stringify(events.map((e) => e.payload.messages));
+    expect(ui).toContain('"name":"app:connect","context":{"app":"google_calendar"}');
+    expect(ui).toContain('"name":"app:connect","context":{"app":"gmail"}');
+    expect(ui).toContain("Connect Gmail");
+    await expect(call("connections.offer", { apps: ["google"], why: "x" })).rejects.toThrow(
+      /No app called google/,
+    );
+    await h.tdb.admin`
+      insert into public.integrations (org_id, kind, name, config) values (${orgId}, 'mcp', 'gcal', '{"app":"google_calendar","url":"https://mcp.test/remote"}')`;
+    events.length = 0;
+    const again = await call("connections.offer", { apps: ["google_calendar"], why: "x" });
+    expect(again.content).toMatch(/No card shown. Google Calendar is already connected/);
+    expect(events).toHaveLength(0);
+    await h.tdb.admin`delete from public.integrations where org_id = ${orgId} and name = 'gcal'`;
+  });
+
+  it("sees Gmail connected through managed Composio and shows no card for it", async () => {
+    const [secret] = await h.tdb.admin<{ id: string }[]>`
+      select vault.create_secret('cmp-key', null, 'composio managed') as id`;
+    await h.tdb.admin`
+      insert into public.integrations (org_id, kind, name, config, vault_secret_id, status)
+      values (${orgId}, 'composio', 'apps', '{"managed": true, "toolkits": ["gmail", "googlecalendar"], "base_url": "https://composio.test"}'::jsonb, ${secret!.id}, 'ok')`;
+    // Gmail signed in; Calendar's sign-in page opened but never finished.
+    composioAccounts = [
+      { toolkit: { slug: "gmail" }, status: "ACTIVE" },
+      { toolkit: { slug: "googlecalendar" }, status: "INITIATED" },
+    ];
+    events.length = 0;
+    const r = await call("connections.offer", { apps: ["gmail"], why: "To read your inbox" });
+    expect(r.content).toMatch(/No card shown. Gmail is already connected/);
+    expect(events).toHaveLength(0);
+    const both = await call("connections.offer", {
+      apps: ["gmail", "google_calendar"],
+      why: "x",
+    });
+    expect(both.content).toMatch(
+      /connect Google Calendar is in the chat.*Gmail is already connected/,
+    );
+    const ui = JSON.stringify(events.map((e) => e.payload.messages));
+    expect(ui).toContain("Connect Google Calendar");
+    expect(ui).not.toContain("Connect Gmail");
+    await h.tdb.admin`delete from public.integrations where org_id = ${orgId} and name = 'apps'`;
   });
 
   it("adds and removes its own action rules, never waving payments through", async () => {

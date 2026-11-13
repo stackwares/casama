@@ -18,6 +18,8 @@ const CORE_PREFIXES = [
   "ui.",
   "setup.",
   "secrets.request",
+  // Always there, so "connect my Google" gets a button, not a made-up answer (D-259).
+  "connections.offer",
   TOOLS_LOAD,
 ];
 const INTEGRATION_KINDS = new Set(["mcp", "openapi", "composio", "pipedream", "local_mcp", "app"]);

@@ -7,11 +7,11 @@
  */
 import { randomUUID } from "node:crypto";
 import { type Database, pgErrorCode } from "@casama/db";
-import { describeActionRule, isValidQuietHours } from "@casama/domain";
+import { APP_CATALOG, appByIdOrNull, describeActionRule, isValidQuietHours } from "@casama/domain";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "../acting.ts";
-import { ComputerMcpAdapter, refreshIntegration } from "../integrations.ts";
+import { ComputerMcpAdapter, managedComposioActive, refreshIntegration } from "../integrations.ts";
 import { botComputerId, computerMcpFetch, syncPluginComputer } from "../plugins.ts";
 import { type ToolContext, ToolError, type ToolRegistry } from "./registry.ts";
 import { surfaceMessages } from "./ui.ts";
@@ -195,7 +195,8 @@ export function registerSettingsTools(
               (r) =>
                 `- ${r.name}${r.label ? ` (${r.label})` : ""}: ${r.kind}, ${r.status}, ${r.tools} tools${r.mine ? ", yours" : ""}`,
             )
-            .join("\n") || "No connections yet.",
+            .join("\n") ||
+          "No connections yet. To get one, show the person a connect button with connections.offer; they sign in themselves.",
         preview: `${rows.length} connections`,
       };
     },
@@ -390,6 +391,103 @@ export function registerSettingsTools(
         content:
           "The card is in the chat. The person installs it there if they want; its tools arrive in a later message.",
         preview: `suggested ${args.name}`,
+      };
+    },
+  });
+
+  // A connect button in any chat (D-259). Without it a bot asked to "connect Google" had no way to
+  // do it and made up a request-from-your-admin step that doesn't exist.
+  registry.register({
+    name: "connections.offer",
+    description: `Show the person a card with a button per app that opens its sign-in, when they want to connect an app or you need one you don't have (if you already have the app's tools, use them instead). They sign in themselves; you can't. Never say an app needs an admin to enable it or must be requested: offer it here. "Google" usually means google_calendar and gmail. Apps: ${APP_CATALOG.map((a) => `${a.id} (${a.name})`).join(", ")}. You don't hear back when they connect; once they say so, check connections.list and connections.attach it if it isn't yours yet.`,
+    risk: "low",
+    readOnly: true,
+    schema: z.object({
+      apps: z
+        .array(z.string().min(1).max(64))
+        .min(1)
+        .max(4)
+        .describe('App ids from the list, e.g. ["google_calendar", "gmail"]'),
+      why: z
+        .string()
+        .min(1)
+        .max(300)
+        .describe("One sentence for the person: what you'll do with it"),
+    }),
+    async execute(args, ctx) {
+      const apps = [...new Set(args.apps)].map((id) => {
+        const app = appByIdOrNull(id);
+        if (!app)
+          throw new ToolError(
+            "unknown_app",
+            `No app called ${id}. Use ids from: ${APP_CATALOG.map((a) => a.id).join(", ")}.`,
+          );
+        return app;
+      });
+      const ids = apps.map((a) => a.id);
+      const have = await db.execute<{ app: string }>(sql`
+        select distinct case when config ->> 'app' = 'gmail_inbox' then 'gmail' else config ->> 'app' end as app
+        from public.integrations
+        where org_id = ${ctx.orgId}::uuid and status <> 'error'
+          and config ->> 'app' = any(${`{${[...ids, ...(ids.includes("gmail") ? ["gmail_inbox"] : [])].join(",")}}`}::text[])`);
+      const connected = new Set(have.map((r) => r.app));
+      // Google and the rest are often connected through the managed Composio route, which isn't
+      // a per-app row; ask Composio so a connected Gmail doesn't get a Connect button.
+      const viaComposio = apps.filter((a) => !connected.has(a.id) && a.composio);
+      const active = await managedComposioActive(
+        db,
+        ctx.orgId,
+        viaComposio.map((a) => a.composio as string),
+        deps.fetch,
+      );
+      for (const a of viaComposio) if (active.has(a.composio as string)) connected.add(a.id);
+      const fresh = [
+        ...new Map(apps.filter((a) => !connected.has(a.id)).map((a) => [a.id, a])).values(),
+      ];
+      const already = apps.filter((a) => connected.has(a.id)).map((a) => a.name);
+      const alreadyNote = already.length
+        ? ` ${already.join(" and ")} ${already.length > 1 ? "are" : "is"} already connected in this workspace, so don't ask again: use its tools (tools.load them if they aren't loaded), or connections.list and connections.attach if you don't have them.`
+        : "";
+      if (!fresh.length)
+        return { content: `No card shown.${alreadyNote}`, preview: "already connected" };
+      const surfaceId = `ui_${randomUUID().replaceAll("-", "").slice(0, 16)}`;
+      const buttons = fresh.flatMap((a, i) => [
+        {
+          id: `c_${a.id}`,
+          component: "Button",
+          child: `c_${a.id}_t`,
+          variant: i === 0 ? "primary" : "default",
+          action: { event: { name: "app:connect", context: { app: a.id } } },
+        },
+        { id: `c_${a.id}_t`, component: "Text", text: `Connect ${a.name}` },
+      ]);
+      const components = [
+        { id: "root", component: "Card", child: "col" },
+        { id: "col", component: "Column", children: ["body", "apps", "more"] },
+        {
+          id: "body",
+          component: "Text",
+          text: `${args.why}\n\nYou choose what I can do, and I ask before anything risky.`,
+        },
+        { id: "apps", component: "Row", children: fresh.map((a) => `c_${a.id}`) },
+        ...buttons,
+        {
+          id: "more",
+          component: "Button",
+          child: "more_t",
+          variant: "borderless",
+          action: { event: { name: "app:route", context: { path: "/settings/integrations" } } },
+        },
+        { id: "more_t", component: "Text", text: "More apps" },
+      ];
+      await ctx.emit("ui.shown", {
+        surface_id: surfaceId,
+        messages: surfaceMessages(surfaceId, components),
+      });
+      const names = fresh.map((a) => a.name).join(" and ");
+      return {
+        content: `The card to connect ${names} is in the chat; end your turn and let them tap it.${alreadyNote}`,
+        preview: `offered ${names}`,
       };
     },
   });

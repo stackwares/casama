@@ -71,7 +71,7 @@ export function registerSetupTools(registry: ToolRegistry, deps: { db: Database 
         args.routines.length ? `${args.routines.length} routines scheduled (${tz})` : null,
       ].filter(Boolean);
       const connect = args.connections.length
-        ? ` Ask the person to connect ${args.connections.join(", ")} in Settings → Integrations; you can't add accounts yourself.`
+        ? ` Now offer ${args.connections.join(", ")} with connections.offer so the person can sign in with one tap; you can't sign in for them.`
         : "";
       return {
         content: `${parts.join(", ")}. They take effect from the next message.${connect}`,

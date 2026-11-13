@@ -3085,6 +3085,15 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
 - **What's lost:** Muse Ember took images, video, audio and files. DeepSeek V4.1 Flash 1017 takes text and images only.
 - **Not changed:** bots that already have a model keep it (never applied over a person's choice). `DEFAULT_MODEL_OPENROUTER` still overrides the default per server. On Cloud, an assignment saved in the admin console (`instance_settings.cloud_models`) overrides the built-in default and has to be changed there.
 
+## D-259 Connect buttons in any chat
+
+- **Problem:** asked "can you get me connected to Google?", a bot said no Google integration was available and that a workspace admin had to enable it. No such step exists; anyone can connect Google. The only `app:connect` buttons were in the welcome chat (D-204). Outside it, `connections.list` said "No connections yet" and `setup.apply` said "you can't add accounts yourself", so the model made up a reason.
+- **Decision:** a `connections.offer` tool (`packages/agent/src/tools/settings.ts`). It takes up to four built-in catalog app ids and a one-line reason, and shows a card with one "Connect <app>" button per app (the `app:connect` action, so the D-256 logo shows), plus a borderless "More apps" button that opens Settings → Integrations. Ids not in the catalog are refused with the list of valid ones. Apps the workspace already has are skipped, and the bot is told to use `connections.attach` instead. The description says "Google" usually means Calendar and Gmail, and tells the bot never to claim an app has to be requested or enabled by an admin.
+- **Always loaded:** `connections.offer` is a core tool (`lazy-tools.ts`), so bots with many tools don't have to `tools.load` it first.
+- **Pointers:** an empty `connections.list` now points to `connections.offer`, and `setup.apply` tells the bot to offer the connections it proposed instead of sending the person to Settings.
+- **Composio-connected apps count:** an app connected through the managed Composio route has no row of its own, so the tool asks Composio which accounts are active (`managedComposioActive` in `integrations.ts`) and skips those too. A sign-in that was opened but never finished still gets a button. Before this, a person who had connected Gmail asked "can you read my inbox" and got a Connect Gmail card before the bot read it.
+- **Not covered:** gallery apps (D-239) aren't in the tool's list yet.
+
 ## D-260 One provider per voice and media job
 
 - **Decision** (Oliver: "remove the gpt realtime fallback, let's use gemini live only … remove the other fallbacks"): each job has one service, and the fallbacks are deleted from the code, not just hidden:

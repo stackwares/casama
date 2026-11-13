@@ -913,6 +913,37 @@ export function composioDirectory(rec: IntegrationRecord, fetchImpl: typeof fetc
   };
 }
 
+/**
+ * Which of these Composio toolkit slugs the workspace has signed in to through its managed
+ * Composio connection. A toolkit lands in the connection's config as soon as its sign-in page
+ * opens, so Composio is asked which accounts are active. Empty when there is no managed
+ * connection or Composio can't be reached.
+ */
+export async function managedComposioActive(
+  db: Database,
+  orgId: string,
+  slugs: string[],
+  fetchImpl: typeof fetch,
+): Promise<Set<string>> {
+  const active = new Set<string>();
+  if (!slugs.length) return active;
+  const [managed] = await db.execute<{ id: string; toolkits: string[] | null }>(sql`
+    select id, config -> 'toolkits' as toolkits from public.integrations
+    where org_id = ${orgId}::uuid and kind = 'composio' and config ->> 'managed' = 'true'
+      and status <> 'error' limit 1`);
+  const wanted = slugs.filter((s) => (managed?.toolkits ?? []).includes(s));
+  if (!managed || !wanted.length) return active;
+  try {
+    const rec = await loadIntegration(db, managed.id, fetchImpl);
+    const accounts = rec ? await composioDirectory(rec, fetchImpl).accounts() : [];
+    for (const s of wanted)
+      if (accounts.some((a) => a.app === s && a.status === "connected")) active.add(s);
+  } catch {
+    // Composio unreachable: show the card; the connect sheet handles an existing account.
+  }
+  return active;
+}
+
 /** Pipedream Connect: the app directory, Connect Link sign-in pages, and connected accounts. */
 export function pipedreamDirectory(rec: IntegrationRecord, fetchImpl: typeof fetch) {
   const adapter = new PipedreamAdapter(rec, { fetch: fetchImpl, secrets: [] });
