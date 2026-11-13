@@ -12,8 +12,10 @@ import { createAdapter, loadIntegration } from "./integrations.ts";
 export interface CalendarTrigger {
   type: "calendar_event";
   integration_id: string;
-  /** Minutes relative to the event's start: -15 is 15 minutes before. */
+  /** Minutes relative to the event's start (or end, with anchor "end"): -15 is 15 minutes before. */
   offset_minutes: number;
+  /** What the offset counts from: the start (default) or the end, for "after the meeting" (D-287). */
+  anchor?: "start" | "end";
   calendar?: string;
   outside_guests?: boolean;
   title_match?: string;
@@ -244,7 +246,8 @@ export async function checkCalendarTriggers(
         and event_id not in (select jsonb_array_elements_text(${JSON.stringify(keep)}::jsonb))`);
     for (const e of events) {
       if (!eventMatches(e, t, own?.domain ?? null)) continue;
-      const fireAt = new Date(Date.parse(e.start) + offset * 60_000);
+      const from = t.anchor === "end" && e.end ? e.end : e.start;
+      const fireAt = new Date(Date.parse(from) + offset * 60_000);
       if (Number.isNaN(fireAt.getTime()) || fireAt.getTime() < now.getTime() - 60_000) continue;
       const rows = await db.execute(sql`
         insert into public.calendar_fires (routine_id, event_id, org_id, fire_at, event)

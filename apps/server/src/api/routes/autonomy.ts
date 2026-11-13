@@ -154,6 +154,7 @@ const routineOut = (r: RoutineRow) => ({
       type?: string;
       integration_id?: string;
       offset_minutes?: number;
+      anchor?: "start" | "end";
       calendar?: string;
       outside_guests?: boolean;
       title_match?: string;
@@ -163,6 +164,7 @@ const routineOut = (r: RoutineRow) => ({
     return {
       integration_id: t.integration_id,
       offset_minutes: Number(t.offset_minutes ?? 0),
+      ...(t.anchor === "end" ? { anchor: "end" as const } : {}),
       ...(t.calendar ? { calendar: t.calendar } : {}),
       ...(t.outside_guests !== undefined ? { outside_guests: t.outside_guests } : {}),
       ...(t.title_match ? { title_match: t.title_match } : {}),

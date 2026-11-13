@@ -24,6 +24,8 @@ class CalendarTriggerConfig {
 
     required  this.offsetMinutes,
 
+     this.anchor,
+
      this.calendar,
 
      this.outsideGuests,
@@ -46,7 +48,7 @@ class CalendarTriggerConfig {
 
 
 
-      /// Relative to the event's start; -15 is 15 minutes before
+      /// Relative to the event's start (or end, with anchor end); -15 is 15 minutes before
           // minimum: -1440
           // maximum: 1440
   @JsonKey(
@@ -58,6 +60,19 @@ class CalendarTriggerConfig {
 
 
   final int offsetMinutes;
+
+
+
+      /// What the offset counts from; end is for after a meeting (D-287)
+  @JsonKey(
+    
+    name: r'anchor',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final CalendarTriggerConfigAnchorEnum? anchor;
 
 
 
@@ -115,6 +130,7 @@ class CalendarTriggerConfig {
     bool operator ==(Object other) => identical(this, other) || other is CalendarTriggerConfig &&
       other.integrationId == integrationId &&
       other.offsetMinutes == offsetMinutes &&
+      other.anchor == anchor &&
       other.calendar == calendar &&
       other.outsideGuests == outsideGuests &&
       other.titleMatch == titleMatch &&
@@ -124,6 +140,7 @@ class CalendarTriggerConfig {
     int get hashCode =>
         integrationId.hashCode +
         offsetMinutes.hashCode +
+        anchor.hashCode +
         calendar.hashCode +
         outsideGuests.hashCode +
         titleMatch.hashCode +
@@ -139,4 +156,22 @@ class CalendarTriggerConfig {
   }
 
 }
+
+/// What the offset counts from; end is for after a meeting (D-287)
+enum CalendarTriggerConfigAnchorEnum {
+    /// What the offset counts from; end is for after a meeting (D-287)
+@JsonValue(r'start')
+start(r'start'),
+    /// What the offset counts from; end is for after a meeting (D-287)
+@JsonValue(r'end')
+end(r'end');
+
+const CalendarTriggerConfigAnchorEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
 

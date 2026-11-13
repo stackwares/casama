@@ -11,6 +11,8 @@ abstract class _$CalendarTriggerConfigCWProxy {
 
   CalendarTriggerConfig offsetMinutes(int offsetMinutes);
 
+  CalendarTriggerConfig anchor(CalendarTriggerConfigAnchorEnum? anchor);
+
   CalendarTriggerConfig calendar(String? calendar);
 
   CalendarTriggerConfig outsideGuests(bool? outsideGuests);
@@ -30,6 +32,7 @@ abstract class _$CalendarTriggerConfigCWProxy {
   CalendarTriggerConfig call({
     String integrationId,
     int offsetMinutes,
+    CalendarTriggerConfigAnchorEnum? anchor,
     String? calendar,
     bool? outsideGuests,
     String? titleMatch,
@@ -52,6 +55,10 @@ class _$CalendarTriggerConfigCWProxyImpl
   @override
   CalendarTriggerConfig offsetMinutes(int offsetMinutes) =>
       call(offsetMinutes: offsetMinutes);
+
+  @override
+  CalendarTriggerConfig anchor(CalendarTriggerConfigAnchorEnum? anchor) =>
+      call(anchor: anchor);
 
   @override
   CalendarTriggerConfig calendar(String? calendar) => call(calendar: calendar);
@@ -80,6 +87,7 @@ class _$CalendarTriggerConfigCWProxyImpl
   CalendarTriggerConfig call({
     Object? integrationId = const $CopyWithPlaceholder(),
     Object? offsetMinutes = const $CopyWithPlaceholder(),
+    Object? anchor = const $CopyWithPlaceholder(),
     Object? calendar = const $CopyWithPlaceholder(),
     Object? outsideGuests = const $CopyWithPlaceholder(),
     Object? titleMatch = const $CopyWithPlaceholder(),
@@ -96,6 +104,10 @@ class _$CalendarTriggerConfigCWProxyImpl
           ? _value.offsetMinutes
           // ignore: cast_nullable_to_non_nullable
           : offsetMinutes as int,
+      anchor: anchor == const $CopyWithPlaceholder()
+          ? _value.anchor
+          // ignore: cast_nullable_to_non_nullable
+          : anchor as CalendarTriggerConfigAnchorEnum?,
       calendar: calendar == const $CopyWithPlaceholder()
           ? _value.calendar
           // ignore: cast_nullable_to_non_nullable
@@ -141,6 +153,10 @@ CalendarTriggerConfig _$CalendarTriggerConfigFromJson(
         'offset_minutes',
         (v) => (v as num).toInt(),
       ),
+      anchor: $checkedConvert(
+        'anchor',
+        (v) => $enumDecodeNullable(_$CalendarTriggerConfigAnchorEnumEnumMap, v),
+      ),
       calendar: $checkedConvert('calendar', (v) => v as String?),
       outsideGuests: $checkedConvert('outside_guests', (v) => v as bool?),
       titleMatch: $checkedConvert('title_match', (v) => v as String?),
@@ -162,8 +178,14 @@ Map<String, dynamic> _$CalendarTriggerConfigToJson(
 ) => <String, dynamic>{
   'integration_id': instance.integrationId,
   'offset_minutes': instance.offsetMinutes,
+  'anchor': ?_$CalendarTriggerConfigAnchorEnumEnumMap[instance.anchor],
   'calendar': ?instance.calendar,
   'outside_guests': ?instance.outsideGuests,
   'title_match': ?instance.titleMatch,
   'has_video_link': ?instance.hasVideoLink,
+};
+
+const _$CalendarTriggerConfigAnchorEnumEnumMap = {
+  CalendarTriggerConfigAnchorEnum.start: 'start',
+  CalendarTriggerConfigAnchorEnum.end: 'end',
 };

@@ -6249,7 +6249,15 @@
             "type": "integer",
             "minimum": -1440,
             "maximum": 1440,
-            "description": "Relative to the event's start; -15 is 15 minutes before"
+            "description": "Relative to the event's start (or end, with anchor end); -15 is 15 minutes before"
+          },
+          "anchor": {
+            "type": "string",
+            "enum": [
+              "start",
+              "end"
+            ],
+            "description": "What the offset counts from; end is for after a meeting (D-287)"
           },
           "calendar": {
             "type": "string",

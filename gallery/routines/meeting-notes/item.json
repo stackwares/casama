@@ -1,0 +1,11 @@
+{
+  "name": "Meeting notes",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "license": "Apache-2.0",
+  "tags": ["meetings", "calendar", "work"],
+  "featured": true,
+  "version": 1
+}

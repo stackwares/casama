@@ -52,6 +52,7 @@ beforeAll(async () => {
                     id: "int",
                     summary: "Standup",
                     start: { dateTime: start.toISOString() },
+                    end: { dateTime: new Date(start.getTime() + 30 * 60_000).toISOString() },
                     attendees: [
                       { email: "ana@example.com", self: true },
                       { email: "ben@example.com" },
@@ -193,5 +194,51 @@ describe("calendar triggers", () => {
       .admin`insert into public.calendar_fires (routine_id, event_id, org_id, fire_at, event)
       values (${routine.id}, 'old', ${orgId}, now() - interval '2 hours', '{"id":"old","title":"Old"}'::jsonb)`;
     expect(await fireDueCalendarRuns(h.handle.db)).toEqual([]);
+  });
+
+  it("an after-meeting routine fires a set time after the meeting ends (D-287)", async () => {
+    const ben = await h.user("ana+after@example.com");
+    const orgId = (
+      await j(
+        await h.request("/v1/orgs", { method: "POST", token: ben.token, json: { name: "A" } }),
+      )
+    ).id;
+    const botId = (
+      await j(
+        await h.request("/v1/bots", {
+          method: "POST",
+          token: ben.token,
+          json: { org_id: orgId, name: "Notes" },
+        }),
+      )
+    ).id;
+    const [i] = await h.tdb.admin<{ id: string }[]>`
+      insert into public.integrations (org_id, kind, name, config, status, tools_cache, tools_cached_at)
+      values (${orgId}, 'mcp', 'google_calendar', ${JSON.stringify({ url: calUrl, app: "google_calendar" })}::text::jsonb, 'ok',
+              ${JSON.stringify([{ name: "list_events", description: "List events", inputSchema: { type: "object", properties: { timeMin: {}, timeMax: {} } } }])}::text::jsonb, now())
+      returning id`;
+    const res = await h.request("/v1/routines", {
+      method: "POST",
+      token: ben.token,
+      json: {
+        bot_id: botId,
+        name: "After standup",
+        instructions: "File the standup notes.",
+        trigger: "calendar_event",
+        calendar: {
+          integration_id: i!.id,
+          offset_minutes: 5,
+          anchor: "end",
+          title_match: "Standup",
+        },
+      },
+    });
+    expect(res.status).toBe(201);
+    expect((await j(res)).calendar).toMatchObject({ offset_minutes: 5, anchor: "end" });
+    await checkCalendarTriggers({ db: h.handle.db, fetch }, new Date());
+    const [fire] = await h.tdb.admin<{ fire_at: Date }[]>`
+      select f.fire_at from public.calendar_fires f join public.routines r on r.id = f.routine_id
+      where r.bot_id = ${botId}`;
+    expect(new Date(fire!.fire_at).getTime()).toBe(start.getTime() + 35 * 60_000);
   });
 });

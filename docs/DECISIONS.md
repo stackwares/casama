@@ -3369,3 +3369,11 @@ Stage 6 of `docs/MASTER-PLAN-2026-11.md` (Add 14 in `docs/PRODUCT-REVIEW-2026-11
 Stage 8 of `docs/MASTER-PLAN-2026-11.md` (Add 5, server side; the app's screens for connection sources are app work).
 
 - **Decision:** a knowledge source can sync every 1 to 168 hours (`sync_every_hours`; 24 by default; uploads never change). Each piece's text is hashed (`knowledge_chunks.text_hash`): a piece that's the same as before keeps its embedding, and a source whose pieces all match (`content_hash`) isn't rewritten at all. An hourly sync of a website or Drive folder that rarely changes therefore costs one read and no embedding calls.
+
+## D-287 Meeting notes without a meeting bot
+
+Stage 8 of `docs/MASTER-PLAN-2026-11.md` (Add 6; meeting bots stay cut, D-123).
+
+- **After the meeting:** calendar routines take `anchor: "end"`, so the offset counts from the meeting's end ("5 minutes after each standup ends") instead of its start.
+- **A gallery routine idea, "Meeting notes":** each weekday evening the bot gathers the day's notes from whichever notes app is connected (Fireflies, Granola, Circleback, Otter, Fathom, Zoom or Google Meet, through the existing app connections) or from the calendar, and files one Markdown file per meeting in the team folder (`shared/meetings/`) with decisions and action items, asking before it sends anything. Gallery routine ideas are schedule-only, because shipped apps parse them strictly; the after-meeting version is made as a calendar routine.
+- **Not done:** the gallery change reaches the public gallery only when it's published (a production step for Oliver), and none of the notes apps were tried with a real account.

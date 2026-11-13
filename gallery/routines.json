@@ -32,6 +32,38 @@
       ]
     },
     {
+      "id": "meeting-notes",
+      "type": "routine",
+      "name": "Meeting notes",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "meetings",
+        "calendar",
+        "work"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "sha256": "4f47970c9c65c9ee9d09cf484565cef1e5662f9cc8ad8d5fbad090fd16be484b",
+      "size": 928,
+      "description": "Each weekday evening: today's meeting notes filed, with decisions and who does what next.",
+      "document": {
+        "description": "Each weekday evening: today's meeting notes filed, with decisions and who does what next.",
+        "category": "work",
+        "icon": "notebook-pen",
+        "instructions_md": "Gather today's meeting notes from my notes app if one is connected (Fireflies, Granola, Circleback, Otter, Fathom, Zoom or Google Meet), otherwise from today's calendar events and anything I sent you. For each meeting: a three-line summary, the decisions, and the action items with owners and dates. Save them as one Markdown file per meeting in the team folder (shared/meetings/), link the files, and ask me before sending anything to anyone. If nothing is connected, tell me which app to connect.",
+        "schedule_cron": "0 18 * * 1-5"
+      },
+      "files": [
+        "routines/meeting-notes/item.json",
+        "routines/meeting-notes/routine.json"
+      ]
+    },
+    {
       "id": "morning-plan",
       "type": "routine",
       "name": "Morning plan",

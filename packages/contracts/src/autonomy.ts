@@ -167,7 +167,13 @@ export const CalendarTriggerConfig = z
       .int()
       .min(-1440)
       .max(1440)
-      .openapi({ description: "Relative to the event's start; -15 is 15 minutes before" }),
+      .openapi({
+        description:
+          "Relative to the event's start (or end, with anchor end); -15 is 15 minutes before",
+      }),
+    anchor: z.enum(["start", "end"]).optional().openapi({
+      description: "What the offset counts from; end is for after a meeting (D-287)",
+    }),
     calendar: z.string().max(200).optional(),
     outside_guests: z.boolean().optional(),
     title_match: z.string().max(200).optional(),
