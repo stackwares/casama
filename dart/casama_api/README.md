@@ -191,6 +191,7 @@ Class | Method | HTTP request | Description
 [*ComputersApi*](doc/ComputersApi.md) | [**updateComputer**](doc/ComputersApi.md#updatecomputer) | **PATCH** /v1/computers/{id} | 
 [*ComputersApi*](doc/ComputersApi.md) | [**uploadComputerFile**](doc/ComputersApi.md#uploadcomputerfile) | **PUT** /v1/computers/{id}/files | Upload a file (request body is the raw contents, up to 100 MB)
 [*CreationsApi*](doc/CreationsApi.md) | [**deleteCreation**](doc/CreationsApi.md#deletecreation) | **DELETE** /v1/creations/{id} | Hides it now; the bytes go after 30 days unless it&#39;s restored
+[*CreationsApi*](doc/CreationsApi.md) | [**duplicateCreation**](doc/CreationsApi.md#duplicatecreation) | **POST** /v1/creations/{id}/duplicate | A private copy to change while the original stays as it is (D-291)
 [*CreationsApi*](doc/CreationsApi.md) | [**getCreation**](doc/CreationsApi.md#getcreation) | **GET** /v1/creations/{id} | 
 [*CreationsApi*](doc/CreationsApi.md) | [**getCreationContent**](doc/CreationsApi.md#getcreationcontent) | **GET** /v1/creations/{id}/content | The bytes (pictures, videos, sound; one byte range honoured). Pages open by view link
 [*CreationsApi*](doc/CreationsApi.md) | [**getCreationCover**](doc/CreationsApi.md#getcreationcover) | **GET** /v1/creations/{id}/cover | The picture for its card, when it has one (has_cover)

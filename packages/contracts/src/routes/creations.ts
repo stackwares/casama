@@ -112,3 +112,14 @@ export const getCreationPreview = createRoute({
     404: e404,
   },
 });
+
+export const duplicateCreation = createRoute({
+  operationId: "duplicateCreation",
+  method: "post",
+  path: "/v1/creations/{id}/duplicate",
+  tags: ["creations"],
+  security,
+  summary: "A private copy to change while the original stays as it is (D-291)",
+  request: { params: idParam },
+  responses: { 201: jsonResponse("The copy", Creation), 401: e401, 403: e403, 404: e404 },
+});

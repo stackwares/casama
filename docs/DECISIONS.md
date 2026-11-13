@@ -3384,3 +3384,14 @@ Stage 7 of `docs/MASTER-PLAN-2026-11.md`; the second half of `docs/LIBRARY-PLAN.
 
 - **Decision:** with an object store configured (the Library's volume by default, D-276), new pictures, videos and sounds are written there and `chat_media` keeps only the key; the hourly maintenance moves older rows' bytes out 50 at a time. Every reader goes through `readMedia`, which serves either place, byte ranges included, so nothing changes for the app. The nightly database dump stops growing with media.
 - **Deletion:** a trigger on `chat_media`, `creations`, `creation_versions` and `page_assets` queues the keys of any deleted row (`deleted_blobs`), whatever deleted it, including workspace and account deletion cascades; the maintenance deletes those bytes unless another row still uses the key.
+
+## D-291 Duplicate anything in the Library; stored bytes are deleted only when nothing uses them
+
+`docs/LIBRARY-PLAN.md` Phase 6 ("duplicate a creation and change the copy").
+
+- **Decision:** `POST /v1/creations/{id}/duplicate` makes a private copy for the person asking: a page becomes a new page with the same layout, data and files; a picture, video or sound a new media row; a kept file a new creation not tied to the computer's file. Copies share the stored bytes instead of copying them (their size still counts toward storage).
+- **Consequence:** bytes are now deleted only through the queue (D-290), which checks no other row still uses them. The 30-day purge and pruning a kept file's old versions stopped deleting bytes directly.
+
+## D-292 Two accounts of one app already work
+
+Add 12 in `docs/PRODUCT-REVIEW-2026-11-13.md` ("two accounts of one app"), checked in the code: an app connected directly (its own sign-in or key) can be connected again, and the second becomes `gmail_2` (`freeName` in `apps/server/src/api/routes/apps.ts`), with its own tools. Connections through Composio's managed sign-in share one connection per workspace, so a second account of the same app isn't possible there; that's Composio's model, recorded here rather than worked around.

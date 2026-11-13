@@ -447,4 +447,57 @@ export function registerCreationRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       "content-security-policy": "default-src 'none'; sandbox",
     }) as never;
   });
+
+  app.openapi(routes.duplicateCreation, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const row = await visible(claims, id);
+    const copyTitle = `Copy of ${row.title}`.slice(0, 200);
+    let newId: string | undefined;
+    if (row.page_id) {
+      // A page copies as a new private page (with its files, which share their stored bytes).
+      const [p] = await db.execute<{ id: string }>(sql`
+        insert into public.pages (org_id, bot_id, created_by, conversation_id, title, html, data, collects)
+        select org_id, bot_id, ${claims.sub}::uuid, conversation_id, ${copyTitle}, html, data, collects
+        from public.pages where id = ${row.page_id}::uuid returning id`);
+      if (!p) throw new ApiError(404, "creation_not_found", "Nothing like that in the Library");
+      await db.execute(sql`
+        insert into public.page_versions (page_id, version, org_id, html, data)
+        select id, version, org_id, html, data from public.pages where id = ${p.id}::uuid`);
+      const [src] = await db.execute<{ assets_version: number | null }>(
+        sql`select assets_version from public.pages where id = ${row.page_id}::uuid`,
+      );
+      if (src?.assets_version) {
+        await db.execute(sql`
+          insert into public.page_assets (page_id, version, path, org_id, mime, blob_key, size)
+          select ${p.id}::uuid, 1, path, org_id, mime, blob_key, size from public.page_assets
+          where page_id = ${row.page_id}::uuid and version = ${src.assets_version}`);
+        await db.execute(sql`update public.pages set assets_version = 1 where id = ${p.id}::uuid`);
+      }
+      const [cr] = await db.execute<{ id: string }>(
+        sql`update public.creations set label = ${row.label} where page_id = ${p.id}::uuid returning id`,
+      );
+      newId = cr?.id;
+    } else if (row.media_id) {
+      const [m] = await db.execute<{ id: string }>(sql`
+        insert into public.chat_media (org_id, bot_id, run_id, conversation_id, name, content_type, bytes, blob_key, size, width, height, duration_s)
+        select org_id, bot_id, run_id, conversation_id, name, content_type, bytes, blob_key, size, width, height, duration_s
+        from public.chat_media where id = ${row.media_id}::uuid returning id`);
+      const [cr] = await db.execute<{ id: string }>(sql`
+        update public.creations set title = ${copyTitle}, label = ${row.label}, made_for = ${claims.sub}::uuid
+        where media_id = ${m?.id}::uuid returning id`);
+      newId = cr?.id;
+    } else if (row.blob_key) {
+      // A kept file: a new creation pointing at the same bytes, not tied to the computer's file.
+      const [cr] = await db.execute<{ id: string }>(sql`
+        insert into public.creations (org_id, bot_id, made_for, conversation_id, run_id, kind, label, title,
+          blob_key, preview_key, cover_key, cover_w, cover_h, mime, size)
+        select org_id, bot_id, ${claims.sub}::uuid, conversation_id, run_id, kind, label, ${copyTitle},
+          blob_key, preview_key, cover_key, cover_w, cover_h, mime, size
+        from public.creations where id = ${id}::uuid returning id`);
+      newId = cr?.id;
+    }
+    if (!newId) throw new ApiError(404, "creation_not_found", "This one can't be copied");
+    return c.json(out(await visible(claims, newId)), 201);
+  });
 }

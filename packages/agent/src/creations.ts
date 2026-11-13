@@ -32,19 +32,9 @@ export async function purgeDeletedCreations(
   store?: import("@casama/sandbox").ObjectStore,
 ) {
   const old = sql`deleted_at < now() - make_interval(days => ${days})`;
-  // Kept files' bytes first: the rows that name them go below.
-  if (store) {
-    const blobs = await db.execute<{ blob_key: string }>(sql`
-      select v.blob_key from public.creation_versions v
-      join public.creations c on c.id = v.creation_id where c.${sql.raw("deleted_at")} < now() - make_interval(days => ${days})
-      union select blob_key from public.creations where ${old} and blob_key is not null
-      union select preview_key from public.creations where ${old} and preview_key is not null
-      union select cover_key from public.creations where ${old} and cover_key is not null
-      union select a.blob_key from public.page_assets a
-        join public.creations c on c.page_id = a.page_id where c.${sql.raw("deleted_at")} < now() - make_interval(days => ${days})
-      limit 5000`);
-    for (const b of blobs) await store.delete(b.blob_key).catch(() => {});
-  }
+  // The bytes behind the rows deleted here are queued by a database trigger and deleted by the
+  // maintenance only when nothing else uses them (D-290): a duplicate can share them (D-291).
+  void store;
   const rows = await db.execute<{ n: number }>(sql`
     with gone as (select id, page_id, media_id from public.creations where ${old} limit 500),
     m as (delete from public.chat_media where id in (select media_id from gone where media_id is not null) returning 1),
@@ -364,11 +354,10 @@ export async function keepFile(
     insert into public.creation_versions (creation_id, version, org_id, blob_key, size)
     values (${row?.id}::uuid, ${version}, ${input.orgId}::uuid, ${key}, ${size})
     on conflict do nothing`);
-  // Older versions beyond five go, bytes and all.
-  const old = await db.execute<{ version: number; blob_key: string }>(sql`
+  // Older versions beyond five go; their bytes are queued for deletion (D-290).
+  await db.execute(sql`
     delete from public.creation_versions where creation_id = ${row?.id}::uuid
-      and version <= ${version - KEEP_VERSIONS} returning version, blob_key`);
-  for (const o of old) await store.delete(o.blob_key).catch(() => {});
+      and version <= ${version - KEEP_VERSIONS}`);
   return {
     creation_id: row?.id as string,
     kind: row?.kind ?? "file",

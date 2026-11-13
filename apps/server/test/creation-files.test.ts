@@ -5,7 +5,12 @@
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { keepFile, purgeDeletedCreations, StorageFullError } from "@casama/agent";
+import {
+  deleteQueuedBlobs,
+  keepFile,
+  purgeDeletedCreations,
+  StorageFullError,
+} from "@casama/agent";
 import { FsObjectStore } from "@casama/sandbox";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { type Harness, j, startHarness } from "./helpers.ts";
@@ -113,6 +118,7 @@ it("the purge removes a deleted file's bytes", async () => {
     .admin`update public.creations set deleted_at = now() - interval '31 days' where id = ${k?.creation_id as string}`;
   const before = (await readdir(join(dir, "creations", orgId), { recursive: true })).length;
   expect(await purgeDeletedCreations(h.handle.db, undefined, store)).toBe(1);
+  await deleteQueuedBlobs(h.handle.db, store);
   const after = (await readdir(join(dir, "creations", orgId), { recursive: true })).length;
   expect(after).toBeLessThan(before);
   expect(
@@ -152,4 +158,24 @@ it("a kept document gets a PDF preview and its first page as the cover (D-280)",
   const [row] = await h.tdb.admin<{ cover_w: number; cover_h: number }[]>`
     select cover_w, cover_h from public.creations where id = ${k!.creation_id}`;
   expect(row).toEqual({ cover_w: 640, cover_h: 360 });
+});
+
+it("a duplicate is a private copy that shares the bytes, which outlive the original (D-291)", async () => {
+  const k = await keep("drafts/poem.md", "roses are red");
+  const copy = await j(
+    await h.request(`/v1/creations/${k!.creation_id}/duplicate`, {
+      method: "POST",
+      token: owner.token,
+    }),
+  );
+  expect(copy).toMatchObject({ title: "Copy of Poem", kind: "document", visibility: "private" });
+  expect(copy.id).not.toBe(k!.creation_id);
+  // Deleting and purging the original keeps the copy's bytes.
+  await h.request(`/v1/creations/${k!.creation_id}`, { method: "DELETE", token: owner.token });
+  await h.tdb
+    .admin`update public.creations set deleted_at = now() - interval '31 days' where id = ${k!.creation_id}`;
+  await purgeDeletedCreations(h.handle.db, undefined, store);
+  await deleteQueuedBlobs(h.handle.db, store);
+  const body = await h.request(`/v1/creations/${copy.id}/content`, { token: owner.token });
+  expect(await body.text()).toBe("roses are red");
 });
