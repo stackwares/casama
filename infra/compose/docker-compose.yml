@@ -478,6 +478,8 @@ services:
       - backups:/backups
       - objects:/objects:ro
       - ./.env:/env:ro
+      # The Vault root key (D-267): the dump's secrets are unreadable without it.
+      - db-config:/db-config:ro
 
   # Free web search for bots (D-179, profile "search"). Set SEARXNG_URL=http://searxng:8080 too.
   # Internal only: no published port; it needs outbound internet to ask the search engines.

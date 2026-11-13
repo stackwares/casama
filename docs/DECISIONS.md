@@ -3167,3 +3167,13 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
 - **Who sees it:** new installs, and anyone whose device never saved a look; each setting falls back to Plain's when it isn't saved. A device that applied a theme or changed a setting keeps what it saved. Light or dark still follows the system.
 - **Resets:** "Use the Defaults" in Fonts and "Reset to Default" in Background go back to Plain's fonts and flat surface instead of Libre Baskerville, Lato and clouds.
 - **Casama stays** as a built-in theme in Settings → Appearance, unchanged.
+
+## D-267 Backups carry the Vault key, restores run as the database admin, and workflow steps are sealed
+
+Stage 0 of `docs/MASTER-PLAN-2026-11.md`. Oliver approved the plan's defaults and asked for it to be executed without questions (2026-11-13); decisions from here to the end of that plan are made on that basis.
+
+- **Found:** a backup could not bring secrets back on another machine. The Vault's root key lives in the `db-config` volume (`pgsodium_root.key`), which no backup included. And `casama selfhost restore` ran `pg_restore` as `postgres`, which is not a superuser on Supabase's image: the Vault's secrets and the sign-in tables belong to other roles, so their rows were skipped while the command reported success. Proved on scratch databases: without the key, or as `postgres`, `vault.decrypted_secrets` comes back empty; with the key in place first and the restore run as `supabase_admin` keeping owners, the secret reads back.
+- **Decision:** both backup paths save the key as `vault-key` (the scheduled container only when `BACKUP_AGE_RECIPIENTS` is set, like `.env`, and it warns otherwise; the CLI always, beside `env`). Restore writes the key, restarts the database, then restores as `supabase_admin` without `--no-owner`.
+- **Found:** the workflow engine (DBOS) keeps every step's result for replay in `dbos.operation_outputs`. For a run that includes model replies, tool results and summaries, in plain text even in a workspace with encryption at rest (D-136), and nothing ever deleted them.
+- **Decision:** `runAgentDurably` seals each step's result with the workspace's key before the engine stores it (`sealStepOutput` / `openStepOutput` in `apps/server/src/worker/workflows.ts`; results recorded before this pass through). The hourly maintenance deletes the engine's records of workflows that ended more than 7 days ago (`purgeEndedWorkflows`). New dependency: `superjson` (the engine's own serializer, so dates survive sealing).
+- **Not done:** step results recorded before this change are not rewritten; they go with the 7-day purge. Production needs the new server image and `up -d backup` to pick up the volume mount; that deploy waits for Oliver.

@@ -30,11 +30,12 @@ import {
   sweepEncryption,
   syncComposioTriggers,
 } from "@casama/agent";
-import { type Database, liftTimeouts } from "@casama/db";
+import { contentKeys, type Database, liftTimeouts } from "@casama/db";
 import { DEFAULT_MODELS } from "@casama/domain";
 import { captureError } from "@casama/observability";
 import { DBOS } from "@dbos-inc/dbos-sdk";
 import { sql } from "drizzle-orm";
+import superjson from "superjson";
 import { sweepSignups } from "../services/analytics-signups.ts";
 import { sweepReferralRewards } from "../services/referrals.ts";
 import {
@@ -168,10 +169,45 @@ export const agentRunWorkflow = DBOS.registerWorkflow(
   { name: WORKFLOWS.agentRun },
 );
 
+/**
+ * A step's result as the workflow engine stores it. In a workspace that encrypts content (D-136)
+ * the engine's own tables would otherwise hold replies, tool results and history in plain text
+ * (D-267), so the result is sealed with the workspace's key before the engine sees it.
+ */
+export function sealStepOutput(orgId: string | null, value: unknown): unknown {
+  if (!contentKeys.seals(orgId)) return value;
+  return {
+    $sealedStep: contentKeys.seal(orgId, superjson.stringify(value === undefined ? null : value)),
+    u: value === undefined,
+  };
+}
+
+/** The reverse of sealStepOutput; results stored before sealing pass through. */
+export function openStepOutput(value: unknown): unknown {
+  const sealed = (value as { $sealedStep?: unknown } | null)?.$sealedStep;
+  if (typeof sealed !== "string") return value;
+  if ((value as { u?: boolean }).u) return undefined;
+  return superjson.parse(contentKeys.open(sealed) as string);
+}
+
 function runAgentDurably(runId: string) {
+  // Read outside a step: a run's workspace never changes, so replays see the same value.
+  let org: Promise<string | null> | undefined;
+  const orgOf = () => {
+    org ??= rt()
+      .db.execute<{ org_id: string }>(sql`select org_id from public.runs where id = ${runId}::uuid`)
+      .then((r) => r[0]?.org_id ?? null);
+    return org;
+  };
   return runAgent(runId, {
     ...rt().agent,
-    step: (name, fn) => DBOS.runStep(fn, { name }),
+    step: async <T>(name: string, fn: () => Promise<T>) => {
+      if (!contentKeys.anySealing) return DBOS.runStep(fn, { name });
+      const orgId = await orgOf();
+      return openStepOutput(
+        await DBOS.runStep(async () => sealStepOutput(orgId, await fn()), { name }),
+      ) as T;
+    },
     // Waits durably (days if needed) without holding a process: woken by decisions and cancels.
     waitUntil: async (name, done, timeoutMs) => {
       const deadline = (await DBOS.now()) + timeoutMs;
@@ -195,6 +231,25 @@ function runAgentDurably(runId: string) {
       }
     },
   });
+}
+
+/** How long an ended workflow's recorded steps are kept. */
+export const WORKFLOW_KEEP_DAYS = 7;
+
+/** Deletes the engine's records of workflows that ended over a week ago, a batch at a time. */
+export async function purgeEndedWorkflows(
+  db: Database,
+  keepDays = WORKFLOW_KEEP_DAYS,
+  batch = 2000,
+) {
+  const rows = await db.execute<{ id: string }>(sql`
+    select workflow_uuid as id from dbos.workflow_status
+    where status in ('SUCCESS', 'ERROR', 'CANCELLED', 'MAX_RECOVERY_ATTEMPTS_EXCEEDED')
+      and updated_at < (extract(epoch from now()) * 1000)::bigint - ${keepDays * 86_400_000}::bigint
+    limit ${batch}`);
+  if (rows.length === 0) return 0;
+  await DBOS.deleteWorkflows(rows.map((r) => r.id));
+  return rows.length;
 }
 
 /** Advisory lock keys for tick steps that must not overlap. */
@@ -795,6 +850,14 @@ export const maintenanceWorkflow = DBOS.registerWorkflow(
     await DBOS.runStep(() => rewrapAllKeys(rt().db).catch(captureStep("rewrap-keys", 0)), {
       name: "rewrap-keys",
     });
+    // The engine keeps every step's result for replay. Once a workflow has ended nothing reads
+    // them again, so they go after a week instead of growing forever (D-267).
+    await DBOS.runStep(
+      () => purgeEndedWorkflows(rt().db).catch(captureStep("purge-workflows", 0)),
+      {
+        name: "purge-workflows",
+      },
+    );
   },
   { name: "maintenance" },
 );

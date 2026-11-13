@@ -164,6 +164,10 @@ class _Backup extends KCommand {
     ]);
     if (objects != 0) throw CliError('backup_failed', 'could not archive computer snapshots');
     File(p.join(d.path, 'infra', 'compose', '.env')).copySync(p.join(out.path, 'env'));
+    // The database's Vault root key: the dump's secrets can't be read on another machine without it.
+    final key = await Process.run('docker', [..._composeArgs(d), 'exec', '-T', 'db', 'cat', _vaultKeyPath]);
+    if (key.exitCode != 0 || (key.stdout as String).trim().isEmpty) throw CliError('backup_failed', 'could not read the Vault key from the database container');
+    File(p.join(out.path, 'vault-key')).writeAsStringSync(key.stdout as String);
     await File(p.join(out.path, 'env')).setLastModified(DateTime.now());
     var encrypted = false;
     if (argResults!['encrypt'] as bool) {
@@ -178,10 +182,12 @@ class _Backup extends KCommand {
     final removed = pruneBackups(Directory(argResults!['out'] as String), keep: int.tryParse(argResults!['keep'] as String? ?? ''), keepDays: int.tryParse(argResults!['keep-days'] as String? ?? ''));
     return ctx.emit(
       {'path': out.path, 'encrypted': encrypted, 'removed': removed},
-      'Backup written to ${out.path} (database, computer archives, .env)${encrypted ? ', encrypted with age' : '. Keep it private'}.${removed.isEmpty ? '' : ' Removed ${removed.length} older backup(s).'}',
+      'Backup written to ${out.path} (database, Vault key, computer archives, .env)${encrypted ? ', encrypted with age' : '. Keep it private'}.${removed.isEmpty ? '' : ' Removed ${removed.length} older backup(s).'}',
     );
   }
 }
+
+const _vaultKeyPath = '/etc/postgresql-custom/pgsodium_root.key';
 
 class _Restore extends KCommand {
   @override
@@ -213,7 +219,20 @@ class _Restore extends KCommand {
     final dump = File(p.join(from.path, 'postgres.dump'));
     if (!dump.existsSync()) throw CliError('not_a_backup', 'No postgres.dump in ${from.path}');
     await _run('docker', [..._composeArgs(d), 'stop', 'api', 'worker']);
-    final proc = await Process.start('docker', [..._composeArgs(d), 'exec', '-T', 'db', 'pg_restore', '-U', 'postgres', '-d', 'postgres', '--clean', '--if-exists', '--no-owner']);
+    // The Vault key goes in first and the database restarts to load it; otherwise the restored
+    // secrets stay sealed under a key this machine doesn't have.
+    final vaultKey = File(p.join(from.path, 'vault-key'));
+    if (vaultKey.existsSync()) {
+      final put = await Process.start('docker', [..._composeArgs(d), 'exec', '-T', 'db', 'sh', '-c', 'cat > $_vaultKeyPath']);
+      put.stdin.add(vaultKey.readAsBytesSync());
+      await put.stdin.close();
+      if (await put.exitCode != 0) throw CliError('restore_failed', 'could not write the Vault key');
+      await _run('docker', [..._composeArgs(d), 'restart', 'db']);
+      await _run('docker', [..._composeArgs(d), 'up', '-d', '--wait', 'db']);
+    } else {
+      stderr.writeln('This backup has no Vault key: saved secrets (model keys, app sign-ins) will need to be entered again unless this machine already has the original key.');
+    }
+    final proc = await Process.start('docker', [..._composeArgs(d), 'exec', '-T', 'db', 'pg_restore', '-U', 'supabase_admin', '-d', 'postgres', '--clean', '--if-exists']);
     await Future.wait([dump.openRead().pipe(proc.stdin), stderr.addStream(proc.stderr), stdout.addStream(proc.stdout)]);
     await proc.exitCode; // pg_restore warns about Supabase-owned objects; the data is restored.
     final tar = File(p.join(from.path, 'objects.tar.gz'));

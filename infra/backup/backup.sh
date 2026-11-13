@@ -6,7 +6,9 @@
 #   casama-backup list       list the backups in the bucket
 #
 # Each backup is a folder <prefix>/<UTC timestamp>/ holding postgres.dump (pg_dump custom format),
-# objects.tar.gz (computer archives, when BACKUP_OBJECTS=true) and env (only when encrypted).
+# objects.tar.gz (computer archives, when BACKUP_OBJECTS=true), and, only when encrypted, env and
+# vault-key (the database's Vault root key: without it the secrets in the dump can't be read on
+# another machine, D-267).
 # With BACKUP_AGE_RECIPIENTS every file is encrypted with age (".age"); the .env holds every key of
 # the installation, so it is never uploaded in plain text.
 #
@@ -77,6 +79,7 @@ run_once() {
   fi
   if [[ ${#ENC[@]} -gt 0 ]]; then
     [[ -f /env ]] && cp /env "$dir/env"
+    [[ -f /db-config/pgsodium_root.key ]] && cp /db-config/pgsodium_root.key "$dir/vault-key"
     for f in "$dir"/*; do
       # A failed encryption stops the backup: nothing unencrypted is ever uploaded.
       if ! age "${ENC[@]}" -o "$f.age" "$f"; then
@@ -86,8 +89,9 @@ run_once() {
       fi
       rm -f "$f"
     done
-  elif [[ -f /env ]]; then
-    log "not uploading .env: set BACKUP_AGE_RECIPIENTS to include it (encrypted)"
+  else
+    [[ -f /env ]] && log "not uploading .env: set BACKUP_AGE_RECIPIENTS to include it (encrypted)"
+    [[ -f /db-config/pgsodium_root.key ]] && log "WARNING: not uploading the Vault key: without it saved secrets (model keys, app sign-ins) can't be restored on another machine. Set BACKUP_AGE_RECIPIENTS, or keep a copy of the db-config volume's pgsodium_root.key"
   fi
   (cd "$dir" && sha256sum -- * >SHA256SUMS) || { log "checksums failed"; return 1; }
 

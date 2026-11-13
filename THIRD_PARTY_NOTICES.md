@@ -10,6 +10,7 @@ Update this file in the same pull request that adds or removes a dependency.
 | @biomejs/biome                          | casama (tooling)                                      | MIT OR Apache-2.0 |
 | @dbos-inc/dbos-sdk                      | @casama/server (runtime)                              | MIT               |
 | @modelcontextprotocol/sdk               | @casama/agent (runtime)                               | MIT               |
+| superjson                               | @casama/server (runtime)                              | MIT               |
 | @hono/node-server                       | @casama/server (runtime)                              | MIT               |
 | @hono/zod-openapi                       | @casama/contracts (runtime), @casama/server (runtime) | MIT               |
 | @openapitools/openapi-generator-cli     | @casama/contracts (tooling)                           | Apache-2.0        |

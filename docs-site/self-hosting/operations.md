@@ -96,6 +96,7 @@ Each run writes a timestamped folder, for example `/backups/2026-11-11T09-30-00`
 | `postgres.dump`   | The whole database (`pg_dump` custom format)                    |
 | `objects.tar.gz`  | Computer archives and checkpoints from the `objects` volume     |
 | `env`             | A copy of `infra/compose/.env`, with every key                  |
+| `vault-key`       | The database's Vault root key. The saved secrets in the dump (model keys, app sign-ins) can't be read on another machine without it |
 
 `--out` defaults to `casama-backups` in the current directory. With S3 object storage, the archive
 only covers the local volume, so back up the bucket with your provider's tools.
@@ -146,8 +147,9 @@ Then sync `/backups` to other storage with your usual tool.
 
 `./install.sh --backups` starts a `backup` container that does this every day, without cron. It
 dumps the database, optionally the computer archives, encrypts each file with age, and uploads the
-folder to any S3-compatible bucket (Cloudflare R2, AWS S3, Backblaze B2, MinIO). The `.env` is
-included only when `BACKUP_AGE_RECIPIENTS` is set. If encryption fails, the folder is deleted and
+folder to any S3-compatible bucket (Cloudflare R2, AWS S3, Backblaze B2, MinIO). The `.env` and
+the Vault key (`vault-key`) are included only when `BACKUP_AGE_RECIPIENTS` is set, so set it:
+without the Vault key a restore on another machine loses every saved secret. If encryption fails, the folder is deleted and
 nothing is uploaded.
 
 | Setting | What it does |
@@ -185,9 +187,13 @@ casama selfhost restore /backups/2026-11-11T09-30-00
 casama selfhost restore /backups/2026-11-11T09-30-00 --identity backup.key
 ```
 
-It stops the API and worker, restores the database with `pg_restore --clean`, unpacks the computer
-archives into the `objects` volume, and starts the stack again. `pg_restore` prints warnings about
-objects Supabase owns; they're expected, and the data is restored.
+It stops the API and worker, puts the backup's Vault key in place and restarts the database to
+load it, restores the database with `pg_restore --clean` as the database's admin user (so sign-in
+accounts and saved secrets come back with their owners), unpacks the computer archives into the
+`objects` volume, and starts the stack again.
+
+A backup made before `vault-key` was added has no key. It restores fine on the machine it came
+from; on a new machine, saved secrets (model keys, app sign-ins) have to be entered again.
 
 `restore` doesn't touch `infra/compose/.env`. To restore onto a new machine:
 

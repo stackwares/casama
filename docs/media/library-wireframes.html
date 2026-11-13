@@ -1,0 +1,246 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Library wireframes</title>
+<style>
+  .wf { font-family: var(--font-sans); color: var(--foreground); font-size: 11px; line-height: 1.35; }
+  .wf * { box-sizing: border-box; }
+  .wf h3 { font-size: 13px; font-weight: 650; margin: 0 0 2px; }
+  .wf .note { color: var(--muted-foreground); font-size: 12px; margin: 0 0 12px; max-width: 62ch; }
+  .wf section + section { margin-top: 30px; }
+
+  .phones { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  figure { margin: 0; }
+  figcaption { margin-top: 8px; font-size: 12px; color: var(--muted-foreground); }
+  figcaption b { color: var(--foreground); font-weight: 650; }
+
+  .phone { position: relative; border: 1px solid var(--border); border-radius: 24px; background: var(--card);
+           padding: 14px 10px 0; height: 456px; overflow: hidden; }
+  .desk  { border: 1px solid var(--border); border-radius: 12px; background: var(--card); overflow: hidden;
+           display: grid; height: 330px; }
+  .desk.lib  { grid-template-columns: 150px 1fr 190px; }
+  .desk.chat { grid-template-columns: 150px 1fr 230px; }
+  @media (max-width: 560px) {
+    .desk.lib, .desk.chat { grid-template-columns: 96px 1fr; }
+    .desk .pane { display: none; }
+  }
+
+  .bar { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .title { font-size: 15px; font-weight: 700; flex: 1; }
+  .ic { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border); flex: none;
+        display: grid; place-items: center; font-size: 11px; color: var(--muted-foreground); }
+  .chips { display: flex; gap: 4px; overflow: hidden; margin-bottom: 10px; }
+  .chip { border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px; white-space: nowrap;
+          color: var(--muted-foreground); }
+  .chip.on { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+  .lbl { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+         color: var(--muted-foreground); margin: 8px 0 5px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; align-content: start; }
+  .tile { border: 1px solid var(--border); border-radius: 9px; overflow: hidden; background: var(--background); }
+  .tile.sel { outline: 2px solid var(--primary); outline-offset: 1px; }
+  .cover { height: 58px; position: relative; }
+  .cover.tall { height: 84px; }
+  .cover.short { height: 40px; }
+  .c1 { background: color-mix(in oklab, var(--chart-1) 30%, var(--card)); }
+  .c2 { background: color-mix(in oklab, var(--chart-2) 30%, var(--card)); }
+  .c3 { background: color-mix(in oklab, var(--chart-3) 30%, var(--card)); }
+  .c4 { background: color-mix(in oklab, var(--chart-4) 30%, var(--card)); }
+  .c5 { background: color-mix(in oklab, var(--chart-5) 30%, var(--card)); }
+  .c6 { background: var(--secondary); }
+  .kind { position: absolute; left: 5px; bottom: 5px; background: var(--card); border: 1px solid var(--border);
+          border-radius: 999px; padding: 0 6px; font-size: 9.5px; font-weight: 600; }
+  .meta { padding: 4px 6px 5px; }
+  .meta b { display: block; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .meta span { color: var(--muted-foreground); font-size: 10px; }
+  .wave { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 2px; }
+  .wave i { width: 3px; border-radius: 2px; background: var(--muted-foreground); opacity: .6; }
+
+  .pill { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; gap: 6px; align-items: center; }
+  .tabs { flex: 1; display: flex; border: 1px solid var(--border); border-radius: 999px; background: var(--card);
+          padding: 3px; box-shadow: 0 4px 14px rgb(0 0 0 / .14); }
+  .tab { flex: 1; text-align: center; padding: 6px 0; border-radius: 999px; color: var(--muted-foreground); font-weight: 600; }
+  .tab.on { background: color-mix(in oklab, var(--primary) 18%, transparent); color: var(--primary); }
+  .fab { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); background: var(--card);
+         display: grid; place-items: center; font-size: 15px; box-shadow: 0 4px 14px rgb(0 0 0 / .14); flex: none; }
+  .new { font-size: 9px; font-weight: 700; background: var(--primary); color: var(--primary-foreground);
+         border-radius: 4px; padding: 0 4px; margin-left: 4px; vertical-align: 1px; }
+
+  .btns { display: flex; gap: 5px; margin: 8px 0; }
+  .btn { flex: 1; text-align: center; border: 1px solid var(--border); border-radius: 8px; padding: 6px 0; font-weight: 650; }
+  .btn.p { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+  .row { display: flex; align-items: center; gap: 7px; padding: 6px 0; border-top: 1px solid var(--border); }
+  .row .g { flex: 1; min-width: 0; }
+  .row small, .sub { color: var(--muted-foreground); font-size: 10px; }
+  .av { width: 20px; height: 20px; border-radius: 50%; background: var(--secondary); border: 1px solid var(--border); flex: none; }
+
+  .bub { max-width: 82%; padding: 6px 9px; border-radius: 12px; margin-bottom: 6px; }
+  .bub.me { margin-left: auto; background: var(--primary); color: var(--primary-foreground); }
+  .bub.bot { background: var(--secondary); }
+  .card { width: 82%; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--background); margin-bottom: 6px; }
+  .card .foot { display: flex; align-items: center; gap: 6px; padding: 6px 8px; }
+  .card .foot b { flex: 1; }
+  .mini { border: 1px solid var(--border); border-radius: 999px; padding: 1px 8px; font-weight: 650; white-space: nowrap; flex: none; }
+  .composer { position: absolute; left: 10px; right: 10px; bottom: 10px; border: 1px solid var(--border);
+              border-radius: 999px; padding: 8px 12px; color: var(--muted-foreground); background: var(--card); }
+
+  .side { border-right: 1px solid var(--border); padding: 10px 8px; background: var(--secondary); display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .side .it { padding: 5px 7px; border-radius: 7px; display: flex; gap: 6px; align-items: center; white-space: nowrap; overflow: hidden; }
+  .side .it.on { background: color-mix(in oklab, var(--primary) 18%, transparent); color: var(--primary); font-weight: 700; }
+  .side .sp { flex: 1; }
+  .main { padding: 10px 12px; min-width: 0; overflow: hidden; position: relative; }
+  .pane { border-left: 1px solid var(--border); padding: 10px; min-width: 0; overflow: hidden; }
+  .seg { display: flex; border: 1px solid var(--border); border-radius: 8px; padding: 2px; margin-bottom: 8px; }
+  .seg div { flex: 1; text-align: center; padding: 3px 0; border-radius: 6px; color: var(--muted-foreground); font-weight: 600; }
+  .seg .on { background: var(--card); color: var(--foreground); box-shadow: 0 0 0 1px var(--border); }
+</style>
+</head>
+<body>
+<div class="wf">
+
+<section>
+  <h3>Phone</h3>
+  <p class="note">A third place between Chats and Tasks. Everything a bot makes lands here on its own; the chat keeps a card that opens the same item.</p>
+  <div class="phones">
+
+    <figure>
+      <div class="phone">
+        <div class="bar"><div class="title">Library</div><div class="ic">⌕</div><div class="ic">+</div></div>
+        <div class="chips"><span class="chip on">All</span><span class="chip">Sites &amp; games</span><span class="chip">Images</span><span class="chip">Video</span></div>
+        <div class="lbl">Pinned</div>
+        <div class="grid2">
+          <div class="tile"><div class="cover short c1"><span class="kind">Game</span></div><div class="meta"><b>Space Dodger</b><span>Ada · v3</span></div></div>
+          <div class="tile"><div class="cover short c3"><span class="kind">Site</span></div><div class="meta"><b>Bakery landing page</b><span>Milo · public</span></div></div>
+        </div>
+        <div class="lbl">Recent</div>
+        <div class="grid2">
+          <div class="tile"><div class="cover short c2"><span class="kind">Image</span></div><div class="meta"><b>Logo, round 2</b><span>Milo · 3h</span></div></div>
+          <div class="tile"><div class="cover short c5"><span class="kind">Video · 0:12</span></div><div class="meta"><b>Launch teaser</b><span>Milo · 1d</span></div></div>
+          <div class="tile"><div class="cover short c6"><div class="wave" style="justify-content:flex-end;padding-right:10px;align-items:flex-start;padding-top:5px"><i style="height:6px"></i><i style="height:12px"></i><i style="height:16px"></i><i style="height:9px"></i><i style="height:14px"></i><i style="height:7px"></i><i style="height:11px"></i></div><span class="kind">Audio · 2:41</span></div><div class="meta"><b>Podcast intro</b><span>Ada · 2d</span></div></div>
+          <div class="tile"><div class="cover short c4"><span class="kind">PDF</span></div><div class="meta"><b>Q4 report</b><span>Sora · 3d</span></div></div>
+        </div>
+        <div class="pill">
+          <div class="tabs"><div class="tab">Chats</div><div class="tab on">Library</div><div class="tab">Tasks</div></div>
+          <div class="fab">⧉</div>
+        </div>
+      </div>
+      <figcaption><b>1. Library tab.</b> Filter chips by kind, a pinned shelf, then everything newest first. The round button stays Connect apps.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone">
+        <div class="bar"><div class="ic">‹</div><div class="title"></div><div class="ic">⋯</div></div>
+        <div class="tile"><div class="cover c1" style="height:120px"><span class="kind">Game · screenshot</span></div></div>
+        <div style="margin-top:8px"><b style="font-size:14px">Space Dodger</b><div class="sub">Made by Ada · 2 hours ago · version 3 · private</div></div>
+        <div class="btns"><div class="btn p">Open</div><div class="btn">Share</div><div class="btn">Change it</div></div>
+        <div class="row"><div class="av"></div><div class="g"><b>From “Space game” in Ada’s chat</b><br><small>Go to the conversation</small></div>›</div>
+        <div class="row"><div class="g"><b>Versions</b><br><small>v3 now · v2 yesterday · v1 Tuesday</small></div>›</div>
+        <div class="row"><div class="g"><b>Made alongside</b><br><small>3 images · 1 sound</small></div>›</div>
+        <div class="row"><div class="g"><b>Add to a collection</b></div>›</div>
+      </div>
+      <figcaption><b>2. One creation.</b> Sites and games show a screenshot and open in the system browser. “Change it” starts a message to the bot that made it.</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone">
+        <div class="bar"><div class="ic">‹</div><div class="av"></div><div class="title" style="font-size:13px">Ada</div><span class="mini">Made here · 12</span><div class="ic">⋯</div></div>
+        <div class="bub me">Make me a space dodging game</div>
+        <div class="bub bot">Done. Drag to steer.</div>
+        <div class="card">
+          <div class="cover c1" style="height:70px"><span class="kind">Game</span></div>
+          <div class="foot"><b>Space Dodger</b><span class="mini">Open</span></div>
+        </div>
+        <div class="bub me">Add a high score</div>
+        <div class="bub bot">Added. It keeps your best three.</div>
+        <div class="card">
+          <div class="foot"><b>Space Dodger<br><span class="sub" style="font-weight:400">Updated · version 2</span></b><span class="mini">Open</span></div>
+        </div>
+        <div class="composer">Message Ada</div>
+      </div>
+      <figcaption><b>3. In the chat.</b> Cards get a cover. An update shows as a small “Updated” card, not a second copy. “Made here” lists this bot’s things.</figcaption>
+    </figure>
+
+  </div>
+</section>
+
+<section>
+  <h3>Desktop</h3>
+  <p class="note">Library joins the sidebar. The panel beside a chat, which holds the computer today, gains a second tab for what was made there, with native previews.</p>
+
+  <figure>
+    <div class="desk lib">
+      <div class="side">
+        <div class="lbl" style="margin-top:0">Bots</div>
+        <div class="it"><div class="av"></div>Ada</div>
+        <div class="it"><div class="av"></div>Milo</div>
+        <div class="it"><div class="av"></div>Sora</div>
+        <div class="sp"></div>
+        <div class="it on">▦ Library <span class="new">new</span></div>
+        <div class="it">☑ Tasks</div>
+        <div class="it"><div class="av"></div>You</div>
+      </div>
+      <div class="main">
+        <div class="bar"><div class="title">Library</div><span class="chip">Any bot ▾</span><span class="chip">Newest ▾</span><div class="ic">⌕</div></div>
+        <div class="chips"><span class="chip on">All</span><span class="chip">Sites &amp; games</span><span class="chip">Images</span><span class="chip">Video</span><span class="chip">Audio</span><span class="chip">Docs</span><span class="chip">Files</span></div>
+        <div class="grid3">
+          <div class="tile sel"><div class="cover c1"><span class="kind">Game</span></div><div class="meta"><b>Space Dodger</b><span>Ada · 2h</span></div></div>
+          <div class="tile"><div class="cover c2"><span class="kind">Image</span></div><div class="meta"><b>Logo, round 2</b><span>Milo · 3h</span></div></div>
+          <div class="tile"><div class="cover c5"><span class="kind">Video · 0:12</span></div><div class="meta"><b>Launch teaser</b><span>Milo · 1d</span></div></div>
+          <div class="tile"><div class="cover c3"><span class="kind">Site</span></div><div class="meta"><b>Bakery landing page</b><span>Milo · 1d</span></div></div>
+          <div class="tile"><div class="cover c6"><div class="wave"><i style="height:10px"></i><i style="height:22px"></i><i style="height:30px"></i><i style="height:16px"></i><i style="height:26px"></i><i style="height:12px"></i></div><span class="kind">Audio · 2:41</span></div><div class="meta"><b>Podcast intro</b><span>Ada · 2d</span></div></div>
+          <div class="tile"><div class="cover c4"><span class="kind">PDF</span></div><div class="meta"><b>Q4 report</b><span>Sora · 3d</span></div></div>
+        </div>
+      </div>
+      <div class="pane">
+        <div class="tile"><div class="cover c1" style="height:92px"></div></div>
+        <div style="margin-top:8px"><b style="font-size:13px">Space Dodger</b><div class="sub">Game · Ada · v3 · private</div></div>
+        <div class="btns"><div class="btn p">Open</div><div class="btn">Share</div></div>
+        <div class="row"><div class="g"><b>Go to the chat</b></div>›</div>
+        <div class="row"><div class="g"><b>Versions</b> <small>3</small></div>›</div>
+        <div class="row"><div class="g"><b>Change it</b></div>›</div>
+      </div>
+    </div>
+    <figcaption><b>4. Library on a wide window.</b> Pick a tile and its details open beside the grid; no page change.</figcaption>
+  </figure>
+
+  <figure style="margin-top:18px">
+    <div class="desk chat">
+      <div class="side">
+        <div class="lbl" style="margin-top:0">Bots</div>
+        <div class="it on"><div class="av"></div>Ada</div>
+        <div class="it"><div class="av"></div>Milo</div>
+        <div class="it"><div class="av"></div>Sora</div>
+        <div class="sp"></div>
+        <div class="it">▦ Library</div>
+        <div class="it">☑ Tasks</div>
+        <div class="it"><div class="av"></div>You</div>
+      </div>
+      <div class="main">
+        <div class="bar"><div class="av"></div><div class="title" style="font-size:13px">Ada</div><div class="ic">⋯</div></div>
+        <div class="bub me">Make me a space dodging game</div>
+        <div class="bub bot">Done. Drag to steer; it speeds up every 20 seconds.</div>
+        <div class="card" style="width:60%"><div class="cover c1" style="height:60px"><span class="kind">Game</span></div><div class="foot"><b>Space Dodger</b><span class="mini">Open</span></div></div>
+        <div class="composer">Message Ada</div>
+      </div>
+      <div class="pane">
+        <div class="seg"><div>Computer</div><div class="on">Made here · 12</div></div>
+        <div class="grid2">
+          <div class="tile sel"><div class="cover short c1"><span class="kind">Game</span></div></div>
+          <div class="tile"><div class="cover short c2"><span class="kind">Image</span></div></div>
+          <div class="tile"><div class="cover short c5"><span class="kind">Video</span></div></div>
+          <div class="tile"><div class="cover short c4"><span class="kind">PDF</span></div></div>
+        </div>
+        <div class="lbl">Selected</div>
+        <div class="tile"><div class="cover c1" style="height:70px"></div><div class="meta"><b>Space Dodger</b><span>v3 · Open in browser</span></div></div>
+      </div>
+    </div>
+    <figcaption><b>5. Beside a chat.</b> The side panel has two tabs, Computer and Made here. Clicking a card in the chat selects it here.</figcaption>
+  </figure>
+</section>
+
+</div>
+</body>
+</html>

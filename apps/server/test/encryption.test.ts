@@ -12,6 +12,7 @@ import {
 } from "@casama/agent";
 import { AwsKmsKeyWrapper, contentKeys, LocalKeyWrapper } from "@casama/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { openStepOutput, sealStepOutput } from "../src/worker/workflows.ts";
 import { type Harness, j, startHarness } from "./helpers.ts";
 
 const keyA = randomBytes(32).toString("base64");
@@ -154,6 +155,20 @@ describe("encryption at rest", () => {
     ).items.find((b: { id: string }) => b.id === botId);
     expect(listed.last_message.text).toBeTruthy();
     expect(listed.last_message.text).not.toMatch(/enc:v1|\$enc/);
+  });
+
+  it("the workflow engine stores step results sealed (D-267)", () => {
+    const when = new Date("2026-11-13T00:00:00Z");
+    const result = { text: "The PIN is 0000", when, calls: [{ name: "files.write" }] };
+    const stored = sealStepOutput(orgId, result);
+    expect(JSON.stringify(stored)).not.toContain("PIN");
+    expect(JSON.stringify(stored)).not.toContain("files.write");
+    expect(openStepOutput(stored)).toEqual(result);
+    expect(openStepOutput(sealStepOutput(orgId, undefined))).toBeUndefined();
+    expect(openStepOutput(sealStepOutput(orgId, false))).toBe(false);
+    // A workspace that doesn't encrypt, and results recorded before sealing, pass through.
+    expect(sealStepOutput(null, result)).toBe(result);
+    expect(openStepOutput(result)).toBe(result);
   });
 
   it("rotation rewraps the data key without rewriting rows", async () => {
