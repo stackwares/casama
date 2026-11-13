@@ -9,7 +9,8 @@ import 'effects.dart';
 
 /// For the big moments (a new bot, a new space, a first routine): a cloud bot pops up with a burst
 /// of little stars and hearts and the [message], then floats away by itself. It sits over every
-/// page, so it keeps playing while the app moves on to the next screen, and never takes a tap.
+/// page on a soft wash of the page colour (so whatever the page draws behind it fades back), keeps
+/// playing while the app moves on to the next screen, and never takes a tap.
 /// With reduced motion it's the bot and the message, fading in and out. Everyday saves keep the
 /// quiet [showSuccess] message instead.
 void showCelebration(BuildContext context, String message, {Mascot? mascot}) {
@@ -130,8 +131,28 @@ class _CelebrationState extends State<_Celebration>
           final rise = still ? 0.0 : outT * 40;
           final bob = still ? 0.0 : math.sin(t * math.pi * 6) * 4 * (1 - outT);
           final center = Offset(size.width / 2, size.height * 0.42);
+          // A soft wash of the page colour behind the show, densest behind the bot, so it never
+          // sits on top of what the page draws there (a new bot's chat shows its own mascot in
+          // the same spot). One gradient fill whose alpha follows the clock: no blur, no layer.
+          final wash = (t / 0.12).clamp(0.0, 1.0) * (1 - outT);
           return Stack(
             children: [
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment(0, center.dy / size.height * 2 - 1),
+                      radius: 0.9,
+                      colors: [
+                        scheme.surface.withValues(alpha: 0.94 * wash),
+                        scheme.surface.withValues(alpha: 0.78 * wash),
+                        scheme.surface.withValues(alpha: 0.55 * wash),
+                      ],
+                      stops: const [0.0, 0.45, 1.0],
+                    ),
+                  ),
+                ),
+              ),
               if (!still)
                 for (final p in _pieces) _piece(p, t, center, bot),
               Positioned(
