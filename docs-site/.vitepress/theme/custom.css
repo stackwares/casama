@@ -16,3 +16,50 @@
 :root {
   --vp-home-hero-name-color: var(--vp-c-brand-1);
 }
+
+/* The Casama wordmark is Libre Baskerville Bold, like the app and casama.ai. */
+@font-face {
+  font-family: "Libre Baskerville";
+  src: url("/brand/LibreBaskerville-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+.VPNavBarTitle .title {
+  font: 700 20px/1 "Libre Baskerville", Georgia, serif;
+  letter-spacing: -0.03em;
+}
+
+.VPHero .main .name {
+  font-family: "Libre Baskerville", Georgia, serif;
+  letter-spacing: -0.03em;
+}
+
+/* The animated mascot (BrandMark.vue) fills these boxes and fades in once drawn. */
+.casama-mark {
+  display: block;
+  flex: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.casama-mark.is-ready { opacity: 1; }
+.casama-mark svg { display: block; }
+
+.casama-mark-nav {
+  width: 34px;
+  height: 34px;
+  margin-right: 8px;
+}
+
+.casama-mark-hero {
+  width: 192px;
+  height: 192px;
+}
+
+@media (min-width: 640px) {
+  .casama-mark-hero { width: 256px; height: 256px; }
+}
+
+@media (min-width: 960px) {
+  .casama-mark-hero { width: 320px; height: 320px; }
+}

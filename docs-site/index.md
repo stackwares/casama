@@ -6,9 +6,6 @@ hero:
   name: Casama
   text: AI teammates with their own computers
   tagline: Bots that remember, work on real computers, ask before risky steps, and run on your own server with any model.
-  image:
-    src: /logo.png
-    alt: Casama
   actions:
     - theme: brand
       text: Quick start

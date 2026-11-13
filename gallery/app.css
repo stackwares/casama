@@ -151,7 +151,10 @@ code { font: 0.92em var(--mono); }
 }
 .bar-inner { display: flex; align-items: center; height: 64px; gap: 10px; }
 .logo { display: inline-flex; align-items: center; gap: 8px; font-size: 22px; text-decoration: none; color: var(--text); }
-.logo img { width: 34px; height: 34px; display: block; }
+/* The animated brand mascot (assets/brand/casama-mark.js) fills these boxes; it fades in once drawn. */
+[data-casama-mark] { display: block; flex: none; width: 34px; height: 34px; opacity: 0; transition: opacity .4s ease; }
+[data-casama-mark].is-ready { opacity: 1; }
+[data-casama-mark] svg { display: block; }
 .crumb { color: var(--border-strong); font-size: 20px; }
 .crumb-page { font-size: 16px; font-weight: 500; text-decoration: none; color: var(--muted); }
 .bar-nav { margin-left: auto; display: flex; align-items: center; gap: 22px; }
@@ -286,7 +289,7 @@ h1 { margin: 0; font-size: clamp(36px, 4vw, 48px); line-height: 1.05; }
 
 /* Footer: the name returns */
 .foot { margin-top: 72px; border-top: 1px solid var(--border); padding: 32px 0 48px; }
-.foot-name { margin: 0 0 8px; font-weight: 700; font-size: 22px; letter-spacing: -0.02em; }
+.foot-name { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-weight: 700; font-size: 22px; letter-spacing: -0.02em; }
 .foot p { margin: 4px 0; }
 
 /* Detail */

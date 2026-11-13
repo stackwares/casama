@@ -24,7 +24,6 @@ export default defineConfig({
     ["meta", { name: "theme-color", content: "#0f6b5c" }],
   ],
   themeConfig: {
-    logo: "/logo.png",
     nav: [
       { text: "Get started", link: "/quick-start" },
       { text: "Guides", link: "/guide/bots" },
