@@ -38,7 +38,7 @@ describe.skipIf(!enabled)("hosted providers against local control planes", () =>
   afterAll(async () => {
     for (const p of planes) await p.stop().catch(() => {});
     await stack?.stop();
-    await rm(dir, { recursive: true, force: true });
+    if (dir) await rm(dir, { recursive: true, force: true });
   }, 120_000);
 
   const hostedOpts = () => ({
