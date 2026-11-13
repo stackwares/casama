@@ -66,6 +66,11 @@ jobs:
           docker build -q -f infra/images/computer/Dockerfile.headless -t casama/computer-headless:dev .
           docker build -q -f apps/supervisor/Dockerfile -t casama/supervisor:dev .
           docker build -q -f infra/egress-proxy/Dockerfile -t casama/egress-proxy:dev .
+          docker build -q -f infra/turn/Dockerfile -t casama/turn:dev .
+          # The desktop image compiles Neko (about 12 minutes); the Images workflow builds it from
+          # this commit, so the tests here use the published one.
+          docker pull -q ghcr.io/stackwares/casama/computer-desktop:latest
+          docker tag ghcr.io/stackwares/casama/computer-desktop:latest casama/computer-desktop:dev
       - name: Sandbox and computer tests (Docker)
         run: pnpm --filter @casama/sandbox --filter @casama/server test
       - name: Dart computerd tests

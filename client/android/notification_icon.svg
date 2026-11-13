@@ -1,0 +1,20 @@
+<!-- Android notification small icon (status bar): the Casama mascot as a white silhouette on
+     transparent, face cut out. Android tints it and ignores colour, so only alpha matters.
+     Rendered into app/src/main/res/drawable-*dpi/ic_notification.png with resvg (24dp base). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="12 14 230 230">
+  <defs>
+    <mask id="face" maskUnits="userSpaceOnUse" x="0" y="0" width="256" height="256">
+      <rect width="256" height="256" fill="#fff"/>
+      <ellipse cx="97" cy="142" rx="17" ry="19" fill="#000"/>
+      <ellipse cx="163" cy="138" rx="17" ry="19" fill="#000"/>
+      <path d="M116 166Q130 180 144 166" fill="none" stroke="#000" stroke-width="9" stroke-linecap="round"/>
+    </mask>
+  </defs>
+  <path d="M82.8 104.8C44.8 99.2 27.9 79.4 51.6 59.1C75.2 38.6 134.9 32.5 183.1 53.9L184.9 50.1C137.1 27.5 70.8 33.4 46.4 52.9C22.1 72.6 43.2 108.8 81.2 115.2Z" fill="#fff" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+  <circle cx="184" cy="52" r="20" fill="#fff"/>
+  <g fill="#fff" mask="url(#face)">
+    <circle cx="110" cy="112" r="50"/><circle cx="176" cy="130" r="36"/><circle cx="205" cy="163" r="27"/>
+    <circle cx="178" cy="190" r="29"/><circle cx="128" cy="197" r="28"/><circle cx="80" cy="189" r="29"/>
+    <circle cx="50" cy="158" r="28"/><circle cx="68" cy="130" r="23"/><ellipse cx="128" cy="158" rx="84" ry="44"/>
+  </g>
+</svg>
