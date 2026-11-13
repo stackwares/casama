@@ -89,16 +89,24 @@ list works on the web, the App Store (no request for high price points) and Goog
 | Plan | Price | Includes | Our cost if fully used | Margin after fees (web / iOS) |
 |---|---|---|---|---|
 | Free | $0 | $1 credits, 3 bots, 1 computer (1 running, 1×), 5 h, 1 seat | about $0.80 a month (plus invite credits) | marketing |
-| Plus | **$15** / $150 a year | $5 credits, 10 bots, 2 computers (1 running, 1×), 30 h, 1 seat | about $4.10 | about 65% / 58% |
+| Plus | **$15** / $150 a year | $5 credits, 10 bots, 2 computers (1 running, 1×), 30 h, 1 seat | about $4.10 | about 66% / 58% |
 | Pro | **$49** / $490 | $15 credits, unlimited bots, 5 computers (2 running, 2×), 100 h, 3 seats | about $13.20 | about 68% / 58% |
-| Max | **$99** / $899 | $30 credits, unlimited bots, 10 computers (3 running, 4×), 300 h, 10 seats | about $32.70 | about 62% / 52% |
+| Max | **$99** a month | $30 credits, unlimited bots, 10 computers (2 running, 4×), 300 h, 10 seats | about $32.70 | about 62% / 52% |
+| Max yearly | **$899** a year (about $74.90 a month) | the same | about $32.70 a month | about 52% / 41% |
 | Extra person (Pro, Max; web only) | **$12** a month ($120 a year) | one more seat | none directly (usage stays within the plan's credits and hours) | about 92% |
 | Pro trial (7 days, once per person) | $0 | $2 credits, 10 h | about $1.70 per trial | acquisition |
 | Credit packs | $10 / $25 web; **$12.99 / $29.99** in the stores | $10 / $25 of credits | $7.70 / $19.25 | about 16% web; 13–30% stores |
 
+Margins are after payment fees with everything used, at the 1.3 markup; store figures assume the
+15% rate, so **enroll in Apple's Small Business Program and Google Play's 15% tier** (at 30% the store
+column drops by about 15 points). Raising the markup to **1.4** (pending Oliver's yes; it's a live
+setting in the Admin screen) makes $1 of included credits cost about $0.71 and lifts each plan by
+about 2 points: Plus 67% / 60%, Pro 70% / 60%, Max 64% / 54%, Max yearly 54% / 43%.
+
 Most people won't use everything included, so real margins are higher. The step to watch is server
 capacity: the $11 VPS has about 9 GB for computers. Memory sizes are limits, not reservations, so a
-4× computer only uses what it needs, but a few busy Max workspaces fill the server; move to a larger
+4× computer only uses what it needs, but a few busy Max workspaces fill the server (Max runs 2 at
+once, not 3, until then); move to a larger
 server (about €159 a month, 128 GB) by about 15–20 paying workspaces.
 
 ## Lowering costs (so prices can come down)

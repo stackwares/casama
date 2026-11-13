@@ -2736,7 +2736,7 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
   and Google Play (capped at $999.99 without $1M in Play earnings).
 - **Credits and hours:** $1 / $5 / $15 / $30 a month; 5 / 30 / 100 / 300 computer hours.
 - **Computers:** hours cost little; what runs out is the server, so plans limit hosted computers
-  running at once (`max_running_computers` 1 / 1 / 2 / 3). Starting another puts the one nobody has
+  running at once (`max_running_computers` 1 / 1 / 2 / 2; Max goes back to 3 on a bigger server, since three 4 GB computers don't fit in the ~9 GB the current one has for computers). Starting another puts the one nobody has
   used for 2 minutes to sleep; if all are in use the start is refused (402 `plan_limit`, or the
   `running_limit` tool error for a bot). `computer_size` (1 / 1 / 2 / 4) sets vCPUs and GB of memory
   at each start and is saved on the computer, so usage is billed at that size.
