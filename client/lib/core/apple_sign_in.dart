@@ -20,7 +20,8 @@ String? appleFullName(String? given, String? family) {
 }
 
 /// The system sheet never opened, so the browser flow can still sign the person in.
-/// An unsigned local Mac build has no Sign in with Apple entitlement and fails this way.
+/// A Mac build without the Sign in with Apple entitlement (unsigned, or Developer ID, which Apple
+/// never grants it to) fails this way.
 bool appleSheetUnavailable(Object error) {
   if (error is SignInWithAppleNotSupportedException) return true;
   if (error is SignInWithAppleAuthorizationException) {

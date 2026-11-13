@@ -1,3 +1,4 @@
+import AuthenticationServices
 import Cocoa
 import FlutterMacOS
 import ServiceManagement
@@ -26,6 +27,7 @@ class MainFlutterWindow: NSWindow {
     RegisterGeneratedPlugins(registry: flutterViewController)
     ShortcutBridge.shared.attach(flutterViewController.engine.binaryMessenger)
     MacBridge.shared.attach(flutterViewController.engine.binaryMessenger)
+    WebAuthBridge.shared.attach(flutterViewController.engine.binaryMessenger)
 
     super.awakeFromNib()
   }
@@ -136,5 +138,59 @@ final class MacBridge: NSObject {
       help.removeAllItems()
       help.addItem(item("Casama Help", "?", [.command], "help"))
     }
+  }
+}
+
+// MARK: - Browser sign-in in the system's sign-in window (ASWebAuthenticationSession) over the
+// casama/web_auth channel: opens over the app instead of switching to the browser, shares the
+// browser's cookies and passkeys, and hands the casama:// link back here instead of to the app's
+// URL handler.
+
+final class WebAuthBridge: NSObject, ASWebAuthenticationPresentationContextProviding {
+  static let shared = WebAuthBridge()
+  private var channel: FlutterMethodChannel?
+  private var session: ASWebAuthenticationSession?
+
+  func attach(_ messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(name: "casama/web_auth", binaryMessenger: messenger)
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard call.method == "authenticate" else { return result(FlutterMethodNotImplemented) }
+      guard let args = call.arguments as? [String: Any],
+            let urlString = args["url"] as? String, let url = URL(string: urlString),
+            let scheme = args["scheme"] as? String else {
+        return result(FlutterError(code: "bad_args", message: "url and scheme are needed", details: nil))
+      }
+      self?.authenticate(url, scheme: scheme, result: result)
+    }
+    self.channel = channel
+  }
+
+  private func authenticate(_ url: URL, scheme: String, result: @escaping FlutterResult) {
+    // A second tap replaces the window still open; its caller hears it was cancelled.
+    session?.cancel()
+    let session = ASWebAuthenticationSession(url: url, callbackURLScheme: scheme) { [weak self] callback, error in
+      DispatchQueue.main.async {
+        self?.session = nil
+        if let callback = callback {
+          result(callback.absoluteString)
+        } else if let error = error as? ASWebAuthenticationSessionError, error.code == .canceledLogin {
+          result(FlutterError(code: "canceled", message: nil, details: nil))
+        } else {
+          result(FlutterError(code: "failed", message: error?.localizedDescription, details: nil))
+        }
+      }
+    }
+    session.presentationContextProvider = self
+    // Keep the browser's cookies, so someone already signed in there isn't asked again.
+    session.prefersEphemeralWebBrowserSession = false
+    self.session = session
+    if !session.start() {
+      self.session = nil
+      result(FlutterError(code: "unavailable", message: "The sign-in window could not open.", details: nil))
+    }
+  }
+
+  func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+    NSApp.mainWindow ?? NSApp.windows.first(where: { $0 is MainFlutterWindow }) ?? ASPresentationAnchor()
   }
 }

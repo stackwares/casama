@@ -17,6 +17,7 @@ import 'apple_sign_in.dart';
 import 'desktop_sign_in.dart';
 import 'google_sign_in.dart';
 import 'passkeys.dart';
+import 'web_auth_sheet.dart';
 import 'backend.dart';
 import 'chatgpt_connect.dart';
 
@@ -137,8 +138,9 @@ class SupabaseBackend implements Backend {
 
   @override
   Future<void> signInWithProvider(String provider) async {
-    // iOS and macOS use Apple's system sheet. If that sheet isn't available (an unsigned local Mac
-    // build has no Sign in with Apple entitlement), the browser flow still works.
+    // iOS and macOS use Apple's system sheet. If that sheet isn't available (Apple grants it to the
+    // Mac App Store build and signed development builds, never a Developer ID one), the web flow
+    // still works: in the sign-in window on macOS, in the browser elsewhere.
     if (provider == 'apple' &&
         nativeAppleSignIn &&
         await _signInWithAppleNative()) {
@@ -157,6 +159,9 @@ class SupabaseBackend implements Backend {
         )).url,
       );
     }
+    if (webAuthSheetPlatform && await _signInThroughSheet(oauthProvider)) {
+      return;
+    }
     final opened = await supabase.auth.signInWithOAuth(
       oauthProvider,
       redirectTo: _authRedirect,
@@ -170,6 +175,29 @@ class SupabaseBackend implements Backend {
     if (opened && !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       _closeSheetOnSignIn();
     }
+  }
+
+  /// macOS: the sign-in page in the system's sign-in window over the app, which hands the
+  /// casama:// link straight back. True when it finished (signed in, or the person closed it).
+  /// False when the window couldn't open, so the caller opens the browser instead.
+  Future<bool> _signInThroughSheet(sb.OAuthProvider provider) async {
+    final url = (await supabase.auth.getOAuthSignInUrl(
+      provider: provider,
+      redirectTo: authRedirect,
+    )).url;
+    final Uri? callback;
+    try {
+      callback = await openWebAuthSheet(Uri.parse(url), scheme: 'casama');
+    } on WebAuthUnavailable {
+      return false;
+    } on PlatformException catch (e) {
+      throw sb.AuthException(e.message ?? 'The sign-in window closed with an error.');
+    }
+    if (callback == null) return true;
+    final result = oauthCallbackResult(callback);
+    if (result.code == null) throw sb.AuthException(result.error!);
+    await supabase.auth.exchangeCodeForSession(result.code!);
+    return true;
   }
 
   /// Windows and Linux don't open casama:// links, so the browser comes back to 127.0.0.1.
