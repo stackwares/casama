@@ -62,6 +62,8 @@ export interface WelcomeState {
   googleDeclined?: boolean;
   /** Google is connected (or its sign-in was started) from the welcome chat. */
   connected?: boolean;
+  /** After Calendar connected, the one follow-up asking about Gmail was shown (D-255). */
+  gmailAsked?: boolean;
 }
 
 /** The Google apps the welcome chat connects and the catch-up reads. */
@@ -276,51 +278,75 @@ export function scopeCard() {
   );
 }
 
+/** The offer itself, said in the bot's own line above the Google card (D-255). */
+export const GOOGLE_PITCH =
+  "Connect your Google Calendar and I'll catch you up on your next two weeks.";
+
 /**
- * Google first (D-204): one card, right after the name, for everyone. Connecting is also the
- * consent to the catch-up, so the card says what it reads and that nothing is sent or changed.
+ * Google first (D-204, slimmed in D-255): right after the name, for everyone. The offer is the
+ * line above; the card is the buttons and one line of small print. Connecting is also the consent
+ * to the catch-up, so the print says it only reads (and that Google's screen names Composio).
  * The app opens the connection itself ("app:connect") and, once it worked, sends
- * "welcome.connected" back ("after").
+ * "welcome.connected" back ("after"). Gmail is offered once Calendar is in (gmailCard).
  */
 export function googleCard(route: GoogleRoute) {
-  const connect = (app: string) => ({ app, after: "welcome.connected" });
   return card(
     column(
-      ["q", "t", ...(route === "composio" ? ["via"] : []), "row"],
+      ["row", "via"],
       [
-        text("q", "## Start with your Google account"),
-        text(
-          "t",
-          "Connect Google Calendar and I'll catch you up on your next two weeks: what's coming, what clashes and what needs preparing. Add Gmail too and I'll tell you which emails need you. I only read; I won't send, change or delete anything.",
-        ),
-        ...(route === "composio"
-          ? [
-              text(
-                "via",
-                "Google's screen names Composio, the service that keeps your Google sign-in safe for Casama. You can disconnect any time in Settings → Connections.",
-                "caption",
-              ),
-            ]
-          : []),
-        { id: "row", component: "Row", children: ["cal", "mail", "skip"] },
+        { id: "row", component: "Row", children: ["cal", "skip"] },
         ...button(
           "cal",
           "Connect Google Calendar",
           "app:connect",
-          connect("google_calendar"),
+          { app: "google_calendar", after: "welcome.connected" },
           "primary",
         ),
-        ...button("mail", "Gmail too", "app:connect", connect("gmail")),
         ...button("skip", "Not now", "welcome.nogoogle", {}, "borderless"),
+        text(
+          "via",
+          route === "composio"
+            ? "Read only. Google's sign-in screen will show Composio, which keeps it safe for Casama."
+            : "Read only. I won't send, change or delete anything.",
+          "caption",
+        ),
       ],
     ),
   );
 }
 
-/** What comes after the name: the Google card when this server can connect Google, else the focus question. */
-function afterName(s: WelcomeState) {
+/** Asked once, after Calendar connected from the welcome chat (D-255): one question, two taps. */
+export const GMAIL_ASK = "Calendar's connected. Want me to check your inbox too?";
+
+export function gmailCard() {
+  return card(
+    column(
+      ["row"],
+      [
+        { id: "row", component: "Row", children: ["mail", "only"] },
+        ...button(
+          "mail",
+          "Add Gmail",
+          "app:connect",
+          { app: "gmail", after: "welcome.connected" },
+          "primary",
+        ),
+        ...button("only", "Just my calendar", "welcome.calendaronly", {}, "borderless"),
+      ],
+    ),
+  );
+}
+
+/**
+ * What comes after the name, as one message: [lead] and the Google offer with its card when this
+ * server can connect Google, else [lead] and the focus question.
+ */
+function afterName(s: WelcomeState, lead = "") {
   s.step = s.google ? "google" : "focus";
-  return s.google ? googleCard(s.google) : focusCard();
+  const say = (t: string) => (t.trim() ? [{ type: "text", text: t.trim() }] : []);
+  return s.google
+    ? [...say(`${lead} ${GOOGLE_PITCH}`), googleCard(s.google)]
+    : [...say(lead), focusCard()];
 }
 
 /**
@@ -333,14 +359,14 @@ export function openingMessage(
   nameKnown = false,
   google?: GoogleRoute,
 ) {
+  // One short message (D-255): who it is, then straight to the first useful thing.
   const hi = nameKnown && firstName.trim() ? `Hi ${firstName.trim()}!` : "Hi!";
-  return [
-    {
-      type: "text",
-      text: `${hi} I'm ${botName}, your assistant. I can work on my own computer, use your apps when you connect them, and remember how you like things done. ${google ? "Let's get you something useful in a minute." : "A couple of quick questions so I can start in the right place."}`,
-    },
-    nameKnown ? afterName({ step: "name", focus: [], google }) : nameCard(firstName),
-  ];
+  const me = `${hi} I'm ${botName}.`;
+  if (!nameKnown) return [{ type: "text", text: me }, nameCard(firstName)];
+  return afterName(
+    { step: "name", focus: [], google },
+    google ? me : `${me} Two quick questions so I start in the right place.`,
+  );
 }
 
 const listLabels = (focus: Focus[], other?: string) =>
@@ -893,6 +919,23 @@ async function handleWelcomeActionInner(
     await saveState(db, c.conversationId, s, purpose);
     return { runId: run?.id as string, messageId: m?.id as string, queue: true };
   };
+  /** Google is in (or its sign-in is still open): the catch-up, the welcome chat's first value. */
+  const startCatchup = async (g: { state: "connected" | "pending"; inbox: boolean }) => {
+    s.step = "first_value";
+    if (g.state === "pending")
+      return scripted([
+        {
+          type: "text",
+          text: "Finish signing in to Google in your browser, then tap Catch me up.",
+        },
+        ...catchupMessage(g.inbox),
+      ]);
+    if (!(await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides, d.platformModel))) {
+      s.step = "model";
+      return scripted([modelCard(true)]);
+    }
+    return modelTurn(g.inbox ? CATCHUP_TEXT : CATCHUP_CALENDAR_TEXT);
+  };
 
   switch (action.name) {
     case "welcome.name": {
@@ -914,11 +957,7 @@ async function handleWelcomeActionInner(
       await db.execute(sql`
         insert into public.user_about (user_id, name_asked_at) values (${c.userId}::uuid, now())
         on conflict (user_id) do update set name_asked_at = coalesce(public.user_about.name_asked_at, now())`);
-      const next = afterName(s);
-      return scripted([
-        ...(name ? [{ type: "text", text: `Nice to meet you, ${name}!` }] : []),
-        next,
-      ]);
+      return scripted(afterName(s, name ? `Nice to meet you, ${name}!` : ""));
     }
     // The app connected a Google app from the Google card (D-204): the catch-up starts right away,
     // since connecting under that card's wording was the consent to it.
@@ -932,27 +971,23 @@ async function handleWelcomeActionInner(
           },
           googleCard(s.google ?? "direct"),
         ]);
+      const first = !s.connected;
       s.connected = true;
-      if (s.step === "google" || s.step === "name") {
+      if ((s.step === "google" || s.step === "name") && (first || g.inbox)) {
         await memory(
           `Connected Google ${g.inbox ? "Calendar and Gmail" : "Calendar"} in the welcome chat.`,
         );
       }
-      s.step = "first_value";
-      if (g.state === "pending")
-        return scripted([
-          {
-            type: "text",
-            text: "Finish signing in to Google in your browser, then tap Catch me up.",
-          },
-          ...catchupMessage(g.inbox),
-        ]);
-      if (!(await ensureBotModel(db, c.botId, c.orgId, d.modelOverrides, d.platformModel))) {
-        s.step = "model";
-        return scripted([modelCard(true)]);
+      // Calendar's in: one follow-up for the inbox (D-255), then the catch-up.
+      if (g.state === "connected" && !g.inbox && !s.gmailAsked) {
+        s.gmailAsked = true;
+        s.step = "google";
+        return scripted([{ type: "text", text: GMAIL_ASK }, gmailCard()]);
       }
-      return modelTurn(g.inbox ? CATCHUP_TEXT : CATCHUP_CALENDAR_TEXT);
+      return startCatchup({ state: g.state, inbox: g.inbox });
     }
+    case "welcome.calendaronly":
+      return startCatchup({ state: "connected", inbox: false });
     case "welcome.nogoogle":
       s.googleDeclined = true;
       s.step = "focus";
@@ -1197,10 +1232,7 @@ export async function welcomeNameAnswered(db: Database, userId: string) {
   await postScripted(
     db,
     { orgId: conv.org_id, botId: conv.bot_id, conversationId: conv.id, userId },
-    [
-      ...(name ? [{ type: "text", text: `Nice to meet you, ${name}!` }] : []),
-      afterName({ ...conv.welcome }),
-    ],
+    afterName({ ...conv.welcome }, name ? `Nice to meet you, ${name}!` : ""),
     {
       text: name || "Skip",
       ...(surface

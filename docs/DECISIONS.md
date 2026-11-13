@@ -2981,3 +2981,26 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
   - Test users start with quiet hours off (`createAuthUser`), so push tests pass at any hour.
 - **Tests:** `quiet-hours.test.ts` (a new sign-up gets 22:00–07:00 on); `general_topics_test.dart`
   (Updates leaves out what's in a chat, the row's rename); the navigation tests use the new keys.
+
+## D-255 A shorter first message
+
+- **Decision** (Oliver, 2026-11-13, looking at the first user's opening: "too much text and 2
+  messages right away").
+- **Before:** a 50-word introduction ("I can work on my own computer, use your apps…"), then a
+  card with a heading, a paragraph, small print and three buttons (Connect Google Calendar, Gmail
+  too, Not now). It read as two messages and two decisions.
+- **Now:** one line and one card.
+  - **The line:** "Hi Oliver! I'm Casama. Connect your Google Calendar and I'll catch you up on your
+    next two weeks." (`GOOGLE_PITCH`). The same line follows "Nice to meet you, …!" when the
+    name was asked first, and when the welcome chat is reopened.
+  - **The card:** only **Connect Google Calendar** and **Not now**, plus one line of small print
+    ("Read only. Google's sign-in screen will show Composio…").
+  - **Gmail afterwards:** once Calendar is connected, one follow-up, "Calendar's connected. Want
+    me to check your inbox too?", with **Add Gmail** or **Just my calendar**
+    (`welcome.calendaronly`, `WelcomeState.gmailAsked`). Then the catch-up runs as before.
+  - **Without Google:** the line is "Hi! I'm Casama. Two quick questions so I start in the right
+    place." before the focus question.
+- **Tests:** `welcome-google.test.ts`:
+  - one text part with the offer and a card with two actions and no heading;
+  - the Gmail question after Calendar connects;
+  - Just my calendar runs the calendar-only catch-up.

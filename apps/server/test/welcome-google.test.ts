@@ -101,7 +101,7 @@ afterAll(async () => {
 });
 
 describe("welcome chat: Google first", () => {
-  it("asks for Google right after the name, saying it goes through Composio", async () => {
+  it("asks for Calendar right after the name, in one short message saying it goes through Composio (D-255)", async () => {
     w = await j(
       await h.request("/v1/welcome", {
         method: "POST",
@@ -112,12 +112,18 @@ describe("welcome chat: Google first", () => {
     await addKey(gail.token, w.org_id);
     await act(await last(), "welcome.name", { name: "Gail" }, "Gail");
     const card = await last();
-    expect(card[0]?.text).toBe("Nice to meet you, Gail!");
+    // One line from the bot with the offer, then a card that's only the buttons and small print.
+    expect(card[0]?.text).toBe(
+      "Nice to meet you, Gail! Connect your Google Calendar and I'll catch you up on your next two weeks.",
+    );
+    expect(card.filter((p) => p.type === "text")).toHaveLength(1);
     expect(actions(card)).toEqual([
       { name: "app:connect", context: { app: "google_calendar", after: "welcome.connected" } },
-      { name: "app:connect", context: { app: "gmail", after: "welcome.connected" } },
       { name: "welcome.nogoogle", context: {} },
     ]);
+    expect(
+      components(card).some((c) => c.component === "Text" && /^## /.test(String(c.text))),
+    ).toBe(false);
     expect(components(card).find((c) => c.id === "via")?.text).toMatch(/Composio/);
     expect(await step()).toBe("google");
   });
@@ -190,6 +196,14 @@ describe("welcome chat: Google first", () => {
     );
     // The fake Composio account list is shared, and still says ACTIVE.
     await act(await last(), "welcome.connected", { app: "google_calendar" }, "Connected");
+    // Calendar's in: one question about the inbox before the catch-up (D-255).
+    const ask = await last();
+    expect(ask[0]?.text).toBe("Calendar's connected. Want me to check your inbox too?");
+    expect(actions(ask)).toEqual([
+      { name: "app:connect", context: { app: "gmail", after: "welcome.connected" } },
+      { name: "welcome.calendaronly", context: {} },
+    ]);
+    await act(ask, "welcome.calendaronly", {}, "Just my calendar");
     await settle();
     const [mem] = await h.tdb.admin<
       { content: string }[]

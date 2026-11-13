@@ -198,9 +198,10 @@ with it. People who join by invite skip this. To set things up by hand instead, 
 
 The welcome chat is scripted, so it costs nothing until a model runs:
 
-1. **Start with your Google account.** Right after your name, the bot offers **Connect Google
-   Calendar**, **Gmail too** or **Not now** (when the server can connect Google). Once Google is
-   connected, the bot catches you up on your next two weeks straight away and skips the questions
+1. **Start with your Google Calendar.** Right after your name, one short message offers **Connect
+   Google Calendar** or **Not now** (when the server can connect Google). Once the calendar is
+   connected, the bot asks once whether to check your inbox too (**Add Gmail** or **Just my
+   calendar**), then catches you up on your next two weeks straight away and skips the questions
    below. It only reads; it sends, changes and deletes nothing.
 2. With **Not now**: **What should I help with first?** Pick up to three areas, or describe
    something else. Then **Just me, my team or my business?** Both questions can be skipped.
