@@ -159,13 +159,20 @@ describe("proactive bots", () => {
       order by created_at desc limit 1`;
     expect(run?.reason).toBe("setup");
     expect(run?.task).toContain("You're all set.");
-    const notes = await h.tdb.admin<{ kind: string; payload: { title: string; body: string } }[]>`
-      select kind, payload from public.notifications where user_id = ${owner.id} order by created_at`;
+    // The summary goes out just after the run finishes, so wait for it rather than racing it.
+    let notes: { kind: string; payload: { title: string; body: string } }[] = [];
+    for (let i = 0; i < 100 && !notes.length; i++) {
+      notes = await h.tdb.admin<{ kind: string; payload: { title: string; body: string } }[]>`
+        select kind, payload from public.notifications where user_id = ${owner.id} order by created_at`;
+      if (!notes.length) await new Promise((res) => setTimeout(res, 100));
+    }
     expect(notes.map((n) => n.kind)).toEqual(["checkin_summary"]);
     expect(notes[0]?.payload).toMatchObject({
       title: "Aide",
       body: "You're all set. Found 1 thing to start on, like booking a ride to the concert tomorrow night.",
     });
+    for (let i = 0; i < 50 && !push.sent.length; i++)
+      await new Promise((res) => setTimeout(res, 100));
     expect(push.sent.map((p) => p.message.title)).toEqual(["Aide"]);
     const [s] = await h.tdb.admin<{ push_text: string }[]>`
       select push_text from public.suggestions where bot_id = ${botId}`;
