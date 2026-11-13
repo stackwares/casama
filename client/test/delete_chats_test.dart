@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:casama_app/features/bots/bot_profile_screen.dart';
 import 'package:casama_app/features/chat/chat_screen.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app_test.dart' show harness, setSize;
@@ -83,5 +84,49 @@ void main() {
     await tester.pumpAndSettle();
     expect(backend.clearedBots, [botId]);
     expect(find.text('1 chat deleted.'), findsOneWidget);
+  });
+
+  testWidgets('deleting a chat keeps what was made there unless asked (D-274)', (tester) async {
+    await setSize(tester, const Size(900, 1000));
+    final backend = FakeBackend()
+      ..creationList = [fakeCreation('c1'), fakeCreation('c2', kind: CreationKind.image), fakeCreation('c3', conversation: 'other')];
+    await tester.pumpWidget(harness(backend, const ChatScreen(botId: botId, conversationId: convId)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('chatMoreMenu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('deleteChat')));
+    await tester.pumpAndSettle();
+    // Two things were made in this chat; the switch is off.
+    expect(find.text('Also delete the 2 things made here'), findsOneWidget);
+    expect(tester.widget<CheckboxListTile>(find.byKey(const Key('deleteChatCreations'))).value, isFalse);
+    await tester.tap(find.byKey(const Key('confirmDeleteChat')));
+    await tester.pumpAndSettle();
+    expect(backend.deletedConversations, [convId]);
+    expect(backend.deletedWithCreations, isEmpty);
+  });
+
+  testWidgets('the switch deletes what was made there too', (tester) async {
+    await setSize(tester, const Size(900, 1000));
+    final backend = FakeBackend()..creationList = [fakeCreation('c1')];
+    await tester.pumpWidget(harness(backend, const ChatScreen(botId: botId, conversationId: convId)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('chatMoreMenu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('deleteChat')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('deleteChatCreations')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirmDeleteChat')));
+    await tester.pumpAndSettle();
+    expect(backend.deletedWithCreations, [convId]);
+  });
+
+  testWidgets('no switch when nothing was made there', (tester) async {
+    await _openChat(tester);
+    await tester.tap(find.byKey(const Key('chatMoreMenu')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('deleteChat')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('deleteChatCreations')), findsNothing);
   });
 }

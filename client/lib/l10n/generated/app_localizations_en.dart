@@ -2764,8 +2764,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String deleteChatBody(String bot) {
-    return 'Its messages, photos and files are deleted for everyone who can see it. Usage records stay, and anything $bot remembered from it stays in its memory.';
+    return 'Its messages are deleted for everyone who can see it. What $bot made here stays in the Library, usage records stay, and anything it remembered from it stays in its memory.';
   }
+
+  @override
+  String deleteChatAlsoCreations(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Also delete the $count things made here',
+      one: 'Also delete the 1 thing made here',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get deleteChatAlsoCreationsHelp => 'Off: they stay in the Library.';
 
   @override
   String get chatDeleted => 'Chat deleted';

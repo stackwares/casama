@@ -1256,8 +1256,8 @@ class SupabaseBackend implements Backend {
       (await api.chat.listConversations(id: botId)).data!.items;
 
   @override
-  Future<void> deleteConversation(String conversationId) async {
-    await api.chat.deleteConversation(id: conversationId);
+  Future<void> deleteConversation(String conversationId, {bool withCreations = false}) async {
+    await api.chat.deleteConversation(id: conversationId, withCreations: withCreations ? 'true' : null);
   }
 
   @override
@@ -3958,6 +3958,60 @@ class SupabaseBackend implements Backend {
 
   @override
   String chatMediaPosterUrl(String id) => '${chatMediaUrl(id)}/poster';
+
+  @override
+  Future<CreationList> creations(
+    String orgId, {
+    CreationKind? kind,
+    String? botId,
+    String? conversationId,
+    String? q,
+    String? cursor,
+    bool recentlyOpened = false,
+    bool deleted = false,
+    int limit = 60,
+  }) async => (await api.creations.listCreations(
+    orgId: orgId,
+    kind: kind,
+    botId: botId,
+    conversationId: conversationId,
+    q: (q == null || q.trim().isEmpty) ? null : q.trim(),
+    cursor: cursor,
+    sort: recentlyOpened ? 'opened' : null,
+    deleted: deleted ? 'true' : null,
+    limit: limit,
+  )).data!;
+
+  @override
+  Future<CreationDetail> creation(String id) async => (await api.creations.getCreation(id: id)).data!;
+
+  @override
+  Future<Creation> updateCreation(String id, {String? title, bool? pinned, bool? opened}) async =>
+      (await api.creations.updateCreation(
+        id: id,
+        updateCreationRequest: UpdateCreationRequest(title: title, pinned: pinned, opened: opened),
+      )).data!;
+
+  @override
+  Future<void> deleteCreation(String id) async => api.creations.deleteCreation(id: id);
+
+  @override
+  Future<void> restoreCreation(String id) async => api.creations.restoreCreation(id: id);
+
+  @override
+  String creationContentUrl(String id) => '${api.baseUrl.replaceAll(RegExp(r'/+$'), '')}/v1/creations/$id/content';
+
+  @override
+  String creationCoverUrl(String id) => '${api.baseUrl.replaceAll(RegExp(r'/+$'), '')}/v1/creations/$id/cover';
+
+  @override
+  Future<Uint8List> creationContent(String id) async {
+    final res = await api.api.dio.get<List<int>>(
+      '/v1/creations/$id/content',
+      options: Options(responseType: ResponseType.bytes, headers: authHeaders, receiveTimeout: const Duration(seconds: 120)),
+    );
+    return Uint8List.fromList(res.data!);
+  }
 
   @override
   Map<String, String> get authHeaders {

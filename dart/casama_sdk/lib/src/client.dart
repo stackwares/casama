@@ -111,6 +111,7 @@ class CasamaClient {
   ReplaysApi get replays => api.getReplaysApi();
   PasswordManagersApi get passwordManagers => api.getPasswordManagersApi();
   McpApi get mcp => api.getMcpApi();
+  CreationsApi get creations => api.getCreationsApi();
 
   /// Wallpaper photo search, when the server has a photo source (D-087).
   AppearanceApi get appearance => api.getAppearanceApi();

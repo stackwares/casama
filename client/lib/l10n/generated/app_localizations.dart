@@ -4177,8 +4177,20 @@ abstract class AppLocalizations {
   /// No description provided for @deleteChatBody.
   ///
   /// In en, this message translates to:
-  /// **'Its messages, photos and files are deleted for everyone who can see it. Usage records stay, and anything {bot} remembered from it stays in its memory.'**
+  /// **'Its messages are deleted for everyone who can see it. What {bot} made here stays in the Library, usage records stay, and anything it remembered from it stays in its memory.'**
   String deleteChatBody(String bot);
+
+  /// No description provided for @deleteChatAlsoCreations.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Also delete the 1 thing made here} other{Also delete the {count} things made here}}'**
+  String deleteChatAlsoCreations(int count);
+
+  /// No description provided for @deleteChatAlsoCreationsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: they stay in the Library.'**
+  String get deleteChatAlsoCreationsHelp;
 
   /// No description provided for @chatDeleted.
   ///

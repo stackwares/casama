@@ -903,7 +903,8 @@ abstract class Backend {
   Future<Conversation> createConversation(String botId);
 
   /// Deletes a chat with its messages and media (the person who started it or a bot manager).
-  Future<void> deleteConversation(String conversationId);
+  /// Deletes a chat; what was made there stays in the Library unless [withCreations] (D-274).
+  Future<void> deleteConversation(String conversationId, {bool withCreations = false});
 
   /// Deletes every direct chat with [botId] this person may delete; returns (deleted, skipped).
   Future<(int, int)> deleteBotConversations(String botId);
@@ -1614,6 +1615,39 @@ abstract class Backend {
 
   /// The current sign-in, for players and images that load straight from the API.
   Map<String, String> get authHeaders;
+
+  // The Library (D-274): everything bots made.
+
+  /// A page of the workspace's creations, newest first (or recently opened), with the kinds that
+  /// exist for the filter chips. [deleted] lists what was deleted in the last 30 days.
+  Future<CreationList> creations(
+    String orgId, {
+    CreationKind? kind,
+    String? botId,
+    String? conversationId,
+    String? q,
+    String? cursor,
+    bool recentlyOpened = false,
+    bool deleted = false,
+    int limit = 60,
+  });
+
+  /// One creation with the others from the same run.
+  Future<CreationDetail> creation(String id);
+
+  /// Renames, pins or marks it opened (Recently opened).
+  Future<Creation> updateCreation(String id, {String? title, bool? pinned, bool? opened});
+
+  /// Hides it now; restorable for 30 days.
+  Future<void> deleteCreation(String id);
+  Future<void> restoreCreation(String id);
+
+  /// Where its bytes and its cover are served (need [authHeaders]); content supports ranges.
+  String creationContentUrl(String id);
+  String creationCoverUrl(String id);
+
+  /// Its bytes (pictures, documents and files to preview or save).
+  Future<Uint8List> creationContent(String id);
   Future<void> uploadFile(String computerId, String path, Uint8List bytes);
   Future<void> deleteFile(String computerId, String path);
   Future<List<Checkpoint>> checkpoints(String computerId);

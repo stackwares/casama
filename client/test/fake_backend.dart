@@ -1587,9 +1587,13 @@ class FakeBackend implements Backend {
       ),
     ...topics,
   ];
+  /// Chats deleted together with what was made in them (D-274).
+  final deletedWithCreations = <String>[];
   @override
-  Future<void> deleteConversation(String conversationId) async =>
-      deletedConversations.add(conversationId);
+  Future<void> deleteConversation(String conversationId, {bool withCreations = false}) async {
+    deletedConversations.add(conversationId);
+    if (withCreations) deletedWithCreations.add(conversationId);
+  }
   @override
   Future<(int, int)> deleteBotConversations(String botId) async {
     clearedBots.add(botId);
@@ -4504,6 +4508,83 @@ class FakeBackend implements Backend {
   @override
   Map<String, String> get authHeaders => const {'Authorization': 'Bearer test'};
 
+  // The Library (D-274).
+  List<Creation> creationList = [];
+  final creationBytes = <String, Uint8List>{};
+  final creationUpdates = <(String, Map<String, Object?>)>[];
+  final deletedCreations = <String>[];
+  final restoredCreations = <String>[];
+  /// Library list requests: (kind, bot, conversation, q, cursor).
+  final creationQueries = <(CreationKind?, String?, String?, String?, String?)>[];
+  /// Fails the Library list when set (load failed with Try Again).
+  Object? creationsError;
+  @override
+  Future<CreationList> creations(
+    String orgId, {
+    CreationKind? kind,
+    String? botId,
+    String? conversationId,
+    String? q,
+    String? cursor,
+    bool recentlyOpened = false,
+    bool deleted = false,
+    int limit = 60,
+  }) async {
+    creationQueries.add((kind, botId, conversationId, q, cursor));
+    final error = creationsError;
+    if (error != null) throw error;
+    final visible = creationList.where((c) => deleted ? c.deletedAt != null : c.deletedAt == null).toList();
+    final words = q?.trim().toLowerCase() ?? '';
+    final items = visible
+        .where((c) => kind == null || c.kind == kind)
+        .where((c) => botId == null || c.botId == botId)
+        .where((c) => conversationId == null || c.conversationId == conversationId)
+        .where((c) => words.isEmpty || c.title.toLowerCase().contains(words) || (c.botName ?? '').toLowerCase().contains(words))
+        .toList();
+    final start = cursor == null ? 0 : int.parse(cursor);
+    final page = items.skip(start).take(limit).toList();
+    final next = start + page.length < items.length ? '${start + page.length}' : null;
+    return CreationList(items: page, nextCursor: next, kinds: {for (final c in visible) c.kind}.toList());
+  }
+
+  @override
+  Future<CreationDetail> creation(String id) async {
+    final c = creationList.firstWhere((x) => x.id == id);
+    return CreationDetail.fromJson({
+      ...c.toJson(),
+      'siblings': [for (final s in creationList) if (s.id != id && s.runId != null && s.runId == c.runId) s.toJson()],
+    });
+  }
+
+  @override
+  Future<Creation> updateCreation(String id, {String? title, bool? pinned, bool? opened}) async {
+    creationUpdates.add((id, {'title': title, 'pinned': pinned, 'opened': opened}));
+    final i = creationList.indexWhere((x) => x.id == id);
+    creationList[i] = Creation.fromJson({...creationList[i].toJson(), 'title': ?title, 'pinned': ?pinned});
+    return creationList[i];
+  }
+
+  @override
+  Future<void> deleteCreation(String id) async {
+    deletedCreations.add(id);
+    final i = creationList.indexWhere((x) => x.id == id);
+    if (i >= 0) creationList[i] = Creation.fromJson({...creationList[i].toJson(), 'deleted_at': DateTime.now().toUtc().toIso8601String()});
+  }
+
+  @override
+  Future<void> restoreCreation(String id) async {
+    restoredCreations.add(id);
+    final i = creationList.indexWhere((x) => x.id == id);
+    if (i >= 0) creationList[i] = Creation.fromJson({...creationList[i].toJson(), 'deleted_at': null});
+  }
+
+  @override
+  String creationContentUrl(String id) => 'http://localhost:8787/v1/creations/$id/content';
+  @override
+  String creationCoverUrl(String id) => 'http://localhost:8787/v1/creations/$id/cover';
+  @override
+  Future<Uint8List> creationContent(String id) async => creationBytes[id] ?? Uint8List.fromList(utf8.encode('hello'));
+
   @override
   Future<Uint8List> downloadFile(String computerId, String path) async =>
       uploads[path] ?? Uint8List.fromList(utf8.encode('# Hello\n\nfile $path'));
@@ -4593,3 +4674,48 @@ extension on Task {
     createdAt: createdAt,
   );
 }
+
+
+/// A creation for Library tests (D-274).
+Creation fakeCreation(
+  String id, {
+  CreationKind kind = CreationKind.page,
+  String title = 'Space Dodger',
+  String? label,
+  String? bot = botId,
+  String? botName = 'Ada',
+  String? conversation = convId,
+  String? runId,
+  String? pageId,
+  String? mediaId,
+  String? mime,
+  bool hasCover = false,
+  bool pinned = false,
+  DateTime? createdAt,
+}) => Creation(
+  id: id,
+  orgId: orgId,
+  botId: bot,
+  botName: botName,
+  madeFor: 'me',
+  conversationId: conversation,
+  runId: runId,
+  kind: kind,
+  label: label,
+  title: title,
+  pageId: pageId ?? (kind == CreationKind.page ? 'page-$id' : null),
+  mediaId: mediaId,
+  mime: mime,
+  size: 1024,
+  width: null,
+  height: null,
+  durationS: null,
+  hasCover: hasCover,
+  version: 1,
+  pinned: pinned,
+  lastOpenedAt: null,
+  canChange: true,
+  deletedAt: null,
+  createdAt: createdAt ?? DateTime.now(),
+  updatedAt: createdAt ?? DateTime.now(),
+);
