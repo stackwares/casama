@@ -46,8 +46,8 @@ class MessageEntry extends ChatEntry {
   /// Edited versions of a message are siblings; arrows switch between them (D-108).
   final int siblingIndex;
   final int siblingCount;
-  MessageEntry copyWith({String? text, bool? streaming, List<AttachmentRef>? attachments, bool? uploading, bool? failed}) => MessageEntry(
-        id: id,
+  MessageEntry copyWith({String? id, String? text, bool? streaming, List<AttachmentRef>? attachments, bool? uploading, bool? failed}) => MessageEntry(
+        id: id ?? this.id,
         role: role,
         text: text ?? this.text,
         streaming: streaming ?? this.streaming,
@@ -654,6 +654,16 @@ class ChatController extends Notifier<ChatState> {
       rethrow;
     } finally {
       if (!turn.isCompleted) turn.complete();
+    }
+    // The bubble takes the id the server gave the message, so it can be edited right away (Fix 13)
+    // and a reload finds it unchanged. A reload that already brought the message wins.
+    final shown = optimistic;
+    final at = state.entries.indexWhere((x) => x is MessageEntry && x.id == shown.id);
+    if (at >= 0) {
+      final known = state.entries.any((x) => x is MessageEntry && x.id == sent.messageId);
+      state = state.copyWith(
+        entries: known ? ([...state.entries]..removeAt(at)) : ([...state.entries]..[at] = (state.entries[at] as MessageEntry).copyWith(id: sent.messageId)),
+      );
     }
     // Joined the run already on screen: keep following it.
     if (sent.joined == true && state.activeRunId == sent.runId) return;

@@ -2749,7 +2749,8 @@ class FakeBackend implements Backend {
     sentAttachments.add(attachments);
     if (uiAction != null) sentUiActions.add(uiAction);
     return SendMessageResponse(
-      messageId: 'm1',
+      // Each message gets its own id, as on the server.
+      messageId: sent.length == 1 ? 'm1' : 'm1-${sent.length}',
       runId: runId,
       conversationId: conversationId,
     );
