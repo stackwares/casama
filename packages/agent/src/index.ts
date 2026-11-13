@@ -10,6 +10,7 @@ export * from "./checkins.ts";
 export * from "./composio-triggers.ts";
 export * from "./computers.ts";
 export * from "./context.ts";
+export * from "./creations.ts";
 export * from "./credentials.ts";
 export * from "./data.ts";
 export * from "./desktop-context.ts";

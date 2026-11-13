@@ -86,7 +86,7 @@ describe("deleting conversations", () => {
     expect(asOwner.items.every((c: { can_delete: boolean }) => c.can_delete)).toBe(true);
   });
 
-  it("deletes a chat with its messages and media, keeps the run, and audits it", async () => {
+  it("deletes a chat with its messages, keeps the run and what was made (D-274), and audits it", async () => {
     const conv = await conversation(member.token);
     const run = await fill(conv);
     const res = await h.request(`/v1/conversations/${conv}`, {
@@ -96,7 +96,8 @@ describe("deleting conversations", () => {
     expect(res.status).toBe(200);
     expect(await j(res)).toEqual({ deleted: conv });
     expect(await count("messages", conv)).toBe(0);
-    expect(await count("chat_media", conv)).toBe(0);
+    // The media stays in the Library, private to the person it was made for.
+    expect(await count("chat_media", conv)).toBe(1);
     const [kept] = await h.tdb.admin<{ conversation_id: string | null }[]>`
       select conversation_id from public.runs where id = ${run}`;
     expect(kept).toEqual({ conversation_id: null });
@@ -140,8 +141,9 @@ describe("deleting conversations", () => {
     await h.tdb.admin`insert into public.runs (org_id, bot_id, conversation_id, trigger, status)
       values (${orgId}, ${botId}, ${b}, 'chat', 'waiting_approval')`;
 
+    // Asked to delete what was made too (D-274).
     const res = await j(
-      await h.request(`/v1/bots/${botId}/conversations`, {
+      await h.request(`/v1/bots/${botId}/conversations?with_creations=true`, {
         method: "DELETE",
         token: member.token,
       }),

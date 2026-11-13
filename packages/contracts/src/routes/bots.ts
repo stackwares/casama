@@ -91,6 +91,13 @@ export const listConversations = createRoute({
   },
 });
 
+const WithCreationsQuery = z.object({
+  with_creations: z
+    .enum(["true", "false"])
+    .optional()
+    .openapi({ description: "true also deletes what the bot made in these chats (D-274)" }),
+});
+
 export const deleteConversation = createRoute({
   operationId: "deleteConversation",
   method: "delete",
@@ -99,8 +106,8 @@ export const deleteConversation = createRoute({
   security,
   summary: "Delete a conversation and its messages",
   description:
-    "Only the person who started it or someone who manages its bot. Usage records and what the bot remembered stay. Refused with 409 while the bot is working in it.",
-  request: { params: idParam },
+    "Only the person who started it or someone who manages its bot. Usage records, what the bot remembered and what it made (the Library, D-274) stay, unless with_creations is true. Refused with 409 while the bot is working in it.",
+  request: { params: idParam, query: WithCreationsQuery },
   responses: {
     200: jsonResponse("Deleted", DeletedConversation),
     401: e401,
@@ -118,8 +125,8 @@ export const deleteBotConversations = createRoute({
   security,
   summary: "Delete every direct conversation with a bot that you may delete",
   description:
-    "Yours, or all of them if you manage the bot. Group chats and conversations the bot is still working in are left alone.",
-  request: { params: idParam },
+    "Yours, or all of them if you manage the bot. Group chats and conversations the bot is still working in are left alone. What the bot made stays in the Library unless with_creations is true.",
+  request: { params: idParam, query: WithCreationsQuery },
   responses: { 200: jsonResponse("Deleted", DeletedConversations), 401: e401, 404: e404 },
 });
 

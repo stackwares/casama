@@ -34,6 +34,7 @@ import { registerChatMediaRoutes } from "./routes/chat-media.ts";
 import { registerChatGptRoutes } from "./routes/chatgpt.ts";
 import { registerCheckinRoutes } from "./routes/checkins.ts";
 import { registerComputerRoutes, sandboxApiError } from "./routes/computers.ts";
+import { registerCreationRoutes } from "./routes/creations.ts";
 import { registerDeviceDataRoutes } from "./routes/device-data.ts";
 import { registerEncryptionRoutes } from "./routes/encryption.ts";
 import { registerGalleryRoutes } from "./routes/gallery.ts";
@@ -353,6 +354,7 @@ export function createApp(deps: AppDeps) {
   registerAttentionRoutes(app, deps);
   registerAboutYouRoutes(app, deps);
   registerChatMediaRoutes(app, deps);
+  registerCreationRoutes(app, deps);
   registerMcpRoutes(app, deps);
   // Enterprise features (ee/, commercial license, D-073); inert without a license key.
   registerEnterpriseRoutes(app as never, {

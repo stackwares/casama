@@ -3240,3 +3240,15 @@ Stage 8 of `docs/MASTER-PLAN-2026-11.md` (Fix 19 in `docs/PRODUCT-REVIEW-2026-11
 - **Decision:** knowledge sources read PDFs with Mozilla's pdf.js (`pdfjs-dist` 6.5.438, Apache-2.0), page by page, with the PDF's own title when it has one. The old reader understood only literal strings in content streams, not the hex strings, font encodings and ToUnicode maps most exported PDFs use, so those files indexed as empty. It stays as a fallback for files pdf.js can't open.
 - **Scans:** a PDF with no text layer now fails with "This PDF has no text to read, probably because it's a scan", which shows on the source, instead of indexing nothing silently. Reading scans (OCR) is not built; a vision model per page would need page rendering, which the server image doesn't have.
 - `parseDocument` became async; its four callers await it.
+
+## D-274 The Library, Phase 1: an index of everything bots make, and its API
+
+Stage 3, first half, of `docs/MASTER-PLAN-2026-11.md`; `docs/LIBRARY-PLAN.md` Phase 1, with all of its §14 defaults taken (Oliver: "you decide all of those", 2026-11-13).
+
+- **Index:** `public.creations`, one row per thing a bot made: kind (`page`, `image`, `video`, `audio`, `document`, `file`), the bot's label, title, where it came from (bot, chat, run, the person it was made for) and a pointer to the bytes (`page_id`, `media_id`; kept files in Phase 3). Per-person pins and "recently opened" in `creation_marks`. Database triggers fill it from `pages` (every publish, version and title change) and `chat_media`, so every path is covered; existing rows were backfilled.
+- **Who sees what:** `can_view_creation`: a page by its own visibility; anything else by the chat it was made in (private chats stay private, D-091); with no chat, the person it was made for and the bot's managers. Renaming and deleting: that person, the bot's managers, or an admin. pgTAP covers it.
+- **Deleting a chat keeps what was made** (changes D-220). Its creations lose the chat and stay private to their person. `DELETE /v1/conversations/{id}` and `DELETE /v1/bots/{id}/conversations` take `with_creations=true` to delete them too.
+- **Deleting a creation** hides it at once with Undo (`POST /v1/creations/{id}/restore`); the hourly maintenance purges it, with its page or media bytes, after 30 days.
+- **API:** `GET /v1/creations` (kind, bot, chat, project, pinned, words, recently opened, deleted; keyset cursor; the workspace's kinds for filter chips), `GET`, `PATCH` (title, label, pin, opened), `DELETE`, `restore`, `content` (byte ranges) and `cover` (a picture is its own cover; a video gets a frame). In the OpenAPI contract and the Dart client.
+- **Bots:** `pages.publish` takes a `label` (Site, Game, Report…), the media tools take a `title` (else the prompt's first words), and `library.list` and `library.get` let a bot find its own earlier work and the handle to change it, scoped to what the person it acts for can see.
+- **Storage** is counted per workspace (`organizations.storage_bytes`) from the start; caps come with Phase 3.

@@ -20,6 +20,7 @@ import {
   postSuggestions,
   postTopicResults,
   projectHeartbeat,
+  purgeDeletedCreations,
   purgeDeviceData,
   purgeSeenInbound,
   type RunDeps,
@@ -885,6 +886,11 @@ export const maintenanceWorkflow = DBOS.registerWorkflow(
     });
     // The engine keeps every step's result for replay. Once a workflow has ended nothing reads
     // them again, so they go after a week instead of growing forever (D-267).
+    // The Library's deleted items go after 30 days (D-274).
+    await DBOS.runStep(
+      () => purgeDeletedCreations(rt().db).catch(captureStep("purge-creations", 0)),
+      { name: "purge-creations" },
+    );
     await DBOS.runStep(
       () => purgeSeenInbound(rt().db).catch(captureStep("purge-seen-inbound", 0)),
       { name: "purge-seen-inbound" },

@@ -183,6 +183,13 @@ Class | Method | HTTP request | Description
 [*ComputersApi*](doc/ComputersApi.md) | [**takeLease**](doc/ComputersApi.md#takelease) | **POST** /v1/computers/{id}/lease | Take control (or renew it). The bot pauses screen actions; control returns after 15 minutes without renewal.
 [*ComputersApi*](doc/ComputersApi.md) | [**updateComputer**](doc/ComputersApi.md#updatecomputer) | **PATCH** /v1/computers/{id} | 
 [*ComputersApi*](doc/ComputersApi.md) | [**uploadComputerFile**](doc/ComputersApi.md#uploadcomputerfile) | **PUT** /v1/computers/{id}/files | Upload a file (request body is the raw contents, up to 100 MB)
+[*CreationsApi*](doc/CreationsApi.md) | [**deleteCreation**](doc/CreationsApi.md#deletecreation) | **DELETE** /v1/creations/{id} | Hides it now; the bytes go after 30 days unless it&#39;s restored
+[*CreationsApi*](doc/CreationsApi.md) | [**getCreation**](doc/CreationsApi.md#getcreation) | **GET** /v1/creations/{id} | 
+[*CreationsApi*](doc/CreationsApi.md) | [**getCreationContent**](doc/CreationsApi.md#getcreationcontent) | **GET** /v1/creations/{id}/content | The bytes (pictures, videos, sound; one byte range honoured). Pages open by view link
+[*CreationsApi*](doc/CreationsApi.md) | [**getCreationCover**](doc/CreationsApi.md#getcreationcover) | **GET** /v1/creations/{id}/cover | The picture for its card, when it has one (has_cover)
+[*CreationsApi*](doc/CreationsApi.md) | [**listCreations**](doc/CreationsApi.md#listcreations) | **GET** /v1/creations | The Library: things bots made that you can open, newest first (D-274)
+[*CreationsApi*](doc/CreationsApi.md) | [**restoreCreation**](doc/CreationsApi.md#restorecreation) | **POST** /v1/creations/{id}/restore | 
+[*CreationsApi*](doc/CreationsApi.md) | [**updateCreation**](doc/CreationsApi.md#updatecreation) | **PATCH** /v1/creations/{id} | Rename, relabel, pin or mark opened
 [*CredentialsApi*](doc/CredentialsApi.md) | [**completeChatGptSignIn**](doc/CredentialsApi.md#completechatgptsignin) | **POST** /v1/credentials/chatgpt/complete | Finish ChatGPT sign-in; the server exchanges the code and keeps the tokens in Vault
 [*CredentialsApi*](doc/CredentialsApi.md) | [**createCredential**](doc/CredentialsApi.md#createcredential) | **POST** /v1/credentials | Store a model key in Vault; returns metadata only
 [*CredentialsApi*](doc/CredentialsApi.md) | [**deleteCredential**](doc/CredentialsApi.md#deletecredential) | **DELETE** /v1/credentials/{id} | Delete a credential and its Vault secret (a ChatGPT sign-in is revoked first)
@@ -550,6 +557,10 @@ Class | Method | HTTP request | Description
  - [CreatedLocalDevice](doc/CreatedLocalDevice.md)
  - [CreatedMcpKey](doc/CreatedMcpKey.md)
  - [CreatedRoutine](doc/CreatedRoutine.md)
+ - [Creation](doc/Creation.md)
+ - [CreationDetail](doc/CreationDetail.md)
+ - [CreationKind](doc/CreationKind.md)
+ - [CreationList](doc/CreationList.md)
  - [Credential](doc/Credential.md)
  - [CredentialList](doc/CredentialList.md)
  - [CredentialStatus](doc/CredentialStatus.md)
@@ -905,6 +916,7 @@ Class | Method | HTTP request | Description
  - [UpdateAboutYouRequest](doc/UpdateAboutYouRequest.md)
  - [UpdateChannelRequest](doc/UpdateChannelRequest.md)
  - [UpdateComputerRequest](doc/UpdateComputerRequest.md)
+ - [UpdateCreationRequest](doc/UpdateCreationRequest.md)
  - [UpdateCredentialRequest](doc/UpdateCredentialRequest.md)
  - [UpdateDefaultInviteRequest](doc/UpdateDefaultInviteRequest.md)
  - [UpdateIntegrationRequest](doc/UpdateIntegrationRequest.md)

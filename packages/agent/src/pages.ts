@@ -100,6 +100,13 @@ export function registerPageTools(
       visibility: z.enum(["private", "workspace"]).optional(),
       refresh_cron: z.string().max(100).optional().describe("Refresh schedule, five-field cron"),
       refresh_instructions: z.string().max(4000).optional(),
+      label: z
+        .string()
+        .max(24)
+        .optional()
+        .describe(
+          "A word for what it is, shown in the person's Library: Site, Game, Report, Dashboard, Tracker",
+        ),
     }),
     async execute(args, ctx) {
       let html = args.html;
@@ -142,6 +149,11 @@ export function registerPageTools(
           insert into public.page_versions (page_id, version, org_id, html, data)
           select id, version, org_id, html, data from public.pages where id = ${id}::uuid`);
       }
+      // The Library's copy (D-274) is made by a trigger; this adds what only the tool knows.
+      await db.execute(sql`
+        update public.creations set run_id = coalesce(run_id, ${ctx.runId}::uuid)
+          ${args.label?.trim() ? sql`, label = ${args.label.trim().slice(0, 24)}` : sql``}
+        where page_id = ${id}::uuid`);
       if (args.refresh_cron)
         await linkRefresh(db, ctx, id, args.title, args.refresh_cron, args.refresh_instructions);
       return {

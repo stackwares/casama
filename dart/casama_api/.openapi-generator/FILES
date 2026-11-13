@@ -16,6 +16,7 @@ lib/src/api/channels_api.dart
 lib/src/api/chat_api.dart
 lib/src/api/checkins_api.dart
 lib/src/api/computers_api.dart
+lib/src/api/creations_api.dart
 lib/src/api/credentials_api.dart
 lib/src/api/devices_api.dart
 lib/src/api/encryption_api.dart
@@ -206,6 +207,10 @@ lib/src/model/created_invite_link.dart
 lib/src/model/created_local_device.dart
 lib/src/model/created_mcp_key.dart
 lib/src/model/created_routine.dart
+lib/src/model/creation.dart
+lib/src/model/creation_detail.dart
+lib/src/model/creation_kind.dart
+lib/src/model/creation_list.dart
 lib/src/model/credential.dart
 lib/src/model/credential_list.dart
 lib/src/model/credential_status.dart
@@ -561,6 +566,7 @@ lib/src/model/ui_shown_event_payload.dart
 lib/src/model/update_about_you_request.dart
 lib/src/model/update_channel_request.dart
 lib/src/model/update_computer_request.dart
+lib/src/model/update_creation_request.dart
 lib/src/model/update_credential_request.dart
 lib/src/model/update_default_invite_request.dart
 lib/src/model/update_integration_request.dart

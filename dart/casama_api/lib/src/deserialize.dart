@@ -143,6 +143,9 @@ import 'package:casama_api/src/model/created_invite_link.dart';
 import 'package:casama_api/src/model/created_local_device.dart';
 import 'package:casama_api/src/model/created_mcp_key.dart';
 import 'package:casama_api/src/model/created_routine.dart';
+import 'package:casama_api/src/model/creation.dart';
+import 'package:casama_api/src/model/creation_detail.dart';
+import 'package:casama_api/src/model/creation_list.dart';
 import 'package:casama_api/src/model/credential.dart';
 import 'package:casama_api/src/model/credential_list.dart';
 import 'package:casama_api/src/model/credential_test_result.dart';
@@ -482,6 +485,7 @@ import 'package:casama_api/src/model/ui_shown_event_payload.dart';
 import 'package:casama_api/src/model/update_about_you_request.dart';
 import 'package:casama_api/src/model/update_channel_request.dart';
 import 'package:casama_api/src/model/update_computer_request.dart';
+import 'package:casama_api/src/model/update_creation_request.dart';
 import 'package:casama_api/src/model/update_credential_request.dart';
 import 'package:casama_api/src/model/update_default_invite_request.dart';
 import 'package:casama_api/src/model/update_integration_request.dart';
@@ -854,6 +858,15 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return CreatedMcpKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CreatedRoutine':
           return CreatedRoutine.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Creation':
+          return Creation.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreationDetail':
+          return CreationDetail.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'CreationKind':
+          
+          
+        case 'CreationList':
+          return CreationList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Credential':
           return Credential.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'CredentialList':
@@ -1580,6 +1593,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UpdateChannelRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateComputerRequest':
           return UpdateComputerRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdateCreationRequest':
+          return UpdateCreationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateCredentialRequest':
           return UpdateCredentialRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateDefaultInviteRequest':

@@ -12,6 +12,7 @@ import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf, personForRun } from "../acting.ts";
 import { wrapUntrusted } from "../context.ts";
+import { titleFromText } from "../creations.ts";
 import { sealRunPayload } from "../events.ts";
 import {
   MEDIA_PRICES,
@@ -1029,6 +1030,8 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     bytes: Uint8Array | null,
     media: MediaResult,
     name: string,
+    /** What the Library calls it (D-274): the bot's title, else the prompt's first words. */
+    title?: string,
   ) {
     if (!bytes || bytes.length === 0 || bytes.length > CHAT_MEDIA_MAX_BYTES) return null;
     const [row] = await db.execute<{ id: string }>(sql`
@@ -1038,6 +1041,11 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
               ${name}, ${media.contentType}, ${Buffer.from(bytes)}, ${bytes.length},
               ${media.width ?? null}, ${media.height ?? null}, ${media.durationS ?? null})
       returning id`);
+    const named = title ? titleFromText(title) : "";
+    if (row?.id && named)
+      await db.execute(
+        sql`update public.creations set title = ${named} where media_id = ${row.id}::uuid`,
+      );
     return row?.id ?? null;
   }
 
@@ -1050,6 +1058,13 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     ready: (ctx) => mediaReady(ctx.orgId, "image"),
     schema: z.object({
       prompt: z.string().min(1).max(4000),
+      title: z
+        .string()
+        .max(120)
+        .optional()
+        .describe(
+          "A short name for it in the person's Library (otherwise the prompt's first words)",
+        ),
       size: z.enum(["square", "portrait", "landscape"]).optional(),
     }),
     async execute(args, ctx) {
@@ -1079,9 +1094,13 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
           : "jpg";
       const bytes = await mediaBytes(img).catch(() => null);
       const path = await saveMedia(ctx, bytes, ext).catch(() => null);
-      const shown = await keepForChat(ctx, bytes, img, fileName(path, `image.${ext}`)).catch(
-        () => null,
-      );
+      const shown = await keepForChat(
+        ctx,
+        bytes,
+        img,
+        fileName(path, `image.${ext}`),
+        args.title ?? args.prompt,
+      ).catch(() => null);
       // Inline images (OpenRouter) have no link; never put their bytes in the conversation.
       const where = img.url ? `Generated image: ${img.url}` : "Generated image";
       return {
@@ -1101,6 +1120,13 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
     ready: (ctx) => mediaReady(ctx.orgId, "video"),
     schema: z.object({
       prompt: z.string().min(1).max(4000),
+      title: z
+        .string()
+        .max(120)
+        .optional()
+        .describe(
+          "A short name for it in the person's Library (otherwise the prompt's first words)",
+        ),
       duration_s: z.number().int().min(1).max(20).optional(),
       image: z
         .string()
@@ -1151,6 +1177,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
         bytes,
         { ...video, durationS: video.durationS ?? seconds },
         fileName(path, "video.mp4"),
+        args.title ?? args.prompt,
       ).catch(() => null);
       const where = video.url ? `Generated video: ${video.url}` : "Generated video";
       return {

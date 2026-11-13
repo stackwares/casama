@@ -37,6 +37,7 @@ import {
   registerDesktopTools,
   registerDeviceTools,
   registerKnowledgeTools,
+  registerLibraryTools,
   registerLinkTools,
   registerLoginTools,
   registerPageTools,
@@ -477,6 +478,8 @@ export async function startWorker(opts: WorkerOptions) {
     },
   });
   registerPageTools(tools, { db, pagesUrl: opts.pagesUrl ?? "http://localhost:8790" });
+  // The Library (D-274): a bot finds its own earlier work.
+  registerLibraryTools(tools, { db });
   // Projects (D-113): the tools start planning runs; the heartbeat lives in the minute tick.
   registerProjectTools(tools, {
     db,

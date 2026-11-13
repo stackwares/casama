@@ -128,10 +128,11 @@ _responseData = rawData == null ? null : deserialize<Conversation, Conversation>
   }
 
   /// Delete every direct conversation with a bot that you may delete
-  /// Yours, or all of them if you manage the bot. Group chats and conversations the bot is still working in are left alone.
+  /// Yours, or all of them if you manage the bot. Group chats and conversations the bot is still working in are left alone. What the bot made stays in the Library unless with_creations is true.
   ///
   /// Parameters:
   /// * [id] 
+  /// * [withCreations] - true also deletes what the bot made in these chats (D-274)
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -143,6 +144,7 @@ _responseData = rawData == null ? null : deserialize<Conversation, Conversation>
   /// Throws [DioException] if API call or serialization fails
   Future<Response<DeletedConversations>> deleteBotConversations({ 
     required String id,
+    String? withCreations,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -169,9 +171,14 @@ _responseData = rawData == null ? null : deserialize<Conversation, Conversation>
       validateStatus: validateStatus,
     );
 
+    final _queryParameters = <String, dynamic>{
+      if (withCreations != null) r'with_creations': withCreations,
+    };
+
     final _response = await _dio.request<Object>(
       _path,
       options: _options,
+      queryParameters: _queryParameters,
       cancelToken: cancelToken,
       onSendProgress: onSendProgress,
       onReceiveProgress: onReceiveProgress,
@@ -206,10 +213,11 @@ _responseData = rawData == null ? null : deserialize<DeletedConversations, Delet
   }
 
   /// Delete a conversation and its messages
-  /// Only the person who started it or someone who manages its bot. Usage records and what the bot remembered stay. Refused with 409 while the bot is working in it.
+  /// Only the person who started it or someone who manages its bot. Usage records, what the bot remembered and what it made (the Library, D-274) stay, unless with_creations is true. Refused with 409 while the bot is working in it.
   ///
   /// Parameters:
   /// * [id] 
+  /// * [withCreations] - true also deletes what the bot made in these chats (D-274)
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -221,6 +229,7 @@ _responseData = rawData == null ? null : deserialize<DeletedConversations, Delet
   /// Throws [DioException] if API call or serialization fails
   Future<Response<DeletedConversation>> deleteConversation({ 
     required String id,
+    String? withCreations,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -247,9 +256,14 @@ _responseData = rawData == null ? null : deserialize<DeletedConversations, Delet
       validateStatus: validateStatus,
     );
 
+    final _queryParameters = <String, dynamic>{
+      if (withCreations != null) r'with_creations': withCreations,
+    };
+
     final _response = await _dio.request<Object>(
       _path,
       options: _options,
+      queryParameters: _queryParameters,
       cancelToken: cancelToken,
       onSendProgress: onSendProgress,
       onReceiveProgress: onReceiveProgress,

@@ -538,9 +538,21 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           where conversation_id in (select jsonb_array_elements_text(${JSON.stringify(ids)}::jsonb)::uuid)`)
       : Promise.resolve();
 
+  /** Also deleting what was made there (D-274): hidden now, purged with the Library's 30 days. */
+  const dropCreations = (
+    tx: Parameters<Parameters<typeof withUserSession>[2]>[0],
+    ids: string[],
+  ) =>
+    ids.length
+      ? tx.execute(sql`update public.creations set deleted_at = now(), updated_at = now()
+          where deleted_at is null
+            and conversation_id in (select jsonb_array_elements_text(${JSON.stringify(ids)}::jsonb)::uuid)`)
+      : Promise.resolve();
+
   app.openapi(routes.deleteConversation, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
+    const withCreations = c.req.valid("query").with_creations === "true";
     const conv = await withUserSession(db, claims, async (tx) => {
       const [row] = await tx.select().from(conversations).where(eq(conversations.id, id));
       if (!row) throw new ApiError(404, "conversation_not_found", "Conversation not found");
@@ -550,6 +562,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           "conversation_busy",
           "The bot is still working in this chat. Stop it first, then delete the chat.",
         );
+      if (withCreations) await dropCreations(tx, [id]);
       const gone = await tx
         .delete(conversations)
         .where(eq(conversations.id, id))
@@ -562,7 +575,8 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         );
       return row;
     });
-    await dropMedia([id]);
+    // What the bot made stays in the Library unless asked (D-274, changing D-220).
+    if (withCreations) await dropMedia([id]);
     await audit(conv.orgId, claims.sub, "conversation.deleted", "conversation", id, {
       bot_id: conv.botId,
       kind: conv.kind,
@@ -573,6 +587,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.deleteBotConversations, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
+    const withCreations = c.req.valid("query").with_creations === "true";
     const out = await withUserSession(db, claims, async (tx) => {
       const [bot] = await tx
         .select({ id: bots.id, orgId: bots.orgId })
@@ -586,6 +601,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       const busy = await busyIds(rows.map((r) => r.id));
       const candidates = rows.map((r) => r.id).filter((r) => !busy.has(r));
       // RLS keeps only the ones this person may delete.
+      if (withCreations) await dropCreations(tx, candidates);
       const gone = candidates.length
         ? await tx
             .delete(conversations)
@@ -596,7 +612,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         : [];
       return { orgId: bot.orgId, ids: gone.map((g) => g.id), skipped: busy.size };
     });
-    await dropMedia(out.ids);
+    if (withCreations) await dropMedia(out.ids);
     if (out.ids.length)
       await audit(out.orgId, claims.sub, "conversation.deleted_all", "bot", id, {
         count: out.ids.length,
