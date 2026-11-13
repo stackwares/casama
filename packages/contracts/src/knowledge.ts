@@ -38,6 +38,8 @@ export const CreateKnowledgeSourceRequest = z
     max_pages: z.number().int().min(1).max(200).optional(),
     /** github: https://github.com/owner/repo[/tree/ref/path] */
     repo_url: z.string().max(500).optional(),
+    /** How often to sync, in hours (1 to 168; 24 by default). Not for uploads. */
+    sync_every_hours: z.number().int().min(1).max(168).optional(),
     /** connection */
     integration_id: Uuid.optional(),
     documents: z

@@ -5,6 +5,7 @@
  * the same hybrid search as memory and returns snippets with citations. Without an embedding key,
  * search is full-text only (D-017).
  */
+import { createHash } from "node:crypto";
 import type { Database } from "@casama/db";
 import { contentKeys } from "@casama/db";
 import { sql } from "drizzle-orm";
@@ -16,6 +17,13 @@ import { withTimeout } from "./safe-fetch.ts";
 import type { ToolRegistry } from "./tools/registry.ts";
 
 export const KNOWLEDGE_SYNC_HOURS = 24;
+
+/** How often a source syncs: uploads don't change; others every 1 to 168 hours, 24 by default (D-286). */
+export function syncHours(kind: string, config: Record<string, unknown> | null | undefined) {
+  if (kind === "upload") return 24 * 365;
+  const n = Number(config?.sync_every_hours);
+  return Number.isInteger(n) && n >= 1 && n <= 168 ? n : KNOWLEDGE_SYNC_HOURS;
+}
 const MAX_PAGES = 50;
 const MAX_CHUNKS = 5000;
 
@@ -274,24 +282,53 @@ export async function syncKnowledgeSource(d: KnowledgeDeps, sourceId: string) {
     if (rows.length > MAX_CHUNKS)
       errors.push(`Kept the first ${MAX_CHUNKS} of ${rows.length} chunks`);
     const kept = rows.slice(0, MAX_CHUNKS);
+    const hashOf = (r: (typeof kept)[number]) =>
+      createHash("sha256")
+        .update(`${r.doc.ref}\n${r.doc.title}\n${r.location ?? ""}\n${r.text}`)
+        .digest("hex")
+        .slice(0, 32);
+    const hashes = kept.map(hashOf);
+    const digest = createHash("sha256").update(hashes.join(",")).digest("hex").slice(0, 32);
+    const every = syncHours(s.kind, s.config);
+    // Nothing changed since the last sync: no rewrite and no embedding calls (D-286).
+    const [prev] = await db.execute<{ content_hash: string | null }>(
+      sql`select content_hash from public.knowledge_sources where id = ${s.id}::uuid`,
+    );
+    if (prev?.content_hash === digest && docs.length) {
+      await db.execute(sql`
+        update public.knowledge_sources set status = 'ready', error = ${errors.length ? errors.join("\n").slice(0, 2000) : null},
+          last_synced_at = now(), next_sync_at = now() + make_interval(hours => ${every})
+        where id = ${s.id}::uuid`);
+      return { documents: docs.length, chunks: kept.length, errors, unchanged: true };
+    }
+    // Pieces that are the same as before keep their embeddings.
+    const known = new Map(
+      (
+        await db.execute<{ text_hash: string; embedding: string | null }>(sql`
+          select distinct on (text_hash) text_hash, embedding::text as embedding from public.knowledge_chunks
+          where source_id = ${s.id}::uuid and text_hash is not null and embedding is not null`)
+      ).map((r) => [r.text_hash, r.embedding]),
+    );
     const vectors: Array<string | null> = [];
-    for (const r of kept)
+    for (const [i, r] of kept.entries())
       vectors.push(
-        embedder
-          ? toPgVector(await embedder.embed(`${r.doc.title}\n${r.location ?? ""}\n${r.text}`))
-          : null,
+        known.get(hashes[i] as string) ??
+          (embedder
+            ? toPgVector(await embedder.embed(`${r.doc.title}\n${r.location ?? ""}\n${r.text}`))
+            : null),
       );
     await db.transaction(async (tx) => {
       await tx.execute(sql`delete from public.knowledge_chunks where source_id = ${s.id}::uuid`);
       for (const [i, r] of kept.entries())
         await tx.execute(sql`
-          insert into public.knowledge_chunks (org_id, source_id, doc_ref, doc_title, location, url, position, text, embedding)
+          insert into public.knowledge_chunks (org_id, source_id, doc_ref, doc_title, location, url, position, text, embedding, text_hash)
           values (${s.org_id}::uuid, ${s.id}::uuid, ${r.doc.ref.slice(0, 2000)}, ${r.doc.title.slice(0, 300)}, ${r.location?.slice(0, 300) ?? null},
-                  ${r.doc.url}, ${r.position}, ${contentKeys.seal(s.org_id, r.text)}, ${vectors[i] ?? null}::extensions.vector)`);
+                  ${r.doc.url}, ${r.position}, ${contentKeys.seal(s.org_id, r.text)}, ${vectors[i] ?? null}::extensions.vector, ${hashes[i] ?? null})`);
       await tx.execute(sql`
         update public.knowledge_sources set status = ${docs.length ? "ready" : "error"}, documents = ${docs.length}, chunks = ${kept.length},
           error = ${errors.length ? errors.join("\n").slice(0, 2000) : docs.length ? null : "Nothing could be read"},
-          last_synced_at = now(), next_sync_at = now() + make_interval(hours => ${s.kind === "upload" ? 24 * 365 : KNOWLEDGE_SYNC_HOURS})
+          last_synced_at = now(), next_sync_at = now() + make_interval(hours => ${every}),
+          content_hash = ${docs.length ? digest : null}
         where id = ${s.id}::uuid`);
     });
     return { documents: docs.length, chunks: kept.length, errors };

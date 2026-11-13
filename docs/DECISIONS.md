@@ -3363,3 +3363,9 @@ Stage 6 of `docs/MASTER-PLAN-2026-11.md` (Add 14 in `docs/PRODUCT-REVIEW-2026-11
 - **Linear:** webhooks signed with `Linear-Signature` (HMAC of the body, timestamp within 5 minutes); comments through the GraphQL API with an API key.
 - **Jira Cloud:** webhooks with a secret (`X-Hub-Signature: sha256=…`); descriptions and comments read from Atlassian's document format; comments posted with the account's email and API token.
 - **Not done:** moving the issue's status as the bot works (it says so in its comment instead).
+
+## D-286 Knowledge that keeps up: per-source sync interval, unchanged pieces reuse their embeddings
+
+Stage 8 of `docs/MASTER-PLAN-2026-11.md` (Add 5, server side; the app's screens for connection sources are app work).
+
+- **Decision:** a knowledge source can sync every 1 to 168 hours (`sync_every_hours`; 24 by default; uploads never change). Each piece's text is hashed (`knowledge_chunks.text_hash`): a piece that's the same as before keeps its embedding, and a source whose pieces all match (`content_hash`) isn't rewritten at all. An hourly sync of a website or Drive folder that rarely changes therefore costs one read and no embedding calls.

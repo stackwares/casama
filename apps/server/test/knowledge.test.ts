@@ -167,6 +167,44 @@ describe("knowledge sources", () => {
     expect(found.content).toContain("3 business days");
   });
 
+  it("syncs on its own schedule, and an unchanged source makes no embedding calls (D-286)", async () => {
+    const src = await j(
+      await h.request("/v1/knowledge-sources", {
+        method: "POST",
+        token: owner.token,
+        json: {
+          org_id: orgId,
+          bot_id: botId,
+          kind: "website",
+          name: "Help, hourly",
+          url: `${base}/`,
+          sync_every_hours: 1,
+        },
+      }),
+    );
+    let embeds = 0;
+    const counting = {
+      ...deps(),
+      embedderFor: async () => {
+        const e = hashEmbedder();
+        return { model: e.model, embed: async (t: string) => (embeds++, e.embed(t)) };
+      },
+    };
+    await syncKnowledgeSource(counting, src.id);
+    const first = embeds;
+    expect(first).toBeGreaterThan(0);
+    const [s1] = await h.tdb.admin<{ hours: number }[]>`
+      select round(extract(epoch from next_sync_at - last_synced_at) / 3600)::int as hours from public.knowledge_sources where id = ${src.id}`;
+    expect(s1!.hours).toBe(1);
+    const again = await syncKnowledgeSource(counting, src.id);
+    expect(again).toMatchObject({ unchanged: true });
+    expect(embeds).toBe(first);
+    // A forced rewrite still reuses every unchanged piece's embedding.
+    await h.tdb.admin`update public.knowledge_sources set content_hash = null where id = ${src.id}`;
+    await syncKnowledgeSource(counting, src.id);
+    expect(embeds).toBe(first);
+  });
+
   it("reads a GitHub repository's documents, shared with the whole workspace, and searches without embeddings too", async () => {
     expect(
       (
@@ -215,7 +253,7 @@ describe("knowledge sources", () => {
         token: member.token,
       }),
     );
-    expect(list.items.length).toBe(3);
+    expect(list.items.length).toBe(4);
     const id = list.items[0].id;
     expect(
       (await h.request(`/v1/knowledge-sources/${id}`, { method: "DELETE", token: member.token }))

@@ -106,6 +106,8 @@ export function registerKnowledgeRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps)
       if (!i) throw new ApiError(404, "integration_not_found", "Connection not found");
       config = { integration_id: b.integration_id, documents: b.documents };
     }
+    // How often it syncs (D-286): 1 to 168 hours; uploads don't change.
+    if (b.sync_every_hours && b.kind !== "upload") config.sync_every_hours = b.sync_every_hours;
     const row = await db.transaction(async (tx) => {
       const [r] = await tx.execute<Row>(sql`
         insert into public.knowledge_sources (org_id, bot_id, kind, name, config, created_by)

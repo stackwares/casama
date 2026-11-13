@@ -38,6 +38,8 @@ class CreateKnowledgeSourceRequest {
 
      this.repoUrl,
 
+     this.syncEveryHours,
+
      this.integrationId,
 
      this.documents,
@@ -141,6 +143,20 @@ class CreateKnowledgeSourceRequest {
 
 
 
+          // minimum: 1
+          // maximum: 168
+  @JsonKey(
+    
+    name: r'sync_every_hours',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? syncEveryHours;
+
+
+
   @JsonKey(
     
     name: r'integration_id',
@@ -177,6 +193,7 @@ class CreateKnowledgeSourceRequest {
       other.url == url &&
       other.maxPages == maxPages &&
       other.repoUrl == repoUrl &&
+      other.syncEveryHours == syncEveryHours &&
       other.integrationId == integrationId &&
       other.documents == documents;
 
@@ -190,6 +207,7 @@ class CreateKnowledgeSourceRequest {
         url.hashCode +
         maxPages.hashCode +
         repoUrl.hashCode +
+        syncEveryHours.hashCode +
         integrationId.hashCode +
         documents.hashCode;
 

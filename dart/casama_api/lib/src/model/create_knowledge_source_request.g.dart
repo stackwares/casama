@@ -25,6 +25,8 @@ abstract class _$CreateKnowledgeSourceRequestCWProxy {
 
   CreateKnowledgeSourceRequest repoUrl(String? repoUrl);
 
+  CreateKnowledgeSourceRequest syncEveryHours(int? syncEveryHours);
+
   CreateKnowledgeSourceRequest integrationId(String? integrationId);
 
   CreateKnowledgeSourceRequest documents(
@@ -48,6 +50,7 @@ abstract class _$CreateKnowledgeSourceRequestCWProxy {
     String? url,
     int? maxPages,
     String? repoUrl,
+    int? syncEveryHours,
     String? integrationId,
     List<CreateKnowledgeSourceRequestDocumentsInner>? documents,
   });
@@ -92,6 +95,10 @@ class _$CreateKnowledgeSourceRequestCWProxyImpl
       call(repoUrl: repoUrl);
 
   @override
+  CreateKnowledgeSourceRequest syncEveryHours(int? syncEveryHours) =>
+      call(syncEveryHours: syncEveryHours);
+
+  @override
   CreateKnowledgeSourceRequest integrationId(String? integrationId) =>
       call(integrationId: integrationId);
 
@@ -118,6 +125,7 @@ class _$CreateKnowledgeSourceRequestCWProxyImpl
     Object? url = const $CopyWithPlaceholder(),
     Object? maxPages = const $CopyWithPlaceholder(),
     Object? repoUrl = const $CopyWithPlaceholder(),
+    Object? syncEveryHours = const $CopyWithPlaceholder(),
     Object? integrationId = const $CopyWithPlaceholder(),
     Object? documents = const $CopyWithPlaceholder(),
   }) {
@@ -154,6 +162,10 @@ class _$CreateKnowledgeSourceRequestCWProxyImpl
           ? _value.repoUrl
           // ignore: cast_nullable_to_non_nullable
           : repoUrl as String?,
+      syncEveryHours: syncEveryHours == const $CopyWithPlaceholder()
+          ? _value.syncEveryHours
+          // ignore: cast_nullable_to_non_nullable
+          : syncEveryHours as int?,
       integrationId: integrationId == const $CopyWithPlaceholder()
           ? _value.integrationId
           // ignore: cast_nullable_to_non_nullable
@@ -207,6 +219,10 @@ CreateKnowledgeSourceRequest _$CreateKnowledgeSourceRequestFromJson(
       url: $checkedConvert('url', (v) => v as String?),
       maxPages: $checkedConvert('max_pages', (v) => (v as num?)?.toInt()),
       repoUrl: $checkedConvert('repo_url', (v) => v as String?),
+      syncEveryHours: $checkedConvert(
+        'sync_every_hours',
+        (v) => (v as num?)?.toInt(),
+      ),
       integrationId: $checkedConvert('integration_id', (v) => v as String?),
       documents: $checkedConvert(
         'documents',
@@ -226,6 +242,7 @@ CreateKnowledgeSourceRequest _$CreateKnowledgeSourceRequestFromJson(
     'botId': 'bot_id',
     'maxPages': 'max_pages',
     'repoUrl': 'repo_url',
+    'syncEveryHours': 'sync_every_hours',
     'integrationId': 'integration_id',
   },
 );
@@ -241,6 +258,7 @@ Map<String, dynamic> _$CreateKnowledgeSourceRequestToJson(
   'url': ?instance.url,
   'max_pages': ?instance.maxPages,
   'repo_url': ?instance.repoUrl,
+  'sync_every_hours': ?instance.syncEveryHours,
   'integration_id': ?instance.integrationId,
   'documents': ?instance.documents?.map((e) => e.toJson()).toList(),
 };

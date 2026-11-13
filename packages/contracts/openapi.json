@@ -11902,6 +11902,11 @@
             "type": "string",
             "maxLength": 500
           },
+          "sync_every_hours": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 168
+          },
           "integration_id": {
             "type": "string",
             "format": "uuid"
