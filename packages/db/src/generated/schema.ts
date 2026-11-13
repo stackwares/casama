@@ -319,9 +319,10 @@ export const conversations = pgTable("conversations", {
 	resultRunId: uuid("result_run_id"),
 	personal: boolean().default(false).notNull(),
 }, (table) => [
-	index("conversations_bot_id_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.lastMessageAt.desc().nullsFirst().op("timestamptz_ops")),
+	index("conversations_bot_id_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.lastMessageAt.desc().nullsFirst().op("uuid_ops")),
 	uniqueIndex("conversations_one_main").using("btree", table.botId.asc().nullsLast().op("uuid_ops"), table.createdBy.asc().nullsLast().op("uuid_ops")).where(sql`is_main`),
 	index("conversations_parent_idx").using("btree", table.parentConversationId.asc().nullsLast().op("uuid_ops")).where(sql`(parent_conversation_id IS NOT NULL)`),
+	index("conversations_posts_result_idx").using("btree", table.id.asc().nullsLast().op("uuid_ops")).where(sql`(posts_result AND (parent_conversation_id IS NOT NULL))`),
 	index("conversations_title_trgm").using("gin", table.title.asc().nullsLast().op("gin_trgm_ops")),
 	foreignKey({
 			columns: [table.orgId],
@@ -1901,7 +1902,8 @@ export const suggestions = pgTable("suggestions", {
 	postCard: boolean("post_card").default(true).notNull(),
 }, (table) => [
 	index("suggestions_notify_due_idx").using("btree", table.notifyAt.asc().nullsLast().op("timestamptz_ops")).where(sql`((status = 'pending'::text) AND (notified_at IS NULL) AND (notify_at IS NOT NULL))`),
-	index("suggestions_user_idx").using("btree", table.userId.asc().nullsLast().op("timestamptz_ops"), table.orgId.asc().nullsLast().op("timestamptz_ops"), table.status.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("text_ops")),
+	index("suggestions_unposted_idx").using("btree", table.createdAt.asc().nullsLast().op("timestamptz_ops")).where(sql`((status = 'pending'::text) AND (message_id IS NULL) AND post_card)`),
+	index("suggestions_user_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops"), table.orgId.asc().nullsLast().op("uuid_ops"), table.status.asc().nullsLast().op("uuid_ops"), table.createdAt.desc().nullsFirst().op("text_ops")),
 	foreignKey({
 			columns: [table.orgId],
 			foreignColumns: [organizations.id],
