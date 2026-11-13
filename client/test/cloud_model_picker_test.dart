@@ -25,6 +25,7 @@ Credential _key(String id, ProviderId provider) => Credential(
   status: CredentialStatus.ok,
   account: null,
   fallbackOnLimit: false,
+  embeddingModel: null,
   createdAt: DateTime(2026),
 );
 
