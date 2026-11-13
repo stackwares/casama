@@ -112,7 +112,7 @@ async function crawlWebsite(d: KnowledgeDeps, start: string, maxPages: number): 
     if (body === null) continue;
     const parsed = type.includes("html")
       ? parseHtml(body, u.pathname)
-      : parseDocument(`${u.pathname || "page"}.md`, new TextEncoder().encode(body));
+      : await parseDocument(`${u.pathname || "page"}.md`, new TextEncoder().encode(body));
     docs.push({ ...parsed, ref: url, url });
     if (!type.includes("html")) continue;
     for (const m of body.matchAll(/<a\s[^>]*href=["']([^"'#]+)["']/gi)) {
@@ -174,7 +174,7 @@ async function readGitHub(
     const bytes = new Uint8Array(
       Buffer.from(b.content, b.encoding === "base64" ? "base64" : "utf8"),
     );
-    const parsed = parseDocument(f.path.split("/").pop() as string, bytes);
+    const parsed = await parseDocument(f.path.split("/").pop() as string, bytes);
     docs.push({
       ...parsed,
       ref: f.path,
@@ -204,7 +204,7 @@ async function readConnection(
       const text = await adapter.callTool(doc.tool, doc.args ?? {});
       const parsed = /<html|<body|<h[1-6]/i.test(text)
         ? parseHtml(text, doc.title)
-        : parseDocument("doc.md", new TextEncoder().encode(text));
+        : await parseDocument("doc.md", new TextEncoder().encode(text));
       docs.push({
         title: doc.title,
         sections: parsed.sections,
@@ -243,7 +243,7 @@ export async function syncKnowledgeSource(d: KnowledgeDeps, sourceId: string) {
       for (const f of files) {
         try {
           docs.push({
-            ...parseDocument(f.name, new Uint8Array(f.content)),
+            ...(await parseDocument(f.name, new Uint8Array(f.content))),
             ref: f.name,
             url: null,
           });

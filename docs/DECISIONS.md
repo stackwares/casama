@@ -3232,3 +3232,11 @@ From the "alongside" list of `docs/MASTER-PLAN-2026-11.md` (Fix 21 and Improve (
 - **Worker health:** the minute tick touches `/tmp/worker-alive`; the worker container is unhealthy when it's over 3 minutes old.
 - **Alerts:** the monitoring profile gains Alertmanager, emailing `ALERT_EMAIL` through Auth's SMTP settings, and a disk-over-85% rule. Found on the way: `prometheus.yml` read the metrics token from `/etc/prometheus/metrics_token` while the entrypoint wrote `/tmp/metrics_token`, so every scrape failed and `CasamaApiDown` fired on a healthy server.
 - **Not done:** a hard disk cap per computer (needs XFS project quotas on the sandbox host; already in NEEDS-FROM-OLIVER).
+
+## D-273 Knowledge PDFs are read with pdf.js; a scan says it has no text
+
+Stage 8 of `docs/MASTER-PLAN-2026-11.md` (Fix 19 in `docs/PRODUCT-REVIEW-2026-11-13.md`), done early because it's server-only.
+
+- **Decision:** knowledge sources read PDFs with Mozilla's pdf.js (`pdfjs-dist` 6.5.438, Apache-2.0), page by page, with the PDF's own title when it has one. The old reader understood only literal strings in content streams, not the hex strings, font encodings and ToUnicode maps most exported PDFs use, so those files indexed as empty. It stays as a fallback for files pdf.js can't open.
+- **Scans:** a PDF with no text layer now fails with "This PDF has no text to read, probably because it's a scan", which shows on the source, instead of indexing nothing silently. Reading scans (OCR) is not built; a vision model per page would need page rendering, which the server image doesn't have.
+- `parseDocument` became async; its four callers await it.

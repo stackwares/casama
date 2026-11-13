@@ -1,8 +1,8 @@
 /**
  * Knowledge sources (D-125): turning documents into titled sections and chunks. Small parsers
  * with no extra libraries: Markdown and plain text by heading, HTML by heading (scripts and styles
- * dropped), CSV by rows with their header, DOCX from its document XML, and PDF from its text
- * operators (Flate-compressed or plain content streams; scanned PDFs have no text to find).
+ * dropped), CSV by rows with their header, DOCX from its document XML, and PDF through pdf.js
+ * (Mozilla), with the old content-stream reader as a fallback. Scanned PDFs have no text to find.
  */
 import { inflateSync } from "node:zlib";
 import { unzipSync } from "fflate";
@@ -158,7 +158,64 @@ function pdfString(s: string) {
   });
 }
 
-export function parsePdf(bytes: Uint8Array, title: string): ParsedDoc {
+/** Thrown for a PDF with no text layer, so the person learns why it found nothing (D-273). */
+export const SCANNED_PDF =
+  "This PDF has no text to read, probably because it's a scan. Upload a version with selectable text.";
+
+/**
+ * A PDF's text, page by page (D-273). pdf.js reads hex strings, font encodings and ToUnicode maps,
+ * which most exported PDFs use and the old reader couldn't, so those files indexed as empty.
+ */
+export async function parsePdf(bytes: Uint8Array, title: string): Promise<ParsedDoc> {
+  let doc: ParsedDoc | null = null;
+  try {
+    doc = await parsePdfText(bytes, title);
+  } catch {
+    doc = null;
+  }
+  if (!doc?.sections.length) doc = parsePdfStreams(bytes, title);
+  if (!doc.sections.length) throw new Error(SCANNED_PDF);
+  return doc;
+}
+
+async function parsePdfText(bytes: Uint8Array, title: string): Promise<ParsedDoc> {
+  const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const task = getDocument({
+    // pdf.js takes ownership of the buffer it's given.
+    data: new Uint8Array(bytes),
+    disableFontFace: true,
+    useSystemFonts: false,
+    verbosity: 0,
+  });
+  const pdf = await task.promise;
+  try {
+    const meta = await pdf.getMetadata().catch(() => null);
+    const docTitle = String((meta?.info as { Title?: unknown } | undefined)?.Title ?? "").trim();
+    const sections: Section[] = [];
+    for (let n = 1; n <= Math.min(pdf.numPages, 2000); n++) {
+      const page = await pdf.getPage(n);
+      const content = await page.getTextContent();
+      let text = "";
+      for (const item of content.items as Array<{ str?: string; hasEOL?: boolean }>) {
+        if (typeof item.str !== "string") continue;
+        text += item.str + (item.hasEOL ? "\n" : "");
+      }
+      page.cleanup();
+      const clean = text
+        .replace(/[ \t]+/g, " ")
+        .replace(/ *\n */g, "\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+      if (clean) sections.push({ location: `page ${n}`, text: clean });
+    }
+    return { title: docTitle || title, sections };
+  } finally {
+    await task.destroy().catch(() => {});
+  }
+}
+
+/** The old reader: literal strings in Flate or plain content streams (kept as a fallback). */
+export function parsePdfStreams(bytes: Uint8Array, title: string): ParsedDoc {
   const raw = Buffer.from(bytes).toString("latin1");
   if (!raw.startsWith("%PDF")) throw new Error("Not a PDF");
   const pages: string[] = [];
@@ -203,7 +260,11 @@ export function parsePdf(bytes: Uint8Array, title: string): ParsedDoc {
 }
 
 /** Picks a parser by file name (or content type). */
-export function parseDocument(name: string, bytes: Uint8Array, contentType = ""): ParsedDoc {
+export async function parseDocument(
+  name: string,
+  bytes: Uint8Array,
+  contentType = "",
+): Promise<ParsedDoc> {
   const ext = name.toLowerCase().split(".").pop() ?? "";
   const base = name.replace(/\.[^.]+$/, "");
   const text = () => new TextDecoder().decode(bytes);
