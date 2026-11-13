@@ -35,8 +35,11 @@ export const PLATFORM_OPENROUTER_CREDENTIAL_ID = "00000000-0000-4000-8000-000000
 /** The only model a Casama Cloud workspace runs on Casama's key. */
 export const CLOUD_LOCKED_MODEL = DEFAULT_MODELS.openrouter ?? "deepseek/deepseek-v4.1-flash-1017";
 
-/** Output cap on Casama's key. Reasoning models can write past a smaller cap. */
-export const CLOUD_MAX_OUTPUT_TOKENS = 4096;
+/**
+ * Output cap on Casama's key. It was 4,096, which cut long answers and file writes mid-way
+ * (D-268); spending is held by the run and day budgets, not by this.
+ */
+export const CLOUD_MAX_OUTPUT_TOKENS = 16_384;
 
 const PAID_DAILY_USD = 10;
 const FREE_DAILY_USD = 0.25;

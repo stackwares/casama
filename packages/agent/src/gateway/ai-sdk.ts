@@ -69,7 +69,13 @@ export function reasoningOptions(
   // Anthropic only caches prompts it's asked to: cache everything up to the newest message, so
   // the instructions, tools and conversation so far are read back at a tenth of the price on the
   // next turn (OpenAI, Gemini and xAI cache matching prefixes on their own). See docs/COSTS.md.
-  if (m.provider === "anthropic") return { anthropic: { cacheControl: { type: "ephemeral" } } };
+  if (m.provider === "anthropic")
+    return {
+      anthropic: {
+        cacheControl: { type: "ephemeral" },
+        ...(m.reasoningEffort ? { effort: m.reasoningEffort } : {}),
+      },
+    };
   if (!m.reasoningEffort) return undefined;
   if (m.provider === "openai") return { openai: { reasoningEffort: m.reasoningEffort } };
   if (m.provider === "openrouter")
@@ -211,6 +217,9 @@ export class AiSdkGateway implements ModelGateway {
               args: (part.input ?? {}) as Record<string, unknown>,
             },
           };
+        } else if (part.type.startsWith("reasoning") || part.type.startsWith("tool-input")) {
+          // Thinking, and a long tool call being written: not shown, but not silence either.
+          yield { type: "progress" };
         } else if (part.type === "error") throw part.error;
         else if (part.type === "abort") throw new ModelCallError("aborted", { retryable: false });
         else if (part.type === "finish") {

@@ -3177,3 +3177,17 @@ Stage 0 of `docs/MASTER-PLAN-2026-11.md`. Oliver approved the plan's defaults an
 - **Found:** the workflow engine (DBOS) keeps every step's result for replay in `dbos.operation_outputs`. For a run that includes model replies, tool results and summaries, in plain text even in a workspace with encryption at rest (D-136), and nothing ever deleted them.
 - **Decision:** `runAgentDurably` seals each step's result with the workspace's key before the engine stores it (`sealStepOutput` / `openStepOutput` in `apps/server/src/worker/workflows.ts`; results recorded before this pass through). The hourly maintenance deletes the engine's records of workflows that ended more than 7 days ago (`purgeEndedWorkflows`). New dependency: `superjson` (the engine's own serializer, so dates survive sealing).
 - **Not done:** step results recorded before this change are not rewritten; they go with the 7-day purge. Production needs the new server image and `up -d backup` to pick up the volume mount; that deploy waits for Oliver.
+
+## D-268 Runs that survive: waiting doesn't count, cut-off replies continue, broken streams retry, restarts don't repeat actions
+
+Stage 1 of `docs/MASTER-PLAN-2026-11.md` (Fix 1–5 and 8, Improve (agent) 6 in `docs/PRODUCT-REVIEW-2026-11-13.md`).
+
+- **Waiting for a person:** time spent waiting on an approval, a secret, a takeover or the screen no longer counts toward the run's 30-minute limit. Each wait is bracketed by two recorded steps, so a replayed run adds up the same.
+- **Thinking:** gateways emit a `progress` event for reasoning and tool-argument chunks. It resets the silence timers and is never passed on, so a failure after only thinking can still fail over.
+- **Claude models** get their reasoning effort (an early return for prompt caching had skipped it).
+- **Cut-off replies:** the run loop reads why the model stopped. A reply stopped at the output limit is kept and continued, up to 3 times; a tool call cut off at the limit asks the model to work in smaller pieces. Casama Cloud's output cap rises from 4,096 to 16,384 tokens; spending is held by the run and day budgets, not by the cap.
+- **Long tasks:** once a run's own steps pass 75% of the model's context, the oldest tool results (all but the newest 4) are cut to their first lines until the total is under 50%; long file contents the model wrote get the same treatment. A provider's "context too long" refusal trims harder once and asks again. Trimming is deterministic, so replays send the same prompt.
+- **Broken streams:** a model step whose stream breaks after it started is tried again up to twice (1 s, then 4 s), and the half-written draft is taken back from the chat first. Errors that can't be helped by trying again (bad keys, context overflow) fail at once.
+- **Restarts:** a new server-only table, `run_tool_attempts`, records each tool call as it starts. When the engine runs a step again after a restart, looking, low-risk and self-only tools run again; anything else returns "Casama restarted while this action was running" to the model instead of doing it twice.
+- **Orphans:** the minute tick fails runs that still say they're working two minutes after their workflow ended. Runs with no workflow (live calls, teach sessions) are left alone.
+- **Not done:** a person-facing "resume" button for a failed run. Retrying the model step and the orphan sweep cover the causes the review found; resume needs the app and waits for Stage 2's retry work.

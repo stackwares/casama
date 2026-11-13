@@ -43,7 +43,14 @@ import { z } from "zod";
 import { loadPerson, type PersonContext, savePersonFact } from "./about-you.ts";
 import { replyToChannel } from "./channels/service.ts";
 import { auditComputer, type ComputerService, RunningLimitError } from "./computers.ts";
-import { buildContext, estimateTokens, messageTokens, offloadLargeResult } from "./context.ts";
+import {
+  buildContext,
+  estimateTokens,
+  isContextOverflow,
+  messageTokens,
+  offloadLargeResult,
+  trimTurn,
+} from "./context.ts";
 import {
   type CredentialResolver,
   type ModelPolicy,
@@ -181,7 +188,8 @@ export interface RunDeps {
   computers?: ComputerService;
   step: StepRunner;
   logger?: Logger;
-  limits?: { maxSteps?: number; wallTimeMs?: number };
+  /** `contextWindow` caps what a run may send, for models whose real window is smaller than listed. */
+  limits?: { maxSteps?: number; wallTimeMs?: number; contextWindow?: number };
   /** Enqueues another run (bots woken by @mentions in group chats, D-118). */
   startRun?: (runId: string) => Promise<void>;
   /** Langfuse generations for every model attempt (D-107); off when unset. */
@@ -802,10 +810,31 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     let fileLinksChecked = false;
     // Untrusted content read since the last approval (web pages, outside services).
     let untrusted = false;
+    // Time spent waiting for a person (an approval, a secret, the screen) doesn't count toward the
+    // run's time limit (D-268). Both ends are recorded steps, so a replay adds up the same.
+    let waitedMs = 0;
+    const timedWait = async (key: string, wait: () => Promise<void>) => {
+      const from = await step(`wait-start-${key}`, async () => Date.now());
+      await wait();
+      const to = await step(`wait-end-${key}`, async () => Date.now());
+      waitedMs += Math.max(0, to - from);
+    };
+    // Replies cut off at the output limit are continued, a few times at most (D-268).
+    let continuations = 0;
+    let carried = "";
+    let overflowHandled = false;
+    const windowTokens = Math.min(
+      caps.contextWindow,
+      deps.limits?.contextWindow ?? caps.contextWindow,
+    );
+    const baseTokens = () =>
+      ctx.system.reduce((n, t) => n + estimateTokens(t), 0) +
+      ctx.messages.reduce((n, m) => n + messageTokens(m), 0);
 
     for (let i = 0; ; i++) {
+      const waited = waitedMs;
       const check = await step(`check-${i}`, () =>
-        checkRun(db, info, i, limits, deps.billCloudModels === true, cloudLocked),
+        checkRun(db, info, i, limits, deps.billCloudModels === true, cloudLocked, waited),
       );
       if (check === "cancelled") {
         await step("cancel", () => finishCancelled(db, info, bus));
@@ -866,25 +895,59 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           lastSaid = m.id;
         }
       }
-      const out = await step(`model-${i}`, () =>
-        modelStep(
-          deps,
-          info,
-          i,
-          {
-            system: lazy ? [...ctx.system, lazy.index] : ctx.system,
-            messages: [...ctx.messages, ...turn],
-            tools: lazy ? specsNow() : toolSpecs,
-            resolveName: (wire) => registry.resolveWire(wire),
-          },
-          chainFor,
-          bus,
-          redactor,
-        ),
-      );
+      // A long task: old tool results are cut down before they overflow the model's context.
+      trimTurn(turn, baseTokens(), windowTokens);
+      const askModel = (name: string) =>
+        step(name, () =>
+          modelStep(
+            deps,
+            info,
+            i,
+            {
+              system: lazy ? [...ctx.system, lazy.index] : ctx.system,
+              messages: [...ctx.messages, ...turn],
+              tools: lazy ? specsNow() : toolSpecs,
+              resolveName: (wire) => registry.resolveWire(wire),
+            },
+            chainFor,
+            bus,
+            redactor,
+          ),
+        );
+      let out: Awaited<ReturnType<typeof modelStep>>;
+      try {
+        out = await askModel(`model-${i}`);
+      } catch (err) {
+        // The estimate was off and the provider says the prompt doesn't fit: cut harder, once.
+        if (overflowHandled || !isContextOverflow(err)) throw err;
+        overflowHandled = true;
+        if (trimTurn(turn, baseTokens(), windowTokens, { force: true, target: 0.3 }) === 0)
+          throw err;
+        out = await askModel(`model-${i}-fit`);
+      }
       if (out.cancelled) {
         await step("cancel", () => finishCancelled(db, info, bus));
         return { status: "cancelled" };
+      }
+      // Cut off at the output limit: without this the half-written reply passed as finished.
+      if (
+        out.finishReason === "length" &&
+        out.toolCalls.length === 0 &&
+        continuations < MAX_CONTINUATIONS
+      ) {
+        continuations++;
+        if (out.text.trim()) {
+          if (info.conversationId && !info.group) {
+            const said = out;
+            const parent = lastSaid;
+            await step(`said-${i}`, () => saveInterimMessage(db, info, said, parent, bus));
+            beforeSaid = lastSaid;
+            lastSaid = said.messageId;
+          } else carried += out.text;
+          turn.push({ role: "assistant", content: out.text });
+        }
+        turn.push({ role: "user", content: out.text.trim() ? CONTINUE_NOTE : CUT_OFF_CALL_NOTE });
+        continue;
       }
       if (out.toolCalls.length === 0) {
         // A reply that links to computer files that aren't there (D-231): take the draft back and
@@ -925,7 +988,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
             continue;
           }
         }
-        final = { text: out.text, messageId: out.messageId };
+        final = { text: carried + out.text, messageId: out.messageId };
         break;
       }
       turn.push({ role: "assistant", content: out.text, toolCalls: out.toolCalls });
@@ -978,7 +1041,10 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         let blocked: string | null = gate.handOff ?? null;
         if (gate.approvalId) {
           const wait = deps.waitForApproval ?? ((id, run, ms) => pollApproval(db, id, run, ms));
-          await wait(gate.approvalId, info.runId, APPROVAL_TTL_MS);
+          const approvalId = gate.approvalId;
+          await timedWait(`approval-${i}-${call.callId}`, () =>
+            wait(approvalId, info.runId, APPROVAL_TTL_MS),
+          );
           const outcome = await step(`resolve-${i}-${call.callId}`, () =>
             resolveApproval(db, info, gate.approvalId as string, bus),
           );
@@ -1039,13 +1105,15 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
             continue;
           }
           let state = "pending";
-          await waitUntil(
-            `secret-${call.callId}`,
-            async () => {
-              state = await secretRequestState(db, started.id);
-              return state !== "pending";
-            },
-            SECRET_REQUEST_TTL_MS,
+          await timedWait(`secret-${i}-${call.callId}`, () =>
+            waitUntil(
+              `secret-${call.callId}`,
+              async () => {
+                state = await secretRequestState(db, started.id);
+                return state !== "pending";
+              },
+              SECRET_REQUEST_TTL_MS,
+            ),
           );
           if (state === "cancelled") {
             await step("cancel", () => finishCancelled(db, info, bus));
@@ -1078,13 +1146,15 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
             continue;
           }
           let state = "pending";
-          await waitUntil(
-            `takeover-${call.callId}`,
-            async () => {
-              state = await takeoverState(db, started.id);
-              return !["pending", "taken"].includes(state);
-            },
-            TAKEOVER_TTL_MS,
+          await timedWait(`takeover-${i}-${call.callId}`, () =>
+            waitUntil(
+              `takeover-${call.callId}`,
+              async () => {
+                state = await takeoverState(db, started.id);
+                return !["pending", "taken"].includes(state);
+              },
+              TAKEOVER_TTL_MS,
+            ),
           );
           if (state === "cancelled") {
             await step("cancel", () => finishCancelled(db, info, bus));
@@ -1111,16 +1181,18 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
             return row.id;
           });
           if (hold) {
-            await waitUntil(
-              `lease-${call.callId}`,
-              async () => {
-                const lease = await activeUserLease(db, hold);
-                const [r] = await db.execute<{ cancel: Date | null }>(
-                  sql`select cancel_requested_at as cancel from public.runs where id = ${info.runId}::uuid`,
-                );
-                return !lease || !!r?.cancel || (!def.screen && lease.allowShell);
-              },
-              24 * 3600 * 1000,
+            await timedWait(`lease-${i}-${call.callId}`, () =>
+              waitUntil(
+                `lease-${call.callId}`,
+                async () => {
+                  const lease = await activeUserLease(db, hold);
+                  const [r] = await db.execute<{ cancel: Date | null }>(
+                    sql`select cancel_requested_at as cancel from public.runs where id = ${info.runId}::uuid`,
+                  );
+                  return !lease || !!r?.cancel || (!def.screen && lease.allowShell);
+                },
+                24 * 3600 * 1000,
+              ),
             );
             const note = await step(`lease-resume-${i}-${call.callId}`, () =>
               resumeFromUser(db, info.runId, hold, bus),
@@ -1133,7 +1205,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
               blockedStep(deps, info, call, blocked as string, bus),
             )
           : await step(`tool-${i}-${call.callId}`, () =>
-              toolStep(deps, registry, info, call, bus, redactor, secrets),
+              toolStep(deps, registry, info, call, bus, redactor, secrets, `${i}-${call.callId}`),
             );
         if (res.untrusted) untrusted = true;
         failStreak = blocked || res.content.startsWith("Error (") ? failStreak + 1 : 0;
@@ -1833,6 +1905,8 @@ async function checkRun(
   limits: { maxSteps: number; wallTimeMs: number },
   billCloudModels: boolean,
   cloudLocked = CLOUD_LOCKED_MODEL,
+  /** Time this run spent waiting for a person, which the time limit doesn't count (D-268). */
+  waitedMs = 0,
 ) {
   const [run] = await db.execute<{ cancel_requested_at: Date | null; started_at: Date | null }>(
     sql`select cancel_requested_at, started_at from public.runs where id = ${info.runId}::uuid`,
@@ -1844,7 +1918,10 @@ async function checkRun(
       code: "max_steps_exceeded",
       message: `The run stopped after ${limits.maxSteps} steps.`,
     };
-  if (run?.started_at && Date.now() - new Date(run.started_at).getTime() > limits.wallTimeMs) {
+  if (
+    run?.started_at &&
+    Date.now() - new Date(run.started_at).getTime() - waitedMs > limits.wallTimeMs
+  ) {
     return {
       ok: false as const,
       code: "wall_time_exceeded",
@@ -1936,7 +2013,43 @@ async function onChatGptError(
   }
 }
 
-async function modelStep(
+/** How many times a model step is tried again after its stream broke part-way (D-268). */
+const MODEL_STEP_RETRIES = 2;
+const MAX_CONTINUATIONS = 3;
+const CONTINUE_NOTE =
+  "[Casama: your reply was cut off at the output limit. Continue exactly where you stopped. Don't repeat or summarize what you already wrote.]";
+const CUT_OFF_CALL_NOTE =
+  "[Casama: your last step was cut off at the output limit before it finished, so nothing ran. Do the same work in smaller pieces: for a long file, write it in several parts.]";
+
+/**
+ * One model step, tried again when the provider's stream breaks after it started (withFallback
+ * only retries before the first output). The half-written draft is taken back from the chat first.
+ */
+async function modelStep(...args: Parameters<typeof modelStepOnce>) {
+  const [deps, info, , , , busFn] = args;
+  const sleep = deps.fallback?.sleep ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)));
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await modelStepOnce(...args);
+    } catch (err) {
+      const retryable = err instanceof ModelCallError ? err.retryable : !isContextOverflow(err);
+      if (attempt >= MODEL_STEP_RETRIES || !retryable || isContextOverflow(err)) throw err;
+      const draft = (err as { draftMessageId?: string }).draftMessageId;
+      if (draft)
+        await (await busFn())
+          .append(info.runId, "message.completed", { message_id: draft, content: [] })
+          .catch(() => {});
+      deps.logger?.info("model step retried", {
+        run_id: info.runId,
+        attempt,
+        error: (err as Error).message,
+      });
+      await sleep(1000 * 4 ** attempt);
+    }
+  }
+}
+
+async function modelStepOnce(
   deps: RunDeps,
   info: RunInfo,
   i: number,
@@ -1981,6 +2094,7 @@ async function modelStep(
   let text = "";
   const toolCalls: ToolCall[] = [];
   let usage: Usage = { inputTokens: 0, outputTokens: 0 };
+  let finishReason = "stop";
   let first = true;
   /**
    * Usage of a reply that stopped before the provider's final usage report (cancelled, or the
@@ -2066,8 +2180,9 @@ async function modelStep(
         coalescer.push(redactor.text(ev.text));
       } else if (ev.type === "tool_call") {
         toolCalls.push({ ...ev.call, name: req.resolveName(ev.call.name) });
-      } else {
+      } else if (ev.type === "finish") {
         usage = ev.usage;
+        finishReason = ev.finishReason;
         model = ev.model || model;
         provider = ev.provider ?? chain.find((m) => m.model === model)?.provider ?? provider;
       }
@@ -2084,6 +2199,8 @@ async function modelStep(
       await coalescer.drain().catch(() => {});
       // A stream that broke after it started producing was paid for (D-248).
       await recordPartial().catch(() => {});
+      if (text && err && typeof err === "object")
+        (err as { draftMessageId?: string }).draftMessageId = messageId;
       throw err;
     }
   } finally {
@@ -2106,7 +2223,13 @@ async function modelStep(
     endRunSpan(span, spanEnd, { type: "cancelled" });
     // Stopping a reply doesn't make what the model already produced free (D-248).
     await recordPartial().catch(() => {});
-    return { cancelled: true as const, text: "", toolCalls: [] as ToolCall[], messageId };
+    return {
+      cancelled: true as const,
+      text: "",
+      toolCalls: [] as ToolCall[],
+      messageId,
+      finishReason: "stop",
+    };
   }
   endRunSpan(span, spanEnd);
   if (lf)
@@ -2135,7 +2258,13 @@ async function modelStep(
     provider,
     deps.billCloudModels === true && onPlatformKey(chain, model),
   );
-  return { cancelled: false as const, text: redactor.text(text), toolCalls, messageId };
+  return {
+    cancelled: false as const,
+    text: redactor.text(text),
+    toolCalls,
+    messageId,
+    finishReason,
+  };
 }
 
 async function toolStep(
@@ -2146,6 +2275,8 @@ async function toolStep(
   busFn: () => Promise<EventBus>,
   redactorFn: () => Promise<Redactor>,
   secretsFn: () => Promise<NamedSecret[]>,
+  /** Names this attempt within the run, so a second attempt after a restart is noticed (D-268). */
+  attemptKey?: string,
 ): Promise<{ content: string; untrusted: boolean }> {
   const bus = await busFn();
   const redactor = await redactorFn();
@@ -2167,6 +2298,20 @@ async function toolStep(
     const def = parsed.def;
     let args = parsed.args as Record<string, unknown>;
     untrusted = def.untrustedOutput === true;
+    // The engine runs a step again when the worker restarted in the middle of it. Looking and the
+    // bot's own notes are safe to repeat; anything else may already have happened once.
+    if (attemptKey) {
+      const [first] = await deps.db.execute<{ call_id: string }>(sql`
+        insert into public.run_tool_attempts (run_id, call_id)
+        values (${info.runId}::uuid, ${attemptKey.slice(0, 200)})
+        on conflict do nothing returning call_id`);
+      const risk = def.riskFor?.(parsed.args as never) ?? def.risk;
+      if (!first && !def.readOnly && !def.selfOnly && risk !== "low")
+        throw new ToolError(
+          "interrupted",
+          "Casama restarted while this action was running, so it may or may not have happened. Check what it left behind before doing it again.",
+        );
+    }
     const emit = (type: string, payload: Record<string, unknown>) =>
       bus.append(info.runId, type, payload).then(() => undefined);
     // The computer is started or restored on first use and touched on every call.

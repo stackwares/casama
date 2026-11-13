@@ -233,6 +233,27 @@ function runAgentDurably(runId: string) {
   });
 }
 
+/**
+ * Fails runs that say they're working although their workflow ended two minutes ago or more.
+ * Runs without a workflow (live calls, teach sessions) are left alone. Returns how many it failed.
+ */
+export async function failOrphanedRuns(db: Database) {
+  const rows = await db.execute<{ id: string }>(sql`
+    select r.id from public.runs r
+    join dbos.workflow_status w on w.workflow_uuid = r.id::text
+    where r.status in ('running', 'waiting_approval', 'waiting_takeover')
+      and coalesce(r.started_at, r.created_at) > now() - interval '7 days'
+      and w.status in ('SUCCESS', 'ERROR', 'CANCELLED', 'MAX_RECOVERY_ATTEMPTS_EXCEEDED')
+      and w.updated_at < (extract(epoch from now()) * 1000)::bigint - 120000
+    limit 50`);
+  for (const r of rows)
+    await failUnfinishedRun(
+      r.id,
+      "Casama stopped while this was running, so it couldn't finish. Send your message again to pick it up.",
+    );
+  return rows.length;
+}
+
 /** How long an ended workflow's recorded steps are kept. */
 export const WORKFLOW_KEEP_DAYS = 7;
 
@@ -480,6 +501,11 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
         { name: "queued-sweep" },
       ).catch(captureStep("queued-sweep", [] as string[]))),
     );
+    // Runs still marked as working whose workflow has ended or was never recorded (a crash between
+    // the two writes): nothing will finish them, so the chat would show "working" forever (D-268).
+    await DBOS.runStep(() => failOrphanedRuns(rt().db).catch(captureStep("orphaned-runs", 0)), {
+      name: "orphaned-runs",
+    });
     for (const runId of new Set(runIds)) {
       try {
         await DBOS.startWorkflow(agentRunWorkflow, { workflowID: runId, queueName: QUEUES.runs })(

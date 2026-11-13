@@ -145,6 +145,10 @@ Ranked by saving. ✅ = done, ☐ = to do.
      bot is on OpenRouter, and on the provider's small model otherwise (Claude Haiku 5.5, GPT-6 Luna,
      Gemini 3.5 Flash-Lite), when the bot hasn't picked a cheap model (D-187). It falls back to
      the main model.
+   - ✅ Output cap on Casama's key is 16,384 tokens a step (D-268; was 4,096, which cut replies
+     mid-way). A cut-off reply is continued at most 3 times, and long runs trim old tool results
+     at 75% of the context window, so a single run can't grow its input without bound. Run and
+     day budgets still hold total spend.
    - ✅ Onboarding already puts the person's own AI first (ChatGPT subscription, own key, local
      model); Casama credits aren't offered there.
    - ☐ Batch APIs (50% off) for work that can wait hours. Routines run at set times, so only for

@@ -54,6 +54,11 @@ export function withFallback(
           // The clock is paused while the caller handles the event, so only the model's silence counts.
           clearTimeout(timer);
           timer = undefined;
+          // Thinking resets the clock but isn't output: a failure after it can still be retried.
+          if (ev.type === "progress") {
+            arm(produced ? idle : Math.max(timeout, idle));
+            continue;
+          }
           produced = true;
           yield ev;
           arm(idle);

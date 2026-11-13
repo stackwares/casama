@@ -8,7 +8,7 @@
         {
           "type": "finish",
           "usage": { "inputTokens": 10, "outputTokens": 1 },
-          "finishReason": "length",
+          "finishReason": "stop",
           "model": ""
         }
       ]

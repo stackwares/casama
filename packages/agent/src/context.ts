@@ -253,3 +253,72 @@ export async function offloadLargeResult(
     artifactPath: null,
   };
 }
+
+/** A run's own steps may fill this share of the model's context before old results are trimmed. */
+export const TURN_TRIM_AT = 0.75;
+/** Trimming goes down to this share, so it happens rarely and the prompt cache survives between. */
+export const TURN_TRIM_TO = 0.5;
+const TRIMMED_KEEP_CHARS = 300;
+const trimmedNote = (content: string) =>
+  `${content.slice(0, TRIMMED_KEEP_CHARS)}\n[The rest of this earlier result was dropped to save space. Run the step again if you need it.]`;
+
+/**
+ * Keeps a long run inside the model's context (D-268): once the steps taken so far pass
+ * TURN_TRIM_AT of the window, the oldest tool results are cut to their first lines until the total
+ * is under TURN_TRIM_TO (or `target`). The newest `keepRecent` results are never touched. Changes
+ * `turn` in place and returns how many results were cut; the same steps always trim the same way.
+ */
+export function trimTurn(
+  turn: ChatMessage[],
+  baseTokens: number,
+  contextWindow: number,
+  opts: { force?: boolean; target?: number; keepRecent?: number } = {},
+): number {
+  const total = () => baseTokens + turn.reduce((n, m) => n + messageTokens(m), 0);
+  if (!opts.force && total() <= contextWindow * TURN_TRIM_AT) return 0;
+  const goal = contextWindow * (opts.target ?? TURN_TRIM_TO);
+  const tools = turn.flatMap((m, i) => (m.role === "tool" ? [i] : []));
+  const old = tools.slice(0, Math.max(0, tools.length - (opts.keepRecent ?? 4)));
+  let cut = 0;
+  let now = total();
+  for (const i of old) {
+    if (now <= goal) break;
+    const m = turn[i] as ChatMessage;
+    if (m.content.length <= TRIMMED_KEEP_CHARS * 2) continue;
+    const before = messageTokens(m);
+    turn[i] = { ...m, content: trimmedNote(m.content) };
+    now -= before - messageTokens(turn[i] as ChatMessage);
+    cut++;
+  }
+  // Still too big: a long file the model wrote itself (tool call arguments) goes the same way.
+  for (let i = 0; i < turn.length - 2 && now > goal; i++) {
+    const m = turn[i] as ChatMessage;
+    if (m.role !== "assistant" || !m.toolCalls?.length) continue;
+    const before = messageTokens(m);
+    const toolCalls = m.toolCalls.map((c) => {
+      const args = Object.fromEntries(
+        Object.entries(c.args ?? {}).map(([k, v]) =>
+          typeof v === "string" && v.length > 2000
+            ? [k, `${v.slice(0, TRIMMED_KEEP_CHARS)} [dropped to save space]`]
+            : [k, v],
+        ),
+      );
+      return { ...c, args };
+    });
+    turn[i] = { ...m, toolCalls };
+    const after = messageTokens(turn[i] as ChatMessage);
+    if (after < before) {
+      now -= before - after;
+      cut++;
+    }
+  }
+  return cut;
+}
+
+/** Whether a provider refused a request because the prompt didn't fit the model's context. */
+export function isContextOverflow(err: unknown): boolean {
+  const text = `${(err as Error)?.message ?? ""} ${String(((err as Error)?.cause as Error | undefined)?.message ?? "")}`;
+  return /context(?:[ _-]?(?:length|window))|maximum context|too many tokens|prompt is too long|input is too long|exceeds? the (?:model'?s? )?(?:max|limit)|reduce the length/i.test(
+    text,
+  );
+}

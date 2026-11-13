@@ -69,6 +69,11 @@ export interface Usage {
 
 export type GatewayEvent =
   | { type: "text"; text: string }
+  /**
+   * The model is working but has produced nothing to show yet: thinking, or writing a tool call's
+   * arguments. It only keeps the silence timers from firing (D-268); withFallback doesn't pass it on.
+   */
+  | { type: "progress" }
   | { type: "tool_call"; call: ToolCall }
   | {
       type: "finish";
@@ -130,7 +135,7 @@ export async function collect(stream: AsyncIterable<GatewayEvent>) {
   for await (const ev of stream) {
     if (ev.type === "text") text += ev.text;
     else if (ev.type === "tool_call") toolCalls.push(ev.call);
-    else {
+    else if (ev.type === "finish") {
       usage = ev.usage;
       finishReason = ev.finishReason;
       model = ev.model;

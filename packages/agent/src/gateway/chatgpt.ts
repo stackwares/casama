@@ -285,6 +285,9 @@ export async function* streamChatGpt(
     } else if (type === "error") {
       const err = ((ev.error as PlanError | undefined) ?? (ev as PlanError)) as PlanError;
       throw planError(undefined, err, req.model, requestId);
+    } else {
+      // Reasoning and tool-argument events: nothing to show, but the model isn't silent.
+      yield { type: "progress" };
     }
   }
   if (req.abortSignal?.aborted) throw new ModelCallError("aborted", { retryable: false });
