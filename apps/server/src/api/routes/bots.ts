@@ -1560,7 +1560,9 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         sql`select date_trunc(${period}, now() at time zone 'utc') at time zone 'utc' as t`,
       );
       const since = s?.t ?? new Date();
-      const scope = sql`u.org_id = ${org_id}::uuid and u.created_at >= ${since}`;
+      const period_ = sql`u.org_id = ${org_id}::uuid and u.created_at >= ${since}`;
+      // Waived charges (D-275) aren't usage the person pays for; they're reported on their own.
+      const scope = sql`${period_} and coalesce(u.meta ->> 'waived', '') <> 'failed_run'`;
       const bots_ = await tx.execute<Sums & { bot_id: string | null; name: string | null }>(sql`
         select u.bot_id, b.name, ${sums}
         from public.usage_ledger u left join public.bots b on b.id = u.bot_id
@@ -1577,7 +1579,37 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       const [r] = await tx.execute<{ n: string }>(
         sql`select count(distinct u.run_id) as n from public.usage_ledger u where ${scope}`,
       );
-      return { since, bots_, days, models, kinds, runs: Number(r?.n ?? 0) };
+      // Per person, for admins only: what each member's work cost (D-275).
+      const [adm] = await tx.execute<{ ok: boolean }>(
+        sql`select public.has_role(${org_id}::uuid, 'admin') as ok`,
+      );
+      const people = adm?.ok
+        ? await tx.execute<{
+            user_id: string | null;
+            name: string | null;
+            cost: string;
+            n: string;
+          }>(sql`
+            select r.created_by as user_id, p.display_name as name, sum(u.cost_usd) as cost,
+                   count(distinct u.run_id) as n
+            from public.usage_ledger u
+            left join public.runs r on r.id = u.run_id
+            left join public.profiles p on p.user_id = r.created_by
+            where ${scope} group by r.created_by, p.display_name order by cost desc limit 200`)
+        : null;
+      const [w] = await tx.execute<{ usd: string | null }>(sql`
+        select sum(u.cost_usd)::text as usd from public.usage_ledger u
+        where ${period_} and u.meta ->> 'waived' = 'failed_run'`);
+      return {
+        since,
+        bots_,
+        days,
+        models,
+        kinds,
+        runs: Number(r?.n ?? 0),
+        people,
+        waived: Number(w?.usd ?? 0),
+      };
     });
     const num = (r: Sums) => ({
       cost_usd: Number(r.cost),
@@ -1599,6 +1631,17 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           cost_usd: Number(r.cost),
         })),
         runs: report.runs,
+        ...(report.people
+          ? {
+              by_person: report.people.map((p) => ({
+                user_id: p.user_id,
+                name: p.name,
+                cost_usd: Number(p.cost),
+                runs: Number(p.n),
+              })),
+            }
+          : {}),
+        waived_usd: report.waived,
       },
       200,
     );

@@ -13,6 +13,7 @@ import {
   gitSyncTick,
   knowledgeTick,
   listModels,
+  lowCreditWorkspaces,
   type ModelGateway,
   type ModelList,
   mergeModelList,
@@ -32,6 +33,7 @@ import {
   sendDueSuggestions,
   sweepEncryption,
   syncComposioTriggers,
+  waiveFailedRun,
 } from "@casama/agent";
 import { contentKeys, type Database, liftTimeouts } from "@casama/db";
 import { DEFAULT_MODELS } from "@casama/domain";
@@ -129,8 +131,11 @@ async function failUnfinishedRun(runId: string, message: string) {
     where id = ${runId}::uuid and status not in ('completed', 'failed', 'cancelled')
     returning id
   `);
-  if (failed)
+  if (failed) {
     await new EventBus(db).append(runId, "run.failed", { error_code: "run_error", message });
+    // Failed on our side or the provider's: the person isn't charged for it (D-275).
+    await waiveFailedRun(db, runId).catch(() => 0);
+  }
 }
 
 /** One durable workflow per run: every model and tool call is a checkpointed step. */
@@ -922,6 +927,23 @@ export const billingSettleWorkflow = DBOS.registerWorkflow(
     const billing = rt().billing;
     if (!billing?.enabled) return;
     await DBOS.runStep(() => billing.settle(), { name: "settle" });
+    // Running low: the owners hear before bots stop (D-275).
+    await DBOS.runStep(
+      async () => {
+        const notes = rt().agent.notifications;
+        if (!notes) return 0;
+        const low = await lowCreditWorkspaces(rt().db);
+        for (const l of low)
+          await notes
+            .notify(l.owner_id, l.org_id, "credits_low", {
+              title: "Credits are running low",
+              body: `$${Number(l.balance).toFixed(2)} left. Bots stop working on Casama's models when it runs out: add credits in Billing.`,
+            })
+            .catch(() => {});
+        return low.length;
+      },
+      { name: "credits-low" },
+    ).catch(captureStep("credits-low", 0));
   },
   { name: "billingSettle" },
 );

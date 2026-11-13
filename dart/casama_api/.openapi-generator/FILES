@@ -594,6 +594,7 @@ lib/src/model/usage_report_by_bot_inner.dart
 lib/src/model/usage_report_by_day_inner.dart
 lib/src/model/usage_report_by_kind_inner.dart
 lib/src/model/usage_report_by_model_inner.dart
+lib/src/model/usage_report_by_person_inner.dart
 lib/src/model/user_fact.dart
 lib/src/model/user_fact_list.dart
 lib/src/model/visibility.dart

@@ -23,6 +23,10 @@ abstract class _$UsageReportCWProxy {
 
   UsageReport runs(int? runs);
 
+  UsageReport byPerson(List<UsageReportByPersonInner>? byPerson);
+
+  UsageReport waivedUsd(num? waivedUsd);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UsageReport(...).copyWith.fieldName(value)`.
@@ -40,6 +44,8 @@ abstract class _$UsageReportCWProxy {
     List<UsageReportByModelInner>? byModel,
     List<UsageReportByKindInner>? byKind,
     int? runs,
+    List<UsageReportByPersonInner>? byPerson,
+    num? waivedUsd,
   });
 }
 
@@ -77,6 +83,13 @@ class _$UsageReportCWProxyImpl implements _$UsageReportCWProxy {
   @override
   UsageReport runs(int? runs) => call(runs: runs);
 
+  @override
+  UsageReport byPerson(List<UsageReportByPersonInner>? byPerson) =>
+      call(byPerson: byPerson);
+
+  @override
+  UsageReport waivedUsd(num? waivedUsd) => call(waivedUsd: waivedUsd);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UsageReport(...).copyWith.fieldName(value)`.
@@ -95,6 +108,8 @@ class _$UsageReportCWProxyImpl implements _$UsageReportCWProxy {
     Object? byModel = const $CopyWithPlaceholder(),
     Object? byKind = const $CopyWithPlaceholder(),
     Object? runs = const $CopyWithPlaceholder(),
+    Object? byPerson = const $CopyWithPlaceholder(),
+    Object? waivedUsd = const $CopyWithPlaceholder(),
   }) {
     return UsageReport(
       period: period == const $CopyWithPlaceholder() || period == null
@@ -130,6 +145,14 @@ class _$UsageReportCWProxyImpl implements _$UsageReportCWProxy {
           ? _value.runs
           // ignore: cast_nullable_to_non_nullable
           : runs as int?,
+      byPerson: byPerson == const $CopyWithPlaceholder()
+          ? _value.byPerson
+          // ignore: cast_nullable_to_non_nullable
+          : byPerson as List<UsageReportByPersonInner>?,
+      waivedUsd: waivedUsd == const $CopyWithPlaceholder()
+          ? _value.waivedUsd
+          // ignore: cast_nullable_to_non_nullable
+          : waivedUsd as num?,
     );
   }
 }
@@ -194,6 +217,16 @@ UsageReport _$UsageReportFromJson(Map<String, dynamic> json) => $checkedCreate(
             .toList(),
       ),
       runs: $checkedConvert('runs', (v) => (v as num?)?.toInt()),
+      byPerson: $checkedConvert(
+        'by_person',
+        (v) => (v as List<dynamic>?)
+            ?.map(
+              (e) =>
+                  UsageReportByPersonInner.fromJson(e as Map<String, dynamic>),
+            )
+            .toList(),
+      ),
+      waivedUsd: $checkedConvert('waived_usd', (v) => v as num?),
     );
     return val;
   },
@@ -203,6 +236,8 @@ UsageReport _$UsageReportFromJson(Map<String, dynamic> json) => $checkedCreate(
     'byDay': 'by_day',
     'byModel': 'by_model',
     'byKind': 'by_kind',
+    'byPerson': 'by_person',
+    'waivedUsd': 'waived_usd',
   },
 );
 
@@ -216,6 +251,8 @@ Map<String, dynamic> _$UsageReportToJson(UsageReport instance) =>
       'by_model': ?instance.byModel?.map((e) => e.toJson()).toList(),
       'by_kind': ?instance.byKind?.map((e) => e.toJson()).toList(),
       'runs': ?instance.runs,
+      'by_person': ?instance.byPerson?.map((e) => e.toJson()).toList(),
+      'waived_usd': ?instance.waivedUsd,
     };
 
 const _$UsageReportPeriodEnumEnumMap = {

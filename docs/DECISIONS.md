@@ -3252,3 +3252,12 @@ Stage 3, first half, of `docs/MASTER-PLAN-2026-11.md`; `docs/LIBRARY-PLAN.md` Ph
 - **API:** `GET /v1/creations` (kind, bot, chat, project, pinned, words, recently opened, deleted; keyset cursor; the workspace's kinds for filter chips), `GET`, `PATCH` (title, label, pin, opened), `DELETE`, `restore`, `content` (byte ranges) and `cover` (a picture is its own cover; a video gets a frame). In the OpenAPI contract and the Dart client.
 - **Bots:** `pages.publish` takes a `label` (Site, Game, Report…), the media tools take a `title` (else the prompt's first words), and `library.list` and `library.get` let a bot find its own earlier work and the handle to change it, scoped to what the person it acts for can see.
 - **Storage** is counted per workspace (`organizations.storage_bytes`) from the start; caps come with Phase 3.
+
+## D-275 Failed runs are free, owners see usage by person, and hear when credits run low
+
+Stage 5 (cost clarity, server side) of `docs/MASTER-PLAN-2026-11.md` (Add 4 in `docs/PRODUCT-REVIEW-2026-11-13.md`; the plan's decision 4 default: no charge for failed runs).
+
+- **Failed runs:** a run that fails on Casama's or a provider's side (the workflow's catch-all `run_error`) has its Casama-billed model usage waived (`waiveFailedRun`): rows not yet settled stop being billable and are marked `waived`; rows already settled come back once as a `refund` credit. Computer time is still billed, since the computer ran. Runs that stopped at a limit, looped or were stopped by the person are charged as before.
+- **Usage report:** `GET /v1/usage` leaves waived charges out of its totals and reports them as `waived_usd`, and gives admins and owners `by_person`: what each member's work cost and how many runs.
+- **Low credits:** after each settlement, owners of a workspace whose balance fell under $1 (and above zero) with billable usage in the last day get a `credits_low` notification, at most once a week.
+- **Not done here:** "a price before a long run". Casama can't know a run's length in advance; the run and day budgets (now settable in the app, Stage 5 app work) are the control that answers it.

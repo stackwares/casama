@@ -73,3 +73,4 @@ export * from "./voice.ts";
 export * from "./watchers.ts";
 export * from "./welcome.ts";
 export * from "./workspace-files.ts";
+export * from "./waive.ts";

@@ -594,6 +594,7 @@ export 'package:casama_api/src/model/usage_report_by_bot_inner.dart';
 export 'package:casama_api/src/model/usage_report_by_day_inner.dart';
 export 'package:casama_api/src/model/usage_report_by_kind_inner.dart';
 export 'package:casama_api/src/model/usage_report_by_model_inner.dart';
+export 'package:casama_api/src/model/usage_report_by_person_inner.dart';
 export 'package:casama_api/src/model/user_fact.dart';
 export 'package:casama_api/src/model/user_fact_list.dart';
 export 'package:casama_api/src/model/visibility.dart';

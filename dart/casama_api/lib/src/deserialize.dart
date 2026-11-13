@@ -513,6 +513,7 @@ import 'package:casama_api/src/model/usage_report_by_bot_inner.dart';
 import 'package:casama_api/src/model/usage_report_by_day_inner.dart';
 import 'package:casama_api/src/model/usage_report_by_kind_inner.dart';
 import 'package:casama_api/src/model/usage_report_by_model_inner.dart';
+import 'package:casama_api/src/model/usage_report_by_person_inner.dart';
 import 'package:casama_api/src/model/user_fact.dart';
 import 'package:casama_api/src/model/user_fact_list.dart';
 import 'package:casama_api/src/model/voice_session.dart';
@@ -1649,6 +1650,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UsageReportByKindInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UsageReportByModelInner':
           return UsageReportByModelInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UsageReportByPersonInner':
+          return UsageReportByPersonInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UserFact':
           return UserFact.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UserFactList':

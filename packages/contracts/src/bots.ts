@@ -465,6 +465,19 @@ export const UsageReport = z
       .array(z.object({ kind: z.string(), quantity: z.number(), cost_usd: z.number() }))
       .optional(),
     runs: z.number().int().optional(),
+    /** Who started the work that cost money (admins and owners only; D-275). */
+    by_person: z
+      .array(
+        z.object({
+          user_id: Uuid.nullable(),
+          name: z.string().nullable(),
+          cost_usd: z.number(),
+          runs: z.number().int(),
+        }),
+      )
+      .optional(),
+    /** Charges waived because runs failed on Casama's or a provider's side (D-275). */
+    waived_usd: z.number().optional(),
   })
   .openapi("UsageReport");
 

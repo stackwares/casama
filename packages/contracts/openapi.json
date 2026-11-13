@@ -4053,6 +4053,42 @@
           },
           "runs": {
             "type": "integer"
+          },
+          "by_person": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "user_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "cost_usd": {
+                  "type": "number"
+                },
+                "runs": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "user_id",
+                "name",
+                "cost_usd",
+                "runs"
+              ]
+            }
+          },
+          "waived_usd": {
+            "type": "number"
           }
         },
         "required": [

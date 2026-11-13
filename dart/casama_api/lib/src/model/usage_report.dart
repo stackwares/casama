@@ -4,6 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:casama_api/src/model/usage_report_by_day_inner.dart';
+import 'package:casama_api/src/model/usage_report_by_person_inner.dart';
 import 'package:casama_api/src/model/usage_report_by_bot_inner.dart';
 import 'package:casama_api/src/model/usage_report_by_model_inner.dart';
 import 'package:casama_api/src/model/usage_report_by_kind_inner.dart';
@@ -39,6 +40,10 @@ class UsageReport {
      this.byKind,
 
      this.runs,
+
+     this.byPerson,
+
+     this.waivedUsd,
   });
 
   @JsonKey(
@@ -137,6 +142,30 @@ class UsageReport {
 
 
 
+  @JsonKey(
+    
+    name: r'by_person',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<UsageReportByPersonInner>? byPerson;
+
+
+
+  @JsonKey(
+    
+    name: r'waived_usd',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final num? waivedUsd;
+
+
+
 
 
     @override
@@ -148,7 +177,9 @@ class UsageReport {
       other.byDay == byDay &&
       other.byModel == byModel &&
       other.byKind == byKind &&
-      other.runs == runs;
+      other.runs == runs &&
+      other.byPerson == byPerson &&
+      other.waivedUsd == waivedUsd;
 
     @override
     int get hashCode =>
@@ -159,7 +190,9 @@ class UsageReport {
         byDay.hashCode +
         byModel.hashCode +
         byKind.hashCode +
-        runs.hashCode;
+        runs.hashCode +
+        byPerson.hashCode +
+        waivedUsd.hashCode;
 
   factory UsageReport.fromJson(Map<String, dynamic> json) => _$UsageReportFromJson(json);
 

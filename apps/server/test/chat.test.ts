@@ -135,7 +135,10 @@ describe("model keys", () => {
     expect(res.status).toBe(200);
     const body = await j(res);
     expect(body.source).toBe("featured");
-    expect(body.items[0]).toMatchObject({ id: "deepseek/deepseek-v4.1-flash-1017", featured: true });
+    expect(body.items[0]).toMatchObject({
+      id: "deepseek/deepseek-v4.1-flash-1017",
+      featured: true,
+    });
     const stranger = await h.user("models-stranger@example.com");
     const denied = await call(`/v1/credentials/${credentialId}/models`, { token: stranger.token });
     expect(denied.status).toBe(404);
@@ -371,6 +374,10 @@ describe("bots and chat", () => {
     expect(usage.by_model[0].tokens_in).toBeGreaterThan(0);
     expect(usage.by_kind.map((k: { kind: string }) => k.kind)).toContain("tokens_in");
     expect(usage.runs).toBeGreaterThan(0);
+    // The owner sees who started the work that cost money, and what was waived (D-275).
+    expect(usage.by_person[0]).toMatchObject({ user_id: owner.id });
+    expect(usage.by_person[0].runs).toBeGreaterThan(0);
+    expect(usage.waived_usd).toBe(0);
   });
 
   it("lists each bot with its last message, skipping turns with nothing to show", async () => {

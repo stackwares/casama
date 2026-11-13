@@ -944,6 +944,7 @@ Class | Method | HTTP request | Description
  - [UsageReportByDayInner](doc/UsageReportByDayInner.md)
  - [UsageReportByKindInner](doc/UsageReportByKindInner.md)
  - [UsageReportByModelInner](doc/UsageReportByModelInner.md)
+ - [UsageReportByPersonInner](doc/UsageReportByPersonInner.md)
  - [UserFact](doc/UserFact.md)
  - [UserFactList](doc/UserFactList.md)
  - [Visibility](doc/Visibility.md)
