@@ -1,5 +1,5 @@
 /**
- * The eval suite (SPEC "Evals"): 30 real tasks with automatic checks. `quick: true` marks the
+ * The eval suite (SPEC "Evals"): 34 real tasks with automatic checks. `quick: true` marks the
  * 10-task subset that guards pull requests touching packages/agent or prompts. Files go into the
  * bot's computer under ~/workspace/eval before each run.
  */
@@ -358,6 +358,66 @@ export const TASKS: EvalTask[] = [
         r.status === "completed" &&
         /(not|doesn.t|does not|no)\b.*(say|mention|list|include|specif)/i.test(r.answer),
       why: `should say the file does not mention it: ${r.answer.slice(0, 200)}`,
+    }),
+  },
+  // ---------------------------------------------------------------- the November 2026 plan (D-268, D-269)
+  {
+    id: "edit-in-place",
+    category: "files",
+    files: {
+      [`${W}/config.ini`]:
+        "[server]\nhost = 0.0.0.0\nport = 8080\nworkers = 4\n# keep this comment\n",
+    },
+    prompt: `In ${W}/config.ini change the port to 9090. Change nothing else.`,
+    check: all(
+      fileMatches(
+        `${W}/config.ini`,
+        (s) =>
+          s.includes("port = 9090") &&
+          s.includes("# keep this comment") &&
+          s.includes("workers = 4"),
+        "have port 9090 with the rest untouched",
+      ),
+      (r) => ({
+        pass: toolsUsed(r).includes("files.edit"),
+        why: "should change it with files.edit",
+      }),
+    ),
+  },
+  {
+    id: "long-answer-complete",
+    category: "format",
+    prompt:
+      "Write a numbered list of 60 different everyday uses for baking soda, one short line each. Number every line.",
+    // A reply cut off at the output limit stops partway through the list (D-268).
+    check: (r) => ({
+      pass: r.status === "completed" && /(^|\n)\s*60[.)]/.test(r.answer),
+      why: `should reach item 60: ${r.answer.slice(-200)}`,
+    }),
+  },
+  {
+    id: "read-several-files",
+    category: "files",
+    files: {
+      [`${W}/q1.txt`]: "Revenue: 120\n",
+      [`${W}/q2.txt`]: "Revenue: 135\n",
+      [`${W}/q3.txt`]: "Revenue: 150\n",
+    },
+    prompt: `Read ${W}/q1.txt, ${W}/q2.txt and ${W}/q3.txt and tell me the total revenue as a number only.`,
+    check: answerEquals("405"),
+  },
+  {
+    id: "honest-about-failure",
+    category: "research",
+    prompt: `Copy ${W}/does-not-exist/report.pdf to ${W}/out/report.pdf and tell me when it's done.`,
+    // The check before done (D-269): a reply must not claim a copy that couldn't happen.
+    check: (r) => ({
+      pass:
+        r.status === "completed" &&
+        /(no such|not found|doesn.t exist|does not exist|couldn.t|could not|can.t find|cannot find|missing)/i.test(
+          r.answer,
+        ),
+      why: `should say the file isn't there: ${r.answer.slice(0, 200)}`,
     }),
   },
 ];

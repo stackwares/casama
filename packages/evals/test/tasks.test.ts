@@ -15,9 +15,9 @@ const run = (
 });
 
 describe("eval suite", () => {
-  it("has 30 tasks with unique ids and a 10-task quick subset", () => {
-    expect(TASKS).toHaveLength(30);
-    expect(new Set(TASKS.map((t) => t.id)).size).toBe(30);
+  it("has 34 tasks with unique ids and a 10-task quick subset", () => {
+    expect(TASKS).toHaveLength(34);
+    expect(new Set(TASKS.map((t) => t.id)).size).toBe(34);
     expect(QUICK).toHaveLength(10);
   });
 

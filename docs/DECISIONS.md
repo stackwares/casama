@@ -3395,3 +3395,10 @@ Stage 7 of `docs/MASTER-PLAN-2026-11.md`; the second half of `docs/LIBRARY-PLAN.
 ## D-292 Two accounts of one app already work
 
 Add 12 in `docs/PRODUCT-REVIEW-2026-11-13.md` ("two accounts of one app"), checked in the code: an app connected directly (its own sign-in or key) can be connected again, and the second becomes `gmail_2` (`freeName` in `apps/server/src/api/routes/apps.ts`), with its own tools. Connections through Composio's managed sign-in share one connection per workspace, so a second account of the same app isn't possible there; that's Composio's model, recorded here rather than worked around.
+
+## D-293 Eval tasks for the run-loop changes
+
+Stage 1's eval item in `docs/MASTER-PLAN-2026-11.md` (Improve (agent) 8).
+
+- **Decision:** four tasks join the suite (now 34): changing one line of a file with `files.edit` and nothing else, a 60-item answer that must reach item 60 (a reply cut off at the output limit doesn't), reading three files and summing them, and refusing to claim a copy of a file that doesn't exist (the check before done). They run in live mode; the quick fixture subset is unchanged.
+- **Not done:** a stored live baseline. Running the suite live costs money (roughly $0.05–0.25), so it waits for Oliver's go-ahead (NEEDS-FROM-OLIVER); until then the nightly run can't fail.
