@@ -3,7 +3,18 @@ import { Uuid } from "./common.ts";
 
 const ts = z.iso.datetime({ offset: true });
 export const ChannelKind = z
-  .enum(["telegram", "email", "sms", "slack", "whatsapp", "messenger", "feishu", "imessage"])
+  .enum([
+    "telegram",
+    "email",
+    "sms",
+    "slack",
+    "whatsapp",
+    "messenger",
+    "feishu",
+    "imessage",
+    "teams",
+    "discord",
+  ])
   .openapi("ChannelKind");
 
 export const Channel = z

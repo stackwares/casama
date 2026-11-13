@@ -171,4 +171,6 @@ const _$ChannelKindEnumMap = {
   ChannelKind.messenger: 'messenger',
   ChannelKind.feishu: 'feishu',
   ChannelKind.imessage: 'imessage',
+  ChannelKind.teams: 'teams',
+  ChannelKind.discord: 'discord',
 };

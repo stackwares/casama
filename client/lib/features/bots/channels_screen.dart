@@ -39,6 +39,8 @@ String channelKindName(ChannelKind k) => switch (k) {
   ChannelKind.messenger => 'Messenger',
   ChannelKind.feishu => 'Feishu',
   ChannelKind.imessage => 'iMessage',
+  ChannelKind.teams => 'Microsoft Teams',
+  ChannelKind.discord => 'Discord',
 };
 
 IconData channelIcon(ChannelKind k) => switch (k) {
@@ -65,6 +67,13 @@ final Map<ChannelKind, List<_Field>> _fields = {
     ('verification_token', true, (l) => l.chVerificationToken),
   ],
   ChannelKind.imessage: const [],
+  // D-278: the Azure bot's app id and client secret; Discord's application, public key and bot token.
+  ChannelKind.teams: [('app_id', false, (l) => l.chAppId), ('app_password', true, (l) => l.chAppSecret)],
+  ChannelKind.discord: [
+    ('application_id', false, (l) => l.chAppId),
+    ('public_key', false, (l) => l.chPublicKey),
+    ('bot_token', true, (l) => l.chBotToken),
+  ],
 };
 
 List<String> _splitSenders(String text) => text.split(RegExp(r'[\n,]')).map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
@@ -209,7 +218,7 @@ class _AddChannelState extends ConsumerState<_AddChannel> {
           key: const Key('channelKind'),
           initialValue: _kind,
           decoration: InputDecoration(labelText: l10n.chatAppsKind),
-          items: [for (final k in ChannelKind.values) DropdownMenuItem(value: k, child: Text(channelKindName(k)))],
+          items: [for (final k in ChannelKind.values) if (_fields.containsKey(k)) DropdownMenuItem(value: k, child: Text(channelKindName(k)))],
           onChanged: hapticOnChanged((k) => setState(() {
             _kind = k ?? _kind;
             if (_name.text.isEmpty || ChannelKind.values.any((x) => channelKindName(x) == _name.text)) _name.text = channelKindName(_kind);

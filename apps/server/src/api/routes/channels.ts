@@ -37,6 +37,10 @@ const REQUIRED: Record<string, { secrets: string[]; config: string[] }> = {
   messenger: { secrets: ["page_token", "app_secret"], config: [] },
   feishu: { secrets: ["app_secret", "encrypt_key", "verification_token"], config: ["app_id"] },
   imessage: { secrets: [], config: ["computer_id"] },
+  // D-278. Teams: the Azure bot's app id and password. Discord: the application's id, its public
+  // key (signatures) and the bot token (replies after the 15-minute interaction window).
+  teams: { secrets: ["app_password"], config: ["app_id"] },
+  discord: { secrets: ["bot_token"], config: ["application_id", "public_key"] },
 };
 
 type Row = {
@@ -251,7 +255,10 @@ export function registerChannelRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       return new Response(hs.body, { status: hs.status, headers: { "content-type": hs.type } });
     if (c.req.method !== "POST")
       return new Response(JSON.stringify({ code: "not_found" }), { status: 404 });
-    if (!adapter.verify(raw, ch.config, ch.secrets))
+    const verified = adapter.verifyAsync
+      ? await adapter.verifyAsync(raw, ch.config, ch.secrets, fetchOut())
+      : adapter.verify(raw, ch.config, ch.secrets);
+    if (!verified)
       return new Response(
         JSON.stringify({ code: "bad_signature", message: "Signature doesn't match" }),
         { status: 401, headers: { "content-type": "application/json" } },
@@ -277,6 +284,10 @@ export function registerChannelRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       for (const m of messages)
         if (senderAllowed(ch.allowed_senders, m.sender))
           await adapter.acknowledge(ch.config, ch.secrets, m, fetchOut()).catch(() => {});
+    // Discord expects its own answer (PING, or "thinking…" while the bot works).
+    const custom = adapter.respond?.(req);
+    if (custom)
+      return new Response(custom.body, { status: custom.status, headers: { "content-type": custom.type } });
     // SMS (Twilio) wants TwiML; an empty response means "no reply now" — replies go out through the API.
     if (ch.kind === "sms")
       return new Response("<Response></Response>", {

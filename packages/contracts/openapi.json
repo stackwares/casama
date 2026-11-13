@@ -6218,7 +6218,9 @@
               "whatsapp",
               "messenger",
               "feishu",
-              "imessage"
+              "imessage",
+              "teams",
+              "discord"
             ]
           },
           "sender": {
@@ -12099,7 +12101,9 @@
           "whatsapp",
           "messenger",
           "feishu",
-          "imessage"
+          "imessage",
+          "teams",
+          "discord"
         ]
       },
       "CreateChannelRequest": {

@@ -3281,3 +3281,12 @@ Stage 6 of `docs/MASTER-PLAN-2026-11.md` (Add 1 in `docs/PRODUCT-REVIEW-2026-11-
 - **Where people talk:** @mentions in channels (`app_mention`, the mention stripped) as well as direct messages; the same message arriving as both events starts one run. An 👀 reaction shows the message arrived.
 - **Approvals in the thread:** when a run from a Slack thread needs approval, the request is posted into the thread with Approve and Deny buttons (as well as the usual push). A press is accepted only from someone on the chat app's allowed list, for an approval of that bot in that channel's thread; it's decided as the person who connected the app, the run wakes, and the message is replaced with "Approved by @…". Self-hosted Slack apps use `/hooks/channels/{id}/interact`.
 - **Needs from Oliver:** a Slack app listing for Casama Cloud (client id, secret, signing secret, and the three URLs above). Teams and Discord follow (D-278).
+
+## D-278 Microsoft Teams and Discord as chat apps
+
+Stage 6 of `docs/MASTER-PLAN-2026-11.md` (Add 1), after Slack (D-277).
+
+- **Teams** (Bot Framework): people message the bot in Teams chats and channels (an @mention, stripped). Each activity's bearer token is checked against Microsoft's published keys (issuer `https://api.botframework.com`, audience the bot's app id, and the token's service address must match the activity's). Replies go to the conversation's service address with a token from Microsoft sign-in (`app_id` and `app_password` of the Azure bot). Adapters gained `verifyAsync` for checks that need the network.
+- **Discord** (HTTP interactions): Discord bots hear ordinary messages only over a gateway connection a webhook server doesn't keep, so people talk to the bot through its `/ask` command. Requests are checked with the application's Ed25519 public key; PING is answered, a command gets Discord's "thinking…" at once (adapters gained `respond`), and the reply goes to the interaction's follow-up address within its 15 minutes, then as a channel message with the bot token.
+- Both are new channel kinds (migration, contract, the app's chat-apps screen with their setup fields, and routine message triggers). Long replies are split at Teams' and Discord's limits (D-270). Buttons for approvals in Teams and Discord are not built; those approvals arrive in the app as before.
+- **Needs from Oliver:** an Azure bot registration and a Discord application to try them for real; both are built against signed test requests.

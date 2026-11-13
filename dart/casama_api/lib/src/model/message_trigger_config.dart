@@ -138,7 +138,11 @@ messenger(r'messenger'),
 @JsonValue(r'feishu')
 feishu(r'feishu'),
 @JsonValue(r'imessage')
-imessage(r'imessage');
+imessage(r'imessage'),
+@JsonValue(r'teams')
+teams(r'teams'),
+@JsonValue(r'discord')
+discord(r'discord');
 
 const MessageTriggerConfigChannelKindEnum(this.value);
 

@@ -3,7 +3,14 @@
  * turns its payload into standard messages, and sends replies. Provider addresses can be pointed
  * elsewhere with `config.api_base` (tests, proxies, regional endpoints).
  */
-import { createDecipheriv, createHash, createHmac, timingSafeEqual } from "node:crypto";
+import {
+  createDecipheriv,
+  createHash,
+  createHmac,
+  createPublicKey,
+  timingSafeEqual,
+  verify as verifySignature,
+} from "node:crypto";
 
 export type ChannelKind =
   | "telegram"
@@ -13,7 +20,9 @@ export type ChannelKind =
   | "whatsapp"
   | "messenger"
   | "feishu"
-  | "imessage";
+  | "imessage"
+  | "teams"
+  | "discord";
 
 export interface WebhookRequest {
   method: string;
@@ -72,6 +81,15 @@ export interface ChannelAdapter {
     approval: { id: string; summary: string },
     f: typeof fetch,
   ): Promise<void>;
+  /** For apps whose signature check needs the network (Teams' signed tokens, D-278). */
+  verifyAsync?(
+    req: WebhookRequest,
+    cfg: Config,
+    secrets: Secrets,
+    f: typeof fetch,
+  ): Promise<boolean>;
+  /** The HTTP answer the app expects after a verified webhook, when it isn't a plain 200 (Discord). */
+  respond?(req: WebhookRequest): { status: number; body: string; type: string } | null;
   /** Reads a button press from the app's interactivity webhook (D-277). */
   parseAction?(req: WebhookRequest): ChannelAction | null;
   /** Fills in what the webhook left out (an email's body), after the signature is checked. */
@@ -731,6 +749,176 @@ const imessage: ChannelAdapter = {
   },
 };
 
+// ------------------------------------------------------------------ Discord (HTTP interactions; D-278)
+/**
+ * Discord bots hear messages only over a long-lived gateway connection, which a webhook server
+ * doesn't keep. Casama uses Discord's HTTP interactions instead: people talk to the bot with its
+ * /ask command (and in DMs with the bot, the same command). Replies go to the interaction's
+ * follow-up address for its 15 minutes, then as a channel message with the bot token.
+ */
+const ED25519_SPKI = Buffer.from("302a300506032b6570032100", "hex");
+const INTERACTION_TTL_MS = 14 * 60_000;
+const discord: ChannelAdapter = {
+  kind: "discord",
+  maxText: 2000,
+  verify(req, cfg) {
+    const sig = h(req, "x-signature-ed25519");
+    const ts = h(req, "x-signature-timestamp");
+    const key = String(cfg.public_key ?? "");
+    if (!sig || !ts || !/^[0-9a-f]{64}$/i.test(key) || !/^[0-9a-f]{128}$/i.test(sig)) return false;
+    try {
+      return verifySignature(
+        null,
+        Buffer.from(ts + req.body),
+        createPublicKey({ key: Buffer.concat([ED25519_SPKI, Buffer.from(key, "hex")]), format: "der", type: "spki" }),
+        Buffer.from(sig, "hex"),
+      );
+    } catch {
+      return false;
+    }
+  },
+  normalize(req) {
+    const b = json(req.body);
+    if (b.type !== 2) return [];
+    const data = (b.data ?? {}) as Record<string, unknown>;
+    const options = (data.options ?? []) as Array<Record<string, unknown>>;
+    const text = String(options.find((o) => typeof o.value === "string")?.value ?? "").trim();
+    const user = ((b.member as Record<string, unknown> | undefined)?.user ?? b.user) as
+      | Record<string, unknown>
+      | undefined;
+    if (!text || !user?.id) return [];
+    return [
+      {
+        messageId: b.id ? String(b.id) : undefined,
+        threadKey: `discord:${b.channel_id}`,
+        sender: String(user.id),
+        senderName: (user.global_name ?? user.username) as string | undefined,
+        text,
+        reply: {
+          channel_id: b.channel_id,
+          application_id: b.application_id,
+          token: b.token,
+          at: Date.now(),
+        },
+      },
+    ];
+  },
+  respond(req) {
+    const b = json(req.body);
+    // PING is Discord checking the address; a command gets "thinking…" while the bot works.
+    if (b.type === 1) return { status: 200, body: JSON.stringify({ type: 1 }), type: "application/json" };
+    if (b.type === 2) return { status: 200, body: JSON.stringify({ type: 5 }), type: "application/json" };
+    return null;
+  },
+  async send(cfg, s, reply, text, f) {
+    const api = base(cfg, "https://discord.com/api/v10");
+    const fresh = reply.token && Date.now() - Number(reply.at ?? 0) < INTERACTION_TTL_MS;
+    await ok(
+      fresh
+        ? await f(`${api}/webhooks/${reply.application_id}/${reply.token}`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ content: text }),
+          })
+        : await f(`${api}/channels/${reply.channel_id}/messages`, {
+            method: "POST",
+            headers: { "content-type": "application/json", authorization: `Bot ${s.bot_token}` },
+            body: JSON.stringify({ content: text }),
+          }),
+      "Discord",
+    );
+  },
+};
+
+// ------------------------------------------------------------------ Microsoft Teams (Bot Framework; D-278)
+const BOT_FRAMEWORK_OPENID = "https://login.botframework.com/v1/.well-known/openidconfiguration";
+const jwksCache = new Map<string, ReturnType<typeof import("jose").createRemoteJWKSet>>();
+async function teamsToken(cfg: Config, s: Secrets, f: typeof fetch) {
+  const res = await ok(
+    await f(
+      `${String(cfg.login_base ?? "https://login.microsoftonline.com").replace(/\/$/, "")}/${String(cfg.tenant_id ?? "botframework.com")}/oauth2/v2.0/token`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "client_credentials",
+          client_id: String(cfg.app_id),
+          client_secret: s.app_password ?? "",
+          scope: "https://api.botframework.com/.default",
+        }).toString(),
+      },
+    ),
+    "Microsoft sign-in",
+  );
+  return String(((await res.json()) as { access_token?: string }).access_token ?? "");
+}
+const teams: ChannelAdapter = {
+  kind: "teams",
+  maxText: 25_000,
+  verify: () => false,
+  async verifyAsync(req, cfg, _s, f) {
+    const auth = h(req, "authorization");
+    if (!auth.startsWith("Bearer ") || !cfg.app_id) return false;
+    try {
+      const { createRemoteJWKSet, jwtVerify } = await import("jose");
+      const openid = String(cfg.openid_url ?? BOT_FRAMEWORK_OPENID);
+      let jwks = jwksCache.get(openid);
+      if (!jwks) {
+        const meta = (await (await f(openid)).json()) as { jwks_uri?: string };
+        if (!meta.jwks_uri) return false;
+        jwks = createRemoteJWKSet(new URL(meta.jwks_uri));
+        jwksCache.set(openid, jwks);
+      }
+      const { payload } = await jwtVerify(auth.slice(7), jwks, {
+        issuer: String(cfg.issuer ?? "https://api.botframework.com"),
+        audience: String(cfg.app_id),
+        clockTolerance: 300,
+      });
+      // The token names the service it came from; the activity must say the same.
+      const activity = json(req.body);
+      return !payload.serviceurl || payload.serviceurl === activity.serviceUrl;
+    } catch {
+      return false;
+    }
+  },
+  normalize(req) {
+    const a = json(req.body);
+    if (a.type !== "message" || typeof a.text !== "string") return [];
+    const from = (a.from ?? {}) as Record<string, unknown>;
+    const conv = (a.conversation ?? {}) as Record<string, unknown>;
+    const text = a.text.replace(/<at>[^<]*<\/at>\s*/g, "").replace(/<[^>]+>/g, "").trim();
+    if (!text || !conv.id) return [];
+    return [
+      {
+        messageId: a.id ? String(a.id) : undefined,
+        threadKey: `teams:${conv.id}`,
+        sender: String(from.aadObjectId ?? from.id ?? ""),
+        senderName: from.name as string | undefined,
+        text,
+        reply: { service_url: a.serviceUrl, conversation_id: conv.id, activity_id: a.id },
+      },
+    ];
+  },
+  async send(cfg, s, reply, text, f) {
+    const token = await teamsToken(cfg, s, f);
+    // The service address comes from the signed activity; api_base overrides it (tests, proxies).
+    const service = base(cfg, String(reply.service_url ?? ""));
+    if (!/^https:\/\//.test(service) && !cfg.api_base)
+      throw new Error("Teams: the conversation has no service address");
+    await ok(
+      await f(
+        `${service}/v3/conversations/${encodeURIComponent(String(reply.conversation_id))}/activities`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+          body: JSON.stringify({ type: "message", text, ...(reply.activity_id ? { replyToId: reply.activity_id } : {}) }),
+        },
+      ),
+      "Teams",
+    );
+  },
+};
+
 export const ADAPTERS: Record<ChannelKind, ChannelAdapter> = {
   telegram,
   email,
@@ -740,6 +928,8 @@ export const ADAPTERS: Record<ChannelKind, ChannelAdapter> = {
   messenger,
   feishu,
   imessage,
+  teams,
+  discord,
 };
 
 /** Whether a sender may talk to the bot (exact match, case-insensitive; "*@domain" for email). */

@@ -179,7 +179,18 @@ export const MessageTriggerConfig = z
   .object({
     channel_id: Uuid.optional(),
     channel_kind: z
-      .enum(["telegram", "email", "sms", "slack", "whatsapp", "messenger", "feishu", "imessage"])
+      .enum([
+        "telegram",
+        "email",
+        "sms",
+        "slack",
+        "whatsapp",
+        "messenger",
+        "feishu",
+        "imessage",
+        "teams",
+        "discord",
+      ])
       .optional(),
     sender: z
       .string()

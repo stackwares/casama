@@ -350,6 +350,9 @@ importers:
       fflate:
         specifier: ^0.8.3
         version: 0.8.3
+      jose:
+        specifier: ^6.2.15
+        version: 6.2.15
       pdfjs-dist:
         specifier: 6.5.438
         version: 6.5.438

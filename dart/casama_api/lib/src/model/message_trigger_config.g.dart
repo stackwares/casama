@@ -166,4 +166,6 @@ const _$MessageTriggerConfigChannelKindEnumEnumMap = {
   MessageTriggerConfigChannelKindEnum.messenger: 'messenger',
   MessageTriggerConfigChannelKindEnum.feishu: 'feishu',
   MessageTriggerConfigChannelKindEnum.imessage: 'imessage',
+  MessageTriggerConfigChannelKindEnum.teams: 'teams',
+  MessageTriggerConfigChannelKindEnum.discord: 'discord',
 };
