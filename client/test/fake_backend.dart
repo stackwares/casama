@@ -1561,6 +1561,10 @@ class FakeBackend implements Backend {
 
   /// Whether the person may delete the fake chat (they started it, or manage the bot).
   var canDeleteChats = true;
+
+  /// General and topics (D-253): the fake chat as General, and topics listed after it.
+  var fakeChatIsGeneral = false;
+  List<Conversation> topics = [];
   @override
   Future<List<Conversation>> conversations(String botId) async => [
     if (!deletedConversations.contains(convId) && !clearedBots.contains(botId))
@@ -1573,7 +1577,9 @@ class FakeBackend implements Backend {
         kind: ConversationKindEnum.direct,
         botIds: [botId],
         canDelete: canDeleteChats,
+        isMain: fakeChatIsGeneral,
       ),
+    ...topics,
   ];
   @override
   Future<void> deleteConversation(String conversationId) async =>

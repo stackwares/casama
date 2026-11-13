@@ -3647,6 +3647,38 @@
           "can_delete": {
             "type": "boolean",
             "description": "Whether you may delete it: you started it, or you manage its bot"
+          },
+          "is_main": {
+            "type": "boolean",
+            "description": "The person's General conversation with this bot (D-253): briefs, routine results and proactive messages land here"
+          },
+          "parent_conversation_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "A topic's General conversation"
+          },
+          "anchor_message_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "The message in General a topic started from (an accepted suggestion)"
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "needs_you",
+              "working",
+              null
+            ],
+            "description": "needs_you: the bot waits for an approval or a take-over in it; working: a run is going"
           }
         },
         "required": [

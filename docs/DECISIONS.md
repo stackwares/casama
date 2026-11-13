@@ -2865,8 +2865,46 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
   Older, and the Inbox tab gives way to Chats with a Needs you filter and a pinned Casama
   conversation for workspace notices. A person's latest direct chat with a bot becomes General;
   the rest become topics. Group chats are unchanged.
-- **Order:** (1) history budget, built here; (2) General and topics on the server; (3) automatic
-  topics with results posted back; (4) the app.
+- **Order:** (1) history budget; (2) General and topics on the server; (3) automatic topics with
+  results posted back; (4) the app. All four are built.
+- **General (server):** `conversations.is_main`, one per person and bot (unique index). A trigger
+  makes a person's first app chat with a bot General and every later one a topic under it
+  (`parent_conversation_id`); chat-app threads, projects and group chats stay out. The migration
+  made each person's latest chat General and the rest its topics. Deleting General promotes the
+  latest remaining chat. `public.main_conversation(org, bot, user)` gets or makes it for the worker.
+  `GET /v1/bots/{id}/conversations` lists your General first and adds `is_main`,
+  `parent_conversation_id`, `anchor_message_id` and `status` (`needs_you` when a run waits for an
+  approval or a take-over, `working` while one is going).
+- **What lands in General:**
+  - Briefs, always. Other routines post where they were asked for (D-155); with no chat recorded,
+    in General.
+  - The setup scan's "You're all set" line.
+  - Suggestions, as the bot's line plus a `suggestion` part. The app draws it as a card with Do it
+    and Not now. `suggestions.message_id` records the post.
+  - Suggestion and summary pushes open `/bots/{id}/chat` (General) instead of the inbox.
+- **Never mid-run:** a run's reply is attached to the message it answers, so a post landing in
+  between would push the reply onto a hidden branch. So nothing is posted into General while a run
+  works there:
+  - a run's own suggestions are posted right after it ends;
+  - anything that had to wait goes out in the worker's minute sweep (`postSuggestions`,
+    `postTopicResults`).
+  - Posts without a run broadcast `conversation_activity`, so open apps reload (D-224).
+- **Topics:** Do it opens a topic with the suggestion's card as its anchor and `posts_result`. It
+  posts a one-line result back to General (the first sentence of the reply, markdown stripped, with
+  a `topic` part linking to it) after the run that did the work, and after later runs nobody asked
+  for there (a routine, a watcher). `result_run_id` keeps it to once per run. The person's own
+  back-and-forth in a topic stays in the topic. A topic made by hand ("New topic") doesn't post back.
+- **Not done:** the bot opening a topic by itself for a long task. Projects already have their own
+  chats, and routines post in General. Revisit if General gets noisy.
+- **App:**
+  - **Tabs:** Chats and Tasks; the Inbox tab is gone. Chats starts with a Needs you card (when
+    something waits) and a pinned Casama row (updates and notices). Both open the old Inbox screen
+    full screen (`/inbox?tab=0` and `/inbox`). Desktop has the same two rows over the bots in the
+    sidebar. The Chats tab carries the badge the Inbox had.
+  - **Opening a bot** opens General. Chips at the top show the live topics: needs you first, then
+    working, then the newest; ones idle 7 days are left out. All topics lists General, the live
+    ones, then Older. Inside a topic, a General chip leads back.
+  - **The header:** "New chat" became New topic, and Conversations became Topics.
 - **History budget (built):** chats used to send their whole history until it reached 70% of the
   model's window. Casama Cloud's Muse Ember has a 1M window, so nothing was summarized before about
   730k tokens, and every message resent it all. Now history over `HISTORY_BUDGET` (16k tokens) is
@@ -2885,3 +2923,14 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
   capped, compacting down to the keep size, a long last turn kept), `apps/server/test/history-budget.test.ts`
   (seeded 24k-token chat: the cut-off is a seeded turn, the next message still carries the kept
   turns; fails on the old cut-off). The replay gateway gained `when.messagesInclude`.
+  `apps/server/test/general-topics.test.ts` covers:
+  - General first and topics under it;
+  - briefs in General;
+  - a suggestion card posted once;
+  - Do it opening an anchored topic that posts back once, with follow-ups staying put;
+  - no post while General is busy, then the sweep;
+  - needs-you status;
+  - deleting General.
+  `client/test/general_topics_test.dart` covers the chips (needs-you first, Older left out, the way
+  back), the suggestion card's Do it and Not now, the topic link, the Needs you and Casama rows, and
+  `splitTopics`. The navigation tests now expect two places.

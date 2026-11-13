@@ -37,6 +37,7 @@ import '../computer/computer_screen.dart';
 import '../notifications/checkins_sheet.dart';
 import '../notifications/quiet_hours.dart';
 import '../settings/about_you_screen.dart';
+import '../inbox/for_you.dart';
 import '../settings/profile_photo.dart';
 import '../../ui/glow_button.dart';
 import '../workspaces/spaces.dart';
@@ -44,7 +45,8 @@ import '../voice/phone_calls.dart';
 import '../voice/wake_word.dart';
 import '../../ui/mascot.dart';
 
-/// Three places on every size (D-176): Chats, Inbox and Tasks. Phone: a floating tab bar with a
+/// Two places on every size (D-176, D-253): Chats and Tasks; what the Inbox held opens from Chats
+/// (Needs you, and the pinned Casama row for updates). Phone: a floating tab bar with a
 /// round search button beside it. Tablet: a navigation rail. Desktop: a sidebar with the chats, the
 /// chat, and the bot's computer beside it. Settings sits behind the person's avatar; a bot's
 /// computer lives in its chat.
@@ -127,15 +129,13 @@ class HomeShell extends ConsumerWidget {
 
   /// The selected place, or -1 on screens outside them (settings, search, the computer).
   int get _index {
-    if (location.startsWith('/inbox') ||
-        location.startsWith('/approvals') ||
-        location == '/pages') {
+    if (location.startsWith('/tasks') || location.startsWith('/projects')) {
       return 1;
     }
-    if (location.startsWith('/tasks') || location.startsWith('/projects')) {
-      return 2;
-    }
     if (location == '/' ||
+        location.startsWith('/inbox') ||
+        location.startsWith('/approvals') ||
+        location == '/pages' ||
         location.startsWith('/bots') ||
         location.startsWith('/groups') ||
         location.startsWith('/quick-ask')) {
@@ -150,7 +150,7 @@ class HomeShell extends ConsumerWidget {
   /// The tab screens themselves. Only these show the tab bar on phones; everything opened from
   /// them (a chat, settings, the computer, search, password managers…) takes the whole screen,
   /// with a back button.
-  static const _tabRoots = {'/', '/bots', '/inbox', '/tasks'};
+  static const _tabRoots = {'/', '/bots', '/tasks'};
 
   bool get _isDetail => !_tabRoots.contains(location);
 
@@ -163,7 +163,6 @@ class HomeShell extends ConsumerWidget {
         LucideIcons.messagesSquare,
         l10n.navChats,
       ),
-      _Dest('/inbox', LucideIcons.inbox, LucideIcons.inbox, l10n.inbox),
       _Dest(
         '/tasks',
         LucideIcons.listTodo,
@@ -282,7 +281,7 @@ class HomeShell extends ConsumerWidget {
                           icon: d.icon,
                           selectedIcon: d.selectedIcon,
                           label: d.label,
-                          badge: d.path == '/inbox' ? badge : 0,
+                          badge: d.path == '/bots' ? badge : 0,
                         ),
                     ],
                     // Connecting more apps (and MCP servers) floats beside the tabs; search sits in
@@ -499,7 +498,7 @@ class _Rail extends StatelessWidget {
         for (final d in dests)
           NavigationRailDestination(
             icon: Badge(
-              isLabelVisible: d.path == '/inbox' && badge > 0,
+              isLabelVisible: d.path == '/bots' && badge > 0,
               label: Text(
                 '$badge',
                 style: const TextStyle(fontFeatures: AppText.tabular),
@@ -507,7 +506,7 @@ class _Rail extends StatelessWidget {
               child: Icon(d.icon),
             ),
             selectedIcon: Badge(
-              isLabelVisible: d.path == '/inbox' && badge > 0,
+              isLabelVisible: d.path == '/bots' && badge > 0,
               label: Text(
                 '$badge',
                 style: const TextStyle(fontFeatures: AppText.tabular),
@@ -604,6 +603,36 @@ class _Sidebar extends ConsumerWidget {
                 primary: false,
                 padding: const EdgeInsets.only(bottom: 12),
                 children: [
+                  // What the Inbox held (D-253): decisions waiting across bots, then the pinned
+                  // Casama row with workspace updates and notices.
+                  _SidebarItem(
+                    key: const Key('sidebar-needs-you'),
+                    leading: Icon(
+                      LucideIcons.bellRing,
+                      size: 21,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    label: l10n.inboxNeedsYou,
+                    selected: location == '/inbox' && GoRouter.maybeOf(context)?.state.uri.queryParameters['tab'] == '0',
+                    trailing: switch (ref.watch(needsYouCountProvider)) {
+                      0 => null,
+                      final n => CountPill(n),
+                    },
+                    onTap: () => context.go('/inbox?tab=0'),
+                  ),
+                  _SidebarItem(
+                    key: const Key('sidebar-casama'),
+                    height: 48,
+                    leading: const CasamaMark(size: 30),
+                    label: l10n.casamaUpdates,
+                    subtitle: l10n.casamaUpdatesSubtitle,
+                    selected: location == '/inbox' && GoRouter.maybeOf(context)?.state.uri.queryParameters['tab'] != '0',
+                    trailing: switch (ref.watch(unreadUpdatesProvider)) {
+                      0 => null,
+                      final n => CountPill(n),
+                    },
+                    onTap: () => context.go('/inbox'),
+                  ),
                   // Bots outside folders first, then each folder in order (D-100).
                   for (final (folder, group) in groupBotsByFolder(
                     bots,

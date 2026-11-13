@@ -29,6 +29,8 @@ import 'shared_files.dart';
 import '../../../ui/action_buttons.dart';
 import '../../../ui/glow_button.dart';
 import '../../devices/device_labels.dart';
+import '../../inbox/for_you.dart';
+import 'package:casama_sdk/casama_sdk.dart';
 import '../../../ui/effects.dart';
 
 // ---------------------------------------------------------------------------------------------
@@ -1822,6 +1824,137 @@ class _ActionCard extends StatelessWidget {
           const SizedBox(height: AppSpace.sm),
           footer,
         ],
+      ),
+    );
+  }
+}
+
+/// A suggestion the bot posted in General (D-253): Do it opens a topic where the bot does it;
+/// Not now dismisses it. Once handled, a quiet line (with a link to the topic it opened).
+class SuggestionPrompt extends ConsumerStatefulWidget {
+  const SuggestionPrompt({
+    super.key,
+    required this.entry,
+    required this.botId,
+    required this.botName,
+    required this.onOpenTopic,
+  });
+  final SuggestionEntry entry;
+  final String botId;
+  final String botName;
+  final ValueChanged<String> onOpenTopic;
+
+  @override
+  ConsumerState<SuggestionPrompt> createState() => _SuggestionPromptState();
+}
+
+class _SuggestionPromptState extends ConsumerState<SuggestionPrompt> {
+  var _busy = false;
+
+  /// Answered here, before the lists that say so reload.
+  bool? _accepted;
+
+  Future<void> _accept() async {
+    setState(() => _busy = true);
+    final r = await runGuarded(context, () => ref.read(backendProvider).acceptSuggestion(widget.entry.suggestion.id));
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      if (r != null) _accepted = true;
+    });
+    ref.invalidate(forYouProvider);
+    ref.invalidate(conversationsProvider(widget.botId));
+    if (r != null) widget.onOpenTopic(r.conversationId);
+  }
+
+  Future<void> _dismiss() async {
+    setState(() => _busy = true);
+    final ok = await runGuarded(context, () async {
+      await ref.read(backendProvider).dismissSuggestion(widget.entry.suggestion.id);
+      return true;
+    });
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      if (ok == true) _accepted = false;
+    });
+    ref.invalidate(forYouProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.appColors;
+    final s = widget.entry.suggestion;
+    final pending = ref.watch(forYouProvider).value?.suggestions.map((x) => x.id).toSet();
+    // The topic this card opened, when it was accepted.
+    final topic = (ref.watch(conversationsProvider(widget.botId)).value ?? const <Conversation>[])
+        .where((c) => c.anchorMessageId == widget.entry.messageId)
+        .firstOrNull;
+    final handled = _accepted != null || topic != null || (pending != null && !pending.contains(s.id));
+    if (handled) {
+      if (topic != null || _accepted == true) {
+        return Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton.icon(
+            key: Key('suggestionTopic-${s.id}'),
+            icon: Icon(LucideIcons.messagesSquare, size: 16, color: colors.positive),
+            label: Text(l10n.suggestionInTopic(s.title), maxLines: 1, overflow: TextOverflow.ellipsis),
+            onPressed: topic == null ? null : () => widget.onOpenTopic(topic.id),
+          ),
+        );
+      }
+      return _Folded(
+        key: Key('suggestionDone-${s.id}'),
+        text: l10n.suggestionClosed(s.title),
+        color: context.colorScheme.onSurfaceVariant,
+        icon: LucideIcons.circleMinus,
+      );
+    }
+    return _ActionCard(
+      key: Key('suggestionCard-${s.id}'),
+      accent: colors.working,
+      icon: LucideIcons.sparkles,
+      title: s.title,
+      body: s.body.trim().isEmpty
+          ? const SizedBox.shrink()
+          : Text(s.body.trim(), maxLines: 6, overflow: TextOverflow.ellipsis, style: context.textTheme.bodyMedium?.copyWith(height: 1.4)),
+      footer: ActionButtons(
+        actions: [
+          OutlinedButton(
+            key: Key('suggestionNotNow-${s.id}'),
+            onPressed: _busy ? null : _dismiss,
+            child: Text(l10n.notNow),
+          ),
+          GlowButton.icon(
+            key: Key('suggestionDoIt-${s.id}'),
+            onPressed: _busy ? null : _accept,
+            icon: const Icon(LucideIcons.check, size: 18),
+            label: Text(l10n.doIt),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A topic's result posted back to General (D-253): its title, tappable into the topic.
+class TopicLinkLine extends StatelessWidget {
+  const TopicLinkLine({super.key, required this.entry, required this.onOpen});
+  final TopicLinkEntry entry;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final title = entry.topic.title.trim().isEmpty ? context.l10n.untitledChat : entry.topic.title.trim();
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: ActionChip(
+        key: Key('topicLink-${entry.topic.conversationId}'),
+        avatar: Icon(LucideIcons.messagesSquare, size: 16, color: scheme.primary),
+        label: Text(context.l10n.openTopic(title), maxLines: 1, overflow: TextOverflow.ellipsis),
+        onPressed: onOpen,
       ),
     );
   }

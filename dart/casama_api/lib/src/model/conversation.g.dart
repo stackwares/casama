@@ -23,6 +23,14 @@ abstract class _$ConversationCWProxy {
 
   Conversation canDelete(bool? canDelete);
 
+  Conversation isMain(bool? isMain);
+
+  Conversation parentConversationId(String? parentConversationId);
+
+  Conversation anchorMessageId(String? anchorMessageId);
+
+  Conversation status(ConversationStatusEnum? status);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Conversation(...).copyWith.fieldName(value)`.
@@ -40,6 +48,10 @@ abstract class _$ConversationCWProxy {
     List<String> botIds,
     DateTime createdAt,
     bool? canDelete,
+    bool? isMain,
+    String? parentConversationId,
+    String? anchorMessageId,
+    ConversationStatusEnum? status,
   });
 }
 
@@ -75,6 +87,20 @@ class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
   @override
   Conversation canDelete(bool? canDelete) => call(canDelete: canDelete);
 
+  @override
+  Conversation isMain(bool? isMain) => call(isMain: isMain);
+
+  @override
+  Conversation parentConversationId(String? parentConversationId) =>
+      call(parentConversationId: parentConversationId);
+
+  @override
+  Conversation anchorMessageId(String? anchorMessageId) =>
+      call(anchorMessageId: anchorMessageId);
+
+  @override
+  Conversation status(ConversationStatusEnum? status) => call(status: status);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Conversation(...).copyWith.fieldName(value)`.
@@ -93,6 +119,10 @@ class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
     Object? botIds = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
     Object? canDelete = const $CopyWithPlaceholder(),
+    Object? isMain = const $CopyWithPlaceholder(),
+    Object? parentConversationId = const $CopyWithPlaceholder(),
+    Object? anchorMessageId = const $CopyWithPlaceholder(),
+    Object? status = const $CopyWithPlaceholder(),
   }) {
     return Conversation(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -127,6 +157,22 @@ class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
           ? _value.canDelete
           // ignore: cast_nullable_to_non_nullable
           : canDelete as bool?,
+      isMain: isMain == const $CopyWithPlaceholder()
+          ? _value.isMain
+          // ignore: cast_nullable_to_non_nullable
+          : isMain as bool?,
+      parentConversationId: parentConversationId == const $CopyWithPlaceholder()
+          ? _value.parentConversationId
+          // ignore: cast_nullable_to_non_nullable
+          : parentConversationId as String?,
+      anchorMessageId: anchorMessageId == const $CopyWithPlaceholder()
+          ? _value.anchorMessageId
+          // ignore: cast_nullable_to_non_nullable
+          : anchorMessageId as String?,
+      status: status == const $CopyWithPlaceholder()
+          ? _value.status
+          // ignore: cast_nullable_to_non_nullable
+          : status as ConversationStatusEnum?,
     );
   }
 }
@@ -180,6 +226,19 @@ Conversation _$ConversationFromJson(Map<String, dynamic> json) =>
             (v) => DateTime.parse(v as String),
           ),
           canDelete: $checkedConvert('can_delete', (v) => v as bool?),
+          isMain: $checkedConvert('is_main', (v) => v as bool?),
+          parentConversationId: $checkedConvert(
+            'parent_conversation_id',
+            (v) => v as String?,
+          ),
+          anchorMessageId: $checkedConvert(
+            'anchor_message_id',
+            (v) => v as String?,
+          ),
+          status: $checkedConvert(
+            'status',
+            (v) => $enumDecodeNullable(_$ConversationStatusEnumEnumMap, v),
+          ),
         );
         return val;
       },
@@ -189,6 +248,9 @@ Conversation _$ConversationFromJson(Map<String, dynamic> json) =>
         'botIds': 'bot_ids',
         'createdAt': 'created_at',
         'canDelete': 'can_delete',
+        'isMain': 'is_main',
+        'parentConversationId': 'parent_conversation_id',
+        'anchorMessageId': 'anchor_message_id',
       },
     );
 
@@ -202,9 +264,18 @@ Map<String, dynamic> _$ConversationToJson(Conversation instance) =>
       'bot_ids': instance.botIds,
       'created_at': instance.createdAt.toIso8601String(),
       'can_delete': ?instance.canDelete,
+      'is_main': ?instance.isMain,
+      'parent_conversation_id': ?instance.parentConversationId,
+      'anchor_message_id': ?instance.anchorMessageId,
+      'status': ?_$ConversationStatusEnumEnumMap[instance.status],
     };
 
 const _$ConversationKindEnumEnumMap = {
   ConversationKindEnum.direct: 'direct',
   ConversationKindEnum.group: 'group',
+};
+
+const _$ConversationStatusEnumEnumMap = {
+  ConversationStatusEnum.needsYou: 'needs_you',
+  ConversationStatusEnum.working: 'working',
 };

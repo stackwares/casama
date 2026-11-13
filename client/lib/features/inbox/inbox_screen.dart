@@ -45,8 +45,11 @@ enum InboxFilter {
 /// Requests waiting for you (approvals, takeovers, suggestions, skill ideas), then morning briefs,
 /// notifications and new pages in one list, with filter chips.
 class InboxScreen extends ConsumerStatefulWidget {
-  const InboxScreen({super.key, this.initialFilter = InboxFilter.all});
+  const InboxScreen({super.key, this.initialFilter = InboxFilter.all, this.title});
   final InboxFilter initialFilter;
+
+  /// Opened from Chats (D-253): "Needs you", or "Casama" for updates.
+  final String? title;
 
   @override
   ConsumerState<InboxScreen> createState() => _InboxScreenState();
@@ -71,7 +74,7 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final needsYou = _needsYouCount(ref);
+    final needsYou = ref.watch(needsYouCountProvider);
     String label(InboxFilter f) => switch (f) {
       InboxFilter.all => l10n.filterAll,
       InboxFilter.needsYou => needsYou == 0 ? l10n.inboxNeedsYou : l10n.inboxNeedsYouCount(needsYou),
@@ -83,7 +86,8 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
       controller: TabReselect.inbox,
       child: Scaffold(
       appBar: ShellHeader(
-        title: l10n.inbox,
+        title: widget.title ?? l10n.inbox,
+        phoneFallback: '/bots',
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(52),
           child: SizedBox(
@@ -114,13 +118,6 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
     );
   }
 }
-
-/// Pending approvals, takeover requests, suggestions and skill ideas: what waits on a decision.
-int _needsYouCount(WidgetRef ref) =>
-    (ref.watch(approvalsProvider).value?.length ?? 0) +
-    (ref.watch(takeoversProvider).value?.length ?? 0) +
-    (ref.watch(forYouProvider).value?.suggestions.length ?? 0) +
-    (ref.watch(skillProposalsProvider).value?.length ?? 0);
 
 /// Whether [n] asks for a decision that is still waiting in Needs you, so Updates doesn't show it
 /// twice. Answered requests stay in Updates.

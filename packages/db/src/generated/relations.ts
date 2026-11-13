@@ -12,8 +12,8 @@ export const organizationsRelations = relations(organizations, ({one, many}) => 
 	invites: many(invites),
 	entitlements: many(entitlements),
 	memories: many(memories),
-	conversations: many(conversations),
 	attachments: many(attachments),
+	conversations: many(conversations),
 	messages: many(messages),
 	quotas: many(quotas),
 	runs: many(runs),
@@ -45,10 +45,10 @@ export const organizationsRelations = relations(organizations, ({one, many}) => 
 	taskComments: many(taskComments),
 	tasks: many(tasks),
 	skillFiles: many(skillFiles),
+	botCheckins: many(botCheckins),
 	botShares: many(botShares),
 	projects: many(projects),
 	projectMilestones: many(projectMilestones),
-	botCheckins: many(botCheckins),
 	actionRules: many(actionRules),
 	watchers: many(watchers),
 	suggestions: many(suggestions),
@@ -140,10 +140,10 @@ export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
 	tasks_assigneeUserId: many(tasks, {
 		relationName: "tasks_assigneeUserId_usersInAuth_id"
 	}),
+	botCheckins: many(botCheckins),
 	botShares: many(botShares),
 	projects: many(projects),
 	projectMilestones: many(projectMilestones),
-	botCheckins: many(botCheckins),
 	actionRules: many(actionRules),
 	watchers: many(watchers),
 	suggestions: many(suggestions),
@@ -334,9 +334,9 @@ export const botsRelations = relations(bots, ({one, many}) => ({
 	tasks_assigneeBotId: many(tasks, {
 		relationName: "tasks_assigneeBotId_bots_id"
 	}),
+	botCheckins: many(botCheckins),
 	botShares: many(botShares),
 	projects: many(projects),
-	botCheckins: many(botCheckins),
 	actionRules: many(actionRules),
 	watchers: many(watchers),
 	suggestions: many(suggestions),
@@ -427,53 +427,22 @@ export const runsRelations = relations(runs, ({one, many}) => ({
 	runEvents: many(runEvents),
 }));
 
-export const conversationsRelations = relations(conversations, ({one, many}) => ({
+export const attachmentsRelations = relations(attachments, ({one}) => ({
 	organization: one(organizations, {
-		fields: [conversations.orgId],
+		fields: [attachments.orgId],
 		references: [organizations.id]
 	}),
-	bot: one(bots, {
-		fields: [conversations.botId],
-		references: [bots.id]
-	}),
-	usersInAuth: one(usersInAuth, {
-		fields: [conversations.createdBy],
-		references: [usersInAuth.id]
-	}),
 	message: one(messages, {
-		fields: [conversations.headMessageId],
-		references: [messages.id],
-		relationName: "conversations_headMessageId_messages_id"
+		fields: [attachments.messageId],
+		references: [messages.id]
 	}),
-	project: one(projects, {
-		fields: [conversations.projectId],
-		references: [projects.id],
-		relationName: "conversations_projectId_projects_id"
-	}),
-	messages: many(messages, {
-		relationName: "messages_conversationId_conversations_id"
-	}),
-	runs: many(runs),
-	routines: many(routines),
-	secretRequests: many(secretRequests),
-	tasks: many(tasks),
-	projects: many(projects, {
-		relationName: "projects_conversationId_conversations_id"
-	}),
-	watchers: many(watchers),
-	pages: many(pages),
-	teachSessions: many(teachSessions),
-	channelThreads: many(channelThreads),
-	voiceCalls: many(voiceCalls),
-	a2ATasks: many(a2ATasks),
-	conversationBots: many(conversationBots),
 }));
 
 export const messagesRelations = relations(messages, ({one, many}) => ({
+	attachments: many(attachments),
 	conversations: many(conversations, {
 		relationName: "conversations_headMessageId_messages_id"
 	}),
-	attachments: many(attachments),
 	organization: one(organizations, {
 		fields: [messages.orgId],
 		references: [organizations.id]
@@ -507,7 +476,58 @@ export const messagesRelations = relations(messages, ({one, many}) => ({
 	runs: many(runs, {
 		relationName: "runs_triggerMessageId_messages_id"
 	}),
+	suggestions: many(suggestions),
 	ttsCaches: many(ttsCache),
+}));
+
+export const conversationsRelations = relations(conversations, ({one, many}) => ({
+	organization: one(organizations, {
+		fields: [conversations.orgId],
+		references: [organizations.id]
+	}),
+	bot: one(bots, {
+		fields: [conversations.botId],
+		references: [bots.id]
+	}),
+	usersInAuth: one(usersInAuth, {
+		fields: [conversations.createdBy],
+		references: [usersInAuth.id]
+	}),
+	message: one(messages, {
+		fields: [conversations.headMessageId],
+		references: [messages.id],
+		relationName: "conversations_headMessageId_messages_id"
+	}),
+	project: one(projects, {
+		fields: [conversations.projectId],
+		references: [projects.id],
+		relationName: "conversations_projectId_projects_id"
+	}),
+	conversation: one(conversations, {
+		fields: [conversations.parentConversationId],
+		references: [conversations.id],
+		relationName: "conversations_parentConversationId_conversations_id"
+	}),
+	conversations: many(conversations, {
+		relationName: "conversations_parentConversationId_conversations_id"
+	}),
+	messages: many(messages, {
+		relationName: "messages_conversationId_conversations_id"
+	}),
+	runs: many(runs),
+	routines: many(routines),
+	secretRequests: many(secretRequests),
+	tasks: many(tasks),
+	projects: many(projects, {
+		relationName: "projects_conversationId_conversations_id"
+	}),
+	watchers: many(watchers),
+	pages: many(pages),
+	teachSessions: many(teachSessions),
+	channelThreads: many(channelThreads),
+	voiceCalls: many(voiceCalls),
+	a2ATasks: many(a2ATasks),
+	conversationBots: many(conversationBots),
 }));
 
 export const projectsRelations = relations(projects, ({one, many}) => ({
@@ -536,17 +556,6 @@ export const projectsRelations = relations(projects, ({one, many}) => ({
 	}),
 	projectMilestones: many(projectMilestones),
 	watchers: many(watchers),
-}));
-
-export const attachmentsRelations = relations(attachments, ({one}) => ({
-	organization: one(organizations, {
-		fields: [attachments.orgId],
-		references: [organizations.id]
-	}),
-	message: one(messages, {
-		fields: [attachments.messageId],
-		references: [messages.id]
-	}),
 }));
 
 export const quotasRelations = relations(quotas, ({one}) => ({
@@ -1046,21 +1055,6 @@ export const skillFilesRelations = relations(skillFiles, ({one}) => ({
 	}),
 }));
 
-export const botSharesRelations = relations(botShares, ({one}) => ({
-	organization: one(organizations, {
-		fields: [botShares.orgId],
-		references: [organizations.id]
-	}),
-	bot: one(bots, {
-		fields: [botShares.botId],
-		references: [bots.id]
-	}),
-	usersInAuth: one(usersInAuth, {
-		fields: [botShares.createdBy],
-		references: [usersInAuth.id]
-	}),
-}));
-
 export const botCheckinsRelations = relations(botCheckins, ({one}) => ({
 	bot: one(bots, {
 		fields: [botCheckins.botId],
@@ -1072,6 +1066,21 @@ export const botCheckinsRelations = relations(botCheckins, ({one}) => ({
 	}),
 	usersInAuth: one(usersInAuth, {
 		fields: [botCheckins.userId],
+		references: [usersInAuth.id]
+	}),
+}));
+
+export const botSharesRelations = relations(botShares, ({one}) => ({
+	organization: one(organizations, {
+		fields: [botShares.orgId],
+		references: [organizations.id]
+	}),
+	bot: one(bots, {
+		fields: [botShares.botId],
+		references: [bots.id]
+	}),
+	usersInAuth: one(usersInAuth, {
+		fields: [botShares.createdBy],
 		references: [usersInAuth.id]
 	}),
 }));
@@ -1130,6 +1139,10 @@ export const suggestionsRelations = relations(suggestions, ({one}) => ({
 	run: one(runs, {
 		fields: [suggestions.runId],
 		references: [runs.id]
+	}),
+	message: one(messages, {
+		fields: [suggestions.messageId],
+		references: [messages.id]
 	}),
 }));
 

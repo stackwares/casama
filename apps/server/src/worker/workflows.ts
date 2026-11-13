@@ -16,6 +16,8 @@ import {
   type ModelList,
   mergeModelList,
   pollIMessage,
+  postSuggestions,
+  postTopicResults,
   projectHeartbeat,
   purgeDeviceData,
   type RunDeps,
@@ -224,6 +226,13 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
           captureStep("due-suggestions", 0),
         ),
       { name: "due-suggestions" },
+    );
+    // General and topics (D-253): suggestion cards and topic results that waited for General to be free.
+    await DBOS.runStep(
+      async () =>
+        (await postSuggestions(rt().db).catch(captureStep("general-suggestions", 0))) +
+        (await postTopicResults(rt().db).catch(captureStep("general-topic-results", 0))),
+      { name: "general-posts" },
     );
     // Timezones that follow the person (D-250): routines that moved zone get their next run anew.
     await DBOS.runStep(() => retimeRoutines(rt().db).catch(captureStep("retime-routines", 0)), {

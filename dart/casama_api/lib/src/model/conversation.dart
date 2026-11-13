@@ -35,6 +35,14 @@ class Conversation {
     required  this.createdAt,
 
      this.canDelete,
+
+     this.isMain,
+
+     this.parentConversationId,
+
+     this.anchorMessageId,
+
+     this.status,
   });
 
   @JsonKey(
@@ -135,6 +143,58 @@ class Conversation {
 
 
 
+      /// The person's General conversation with this bot (D-253): briefs, routine results and proactive messages land here
+  @JsonKey(
+    
+    name: r'is_main',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? isMain;
+
+
+
+      /// A topic's General conversation
+  @JsonKey(
+    
+    name: r'parent_conversation_id',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? parentConversationId;
+
+
+
+      /// The message in General a topic started from (an accepted suggestion)
+  @JsonKey(
+    
+    name: r'anchor_message_id',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? anchorMessageId;
+
+
+
+      /// needs_you: the bot waits for an approval or a take-over in it; working: a run is going
+  @JsonKey(
+    
+    name: r'status',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final ConversationStatusEnum? status;
+
+
+
 
 
     @override
@@ -146,7 +206,11 @@ class Conversation {
       other.kind == kind &&
       other.botIds == botIds &&
       other.createdAt == createdAt &&
-      other.canDelete == canDelete;
+      other.canDelete == canDelete &&
+      other.isMain == isMain &&
+      other.parentConversationId == parentConversationId &&
+      other.anchorMessageId == anchorMessageId &&
+      other.status == status;
 
     @override
     int get hashCode =>
@@ -157,7 +221,11 @@ class Conversation {
         kind.hashCode +
         botIds.hashCode +
         createdAt.hashCode +
-        canDelete.hashCode;
+        canDelete.hashCode +
+        isMain.hashCode +
+        (parentConversationId == null ? 0 : parentConversationId.hashCode) +
+        (anchorMessageId == null ? 0 : anchorMessageId.hashCode) +
+        (status == null ? 0 : status.hashCode);
 
   factory Conversation.fromJson(Map<String, dynamic> json) => _$ConversationFromJson(json);
 
@@ -178,6 +246,24 @@ direct(r'direct'),
 group(r'group');
 
 const ConversationKindEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
+
+/// needs_you: the bot waits for an approval or a take-over in it; working: a run is going
+enum ConversationStatusEnum {
+    /// needs_you: the bot waits for an approval or a take-over in it; working: a run is going
+@JsonValue(r'needs_you')
+needsYou(r'needs_you'),
+    /// needs_you: the bot waits for an approval or a take-over in it; working: a run is going
+@JsonValue(r'working')
+working(r'working');
+
+const ConversationStatusEnum(this.value);
 
 final String value;
 

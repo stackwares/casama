@@ -261,7 +261,9 @@ describe("bots and chat", () => {
     const memories = await j(await call(`/v1/bots/${botId}/memories`, { token: owner.token }));
     expect(memories.items.some((m: { content: string }) => /teal/.test(m.content))).toBe(true);
     const convos = await j(await call(`/v1/bots/${botId}/conversations`, { token: owner.token }));
-    expect(convos.items[0].id).toBe(convB.id);
+    // Your General first (the first chat, D-253), then the newest.
+    expect(convos.items[0]).toMatchObject({ id: convA.id, is_main: true });
+    expect(convos.items[1]).toMatchObject({ id: convB.id, parent_conversation_id: convA.id });
     expect(convos.items.find((c: { id: string }) => c.id === convA.id).title).toContain(
       "favorite color",
     );

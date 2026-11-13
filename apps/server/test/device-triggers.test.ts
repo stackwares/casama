@@ -295,8 +295,11 @@ describe("device triggers", () => {
     await up("06:45");
     expect(await runsOf(brief!.id)).toHaveLength(1);
     expect(await runsOf(wake.id)).toHaveLength(1);
-    // And the scheduled 08:00 brief skips today.
-    await claimDueRoutines(h.deps.db, new Date(new Date(brief!.next_run_at).getTime() + 1000));
+    // And the scheduled brief skips today. It comes due now rather than at its stored time, which
+    // after 08:00 UTC is tomorrow, more than 14 hours after the wake-up brief.
+    await h.tdb
+      .admin`update public.routines set next_run_at = now() - interval '1 minute' where id = ${brief!.id}`;
+    await claimDueRoutines(h.deps.db);
     expect(await runsOf(brief!.id)).toHaveLength(1);
   });
 

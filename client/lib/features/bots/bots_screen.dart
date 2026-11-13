@@ -13,6 +13,8 @@ import '../../core/providers.dart';
 import '../../core/plain_text.dart';
 import '../../core/date_format.dart';
 import '../groups/group_chats.dart';
+import '../inbox/for_you.dart';
+import '../../core/backend.dart';
 import '../../ui/bot_activity.dart';
 import '../../core/widgets.dart';
 import '../../core/haptics.dart';
@@ -24,6 +26,7 @@ import '../../ui/advanced_section.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../../ui/mascot.dart';
+import '../../ui/casama_mark.dart';
 import '../../ui/page.dart';
 import '../../ui/tab_reselect.dart';
 import '../../ui/shell_header.dart';
@@ -186,10 +189,13 @@ class BotsList extends ConsumerWidget {
                       side,
                       AppSpace.xl + MediaQuery.paddingOf(context).bottom,
                     ),
-                    itemCount: items.length + 1 + (archived.isNotEmpty ? 1 : 0),
+                    itemCount: items.length + 2 + (archived.isNotEmpty ? 1 : 0),
                     separatorBuilder: (_, _) =>
                         const SizedBox(height: AppSpace.xs),
                     itemBuilder: (context, i) {
+                      // What the Inbox held comes first (D-253): Needs you, and the Casama row.
+                      if (i == 0) return const _InboxRows();
+                      i -= 1;
                       if (i == items.length) {
                         return _GroupChatsSection(bots: items);
                       }
@@ -215,6 +221,108 @@ class BotsList extends ConsumerWidget {
               ),
             );
       },
+    );
+  }
+}
+
+/// The top of the chats (D-253): decisions waiting across bots, when there are any, and the pinned
+/// Casama row with workspace updates and notices (what the Inbox tab showed).
+class _InboxRows extends ConsumerWidget {
+  const _InboxRows();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final needsYou = ref.watch(needsYouCountProvider);
+    final unread = ref.watch(unreadUpdatesProvider);
+    final latest = (ref.watch(notificationsProvider).value ?? const <NotificationView>[])
+        .where((n) => !n.isRequest)
+        .firstOrNull;
+    return Column(
+      spacing: AppSpace.xs,
+      children: [
+        if (needsYou > 0)
+          AppCard(
+            key: const Key('chatsNeedsYou'),
+            onTap: () => context.push('/inbox?tab=0'),
+            padding: const EdgeInsets.fromLTRB(AppSpace.md, 12, AppSpace.sm, 12),
+            color: scheme.primaryContainer.withValues(alpha: 0.55),
+            child: Row(
+              children: [
+                Icon(LucideIcons.bellRing, color: scheme.onPrimaryContainer),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    l10n.chatsNeedsYou(needsYou),
+                    style: context.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+                Icon(LucideIcons.chevronRight, color: scheme.onPrimaryContainer),
+              ],
+            ),
+          ),
+        AppCard(
+          key: const Key('chatsCasama'),
+          onTap: () => context.push('/inbox'),
+          padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.sm, 14),
+          child: Row(
+            children: [
+              const CasamaMark(size: 46),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            l10n.casamaUpdates,
+                            style: context.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpace.xs),
+                        Icon(LucideIcons.pin, size: 14, color: scheme.onSurfaceVariant),
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      latest?.title ?? l10n.casamaUpdatesSubtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 46,
+                child: Center(
+                  child: unread > 0
+                      ? Padding(
+                          padding: const EdgeInsets.only(right: AppSpace.xs),
+                          child: BotActivity(count: unread, working: false),
+                        )
+                      : Icon(
+                          LucideIcons.chevronRight,
+                          color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                        ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

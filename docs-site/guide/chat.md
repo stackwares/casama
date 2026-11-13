@@ -9,8 +9,23 @@ in one chat it can recall in the others.
 1. Select a bot in the sidebar (on a phone, tap it in **Chats**).
 2. Type in the message field and send.
 
-To start fresh, select **New chat**. To go back to an earlier one, select **Conversations** (the
-history button) and pick it. New conversations get a title from their first messages.
+Opening a bot takes you to your **General** chat with it. That's where you talk day to day, and
+where the bot reaches out: morning briefs, routine results and suggestions land there.
+
+Work that needs its own space runs in a **topic**:
+
+- **Do it** on a suggestion opens a topic where the bot does the work, then posts a one-line
+  result back in General with a link to the topic.
+- To start a topic yourself, select **New topic**.
+- Topics with something going on show as chips at the top of General. **Needs you** comes first,
+  then those the bot is working on.
+- **All topics** lists every one. Topics idle for a week move under **Older**.
+- Inside a topic, the **General** chip takes you back.
+
+New topics get a title from their first messages.
+
+Long chats stay quick and cheap: once a chat's history passes about 16,000 tokens, the bot keeps
+the most recent part word for word and a summary of the rest.
 
 An open chat stays live on every device. A message you send from your phone shows up, with the
 bot's reply streaming in, on your laptop with the same chat open, and the same goes for a teammate
@@ -137,7 +152,8 @@ message: the bubble shrinks a little as you hold, then the menu opens.
 ## Delete a chat
 
 1. In the chat, open the **More** menu (**…**) and choose **Delete Chat**. You can also delete a
-   chat from **Conversations**: use its delete button, or long-press it.
+   chat from **All topics**: use its delete button, or long-press it. If you delete General, your
+   most recent topic becomes General.
 2. Confirm.
 
 The chat's messages, photos and files are deleted for everyone who can see it. Usage records stay,

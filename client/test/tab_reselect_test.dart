@@ -57,10 +57,6 @@ void main() {
     expect(GoRouter.of(tester.element(bar)).state.uri.path, '/bots');
     expect(tester.takeException(), isNull);
 
-    await tester.tap(find.descendant(of: bar, matching: find.text('Inbox')));
-    await tester.pumpAndSettle();
-    expect(TabReselect.inbox.hasClients, isTrue, reason: 'the Inbox list picks up the tab controller');
-
     await tester.tap(find.descendant(of: bar, matching: find.text('Tasks')));
     await tester.pumpAndSettle();
     expect(TabReselect.tasks.hasClients, isTrue, reason: 'the Tasks list picks up the tab controller');

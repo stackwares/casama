@@ -2751,5 +2751,20 @@
   "adminNumberPositive": "Enter a number above 0",
   "adminWholeNumber": "Enter a whole number",
   "adminNameRequired": "Enter a name",
-  "adminPricingBillingOff": "Billing is off on this server. These prices apply once it's on."
+  "adminPricingBillingOff": "Billing is off on this server. These prices apply once it's on.",
+  "casamaUpdates": "Casama",
+  "casamaUpdatesSubtitle": "Updates and notices",
+  "chatsNeedsYou": "{n, plural, =1{1 thing needs you} other{{n} things need you}}",
+  "@chatsNeedsYou": {"placeholders": {"n": {"type": "int"}}},
+  "suggestionInTopic": "Working on it: {title}",
+  "@suggestionInTopic": {"placeholders": {"title": {"type": "String"}}},
+  "suggestionClosed": "Not now: {title}",
+  "@suggestionClosed": {"placeholders": {"title": {"type": "String"}}},
+  "openTopic": "Open {title}",
+  "@openTopic": {"placeholders": {"title": {"type": "String"}}},
+  "newTopic": "New topic",
+  "topics": "Topics",
+  "olderTopics": "Older",
+  "generalChat": "General",
+  "allTopics": "All topics"
 }

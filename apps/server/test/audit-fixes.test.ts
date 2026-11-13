@@ -136,9 +136,11 @@ describe("audit fixes", () => {
 });
 
 describe("routines post in the person's chat (D-155)", () => {
-  it("a routine with no chat recorded runs in the person's latest chat with the bot, marked as a routine", async () => {
+  it("a routine with no chat recorded runs in the person's General with the bot (D-253), marked as a routine", async () => {
+    await h.tdb.admin`
+      insert into public.conversations (org_id, bot_id, created_by, last_message_at) values (${orgA}, ${botA}, ${owner.id}, now())`;
     const [chat] = await h.tdb.admin<{ id: string }[]>`
-      insert into public.conversations (org_id, bot_id, created_by, last_message_at) values (${orgA}, ${botA}, ${owner.id}, now()) returning id`;
+      select id from public.conversations where bot_id = ${botA} and created_by = ${owner.id} and is_main`;
     const past = new Date(Date.now() - 60_000).toISOString();
     const [r] = await h.tdb.admin<{ id: string }[]>`
       insert into public.routines (org_id, bot_id, created_by, name, instructions_md, trigger, timezone, next_run_at)

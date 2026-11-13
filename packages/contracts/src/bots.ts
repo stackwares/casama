@@ -115,6 +115,20 @@ export const Conversation = z
     can_delete: z.boolean().optional().openapi({
       description: "Whether you may delete it: you started it, or you manage its bot",
     }),
+    is_main: z.boolean().optional().openapi({
+      description:
+        "The person's General conversation with this bot (D-253): briefs, routine results and proactive messages land here",
+    }),
+    parent_conversation_id: Uuid.nullable().optional().openapi({
+      description: "A topic's General conversation",
+    }),
+    anchor_message_id: Uuid.nullable().optional().openapi({
+      description: "The message in General a topic started from (an accepted suggestion)",
+    }),
+    status: z.enum(["needs_you", "working"]).nullable().optional().openapi({
+      description:
+        "needs_you: the bot waits for an approval or a take-over in it; working: a run is going",
+    }),
   })
   .openapi("Conversation");
 

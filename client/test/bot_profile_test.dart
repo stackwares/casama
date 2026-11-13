@@ -198,11 +198,11 @@ void main() {
     expect(find.text('Routines'), findsNothing);
     expect(find.text('Integrations for this bot'), findsNothing);
 
-    // Conversations opens the same sheet the header button did.
+    // Topics (D-253): General and the topics under it, with New topic.
     await tester.tap(find.byKey(const Key('openConversations')));
     await tester.pumpAndSettle();
-    expect(find.text('Conversations'), findsOneWidget);
-    expect(find.text('New chat'), findsOneWidget);
+    expect(find.text('Topics'), findsOneWidget);
+    expect(find.text('New topic'), findsWidgets);
   });
 
   testWidgets('an idle bot\'s chat header shows no subtitle, not its model', (tester) async {

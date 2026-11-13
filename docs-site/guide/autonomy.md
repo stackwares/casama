@@ -55,7 +55,7 @@ to your calendar don't ask by default; your credits and the bot's budget still a
 When a bot needs your OK, the run pauses and an approval request appears in two places:
 
 - The chat, as a card under the bot's message.
-- **Inbox**, under **Needs you**, for every bot you can use. The filter shows a count when
+- **Needs you**, at the top of **Chats**, for every bot you can use. It shows a count when
   something is waiting.
 
 Each request shows the bot, the tool, its risk (**Low risk**, **Medium risk** or **High risk**)
@@ -63,7 +63,7 @@ and the arguments it wants to use, with secrets removed.
 
 To answer it:
 
-1. Open the card in the chat, or go to **Inbox → Needs you**.
+1. Open the card in the chat, or tap **Needs you** at the top of **Chats**.
 2. Read what the bot wants to do.
 3. Tap **Approve**, **Deny** or **Always Allow**.
 

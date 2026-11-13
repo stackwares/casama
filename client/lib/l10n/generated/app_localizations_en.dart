@@ -9140,4 +9140,51 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adminPricingBillingOff =>
       'Billing is off on this server. These prices apply once it\'s on.';
+
+  @override
+  String get casamaUpdates => 'Casama';
+
+  @override
+  String get casamaUpdatesSubtitle => 'Updates and notices';
+
+  @override
+  String chatsNeedsYou(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n things need you',
+      one: '1 thing needs you',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String suggestionInTopic(String title) {
+    return 'Working on it: $title';
+  }
+
+  @override
+  String suggestionClosed(String title) {
+    return 'Not now: $title';
+  }
+
+  @override
+  String openTopic(String title) {
+    return 'Open $title';
+  }
+
+  @override
+  String get newTopic => 'New topic';
+
+  @override
+  String get topics => 'Topics';
+
+  @override
+  String get olderTopics => 'Older';
+
+  @override
+  String get generalChat => 'General';
+
+  @override
+  String get allTopics => 'All topics';
 }

@@ -68,20 +68,18 @@ export async function createRoutineRun(
     const held = await takeHeldForBrief(tx as Database, r.created_by, r.org_id);
     if (held) eventText = eventText ? `${eventText}\n\n${held}` : held;
   }
-  let conversationId = r.conversation_id;
-  // No chat recorded (made in Settings, or before D-155): the person's latest chat with this bot,
-  // so results land where they already talk to it. Only a person with no chat yet gets a new one.
+  // Briefs always go to the person's General (D-253); other routines post where they were asked
+  // for (D-155), else General too. Only a routine with nobody behind it gets a chat of its own.
+  let conversationId = r.kind === "brief" ? null : r.conversation_id;
   if (!conversationId && r.created_by) {
-    const [latest] = await tx.execute<{ id: string }>(sql`
-      select id from public.conversations
-      where bot_id = ${r.bot_id}::uuid and kind = 'direct' and created_by = ${r.created_by}::uuid and channel_id is null
-      order by coalesce(last_message_at, created_at) desc limit 1`);
-    if (latest) {
-      conversationId = latest.id;
+    const [main] = await tx.execute<{ id: string }>(
+      sql`select public.main_conversation(${r.org_id}::uuid, ${r.bot_id}::uuid, ${r.created_by}::uuid) as id`,
+    );
+    conversationId = main?.id ?? null;
+    if (conversationId && r.kind !== "brief")
       await tx.execute(
         sql`update public.routines set conversation_id = ${conversationId}::uuid where id = ${r.id}::uuid`,
       );
-    }
   }
   if (!conversationId) {
     const [conv] = await tx.execute<{ id: string }>(sql`

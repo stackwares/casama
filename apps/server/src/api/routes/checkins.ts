@@ -95,7 +95,8 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         select distinct on (rt.bot_id) rt.bot_id, m.conversation_id, m.content, m.created_at
         from public.routines rt
         join public.bot_checkins ck on ck.bot_id = rt.bot_id and ck.enabled and ck.user_id = ${claims.sub}::uuid
-        join public.messages m on m.conversation_id = rt.conversation_id and m.role = 'assistant'
+        join public.runs r on r.routine_id = rt.id
+        join public.messages m on m.run_id = r.id and m.role = 'assistant'
         where rt.org_id = ${org_id}::uuid and rt.kind = 'brief' and m.created_at > now() - interval '36 hours'
         order by rt.bot_id, m.created_at desc`);
       const suggestions = await tx.execute<{
@@ -158,8 +159,9 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         proposed_action: unknown;
         status: string;
         created_at: string;
+        message_id: string | null;
       }>(sql`
-        select id, org_id, bot_id, title, body_md, proposed_action, status, created_at from public.suggestions where id = ${id}::uuid`),
+        select id, org_id, bot_id, title, body_md, proposed_action, status, created_at, message_id from public.suggestions where id = ${id}::uuid`),
     );
     if (!s) throw new ApiError(404, "suggestion_not_found", "Suggestion not found");
     if (s.status !== "pending")
@@ -194,9 +196,11 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       .filter(Boolean)
       .join("\n\n");
     const created = await withUserSession(db, claims, async (tx) => {
+      // A topic under the person's General (D-253), started from the suggestion's card there; it
+      // posts its result back when the work is done.
       const [conv] = await tx.execute<{ id: string }>(sql`
-        insert into public.conversations (org_id, bot_id, title, created_by, last_message_at)
-        values (${s.org_id}::uuid, ${s.bot_id}::uuid, ${s.title.slice(0, 200)}, ${claims.sub}::uuid, now()) returning id`);
+        insert into public.conversations (org_id, bot_id, title, created_by, last_message_at, anchor_message_id, posts_result)
+        values (${s.org_id}::uuid, ${s.bot_id}::uuid, ${s.title.slice(0, 200)}, ${claims.sub}::uuid, now(), ${s.message_id}::uuid, true) returning id`);
       const [run] = await tx.execute<{ id: string }>(sql`
         insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger)
         values (${s.org_id}::uuid, ${s.bot_id}::uuid, ${conv?.id}::uuid, ${claims.sub}::uuid, 'chat') returning id`);

@@ -14343,6 +14343,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Billing is off on this server. These prices apply once it\'s on.'**
   String get adminPricingBillingOff;
+
+  /// No description provided for @casamaUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama'**
+  String get casamaUpdates;
+
+  /// No description provided for @casamaUpdatesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates and notices'**
+  String get casamaUpdatesSubtitle;
+
+  /// No description provided for @chatsNeedsYou.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 thing needs you} other{{n} things need you}}'**
+  String chatsNeedsYou(int n);
+
+  /// No description provided for @suggestionInTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Working on it: {title}'**
+  String suggestionInTopic(String title);
+
+  /// No description provided for @suggestionClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now: {title}'**
+  String suggestionClosed(String title);
+
+  /// No description provided for @openTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'Open {title}'**
+  String openTopic(String title);
+
+  /// No description provided for @newTopic.
+  ///
+  /// In en, this message translates to:
+  /// **'New topic'**
+  String get newTopic;
+
+  /// No description provided for @topics.
+  ///
+  /// In en, this message translates to:
+  /// **'Topics'**
+  String get topics;
+
+  /// No description provided for @olderTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'Older'**
+  String get olderTopics;
+
+  /// No description provided for @generalChat.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get generalChat;
+
+  /// No description provided for @allTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'All topics'**
+  String get allTopics;
 }
 
 class _AppLocalizationsDelegate

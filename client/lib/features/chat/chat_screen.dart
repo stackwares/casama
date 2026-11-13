@@ -927,6 +927,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final controller = ref.read(chatControllerProvider(widget.botId).notifier);
     final computer = computerForBot(ref.watch(computersProvider).value ?? const [], widget.botId, defaultComputerId: bot?.defaultComputerId);
     ref.listen(chatControllerProvider(widget.botId), (prev, next) {
+      // General and topics (D-253): the chips and statuses follow what happens here.
+      if (prev?.conversationId != next.conversationId || (prev?.running ?? false) != next.running) {
+        ref.invalidate(conversationsProvider(widget.botId));
+      }
       final opened = (prev?.loading ?? false) && !next.loading;
       _followIfAtBottom(
         force:
@@ -988,7 +992,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           HeaderIconButton(
             key: const Key('newChatButton'),
             icon: LucideIcons.squarePen,
-            tooltip: l10n.newChat,
+            tooltip: l10n.newTopic,
             onPressed: chat.running || chat.empty ? null : controller.newChat,
           ),
           _MoreMenu(
@@ -1098,6 +1102,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         TextButton(onPressed: () => runGuarded(context, () => controller.open(chat.conversationId)), child: Text(l10n.retry)),
                       ],
                     ),
+                  ),
+                // General and topics (D-253): what's going on in other topics, or the way back to General.
+                if (!widget.group)
+                  _TopicsBar(
+                    botId: widget.botId,
+                    currentId: chat.conversationId,
+                    side: side,
+                    onOpen: _openConversation,
+                    onAll: () => _showConversations(context, chat.conversationId),
                   ),
                 Expanded(
                   child: Stack(
@@ -1428,6 +1441,28 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         case final SecretEntry k:
           botSide('secret-${k.requestId}');
           rows.add(_Row(ValueKey('secret-${k.requestId}'), AppSpace.sm, () => SecretPrompt(entry: k, botName: name), fresh: fresh, inputs: (k, name)));
+        case final SuggestionEntry e:
+          botSide('suggestion-${e.suggestion.id}');
+          rows.add(
+            _Row(
+              ValueKey('suggestion-${e.suggestion.id}'),
+              AppSpace.sm,
+              () => SuggestionPrompt(entry: e, botId: widget.botId, botName: name, onOpenTopic: _openConversation),
+              fresh: fresh,
+              inputs: (e, name),
+            ),
+          );
+        case final TopicLinkEntry e:
+          botSide('topic-${e.messageId}');
+          rows.add(
+            _Row(
+              ValueKey('topic-${e.messageId}'),
+              AppSpace.xs,
+              () => TopicLinkLine(entry: e, onOpen: () => _openConversation(e.topic.conversationId)),
+              fresh: fresh,
+              inputs: e,
+            ),
+          );
         case final DeviceAccessEntry d:
           botSide('device-${d.kind.value}-$i');
           rows.add(_Row(ValueKey('device-${d.kind.value}-$i'), AppSpace.sm, () => DeviceAccessPrompt(entry: d, botName: name), fresh: fresh, inputs: (d, name)));
@@ -1542,6 +1577,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       rows[lastHeader] = _Row(h.key, h.gap, () => BotTurnHeader(name: who, avatar: face, working: true), header: true, inputs: (who, face, true));
     }
     return rows;
+  }
+
+  /// Opens General or a topic (D-253) in this chat screen.
+  void _openConversation(String id) {
+    ref.invalidate(conversationsProvider(widget.botId));
+    context.go('/bots/${widget.botId}/chat?c=$id');
   }
 
   Future<void> _showConversations(BuildContext context, String? currentId) async {
@@ -1955,7 +1996,7 @@ class _MoreMenu extends StatelessWidget {
       alignmentOffset: const Offset(-(menuWidth - 42), 6),
       style: const MenuStyle(minimumSize: WidgetStatePropertyAll(Size(menuWidth, 0)), maximumSize: WidgetStatePropertyAll(Size(menuWidth, double.infinity))),
       menuChildren: [
-        item(LucideIcons.history, l10n.conversations, onConversations, key: const Key('openConversations')),
+        item(LucideIcons.messagesSquare, l10n.topics, onConversations, key: const Key('openConversations')),
         if (showComputer) item(LucideIcons.monitor, l10n.navComputer, () => context.push('/computer?bot=$botId'), key: const Key('openComputer')),
         const Divider(),
         item(LucideIcons.circleUser, l10n.botProfile, () => context.push('/bots/$botId/settings'), key: const Key('openBotProfile')),
@@ -2091,28 +2132,46 @@ class _ConversationsSheet extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SheetTitle(
-          l10n.conversations,
-          trailing: FilledButton.tonalIcon(onPressed: onNew, icon: const Icon(LucideIcons.squarePen, size: 18), label: Text(l10n.newChat)),
+          l10n.topics,
+          trailing: FilledButton.tonalIcon(onPressed: onNew, icon: const Icon(LucideIcons.squarePen, size: 18), label: Text(l10n.newTopic)),
         ),
         Expanded(
           child: AsyncView(
             value: convos,
             onRetry: () => ref.invalidate(conversationsProvider(botId)),
             loading: const _ConversationsSkeleton(),
-            data: (items) => items.isEmpty
+            data: (all) {
+              // General first, then live topics, then those idle a week under Older (D-253).
+              final split = splitTopics(all);
+              final items = [...split.active, ...split.older];
+              return items.isEmpty
                 ? EmptyState(icon: LucideIcons.messagesSquare, message: l10n.noConversations)
                 : ListView.separated(
                     padding: EdgeInsets.fromLTRB(AppSpace.sm, 0, AppSpace.sm, BottomPadding.of(context, minimum: AppSpace.md)),
                     itemCount: items.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 2),
+                    separatorBuilder: (_, i) => split.older.isNotEmpty && i == split.active.length - 1
+                        ? Padding(
+                            key: const Key('olderTopics'),
+                            padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.md, AppSpace.md, AppSpace.xs),
+                            child: Text(l10n.olderTopics, style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w700)),
+                          )
+                        : const SizedBox(height: 2),
                     itemBuilder: (context, i) {
                       final c = items[i];
                       final current = c.id == currentId;
                       return ListTile(
+                        key: Key('topicRow-${c.id}'),
                         selected: current,
-                        leading: Icon(current ? LucideIcons.messageCircle : LucideIcons.messageCircle, size: 20),
+                        leading: Icon(
+                          c.isMain == true
+                              ? LucideIcons.house
+                              : c.status == ConversationStatusEnum.needsYou
+                              ? LucideIcons.circleAlert
+                              : LucideIcons.messagesSquare,
+                          size: 20,
+                        ),
                         title: Text(
-                          c.title.orPlaceholder(l10n.untitledChat),
+                          c.isMain == true ? l10n.generalChat : c.title.orPlaceholder(l10n.untitledChat),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: context.textTheme.bodyLarge?.copyWith(fontWeight: current ? FontWeight.w700 : FontWeight.w500),
@@ -2138,7 +2197,8 @@ class _ConversationsSheet extends ConsumerWidget {
                         onLongPress: c.canDelete == true ? () => onDelete(c) : null,
                       );
                     },
-                  ),
+                  );
+            },
           ),
         ),
       ],
@@ -2250,6 +2310,108 @@ class _EditSheetState extends State<_EditSheet> {
       submitKey: const Key('sendEdit'),
       onSubmit: () => Navigator.pop(context, _text.text),
       children: [TextField(key: const Key('editField'), controller: _text, autofocus: true, minLines: 2, maxLines: 10)],
+    );
+  }
+}
+
+
+/// General and topics (D-253): General first, then topics with something going on or a message in
+/// the last week (needs you, then working, then newest), then the rest as Older.
+({List<Conversation> active, List<Conversation> older}) splitTopics(List<Conversation> all, {DateTime? now}) {
+  final cutoff = (now ?? DateTime.now()).subtract(const Duration(days: 7));
+  int rank(Conversation c) => c.isMain == true
+      ? 0
+      : c.status == ConversationStatusEnum.needsYou
+      ? 1
+      : c.status == ConversationStatusEnum.working
+      ? 2
+      : 3;
+  bool live(Conversation c) => c.isMain == true || c.status != null || (c.lastMessageAt ?? c.createdAt).isAfter(cutoff);
+  final active = all.where(live).toList()
+    ..sort((a, b) {
+      final r = rank(a).compareTo(rank(b));
+      return r != 0 ? r : (b.lastMessageAt ?? b.createdAt).compareTo(a.lastMessageAt ?? a.createdAt);
+    });
+  return (active: active, older: all.where((c) => !live(c)).toList());
+}
+
+/// Above the thread (D-253). In General: chips for the topics going on (needs you first), and All
+/// topics. In a topic: the way back to General.
+class _TopicsBar extends ConsumerWidget {
+  const _TopicsBar({required this.botId, required this.currentId, required this.side, required this.onOpen, required this.onAll});
+  final String botId;
+  final String? currentId;
+  final double side;
+  final ValueChanged<String> onOpen;
+  final VoidCallback onAll;
+
+  static const _maxChips = 6;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final colors = context.appColors;
+    final all = ref.watch(conversationsProvider(botId)).value ?? const <Conversation>[];
+    final main = all.where((c) => c.isMain == true).firstOrNull;
+    if (main == null) return const SizedBox.shrink();
+    final inGeneral = currentId == main.id;
+    final List<Widget> chips;
+    if (inGeneral) {
+      final topics = splitTopics(all).active.where((c) => c.isMain != true).toList();
+      if (topics.isEmpty) return const SizedBox.shrink();
+      chips = [
+        for (final c in topics.take(_maxChips))
+          ActionChip(
+            key: Key('topicChip-${c.id}'),
+            avatar: switch (c.status) {
+              ConversationStatusEnum.needsYou => Icon(LucideIcons.circleAlert, size: 16, color: colors.waiting),
+              ConversationStatusEnum.working => SizedBox.square(dimension: 14, child: CircularProgressIndicator(strokeWidth: 2, color: colors.working)),
+              _ => Icon(LucideIcons.messagesSquare, size: 16, color: scheme.onSurfaceVariant),
+            },
+            label: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 160),
+              child: Text(c.title.orPlaceholder(l10n.untitledChat), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ),
+            onPressed: () => onOpen(c.id),
+          ),
+        ActionChip(
+          key: const Key('allTopics'),
+          label: Text(l10n.allTopics),
+          onPressed: onAll,
+        ),
+      ];
+    } else {
+      final here = all.where((c) => c.id == currentId).firstOrNull;
+      chips = [
+        ActionChip(
+          key: const Key('backToGeneral'),
+          avatar: Icon(LucideIcons.arrowLeft, size: 16, color: scheme.primary),
+          label: Text(l10n.generalChat),
+          onPressed: () => onOpen(main.id),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: AppSpace.xxs),
+          child: Text(
+            currentId == null ? l10n.newTopic : here?.title.orPlaceholder(l10n.untitledChat) ?? '',
+            key: const Key('topicTitle'),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: context.textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ];
+    }
+    return SizedBox(
+      key: const Key('topicsBar'),
+      height: 48,
+      child: EdgeFade(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, 0),
+          child: Row(spacing: AppSpace.xs, children: chips),
+        ),
+      ),
     );
   }
 }

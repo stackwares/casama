@@ -22,17 +22,17 @@ Future<void> _pumpApp(WidgetTester tester, Size size) async {
 }
 
 void main() {
-  testWidgets('phones have three tabs and a search button beside them', (tester) async {
+  testWidgets('phones have two tabs (D-253) and a search button beside them', (tester) async {
     await _pumpApp(tester, const Size(400, 860));
     final bar = find.byType(FloatingTabChrome);
-    for (final label in ['Chats', 'Inbox', 'Tasks']) {
+    for (final label in ['Chats', 'Tasks']) {
       expect(
         find.descendant(of: bar, matching: find.text(label)),
         findsOneWidget,
         reason: label,
       );
     }
-    for (final label in ['Bots', 'Board', 'Computer', 'Settings', 'Search']) {
+    for (final label in ['Inbox', 'Bots', 'Board', 'Computer', 'Settings', 'Search']) {
       expect(
         find.descendant(of: bar, matching: find.text(label)),
         findsNothing,
@@ -62,16 +62,17 @@ void main() {
     expect(GoRouter.of(tester.element(find.byType(FloatingTabChrome))).state.uri.path, '/tasks');
   });
 
-  testWidgets('on phones only the three tabs show the tab bar; pages opened from them hide it', (tester) async {
+  testWidgets('on phones only the two tabs show the tab bar; pages opened from them hide it', (tester) async {
     await _pumpApp(tester, const Size(400, 860));
     final router = GoRouter.of(tester.element(find.byType(FloatingTabChrome)));
     Offset slide() => tester.widget<AnimatedSlide>(find.ancestor(of: find.byType(FloatingTabChrome), matching: find.byType(AnimatedSlide))).offset;
-    for (final path in ['/bots', '/inbox', '/tasks']) {
+    for (final path in ['/bots', '/tasks']) {
       router.go(path);
       await tester.pumpAndSettle();
       expect(slide(), Offset.zero, reason: path);
     }
-    for (final path in ['/password-managers', '/settings', '/search', '/pages', '/computer']) {
+    // What the Inbox held opens from Chats now, full screen (D-253).
+    for (final path in ['/inbox', '/password-managers', '/settings', '/search', '/pages', '/computer']) {
       router.go(path);
       await tester.pumpAndSettle();
       expect(slide(), isNot(Offset.zero), reason: path);
@@ -105,10 +106,10 @@ void main() {
     }
   });
 
-  testWidgets('tablets get a rail with the three places, search, and the avatar for Settings', (tester) async {
+  testWidgets('tablets get a rail with the two places, search, and the avatar for Settings', (tester) async {
     await _pumpApp(tester, const Size(900, 1000));
     final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
-    expect(rail.destinations, hasLength(3));
+    expect(rail.destinations, hasLength(2));
     expect(find.byKey(const Key('railSearch')), findsOneWidget);
     await tester.tap(find.byKey(const Key('railMe')));
     await tester.pumpAndSettle();
@@ -116,12 +117,13 @@ void main() {
     expect(tester.widget<NavigationRail>(find.byType(NavigationRail)).selectedIndex, isNull);
   });
 
-  testWidgets('wide windows list Inbox, Tasks and the person under the chats; no Pages or Computer rows', (tester) async {
+  testWidgets('wide windows list Needs you and Casama over the chats, Tasks and the person under them', (tester) async {
     await _pumpApp(tester, const Size(1600, 1000));
-    expect(find.byKey(const Key('sidebar-nav-/inbox')), findsOneWidget);
+    expect(find.byKey(const Key('sidebar-needs-you')), findsOneWidget);
+    expect(find.byKey(const Key('sidebar-casama')), findsOneWidget);
     expect(find.byKey(const Key('sidebar-nav-/tasks')), findsOneWidget);
     expect(find.byKey(const Key('sidebarMe')), findsOneWidget);
-    for (final gone in ['sidebarPages', 'sidebar-nav-/computer', 'sidebar-nav-/settings']) {
+    for (final gone in ['sidebar-nav-/inbox', 'sidebarPages', 'sidebar-nav-/computer', 'sidebar-nav-/settings']) {
       expect(find.byKey(Key(gone)), findsNothing, reason: gone);
     }
     await tester.tap(find.byKey(const Key('sidebarMe')));

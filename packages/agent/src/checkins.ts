@@ -11,6 +11,7 @@ import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
 import { track } from "./analytics.ts";
 import { deviceDataOfRun } from "./attention.ts";
+import { mainConversation, postFromBot } from "./general.ts";
 import type { NotificationService } from "./notifications.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
 
@@ -375,6 +376,13 @@ export async function afterCheckinRun(
       ? text.slice(0, 240)
       : `You're all set. Found ${c?.n} ${c?.n === 1 ? "thing" : "things"} to start on.`
     : "You're all set. I'll keep an eye on things and tell you when something needs you.";
+  // The same words open the person's General (D-253); the suggestions follow as cards.
+  await postFromBot(db, {
+    orgId: run.orgId,
+    conversationId: await mainConversation(db, run.orgId, run.botId, r.user_id),
+    botId: run.botId,
+    parts: [{ type: "text", text: body }],
+  }).catch(() => null);
   track(db, {
     event: "proactive_message_sent",
     userId: r.user_id,
@@ -385,7 +393,13 @@ export async function afterCheckinRun(
     r.user_id,
     run.orgId,
     "checkin_summary",
-    { title: run.botName, body, link: "/inbox", bot_id: run.botId, run_id: run.runId },
+    {
+      title: run.botName,
+      body,
+      link: `/bots/${run.botId}/chat`,
+      bot_id: run.botId,
+      run_id: run.runId,
+    },
     {
       urgency: "normal",
       why: { rule: `${run.botName}'s first look after setup (check-ins)`, data: [] },
@@ -435,7 +449,8 @@ async function pushSuggestion(
     {
       title: bot?.name ?? s.title,
       body: (s.push_text?.trim() || s.title).slice(0, 240),
-      link: "/inbox",
+      // Opens General, where the suggestion is a card (D-253).
+      link: `/bots/${s.bot_id}/chat`,
       suggestion_id: s.id,
       suggestion_title: s.title,
       bot_id: s.bot_id,
@@ -495,7 +510,7 @@ export function registerSuggestionTools(
   registry.register({
     name: "suggestions.add",
     description:
-      "Suggest something for the person to do or approve, shown in their For you feed and sent as a push from you. Include the action you'd run if they accept (a tool name and its arguments), the sources, the urgency (low ones wait for the brief), push_text (the one line the push shows, in your own voice, ending in a question when you offer to do something), and notify_at when the offer only makes sense close to a time.",
+      "Suggest something for the person to do or approve, posted as a card in your main chat with them (after your reply) and sent as a push from you. Include the action you'd run if they accept (a tool name and its arguments), the sources, the urgency (low ones wait for the brief), push_text (the one line the push shows, in your own voice, ending in a question when you offer to do something), and notify_at when the offer only makes sense close to a time.",
     risk: "low",
     // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,

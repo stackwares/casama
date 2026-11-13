@@ -24,6 +24,7 @@ export * from "./gateway/live-prices.ts";
 export * from "./gateway/registry.ts";
 export * from "./gateway/replay.ts";
 export * from "./gateway/types.ts";
+export * from "./general.ts";
 export * from "./git-sync.ts";
 export * from "./integrations.ts";
 export * from "./knowledge.ts";

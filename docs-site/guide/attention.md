@@ -7,7 +7,8 @@ interrupt you, and understand why a message did or didn't buzz your phone.
 
 ## Where notifications go
 
-Every notification lands in **Inbox** in the app, whatever else happens. The inbox is one feed:
+Every notification lands in the **Casama** row pinned at the top of **Chats**, whatever else
+happens. It opens one feed:
 things that need a decision come first (approvals, take-over requests, suggestions and skill
 ideas), then updates newest first (briefs, routine results, messages from bots, missed calls,
 published pages). Filter it with:

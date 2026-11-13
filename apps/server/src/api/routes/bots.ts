@@ -104,7 +104,12 @@ export function messagePreview(
 }
 
 type ConvRow = typeof conversations.$inferSelect;
-const convOut = (c: ConvRow, botIds: string[] = [], canDelete?: boolean) => ({
+const convOut = (
+  c: ConvRow,
+  botIds: string[] = [],
+  canDelete?: boolean,
+  status?: "needs_you" | "working" | null,
+) => ({
   ...(canDelete === undefined ? {} : { can_delete: canDelete }),
   id: c.id,
   bot_id: c.botId,
@@ -113,6 +118,11 @@ const convOut = (c: ConvRow, botIds: string[] = [], canDelete?: boolean) => ({
   kind: (c.kind ?? "direct") as "direct",
   bot_ids: botIds.length ? botIds : [c.botId],
   created_at: iso(c.createdAt),
+  // General and topics (D-253).
+  is_main: c.isMain,
+  parent_conversation_id: c.parentConversationId,
+  anchor_message_id: c.anchorMessageId,
+  ...(status === undefined ? {} : { status }),
 });
 
 type RunRow = typeof runs.$inferSelect;
@@ -589,17 +599,33 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       const [m] = await tx.execute<{ ok: boolean }>(
         sql`select public.can_manage_bot(${id}::uuid) as ok`,
       );
+      // Your General first (D-253), then the newest.
       const list = await tx
         .select()
         .from(conversations)
         .where(and(eq(conversations.botId, id), eq(conversations.kind, "direct")))
-        .orderBy(desc(sql`coalesce(${conversations.lastMessageAt}, ${conversations.createdAt})`))
+        .orderBy(
+          desc(sql`(${conversations.isMain} and ${conversations.createdBy} = ${claims.sub}::uuid)`),
+          desc(sql`coalesce(${conversations.lastMessageAt}, ${conversations.createdAt})`),
+        )
         .limit(100);
-      return { list, manage: !!m?.ok };
+      // What each one is waiting on: a run that needs the person, or one still going.
+      const states = list.length
+        ? await tx.execute<{ id: string; status: "needs_you" | "working" }>(sql`
+            select conversation_id as id,
+              case when bool_or(status in ('waiting_approval', 'waiting_takeover')) then 'needs_you' else 'working' end as status
+            from public.runs
+            where status in ('queued', 'running', 'waiting_approval', 'waiting_takeover')
+              and conversation_id in (select jsonb_array_elements_text(${JSON.stringify(list.map((r) => r.id))}::jsonb)::uuid)
+            group by conversation_id`)
+        : [];
+      return { list, manage: !!m?.ok, states: new Map(states.map((s) => [s.id, s.status])) };
     });
     return c.json(
       {
-        items: rows.list.map((r) => convOut(r, [], rows.manage || r.createdBy === claims.sub)),
+        items: rows.list.map((r) =>
+          convOut(r, [], rows.manage || r.createdBy === claims.sub, rows.states.get(r.id) ?? null),
+        ),
       },
       200,
     );

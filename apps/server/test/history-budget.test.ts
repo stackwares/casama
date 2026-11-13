@@ -94,7 +94,7 @@ describe("history budget", () => {
     // The cut-off is one of the seeded turns, not the newest message: later turns stay word for word.
     const [cut] = await h.tdb.admin<{ text: string }[]>`
       select content -> 0 ->> 'text' as text from public.messages
-      where conversation_id = ${convId} and created_at = ${c?.through}::timestamptz`;
+      where conversation_id = ${convId} and created_at = ${c?.through ?? ""}::timestamptz`;
     expect(cut?.text).toMatch(/^turn-\d+-marker/);
     const n = Number(cut?.text.match(/^turn-(\d+)/)?.[1]);
     expect(n).toBeGreaterThan(20);

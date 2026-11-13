@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/backend.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
@@ -11,6 +12,7 @@ import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/bot_avatar.dart';
 import '../chat/widgets/chat_markdown.dart';
+import '../skills/skill_proposals.dart';
 
 /// The "For you" feed (D-114): the latest morning briefs, pending suggestions and approvals,
 /// shown in the Inbox.
@@ -119,3 +121,15 @@ class SuggestionCard extends ConsumerWidget {
     );
   }
 }
+
+/// Decisions waiting across bots (D-253, the Needs you row): approvals, takeovers, suggestions and
+/// skill ideas.
+final needsYouCountProvider = Provider<int>((ref) =>
+    (ref.watch(approvalsProvider).value?.length ?? 0) +
+    (ref.watch(takeoversProvider).value?.length ?? 0) +
+    (ref.watch(forYouProvider).value?.suggestions.length ?? 0) +
+    (ref.watch(skillProposalsProvider).value?.length ?? 0));
+
+/// Unread updates (D-253, the pinned Casama row): notifications that aren't requests.
+final unreadUpdatesProvider = Provider<int>((ref) =>
+    (ref.watch(notificationsProvider).value ?? const <NotificationView>[]).where((n) => n.readAt == null && !n.isRequest).length);

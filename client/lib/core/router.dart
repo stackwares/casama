@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'widgets.dart';
 
 import '../features/bots/bot_history_screen.dart';
 import '../features/whats_new/whats_new.dart';
@@ -434,13 +435,18 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ),
           ),
+          // Opened from Chats (D-253): ?tab=0 is Needs you, otherwise the Casama updates feed.
           GoRoute(
             path: '/inbox',
-            pageBuilder: _tab(
-              (_, s) => InboxScreen(
+            pageBuilder: _page(
+              (context, s) => InboxScreen(
+                key: ValueKey(s.uri.toString()),
                 initialFilter: InboxFilter.fromTab(
                   s.uri.queryParameters['tab'],
                 ),
+                title: s.uri.queryParameters['tab'] == '0'
+                    ? context.l10n.inboxNeedsYou
+                    : context.l10n.casamaUpdates,
               ),
             ),
           ),

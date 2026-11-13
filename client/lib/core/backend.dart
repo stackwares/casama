@@ -200,10 +200,18 @@ class ChatMessageView {
     this.siblingCount = 1,
     this.botId,
     this.routineName,
+    this.suggestion,
+    this.topic,
   });
 
   /// Set on the message a routine posts to start its run (D-155): shown as a line, not a bubble.
   final String? routineName;
+
+  /// A suggestion the bot posted in General (D-253), shown as a card with Do it / Not now.
+  final MessageSuggestion? suggestion;
+
+  /// A topic's result posted back to General (D-253), with a link to the topic.
+  final MessageTopic? topic;
 
   /// For the offline cache (D-112): text, attachments and versions; bot UIs are left out.
   Map<String, Object?> toJson() => {
@@ -217,6 +225,8 @@ class ChatMessageView {
     'sibling_count': siblingCount,
     'bot_id': botId,
     'routine_name': routineName,
+    if (suggestion case final s?) 'suggestion': {'id': s.id, 'title': s.title, 'body': s.body},
+    if (topic case final t?) 'topic': {'conversation_id': t.conversationId, 'title': t.title},
   };
   static ChatMessageView fromJson(Map<String, dynamic> j) => ChatMessageView(
     id: j['id'] as String,
@@ -232,6 +242,14 @@ class ChatMessageView {
     siblingCount: (j['sibling_count'] as num?)?.toInt() ?? 1,
     botId: j['bot_id'] as String?,
     routineName: j['routine_name'] as String?,
+    suggestion: switch (j['suggestion']) {
+      {'id': final String id, 'title': final String title} && final Map m => MessageSuggestion(id: id, title: title, body: m['body'] as String? ?? ''),
+      _ => null,
+    },
+    topic: switch (j['topic']) {
+      {'conversation_id': final String id, 'title': final String title} => MessageTopic(conversationId: id, title: title),
+      _ => null,
+    },
   );
 
   final String id;
@@ -253,6 +271,21 @@ class ChatMessageView {
 
   /// The bot UI this message answers, when it was sent from one.
   final String? uiActionSurface;
+}
+
+/// A suggestion posted in General (D-253).
+class MessageSuggestion {
+  const MessageSuggestion({required this.id, required this.title, this.body = ''});
+  final String id;
+  final String title;
+  final String body;
+}
+
+/// A topic's result posted back to General (D-253).
+class MessageTopic {
+  const MessageTopic({required this.conversationId, required this.title});
+  final String conversationId;
+  final String title;
 }
 
 class SkillView {

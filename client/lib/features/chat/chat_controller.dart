@@ -139,6 +139,20 @@ class DeviceAccessEntry extends ChatEntry {
   final String botId;
 }
 
+/// A suggestion the bot posted in General (D-253): Do it opens a topic, Not now dismisses it.
+class SuggestionEntry extends ChatEntry {
+  const SuggestionEntry({required this.messageId, required this.suggestion});
+  final String messageId;
+  final MessageSuggestion suggestion;
+}
+
+/// A topic's result posted back to General (D-253): a link into the topic.
+class TopicLinkEntry extends ChatEntry {
+  const TopicLinkEntry({required this.messageId, required this.topic});
+  final String messageId;
+  final MessageTopic topic;
+}
+
 /// An interactive UI the bot showed (D-086), rendered from A2UI messages.
 class UiEntry extends ChatEntry {
   const UiEntry({required this.surfaceId, required this.messages});
@@ -309,6 +323,8 @@ class ChatController extends Notifier<ChatState> {
                 botId: m.botId,
               ),
             },
+          if (m.suggestion case final s?) SuggestionEntry(messageId: m.id, suggestion: s),
+          if (m.topic case final t?) TopicLinkEntry(messageId: m.id, topic: t),
           for (final u in m.ui)
             UiEntry(surfaceId: u.surfaceId, messages: u.messages),
         ],

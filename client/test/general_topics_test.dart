@@ -1,0 +1,258 @@
+// General and topics (D-253): the topics bar above General and inside a topic, suggestion cards and
+// topic results in General, and the Needs you and Casama rows at the top of the chats.
+import 'package:casama_app/core/backend.dart';
+import 'package:casama_app/core/local_cache.dart';
+import 'package:casama_app/core/providers.dart';
+import 'package:casama_app/features/bots/bots_screen.dart';
+import 'package:casama_app/features/chat/chat_screen.dart';
+import 'package:casama_app/l10n/generated/app_localizations.dart';
+import 'package:casama_sdk/casama_sdk.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'app_test.dart' show setSize;
+import 'fake_backend.dart';
+
+Conversation _topic(
+  String id,
+  String title, {
+  ConversationStatusEnum? status,
+  DateTime? at,
+}) => Conversation(
+  id: id,
+  botId: botId,
+  title: title,
+  lastMessageAt: at ?? DateTime.now().subtract(const Duration(hours: 1)),
+  createdAt: DateTime(2026),
+  kind: ConversationKindEnum.direct,
+  botIds: const [botId],
+  isMain: false,
+  parentConversationId: convId,
+  status: status,
+);
+
+Widget _app(FakeBackend backend, GoRouter router) => ProviderScope(
+  overrides: [
+    backendProvider.overrideWithValue(backend),
+    localCacheProvider.overrideWithValue(const NoCache()),
+  ],
+  child: MaterialApp.router(
+    routerConfig: router,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+  ),
+);
+
+GoRouter _router(String initial) => _current = GoRouter(
+  initialLocation: initial,
+  routes: [
+    GoRoute(
+      path: '/bots',
+      builder: (_, _) => const Scaffold(body: BotsList()),
+    ),
+    GoRoute(
+      path: '/bots/:botId/chat',
+      builder: (_, s) => ChatScreen(
+        botId: s.pathParameters['botId']!,
+        conversationId: s.uri.queryParameters['c'],
+      ),
+    ),
+    GoRoute(
+      path: '/inbox',
+      builder: (_, s) => Scaffold(
+        body: Text('inbox ${s.uri.queryParameters['tab'] ?? 'all'}'),
+      ),
+    ),
+  ],
+);
+
+late GoRouter _current;
+String _location(WidgetTester _) =>
+    _current.routerDelegate.currentConfiguration.uri.toString();
+
+void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets(
+    'General shows chips for the topics going on, needs-you first, and opens one',
+    (tester) async {
+      await setSize(tester, const Size(430, 932));
+      final backend = FakeBackend()
+        ..fakeChatIsGeneral = true
+        ..topics = [
+          _topic('t-trip', 'Japan trip'),
+          _topic(
+            't-pay',
+            'Pay the Acme invoice',
+            status: ConversationStatusEnum.needsYou,
+          ),
+          _topic(
+            't-old',
+            'Old thing',
+            at: DateTime.now().subtract(const Duration(days: 30)),
+          ),
+        ];
+      await tester.pumpWidget(
+        _app(backend, _router('/bots/$botId/chat?c=$convId')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('topicChip-t-pay')), findsOneWidget);
+      expect(find.byKey(const Key('topicChip-t-trip')), findsOneWidget);
+      // A topic idle for a month waits under Older in All topics, not as a chip.
+      expect(find.byKey(const Key('topicChip-t-old')), findsNothing);
+      expect(
+        tester.getTopLeft(find.byKey(const Key('topicChip-t-pay'))).dx,
+        lessThan(
+          tester.getTopLeft(find.byKey(const Key('topicChip-t-trip'))).dx,
+        ),
+      );
+      await tester.ensureVisible(find.byKey(const Key('topicChip-t-trip')));
+      await tester.tap(find.byKey(const Key('topicChip-t-trip')));
+      await tester.pumpAndSettle();
+      expect(_location(tester), '/bots/$botId/chat?c=t-trip');
+      // In the topic: its title and the way back to General.
+      expect(find.byKey(const Key('topicTitle')), findsOneWidget);
+      expect(
+        tester.widget<Text>(find.byKey(const Key('topicTitle'))).data,
+        'Japan trip',
+      );
+      await tester.tap(find.byKey(const Key('backToGeneral')));
+      await tester.pumpAndSettle();
+      expect(_location(tester), '/bots/$botId/chat?c=$convId');
+
+      // All topics: General first, the live ones, then Older.
+      await tester.ensureVisible(find.byKey(const Key('allTopics')));
+      await tester.tap(find.byKey(const Key('allTopics')));
+      await tester.pumpAndSettle();
+      expect(find.text('Topics'), findsOneWidget);
+      expect(find.byKey(const Key('olderTopics')), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byKey(const Key('topicRow-$convId'))).dy,
+        lessThan(tester.getTopLeft(find.byKey(const Key('topicRow-t-pay'))).dy),
+      );
+      expect(
+        tester.getTopLeft(find.byKey(const Key('topicRow-t-trip'))).dy,
+        lessThan(tester.getTopLeft(find.byKey(const Key('topicRow-t-old'))).dy),
+      );
+    },
+  );
+
+  testWidgets(
+    'a suggestion in General is a card: Do it opens the topic it starts',
+    (tester) async {
+      await setSize(tester, const Size(430, 932));
+      final backend = FakeBackend()
+        ..fakeChatIsGeneral = true
+        ..storedMessages = [
+          ChatMessageView(
+            id: 'm-s1',
+            role: 'assistant',
+            text: 'Ana asked twice. Want me to reply?',
+            createdAt: DateTime(2026, 11, 10),
+            suggestion: const MessageSuggestion(
+              id: 's1',
+              title: 'Reply to Ana',
+              body: 'She asked twice.',
+            ),
+          ),
+          ChatMessageView(
+            id: 'm-t1',
+            role: 'assistant',
+            text: 'Booked an Uber for 7:15 tonight.',
+            createdAt: DateTime(2026, 11, 10, 9),
+            topic: const MessageTopic(
+              conversationId: 't-ride',
+              title: 'Book a ride',
+            ),
+          ),
+        ];
+      await tester.pumpWidget(
+        _app(backend, _router('/bots/$botId/chat?c=$convId')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Ana asked twice. Want me to reply?'), findsOneWidget);
+      expect(find.byKey(const Key('suggestionCard-s1')), findsOneWidget);
+      expect(find.byKey(const Key('topicLink-t-ride')), findsOneWidget);
+      expect(find.text('Open Book a ride'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('suggestionDoIt-s1')));
+      await tester.pumpAndSettle();
+      expect(backend.suggestionActions, ['accept:s1']);
+      // The fake answers with its one chat as the topic.
+      expect(_location(tester), '/bots/$botId/chat?c=$convId');
+      expect(find.byKey(const Key('suggestionCard-s1')), findsNothing);
+    },
+  );
+
+  testWidgets('Not now folds the card into a line', (tester) async {
+    await setSize(tester, const Size(430, 932));
+    final backend = FakeBackend()
+      ..storedMessages = [
+        ChatMessageView(
+          id: 'm-s1',
+          role: 'assistant',
+          text: 'Want me to reply to Ana?',
+          createdAt: DateTime(2026, 11, 10),
+          suggestion: const MessageSuggestion(id: 's1', title: 'Reply to Ana'),
+        ),
+      ];
+    await tester.pumpWidget(
+      _app(backend, _router('/bots/$botId/chat?c=$convId')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('suggestionNotNow-s1')));
+    await tester.pumpAndSettle();
+    expect(backend.suggestionActions, ['dismiss:s1']);
+    expect(find.byKey(const Key('suggestionDone-s1')), findsOneWidget);
+  });
+
+  testWidgets('the chats start with Needs you and the pinned Casama row', (
+    tester,
+  ) async {
+    await setSize(tester, const Size(430, 932));
+    await tester.pumpWidget(_app(FakeBackend(), _router('/bots')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('chatsCasama')), findsOneWidget);
+    // The fake has approvals and a suggestion waiting.
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('chatsNeedsYou')),
+        matching: find.textContaining('need'),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('chatsNeedsYou')));
+    await tester.pumpAndSettle();
+    expect(find.text('inbox 0'), findsOneWidget);
+  });
+
+  test('topics split into live and older, General first', () {
+    final now = DateTime(2026, 11, 13);
+    final general = Conversation(
+      id: 'g',
+      botId: botId,
+      title: null,
+      lastMessageAt: DateTime(2025),
+      createdAt: DateTime(2025),
+      kind: ConversationKindEnum.direct,
+      botIds: const [botId],
+      isMain: true,
+    );
+    final split = splitTopics([
+      _topic('a', 'Recent', at: DateTime(2026, 11, 12)),
+      _topic(
+        'b',
+        'Working',
+        status: ConversationStatusEnum.working,
+        at: DateTime(2026, 1, 1),
+      ),
+      _topic('c', 'Old', at: DateTime(2026, 1, 1)),
+      general,
+    ], now: now);
+    expect(split.active.map((c) => c.id), ['g', 'b', 'a']);
+    expect(split.older.map((c) => c.id), ['c']);
+  });
+}

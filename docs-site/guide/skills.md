@@ -129,7 +129,7 @@ Bots also learn from how their runs go and suggest skills for you to approve.
 
 To review ideas:
 
-1. You get a notification. Open **Inbox** → **Needs you**. Ideas show as cards, for example "Ada
+1. You get a notification. Tap **Needs you** at the top of **Chats**. Ideas show as cards, for example "Ada
    suggests a skill: weekly-report" or "Ada suggests improving weekly-report".
 2. Read the steps, the tools it **Uses**, or the line-by-line change.
 3. Select **Save skill** or **Apply change**, or **Dismiss**.

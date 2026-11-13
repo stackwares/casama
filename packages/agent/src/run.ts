@@ -123,6 +123,7 @@ import {
   checkinToolAllowed,
   isCheckinKind,
 } from "./checkins.ts";
+import { postSuggestions, postTopicResults } from "./general.ts";
 import {
   DEFAULT_LAZY_THRESHOLD,
   isCoreTool,
@@ -1291,6 +1292,16 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           log?.warn("check-in summary failed", { run_id: runId, error: (err as Error).message });
         }),
       );
+    // General and topics (D-253): this run's suggestions as cards in General, and a topic's result.
+    await step("general-posts", async () => {
+      await postSuggestions(db, { runId: info.runId }).catch((err) =>
+        log?.warn("suggestion posts failed", { run_id: runId, error: (err as Error).message }),
+      );
+      if (info.conversationId)
+        await postTopicResults(db, { runId: info.runId }).catch((err) =>
+          log?.warn("topic result failed", { run_id: runId, error: (err as Error).message }),
+        );
+    });
     return { status: "completed" };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

@@ -193,8 +193,10 @@ chat, starts with them on. Other bots start with them off.
    default 3) and **Daily limit** (default $1).
 3. Tap **Save**.
 
-Briefs and suggestions go to the person who turned check-ins on, in their timezone. They appear in
-the **Inbox**:
+Briefs and suggestions go to the person who turned check-ins on, in their timezone. They're posted
+in your **General** chat with the bot. A suggestion is a card there: **Do it** opens a topic where
+the bot does it and reports back in General, **Not now** puts it away. They're also collected
+under the **Casama** row at the top of **Chats**:
 
 - **Morning brief from {bot}**: the latest brief from each bot, under **Briefs**.
 - **Suggestions**: things the bot thinks you should act on, under **Needs you**, each with the
