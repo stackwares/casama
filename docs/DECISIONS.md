@@ -2835,3 +2835,12 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
   hourly while down) and when it's back, through the same SMTP mailbox as the server. It runs on
   Cloudflare, so it works when the server doesn't; no new account was needed.
 
+## D-251 Bot computers' CLIs stay current through their images
+
+- **Decision** (Oliver asked, 2026-11-13: "how do we keep those CLIs updated for every bot's computer?", then "do all of those now"): agent-browser, Playwright and agent-desktop stay pinned in the computer images, and updates arrive as reviewed image changes, never by upgrading tools inside running computers (bots can't anyway: `/usr/local` is root's).
+- **How a computer gets them:** sleeping archives the home folder and deletes the container (D-178); waking creates a fresh container from the image and restores the home folder. So a new image reaches every computer on its next wake-up or restart, with its files, logins and settings kept. No extra cost: images are public on ghcr (free), and a version bump changes only the top layers.
+- **`scripts/computer-tools.sh`:** `check` compares the pins with npm. `bump` raises them in a separate checkout of `origin/main` (never the shared tree), builds both images for the local machine and checks each CLI starts (`agent-browser --version`, `playwright --version`, `chrome --version`, `agent-desktop version`), then opens a pull request with the steps after merging. It skips when everything is current or a `computer-tools/` pull request is already open. `prod-pull --yes` pulls both images on the VPS and prunes old layers; it changes production, so it runs only with Oliver's yes.
+- **Weekly:** `~/Library/LaunchAgents/ai.casama.computer-tools.plist` (Oliver's Mac) runs `bump` on Mondays at 10:00 and logs to `~/Library/Logs/casama-computer-tools.log`. If Docker isn't running, `bump` stops without opening a pull request.
+- **Warm pool:** `fillPool` (every minute) also replaces pool members whose image differs from what the headless tag now names, and `claim` never hands one out, so the first computer after an update is current too. When either image id can't be read, members are kept rather than churned.
+- **Not covered:** a computer that never idles for 5 minutes keeps its image until it restarts. The supervisor still doesn't pull images itself; `prod-pull` is the step.
+- **Tests:** `packages/sandbox/test/warm-pool-refresh.test.ts`.

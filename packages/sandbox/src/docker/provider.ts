@@ -162,22 +162,38 @@ export class DockerProvider implements SandboxProvider {
     return same(spec.size?.cpus, d.cpus, 1) && same(spec.size?.memoryMb, d.memoryMb, 1024);
   }
 
-  /** Unclaimed pool members (still named <prefix>-c-pool-…), with their state. */
+  /**
+   * Unclaimed pool members (still named <prefix>-c-pool-…), with their state. `current` is false
+   * for a member started from an older headless image than the one the tag now names (the image
+   * was pulled again after an update), so nobody is handed yesterday's tools.
+   */
   private async poolMembers() {
     const filters = encodeURIComponent(JSON.stringify({ label: [POOL_LABEL] }));
-    const items = await this.opts.docker.call<
-      Array<{ Names: string[]; State: string; Labels: Record<string, string> }>
-    >("GET", `/containers/json?all=true&filters=${filters}`);
+    const [items, image] = await Promise.all([
+      this.opts.docker.call<
+        Array<{ Names: string[]; State: string; Labels: Record<string, string>; ImageID?: string }>
+      >("GET", `/containers/json?all=true&filters=${filters}`),
+      this.opts.docker
+        .inspectOrNull<{ Id: string }>(
+          `/images/${encodeURIComponent(this.opts.images.headless)}/json`,
+        )
+        .catch(() => null),
+    ]);
     const prefix = `/${this.opts.namePrefix ?? "casama"}-c-pool-`;
     return items
       .filter((c) => c.Names.some((x) => x.startsWith(prefix)))
-      .map((c) => ({ pool: c.Labels[POOL_LABEL] as string, running: c.State === "running" }));
+      .map((c) => ({
+        pool: c.Labels[POOL_LABEL] as string,
+        running: c.State === "running",
+        // Can't tell (no image id either side): keep it rather than churn the pool.
+        current: !image?.Id || !c.ImageID || c.ImageID === image.Id,
+      }));
   }
 
   /** Takes a started pool member for [ref]: renames its container and remembers the alias. */
   private async claim(ref: string): Promise<boolean> {
     const p = this.opts.namePrefix ?? "casama";
-    for (const m of (await this.poolMembers()).filter((x) => x.running)) {
+    for (const m of (await this.poolMembers()).filter((x) => x.running && x.current)) {
       const renamed = await this.opts.docker
         .call("POST", `/containers/${p}-c-${m.pool}/rename?name=${p}-c-${ref}`, undefined, [204])
         .then(() => true)
@@ -194,15 +210,19 @@ export class DockerProvider implements SandboxProvider {
     return false;
   }
 
-  /** Tops the pool up to its size (one fill at a time); stopped members are replaced. */
+  /**
+   * Tops the pool up to its size (one fill at a time, every minute from the supervisor). Stopped
+   * members are replaced, and so are members on an older image after an update.
+   */
   fillPool(): Promise<void> {
     if (!this.opts.warmPool) return Promise.resolve();
     this.filling ??= (async () => {
       try {
         const members = await this.poolMembers();
-        for (const m of members.filter((x) => !x.running))
+        const usable = (x: { running: boolean; current: boolean }) => x.running && x.current;
+        for (const m of members.filter((x) => !usable(x)))
           await this.destroy(m.pool).catch(() => {});
-        for (let i = members.filter((x) => x.running).length; i < (this.opts.warmPool ?? 0); i++) {
+        for (let i = members.filter(usable).length; i < (this.opts.warmPool ?? 0); i++) {
           const pool = `pool-${randomUUID().replace(/-/g, "").slice(0, 20)}`;
           await this.start({ ref: pool, profile: "headless" }, { [POOL_LABEL]: pool });
         }
