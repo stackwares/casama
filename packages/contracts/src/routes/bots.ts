@@ -27,6 +27,7 @@ import {
   SwitchBranchRequest,
   SwitchBranchResponse,
   TestCredentialRequest,
+  UpdateConversationRequest,
   UpdateCredentialRequest,
   UsageReport,
   WelcomeChat,
@@ -114,6 +115,24 @@ export const deleteConversation = createRoute({
     403: e403,
     404: e404,
     409: e409,
+  },
+});
+
+export const updateConversation = createRoute({
+  operationId: "updateConversation",
+  method: "patch",
+  path: "/v1/conversations/{id}",
+  tags: ["chat"],
+  security,
+  summary: "Rename or pin a conversation",
+  description: "Only the person who started it or someone who manages its bot.",
+  request: { params: idParam, body: jsonBody(UpdateConversationRequest) },
+  responses: {
+    200: jsonResponse("Updated", Conversation),
+    400: e400,
+    401: e401,
+    403: e403,
+    404: e404,
   },
 });
 

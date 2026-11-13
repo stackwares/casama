@@ -132,6 +132,7 @@ Class | Method | HTTP request | Description
 [*ChannelsApi*](doc/ChannelsApi.md) | [**deleteChannel**](doc/ChannelsApi.md#deletechannel) | **DELETE** /v1/channels/{id} | 
 [*ChannelsApi*](doc/ChannelsApi.md) | [**listChannelEvents**](doc/ChannelsApi.md#listchannelevents) | **GET** /v1/channels/{id}/events | Recent messages in and out, including ignored senders
 [*ChannelsApi*](doc/ChannelsApi.md) | [**listChannels**](doc/ChannelsApi.md#listchannels) | **GET** /v1/channels | A bot&#39;s chat apps
+[*ChannelsApi*](doc/ChannelsApi.md) | [**startSlackInstall**](doc/ChannelsApi.md#startslackinstall) | **GET** /v1/channels/slack/install | Add Casama&#39;s Slack app to a Slack workspace for this bot (D-277)
 [*ChannelsApi*](doc/ChannelsApi.md) | [**updateChannel**](doc/ChannelsApi.md#updatechannel) | **PATCH** /v1/channels/{id} | 
 [*ChatApi*](doc/ChatApi.md) | [**createConversation**](doc/ChatApi.md#createconversation) | **POST** /v1/conversations | 
 [*ChatApi*](doc/ChatApi.md) | [**deleteBotConversations**](doc/ChatApi.md#deletebotconversations) | **DELETE** /v1/bots/{id}/conversations | Delete every direct conversation with a bot that you may delete
@@ -142,6 +143,7 @@ Class | Method | HTTP request | Description
 [*ChatApi*](doc/ChatApi.md) | [**listGroupChats**](doc/ChatApi.md#listgroupchats) | **GET** /v1/group-chats | Group chats in a workspace that you can see
 [*ChatApi*](doc/ChatApi.md) | [**sendMessage**](doc/ChatApi.md#sendmessage) | **POST** /v1/conversations/{id}/messages | Send a message; starts a run
 [*ChatApi*](doc/ChatApi.md) | [**switchBranch**](doc/ChatApi.md#switchbranch) | **POST** /v1/conversations/{id}/branch | Show another branch of the conversation (its newest message under the given one)
+[*ChatApi*](doc/ChatApi.md) | [**updateConversation**](doc/ChatApi.md#updateconversation) | **PATCH** /v1/conversations/{id} | Rename or pin a conversation
 [*CheckinsApi*](doc/CheckinsApi.md) | [**acceptSuggestion**](doc/CheckinsApi.md#acceptsuggestion) | **POST** /v1/suggestions/{id}/accept | Have the bot do it, through normal approvals
 [*CheckinsApi*](doc/CheckinsApi.md) | [**dismissSuggestion**](doc/CheckinsApi.md#dismisssuggestion) | **POST** /v1/suggestions/{id}/dismiss | 
 [*CheckinsApi*](doc/CheckinsApi.md) | [**getBotCheckins**](doc/CheckinsApi.md#getbotcheckins) | **GET** /v1/bots/{id}/checkins | 
@@ -857,6 +859,7 @@ Class | Method | HTTP request | Description
  - [SkillStats](doc/SkillStats.md)
  - [SkillStatsRevisionsInner](doc/SkillStatsRevisionsInner.md)
  - [SkillUpdateCheck](doc/SkillUpdateCheck.md)
+ - [SlackInstallLink](doc/SlackInstallLink.md)
  - [StartAgentImportRequest](doc/StartAgentImportRequest.md)
  - [StartAgentImportRequestFilesInner](doc/StartAgentImportRequestFilesInner.md)
  - [StartSetupResponse](doc/StartSetupResponse.md)
@@ -916,6 +919,7 @@ Class | Method | HTTP request | Description
  - [UpdateAboutYouRequest](doc/UpdateAboutYouRequest.md)
  - [UpdateChannelRequest](doc/UpdateChannelRequest.md)
  - [UpdateComputerRequest](doc/UpdateComputerRequest.md)
+ - [UpdateConversationRequest](doc/UpdateConversationRequest.md)
  - [UpdateCreationRequest](doc/UpdateCreationRequest.md)
  - [UpdateCredentialRequest](doc/UpdateCredentialRequest.md)
  - [UpdateDefaultInviteRequest](doc/UpdateDefaultInviteRequest.md)

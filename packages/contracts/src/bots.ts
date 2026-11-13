@@ -129,8 +129,20 @@ export const Conversation = z
       description:
         "needs_you: the bot waits for an approval or a take-over in it; working: a run is going",
     }),
+    pinned: z.boolean().optional().openapi({
+      description: "Pinned by the person who started it: listed after General, before the rest",
+    }),
   })
   .openapi("Conversation");
+
+export const UpdateConversationRequest = z
+  .object({
+    title: z.string().trim().max(200).nullable().optional().openapi({
+      description: "A new name; empty or null goes back to the automatic one",
+    }),
+    pinned: z.boolean().optional(),
+  })
+  .openapi("UpdateConversationRequest");
 
 export const DeletedConversation = z.object({ deleted: Uuid }).openapi("DeletedConversation");
 

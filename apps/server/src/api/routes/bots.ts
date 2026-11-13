@@ -133,6 +133,7 @@ const convOut = (
   parent_conversation_id: c.parentConversationId,
   anchor_message_id: c.anchorMessageId,
   ...(status === undefined ? {} : { status }),
+  pinned: !!c.pinnedAt,
 });
 
 type RunRow = typeof runs.$inferSelect;
@@ -584,6 +585,45 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     return c.json({ deleted: id }, 200);
   });
 
+  // Rename or pin (Improve app 2): the same people who may delete it.
+  app.openapi(routes.updateConversation, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const body = c.req.valid("json");
+    const out = await withUserSession(db, claims, async (tx) => {
+      const [row] = await tx.select().from(conversations).where(eq(conversations.id, id));
+      if (!row) throw new ApiError(404, "conversation_not_found", "Conversation not found");
+      const [m] = await tx.execute<{ ok: boolean }>(
+        sql`select public.can_manage_bot(${row.botId}::uuid) as ok`,
+      );
+      if (row.createdBy !== claims.sub && !m?.ok)
+        throw new ApiError(
+          403,
+          "forbidden",
+          "Only the person who started this chat or someone who manages the bot can change it",
+        );
+      const set: { title?: string | null; pinnedAt?: string | null } = {};
+      if (body.title !== undefined) set.title = body.title?.trim() || null;
+      if (body.pinned !== undefined)
+        set.pinnedAt = body.pinned ? (row.pinnedAt ?? new Date().toISOString()) : null;
+      const [updated] = Object.keys(set).length
+        ? await tx.update(conversations).set(set).where(eq(conversations.id, id)).returning()
+        : [row];
+      const members =
+        row.kind === "group"
+          ? await tx.execute<{ bot_id: string }>(
+              sql`select bot_id from public.conversation_bots where conversation_id = ${id}::uuid order by position`,
+            )
+          : [];
+      return {
+        row: updated ?? row,
+        members: members.map((x) => x.bot_id),
+        isMain: row.isMain && row.createdBy === claims.sub,
+      };
+    });
+    return c.json(convOut({ ...out.row, isMain: out.isMain }, out.members, true), 200);
+  });
+
   app.openapi(routes.deleteBotConversations, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
@@ -636,6 +676,8 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         .where(and(eq(conversations.botId, id), eq(conversations.kind, "direct")))
         .orderBy(
           desc(sql`(${conversations.isMain} and ${conversations.createdBy} = ${claims.sub}::uuid)`),
+          // Pinned next (Improve app 2), most recently pinned first.
+          sql`${conversations.pinnedAt} desc nulls last`,
           desc(sql`coalesce(${conversations.lastMessageAt}, ${conversations.createdAt})`),
         )
         .limit(100);

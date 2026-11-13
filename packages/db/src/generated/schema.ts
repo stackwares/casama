@@ -318,6 +318,7 @@ export const conversations = pgTable("conversations", {
 	postsResult: boolean("posts_result").default(false).notNull(),
 	resultRunId: uuid("result_run_id"),
 	personal: boolean().default(false).notNull(),
+	pinnedAt: timestamp("pinned_at", { withTimezone: true, mode: 'string' }),
 }, (table) => [
 	index("conversations_bot_id_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.lastMessageAt.desc().nullsFirst().op("uuid_ops")),
 	uniqueIndex("conversations_one_main").using("btree", table.botId.asc().nullsLast().op("uuid_ops"), table.createdBy.asc().nullsLast().op("uuid_ops")).where(sql`is_main`),

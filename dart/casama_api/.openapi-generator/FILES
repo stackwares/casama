@@ -507,6 +507,7 @@ lib/src/model/skill_proposal_list.dart
 lib/src/model/skill_stats.dart
 lib/src/model/skill_stats_revisions_inner.dart
 lib/src/model/skill_update_check.dart
+lib/src/model/slack_install_link.dart
 lib/src/model/start_agent_import_request.dart
 lib/src/model/start_agent_import_request_files_inner.dart
 lib/src/model/start_setup_response.dart
@@ -566,6 +567,7 @@ lib/src/model/ui_shown_event_payload.dart
 lib/src/model/update_about_you_request.dart
 lib/src/model/update_channel_request.dart
 lib/src/model/update_computer_request.dart
+lib/src/model/update_conversation_request.dart
 lib/src/model/update_creation_request.dart
 lib/src/model/update_credential_request.dart
 lib/src/model/update_default_invite_request.dart

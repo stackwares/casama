@@ -429,6 +429,7 @@ import 'package:casama_api/src/model/skill_proposal_list.dart';
 import 'package:casama_api/src/model/skill_stats.dart';
 import 'package:casama_api/src/model/skill_stats_revisions_inner.dart';
 import 'package:casama_api/src/model/skill_update_check.dart';
+import 'package:casama_api/src/model/slack_install_link.dart';
 import 'package:casama_api/src/model/start_agent_import_request.dart';
 import 'package:casama_api/src/model/start_agent_import_request_files_inner.dart';
 import 'package:casama_api/src/model/start_setup_response.dart';
@@ -485,6 +486,7 @@ import 'package:casama_api/src/model/ui_shown_event_payload.dart';
 import 'package:casama_api/src/model/update_about_you_request.dart';
 import 'package:casama_api/src/model/update_channel_request.dart';
 import 'package:casama_api/src/model/update_computer_request.dart';
+import 'package:casama_api/src/model/update_conversation_request.dart';
 import 'package:casama_api/src/model/update_creation_request.dart';
 import 'package:casama_api/src/model/update_credential_request.dart';
 import 'package:casama_api/src/model/update_default_invite_request.dart';
@@ -1473,6 +1475,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SkillStatsRevisionsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SkillUpdateCheck':
           return SkillUpdateCheck.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SlackInstallLink':
+          return SlackInstallLink.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'StartAgentImportRequest':
           return StartAgentImportRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'StartAgentImportRequestFilesInner':
@@ -1594,6 +1598,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return UpdateChannelRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateComputerRequest':
           return UpdateComputerRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'UpdateConversationRequest':
+          return UpdateConversationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateCreationRequest':
           return UpdateCreationRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'UpdateCredentialRequest':
