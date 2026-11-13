@@ -8,18 +8,18 @@ model, which is faster and cheaper for tasks that don't change.
 ## Before you start
 
 - The bot needs a desktop [computer](/guide/computers). On a headless computer, use **Switch to
-  desktop** first.
+  Desktop** first.
 - Teaching happens in the live view, and only while you're in control.
 
 ## Teach a task
 
-1. Open the bot's computer and tap **Open live view**.
-2. Tap **Take control**.
-3. Tap **Teach a task** (the graduation cap) in the live view's header. On a team computer, pick
-   **Which bot should learn this?**
+1. Open the bot's computer and tap **Open Live View**.
+2. Tap **Take Control**.
+3. Open **More** (**⋯**) and tap **Teach a task**. On a team computer, pick **Which bot should
+   learn this?**
 4. A red **Recording** banner appears. Do the task as you normally would. The banner shows the last
    step it saved.
-5. If you type something sensitive that isn't in a password field, tap **Mark as secret** right
+5. If you type something sensitive that isn't in a password field, tap **Mark as Secret** right
    after typing it, give it a **Name** such as `EMPLOYEE_ID`, and tap **Save**.
 6. Tap **Stop** when you're done.
 
@@ -104,7 +104,7 @@ Each step can carry:
 
 ### Run a replay
 
-1. Open the bot's **Bot settings → Replays**.
+1. Open the bot's **Bot profile → Replays**.
 2. Tap **Run** on the replay.
 3. Check the values it fills in, then run it. The run's chat opens.
 
@@ -117,7 +117,7 @@ A missing element, a failed check or a tool error stops the replay at that step.
 and why it stopped, plus what was already done, and carries on from there with the model. It can
 then offer to update the replay. A replay run still passes through your approval rules as usual.
 
-To delete a replay, use **Delete** in **Bot settings → Replays**.
+To delete a replay, use **Delete** in **Bot profile → Replays**.
 
 ## Limits
 

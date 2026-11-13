@@ -19,12 +19,14 @@ For a server other people reach over the internet, point a domain at the machine
 ```
 
 The installer checks Docker, generates every secret, builds and starts the stack, and waits until
-it's healthy. It prints the address when it's done. See [Self-hosting](/self-hosting/) for
+it's healthy. It prints the address when it's done. Add `--pull` to download the published images
+instead of building them. See [Self-hosting](/self-hosting/) for
 requirements, every option and production advice.
 
 ::: tip Prefer not to use a terminal?
-The desktop app can run a server on the computer it's installed on: on the sign-in screen, choose
-**More options** → **Run Casama on this computer**.
+The desktop app on macOS and Linux can run a server on the computer it's installed on: start
+Docker Desktop, then on the sign-in screen choose **More options** → **Run Casama on this
+computer**. It needs about 10 GB of free disk.
 :::
 
 ## 2. Install a client

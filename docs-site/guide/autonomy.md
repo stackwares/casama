@@ -7,15 +7,21 @@ understand exactly when it will stop and ask.
 
 ## Choose a bot's autonomy
 
-1. Open the bot's chat and tap its name at the top (or open the menu and choose **Bot settings**).
+1. Open the bot's chat and tap its name at the top (or open the menu and choose **Bot profile**).
 2. Under **Autonomy**, pick a level.
-3. Tap **Save changes**.
+3. Tap **Save Changes**.
 
 | Level in the app | Value in the API and CLI | The bot asks before |
 | --- | --- | --- |
 | **Ask before acting** | `ask_always` | Every action that changes something |
-| **Ask for risky actions** (default) | `ask_risky` | High-risk actions, medium-risk actions after it has read untrusted content, and tools that always confirm |
+| **Ask for risky actions** (default) | `ask_risky` | Only really risky actions (listed below), paid data lookups, and, after it has read untrusted content, actions that send data out of Casama |
 | **Act on its own** | `autonomous` | Nothing, except high-risk actions on your own computer |
+
+Under **Ask for risky actions**, a bot does most work without asking. The high-risk actions that
+still ask are: sending through chat apps or email, calling other people, making a page public,
+creating or archiving bots, raising a bot's autonomy or budget, setup changes, opening pull
+requests, deleting things outside the bot's `~/workspace` folder, and connected-app tools marked
+**Always asks**. Payments always ask, whatever the level.
 
 Under every level, a bot never asks for built-in tools that only look at things (reading,
 listing, searching, taking screenshots) or for the [self-only actions](#actions-that-never-ask)
@@ -40,33 +46,36 @@ Tools from apps you connect get a level per tool. On the connection's page you c
 tool to **Read-only**, **Makes changes** or **Always asks**, which map to low, medium and high
 risk. See [Connections](/guide/connections).
 
-A few tools ask under **Ask for risky actions** whatever their risk, because they change your
-own things or cost money: image and video generation, changes to your calendar, and buying a
-call to a paid data service.
+Buying a call to a paid data service asks under **Ask for risky actions** whatever its risk,
+because it costs money, and the approval shows the price. Image and video generation and changes
+to your calendar don't ask by default; your credits and the bot's budget still apply.
 
 ## Approvals
 
 When a bot needs your OK, the run pauses and an approval request appears in two places:
 
 - The chat, as a card under the bot's message.
-- **Inbox → Approvals**, for every bot you can use. The tab shows a count when something is
-  waiting.
+- **Inbox**, under **Needs you**, for every bot you can use. The filter shows a count when
+  something is waiting.
 
 Each request shows the bot, the tool, its risk (**Low risk**, **Medium risk** or **High risk**)
 and the arguments it wants to use, with secrets removed.
 
 To answer it:
 
-1. Open the card in the chat, or go to **Inbox → Approvals**.
+1. Open the card in the chat, or go to **Inbox → Needs you**.
 2. Read what the bot wants to do.
-3. Tap **Approve**, **Deny** or **Always allow**.
+3. Tap **Approve**, **Deny** or **Always Allow**.
 
 | Choice | What happens |
 | --- | --- |
 | **Approve** | The step runs and the bot carries on. |
 | **Deny** | Only that step fails. The bot is told, and it continues without it. |
-| **Always allow** | The step runs, and Casama adds an action rule so this bot runs this tool without asking from now on. |
+| **Always Allow** | The step runs, and Casama adds an action rule so this bot runs this tool without asking from now on. |
 | No answer for 24 hours | The request expires and is treated like a deny. |
+
+Once answered, the card folds into one quiet line in the chat, such as "Allowed: Making an image".
+Requests for a key, a sign-in code, a takeover or device access fold the same way.
 
 A run that waits for approval costs nothing while it waits, and it survives server restarts.
 Anyone who can use the bot can answer. If someone already answered, you see **This request was
@@ -90,7 +99,7 @@ else."
 
 ### Add a rule
 
-1. Open **Bot settings → Action rules**.
+1. Open **Bot profile → Action rules**.
 2. Tap **Add a rule**.
 3. Under **When the bot is**, pick a category: **Sending messages**, **Payments**, **Deleting**,
    **Publishing**, **Sharing and invites** or **Signing in**.
@@ -107,7 +116,7 @@ else."
 | **Hand it to me to finish** | The bot never does the step itself. It prepares everything and asks you to finish, taking over its computer screen if it's working there. |
 
 Each rule shows a plain-language summary, such as "Sends messages to anyone at example.com
-without asking". The list groups rules by category, with tool rules (from **Always allow**)
+without asking". The list groups rules by category, with tool rules (from **Always Allow**)
 under **Specific tools**.
 
 ### Who can change rules
@@ -158,7 +167,7 @@ a self-only action.
 
 | Action | Rule |
 | --- | --- |
-| Paying with a virtual card | Always asks, whatever the autonomy or rules. **Always allow** doesn't apply. See [Payments](/guide/payments). |
+| Paying with a virtual card | Always asks, whatever the autonomy or rules. **Always Allow** doesn't apply. See [Payments](/guide/payments). |
 | Changing a password or two-step settings | Always handed to you to finish. A rule can't change this. |
 | High-risk actions on your own computer | Always ask, even under **Act on its own**. See [Your own computer](/guide/companion). |
 
@@ -169,8 +178,10 @@ Casama protects against this in three ways:
 
 - Untrusted content reaches the model inside labeled blocks, and the bot is told never to follow
   instructions found inside them.
-- Under **Ask for risky actions**, once a run has read untrusted content, medium-risk actions ask
-  for approval until you approve something again.
+- Under **Ask for risky actions**, once a run has read untrusted content, medium-risk actions that
+  send data out of Casama ask for approval until you approve something again. These are web
+  requests that post or change data, tools from connected apps, and questions to linked bots.
+  Reading the web, publishing inside the workspace and the like still run.
 - Secrets never reach the model. Bots use placeholders such as `{{secret:NAME}}`, and Casama fills
   in the value only when the request goes to a host the secret allows. See
   [Privacy and security](/guide/privacy).
@@ -196,7 +207,7 @@ See [Computers](/guide/computers).
 ## Limits
 
 - The app adds action rules by category only. Rules for a specific tool come from **Always
-  allow**; rules for a tool group or exact recipients need the API.
+  Allow**; rules for a tool group or exact recipients need the API.
 - Approvals can't be answered from the CLI. Use the app, or an AI app connected over MCP.
 - Checkpoints are automatic only before destructive shell commands, not before every high-risk
   action.

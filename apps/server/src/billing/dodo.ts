@@ -213,6 +213,22 @@ export class DodoProvider implements BillingProvider {
     return { url: r.checkout_url, sessionId: r.session_id };
   }
 
+  /**
+   * Moves a subscription to another plan instead of starting a second one (D-248). The difference
+   * is charged or credited now; a failed charge leaves the old plan in place.
+   */
+  async changePlan(subscriptionId: string, productId: string) {
+    await this.call(`/subscriptions/${encodeURIComponent(subscriptionId)}/change-plan`, {
+      method: "POST",
+      body: JSON.stringify({
+        product_id: productId,
+        quantity: 1,
+        proration_billing_mode: "prorated_immediately",
+        on_payment_failure: "prevent_change",
+      }),
+    });
+  }
+
   /** Sets the extra-person add-on's quantity on a subscription, keeping its product (D-249). */
   async setAddon(args: {
     subscriptionId: string;

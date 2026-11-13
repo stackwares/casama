@@ -18,7 +18,9 @@ spec:
     - host: {{ .Values.ingress.apiHost | quote }}
       http:
         paths:
-          {{- range $p := list "/v1" "/hooks" "/healthz" "/a2a" "/links" "/oauth" "/mcp" "/.well-known" "/telephony" "/internal" "/metrics" }}
+          {{- /* Keep in step with the @api paths in infra/compose/selfhost/Caddyfile. /internal and /metrics stay
+               in the cluster (worker, egress proxy and Prometheus reach the api Service directly). */}}
+          {{- range $p := list "/v1" "/hooks" "/connect" "/telemetry" "/telephony" "/healthz" "/readyz" "/a2a" "/links" "/oauth" "/mcp" "/.well-known" "/openapi.json" "/docs" }}
           - { path: {{ $p }}, pathType: Prefix, backend: { service: { name: {{ $.Release.Name }}-api, port: { name: http } } } }
           {{- end }}
           {{- if .Values.web.enabled }}

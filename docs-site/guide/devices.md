@@ -7,7 +7,7 @@ even workspace admins can't see it.
 
 ## Share data from a device
 
-1. On the device, open **Settings** → **Device connections**.
+1. On the device, open **Settings** → **Advanced** → **Device connections**.
 2. Turn on a kind of data. The system permission prompt appears only at this point.
 3. Optionally set **Keep for** and **Private models only** (see below).
 
@@ -51,8 +51,8 @@ Places and notifications mainly drive device triggers, such as "when I leave wor
 
 ## Bots adding events
 
-A bot can add an event to your calendar. It asks first by default, and your action rules can allow
-it. The event goes to the device's default writable calendar on the device seen most recently. If
+A bot can add an event to your calendar. Under the default autonomy it does this without asking;
+set the bot to **Ask before acting** if you want to approve each one. The event goes to the device's default writable calendar on the device seen most recently. If
 that device doesn't answer within 20 seconds, the bot is told it will happen when the device is
 next online.
 

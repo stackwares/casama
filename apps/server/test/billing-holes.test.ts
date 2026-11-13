@@ -126,6 +126,34 @@ describe("billing holes (D-246)", () => {
     expect(await balance(orgId)).toBeCloseTo(8, 6);
   });
 
+  it("one inviter's friends earn the welcome bonus at most twice the reward cap (D-248)", async () => {
+    const inviter = await h.user("inviter-cap@example.com");
+    const friends: string[] = [];
+    for (let i = 0; i < 3; i++) {
+      const f = await h.user(`invited-cap-${i}@example.com`);
+      await h.request("/v1/orgs", {
+        method: "POST",
+        token: f.token,
+        json: { name: `Friend ${i}` },
+      });
+      await db().execute(
+        sql`update auth.users set email_confirmed_at = now() where id = ${f.id}::uuid`,
+      );
+      await db().execute(
+        sql`insert into public.referrals (invitee_id, inviter_id, code) values (${f.id}::uuid, ${inviter.id}::uuid, 'CAPTEST')`,
+      );
+      await db().execute(
+        sql`insert into public.analytics_milestones (user_id, milestone) values (${f.id}::uuid, 'first_value') on conflict do nothing`,
+      );
+      friends.push(f.id);
+    }
+    // A reward cap of 1: the welcome bonus goes to 2 friends, not 3.
+    await db().execute(sql`select * from public.worker_reward_referrals(2, 2, 1, 100)`);
+    const rows = await db().execute<{ welcome_usd: string | null }>(sql`
+      select welcome_usd from public.referrals where inviter_id = ${inviter.id}::uuid order by created_at`);
+    expect(rows.filter((r) => r.welcome_usd != null)).toHaveLength(2);
+  });
+
   it("media says which side runs on the server's key", () => {
     const side = {
       id: "x",

@@ -11,7 +11,8 @@ before risky steps. You can run it yourself, on any model.
 ### Is it free?
 
 Self-hosting is free, with no paywall or limits; you pay only your model provider and your server.
-Casama Cloud, the hosted service, has plans and credits.
+Casama Cloud, the hosted service, has a Free plan and paid plans (Plus, Pro and Max). Models,
+computers and voice there are paid from credits, counted in dollars (1 credit = $1).
 
 ### Which models can I use?
 
@@ -30,7 +31,8 @@ endpoint. Bots that browse the web or use cloud apps still need internet access 
 
 On a self-hosted server, only people with access to your server. Every table uses row-level
 security, so one workspace can't read another's data. Message content can be encrypted at rest.
-Telemetry is off unless the server owner turns it on. See [Privacy and security](/guide/privacy).
+The server sends no telemetry unless its owner turns it on. The official apps connected to your
+server send only crash reports and one anonymous daily ping. See [Privacy and security](/guide/privacy).
 
 ### Does the model see my passwords and API keys?
 
@@ -54,7 +56,7 @@ addresses, so a bot's computer can't reach your home or office network. See
 
 ### What do I need to self-host?
 
-A Linux server (or a Mac, for a trial) with Docker, and a domain if other people will connect. See [Self-hosting](/self-hosting/) for sizing.
+A Linux server (or a Mac, for a trial) with Docker, and a domain if other people will connect. See [Self-hosting](/self-hosting/) for sizing. To try it on your own Mac or Linux computer without a terminal, use **Run Casama on this computer** in the desktop app.
 
 ### How do I upgrade?
 

@@ -3,6 +3,7 @@ import {
   BillingSummary,
   BillingUsage,
   CheckoutRequest,
+  CheckoutResult,
   ConnectKey,
   CreateConnectKeyRequest,
   CreatedConnectKey,
@@ -49,7 +50,7 @@ export const createCheckout = createRoute({
   summary: "Start a web checkout (Dodo Payments) for a plan or credit pack",
   request: { params: orgParam, body: jsonBody(CheckoutRequest) },
   responses: {
-    200: jsonResponse("Checkout page", RedirectUrl),
+    200: jsonResponse("Checkout page, or the plan changed in place", CheckoutResult),
     400: e400,
     401: e401,
     403: e403,

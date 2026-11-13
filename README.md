@@ -41,16 +41,20 @@ every platform, the terminal, chat apps or your AI coding tools.
 - **You stay in charge**: autonomy levels, approvals, action rules, budgets, a loop guard and a full
   timeline of every run. [Autonomy](docs-site/guide/autonomy.md)
 - **Any model**: OpenAI, Anthropic, Google, xAI, OpenRouter or any OpenAI-compatible endpoint
-  (including local models), or sign in with a ChatGPT plan. [Bots and models](docs-site/guide/bots.md)
+  (including local models), or sign in with a ChatGPT plan. On Casama Cloud, Casama picks the models.
+  [Bots and models](docs-site/guide/bots.md)
 - **Connected to your tools**: built-in apps (GitHub, Notion, Linear, Slack, Google and more), MCP
   servers, plugins, password managers and device data, with secrets kept out of the model's sight.
   [Connections](docs-site/guide/connections.md)
 - **Everywhere you are**: apps for iOS, Android, macOS, Windows, Linux and the web; chat apps such as
   Telegram, Slack, WhatsApp, email and SMS; voice calls; group chats with several bots.
+- **An open gallery**: themes, skills, apps, starter bots, routine ideas and plugins that anyone can add
+  with a pull request, and every app picks up without a release. [Gallery](gallery/README.md)
 - **Built to build on**: an HTTP API, a CLI, a Dart SDK, an MCP server for AI apps, plugins,
   bot templates and agent-to-agent (A2A). [Build on Casama](docs-site/develop/api.md)
-- **Private by design**: row-level security on every table, encryption at rest, data export and
-  deletion, and telemetry off unless you turn it on. [Privacy](docs-site/guide/privacy.md)
+- **Private by design**: row-level security on every table, encryption at rest with replaceable keys,
+  data export and deletion. A self-hosted server sends no telemetry unless you turn it on, and the
+  official apps have a switch for analytics. [Privacy](docs-site/guide/privacy.md)
 
 ## Self-host in about 15 minutes
 
@@ -62,11 +66,14 @@ git clone https://github.com/stackwares/casama && cd casama
 ./install.sh --domain casama.example.com      # or a server with a domain pointed at it
 ```
 
-Then open the app, choose your server under **More options** on the sign-in screen, and create the
-first account, which becomes the server's owner. The full guide covers requirements, configuration,
+Then open the app, choose your server under **More Options** on the sign-in screen, and create the
+first account, which becomes the server's owner. On a Mac or Linux, the downloaded desktop app can
+also do all of this for you: **More Options** → **Run Casama on This Computer** on the sign-in screen
+(it needs Docker and about 10 GB of disk). The full guide covers requirements, configuration,
 upgrades and backups: [Self-hosting](docs-site/self-hosting/index.md).
 
-Self-hosting has no paywall and no limits. Casama Cloud, the hosted service, is optional, and
+Self-hosting has no paywall and no limits. Casama Cloud, the hosted service, is optional (a free plan,
+then Plus, Pro and Max from $15 a month), and
 [Cloud Connect](docs-site/guide/cloud-connect.md) lets your own server borrow its computers or model
 credits.
 

@@ -136,6 +136,7 @@ lib/src/model/chat_gpt_sign_in_complete_request.dart
 lib/src/model/chat_gpt_sign_in_start.dart
 lib/src/model/chat_gpt_sign_in_start_request.dart
 lib/src/model/checkout_request.dart
+lib/src/model/checkout_result.dart
 lib/src/model/checkpoint.dart
 lib/src/model/checkpoint_created_event.dart
 lib/src/model/checkpoint_created_event_payload.dart

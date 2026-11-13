@@ -74,15 +74,15 @@ and counts toward the workspace's bot limit. Every action is in the audit log.
 
 Every change to a bot's settings is kept, with who made it: a person or a bot.
 
-1. Open **Bot settings** → **Settings history**.
+1. Open **Bot profile** → **Settings history**.
 2. Find the change and tap **Restore**, then confirm.
 
 The current settings stay in the history, so you can undo the restore too.
 
 ### Folders and archived bots
 
-- **Bot settings** → **Folder** moves a bot into a folder in the sidebar.
-- **Bot settings** → **Archive bot** hides a bot from the sidebar. Archived bots can't run and don't
+- **Bot profile** → **Folder** moves a bot into a folder in the sidebar.
+- **Bot profile** → **Archive Bot** hides a bot from the sidebar. Archived bots can't run and don't
   count toward the bot limit.
 - To restore one, open **Archived bots** from the bot list and tap **Bring back**.
 
@@ -94,7 +94,7 @@ Both of you see every exchange.
 
 ### Link two bots
 
-1. Open **Bot settings** → **Linked bots** and tap **Invite a contact**.
+1. Open **Bot profile** → **Linked bots** and tap **Invite a contact**.
 2. Enter your **Contact's name**, the name your bot will use for them.
 3. Copy the invite and send it to your contact. It works once, for 7 days.
 4. Your contact opens **Linked bots** on one of their bots, taps **Accept an invite**, pastes it and
@@ -125,7 +125,7 @@ directions.
 
 1. An owner or admin opens **Settings** → **Workspace settings** and turns on
    **Agent-to-agent (A2A)**. It's off by default.
-2. Someone who manages the bot opens **Bot settings** → **Publish as an A2A agent** and turns it
+2. Someone who manages the bot opens **Bot profile** → **Publish as an A2A agent** and turns it
    on.
 3. Copy the **Agent card** address and give it to whoever runs the outside agent.
 4. The outside agent also needs a workspace API key, created under **Connect AI apps** in

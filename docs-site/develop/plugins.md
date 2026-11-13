@@ -241,6 +241,9 @@ something, as the GitHub Action does by default.
 naming the repository folder and the exact commit to review. People who add it from the directory
 get that commit; a newer version is another pull request that changes `commit`.
 
+A bot can also suggest a plugin in chat. The card opens the same install sheet, so the person
+still sees what it adds and enters its secrets.
+
 **Updates:** push a new commit. People press **Check for update** on the plugin's page and see
 what changed (skills and servers added, changed or removed, new hosts, new secrets) before updating.
 Tag releases and keep `version` current so the change is easy to read.
@@ -271,7 +274,8 @@ curl -s -X POST "https://casama.example.com/v1/plugins" \
 
 | Endpoint | What it does |
 | --- | --- |
-| `POST /v1/plugins/preview` | What a plugin at a GitHub URL would add |
+| `GET /v1/plugin-directory` | The reviewed plugins from the gallery, each with its pinned commit |
+| `POST /v1/plugins/preview` | What a plugin at a GitHub URL would add, at the latest commit or the `commit` you pass |
 | `POST /v1/plugins` | Install it for a bot, pinned to a commit |
 | `GET /v1/plugins?bot_id=...` | A bot's plugins, with each server's status and tools |
 | `GET /v1/plugins/{id}/update` | The latest commit and what would change |
@@ -285,7 +289,6 @@ curl -s -X POST "https://casama.example.com/v1/plugins" \
 - Plugins are installed per bot, not for a whole workspace.
 - `stdio` servers run on the bot's computer; running them on a person's own computer through the
   desktop companion isn't supported yet.
-- There's no plugin directory in the app yet: share your link.
 
 ## Related
 

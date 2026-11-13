@@ -18,7 +18,7 @@ routines never needs your approval. What the routine later does still goes throu
 To create one yourself:
 
 1. Open the bot's chat, open the **More** menu and tap **Routines**. You can also go to
-   **Bot settings → Routines**.
+   **Bot profile → Routines**.
 2. Tap **New routine**.
 3. Enter a **Name** and **Instructions**: what the bot should do each time. Or tap one of the
    **Ideas** at the top (a weekly review, a morning plan, bill reminders…) to fill in the name,
@@ -132,8 +132,8 @@ never sees your events.
 | Notification | A notification arrives from an app you picked. One-time codes are masked. | Android's notification access |
 | File added | A new file appears in a watched folder, optionally matching a pattern such as `*.pdf`. | Watched folders in the desktop app |
 
-Set up places, watched apps and watched folders in **Settings → Device connections**. Casama keeps
-only place names and times, never a location trail. See [Devices](/guide/devices) for setup and
+Set up places, watched apps and watched folders in **Settings → Advanced → Device connections**.
+Casama keeps only place names and times, never a location trail. See [Devices](/guide/devices) for setup and
 privacy details.
 
 The routine starts as soon as the event reaches the server. A retried upload never starts it twice.
@@ -176,7 +176,7 @@ How watchers work:
   gets a run with what changed, your condition and what to do, and decides whether it counts.
 - A watcher can expire after a set number of days.
 
-To manage them, open **Bot settings → Watchers**. Each shows **Watching**, **Paused**, **Done** or
+To manage them, open **Bot profile → Watchers**. Each shows **Watching**, **Paused**, **Done** or
 **Expired** and how many times it fired. Use **Pause**, **Resume** or **Delete**, or open it to see
 its conversation.
 
@@ -184,26 +184,59 @@ Watchers fetch outside pages, so creating one follows the bot's normal approval 
 
 ## Check-ins
 
-Check-ins give you a morning brief from a bot and a look every few hours for things that need you.
-They're off by default.
+Check-ins are how a bot reaches out first: a morning brief, and a look every few hours for things
+that need you, like a trip to plan or an email to answer. Your first bot, the one from the welcome
+chat, starts with them on. Other bots start with them off.
 
-1. Open **Bot settings → Check-ins**.
+1. Open **Bot profile → Check-Ins**.
 2. Turn them on and set **Morning brief at** (8:00 by default), **Look every** (1 to 24 hours,
    default 3) and **Daily limit** (default $1).
 3. Tap **Save**.
 
 Briefs and suggestions go to the person who turned check-ins on, in their timezone. They appear in
-**Inbox → For you**:
+the **Inbox**:
 
-- **Morning brief from {bot}**: the latest brief from each bot.
-- **Suggestions**: things the bot thinks you should act on. Tap **Do it** to start a chat asking
-  the bot to do it (its actions still go through approvals), or **Dismiss** and choose **Just this
-  once** or **Don't suggest it again**.
+- **Morning brief from {bot}**: the latest brief from each bot, under **Briefs**.
+- **Suggestions**: things the bot thinks you should act on, under **Needs you**, each with the
+  bot's own one-line take. Tap **Do it** to start a chat asking the bot to do it (its actions still
+  go through approvals), or **Dismiss** and choose **Just this once** or **Don't suggest it
+  again**.
+
+A suggestion also arrives as a push from the bot, in its own words, following your
+[attention rules](/guide/attention): low-urgency ones wait for your brief, and a suggestion tied to
+a time (leaving for the airport, booking a ride before a show) can wait until then. On iPhone and
+Android the push has **Do it** and **Not now** buttons. **Do it** opens the chat with the bot
+working on it; **Not now** clears the push and leaves the suggestion in your inbox.
+
+The bot also takes an extra look when there's something new to look at:
+
+- **After setup.** Once the welcome chat or the setup interview is done, the bot looks around and
+  sends one push summing up what it found ("You're all set. Found 3 things to start on…").
+- **After you connect an app**, a few minutes later.
+- **When something happens**: new mail or a calendar change in Gmail, Google Calendar or Outlook
+  connected through Composio (when the server has Composio's events set up), or a new event in the
+  next 7 days on a calendar your phone shares. At most every 30 minutes, and not on the Free plan.
+
+To save money, scheduled looks skip your quiet hours (the brief covers the night). If you haven't
+opened Casama for a week, the bot looks at most once a day, and after a month it stops until
+you're back.
 
 Check-ins use the bot's cheap model when it has one, and stop for the day once they reach the daily
-limit. A look that finds nothing writes nothing and sends nothing. Only urgent suggestions send a
-notification. If your phone shares health data, the brief can also run when you wake up, and the
-scheduled time becomes the fallback.
+limit. Their cost comes out of your usage like any other run. A look that finds nothing writes
+nothing and sends nothing. If your phone shares health data, the brief can also run when you wake
+up, and the scheduled time becomes the fallback.
+
+On Casama Cloud, plans limit how many bots can check in and how often they look:
+
+| Plan | Bots with check-ins | Look at most every | Looks when something happens |
+| --- | --- | --- | --- |
+| **Free** | 1 | 12 hours | No |
+| **Plus** | 2 | 3 hours | Yes |
+| **Pro** | 5 | 1 hour | Yes |
+| **Max** | 20 | 1 hour | Yes |
+
+Going past a limit opens the paywall. After a downgrade, the oldest bots keep their check-ins.
+Self-hosted servers have no such limits.
 
 ## Limits
 
