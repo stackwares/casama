@@ -65,6 +65,7 @@ import {
   type Usage,
 } from "./gateway/types.ts";
 import {
+  composioToolRisk,
   createAdapter,
   type IntegrationToolInfo,
   integrationToolName,
@@ -114,7 +115,14 @@ const handOffMessage = (why: string) =>
 import { contentKeys } from "@casama/db";
 import { endRunSpan, recordRunSpan, runTraceId, startRunChildSpan } from "@casama/observability";
 import { deviceDataOfRun } from "./attention.ts";
-import { afterCheckinRun } from "./checkins.ts";
+import {
+  afterCheckinRun,
+  CHECKIN_APPROVAL_NOTE,
+  CHECKIN_MAX_STEPS,
+  CHECKIN_TOOL_OUTPUT_CHARS,
+  checkinToolAllowed,
+  isCheckinKind,
+} from "./checkins.ts";
 import {
   DEFAULT_LAZY_THRESHOLD,
   isCoreTool,
@@ -407,6 +415,9 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     ...deps.limits,
     ...(info.wallTimeMs ? { wallTimeMs: info.wallTimeMs } : {}),
   };
+  // Check-ins read and suggest in a few steps (D-247 costs).
+  if (isCheckinKind(info.routine?.kind))
+    limits.maxSteps = Math.min(limits.maxSteps, CHECKIN_MAX_STEPS);
 
   // In-process caches only (never persisted in step outputs): keys, secrets and the redactor.
   let redactorCache: Redactor | undefined;
@@ -596,12 +607,17 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           };
         })
       : null;
-    const available = registry.available(
-      { computer: !!deps.computers, desktop, vision: caps.vision },
-      allowed ? (name) => allowed.some((a) => name === a || name.startsWith(`${a}.`)) : undefined,
-    );
+    // Check-ins (D-247 costs) get only reads and suggestions.add, all sent up front: no computer,
+    // no tools.load round trips.
+    const checkinRun = isCheckinKind(info.routine?.kind);
+    const available = registry
+      .available(
+        { computer: !!deps.computers, desktop, vision: caps.vision },
+        allowed ? (name) => allowed.some((a) => name === a || name.startsWith(`${a}.`)) : undefined,
+      )
+      .filter((t) => !checkinRun || checkinToolAllowed(t));
     // Lazy tool loading (D-106): many tools → core tools, tools.load and an index of the rest.
-    const threshold = deps.lazyToolsThreshold ?? DEFAULT_LAZY_THRESHOLD;
+    const threshold = checkinRun ? 0 : (deps.lazyToolsThreshold ?? DEFAULT_LAZY_THRESHOLD);
     const canLoad = !!registry.get(TOOLS_LOAD);
     const native = !!caps.deferredTools && threshold > 0 && available.length > threshold;
     const lazy = canLoad && !native ? planLazyTools(available, threshold) : null;
@@ -2919,6 +2935,9 @@ async function approvalGate(
       forceHighRisk: onLocal,
     });
   if (!needed) return { approvalId: null };
+  // Nobody is waiting on a check-in: what would need a yes becomes a suggestion (D-247).
+  if (isCheckinKind(info.routine?.kind))
+    return { approvalId: null, handOff: CHECKIN_APPROVAL_NOTE };
 
   // Some tools show more than their arguments, such as a skill's diff (D-104).
   const details = def.approvalDetails
@@ -3179,7 +3198,11 @@ async function loadIntegrationTools(
         fullName: integrationToolName({ kind: row.kind as "mcp", name: row.name }, t.name),
         description: t.description.slice(0, 1000),
         inputSchema: t.inputSchema ?? { type: "object" },
-        risk: row.risk_overrides?.[t.name] ?? t.risk ?? "medium",
+        // Composio tools cached before reads were told apart (D-247) get their risk from the slug.
+        risk:
+          row.risk_overrides?.[t.name] ??
+          t.risk ??
+          (row.kind === "composio" ? composioToolRisk(t.name) : "medium"),
       });
     }
   }
@@ -3244,10 +3267,15 @@ function integrationDefs(
             }, 1000)
           : undefined;
       try {
-        const text = await adapter.callTool(spec.tool, args, {
+        const full = await adapter.callTool(spec.tool, args, {
           signal: ctrl.signal,
           onProgress: (t) => void ctx.output(`${t}\n`).catch(() => {}),
         });
+        // Check-ins read a lot of mail: each result is capped so a scan stays a few cents.
+        const text =
+          isCheckinKind(info?.routine?.kind) && full.length > CHECKIN_TOOL_OUTPUT_CHARS
+            ? `${full.slice(0, CHECKIN_TOOL_OUTPUT_CHARS)}\n[cut: ask for fewer items or a narrower search]`
+            : full;
         // A call through the server's own Composio account costs Casama per call (D-244).
         if (rec.kind === "composio" && rec.config.managed === true) {
           const cost = COMPOSIO_CALL_USD;

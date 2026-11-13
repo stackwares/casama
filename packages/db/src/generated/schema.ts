@@ -1743,6 +1743,7 @@ export const botCheckins = pgTable("bot_checkins", {
 	scanRequestedAt: timestamp("scan_requested_at", { withTimezone: true, mode: 'string' }),
 	scanReason: text("scan_reason"),
 	welcomedAt: timestamp("welcomed_at", { withTimezone: true, mode: 'string' }),
+	scanNote: text("scan_note"),
 }, (table) => [
 	foreignKey({
 			columns: [table.botId],

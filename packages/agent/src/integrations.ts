@@ -455,6 +455,7 @@ export class ComposioAdapter implements IntegrationAdapter {
           name: String(t.slug).toLowerCase(),
           description: str(t.description) ?? str(t.name) ?? String(t.slug),
           inputSchema: (t.input_parameters as Record<string, unknown>) ?? { type: "object" },
+          risk: composioToolRisk(String(t.slug), t.tags),
         });
       }
     }
@@ -469,6 +470,31 @@ export class ComposioAdapter implements IntegrationAdapter {
     if (r.successful === false) throw new Error(textOf(r.error ?? "Composio tool failed"));
     return textOf(r.data ?? r);
   }
+}
+
+/** Words in a Composio tool slug that mean it changes something. */
+const COMPOSIO_WRITE_WORDS = new Set(
+  "send create delete update add move remove modify patch insert reply forward trash untrash archive star unstar mark set post upload share invite accept decline respond cancel book quick import clear empty execute run stop start batch rename copy apply assign close merge publish schedule subscribe unsubscribe enable disable revoke approve reject transfer pay".split(
+    " ",
+  ),
+);
+const COMPOSIO_READ_WORDS = new Set(
+  "fetch get list search find read retrieve query lookup describe view count download".split(" "),
+);
+
+/**
+ * A Composio tool's risk from its tags (MCP-style hints) or, without them, its slug: a read
+ * ("GMAIL_FETCH_EMAILS", "GOOGLECALENDAR_EVENTS_LIST") is low, so reading the person's own mail and
+ * calendar doesn't stop to ask (check-ins read unattended, D-247); anything that names a change,
+ * or isn't clearly a read, stays medium.
+ */
+export function composioToolRisk(slug: string, tags: unknown = []): Risk {
+  const t = Array.isArray(tags) ? tags.map((x) => String(x).toLowerCase()) : [];
+  if (t.includes("destructivehint")) return "high";
+  if (t.includes("readonlyhint")) return "low";
+  const words = slug.toLowerCase().split(/[^a-z]+/);
+  if (words.some((w) => COMPOSIO_WRITE_WORDS.has(w))) return "medium";
+  return words.some((w) => COMPOSIO_READ_WORDS.has(w)) ? "low" : "medium";
 }
 
 // ---------------------------------------------------------------------------

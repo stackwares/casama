@@ -43,11 +43,17 @@ export async function createRoutineRun(
   if (r.kind === "scan") {
     // Proactive bots (D-247): why this scan runs now (setup, a new app, an app event, or its
     // schedule), and today's wording for scans made with the original instructions.
-    const reason = await takeScanRequest(tx as Database, r.bot_id);
+    const request = await takeScanRequest(tx as Database, r.bot_id);
+    const reason = request?.reason ?? null;
     const instructions = r.instructions_md.startsWith("Check-in scan.")
       ? SCAN_INSTRUCTIONS
       : r.instructions_md;
-    const task = scanTask(instructions, reason, await scanContext(tx as Database, r.bot_id));
+    const task = scanTask(
+      instructions,
+      reason,
+      await scanContext(tx as Database, r.bot_id),
+      request?.note ? wrapUntrusted("app event", request.note) : null,
+    );
     const [run] = await tx.execute<{ id: string }>(sql`
       insert into public.runs (org_id, bot_id, created_by, trigger, routine_id, budget)
       values (${r.org_id}::uuid, ${r.bot_id}::uuid, ${r.created_by}::uuid, ${trigger}, ${r.id}::uuid, ${JSON.stringify({ task, ...(reason ? { scan_reason: reason } : {}) })}::jsonb)

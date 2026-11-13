@@ -159,13 +159,20 @@ describe("proactive bots", () => {
       order by created_at desc limit 1`;
     expect(run?.reason).toBe("setup");
     expect(run?.task).toContain("You're all set.");
-    const notes = await h.tdb.admin<{ kind: string; payload: { title: string; body: string } }[]>`
-      select kind, payload from public.notifications where user_id = ${owner.id} order by created_at`;
+    // The summary goes out just after the run finishes, so wait for it rather than racing it.
+    let notes: { kind: string; payload: { title: string; body: string } }[] = [];
+    for (let i = 0; i < 100 && !notes.length; i++) {
+      notes = await h.tdb.admin<{ kind: string; payload: { title: string; body: string } }[]>`
+        select kind, payload from public.notifications where user_id = ${owner.id} order by created_at`;
+      if (!notes.length) await new Promise((res) => setTimeout(res, 100));
+    }
     expect(notes.map((n) => n.kind)).toEqual(["checkin_summary"]);
     expect(notes[0]?.payload).toMatchObject({
       title: "Aide",
       body: "You're all set. Found 1 thing to start on, like booking a ride to the concert tomorrow night.",
     });
+    for (let i = 0; i < 50 && !push.sent.length; i++)
+      await new Promise((res) => setTimeout(res, 100));
     expect(push.sent.map((p) => p.message.title)).toEqual(["Aide"]);
     const [s] = await h.tdb.admin<{ push_text: string }[]>`
       select push_text from public.suggestions where bot_id = ${botId}`;
@@ -187,7 +194,7 @@ describe("proactive bots", () => {
       .admin`update public.bot_checkins set scan_requested_at = null, scan_reason = null where bot_id = ${botId}`;
   });
 
-  it("Composio events are verified and start a scan, at most every 30 minutes", async () => {
+  it("Composio events are verified and start a scan, at most every 2 hours", async () => {
     const body = JSON.stringify({
       id: "msg_1",
       type: "composio.trigger.message",
@@ -201,8 +208,11 @@ describe("proactive bots", () => {
     expect(res.status).toBe(200);
     expect((await j(res)).scans).toBe(1);
     const [rt] = await h.tdb.admin<{ soon: boolean }[]>`
-      select next_run_at between now() + interval '20 minutes' and now() + interval '31 minutes' as soon from public.routines where bot_id = ${botId} and kind = 'scan'`;
+      select next_run_at between now() + interval '110 minutes' and now() + interval '121 minutes' as soon from public.routines where bot_id = ${botId} and kind = 'scan'`;
     expect(rt?.soon).toBe(true); // the setup scan just ran
+    const [ck] = await h.tdb.admin<{ note: string | null }[]>`
+      select scan_note as note from public.bot_checkins where bot_id = ${botId}`;
+    expect(ck?.note).toBe("New email: Your flight on Sunday"); // handed to the scan
     expect(
       verifyComposioSignature(
         SECRET,
@@ -255,7 +265,7 @@ describe("proactive bots", () => {
       token: owner.token,
       json: { name: "Phone", platform: "ios", kinds: { calendar: {} } },
     });
-    const t = new Date(Date.now() + 2 * 86_400_000);
+    const t = new Date(Date.now() + 86_400_000);
     const up = await h.request("/v1/device-sources/phone-key-0001/readings", {
       method: "POST",
       token: owner.token,
@@ -272,11 +282,74 @@ describe("proactive bots", () => {
       },
     });
     expect(up.status).toBe(200);
-    const [ck] = await h.tdb.admin<{ reason: string | null }[]>`
+    const [ck] = await h.tdb.admin<{ reason: string | null; note: string | null }[]>`
+      select scan_reason as reason, scan_note as note from public.bot_checkins where bot_id = ${botId}`;
+    expect(ck?.reason).toBe("event");
+    expect(ck?.note).toContain("Phone calendar: Concert at ");
+    await h.tdb
+      .admin`update public.bot_checkins set scan_requested_at = null, scan_reason = null, scan_note = null where bot_id = ${botId}`;
+  });
+
+  it("saves cost: newsletters, no-reply mail and far-off calendar changes don't scan; a few a day", async () => {
+    await h.tdb
+      .admin`update public.routines set last_run_at = now() - interval '3 hours' where bot_id = ${botId} and kind = 'scan'`;
+    const event = (slug: string, data: Record<string, unknown>) =>
+      JSON.stringify({
+        id: "msg_1",
+        type: "composio.trigger.message",
+        metadata: { trigger_slug: slug, trigger_id: "ti_mail", user_id: orgId },
+        data,
+      });
+    const scans = async (body: string) => (await j(await hook(body))).scans;
+    const mail = "GMAIL_NEW_GMAIL_MESSAGE";
+    expect(
+      await scans(
+        event(mail, {
+          sender: "Shop <deals@shop.example>",
+          label_ids: ["INBOX", "CATEGORY_PROMOTIONS"],
+        }),
+      ),
+    ).toBe(0);
+    expect(
+      await scans(
+        event(mail, { sender: "GitHub <notifications@github.com>", subject: "CI passed" }),
+      ),
+    ).toBe(0);
+    expect(
+      await scans(event(mail, { sender: "no-reply@bank.example", subject: "Statement" })),
+    ).toBe(0);
+    const far = new Date(Date.now() + 5 * 86_400_000).toISOString();
+    expect(
+      await scans(
+        event("GOOGLECALENDAR_GOOGLE_CALENDAR_EVENT_CREATED_TRIGGER", {
+          summary: "Dentist",
+          start: { dateTime: far },
+        }),
+      ),
+    ).toBe(0);
+    let [ck] = await h.tdb.admin<{ reason: string | null }[]>`
+      select scan_reason as reason from public.bot_checkins where bot_id = ${botId}`;
+    expect(ck?.reason).toBeNull();
+    // Six event scans in the last day: the seventh waits for the schedule.
+    const [rt] = await h.tdb.admin<{ id: string }[]>`
+      select id from public.routines where bot_id = ${botId} and kind = 'scan'`;
+    for (let i = 0; i < 6; i++)
+      await h.tdb.admin`
+        insert into public.runs (org_id, bot_id, trigger, routine_id, status, budget)
+        values (${orgId}, ${botId}, 'schedule', ${rt!.id}, 'completed', '{"scan_reason": "event"}'::jsonb)`;
+    expect(
+      await scans(event(mail, { sender: "Ana Ruiz <ana@example.com>", subject: "Q3 invoice" })),
+    ).toBe(0);
+    await h.tdb.admin`
+      delete from public.runs where bot_id = ${botId} and budget ->> 'scan_reason' = 'event' and budget ->> 'task' is null`;
+    expect(
+      await scans(event(mail, { sender: "Ana Ruiz <ana@example.com>", subject: "Q3 invoice" })),
+    ).toBe(1);
+    [ck] = await h.tdb.admin<{ reason: string | null }[]>`
       select scan_reason as reason from public.bot_checkins where bot_id = ${botId}`;
     expect(ck?.reason).toBe("event");
     await h.tdb
-      .admin`update public.bot_checkins set scan_requested_at = null, scan_reason = null where bot_id = ${botId}`;
+      .admin`update public.bot_checkins set scan_requested_at = null, scan_reason = null, scan_note = null where bot_id = ${botId}`;
   });
 
   it("saves cost: no scans in quiet hours, slower when idle, none after 30 days away", async () => {

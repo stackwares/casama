@@ -172,6 +172,66 @@ function eventTarget(p: Record<string, unknown>) {
   };
 }
 
+const SKIP_LABELS = new Set([
+  "CATEGORY_PROMOTIONS",
+  "CATEGORY_SOCIAL",
+  "CATEGORY_UPDATES",
+  "CATEGORY_FORUMS",
+  "SPAM",
+  "TRASH",
+  "SENT",
+  "DRAFT",
+]);
+/** Senders that are machines: receipts, alerts, newsletters, CI. */
+const AUTOMATED_SENDER =
+  /(^|[<\s"])(no[-_.]?reply|do[-_.]?not[-_.]?reply|notifications?|notify|alerts?|mailer[-_.]daemon|postmaster|newsletters?|news|digest|marketing|updates|bounce)[@+.-]/i;
+const EVENT_HORIZON_MS = 48 * 60 * 60_000;
+
+/**
+ * Whether an app event is worth a scan (D-247 costs), and the note the scan starts from. Mail
+ * from a person (not promotions, updates, newsletters or no-reply senders) and calendar changes in
+ * the next 48 hours are; everything else waits for the scheduled scan. Unknown shapes count.
+ */
+export function composioEventNote(
+  payload: Record<string, unknown>,
+  now = Date.now(),
+): { scan: boolean; note: string | null } {
+  const meta = (payload.metadata ?? {}) as Record<string, unknown>;
+  const data = (payload.data ?? {}) as Record<string, unknown>;
+  const s = (v: unknown) => (typeof v === "string" ? v : "");
+  const slug = (s(meta.trigger_slug) || s(data.trigger_slug) || s(payload.type)).toUpperCase();
+  if (slug.includes("GMAIL") || slug.includes("OUTLOOK")) {
+    const labels = Array.isArray(data.label_ids) ? data.label_ids.map(String) : [];
+    if (labels.some((l) => SKIP_LABELS.has(l))) return { scan: false, note: null };
+    if (s(data.inferenceClassification).toLowerCase() === "other")
+      return { scan: false, note: null };
+    const from = (data.from ?? {}) as { emailAddress?: { name?: string; address?: string } };
+    const sender =
+      s(data.sender) ||
+      [from.emailAddress?.name, from.emailAddress?.address && `<${from.emailAddress.address}>`]
+        .filter(Boolean)
+        .join(" ");
+    if (sender && AUTOMATED_SENDER.test(sender)) return { scan: false, note: null };
+    const subject = s(data.subject) || s((data.preview as Record<string, unknown>)?.subject);
+    return {
+      scan: true,
+      note: `New email${sender ? ` from ${sender}` : ""}${subject ? `: ${subject}` : ""}`,
+    };
+  }
+  if (slug.includes("CALENDAR")) {
+    const ev = (data.event ?? data) as Record<string, unknown>;
+    const start = (ev.start ?? {}) as Record<string, unknown>;
+    const at = Date.parse(s(start.dateTime) || s(start.date) || s(ev.start_time));
+    if (Number.isFinite(at) && (at < now - 60 * 60_000 || at > now + EVENT_HORIZON_MS))
+      return { scan: false, note: null };
+    const title = s(ev.summary) || s(ev.title);
+    const when = Number.isFinite(at) ? ` at ${new Date(at).toISOString()}` : "";
+    const cancelled = s(ev.status) === "cancelled" ? " (cancelled)" : "";
+    return { scan: true, note: `Calendar change: ${title || "an event"}${when}${cancelled}` };
+  }
+  return { scan: true, note: null };
+}
+
 /**
  * A Composio event: verified, matched to the workspace whose connection it came from (by its
  * Composio user id and the trigger id we stored), then a scan request for each bot there that
@@ -193,6 +253,8 @@ export async function handleComposioEvent(
   }
   const target = eventTarget(payload);
   if (!target?.userId && !target?.triggerId) return { ok: true, scans: 0 };
+  const worth = composioEventNote(payload);
+  if (!worth.scan) return { ok: true, scans: 0 };
   const isUuid = (v: string | null) =>
     !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
   const [integration] = await db.execute<{ id: string; org_id: string }>(sql`
@@ -213,6 +275,6 @@ export async function handleComposioEvent(
       and (exists (select 1 from public.bot_integrations bi where bi.bot_id = ck.bot_id and bi.integration_id = ${integration.id}::uuid)
            or not exists (select 1 from public.bot_integrations bi where bi.integration_id = ${integration.id}::uuid))`);
   let scans = 0;
-  for (const b of bots) if (await requestScan(db, b.bot_id, "event")) scans++;
+  for (const b of bots) if (await requestScan(db, b.bot_id, "event", worth.note)) scans++;
   return { ok: true, scans };
 }
