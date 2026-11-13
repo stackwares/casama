@@ -28,6 +28,7 @@ import 'cron_words.dart';
 import '../../ui/celebration.dart';
 import '../../core/analytics.dart';
 import 'routine_ideas.dart';
+import 'edit_routine_sheet.dart';
 
 /// A bot's routines: one-time, repeating (cron in a timezone), or webhook-triggered.
 class RoutinesScreen extends ConsumerWidget {
@@ -184,6 +185,11 @@ class _RoutineCard extends ConsumerWidget {
     ref.invalidate(routinesProvider(routine.botId));
   }
 
+  Future<void> _edit(BuildContext context, WidgetRef ref) async {
+    final saved = await showAdaptiveSheet<bool>(context: context, builder: (_) => EditRoutineSheet(routine: routine));
+    if (saved == true) ref.invalidate(routinesProvider(routine.botId));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -206,6 +212,7 @@ class _RoutineCard extends ConsumerWidget {
     final tint = r.enabled ? scheme.primary : scheme.onSurfaceVariant;
     return AppCard(
       key: Key('routine-${r.id}'),
+      onTap: () => _edit(context, ref),
       padding: const EdgeInsets.fromLTRB(AppSpace.md, 14, AppSpace.xs, 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,6 +278,12 @@ class _RoutineCard extends ConsumerWidget {
                   }
                 },
                 child: Text(l10n.runNow),
+              ),
+              MenuItemButton(
+                key: Key('editRoutine-${r.id}'),
+                leadingIcon: const Icon(LucideIcons.pencil, size: 20),
+                onPressed: () => _edit(context, ref),
+                child: Text(l10n.edit),
               ),
               if (r.trigger != RoutineTrigger.once)
                 MenuItemButton(

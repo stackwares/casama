@@ -800,6 +800,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get routineName => 'Name';
 
   @override
+  String get routineEditTitle => 'Edit Routine';
+
+  @override
+  String get routineEditSubtitle => 'Change what it does and when it runs.';
+
+  @override
+  String get routineRecentRuns => 'Recent runs';
+
+  @override
+  String get routineNoRuns => 'It hasn\'t run yet.';
+
+  @override
+  String get routineSaved => 'Routine saved';
+
+  @override
   String get routineStarted => 'Routine started';
 
   @override

@@ -1039,6 +1039,12 @@ abstract class Backend {
   Future<void> deleteRoutine(String routineId);
   Future<String> runRoutine(String routineId);
 
+  /// Changes what a routine does and when (D-262's full update): only the fields given change.
+  Future<void> updateRoutine(String routineId, {String? name, String? instructions, String? scheduleCron, String? timezone, DateTime? runAt});
+
+  /// A routine's latest runs, newest first.
+  Future<List<RunSummary>> routineRuns(String routineId);
+
   // Integrations and secrets
   Future<List<Integration>> integrations(String orgId);
   Future<Integration> createIntegration(

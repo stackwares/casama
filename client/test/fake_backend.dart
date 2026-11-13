@@ -3022,6 +3022,29 @@ class FakeBackend implements Backend {
   }
 
   final uploads = <String, Uint8List>{};
+  /// Routine changes saved from the edit sheet: (id, fields).
+  final routineUpdates = <(String, Map<String, Object?>)>[];
+  @override
+  Future<void> updateRoutine(String routineId, {String? name, String? instructions, String? scheduleCron, String? timezone, DateTime? runAt}) async {
+    routineUpdates.add((routineId, {'name': name, 'instructions': instructions, 'schedule_cron': scheduleCron, 'timezone': timezone, 'run_at': runAt}));
+    final i = routineList.indexWhere((r) => r.id == routineId);
+    if (i >= 0) {
+      routineList[i] = Routine.fromJson({
+        ...routineList[i].toJson(),
+        'name': ?name,
+        'instructions_md': ?instructions,
+        'schedule_cron': ?scheduleCron,
+        'timezone': ?timezone,
+        if (runAt != null) 'next_run_at': runAt.toUtc().toIso8601String(),
+      });
+    }
+  }
+
+  /// What [routineRuns] returns.
+  List<RunSummary> routineRunList = [];
+  @override
+  Future<List<RunSummary>> routineRuns(String routineId) async => routineRunList;
+
   @override
   Future<String> runRoutine(String routineId) async {
     routinesRun.add(routineId);

@@ -2139,6 +2139,33 @@ class SupabaseBackend implements Backend {
   Future<String> runRoutine(String routineId) async =>
       (await api.routines.runRoutine(id: routineId)).data!.runId;
 
+  @override
+  Future<void> updateRoutine(String routineId, {String? name, String? instructions, String? scheduleCron, String? timezone, DateTime? runAt}) async =>
+      api.routines.updateRoutine(
+        id: routineId,
+        updateRoutineRequest: UpdateRoutineRequest(name: name, instructions: instructions, scheduleCron: scheduleCron, timezone: timezone, runAt: runAt?.toUtc()),
+      );
+
+  @override
+  Future<List<RunSummary>> routineRuns(String routineId) async {
+    final rows = await supabase
+        .from('runs')
+        .select('id, status, trigger, created_at, cost_usd')
+        .eq('routine_id', routineId)
+        .order('created_at', ascending: false)
+        .limit(10);
+    return [
+      for (final r in rows)
+        RunSummary(
+          id: r['id'] as String,
+          status: r['status'] as String,
+          trigger: r['trigger'] as String,
+          createdAt: DateTime.parse(r['created_at'] as String),
+          costUsd: double.tryParse('${r['cost_usd']}') ?? 0,
+        ),
+    ];
+  }
+
   // --- integrations and secrets ---------------------------------------------
 
   @override

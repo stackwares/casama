@@ -1468,6 +1468,36 @@ abstract class AppLocalizations {
   /// **'Name'**
   String get routineName;
 
+  /// No description provided for @routineEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Routine'**
+  String get routineEditTitle;
+
+  /// No description provided for @routineEditSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change what it does and when it runs.'**
+  String get routineEditSubtitle;
+
+  /// No description provided for @routineRecentRuns.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent runs'**
+  String get routineRecentRuns;
+
+  /// No description provided for @routineNoRuns.
+  ///
+  /// In en, this message translates to:
+  /// **'It hasn\'t run yet.'**
+  String get routineNoRuns;
+
+  /// No description provided for @routineSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine saved'**
+  String get routineSaved;
+
   /// No description provided for @routineStarted.
   ///
   /// In en, this message translates to:
