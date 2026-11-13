@@ -98,7 +98,12 @@ const loosens = (rule: string) => rule === "allow" || rule === "allow_within_lim
 
 export function registerSettingsTools(
   registry: ToolRegistry,
-  deps: { db: Database; fetch: typeof fetch },
+  deps: {
+    db: Database;
+    fetch: typeof fetch;
+    /** The gallery's apps (D-239), beyond the built-in catalog; the server supplies them. */
+    galleryApps?: () => Promise<Array<{ id: string; name: string }>>;
+  },
 ) {
   const { db } = deps;
   const audit = (ctx: ToolContext, action: string, type: string, id: string, meta: object) =>
@@ -399,7 +404,7 @@ export function registerSettingsTools(
   // do it and made up a request-from-your-admin step that doesn't exist.
   registry.register({
     name: "connections.offer",
-    description: `Show the person a card with a button per app that opens its sign-in, when they want to connect an app or you need one you don't have (if you already have the app's tools, use them instead). They sign in themselves; you can't. Never say an app needs an admin to enable it or must be requested: offer it here. "Google" usually means google_calendar and gmail. Apps: ${APP_CATALOG.map((a) => `${a.id} (${a.name})`).join(", ")}. You don't hear back when they connect; once they say so, check connections.list and connections.attach it if it isn't yours yet.`,
+    description: `Show the person a card with a button per app that opens its sign-in, when they want to connect an app or you need one you don't have (if you already have the app's tools, use them instead). They sign in themselves; you can't. Never say an app needs an admin to enable it or must be requested: offer it here. "Google" usually means google_calendar and gmail. Apps: ${APP_CATALOG.map((a) => `${a.id} (${a.name})`).join(", ")}. More come from the app gallery: for an app not listed, pass its name in lowercase with dashes (e.g. "cal-com") and an unknown one returns every id there is. You don't hear back when they connect; once they say so, check connections.list and connections.attach it if it isn't yours yet.`,
     risk: "low",
     readOnly: true,
     schema: z.object({
@@ -415,15 +420,24 @@ export function registerSettingsTools(
         .describe("One sentence for the person: what you'll do with it"),
     }),
     async execute(args, ctx) {
-      const apps = [...new Set(args.apps)].map((id) => {
-        const app = appByIdOrNull(id);
-        if (!app)
+      // Built-in apps first; the gallery's only when one isn't built in (never replacing one).
+      let gallery: Array<{ id: string; name: string; composio?: string }> | null = null;
+      const fromGallery = async () => {
+        gallery ??= deps.galleryApps ? await deps.galleryApps().catch(() => []) : [];
+        return gallery;
+      };
+      const apps: Array<{ id: string; name: string; composio?: string }> = [];
+      for (const id of new Set(args.apps)) {
+        const app = appByIdOrNull(id) ?? (await fromGallery()).find((a) => a.id === id);
+        if (!app) {
+          const all = [...APP_CATALOG, ...(await fromGallery())].map((a) => a.id);
           throw new ToolError(
             "unknown_app",
-            `No app called ${id}. Use ids from: ${APP_CATALOG.map((a) => a.id).join(", ")}.`,
+            `No app called ${id}. Use ids from: ${all.join(", ")}.`,
           );
-        return app;
-      });
+        }
+        apps.push(app);
+      }
       const ids = apps.map((a) => a.id);
       const have = await db.execute<{ app: string }>(sql`
         select distinct case when config ->> 'app' = 'gmail_inbox' then 'gmail' else config ->> 'app' end as app

@@ -190,8 +190,10 @@ if (env.MODE === "api") {
   const { startWorker } = await import("./worker/index.ts");
   const handle = env.BILLING_ENABLED ? createDb(env.DATABASE_URL, { max: 3 }) : undefined;
   if (handle) stoppers.push(handle.close);
+  const { galleryApps } = await import("./services/gallery.ts");
   const worker = await startWorker({
     egressExemptCidrs: allowCidrs,
+    galleryApps: () => galleryApps(env),
     billing: handle ? billingFromEnv(env, handle.db, logger) : undefined,
     telemetry:
       env.TELEMETRY === "on" ? { url: env.TELEMETRY_URL, version: CASAMA_VERSION } : undefined,

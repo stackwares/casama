@@ -171,6 +171,8 @@ export interface WorkerOptions {
   chatgpt?: { authUrl?: string; apiUrl?: string };
   /** Casama Cloud abuse controls (D-094): free workspaces need a verified owner email for computers. */
   requireVerifiedEmail?: boolean;
+  /** The gallery's apps (D-239), so bots can offer connect buttons for them too (D-259). */
+  galleryApps?: () => Promise<Array<{ id: string; name: string; composio?: string }>>;
 }
 
 function loadFixtures(paths: string): FixtureFile[] {
@@ -280,7 +282,7 @@ export async function startWorker(opts: WorkerOptions) {
   registerSkillTools(tools, { db });
   registerSetupTools(tools, { db });
   // Bots that change their own setup: connections, theme, rules, knowledge, notifications (D-242).
-  registerSettingsTools(tools, { db, fetch: fetchOut });
+  registerSettingsTools(tools, { db, fetch: fetchOut, galleryApps: opts.galleryApps });
   registerToolsLoad(tools);
   // Coding agents (D-097): on the bot's computer, the user's own computer, or Cursor's cloud.
   registerCodingTools(tools, {

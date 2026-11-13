@@ -3092,7 +3092,7 @@ Revises D-244 after comparing Rakazo, MausBot, OpenBot, Claude Duet, Grok Bot an
 - **Always loaded:** `connections.offer` is a core tool (`lazy-tools.ts`), so bots with many tools don't have to `tools.load` it first.
 - **Pointers:** an empty `connections.list` now points to `connections.offer`, and `setup.apply` tells the bot to offer the connections it proposed instead of sending the person to Settings.
 - **Composio-connected apps count:** an app connected through the managed Composio route has no row of its own, so the tool asks Composio which accounts are active (`managedComposioActive` in `integrations.ts`) and skips those too. A sign-in that was opened but never finished still gets a button. Before this, a person who had connected Gmail asked "can you read my inbox" and got a Connect Gmail card before the bot read it.
-- **Not covered:** gallery apps (D-239) aren't in the tool's list yet.
+- **Gallery apps:** the tool also accepts the gallery's apps (D-239). The worker passes `galleryApps` (the same cached, checked list the catalog route uses) into `registerSettingsTools`. Built-in ids win, and a gallery app never replaces one. Gallery ids stay out of the tool description so the cached prompt prefix doesn't change when the gallery does; the description tells the bot to try a lowercase, dashed id, and an unknown id returns every built-in and gallery id. If the gallery is off or can't be reached, only built-in apps are offered.
 
 ## D-260 One provider per voice and media job
 

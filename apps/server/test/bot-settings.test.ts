@@ -123,7 +123,11 @@ beforeAll(async () => {
       return Response.json({ items: composioAccounts });
     return fetch(url.replace("https://mcp.test", servicesUrl), init);
   }) as typeof fetch;
-  registerSettingsTools(reg, { db: h.handle.db, fetch: fakeFetch });
+  registerSettingsTools(reg, {
+    db: h.handle.db,
+    fetch: fakeFetch,
+    galleryApps: async () => [{ id: "cal-com", name: "Cal.com" }],
+  });
 }, 60_000);
 afterAll(async () => {
   await h?.stop();
@@ -241,7 +245,14 @@ describe("bot settings tools", () => {
     expect(ui).toContain('"name":"app:connect","context":{"app":"gmail"}');
     expect(ui).toContain("Connect Gmail");
     await expect(call("connections.offer", { apps: ["google"], why: "x" })).rejects.toThrow(
-      /No app called google/,
+      /No app called google\. Use ids from: .*gmail.*cal-com/,
+    );
+    // A gallery app gets a button too.
+    events.length = 0;
+    const gallery = await call("connections.offer", { apps: ["cal-com"], why: "Book meetings" });
+    expect(gallery.content).toMatch(/connect Cal\.com is in the chat/);
+    expect(JSON.stringify(events.map((e) => e.payload.messages))).toContain(
+      '"name":"app:connect","context":{"app":"cal-com"}',
     );
     await h.tdb.admin`
       insert into public.integrations (org_id, kind, name, config) values (${orgId}, 'mcp', 'gcal', '{"app":"google_calendar","url":"https://mcp.test/remote"}')`;
