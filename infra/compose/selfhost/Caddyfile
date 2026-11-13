@@ -9,7 +9,7 @@
 	}
 	# Keep in step with the API's top-level routes (and the Helm ingress list): a path missing here
 	# falls through to the web app, which isn't running on API-only installs, and answers 502.
-	@api path /v1/* /hooks/* /connect/* /telemetry/* /oauth/* /mcp /mcp/* /a2a/* /links/* /openapi.json /docs /docs/* /healthz /readyz /.well-known/apple-app-site-association /.well-known/assetlinks.json /.well-known/oauth-protected-resource /.well-known/oauth-protected-resource/* /.well-known/oauth-authorization-server
+	@api path /v1/* /hooks/* /connect/* /telemetry/* /telephony/* /oauth/* /mcp /mcp/* /a2a/* /links/* /openapi.json /docs /docs/* /healthz /readyz /.well-known/apple-app-site-association /.well-known/assetlinks.json /.well-known/oauth-protected-resource /.well-known/oauth-protected-resource/* /.well-known/oauth-authorization-server
 	handle @api {
 		reverse_proxy api:8787
 	}

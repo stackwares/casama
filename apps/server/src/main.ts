@@ -31,7 +31,7 @@ import { loadEnv, modelOverrides } from "./env.ts";
 import { createPagesApp } from "./pages/app.ts";
 import { abuseControlsOn } from "./services/abuse.ts";
 import { disabledEmail, resendEmail, smtpEmail } from "./services/email.ts";
-import { chromiumPdf } from "./services/pdf.ts";
+import { chromiumPdf, remotePdf } from "./services/pdf.ts";
 import { referralConfig } from "./services/referrals.ts";
 
 const env = loadEnv();
@@ -148,7 +148,11 @@ if (env.MODE === "api") {
             env.EMAIL_FROM,
           )
         : disabledEmail,
-    pdf: env.PDF_CHROMIUM_PATH ? chromiumPdf(env.PDF_CHROMIUM_PATH) : null,
+    pdf: env.PDF_RENDERER_URL
+      ? remotePdf(env.PDF_RENDERER_URL)
+      : env.PDF_CHROMIUM_PATH
+        ? chromiumPdf(env.PDF_CHROMIUM_PATH)
+        : null,
     readiness: { database: async () => void (await handle.db.execute(sql`select 1`)) },
     // Outbound calls to addresses people type (password managers, Infisical, invites, memory
     // backends) can't reach private networks unless allowed (audit 2026-11: SSRF).

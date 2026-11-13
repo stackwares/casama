@@ -291,6 +291,11 @@ export const EnvSchema = z.object({
   COMPOSIO_WEBHOOK_SECRET: z.string().optional(),
   /** Headless Chromium for page PDFs (unset: PDF export is off). */
   PDF_CHROMIUM_PATH: z.string().optional(),
+  /**
+   * A Gotenberg sidecar for page PDFs, e.g. http://pdf:3000 (compose profile `pdf`). Wins over
+   * PDF_CHROMIUM_PATH: Chromium keeps no sandbox inside the API's container, so it runs isolated.
+   */
+  PDF_RENDERER_URL: z.url().optional(),
 });
 export type Env = z.infer<typeof EnvSchema>;
 
