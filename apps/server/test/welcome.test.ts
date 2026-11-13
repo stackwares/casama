@@ -1,7 +1,7 @@
 /** Welcome chat (D-129): scripted questions, intro and connection card, first task, interview, "What I learned". */
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { type Harness, j, startHarness } from "./helpers.ts";
+import { type Harness, j, legacyWelcome, startHarness } from "./helpers.ts";
 
 const FIXTURES = fileURLToPath(new URL("./fixtures/welcome.json", import.meta.url));
 let h: Harness;
@@ -64,14 +64,8 @@ afterAll(async () => {
 });
 
 describe("welcome chat", () => {
-  it("creates a personal space, bot and chat that opens with the focus question", async () => {
-    w = await j(
-      await h.request("/v1/welcome", {
-        method: "POST",
-        token: ana.token,
-        json: { first_name: "ana" },
-      }),
-    );
+  it("a welcome chat already in progress asks the name, then the focus question", async () => {
+    w = await legacyWelcome(h, ana, { first_name: "ana" });
     expect(w).toMatchObject({ created: true });
     const [org] = await h.tdb.admin<
       { name: string }[]
@@ -95,6 +89,11 @@ describe("welcome chat", () => {
       { preferred_name: string }[]
     >`select preferred_name from public.profiles where user_id = ${ana.id}`;
     expect(profile?.preferred_name).toBe("Annie");
+    // The space was named from the sign-up name; it follows the name they chose.
+    const [renamed] = await h.tdb.admin<
+      { name: string }[]
+    >`select name from public.organizations where id = ${w.org_id}`;
+    expect(renamed?.name).toBe("Annie's space");
     const focus = await last();
     expect(focus[0]?.text).toBe("Nice to meet you, Annie!");
     expect(components(focus).find((c) => c.component === "ChoicePicker")).toBeTruthy();
@@ -251,7 +250,7 @@ describe("welcome chat", () => {
     ).toBe(409);
   });
 
-  it("a name given in the app's name step first skips the chat's name question", async () => {
+  it("a new person lands in an empty chat with their bot, like a new bot, with no welcome script", async () => {
     const bea = await h.user("bea@example.com");
     await h.request("/v1/me/about", {
       method: "PATCH",
@@ -261,24 +260,71 @@ describe("welcome chat", () => {
     const bw = await j(
       await h.request("/v1/welcome", { method: "POST", token: bea.token, json: {} }),
     );
-    const [m] = await h.tdb.admin<
-      { content: Part[] }[]
-    >`select content from public.messages where conversation_id = ${bw.conversation_id} and role = 'assistant'`;
-    const open = m?.content ?? [];
-    expect(open[0]?.text).toMatch(/^Hi Bea! I'm Casama/);
-    expect(components(open).find((c) => c.id === "name")).toBeFalsy();
-    expect(components(open).find((c) => c.component === "ChoicePicker")).toBeTruthy();
+    expect(bw).toMatchObject({ created: true });
+    const [conv] = await h.tdb.admin<
+      { purpose: string; welcome: unknown; personal: boolean; is_main: boolean; bot_id: string }[]
+    >`select purpose, welcome, personal, is_main, bot_id from public.conversations where id = ${bw.conversation_id}`;
+    expect(conv).toEqual({
+      purpose: "chat",
+      welcome: null,
+      personal: true,
+      is_main: true,
+      bot_id: bw.bot_id,
+    });
+    const msgs = await h.tdb
+      .admin`select 1 from public.messages where conversation_id = ${bw.conversation_id}`;
+    expect(msgs).toHaveLength(0);
+    const [bot] = await h.tdb.admin<
+      { name: string }[]
+    >`select name from public.bots where id = ${bw.bot_id}`;
+    expect(bot?.name).toBe("Casama");
+    // Checked in on by default (D-247), and asking again gives the same chat.
+    const [ck] = await h.tdb.admin<
+      { enabled: boolean }[]
+    >`select enabled from public.bot_checkins where bot_id = ${bw.bot_id}`;
+    expect(ck?.enabled).toBe(true);
+    expect(
+      await j(await h.request("/v1/welcome", { method: "POST", token: bea.token, json: {} })),
+    ).toMatchObject({ conversation_id: bw.conversation_id, created: false });
+  });
+
+  it("names the space from the onboarding name, and leaves a name they picked alone", async () => {
+    const cy = await h.user("cyrus.k@example.com");
+    await h.request("/v1/me/about", {
+      method: "PATCH",
+      token: cy.token,
+      json: { preferred_name: "Cy" },
+    });
+    const cw = await j(
+      await h.request("/v1/welcome", { method: "POST", token: cy.token, json: {} }),
+    );
+    const name = async () =>
+      (
+        await h.tdb.admin<
+          { name: string }[]
+        >`select name from public.organizations where id = ${cw.org_id}`
+      )[0]?.name;
+    expect(await name()).toBe("Cy's space");
+    // A new name later renames a space that still has the made-up name...
+    await h.request("/v1/me/about", {
+      method: "PATCH",
+      token: cy.token,
+      json: { preferred_name: "Cyrus" },
+    });
+    expect(await name()).toBe("Cyrus's space");
+    // ...but never one they named themselves.
+    await h.tdb.admin`update public.organizations set name = 'Kitchen' where id = ${cw.org_id}`;
+    await h.request("/v1/me/about", {
+      method: "PATCH",
+      token: cy.token,
+      json: { preferred_name: "Cee" },
+    });
+    expect(await name()).toBe("Kitchen");
   });
 
   it("answering the name elsewhere moves a waiting welcome chat on, once", async () => {
     const cy = await h.user("cy@example.com");
-    const cw = await j(
-      await h.request("/v1/welcome", {
-        method: "POST",
-        token: cy.token,
-        json: { first_name: "cy" },
-      }),
-    );
+    const cw = await legacyWelcome(h, cy, { first_name: "cy" });
     const messages = () =>
       h.tdb.admin<
         { role: string; content: Part[] }[]

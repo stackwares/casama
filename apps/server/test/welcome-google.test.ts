@@ -4,7 +4,7 @@ import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { type Harness, j, startHarness } from "./helpers.ts";
+import { type Harness, j, legacyWelcome, startHarness } from "./helpers.ts";
 
 const FIXTURES = fileURLToPath(new URL("./fixtures/welcome-google.json", import.meta.url));
 let h: Harness;
@@ -102,13 +102,7 @@ afterAll(async () => {
 
 describe("welcome chat: Google first", () => {
   it("asks for Calendar right after the name, in one short message saying it goes through Composio (D-255)", async () => {
-    w = await j(
-      await h.request("/v1/welcome", {
-        method: "POST",
-        token: gail.token,
-        json: { first_name: "gail" },
-      }),
-    );
+    w = await legacyWelcome(h, gail, { first_name: "gail" });
     await addKey(gail.token, w.org_id);
     await act(await last(), "welcome.name", { name: "Gail" }, "Gail");
     const card = await last();
@@ -178,13 +172,7 @@ describe("welcome chat: Google first", () => {
 
   it("connected from the card, the catch-up starts at once and the picks are skipped", async () => {
     const hal = await h.user("hal@example.com");
-    const hw = await j(
-      await h.request("/v1/welcome", {
-        method: "POST",
-        token: hal.token,
-        json: { first_name: "hal" },
-      }),
-    );
+    const hw = await legacyWelcome(h, hal, { first_name: "hal" });
     w = hw;
     gail = hal;
     await addKey(hal.token, hw.org_id);
@@ -221,13 +209,7 @@ describe("welcome chat: Google first", () => {
 
   it("'Not now' goes on to the picks, and the later connection card leaves Google out", async () => {
     const ivy = await h.user("ivy@example.com");
-    w = await j(
-      await h.request("/v1/welcome", {
-        method: "POST",
-        token: ivy.token,
-        json: { first_name: "ivy" },
-      }),
-    );
+    w = await legacyWelcome(h, ivy, { first_name: "ivy" });
     gail = ivy;
     await addKey(ivy.token, w.org_id);
     await act(await last(), "welcome.name", { name: "Ivy" }, "Ivy");

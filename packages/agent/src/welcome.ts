@@ -949,10 +949,15 @@ async function handleWelcomeActionInner(
         !ctx.skip && typeof ctx.name === "string"
           ? ctx.name.trim().replace(/\s+/g, " ").slice(0, 60)
           : "";
-      if (name)
+      if (name) {
+        const [was] = await db.execute<{ preferred_name: string | null }>(
+          sql`select preferred_name from public.profiles where user_id = ${c.userId}::uuid`,
+        );
         await db.execute(
           sql`update public.profiles set preferred_name = ${name} where user_id = ${c.userId}::uuid`,
         );
+        await renameDefaultSpaces(db, c.userId, name, was?.preferred_name);
+      }
       // An older copy of the card, answered after the chat moved on (welcomeNameAnswered): take
       // the name, but don't ask the focus question again.
       if (s.step !== "name")
@@ -1269,22 +1274,34 @@ export async function existingWelcome(db: Database, userId: string) {
   const [w] = await db.execute<{ org_id: string; bot_id: string; id: string }>(sql`
     select c.org_id, c.bot_id, c.id from public.conversations c
     where c.created_by = ${userId}::uuid and c.welcome is not null order by c.created_at limit 1`);
+  if (!w) {
+    // Since the welcome chat was dropped: the first bot's chat in the space they were given.
+    const [f] = await db.execute<{ org_id: string; bot_id: string; id: string }>(sql`
+      select c.org_id, c.bot_id, c.id from public.conversations c
+      join public.organizations o on o.id = c.org_id and o.created_by = ${userId}::uuid
+      join public.bots b on b.id = c.bot_id and b.created_by = ${userId}::uuid
+      where c.created_by = ${userId}::uuid and c.is_main
+      order by o.created_at, b.created_at, c.created_at limit 1`);
+    return f ? { orgId: f.org_id, botId: f.bot_id, conversationId: f.id } : null;
+  }
   return w ? { orgId: w.org_id, botId: w.bot_id, conversationId: w.id } : null;
 }
 
-/** In a new personal workspace: the personal bot and its welcome chat, with the scripted opening. */
+/**
+ * In a new personal workspace: the personal bot, with a model, and one empty chat with it. The
+ * person lands where a new bot lands: its empty chat, with apps to connect and starter requests.
+ * (The scripted welcome chat, D-129, is no longer started; chats already in it still work.)
+ */
 export async function startWelcome(
   db: Database,
   a: {
     orgId: string;
     userId: string;
-    firstName: string;
     botName: string;
     mascot?: string;
-    /** They already answered "What should bots call you?" (About you, D-169). */
-    nameKnown?: boolean;
-    /** How Google connects here; the Google card comes right after the name (D-204). */
-    google?: GoogleRoute | null;
+    modelOverrides?: Record<string, string | undefined>;
+    /** Casama Cloud's shared key gives the bot a model when the workspace has no key yet. */
+    platformModel?: boolean;
   },
 ): Promise<{ orgId: string; botId: string; conversationId: string }> {
   const out = await db.transaction(async (tx) => {
@@ -1293,18 +1310,54 @@ export async function startWelcome(
       values (${a.orgId}::uuid, ${a.userId}::uuid, ${a.botName}, ${`You are ${a.botName}, this person's personal assistant. Be warm, brief and practical.`},
               ${`mascot:${a.mascot ?? "winky"}`}, 'private')
       returning id`);
+    // A personal chat, so it becomes their General with the bot (D-253).
     const [conv] = await tx.execute<{ id: string }>(sql`
-      insert into public.conversations (org_id, bot_id, title, created_by, last_message_at, purpose, personal, welcome)
-      values (${a.orgId}::uuid, ${bot?.id}::uuid, 'Welcome', ${a.userId}::uuid, now(), 'welcome', true, ${JSON.stringify({ step: a.nameKnown ? (a.google ? "google" : "focus") : "name", focus: [], ...(a.google ? { google: a.google } : {}) })}::jsonb)
+      insert into public.conversations (org_id, bot_id, created_by, personal)
+      values (${a.orgId}::uuid, ${bot?.id}::uuid, ${a.userId}::uuid, true)
       returning id`);
-    await tx.execute(sql`
-      insert into public.messages (org_id, conversation_id, role, content, bot_id)
-      values (${a.orgId}::uuid, ${conv?.id}::uuid, 'assistant', ${contentKeys.sealJson(a.orgId, openingMessage(a.botName, a.firstName, a.nameKnown, a.google ?? undefined))}::jsonb, ${bot?.id}::uuid)`);
     return { orgId: a.orgId, botId: bot?.id as string, conversationId: conv?.id as string };
   });
-  // Proactive from the first minute (D-247): the welcome bot checks in by default, within the plan.
+  await ensureBotModel(db, out.botId, out.orgId, a.modelOverrides, a.platformModel).catch(
+    () => false,
+  );
+  // Proactive from the first minute (D-247): the first bot checks in by default, within the plan.
   await enableDefaultCheckins(db, { orgId: out.orgId, botId: out.botId, userId: a.userId }).catch(
     () => false,
   );
   return out;
+}
+
+/** The name a new workspace gets from its owner's first name: "Oliver's space", or "My space". */
+export function spaceName(first: string) {
+  const f = first.trim().replace(/\s+/g, " ");
+  return `${f ? `${f[0]?.toUpperCase()}${f.slice(1)}` : "My"}'s space`.slice(0, 80);
+}
+
+/**
+ * Renames the workspaces a person created to their new first name, but only those still carrying
+ * a name we made up for them (from the email, the sign-in name, the [previous] name they gave, or
+ * "My"), never one they named.
+ */
+export async function renameDefaultSpaces(
+  db: Database,
+  userId: string,
+  first: string,
+  previous?: string | null,
+) {
+  const name = first.trim();
+  if (!name) return;
+  // display_name is the sign-in name, else the email's first part (profile_display_name).
+  const [p] = await db.execute<{ display: string | null }>(sql`
+    select display_name as display from public.profiles where user_id = ${userId}::uuid`);
+  const display = p?.display?.trim() ?? "";
+  const made = new Set(["", display, display.split(" ")[0] ?? "", previous ?? ""].map(spaceName));
+  made.delete(spaceName(name));
+  if (!made.size) return;
+  await db.execute(sql`
+    update public.organizations set name = ${spaceName(name)}
+    where created_by = ${userId}::uuid
+      and name in (${sql.join(
+        [...made].map((n) => sql`${n}`),
+        sql`, `,
+      )})`);
 }

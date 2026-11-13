@@ -432,7 +432,6 @@ describe("proactive bots", () => {
     const w = await startWelcome(h.handle.db, {
       orgId: org,
       userId: other.id,
-      firstName: "Sam",
       botName: "Pip",
     });
     const [ck] = await h.tdb.admin<{ enabled: boolean; scan_every_hours: number }[]>`

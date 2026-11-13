@@ -274,3 +274,42 @@ async function freePort() {
   await new Promise((r) => s.close(r));
   return port;
 }
+
+/**
+ * A welcome chat as the server used to start it (D-129), for testing the script that chats already
+ * in it still run: /v1/welcome makes the space, bot and empty chat, and this turns that chat into
+ * the scripted welcome with its opening message.
+ */
+export async function legacyWelcome(
+  h: Harness,
+  user: { id: string; token: string },
+  json: { first_name?: string } = {},
+): Promise<{ org_id: string; bot_id: string; conversation_id: string }> {
+  const { openingMessage } = await import("@casama/agent");
+  const { googleConnectRoute } = await import("../src/services/connection-settings.ts");
+  const w = (await (
+    await h.request("/v1/welcome", { method: "POST", token: user.token, json })
+  ).json()) as { org_id: string; bot_id: string; conversation_id: string };
+  const [p] = await h.tdb.admin<{ name: string | null; asked: boolean }[]>`
+    select coalesce(nullif(btrim(p.preferred_name), ''),
+                    initcap(nullif(${json.first_name ?? ""}, ''))) as name,
+           (a.name_asked_at is not null or nullif(btrim(p.preferred_name), '') is not null) as asked
+    from public.profiles p left join public.user_about a on a.user_id = p.user_id
+    where p.user_id = ${user.id}`;
+  const google = await googleConnectRoute(h.handle.db, h.deps.env);
+  const welcome = {
+    step: p?.asked ? (google ? "google" : "focus") : "name",
+    focus: [],
+    ...(google ? { google } : {}),
+  };
+  await h.tdb.admin`
+    update public.conversations set purpose = 'welcome', title = 'Welcome', last_message_at = now(),
+      welcome = ${h.tdb.admin.json(welcome)}
+    where id = ${w.conversation_id}`;
+  const content = openingMessage("Casama", p?.name ?? "", p?.asked, google ?? undefined);
+  await h.tdb.admin`
+    insert into public.messages (org_id, conversation_id, role, content, bot_id)
+    values (${w.org_id}, ${w.conversation_id}, 'assistant',
+            ${h.tdb.admin.json(JSON.parse(contentKeys.sealJson(w.org_id, content)))}, ${w.bot_id})`;
+  return w;
+}

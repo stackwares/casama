@@ -3,7 +3,7 @@
  * straight to Supabase because the text is sealed with the person's key when they belong to a
  * workspace that encrypts (D-136); reads through this client are opened transparently.
  */
-import { welcomeNameAnswered } from "@casama/agent";
+import { renameDefaultSpaces, welcomeNameAnswered } from "@casama/agent";
 import { routes } from "@casama/contracts";
 import { contentKeys } from "@casama/db";
 import type { OpenAPIHono } from "@hono/zod-openapi";
@@ -159,6 +159,9 @@ export function registerAboutYouRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
   app.openapi(routes.updateAboutYou, async (c) => {
     const userId = me(c);
     const b = c.req.valid("json");
+    const [was] = await db.execute<{ preferred_name: string | null }>(
+      sql`select preferred_name from public.profiles where user_id = ${userId}::uuid`,
+    );
     if (b.preferred_name !== undefined || b.pronouns !== undefined)
       await db.execute(sql`
         update public.profiles set
@@ -177,6 +180,9 @@ export function registerAboutYouRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         learn = coalesce(${b.learn ?? null}::boolean, public.user_about.learn),
         name_asked_at = coalesce(public.user_about.name_asked_at, ${b.name_asked || b.preferred_name ? sql`now()` : sql`null`}),
         updated_at = now()`);
+    // A workspace still named from the email or sign-in name takes the name they chose.
+    const preferred = orNull(b.preferred_name);
+    if (preferred) await renameDefaultSpaces(db, userId, preferred, was?.preferred_name);
     // Answered here: a welcome chat still asking for the name moves on instead of asking again.
     if (b.name_asked || orNull(b.preferred_name)) await welcomeNameAnswered(db, userId);
     return c.json(await read(userId), 200);

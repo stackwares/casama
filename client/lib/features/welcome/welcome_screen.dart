@@ -13,8 +13,8 @@ import '../settings/name_step.dart';
 import '../../ui/bot_loader.dart';
 import '../../core/analytics.dart';
 
-/// Welcome chat (D-129): a new person gets a personal space and bot, and lands in its chat. No
-/// form; the old wizard is behind "Set up manually".
+/// First run (D-263): a new person gets a personal space and bot, and lands in its empty chat, the
+/// same one a new bot opens on. No form; the old wizard is behind "Set up manually".
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
 

@@ -179,8 +179,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
       final hasOrg = (orgs.value ?? const []).isNotEmpty;
       final bots = ref.read(botsProvider).value;
-      // New people land in the welcome chat (D-129); the wizard stays at /onboarding. Those whose
-      // team already has a workspace open to their email domain see it first (D-167).
+      // New people get a space and bot and land in its empty chat (D-263); the wizard stays at
+      // /onboarding. Those whose team already has a workspace open to their email domain see it
+      // first (D-167).
       if (!hasOrg &&
           loc != '/onboarding' &&
           loc != '/welcome' &&

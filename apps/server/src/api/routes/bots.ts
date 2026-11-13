@@ -5,11 +5,10 @@ import {
   milestone,
   PLATFORM_OPENROUTER_CREDENTIAL_ID,
   type StoredMemory,
+  spaceName,
   startWelcome,
   storeFromConfig,
   track,
-  trackWelcomeStepView,
-  welcomeStep,
 } from "@casama/agent";
 import { ProviderId, routes } from "@casama/contracts";
 import { contentKeys, type JwtClaims, schema, withUserSession } from "@casama/db";
@@ -28,7 +27,6 @@ import { streamSSE } from "hono/streaming";
 import { enforceLimit } from "../../billing/limits.ts";
 import { modelOverrides } from "../../env.ts";
 import { getCloudModels } from "../../services/cloud-models.ts";
-import { googleConnectRoute } from "../../services/connection-settings.ts";
 import { findTemplate } from "../../services/gallery.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -963,14 +961,17 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       email.split("@")[0] ??
       ""
     ).trim();
-    const name = `${first ? `${first[0]?.toUpperCase()}${first.slice(1)}` : "My"}'s space`.slice(
-      0,
-      80,
-    );
+    // The name they gave in onboarding comes first, so the workspace is "Oliver's space", not
+    // one made from the email.
+    const [chosen] = await db.execute<{ preferred: string | null }>(sql`
+      select nullif(btrim(preferred_name), '') as preferred from public.profiles
+      where user_id = ${claims.sub}::uuid`);
+    const base = chosen?.preferred ?? first;
+    const name = spaceName(base);
     let orgId: string | undefined;
     for (let attempt = 0; attempt < 5 && !orgId; attempt++) {
       const slug = `${
-        (first || "space")
+        (base || "space")
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/^-|-$/g, "")
@@ -993,36 +994,15 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     }
     if (!orgId) throw new ApiError(409, "slug_taken", "Could not create your space; try again");
     if (deps.billing?.enabled) await deps.billing.recompute(orgId);
-    // About you (D-169): the name card is filled in from a real name only, never the email. When
-    // the app's name step already asked, the chat greets them by it and skips the question.
-    const [profile] = await db.execute<{
-      name: string | null;
-      preferred: string | null;
-      asked: boolean;
-    }>(sql`
-      select coalesce(nullif(btrim(p.preferred_name), ''), nullif(split_part(btrim(p.display_name), ' ', 1), '')) as name,
-             nullif(btrim(p.preferred_name), '') as preferred,
-             (a.name_asked_at is not null or nullif(btrim(p.preferred_name), '') is not null) as asked
-      from public.profiles p left join public.user_about a on a.user_id = p.user_id
-      where p.user_id = ${claims.sub}::uuid`);
-    const emailPrefix = email.split("@")[0] ?? "";
-    const realFirst =
-      b.first_name?.trim() ||
-      (profile?.name && profile.name !== emailPrefix ? profile.name : "") ||
-      (first !== emailPrefix ? first : "");
+    // A new person gets what a new bot gets: its empty chat, with apps to connect and starter
+    // requests. There is no scripted welcome chat any more.
     const w = await startWelcome(db, {
       orgId,
       userId: claims.sub,
-      firstName: profile?.preferred
-        ? profile.preferred
-        : realFirst
-          ? `${realFirst[0]?.toUpperCase()}${realFirst.slice(1)}`
-          : "",
       botName: b.bot_name ?? "Casama",
-      nameKnown: !!profile?.asked,
-      google: await googleConnectRoute(db, deps.env),
+      modelOverrides: modelOverrides(deps.env),
+      platformModel: Boolean(deps.env.CLOUD_MODEL_UPSTREAM_KEY),
     });
-    // The Welcome path (F2): a workspace, a bot and the start of onboarding in one step.
     track(db, {
       event: "workspace_created",
       userId: claims.sub,
@@ -1035,15 +1015,20 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       orgId: w.orgId,
       properties: { source: "welcome" },
     });
+    // Onboarding is the space and bot made in one step; nothing is left to walk through.
     track(db, {
       event: "onboarding_begin",
       userId: claims.sub,
       orgId: w.orgId,
-      properties: { path: "welcome_chat" },
+      properties: { path: "auto" },
+    });
+    track(db, {
+      event: "onboarding_complete",
+      userId: claims.sub,
+      orgId: w.orgId,
+      properties: { path: "auto" },
     });
     milestone(db, claims.sub, "first_bot_created", w.orgId);
-    const opening = await welcomeStep(db, w.conversationId).catch(() => null);
-    if (opening) trackWelcomeStepView(db, { orgId: w.orgId, userId: claims.sub }, opening.step);
     return c.json(
       { org_id: w.orgId, bot_id: w.botId, conversation_id: w.conversationId, created: true },
       200,
