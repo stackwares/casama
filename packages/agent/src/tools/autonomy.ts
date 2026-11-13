@@ -336,10 +336,96 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
 
   // --- routines -----------------------------------------------------------------
 
+  const DEVICE_EVENT = z
+    .object({
+      event: z.enum([
+        "wake",
+        "arrive",
+        "leave",
+        "leave_now",
+        "workout_ended",
+        "notification",
+        "focus_on",
+        "focus_off",
+        "file_added",
+      ]),
+      place: z.string().max(60).optional().describe("arrive/leave: a named place like Home"),
+      app: z.string().max(200).optional().describe("notification: the app to watch"),
+      minutes_before: z
+        .number()
+        .int()
+        .min(0)
+        .max(120)
+        .optional()
+        .describe("leave_now: buffer on top of travel time"),
+      folder: z
+        .string()
+        .max(200)
+        .optional()
+        .describe("file_added: a folder the person's desktop app watches, like Downloads"),
+      pattern: z
+        .string()
+        .max(100)
+        .optional()
+        .describe("file_added: a file name pattern like *.pdf"),
+    })
+    .describe(
+      "Run each time this happens on the person's own phone (they must share that kind in Device connections)",
+    );
+  const checkDeviceEvent = (d: z.infer<typeof DEVICE_EVENT>) => {
+    if ((d.event === "arrive" || d.event === "leave") && !d.place)
+      throw new ToolError("place_required", "Arrive and leave need a named place.");
+    if (d.event === "notification" && !d.app)
+      throw new ToolError("app_required", "Notification routines need the app to watch.");
+    if (d.event === "file_added" && !d.folder)
+      throw new ToolError("folder_required", "File routines need the watched folder.");
+  };
+  /** A one-time run's time from run_at or in_minutes; refuses times already past. */
+  const onceAt = (runAt: string | undefined, inMinutes: number | undefined) => {
+    if (inMinutes != null) return new Date(Date.now() + inMinutes * 60_000);
+    const at = new Date(runAt as string);
+    if (Number.isNaN(at.getTime()))
+      throw new ToolError("invalid_time", "run_at must be an ISO 8601 time.");
+    if (at.getTime() < Date.now() - 60_000)
+      throw new ToolError("invalid_time", "run_at is in the past.");
+    return at;
+  };
+  /** An end time (D-262): ISO 8601, in the future. */
+  const endAt = (v: string) => {
+    const at = new Date(v);
+    if (Number.isNaN(at.getTime()))
+      throw new ToolError("invalid_time", "ends_at must be an ISO 8601 time.");
+    if (at.getTime() <= Date.now()) throw new ToolError("invalid_time", "ends_at is in the past.");
+    return at;
+  };
+  const ENDS_AT = z
+    .string()
+    .max(40)
+    .describe("Stop for good at this ISO 8601 time (with offset); it switches itself off");
+  const MAX_RUNS = z
+    .number()
+    .int()
+    .min(1)
+    .max(10_000)
+    .describe("Stop for good after this many runs; it switches itself off");
+  const IN_MINUTES = z
+    .number()
+    .int()
+    .min(1)
+    .max(60 * 24 * 365);
+  /** How a routine ends, for tool replies. */
+  const endsText = (endsAt: Date | string | null, maxRuns: number | null, runCount = 0) =>
+    [
+      endsAt ? `ends ${new Date(endsAt).toISOString()}` : null,
+      maxRuns != null ? `${Math.max(0, maxRuns - runCount)} of ${maxRuns} runs left` : null,
+    ]
+      .filter(Boolean)
+      .join(", ");
+
   registry.register({
     name: "routines.create",
     description:
-      "Schedule work for yourself later. For something that should happen once (a reminder, a follow-up), pass in_minutes or run_at; it runs a single time and switches itself off. Use schedule_cron (5-field cron in the user's timezone) only for work that repeats. Each run posts its reply in this chat and notifies the person, so a reminder or greeting needs no other way of sending.",
+      "Schedule work for yourself later. For something that should happen once (a reminder, a follow-up), pass in_minutes or run_at; it runs a single time and switches itself off. Use schedule_cron (5-field cron in the user's timezone) only for work that repeats. A repeating or device routine can end on its own: ends_at (a date and time) and/or max_runs (after that many runs). Each run posts its reply in this chat and notifies the person, so a reminder or greeting needs no other way of sending.",
     risk: "medium",
     // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,
@@ -351,56 +437,16 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
         .min(1)
         .max(10_000)
         .describe("What to do when it runs, written as a message to yourself"),
-      in_minutes: z
-        .number()
-        .int()
-        .min(1)
-        .max(60 * 24 * 365)
-        .optional()
-        .describe("Run once, this many minutes from now"),
+      in_minutes: IN_MINUTES.optional().describe("Run once, this many minutes from now"),
       run_at: z
         .string()
         .max(40)
         .optional()
         .describe("Run once at this ISO 8601 time (with offset)"),
       schedule_cron: z.string().max(100).optional().describe("Repeat on this 5-field cron"),
-      on_device_event: z
-        .object({
-          event: z.enum([
-            "wake",
-            "arrive",
-            "leave",
-            "leave_now",
-            "workout_ended",
-            "notification",
-            "focus_on",
-            "focus_off",
-            "file_added",
-          ]),
-          place: z.string().max(60).optional().describe("arrive/leave: a named place like Home"),
-          app: z.string().max(200).optional().describe("notification: the app to watch"),
-          minutes_before: z
-            .number()
-            .int()
-            .min(0)
-            .max(120)
-            .optional()
-            .describe("leave_now: buffer on top of travel time"),
-          folder: z
-            .string()
-            .max(200)
-            .optional()
-            .describe("file_added: a folder the person's desktop app watches, like Downloads"),
-          pattern: z
-            .string()
-            .max(100)
-            .optional()
-            .describe("file_added: a file name pattern like *.pdf"),
-        })
-        .optional()
-        .describe(
-          "Run each time this happens on the person's own phone (they must share that kind in Device connections)",
-        ),
+      on_device_event: DEVICE_EVENT.optional(),
+      ends_at: ENDS_AT.optional(),
+      max_runs: MAX_RUNS.optional(),
       timezone: z.string().max(64).optional(),
       notify: z.boolean().optional(),
     }),
@@ -423,15 +469,19 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
           "invalid_schedule",
           "Pass exactly one of in_minutes, run_at (once), schedule_cron (repeating) or on_device_event.",
         );
+      const once = args.in_minutes != null || !!args.run_at;
+      if (once && (args.ends_at || args.max_runs != null))
+        throw new ToolError(
+          "invalid_schedule",
+          "A one-time routine already ends after its run: ends_at and max_runs are for repeating or device routines.",
+        );
+      const ends = args.ends_at ? endAt(args.ends_at) : null;
+      const maxRuns = args.max_runs ?? null;
+      const endNote = endsText(ends, maxRuns);
       if (args.on_device_event) {
         // Device triggers (D-151) belong to the person this run acts for: their events, their routine.
         const d = args.on_device_event;
-        if ((d.event === "arrive" || d.event === "leave") && !d.place)
-          throw new ToolError("place_required", "Arrive and leave need a named place.");
-        if (d.event === "notification" && !d.app)
-          throw new ToolError("app_required", "Notification routines need the app to watch.");
-        if (d.event === "file_added" && !d.folder)
-          throw new ToolError("folder_required", "File routines need the watched folder.");
+        checkDeviceEvent(d);
         const person = await actingUserOf(db, ctx.runId);
         if (!person)
           throw new ToolError(
@@ -439,11 +489,12 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
             "Device routines need a person: this run isn't acting for anyone.",
           );
         const [r] = await db.execute<{ id: string }>(sql`
-          insert into public.routines (org_id, bot_id, created_by, name, instructions_md, timezone, trigger, notify, conversation_id)
+          insert into public.routines (org_id, bot_id, created_by, name, instructions_md, timezone, trigger, notify, conversation_id, ends_at, max_runs)
           values (${ctx.orgId}::uuid, ${target}::uuid, ${person}::uuid, ${args.name}, ${args.instructions}, ${args.timezone ?? "UTC"},
-                  ${JSON.stringify({ type: "device", ...d })}::jsonb, ${args.notify ?? true}, ${conversationId}::uuid) returning id`);
+                  ${JSON.stringify({ type: "device", ...d })}::jsonb, ${args.notify ?? true}, ${conversationId}::uuid,
+                  ${ends?.toISOString() ?? null}::timestamptz, ${maxRuns}::int) returning id`);
         return {
-          content: `Created routine ${r?.id}: it runs on ${d.event}${d.place ? ` (${d.place})` : ""}${d.app ? ` (${d.app})` : ""}.`,
+          content: `Created routine ${r?.id}: it runs on ${d.event}${d.place ? ` (${d.place})` : ""}${d.app ? ` (${d.app})` : ""}${endNote ? `; ${endNote}` : ""}.`,
           preview: `${args.name} · on ${d.event}`,
         };
       }
@@ -453,28 +504,24 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       const owner = { user_id: person.userId, timezone: person.timezone };
       const tz = args.timezone ?? owner?.timezone ?? "UTC";
       if (!isValidTimezone(tz)) throw new ToolError("invalid_timezone", `Unknown timezone ${tz}.`);
-      let next: Date;
-      if (args.schedule_cron) {
-        next = nextRunAt(args.schedule_cron, tz);
-      } else if (args.in_minutes != null) {
-        next = new Date(Date.now() + args.in_minutes * 60_000);
-      } else {
-        next = new Date(args.run_at as string);
-        if (Number.isNaN(next.getTime()))
-          throw new ToolError("invalid_time", "run_at must be an ISO 8601 time.");
-        if (next.getTime() < Date.now() - 60_000)
-          throw new ToolError("invalid_time", "run_at is in the past.");
-      }
-      const once = !args.schedule_cron;
+      const next = args.schedule_cron
+        ? nextRunAt(args.schedule_cron, tz)
+        : onceAt(args.run_at, args.in_minutes);
+      if (ends && next.getTime() > ends.getTime())
+        throw new ToolError(
+          "invalid_time",
+          `It would end before its first run (${next.toISOString()}). Pick a later ends_at.`,
+        );
       const trigger = JSON.stringify({ type: once ? "once" : "schedule" });
       const [r] = await db.execute<{ id: string }>(sql`
-        insert into public.routines (org_id, bot_id, created_by, name, instructions_md, schedule_cron, timezone, trigger, notify, next_run_at, conversation_id)
+        insert into public.routines (org_id, bot_id, created_by, name, instructions_md, schedule_cron, timezone, trigger, notify, next_run_at, conversation_id, ends_at, max_runs)
         values (${ctx.orgId}::uuid, ${target}::uuid, ${owner?.user_id ?? null}::uuid, ${args.name}, ${args.instructions},
-                ${args.schedule_cron ?? null}, ${tz}, ${trigger}::jsonb, ${args.notify ?? true}, ${next.toISOString()}::timestamptz, ${conversationId}::uuid) returning id`);
+                ${args.schedule_cron ?? null}, ${tz}, ${trigger}::jsonb, ${args.notify ?? true}, ${next.toISOString()}::timestamptz, ${conversationId}::uuid,
+                ${ends?.toISOString() ?? null}::timestamptz, ${maxRuns}::int) returning id`);
       return {
         content: once
           ? `Scheduled one-time routine ${r?.id} for ${next.toISOString()}. It runs once, then switches itself off.`
-          : `Scheduled repeating routine ${r?.id}; next run ${next.toISOString()} (${tz}).`,
+          : `Scheduled repeating routine ${r?.id}; next run ${next.toISOString()} (${tz})${endNote ? `; ${endNote}` : ""}.`,
         preview: once
           ? `${args.name} · once at ${next.toISOString()}`
           : `${args.name} · ${args.schedule_cron}`,
@@ -485,7 +532,7 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
   registry.register({
     name: "routines.list",
     description:
-      "List your routines (id, name, schedule, whether it is on, next run). Use it before changing or deleting one.",
+      "List your routines (id, name, schedule, whether it is on, next run, when it ends). Use it before changing or deleting one.",
     risk: "low",
     readOnly: true,
     schema: z.object({ bot: BOT_ARG }),
@@ -495,14 +542,17 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
         id: string;
         name: string;
         schedule_cron: string | null;
-        trigger: { type?: string };
+        trigger: { type?: string; event?: string; place?: string };
         timezone: string;
         enabled: boolean;
         next_run_at: string | null;
         last_run_at: string | null;
+        ends_at: string | null;
+        max_runs: number | null;
+        run_count: number;
       }>(sql`
-        select id, name, schedule_cron, trigger, timezone, enabled, next_run_at, last_run_at from public.routines
-        where bot_id = ${target}::uuid order by created_at`);
+        select id, name, schedule_cron, trigger, timezone, enabled, next_run_at, last_run_at, ends_at, max_runs, run_count
+        from public.routines where bot_id = ${target}::uuid order by created_at`);
       if (!rows.length) return { content: "You have no routines.", preview: "none" };
       const lines = rows.map((r) => {
         const when =
@@ -510,9 +560,12 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
             ? "once"
             : r.schedule_cron
               ? `cron ${r.schedule_cron} (${r.timezone})`
-              : (r.trigger?.type ?? "schedule");
+              : r.trigger?.type === "device"
+                ? `on ${r.trigger.event}${r.trigger.place ? ` (${r.trigger.place})` : ""}`
+                : (r.trigger?.type ?? "schedule");
         const next = r.next_run_at ? new Date(r.next_run_at).toISOString() : "none";
-        return `- ${r.id} · ${r.name} · ${when} · ${r.enabled ? "on" : "off"} · next ${next}`;
+        const ends = endsText(r.ends_at, r.max_runs, r.run_count);
+        return `- ${r.id} · ${r.name} · ${when} · ${r.enabled ? "on" : "off"} · next ${next}${ends ? ` · ${ends}` : ""}`;
       });
       return {
         content: lines.join("\n"),
@@ -524,57 +577,149 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
   registry.register({
     name: "routines.update",
     description:
-      "Change, pause (enabled: false) or resume one of your routines. Find its id with routines.list.",
+      "Change, pause (enabled: false) or resume one of your routines: its name, instructions, timezone, schedule, device event or when it ends. schedule_cron makes it repeat; run_at or in_minutes makes it run once. ends_at and max_runs end it on their own (null removes them; max_runs counts from now). Find its id with routines.list.",
     risk: "medium",
     // Only the bot's own state inside Casama: never asks (D-155).
     selfOnly: true,
     schema: z.object({
       bot: BOT_ARG,
       routine_id: z.uuid(),
+      name: z.string().min(1).max(120).optional(),
       enabled: z.boolean().optional(),
-      schedule_cron: z.string().max(100).optional(),
-      run_at: z.string().max(40).optional(),
-      instructions: z.string().max(10_000).optional(),
+      notify: z.boolean().optional(),
+      instructions: z.string().min(1).max(10_000).optional(),
+      timezone: z.string().max(64).optional(),
+      schedule_cron: z.string().max(100).optional().describe("Repeat on this 5-field cron"),
+      run_at: z
+        .string()
+        .max(40)
+        .optional()
+        .describe("Run once at this ISO 8601 time (with offset)"),
+      in_minutes: IN_MINUTES.optional().describe("Run once, this many minutes from now"),
+      on_device_event: DEVICE_EVENT.optional().describe("A device routine's new event"),
+      ends_at: ENDS_AT.nullable().optional(),
+      max_runs: MAX_RUNS.nullable().optional(),
     }),
     async execute(args, ctx) {
       const target = await routineBot(args.bot, ctx);
       const [r] = await db.execute<{
         schedule_cron: string | null;
         timezone: string;
-        trigger: { type?: string };
+        trigger: Record<string, unknown> & { type?: string };
+        enabled: boolean;
         next_run_at: string | null;
+        ends_at: string | null;
+        max_runs: number | null;
+        run_count: number;
       }>(sql`
-        select schedule_cron, timezone, trigger, next_run_at from public.routines where id = ${args.routine_id}::uuid and bot_id = ${target}::uuid`);
+        select schedule_cron, timezone, trigger, enabled, next_run_at, ends_at, max_runs, run_count
+        from public.routines where id = ${args.routine_id}::uuid and bot_id = ${target}::uuid`);
       if (!r)
         throw new ToolError(
           "routine_not_found",
           "No such routine for this bot. Check routines.list.",
         );
-      const once = r.trigger?.type === "once";
+      const wantsOnce = !!args.run_at || args.in_minutes != null;
+      if ([wantsOnce, !!args.schedule_cron, !!args.on_device_event].filter(Boolean).length > 1)
+        throw new ToolError(
+          "invalid_schedule",
+          "Pass at most one of schedule_cron, run_at/in_minutes or on_device_event.",
+        );
+      const was = r.trigger?.type ?? "schedule";
+      // Only time-based routines switch between once and repeating; an event routine keeps its kind.
+      if ((wantsOnce || args.schedule_cron) && was !== "once" && was !== "schedule")
+        throw new ToolError(
+          "invalid_schedule",
+          `This routine runs on ${was === "device" ? "a device event" : `a ${was} trigger`}. Delete it and create a scheduled one instead.`,
+        );
+      if (args.on_device_event && was !== "device")
+        throw new ToolError(
+          "invalid_schedule",
+          "Only a device routine takes on_device_event. Delete this one and create a device routine instead.",
+        );
+      if (args.on_device_event) checkDeviceEvent(args.on_device_event);
       if (args.schedule_cron && !isValidCron(args.schedule_cron))
-        throw new ToolError("invalid_cron", "Invalid cron expression.");
-      const cron = once ? null : (args.schedule_cron ?? r.schedule_cron);
-      let next: string | null = null;
-      if (once) {
-        const at = args.run_at
-          ? new Date(args.run_at)
-          : r.next_run_at
-            ? new Date(r.next_run_at)
-            : null;
-        if (args.run_at && (!at || Number.isNaN(at.getTime())))
-          throw new ToolError("invalid_time", "run_at must be an ISO 8601 time.");
-        next = at ? at.toISOString() : null;
-      } else if (cron) {
-        next = nextRunAt(cron, r.timezone).toISOString();
+        throw new ToolError("invalid_cron", "Use a 5-field cron expression like '0 8 * * *'.");
+      const tz = args.timezone ?? r.timezone;
+      if (!isValidTimezone(tz)) throw new ToolError("invalid_timezone", `Unknown timezone ${tz}.`);
+      const type = wantsOnce ? "once" : args.schedule_cron ? "schedule" : was;
+      const cron = type === "schedule" ? (args.schedule_cron ?? r.schedule_cron) : null;
+      const trigger =
+        type !== was
+          ? { type }
+          : args.on_device_event
+            ? { type: "device", ...args.on_device_event }
+            : r.trigger;
+      if (type === "once" && (args.ends_at || args.max_runs))
+        throw new ToolError(
+          "invalid_schedule",
+          "A one-time routine already ends after its run: ends_at and max_runs are for repeating or device routines.",
+        );
+      // A one-time routine keeps no end of its own.
+      const ends =
+        type === "once" || args.ends_at === null
+          ? null
+          : args.ends_at
+            ? endAt(args.ends_at)
+            : r.ends_at
+              ? new Date(r.ends_at)
+              : null;
+      const maxRuns =
+        type === "once" ? null : args.max_runs === undefined ? r.max_runs : args.max_runs;
+      // A new max_runs counts from now.
+      const runCount = args.max_runs === undefined ? r.run_count : 0;
+      const enabled = args.enabled ?? r.enabled;
+      let next: Date | null = null;
+      if (enabled) {
+        if (ends && ends.getTime() <= Date.now())
+          throw new ToolError(
+            "routine_ended",
+            "This routine's end time has passed. Pass a later ends_at, or ends_at: null to keep it going.",
+          );
+        if (maxRuns != null && runCount >= maxRuns)
+          throw new ToolError(
+            "routine_ended",
+            `This routine already ran its ${maxRuns} times. Pass max_runs (counted from now), or max_runs: null.`,
+          );
+        if (type === "once") {
+          next = wantsOnce
+            ? onceAt(args.run_at, args.in_minutes)
+            : r.next_run_at && new Date(r.next_run_at).getTime() > Date.now() - 60_000
+              ? new Date(r.next_run_at)
+              : null;
+          if (!next)
+            throw new ToolError(
+              "invalid_time",
+              "This one-time routine has already run. Pass run_at or in_minutes for its new time.",
+            );
+        } else if (cron) {
+          next = nextRunAt(cron, tz);
+          if (ends && next.getTime() > ends.getTime())
+            throw new ToolError(
+              "invalid_time",
+              `It would end before its next run (${next.toISOString()}). Pick a later ends_at.`,
+            );
+        }
       }
       await db.execute(sql`
-        update public.routines set enabled = coalesce(${args.enabled ?? null}, enabled), schedule_cron = ${cron},
+        update public.routines set
+          name = coalesce(${args.name ?? null}, name),
           instructions_md = coalesce(${args.instructions ?? null}, instructions_md),
-          next_run_at = case when coalesce(${args.enabled ?? null}, enabled) then ${next}::timestamptz else null end
+          notify = coalesce(${args.notify ?? null}, notify),
+          enabled = ${enabled}, timezone = ${tz}, schedule_cron = ${cron},
+          trigger = ${JSON.stringify(trigger)}::jsonb,
+          ends_at = ${ends?.toISOString() ?? null}::timestamptz, max_runs = ${maxRuns}::int, run_count = ${runCount}::int,
+          next_run_at = ${next?.toISOString() ?? null}::timestamptz, retime_pending = false
         where id = ${args.routine_id}::uuid`);
+      const parts = [
+        enabled ? "on" : "paused",
+        type === "once" && next ? `runs once at ${next.toISOString()}` : null,
+        type === "schedule" && next ? `next run ${next.toISOString()} (${tz})` : null,
+        endsText(ends, maxRuns, runCount) || null,
+      ].filter(Boolean);
       return {
-        content: "Routine updated.",
-        preview: args.enabled === false ? "paused" : "updated",
+        content: `Routine updated: ${parts.join(", ")}.`,
+        preview: enabled ? "updated" : "paused",
       };
     },
   });

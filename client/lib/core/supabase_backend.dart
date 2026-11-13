@@ -2079,6 +2079,8 @@ class SupabaseBackend implements Backend {
     DateTime? runAt,
     CalendarTriggerConfig? calendar,
     MessageTriggerConfig? message,
+    DateTime? endsAt,
+    int? maxRuns,
   }) async => (await api.routines.createRoutine(
     createRoutineRequest: CreateRoutineRequest(
       botId: botId,
@@ -2090,6 +2092,8 @@ class SupabaseBackend implements Backend {
       timezone: timezone,
       calendar: trigger == 'calendar_event' ? calendar : null,
       message: trigger == 'message' ? message : null,
+      endsAt: trigger == 'once' ? null : endsAt?.toUtc(),
+      maxRuns: trigger == 'once' ? null : maxRuns,
     ),
   )).data!;
 
@@ -2102,6 +2106,15 @@ class SupabaseBackend implements Backend {
       api.routines.updateRoutine(
         id: routineId,
         updateRoutineRequest: UpdateRoutineRequest(enabled: enabled),
+      );
+
+  // Sent as raw JSON: the generated request drops nulls, and null is how an end is removed.
+  @override
+  Future<void> setRoutineEnd(String routineId, {DateTime? endsAt, int? maxRuns}) async =>
+      api.api.dio.patch<Object>(
+        '/v1/routines/$routineId',
+        data: {'ends_at': endsAt?.toUtc().toIso8601String(), 'max_runs': maxRuns},
+        options: Options(headers: authHeaders, contentType: 'application/json'),
       );
 
   @override

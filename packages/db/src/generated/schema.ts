@@ -840,8 +840,12 @@ export const routines = pgTable("routines", {
 	projectId: uuid("project_id"),
 	kind: text().default('task').notNull(),
 	retimePending: boolean("retime_pending").default(false).notNull(),
+	endsAt: timestamp("ends_at", { withTimezone: true, mode: 'string' }),
+	maxRuns: integer("max_runs"),
+	runCount: integer("run_count").default(0).notNull(),
 }, (table) => [
 	index("routines_due_idx").using("btree", table.enabled.asc().nullsLast().op("timestamptz_ops"), table.nextRunAt.asc().nullsLast().op("timestamptz_ops")),
+	index("routines_ends_idx").using("btree", table.endsAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(enabled AND (ends_at IS NOT NULL))`),
 	index("routines_name_trgm").using("gin", table.name.asc().nullsLast().op("gin_trgm_ops")),
 	index("routines_retime_idx").using("btree", table.id.asc().nullsLast().op("uuid_ops")).where(sql`retime_pending`),
 	index("routines_trigger_type_idx").using("btree", sql`((trigger ->> 'type'::text))`).where(sql`enabled`),

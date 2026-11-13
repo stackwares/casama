@@ -259,6 +259,21 @@ export const Routine = z
     enabled: z.boolean(),
     next_run_at: ts.nullable(),
     last_run_at: ts.nullable(),
+    ends_at: ts
+      .nullable()
+      .optional()
+      .openapi({ description: "When it switches itself off for good (D-262)" }),
+    max_runs: z
+      .number()
+      .int()
+      .nullable()
+      .optional()
+      .openapi({ description: "How many runs before it switches itself off (D-262)" }),
+    run_count: z
+      .number()
+      .int()
+      .optional()
+      .openapi({ description: "Runs that count toward max_runs (manual runs don't)" }),
     conversation_id: Uuid.nullable(),
     created_at: ts,
   })
@@ -300,6 +315,12 @@ export const CreateRoutineRequest = z
     device: DeviceTriggerConfig.optional().openapi({
       description: "Required for device triggers: the event on your own phone or computer",
     }),
+    ends_at: z.iso.datetime({ offset: true }).optional().openapi({
+      description: "Repeating and event routines: switch off for good at this time",
+    }),
+    max_runs: z.number().int().min(1).max(10_000).optional().openapi({
+      description: "Repeating and event routines: switch off for good after this many runs",
+    }),
   })
   .openapi("CreateRoutineRequest");
 
@@ -315,11 +336,26 @@ export const UpdateRoutineRequest = z
   .object({
     name: z.string().trim().min(1).max(120).optional(),
     instructions: z.string().min(1).max(20_000).optional(),
-    schedule_cron: z.string().max(100).optional(),
-    run_at: z.iso.datetime({ offset: true }).optional(),
+    schedule_cron: z
+      .string()
+      .max(100)
+      .optional()
+      .openapi({ description: "A once routine given a cron becomes a repeating one" }),
+    run_at: z.iso
+      .datetime({ offset: true })
+      .optional()
+      .openapi({ description: "A repeating routine given run_at becomes a once one" }),
     timezone: z.string().max(64).optional(),
     notify: z.boolean().optional(),
     enabled: z.boolean().optional(),
+    ends_at: z.iso
+      .datetime({ offset: true })
+      .nullable()
+      .optional()
+      .openapi({ description: "When it switches itself off; null removes the end time" }),
+    max_runs: z.number().int().min(1).max(10_000).nullable().optional().openapi({
+      description: "Runs left before it switches itself off, counted from now; null removes it",
+    }),
   })
   .openapi("UpdateRoutineRequest");
 

@@ -129,7 +129,8 @@ export async function handleInbound(
     sql`update public.channels set last_inbound_at = now() where id = ${c.id}::uuid`,
   );
   const routines = await db.execute<{ id: string; trigger: MessageTrigger }>(sql`
-    select id, trigger from public.routines where bot_id = ${c.bot_id}::uuid and enabled and trigger ->> 'type' = 'message'`);
+    select id, trigger from public.routines where bot_id = ${c.bot_id}::uuid and enabled and trigger ->> 'type' = 'message'
+      and (ends_at is null or ends_at > now())`);
   for (const m of messages) {
     // Routines with matching filters start on the message, whoever sent it.
     let routed = false;

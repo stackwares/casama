@@ -1004,8 +1004,14 @@ abstract class Backend {
     DateTime? runAt,
     CalendarTriggerConfig? calendar,
     MessageTriggerConfig? message,
+    DateTime? endsAt,
+    int? maxRuns,
   });
   Future<void> setRoutineEnabled(String routineId, bool enabled);
+
+  /// When a repeating or event routine ends on its own (D-262): at [endsAt], after [maxRuns] more
+  /// runs, both, or (both null) never.
+  Future<void> setRoutineEnd(String routineId, {DateTime? endsAt, int? maxRuns});
   Future<void> deleteRoutine(String routineId);
   Future<String> runRoutine(String routineId);
 

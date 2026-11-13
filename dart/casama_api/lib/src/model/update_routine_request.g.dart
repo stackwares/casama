@@ -21,6 +21,10 @@ abstract class _$UpdateRoutineRequestCWProxy {
 
   UpdateRoutineRequest enabled(bool? enabled);
 
+  UpdateRoutineRequest endsAt(DateTime? endsAt);
+
+  UpdateRoutineRequest maxRuns(int? maxRuns);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateRoutineRequest(...).copyWith.fieldName(value)`.
@@ -37,6 +41,8 @@ abstract class _$UpdateRoutineRequestCWProxy {
     String? timezone,
     bool? notify,
     bool? enabled,
+    DateTime? endsAt,
+    int? maxRuns,
   });
 }
 
@@ -71,6 +77,12 @@ class _$UpdateRoutineRequestCWProxyImpl
   @override
   UpdateRoutineRequest enabled(bool? enabled) => call(enabled: enabled);
 
+  @override
+  UpdateRoutineRequest endsAt(DateTime? endsAt) => call(endsAt: endsAt);
+
+  @override
+  UpdateRoutineRequest maxRuns(int? maxRuns) => call(maxRuns: maxRuns);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateRoutineRequest(...).copyWith.fieldName(value)`.
@@ -88,6 +100,8 @@ class _$UpdateRoutineRequestCWProxyImpl
     Object? timezone = const $CopyWithPlaceholder(),
     Object? notify = const $CopyWithPlaceholder(),
     Object? enabled = const $CopyWithPlaceholder(),
+    Object? endsAt = const $CopyWithPlaceholder(),
+    Object? maxRuns = const $CopyWithPlaceholder(),
   }) {
     return UpdateRoutineRequest(
       name: name == const $CopyWithPlaceholder()
@@ -118,6 +132,14 @@ class _$UpdateRoutineRequestCWProxyImpl
           ? _value.enabled
           // ignore: cast_nullable_to_non_nullable
           : enabled as bool?,
+      endsAt: endsAt == const $CopyWithPlaceholder()
+          ? _value.endsAt
+          // ignore: cast_nullable_to_non_nullable
+          : endsAt as DateTime?,
+      maxRuns: maxRuns == const $CopyWithPlaceholder()
+          ? _value.maxRuns
+          // ignore: cast_nullable_to_non_nullable
+          : maxRuns as int?,
     );
   }
 }
@@ -136,21 +158,36 @@ extension $UpdateRoutineRequestCopyWith on UpdateRoutineRequest {
 
 UpdateRoutineRequest _$UpdateRoutineRequestFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate('UpdateRoutineRequest', json, ($checkedConvert) {
-  final val = UpdateRoutineRequest(
-    name: $checkedConvert('name', (v) => v as String?),
-    instructions: $checkedConvert('instructions', (v) => v as String?),
-    scheduleCron: $checkedConvert('schedule_cron', (v) => v as String?),
-    runAt: $checkedConvert(
-      'run_at',
-      (v) => v == null ? null : DateTime.parse(v as String),
-    ),
-    timezone: $checkedConvert('timezone', (v) => v as String?),
-    notify: $checkedConvert('notify', (v) => v as bool?),
-    enabled: $checkedConvert('enabled', (v) => v as bool?),
-  );
-  return val;
-}, fieldKeyMap: const {'scheduleCron': 'schedule_cron', 'runAt': 'run_at'});
+) => $checkedCreate(
+  'UpdateRoutineRequest',
+  json,
+  ($checkedConvert) {
+    final val = UpdateRoutineRequest(
+      name: $checkedConvert('name', (v) => v as String?),
+      instructions: $checkedConvert('instructions', (v) => v as String?),
+      scheduleCron: $checkedConvert('schedule_cron', (v) => v as String?),
+      runAt: $checkedConvert(
+        'run_at',
+        (v) => v == null ? null : DateTime.parse(v as String),
+      ),
+      timezone: $checkedConvert('timezone', (v) => v as String?),
+      notify: $checkedConvert('notify', (v) => v as bool?),
+      enabled: $checkedConvert('enabled', (v) => v as bool?),
+      endsAt: $checkedConvert(
+        'ends_at',
+        (v) => v == null ? null : DateTime.parse(v as String),
+      ),
+      maxRuns: $checkedConvert('max_runs', (v) => (v as num?)?.toInt()),
+    );
+    return val;
+  },
+  fieldKeyMap: const {
+    'scheduleCron': 'schedule_cron',
+    'runAt': 'run_at',
+    'endsAt': 'ends_at',
+    'maxRuns': 'max_runs',
+  },
+);
 
 Map<String, dynamic> _$UpdateRoutineRequestToJson(
   UpdateRoutineRequest instance,
@@ -162,4 +199,6 @@ Map<String, dynamic> _$UpdateRoutineRequestToJson(
   'timezone': ?instance.timezone,
   'notify': ?instance.notify,
   'enabled': ?instance.enabled,
+  'ends_at': ?instance.endsAt?.toIso8601String(),
+  'max_runs': ?instance.maxRuns,
 };

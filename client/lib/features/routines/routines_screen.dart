@@ -199,7 +199,10 @@ class _RoutineCard extends ConsumerWidget {
       RoutineTrigger.device => (LucideIcons.smartphone, l10n.routineDevice(r.device?.event.value.replaceAll('_', ' ') ?? '', r.device?.place ?? r.device?.app ?? r.device?.folder ?? '')),
     };
     final next = r.enabled && r.nextRunAt != null ? l10n.nextRun(_formatWhen(context, r.nextRunAt!)) : null;
-    final last = r.lastRunAt != null ? l10n.lastRun(_formatWhen(context, r.lastRunAt!)) : null;
+    final last = r.lastRunAt != null ? l10n.lastRun(relativeTime(r.lastRunAt!, context)) : null;
+    // Routines that end (D-262): when, or how many runs are left.
+    final ends = r.endsAt != null ? l10n.routineEndsAt(_formatWhen(context, r.endsAt!)) : null;
+    final runsLeft = r.maxRuns != null ? l10n.routineRunsLeft((r.maxRuns! - (r.runCount ?? 0)).clamp(0, r.maxRuns!)) : null;
     final tint = r.enabled ? scheme.primary : scheme.onSurfaceVariant;
     return AppCard(
       key: Key('routine-${r.id}'),
@@ -222,7 +225,7 @@ class _RoutineCard extends ConsumerWidget {
                 Text(r.name, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 2),
                 Text(schedule, style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
-                if (next != null || last != null || !r.enabled) ...[
+                if (next != null || last != null || ends != null || runsLeft != null || !r.enabled) ...[
                   const SizedBox(height: 6),
                   Wrap(
                     spacing: AppSpace.xs,
@@ -230,6 +233,8 @@ class _RoutineCard extends ConsumerWidget {
                     children: [
                       if (!r.enabled) StatusLabel(text: l10n.routineOff, color: scheme.onSurfaceVariant, pill: true),
                       if (next != null) StatusLabel(text: next, color: context.appColors.positive, pill: true, icon: LucideIcons.clock),
+                      if (ends != null) StatusLabel(key: Key('routineEndsAt-${r.id}'), text: ends, color: scheme.onSurfaceVariant, pill: true, icon: LucideIcons.flag),
+                      if (runsLeft != null) StatusLabel(key: Key('routineRunsLeft-${r.id}'), text: runsLeft, color: scheme.onSurfaceVariant, pill: true, icon: LucideIcons.hash),
                       if (last != null) Text(last, style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
                     ],
                   ),
@@ -267,6 +272,16 @@ class _RoutineCard extends ConsumerWidget {
                 },
                 child: Text(l10n.runNow),
               ),
+              if (r.trigger != RoutineTrigger.once)
+                MenuItemButton(
+                  key: Key('routineEnd-${r.id}'),
+                  leadingIcon: const Icon(LucideIcons.flag, size: 20),
+                  onPressed: () async {
+                    final saved = await showAdaptiveSheet<bool>(context: context, builder: (_) => RoutineEndSheet(routine: r));
+                    if (saved == true) ref.invalidate(routinesProvider(r.botId));
+                  },
+                  child: Text(l10n.routineChangeEnd),
+                ),
               MenuItemButton(
                 key: Key('deleteRoutine-${r.id}'),
                 leadingIcon: Icon(LucideIcons.trash2, size: 20, color: scheme.error),
@@ -325,6 +340,10 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
   final _msgSubject = TextEditingController();
   final _msgText = TextEditingController();
   DateTime _runAt = DateTime.now().add(const Duration(hours: 1));
+  // How a repeating or event routine ends (D-262).
+  var _end = RoutineEnd.never;
+  DateTime _endsAt = RoutineEnd.defaultDate();
+  var _maxRuns = 5;
   var _busy = false;
 
   @override
@@ -409,6 +428,7 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
         _name.text.trim().isNotEmpty &&
         _instructions.text.trim().isNotEmpty &&
         (_trigger != 'once' || _runAt.isAfter(DateTime.now())) &&
+        (_trigger == 'once' || _end != RoutineEnd.onDate || _endsAt.isAfter(DateTime.now())) &&
         (_trigger != 'schedule' || _cron.text.trim().isNotEmpty) &&
         (_trigger != 'calendar_event' || _calendarId != null) &&
         (_trigger != 'message' || _msgKind != null || [_msgSender, _msgSubject, _msgText].any((c) => c.text.trim().isNotEmpty));
@@ -629,6 +649,19 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
               ),
             ],
           ],
+          if (_trigger != 'once') ...[
+            const SizedBox(height: AppSpace.sm),
+            RoutineEndPicker(
+              end: _end,
+              endsAt: _endsAt,
+              maxRuns: _maxRuns,
+              onChanged: (end, endsAt, maxRuns) => setState(() {
+                _end = end;
+                _endsAt = endsAt;
+                _maxRuns = maxRuns;
+              }),
+            ),
+          ],
           // GitHub and webhook triggers, the raw cron and the timezone (D-182). It stays open while
           // one of them is in use, so the routine's current setup is never folded away.
           AdvancedSection(
@@ -704,6 +737,8 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
                                     textMatch: _msgText.text.trim().isEmpty ? null : _msgText.text.trim(),
                                   )
                                 : null,
+                            endsAt: _trigger != 'once' && _end == RoutineEnd.onDate ? _endsAt : null,
+                            maxRuns: _trigger != 'once' && _end == RoutineEnd.afterRuns ? _maxRuns : null,
                           ),
                     );
                     if (!context.mounted) return;
@@ -714,6 +749,149 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// How a repeating or event routine ends (D-262).
+enum RoutineEnd {
+  never,
+  onDate,
+  afterRuns;
+
+  /// A week from now, at the end of that day.
+  static DateTime defaultDate() {
+    final d = DateTime.now().add(const Duration(days: 7));
+    return DateTime(d.year, d.month, d.day, 23, 59);
+  }
+}
+
+const _runChoices = [1, 2, 3, 5, 7, 10, 14, 30];
+
+/// The "Ends" rows: never, on a date (a last day and time), or after a number of runs.
+class RoutineEndPicker extends StatelessWidget {
+  const RoutineEndPicker({super.key, required this.end, required this.endsAt, required this.maxRuns, required this.onChanged});
+  final RoutineEnd end;
+  final DateTime endsAt;
+  final int maxRuns;
+  final void Function(RoutineEnd end, DateTime endsAt, int maxRuns) onChanged;
+
+  Future<void> _pickDate(BuildContext context) async {
+    unfocusBeforeModal();
+    final now = DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: endsAt.isAfter(now) ? endsAt : now,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365 * 2)),
+    );
+    if (date == null || !context.mounted) return;
+    final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(endsAt));
+    if (time == null) return;
+    onChanged(end, DateTime(date.year, date.month, date.day, time.hour, time.minute), maxRuns);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    String label(RoutineEnd e) => switch (e) {
+      RoutineEnd.never => l10n.routineEndsNever,
+      RoutineEnd.onDate => l10n.routineEndsOnDate,
+      RoutineEnd.afterRuns => l10n.routineEndsAfterRuns,
+    };
+    final runs = {..._runChoices, maxRuns}.toList()..sort();
+    return GroupedCard(
+      children: [
+        PropertyRow<RoutineEnd>(
+          key: const Key('routineEnds'),
+          icon: LucideIcons.flag,
+          title: l10n.routineEnds,
+          value: label(end),
+          options: [for (final e in RoutineEnd.values) PropertyOption(value: e, label: label(e), selected: e == end)],
+          onSelected: (v) => onChanged(v, endsAt, maxRuns),
+        ),
+        if (end == RoutineEnd.onDate)
+          GroupedTile(
+            key: const Key('routineEndDate'),
+            icon: LucideIcons.calendarX,
+            title: l10n.routineEndDate,
+            onTap: () => _pickDate(context),
+            trailing: _ValueText(_formatWhen(context, endsAt)),
+          ),
+        if (end == RoutineEnd.afterRuns)
+          PropertyRow<int>(
+            key: const Key('routineMaxRuns'),
+            icon: LucideIcons.hash,
+            title: l10n.routineRunCountLabel,
+            value: l10n.routineRunsCount(maxRuns),
+            options: [for (final n in runs) PropertyOption(value: n, label: l10n.routineRunsCount(n), selected: n == maxRuns)],
+            onSelected: (v) => onChanged(end, endsAt, v),
+          ),
+      ],
+    );
+  }
+}
+
+/// Changes when an existing routine ends (D-262). A new number of runs counts from now.
+class RoutineEndSheet extends ConsumerStatefulWidget {
+  const RoutineEndSheet({super.key, required this.routine});
+  final Routine routine;
+
+  @override
+  ConsumerState<RoutineEndSheet> createState() => _RoutineEndSheetState();
+}
+
+class _RoutineEndSheetState extends ConsumerState<RoutineEndSheet> {
+  late var _end = widget.routine.endsAt != null
+      ? RoutineEnd.onDate
+      : widget.routine.maxRuns != null
+      ? RoutineEnd.afterRuns
+      : RoutineEnd.never;
+  late var _endsAt = widget.routine.endsAt?.toLocal() ?? RoutineEnd.defaultDate();
+  late var _maxRuns = widget.routine.maxRuns != null ? (widget.routine.maxRuns! - (widget.routine.runCount ?? 0)).clamp(1, 10000) : 5;
+  var _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final valid = _end != RoutineEnd.onDate || _endsAt.isAfter(DateTime.now());
+    return FormSheet(
+      icon: LucideIcons.flag,
+      title: l10n.routineEndTitle,
+      subtitle: l10n.routineEndSubtitle,
+      submitLabel: l10n.save,
+      submitKey: const Key('saveRoutineEnd'),
+      busy: _busy,
+      onSubmit: !valid
+          ? null
+          : () async {
+              setState(() => _busy = true);
+              final ok = await runGuarded(context, () async {
+                await ref
+                    .read(backendProvider)
+                    .setRoutineEnd(
+                      widget.routine.id,
+                      endsAt: _end == RoutineEnd.onDate ? _endsAt : null,
+                      maxRuns: _end == RoutineEnd.afterRuns ? _maxRuns : null,
+                    );
+                return true;
+              });
+              if (!context.mounted) return;
+              setState(() => _busy = false);
+              if (ok == true) Navigator.of(context).pop(true);
+            },
+      children: [
+        RoutineEndPicker(
+          end: _end,
+          endsAt: _endsAt,
+          maxRuns: _maxRuns,
+          onChanged: (end, endsAt, maxRuns) => setState(() {
+            _end = end;
+            _endsAt = endsAt;
+            _maxRuns = maxRuns;
+          }),
+        ),
+      ],
     );
   }
 }

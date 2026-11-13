@@ -3820,6 +3820,78 @@ abstract class AppLocalizations {
   /// **'Off'**
   String get routineOff;
 
+  /// No description provided for @routineEnds.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends'**
+  String get routineEnds;
+
+  /// No description provided for @routineEndsNever.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get routineEndsNever;
+
+  /// No description provided for @routineEndsOnDate.
+  ///
+  /// In en, this message translates to:
+  /// **'On a date'**
+  String get routineEndsOnDate;
+
+  /// No description provided for @routineEndsAfterRuns.
+  ///
+  /// In en, this message translates to:
+  /// **'After some runs'**
+  String get routineEndsAfterRuns;
+
+  /// No description provided for @routineEndDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Last day'**
+  String get routineEndDate;
+
+  /// No description provided for @routineRunCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Runs'**
+  String get routineRunCountLabel;
+
+  /// No description provided for @routineRunsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 run} other{{n} runs}}'**
+  String routineRunsCount(int n);
+
+  /// No description provided for @routineEndsAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends {when}'**
+  String routineEndsAt(String when);
+
+  /// No description provided for @routineRunsLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =0{No runs left} =1{1 run left} other{{n} runs left}}'**
+  String routineRunsLeft(int n);
+
+  /// No description provided for @routineChangeEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'When It Ends'**
+  String get routineChangeEnd;
+
+  /// No description provided for @routineEndTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When it ends'**
+  String get routineEndTitle;
+
+  /// No description provided for @routineEndSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'It switches itself off then. A new number of runs counts from now.'**
+  String get routineEndSubtitle;
+
   /// No description provided for @deleteRoutineTitle.
   ///
   /// In en, this message translates to:

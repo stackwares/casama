@@ -2521,6 +2521,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String get routineOff => 'Off';
 
   @override
+  String get routineEnds => 'Ends';
+
+  @override
+  String get routineEndsNever => 'Never';
+
+  @override
+  String get routineEndsOnDate => 'On a date';
+
+  @override
+  String get routineEndsAfterRuns => 'After some runs';
+
+  @override
+  String get routineEndDate => 'Last day';
+
+  @override
+  String get routineRunCountLabel => 'Runs';
+
+  @override
+  String routineRunsCount(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n runs',
+      one: '1 run',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String routineEndsAt(String when) {
+    return 'Ends $when';
+  }
+
+  @override
+  String routineRunsLeft(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n runs left',
+      one: '1 run left',
+      zero: 'No runs left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get routineChangeEnd => 'When It Ends';
+
+  @override
+  String get routineEndTitle => 'When it ends';
+
+  @override
+  String get routineEndSubtitle =>
+      'It switches itself off then. A new number of runs counts from now.';
+
+  @override
   String deleteRoutineTitle(String name) {
     return 'Delete “$name”?';
   }

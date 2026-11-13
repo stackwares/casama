@@ -35,6 +35,12 @@ abstract class _$CreatedRoutineCWProxy {
 
   CreatedRoutine lastRunAt(DateTime? lastRunAt);
 
+  CreatedRoutine endsAt(DateTime? endsAt);
+
+  CreatedRoutine maxRuns(int? maxRuns);
+
+  CreatedRoutine runCount(int? runCount);
+
   CreatedRoutine conversationId(String? conversationId);
 
   CreatedRoutine createdAt(DateTime createdAt);
@@ -66,6 +72,9 @@ abstract class _$CreatedRoutineCWProxy {
     bool enabled,
     DateTime? nextRunAt,
     DateTime? lastRunAt,
+    DateTime? endsAt,
+    int? maxRuns,
+    int? runCount,
     String? conversationId,
     DateTime createdAt,
     String? webhookUrl,
@@ -127,6 +136,15 @@ class _$CreatedRoutineCWProxyImpl implements _$CreatedRoutineCWProxy {
   CreatedRoutine lastRunAt(DateTime? lastRunAt) => call(lastRunAt: lastRunAt);
 
   @override
+  CreatedRoutine endsAt(DateTime? endsAt) => call(endsAt: endsAt);
+
+  @override
+  CreatedRoutine maxRuns(int? maxRuns) => call(maxRuns: maxRuns);
+
+  @override
+  CreatedRoutine runCount(int? runCount) => call(runCount: runCount);
+
+  @override
   CreatedRoutine conversationId(String? conversationId) =>
       call(conversationId: conversationId);
 
@@ -164,6 +182,9 @@ class _$CreatedRoutineCWProxyImpl implements _$CreatedRoutineCWProxy {
     Object? enabled = const $CopyWithPlaceholder(),
     Object? nextRunAt = const $CopyWithPlaceholder(),
     Object? lastRunAt = const $CopyWithPlaceholder(),
+    Object? endsAt = const $CopyWithPlaceholder(),
+    Object? maxRuns = const $CopyWithPlaceholder(),
+    Object? runCount = const $CopyWithPlaceholder(),
     Object? conversationId = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
     Object? webhookUrl = const $CopyWithPlaceholder(),
@@ -228,6 +249,18 @@ class _$CreatedRoutineCWProxyImpl implements _$CreatedRoutineCWProxy {
           ? _value.lastRunAt
           // ignore: cast_nullable_to_non_nullable
           : lastRunAt as DateTime?,
+      endsAt: endsAt == const $CopyWithPlaceholder()
+          ? _value.endsAt
+          // ignore: cast_nullable_to_non_nullable
+          : endsAt as DateTime?,
+      maxRuns: maxRuns == const $CopyWithPlaceholder()
+          ? _value.maxRuns
+          // ignore: cast_nullable_to_non_nullable
+          : maxRuns as int?,
+      runCount: runCount == const $CopyWithPlaceholder()
+          ? _value.runCount
+          // ignore: cast_nullable_to_non_nullable
+          : runCount as int?,
       conversationId: conversationId == const $CopyWithPlaceholder()
           ? _value.conversationId
           // ignore: cast_nullable_to_non_nullable
@@ -322,6 +355,12 @@ CreatedRoutine _$CreatedRoutineFromJson(
         'last_run_at',
         (v) => v == null ? null : DateTime.parse(v as String),
       ),
+      endsAt: $checkedConvert(
+        'ends_at',
+        (v) => v == null ? null : DateTime.parse(v as String),
+      ),
+      maxRuns: $checkedConvert('max_runs', (v) => (v as num?)?.toInt()),
+      runCount: $checkedConvert('run_count', (v) => (v as num?)?.toInt()),
       conversationId: $checkedConvert('conversation_id', (v) => v as String?),
       createdAt: $checkedConvert(
         'created_at',
@@ -338,6 +377,9 @@ CreatedRoutine _$CreatedRoutineFromJson(
     'scheduleCron': 'schedule_cron',
     'nextRunAt': 'next_run_at',
     'lastRunAt': 'last_run_at',
+    'endsAt': 'ends_at',
+    'maxRuns': 'max_runs',
+    'runCount': 'run_count',
     'conversationId': 'conversation_id',
     'createdAt': 'created_at',
     'webhookUrl': 'webhook_url',
@@ -361,6 +403,9 @@ Map<String, dynamic> _$CreatedRoutineToJson(CreatedRoutine instance) =>
       'enabled': instance.enabled,
       'next_run_at': instance.nextRunAt?.toIso8601String(),
       'last_run_at': instance.lastRunAt?.toIso8601String(),
+      'ends_at': ?instance.endsAt?.toIso8601String(),
+      'max_runs': ?instance.maxRuns,
+      'run_count': ?instance.runCount,
       'conversation_id': instance.conversationId,
       'created_at': instance.createdAt.toIso8601String(),
       'webhook_url': ?instance.webhookUrl,

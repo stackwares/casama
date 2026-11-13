@@ -6016,6 +6016,25 @@
             ],
             "format": "date-time"
           },
+          "ends_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When it switches itself off for good (D-262)"
+          },
+          "max_runs": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "How many runs before it switches itself off (D-262)"
+          },
+          "run_count": {
+            "type": "integer",
+            "description": "Runs that count toward max_runs (manual runs don't)"
+          },
           "conversation_id": {
             "type": [
               "string",
@@ -6120,6 +6139,17 @@
                 "description": "Required for device triggers: the event on your own phone or computer"
               }
             ]
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Repeating and event routines: switch off for good at this time"
+          },
+          "max_runs": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000,
+            "description": "Repeating and event routines: switch off for good after this many runs"
           }
         },
         "required": [
@@ -6987,11 +7017,13 @@
           },
           "schedule_cron": {
             "type": "string",
-            "maxLength": 100
+            "maxLength": 100,
+            "description": "A once routine given a cron becomes a repeating one"
           },
           "run_at": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "description": "A repeating routine given run_at becomes a once one"
           },
           "timezone": {
             "type": "string",
@@ -7002,6 +7034,23 @@
           },
           "enabled": {
             "type": "boolean"
+          },
+          "ends_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When it switches itself off; null removes the end time"
+          },
+          "max_runs": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "maximum": 10000,
+            "description": "Runs left before it switches itself off, counted from now; null removes it"
           }
         }
       },

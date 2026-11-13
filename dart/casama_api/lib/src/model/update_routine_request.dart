@@ -33,6 +33,10 @@ class UpdateRoutineRequest {
      this.notify,
 
      this.enabled,
+
+     this.endsAt,
+
+     this.maxRuns,
   });
 
   @JsonKey(
@@ -59,6 +63,7 @@ class UpdateRoutineRequest {
 
 
 
+      /// A once routine given a cron becomes a repeating one
   @JsonKey(
     
     name: r'schedule_cron',
@@ -71,6 +76,7 @@ class UpdateRoutineRequest {
 
 
 
+      /// A repeating routine given run_at becomes a once one
   @JsonKey(
     
     name: r'run_at',
@@ -119,6 +125,34 @@ class UpdateRoutineRequest {
 
 
 
+      /// When it switches itself off; null removes the end time
+  @JsonKey(
+    
+    name: r'ends_at',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final DateTime? endsAt;
+
+
+
+      /// Runs left before it switches itself off, counted from now; null removes it
+          // minimum: 1
+          // maximum: 10000
+  @JsonKey(
+    
+    name: r'max_runs',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? maxRuns;
+
+
+
 
 
     @override
@@ -129,7 +163,9 @@ class UpdateRoutineRequest {
       other.runAt == runAt &&
       other.timezone == timezone &&
       other.notify == notify &&
-      other.enabled == enabled;
+      other.enabled == enabled &&
+      other.endsAt == endsAt &&
+      other.maxRuns == maxRuns;
 
     @override
     int get hashCode =>
@@ -139,7 +175,9 @@ class UpdateRoutineRequest {
         runAt.hashCode +
         timezone.hashCode +
         notify.hashCode +
-        enabled.hashCode;
+        enabled.hashCode +
+        (endsAt == null ? 0 : endsAt.hashCode) +
+        (maxRuns == null ? 0 : maxRuns.hashCode);
 
   factory UpdateRoutineRequest.fromJson(Map<String, dynamic> json) => _$UpdateRoutineRequestFromJson(json);
 

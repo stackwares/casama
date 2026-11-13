@@ -2949,6 +2949,8 @@ class FakeBackend implements Backend {
     DateTime? runAt,
     CalendarTriggerConfig? calendar,
     MessageTriggerConfig? message,
+    DateTime? endsAt,
+    int? maxRuns,
   }) async {
     createdCalendar = calendar;
     createdMessageTrigger = message;
@@ -2966,6 +2968,9 @@ class FakeBackend implements Backend {
           ? DateTime(2026, 11, 11, 7)
           : (trigger == 'once' ? runAt : null),
       lastRunAt: null,
+      endsAt: trigger == 'once' ? null : endsAt,
+      maxRuns: trigger == 'once' ? null : maxRuns,
+      runCount: 0,
       conversationId: null,
       createdAt: DateTime.now(),
       webhookUrl:
@@ -2993,6 +2998,15 @@ class FakeBackend implements Backend {
 
   @override
   Future<void> setRoutineEnabled(String routineId, bool enabled) async {}
+  final routineEnds = <String, (DateTime?, int?)>{};
+  @override
+  Future<void> setRoutineEnd(String routineId, {DateTime? endsAt, int? maxRuns}) async {
+    routineEnds[routineId] = (endsAt, maxRuns);
+    final i = routineList.indexWhere((r) => r.id == routineId);
+    if (i >= 0) {
+      routineList[i] = Routine.fromJson({...routineList[i].toJson(), 'ends_at': endsAt?.toUtc().toIso8601String(), 'max_runs': maxRuns, 'run_count': 0});
+    }
+  }
   final deletedRoutines = <String>[];
   @override
   Future<void> deleteRoutine(String routineId) async {

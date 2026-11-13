@@ -106,6 +106,7 @@ export async function fireDeviceEvent(
     if (!fresh.length) return [];
     const routines = await tx.execute<RoutineRow>(sql`
       select * from public.routines where enabled and created_by = ${userId}::uuid
+        and (ends_at is null or ends_at > now())
         and ((trigger ->> 'type' = 'device' and trigger ->> 'event' = ${e.type})
           or (${e.type} = 'wake' and kind = 'brief'))
       for update`);

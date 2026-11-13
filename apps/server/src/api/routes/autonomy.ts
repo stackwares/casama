@@ -193,9 +193,22 @@ const routineOut = (r: RoutineRow) => ({
   enabled: r.enabled,
   next_run_at: r.nextRunAt ? iso(r.nextRunAt) : null,
   last_run_at: r.lastRunAt ? iso(r.lastRunAt) : null,
+  ends_at: r.endsAt ? iso(r.endsAt) : null,
+  max_runs: r.maxRuns,
+  run_count: r.runCount,
   conversation_id: r.conversationId,
   created_at: iso(r.createdAt),
 });
+
+/** An end time for a routine (D-262): must be in the future. */
+const routineEnd = (v: string) => {
+  const at = new Date(v);
+  if (Number.isNaN(at.getTime()) || at.getTime() <= Date.now())
+    throw new ApiError(400, "validation_failed", "The end time must be in the future", {
+      errors: [{ path: "ends_at", message: "Pick a time in the future" }],
+    });
+  return at;
+};
 
 /** Applies a starter template to a new bot: persona, autonomy, skills and routines. */
 export async function applyTemplate(
@@ -709,6 +722,11 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         errors: [{ path: "run_at", message: "Pick a time in the future" }],
       });
     }
+    if (trigger === "once" && (body.ends_at || body.max_runs != null))
+      throw new ApiError(400, "validation_failed", "A once routine already ends after its run", {
+        errors: [{ path: "ends_at", message: "Only for repeating or event routines" }],
+      });
+    const endsAt = body.ends_at ? routineEnd(body.ends_at) : null;
     let webhookSecret: string | undefined;
     let triggerJson: Record<string, unknown> = { type: trigger };
     if (trigger === "message") {
@@ -758,6 +776,11 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       };
     }
     const cron = trigger === "schedule" ? (body.schedule_cron as string) : null;
+    const firstRun = cron ? nextRunAt(cron, tz) : null;
+    if (endsAt && firstRun && firstRun > endsAt)
+      throw new ApiError(400, "validation_failed", "It would end before its first run", {
+        errors: [{ path: "ends_at", message: "Pick a later end time" }],
+      });
     const [row] = await db
       .insert(routines)
       .values({
@@ -770,8 +793,10 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         timezone: tz,
         trigger: triggerJson,
         notify: body.notify ?? true,
-        nextRunAt: cron
-          ? nextRunAt(cron, tz).toISOString()
+        endsAt: endsAt?.toISOString() ?? null,
+        maxRuns: body.max_runs ?? null,
+        nextRunAt: firstRun
+          ? firstRun.toISOString()
           : trigger === "once"
             ? new Date(body.run_at as string).toISOString()
             : null,
@@ -808,13 +833,56 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       tx.select().from(routines).where(eq(routines.id, id)),
     );
     if (!cur) throw new ApiError(404, "routine_not_found", "Routine not found");
+    const bad = (path: string, message: string): never => {
+      throw new ApiError(400, "validation_failed", message, { errors: [{ path, message }] });
+    };
     const tz = body.timezone ?? cur.timezone;
-    const isOnce = (cur.trigger as { type?: string })?.type === "once";
-    const cron = isOnce ? null : (body.schedule_cron ?? cur.scheduleCron);
-    if (!isValidTimezone(tz))
-      throw new ApiError(400, "validation_failed", `Unknown timezone ${tz}`);
+    if (!isValidTimezone(tz)) bad("timezone", `Unknown timezone ${tz}`);
     if (body.schedule_cron && !isValidCron(body.schedule_cron))
-      throw new ApiError(400, "validation_failed", "Invalid cron expression");
+      bad("schedule_cron", "Invalid cron expression");
+    if (body.schedule_cron && body.run_at) bad("run_at", "Pass a cron or a time, not both");
+    // A once routine given a cron repeats; a repeating one given run_at runs once (D-262).
+    const was = (cur.trigger as { type?: string })?.type ?? "schedule";
+    if ((body.schedule_cron || body.run_at) && was !== "once" && was !== "schedule")
+      bad("trigger", "An event routine keeps its trigger; create a scheduled one instead");
+    const type = body.run_at ? "once" : body.schedule_cron ? "schedule" : was;
+    const isOnce = type === "once";
+    const cron = type === "schedule" ? (body.schedule_cron ?? cur.scheduleCron) : null;
+    if (isOnce && (body.ends_at || body.max_runs))
+      bad("ends_at", "A once routine already ends after its run");
+    const endsAt = isOnce
+      ? null
+      : body.ends_at === null
+        ? null
+        : body.ends_at
+          ? routineEnd(body.ends_at)
+          : cur.endsAt
+            ? new Date(cur.endsAt)
+            : null;
+    const maxRuns = isOnce ? null : body.max_runs === undefined ? cur.maxRuns : body.max_runs;
+    // A new max_runs counts from now.
+    const runCount = body.max_runs === undefined ? cur.runCount : 0;
+    const enabled = body.enabled ?? cur.enabled;
+    let next: string | null = null;
+    if (enabled) {
+      if (endsAt && endsAt.getTime() <= Date.now())
+        bad("ends_at", "Its end time has passed: pick a later one or remove it");
+      if (maxRuns != null && runCount >= maxRuns)
+        bad("max_runs", `It already ran its ${maxRuns} times: raise the runs or remove the limit`);
+      if (isOnce) {
+        const at = body.run_at
+          ? new Date(body.run_at)
+          : cur.nextRunAt && new Date(cur.nextRunAt).getTime() > Date.now() - 60_000
+            ? new Date(cur.nextRunAt)
+            : null;
+        if (!at || at.getTime() < Date.now() - 60_000) bad("run_at", "Pick a time in the future");
+        next = (at as Date).toISOString();
+      } else if (cron) {
+        const n = nextRunAt(cron, tz);
+        if (endsAt && n > endsAt) bad("ends_at", "It would end before its next run");
+        next = n.toISOString();
+      }
+    }
     const [row] = await withUserSession(db, claims, (tx) =>
       tx
         .update(routines)
@@ -823,19 +891,14 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
           instructionsMd: body.instructions ?? cur.instructionsMd,
           scheduleCron: cron,
           timezone: tz,
+          trigger: type === was ? cur.trigger : { type },
           notify: body.notify ?? cur.notify,
-          enabled: body.enabled ?? cur.enabled,
-          nextRunAt: !(body.enabled ?? cur.enabled)
-            ? null
-            : isOnce
-              ? body.run_at
-                ? new Date(body.run_at).toISOString()
-                : cur.nextRunAt
-                  ? iso(cur.nextRunAt)
-                  : null
-              : cron
-                ? nextRunAt(cron, tz).toISOString()
-                : null,
+          enabled,
+          endsAt: endsAt?.toISOString() ?? null,
+          maxRuns,
+          runCount,
+          nextRunAt: next,
+          retimePending: false,
         })
         .where(eq(routines.id, id))
         .returning(),

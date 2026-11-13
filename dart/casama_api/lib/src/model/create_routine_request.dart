@@ -47,6 +47,10 @@ class CreateRoutineRequest {
      this.message,
 
      this.device,
+
+     this.endsAt,
+
+     this.maxRuns,
   });
 
   @JsonKey(
@@ -200,6 +204,34 @@ class CreateRoutineRequest {
 
 
 
+      /// Repeating and event routines: switch off for good at this time
+  @JsonKey(
+    
+    name: r'ends_at',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final DateTime? endsAt;
+
+
+
+      /// Repeating and event routines: switch off for good after this many runs
+          // minimum: 1
+          // maximum: 10000
+  @JsonKey(
+    
+    name: r'max_runs',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? maxRuns;
+
+
+
 
 
     @override
@@ -215,7 +247,9 @@ class CreateRoutineRequest {
       other.events == events &&
       other.calendar == calendar &&
       other.message == message &&
-      other.device == device;
+      other.device == device &&
+      other.endsAt == endsAt &&
+      other.maxRuns == maxRuns;
 
     @override
     int get hashCode =>
@@ -230,7 +264,9 @@ class CreateRoutineRequest {
         events.hashCode +
         (calendar == null ? 0 : calendar.hashCode) +
         (message == null ? 0 : message.hashCode) +
-        (device == null ? 0 : device.hashCode);
+        (device == null ? 0 : device.hashCode) +
+        endsAt.hashCode +
+        maxRuns.hashCode;
 
   factory CreateRoutineRequest.fromJson(Map<String, dynamic> json) => _$CreateRoutineRequestFromJson(json);
 

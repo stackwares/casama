@@ -34,9 +34,27 @@ Each routine in the list shows its trigger, when it runs **Next** and when it ra
 
 - Use the switch to turn a routine on or off. An off routine shows **Off**.
 - Open its **More** menu and tap **Run now** to start it immediately. **View run** opens the run.
+- **When It Ends** in the same menu sets or removes its end (below).
 - **Delete** stops it for good. Results it already posted stay in their conversation.
 
-You can also ask the bot to list, change or delete its routines.
+You can also ask the bot to list, change or delete its routines. It can rename one, change its
+instructions, schedule, timezone or device event, pause or resume it, set or remove its end, and
+turn a one-time routine into a repeating one or back ("make that reminder daily", "stop the standup
+after Friday").
+
+## Ending a routine
+
+A repeating or event routine can end on its own. In **New routine** (or **When It Ends** on an
+existing one), set **Ends**:
+
+- **Never**: it keeps going until you turn it off.
+- **On a date**: pick the **Last day** and time. It doesn't run after that.
+- **After some runs**: it stops after that many runs. On an existing routine the count starts
+  over from now.
+
+The card shows **Ends** with the date, or how many runs are left. Once it ends it switches itself
+off and shows **Off**. To start it again, give it a later end or remove the end. **Run now** doesn't
+count as one of its runs. One-time routines don't need an end: they already stop after their run.
 
 ## One-time routines
 
@@ -251,7 +269,8 @@ Self-hosted servers have no such limits.
 - Calendar changes are picked up by the 5-minute check; Casama doesn't receive change
   notifications from calendar providers yet.
 - Watchers can't watch email or chat replies yet; replies on tickets work.
-- In the app you can't edit a routine after creating it. Ask the bot to change it instead.
+- In the app you can only change a routine's end after creating it. Ask the bot to change anything
+  else.
 
 ## Related
 

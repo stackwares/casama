@@ -52,6 +52,12 @@ class CreatedRoutine {
 
     required  this.lastRunAt,
 
+     this.endsAt,
+
+     this.maxRuns,
+
+     this.runCount,
+
     required  this.conversationId,
 
     required  this.createdAt,
@@ -229,6 +235,45 @@ class CreatedRoutine {
 
 
 
+      /// When it switches itself off for good (D-262)
+  @JsonKey(
+    
+    name: r'ends_at',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final DateTime? endsAt;
+
+
+
+      /// How many runs before it switches itself off (D-262)
+  @JsonKey(
+    
+    name: r'max_runs',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? maxRuns;
+
+
+
+      /// Runs that count toward max_runs (manual runs don't)
+  @JsonKey(
+    
+    name: r'run_count',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? runCount;
+
+
+
   @JsonKey(
     
     name: r'conversation_id',
@@ -296,6 +341,9 @@ class CreatedRoutine {
       other.enabled == enabled &&
       other.nextRunAt == nextRunAt &&
       other.lastRunAt == lastRunAt &&
+      other.endsAt == endsAt &&
+      other.maxRuns == maxRuns &&
+      other.runCount == runCount &&
       other.conversationId == conversationId &&
       other.createdAt == createdAt &&
       other.webhookUrl == webhookUrl &&
@@ -317,6 +365,9 @@ class CreatedRoutine {
         enabled.hashCode +
         (nextRunAt == null ? 0 : nextRunAt.hashCode) +
         (lastRunAt == null ? 0 : lastRunAt.hashCode) +
+        (endsAt == null ? 0 : endsAt.hashCode) +
+        (maxRuns == null ? 0 : maxRuns.hashCode) +
+        runCount.hashCode +
         (conversationId == null ? 0 : conversationId.hashCode) +
         createdAt.hashCode +
         webhookUrl.hashCode +

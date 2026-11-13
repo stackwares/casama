@@ -31,6 +31,10 @@ abstract class _$CreateRoutineRequestCWProxy {
 
   CreateRoutineRequest device(DeviceTriggerConfig? device);
 
+  CreateRoutineRequest endsAt(DateTime? endsAt);
+
+  CreateRoutineRequest maxRuns(int? maxRuns);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateRoutineRequest(...).copyWith.fieldName(value)`.
@@ -52,6 +56,8 @@ abstract class _$CreateRoutineRequestCWProxy {
     CalendarTriggerConfig? calendar,
     MessageTriggerConfig? message,
     DeviceTriggerConfig? device,
+    DateTime? endsAt,
+    int? maxRuns,
   });
 }
 
@@ -105,6 +111,12 @@ class _$CreateRoutineRequestCWProxyImpl
   CreateRoutineRequest device(DeviceTriggerConfig? device) =>
       call(device: device);
 
+  @override
+  CreateRoutineRequest endsAt(DateTime? endsAt) => call(endsAt: endsAt);
+
+  @override
+  CreateRoutineRequest maxRuns(int? maxRuns) => call(maxRuns: maxRuns);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `CreateRoutineRequest(...).copyWith.fieldName(value)`.
@@ -127,6 +139,8 @@ class _$CreateRoutineRequestCWProxyImpl
     Object? calendar = const $CopyWithPlaceholder(),
     Object? message = const $CopyWithPlaceholder(),
     Object? device = const $CopyWithPlaceholder(),
+    Object? endsAt = const $CopyWithPlaceholder(),
+    Object? maxRuns = const $CopyWithPlaceholder(),
   }) {
     return CreateRoutineRequest(
       botId: botId == const $CopyWithPlaceholder() || botId == null
@@ -178,6 +192,14 @@ class _$CreateRoutineRequestCWProxyImpl
           ? _value.device
           // ignore: cast_nullable_to_non_nullable
           : device as DeviceTriggerConfig?,
+      endsAt: endsAt == const $CopyWithPlaceholder()
+          ? _value.endsAt
+          // ignore: cast_nullable_to_non_nullable
+          : endsAt as DateTime?,
+      maxRuns: maxRuns == const $CopyWithPlaceholder()
+          ? _value.maxRuns
+          // ignore: cast_nullable_to_non_nullable
+          : maxRuns as int?,
     );
   }
 }
@@ -238,6 +260,11 @@ CreateRoutineRequest _$CreateRoutineRequestFromJson(
             ? null
             : DeviceTriggerConfig.fromJson(v as Map<String, dynamic>),
       ),
+      endsAt: $checkedConvert(
+        'ends_at',
+        (v) => v == null ? null : DateTime.parse(v as String),
+      ),
+      maxRuns: $checkedConvert('max_runs', (v) => (v as num?)?.toInt()),
     );
     return val;
   },
@@ -245,6 +272,8 @@ CreateRoutineRequest _$CreateRoutineRequestFromJson(
     'botId': 'bot_id',
     'scheduleCron': 'schedule_cron',
     'runAt': 'run_at',
+    'endsAt': 'ends_at',
+    'maxRuns': 'max_runs',
   },
 );
 
@@ -263,6 +292,8 @@ Map<String, dynamic> _$CreateRoutineRequestToJson(
   'calendar': ?instance.calendar?.toJson(),
   'message': ?instance.message?.toJson(),
   'device': ?instance.device?.toJson(),
+  'ends_at': ?instance.endsAt?.toIso8601String(),
+  'max_runs': ?instance.maxRuns,
 };
 
 const _$RoutineTriggerEnumMap = {

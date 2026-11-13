@@ -39,6 +39,7 @@ import { sweepSignups } from "../services/analytics-signups.ts";
 import { sweepReferralRewards } from "../services/referrals.ts";
 import {
   claimDueRoutines,
+  expireRoutines,
   fireDueCalendarRuns,
   handleRoutineWebhook,
   retimeRoutines,
@@ -237,6 +238,10 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
     // Timezones that follow the person (D-250): routines that moved zone get their next run anew.
     await DBOS.runStep(() => retimeRoutines(rt().db).catch(captureStep("retime-routines", 0)), {
       name: "retime-routines",
+    });
+    // Routines that end (D-262): past their end time, they switch off.
+    await DBOS.runStep(() => expireRoutines(rt().db).catch(captureStep("expire-routines", 0)), {
+      name: "expire-routines",
     });
     // App events start scans: subscribe Composio triggers for new connections, every 10 minutes,
     // once the Composio webhook is set up (COMPOSIO_WEBHOOK_SECRET).

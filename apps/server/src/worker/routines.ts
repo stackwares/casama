@@ -26,7 +26,35 @@ interface RoutineRow {
   schedule_cron: string | null;
   timezone: string;
   trigger: { type?: string; vault_secret_id?: string; events?: string[] };
+  ends_at?: string | null;
+  max_runs?: number | null;
   [key: string]: unknown;
+}
+
+/** A routine that hasn't passed its end time (D-262). For selects on `public.routines` as `rt`. */
+const notEnded = sql`(rt.ends_at is null or rt.ends_at > now())`;
+
+/**
+ * Records a run on its routine. A run it started on its own counts toward max_runs (D-262), and
+ * the run that reaches it switches the routine off; manual "run now" doesn't count.
+ */
+async function markRun(tx: Tx | Database, routineId: string, runId: string, counts: boolean) {
+  await tx.execute(sql`
+    update public.routines set last_run_id = ${runId}::uuid, last_run_at = now(),
+      run_count = run_count + ${counts ? 1 : 0},
+      enabled = enabled and not (${counts} and max_runs is not null and run_count + 1 >= max_runs),
+      next_run_at = case when ${counts} and max_runs is not null and run_count + 1 >= max_runs
+        then null else next_run_at end
+    where id = ${routineId}::uuid`);
+}
+
+/** Switches off routines past their end time (D-262), event routines included. Every minute. */
+export async function expireRoutines(db: Database, now = new Date()) {
+  const rows = await db.execute<{ id: string }>(sql`
+    update public.routines set enabled = false, next_run_at = null
+    where enabled and ends_at is not null and ends_at <= ${now.toISOString()}::timestamptz
+    returning id`);
+  return rows.length;
 }
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
@@ -37,6 +65,7 @@ export async function createRoutineRun(
   r: RoutineRow,
   trigger: "routine" | "webhook" | "calendar" | "message" | "device",
   eventText?: string,
+  counts = true,
 ) {
   // Check-in scans (D-114) keep no conversation: a quiet scan writes nothing. Their instructions
   // travel as the run's task, with what was already suggested.
@@ -58,9 +87,7 @@ export async function createRoutineRun(
       insert into public.runs (org_id, bot_id, created_by, trigger, routine_id, budget)
       values (${r.org_id}::uuid, ${r.bot_id}::uuid, ${r.created_by}::uuid, ${trigger}, ${r.id}::uuid, ${JSON.stringify({ task, ...(reason ? { scan_reason: reason } : {}) })}::jsonb)
       returning id`);
-    await tx.execute(
-      sql`update public.routines set last_run_id = ${run?.id}::uuid, last_run_at = now() where id = ${r.id}::uuid`,
-    );
+    await markRun(tx, r.id, run?.id as string, counts);
     return run?.id as string;
   }
   // Attention rules (D-153): a brief carries what waited while the person was busy.
@@ -101,9 +128,7 @@ export async function createRoutineRun(
   await tx.execute(sql`
     insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
     values (${r.org_id}::uuid, ${conversationId}::uuid, 'user', ${r.created_by}::uuid, ${contentKeys.sealJson(r.org_id, [{ type: "text", text, routine: { id: r.id, name: r.name } }])}::jsonb, ${runId}::uuid)`);
-  await tx.execute(
-    sql`update public.routines set last_run_id = ${runId}::uuid, last_run_at = now() where id = ${r.id}::uuid`,
-  );
+  await markRun(tx, r.id, runId, counts);
   return runId;
 }
 
@@ -118,8 +143,9 @@ export async function claimDueRoutines(
 ): Promise<string[]> {
   return db.transaction(async (tx) => {
     const due = await tx.execute<RoutineRow>(sql`
-      select * from public.routines
+      select * from public.routines rt
       where enabled and next_run_at <= ${now.toISOString()}::timestamptz
+        and (ends_at is null or ends_at > ${now.toISOString()}::timestamptz)
         and (schedule_cron is not null or trigger ->> 'type' = 'once')
       order by next_run_at limit ${limit}
       for update skip locked`);
@@ -162,10 +188,15 @@ export async function claimDueRoutines(
             );
             return made;
           }
+          // A next run past the end time (D-262) ends the routine instead. markRun may have
+          // switched it off already (its last allowed run).
           const next = nextRunAt(r.schedule_cron as string, r.timezone, now);
-          await tx.execute(
-            sql`update public.routines set next_run_at = ${next.toISOString()}::timestamptz where id = ${r.id}::uuid`,
-          );
+          await tx.execute(sql`
+            update public.routines set
+              enabled = enabled and (ends_at is null or ${next.toISOString()}::timestamptz <= ends_at),
+              next_run_at = case when enabled and (ends_at is null or ${next.toISOString()}::timestamptz <= ends_at)
+                then ${next.toISOString()}::timestamptz else null end
+            where id = ${r.id}::uuid`);
           return made;
         });
         if (made) runIds.push(made);
@@ -228,7 +259,7 @@ export async function startRoutineForMessage(
   eventText: string,
 ): Promise<string | null> {
   const [r] = await db.execute<RoutineRow>(
-    sql`select * from public.routines where id = ${routineId}::uuid and enabled`,
+    sql`select * from public.routines rt where id = ${routineId}::uuid and enabled and ${notEnded}`,
   );
   if (!r) return null;
   return createRoutineRun(db, r, "message", eventText);
@@ -243,7 +274,7 @@ export async function fireDueCalendarRuns(db: Database, now = new Date()): Promi
       event: import("@casama/agent").CalEvent;
     }>(sql`
       select f.routine_id, f.event_id, f.event from public.calendar_fires f join public.routines r on r.id = f.routine_id
-      where f.fired_at is null and r.enabled and f.fire_at <= ${now.toISOString()}::timestamptz
+      where f.fired_at is null and r.enabled and (r.ends_at is null or r.ends_at > now()) and f.fire_at <= ${now.toISOString()}::timestamptz
         and f.fire_at > ${new Date(now.getTime() - 10 * 60_000).toISOString()}::timestamptz
       order by f.fire_at limit 50 for update of f skip locked`);
     const runIds: string[] = [];
@@ -267,7 +298,7 @@ export async function runRoutineNow(db: Database, routineId: string) {
     sql`select * from public.routines where id = ${routineId}::uuid`,
   );
   if (!r) throw new Error("routine_not_found");
-  return createRoutineRun(db, r, "routine");
+  return createRoutineRun(db, r, "routine", undefined, false);
 }
 
 const safeEqual = (a: string, b: string) => {
@@ -294,7 +325,8 @@ export async function handleRoutineWebhook(
     select rt.*, v.decrypted_secret as secret from public.routines rt
     left join vault.decrypted_secrets v on v.id = (rt.trigger ->> 'vault_secret_id')::uuid
     where rt.id = ${routineId}::uuid`);
-  if (!r?.enabled) return { ok: false, reason: "routine_not_found" };
+  if (!r?.enabled || (r.ends_at && new Date(r.ends_at).getTime() <= Date.now()))
+    return { ok: false, reason: "routine_not_found" };
   const expected = kind === "github" ? "github" : "webhook";
   if (r.trigger?.type !== expected) return { ok: false, reason: "wrong_trigger" };
   if (!r.secret) return { ok: false, reason: "no_secret" };
