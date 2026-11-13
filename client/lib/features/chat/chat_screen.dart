@@ -1579,7 +1579,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               );
               if (!(last && n.kind == NoticeKind.failed && !chat.running)) return line;
               final fix = errorFix(context, ref, n, widget.botId);
-              final canRetry = chat.lastUserText != null;
+              final canRetry = chat.canRetry;
               if (fix == null && !canRetry) return line;
               return Column(
                 children: [

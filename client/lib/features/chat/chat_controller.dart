@@ -180,6 +180,9 @@ class NoticeEntry extends ChatEntry {
   final DateTime? at;
 }
 
+/// What a message was sent with: Retry after a failed run sends exactly this again (Fix 12).
+typedef SentMessage = ({String text, List<AttachmentRef> attachments, List<String> skills, Map<String, Object?>? uiAction});
+
 class ChatState {
   const ChatState({
     this.conversationId,
@@ -189,7 +192,7 @@ class ChatState {
     this.lastRunId,
     this.costUsd = 0,
     this.tokens = 0,
-    this.lastUserText,
+    this.lastSent,
     this.answeredUi = const {},
     this.offline = false,
     this.activeBotId,
@@ -219,7 +222,10 @@ class ChatState {
   final String? lastRunId;
   final double costUsd;
   final int tokens;
-  final String? lastUserText;
+  final SentMessage? lastSent;
+
+  /// The last message sent from here can be sent again (words, files, or both).
+  bool get canRetry => lastSent != null;
 
   /// Bot UIs the person has already answered; they stay visible but can't be used again.
   final Set<String> answeredUi;
@@ -235,7 +241,7 @@ class ChatState {
     String? lastRunId,
     double? costUsd,
     int? tokens,
-    String? lastUserText,
+    SentMessage? lastSent,
     Set<String>? answeredUi,
     bool? offline,
     String? activeBotId,
@@ -253,7 +259,7 @@ class ChatState {
     lastRunId: lastRunId ?? this.lastRunId,
     costUsd: costUsd ?? this.costUsd,
     tokens: tokens ?? this.tokens,
-    lastUserText: lastUserText ?? this.lastUserText,
+    lastSent: lastSent ?? this.lastSent,
     answeredUi: answeredUi ?? this.answeredUi,
     offline: offline ?? this.offline,
     activeBotId: clearActiveRun ? null : (activeBotId ?? this.activeBotId),
@@ -314,6 +320,7 @@ class ChatController extends Notifier<ChatState> {
       conversationId: id,
       offline: offline,
       hasEarlier: hasEarlier,
+      lastSent: state.conversationId == id ? state.lastSent : null,
       loadingEarlier: state.conversationId == id && state.loadingEarlier,
       entries: [..._entriesOf(id, messages), ..._notDelivered(id)],
       answeredUi: {for (final m in messages) ?m.uiActionSurface},
@@ -618,7 +625,7 @@ class ChatController extends Notifier<ChatState> {
       optimistic = local;
       state = state.copyWith(
         entries: [...state.entries, local],
-        lastUserText: trimmed,
+        lastSent: (text: trimmed, attachments: attachments, skills: skills, uiAction: uiAction),
         answeredUi: uiAction == null ? null : {...state.answeredUi, '${uiAction['surface_id']}'},
       );
       await before;
@@ -673,9 +680,12 @@ class ChatController extends Notifier<ChatState> {
     state = state.copyWith(entries: [for (final e in state.entries) if (!(e is MessageEntry && e.id == id && e.failed)) e]);
   }
 
+  /// Sends the last message again after its run failed: the words, the files, the skills picked
+  /// for it and a card's answer, as they were.
   Future<void> retry() async {
-    final text = state.lastUserText;
-    if (text != null) await send(text);
+    final last = state.lastSent;
+    if (last == null) return;
+    await send(last.text, attachments: last.attachments, skills: last.skills, uiAction: last.uiAction);
   }
 
   Future<void> cancel() async {
