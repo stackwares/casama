@@ -1022,7 +1022,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth);
             final background = Theme.of(context).scaffoldBackgroundColor;
             final Widget thread;
-            if (chat.loading || (_opening && chat.empty)) {
+            if (chat.loadFailed) {
+              thread = EmptyState(
+                key: const Key('chatLoadError'),
+                icon: LucideIcons.cloudOff,
+                isError: true,
+                title: l10n.chatLoadFailedTitle,
+                message: l10n.chatLoadFailedBody,
+                action: FilledButton.tonalIcon(
+                  key: const Key('chatLoadRetry'),
+                  onPressed: () => controller.open(widget.conversationId ?? chat.conversationId),
+                  icon: const Icon(LucideIcons.rotateCw, size: 18),
+                  label: Text(l10n.retry),
+                ),
+              );
+            } else if (chat.loading || (_opening && chat.empty)) {
               // Placeholder bubbles where the thread will be, so opening a chat never flashes the
               // starter cards or a spinner.
               thread = Padding(
@@ -1104,7 +1118,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
                   ),
                 // General and topics (D-253): what's going on in other topics, or the way back to General.
-                if (!widget.group && !chat.loading && !(_opening && chat.empty))
+                if (!widget.group && !chat.loading && !chat.loadFailed && !(_opening && chat.empty))
                   _TopicsBar(
                     botId: widget.botId,
                     currentId: chat.conversationId,
@@ -1826,10 +1840,11 @@ class _AttachButton extends StatelessWidget {
 }
 
 /// The parts of [ChatState] the chat screen shows outside the thread (a record: equal by value).
-typedef _ChatFrame = ({bool loading, bool offline, bool running, bool empty, String? conversationId, String? lastSpeakerId});
+typedef _ChatFrame = ({bool loading, bool loadFailed, bool offline, bool running, bool empty, String? conversationId, String? lastSpeakerId});
 
 _ChatFrame _chatFrame(ChatState c, {required bool group}) => (
   loading: c.loading,
+  loadFailed: c.loadFailed && c.entries.isEmpty,
   offline: c.offline,
   running: c.running,
   empty: c.entries.isEmpty,

@@ -5105,6 +5105,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get offlineSaved => 'Offline. Showing saved messages.';
 
   @override
+  String get chatLoadFailedTitle => 'This chat didn\'t load';
+
+  @override
+  String get chatLoadFailedBody => 'Check your connection, then try again.';
+
+  @override
   String get projects => 'Projects';
 
   @override

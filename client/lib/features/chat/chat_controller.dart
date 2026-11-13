@@ -193,8 +193,13 @@ class ChatState {
     this.answeredUi = const {},
     this.offline = false,
     this.activeBotId,
+    this.loadFailed = false,
   });
   final String? conversationId;
+
+  /// The chat couldn't be loaded and nothing is saved on the device: the screen says so and
+  /// offers Try Again, instead of placeholders that never end.
+  final bool loadFailed;
 
   /// In a group chat, the bot whose run is on screen: it heads "thinking" and the streaming reply.
   final String? activeBotId;
@@ -227,7 +232,9 @@ class ChatState {
     Set<String>? answeredUi,
     bool? offline,
     String? activeBotId,
+    bool? loadFailed,
   }) => ChatState(
+    loadFailed: loadFailed ?? this.loadFailed,
     conversationId: conversationId ?? this.conversationId,
     entries: entries ?? this.entries,
     loading: loading ?? this.loading,
@@ -370,6 +377,7 @@ class ChatController extends Notifier<ChatState> {
   void _setIfChanged(ChatState next) {
     if (state.conversationId == next.conversationId &&
         state.loading == next.loading &&
+        state.loadFailed == next.loadFailed &&
         state.offline == next.offline &&
         state.activeRunId == next.activeRunId &&
         _sameEntries(state.entries, next.entries) &&
@@ -425,7 +433,10 @@ class ChatController extends Notifier<ChatState> {
         id = list.isEmpty ? null : list.first.id;
         unawaited(cacheWrite(cache, 'lastconv:$botId', id));
       } catch (_) {
-        if (saved is! String) rethrow;
+        if (saved is! String) {
+          state = const ChatState(loadFailed: true);
+          return;
+        }
         id = saved;
       }
     }
@@ -445,7 +456,9 @@ class ChatController extends Notifier<ChatState> {
         state = state.copyWith(offline: true);
         return;
       }
-      rethrow;
+      // Nothing to show (no saved copy, as on the web): say so, with a way to try again.
+      state = ChatState(conversationId: conversationId == null ? null : id, loadFailed: true);
+      return;
     }
     unawaited(
       cacheWrite(cache, key, [

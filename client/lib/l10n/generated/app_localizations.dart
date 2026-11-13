@@ -8032,6 +8032,18 @@ abstract class AppLocalizations {
   /// **'Offline. Showing saved messages.'**
   String get offlineSaved;
 
+  /// No description provided for @chatLoadFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This chat didn\'t load'**
+  String get chatLoadFailedTitle;
+
+  /// No description provided for @chatLoadFailedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection, then try again.'**
+  String get chatLoadFailedBody;
+
   /// No description provided for @projects.
   ///
   /// In en, this message translates to:
