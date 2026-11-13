@@ -428,7 +428,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     Future.microtask(() async {
       final c = ref.read(chatControllerProvider(widget.botId).notifier)..group = widget.group;
       try {
-        await c.open(widget.conversationId);
+        await c.open(widget.conversationId, around: widget.focusMessageId);
       } finally {
         if (mounted && _opening) setState(() => _opening = false);
         if (mounted) unawaited(_bindDraft(ref.read(chatControllerProvider(widget.botId)).conversationId));
@@ -449,7 +449,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       Future.microtask(() async {
         final c = ref.read(chatControllerProvider(widget.botId).notifier)..group = widget.group;
         try {
-          await c.open(widget.conversationId);
+          await c.open(widget.conversationId, around: widget.focusMessageId);
         } finally {
           if (mounted && _opening) setState(() => _opening = false);
           if (mounted) unawaited(_bindDraft(ref.read(chatControllerProvider(widget.botId)).conversationId));
@@ -488,6 +488,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final distance = _scroll.position.pixels;
     _stickToBottom = distance < 120;
     _showJump.value = distance > 400;
+    // Near the top of what is loaded (the far end of the bottom-anchored list): fetch the page
+    // before it. The list keeps its place, since new rows are added beyond the far end.
+    if (_scroll.position.extentAfter < 600) {
+      unawaited(ref.read(chatControllerProvider(widget.botId).notifier).loadEarlier().catchError((_) {}));
+    }
   }
 
   /// Scrolls to the searched message: exactly when its row is built, else a rough jump first so
@@ -1324,6 +1329,33 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     var lastSide = '';
     var lastHeader = -1;
     final freshFrom = entries.length - 1;
+
+    // Older messages exist (Fix 10): scrolling here loads them; the button is the same thing by hand.
+    if (chat.hasEarlier) {
+      rows.add(
+        _Row(
+          const ValueKey('earlier'),
+          0,
+          () => Padding(
+            padding: const EdgeInsets.only(bottom: AppSpace.sm),
+            child: Center(
+              child: chat.loadingEarlier
+                  ? const Padding(
+                      padding: EdgeInsets.all(AppSpace.sm),
+                      child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                    )
+                  : TextButton.icon(
+                      key: const Key('loadEarlier'),
+                      onPressed: () => runGuarded(context, ref.read(chatControllerProvider(widget.botId).notifier).loadEarlier),
+                      icon: const Icon(LucideIcons.arrowUp, size: 16),
+                      label: Text(context.l10n.loadEarlierMessages),
+                    ),
+            ),
+          ),
+          inputs: chat.loadingEarlier,
+        ),
+      );
+    }
 
     final allBots = ref.read(botsProvider).value ?? const <Bot>[];
     // Between turns: close with one bot (D-256); group chats leave room for each bot's name.

@@ -2712,10 +2712,15 @@ class FakeBackend implements Backend {
   }
 
   @override
-  Future<List<ChatMessageView>> messages(String conversationId) async {
+  Future<List<ChatMessageView>> messages(String conversationId, {int? limit, String? before, String? around}) async {
     if (offline) throw Exception('offline');
-    return storedMessages;
+    messageRequests.add((limit: limit, before: before, around: around));
+    if (limit == null) return storedMessages;
+    return pageOfThread(storedMessages, (m) => m.id, limit: limit, before: before, around: around);
   }
+
+  /// What each thread read asked for (paging tests).
+  final messageRequests = <({int? limit, String? before, String? around})>[];
 
   /// Simulates no network for bots and messages (offline cache tests).
   bool offline = false;

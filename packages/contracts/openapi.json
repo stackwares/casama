@@ -19390,6 +19390,40 @@
             "required": true,
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "description": "Only the messages people read (user and assistant), the newest `limit` of them. Without it: the whole branch, every role"
+            },
+            "required": false,
+            "description": "Only the messages people read (user and assistant), the newest `limit` of them. Without it: the whole branch, every role",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "With `limit`: the page just before this message"
+            },
+            "required": false,
+            "description": "With `limit`: the page just before this message",
+            "name": "before",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "With `limit`: the newest messages back to this one and half a page before it (a search hit)"
+            },
+            "required": false,
+            "description": "With `limit`: the newest messages back to this one and half a page before it (a search hit)",
+            "name": "around",
+            "in": "query"
           }
         ],
         "responses": {

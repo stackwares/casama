@@ -1374,13 +1374,17 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.getConversationThread, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
+    // Paging (Fix 10): a page of what people read, instead of the whole branch.
+    const { limit, before, around } = c.req.valid("query");
     const rows = await withUserSession(db, claims, async (tx) => {
       const [conv] = await tx.execute<{ id: string }>(
         sql`select id from public.conversations where id = ${id}::uuid`,
       );
       if (!conv) throw new ApiError(404, "conversation_not_found", "Conversation not found");
       return tx.execute<Record<string, unknown>>(
-        sql`select * from public.conversation_thread(${id}::uuid)`,
+        sql`select * from public.conversation_thread(${id}::uuid, ${limit ?? null}::int, ${
+          limit === undefined ? null : (before ?? null)
+        }::uuid, ${limit === undefined ? null : (around ?? null)}::uuid)`,
       );
     });
     return c.json(

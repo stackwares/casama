@@ -1526,6 +1526,7 @@
   "@importMemories": {"placeholders": {"count": {"type": "int", "format": "decimalPattern"}}},
   "startingRoutine": "Starting the routine…",
   "offlineSaved": "Offline. Showing saved messages.",
+  "loadEarlierMessages": "Earlier Messages",
   "chatLoadFailedTitle": "This chat didn't load",
   "chatLoadFailedBody": "Check your connection, then try again.",
   "projects": "Projects",

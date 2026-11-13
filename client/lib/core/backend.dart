@@ -605,6 +605,22 @@ class RunAlreadyFinished implements Exception {
   const RunAlreadyFinished();
 }
 
+/// One page of a whole thread (oldest first), cut the way the server's conversation_thread does:
+/// for a server from before paging, and for tests.
+List<T> pageOfThread<T>(List<T> all, String Function(T) idOf, {required int limit, String? before, String? around}) {
+  var rows = all;
+  if (before != null) {
+    final i = rows.indexWhere((r) => idOf(r) == before);
+    rows = i < 0 ? <T>[] : rows.sublist(0, i);
+  }
+  var n = limit;
+  if (around != null) {
+    final i = rows.indexWhere((r) => idOf(r) == around);
+    if (i >= 0 && rows.length - i + limit ~/ 2 > n) n = rows.length - i + limit ~/ 2;
+  }
+  return rows.length > n ? rows.sublist(rows.length - n) : rows;
+}
+
 abstract class Backend {
   // Auth
   Stream<bool> get signedInChanges;
@@ -886,7 +902,10 @@ abstract class Backend {
 
   /// Deletes every direct chat with [botId] this person may delete; returns (deleted, skipped).
   Future<(int, int)> deleteBotConversations(String botId);
-  Future<List<ChatMessageView>> messages(String conversationId);
+  /// The branch being shown, oldest first. With [limit], a page of it (Fix 10): the newest
+  /// [limit] messages, the [limit] just before the message [before], or the newest back to the
+  /// message [around] and half a page before it (a search hit).
+  Future<List<ChatMessageView>> messages(String conversationId, {int? limit, String? before, String? around});
   Future<String?> activeRun(String conversationId);
 
   /// [skills]: skills picked with / in the composer (D-104).

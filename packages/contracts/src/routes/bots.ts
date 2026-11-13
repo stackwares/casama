@@ -423,7 +423,22 @@ export const getConversationThread = createRoute({
   security,
   summary:
     "The branch being shown, oldest first (what conversation_thread returns, with content opened)",
-  request: { params: idParam },
+  request: {
+    params: idParam,
+    query: z.object({
+      limit: z.coerce.number().int().min(1).max(500).optional().openapi({
+        description:
+          "Only the messages people read (user and assistant), the newest `limit` of them. Without it: the whole branch, every role",
+      }),
+      before: Uuid.optional().openapi({
+        description: "With `limit`: the page just before this message",
+      }),
+      around: Uuid.optional().openapi({
+        description:
+          "With `limit`: the newest messages back to this one and half a page before it (a search hit)",
+      }),
+    }),
+  },
   responses: {
     200: jsonResponse(
       "Messages",

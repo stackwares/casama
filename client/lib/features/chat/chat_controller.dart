@@ -194,7 +194,14 @@ class ChatState {
     this.offline = false,
     this.activeBotId,
     this.loadFailed = false,
+    this.hasEarlier = false,
+    this.loadingEarlier = false,
   });
+
+  /// The thread has messages older than the ones loaded (Fix 10); [loadingEarlier] while the next
+  /// page up is on its way.
+  final bool hasEarlier;
+  final bool loadingEarlier;
   final String? conversationId;
 
   /// The chat couldn't be loaded and nothing is saved on the device: the screen says so and
@@ -233,7 +240,11 @@ class ChatState {
     bool? offline,
     String? activeBotId,
     bool? loadFailed,
+    bool? hasEarlier,
+    bool? loadingEarlier,
   }) => ChatState(
+    hasEarlier: hasEarlier ?? this.hasEarlier,
+    loadingEarlier: loadingEarlier ?? this.loadingEarlier,
     loadFailed: loadFailed ?? this.loadFailed,
     conversationId: conversationId ?? this.conversationId,
     entries: entries ?? this.entries,
@@ -297,17 +308,28 @@ class ChatController extends Notifier<ChatState> {
     String id,
     List<ChatMessageView> messages, {
     bool offline = false,
+    bool hasEarlier = false,
   }) {
+    return ChatState(
+      conversationId: id,
+      offline: offline,
+      hasEarlier: hasEarlier,
+      loadingEarlier: state.conversationId == id && state.loadingEarlier,
+      entries: _entriesOf(id, messages),
+      answeredUi: {for (final m in messages) ?m.uiActionSurface},
+    );
+  }
+
+  /// The chat's entries for [messages]; a message that hasn't changed keeps its entry, so its row
+  /// isn't built again.
+  List<ChatEntry> _entriesOf(String id, List<ChatMessageView> messages) {
     final prevMessages = state.conversationId == id
         ? <String, MessageEntry>{
             for (final e in state.entries)
               if (e is MessageEntry) e.id: e,
           }
         : const <String, MessageEntry>{};
-    return ChatState(
-      conversationId: id,
-      offline: offline,
-      entries: [
+    return [
         for (final m in messages) ...[
           // A routine's run starts with its instructions; the chat shows that it ran instead.
           if (m.routineName != null)
@@ -343,9 +365,7 @@ class ChatController extends Notifier<ChatState> {
           for (final u in m.ui)
             UiEntry(surfaceId: u.surfaceId, messages: u.messages),
         ],
-      ],
-      answeredUi: {for (final m in messages) ?m.uiActionSurface},
-    );
+    ];
   }
 
   static bool _sameAttachments(List<AttachmentRef> a, List<AttachmentRef> b) {
@@ -378,6 +398,8 @@ class ChatController extends Notifier<ChatState> {
     if (state.conversationId == next.conversationId &&
         state.loading == next.loading &&
         state.loadFailed == next.loadFailed &&
+        state.hasEarlier == next.hasEarlier &&
+        state.loadingEarlier == next.loadingEarlier &&
         state.offline == next.offline &&
         state.activeRunId == next.activeRunId &&
         _sameEntries(state.entries, next.entries) &&
@@ -393,7 +415,42 @@ class ChatController extends Notifier<ChatState> {
   /// and follows the next bot still working.
   bool group = false;
 
-  Future<void> open(String? conversationId) async {
+  /// How many messages a chat opens with, and how many each step up the thread adds (Fix 10).
+  static const pageSize = 60;
+
+  /// The window of the thread that is loaded: for which chat, how many messages, the oldest one,
+  /// and the thread's very first message once a page up has reached it.
+  String? _loadedFor;
+  var _loadedCount = 0;
+  String? _oldestId;
+  String? _firstId;
+
+  /// Loads the page of messages before the oldest one showing (scrolling to the top asks for it).
+  Future<void> loadEarlier() async {
+    final id = state.conversationId;
+    final before = _oldestId;
+    if (id == null || before == null || _loadedFor != id || !state.hasEarlier || state.loadingEarlier) return;
+    state = state.copyWith(loadingEarlier: true);
+    try {
+      final older = await _backend.messages(id, limit: pageSize, before: before);
+      // The chat changed, or reloaded onto another branch, while this was on its way.
+      if (state.conversationId != id || _oldestId != before) return;
+      _loadedCount += older.length;
+      if (older.isNotEmpty) _oldestId = older.first.id;
+      if (older.length < pageSize) _firstId = _oldestId;
+      state = state.copyWith(
+        entries: [..._entriesOf(id, older), ...state.entries],
+        answeredUi: {...state.answeredUi, for (final m in older) ?m.uiActionSurface},
+        hasEarlier: older.length >= pageSize,
+        loadingEarlier: false,
+      );
+    } finally {
+      if (state.conversationId == id && state.loadingEarlier) state = state.copyWith(loadingEarlier: false);
+    }
+  }
+
+  /// [around]: a message to have loaded even when it is older than the first page (a search hit).
+  Future<void> open(String? conversationId, {String? around}) async {
     final sub = _sub;
     _sub = null;
     unawaited(sub?.cancel());
@@ -449,8 +506,10 @@ class ChatController extends Notifier<ChatState> {
       await loadCached(id);
     }
     final List<ChatMessageView> messages;
+    // A reload keeps what the person has already scrolled back through.
+    final want = _loadedFor == id && _loadedCount > pageSize ? _loadedCount : pageSize;
     try {
-      messages = await _backend.messages(id);
+      messages = await _backend.messages(id, limit: want, around: around);
     } catch (_) {
       if (showingCached && state.conversationId == id) {
         state = state.copyWith(offline: true);
@@ -469,7 +528,11 @@ class ChatController extends Notifier<ChatState> {
           m.toJson(),
       ]),
     );
-    _setIfChanged(_fromMessages(id, messages));
+    if (_loadedFor != id) _firstId = null;
+    _loadedFor = id;
+    _loadedCount = messages.length;
+    _oldestId = messages.firstOrNull?.id;
+    _setIfChanged(_fromMessages(id, messages, hasEarlier: messages.length >= want && _oldestId != _firstId));
     _follow(id);
     final active = await _backend.activeRun(id);
     if (active != null) _attach(active);

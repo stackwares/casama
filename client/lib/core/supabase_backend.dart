@@ -1296,12 +1296,26 @@ class SupabaseBackend implements Backend {
   }
 
   @override
-  Future<List<ChatMessageView>> messages(String conversationId) async {
-    // The branch being shown (D-108), oldest first.
-    List<dynamic> all = await supabase.rpc(
-      'conversation_thread',
-      params: {'p_conversation': conversationId},
-    );
+  Future<List<ChatMessageView>> messages(String conversationId, {int? limit, String? before, String? around}) async {
+    // The branch being shown (D-108), oldest first; a page of it when [limit] is given (Fix 10).
+    var paged = limit != null;
+    List<dynamic> all;
+    try {
+      all = await supabase.rpc(
+        'conversation_thread',
+        params: {
+          'p_conversation': conversationId,
+          if (paged) 'p_limit': limit,
+          if (paged && before != null) 'p_before': before,
+          if (paged && around != null) 'p_around': around,
+        },
+      );
+    } on sb.PostgrestException catch (e) {
+      // A server from before paging has no such function: read the whole branch, page it here.
+      if (!paged || e.code != 'PGRST202') rethrow;
+      paged = false;
+      all = await supabase.rpc('conversation_thread', params: {'p_conversation': conversationId});
+    }
     // A workspace that encrypts content (D-136): Postgres has ciphertext, so read the thread through the API.
     if (all.any(
       (r) =>
@@ -1309,17 +1323,21 @@ class SupabaseBackend implements Backend {
           r['content'] is Map &&
           (r['content'] as Map).containsKey(r'$enc'),
     )) {
-      all = (await api.chat.getConversationThread(id: conversationId))
-          .data!
-          .items;
+      all = (await api.chat.getConversationThread(
+        id: conversationId,
+        limit: paged ? limit : null,
+        before: paged ? before : null,
+        around: paged ? around : null,
+      )).data!.items;
     }
-    final rows = all
+    var rows = all
         .map((r) => Map<String, dynamic>.from(r as Map))
         .where((r) => r['role'] == 'user' || r['role'] == 'assistant')
         .toList();
+    if (limit != null && !paged) rows = pageOfThread(rows, (r) => r['id'] as String, limit: limit, before: before, around: around);
     return [
       for (final r
-          in rows.length > 500 ? rows.sublist(rows.length - 500) : rows)
+          in limit == null && rows.length > 500 ? rows.sublist(rows.length - 500) : rows)
         ChatMessageView(
           siblingIndex: (r['sibling_index'] as num?)?.toInt() ?? 1,
           siblingCount: (r['sibling_count'] as num?)?.toInt() ?? 1,

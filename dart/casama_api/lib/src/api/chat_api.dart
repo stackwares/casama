@@ -388,6 +388,9 @@ _responseData = rawData == null ? null : deserialize<SendMessageResponse, SendMe
   ///
   /// Parameters:
   /// * [id] 
+  /// * [limit] - Only the messages people read (user and assistant), the newest `limit` of them. Without it: the whole branch, every role
+  /// * [before] - With `limit`: the page just before this message
+  /// * [around] - With `limit`: the newest messages back to this one and half a page before it (a search hit)
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
   /// * [headers] - Can be used to add additional headers to the request
   /// * [extras] - Can be used to add flags to the request
@@ -399,6 +402,9 @@ _responseData = rawData == null ? null : deserialize<SendMessageResponse, SendMe
   /// Throws [DioException] if API call or serialization fails
   Future<Response<ConversationThread>> getConversationThread({ 
     required String id,
+    int? limit,
+    String? before,
+    String? around,
     CancelToken? cancelToken,
     Map<String, dynamic>? headers,
     Map<String, dynamic>? extra,
@@ -425,9 +431,16 @@ _responseData = rawData == null ? null : deserialize<SendMessageResponse, SendMe
       validateStatus: validateStatus,
     );
 
+    final _queryParameters = <String, dynamic>{
+      if (limit != null) r'limit': limit,
+      if (before != null) r'before': before,
+      if (around != null) r'around': around,
+    };
+
     final _response = await _dio.request<Object>(
       _path,
       options: _options,
+      queryParameters: _queryParameters,
       cancelToken: cancelToken,
       onSendProgress: onSendProgress,
       onReceiveProgress: onReceiveProgress,
