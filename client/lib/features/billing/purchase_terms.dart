@@ -15,7 +15,7 @@ const casamaPrivacyUrl = 'https://casama.ai/privacy';
 /// that it renews until cancelled, who charges it and how to cancel; then Terms and Privacy links.
 /// [store] is the store source ('app_store', 'google_play') or null for web checkout.
 class PurchaseTerms extends ConsumerWidget {
-  const PurchaseTerms({super.key, required this.price, required this.yearly, required this.store, this.priceHasPeriod = false});
+  const PurchaseTerms({super.key, required this.price, required this.yearly, required this.store, this.priceHasPeriod = false, this.trialDays});
 
   /// The price as shown to the person; null hides the disclosure line (no plan picked yet).
   final String? price;
@@ -25,6 +25,9 @@ class PurchaseTerms extends ConsumerWidget {
   /// Web price labels already read "$39 / month".
   final bool priceHasPeriod;
 
+  /// Free-trial days web checkout starts with, or null. The line then says when charging begins.
+  final int? trialDays;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -32,11 +35,14 @@ class PurchaseTerms extends ConsumerWidget {
     final small = context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.35);
     final period = yearly ? l10n.pricePerYear : l10n.pricePerMonth;
     final price = this.price;
+    final trial = trialDays ?? 0;
     final String? disclosure = price == null
         ? null
-        : store == null
-        ? l10n.paywallDisclosureWeb(priceHasPeriod ? price : '$price $period')
-        : l10n.paywallDisclosureStore(price, period, store == 'app_store' ? l10n.storeAccountApple : l10n.storeAccountGoogle);
+        : store != null
+        ? l10n.paywallDisclosureStore(price, period, store == 'app_store' ? l10n.storeAccountApple : l10n.storeAccountGoogle)
+        : trial > 0
+        ? l10n.paywallDisclosureWebTrial(trial, priceHasPeriod ? price : '$price $period')
+        : l10n.paywallDisclosureWeb(priceHasPeriod ? price : '$price $period');
     final platform = ref.watch(platformProvider);
     final apple = !kIsWeb && (platform == TargetPlatform.iOS || platform == TargetPlatform.macOS);
     final open = ref.read(openUrlProvider);

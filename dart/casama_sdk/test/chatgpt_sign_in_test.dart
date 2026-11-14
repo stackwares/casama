@@ -44,6 +44,7 @@ Future<(HttpServer, List<Map<String, dynamic>>)> fakeApi({String? error}) async 
         'status': 'ok',
         'account': 'me@example.com',
         'fallback_on_limit': false,
+        'embedding_model': null,
         'created_at': DateTime.now().toUtc().toIso8601String(),
       }));
     } else {
