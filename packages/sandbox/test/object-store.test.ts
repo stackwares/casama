@@ -95,16 +95,23 @@ describe.skipIf(!enabled)("object stores on S3", () => {
       forcePathStyle: true,
       credentials: creds,
     });
+    // SeaweedFS starts its master, volume, filer and S3 gateway in turn; a CI runner can take well
+    // over the 15 s a laptop does, so allow two minutes and show its logs if it never answers.
     for (let i = 0; ; i++) {
       try {
         await s3.send(new CreateBucketCommand({ Bucket: "casama" }));
         break;
       } catch (err) {
-        if (i > 60) throw err;
+        if (i >= 240) {
+          const logs = await run("docker", ["logs", "--tail", "40", name]).catch(() => null);
+          throw new Error(
+            `SeaweedFS never answered at ${endpoint}: ${err}\n${logs?.stdout ?? ""}${logs?.stderr ?? ""}`,
+          );
+        }
         await new Promise((r) => setTimeout(r, 500));
       }
     }
-  }, 120_000);
+  }, 180_000);
   afterAll(async () => {
     await run("docker", ["rm", "-f", name]).catch(() => {});
     await rm(cfgDir, { recursive: true, force: true });
