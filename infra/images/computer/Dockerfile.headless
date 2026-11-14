@@ -11,7 +11,7 @@ RUN mkdir -p /out && dart pub get && dart compile exe computerd/bin/computerd.da
 
 # --- computer image ---
 FROM ubuntu:24.04
-ARG AGENT_BROWSER_VERSION=0.41.2
+ARG AGENT_BROWSER_VERSION=0.43.0
 ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8 TZ=UTC
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
