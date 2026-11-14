@@ -85,7 +85,7 @@ void main() {
     await tester.tap(find.byKey(const Key('meButton')));
     await tester.pumpAndSettle();
     expect(find.byType(SettingsScreen), findsOneWidget);
-    for (final section in ['Workspace', 'App', 'Connections', 'Sign-in & Security']) {
+    for (final section in ['Workspace', 'App', 'Connections', 'Sign-in & security']) {
       await tester.scrollUntilVisible(find.text(section), 200, scrollable: find.byType(Scrollable).last);
       expect(find.text(section), findsOneWidget, reason: section);
     }

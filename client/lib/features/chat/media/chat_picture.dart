@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -132,6 +134,31 @@ class _ChatPictureState extends State<ChatPicture> {
   }
 
   Future<void> _inspectRaster(Uint8List bytes) async {
+    // The web engine has no ImageDescriptor.encoded: decode once instead, which is what the
+    // picture does next anyway. Without this every picture in a web chat showed as broken.
+    if (kIsWeb) {
+      try {
+        final codec = await ui.instantiateImageCodec(bytes);
+        final frame = await codec.getNextFrame();
+        codec.dispose();
+        final image = frame.image;
+        final size = Size(image.width.toDouble(), image.height.toDouble());
+        final still = widget.kind == MediaKind.gif && mounted && _still;
+        if (!still) image.dispose();
+        if (!mounted) {
+          if (still) image.dispose();
+          return;
+        }
+        setState(() {
+          _natural ??= size;
+          _firstFrame?.dispose();
+          _firstFrame = still ? image : null;
+        });
+      } catch (_) {
+        if (mounted) setState(() => _failed = true);
+      }
+      return;
+    }
     try {
       final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);
       final descriptor = await ui.ImageDescriptor.encoded(buffer);

@@ -155,7 +155,7 @@ class _QuickAskScreenState extends ConsumerState<QuickAskScreen> {
     return SubPage(
       title: l10n.quickAsk,
       children: [
-        Text(l10n.quickAskIntro, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
+        Text(bots.length == 1 ? l10n.quickAskIntroBot(bots.single.name) : l10n.quickAskIntro, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
         const SizedBox(height: AppSpace.lg),
         if (bots.length > 1) ...[
           PageBleed(child: SizedBox(

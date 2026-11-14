@@ -2074,16 +2074,22 @@ abstract class AppLocalizations {
   /// **'Earlier'**
   String get libraryEarlier;
 
+  /// No description provided for @videoCantPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'This video won\'t play on this device.'**
+  String get videoCantPlay;
+
   /// No description provided for @libraryEmptyTitle.
   ///
   /// In en, this message translates to:
-  /// **'Nothing made yet'**
+  /// **'What should we make first?'**
   String get libraryEmptyTitle;
 
   /// No description provided for @libraryEmptyBody.
   ///
   /// In en, this message translates to:
-  /// **'Sites, games, pictures, videos and files your bots make land here on their own.'**
+  /// **'Pick one and your bot gets started. Everything your bots make lands here on its own.'**
   String get libraryEmptyBody;
 
   /// No description provided for @libraryNoMatch.
@@ -2127,6 +2133,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Make a one-page website for my business.'**
   String get libraryStarterSitePrompt;
+
+  /// No description provided for @libraryStarterVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'A short video'**
+  String get libraryStarterVideo;
+
+  /// No description provided for @libraryStarterVideoPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Make a short video of '**
+  String get libraryStarterVideoPrompt;
+
+  /// No description provided for @libraryStarterCard.
+  ///
+  /// In en, this message translates to:
+  /// **'A birthday card'**
+  String get libraryStarterCard;
+
+  /// No description provided for @libraryStarterCardPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Make a birthday card for '**
+  String get libraryStarterCardPrompt;
+
+  /// No description provided for @libraryStarterReport.
+  ///
+  /// In en, this message translates to:
+  /// **'A report'**
+  String get libraryStarterReport;
+
+  /// No description provided for @libraryStarterReportPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Research and write a report on '**
+  String get libraryStarterReportPrompt;
+
+  /// No description provided for @libraryStarterElse.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else…'**
+  String get libraryStarterElse;
 
   /// No description provided for @creationOpen.
   ///
@@ -2883,6 +2931,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Look closely before you allow this'**
   String get approvalLookClosely;
+
+  /// No description provided for @pageShareToPublic.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone with the link will be able to open it'**
+  String get pageShareToPublic;
+
+  /// No description provided for @pageShareToWorkspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone in this workspace will be able to open it'**
+  String get pageShareToWorkspace;
+
+  /// No description provided for @pageShareToPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Only you will be able to open it'**
+  String get pageShareToPrivate;
 
   /// No description provided for @approvalAllowedLine.
   ///
@@ -5254,6 +5320,12 @@ abstract class AppLocalizations {
   /// **'Send a quick request. It starts a new chat with the bot you pick.'**
   String get quickAskIntro;
 
+  /// No description provided for @quickAskIntroBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a quick request. It starts a new chat with {name}.'**
+  String quickAskIntroBot(String name);
+
   /// No description provided for @quickAskHintBot.
   ///
   /// In en, this message translates to:
@@ -5403,6 +5475,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No schemes match.'**
   String get noThemesFound;
+
+  /// No description provided for @noAppsMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No apps match. You can add your own server under Advanced.'**
+  String get noAppsMatch;
+
+  /// No description provided for @appsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 app} other{{count} apps}}'**
+  String appsFound(int count);
 
   /// No description provided for @familyAll.
   ///
@@ -7591,14 +7675,62 @@ abstract class AppLocalizations {
   /// No description provided for @noTickets.
   ///
   /// In en, this message translates to:
-  /// **'No tickets yet'**
+  /// **'Give your bots something to do'**
   String get noTickets;
 
   /// No description provided for @noTicketsHelp.
   ///
   /// In en, this message translates to:
-  /// **'Add a ticket and assign it to a bot to get it started, or ask a bot to plan work here.'**
+  /// **'Hand off one piece of work, or a whole goal. You can watch it move from here.'**
   String get noTicketsHelp;
+
+  /// No description provided for @tasksStartTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a ticket'**
+  String get tasksStartTicket;
+
+  /// No description provided for @tasksStartTicketHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'One piece of work. Assign it to a bot and it starts.'**
+  String get tasksStartTicketHelp;
+
+  /// No description provided for @tasksStartProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a project'**
+  String get tasksStartProject;
+
+  /// No description provided for @tasksStartProjectHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'A bigger goal. A bot plans it as tickets and waits for your OK.'**
+  String get tasksStartProjectHelp;
+
+  /// No description provided for @tasksExamples.
+  ///
+  /// In en, this message translates to:
+  /// **'Or start from one of these'**
+  String get tasksExamples;
+
+  /// No description provided for @tasksExampleResearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Research my top three competitors'**
+  String get tasksExampleResearch;
+
+  /// No description provided for @tasksExampleDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft a launch announcement'**
+  String get tasksExampleDraft;
+
+  /// No description provided for @tasksExampleTidy.
+  ///
+  /// In en, this message translates to:
+  /// **'Tidy up my files'**
+  String get tasksExampleTidy;
 
   /// No description provided for @ticketStatus.
   ///
@@ -8577,6 +8709,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Budget'**
   String get projectBudget;
+
+  /// No description provided for @projectGoalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What should exist at the end? A landing page live on my domain…'**
+  String get projectGoalHint;
+
+  /// No description provided for @projectDoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. How you\'ll know it\'s finished'**
+  String get projectDoneHint;
+
+  /// No description provided for @projectBudgetHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. Work pauses when it\'s spent'**
+  String get projectBudgetHint;
 
   /// No description provided for @projectThread.
   ///
@@ -12223,7 +12373,7 @@ abstract class AppLocalizations {
   /// No description provided for @showBotSteps.
   ///
   /// In en, this message translates to:
-  /// **'Show the Bot\'s Steps'**
+  /// **'Show the bot\'s steps'**
   String get showBotSteps;
 
   /// No description provided for @showBotStepsHelp.
@@ -13399,7 +13549,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsSecuritySection.
   ///
   /// In en, this message translates to:
-  /// **'Sign-in & Security'**
+  /// **'Sign-in & security'**
   String get settingsSecuritySection;
 
   /// No description provided for @customize.
@@ -14899,7 +15049,7 @@ abstract class AppLocalizations {
   /// No description provided for @updatesRowSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Workspace notices and pages'**
+  /// **'News from your workspace'**
   String get updatesRowSubtitle;
 
   /// No description provided for @updatesEmpty.

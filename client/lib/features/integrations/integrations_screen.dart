@@ -5,7 +5,6 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/display_text.dart';
-import '../../core/number_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../core/haptics.dart';
@@ -276,6 +275,9 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
                 start: tab == _HubTab.browse,
                 child: AdvancedSection(
                   id: 'integrations',
+                  // Searching for a server by hand ("mcp", "custom") opens where that's done.
+                  forceOpen: RegExp(r'mcp|server|custom|composio|pipedream|openapi')
+                      .hasMatch(_search.text.toLowerCase()),
                   summary: l10n.integrationsAdvancedSummary,
                   children: [
                     GroupedCard(
@@ -428,16 +430,16 @@ class _IntegrationsScreenState extends ConsumerState<IntegrationsScreen> {
           ),
         ),
       ],
-      SectionHeader(
-        title: filtering
-            ? shown.length.humanizedCount(context.l10n.localeName)
-            : l10n.allApps,
-      ),
+      // A bare "0" read as a stray number: say what's counted, and nothing when there's nothing.
+      if (!filtering || shown.isNotEmpty)
+        SectionHeader(
+          title: filtering ? l10n.appsFound(shown.length) : l10n.allApps,
+        ),
       if (shown.isEmpty)
         Padding(
           padding: const EdgeInsets.symmetric(vertical: AppSpace.xl),
           child: Text(
-            l10n.noThemesFound,
+            l10n.noAppsMatch,
             textAlign: TextAlign.center,
             style: context.textTheme.bodyMedium,
           ),
@@ -1027,6 +1029,14 @@ class _AddIntegrationSheetState extends ConsumerState<AddIntegrationSheet> {
       try {
         await backend.testIntegration(i.id);
       } catch (_) {}
+      // With one bot there's no one else to give it to: it was left "not given to any bot", and
+      // the bot couldn't use what was just added until someone found the switch.
+      final bots = ref.read(botsProvider).value ?? const <Bot>[];
+      if (bots.length == 1) {
+        try {
+          await backend.setBotIntegration(bots.single.id, i.id, true);
+        } catch (_) {}
+      }
       return i;
     });
     if (!mounted) return;

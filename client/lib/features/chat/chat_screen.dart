@@ -1639,6 +1639,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           final last = i == entries.length - 1;
           // Skills, checkpoints and model switches are details of how it works.
           if (!showSteps && (n.kind == NoticeKind.skill || n.kind == NoticeKind.checkpoint || n.kind == NoticeKind.modelFallback)) continue;
+          // "Remembered something" says the same thing each time: one line for a run of them, not a
+          // stack of identical chips under a reply.
+          final prev = i > 0 ? entries[i - 1] : null;
+          if (n.kind == NoticeKind.memory && prev is NoticeEntry && prev.kind == NoticeKind.memory) continue;
           rows.add(
             _Row(ValueKey('notice-$i'), AppSpace.sm, () {
               final line = NoticeLine(
@@ -1724,7 +1728,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final replying = last is MessageEntry && last.role == 'assistant' && last.streaming;
     final toolRunning = last is ToolEntry && last.status == ToolStatus.running;
     // With the steps hidden, the working line also shows while a step runs.
-    if (chat.running && !waitingOnPerson && !replying && (!toolRunning || !showSteps)) {
+    if ((chat.running || chat.sending) && !waitingOnPerson && !replying && (!toolRunning || !showSteps)) {
       botSide('working', chat.activeBotId);
       final (who, face) = workingBot();
       final status = workingStatus() ?? context.l10n.thinking;
@@ -2781,12 +2785,17 @@ class _TopicsBar extends ConsumerWidget {
         ),
         Padding(
           padding: const EdgeInsets.only(left: AppSpace.xxs),
-          child: Text(
-            currentId == null ? l10n.newTopic : here?.title.orPlaceholder(l10n.untitledChat) ?? '',
+          // Capped, so a long title ends in "…" instead of running off the edge of the bar; and an
+          // untitled topic keeps the name it had before the first message ("New topic").
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 220),
+            child: Text(
+            currentId == null ? l10n.newTopic : here?.title.orPlaceholder(l10n.newTopic) ?? '',
             key: const Key('topicTitle'),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: context.textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant, fontWeight: FontWeight.w600),
+          ),
           ),
         ),
       ];

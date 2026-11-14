@@ -36,6 +36,22 @@ export function keepNewestImages(turn: ChatMessage[], keep = KEEP_IMAGES) {
   }
 }
 
+/** Takes every picture out of [turn] (a provider refused them); returns how many went. */
+export function dropTurnImages(turn: ChatMessage[]) {
+  let dropped = 0;
+  for (let i = 0; i < turn.length; i++) {
+    const m = turn[i] as ChatMessage;
+    if (m.role !== "tool" || !m.images?.length) continue;
+    dropped += m.images.length;
+    const { images: _dropped, ...rest } = m;
+    turn[i] = {
+      ...rest,
+      content: `${m.content}\n[The model couldn't take this picture, so it isn't attached. Don't try to look at it again; work from what you know.]`,
+    };
+  }
+  return dropped;
+}
+
 export function messageTokens(m: ChatMessage) {
   let n = estimateTokens(m.content) + 4;
   if (m.role === "assistant" && m.toolCalls) n += estimateTokens(JSON.stringify(m.toolCalls));

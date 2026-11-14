@@ -193,7 +193,8 @@ void main() {
       await tester.pumpWidget(_app(FakeBackend(), _router('/library')));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('libraryEmpty')), findsOneWidget);
-      expect(find.text('Nothing made yet'), findsOneWidget);
+      expect(find.text('What should we make first?'), findsOneWidget);
+      expect(find.byKey(const Key('libraryStarter-else')), findsOneWidget);
       await tester.tap(find.byKey(const Key('libraryStarter-game')));
       await tester.pumpAndSettle();
       expect(

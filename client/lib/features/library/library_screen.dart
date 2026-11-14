@@ -11,12 +11,13 @@ import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
-import '../../ui/mascot.dart';
+import '../../ui/bottom_padding.dart';
 import '../../ui/page.dart';
 import '../../ui/tab_reselect.dart';
 import 'creation_detail.dart';
 import 'creation_tile.dart';
 import 'library_providers.dart';
+import 'library_starters.dart';
 
 /// The Library (D-274, LIBRARY-PLAN §5.2): everything bots made, newest first. Chips filter by
 /// kind (only kinds the workspace has), a search box matches titles and bot names, pinned things
@@ -86,7 +87,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     context.push(
       Uri(
         path: '/quick-ask',
-        queryParameters: {'text': text, 'bot': ?bot?.id},
+        queryParameters: {if (text.isNotEmpty) 'text': text, 'bot': ?bot?.id},
       ).toString(),
     );
   }
@@ -217,49 +218,18 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             padding: const EdgeInsets.symmetric(horizontal: AppSpace.gutter),
             children: [
               if (filtered) header,
-              const SizedBox(height: AppSpace.xl),
+              SizedBox(height: filtered ? AppSpace.xl : AppSpace.xs),
               filtered
                   ? EmptyState(
                       key: const Key('libraryNoMatch'),
                       icon: LucideIcons.searchX,
                       message: l10n.libraryNoMatch,
                     )
-                  : EmptyState(
+                  : LibraryStarters(
                       key: const Key('libraryEmpty'),
-                      icon: LucideIcons.library,
-                      mascot: Mascot.sleepy,
-                      title: l10n.libraryEmptyTitle,
-                      message: l10n.libraryEmptyBody,
-                      action: Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: AppSpace.xs,
-                        runSpacing: AppSpace.xs,
-                        children: [
-                          for (final (key, label, prompt) in [
-                            (
-                              'game',
-                              l10n.libraryStarterGame,
-                              l10n.libraryStarterGamePrompt,
-                            ),
-                            (
-                              'logo',
-                              l10n.libraryStarterLogo,
-                              l10n.libraryStarterLogoPrompt,
-                            ),
-                            (
-                              'site',
-                              l10n.libraryStarterSite,
-                              l10n.libraryStarterSitePrompt,
-                            ),
-                          ])
-                            ActionChip(
-                              key: Key('libraryStarter-$key'),
-                              label: Text(label),
-                              onPressed: () => _starter(prompt),
-                            ),
-                        ],
-                      ),
+                      onPick: _starter,
                     ),
+              SizedBox(height: BottomPadding.of(context, minimum: AppSpace.xl)),
             ],
           );
         }

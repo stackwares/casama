@@ -117,4 +117,22 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('ticket-t1')), findsOneWidget);
   });
+
+  testWidgets('an empty board offers a ticket, a project and examples that fill the ticket form', (tester) async {
+    await setSize(tester, const Size(420, 900));
+    final backend = FakeBackend()..taskList.clear();
+    await tester.pumpWidget(harness(backend, const BoardScreen()));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('boardEmpty')), findsOneWidget);
+    expect(find.byKey(const Key('ticketFilters')), findsNothing);
+    expect(find.byKey(const Key('startProject')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('ticketExample-0')));
+    await tester.pumpAndSettle();
+    // The fake builds new tickets from an existing one, so this stops at the filled-in form.
+    expect(
+      tester.widget<TextField>(find.byKey(const Key('ticketTitle'))).controller!.text,
+      'Research my top three competitors',
+    );
+  });
 }

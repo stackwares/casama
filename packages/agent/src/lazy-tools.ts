@@ -22,6 +22,17 @@ const CORE_PREFIXES = [
   "connections.offer",
   TOOLS_LOAD,
 ];
+/**
+ * What a group is for, for groups people ask for by outcome rather than by tool: without it a bot
+ * asked for "a game I can play" writes an HTML file and links that, since nothing in "pages (5):
+ * publish, share…" says that's how sites and games reach the person.
+ */
+const GROUP_PURPOSE: Record<string, string> = {
+  pages:
+    "how sites, games, reports and dashboards reach the person: publish one and they open or play it",
+  media: "make pictures, videos and sound",
+  library: "find and change things you made before",
+};
 const INTEGRATION_KINDS = new Set(["mcp", "openapi", "composio", "pipedream", "local_mcp", "app"]);
 
 export const isCoreTool = (name: string) =>
@@ -65,7 +76,8 @@ export function planLazyTools(
       names.length > 8
         ? `${names.slice(0, 8).join(", ")}, +${names.length - 8} more`
         : names.join(", ");
-    return `- ${g} (${tools.length}): ${shown}`;
+    const purpose = GROUP_PURPOSE[g];
+    return `- ${g} (${tools.length}): ${shown}${purpose ? ` (${purpose})` : ""}`;
   });
   const index = [
     "More tools are available. Call tools.load with the groups (or tool names) you need before using them; they stay loaded for this run.",

@@ -155,8 +155,10 @@ class _NewProjectState extends ConsumerState<_NewProject> {
             },
       children: [
         TextField(key: const Key('projectTitle'), controller: _title, textInputAction: TextInputAction.next, autofocus: true, decoration: InputDecoration(labelText: l10n.projectTitle), onChanged: (_) => setState(() {})),
-        TextField(key: const Key('projectGoal'), controller: _goal, minLines: 2, maxLines: 6, decoration: InputDecoration(labelText: l10n.projectGoal), onChanged: (_) => setState(() {})),
-        TextField(key: const Key('projectDone'), controller: _done, minLines: 1, maxLines: 4, decoration: InputDecoration(labelText: l10n.projectDoneWhen)),
+        TextField(key: const Key('projectGoal'), controller: _goal, minLines: 2, maxLines: 6, decoration: InputDecoration(labelText: l10n.projectGoal, hintText: l10n.projectGoalHint), onChanged: (_) => setState(() {})),
+        TextField(key: const Key('projectDone'), controller: _done, minLines: 1, maxLines: 4, decoration: InputDecoration(labelText: l10n.projectDoneWhen, helperText: l10n.projectDoneHint)),
+        // With one bot there's nothing to pick.
+        if (bots.length > 1)
         DropdownButtonFormField<String>(
           key: const Key('projectLead'),
           initialValue: _lead,
@@ -171,7 +173,7 @@ class _NewProjectState extends ConsumerState<_NewProject> {
           textInputAction: TextInputAction.done,
           onSubmitted: (_) => submit?.call(),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(labelText: l10n.projectBudget, prefixText: r'$ '),
+          decoration: InputDecoration(labelText: l10n.projectBudget, prefixText: r'$ ', helperText: l10n.projectBudgetHint),
         ),
       ],
     );

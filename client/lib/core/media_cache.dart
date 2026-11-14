@@ -7,14 +7,19 @@ import 'package:flutter/painting.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 /// A picture from the web, kept on the device after the first load (see [MediaCache]).
-ImageProvider cachedNetworkImage(String url, {Map<String, String>? headers}) =>
-    MediaCache.diskEnabled
-    ? CachedNetworkImageProvider(
-        url,
-        headers: headers,
-        cacheManager: MediaCache.manager,
-      )
-    : NetworkImage(url, headers: headers);
+ImageProvider cachedNetworkImage(String url, {Map<String, String>? headers}) {
+  // On the web, CachedNetworkImage draws through an <img>, which drops the headers: every picture
+  // behind sign-in (video posters, Library covers) came back 401 and showed blank. Flutter's own
+  // NetworkImage fetches with the headers there, and the browser keeps its own cache.
+  if (kIsWeb && headers != null && headers.isNotEmpty) return NetworkImage(url, headers: headers);
+  return MediaCache.diskEnabled
+      ? CachedNetworkImageProvider(
+          url,
+          headers: headers,
+          cacheManager: MediaCache.manager,
+        )
+      : NetworkImage(url, headers: headers);
+}
 
 /// Pictures and files the chat shows, kept on the device so a chat opened again shows them at
 /// once (no download, no waking the bot's computer). Web pictures share it through

@@ -124,7 +124,7 @@ export async function missingLinkedFiles(
 /** The note that sends the model back after a reply linked to files that aren't there. */
 export function missingFilesNote(missing: string[]): string {
   const list = missing.map((p) => `"${p}"`).join(", ");
-  return `[Casama: your reply links to ${list}, but there's no file there on your computer, so the link won't open. Don't say you made or saved something you didn't. Either make it now with your tools and then reply, or reply again without that link and say plainly what you did and didn't do.]`;
+  return `[Casama: your reply links to ${list}, but there's no file there on your computer, so the link won't open. Don't say you made or saved something you didn't. Either make it now with your tools and then reply, or reply again without that link and say plainly what you did and didn't do. This note is from Casama, not the person: don't answer it, thank anyone or mention this check.]`;
 }
 
 /**

@@ -155,11 +155,20 @@ function classify(err: unknown): ModelCallError {
       );
     const retryable =
       status === undefined || status === 408 || status === 409 || status === 429 || status >= 500;
-    return new ModelCallError(`provider returned ${status ?? "no status"}`, {
-      retryable,
-      status,
-      cause: err,
-    });
+    // The provider's own reason, so a failed run's Details say why instead of just "400".
+    let reason = "";
+    try {
+      const m = (JSON.parse(body) as { error?: { message?: unknown } })?.error?.message;
+      if (typeof m === "string") reason = m.replace(/\s+/g, " ").trim().slice(0, 200);
+    } catch {}
+    return new ModelCallError(
+      `provider returned ${status ?? "no status"}${reason ? `: ${reason}` : ""}`,
+      {
+        retryable,
+        status,
+        cause: err,
+      },
+    );
   }
   const name = (err as Error)?.name ?? "";
   if (name === "AbortError") return new ModelCallError("aborted", { retryable: false, cause: err });

@@ -19,7 +19,7 @@ import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/property_row.dart';
 import '../../ui/tab_reselect.dart';
-import '../projects/projects_screen.dart' show projectsProvider;
+import '../projects/projects_screen.dart' show projectsProvider, showNewProject;
 
 /// The Tasks tab, the ticket board (D-098): filters, a ticket sheet, and on tablets and desktops
 /// one column per status with drag to move. Phones get one list grouped by status instead, where a
@@ -145,12 +145,12 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
     ref.invalidate(tasksProvider);
   }
 
-  Future<void> _newTicket() async {
+  Future<void> _newTicket([String title = '']) async {
     final org = ref.read(currentOrgProvider);
     if (org == null) return;
     final created = await showAdaptiveSheet<bool>(
       context: context,
-      builder: (_) => _TicketForm(orgId: org.id),
+      builder: (_) => _TicketForm(orgId: org.id, title: title),
     );
     if (created == true) ref.invalidate(tasksProvider);
   }
@@ -217,7 +217,10 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (compact)
+                // Nothing to filter on an empty board.
+                if (items.isEmpty)
+                  const SizedBox.shrink()
+                else if (compact)
                   // One line of filters that scrolls sideways, so the tickets get the height.
                   EdgeFade(
                     child: SingleChildScrollView(
@@ -249,10 +252,10 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
                   ),
                 if (items.isEmpty)
                   Expanded(
-                    child: EmptyState(
-                      icon: LucideIcons.squareKanban,
-                      title: l10n.noTickets,
-                      message: l10n.noTicketsHelp,
+                    child: _BoardStarters(
+                      bottom: barInset,
+                      onTicket: _newTicket,
+                      onProject: () => showNewProject(context, ref),
                     ),
                   )
                 else if (compact && shown.isEmpty)
@@ -1044,18 +1047,23 @@ class _Card extends ConsumerWidget {
 }
 
 class _TicketForm extends ConsumerStatefulWidget {
-  const _TicketForm({required this.orgId});
+  const _TicketForm({required this.orgId, this.title = ''});
   final String orgId;
+
+  /// Typed in already (an example from the empty board).
+  final String title;
 
   @override
   ConsumerState<_TicketForm> createState() => _TicketFormState();
 }
 
 class _TicketFormState extends ConsumerState<_TicketForm> {
-  final _title = TextEditingController();
+  late final _title = TextEditingController(text: widget.title);
   final _details = TextEditingController();
   var _priority = TaskPriority.none;
   String? _bot;
+  // An example from the empty board goes to a bot, so it starts once created.
+  late var _pickBot = widget.title.isNotEmpty;
   var _review = false;
 
   @override
@@ -1069,6 +1077,10 @@ class _TicketFormState extends ConsumerState<_TicketForm> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final bots = ref.watch(botsProvider).value ?? const <Bot>[];
+    if (_pickBot && bots.isNotEmpty) {
+      _pickBot = false;
+      _bot = bots.first.id;
+    }
     return FormSheet(
       icon: LucideIcons.squareKanban,
       title: l10n.newTicket,
@@ -1680,6 +1692,134 @@ class _TicketSheetSkeleton extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// The empty board: the two ways to hand work to a bot (a ticket, or a project a bot plans), and a
+/// few tickets to start from, which open the ticket form with the title typed in.
+class _BoardStarters extends StatelessWidget {
+  const _BoardStarters({
+    required this.bottom,
+    required this.onTicket,
+    required this.onProject,
+  });
+  final double bottom;
+  final void Function([String title]) onTicket;
+  final VoidCallback onProject;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = context.textTheme;
+    final scheme = context.colorScheme;
+    Widget way(Key key, IconData icon, double hue, String title, String help, VoidCallback onTap) {
+      // The Library's cover tints, so the two empty screens read as one family.
+      final tint = HSLColor.fromAHSL(1, hue, 0.60, context.isDark ? 0.72 : 0.42).toColor();
+      return AppCard(
+          key: key,
+          onTap: () {
+            HapticsHelper.selection();
+            onTap();
+          },
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: tint.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(AppRadius.row),
+                ),
+                child: Icon(icon, size: 20, color: tint),
+              ),
+              const SizedBox(width: AppSpace.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: text.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 2),
+                    Text(help, style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.35)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpace.xs),
+              Icon(LucideIcons.chevronRight, size: 18, color: scheme.onSurfaceVariant),
+            ],
+          ),
+        );
+    }
+
+    final examples = [
+      l10n.tasksExampleResearch,
+      l10n.tasksExampleDraft,
+      l10n.tasksExampleTidy,
+    ];
+    return ListView(
+      key: const Key('boardEmpty'),
+      padding: EdgeInsets.fromLTRB(AppSpace.gutter, AppSpace.xs, AppSpace.gutter, AppSpace.xl + bottom),
+      children: [
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.noTickets,
+                  style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.3),
+                ),
+                const SizedBox(height: AppSpace.xs),
+                Text(
+                  l10n.noTicketsHelp,
+                  style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant, height: 1.4),
+                ),
+                const SizedBox(height: AppSpace.lg),
+                way(const Key('startTicket'), LucideIcons.listTodo, 210, l10n.tasksStartTicket, l10n.tasksStartTicketHelp, onTicket),
+                const SizedBox(height: AppSpace.sm),
+                way(const Key('startProject'), LucideIcons.target, 265, l10n.tasksStartProject, l10n.tasksStartProjectHelp, onProject),
+                const SizedBox(height: AppSpace.xl),
+                Text(
+                  l10n.tasksExamples,
+                  style: text.labelLarge?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: AppSpace.xs),
+                AppCard(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpace.xxs),
+                  child: Column(
+                    children: [
+                      for (final (i, example) in examples.indexed) ...[
+                        if (i > 0)
+                          Divider(height: 1, indent: 46, color: scheme.outlineVariant.withValues(alpha: 0.4)),
+                        InkWell(
+                          key: Key('ticketExample-$i'),
+                          onTap: () {
+                            HapticsHelper.selection();
+                            onTicket(example);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: AppSpace.md),
+                            child: Row(
+                              children: [
+                                Icon(LucideIcons.circleDashed, size: 18, color: scheme.onSurfaceVariant),
+                                const SizedBox(width: AppSpace.sm),
+                                Expanded(child: Text(example, style: text.bodyLarge)),
+                                const SizedBox(width: AppSpace.xs),
+                                Icon(LucideIcons.plus, size: 18, color: scheme.onSurfaceVariant),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

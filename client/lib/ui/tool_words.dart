@@ -312,7 +312,7 @@ String? _typed(String? text) {
 }
 
 /// The thing a step is about, in friendly form.
-String? _detailFor(String? id, String tool, Map<String, Object?> a) =>
+String? _detailFor(AppLocalizations l10n, String? id, String tool, Map<String, Object?> a) =>
     switch (id) {
       'browser_open' || 'http' || 'web' => _site(_str(a, ['url'])),
       'files_read' || 'files_write' => _fileName(_str(a, ['path'])),
@@ -323,6 +323,13 @@ String? _detailFor(String? id, String tool, Map<String, Object?> a) =>
       'skills_create' ||
       'skills_update' => _str(a, ['name']).map(_human),
       'pages_publish' => _str(a, ['title']).map(_quote),
+      // Who will see it is the whole point of this approval: say it, not "changing who can see".
+      'pages_share' => switch (_str(a, ['visibility'])) {
+        'public' => l10n.pageShareToPublic,
+        'workspace' => l10n.pageShareToWorkspace,
+        'private' => l10n.pageShareToPrivate,
+        _ => null,
+      },
       'shell' ||
       'browser_click' ||
       'desktop_click' ||
@@ -379,7 +386,7 @@ ToolWords toolWords(
     tone: tone,
     doing: l10n.toolDoing(id),
     done: l10n.toolDid(id),
-    detail: _detailFor(id, tool, args),
+    detail: _detailFor(l10n, id, tool, args),
   );
 }
 

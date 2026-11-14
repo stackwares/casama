@@ -238,13 +238,15 @@ class _ChatVideoState extends ConsumerState<ChatVideo> {
       final backend = ref.read(backendProvider);
       final id = _a.mediaId;
       final VideoPlayerController c;
-      if (id != null) {
+      if (id != null && !kIsWeb) {
         // Streams from the API with range requests.
         c = VideoPlayerController.networkUrl(
           Uri.parse(backend.chatMediaUrl(id)),
           httpHeaders: backend.authHeaders,
         );
       } else if (kIsWeb) {
+        // The web player can't send the sign-in header, so chat media streamed from the API got
+        // a 401 and failed as a "format error". Load it first instead.
         final bytes = await _bytes();
         c = VideoPlayerController.networkUrl(
           Uri.dataFromBytes(bytes, mimeType: mimeFor(_a.name)),
@@ -252,7 +254,14 @@ class _ChatVideoState extends ConsumerState<ChatVideo> {
       } else {
         c = VideoPlayerController.file(await _tempFile(await _bytes()));
       }
-      await c.initialize();
+      try {
+        await c.initialize();
+      } catch (_) {
+        await c.dispose();
+        // A player error (a codec this device lacks) means nothing to people: say it plainly.
+        if (mounted) showWarning(context, context.l10n.videoCantPlay);
+        return;
+      }
       if (!mounted) {
         await c.dispose();
         return;

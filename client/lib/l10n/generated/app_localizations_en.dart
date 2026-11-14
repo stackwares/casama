@@ -1218,11 +1218,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryEarlier => 'Earlier';
 
   @override
-  String get libraryEmptyTitle => 'Nothing made yet';
+  String get videoCantPlay => 'This video won\'t play on this device.';
+
+  @override
+  String get libraryEmptyTitle => 'What should we make first?';
 
   @override
   String get libraryEmptyBody =>
-      'Sites, games, pictures, videos and files your bots make land here on their own.';
+      'Pick one and your bot gets started. Everything your bots make lands here on its own.';
 
   @override
   String get libraryNoMatch => 'Nothing here matches.';
@@ -1246,6 +1249,27 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get libraryStarterSitePrompt =>
       'Make a one-page website for my business.';
+
+  @override
+  String get libraryStarterVideo => 'A short video';
+
+  @override
+  String get libraryStarterVideoPrompt => 'Make a short video of ';
+
+  @override
+  String get libraryStarterCard => 'A birthday card';
+
+  @override
+  String get libraryStarterCardPrompt => 'Make a birthday card for ';
+
+  @override
+  String get libraryStarterReport => 'A report';
+
+  @override
+  String get libraryStarterReportPrompt => 'Research and write a report on ';
+
+  @override
+  String get libraryStarterElse => 'Something else…';
 
   @override
   String get creationOpen => 'Open';
@@ -1840,6 +1864,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get approvalLookClosely => 'Look closely before you allow this';
+
+  @override
+  String get pageShareToPublic =>
+      'Anyone with the link will be able to open it';
+
+  @override
+  String get pageShareToWorkspace =>
+      'Everyone in this workspace will be able to open it';
+
+  @override
+  String get pageShareToPrivate => 'Only you will be able to open it';
 
   @override
   String approvalAllowedLine(String what) {
@@ -3431,6 +3466,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Send a quick request. It starts a new chat with the bot you pick.';
 
   @override
+  String quickAskIntroBot(String name) {
+    return 'Send a quick request. It starts a new chat with $name.';
+  }
+
+  @override
   String quickAskHintBot(String bot) {
     return 'What should $bot do?';
   }
@@ -3518,6 +3558,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noThemesFound => 'No schemes match.';
+
+  @override
+  String get noAppsMatch =>
+      'No apps match. You can add your own server under Advanced.';
+
+  @override
+  String appsFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count apps',
+      one: '1 app',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get familyAll => 'All';
@@ -4810,11 +4865,37 @@ class AppLocalizationsEn extends AppLocalizations {
       'No comments yet. Leave a note for the bot or your team.';
 
   @override
-  String get noTickets => 'No tickets yet';
+  String get noTickets => 'Give your bots something to do';
 
   @override
   String get noTicketsHelp =>
-      'Add a ticket and assign it to a bot to get it started, or ask a bot to plan work here.';
+      'Hand off one piece of work, or a whole goal. You can watch it move from here.';
+
+  @override
+  String get tasksStartTicket => 'Add a ticket';
+
+  @override
+  String get tasksStartTicketHelp =>
+      'One piece of work. Assign it to a bot and it starts.';
+
+  @override
+  String get tasksStartProject => 'Start a project';
+
+  @override
+  String get tasksStartProjectHelp =>
+      'A bigger goal. A bot plans it as tickets and waits for your OK.';
+
+  @override
+  String get tasksExamples => 'Or start from one of these';
+
+  @override
+  String get tasksExampleResearch => 'Research my top three competitors';
+
+  @override
+  String get tasksExampleDraft => 'Draft a launch announcement';
+
+  @override
+  String get tasksExampleTidy => 'Tidy up my files';
 
   @override
   String get ticketStatus => 'Status';
@@ -5407,6 +5488,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get projectBudget => 'Budget';
+
+  @override
+  String get projectGoalHint =>
+      'What should exist at the end? A landing page live on my domain…';
+
+  @override
+  String get projectDoneHint => 'Optional. How you\'ll know it\'s finished';
+
+  @override
+  String get projectBudgetHint => 'Optional. Work pauses when it\'s spent';
 
   @override
   String get projectThread => 'Project chat';
@@ -7814,7 +7905,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photosFromUnsplash => 'Photos from Unsplash';
 
   @override
-  String get showBotSteps => 'Show the Bot\'s Steps';
+  String get showBotSteps => 'Show the bot\'s steps';
 
   @override
   String get showBotStepsHelp => 'Commands and technical errors in every chat.';
@@ -8552,7 +8643,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAppSection => 'App';
 
   @override
-  String get settingsSecuritySection => 'Sign-in & Security';
+  String get settingsSecuritySection => 'Sign-in & security';
 
   @override
   String get customize => 'Customize';
@@ -9469,7 +9560,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updatesRow => 'Updates';
 
   @override
-  String get updatesRowSubtitle => 'Workspace notices and pages';
+  String get updatesRowSubtitle => 'News from your workspace';
 
   @override
   String get updatesEmpty => 'No updates';

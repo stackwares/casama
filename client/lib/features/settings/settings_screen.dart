@@ -92,13 +92,15 @@ class SettingsScreen extends ConsumerWidget {
                             overflow: TextOverflow.ellipsis,
                             style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            [if (name.isNotEmpty) email, org?.name ?? '', if (org != null) _roleLabel(context, org.role)].where((s) => s.isNotEmpty).join(' · '),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-                          ),
+                          if (name.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              email,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                            ),
+                          ],
                           const SizedBox(height: 2),
                           Text(l10n.aboutYouRow, style: context.textTheme.bodySmall?.copyWith(color: scheme.primary, fontWeight: FontWeight.w600)),
                         ],
@@ -118,7 +120,7 @@ class SettingsScreen extends ConsumerWidget {
                   GroupedTile(
                     icon: LucideIcons.boxes,
                     title: org?.name ?? l10n.workspace,
-                    subtitle: orgs.length > 1 ? l10n.switchWorkspace : null,
+                    subtitle: [if (org != null) _roleLabel(context, org.role), if (orgs.length > 1) l10n.switchWorkspace].join(' · '),
                     trailing: orgs.length > 1
                         ? PopupMenuButton<String>(
                             tooltip: l10n.switchWorkspace,
@@ -291,7 +293,7 @@ class SettingsScreen extends ConsumerWidget {
                   if (ref.watch(authMethodsProvider).value?.passkeys == true)
                     GroupedTile(
                       key: const Key('settingsPasskeys'),
-                      icon: LucideIcons.keyRound,
+                      icon: LucideIcons.fingerprint,
                       title: l10n.passkeys,
                       subtitle: l10n.passkeysRow,
                       onTap: () => open('/settings/passkeys'), selected: sel('/settings/passkeys'),

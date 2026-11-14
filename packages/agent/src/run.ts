@@ -45,6 +45,7 @@ import { postApprovalToChannel, replyToChannel } from "./channels/service.ts";
 import { auditComputer, type ComputerService, RunningLimitError } from "./computers.ts";
 import {
   buildContext,
+  dropTurnImages,
   estimateTokens,
   isContextOverflow,
   keepNewestImages,
@@ -826,6 +827,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     let continuations = 0;
     let carried = "";
     let overflowHandled = false;
+    let imagesDropped = false;
     let verified = false;
     const windowTokens = Math.min(
       caps.contextWindow,
@@ -885,6 +887,16 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         return { status: "failed" };
       }
 
+      // A few steps before the limit, a heads-up: a bot polishing and re-testing used all 40 steps
+      // and stopped with nothing delivered (a game written but never published). Now it's told to
+      // hand over what it has while it still can.
+      if (info.conversationId && i === limits.maxSteps - STEPS_WARNING) {
+        turn.push({
+          role: "user",
+          content: `[Casama: ${STEPS_WARNING} steps left in this run. Stop polishing and deliver now: publish or save what you have, then reply with what works and what doesn't. Don't mention this note.]`,
+        });
+      }
+
       // Messages the person sent while this run works (direct chats): the bot sees them now and
       // decides whether to fold them in, switch, or finish first.
       if (info.conversationId && !info.group && info.current) {
@@ -922,12 +934,24 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       try {
         out = await askModel(`model-${i}`);
       } catch (err) {
-        // The estimate was off and the provider says the prompt doesn't fit: cut harder, once.
-        if (overflowHandled || !isContextOverflow(err)) throw err;
-        overflowHandled = true;
-        if (trimTurn(turn, baseTokens(), windowTokens, { force: true, target: 0.3 }) === 0)
-          throw err;
-        out = await askModel(`model-${i}-fit`);
+        // A provider that turns down a picture (size, format, or vision it doesn't really have)
+        // failed the whole run with "provider returned 400". Drop the pictures and go on, once.
+        if (
+          !imagesDropped &&
+          err instanceof ModelCallError &&
+          err.status === 400 &&
+          dropTurnImages(turn) > 0
+        ) {
+          imagesDropped = true;
+          out = await askModel(`model-${i}-noimg`);
+        } else {
+          // The estimate was off and the provider says the prompt doesn't fit: cut harder, once.
+          if (overflowHandled || !isContextOverflow(err)) throw err;
+          overflowHandled = true;
+          if (trimTurn(turn, baseTokens(), windowTokens, { force: true, target: 0.3 }) === 0)
+            throw err;
+          out = await askModel(`model-${i}-fit`);
+        }
       }
       if (out.cancelled) {
         await step("cancel", () => finishCancelled(db, info, bus));
@@ -2194,6 +2218,8 @@ async function verifyReply(
   }
 }
 
+/** Steps before the limit at which the bot is told to deliver what it has. */
+const STEPS_WARNING = 5;
 /** How many times a model step is tried again after its stream broke part-way (D-268). */
 const MODEL_STEP_RETRIES = 2;
 const MAX_CONTINUATIONS = 3;

@@ -524,7 +524,18 @@ class WorkingIndicator extends StatelessWidget {
             icon,
             const SizedBox(width: 10),
             Flexible(
-              child: AnimatedSwitcher(duration: AppMotion.of(context, AppMotion.fast), child: text),
+              // Fade through, left-aligned: the old line leaves before the new one shows, so two
+              // statuses of different widths never sit on top of each other.
+              child: AnimatedSwitcher(
+                duration: AppMotion.of(context, AppMotion.duration),
+                switchInCurve: const Interval(0.5, 1, curve: Curves.easeOut),
+                switchOutCurve: const Interval(0.5, 1, curve: Curves.easeIn),
+                layoutBuilder: (current, previous) => Stack(
+                  alignment: Alignment.centerLeft,
+                  children: [...previous, ?current],
+                ),
+                child: text,
+              ),
             ),
           ],
         ),
@@ -571,6 +582,10 @@ String toolActivity(AppLocalizations l10n, String tool) {
       tool.startsWith('computer') ||
       tool.startsWith('checkpoint')) {
     return l10n.activityComputer;
+  }
+  // A connected app or server by name ("Using Deepwiki…"), not just "your apps".
+  if (RegExp(r'^(mcp|composio|pipedream|app|openapi|local_mcp)\.[^.]+\.').hasMatch(tool)) {
+    return '${toolWords(l10n, tool).doing}…';
   }
   if (tool.startsWith('http') ||
       tool.contains('.') &&

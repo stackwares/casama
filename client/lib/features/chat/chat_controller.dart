@@ -199,7 +199,12 @@ class ChatState {
     this.loadFailed = false,
     this.hasEarlier = false,
     this.loadingEarlier = false,
+    this.sending = false,
   });
+
+  /// A message is on its way and its run hasn't started yet: the chat already shows the bot
+  /// thinking, so a slow send doesn't look like nothing happened.
+  final bool sending;
 
   /// The thread has messages older than the ones loaded (Fix 10); [loadingEarlier] while the next
   /// page up is on its way.
@@ -248,7 +253,9 @@ class ChatState {
     bool? loadFailed,
     bool? hasEarlier,
     bool? loadingEarlier,
+    bool? sending,
   }) => ChatState(
+    sending: sending ?? this.sending,
     hasEarlier: hasEarlier ?? this.hasEarlier,
     loadingEarlier: loadingEarlier ?? this.loadingEarlier,
     loadFailed: loadFailed ?? this.loadFailed,
@@ -657,6 +664,7 @@ class ChatController extends Notifier<ChatState> {
       state = state.copyWith(
         entries: [...state.entries, local],
         lastSent: (text: trimmed, attachments: attachments, skills: skills, uiAction: uiAction),
+        sending: true,
         answeredUi: uiAction == null ? null : {...state.answeredUi, '${uiAction['surface_id']}'},
       );
       await before;
@@ -682,6 +690,7 @@ class ChatController extends Notifier<ChatState> {
         state = state.copyWith(entries: [...state.entries]..[i] = o.copyWith(failed: true, uploading: false));
         _unsent[o.id] = (skills: skills, uiAction: uiAction);
       }
+      state = state.copyWith(sending: false);
       rethrow;
     } finally {
       if (!turn.isCompleted) turn.complete();
@@ -696,6 +705,7 @@ class ChatController extends Notifier<ChatState> {
         entries: known ? ([...state.entries]..removeAt(at)) : ([...state.entries]..[at] = (state.entries[at] as MessageEntry).copyWith(id: sent.messageId)),
       );
     }
+    state = state.copyWith(sending: false);
     // Joined the run already on screen: keep following it.
     if (sent.joined == true && state.activeRunId == sent.runId) return;
     unawaited(ref.read(runActivitiesProvider).started(sent.runId, ref.read(botProvider(botId))?.name ?? ''));

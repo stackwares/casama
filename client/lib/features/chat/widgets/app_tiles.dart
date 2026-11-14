@@ -162,7 +162,7 @@ class _AppTile extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(app.name, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: context.textTheme.labelSmall),
+                  Text(_shortName(app.name), maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: context.textTheme.labelSmall),
                 ],
               ),
             ),
@@ -213,4 +213,13 @@ class _MoreTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A tile's label: the brand dropped from suite apps ("Google Calendar" → "Calendar"), since the
+/// logo already says whose it is and the full name doesn't fit 64 points.
+String _shortName(String name) {
+  for (final brand in const ['Google ', 'Microsoft ']) {
+    if (name.startsWith(brand) && name.length > brand.length) return name.substring(brand.length);
+  }
+  return name;
 }
