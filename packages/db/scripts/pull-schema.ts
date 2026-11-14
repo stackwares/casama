@@ -77,6 +77,17 @@ try {
       src = src
         .replace(/\t\/\/ TODO: failed to parse database type 'citext'\n/g, "")
         .replace(/unknown\("(\w+)"\)/g, 'text("$1")');
+      // drizzle-kit lists the pg-core imports in no fixed order; sort them so the file is stable.
+      src = src.replace(
+        /^import \{ ([^}]+) \} from "drizzle-orm\/pg-core"$/m,
+        (_, names: string) =>
+          `import { ${names
+            .split(",")
+            .map((n) => n.trim())
+            .filter(Boolean)
+            .sort()
+            .join(", ")} } from "drizzle-orm/pg-core"`,
+      );
     }
     if (f === "relations.ts") {
       src = src.replace(/from "\.\/schema"/, 'from "./schema.ts"');
