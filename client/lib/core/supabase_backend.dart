@@ -3068,18 +3068,23 @@ class SupabaseBackend implements Backend {
   Future<Project> createProject(
     String orgId, {
     required String title,
-    required String goal,
+    String goal = '',
     String doneCriteria = '',
     required String leadBotId,
     double? budgetUsd,
+    bool autonomous = false,
+    String? conversationId,
   }) async => (await api.projects.createProject(
     createProjectRequest: CreateProjectRequest(
       orgId: orgId,
       title: title,
-      goalMd: goal,
+      goalMd: goal.isEmpty ? null : goal,
       doneCriteriaMd: doneCriteria,
       leadBotId: leadBotId,
       budgetUsd: budgetUsd,
+      // Always sent: a server that doesn't say otherwise plans and runs the project by itself.
+      autonomous: autonomous,
+      conversationId: conversationId,
     ),
   )).data!;
 
@@ -3092,6 +3097,9 @@ class SupabaseBackend implements Backend {
     String projectId, {
     String? status,
     double? budgetUsd,
+    bool? autonomous,
+    String? goal,
+    String? doneCriteria,
   }) async {
     await api.projects.updateProject(
       id: projectId,
@@ -3102,6 +3110,9 @@ class SupabaseBackend implements Backend {
                 (s) => s.value == status,
               ),
         budgetUsd: budgetUsd,
+        autonomous: autonomous,
+        goalMd: goal,
+        doneCriteriaMd: doneCriteria,
       ),
     );
   }
@@ -3982,6 +3993,7 @@ class SupabaseBackend implements Backend {
     CreationKind? kind,
     String? botId,
     String? conversationId,
+    String? projectId,
     String? q,
     String? cursor,
     bool recentlyOpened = false,
@@ -3992,6 +4004,7 @@ class SupabaseBackend implements Backend {
     kind: kind,
     botId: botId,
     conversationId: conversationId,
+    projectId: projectId,
     q: (q == null || q.trim().isEmpty) ? null : q.trim(),
     cursor: cursor,
     sort: recentlyOpened ? 'opened' : null,
@@ -4013,6 +4026,17 @@ class SupabaseBackend implements Backend {
           visibility: visibility == null ? null : UpdateCreationRequestVisibilityEnum.values.firstWhere((v) => v.value == visibility.value),
         ),
       )).data!;
+
+  // Sent as raw JSON: the generated request drops nulls, and null is how it leaves a project.
+  @override
+  Future<Creation> moveCreation(String id, String? projectId) async {
+    final res = await api.api.dio.patch<Map<String, dynamic>>(
+      '/v1/creations/$id',
+      data: {'project_id': projectId},
+      options: Options(headers: authHeaders, contentType: 'application/json'),
+    );
+    return Creation.fromJson(res.data!);
+  }
 
   @override
   Future<void> deleteCreation(String id) async => api.creations.deleteCreation(id: id);

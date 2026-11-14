@@ -142,6 +142,7 @@ import {
   ToolsLoadArgs,
 } from "./lazy-tools.ts";
 import { hasCardPlaceholders, resolveCardPlaceholders } from "./payments.ts";
+import { projectContext } from "./projects.ts";
 import {
   hasPlaceholders,
   loadSecrets,
@@ -769,6 +770,19 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
             return [];
           })
         : [];
+    // The project this run works on, or the person's open ones (D-295).
+    const project = await step("project-context", () =>
+      projectContext(db, {
+        runId,
+        orgId: info.orgId,
+        botId: info.botId,
+        actingUserId: info.actingUserId,
+        computer: !!deps.computers,
+      }).catch((err) => {
+        log?.warn("project context not loaded", { run_id: runId, error: (err as Error).message });
+        return null;
+      }),
+    );
     const contextFor = (summary: string) =>
       buildContext({
         botName: info.botName,
@@ -792,6 +806,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         localComputer: localComputer ?? undefined,
         routine: info.routine ? { id: info.routine.id, name: info.routine.name } : undefined,
         person,
+        project,
       });
 
     let ctx = contextFor(info.summary);

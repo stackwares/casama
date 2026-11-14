@@ -43,6 +43,18 @@ abstract class _$ProjectDetailCWProxy {
 
   ProjectDetail createdAt(DateTime createdAt);
 
+  ProjectDetail autonomous(bool? autonomous);
+
+  ProjectDetail personal(bool? personal);
+
+  ProjectDetail folder(String? folder);
+
+  ProjectDetail creationsCount(int? creationsCount);
+
+  ProjectDetail latestCreation(Creation? latestCreation);
+
+  ProjectDetail canSteer(bool? canSteer);
+
   ProjectDetail milestones(List<ProjectMilestone> milestones);
 
   ProjectDetail runs(List<ProjectRun> runs);
@@ -74,6 +86,12 @@ abstract class _$ProjectDetailCWProxy {
     String planMd,
     int sessions,
     DateTime createdAt,
+    bool? autonomous,
+    bool? personal,
+    String? folder,
+    int? creationsCount,
+    Creation? latestCreation,
+    bool? canSteer,
     List<ProjectMilestone> milestones,
     List<ProjectRun> runs,
   });
@@ -147,6 +165,26 @@ class _$ProjectDetailCWProxyImpl implements _$ProjectDetailCWProxy {
   ProjectDetail createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
   @override
+  ProjectDetail autonomous(bool? autonomous) => call(autonomous: autonomous);
+
+  @override
+  ProjectDetail personal(bool? personal) => call(personal: personal);
+
+  @override
+  ProjectDetail folder(String? folder) => call(folder: folder);
+
+  @override
+  ProjectDetail creationsCount(int? creationsCount) =>
+      call(creationsCount: creationsCount);
+
+  @override
+  ProjectDetail latestCreation(Creation? latestCreation) =>
+      call(latestCreation: latestCreation);
+
+  @override
+  ProjectDetail canSteer(bool? canSteer) => call(canSteer: canSteer);
+
+  @override
   ProjectDetail milestones(List<ProjectMilestone> milestones) =>
       call(milestones: milestones);
 
@@ -181,6 +219,12 @@ class _$ProjectDetailCWProxyImpl implements _$ProjectDetailCWProxy {
     Object? planMd = const $CopyWithPlaceholder(),
     Object? sessions = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
+    Object? autonomous = const $CopyWithPlaceholder(),
+    Object? personal = const $CopyWithPlaceholder(),
+    Object? folder = const $CopyWithPlaceholder(),
+    Object? creationsCount = const $CopyWithPlaceholder(),
+    Object? latestCreation = const $CopyWithPlaceholder(),
+    Object? canSteer = const $CopyWithPlaceholder(),
     Object? milestones = const $CopyWithPlaceholder(),
     Object? runs = const $CopyWithPlaceholder(),
   }) {
@@ -260,6 +304,30 @@ class _$ProjectDetailCWProxyImpl implements _$ProjectDetailCWProxy {
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
+      autonomous: autonomous == const $CopyWithPlaceholder()
+          ? _value.autonomous
+          // ignore: cast_nullable_to_non_nullable
+          : autonomous as bool?,
+      personal: personal == const $CopyWithPlaceholder()
+          ? _value.personal
+          // ignore: cast_nullable_to_non_nullable
+          : personal as bool?,
+      folder: folder == const $CopyWithPlaceholder()
+          ? _value.folder
+          // ignore: cast_nullable_to_non_nullable
+          : folder as String?,
+      creationsCount: creationsCount == const $CopyWithPlaceholder()
+          ? _value.creationsCount
+          // ignore: cast_nullable_to_non_nullable
+          : creationsCount as int?,
+      latestCreation: latestCreation == const $CopyWithPlaceholder()
+          ? _value.latestCreation
+          // ignore: cast_nullable_to_non_nullable
+          : latestCreation as Creation?,
+      canSteer: canSteer == const $CopyWithPlaceholder()
+          ? _value.canSteer
+          // ignore: cast_nullable_to_non_nullable
+          : canSteer as bool?,
       milestones:
           milestones == const $CopyWithPlaceholder() || milestones == null
           ? _value.milestones
@@ -346,6 +414,18 @@ ProjectDetail _$ProjectDetailFromJson(
         'created_at',
         (v) => DateTime.parse(v as String),
       ),
+      autonomous: $checkedConvert('autonomous', (v) => v as bool?),
+      personal: $checkedConvert('personal', (v) => v as bool?),
+      folder: $checkedConvert('folder', (v) => v as String?),
+      creationsCount: $checkedConvert(
+        'creations_count',
+        (v) => (v as num?)?.toInt(),
+      ),
+      latestCreation: $checkedConvert(
+        'latest_creation',
+        (v) => v == null ? null : Creation.fromJson(v as Map<String, dynamic>),
+      ),
+      canSteer: $checkedConvert('can_steer', (v) => v as bool?),
       milestones: $checkedConvert(
         'milestones',
         (v) => (v as List<dynamic>)
@@ -375,6 +455,9 @@ ProjectDetail _$ProjectDetailFromJson(
     'deadlineAt': 'deadline_at',
     'planMd': 'plan_md',
     'createdAt': 'created_at',
+    'creationsCount': 'creations_count',
+    'latestCreation': 'latest_creation',
+    'canSteer': 'can_steer',
   },
 );
 
@@ -398,6 +481,12 @@ Map<String, dynamic> _$ProjectDetailToJson(ProjectDetail instance) =>
       'plan_md': instance.planMd,
       'sessions': instance.sessions,
       'created_at': instance.createdAt.toIso8601String(),
+      'autonomous': ?instance.autonomous,
+      'personal': ?instance.personal,
+      'folder': ?instance.folder,
+      'creations_count': ?instance.creationsCount,
+      'latest_creation': ?instance.latestCreation?.toJson(),
+      'can_steer': ?instance.canSteer,
       'milestones': instance.milestones.map((e) => e.toJson()).toList(),
       'runs': instance.runs.map((e) => e.toJson()).toList(),
     };

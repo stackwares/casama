@@ -58,8 +58,8 @@ export const organizationsRelations = relations(organizations, ({one, many}) => 
 	skillFiles: many(skillFiles),
 	botCheckins: many(botCheckins),
 	botShares: many(botShares),
-	projects: many(projects),
 	projectMilestones: many(projectMilestones),
+	projects: many(projects),
 	actionRules: many(actionRules),
 	watchers: many(watchers),
 	suggestions: many(suggestions),
@@ -107,9 +107,9 @@ export const organizationsRelations = relations(organizations, ({one, many}) => 
 	chatMedias: many(chatMedia),
 	creditLots: many(creditLots),
 	capacityEvents: many(capacityEvents),
-	creations: many(creations),
 	pageSubmissions: many(pageSubmissions),
 	creationReports: many(creationReports),
+	creations: many(creations),
 	profileSpaces: many(profileSpaces),
 	conversationBots: many(conversationBots),
 	pluginFiles: many(pluginFiles),
@@ -159,8 +159,8 @@ export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
 	}),
 	botCheckins: many(botCheckins),
 	botShares: many(botShares),
-	projects: many(projects),
 	projectMilestones: many(projectMilestones),
+	projects: many(projects),
 	actionRules: many(actionRules),
 	watchers: many(watchers),
 	suggestions: many(suggestions),
@@ -224,8 +224,8 @@ export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
 	referrals_inviterId: many(referrals, {
 		relationName: "referrals_inviterId_usersInAuth_id"
 	}),
-	creations: many(creations),
 	pageSubmissions: many(pageSubmissions),
+	creations: many(creations),
 	analyticsMilestones: many(analyticsMilestones),
 	deviceGrants: many(deviceGrants),
 	deviceEventLogs: many(deviceEventLog),
@@ -539,6 +539,7 @@ export const projectsRelations = relations(projects, ({one, many}) => ({
 	runs: many(runs),
 	routines: many(routines),
 	tasks: many(tasks),
+	projectMilestones: many(projectMilestones),
 	conversation: one(conversations, {
 		fields: [projects.conversationId],
 		references: [conversations.id],
@@ -556,8 +557,8 @@ export const projectsRelations = relations(projects, ({one, many}) => ({
 		fields: [projects.ownerUserId],
 		references: [usersInAuth.id]
 	}),
-	projectMilestones: many(projectMilestones),
 	watchers: many(watchers),
+	creations: many(creations),
 }));
 
 export const attachmentsRelations = relations(attachments, ({one}) => ({
@@ -1192,8 +1193,8 @@ export const pagesRelations = relations(pages, ({one, many}) => ({
 		relationName: "pages_submitRoutineId_routines_id"
 	}),
 	pageViewTokens: many(pageViewTokens),
-	creations: many(creations),
 	pageSubmissions: many(pageSubmissions),
+	creations: many(creations),
 	pageVersions: many(pageVersions),
 	pageAssets: many(pageAssets),
 }));
@@ -1841,7 +1842,34 @@ export const capacityEventsRelations = relations(capacityEvents, ({one}) => ({
 	}),
 }));
 
+export const pageSubmissionsRelations = relations(pageSubmissions, ({one}) => ({
+	page: one(pages, {
+		fields: [pageSubmissions.pageId],
+		references: [pages.id]
+	}),
+	organization: one(organizations, {
+		fields: [pageSubmissions.orgId],
+		references: [organizations.id]
+	}),
+	usersInAuth: one(usersInAuth, {
+		fields: [pageSubmissions.submittedBy],
+		references: [usersInAuth.id]
+	}),
+}));
+
+export const creationReportsRelations = relations(creationReports, ({one}) => ({
+	creation: one(creations, {
+		fields: [creationReports.creationId],
+		references: [creations.id]
+	}),
+	organization: one(organizations, {
+		fields: [creationReports.orgId],
+		references: [organizations.id]
+	}),
+}));
+
 export const creationsRelations = relations(creations, ({one, many}) => ({
+	creationReports: many(creationReports),
 	run: one(runs, {
 		fields: [creations.runId],
 		references: [runs.id]
@@ -1870,35 +1898,12 @@ export const creationsRelations = relations(creations, ({one, many}) => ({
 		fields: [creations.conversationId],
 		references: [conversations.id]
 	}),
-	creationReports: many(creationReports),
+	project: one(projects, {
+		fields: [creations.projectId],
+		references: [projects.id]
+	}),
 	creationMarks: many(creationMarks),
 	creationVersions: many(creationVersions),
-}));
-
-export const pageSubmissionsRelations = relations(pageSubmissions, ({one}) => ({
-	page: one(pages, {
-		fields: [pageSubmissions.pageId],
-		references: [pages.id]
-	}),
-	organization: one(organizations, {
-		fields: [pageSubmissions.orgId],
-		references: [organizations.id]
-	}),
-	usersInAuth: one(usersInAuth, {
-		fields: [pageSubmissions.submittedBy],
-		references: [usersInAuth.id]
-	}),
-}));
-
-export const creationReportsRelations = relations(creationReports, ({one}) => ({
-	creation: one(creations, {
-		fields: [creationReports.creationId],
-		references: [creations.id]
-	}),
-	organization: one(organizations, {
-		fields: [creationReports.orgId],
-		references: [organizations.id]
-	}),
 }));
 
 export const agentImportFilesRelations = relations(agentImportFiles, ({one}) => ({

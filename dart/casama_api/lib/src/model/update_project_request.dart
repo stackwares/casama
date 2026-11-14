@@ -29,6 +29,12 @@ class UpdateProjectRequest {
      this.deadlineAt,
 
      this.planMd,
+
+     this.goalMd,
+
+     this.doneCriteriaMd,
+
+     this.autonomous,
   });
 
   @JsonKey(
@@ -43,7 +49,7 @@ class UpdateProjectRequest {
 
 
 
-      /// Resume, pause or cancel
+      /// Resume, pause, cancel or finish. A finished project you work on together can be made active again
   @JsonKey(
     
     name: r'status',
@@ -94,6 +100,43 @@ class UpdateProjectRequest {
 
 
 
+  @JsonKey(
+    
+    name: r'goal_md',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? goalMd;
+
+
+
+  @JsonKey(
+    
+    name: r'done_criteria_md',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? doneCriteriaMd;
+
+
+
+      /// true: the lead bot drafts a plan for you to approve, then works by itself (needs a goal). false: back to working on it together; nothing more starts by itself
+  @JsonKey(
+    
+    name: r'autonomous',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? autonomous;
+
+
+
 
 
     @override
@@ -102,7 +145,10 @@ class UpdateProjectRequest {
       other.status == status &&
       other.budgetUsd == budgetUsd &&
       other.deadlineAt == deadlineAt &&
-      other.planMd == planMd;
+      other.planMd == planMd &&
+      other.goalMd == goalMd &&
+      other.doneCriteriaMd == doneCriteriaMd &&
+      other.autonomous == autonomous;
 
     @override
     int get hashCode =>
@@ -110,7 +156,10 @@ class UpdateProjectRequest {
         status.hashCode +
         (budgetUsd == null ? 0 : budgetUsd.hashCode) +
         (deadlineAt == null ? 0 : deadlineAt.hashCode) +
-        planMd.hashCode;
+        planMd.hashCode +
+        goalMd.hashCode +
+        doneCriteriaMd.hashCode +
+        autonomous.hashCode;
 
   factory UpdateProjectRequest.fromJson(Map<String, dynamic> json) => _$UpdateProjectRequestFromJson(json);
 
@@ -123,17 +172,20 @@ class UpdateProjectRequest {
 
 }
 
-/// Resume, pause or cancel
+/// Resume, pause, cancel or finish. A finished project you work on together can be made active again
 enum UpdateProjectRequestStatusEnum {
-    /// Resume, pause or cancel
+    /// Resume, pause, cancel or finish. A finished project you work on together can be made active again
 @JsonValue(r'active')
 active(r'active'),
-    /// Resume, pause or cancel
+    /// Resume, pause, cancel or finish. A finished project you work on together can be made active again
 @JsonValue(r'paused')
 paused(r'paused'),
-    /// Resume, pause or cancel
+    /// Resume, pause, cancel or finish. A finished project you work on together can be made active again
 @JsonValue(r'cancelled')
-cancelled(r'cancelled');
+cancelled(r'cancelled'),
+    /// Resume, pause, cancel or finish. A finished project you work on together can be made active again
+@JsonValue(r'done')
+done(r'done');
 
 const UpdateProjectRequestStatusEnum(this.value);
 

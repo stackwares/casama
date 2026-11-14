@@ -88,12 +88,13 @@ export function registerLibraryTools(
   registry.register({
     name: "library.list",
     description:
-      "List things you made earlier that are in the person's Library (pages, pictures, videos, files), newest first, to find one to show, reuse or change. Filter by kind or words in the title.",
+      "List things you made earlier that are in the person's Library (pages, pictures, videos, files), newest first, to find one to show, reuse or change. Filter by kind, words in the title, or a project.",
     risk: "low",
     readOnly: true,
     schema: z.object({
       kind: z.enum(["page", "image", "video", "audio", "document", "file"]).optional(),
       query: z.string().max(200).optional(),
+      project: z.string().max(200).optional().describe("A project's id, slug or title"),
       limit: z.number().int().min(1).max(50).optional(),
     }),
     async execute(args, ctx) {
@@ -103,6 +104,12 @@ export function registerLibraryTools(
         where c.bot_id = ${ctx.botId}::uuid and c.deleted_at is null and ${visibleTo(ctx.runId)}
           ${args.kind ? sql`and c.kind = ${args.kind}` : sql``}
           ${args.query ? sql`and c.title ilike ${`%${args.query.replace(/[\\%_]/g, (x) => `\\${x}`)}%`}` : sql``}
+          ${
+            args.project
+              ? sql`and c.project_id in (select p.id from public.projects p where p.org_id = ${ctx.orgId}::uuid
+                    and (p.id::text = ${args.project} or p.slug = ${args.project} or lower(p.title) = lower(${args.project})))`
+              : sql``
+          }
         order by c.created_at desc limit ${args.limit ?? 20}`);
       if (!rows.length) return { content: "Nothing in the Library matches.", preview: "none" };
       return {

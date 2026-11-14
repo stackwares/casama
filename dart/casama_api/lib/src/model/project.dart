@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:casama_api/src/model/creation.dart';
 import 'package:casama_api/src/model/project_status.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -56,6 +57,18 @@ class Project {
     required  this.sessions,
 
     required  this.createdAt,
+
+     this.autonomous,
+
+     this.personal,
+
+     this.folder,
+
+     this.creationsCount,
+
+     this.latestCreation,
+
+     this.canSteer,
   });
 
   @JsonKey(
@@ -274,6 +287,83 @@ class Project {
 
 
 
+      /// Plans for your approval, then works by itself in sessions (D-113). False: worked on together in its chat (D-295). Absent on older servers, where every project is autonomous
+  @JsonKey(
+    
+    name: r'autonomous',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? autonomous;
+
+
+
+      /// Grew out of a person's own chat: seen by them and by whoever can open its chat, not the whole workspace
+  @JsonKey(
+    
+    name: r'personal',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? personal;
+
+
+
+      /// Where its files live on the lead bot's computer, under the home folder (the folder is made when the bot first saves something there)
+  @JsonKey(
+    
+    name: r'folder',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? folder;
+
+
+
+      /// How many things in the Library are filed under it, that you can see
+  @JsonKey(
+    
+    name: r'creations_count',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final int? creationsCount;
+
+
+
+  @JsonKey(
+    
+    name: r'latest_creation',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final Creation? latestCreation;
+
+
+
+      /// Whether you may change it: its owner, an admin or the lead bot's managers
+  @JsonKey(
+    
+    name: r'can_steer',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? canSteer;
+
+
+
 
 
     @override
@@ -295,7 +385,13 @@ class Project {
       other.deadlineAt == deadlineAt &&
       other.planMd == planMd &&
       other.sessions == sessions &&
-      other.createdAt == createdAt;
+      other.createdAt == createdAt &&
+      other.autonomous == autonomous &&
+      other.personal == personal &&
+      other.folder == folder &&
+      other.creationsCount == creationsCount &&
+      other.latestCreation == latestCreation &&
+      other.canSteer == canSteer;
 
     @override
     int get hashCode =>
@@ -316,7 +412,13 @@ class Project {
         (deadlineAt == null ? 0 : deadlineAt.hashCode) +
         planMd.hashCode +
         sessions.hashCode +
-        createdAt.hashCode;
+        createdAt.hashCode +
+        autonomous.hashCode +
+        personal.hashCode +
+        folder.hashCode +
+        creationsCount.hashCode +
+        latestCreation.hashCode +
+        canSteer.hashCode;
 
   factory Project.fromJson(Map<String, dynamic> json) => _$ProjectFromJson(json);
 

@@ -130,8 +130,8 @@ describe("projects", () => {
 
   it("stops cleanly at its budget and tells the owner", async () => {
     const [p2] = await h.tdb.admin<{ id: string }[]>`
-      insert into public.projects (org_id, slug, title, goal_md, lead_bot_id, owner_user_id, budget_usd, status, plan_status)
-      values (${orgId}, 'tiny', 'Tiny budget', 'x', ${botId}, ${owner.id}, 1, 'active', 'approved') returning id`;
+      insert into public.projects (org_id, slug, title, goal_md, lead_bot_id, owner_user_id, budget_usd, status, plan_status, autonomous)
+      values (${orgId}, 'tiny', 'Tiny budget', 'x', ${botId}, ${owner.id}, 1, 'active', 'approved', true) returning id`;
     await h.tdb
       .admin`insert into public.tasks (org_id, title, project_id) values (${orgId}, 'Do a thing', ${p2!.id})`;
     await h.tdb

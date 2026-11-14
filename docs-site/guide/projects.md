@@ -1,12 +1,11 @@
 # Projects and the ticket board
 
 **Tasks** is a shared ticket board for people and bots. Assign a ticket to a bot and it starts
-working, reports back in comments and moves the ticket along. A **project** goes further: give a
-lead bot a goal, approve the plan it drafts, and it works through milestones and tickets in
-sessions until the goal is done, within the budget and deadline you set.
+working, reports back in comments and moves the ticket along. A **project** keeps one larger piece
+of work together: its chat, its plan and to-dos, its files, and everything a bot made for it.
 
-Use tickets for single pieces of work. Use a project for a larger goal that takes many steps over
-days.
+Use tickets for single pieces of work. Use a project for work that takes several files or several
+sittings, such as a game, a site or a set of reports.
 
 ## The ticket board
 
@@ -65,41 +64,105 @@ Tap a ticket to open it. From the sheet you can:
 
 ## Projects
 
-A project has a goal, done criteria, a lead bot, and optionally a budget. The lead bot plans the
-work as milestones, each with tickets, and nothing starts until you approve the plan.
+A project needs only a name and a bot. It holds:
+
+| Part | Where you see it |
+| --- | --- |
+| **Project chat** | A topic with the bot. What the bot makes there belongs to the project. |
+| **Made in this project** | The sites, games, pictures, videos, documents and files the bot made for it. They are also in the **Library**. |
+| **Plan** | The bot's notes on what is done and what is next. |
+| **To-dos** | Tickets on the board that belong to the project. |
+| **Files** | One folder on the bot's computer for working files such as code. |
+
+You can work on a project in two ways:
+
+- **Together, in its chat.** This is how every new project starts. Nothing happens unless you ask.
+- **By itself.** The bot drafts a plan for you to approve, then works in sessions until the goal is
+  met. See [Let the bot work on it by itself](#let-the-bot-work-on-it-by-itself).
 
 ### Start a project
 
-1. In **Tasks**, open the project picker and tap **Manage projects**, then **New project**.
-2. Enter a **Title** and the **Goal**.
-3. Describe **Done when**: how you'll know the project is finished.
-4. Pick the **Lead bot**.
-5. Optionally set a **Budget** in dollars.
-6. Tap **Start planning**.
+There are three ways:
 
-The lead bot drafts a plan in the project chat: milestones with tickets, who should do each one,
-which milestones need your sign-off, and a written plan. You get a notification when it's ready.
-Until you approve it, asking the bot to plan again replaces the proposed tickets.
+- **From a topic.** In a topic, open the chat's **…** menu and tap **Make This a Project**. The
+  topic becomes the project's chat, and what the bot already made there is filed under the project.
+  General can't become a project.
+- **From the list.** In **Tasks**, open the project picker and tap **Manage projects**, then
+  **New project**. Enter a **Name**, pick the **Lead bot** and tap **Create Project**. The project
+  gets a new topic as its chat.
+- **By asking the bot.** Ask for one ("start a project for this"), or let the bot start one when
+  the work clearly takes several files. In a topic, the topic becomes the project's chat. In
+  General, only what the bot makes in that reply is filed under the project.
+
+### Find a project
+
+- **Library** has a **Projects** row at the top, one card per project. Tap a card to open the
+  project, or **See All** for the list.
+- A topic that is a project's chat shows a **Project** chip at the top, and **Open Project** in its
+  **…** menu.
+- Something in the Library shows the project it belongs to. Tap it to open the project.
+
+What belongs to a project still shows in the Library's main grid. To see only one project's things,
+open the project and tap **See All** next to **Made in this project**.
+
+### Move something into or out of a project
+
+Things file themselves: whatever a bot makes in a project's chat, or while working on a project,
+belongs to it. To change that by hand, open the thing in the **Library**, open its **…** menu and
+tap **Move to Project**. Pick a project, or **No Project** to take it out.
+
+### Files and code
+
+The bot keeps a project's working files in one folder on its computer. **Files** on the project
+screen opens that folder. It is empty until the bot saves something there.
+
+Code and other working files stay on the computer. They reach the Library when the bot links one in
+a reply, or keeps the folder as one zip labelled **Source** (ask it to if it hasn't). Keeping it
+again makes a new version of the same item. The Library is kept by the server, so that copy survives
+a reset of the computer.
+
+### Finish a project
+
+On a project you work on together, tap **Mark as Done**. Tap **Reopen** to pick it up again.
+
+### Let the bot work on it by itself
+
+Turn on the switch **Let Ada work on it by itself** (it names your bot) on the project screen, or
+in the **New project** sheet. It asks for:
+
+1. the **Goal**,
+2. **Done when**: how you'll know the project is finished (optional),
+3. a **Budget** in dollars (optional).
+
+Tap **Start Planning**. The bot drafts a plan in the project chat: milestones with tickets, who
+should do each one, which milestones need your sign-off, and a written plan. You get a notification
+when it's ready. Until you approve it, asking the bot to plan again replaces the proposed tickets.
+Nothing starts before you approve.
+
+Turn the switch off to go back to working on it together. Nothing more starts by itself; a session
+already running finishes. Turning it on again later carries on with the plan you approved.
 
 ### Approve and follow along
 
-Open the project from **Tasks**: project picker → **Manage projects**. The project screen shows:
+The project screen shows:
 
 - the status (**Planning**, **Active**, **Paused**, **Blocked**, **Done** or **Cancelled**) and,
   when there is one, the reason,
 - **Approve the plan**, while a plan is waiting for you,
 - **Pause** or **Resume**,
+- **Made in this project**,
 - the **Goal**, and spend against the **Budget**,
 - **Milestones**, with tickets done out of the total and **Sign off** where one waits for you,
 - the **Plan**, the **Tickets** and a **Timeline** of every run,
+- **Files**,
 - **Project chat**, which opens the conversation with the lead bot.
 
 Tap **Approve the plan** to make the project active.
 
-### How a project runs
+### How a project runs by itself
 
-Once the plan is approved, Casama checks every active project each minute. When nothing is already
-running for it, it does the next thing:
+Once the plan is approved, Casama checks every active project that works by itself each minute.
+When nothing is already running for it, it does the next thing:
 
 1. **Pause** if the project has reached its budget or passed its deadline. You get a note in the
    project chat and a notification.
@@ -113,20 +176,26 @@ running for it, it does the next thing:
 The lead bot can also pause the project and ask you a question; you get a notification and the
 project shows **Blocked** until you answer in the project chat and tap **Resume**.
 
-Sessions are normal runs, so the usual step and time limits apply. Every run started for the
-project, including ticket runs and work a bot delegates, counts toward its spend. Progress is kept
-in the database, so a project picks up where it left off after a server restart.
+Sessions are normal runs, so the usual step and time limits apply. Every run for the project counts
+toward its spend: sessions, ticket runs, work a bot delegates, and your own messages in the project
+chat. Progress is kept in the database, so a project picks up where it left off after a server
+restart.
 
 ## Who can do what
 
-- Everyone in the workspace can see projects and their tickets.
+- A project made from the list is seen by everyone in the workspace.
+- A project that grew out of your own chat (made from a topic, or started by a bot there) is seen by
+  you and by people who can open that chat.
+- Tickets are on the shared board, so everyone in the workspace sees a project's to-dos.
 - The project's owner, workspace admins and people who manage the lead bot can approve the plan,
-  sign off milestones, pause and resume.
+  sign off milestones, pause, resume, finish it and switch working by itself on or off.
 
 ## Limits
 
-- The app doesn't set a project's deadline or cancel a project yet. Both are available through the
-  [API](/develop/api) (`PATCH /v1/projects/{id}`), which also changes the budget and the plan.
+- The app doesn't set a project's deadline, rename it or cancel it yet. All three are available
+  through the [API](/develop/api) (`PATCH /v1/projects/{id}`), which also changes the budget and
+  the plan.
+- A project has one lead bot, and its chat is with that bot.
 - Ticket labels and due dates exist in the API but aren't shown on the board.
 
 ## Related

@@ -3686,6 +3686,14 @@
           "pinned": {
             "type": "boolean",
             "description": "Pinned by the person who started it: listed after General, before the rest"
+          },
+          "project_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "The project this chat belongs to (D-295)"
           }
         },
         "required": [
@@ -5711,6 +5719,20 @@
             ],
             "format": "uuid"
           },
+          "project_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "The project it's filed under (D-295), when you can see that project"
+          },
+          "project_title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "kind": {
             "$ref": "#/components/schemas/CreationKind"
           },
@@ -5954,6 +5976,14 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 365
+          },
+          "project_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "File it under a project, or null to take it out of one"
           }
         }
       },
@@ -10907,6 +10937,29 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "autonomous": {
+            "type": "boolean",
+            "description": "Plans for your approval, then works by itself in sessions (D-113). False: worked on together in its chat (D-295). Absent on older servers, where every project is autonomous"
+          },
+          "personal": {
+            "type": "boolean",
+            "description": "Grew out of a person's own chat: seen by them and by whoever can open its chat, not the whole workspace"
+          },
+          "folder": {
+            "type": "string",
+            "description": "Where its files live on the lead bot's computer, under the home folder (the folder is made when the bot first saves something there)"
+          },
+          "creations_count": {
+            "type": "integer",
+            "description": "How many things in the Library are filed under it, that you can see"
+          },
+          "latest_creation": {
+            "$ref": "#/components/schemas/Creation"
+          },
+          "can_steer": {
+            "type": "boolean",
+            "description": "Whether you may change it: its owner, an admin or the lead bot's managers"
           }
         },
         "required": [
@@ -10955,8 +11008,8 @@
           },
           "goal_md": {
             "type": "string",
-            "minLength": 1,
-            "maxLength": 20000
+            "maxLength": 20000,
+            "description": "Needed when the project works by itself"
           },
           "done_criteria_md": {
             "type": "string",
@@ -10980,12 +11033,20 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "autonomous": {
+            "type": "boolean",
+            "description": "true (the default, as before D-295): the lead bot drafts a plan for you to approve, then works by itself. false: a project you work on together in its chat"
+          },
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "With autonomous false: make this topic of yours the project's chat, and file what was made in it under the project. Without it the project gets a new topic"
           }
         },
         "required": [
           "org_id",
           "title",
-          "goal_md",
           "lead_bot_id"
         ]
       },
@@ -11119,9 +11180,10 @@
             "enum": [
               "active",
               "paused",
-              "cancelled"
+              "cancelled",
+              "done"
             ],
-            "description": "Resume, pause or cancel"
+            "description": "Resume, pause, cancel or finish. A finished project you work on together can be made active again"
           },
           "budget_usd": {
             "type": [
@@ -11141,6 +11203,18 @@
           "plan_md": {
             "type": "string",
             "maxLength": 20000
+          },
+          "goal_md": {
+            "type": "string",
+            "maxLength": 20000
+          },
+          "done_criteria_md": {
+            "type": "string",
+            "maxLength": 10000
+          },
+          "autonomous": {
+            "type": "boolean",
+            "description": "true: the lead bot drafts a plan for you to approve, then works by itself (needs a goal). false: back to working on it together; nothing more starts by itself"
           }
         }
       },
@@ -30598,7 +30672,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Start a project; its lead bot drafts a plan for you to approve",
+        "summary": "Start a project: one you work on together in its chat, or one its lead bot plans for your approval and then works on by itself",
         "requestBody": {
           "required": true,
           "content": {
@@ -30762,7 +30836,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "Pause, resume or cancel a project, or change its budget, deadline or plan",
+        "summary": "Pause, resume, cancel or finish a project, change its goal, budget, deadline or plan, or switch working by itself on or off",
         "parameters": [
           {
             "schema": {
@@ -30827,6 +30901,16 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/problem+json": {
                 "schema": {

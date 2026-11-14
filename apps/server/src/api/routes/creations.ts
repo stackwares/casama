@@ -21,7 +21,7 @@ export const CREATION_UNDO_DAYS = 30;
 /** New public links a workspace may make a day (abuse limit, D-281). */
 export const PUBLIC_LINKS_PER_DAY = 20;
 
-type CreationRow = {
+export type CreationRow = {
   id: string;
   org_id: string;
   bot_id: string | null;
@@ -29,6 +29,8 @@ type CreationRow = {
   made_for: string | null;
   conversation_id: string | null;
   run_id: string | null;
+  project_id: string | null;
+  project_title: string | null;
   kind: "page" | "image" | "video" | "audio" | "document" | "file";
   label: string | null;
   title: string;
@@ -61,6 +63,8 @@ const out = (r: CreationRow) => ({
   made_for: r.made_for,
   conversation_id: r.conversation_id,
   run_id: r.run_id,
+  project_id: r.project_id,
+  project_title: r.project_title,
   kind: r.kind,
   label: r.label,
   title: r.title,
@@ -88,9 +92,13 @@ const out = (r: CreationRow) => ({
   updated_at: iso(r.updated_at),
 });
 
-/** The columns every read returns, for the person asking. */
+/**
+ * The columns every read returns, for the person asking. The project comes from the join, so it's
+ * there only when they can see that project (row-level security).
+ */
 const columns = (_userId: string) => sql`
   c.id, c.org_id, c.bot_id, b.name as bot_name, c.made_for, c.conversation_id, c.run_id, c.kind,
+  pr.id as project_id, pr.title as project_title,
   c.label, c.title, c.page_id, c.media_id, c.mime, c.size, c.width, c.height, c.duration_s,
   c.cover_key, c.blob_key, c.preview_key, c.version,
   coalesce((select p.visibility from public.pages p where p.id = c.page_id), c.visibility) as visibility,
@@ -99,7 +107,13 @@ const columns = (_userId: string) => sql`
 const joins = (userId: string) => sql`
   from public.creations c
   left join public.bots b on b.id = c.bot_id
+  left join public.projects pr on pr.id = c.project_id
   left join public.creation_marks m on m.creation_id = c.id and m.user_id = ${userId}::uuid`;
+
+/** For other routes that return creations (a project's newest one). Read in the person's session. */
+export const creationOut = out;
+export const creationColumns = columns("");
+export const creationJoins = joins;
 
 /** An opaque keyset cursor: the sort value and the id of the last row. */
 const encodeCursor = (at: Date | string | null, id: string) =>
@@ -145,7 +159,7 @@ export function registerCreationRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
           ${q.kind ? sql`and c.kind = ${q.kind}` : sql``}
           ${q.bot_id ? sql`and c.bot_id = ${q.bot_id}::uuid` : sql``}
           ${q.conversation_id ? sql`and c.conversation_id = ${q.conversation_id}::uuid` : sql``}
-          ${q.project_id ? sql`and c.run_id in (select id from public.runs where project_id = ${q.project_id}::uuid)` : sql``}
+          ${q.project_id ? sql`and c.project_id = ${q.project_id}::uuid` : sql``}
           ${q.pinned === "true" ? sql`and m.pinned_at is not null` : q.pinned === "false" ? sql`and m.pinned_at is null` : sql``}
           ${q.q ? sql`and (c.title ilike ${`%${q.q.replace(/[\\%_]/g, (x) => `\\${x}`)}%`} or c.label ilike ${`%${q.q.replace(/[\\%_]/g, (x) => `\\${x}`)}%`})` : sql``}
           ${byOpened ? sql`and m.last_opened_at is not null` : sql``}
@@ -223,6 +237,24 @@ export function registerCreationRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
           "forbidden",
           "Only the person it was made for, or the bot's managers, can share it",
         );
+      // Filed under a project by hand, or taken out of one (D-295).
+      if (body.project_id !== undefined) {
+        if (!row.can_change)
+          throw new ApiError(
+            403,
+            "forbidden",
+            "Only the person it was made for, or the bot's managers, can move it",
+          );
+        if (body.project_id) {
+          const [project] = await tx.execute<{ id: string }>(sql`
+            select id from public.projects
+            where id = ${body.project_id}::uuid and org_id = ${row.org_id}::uuid`);
+          if (!project) throw new ApiError(404, "project_not_found", "Project not found");
+        }
+        await tx.execute(sql`
+          update public.creations set project_id = ${body.project_id}::uuid, updated_at = now()
+          where id = ${id}::uuid`);
+      }
       if (body.pinned !== undefined || body.opened) {
         await tx.execute(sql`
           insert into public.creation_marks (user_id, creation_id, org_id, pinned_at, last_opened_at)

@@ -99,7 +99,7 @@ _responseData = rawData == null ? null : deserialize<Project, Project>(rawData, 
     );
   }
 
-  /// Start a project; its lead bot drafts a plan for you to approve
+  /// Start a project: one you work on together in its chat, or one its lead bot plans for your approval and then works on by itself
   /// 
   ///
   /// Parameters:
@@ -436,7 +436,7 @@ _responseData = rawData == null ? null : deserialize<Project, Project>(rawData, 
     );
   }
 
-  /// Pause, resume or cancel a project, or change its budget, deadline or plan
+  /// Pause, resume, cancel or finish a project, change its goal, budget, deadline or plan, or switch working by itself on or off
   /// 
   ///
   /// Parameters:

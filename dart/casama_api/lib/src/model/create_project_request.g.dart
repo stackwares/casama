@@ -11,7 +11,7 @@ abstract class _$CreateProjectRequestCWProxy {
 
   CreateProjectRequest title(String title);
 
-  CreateProjectRequest goalMd(String goalMd);
+  CreateProjectRequest goalMd(String? goalMd);
 
   CreateProjectRequest doneCriteriaMd(String? doneCriteriaMd);
 
@@ -20,6 +20,10 @@ abstract class _$CreateProjectRequestCWProxy {
   CreateProjectRequest budgetUsd(num? budgetUsd);
 
   CreateProjectRequest deadlineAt(DateTime? deadlineAt);
+
+  CreateProjectRequest autonomous(bool? autonomous);
+
+  CreateProjectRequest conversationId(String? conversationId);
 
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
@@ -32,11 +36,13 @@ abstract class _$CreateProjectRequestCWProxy {
   CreateProjectRequest call({
     String orgId,
     String title,
-    String goalMd,
+    String? goalMd,
     String? doneCriteriaMd,
     String leadBotId,
     num? budgetUsd,
     DateTime? deadlineAt,
+    bool? autonomous,
+    String? conversationId,
   });
 }
 
@@ -55,7 +61,7 @@ class _$CreateProjectRequestCWProxyImpl
   CreateProjectRequest title(String title) => call(title: title);
 
   @override
-  CreateProjectRequest goalMd(String goalMd) => call(goalMd: goalMd);
+  CreateProjectRequest goalMd(String? goalMd) => call(goalMd: goalMd);
 
   @override
   CreateProjectRequest doneCriteriaMd(String? doneCriteriaMd) =>
@@ -71,6 +77,14 @@ class _$CreateProjectRequestCWProxyImpl
   @override
   CreateProjectRequest deadlineAt(DateTime? deadlineAt) =>
       call(deadlineAt: deadlineAt);
+
+  @override
+  CreateProjectRequest autonomous(bool? autonomous) =>
+      call(autonomous: autonomous);
+
+  @override
+  CreateProjectRequest conversationId(String? conversationId) =>
+      call(conversationId: conversationId);
 
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
@@ -89,6 +103,8 @@ class _$CreateProjectRequestCWProxyImpl
     Object? leadBotId = const $CopyWithPlaceholder(),
     Object? budgetUsd = const $CopyWithPlaceholder(),
     Object? deadlineAt = const $CopyWithPlaceholder(),
+    Object? autonomous = const $CopyWithPlaceholder(),
+    Object? conversationId = const $CopyWithPlaceholder(),
   }) {
     return CreateProjectRequest(
       orgId: orgId == const $CopyWithPlaceholder() || orgId == null
@@ -99,10 +115,10 @@ class _$CreateProjectRequestCWProxyImpl
           ? _value.title
           // ignore: cast_nullable_to_non_nullable
           : title as String,
-      goalMd: goalMd == const $CopyWithPlaceholder() || goalMd == null
+      goalMd: goalMd == const $CopyWithPlaceholder()
           ? _value.goalMd
           // ignore: cast_nullable_to_non_nullable
-          : goalMd as String,
+          : goalMd as String?,
       doneCriteriaMd: doneCriteriaMd == const $CopyWithPlaceholder()
           ? _value.doneCriteriaMd
           // ignore: cast_nullable_to_non_nullable
@@ -119,6 +135,14 @@ class _$CreateProjectRequestCWProxyImpl
           ? _value.deadlineAt
           // ignore: cast_nullable_to_non_nullable
           : deadlineAt as DateTime?,
+      autonomous: autonomous == const $CopyWithPlaceholder()
+          ? _value.autonomous
+          // ignore: cast_nullable_to_non_nullable
+          : autonomous as bool?,
+      conversationId: conversationId == const $CopyWithPlaceholder()
+          ? _value.conversationId
+          // ignore: cast_nullable_to_non_nullable
+          : conversationId as String?,
     );
   }
 }
@@ -141,14 +165,11 @@ CreateProjectRequest _$CreateProjectRequestFromJson(
   'CreateProjectRequest',
   json,
   ($checkedConvert) {
-    $checkKeys(
-      json,
-      requiredKeys: const ['org_id', 'title', 'goal_md', 'lead_bot_id'],
-    );
+    $checkKeys(json, requiredKeys: const ['org_id', 'title', 'lead_bot_id']);
     final val = CreateProjectRequest(
       orgId: $checkedConvert('org_id', (v) => v as String),
       title: $checkedConvert('title', (v) => v as String),
-      goalMd: $checkedConvert('goal_md', (v) => v as String),
+      goalMd: $checkedConvert('goal_md', (v) => v as String?),
       doneCriteriaMd: $checkedConvert('done_criteria_md', (v) => v as String?),
       leadBotId: $checkedConvert('lead_bot_id', (v) => v as String),
       budgetUsd: $checkedConvert('budget_usd', (v) => v as num?),
@@ -156,6 +177,8 @@ CreateProjectRequest _$CreateProjectRequestFromJson(
         'deadline_at',
         (v) => v == null ? null : DateTime.parse(v as String),
       ),
+      autonomous: $checkedConvert('autonomous', (v) => v as bool?),
+      conversationId: $checkedConvert('conversation_id', (v) => v as String?),
     );
     return val;
   },
@@ -166,6 +189,7 @@ CreateProjectRequest _$CreateProjectRequestFromJson(
     'leadBotId': 'lead_bot_id',
     'budgetUsd': 'budget_usd',
     'deadlineAt': 'deadline_at',
+    'conversationId': 'conversation_id',
   },
 );
 
@@ -174,9 +198,11 @@ Map<String, dynamic> _$CreateProjectRequestToJson(
 ) => <String, dynamic>{
   'org_id': instance.orgId,
   'title': instance.title,
-  'goal_md': instance.goalMd,
+  'goal_md': ?instance.goalMd,
   'done_criteria_md': ?instance.doneCriteriaMd,
   'lead_bot_id': instance.leadBotId,
   'budget_usd': ?instance.budgetUsd,
   'deadline_at': ?instance.deadlineAt?.toIso8601String(),
+  'autonomous': ?instance.autonomous,
+  'conversation_id': ?instance.conversationId,
 };

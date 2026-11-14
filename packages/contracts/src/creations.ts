@@ -18,6 +18,10 @@ export const Creation = z
     made_for: Uuid.nullable(),
     conversation_id: Uuid.nullable(),
     run_id: Uuid.nullable(),
+    project_id: Uuid.nullable().optional().openapi({
+      description: "The project it's filed under (D-295), when you can see that project",
+    }),
+    project_title: z.string().nullable().optional(),
     kind: CreationKind,
     label: z
       .string()
@@ -82,6 +86,9 @@ export const UpdateCreationRequest = z
       description: "Making it public returns public_url once; public again gives a new link",
     }),
     expires_in_days: z.number().int().min(1).max(365).optional(),
+    project_id: Uuid.nullable().optional().openapi({
+      description: "File it under a project, or null to take it out of one",
+    }),
   })
   .openapi("UpdateCreationRequest");
 

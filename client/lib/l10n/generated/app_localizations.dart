@@ -8677,13 +8677,13 @@ abstract class AppLocalizations {
   /// No description provided for @projectsHelp.
   ///
   /// In en, this message translates to:
-  /// **'Give a bot a goal. It drafts a plan for you to approve, then works in sessions until it\'s done, within the budget and deadline you set.'**
+  /// **'A project keeps one piece of work together: its chat, plan, to-dos, files and everything made for it. Work on it with a bot, or let the bot plan it and work on it by itself.'**
   String get projectsHelp;
 
   /// No description provided for @newProjectHelp.
   ///
   /// In en, this message translates to:
-  /// **'The lead bot drafts milestones and tickets. Nothing starts until you approve the plan.'**
+  /// **'Keeps one piece of work together: its chat, plan, to-dos, files and everything made for it.'**
   String get newProjectHelp;
 
   /// No description provided for @startPlanning.
@@ -8835,6 +8835,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancelled'**
   String get projectCancelled;
+
+  /// No description provided for @projectName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get projectName;
+
+  /// No description provided for @projectNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Space Dodger, Spring newsletter…'**
+  String get projectNameHint;
+
+  /// No description provided for @createProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Project'**
+  String get createProject;
+
+  /// No description provided for @projectWorksAlone.
+  ///
+  /// In en, this message translates to:
+  /// **'Let {bot} work on it by itself'**
+  String projectWorksAlone(String bot);
+
+  /// No description provided for @projectWorksAloneHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'It drafts a plan for you to approve, then works in sessions until the goal is met. Nothing starts before you approve.'**
+  String get projectWorksAloneHelp;
+
+  /// No description provided for @projectWorksAloneOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Works in sessions until the goal is met.'**
+  String get projectWorksAloneOn;
+
+  /// No description provided for @projectWorksAloneOff.
+  ///
+  /// In en, this message translates to:
+  /// **'You work on it together in its chat.'**
+  String get projectWorksAloneOff;
+
+  /// No description provided for @projectMade.
+  ///
+  /// In en, this message translates to:
+  /// **'Made in this project'**
+  String get projectMade;
+
+  /// No description provided for @projectMadeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing yet. What {bot} makes in this project\'s chat shows up here.'**
+  String projectMadeEmpty(String bot);
+
+  /// No description provided for @projectSeeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See All'**
+  String get projectSeeAll;
+
+  /// No description provided for @projectTodos.
+  ///
+  /// In en, this message translates to:
+  /// **'To-dos'**
+  String get projectTodos;
+
+  /// No description provided for @projectFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get projectFiles;
+
+  /// No description provided for @projectFilesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'{folder} on {bot}\'s computer'**
+  String projectFilesHelp(String folder, String bot);
+
+  /// No description provided for @projectMarkDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as Done'**
+  String get projectMarkDone;
+
+  /// No description provided for @projectReopen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen'**
+  String get projectReopen;
+
+  /// No description provided for @projectThings.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing yet} =1{1 thing} other{{count} things}}'**
+  String projectThings(int count);
+
+  /// No description provided for @creationProjectLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Project'**
+  String get creationProjectLabel;
+
+  /// No description provided for @creationMoveToProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to Project'**
+  String get creationMoveToProject;
+
+  /// No description provided for @creationNoProject.
+  ///
+  /// In en, this message translates to:
+  /// **'No Project'**
+  String get creationNoProject;
+
+  /// No description provided for @makeProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Make This a Project'**
+  String get makeProject;
+
+  /// No description provided for @makeProjectTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Make this topic a project'**
+  String get makeProjectTitle;
+
+  /// No description provided for @makeProjectHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'What {bot} made in this topic is filed under the project, and so is what it makes here next.'**
+  String makeProjectHelp(String bot);
+
+  /// No description provided for @openProject.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Project'**
+  String get openProject;
+
+  /// No description provided for @theBot.
+  ///
+  /// In en, this message translates to:
+  /// **'the bot'**
+  String get theBot;
 
   /// No description provided for @forYou.
   ///

@@ -1316,21 +1316,33 @@ abstract class Backend {
   Future<ForYou> forYou(String orgId);
   Future<AcceptedSuggestion> acceptSuggestion(String id);
   Future<void> dismissSuggestion(String id, {bool dontSuggestAgain = false});
-  // Projects (D-113)
+  // Projects (D-113, D-295)
   Future<List<Project>> projects(String orgId);
+
+  /// A project you work on together in its chat, or with [autonomous] one its lead bot plans for
+  /// your approval and then works on by itself (that needs a [goal]). [conversationId] makes a
+  /// topic of yours the project's chat.
   Future<Project> createProject(
     String orgId, {
     required String title,
-    required String goal,
+    String goal,
     String doneCriteria,
     required String leadBotId,
     double? budgetUsd,
+    bool autonomous,
+    String? conversationId,
   });
   Future<ProjectDetail> project(String projectId);
+
+  /// [status] pauses, resumes, cancels or finishes it; [autonomous] switches working by itself on
+  /// or off (on needs a goal: the one it has, or [goal]).
   Future<void> updateProject(
     String projectId, {
     String? status,
     double? budgetUsd,
+    bool? autonomous,
+    String? goal,
+    String? doneCriteria,
   });
   Future<void> approveProjectPlan(String projectId);
   Future<void> signOffMilestone(String projectId, String milestoneId);
@@ -1634,6 +1646,7 @@ abstract class Backend {
     CreationKind? kind,
     String? botId,
     String? conversationId,
+    String? projectId,
     String? q,
     String? cursor,
     bool recentlyOpened = false,
@@ -1643,6 +1656,9 @@ abstract class Backend {
 
   /// One creation with the others from the same run.
   Future<CreationDetail> creation(String id);
+
+  /// Files a creation under a project, or takes it out of one ([projectId] null) (D-295).
+  Future<Creation> moveCreation(String id, String? projectId);
 
   /// Renames, pins, marks it opened (Recently opened) or changes who can see it (D-281). Making it
   /// public returns `public_url` once.

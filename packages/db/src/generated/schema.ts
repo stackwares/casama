@@ -1710,56 +1710,6 @@ export const botShares = pgTable("bot_shares", {
 	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
 ]);
 
-export const projects = pgTable("projects", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgId: uuid("org_id").notNull(),
-	slug: text().notNull(),
-	title: text().notNull(),
-	goalMd: text("goal_md").notNull(),
-	doneCriteriaMd: text("done_criteria_md").default("").notNull(),
-	status: text().default('planning').notNull(),
-	planStatus: text("plan_status").default('draft').notNull(),
-	statusReason: text("status_reason"),
-	leadBotId: uuid("lead_bot_id").notNull(),
-	ownerUserId: uuid("owner_user_id"),
-	conversationId: uuid("conversation_id"),
-	budgetUsd: numeric("budget_usd", { precision: 10, scale:  2 }),
-	deadlineAt: timestamp("deadline_at", { withTimezone: true, mode: 'string' }),
-	planMd: text("plan_md").default("").notNull(),
-	version: integer().default(1).notNull(),
-	sessions: integer().default(0).notNull(),
-	lastSessionAt: timestamp("last_session_at", { withTimezone: true, mode: 'string' }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("projects_active_idx").using("btree", table.status.asc().nullsLast().op("text_ops")).where(sql`(status = 'active'::text)`),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "projects_org_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.leadBotId],
-			foreignColumns: [bots.id],
-			name: "projects_lead_bot_id_fkey"
-		}).onDelete("restrict"),
-	foreignKey({
-			columns: [table.ownerUserId],
-			foreignColumns: [users.id],
-			name: "projects_owner_user_id_fkey"
-		}).onDelete("set null"),
-	unique("projects_org_id_slug_key").on(table.orgId, table.slug),
-	pgPolicy("projects_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`is_member(org_id)` }),
-	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
-	check("projects_slug_check", sql`slug ~ '^[a-z0-9][a-z0-9-]{0,62}$'::text`),
-	check("projects_title_check", sql`(char_length(title) >= 1) AND (char_length(title) <= 200)`),
-	check("projects_goal_md_check", sql`(char_length(goal_md) >= 1) AND (char_length(goal_md) <= 20000)`),
-	check("projects_done_criteria_md_check", sql`char_length(done_criteria_md) <= 10000`),
-	check("projects_status_check", sql`status = ANY (ARRAY['planning'::text, 'active'::text, 'paused'::text, 'blocked'::text, 'done'::text, 'cancelled'::text])`),
-	check("projects_plan_status_check", sql`plan_status = ANY (ARRAY['draft'::text, 'proposed'::text, 'approved'::text])`),
-	check("projects_budget_usd_check", sql`(budget_usd IS NULL) OR (budget_usd > (0)::numeric)`),
-]);
-
 export const projectMilestones = pgTable("project_milestones", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	orgId: uuid("org_id").notNull(),
@@ -1791,6 +1741,59 @@ export const projectMilestones = pgTable("project_milestones", {
 	pgPolicy("project_milestones_select", { as: "permissive", for: "select", to: ["authenticated"] }),
 	check("project_milestones_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 120)`),
 	check("project_milestones_status_check", sql`status = ANY (ARRAY['open'::text, 'awaiting_signoff'::text, 'done'::text])`),
+]);
+
+export const projects = pgTable("projects", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	slug: text().notNull(),
+	title: text().notNull(),
+	goalMd: text("goal_md").default("").notNull(),
+	doneCriteriaMd: text("done_criteria_md").default("").notNull(),
+	status: text().default('planning').notNull(),
+	planStatus: text("plan_status").default('draft').notNull(),
+	statusReason: text("status_reason"),
+	leadBotId: uuid("lead_bot_id").notNull(),
+	ownerUserId: uuid("owner_user_id"),
+	conversationId: uuid("conversation_id"),
+	budgetUsd: numeric("budget_usd", { precision: 10, scale:  2 }),
+	deadlineAt: timestamp("deadline_at", { withTimezone: true, mode: 'string' }),
+	planMd: text("plan_md").default("").notNull(),
+	version: integer().default(1).notNull(),
+	sessions: integer().default(0).notNull(),
+	lastSessionAt: timestamp("last_session_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	autonomous: boolean().default(false).notNull(),
+	personal: boolean().default(false).notNull(),
+}, (table) => [
+	index("projects_active_idx").using("btree", table.status.asc().nullsLast().op("text_ops")).where(sql`(status = 'active'::text)`),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "projects_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.leadBotId],
+			foreignColumns: [bots.id],
+			name: "projects_lead_bot_id_fkey"
+		}).onDelete("restrict"),
+	foreignKey({
+			columns: [table.ownerUserId],
+			foreignColumns: [users.id],
+			name: "projects_owner_user_id_fkey"
+		}).onDelete("set null"),
+	unique("projects_org_id_slug_key").on(table.orgId, table.slug),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	pgPolicy("projects_select", { as: "permissive", for: "select", to: ["authenticated"] }),
+	check("projects_slug_check", sql`slug ~ '^[a-z0-9][a-z0-9-]{0,62}$'::text`),
+	check("projects_title_check", sql`(char_length(title) >= 1) AND (char_length(title) <= 200)`),
+	check("projects_done_criteria_md_check", sql`char_length(done_criteria_md) <= 10000`),
+	check("projects_status_check", sql`status = ANY (ARRAY['planning'::text, 'active'::text, 'paused'::text, 'blocked'::text, 'done'::text, 'cancelled'::text])`),
+	check("projects_plan_status_check", sql`plan_status = ANY (ARRAY['draft'::text, 'proposed'::text, 'approved'::text])`),
+	check("projects_budget_usd_check", sql`(budget_usd IS NULL) OR (budget_usd > (0)::numeric)`),
+	check("projects_goal_md_check", sql`char_length(goal_md) <= 20000`),
+	check("projects_autonomous_goal", sql`(NOT autonomous) OR (char_length(goal_md) >= 1)`),
 ]);
 
 export const actionRules = pgTable("action_rules", {
@@ -3670,97 +3673,6 @@ export const capacityEvents = pgTable("capacity_events", {
 	check("capacity_events_kind_check", sql`kind = 'capacity_full'::text`),
 ]);
 
-export const creations = pgTable("creations", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	orgId: uuid("org_id").notNull(),
-	botId: uuid("bot_id"),
-	madeFor: uuid("made_for"),
-	conversationId: uuid("conversation_id"),
-	messageId: uuid("message_id"),
-	runId: uuid("run_id"),
-	kind: text().notNull(),
-	label: text(),
-	title: text().notNull(),
-	pageId: uuid("page_id"),
-	mediaId: uuid("media_id"),
-	blobKey: text("blob_key"),
-	computerId: uuid("computer_id"),
-	originPath: text("origin_path"),
-	mime: text(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	size: bigint({ mode: "number" }).default(0).notNull(),
-	width: integer(),
-	height: integer(),
-	durationS: real("duration_s"),
-	coverKey: text("cover_key"),
-	coverW: integer("cover_w"),
-	coverH: integer("cover_h"),
-	version: integer().default(1).notNull(),
-	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: 'string' }),
-	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	previewKey: text("preview_key"),
-	visibility: text().default('private').notNull(),
-	publicTokenHash: text("public_token_hash"),
-	shareExpiresAt: timestamp("share_expires_at", { withTimezone: true, mode: 'string' }),
-	takenDownAt: timestamp("taken_down_at", { withTimezone: true, mode: 'string' }),
-}, (table) => [
-	index("creations_bot_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("uuid_ops")),
-	index("creations_conversation_idx").using("btree", table.conversationId.asc().nullsLast().op("uuid_ops")),
-	index("creations_deleted_idx").using("btree", table.deletedAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(deleted_at IS NOT NULL)`),
-	uniqueIndex("creations_file_idx").using("btree", table.botId.asc().nullsLast().op("text_ops"), table.computerId.asc().nullsLast().op("uuid_ops"), table.originPath.asc().nullsLast().op("text_ops")).where(sql`(blob_key IS NOT NULL)`),
-	index("creations_org_created_idx").using("btree", table.orgId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("uuid_ops")),
-	index("creations_org_kind_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops"), table.kind.asc().nullsLast().op("uuid_ops"), table.createdAt.desc().nullsFirst().op("uuid_ops")),
-	index("creations_run_idx").using("btree", table.runId.asc().nullsLast().op("uuid_ops")),
-	index("creations_title_trgm_idx").using("gin", table.title.asc().nullsLast().op("gin_trgm_ops")),
-	foreignKey({
-			columns: [table.runId],
-			foreignColumns: [runs.id],
-			name: "creations_run_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.pageId],
-			foreignColumns: [pages.id],
-			name: "creations_page_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.mediaId],
-			foreignColumns: [chatMedia.id],
-			name: "creations_media_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.orgId],
-			foreignColumns: [organizations.id],
-			name: "creations_org_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.botId],
-			foreignColumns: [bots.id],
-			name: "creations_bot_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.madeFor],
-			foreignColumns: [users.id],
-			name: "creations_made_for_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.conversationId],
-			foreignColumns: [conversations.id],
-			name: "creations_conversation_id_fkey"
-		}).onDelete("set null"),
-	unique("creations_page_id_key").on(table.pageId),
-	unique("creations_media_id_key").on(table.mediaId),
-	unique("creations_public_token_hash_key").on(table.publicTokenHash),
-	pgPolicy("creations_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_view_creation(id)` }),
-	pgPolicy("creations_update", { as: "permissive", for: "update", to: ["authenticated"] }),
-	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
-	check("creations_kind_check", sql`kind = ANY (ARRAY['page'::text, 'image'::text, 'video'::text, 'audio'::text, 'document'::text, 'file'::text])`),
-	check("creations_label_check", sql`(char_length(label) >= 1) AND (char_length(label) <= 24)`),
-	check("creations_title_check", sql`(char_length(title) >= 1) AND (char_length(title) <= 200)`),
-	check("creations_size_check", sql`size >= 0`),
-	check("creations_visibility_check", sql`visibility = ANY (ARRAY['private'::text, 'workspace'::text, 'public'::text])`),
-]);
-
 export const pageSubmissions = pgTable("page_submissions", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	pageId: uuid("page_id").notNull(),
@@ -3813,6 +3725,104 @@ export const creationReports = pgTable("creation_reports", {
 		}).onDelete("cascade"),
 	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
 	check("creation_reports_reason_check", sql`(char_length(reason) >= 1) AND (char_length(reason) <= 1000)`),
+]);
+
+export const creations = pgTable("creations", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id"),
+	madeFor: uuid("made_for"),
+	conversationId: uuid("conversation_id"),
+	messageId: uuid("message_id"),
+	runId: uuid("run_id"),
+	kind: text().notNull(),
+	label: text(),
+	title: text().notNull(),
+	pageId: uuid("page_id"),
+	mediaId: uuid("media_id"),
+	blobKey: text("blob_key"),
+	computerId: uuid("computer_id"),
+	originPath: text("origin_path"),
+	mime: text(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	size: bigint({ mode: "number" }).default(0).notNull(),
+	width: integer(),
+	height: integer(),
+	durationS: real("duration_s"),
+	coverKey: text("cover_key"),
+	coverW: integer("cover_w"),
+	coverH: integer("cover_h"),
+	version: integer().default(1).notNull(),
+	deletedAt: timestamp("deleted_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	previewKey: text("preview_key"),
+	visibility: text().default('private').notNull(),
+	publicTokenHash: text("public_token_hash"),
+	shareExpiresAt: timestamp("share_expires_at", { withTimezone: true, mode: 'string' }),
+	takenDownAt: timestamp("taken_down_at", { withTimezone: true, mode: 'string' }),
+	projectId: uuid("project_id"),
+}, (table) => [
+	index("creations_bot_idx").using("btree", table.botId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("uuid_ops")),
+	index("creations_conversation_idx").using("btree", table.conversationId.asc().nullsLast().op("uuid_ops")),
+	index("creations_deleted_idx").using("btree", table.deletedAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(deleted_at IS NOT NULL)`),
+	uniqueIndex("creations_file_idx").using("btree", table.botId.asc().nullsLast().op("text_ops"), table.computerId.asc().nullsLast().op("uuid_ops"), table.originPath.asc().nullsLast().op("text_ops")).where(sql`(blob_key IS NOT NULL)`),
+	index("creations_org_created_idx").using("btree", table.orgId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("uuid_ops")),
+	index("creations_org_kind_idx").using("btree", table.orgId.asc().nullsLast().op("uuid_ops"), table.kind.asc().nullsLast().op("uuid_ops"), table.createdAt.desc().nullsFirst().op("uuid_ops")),
+	index("creations_project_idx").using("btree", table.projectId.asc().nullsLast().op("timestamptz_ops"), table.createdAt.desc().nullsFirst().op("uuid_ops")).where(sql`(project_id IS NOT NULL)`),
+	index("creations_run_idx").using("btree", table.runId.asc().nullsLast().op("uuid_ops")),
+	index("creations_title_trgm_idx").using("gin", table.title.asc().nullsLast().op("gin_trgm_ops")),
+	foreignKey({
+			columns: [table.runId],
+			foreignColumns: [runs.id],
+			name: "creations_run_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.pageId],
+			foreignColumns: [pages.id],
+			name: "creations_page_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.mediaId],
+			foreignColumns: [chatMedia.id],
+			name: "creations_media_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "creations_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "creations_bot_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.madeFor],
+			foreignColumns: [users.id],
+			name: "creations_made_for_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.conversationId],
+			foreignColumns: [conversations.id],
+			name: "creations_conversation_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.projectId],
+			foreignColumns: [projects.id],
+			name: "creations_project_id_fkey"
+		}).onDelete("set null"),
+	unique("creations_page_id_key").on(table.pageId),
+	unique("creations_media_id_key").on(table.mediaId),
+	unique("creations_public_token_hash_key").on(table.publicTokenHash),
+	pgPolicy("creations_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`can_view_creation(id)` }),
+	pgPolicy("creations_update", { as: "permissive", for: "update", to: ["authenticated"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
+	check("creations_kind_check", sql`kind = ANY (ARRAY['page'::text, 'image'::text, 'video'::text, 'audio'::text, 'document'::text, 'file'::text])`),
+	check("creations_label_check", sql`(char_length(label) >= 1) AND (char_length(label) <= 24)`),
+	check("creations_title_check", sql`(char_length(title) >= 1) AND (char_length(title) <= 200)`),
+	check("creations_size_check", sql`size >= 0`),
+	check("creations_visibility_check", sql`visibility = ANY (ARRAY['private'::text, 'workspace'::text, 'public'::text])`),
 ]);
 
 export const deletedBlobs = pgTable("deleted_blobs", {

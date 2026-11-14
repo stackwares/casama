@@ -5473,11 +5473,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get projectsHelp =>
-      'Give a bot a goal. It drafts a plan for you to approve, then works in sessions until it\'s done, within the budget and deadline you set.';
+      'A project keeps one piece of work together: its chat, plan, to-dos, files and everything made for it. Work on it with a bot, or let the bot plan it and work on it by itself.';
 
   @override
   String get newProjectHelp =>
-      'The lead bot drafts milestones and tickets. Nothing starts until you approve the plan.';
+      'Keeps one piece of work together: its chat, plan, to-dos, files and everything made for it.';
 
   @override
   String get startPlanning => 'Start Planning';
@@ -5554,6 +5554,100 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get projectCancelled => 'Cancelled';
+
+  @override
+  String get projectName => 'Name';
+
+  @override
+  String get projectNameHint => 'Space Dodger, Spring newsletter…';
+
+  @override
+  String get createProject => 'Create Project';
+
+  @override
+  String projectWorksAlone(String bot) {
+    return 'Let $bot work on it by itself';
+  }
+
+  @override
+  String get projectWorksAloneHelp =>
+      'It drafts a plan for you to approve, then works in sessions until the goal is met. Nothing starts before you approve.';
+
+  @override
+  String get projectWorksAloneOn => 'Works in sessions until the goal is met.';
+
+  @override
+  String get projectWorksAloneOff => 'You work on it together in its chat.';
+
+  @override
+  String get projectMade => 'Made in this project';
+
+  @override
+  String projectMadeEmpty(String bot) {
+    return 'Nothing yet. What $bot makes in this project\'s chat shows up here.';
+  }
+
+  @override
+  String get projectSeeAll => 'See All';
+
+  @override
+  String get projectTodos => 'To-dos';
+
+  @override
+  String get projectFiles => 'Files';
+
+  @override
+  String projectFilesHelp(String folder, String bot) {
+    return '$folder on $bot\'s computer';
+  }
+
+  @override
+  String get projectMarkDone => 'Mark as Done';
+
+  @override
+  String get projectReopen => 'Reopen';
+
+  @override
+  String projectThings(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString things',
+      one: '1 thing',
+      zero: 'Nothing yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get creationProjectLabel => 'Project';
+
+  @override
+  String get creationMoveToProject => 'Move to Project';
+
+  @override
+  String get creationNoProject => 'No Project';
+
+  @override
+  String get makeProject => 'Make This a Project';
+
+  @override
+  String get makeProjectTitle => 'Make this topic a project';
+
+  @override
+  String makeProjectHelp(String bot) {
+    return 'What $bot made in this topic is filed under the project, and so is what it makes here next.';
+  }
+
+  @override
+  String get openProject => 'Open Project';
+
+  @override
+  String get theBot => 'the bot';
 
   @override
   String get forYou => 'For you';

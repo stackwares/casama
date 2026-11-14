@@ -64,7 +64,7 @@ String computerStatusLabel(BuildContext context, Computer c) {
 
 /// The team computer (or a bot's private one): state, screen, terminal, files, checkpoints.
 class ComputerScreen extends ConsumerWidget {
-  const ComputerScreen({super.key, this.botId, this.embedded = false, this.computerId, this.initialTab});
+  const ComputerScreen({super.key, this.botId, this.embedded = false, this.computerId, this.initialTab, this.initialPath});
   final String? botId;
   final bool embedded;
 
@@ -73,6 +73,9 @@ class ComputerScreen extends ConsumerWidget {
 
   /// The tab to open first ('screen', 'files', 'manage').
   final String? initialTab;
+
+  /// The folder the Files tab opens in, under the home folder (a project's folder, D-295).
+  final String? initialPath;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -100,7 +103,7 @@ class ComputerScreen extends ConsumerWidget {
             message: l10n.somethingWentWrong,
           );
         }
-        return ComputerPanel(computer: c, embedded: embedded, initialTab: initialTab);
+        return ComputerPanel(computer: c, embedded: embedded, initialTab: initialTab, initialPath: initialPath);
       },
     );
     if (embedded) return body;
@@ -283,11 +286,15 @@ class ComputerPanel extends ConsumerStatefulWidget {
     required this.computer,
     this.embedded = false,
     this.initialTab,
+    this.initialPath,
   });
   final Computer computer;
 
   /// The tab to open first; Screen otherwise.
   final String? initialTab;
+
+  /// The folder the Files tab opens in; the home folder otherwise.
+  final String? initialPath;
 
   /// In the side panel next to the chat (large screens): a desktop's live view plays here once
   /// the person starts, wakes, or opens it, with a button to open it full screen.
@@ -500,7 +507,7 @@ class _ComputerPanelState extends ConsumerState<ComputerPanel> {
                       for (final t in tabIds)
                         switch (t) {
                           'terminal' => TerminalTab(computerId: computer.id),
-                          'files' => FilesTab(computerId: computer.id),
+                          'files' => FilesTab(computerId: computer.id, initialPath: widget.initialPath),
                           'manage' => ManageTab(computer: computer),
                           _ when personal => Column(
                             children: [
@@ -1613,16 +1620,32 @@ class _TerminalTabState extends ConsumerState<TerminalTab>
 }
 
 class FilesTab extends ConsumerStatefulWidget {
-  const FilesTab({super.key, required this.computerId});
+  const FilesTab({super.key, required this.computerId, this.initialPath});
   final String computerId;
+
+  /// The folder to open in. One that isn't there yet (a project the bot hasn't saved anything
+  /// for) shows as an empty folder.
+  final String? initialPath;
 
   @override
   ConsumerState<FilesTab> createState() => _FilesTabState();
 }
 
 class _FilesTabState extends ConsumerState<FilesTab> {
-  var _path = '';
+  late var _path = widget.initialPath ?? '';
   Future<List<ComputerFileEntry>>? _entries;
+
+  Future<List<ComputerFileEntry>> _list() async {
+    final asked = _path;
+    try {
+      return await ref.read(backendProvider).listFiles(widget.computerId, asked);
+    } catch (_) {
+      // The folder it was opened at may not exist yet (a project nothing was saved for): show it
+      // empty, where the bot will put things, instead of an error.
+      if (asked.isEmpty || asked != widget.initialPath) rethrow;
+      return const [];
+    }
+  }
 
   @override
   void initState() {
@@ -1632,7 +1655,7 @@ class _FilesTabState extends ConsumerState<FilesTab> {
 
   void _reload() {
     // Start the request first; the setState callback must not return the Future.
-    final next = ref.read(backendProvider).listFiles(widget.computerId, _path);
+    final next = _list();
     setState(() {
       _entries = next;
     });

@@ -132,6 +132,9 @@ export const Conversation = z
     pinned: z.boolean().optional().openapi({
       description: "Pinned by the person who started it: listed after General, before the rest",
     }),
+    project_id: Uuid.nullable().optional().openapi({
+      description: "The project this chat belongs to (D-295)",
+    }),
   })
   .openapi("Conversation");
 

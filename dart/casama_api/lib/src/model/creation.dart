@@ -35,6 +35,10 @@ class Creation {
 
     required  this.runId,
 
+     this.projectId,
+
+     this.projectTitle,
+
     required  this.kind,
 
     required  this.label,
@@ -159,6 +163,31 @@ class Creation {
 
 
   final String? runId;
+
+
+
+      /// The project it's filed under (D-295), when you can see that project
+  @JsonKey(
+    
+    name: r'project_id',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? projectId;
+
+
+
+  @JsonKey(
+    
+    name: r'project_title',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? projectTitle;
 
 
 
@@ -431,6 +460,8 @@ class Creation {
       other.madeFor == madeFor &&
       other.conversationId == conversationId &&
       other.runId == runId &&
+      other.projectId == projectId &&
+      other.projectTitle == projectTitle &&
       other.kind == kind &&
       other.label == label &&
       other.title == title &&
@@ -462,6 +493,8 @@ class Creation {
         (madeFor == null ? 0 : madeFor.hashCode) +
         (conversationId == null ? 0 : conversationId.hashCode) +
         (runId == null ? 0 : runId.hashCode) +
+        (projectId == null ? 0 : projectId.hashCode) +
+        (projectTitle == null ? 0 : projectTitle.hashCode) +
         kind.hashCode +
         (label == null ? 0 : label.hashCode) +
         title.hashCode +

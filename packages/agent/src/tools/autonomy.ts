@@ -239,10 +239,12 @@ export function registerAutonomyTools(registry: ToolRegistry, deps: AutonomyTool
       const assignee = args.assignee ? await botByRef(ctx.orgId, args.assignee) : undefined;
       if (args.assignee && !assignee)
         throw new ToolError("bot_not_found", `No bot named ${args.assignee}.`);
+      // A ticket made while working on a project is the project's (D-295).
       const [t] = await db.execute<{ id: string }>(sql`
-        insert into public.tasks (org_id, created_by_bot_id, assignee_bot_id, title, details_md, parent_run_id, priority, review_required)
+        insert into public.tasks (org_id, created_by_bot_id, assignee_bot_id, title, details_md, parent_run_id, priority, review_required, project_id)
         values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${assignee?.id ?? null}::uuid, ${args.title}, ${contentKeys.seal(ctx.orgId, args.details ?? "")}, ${ctx.runId}::uuid,
-                ${args.priority ?? "none"}, ${args.review_required ?? false})
+                ${args.priority ?? "none"}, ${args.review_required ?? false},
+                (select project_id from public.runs where id = ${ctx.runId}::uuid))
         returning id`);
       if (t) await startAssignee(t.id, assignee?.id, ctx);
       return { content: `Created ticket ${t?.id}.`, preview: args.title };

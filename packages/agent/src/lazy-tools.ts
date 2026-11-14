@@ -32,6 +32,8 @@ const GROUP_PURPOSE: Record<string, string> = {
     "how sites, games, reports and dashboards reach the person: publish one and they open or play it",
   media: "make pictures, videos and sound",
   library: "find and change things you made before",
+  projects:
+    "keep work that takes several files or sessions (a game, an app, a site) together: start one and what you make is filed under it",
 };
 const INTEGRATION_KINDS = new Set(["mcp", "openapi", "composio", "pipedream", "local_mcp", "app"]);
 

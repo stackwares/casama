@@ -462,6 +462,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 key: ValueKey(s.uri.query),
                 kind: CreationKind.values.where((k) => k.value == s.uri.queryParameters['kind']).firstOrNull,
                 botId: s.uri.queryParameters['bot'],
+                projectId: s.uri.queryParameters['project'],
                 query: s.uri.queryParameters['q'] ?? '',
               ),
             ),
@@ -549,6 +550,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 botId: s.uri.queryParameters['bot'],
                 computerId: s.uri.queryParameters['c'],
                 initialTab: s.uri.queryParameters['tab'],
+                initialPath: s.uri.queryParameters['path'],
               ),
             ),
             routes: [

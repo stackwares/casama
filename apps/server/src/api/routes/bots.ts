@@ -134,6 +134,8 @@ const convOut = (
   anchor_message_id: c.anchorMessageId,
   ...(status === undefined ? {} : { status }),
   pinned: !!c.pinnedAt,
+  // The project this chat belongs to (D-295).
+  project_id: c.projectId,
 });
 
 type RunRow = typeof runs.$inferSelect;

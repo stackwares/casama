@@ -104,8 +104,9 @@ a public showcase of other people's creations, hosting apps with a backend.
 ## 3. Principles
 
 1. **A creation is a thing, not a path.** It has a name, a cover, a maker and a home chat.
-2. **The Library fills itself.** Grouping comes free from kind, bot and topic. Collections made by
-   hand come later and stay optional.
+2. **The Library fills itself.** Grouping comes free from kind, bot, topic and project (D-295: what
+   is made in a project's chat is filed under it). Collections made by hand are dropped: projects
+   are the one way things are grouped.
 3. **One item per thing.** A new version updates the item; it never adds a twin.
 4. **The chat is where you change it; the Library is where you find it.**
 5. **Only what was handed over.** Generated media the person saw, published pages, files a reply
@@ -125,7 +126,7 @@ a public showcase of other people's creations, hosting apps with a backend.
 | **Label** | The bot's word for it, shown on the card: Site, Game, Report, Dashboard, Slides, Sheet. Free text, at most 24 characters; the app translates the ones it knows and falls back to the kind |
 | **Cover** | The picture on the card |
 | **Made here** | A bot's or a topic's creations, opened from its chat |
-| **Collection** | A group the person makes (Phase 4) |
+| **Project** | The group a thing belongs to (D-295): filed by itself from the chat or run that made it, movable by hand. Replaces the Collection this plan had for Phase 4 |
 
 Filter chips group kinds for people: All, Sites & games (`page`), Images, Videos, Audio, Documents,
 Files. A chip shows only once the workspace has something of that kind.
@@ -175,8 +176,8 @@ Other shapes considered:
   existing `/quick-ask?bot=&text=` route.
 - **Offline:** the last list and covers from the caches that exist (`local_cache.dart`,
   `media_cache.dart`).
-- **Select several** (Phase 4): long-press on phones, a checkbox on hover on desktop. Delete, add
-  to a collection, save, share.
+- **Select several** (Phase 4): long-press on phones, a checkbox on hover on desktop. Delete, move
+  to a project, save, share.
 
 ### 5.3 One creation
 
@@ -184,8 +185,8 @@ A full screen on phones, a pane beside the grid on wide windows.
 
 - **Top:** the preview, the title (tap to rename), then "Made by Ada · 2 hours ago · version 3 ·
   private".
-- **Actions:** one main action for the kind, Share, Change it, and a menu: Rename, Pin, Add to a
-  collection, Save, Export PDF (pages), Who can see it, Delete.
+- **Actions:** one main action for the kind, Share, Change it, and a menu: Rename, Pin, Move to
+  Project (D-295), Save, Export PDF (pages), Who can see it, Delete.
 - **Rows:** From "topic" in Ada's chat (opens the conversation at that message); Versions; Made
   alongside (the same run's other creations); Details (size, dimensions, length).
 
@@ -276,7 +277,7 @@ One row per thing. It points at the bytes; it does not copy what a table already
   Recently opened sort.
 - `creation_versions (creation_id, version, blob_key, size, created_at)` for files, last 5 kept by
   a trigger. Pages keep `page_versions`.
-- `collections` and `collection_items` in Phase 4.
+- No `collections` tables: `creations.project_id` (D-295) took their place.
 - **RLS:** select through `can_view_creation(id)`, which is `can_view_page` for pages and
   `can_access_conversation` otherwise. Update and delete for `made_for` and the bot's managers.
   `public.allow_worker` and a pgTAP test, as every new table.
@@ -393,7 +394,7 @@ data, media, kept files and their versions), shown in Usage.
 |---|---|
 | `client/lib/core/router.dart` | `/library`, `/library/:id`, the `/pages` redirect |
 | `client/lib/features/home/home_shell.dart` | Third destination, tab roots, the dot, the split pane, the side panel with two tabs |
-| `client/lib/features/library/` (new) | `library_screen.dart`, `creation_tile.dart`, `creation_detail.dart`, `library_providers.dart`, `made_here.dart`, later `collections.dart` |
+| `client/lib/features/library/` (new) | `library_screen.dart`, `creation_tile.dart`, `creation_detail.dart`, `library_providers.dart`, `made_here.dart`, `../projects/project_tile.dart` for the Projects shelf (D-295) |
 | `client/lib/features/chat/media/attachment_view.dart` | Covers on page cards, the Updated card, the `creation` part |
 | `client/lib/features/chat/chat_screen.dart` | The Made here button, the About chip on the composer |
 | `client/lib/features/bots/bot_profile_screen.dart` | The Library tile |
@@ -439,8 +440,8 @@ work, M several days, L a week or more.
 
 **Phase 4: beside the chat, and keeping things** (M)
 - Made here on phones; the two-tab side panel on desktop; covers and Updated cards in the chat.
-- Pin, collections, select several, Recently opened.
-- What was made for a ticket and in a project.
+- Pin, select several, Recently opened. (Collections became projects, built in D-295.)
+- What was made for a ticket. (What was made in a project is built: D-295.)
 - The audio mini player (useful once Phase 6 adds sound; a bot can already hand over an audio
   file it made with ffmpeg).
 

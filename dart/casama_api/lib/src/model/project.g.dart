@@ -43,6 +43,18 @@ abstract class _$ProjectCWProxy {
 
   Project createdAt(DateTime createdAt);
 
+  Project autonomous(bool? autonomous);
+
+  Project personal(bool? personal);
+
+  Project folder(String? folder);
+
+  Project creationsCount(int? creationsCount);
+
+  Project latestCreation(Creation? latestCreation);
+
+  Project canSteer(bool? canSteer);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Project(...).copyWith.fieldName(value)`.
@@ -70,6 +82,12 @@ abstract class _$ProjectCWProxy {
     String planMd,
     int sessions,
     DateTime createdAt,
+    bool? autonomous,
+    bool? personal,
+    String? folder,
+    int? creationsCount,
+    Creation? latestCreation,
+    bool? canSteer,
   });
 }
 
@@ -138,6 +156,26 @@ class _$ProjectCWProxyImpl implements _$ProjectCWProxy {
   @override
   Project createdAt(DateTime createdAt) => call(createdAt: createdAt);
 
+  @override
+  Project autonomous(bool? autonomous) => call(autonomous: autonomous);
+
+  @override
+  Project personal(bool? personal) => call(personal: personal);
+
+  @override
+  Project folder(String? folder) => call(folder: folder);
+
+  @override
+  Project creationsCount(int? creationsCount) =>
+      call(creationsCount: creationsCount);
+
+  @override
+  Project latestCreation(Creation? latestCreation) =>
+      call(latestCreation: latestCreation);
+
+  @override
+  Project canSteer(bool? canSteer) => call(canSteer: canSteer);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Project(...).copyWith.fieldName(value)`.
@@ -166,6 +204,12 @@ class _$ProjectCWProxyImpl implements _$ProjectCWProxy {
     Object? planMd = const $CopyWithPlaceholder(),
     Object? sessions = const $CopyWithPlaceholder(),
     Object? createdAt = const $CopyWithPlaceholder(),
+    Object? autonomous = const $CopyWithPlaceholder(),
+    Object? personal = const $CopyWithPlaceholder(),
+    Object? folder = const $CopyWithPlaceholder(),
+    Object? creationsCount = const $CopyWithPlaceholder(),
+    Object? latestCreation = const $CopyWithPlaceholder(),
+    Object? canSteer = const $CopyWithPlaceholder(),
   }) {
     return Project(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -243,6 +287,30 @@ class _$ProjectCWProxyImpl implements _$ProjectCWProxy {
           ? _value.createdAt
           // ignore: cast_nullable_to_non_nullable
           : createdAt as DateTime,
+      autonomous: autonomous == const $CopyWithPlaceholder()
+          ? _value.autonomous
+          // ignore: cast_nullable_to_non_nullable
+          : autonomous as bool?,
+      personal: personal == const $CopyWithPlaceholder()
+          ? _value.personal
+          // ignore: cast_nullable_to_non_nullable
+          : personal as bool?,
+      folder: folder == const $CopyWithPlaceholder()
+          ? _value.folder
+          // ignore: cast_nullable_to_non_nullable
+          : folder as String?,
+      creationsCount: creationsCount == const $CopyWithPlaceholder()
+          ? _value.creationsCount
+          // ignore: cast_nullable_to_non_nullable
+          : creationsCount as int?,
+      latestCreation: latestCreation == const $CopyWithPlaceholder()
+          ? _value.latestCreation
+          // ignore: cast_nullable_to_non_nullable
+          : latestCreation as Creation?,
+      canSteer: canSteer == const $CopyWithPlaceholder()
+          ? _value.canSteer
+          // ignore: cast_nullable_to_non_nullable
+          : canSteer as bool?,
     );
   }
 }
@@ -316,6 +384,18 @@ Project _$ProjectFromJson(Map<String, dynamic> json) => $checkedCreate(
         'created_at',
         (v) => DateTime.parse(v as String),
       ),
+      autonomous: $checkedConvert('autonomous', (v) => v as bool?),
+      personal: $checkedConvert('personal', (v) => v as bool?),
+      folder: $checkedConvert('folder', (v) => v as String?),
+      creationsCount: $checkedConvert(
+        'creations_count',
+        (v) => (v as num?)?.toInt(),
+      ),
+      latestCreation: $checkedConvert(
+        'latest_creation',
+        (v) => v == null ? null : Creation.fromJson(v as Map<String, dynamic>),
+      ),
+      canSteer: $checkedConvert('can_steer', (v) => v as bool?),
     );
     return val;
   },
@@ -333,6 +413,9 @@ Project _$ProjectFromJson(Map<String, dynamic> json) => $checkedCreate(
     'deadlineAt': 'deadline_at',
     'planMd': 'plan_md',
     'createdAt': 'created_at',
+    'creationsCount': 'creations_count',
+    'latestCreation': 'latest_creation',
+    'canSteer': 'can_steer',
   },
 );
 
@@ -355,6 +438,12 @@ Map<String, dynamic> _$ProjectToJson(Project instance) => <String, dynamic>{
   'plan_md': instance.planMd,
   'sessions': instance.sessions,
   'created_at': instance.createdAt.toIso8601String(),
+  'autonomous': ?instance.autonomous,
+  'personal': ?instance.personal,
+  'folder': ?instance.folder,
+  'creations_count': ?instance.creationsCount,
+  'latest_creation': ?instance.latestCreation?.toJson(),
+  'can_steer': ?instance.canSteer,
 };
 
 const _$ProjectStatusEnumMap = {

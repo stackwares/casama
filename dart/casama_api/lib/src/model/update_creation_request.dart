@@ -31,6 +31,8 @@ class UpdateCreationRequest {
      this.visibility,
 
      this.expiresInDays,
+
+     this.projectId,
   });
 
   @JsonKey(
@@ -109,6 +111,19 @@ class UpdateCreationRequest {
 
 
 
+      /// File it under a project, or null to take it out of one
+  @JsonKey(
+    
+    name: r'project_id',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? projectId;
+
+
+
 
 
     @override
@@ -118,7 +133,8 @@ class UpdateCreationRequest {
       other.pinned == pinned &&
       other.opened == opened &&
       other.visibility == visibility &&
-      other.expiresInDays == expiresInDays;
+      other.expiresInDays == expiresInDays &&
+      other.projectId == projectId;
 
     @override
     int get hashCode =>
@@ -127,7 +143,8 @@ class UpdateCreationRequest {
         pinned.hashCode +
         opened.hashCode +
         visibility.hashCode +
-        expiresInDays.hashCode;
+        expiresInDays.hashCode +
+        (projectId == null ? 0 : projectId.hashCode);
 
   factory UpdateCreationRequest.fromJson(Map<String, dynamic> json) => _$UpdateCreationRequestFromJson(json);
 

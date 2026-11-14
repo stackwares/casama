@@ -17,6 +17,12 @@ abstract class _$UpdateProjectRequestCWProxy {
 
   UpdateProjectRequest planMd(String? planMd);
 
+  UpdateProjectRequest goalMd(String? goalMd);
+
+  UpdateProjectRequest doneCriteriaMd(String? doneCriteriaMd);
+
+  UpdateProjectRequest autonomous(bool? autonomous);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateProjectRequest(...).copyWith.fieldName(value)`.
@@ -31,6 +37,9 @@ abstract class _$UpdateProjectRequestCWProxy {
     num? budgetUsd,
     DateTime? deadlineAt,
     String? planMd,
+    String? goalMd,
+    String? doneCriteriaMd,
+    bool? autonomous,
   });
 }
 
@@ -59,6 +68,17 @@ class _$UpdateProjectRequestCWProxyImpl
   @override
   UpdateProjectRequest planMd(String? planMd) => call(planMd: planMd);
 
+  @override
+  UpdateProjectRequest goalMd(String? goalMd) => call(goalMd: goalMd);
+
+  @override
+  UpdateProjectRequest doneCriteriaMd(String? doneCriteriaMd) =>
+      call(doneCriteriaMd: doneCriteriaMd);
+
+  @override
+  UpdateProjectRequest autonomous(bool? autonomous) =>
+      call(autonomous: autonomous);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateProjectRequest(...).copyWith.fieldName(value)`.
@@ -74,6 +94,9 @@ class _$UpdateProjectRequestCWProxyImpl
     Object? budgetUsd = const $CopyWithPlaceholder(),
     Object? deadlineAt = const $CopyWithPlaceholder(),
     Object? planMd = const $CopyWithPlaceholder(),
+    Object? goalMd = const $CopyWithPlaceholder(),
+    Object? doneCriteriaMd = const $CopyWithPlaceholder(),
+    Object? autonomous = const $CopyWithPlaceholder(),
   }) {
     return UpdateProjectRequest(
       title: title == const $CopyWithPlaceholder()
@@ -96,6 +119,18 @@ class _$UpdateProjectRequestCWProxyImpl
           ? _value.planMd
           // ignore: cast_nullable_to_non_nullable
           : planMd as String?,
+      goalMd: goalMd == const $CopyWithPlaceholder()
+          ? _value.goalMd
+          // ignore: cast_nullable_to_non_nullable
+          : goalMd as String?,
+      doneCriteriaMd: doneCriteriaMd == const $CopyWithPlaceholder()
+          ? _value.doneCriteriaMd
+          // ignore: cast_nullable_to_non_nullable
+          : doneCriteriaMd as String?,
+      autonomous: autonomous == const $CopyWithPlaceholder()
+          ? _value.autonomous
+          // ignore: cast_nullable_to_non_nullable
+          : autonomous as bool?,
     );
   }
 }
@@ -130,6 +165,9 @@ UpdateProjectRequest _$UpdateProjectRequestFromJson(
         (v) => v == null ? null : DateTime.parse(v as String),
       ),
       planMd: $checkedConvert('plan_md', (v) => v as String?),
+      goalMd: $checkedConvert('goal_md', (v) => v as String?),
+      doneCriteriaMd: $checkedConvert('done_criteria_md', (v) => v as String?),
+      autonomous: $checkedConvert('autonomous', (v) => v as bool?),
     );
     return val;
   },
@@ -137,6 +175,8 @@ UpdateProjectRequest _$UpdateProjectRequestFromJson(
     'budgetUsd': 'budget_usd',
     'deadlineAt': 'deadline_at',
     'planMd': 'plan_md',
+    'goalMd': 'goal_md',
+    'doneCriteriaMd': 'done_criteria_md',
   },
 );
 
@@ -148,10 +188,14 @@ Map<String, dynamic> _$UpdateProjectRequestToJson(
   'budget_usd': ?instance.budgetUsd,
   'deadline_at': ?instance.deadlineAt?.toIso8601String(),
   'plan_md': ?instance.planMd,
+  'goal_md': ?instance.goalMd,
+  'done_criteria_md': ?instance.doneCriteriaMd,
+  'autonomous': ?instance.autonomous,
 };
 
 const _$UpdateProjectRequestStatusEnumEnumMap = {
   UpdateProjectRequestStatusEnum.active: 'active',
   UpdateProjectRequestStatusEnum.paused: 'paused',
   UpdateProjectRequestStatusEnum.cancelled: 'cancelled',
+  UpdateProjectRequestStatusEnum.done: 'done',
 };

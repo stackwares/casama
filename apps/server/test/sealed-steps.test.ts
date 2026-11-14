@@ -90,6 +90,14 @@ it("a run's recorded steps hold no message text, and the reply still arrives", a
   expect(all).not.toContain("walrus-teapot");
   expect(all).toContain("$sealedStep");
 
+  // The workflow outlives the run's "completed" by a few steps (learning, posts in General), and
+  // only an ended workflow is purged: wait for it to end.
+  for (let i = 0; i < 100; i++) {
+    const [w] = await h.tdb.admin<{ status: string }[]>`
+      select status from dbos.workflow_status where workflow_uuid = ${sent.run_id}`;
+    if (w && w.status !== "PENDING" && w.status !== "ENQUEUED") break;
+    await new Promise((r) => setTimeout(r, 50));
+  }
   // Ended workflows go after a week; a fresh one stays.
   expect(await purgeEndedWorkflows(h.handle.db)).toBe(0);
   await h.tdb.admin`update dbos.workflow_status set updated_at = updated_at - 8 * 86400000

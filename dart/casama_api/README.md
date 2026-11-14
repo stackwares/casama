@@ -306,11 +306,11 @@ Class | Method | HTTP request | Description
 [*PrivacyApi*](doc/PrivacyApi.md) | [**setAnalyticsOptOut**](doc/PrivacyApi.md#setanalyticsoptout) | **POST** /v1/me/analytics-opt-out | Update the user&#39;s analytics opt-out preference
 [*PrivacyApi*](doc/PrivacyApi.md) | [**updateOrgSettings**](doc/PrivacyApi.md#updateorgsettings) | **PATCH** /v1/orgs/{id}/settings | Change workspace settings such as run event retention (admins)
 [*ProjectsApi*](doc/ProjectsApi.md) | [**approveProjectPlan**](doc/ProjectsApi.md#approveprojectplan) | **POST** /v1/projects/{id}/plan/approve | Approve the proposed plan; sessions start
-[*ProjectsApi*](doc/ProjectsApi.md) | [**createProject**](doc/ProjectsApi.md#createproject) | **POST** /v1/projects | Start a project; its lead bot drafts a plan for you to approve
+[*ProjectsApi*](doc/ProjectsApi.md) | [**createProject**](doc/ProjectsApi.md#createproject) | **POST** /v1/projects | Start a project: one you work on together in its chat, or one its lead bot plans for your approval and then works on by itself
 [*ProjectsApi*](doc/ProjectsApi.md) | [**getProject**](doc/ProjectsApi.md#getproject) | **GET** /v1/projects/{id} | 
 [*ProjectsApi*](doc/ProjectsApi.md) | [**listProjects**](doc/ProjectsApi.md#listprojects) | **GET** /v1/projects | 
 [*ProjectsApi*](doc/ProjectsApi.md) | [**signOffMilestone**](doc/ProjectsApi.md#signoffmilestone) | **POST** /v1/projects/{id}/milestones/{milestone_id}/signoff | Sign off a finished milestone so the next one begins
-[*ProjectsApi*](doc/ProjectsApi.md) | [**updateProject**](doc/ProjectsApi.md#updateproject) | **PATCH** /v1/projects/{id} | Pause, resume or cancel a project, or change its budget, deadline or plan
+[*ProjectsApi*](doc/ProjectsApi.md) | [**updateProject**](doc/ProjectsApi.md#updateproject) | **PATCH** /v1/projects/{id} | Pause, resume, cancel or finish a project, change its goal, budget, deadline or plan, or switch working by itself on or off
 [*ReferralsApi*](doc/ReferralsApi.md) | [**getReferral**](doc/ReferralsApi.md#getreferral) | **GET** /v1/me/referral | Your invite code and link, what you&#39;ve earned, and who invited you
 [*ReferralsApi*](doc/ReferralsApi.md) | [**previewReferral**](doc/ReferralsApi.md#previewreferral) | **GET** /v1/referral/preview | Who an invite code is from (no sign-in)
 [*ReferralsApi*](doc/ReferralsApi.md) | [**redeemReferral**](doc/ReferralsApi.md#redeemreferral) | **POST** /v1/me/referral/redeem | Enter a friend&#39;s invite code (a few days after signing up)

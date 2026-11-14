@@ -109,8 +109,8 @@ Sizes: S is a day or two of agent work, M several days, L a week or more.
 
 ### Stage 7: the Library, part two (M)
 
-- Library plan Phase 4 (beside the chat, pins, collections) and Phase 5 (sharing every kind, media
-  bytes out of Postgres).
+- Library plan Phase 4 (beside the chat, pins; collections became projects, D-295) and Phase 5
+  (sharing every kind, media bytes out of Postgres).
 - Add 11 (the rest): export a chat, a public read-only link to a chat, using Phase 5's sharing.
 
 ### Stage 8: making more, and knowing more (each item its own short plan)

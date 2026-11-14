@@ -25,7 +25,8 @@ export const createProject = createRoute({
   path: "/v1/projects",
   tags: ["projects"],
   security,
-  summary: "Start a project; its lead bot drafts a plan for you to approve",
+  summary:
+    "Start a project: one you work on together in its chat, or one its lead bot plans for your approval and then works on by itself",
   request: { body: jsonBody(CreateProjectRequest) },
   responses: { 201: jsonResponse("Created", Project), 400: e400, 401: e401, 403: e403 },
 });
@@ -46,9 +47,17 @@ export const updateProject = createRoute({
   path: "/v1/projects/{id}",
   tags: ["projects"],
   security,
-  summary: "Pause, resume or cancel a project, or change its budget, deadline or plan",
+  summary:
+    "Pause, resume, cancel or finish a project, change its goal, budget, deadline or plan, or switch working by itself on or off",
   request: { params: idParam, body: jsonBody(UpdateProjectRequest) },
-  responses: { 200: jsonResponse("Project", Project), 400: e400, 401: e401, 403: e403, 404: e404 },
+  responses: {
+    200: jsonResponse("Project", Project),
+    400: e400,
+    401: e401,
+    403: e403,
+    404: e404,
+    409: e409,
+  },
 });
 
 export const approveProjectPlan = createRoute({

@@ -20,6 +20,7 @@ import '../chat/media/chat_audio.dart';
 import '../chat/media/chat_video.dart';
 import '../files/file_preview.dart';
 import '../pages/pages_screen.dart' show pageOpenerProvider;
+import '../projects/projects_screen.dart' show projectsProvider;
 import 'creation_tile.dart';
 import 'library_providers.dart';
 
@@ -204,6 +205,24 @@ class _Detail extends ConsumerWidget {
     );
     if (updated == null) return;
     ref.invalidate(creationProvider(c.id));
+    onChanged?.call(updated);
+  }
+
+  /// Files it under a project, or takes it out of one (D-295).
+  Future<void> _move(BuildContext context, WidgetRef ref) async {
+    final picked = await showAdaptiveSheet<_ProjectPick>(
+      context: context,
+      builder: (_) => _MoveToProject(current: c.projectId),
+    );
+    if (picked == null || picked.id == c.projectId || !context.mounted) return;
+    final updated = await runGuarded(
+      context,
+      () => ref.read(backendProvider).moveCreation(c.id, picked.id),
+    );
+    if (updated == null) return;
+    ref
+      ..invalidate(creationProvider(c.id))
+      ..invalidate(projectsProvider);
     onChanged?.call(updated);
   }
 
@@ -446,6 +465,13 @@ class _Detail extends ConsumerWidget {
                     ],
                     child: Text(l10n.creationWhoCanSee),
                   ),
+                if (creation.canChange)
+                  MenuItemButton(
+                    key: const Key('creationMove'),
+                    leadingIcon: const Icon(LucideIcons.folderInput, size: 20),
+                    onPressed: () => _move(context, ref),
+                    child: Text(l10n.creationMoveToProject),
+                  ),
                 if (creation.kind == CreationKind.page &&
                     creation.pageId != null)
                   MenuItemButton(
@@ -484,6 +510,14 @@ class _Detail extends ConsumerWidget {
         const SizedBox(height: AppSpace.lg),
         GroupedCard(
           children: [
+            if (creation.projectId != null)
+              GroupedTile(
+                key: const Key('creationProject'),
+                icon: LucideIcons.folderKanban,
+                title: creation.projectTitle ?? l10n.creationProjectLabel,
+                subtitle: l10n.creationProjectLabel,
+                onTap: () => context.push('/projects/${creation.projectId}'),
+              ),
             if (creation.botId != null)
               GroupedTile(
                 key: const Key('creationFrom'),
@@ -541,6 +575,61 @@ class _Detail extends ConsumerWidget {
             ),
           ),
         ],
+      ],
+    );
+  }
+}
+
+/// What the Move to Project sheet returns: a project, or none (taken out of its project).
+class _ProjectPick {
+  const _ProjectPick(this.id);
+  final String? id;
+}
+
+/// The projects a creation can be filed under, with the one it's in ticked.
+class _MoveToProject extends ConsumerWidget {
+  const _MoveToProject({required this.current});
+  final String? current;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final projects = (ref.watch(projectsProvider).value ?? const <Project>[])
+        .where((p) => p.status != ProjectStatus.cancelled || p.id == current)
+        .toList();
+    return FormSheet(
+      icon: LucideIcons.folderInput,
+      title: l10n.creationMoveToProject,
+      submitLabel: l10n.close,
+      showCancel: false,
+      onSubmit: () => Navigator.pop(context),
+      children: [
+        GroupedCard(
+          children: [
+            for (final p in projects)
+              GroupedTile(
+                key: Key('moveToProject-${p.id}'),
+                icon: LucideIcons.folderKanban,
+                title: p.title,
+                selected: p.id == current,
+                showChevron: false,
+                trailing: p.id == current
+                    ? const Icon(LucideIcons.check, size: 18)
+                    : null,
+                onTap: () => Navigator.pop(context, _ProjectPick(p.id)),
+              ),
+            if (current != null || projects.isEmpty)
+              GroupedTile(
+                key: const Key('moveToProject-none'),
+                icon: LucideIcons.folderMinus,
+                title: l10n.creationNoProject,
+                showChevron: false,
+                onTap: current == null
+                    ? null
+                    : () => Navigator.pop(context, const _ProjectPick(null)),
+              ),
+          ],
+        ),
       ],
     );
   }

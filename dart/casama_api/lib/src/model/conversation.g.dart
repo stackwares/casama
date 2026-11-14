@@ -33,6 +33,8 @@ abstract class _$ConversationCWProxy {
 
   Conversation pinned(bool? pinned);
 
+  Conversation projectId(String? projectId);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Conversation(...).copyWith.fieldName(value)`.
@@ -55,6 +57,7 @@ abstract class _$ConversationCWProxy {
     String? anchorMessageId,
     ConversationStatusEnum? status,
     bool? pinned,
+    String? projectId,
   });
 }
 
@@ -107,6 +110,9 @@ class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
   @override
   Conversation pinned(bool? pinned) => call(pinned: pinned);
 
+  @override
+  Conversation projectId(String? projectId) => call(projectId: projectId);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Conversation(...).copyWith.fieldName(value)`.
@@ -130,6 +136,7 @@ class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
     Object? anchorMessageId = const $CopyWithPlaceholder(),
     Object? status = const $CopyWithPlaceholder(),
     Object? pinned = const $CopyWithPlaceholder(),
+    Object? projectId = const $CopyWithPlaceholder(),
   }) {
     return Conversation(
       id: id == const $CopyWithPlaceholder() || id == null
@@ -184,6 +191,10 @@ class _$ConversationCWProxyImpl implements _$ConversationCWProxy {
           ? _value.pinned
           // ignore: cast_nullable_to_non_nullable
           : pinned as bool?,
+      projectId: projectId == const $CopyWithPlaceholder()
+          ? _value.projectId
+          // ignore: cast_nullable_to_non_nullable
+          : projectId as String?,
     );
   }
 }
@@ -251,6 +262,7 @@ Conversation _$ConversationFromJson(Map<String, dynamic> json) =>
             (v) => $enumDecodeNullable(_$ConversationStatusEnumEnumMap, v),
           ),
           pinned: $checkedConvert('pinned', (v) => v as bool?),
+          projectId: $checkedConvert('project_id', (v) => v as String?),
         );
         return val;
       },
@@ -263,6 +275,7 @@ Conversation _$ConversationFromJson(Map<String, dynamic> json) =>
         'isMain': 'is_main',
         'parentConversationId': 'parent_conversation_id',
         'anchorMessageId': 'anchor_message_id',
+        'projectId': 'project_id',
       },
     );
 
@@ -281,6 +294,7 @@ Map<String, dynamic> _$ConversationToJson(Conversation instance) =>
       'anchor_message_id': ?instance.anchorMessageId,
       'status': ?_$ConversationStatusEnumEnumMap[instance.status],
       'pinned': ?instance.pinned,
+      'project_id': ?instance.projectId,
     };
 
 const _$ConversationKindEnumEnumMap = {

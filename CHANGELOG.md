@@ -9,6 +9,10 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- Projects keep one piece of work together. A project needs only a name and a bot, a topic can
+  become one, and what a bot makes for it is filed under it in the Library, which has a Projects
+  row. Letting the bot plan a project and work on it by itself is now a switch. Something in the
+  Library can be moved into or out of a project.
 - Bots can change their own setup: add MCP servers (remote, or run on their computer), use the
   workspace's connections, suggest plugins and a new look for the app, add their own action
   rules and knowledge, and quiet their notifications. Anything that lets a bot reach more always

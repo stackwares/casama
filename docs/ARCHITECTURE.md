@@ -192,9 +192,10 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `client/lib/core/local_cache.dart` (drift key/value cache, `openLocalCache` installed in `main.dart`), cache-first `BotsNotifier` and `ChatController.open`, cleared on sign-out.
 
-## Projects (D-113)
+## Projects (D-113, D-295)
 
-- `packages/agent/src/projects.ts` (`projectHeartbeat` in the worker's minute tick, `startProjectRun`, `projects.create|plan|update|status`), `projects`/`project_milestones`, `project_id` on tickets, runs, conversations and routines, `apps/server/src/api/routes/projects.ts`, and the app's `features/projects/`.
+- `packages/agent/src/projects.ts` (`projectHeartbeat` in the worker's minute tick, `startProjectRun`, `projects.create|open|plan|update|status`), `projects`/`project_milestones`, `project_id` on tickets, runs, conversations and routines, `apps/server/src/api/routes/projects.ts`, and the app's `features/projects/`.
+- **Light projects (D-295):** `projects.autonomous` (the heartbeat only runs these) and `projects.personal` (`can_view_project`: a project that grew out of someone's chat follows that chat). `creations.project_id` is filled by the `creations_set_project` trigger from the run, else the chat; `runs_set_project` gives a run its chat's project. `adoptChat` makes a topic a project's chat, `fileRunUnderProject` files one run, and `projectContext` is the prompt block a run gets (`run.ts`, step `project-context`). In the app: `project_tile.dart` (the Library's Projects row), `make_project.dart` (a topic becomes a project), `/library?project=`, and the Files tab's `initialPath`.
 
 ## Check-ins (D-114)
 

@@ -743,20 +743,28 @@ class FakeBackend implements Backend {
     runs: const [],
   );
   final projectActions = <String>[];
+
+  /// The workspace's projects; the one in [projectDetail] when not set.
+  List<Project>? projectList;
   @override
-  Future<List<Project>> projects(String orgId) async => [
-    Project.fromJson(projectDetail.toJson()),
-  ];
+  Future<List<Project>> projects(String orgId) async =>
+      projectList ?? [Project.fromJson(projectDetail.toJson())];
   @override
   Future<Project> createProject(
     String orgId, {
     required String title,
-    required String goal,
+    String goal = '',
     String doneCriteria = '',
     required String leadBotId,
     double? budgetUsd,
+    bool autonomous = false,
+    String? conversationId,
   }) async {
-    projectActions.add('create:$title:$budgetUsd');
+    projectActions.add(
+      autonomous
+          ? 'create:$title:$budgetUsd'
+          : 'create-light:$title${conversationId == null ? '' : ':$conversationId'}',
+    );
     return Project.fromJson(projectDetail.toJson());
   }
 
@@ -767,7 +775,14 @@ class FakeBackend implements Backend {
     String projectId, {
     String? status,
     double? budgetUsd,
-  }) async => projectActions.add('status:$status');
+    bool? autonomous,
+    String? goal,
+    String? doneCriteria,
+  }) async => projectActions.add(
+    autonomous == null
+        ? 'status:$status'
+        : 'autonomous:$autonomous${goal == null ? '' : ':$goal'}',
+  );
   @override
   Future<void> approveProjectPlan(String projectId) async =>
       projectActions.add('approve');
@@ -4562,6 +4577,9 @@ class FakeBackend implements Backend {
   final restoredCreations = <String>[];
   /// Library list requests: (kind, bot, conversation, q, cursor).
   final creationQueries = <(CreationKind?, String?, String?, String?, String?)>[];
+
+  /// Creations moved between projects: (creation, project or null).
+  final creationMoves = <(String, String?)>[];
   /// Fails the Library list when set (load failed with Try Again).
   Object? creationsError;
   @override
@@ -4570,6 +4588,7 @@ class FakeBackend implements Backend {
     CreationKind? kind,
     String? botId,
     String? conversationId,
+    String? projectId,
     String? q,
     String? cursor,
     bool recentlyOpened = false,
@@ -4585,6 +4604,7 @@ class FakeBackend implements Backend {
         .where((c) => kind == null || c.kind == kind)
         .where((c) => botId == null || c.botId == botId)
         .where((c) => conversationId == null || c.conversationId == conversationId)
+        .where((c) => projectId == null || c.projectId == projectId)
         .where((c) => words.isEmpty || c.title.toLowerCase().contains(words) || (c.botName ?? '').toLowerCase().contains(words))
         .toList();
     final start = cursor == null ? 0 : int.parse(cursor);
@@ -4612,6 +4632,19 @@ class FakeBackend implements Backend {
       'pinned': ?pinned,
       'visibility': ?visibility?.value,
       if (visibility == CreationVisibilityEnum.public) 'public_url': 'https://pages.example.com/c/tok-$id',
+    });
+    return creationList[i];
+  }
+
+  @override
+  Future<Creation> moveCreation(String id, String? projectId) async {
+    creationMoves.add((id, projectId));
+    final i = creationList.indexWhere((x) => x.id == id);
+    final title = (await projects(orgId)).where((p) => p.id == projectId).firstOrNull?.title;
+    creationList[i] = Creation.fromJson({
+      ...creationList[i].toJson(),
+      'project_id': projectId,
+      'project_title': title,
     });
     return creationList[i];
   }

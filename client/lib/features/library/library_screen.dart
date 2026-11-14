@@ -14,19 +14,30 @@ import '../../theme/app_tokens.dart';
 import '../../ui/bottom_padding.dart';
 import '../../ui/page.dart';
 import '../../ui/tab_reselect.dart';
+import '../projects/project_tile.dart';
+import '../projects/projects_screen.dart' show projectsProvider;
 import 'creation_detail.dart';
 import 'creation_tile.dart';
 import 'library_providers.dart';
 import 'library_starters.dart';
 
 /// The Library (D-274, LIBRARY-PLAN §5.2): everything bots made, newest first. Chips filter by
-/// kind (only kinds the workspace has), a search box matches titles and bot names, pinned things
-/// sit on their own shelf, and the rest falls under day headings. On a wide window a picked tile
-/// opens beside the grid; elsewhere it opens its own page.
+/// kind (only kinds the workspace has), a search box matches titles and bot names, projects and
+/// pinned things sit on their own shelves, and the rest falls under day headings. On a wide window
+/// a picked tile opens beside the grid; elsewhere it opens its own page.
 class LibraryScreen extends ConsumerStatefulWidget {
-  const LibraryScreen({super.key, this.kind, this.botId, this.query = ''});
+  const LibraryScreen({
+    super.key,
+    this.kind,
+    this.botId,
+    this.projectId,
+    this.query = '',
+  });
   final CreationKind? kind;
   final String? botId;
+
+  /// Only what is filed under this project (D-295).
+  final String? projectId;
   final String query;
 
   /// The detail opens beside the grid from this width of the Library's own area.
@@ -43,7 +54,26 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   Timer? _debounce;
   String? _selected;
 
-  LibraryQuery get _q => (kind: _kind, botId: widget.botId, q: _query.trim());
+  LibraryQuery get _q => (
+    kind: _kind,
+    botId: widget.botId,
+    projectId: widget.projectId,
+    q: _query.trim(),
+  );
+
+  /// Everything, unfiltered: where the Projects and Pinned shelves show.
+  bool get _plain =>
+      _kind == null &&
+      _query.trim().isEmpty &&
+      widget.botId == null &&
+      widget.projectId == null;
+
+  @override
+  void initState() {
+    super.initState();
+    // The Projects shelf keeps what it showed last time while it reloads.
+    refreshKeptOnOpen(context, [projectsProvider]);
+  }
 
   @override
   void didUpdateWidget(LibraryScreen old) {
@@ -99,11 +129,16 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final bot = widget.botId == null
         ? null
         : ref.watch(botProvider(widget.botId!));
+    final project = widget.projectId == null
+        ? null
+        : (ref.watch(projectsProvider).value ?? const <Project>[])
+              .where((p) => p.id == widget.projectId)
+              .firstOrNull;
     return PrimaryScrollController(
       controller: TabReselect.library,
       child: SubPage(
         title: l10n.library,
-        subtitle: bot?.name,
+        subtitle: project?.title ?? bot?.name,
         maxWidth: double.infinity,
         body: LayoutBuilder(
           builder: (context, constraints) {
@@ -204,6 +239,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             ),
           ),
         ],
+        if (_plain) ...[
+          const SizedBox(height: AppSpace.xs),
+          const ProjectShelf(),
+        ],
       ],
     );
     return AsyncView(
@@ -212,12 +251,16 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       loading: const _LibrarySkeleton(),
       data: (data) {
         if (data.items.isEmpty) {
-          final filtered =
-              _kind != null || _query.trim().isNotEmpty || widget.botId != null;
+          final filtered = !_plain;
+          // An empty Library can still have projects: their shelf stays above the starters.
+          final hasProjects =
+              (ref.watch(projectsProvider).value ?? const <Project>[]).any(
+                (p) => p.status != ProjectStatus.cancelled,
+              );
           return ListView(
             padding: const EdgeInsets.symmetric(horizontal: AppSpace.gutter),
             children: [
-              if (filtered) header,
+              if (filtered) header else if (hasProjects) const ProjectShelf(),
               SizedBox(height: filtered ? AppSpace.xl : AppSpace.xs),
               filtered
                   ? EmptyState(
@@ -291,7 +334,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final l10n = context.l10n;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final pinned = _kind == null && _query.trim().isEmpty
+    final pinned =
+        _kind == null && _query.trim().isEmpty && widget.projectId == null
         ? data.items.where((c) => c.pinned).toList()
         : const <Creation>[];
     final rest = pinned.isEmpty

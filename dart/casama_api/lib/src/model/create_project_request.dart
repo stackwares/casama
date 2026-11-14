@@ -24,7 +24,7 @@ class CreateProjectRequest {
 
     required  this.title,
 
-    required  this.goalMd,
+     this.goalMd,
 
      this.doneCriteriaMd,
 
@@ -33,6 +33,10 @@ class CreateProjectRequest {
      this.budgetUsd,
 
      this.deadlineAt,
+
+     this.autonomous,
+
+     this.conversationId,
   });
 
   @JsonKey(
@@ -59,15 +63,16 @@ class CreateProjectRequest {
 
 
 
+      /// Needed when the project works by itself
   @JsonKey(
     
     name: r'goal_md',
-    required: true,
+    required: false,
     includeIfNull: false,
   )
 
 
-  final String goalMd;
+  final String? goalMd;
 
 
 
@@ -121,6 +126,32 @@ class CreateProjectRequest {
 
 
 
+      /// true (the default, as before D-295): the lead bot drafts a plan for you to approve, then works by itself. false: a project you work on together in its chat
+  @JsonKey(
+    
+    name: r'autonomous',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? autonomous;
+
+
+
+      /// With autonomous false: make this topic of yours the project's chat, and file what was made in it under the project. Without it the project gets a new topic
+  @JsonKey(
+    
+    name: r'conversation_id',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? conversationId;
+
+
+
 
 
     @override
@@ -131,7 +162,9 @@ class CreateProjectRequest {
       other.doneCriteriaMd == doneCriteriaMd &&
       other.leadBotId == leadBotId &&
       other.budgetUsd == budgetUsd &&
-      other.deadlineAt == deadlineAt;
+      other.deadlineAt == deadlineAt &&
+      other.autonomous == autonomous &&
+      other.conversationId == conversationId;
 
     @override
     int get hashCode =>
@@ -141,7 +174,9 @@ class CreateProjectRequest {
         doneCriteriaMd.hashCode +
         leadBotId.hashCode +
         (budgetUsd == null ? 0 : budgetUsd.hashCode) +
-        (deadlineAt == null ? 0 : deadlineAt.hashCode);
+        (deadlineAt == null ? 0 : deadlineAt.hashCode) +
+        autonomous.hashCode +
+        conversationId.hashCode;
 
   factory CreateProjectRequest.fromJson(Map<String, dynamic> json) => _$CreateProjectRequestFromJson(json);
 

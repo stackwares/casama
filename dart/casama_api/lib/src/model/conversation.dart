@@ -45,6 +45,8 @@ class Conversation {
      this.status,
 
      this.pinned,
+
+     this.projectId,
   });
 
   @JsonKey(
@@ -210,6 +212,19 @@ class Conversation {
 
 
 
+      /// The project this chat belongs to (D-295)
+  @JsonKey(
+    
+    name: r'project_id',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? projectId;
+
+
+
 
 
     @override
@@ -226,7 +241,8 @@ class Conversation {
       other.parentConversationId == parentConversationId &&
       other.anchorMessageId == anchorMessageId &&
       other.status == status &&
-      other.pinned == pinned;
+      other.pinned == pinned &&
+      other.projectId == projectId;
 
     @override
     int get hashCode =>
@@ -242,7 +258,8 @@ class Conversation {
         (parentConversationId == null ? 0 : parentConversationId.hashCode) +
         (anchorMessageId == null ? 0 : anchorMessageId.hashCode) +
         (status == null ? 0 : status.hashCode) +
-        pinned.hashCode;
+        pinned.hashCode +
+        (projectId == null ? 0 : projectId.hashCode);
 
   factory Conversation.fromJson(Map<String, dynamic> json) => _$ConversationFromJson(json);
 

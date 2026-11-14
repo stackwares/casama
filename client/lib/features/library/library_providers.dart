@@ -3,8 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
 
-/// What the Library shows: one kind (null for all), one bot (null for any), and the words typed.
-typedef LibraryQuery = ({CreationKind? kind, String? botId, String q});
+/// What the Library shows: one kind (null for all), one bot (null for any), one project (null for
+/// any), and the words typed.
+typedef LibraryQuery = ({
+  CreationKind? kind,
+  String? botId,
+  String? projectId,
+  String q,
+});
 
 /// One loaded run of the Library: the items so far, the workspace's kinds (for the chips), and
 /// the cursor for the next page.
@@ -51,6 +57,7 @@ class LibraryNotifier extends AsyncNotifier<LibraryPage> {
           orgId,
           kind: query.kind,
           botId: query.botId,
+          projectId: query.projectId,
           q: query.q,
           limit: pageSize,
         );
@@ -79,6 +86,7 @@ class LibraryNotifier extends AsyncNotifier<LibraryPage> {
             orgId,
             kind: query.kind,
             botId: query.botId,
+            projectId: query.projectId,
             q: query.q,
             cursor: current.next,
             limit: pageSize,

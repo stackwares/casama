@@ -1,0 +1,390 @@
+{
+  "name": "light-projects",
+  "turns": [
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[]}"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "make me a game"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "c1",
+            "name": "projects__create",
+            "args": {
+              "title": "Space Dodger"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "start a project for the newsletter"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "c2",
+            "name": "projects__create",
+            "args": {
+              "title": "Newsletter"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "projects.create"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Started the project."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "more art"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "o1",
+            "name": "projects__open",
+            "args": {
+              "project": "space-dodger"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "projects.open"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "t1",
+            "name": "tasks__create",
+            "args": {
+              "title": "Draw the ship"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "tasks.create"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Filed under Space Dodger."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "list the to-dos"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "p1",
+            "name": "projects__plan",
+            "args": {
+              "project": "Space Dodger",
+              "plan_md": "Build, then polish.",
+              "milestones": [
+                {
+                  "name": "Build",
+                  "requires_signoff": true,
+                  "tickets": [
+                    {
+                      "title": "Ship sprite"
+                    },
+                    {
+                      "title": "Controls"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "ask the owner"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "b1",
+            "name": "projects__update",
+            "args": {
+              "project": "Space Dodger",
+              "status": "blocked",
+              "question": "Which colour?"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "projects.update"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Asked in the chat instead."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "Plan this project"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "p2",
+            "name": "projects__plan",
+            "args": {
+              "project": "Zine",
+              "plan_md": "One milestone.",
+              "milestones": [
+                {
+                  "name": "Print",
+                  "tickets": [
+                    {
+                      "title": "Print it"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "projects.plan"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Plan saved."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "systemIncludes": "You are working on the project \"Space Cat\"",
+        "lastUserIncludes": "what are we building"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "We are building Space Cat."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "systemIncludes": "Projects you have with this person",
+        "lastUserIncludes": "what is open"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Open projects seen."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Okay."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 200,
+            "outputTokens": 20
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

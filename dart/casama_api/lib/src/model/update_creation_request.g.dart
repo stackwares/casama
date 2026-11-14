@@ -21,6 +21,8 @@ abstract class _$UpdateCreationRequestCWProxy {
 
   UpdateCreationRequest expiresInDays(int? expiresInDays);
 
+  UpdateCreationRequest projectId(String? projectId);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateCreationRequest(...).copyWith.fieldName(value)`.
@@ -36,6 +38,7 @@ abstract class _$UpdateCreationRequestCWProxy {
     bool? opened,
     UpdateCreationRequestVisibilityEnum? visibility,
     int? expiresInDays,
+    String? projectId,
   });
 }
 
@@ -68,6 +71,10 @@ class _$UpdateCreationRequestCWProxyImpl
   UpdateCreationRequest expiresInDays(int? expiresInDays) =>
       call(expiresInDays: expiresInDays);
 
+  @override
+  UpdateCreationRequest projectId(String? projectId) =>
+      call(projectId: projectId);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `UpdateCreationRequest(...).copyWith.fieldName(value)`.
@@ -84,6 +91,7 @@ class _$UpdateCreationRequestCWProxyImpl
     Object? opened = const $CopyWithPlaceholder(),
     Object? visibility = const $CopyWithPlaceholder(),
     Object? expiresInDays = const $CopyWithPlaceholder(),
+    Object? projectId = const $CopyWithPlaceholder(),
   }) {
     return UpdateCreationRequest(
       title: title == const $CopyWithPlaceholder()
@@ -110,6 +118,10 @@ class _$UpdateCreationRequestCWProxyImpl
           ? _value.expiresInDays
           // ignore: cast_nullable_to_non_nullable
           : expiresInDays as int?,
+      projectId: projectId == const $CopyWithPlaceholder()
+          ? _value.projectId
+          // ignore: cast_nullable_to_non_nullable
+          : projectId as String?,
     );
   }
 }
@@ -128,24 +140,35 @@ extension $UpdateCreationRequestCopyWith on UpdateCreationRequest {
 
 UpdateCreationRequest _$UpdateCreationRequestFromJson(
   Map<String, dynamic> json,
-) => $checkedCreate('UpdateCreationRequest', json, ($checkedConvert) {
-  final val = UpdateCreationRequest(
-    title: $checkedConvert('title', (v) => v as String?),
-    label: $checkedConvert('label', (v) => v as String?),
-    pinned: $checkedConvert('pinned', (v) => v as bool?),
-    opened: $checkedConvert('opened', (v) => v as bool?),
-    visibility: $checkedConvert(
-      'visibility',
-      (v) =>
-          $enumDecodeNullable(_$UpdateCreationRequestVisibilityEnumEnumMap, v),
-    ),
-    expiresInDays: $checkedConvert(
-      'expires_in_days',
-      (v) => (v as num?)?.toInt(),
-    ),
-  );
-  return val;
-}, fieldKeyMap: const {'expiresInDays': 'expires_in_days'});
+) => $checkedCreate(
+  'UpdateCreationRequest',
+  json,
+  ($checkedConvert) {
+    final val = UpdateCreationRequest(
+      title: $checkedConvert('title', (v) => v as String?),
+      label: $checkedConvert('label', (v) => v as String?),
+      pinned: $checkedConvert('pinned', (v) => v as bool?),
+      opened: $checkedConvert('opened', (v) => v as bool?),
+      visibility: $checkedConvert(
+        'visibility',
+        (v) => $enumDecodeNullable(
+          _$UpdateCreationRequestVisibilityEnumEnumMap,
+          v,
+        ),
+      ),
+      expiresInDays: $checkedConvert(
+        'expires_in_days',
+        (v) => (v as num?)?.toInt(),
+      ),
+      projectId: $checkedConvert('project_id', (v) => v as String?),
+    );
+    return val;
+  },
+  fieldKeyMap: const {
+    'expiresInDays': 'expires_in_days',
+    'projectId': 'project_id',
+  },
+);
 
 Map<String, dynamic> _$UpdateCreationRequestToJson(
   UpdateCreationRequest instance,
@@ -157,6 +180,7 @@ Map<String, dynamic> _$UpdateCreationRequestToJson(
   'visibility':
       ?_$UpdateCreationRequestVisibilityEnumEnumMap[instance.visibility],
   'expires_in_days': ?instance.expiresInDays,
+  'project_id': ?instance.projectId,
 };
 
 const _$UpdateCreationRequestVisibilityEnumEnumMap = {

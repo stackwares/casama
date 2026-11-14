@@ -41,6 +41,7 @@ import '../../ui/motion.dart';
 import '../../ui/shell_header.dart';
 import '../files/file_preview.dart';
 import '../home/home_shell.dart';
+import '../projects/make_project.dart';
 import 'chat_controller.dart';
 import 'chat_detail.dart';
 import 'local_actions.dart';
@@ -584,6 +585,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   /// Whether this chat exists on the server and this person may delete it (started it, or
   /// manages the bot).
+  /// The open chat's row from the bot's list, once that has loaded.
+  Conversation? _currentConversation(String? id) {
+    if (id == null || widget.group) return null;
+    return ref.watch(conversationsProvider(widget.botId)).value?.where((c) => c.id == id).firstOrNull;
+  }
+
+  /// A topic (never General) that isn't a project's chat yet can become one (D-295).
+  bool _canMakeProject(String? id) {
+    final c = _currentConversation(id);
+    return c != null && c.isMain != true && c.parentConversationId != null && c.projectId == null;
+  }
+
+  Future<void> _makeProject(String id) => makeProjectFromTopic(
+    context,
+    ref,
+    botId: widget.botId,
+    conversationId: id,
+    title: _currentConversation(id)?.title ?? '',
+  );
+
   bool _canDeleteCurrent(String? id) {
     if (id == null) return false;
     final list = widget.group ? ref.watch(groupChatsProvider).value : ref.watch(conversationsProvider(widget.botId)).value;
@@ -1075,6 +1096,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             botId: widget.botId,
             showComputer: layout != LayoutSize.desktop,
             onConversations: () => _showConversations(context, chat.conversationId),
+            projectId: _currentConversation(chat.conversationId)?.projectId,
+            onMakeProject: _canMakeProject(chat.conversationId) ? () => _makeProject(chat.conversationId!) : null,
             onFind: chat.empty ? null : _openFind,
             onDelete: chat.running || !_canDeleteCurrent(chat.conversationId) ? null : () => _deleteCurrent(chat.conversationId!, name),
           ),
@@ -2137,10 +2160,16 @@ class _HeroMark extends StatelessWidget {
 /// The chat's … menu: its conversations, the computer (phones and tablets) and the bot's profile,
 /// where its memory, routines and apps live (and its activity, under Advanced).
 class _MoreMenu extends StatelessWidget {
-  const _MoreMenu({required this.botId, required this.showComputer, required this.onConversations, this.onFind, this.onDelete});
+  const _MoreMenu({required this.botId, required this.showComputer, required this.onConversations, this.projectId, this.onMakeProject, this.onFind, this.onDelete});
   final String botId;
   final bool showComputer;
   final VoidCallback onConversations;
+
+  /// The project this chat belongs to (D-295), when it has one.
+  final String? projectId;
+
+  /// Set in a topic of the person's own that isn't a project yet.
+  final VoidCallback? onMakeProject;
 
   /// Find in this chat (Add 11); null while the chat is empty.
   final VoidCallback? onFind;
@@ -2166,6 +2195,10 @@ class _MoreMenu extends StatelessWidget {
       menuChildren: [
         item(LucideIcons.messagesSquare, l10n.topics, onConversations, key: const Key('openConversations')),
         if (onFind != null) item(LucideIcons.textSearch, l10n.findInChat, onFind!, key: const Key('findInChat')),
+        if (projectId != null)
+          item(LucideIcons.folderKanban, l10n.openProject, () => context.push('/projects/$projectId'), key: const Key('openProject'))
+        else if (onMakeProject != null)
+          item(LucideIcons.folderPlus, l10n.makeProject, onMakeProject!, key: const Key('makeProject')),
         if (showComputer) item(LucideIcons.monitor, l10n.navComputer, () => context.push('/computer?bot=$botId'), key: const Key('openComputer')),
         const Divider(),
         item(LucideIcons.circleUser, l10n.botProfile, () => context.push('/bots/$botId/settings'), key: const Key('openBotProfile')),
@@ -2783,6 +2816,14 @@ class _TopicsBar extends ConsumerWidget {
           label: Text(l10n.generalChat),
           onPressed: () => onOpen(main.id),
         ),
+        // A topic that is a project's chat leads to the project (D-295).
+        if (here?.projectId != null)
+          ActionChip(
+            key: const Key('topicProject'),
+            avatar: Icon(LucideIcons.folderKanban, size: 16, color: scheme.onSurfaceVariant),
+            label: Text(l10n.creationProjectLabel),
+            onPressed: () => context.push('/projects/${here!.projectId}'),
+          ),
         Padding(
           padding: const EdgeInsets.only(left: AppSpace.xxs),
           // Capped, so a long title ends in "…" instead of running off the edge of the bar; and an

@@ -107,6 +107,8 @@ export interface ContextInput {
   routine?: { id: string; name: string };
   /** The person this run acts for (About you, D-169). */
   person?: PersonContext | null;
+  /** The project this run works on, or the person's open ones (D-295; `projectContext`). */
+  project?: string | null;
 }
 
 export interface BuiltContext {
@@ -212,6 +214,7 @@ export function buildContext(input: ContextInput): BuiltContext {
       `This run was started by your routine "${input.routine.name}" (id ${input.routine.id}). Your reply is posted in the person's chat with you and they get a notification, so to tell, remind or greet them, just write it as your reply. Use channel.send only when the routine names an outside chat app (Telegram, WhatsApp, Slack, email) to send through. If it should not run again, switch it off with routines.update (enabled: false) or remove it with routines.delete.`,
     );
   }
+  if (input.project) system.push(input.project);
   if (input.memories.length) {
     system.push(
       // Notes, not orders (D-269): a memory saved from a web page can't steer the bot later.

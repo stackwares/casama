@@ -21,6 +21,10 @@ abstract class _$CreationDetailCWProxy {
 
   CreationDetail runId(String? runId);
 
+  CreationDetail projectId(String? projectId);
+
+  CreationDetail projectTitle(String? projectTitle);
+
   CreationDetail kind(CreationKind kind);
 
   CreationDetail label(String? label);
@@ -81,6 +85,8 @@ abstract class _$CreationDetailCWProxy {
     String? madeFor,
     String? conversationId,
     String? runId,
+    String? projectId,
+    String? projectTitle,
     CreationKind kind,
     String? label,
     String title,
@@ -134,6 +140,13 @@ class _$CreationDetailCWProxyImpl implements _$CreationDetailCWProxy {
 
   @override
   CreationDetail runId(String? runId) => call(runId: runId);
+
+  @override
+  CreationDetail projectId(String? projectId) => call(projectId: projectId);
+
+  @override
+  CreationDetail projectTitle(String? projectTitle) =>
+      call(projectTitle: projectTitle);
 
   @override
   CreationDetail kind(CreationKind kind) => call(kind: kind);
@@ -220,6 +233,8 @@ class _$CreationDetailCWProxyImpl implements _$CreationDetailCWProxy {
     Object? madeFor = const $CopyWithPlaceholder(),
     Object? conversationId = const $CopyWithPlaceholder(),
     Object? runId = const $CopyWithPlaceholder(),
+    Object? projectId = const $CopyWithPlaceholder(),
+    Object? projectTitle = const $CopyWithPlaceholder(),
     Object? kind = const $CopyWithPlaceholder(),
     Object? label = const $CopyWithPlaceholder(),
     Object? title = const $CopyWithPlaceholder(),
@@ -272,6 +287,14 @@ class _$CreationDetailCWProxyImpl implements _$CreationDetailCWProxy {
           ? _value.runId
           // ignore: cast_nullable_to_non_nullable
           : runId as String?,
+      projectId: projectId == const $CopyWithPlaceholder()
+          ? _value.projectId
+          // ignore: cast_nullable_to_non_nullable
+          : projectId as String?,
+      projectTitle: projectTitle == const $CopyWithPlaceholder()
+          ? _value.projectTitle
+          // ignore: cast_nullable_to_non_nullable
+          : projectTitle as String?,
       kind: kind == const $CopyWithPlaceholder() || kind == null
           ? _value.kind
           // ignore: cast_nullable_to_non_nullable
@@ -426,6 +449,8 @@ CreationDetail _$CreationDetailFromJson(Map<String, dynamic> json) =>
             (v) => v as String?,
           ),
           runId: $checkedConvert('run_id', (v) => v as String?),
+          projectId: $checkedConvert('project_id', (v) => v as String?),
+          projectTitle: $checkedConvert('project_title', (v) => v as String?),
           kind: $checkedConvert(
             'kind',
             (v) => $enumDecode(_$CreationKindEnumMap, v),
@@ -481,6 +506,8 @@ CreationDetail _$CreationDetailFromJson(Map<String, dynamic> json) =>
         'madeFor': 'made_for',
         'conversationId': 'conversation_id',
         'runId': 'run_id',
+        'projectId': 'project_id',
+        'projectTitle': 'project_title',
         'pageId': 'page_id',
         'mediaId': 'media_id',
         'durationS': 'duration_s',
@@ -504,6 +531,8 @@ Map<String, dynamic> _$CreationDetailToJson(CreationDetail instance) =>
       'made_for': instance.madeFor,
       'conversation_id': instance.conversationId,
       'run_id': instance.runId,
+      'project_id': ?instance.projectId,
+      'project_title': ?instance.projectTitle,
       'kind': _$CreationKindEnumMap[instance.kind]!,
       'label': instance.label,
       'title': instance.title,

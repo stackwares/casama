@@ -15,6 +15,9 @@ void main() {
     await tester.tap(find.byKey(const Key('newProject')));
     await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('projectTitle')), 'Docs refresh');
+    // Working by itself is a switch (D-295): the goal and budget are asked for once it's on.
+    await tester.tap(find.byKey(const Key('projectAlone')));
+    await tester.pumpAndSettle();
     await tester.enterText(find.byKey(const Key('projectGoal')), 'Rewrite the getting started guide.');
     await tester.enterText(find.byKey(const Key('projectBudget')), '20');
     await tester.pump();
