@@ -807,10 +807,9 @@ function resultPage(message: string, ok: boolean) {
   );
   return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Casama</title><style>
-:root{color-scheme:light dark}body{margin:0;min-height:100vh;display:grid;place-items:center;font:16px/1.5 system-ui,sans-serif;background:linear-gradient(160deg,#efe4fb,#dcebff);color:#1c1530}
-@media (prefers-color-scheme:dark){body{background:linear-gradient(160deg,#25102f,#151f3f);color:#f3eefc}}
-main{max-width:420px;margin:24px;padding:32px;border-radius:24px;background:rgba(255,255,255,.7);text-align:center;box-shadow:0 20px 60px rgba(60,20,120,.18)}
-@media (prefers-color-scheme:dark){main{background:rgba(30,20,50,.7)}}
+:root{color-scheme:light dark}body{margin:0;min-height:100vh;display:grid;place-items:center;font:16px/1.5 system-ui,sans-serif;background:#fff;color:#18181b}
+@media (prefers-color-scheme:dark){body{background:#1c1c1e;color:#f4f4f5}}
+main{max-width:420px;margin:24px;padding:32px;text-align:center}
 .icon{width:56px;height:56px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;font-size:28px;color:#fff;background:${ok ? "#22a06b" : "#d9534f"}}
 h1{font-size:20px;margin:0 0 8px}</style></head><body><main><div class="icon">${ok ? "&#10003;" : "!"}</div>
 <h1>${ok ? "All set" : "Something went wrong"}</h1><p>${esc}</p></main>

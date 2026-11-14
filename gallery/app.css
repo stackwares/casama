@@ -1,5 +1,5 @@
 /* gallery.casama.ai chrome matches the Casama app and casama.ai: plum, lilac, Libre Baskerville
-   and Lato, on the clouds wallpaper. Previews keep each item's own colors. */
+   and Lato, on a plain background. Previews keep each item's own colors. */
 @font-face {
   font-family: "Libre Baskerville";
   src: url("assets/fonts/LibreBaskerville-Regular.ttf") format("truetype");
@@ -47,10 +47,7 @@
   --accent: #7a3fa8;
   --accent-ink: #ffffff;
   --accent-soft: rgba(122, 63, 168, 0.12);
-  --wall-0: #eee2fb;
-  --wall-1: #fbe3ee;
-  --wall-2: #dde9ff;
-  --wall-3: #ddf7f5;
+  --page: #ffffff;
   --radius-card: 18px;
   --radius-control: 14px;
   --gap: 16px;
@@ -73,10 +70,7 @@
     --accent: #d9b6f7;
     --accent-ink: #25102f;
     --accent-soft: rgba(217, 182, 247, 0.14);
-    --wall-0: #25102f;
-    --wall-1: #34123a;
-    --wall-2: #151f3f;
-    --wall-3: #0f292e;
+    --page: #1c1c1e;
     color-scheme: dark;
   }
 }
@@ -92,10 +86,7 @@
   --accent: #d9b6f7;
   --accent-ink: #25102f;
   --accent-soft: rgba(217, 182, 247, 0.14);
-  --wall-0: #25102f;
-  --wall-1: #34123a;
-  --wall-2: #151f3f;
-  --wall-3: #0f292e;
+  --page: #1c1c1e;
   color-scheme: dark;
 }
 
@@ -103,33 +94,11 @@
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
-  background: transparent;
+  background: var(--page);
   color: var(--text);
   font: 16.5px/1.55 var(--font);
   -webkit-font-smoothing: antialiased;
 }
-.wallpaper {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-color: var(--wall-0);
-  background-image:
-    radial-gradient(circle 75vmax at 85% 12%, var(--wall-1), transparent),
-    radial-gradient(circle 75vmax at 15% 55%, var(--wall-2), transparent),
-    radial-gradient(circle 75vmax at 70% 92%, var(--wall-3), transparent);
-}
-.wallpaper-pattern {
-  position: absolute;
-  inset: 0;
-  background: url("assets/clouds.svg") 0 0 / 260px 260px repeat;
-  opacity: 0.22;
-}
-:root[data-theme="dark"] .wallpaper-pattern { opacity: 0.16; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .wallpaper-pattern { opacity: 0.16; }
-}
-body > :not(.wallpaper) { position: relative; z-index: 1; }
 h1, h2, .logo, .foot-name { font-family: var(--display); font-weight: 700; letter-spacing: -0.03em; }
 a { color: inherit; }
 code { font: 0.92em var(--mono); }
