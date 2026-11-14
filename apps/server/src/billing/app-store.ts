@@ -78,6 +78,8 @@ export interface AppStoreOptions {
   bundleId: string;
   environment?: "production" | "sandbox";
   baseUrl?: string;
+  /** Where sandbox lookups go when production doesn't know a transaction (tests point it at a fake). */
+  sandboxBaseUrl?: string;
   /** Trusted roots as PEM; defaults to Apple Root CA - G3 shipped with Casama. */
   rootPems?: string[];
   fetch?: typeof fetch;
@@ -111,6 +113,8 @@ export class AppStoreProvider implements BillingProvider {
   readonly id = "app_store" as const;
   private readonly opts: AppStoreOptions;
   private readonly base: string;
+  /** Asked when production doesn't know the transaction; null in sandbox mode. */
+  private readonly sandboxBase: string | null;
   private readonly roots: X509Certificate[];
   private token: { value: string; until: number } | null = null;
 
@@ -122,6 +126,15 @@ export class AppStoreProvider implements BillingProvider {
         ? "https://api.storekit-sandbox.itunes.apple.com"
         : "https://api.storekit.itunes.apple.com")
     ).replace(/\/$/, "");
+    // Production first, then sandbox, as Apple asks: TestFlight, development builds and App
+    // Review all buy in the sandbox, and a production server sees those purchases too.
+    this.sandboxBase =
+      opts.environment === "sandbox"
+        ? null
+        : ((
+            opts.sandboxBaseUrl ??
+            (opts.baseUrl ? null : "https://api.storekit-sandbox.itunes.apple.com")
+          )?.replace(/\/$/, "") ?? null);
     this.roots = loadRoots(opts.rootPems ?? [readFileSync(APPLE_ROOT_G3, "utf8")]);
   }
 
@@ -142,12 +155,19 @@ export class AppStoreProvider implements BillingProvider {
 
   private async call<T>(path: string) {
     const f = this.opts.fetch ?? fetch;
-    return providerJson<T>(
-      "App Store Server API",
-      f(`${this.base}${path}`, {
+    const get = async (base: string) =>
+      f(`${base}${path}`, {
         headers: { authorization: `Bearer ${await this.bearer()}` },
         signal: AbortSignal.timeout(15_000),
-      }),
+      });
+    let res = await get(this.base).catch((err: Error) => err);
+    // Production answers 404 for a sandbox transaction, and 401 for everything until the app's
+    // first release is live; either way the sandbox may know it.
+    if (this.sandboxBase && res instanceof Response && (res.status === 404 || res.status === 401))
+      res = await get(this.sandboxBase).catch((err: Error) => err);
+    return providerJson<T>(
+      "App Store Server API",
+      res instanceof Response ? res : Promise.reject(res),
     );
   }
 

@@ -152,6 +152,8 @@ type AppleSub = {
   status: number;
   autoRenewStatus: number;
   revocationDate?: number;
+  /** Bought in the sandbox (TestFlight, App Review): only Apple's sandbox host knows it. */
+  sandbox?: boolean;
 };
 type PlaySub = {
   subscriptionState: string;
@@ -208,6 +210,8 @@ export interface FakeBilling {
     issuerId: string;
     privateKeyPem: string;
     subs: Map<string, AppleSub>;
+    /** Production answers 401 to everything, as it does until the app's first release. */
+    productionLocked: boolean;
     add(sub: Partial<AppleSub> & { productId: string }): AppleSub;
     notification(type: string, otid: string, subtype?: string, pki?: TestPki): Promise<string>;
   };
@@ -385,7 +389,8 @@ export async function startFakeBilling(
         return send(404, { code: "NOT_FOUND" });
       }
       // ---------------- App Store Server API
-      if (path.startsWith("/apple/")) {
+      const sandboxHost = path.startsWith("/apple-sandbox/");
+      if (path.startsWith("/apple/") || sandboxHost) {
         try {
           const token = (auth ?? "").replace("Bearer ", "");
           const { payload, protectedHeader } = await jwtVerify(
@@ -400,17 +405,20 @@ export async function startFakeBilling(
         } catch {
           return send(401, { errorCode: 4010000 });
         }
-        const p = path.slice(6);
+        if (!sandboxHost && self.apple.productionLocked) return send(401, {});
+        const p = path.slice(sandboxHost ? 14 : 6);
+        const here = (x: AppleSub | undefined) =>
+          x && !!x.sandbox === sandboxHost ? x : undefined;
         let m = p.match(/^\/inApps\/v1\/transactions\/([^/]+)$/);
         if (m) {
-          const s = [...appleSubs.values()].find((x) => x.transactionId === m?.[1]);
+          const s = here([...appleSubs.values()].find((x) => x.transactionId === m?.[1]));
           return s
             ? send(200, { signedTransactionInfo: await appleTx(s) })
             : send(404, { errorCode: 4040010 });
         }
         m = p.match(/^\/inApps\/v1\/subscriptions\/([^/]+)$/);
         if (m) {
-          const s = appleSubs.get(m[1] as string);
+          const s = here(appleSubs.get(m[1] as string));
           if (!s) return send(404, { errorCode: 4040005 });
           return send(200, {
             bundleId,
@@ -583,6 +591,7 @@ export async function startFakeBilling(
       issuerId,
       privateKeyPem: await exportPKCS8(appleKeys.privateKey),
       subs: appleSubs,
+      productionLocked: false,
       add(s) {
         const otid =
           s.originalTransactionId ?? String(2000000000 + Math.floor(Math.random() * 1e8));
@@ -594,6 +603,7 @@ export async function startFakeBilling(
           expiresDate: s.expiresDate ?? Date.now() + 30 * 86400_000,
           status: s.status ?? 1,
           autoRenewStatus: s.autoRenewStatus ?? 1,
+          sandbox: s.sandbox,
         };
         appleSubs.set(otid, sub);
         return sub;
@@ -689,6 +699,7 @@ export function billingEnv(f: FakeBilling): Record<string, string> {
     APP_STORE_PRIVATE_KEY: f.apple.privateKeyPem,
     APP_STORE_BUNDLE_ID: f.apple.bundleId,
     APP_STORE_API_URL: `${f.url}/apple`,
+    APP_STORE_SANDBOX_API_URL: `${f.url}/apple-sandbox`,
     APP_STORE_ROOT_CA: f.apple.pki.rootPem,
     GOOGLE_PLAY_SERVICE_ACCOUNT: JSON.stringify(f.google.serviceAccount),
     GOOGLE_PLAY_API_URL: `${f.url}/google`,

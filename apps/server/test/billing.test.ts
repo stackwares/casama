@@ -411,6 +411,42 @@ describe("billing on (Casama Cloud, Phase 7 gate)", () => {
     expect((await billing(mine)).subscriptions).toHaveLength(1);
   });
 
+  it("a sandbox App Store purchase is found in Apple's sandbox, before and after release", async () => {
+    // TestFlight, development builds and App Review buy in the sandbox. Production answers 404
+    // for those, and 401 for everything until the app's first release is live.
+    for (const locked of [true, false]) {
+      f.apple.productionLocked = locked;
+      const orgId = await newOrg(`TestFlight buyer ${locked}`);
+      const sub = f.apple.add({
+        productId: "ai.casama.pro.monthly",
+        appAccountToken: orgId,
+        sandbox: true,
+      });
+      const res = await h.request(`/v1/orgs/${orgId}/billing/purchases`, {
+        method: "POST",
+        token: owner.token,
+        json: {
+          source: "app_store",
+          product_id: "ai.casama.pro.monthly",
+          transaction_id: sub.transactionId,
+        },
+      });
+      expect(res.status).toBe(200);
+      expect((await billing(orgId)).plan_code).toBe("pro");
+      // Apple's notifications for it are checked against the sandbox too.
+      sub.autoRenewStatus = 0;
+      expect(
+        (
+          await hook(
+            "app_store",
+            await f.apple.notification("DID_CHANGE_RENEWAL_STATUS", sub.originalTransactionId),
+          )
+        ).status,
+      ).toBe(200);
+    }
+    f.apple.productionLocked = false;
+  });
+
   it("credit packs bought in the stores credit the workspace once (D-244)", async () => {
     const orgId = await newOrg("Pack buyer");
     const buy = (json: Record<string, unknown>, org = orgId) =>

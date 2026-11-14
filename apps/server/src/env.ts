@@ -114,6 +114,8 @@ export const EnvSchema = z.object({
   APP_STORE_BUNDLE_ID: z.string().default("ai.casama.app"),
   APP_STORE_ENVIRONMENT: z.enum(["production", "sandbox"]).default("production"),
   APP_STORE_API_URL: z.url().optional(),
+  /** Sandbox lookups (tests); defaults to Apple's sandbox, or none when APP_STORE_API_URL is set. */
+  APP_STORE_SANDBOX_API_URL: z.url().optional(),
   /** Extra trusted roots (PEM text, or PEM paths comma-separated); Apple Root CA - G3 is built in. */
   APP_STORE_ROOT_CA: z.string().optional(),
   /** Google Play Developer API (Android). The service account is JSON text or a path. */

@@ -41,6 +41,7 @@ export function billingFromEnv(
         bundleId: env.APP_STORE_BUNDLE_ID,
         environment: env.APP_STORE_ENVIRONMENT,
         baseUrl: env.APP_STORE_API_URL,
+        sandboxBaseUrl: env.APP_STORE_SANDBOX_API_URL,
         rootPems: [
           readFileSync(APPLE_ROOT_G3, "utf8"),
           ...(env.APP_STORE_ROOT_CA?.includes("-----BEGIN")
