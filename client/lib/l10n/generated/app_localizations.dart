@@ -2932,6 +2932,12 @@ abstract class AppLocalizations {
   /// **'Look closely before you allow this'**
   String get approvalLookClosely;
 
+  /// No description provided for @approvalDontAskAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t ask {bot} again for this'**
+  String approvalDontAskAgain(String bot);
+
   /// No description provided for @pageShareToPublic.
   ///
   /// In en, this message translates to:
@@ -5619,6 +5625,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sent'**
   String get botUiSent;
+
+  /// No description provided for @botUiConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get botUiConnected;
 
   /// Label above the picker for a bot's avatar (initials or a cloud mascot)
   ///
@@ -12646,12 +12658,6 @@ abstract class AppLocalizations {
   /// **'This invite is for {host}, and this app is connected to a different server.'**
   String inviteOtherServer(String host);
 
-  /// No description provided for @invitePeopleTo.
-  ///
-  /// In en, this message translates to:
-  /// **'Invite People to {name}'**
-  String invitePeopleTo(String name);
-
   /// No description provided for @inviteRenewed.
   ///
   /// In en, this message translates to:
@@ -12747,6 +12753,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Join with a link or code'**
   String get joinWithLinkOrCode;
+
+  /// No description provided for @spacesInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite people'**
+  String get spacesInvite;
+
+  /// No description provided for @spacesInviteTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To {name}'**
+  String spacesInviteTo(String name);
+
+  /// No description provided for @spacesNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New workspace'**
+  String get spacesNew;
+
+  /// No description provided for @spacesNewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Its own bots, people and billing'**
+  String get spacesNewHint;
+
+  /// No description provided for @spacesJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Join a workspace'**
+  String get spacesJoin;
+
+  /// No description provided for @spacesJoinHint.
+  ///
+  /// In en, this message translates to:
+  /// **'With an invite link or code'**
+  String get spacesJoinHint;
 
   /// No description provided for @joinWorkspaceNamed.
   ///
@@ -13828,6 +13870,12 @@ abstract class AppLocalizations {
   /// **'{price}, renewing automatically until you cancel. Cancel anytime from Billing; you keep the plan until the period ends.'**
   String paywallDisclosureWeb(String price);
 
+  /// No description provided for @paywallDisclosureWebTrial.
+  ///
+  /// In en, this message translates to:
+  /// **'Free for {days} days, then {price}, renewing automatically until you cancel. Cancel from Billing before the trial ends and you won\'t be charged.'**
+  String paywallDisclosureWebTrial(int days, String price);
+
   /// No description provided for @pricePerMonth.
   ///
   /// In en, this message translates to:
@@ -14769,6 +14817,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Billing period'**
   String get paywallBillingPeriod;
+
+  /// No description provided for @paywallSaveUpTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Save up to {pct}%'**
+  String paywallSaveUpTo(int pct);
+
+  /// No description provided for @paywallMostPopular.
+  ///
+  /// In en, this message translates to:
+  /// **'Most popular'**
+  String get paywallMostPopular;
+
+  /// No description provided for @paywallTaglinePlus.
+  ///
+  /// In en, this message translates to:
+  /// **'For you and a handful of bots'**
+  String get paywallTaglinePlus;
+
+  /// No description provided for @paywallTaglinePro.
+  ///
+  /// In en, this message translates to:
+  /// **'For a busy crew and a small team'**
+  String get paywallTaglinePro;
+
+  /// No description provided for @paywallTaglineMax.
+  ///
+  /// In en, this message translates to:
+  /// **'For teams with bots working all day'**
+  String get paywallTaglineMax;
+
+  /// No description provided for @paywallPerMonthShort.
+  ///
+  /// In en, this message translates to:
+  /// **'/mo'**
+  String get paywallPerMonthShort;
+
+  /// No description provided for @paywallBilledYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'{price} billed yearly'**
+  String paywallBilledYearly(String price);
+
+  /// No description provided for @paywallWorksOutTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Works out to {price}/mo'**
+  String paywallWorksOutTo(String price);
+
+  /// No description provided for @paywallBilledMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Billed monthly'**
+  String get paywallBilledMonthly;
+
+  /// No description provided for @paywallBilledYearlyPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'Billed yearly'**
+  String get paywallBilledYearlyPlain;
+
+  /// No description provided for @paywallPerYearShort.
+  ///
+  /// In en, this message translates to:
+  /// **'/yr'**
+  String get paywallPerYearShort;
+
+  /// No description provided for @paywallStartTrial.
+  ///
+  /// In en, this message translates to:
+  /// **'Start {n}-day free trial'**
+  String paywallStartTrial(int n);
+
+  /// No description provided for @paywallGetPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Get {plan}'**
+  String paywallGetPlan(String plan);
+
+  /// No description provided for @paywallPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 person} other{{count} people}}'**
+  String paywallPeople(int count);
+
+  /// No description provided for @paywallFactHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} computer hours'**
+  String paywallFactHours(int hours);
+
+  /// No description provided for @billingChangePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Change plan'**
+  String get billingChangePlan;
+
+  /// No description provided for @billingChangePlanBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare every plan, monthly or yearly.'**
+  String get billingChangePlanBody;
+
+  /// No description provided for @paywallWhatYouGet.
+  ///
+  /// In en, this message translates to:
+  /// **'What {plan} gets you'**
+  String paywallWhatYouGet(String plan);
 
   /// No description provided for @adminPricing.
   ///

@@ -19,7 +19,7 @@ import json, os, re, subprocess, tempfile
 from PIL import Image
 
 CLIENT = 'client'
-LIGHT, DARK = '#FCF3FB', '#25102F'  # sign-in background; the default dark wallpaper
+LIGHT, DARK = '#FFFFFF', '#1C1C1E'  # plain white; plain dark grey
 WIDTH = 160                        # cloud width in pt / CSS px (iOS, web, desktop)
 # Android 12+ draws the splash icon on a 288dp canvas and masks it to a 192dp circle: the cloud (tail and orb
 # included) is about square, so it must stay within 192/sqrt(2) ~ 136dp. Older Android shows the same size so the app

@@ -24,10 +24,8 @@ import '../../ui/app_card.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/shell_header.dart';
-import '../../ui/glow_button.dart';
 import '../../ui/mascot.dart';
 import 'credits_meter.dart';
-import 'purchase_terms.dart';
 import 'paywall.dart';
 
 /// Model input and output, shown together.
@@ -177,7 +175,7 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
               children: [
                 _CurrentPlan(summary: b, onManage: isAdmin && b.source_.value != 'default' ? () => _manage(b) : null).appCardEntrance(),
                 if (isAdmin && b.planCode == 'free') const _UpgradeBanner().appCardEntrance(),
-                if (isAdmin) ..._plans(context, b, channels),
+                if (isAdmin) ..._plans(context, b),
                 if (isAdmin && b.source_.value == 'dodo' && b.limits['extra_seat_usd'] != null) _ExtraPeople(summary: b),
                 // Credit packs come with a paid plan; a free workspace upgrades instead (D-246).
                 if (isAdmin && b.planCode != 'free') ..._packs(context, channels),
@@ -209,95 +207,39 @@ class _BillingScreenState extends ConsumerState<BillingScreen> {
     );
   }
 
-  List<Widget> _plans(BuildContext context, BillingSummary b, List<PurchaseChannel> channels) {
+  /// A paying workspace changes plans in the paywall, which lays the tiers and periods side by
+  /// side and knows which store or web checkout each can use (D-248). Free has the banner instead.
+  List<Widget> _plans(BuildContext context, BillingSummary b) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
-    final catalog = ref.watch(planCatalogProvider).value;
-    final products = ref.watch(storeProductsProvider).value ?? const {};
+    if (b.planCode == 'free') return const [];
     final source = ref.watch(storeProvider).source;
-    if (catalog == null) return const [];
     // One subscription per workspace (D-248): change plans where you subscribed.
-    final paidVia = b.planCode != 'free' ? b.source_.value : null;
-    final storeSub = paidVia == 'app_store' || paidVia == 'google_play';
-    final elsewhere = storeSub && paidVia != source;
-    final webSub = paidVia == 'dodo';
+    final paidVia = b.source_.value;
+    final elsewhere = (paidVia == 'app_store' || paidVia == 'google_play') && paidVia != source;
     return [
       SectionHeader(title: l10n.plans),
-      for (final p in catalog.plans.where((p) => p.interval.value != 'none'))
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppSpace.xs),
-          child: AppCard(
-            key: Key('plan-${p.code}'),
-            borderColor: p.code == b.planCode ? scheme.primary.withValues(alpha: 0.5) : null,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(p.code == b.planCode ? LucideIcons.circleCheck : LucideIcons.gem, size: 20, color: scheme.primary),
-                    const SizedBox(width: AppSpace.xs),
-                    Expanded(
-                      child: Text(p.name, style: context.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
-                    ),
-                    if (p.code == b.planCode) StatusLabel(text: l10n.currentPlan, color: scheme.primary, pill: true),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(_limitsText(context, p.limits), style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.4)),
-                if (p.code != b.planCode) ...[
-                  const SizedBox(height: AppSpace.sm),
-                  Wrap(
-                    spacing: AppSpace.xs,
-                    runSpacing: AppSpace.xs,
-                    children: [
-                      if (!webSub && !elsewhere && source != null && products[p.storeProductIds[source]] != null && channels.any((c) => c != PurchaseChannel.web))
-                        GlowButton.icon(
-                          key: Key('buyStore-${p.code}'),
-                          onPressed: () => _storeBuy(products[p.storeProductIds[source]]!),
-                          icon: const Icon(LucideIcons.shoppingBag, size: 18),
-                          // The period goes with the price (App Store 3.1.2).
-                          label: Text(
-                            l10n.subscribeFor(
-                              '${products[p.storeProductIds[source]]!.price} ${p.interval.value == 'year' ? l10n.pricePerYear : l10n.pricePerMonth}',
-                            ),
-                          ),
-                        ),
-                      if (!storeSub && channels.contains(PurchaseChannel.web) && p.web)
-                        OutlinedButton.icon(
-                          key: Key('buyWeb-${p.code}'),
-                          onPressed: () => _webCheckout(plan: p.code),
-                          icon: const Icon(LucideIcons.squareArrowOutUpRight, size: 18),
-                          label: Text(l10n.subscribeOnWeb),
-                        ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
+      GroupedCard(
+        children: [
+          GroupedTile(
+            key: const Key('changePlan'),
+            icon: LucideIcons.gem,
+            iconColor: scheme.primary,
+            title: l10n.billingChangePlan,
+            subtitle: l10n.billingChangePlanBody,
+            trailing: Icon(LucideIcons.chevronRight, size: 18, color: scheme.onSurfaceVariant),
+            onTap: () => openPaywall(context, source: 'settings'),
           ),
-        ),
+        ],
+      ),
       if (elsewhere)
         Padding(
-          padding: const EdgeInsets.only(bottom: AppSpace.xs),
+          padding: const EdgeInsets.only(top: AppSpace.xs),
           child: FormNote(
             l10n.subscribedInStoreNote(paidVia == 'app_store' ? 'the App Store' : 'Google Play'),
             key: const Key('billingChannelNote'),
           ),
         ),
-      // Renewal and cancellation terms, Terms of Use and Privacy, under every way to subscribe.
-      Padding(
-        padding: const EdgeInsets.only(top: AppSpace.xs),
-        child: Column(
-          children: [
-            Text(
-              channels.any((c) => c != PurchaseChannel.web) && source != null ? l10n.paywallFineStore : l10n.paywallFineWeb,
-              textAlign: TextAlign.center,
-              style: context.textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-            const PurchaseTerms(price: null, yearly: false, store: null),
-          ],
-        ),
-      ),
     ];
   }
 

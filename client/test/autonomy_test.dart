@@ -760,6 +760,40 @@ void main() {
     expect(find.byKey(const Key('chatApprove')), findsNothing);
   });
 
+  testWidgets('ticking "don\'t ask again" turns Allow into Always Allow', (tester) async {
+    await setSize(tester, const Size(500, 900));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const ChatScreen(botId: botId, conversationId: convId)));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('messageInput')), 'tidy up');
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('sendButton')));
+    await tester.pump();
+    backend.runEventsController.add(
+      ev(1, 'approval.requested', {
+        'approval_id': 'appr2',
+        'tool': 'shell.exec',
+        'args_redacted': {'cmd': 'ls'},
+        'risk': 'medium',
+        'expires_at': '2026-11-11T09:00:00.000Z',
+      }),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    // Medium risk: no warning box. The opt-in names the bot and starts unticked.
+    expect(find.byKey(const Key('approvalRisk')), findsNothing);
+    expect(find.text("Don't ask Ada again for this"), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const Key('chatApprove')), matching: find.text('Allow')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('chatAlwaysAllow')));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.widget<Checkbox>(find.byType(Checkbox)).value, isTrue);
+    expect(find.descendant(of: find.byKey(const Key('chatApprove')), matching: find.text('Always Allow')), findsOneWidget);
+    // Ticking alone decides nothing.
+    expect(backend.decisions, isEmpty);
+    await tester.tap(find.byKey(const Key('chatApprove')));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(backend.decisions, {'appr2': 'always'});
+  });
+
   testWidgets(
     'blank bots start unnamed (Chief if left empty) and default to DeepSeek V4.1 Flash 1017; the model comes from a searchable picker',
     (tester) async {

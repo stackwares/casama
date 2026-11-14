@@ -1248,6 +1248,10 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
   var _busy = false;
   String? _localDecision;
 
+  /// "Don't ask again" is ticked: Allow becomes Always Allow. A choice you opt into above the
+  /// buttons, never a third button under Allow where a slip would make it permanent.
+  var _always = false;
+
   Future<void> _decide(bool approve, {bool always = false}) async {
     HapticFeedback.mediumImpact();
     setState(() => _busy = true);
@@ -1305,7 +1309,6 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
     // Everyday words: what the bot wants to do, and what it's about. The command stays on the
     // card, because this is the moment someone decides; the raw request stays behind Details.
     final focus = words.detail ?? toolApprovalFocus(e.args);
-    final muted = context.colorScheme.onSurfaceVariant;
     return _ActionCard(
       key: const Key('chatApproval'),
       label: context.l10n.cardApproval,
@@ -1325,54 +1328,105 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
               style: context.textTheme.bodyMedium?.copyWith(height: 1.4),
             ),
           if (high)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpace.xs),
+            Container(
+              key: const Key('approvalRisk'),
+              margin: EdgeInsets.only(top: focus != null ? AppSpace.sm : 0),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: colors.negative.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Row(
                 children: [
-                  Icon(
-                    LucideIcons.triangleAlert,
-                    size: 15,
-                    color: colors.negative,
-                  ),
-                  const SizedBox(width: 6),
-                  Flexible(
+                  Icon(LucideIcons.triangleAlert, size: 16, color: colors.negative),
+                  const SizedBox(width: 10),
+                  Expanded(
                     child: Text(
                       l10n.approvalLookClosely,
-                      style: context.textTheme.labelMedium?.copyWith(
-                        color: colors.negative,
-                      ),
+                      style: context.textTheme.labelLarge?.copyWith(color: colors.negative, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ],
               ),
             ),
+          const SizedBox(height: AppSpace.xxs),
           _TechnicalDetails(tool: e.tool, args: e.args),
         ],
       ),
-      footer: ActionButtons(
-        actions: [
-          OutlinedButton(
-            key: const Key('chatDeny'),
-            onPressed: _busy ? null : () => _decide(false),
-            child: Text(l10n.notNow),
+      footer: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _DontAskAgain(
+            value: _always,
+            label: l10n.approvalDontAskAgain(widget.botName),
+            onChanged: _busy ? null : (v) => setState(() => _always = v),
           ),
-          GlowButton(
-            key: const Key('chatApprove'),
-            onPressed: _busy ? null : () => _decide(true),
-            child: Text(l10n.allow),
+          const SizedBox(height: AppSpace.sm),
+          ActionButtons(
+            actions: [
+              OutlinedButton(
+                key: const Key('chatDeny'),
+                onPressed: _busy ? null : () => _decide(false),
+                child: Text(l10n.notNow),
+              ),
+              GlowButton(
+                key: const Key('chatApprove'),
+                onPressed: _busy ? null : () => _decide(true, always: _always),
+                child: AnimatedSwitcher(
+                  duration: AppMotion.of(context, AppMotion.fast),
+                  child: Text(_always ? l10n.alwaysAllow : l10n.allow, key: ValueKey(_always)),
+                ),
+              ),
+            ],
           ),
         ],
-        extra: [
-          TextButton(
-            key: const Key('chatAlwaysAllow'),
-            onPressed: _busy ? null : () => _decide(true, always: true),
-            style: TextButton.styleFrom(
-              foregroundColor: muted,
-              visualDensity: VisualDensity.compact,
-            ),
-            child: Text(l10n.alwaysAllow),
+      ),
+    );
+  }
+}
+
+/// The "don't ask again" line above an approval's buttons: a checkbox and what it covers. The
+/// whole line is the tap target.
+class _DontAskAgain extends StatelessWidget {
+  const _DontAskAgain({required this.value, required this.label, required this.onChanged});
+  final bool value;
+  final String label;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final onChanged = this.onChanged;
+    return MergeSemantics(
+      child: InkWell(
+        key: const Key('chatAlwaysAllow'),
+        onTap: onChanged == null ? null : () => onChanged(!value),
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            children: [
+              SizedBox.square(
+                dimension: 20,
+                child: Checkbox(
+                  value: value,
+                  onChanged: onChanged == null ? null : (v) => onChanged(v ?? false),
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  style: context.textTheme.bodyMedium?.copyWith(color: value ? scheme.onSurface : scheme.onSurfaceVariant),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

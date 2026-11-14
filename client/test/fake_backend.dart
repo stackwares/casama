@@ -3895,6 +3895,9 @@ class FakeBackend implements Backend {
   var billingEnabled = false;
   var planCode = 'free';
   var billingSource = BillingSummarySource_Enum.default_;
+
+  /// Whether the owner can still start a plan's free trial (D-249).
+  var trialAvailable = false;
   final checkouts = <String>[];
   final verified = <String>[];
   final connectKeyNames = <String>[];
@@ -3935,6 +3938,7 @@ class FakeBackend implements Backend {
     validUntil: planCode == 'pro' ? DateTime.utc(2026, 12, 10) : null,
     source_: billingSource,
     cancelAtPeriodEnd: false,
+    trialAvailable: trialAvailable,
     creditsUsd: billingEnabled ? 1.0 + packCredits : 0,
     subscriptions: const [],
     providers: const [

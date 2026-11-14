@@ -19,9 +19,9 @@ class BrandSplash extends StatefulWidget {
   static const stillAsset = 'assets/mascots/brand-splash.png';
   static const lottieAsset = 'assets/mascots/brand.json';
 
-  /// Launch-screen background. The saved theme is not applied yet, so this follows the system.
-  static const lightBackground = Color(0xFFFCF3FB);
-  static const darkBackground = Color(0xFF25102F);
+  /// Launch-screen background: plain white or dark grey. The saved theme is not applied yet, so this follows the system.
+  static const lightBackground = Color(0xFFFFFFFF);
+  static const darkBackground = Color(0xFF1C1C1E);
 
   /// How the cloud leaves once the app is ready. [AppMotion.of] drops it to zero for Reduce Motion.
   static const exitDuration = Duration(milliseconds: 300);

@@ -1866,6 +1866,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get approvalLookClosely => 'Look closely before you allow this';
 
   @override
+  String approvalDontAskAgain(String bot) {
+    return 'Don\'t ask $bot again for this';
+  }
+
+  @override
   String get pageShareToPublic =>
       'Anyone with the link will be able to open it';
 
@@ -3640,6 +3645,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get botUiSent => 'Sent';
+
+  @override
+  String get botUiConnected => 'Connected';
 
   @override
   String get botIcon => 'Icon';
@@ -8062,11 +8070,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String invitePeopleTo(String name) {
-    return 'Invite People to $name';
-  }
-
-  @override
   String get inviteRenewed =>
       'The invite works for 7 more days. Send them the new link.';
 
@@ -8138,6 +8141,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get joinWithLinkOrCode => 'Join with a link or code';
+
+  @override
+  String get spacesInvite => 'Invite people';
+
+  @override
+  String spacesInviteTo(String name) {
+    return 'To $name';
+  }
+
+  @override
+  String get spacesNew => 'New workspace';
+
+  @override
+  String get spacesNewHint => 'Its own bots, people and billing';
+
+  @override
+  String get spacesJoin => 'Join a workspace';
+
+  @override
+  String get spacesJoinHint => 'With an invite link or code';
 
   @override
   String joinWorkspaceNamed(String name) {
@@ -8813,6 +8836,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String paywallDisclosureWebTrial(int days, String price) {
+    return 'Free for $days days, then $price, renewing automatically until you cancel. Cancel from Billing before the trial ends and you won\'t be charged.';
+  }
+
+  @override
   String get pricePerMonth => 'per month';
 
   @override
@@ -9410,6 +9438,86 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paywallBillingPeriod => 'Billing period';
+
+  @override
+  String paywallSaveUpTo(int pct) {
+    return 'Save up to $pct%';
+  }
+
+  @override
+  String get paywallMostPopular => 'Most popular';
+
+  @override
+  String get paywallTaglinePlus => 'For you and a handful of bots';
+
+  @override
+  String get paywallTaglinePro => 'For a busy crew and a small team';
+
+  @override
+  String get paywallTaglineMax => 'For teams with bots working all day';
+
+  @override
+  String get paywallPerMonthShort => '/mo';
+
+  @override
+  String paywallBilledYearly(String price) {
+    return '$price billed yearly';
+  }
+
+  @override
+  String paywallWorksOutTo(String price) {
+    return 'Works out to $price/mo';
+  }
+
+  @override
+  String get paywallBilledMonthly => 'Billed monthly';
+
+  @override
+  String get paywallBilledYearlyPlain => 'Billed yearly';
+
+  @override
+  String get paywallPerYearShort => '/yr';
+
+  @override
+  String paywallStartTrial(int n) {
+    return 'Start $n-day free trial';
+  }
+
+  @override
+  String paywallGetPlan(String plan) {
+    return 'Get $plan';
+  }
+
+  @override
+  String paywallPeople(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people',
+      one: '1 person',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallFactHours(int hours) {
+    final intl.NumberFormat hoursNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String hoursString = hoursNumberFormat.format(hours);
+
+    return '$hoursString computer hours';
+  }
+
+  @override
+  String get billingChangePlan => 'Change plan';
+
+  @override
+  String get billingChangePlanBody => 'Compare every plan, monthly or yearly.';
+
+  @override
+  String paywallWhatYouGet(String plan) {
+    return 'What $plan gets you';
+  }
 
   @override
   String get adminPricing => 'Pricing';

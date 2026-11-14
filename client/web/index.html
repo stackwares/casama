@@ -49,7 +49,7 @@
   <!-- Launch screen until Flutter draws its first frame (image from scripts/casama-splash.py).
        The float rests at the same centred 160px box Flutter's first frame draws. -->
   <style>
-    html, body { margin: 0; height: 100%; background: #FCF3FB; }
+    html, body { margin: 0; height: 100%; background: #FFFFFF; }
     #splash { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
     #splash img { width: 160px; height: auto; animation: casama-splash 2.6s ease-in-out infinite; }
     @keyframes casama-splash {
@@ -59,7 +59,7 @@
     @media (prefers-reduced-motion: reduce) {
       #splash img { animation: none; }
     }
-    @media (prefers-color-scheme: dark) { html, body { background: #25102F; } }
+    @media (prefers-color-scheme: dark) { html, body { background: #1C1C1E; } }
   </style>
 </head>
 <body>

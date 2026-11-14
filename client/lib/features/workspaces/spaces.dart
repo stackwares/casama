@@ -148,23 +148,24 @@ Future<void> showSpacesSheet(BuildContext context, WidgetRef ref) => showAdaptiv
           children: [
             Text(l10n.spaces, style: context.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: AppSpace.md),
+            // Where you are, and where else you can go: name and your role, the current one marked.
             GroupedCard(
               children: [
                 for (final o in orgs)
                   GroupedTile(
                     key: Key('space-${o.id}'),
                     icon: LucideIcons.building2,
+                    selected: o.id == current?.id,
                     leading: SpaceAvatar(name: o.name, icon: o.icon, color: o.color),
                     title: o.name,
+                    subtitle: _roleLabel(context, o.role),
+                    showChevron: false,
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
+                      spacing: AppSpace.xs,
                       children: [
                         if ((badges[o.id] ?? 0) > 0) Badge(label: Text('${badges[o.id]}', style: const TextStyle(fontFeatures: AppText.tabular))),
-                        if (o.id == current?.id)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8),
-                            child: Icon(LucideIcons.check, color: context.colorScheme.primary),
-                          ),
+                        if (o.id == current?.id) Icon(LucideIcons.check, size: 20, color: context.colorScheme.primary),
                       ],
                     ),
                     onTap: () {
@@ -176,37 +177,42 @@ Future<void> showSpacesSheet(BuildContext context, WidgetRef ref) => showAdaptiv
               ],
             ),
             JoinableWorkspacesSection(onJoined: () => Navigator.pop(c)),
-            const SizedBox(height: AppSpace.md),
-            OutlinedButton.icon(
-              key: const Key('newWorkspace'),
-              icon: const Icon(LucideIcons.plus, size: 18),
-              label: Text(l10n.newWorkspace),
-              onPressed: () async {
-                Navigator.pop(c);
-                await showAdaptiveSheet<void>(context: context, builder: (_) => const NewSpaceSheet());
-              },
-            ),
-            const SizedBox(height: AppSpace.sm),
-            if (current != null && current.role != OrgRole.member) ...[
-              OutlinedButton.icon(
-                key: const Key('invitePeople'),
-                icon: const Icon(LucideIcons.userPlus, size: 18),
-                label: Text(l10n.invitePeopleTo(current.name)),
-                onPressed: () {
-                  Navigator.pop(c);
-                  GoRouter.maybeOf(context)?.push('/settings/people');
-                },
-              ),
-              const SizedBox(height: AppSpace.sm),
-            ],
-            TextButton.icon(
-              key: const Key('joinWorkspace'),
-              icon: const Icon(LucideIcons.link, size: 18),
-              label: Text(l10n.joinWithLinkOrCode),
-              onPressed: () async {
-                Navigator.pop(c);
-                await showAdaptiveSheet<void>(context: context, builder: (_) => const JoinSpaceSheet());
-              },
+            const SizedBox(height: AppSpace.lg),
+            // Everything else is one menu: same rows, same weight, each with a line saying what it does.
+            GroupedCard(
+              children: [
+                if (current != null && current.role != OrgRole.member)
+                  GroupedTile(
+                    key: const Key('invitePeople'),
+                    icon: LucideIcons.userPlus,
+                    title: l10n.spacesInvite,
+                    subtitle: l10n.spacesInviteTo(current.name),
+                    onTap: () {
+                      Navigator.pop(c);
+                      GoRouter.maybeOf(context)?.push('/settings/people');
+                    },
+                  ),
+                GroupedTile(
+                  key: const Key('newWorkspace'),
+                  icon: LucideIcons.plus,
+                  title: l10n.spacesNew,
+                  subtitle: l10n.spacesNewHint,
+                  onTap: () async {
+                    Navigator.pop(c);
+                    await showAdaptiveSheet<void>(context: context, builder: (_) => const NewSpaceSheet());
+                  },
+                ),
+                GroupedTile(
+                  key: const Key('joinWorkspace'),
+                  icon: LucideIcons.link,
+                  title: l10n.spacesJoin,
+                  subtitle: l10n.spacesJoinHint,
+                  onTap: () async {
+                    Navigator.pop(c);
+                    await showAdaptiveSheet<void>(context: context, builder: (_) => const JoinSpaceSheet());
+                  },
+                ),
+              ],
             ),
           ],
         ),
@@ -214,6 +220,12 @@ Future<void> showSpacesSheet(BuildContext context, WidgetRef ref) => showAdaptiv
     },
   ),
 );
+
+String _roleLabel(BuildContext context, OrgRole role) => switch (role) {
+  OrgRole.owner => context.l10n.roleOwner,
+  OrgRole.admin => context.l10n.roleAdmin,
+  _ => context.l10n.roleMember,
+};
 
 /// The icon and color pickers shared by the new-workspace sheet and workspace settings.
 class _LookPicker extends StatelessWidget {

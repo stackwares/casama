@@ -185,12 +185,17 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Free'), findsOneWidget);
     expect(find.text(r'Credits: $1.00'), findsOneWidget);
-    expect(find.byKey(const Key('buyStore-pro')), findsNothing);
     expect(find.byKey(const Key('restorePurchases')), findsNothing);
-    await tester.tap(find.byKey(const Key('buyWeb-pro')));
-    await tester.pumpAndSettle();
+    // Free upgrades through the banner's paywall; there is no plan list to buy from here.
+    expect(find.byKey(const Key('changePlan')), findsNothing);
+    await tester.tap(find.byKey(const Key('openPaywall')));
+    await settle(tester);
+    await tester.tap(find.byKey(const Key('paywallBuy')));
+    await settle(tester);
     expect(backend.checkouts, ['pro']);
     expect(opened, ['https://checkout.example.com/pro']);
+    await tester.tap(find.byKey(const Key('paywallClose')));
+    await settle(tester);
     // Credit packs come with a paid plan; Free is offered the upgrade instead (D-246).
     expect(find.byKey(const Key('pack-credits_10')), findsNothing);
     // One row to Usage with the month's total; the full list lives there (D-182).
@@ -221,7 +226,7 @@ void main() {
     await tester.pumpWidget(app(FakeBackend()..billingEnabled = true));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('currentPlan')), findsOneWidget);
-    expect(find.byKey(const Key('buyWeb-pro')), findsOneWidget);
+    expect(find.byKey(const Key('openPaywall')), findsOneWidget);
     expect(find.text('Charges by server, Cloud Connect keys'), findsOneWidget);
     expect(find.byKey(const Key('createConnectKey')), findsNothing);
     expect(find.byKey(const Key('billedItems')), findsNothing);
@@ -245,12 +250,16 @@ void main() {
     final store = FakeStore('app_store', country: 'GBR');
     await tester.pumpWidget(app(backend, store: store, platform: TargetPlatform.iOS));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('buyWeb-pro')), findsNothing);
     expect(find.byKey(const Key('pack-credits_10')), findsNothing);
     expect(find.byKey(const Key('restorePurchases')), findsOneWidget);
-    expect(find.text(r'Subscribe for $9.99 per month'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('buyStore-pro')));
-    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('openPaywall')));
+    await settle(tester);
+    // App Store only: the store's price on the button, no web checkout.
+    expect(find.byKey(const Key('paywallWeb')), findsNothing);
+    expect(find.text(r'Subscribe for $9.99'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('paywallBuy')));
+    await settle(tester);
+    await tester.pump(const Duration(seconds: 5));
     expect(store.bought, ['dev.casama.pro.monthly@$orgId']);
     expect(backend.verified, ['app_store:dev.casama.pro.monthly:2000000123']);
     expect(store.completed, ['dev.casama.pro.monthly']);
@@ -258,13 +267,31 @@ void main() {
     expect(find.descendant(of: find.byKey(const Key('currentPlan')), matching: find.text('Pro')), findsOneWidget);
   });
 
+  testWidgets('a paying workspace changes plans in the paywall, not from a list of every plan', (tester) async {
+    await setSize(tester, const Size(430, 1800));
+    final backend = FakeBackend()
+      ..billingEnabled = true
+      ..planCode = 'pro'
+      ..billingSource = BillingSummarySource_Enum.dodo;
+    await tester.pumpWidget(app(backend));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('openPaywall')), findsNothing);
+    expect(find.byKey(const Key('plan-pro')), findsNothing);
+    await tester.ensureVisible(find.byKey(const Key('changePlan')));
+    await tester.tap(find.byKey(const Key('changePlan')));
+    await settle(tester);
+    expect(find.byType(PaywallScreen), findsOneWidget);
+  });
+
   testWidgets('iOS on the US storefront also offers web checkout', (tester) async {
     await setSize(tester, const Size(900, 1800));
     final backend = FakeBackend()..billingEnabled = true;
     await tester.pumpWidget(app(backend, store: FakeStore('app_store', country: 'USA'), platform: TargetPlatform.iOS));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('buyStore-pro')), findsOneWidget);
-    expect(find.byKey(const Key('buyWeb-pro')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('openPaywall')));
+    await settle(tester);
+    expect(find.text(r'Subscribe for $9.99'), findsOneWidget);
+    expect(find.byKey(const Key('paywallWeb')), findsOneWidget);
   });
 
   testWidgets('Android: Restore Purchases sends the purchase token to the server', (tester) async {
@@ -273,8 +300,6 @@ void main() {
     final store = FakeStore('google_play', country: 'USA');
     await tester.pumpWidget(app(backend, store: store, platform: TargetPlatform.android));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('buyWeb-pro')), findsNothing);
-    expect(find.text(r'Subscribe for $9.49 per month'), findsOneWidget);
     await tester.tap(find.byKey(const Key('restorePurchases')));
     await tester.pumpAndSettle();
     expect(store.restoredWith, orgId);
@@ -413,31 +438,43 @@ void main() {
         final opened = <String>[];
         await pumpPaywall(tester, backend, opened: opened);
         expect(find.byType(PaywallScreen), findsOneWidget);
-        // On a small phone the pickers sit below the mascots; the price card stays pinned.
+        // On a small phone the period toggle and the tier cards sit under the headline.
         await tester.scrollUntilVisible(find.byKey(const Key('paywallInterval-year')), 100,
             scrollable: find.descendant(of: find.byType(PaywallScreen), matching: find.byType(Scrollable)).first);
         await settle(tester);
+        // Yearly saves 16% on every tier here.
+        expect(find.text('Save up to 16%'), findsOneWidget);
         for (final t in ['plus', 'pro', 'max']) {
           await revealInPaywall(tester, find.byKey(Key('paywallTier-$t')));
           expect(find.byKey(Key('paywallTier-$t')), findsOneWidget);
         }
-        // From Free: Pro, yearly, with the price label (no store on desktop).
+        // From Free: Pro, yearly. Every tier shows its price a month, how it is billed and the
+        // monthly price it beats (no store on desktop, so the web price labels).
         expect(find.byKey(const Key('paywallPrice-pro_yearly')), findsOneWidget);
-        expect(find.text(r'$390 / year'), findsOneWidget);
-        expect(find.text('2 months free'), findsOneWidget);
-        expect(find.text('Yearly · 2 months free'), findsOneWidget);
+        Finder inPrice(String code, Finder f) => find.descendant(of: find.byKey(Key('paywallPrice-$code')), matching: f);
+        expect(inPrice('pro_yearly', find.text(r'$39 $32.50/mo', findRichText: true)), findsOneWidget);
+        expect(inPrice('pro_yearly', find.text(r'$390 billed yearly')), findsOneWidget);
+        expect(inPrice('pro_yearly', find.text('2 months free')), findsOneWidget);
+        // No trial open here, so the button names the plan.
+        expect(find.descendant(of: find.byKey(const Key('paywallBuy')), matching: find.text('Get Pro')), findsOneWidget);
 
+        await revealInPaywall(tester, find.byKey(const Key('paywallTier-max')));
         await tester.tap(find.byKey(const Key('paywallTier-max')));
         await settle(tester);
-        expect(find.byKey(const Key('paywallPrice-max_yearly')), findsOneWidget);
-        expect(find.text(r'$1,490 / year'), findsOneWidget);
+        expect(inPrice('max_yearly', find.text(r'$1,490 billed yearly')), findsOneWidget);
+        expect(find.descendant(of: find.byKey(const Key('paywallBuy')), matching: find.text('Get Max')), findsOneWidget);
 
+        await revealInPaywall(tester, find.byKey(const Key('paywallInterval-month')));
         await tester.tap(find.byKey(const Key('paywallInterval-month')));
         await settle(tester);
-        expect(find.byKey(const Key('paywallPrice-max')), findsOneWidget);
-        expect(find.text(r'$149 / month'), findsOneWidget);
-        // The perks compare Max with Free: 50 bots where Free has 2.
-        expect(find.text('50'), findsWidgets);
+        await revealInPaywall(tester, find.byKey(const Key('paywallPrice-max')));
+        expect(inPrice('max', find.text(r'$149/mo', findRichText: true)), findsOneWidget);
+        expect(find.byKey(const Key('paywallPrice-max_yearly')), findsNothing);
+        if (width < 600) {
+          // Phones compare Max with Free under the cards: 50 bots where Free has 2.
+          await revealInPaywall(tester, find.text('50'));
+          expect(find.text('50'), findsWidgets);
+        }
 
         await tester.tap(find.byKey(const Key('paywallBuy')));
         await settle(tester);
@@ -454,8 +491,35 @@ void main() {
         ..catalogPlans = pricingPlans();
       await pumpPaywall(tester, backend);
       expect(find.byKey(const Key('paywallPrice-pro_yearly')), findsOneWidget);
+      await revealInPaywall(tester, find.text('100 h'));
       expect(find.text('100 h'), findsOneWidget);
       expect(find.text('30 h'), findsOneWidget);
+      // Plus is marked as theirs; switching up is not a trial.
+      expect(find.descendant(of: find.byKey(const Key('paywallTier-plus')), matching: find.text('Current plan')), findsOneWidget);
+    });
+
+    testWidgets('a first-time Pro subscriber on the web is offered the trial, on the card and the button', (tester) async {
+      await setSize(tester, const Size(400, 900));
+      final backend = FakeBackend()
+        ..billingEnabled = true
+        ..trialAvailable = true
+        ..catalogPlans = [
+          for (final p in pricingPlans())
+            p.code.startsWith('pro')
+                ? Plan(code: p.code, name: p.name, interval: p.interval, limits: {...p.limits, 'trial_days': 7},
+                    priceLabel: p.priceLabel, web: p.web, storeProductIds: p.storeProductIds)
+                : p,
+        ];
+      final opened = <String>[];
+      await pumpPaywall(tester, backend, opened: opened);
+      expect(find.descendant(of: find.byKey(const Key('paywallTier-pro')), matching: find.text('7 days free')), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const Key('paywallTier-pro')), matching: find.text('Most popular')), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const Key('paywallBuy')), matching: find.text('Start 7-day free trial')), findsOneWidget);
+      // Max has no trial: its button names the plan.
+      await revealInPaywall(tester, find.byKey(const Key('paywallTier-max')));
+      await tester.tap(find.byKey(const Key('paywallTier-max')));
+      await settle(tester);
+      expect(find.descendant(of: find.byKey(const Key('paywallBuy')), matching: find.text('Get Max')), findsOneWidget);
     });
 
     testWidgets('on Pro yearly it opens on Max; picking the plan they have turns the button off', (tester) async {
@@ -466,6 +530,7 @@ void main() {
         ..catalogPlans = pricingPlans();
       await pumpPaywall(tester, backend);
       expect(find.byKey(const Key('paywallPrice-max_yearly')), findsOneWidget);
+      await revealInPaywall(tester, find.byKey(const Key('paywallTier-pro')));
       await tester.tap(find.byKey(const Key('paywallTier-pro')));
       await settle(tester);
       expect(find.descendant(of: find.byKey(const Key('paywallBuy')), matching: find.text('Current plan')), findsOneWidget);
@@ -474,19 +539,24 @@ void main() {
       expect(backend.checkouts, isEmpty);
     });
 
-    testWidgets('Android: the price card shows the store price, and the button buys that plan', (tester) async {
+    testWidgets('Android: the cards show the store price, and the button buys that plan', (tester) async {
       await setSize(tester, const Size(360, 740));
       final backend = FakeBackend()
         ..billingEnabled = true
         ..catalogPlans = pricingPlans();
       final store = FakeStore('google_play', country: 'USA');
       await pumpPaywall(tester, backend, store: store, platform: TargetPlatform.android);
+      // The store's button promises only its price: the store decides who gets its intro offer.
       expect(find.text(r'Subscribe for $9.49'), findsOneWidget);
-      expect(find.text(r'$9.49 / year'), findsOneWidget);
+      Finder inPrice(String code, Finder f) => find.descendant(of: find.byKey(Key('paywallPrice-$code')), matching: f);
+      // The fake store gives no number to divide, so the yearly price stands as it is, never the
+      // web's dollars beside the store's price.
+      expect(inPrice('pro_yearly', find.text(r'$9.49/yr', findRichText: true)), findsOneWidget);
+      expect(inPrice('pro_yearly', find.text('Billed yearly')), findsOneWidget);
       await revealInPaywall(tester, find.byKey(const Key('paywallInterval-month')));
       await tester.tap(find.byKey(const Key('paywallInterval-month')));
       await settle(tester);
-      expect(find.text(r'$9.49 / month'), findsOneWidget);
+      expect(inPrice('pro', find.text(r'$9.49/mo', findRichText: true)), findsOneWidget);
       await tester.tap(find.byKey(const Key('paywallBuy')));
       await settle(tester);
       expect(store.bought, ['casama_pro@$orgId']);
