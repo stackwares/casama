@@ -1,10 +1,12 @@
 import 'package:a2ui_core/a2ui_core.dart';
 import 'package:a2ui_flutter/a2ui_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/widgets.dart';
+import '../../integrations/integrations_screen.dart' show connectedAppIdsProvider;
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_tokens.dart';
 import 'bot_ui_components.dart';
@@ -20,6 +22,7 @@ class BotUiAction {
     required this.sourceComponentId,
     this.label,
     this.optionLabels = const {},
+    this.connectApps = const {},
   });
   final String surfaceId;
   final String name;
@@ -31,6 +34,9 @@ class BotUiAction {
 
   /// Choice values and what they say on screen ("email_calendar" -> "Email and calendar").
   final Map<String, String> optionLabels;
+
+  /// The apps the card's Connect buttons connect, to tell when all of them are.
+  final Set<String> connectApps;
 
   Map<String, Object?> toJson() => {'surface_id': surfaceId, 'name': name, 'context': context, 'source_component_id': sourceComponentId};
 }
@@ -68,6 +74,7 @@ class BotUiHost {
                   if (o['value'] case final String v)
                     if (o['label'] case final String l) v: l,
           },
+          connectApps: connectApps(a.surfaceId),
         ),
       );
     });
@@ -97,6 +104,12 @@ class BotUiHost {
     final text = components[child]?['text'];
     return text is String && text.trim().isNotEmpty ? text.trim() : null;
   }
+
+  /// The apps the Connect buttons on [surfaceId] connect ("app:connect" actions, D-256).
+  Set<String> connectApps(String surfaceId) => {
+    for (final c in (_components[surfaceId] ?? const {}).values)
+      if (c['action'] case {'event': {'name': 'app:connect', 'context': {'app': final String app}}}) app,
+  };
 
   /// The surface for [surfaceId], built from [messages] the first time it is asked for. Null when
   /// the messages don't describe a valid surface.
@@ -128,8 +141,9 @@ class BotUiHost {
 }
 
 /// A bot's interactive UI in the thread: a card around the A2UI surface. Once answered it stays
-/// visible, dimmed, with a note that it was sent.
-class BotUiCard extends StatelessWidget {
+/// visible, dimmed, with a note that it was sent. A card of Connect buttons closes the same way
+/// once all its apps are connected, from the card or anywhere else.
+class BotUiCard extends ConsumerWidget {
   const BotUiCard({super.key, required this.host, required this.surfaceId, required this.messages, this.answered = false});
   final BotUiHost host;
   final String surfaceId;
@@ -137,9 +151,12 @@ class BotUiCard extends StatelessWidget {
   final bool answered;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final scheme = context.colorScheme;
     final surface = host.surface(surfaceId, messages);
+    final apps = host.connectApps(surfaceId);
+    final connected = apps.isNotEmpty && (ref.watch(connectedAppIdsProvider).value?.containsAll(apps) ?? false);
+    final answered = this.answered || connected;
     final Widget body = surface == null
         ? Text(context.l10n.botUiBroken, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant))
         // Plain text in the card takes the body style; buttons and chips set their own.
@@ -177,7 +194,7 @@ class BotUiCard extends StatelessWidget {
                   children: [
                     Icon(LucideIcons.circleCheck, size: 14, color: context.appColors.positive),
                     const SizedBox(width: 6),
-                    Text(context.l10n.botUiSent, style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
+                    Text(connected ? context.l10n.botUiConnected : context.l10n.botUiSent, style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
                   ],
                 ),
               ],

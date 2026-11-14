@@ -155,6 +155,20 @@ final hubAppsProvider = FutureProvider<List<HubApp>>((ref) async {
   return bySlug.values.toList();
 });
 
+/// The catalog apps the workspace has connected, directly or through a hub, so a bot's Connect
+/// card can close once its apps are in.
+final connectedAppIdsProvider = FutureProvider<Set<String>>((ref) async {
+  final direct = await ref.watch(integrationsProvider.future);
+  final hubs = await ref.watch(hubAppsProvider.future);
+  return {
+    for (final i in direct)
+      if (i.appId case final String id when i.status == IntegrationStatusEnum.ok) id == 'gmail_inbox' ? 'gmail' : id,
+    for (final h in hubs)
+      if (h.status == ProviderAccountStatusEnum.connected)
+        if (h.app?.id case final String id) id,
+  };
+});
+
 /// Settings → Apps (D-089): the workspace's connections, and a catalog of apps to connect in one
 /// step (vendors' own MCP servers), plus Composio, Pipedream and custom servers for the rest.
 class IntegrationsScreen extends ConsumerStatefulWidget {

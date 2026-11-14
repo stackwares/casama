@@ -11,6 +11,7 @@ import '../settings/model_keys_screen.dart';
 import '../../theme/appearance.dart';
 import '../../theme/suggested_look.dart';
 import '../integrations/connect_app_sheet.dart';
+import '../integrations/integrations_screen.dart' show connectedAppIdsProvider;
 import 'widgets/bot_ui.dart';
 
 /// Card actions the app handles itself (D-129): "app:connect" opens a connection, "app:route" a
@@ -52,13 +53,26 @@ Future<bool> handleLocalUiAction(
         final connected = await showConnectApp(context, app);
         ref.invalidate(integrationsProvider);
         final after = ctx['after'];
-        if (connected != null && after is String && after.startsWith('welcome.') && send != null && context.mounted) {
+        if (connected == null || send == null || !context.mounted) return true;
+        if (after is String && after.startsWith('welcome.')) {
           await send(BotUiAction(
             surfaceId: action.surfaceId,
             name: after,
             context: {'app': app.id},
             sourceComponentId: action.sourceComponentId,
             // Shown in the chat as what the person did: "Connected Google Calendar".
+            optionLabels: {app.id: context.l10n.connectedAppSummary(app.name)},
+          ));
+        } else if (after == null) {
+          // A bot's Connect card: once every app on it is in, the person's answer is that they
+          // connected, so the bot goes on without being told "done".
+          final have = await ref.read(connectedAppIdsProvider.future).catchError((_) => <String>{});
+          if (!context.mounted || !{...have, app.id}.containsAll(action.connectApps)) return true;
+          await send(BotUiAction(
+            surfaceId: action.surfaceId,
+            name: 'connected',
+            context: {'app': app.id},
+            sourceComponentId: action.sourceComponentId,
             optionLabels: {app.id: context.l10n.connectedAppSummary(app.name)},
           ));
         }

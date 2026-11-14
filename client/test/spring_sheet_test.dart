@@ -76,4 +76,36 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.getTopLeft(find.byKey(const Key('sheetBody'))), first);
   });
+
+  testWidgets('tall content stops at 90% of the screen and scrolls inside the sheet', (tester) async {
+    await _phone(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => Center(
+              child: TextButton(
+                key: const Key('openSheet'),
+                onPressed: () => showAdaptiveSheet<void>(
+                  context: context,
+                  builder: (_) => SingleChildScrollView(
+                    child: Column(children: [for (var i = 0; i < 40; i++) SizedBox(height: 60, child: Text('Row $i'))]),
+                  ),
+                ),
+                child: const Text('Open'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const Key('openSheet')));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    final sheet = tester.getRect(find.byType(SheetContainer));
+    expect(sheet.height, closeTo(844 * 0.9, 0.5));
+    expect(sheet.bottom, 844);
+  });
 }

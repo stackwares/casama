@@ -123,6 +123,24 @@ describe("ui.show (D-086)", () => {
         { type: "ui", surface_id: "ui_1", messages: [] },
       ]),
     ).toContain("(You showed an interactive UI, ui_1.)");
+    const picker = [
+      { id: "root", component: "Column", children: ["q"] },
+      {
+        id: "q",
+        component: "ChoicePicker",
+        label: "Want me to take one of these?",
+        options: [
+          { label: "Diagnose the failing CI", value: "ci" },
+          { label: "Check PR #16", value: "pr" },
+        ],
+        value: { "@path": "/form/task" },
+      },
+    ];
+    expect(
+      partsText([{ type: "ui", surface_id: "ui_2", messages: surfaceMessages("ui_2", picker) }]),
+    ).toContain(
+      "(You showed an interactive UI, ui_2: Want me to take one of these? A) Diagnose the failing CI, B) Check PR #16.)",
+    );
     const answer = partsText([
       { type: "text", text: "plan: pro" },
       { type: "ui_action", surface_id: "ui_1", name: "choose", context: { plan: "pro" } },

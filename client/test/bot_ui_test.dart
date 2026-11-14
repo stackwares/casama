@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:casama_api/casama_api.dart' show Integration, IntegrationKind, IntegrationStatusEnum;
 import 'package:casama_app/core/backend.dart';
 import 'package:casama_app/features/chat/chat_screen.dart';
 import 'package:casama_app/features/chat/widgets/bot_ui.dart';
@@ -91,6 +92,62 @@ void main() {
     expect(backend.sent.last, 'pro');
     // Answered: still visible, marked as sent.
     expect(find.text('Sent'), findsOneWidget);
+  });
+
+  testWidgets('a Connect card closes once its app is connected', (tester) async {
+    await setSize(tester, const Size(500, 900));
+    const id = 'ui_connect';
+    final backend = FakeBackend()
+      ..integrationList.add(
+        Integration(
+          id: 'i1',
+          orgId: 'org',
+          kind: IntegrationKind.mcp,
+          name: 'Google Calendar',
+          appId: 'googlecalendar',
+          status: IntegrationStatusEnum.ok,
+          error: null,
+          tools: const [],
+          toolsCachedAt: null,
+          createdAt: DateTime(2026),
+        ),
+      )
+      ..storedMessages = [
+        ChatMessageView(
+          id: 'msg-1',
+          role: 'assistant',
+          text: 'One thing first:',
+          createdAt: DateTime(2026),
+          ui: [
+            UiPart(
+              surfaceId: id,
+              messages: [
+                {
+                  'version': '1.0',
+                  'createSurface': {'surfaceId': id, 'catalogId': 'https://a2ui.org/specification/v1_0/catalogs/basic/catalog.json'},
+                },
+                {
+                  'version': '1.0',
+                  'updateComponents': {
+                    'surfaceId': id,
+                    'components': [
+                      {'id': 'root', 'component': 'Button', 'child': 'label', 'variant': 'primary', 'action': {
+                        'event': {'name': 'app:connect', 'context': {'app': 'googlecalendar'}},
+                      }},
+                      {'id': 'label', 'component': 'Text', 'text': 'Connect Google Calendar'},
+                    ],
+                  },
+                },
+              ],
+            ),
+          ],
+        ),
+      ];
+    await tester.pumpWidget(harness(backend, const ChatScreen(botId: botId, conversationId: convId)));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Connect Google Calendar'), findsOneWidget);
+    expect(find.text('Connected'), findsOneWidget);
   });
 
   testWidgets('radio and checkbox pickers from the basic catalog render (they need an SDK Material)', (tester) async {

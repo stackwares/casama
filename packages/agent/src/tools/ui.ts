@@ -55,14 +55,41 @@ Give a flat list of components; the one with id "root" is the top. Containers na
 - Button: {child: id of a Text, variant?: "primary"|"default"|"borderless", action: {event: {name, context?}}}
 - TextField: {label, value: {"@path": "/form/x"}, placeholder?, variant?: "shortText"|"longText"|"number"}
 - CheckBox: {label, value: {"@path": "/form/agree"}}
-- ChoicePicker: {label?, options: [{label, value}], value: {"@path": "/form/plan"}, variant?: "mutuallyExclusive"|"multipleSelection", displayStyle?: "chips"|"checkbox"}. Its value is a list of strings. The default allows one choice; when the person may pick several ("pick any", "all that apply"), set variant "multipleSelection".
+- ChoicePicker: {label?, options: [{label, value}], value: {"@path": "/form/plan"}, variant?: "mutuallyExclusive"|"multipleSelection", displayStyle?: "chips"|"checkbox"}. Its value is a list of strings. The default allows one choice; when the person may pick several ("pick any", "all that apply"), set variant "multipleSelection". Without displayStyle "chips" it shows as a lettered list: A, B, C… in the order you give.
 - Slider: {label?, min?, max, value: {"@path": "/form/n"}}
 - DateTimeInput: {value: {"@path": "/form/when"}, enableDate?: true, enableTime?: true, label?}
 - Image: {url, description?}. Icon: {name}, e.g. "check", "info", "event", "mail".
 
-Inputs keep their values at their data path; bind with {"@path": "/form/x"} (note the @). A Button's action sends an event to you; put the values you need in its context with paths, e.g. {"event": {"name": "submit", "context": {"plan": {"@path": "/form/plan"}, "note": {"@path": "/form/note"}}}}. For simple choices make one Button per option with a literal context, e.g. {"event": {"name": "choose", "context": {"plan": "pro"}}}. Inputs alone send nothing: every UI with inputs needs a Button that sends them (one is added if you leave it out). Always leave the person a way out: next to a single Go/Send/Confirm button, add a borderless "Skip" or "Not now" (a Skip is added if a UI has only one button).
+Inputs keep their values at their data path; bind with {"@path": "/form/x"} (note the @). A Button's action sends an event to you; put the values you need in its context with paths, e.g. {"event": {"name": "submit", "context": {"plan": {"@path": "/form/plan"}, "note": {"@path": "/form/note"}}}}. To ask the person to pick between options (which plan, which task to take on, "want me to do one of these?"), use one ChoicePicker with the question as its label, not a Button per option: they tap a letter, or just type it ("B", "A and C", "2"). Keep Buttons for actions (Connect, Confirm, Open), not answers. Inputs alone send nothing: every UI with inputs needs a Button that sends them (one is added if you leave it out). Always leave the person a way out: next to a single Go/Send/Confirm button, add a borderless "Skip" or "Not now" (a Skip is added if a UI has only one button).
 
-After calling this, end your turn: the person's choice arrives as their next message.`;
+After calling this, end your turn: the person's choice arrives as their next message. If they type letters or numbers instead of tapping, read them as those options of your last list (A or 1 is the first).`;
+
+/**
+ * The lettered options of each list question on a shown UI ("Which plan? A) Basic, B) Pro"), so
+ * that on a later turn a typed "B" means something to the model. Chip pickers have no letters.
+ */
+export function uiChoiceLines(messages: unknown): string[] {
+  if (!Array.isArray(messages)) return [];
+  const lines: string[] = [];
+  for (const m of messages) {
+    const comps = (m as { updateComponents?: { components?: unknown } })?.updateComponents
+      ?.components;
+    if (!Array.isArray(comps)) continue;
+    for (const c of comps as Array<Record<string, unknown>>) {
+      if (c?.component !== "ChoicePicker" || c.displayStyle === "chips" || c.filterable) continue;
+      const opts = (Array.isArray(c.options) ? c.options : [])
+        .map((o) => (o as { label?: unknown; value?: unknown }) ?? {})
+        .map((o) => String(typeof o.label === "string" ? o.label : (o.value ?? "")))
+        .filter(Boolean);
+      if (!opts.length) continue;
+      const list = opts.map((o, i) => `${String.fromCharCode(65 + (i % 26))}) ${o}`).join(", ");
+      const label = typeof c.label === "string" && c.label.trim() ? `${c.label.trim()} ` : "";
+      const many = c.variant === "multipleSelection" ? " (pick any)" : "";
+      lines.push(`${label}${list}${many}`);
+    }
+  }
+  return lines;
+}
 
 /** A2UI v1.0 binds data with "@path"; models often write "path" (the v0.9 form). Fix it up. */
 export function normalizeBindings(value: unknown): unknown {

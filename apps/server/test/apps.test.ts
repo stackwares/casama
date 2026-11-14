@@ -17,7 +17,7 @@ import { type Harness, j, startHarness } from "./helpers.ts";
  */
 let vendor: Server;
 let base = "";
-const issued = { challenge: "", registered: 0, refreshed: 0 };
+const issued = { challenge: "", registered: 0, refreshed: 0, confidential: false };
 const valid = new Set(["key-123"]);
 
 async function startVendor() {
@@ -57,10 +57,16 @@ async function startVendor() {
     if (p === "/register") {
       issued.registered++;
       const body = JSON.parse(raw);
+      // Like Composio's: a confidential client with a secret unless a public one is asked for,
+      // even though the token endpoint only announces `none`.
+      if (body.token_endpoint_auth_method === "none")
+        return json(res, 201, { ...body, client_id: "casama-client" });
+      issued.confidential = true;
       return json(res, 201, {
         ...body,
         client_id: "casama-client",
-        token_endpoint_auth_method: "none",
+        client_secret: "shh",
+        token_endpoint_auth_method: "client_secret_basic",
       });
     }
     if (p === "/authorize") {
@@ -73,6 +79,11 @@ async function startVendor() {
     }
     if (p === "/token") {
       const form = new URLSearchParams(raw);
+      if (issued.confidential && !req.headers.authorization && !form.get("client_secret"))
+        return json(res, 401, {
+          error: "invalid_client",
+          error_description: "Missing client_secret.",
+        });
       if (form.get("grant_type") === "authorization_code") {
         const verifier = form.get("code_verifier") ?? "";
         const challenge = createHash("sha256").update(verifier).digest("base64url");

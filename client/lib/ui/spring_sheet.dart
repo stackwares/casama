@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/physics.dart';
 
@@ -59,6 +61,13 @@ class SpringSheetRoute<T> extends PopupRoute<T> {
 
   // The widest the sheet grows, like Material's bottom sheet.
   static const double _maxWidth = 640;
+
+  // The tallest the sheet grows: 90% of the space above the keyboard, and
+  // always at least this much of the screen behind showing under the status
+  // bar, so it still reads as a sheet you can pull away. Taller content
+  // scrolls inside it.
+  static const double _maxHeightFactor = 0.9;
+  static const double _minTopGap = 48;
 
   // Release velocity in sheet heights per second (positive is downward),
   // carried from the drag into the close simulation.
@@ -167,6 +176,12 @@ class SpringSheetRoute<T> extends PopupRoute<T> {
 
   @override
   Widget buildPage(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
+    final MediaQueryData view = MediaQuery.of(context);
+    final double keyboard = view.viewInsets.bottom;
+    final double available = view.size.height - keyboard;
+    // The content pads itself above the keyboard, so the keyboard's height
+    // goes on top of the cap.
+    final double maxHeight = keyboard + math.max(0.0, math.min(available * _maxHeightFactor, available - view.padding.top - _minTopGap));
     final Widget sheet = Align(
       alignment: Alignment.bottomCenter,
       child: ConstrainedBox(
@@ -200,7 +215,10 @@ class SpringSheetRoute<T> extends PopupRoute<T> {
                     namesRoute: true,
                     explicitChildNodes: true,
                     label: MaterialLocalizations.of(context).bottomSheetLabel,
-                    child: SheetContainer(child: builder(context)),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxHeight: maxHeight),
+                      child: SheetContainer(child: builder(context)),
+                    ),
                   ),
                 ),
               );

@@ -169,7 +169,7 @@ import {
 } from "./team-computer.ts";
 import { ticketAfterRun, ticketStarted } from "./tickets.ts";
 import { type ToolDefinition, ToolError, type ToolRegistry } from "./tools/registry.ts";
-import { UI_SHOWN_RESULT } from "./tools/ui.ts";
+import { UI_SHOWN_RESULT, uiChoiceLines } from "./tools/ui.ts";
 
 /** Runs fn as a durable, checkpointed step (DBOS.runStep in the worker; direct call in tests). */
 export type StepRunner = <T>(name: string, fn: () => Promise<T>) => Promise<T>;
@@ -353,10 +353,23 @@ export function partsText(content: unknown): string {
   const notes: string[] = [];
   for (const p of content) {
     if (!p || typeof p !== "object") continue;
-    const part = p as { type?: string; surface_id?: unknown; name?: unknown; context?: unknown };
-    // D-086: interactive UI the bot showed, and what the person did on it.
-    if (part.type === "ui")
-      notes.push(`(You showed an interactive UI, ${String(part.surface_id)}.)`);
+    const part = p as {
+      type?: string;
+      surface_id?: unknown;
+      name?: unknown;
+      context?: unknown;
+      messages?: unknown;
+    };
+    // D-086: interactive UI the bot showed, and what the person did on it. Its lettered options
+    // ride along, so a typed "B" on the next turn can be read as that option.
+    if (part.type === "ui") {
+      const choices = uiChoiceLines(part.messages);
+      notes.push(
+        choices.length
+          ? `(You showed an interactive UI, ${String(part.surface_id)}: ${choices.join("; ")}.)`
+          : `(You showed an interactive UI, ${String(part.surface_id)}.)`,
+      );
+    }
     if (part.type === "page")
       notes.push(
         `(A card that opens your page "${String((p as { title?: unknown }).title ?? "")}" showed under your reply, page ${String((p as { page_id?: unknown }).page_id)}.)`,

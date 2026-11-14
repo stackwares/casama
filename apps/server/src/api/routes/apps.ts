@@ -74,6 +74,12 @@ export function preregisteredClients(
   return out;
 }
 
+/** The authorization server announces only `none` for its token endpoint (no client secrets). */
+export function publicClientOnly(metadata?: { token_endpoint_auth_methods_supported?: string[] }) {
+  const methods = metadata?.token_endpoint_auth_methods_supported;
+  return !!methods?.length && methods.every((m) => m === "none");
+}
+
 /**
  * Where vendors send people back after signing in. Vendors only accept https or localhost, so a
  * server reached on a private network address over http (local development) comes back to
@@ -448,6 +454,11 @@ export function registerAppRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps, opts:
             redirect_uris: [redirectUri(c)],
             grant_types: ["authorization_code", "refresh_token"],
             response_types: ["code"],
+            // A server that takes no client secret at its token endpoint gets asked for a public
+            // client: Composio otherwise registers a confidential one with a secret, the SDK then
+            // follows the announced methods and sends none, and the token exchange fails with
+            // "Missing client_secret".
+            ...(publicClientOnly(metadata) ? { token_endpoint_auth_method: "none" } : {}),
           },
           scope: scopes,
           fetchFn: fetchImpl as never,
