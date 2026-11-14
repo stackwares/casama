@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -66,6 +66,9 @@ describe.skipIf(!enabled)("object stores on S3", () => {
         ],
       }),
     );
+    // mkdtemp makes the folder 0700; the container's user isn't us on Linux, so let it read the config.
+    await chmod(cfgDir, 0o755);
+    await chmod(join(cfgDir, "s3.json"), 0o644);
     await run("docker", [
       "run",
       "-d",
@@ -95,8 +98,8 @@ describe.skipIf(!enabled)("object stores on S3", () => {
       forcePathStyle: true,
       credentials: creds,
     });
-    // SeaweedFS starts its master, volume, filer and S3 gateway in turn; a CI runner can take well
-    // over the 15 s a laptop does, so allow two minutes and show its logs if it never answers.
+    // SeaweedFS starts its master, volume, filer and S3 gateway in turn; allow two minutes on a slow
+    // runner, and show its logs if it never answers.
     for (let i = 0; ; i++) {
       try {
         await s3.send(new CreateBucketCommand({ Bucket: "casama" }));
