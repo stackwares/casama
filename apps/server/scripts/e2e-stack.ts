@@ -12,7 +12,7 @@ import { startTestDatabase } from "@casama/db/testing";
 import { createLogger } from "@casama/observability";
 import { startSandboxStack } from "@casama/sandbox/testing";
 import { serve } from "@hono/node-server";
-import { SignJWT } from "jose";
+import { jwtVerify, SignJWT } from "jose";
 import { createApp } from "../src/api/app.ts";
 import { createTokenVerifier } from "../src/api/auth.ts";
 import { attachTerminal } from "../src/api/routes/computers.ts";
@@ -74,6 +74,16 @@ const auth = createServer(async (req, res) => {
     const user = users.get(email);
     if (!user) return send(400, { error_description: "Unknown user" });
     return send(200, await session(user.id, email));
+  }
+  // The CLI reads the account after signing in to see whether it needs a second step (D-092).
+  if (url.pathname === "/auth/v1/user" && req.method === "GET") {
+    const token = (req.headers.authorization ?? "").replace(/^Bearer /i, "");
+    try {
+      const { payload } = await jwtVerify(token, new TextEncoder().encode(secret));
+      return send(200, { id: payload.sub, email: payload.email, factors: [] });
+    } catch {
+      return send(401, { msg: "Invalid token" });
+    }
   }
   send(404, { msg: "not found" });
 });

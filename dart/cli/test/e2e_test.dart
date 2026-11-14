@@ -156,7 +156,8 @@ void main() {
     expect(err, contains('→ shell.exec'));
 
     final report = File('$dir/report.md');
-    (code, out, err) = await raw(['computer', 'files', 'get', 'report.md', '-O', report.path]);
+    // On a team computer each bot works in its own folder, ~/workspace/bots/<name> (D-148).
+    (code, out, err) = await raw(['computer', 'files', 'get', 'bots/scout/report.md', '-O', report.path]);
     expect(code, 0, reason: err);
     expect(report.readAsStringSync(), contains('Example Domain'));
 
