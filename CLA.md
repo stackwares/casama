@@ -31,4 +31,5 @@ any work you submit to the Casama repository, in a pull request or otherwise.
 
 6. **Signing.** Comment on your pull request: "I have read the Casama CLA (CLA.md) and I agree to
    it." That comment, tied to your GitHub account, is your signature for this and future
-   Contributions.
+   Contributions. The CLA check on the pull request asks for it and records it; comment "recheck"
+   if the check doesn't turn green.

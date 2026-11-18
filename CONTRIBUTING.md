@@ -189,6 +189,7 @@ change or have the right to submit it under the project license.
 Your contribution is published under the license of the folder you change: AGPL-3.0 for the
 product, Apache-2.0 for the SDKs, CLI, plugin kit, examples and docs, and the Casama Enterprise
 License inside `ee/`. Every contributor signs the one-time
-[Contributor License Agreement](CLA.md) by commenting on their first pull request. You keep your
+[Contributor License Agreement](CLA.md) by commenting on their first pull request (the CLA check
+asks for the exact sentence and records it). You keep your
 copyright; the CLA lets Stackwares also offer the code under a commercial license and ship the apps
 in the app stores. [LICENSING.md](LICENSING.md) has the details and says which features go where.
