@@ -18,6 +18,7 @@
       "!**/*.md",
       "!site",
       "!gallery",
+      "!docs/media",
       "!docs-site/public/brand",
       "!link-site/assets/brand",
       "!infra/helm/**/templates",
