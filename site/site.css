@@ -367,6 +367,9 @@ button { cursor: pointer; }
 @media (hover: hover) and (pointer: fine) { .film-close:hover { background: rgba(255, 255, 255, .24); } }
 .film-note { margin-top: 12px; font-size: 13px; color: rgba(255, 255, 255, .7); text-align: center; }
 @media (max-width: 600px) { .film-video { border-radius: 12px; } }
+/* A phone held upright plays the 9:16 film (site.js adds .film--tall when it opens the dialog). */
+.film--tall { width: min(92vw, calc(74vh * 9 / 16)); }
+.film--tall .film-video { aspect-ratio: 9 / 16; max-height: 74vh; }
 /* A phone on its side has no room above the video, so the close button sits on it. */
 @media (max-height: 500px) { .film-close { top: 8px; right: 8px; z-index: 1; background: rgba(0, 0, 0, .5); } .film-note { margin-top: 6px; } }
 @media (prefers-reduced-motion: reduce) { .film[open] { animation: none; } }

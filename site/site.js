@@ -67,12 +67,25 @@
     }
   }
 
-  // The film (D-390): "Watch the film" opens the 86-second film with sound in a dialog (16:9 on every
-  // screen). casama.ai/#film opens it straight away. Without JavaScript the links open the file.
+  // The film (D-390): "Watch the film" opens the 86-second film with sound in a dialog. A phone held
+  // upright gets the 9:16 film, which fills its screen; everything else gets 16:9. The choice is made
+  // each time the dialog opens. casama.ai/#film opens it straight away. Without JavaScript the links
+  // open the 16:9 file.
   var filmVideo = film && film.querySelector(".film-video");
   if (film && filmVideo && typeof film.showModal === "function") {
+    var wide = {src: filmVideo.getAttribute("src"), poster: filmVideo.getAttribute("poster")};
+    var tall = {src: filmVideo.getAttribute("data-src-tall"), poster: filmVideo.getAttribute("data-poster-tall")};
+    var upright = window.matchMedia ? window.matchMedia("(orientation: portrait) and (max-width: 600px)") : null;
     var openFilm = function () {
       if (reel) reel.pause();
+      var useTall = !!(tall.src && upright && upright.matches);
+      var pick = useTall ? tall : wide;
+      film.classList.toggle("film--tall", useTall);
+      if (filmVideo.getAttribute("src") !== pick.src) {
+        filmVideo.setAttribute("poster", pick.poster);
+        filmVideo.setAttribute("src", pick.src);
+        filmVideo.load();
+      }
       film.showModal();
       playQuietly(filmVideo);
     };
