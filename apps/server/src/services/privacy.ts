@@ -103,6 +103,13 @@ export async function exportUserData(db: Database, claims: JwtClaims) {
         ),
       },
       push_devices: await q(sql`select * from public.devices where user_id = ${claims.sub}::uuid`),
+      // Casama's monthly email (D-408): the choice and when it was made.
+      newsletter:
+        (
+          await q(
+            sql`select subscribed, changed_via, changed_at, asked_at from public.newsletter_subscriptions where user_id = ${claims.sub}::uuid`,
+          )
+        )[0] ?? null,
       // Device connections (D-149): the person's own shared device data.
       device_sources: await q(
         sql`select id, name, platform, kinds, last_seen_at, created_at from public.device_sources where user_id = ${claims.sub}::uuid`,

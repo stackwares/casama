@@ -3,6 +3,7 @@
  * fails, the webhook that turns it off, email changes and account deletion.
  */
 import { sql } from "drizzle-orm";
+import { strFromU8, unzipSync } from "fflate";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   applyResendEvent,
@@ -190,6 +191,15 @@ describe("monthly email on Casama Cloud (D-408)", () => {
     );
     await put(ben.token, { subscribed: false });
     expect((await row(ana.id))?.subscribed).toBe(true);
+  });
+
+  it("is in the person's data export, without the address Resend has", async () => {
+    const res = await h.request("/v1/me/export", { token: ana.token });
+    expect(res.status).toBe(200);
+    const files = unzipSync(new Uint8Array(await res.arrayBuffer()));
+    const account = JSON.parse(strFromU8(files["account.json"] as Uint8Array));
+    expect(account.newsletter).toMatchObject({ subscribed: true });
+    expect(account.newsletter.resend_email).toBeUndefined();
   });
 
   it("an email change moves the contact to the new address", async () => {
