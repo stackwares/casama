@@ -50,7 +50,8 @@ self-host with any AI model, and it is also offered as Casama Cloud.
   $99 a month. [Pricing](https://casama.ai/pricing)
 - **Where it runs:** your own server, Mac or Linux computer (Docker and 8 GB of memory), or Casama Cloud.
 - **Status:** pre-1.0. Expect rough edges, and please [report them](https://github.com/stackwares/casama/issues).
-- **Made by:** Stackwares.
+- **Made by:** Stackwares: Oliver Martinez (founder and CEO), Anna May A. Valdez (co-founder, product),
+  April Dawn D. Martinez (customer success) and Kelly Avia Martinez (social and community). [About](https://casama.ai/about#who-makes-it)
 - **Links:** [casama.ai](https://casama.ai) · [docs](https://docs.casama.ai) ·
   [gallery](https://gallery.casama.ai) · [download](https://casama.ai/download) ·
   [web app](https://app.casama.ai)

@@ -5852,3 +5852,9 @@ cookies and could set cookies on `.casama.ai`.
 - **Sign-up box timing:** the account may not exist until the address is confirmed, so the box's answer waits on the device (`casama.newsletter.signup`) and is sent once the account signs in, only if the app hasn't asked yet.
 - **Not done:** the switch doesn't learn about a casama.ai form sign-up (it only turns off from Resend's side, never on); sign-up with an email code, Apple or Google gets the card instead of a box; no app build or deploy yet. Privacy policy updated (Resend listed, consent, retention).
 - **Tests:** `apps/server/test/newsletter.test.ts`, `supabase/tests/newsletter_rls.test.sql`, `client/test/newsletter_test.dart`.
+
+## D-409 The founding team on casama.ai/about and in the README
+
+- **Decision (2026-11-19, Oliver: "apply them all now"):** casama.ai/about's "Who makes it" and the README's "Made by" name the founding team: Oliver Martinez (Founder & CEO), Anna May A. Valdez (Co-founder & Head of Product), April Dawn D. Martinez (Head of Customer Success) and Kelly Avia Martinez (Head of Social & Community).
+- **Why these titles:** "founder" only for people who own a core part of the company; support and social are founding-team roles, credited by name without founder titles or founder equity.
+- **Not changed:** GOVERNANCE.md maintainers, CODEOWNERS and the CLA allowlist stay `oliverbytes` until the others have GitHub accounts on the project and their work is covered by an assignment agreement (D-407). Stackwares is still unregistered; equity, vesting and IP assignment wait for the company and a lawyer.

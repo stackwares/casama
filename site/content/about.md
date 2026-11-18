@@ -4,7 +4,7 @@ h1: About Casama
 crumb: About
 description: Casama is an open-source app for AI teammates with their own computers, made by Stackwares. Who we are, how to reach us, and a press kit.
 lead: Casama is an open-source app for AI teammates that each have their own computer. They remember, work while you're away and ask before anything risky.
-updated: 2026-11-18
+updated: 2026-11-19
 schema: about
 ---
 
@@ -38,11 +38,23 @@ same name.
 
 ## Who makes it
 
-Casama is made by Stackwares, a small software company.
+Casama is made by Stackwares, a small software company. This is the founding team.
 
-<h3 id="oliver">Oliver Martinez</h3>
+<h3 id="oliver">Oliver Martinez, Founder &amp; CEO</h3>
 
-Oliver Martinez builds Casama at Stackwares and writes the posts on the [blog](/blog/).
+Oliver Martinez started Casama, builds it and writes the posts on the [blog](/blog/).
+
+<h3 id="anna-may">Anna May A. Valdez, Co-founder &amp; Head of Product</h3>
+
+Anna May Valdez decides what Casama builds next and how it should feel to use.
+
+<h3 id="april">April Dawn D. Martinez, Head of Customer Success</h3>
+
+April Dawn Martinez looks after the people who use Casama and answers support@casama.ai.
+
+<h3 id="kelly">Kelly Avia Martinez, Head of Social &amp; Community</h3>
+
+Kelly Avia Martinez runs Casama's social accounts and its community.
 
 ## Reach us
 
