@@ -267,7 +267,9 @@ export function startNewsletterSync(opts: {
 
 /**
  * Account deletion: the switch goes off and the contact is removed from Resend now, not after the
- * grace period. A failure leaves the row due, and the worker keeps trying until the purge.
+ * grace period. That's the address the app added, or else the sign-in address (they may have
+ * signed up on casama.ai with it). A failure leaves the row due, and the worker keeps trying until
+ * the purge.
  */
 export async function newsletterOnAccountDeletion(
   db: Database,
@@ -276,9 +278,16 @@ export async function newsletterOnAccountDeletion(
   log?: (msg: string, extra?: Record<string, unknown>) => void,
 ): Promise<void> {
   const rows = await db.execute<{ user_id: string }>(sql`
-    update public.newsletter_subscriptions
-    set subscribed = false, changed_at = now(), sync_due = true, sync_tries = 0, version = version + 1
-    where user_id = ${userId}::uuid and (subscribed or resend_email is not null)
+    insert into public.newsletter_subscriptions (user_id, subscribed, resend_email, sync_due, version)
+    select u.id, false, lower(u.email::text), true, 1
+    from auth.users u where u.id = ${userId}::uuid and u.email is not null
+    on conflict (user_id) do update set
+      subscribed = false,
+      changed_at = now(),
+      resend_email = coalesce(public.newsletter_subscriptions.resend_email, excluded.resend_email),
+      sync_due = true,
+      sync_tries = 0,
+      version = public.newsletter_subscriptions.version + 1
     returning user_id`);
   if (rows.length) await syncNewsletter(db, cfg, userId, log);
 }

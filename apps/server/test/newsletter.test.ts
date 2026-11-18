@@ -319,6 +319,27 @@ describe("monthly email on Casama Cloud (D-408)", () => {
     expect(forgotten).toContain(ben.id);
     expect(await row(ben.id)).toBeUndefined();
   });
+  it("deleting an account also removes a casama.ai sign-up with the same address", async () => {
+    const dee = await h.user("dee@example.com");
+    resend.calls.length = 0;
+    expect(
+      (
+        await h.request("/v1/me", {
+          method: "DELETE",
+          token: dee.token,
+          json: { confirm_email: "dee@example.com" },
+        })
+      ).status,
+    ).toBe(200);
+    expect(resend.calls.map((c) => `${c.method} ${c.path}`)).toEqual([
+      "DELETE /contacts/dee@example.com",
+    ]);
+    expect(await row(dee.id)).toMatchObject({
+      subscribed: false,
+      resend_email: null,
+      sync_due: false,
+    });
+  });
 });
 
 describe("monthly email on a self-hosted server (D-408)", () => {
