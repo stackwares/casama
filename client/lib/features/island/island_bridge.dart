@@ -16,6 +16,8 @@ import '../../core/shortcuts.dart' show askPath;
 import '../../l10n/generated/app_localizations.dart';
 import '../app_lock/app_lock.dart';
 import '../companion/desktop_shell.dart';
+import '../inbox/for_you.dart' show forYouProvider;
+import '../widgets/widget_settings.dart';
 import '../voice/active_call.dart';
 import '../voice/call_system.dart';
 import 'island_call.dart';
@@ -30,7 +32,8 @@ import 'run_tracker.dart';
 ///   the button labels (from app_en.arb, so native code holds no text).
 /// - Native → Dart `action`: open a link, stop a run, allow or deny an approval, ask (bot and
 ///   text), drop (file paths), quick ask, show the window, seen (the list or panel was opened,
-///   for analytics).
+///   for analytics). From a widget (D-405, with `from: "widget"`): also run a routine
+///   (`run_routine`) and accept a suggestion (`accept`).
 /// - Native → Dart `token`: a Live Activity's push token (or an Android phone's), registered for
 ///   its run.
 ///
@@ -405,9 +408,70 @@ class IslandBridge {
     return settings.activeFor(_ref.read(backendProvider).userId) && _ref.read(appLockProvider).locked;
   }
 
+  /// What a widget or control pressed (native passes `from: "widget"`), as `widget_action` names
+  /// it (plan D-405 §15).
+  static const _widgetActions = {'run_routine': 'run', 'accept': 'do_it', 'allow': 'allow', 'deny': 'deny', 'stop': 'stop'};
+
+  /// A widget's button on a phone (D-405 §8.4): nothing is done in place while widgets are private
+  /// (the app lock, §10). Native code then opens the app at the fallback link, behind the lock.
+  bool get _widgetMayAct => _phone && !_ref.read(widgetsPrivateProvider);
+
+  static bool get _phone => defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android;
+
+  /// Allow and Deny from a widget (D-405 decision 5): only a request that is still waiting and is
+  /// low risk, read fresh from the server, since the widget may be minutes old. Medium and high
+  /// show Review in the widget and are answered in the app.
+  Future<bool> _widgetAnswers(String approvalId) async {
+    if (!_widgetMayAct) return false;
+    final orgId = _ref.read(currentOrgIdProvider);
+    if (orgId == null) return false;
+    final waiting = await _ref.read(backendProvider).approvals(orgId);
+    return waiting.any((a) => a.id == approvalId && a.status == ApprovalStatusEnum.pending && a.risk == Risk.low);
+  }
+
   Future<bool> _action(Map<String, Object?> args) async {
+    // Run now and Do it only ever come from a widget or control.
+    final fromWidget = args['from'] == 'widget' || args['kind'] == 'run_routine' || args['kind'] == 'accept';
+    final done = await _carryOut(args, fromWidget: fromWidget);
+    final action = fromWidget ? _widgetActions[args['kind']] : null;
+    if (done && action != null) Analytics.widgetAction(action);
+    return done;
+  }
+
+  Future<bool> _carryOut(Map<String, Object?> args, {required bool fromWidget}) async {
     final backend = _ref.read(backendProvider);
-    if (_counted.contains(args['kind'])) Analytics.feature('notch_action');
+    if (!fromWidget && _counted.contains(args['kind'])) Analytics.feature('notch_action');
+    // Widgets' buttons (D-405): Run now, Do it, Allow and Deny, on phones only. The Mac's widgets
+    // only open links.
+    if (fromWidget) {
+      switch (args['kind']) {
+        case 'run_routine':
+          final routineId = args['routine_id'];
+          if (routineId is! String || routineId.isEmpty || !_widgetMayAct) return false;
+          final runId = await backend.runRoutine(routineId);
+          // Started by hand here, so the phone follows it on the Lock Screen (D-324).
+          final botId = args['bot_id'];
+          if (botId is String && botId.isNotEmpty && _ref.mounted) {
+            _ref.read(runTrackerProvider.notifier).startedHere(runId, botId: botId);
+          }
+          return true;
+        case 'accept':
+          final suggestionId = args['suggestion_id'];
+          if (suggestionId is! String || suggestionId.isEmpty || !_widgetMayAct) return false;
+          await backend.acceptSuggestion(suggestionId);
+          _ref.invalidate(forYouProvider);
+          return true;
+        case 'allow' || 'deny':
+          final approvalId = args['approval_id'];
+          if (approvalId is! String || !await _widgetAnswers(approvalId)) return false;
+          await backend.decideApproval(approvalId, approve: args['kind'] == 'allow');
+          _ref.invalidate(approvalsProvider);
+          return true;
+        default:
+          // Stop and Open work as from the Live Activity, below.
+          break;
+      }
+    }
     // While locked, nothing is sent or answered from the notch or the tray: Allow, Deny and Ask
     // open the window (the lock screen) instead. Stop and the call's controls still work. Phones
     // answer only after the phone itself was unlocked for it (see [_answersInPlace]).

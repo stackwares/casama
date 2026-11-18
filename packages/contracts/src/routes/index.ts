@@ -23,6 +23,7 @@ import * as domains from "./domains.ts";
 import * as encryption from "./encryption.ts";
 import * as gallery from "./gallery.ts";
 import * as galleryContent from "./gallery-content.ts";
+import * as glance from "./glance.ts";
 import * as knowledge from "./knowledge.ts";
 import * as connect from "./link.ts";
 import * as links from "./links.ts";
@@ -112,6 +113,7 @@ export const routes = {
   ...sites,
   ...domains,
   ...starters,
+  ...glance,
 };
 export {
   aboutYou,
@@ -135,6 +137,7 @@ export {
   domains,
   encryption,
   gallery,
+  glance,
   knowledge,
   links,
   local,

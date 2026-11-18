@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Credits, 2×2: a ring for the share of this period used (drawn in code, tinted here so it follows
+     light and dark), what is left and today's spend. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    style="@style/WidgetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <FrameLayout
+        android:layout_width="64dp"
+        android:layout_height="64dp">
+        <ImageView
+            android:id="@+id/w_ring_track"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no"
+            android:tint="@color/widget_track" />
+        <ImageView
+            android:id="@+id/w_ring"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no"
+            android:tint="@color/widget_primary" />
+        <TextView
+            android:id="@+id/w_count"
+            style="@style/WidgetText.Strong"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:fontFeatureSettings="tnum"
+            android:textSize="14sp" />
+    </FrameLayout>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+    <TextView
+        android:id="@+id/w_title"
+        style="@style/WidgetText.Title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFeatureSettings="tnum"
+        android:textSize="16sp" />
+    <TextView
+        android:id="@+id/w_line"
+        style="@style/WidgetText.Second"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:maxLines="2"
+        android:textSize="12.5sp" />
+    <TextView
+        android:id="@+id/w_asof"
+        style="@style/WidgetText.AsOf"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp" />
+</LinearLayout>

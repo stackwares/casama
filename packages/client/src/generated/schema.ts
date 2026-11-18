@@ -1746,7 +1746,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** The picture for its card, when it has one (has_cover) */
+        /** The picture for its card, when it has one (has_cover). Also takes `Authorization: Widget <key>` for a creation in the key's workspace (D-405) */
         get: operations["getCreationCover"];
         put?: never;
         post?: never;
@@ -6487,6 +6487,75 @@ export interface paths {
         /** Starter requests for an empty chat with this bot, written for you */
         get: operations["getBotStarters"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/widget-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A key this device's widgets fetch the glance with, shown once. It reads the glance and creation covers and nothing else */
+        post: operations["createWidgetKey"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/widget-keys/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Forget a widget key (sign-out): its widgets stop fetching */
+        delete: operations["deleteWidgetKey"];
+        options?: never;
+        head?: never;
+        /** Make the glance this key reads private (counts and general words only), or not */
+        patch: operations["updateWidgetKey"];
+        trace?: never;
+    };
+    "/v1/glance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What the person's widgets show, in one small document (D-405). Takes the session or `Authorization: Widget <key>`; send `If-None-Match` with the last `version` to get 304 when nothing changed */
+        get: operations["getGlance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/widget-keys/current/push-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Where to send refresh pushes for a key's widgets: the widget extension calls it with `Authorization: Widget <key>`, the app with the session and `?key_id=` */
+        put: operations["setWidgetPushToken"];
         post?: never;
         delete?: never;
         options?: never;
@@ -13421,6 +13490,201 @@ export interface components {
             /** @description Decoration only; tapping sends the text. */
             emoji: string;
             text: string;
+        };
+        WidgetKeyCreated: {
+            /** Format: uuid */
+            id: string;
+            /** @description Shown once */
+            key: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        WidgetKeyCreate: {
+            /** Format: uuid */
+            org_id: string;
+            /** @enum {string} */
+            platform: "ios" | "android" | "macos";
+            label?: string;
+        };
+        DeletedWidgetKey: {
+            /** Format: uuid */
+            deleted: string;
+        };
+        Glance: {
+            version: string;
+            /** Format: date-time */
+            made_at: string;
+            /** Format: uuid */
+            org_id: string;
+            needs: {
+                count: number;
+                items: components["schemas"]["GlanceNeed"][];
+            };
+            bots: components["schemas"]["GlanceBot"][];
+            next: components["schemas"]["GlanceRoutine"][];
+            routines: components["schemas"]["GlanceRoutineChoice"][];
+            brief: components["schemas"]["GlanceBrief"];
+            lately: components["schemas"]["GlanceDone"][];
+            recent: components["schemas"]["GlanceCreation"][];
+            tasks: {
+                counts: {
+                    todo: number;
+                    in_progress: number;
+                    in_review: number;
+                    blocked: number;
+                };
+                items: components["schemas"]["GlanceTask"][];
+            };
+            credits: components["schemas"]["GlanceCredits"];
+            starters: components["schemas"]["GlanceStarter"][];
+            flags: {
+                private: boolean;
+                hide_reply_text: boolean;
+            };
+        };
+        GlanceNeed: {
+            /** @enum {string} */
+            kind: "approval" | "takeover" | "suggestion";
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            bot_id: string;
+            bot: string;
+            bot_avatar: string;
+            text: string;
+            /** @enum {string|null} */
+            risk: "low" | "medium" | "high" | null;
+            urgent: boolean;
+            /** Format: date-time */
+            created_at: string;
+            link: string;
+        };
+        GlanceBot: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            avatar: string;
+            /** @enum {string} */
+            status: "idle" | "working" | "waiting" | "disabled";
+            step: string | null;
+            last_text: string | null;
+            /** Format: date-time */
+            last_at: string | null;
+            /** Format: date-time */
+            busy_at: string | null;
+            link: string;
+        };
+        GlanceRoutine: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            bot_id: string;
+            name: string;
+            bot: string;
+            bot_avatar: string;
+            /** Format: date-time */
+            next_at: string | null;
+            every: string;
+            enabled: boolean;
+            link: string;
+        };
+        GlanceRoutineChoice: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            bot_id: string;
+            name: string;
+            bot: string;
+            enabled: boolean;
+        };
+        GlanceBrief: {
+            /** Format: uuid */
+            bot_id: string;
+            bot: string;
+            bot_avatar: string;
+            text: string | null;
+            /** Format: date-time */
+            at: string | null;
+            /** Format: date-time */
+            next_at: string | null;
+            link: string;
+        } | null;
+        GlanceDone: {
+            /** Format: uuid */
+            bot_id: string;
+            bot: string;
+            bot_avatar: string;
+            title: string;
+            /** Format: date-time */
+            at: string;
+            link: string;
+        };
+        GlanceCreation: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "page" | "image" | "video" | "audio" | "document" | "file";
+            title: string;
+            bot: string | null;
+            has_cover: boolean;
+            version: number;
+            /** Format: date-time */
+            at: string;
+            link: string;
+        };
+        GlanceTask: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            /** @enum {string} */
+            status: "todo" | "in_progress" | "in_review" | "blocked" | "done";
+            bot: string | null;
+            link: string;
+        };
+        GlanceCredits: {
+            billing: boolean;
+            unlimited: boolean;
+            plan: string | null;
+            used_share: number | null;
+            left_usd: number | null;
+            today_usd: number;
+            month_usd: number;
+            daily_cap_usd: number | null;
+            daily_used_usd: number | null;
+            /** Format: date-time */
+            resets_at: string | null;
+        };
+        GlanceStarter: {
+            emoji: string;
+            text: string;
+        };
+        WidgetPushTokenSaved: {
+            /** @enum {boolean} */
+            ok: true;
+        };
+        WidgetPushToken: {
+            token: string;
+            /** @enum {string} */
+            kind: "apns_widgets" | "fcm";
+            sandbox?: boolean;
+        };
+        WidgetKey: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            org_id: string;
+            /** @enum {string} */
+            platform: "ios" | "android" | "macos";
+            label: string | null;
+            private: boolean;
+            has_push: boolean;
+            /** Format: date-time */
+            last_used_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        WidgetKeyUpdate: {
+            private?: boolean;
         };
     };
     responses: never;
@@ -36175,6 +36439,287 @@ export interface operations {
             };
             /** @description Not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createWidgetKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WidgetKeyCreate"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetKeyCreated"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteWidgetKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletedWidgetKey"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateWidgetKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WidgetKeyUpdate"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetKey"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getGlance: {
+        parameters: {
+            query?: {
+                /** @description Needed with the session; a widget key reads its own workspace */
+                org_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The glance */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Glance"];
+                };
+            };
+            /** @description Not changed since the version in If-None-Match */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setWidgetPushToken: {
+        parameters: {
+            query?: {
+                key_id?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WidgetPushToken"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetPushTokenSaved"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

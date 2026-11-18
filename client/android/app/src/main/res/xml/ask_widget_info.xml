@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ask (D-405 §6.1 C): a 4×1 bar, resizable from 2×1 to 5×1, and a 2×2 with two starters. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_ask_description"
+    android:initialLayout="@layout/widget_loading"
+    android:previewLayout="@layout/widget_ask_bar"
+    android:minWidth="110dp"
+    android:minHeight="40dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="40dp"
+    android:maxResizeWidth="400dp"
+    android:maxResizeHeight="200dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="1"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen"
+    android:configure="ai.casama.app.WidgetConfigActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional" />

@@ -1,20 +1,23 @@
 /**
  * Casama Link's push relay, cloud side (D-296):
  *
- *   POST /link/v1/push   { tokens, message }, { tokens, call }, { tokens, voip } or { tokens, live }
+ *   POST /link/v1/push   { tokens, message }, { tokens, call }, { tokens, voip }, { tokens, live }
+ *                        or { tokens, widget }
  *
  * A linked self-hosted server hands over a notification and the device tokens it is for, and this
  * sends it with Casama's Firebase key, the only key that can address the store apps. It answers
  * which tokens are dead so the server forgets them (D-271). A call rings Android phones through
  * Firebase (`call`) and iPhones through Apple's call pushes (`voip`), with Casama's Apple key. A
  * followed run's state (`live`, D-324) updates iPhone Live Activities and Android's live
- * notification; with private notifications on, the server sends it without the words.
+ * notification; with private notifications on, the server sends it without the words. A widget
+ * refresh (`widget`, D-405) carries only the tokens: Apple's WidgetKit pushes with Casama's Apple
+ * key, Android's data message with Firebase.
  *
  * A server can only name tokens of devices that signed in to it, since that is the only place a
  * token is handed over. Nothing is stored here: not the tokens, not the text. Each key is held to
  * a number of pushes an hour, so a server gone wrong can't spend the project's quota.
  */
-import type { PushSender, VoipSender } from "@casama/agent";
+import type { PushSender, VoipSender, WidgetPushSender } from "@casama/agent";
 import type { Database } from "@casama/db";
 import type { Hono } from "hono";
 import { z } from "zod";
@@ -94,9 +97,25 @@ const Body = z
         }),
       })
       .optional(),
+    // Widget refresh pushes (D-405): tokens only, nothing to read; `tokens` are the targets'.
+    widget: z
+      .object({
+        targets: z
+          .array(
+            z.object({
+              token: z.string().min(8).max(4096),
+              kind: z.enum(["apns_widgets", "fcm"]),
+              sandbox: z.boolean(),
+            }),
+          )
+          .min(1)
+          .max(50),
+        urgent: z.boolean().optional(),
+      })
+      .optional(),
   })
   .refine(
-    (b) => [b.message, b.call, b.voip, b.live].filter(Boolean).length === 1,
+    (b) => [b.message, b.call, b.voip, b.live, b.widget].filter(Boolean).length === 1,
     "Send a message or a call",
   )
   .refine(
@@ -105,6 +124,13 @@ const Body = z
       (b.live.targets.length === b.tokens.length &&
         b.live.targets.every((t, i) => t.token === b.tokens[i])),
     "The live targets don't match the tokens",
+  )
+  .refine(
+    (b) =>
+      !b.widget ||
+      (b.widget.targets.length === b.tokens.length &&
+        b.widget.targets.every((t, i) => t.token === b.tokens[i])),
+    "The widget targets don't match the tokens",
   );
 
 export function registerPushRelay(
@@ -115,6 +141,8 @@ export function registerPushRelay(
     db?: Database;
     /** Apple's call pushes, which ring iPhones; unset: this cloud rings none. */
     voip?: VoipSender;
+    /** Widget refresh pushes (D-405); unset: this cloud refreshes no widgets. */
+    widgets?: WidgetPushSender;
     perHour?: number;
     now?: () => number;
   },
@@ -138,10 +166,15 @@ export function registerPushRelay(
     const parsed = Body.safeParse(await c.req.json().catch(() => null));
     if (!parsed.success)
       return c.json({ code: "bad_request", message: "The request isn't valid" }, 400);
-    const { tokens, message, call, voip, live } = parsed.data;
+    const { tokens, message, call, voip, live, widget } = parsed.data;
     // Said before anything is counted, so a server stops asking a cloud that rings no iPhones.
     if (voip && !o.voip)
       return c.json({ code: "voip_unavailable", message: "This cloud rings no iPhones" }, 404);
+    if (widget && !o.widgets)
+      return c.json(
+        { code: "widget_unavailable", message: "This cloud refreshes no widgets" },
+        404,
+      );
     // The data a notification carries is small; anything bigger isn't one.
     const size = JSON.stringify(message?.data ?? call?.data ?? {}).length;
     if (size > 3500)
@@ -160,15 +193,19 @@ export function registerPushRelay(
     }
     w.count += tokens.length;
 
-    const result = live
-      ? await (o.push.sendLive?.(live.targets, live.update) ??
-          Promise.resolve({ invalidTokens: [] }))
-      : voip
-        ? await (o.voip as VoipSender).send(tokens, voip.call)
-        : call
-          ? await (o.push.sendCall?.(tokens, call.data, call.ttl_seconds) ??
-              Promise.resolve({ invalidTokens: [] }))
-          : await o.push.send(tokens, message as NonNullable<typeof message>);
+    const result = widget
+      ? await (o.widgets as WidgetPushSender).sendWidgets(widget.targets, {
+          urgent: widget.urgent === true,
+        })
+      : live
+        ? await (o.push.sendLive?.(live.targets, live.update) ??
+            Promise.resolve({ invalidTokens: [] }))
+        : voip
+          ? await (o.voip as VoipSender).send(tokens, voip.call)
+          : call
+            ? await (o.push.sendCall?.(tokens, call.data, call.ttl_seconds) ??
+                Promise.resolve({ invalidTokens: [] }))
+            : await o.push.send(tokens, message as NonNullable<typeof message>);
     return c.json({ sent: tokens.length, invalid_tokens: result.invalidTokens });
   });
 }

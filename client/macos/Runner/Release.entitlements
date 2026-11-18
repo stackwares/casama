@@ -16,5 +16,9 @@
 	<true/>
 	<key>com.apple.security.app-sandbox</key>
 	<false/>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>V8V5US964Z.ai.casama.app</string>
+	</array>
 </dict>
 </plist>

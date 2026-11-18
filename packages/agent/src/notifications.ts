@@ -124,6 +124,22 @@ export interface PushSender {
    * the picture up to date while it is open.
    */
   sendLive?(targets: LiveTarget[], update: LiveUpdate): Promise<{ invalidTokens: string[] }>;
+  /**
+   * Tells Android phones' widgets to fetch the glance again (D-405): a data-only `{kind:
+   * "glance"}` message at normal priority, one per phone however many changes it stands for.
+   * Unset: this server sends none.
+   */
+  sendGlance?(tokens: string[]): Promise<{ invalidTokens: string[] }>;
+}
+
+/** The Firebase message that refreshes an Android phone's widgets (D-405): nothing to read in it. */
+export function fcmGlanceMessage(token: string) {
+  return {
+    token,
+    data: { kind: "glance" },
+    // A refresh nobody saw in time is replaced by the next one anyway.
+    android: { priority: "NORMAL", ttl: "3600s", collapse_key: "glance" },
+  };
 }
 
 /** Records pushes (tests and installs without FCM). */
@@ -142,6 +158,11 @@ export class RecordingPushSender implements PushSender {
   readonly live: Array<{ targets: LiveTarget[]; update: LiveUpdate; at: number }> = [];
   async sendLive(targets: LiveTarget[], update: LiveUpdate) {
     this.live.push({ targets, update, at: Date.now() });
+    return { invalidTokens: [] };
+  }
+  readonly glance: Array<{ tokens: string[]; at: number }> = [];
+  async sendGlance(tokens: string[]) {
+    this.glance.push({ tokens, at: Date.now() });
     return { invalidTokens: [] };
   }
 }
@@ -404,6 +425,28 @@ export class FcmPushSender implements PushSender {
     }
     return { invalidTokens };
   }
+
+  async sendGlance(tokens: string[]) {
+    const invalidTokens: string[] = [];
+    if (!tokens.length) return { invalidTokens };
+    const access = await this.accessToken();
+    for (const token of tokens) {
+      try {
+        const res = await this.fetchImpl(
+          `https://fcm.googleapis.com/v1/projects/${this.account.project_id}/messages:send`,
+          {
+            method: "POST",
+            headers: { authorization: `Bearer ${access}`, "content-type": "application/json" },
+            body: JSON.stringify({ message: fcmGlanceMessage(token) }),
+          },
+        );
+        if (await fcmTokenGone(res)) invalidTokens.push(token);
+      } catch {
+        // One phone out of reach doesn't keep the others from hearing.
+      }
+    }
+    return { invalidTokens };
+  }
 }
 
 /**
@@ -422,9 +465,22 @@ export async function fcmTokenGone(res: Response) {
 export class NotificationService {
   readonly db: Database;
   readonly push: PushSender;
+  /**
+   * Hears every inbox row this service adds, after it is written, whatever the push settings
+   * (the widgets' refresh pushes, D-405). Must not throw or block.
+   */
+  onNotify?: (userId: string, kind: string) => void;
   constructor(db: Database, push: PushSender) {
     this.db = db;
     this.push = push;
+  }
+
+  private heard(userId: string, kind: string) {
+    try {
+      this.onNotify?.(userId, kind);
+    } catch {
+      // A listener's trouble is its own.
+    }
   }
 
   async notify(
@@ -457,6 +513,7 @@ export class NotificationService {
         values (${userId}::uuid, ${orgId}::uuid, ${kind}, ${JSON.stringify(payload)}::jsonb, 'off',
                 ${proactive?.urgency ?? null}, ${focused ? new Date().toISOString() : null}::timestamptz)
         returning id`);
+      this.heard(userId, kind);
       return row?.id;
     }
     const urgent = message.urgent || proactive?.urgency === "urgent";
@@ -474,6 +531,7 @@ export class NotificationService {
       values (${userId}::uuid, ${orgId}::uuid, ${kind}, ${JSON.stringify(payload)}::jsonb,
               ${held ? "held" : later ? "deferred" : "sent"}, ${later?.toISOString() ?? null}::timestamptz,
               ${proactive?.urgency ?? null}, ${held}) returning id`);
+    this.heard(userId, kind);
     // The inbox row is in; a push provider error mustn't fail the caller.
     if (!later && !held)
       await this.pushTo(userId, row?.id ?? "", kind, { ...message, urgent }, prefs).catch(() => {});

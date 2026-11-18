@@ -116,6 +116,8 @@ final class IslandActivities {
       switch intent {
       case let i as StopRunIntent: throw i.needsToContinueInForegroundError()
       case let i as AnswerRequestIntent: throw i.needsToContinueInForegroundError()
+      case let i as RunRoutineWidgetIntent: throw i.needsToContinueInForegroundError()
+      case let i as AcceptSuggestionIntent: throw i.needsToContinueInForegroundError()
       default: return
       }
     }
@@ -301,3 +303,10 @@ extension StopRunIntent: ForegroundContinuableIntent {}
 
 @available(iOS 17.0, *)
 extension AnswerRequestIntent: ForegroundContinuableIntent {}
+
+// The widgets' and controls' buttons (D-405 §8.4).
+@available(iOS 17.0, *)
+extension RunRoutineWidgetIntent: ForegroundContinuableIntent {}
+
+@available(iOS 17.0, *)
+extension AcceptSuggestionIntent: ForegroundContinuableIntent {}

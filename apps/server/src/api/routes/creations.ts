@@ -417,6 +417,10 @@ export function registerCreationRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
     const row = await visible(claims, id);
+    // A widget key (D-405) reads covers in its own workspace only.
+    const widget = c.get("widgetKey");
+    if (widget && row.org_id !== widget.orgId)
+      throw new ApiError(404, "creation_not_found", "Nothing like that in the Library");
     const none = () => new ApiError(404, "no_cover", "This one has no cover; the app draws one");
     // A stored cover (a document's first page, D-280).
     if (row.cover_key && deps.objects) {

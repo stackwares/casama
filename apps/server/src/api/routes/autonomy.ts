@@ -333,6 +333,8 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
               ${JSON.stringify({ tool: row.toolName, always_allow: row.alwaysAllow })}::jsonb)`);
     milestone(db, claims.sub, "first_approval", row.orgId);
     await deps.workflows.signalRun(row.runId);
+    // Widgets (D-405): the answerer's at once; the worker tells the run's people as it resumes.
+    deps.glance?.changed(claims.sub, { urgent: true });
     return c.json(approvalOut(row), 200);
   });
 
@@ -951,6 +953,8 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         access: galleryIdea.access,
       });
     const base = new URL(c.req.url).origin;
+    // Up next on the person's widgets (D-405), gathered with other changes.
+    deps.glance?.changed(claims.sub, { urgent: false });
     return c.json(
       {
         ...routineOut(row),
@@ -1050,6 +1054,7 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         .where(eq(routines.id, id))
         .returning(),
     );
+    deps.glance?.changed(claims.sub, { urgent: false });
     return c.json(routineOut(row as RoutineRow, c.req.valid("query").all_events === "true"), 200);
   });
 
@@ -1063,6 +1068,7 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
         .returning({ id: routines.id, botId: routines.botId }),
     );
     if (!row) throw new ApiError(404, "routine_not_found", "Routine not found");
+    deps.glance?.changed(claims.sub, { urgent: false });
     return c.json({ deleted: row.id }, 200);
   });
 

@@ -1408,8 +1408,36 @@
             "menu_bar_panel",
             "live_activity_started",
             "live_notification_started",
-            "reactions"
+            "reactions",
+            "widget_opened",
+            "widget_action"
           ]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "widgets_placed",
+      "by": ["client"],
+      "description": "Widgets this device has placed, once a day per device (D-405): how many, and whether any is on the Lock Screen.",
+      "properties": {
+        "count": {
+          "type": "number"
+        },
+        "lock_screen": {
+          "type": "boolean"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "widget_action",
+      "by": ["client"],
+      "description": "A button in a widget or control was pressed and carried out by the app (D-405).",
+      "properties": {
+        "action": {
+          "type": "string",
+          "values": ["run", "do_it", "allow", "deny", "stop", "ask", "talk"]
         }
       },
       "funnels": []

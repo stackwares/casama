@@ -154,12 +154,99 @@
             android:excludeFromRecents="true"
             android:taskAffinity=""
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-        <receiver android:name=".BotStatusWidget" android:exported="true">
+        <!-- Widgets (D-405, docs/WIDGETS-PLAN.md §6.4): RemoteViews drawn from the glance the app
+             (or GlanceRefresh) writes. BotStatusWidget keeps its name so placed widgets carry over. -->
+        <receiver android:name=".NeedsYouWidget" android:exported="true" android:label="@string/widget_needs_you">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/needs_you_widget_info" />
+        </receiver>
+        <receiver android:name=".BotStatusWidget" android:exported="true" android:label="@string/widget_bot">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/bot_status_widget_info" />
         </receiver>
+        <receiver android:name=".AskWidget" android:exported="true" android:label="@string/widget_ask">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/ask_widget_info" />
+        </receiver>
+        <receiver android:name=".RoutinesWidget" android:exported="true" android:label="@string/widget_routines">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/routines_widget_info" />
+        </receiver>
+        <receiver android:name=".TodayWidget" android:exported="true" android:label="@string/widget_today">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/today_widget_info" />
+        </receiver>
+        <receiver android:name=".BriefWidget" android:exported="true" android:label="@string/widget_brief">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/brief_widget_info" />
+        </receiver>
+        <receiver android:name=".LibraryWidget" android:exported="true" android:label="@string/widget_library">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/library_widget_info" />
+        </receiver>
+        <receiver android:name=".TasksWidget" android:exported="true" android:label="@string/widget_tasks">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/tasks_widget_info" />
+        </receiver>
+        <receiver android:name=".CreditsWidget" android:exported="true" android:label="@string/widget_credits">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/credits_widget_info" />
+        </receiver>
+        <!-- Today's list below Android 12, where a collection's items come from a service. -->
+        <service
+            android:name=".TodayWidgetService"
+            android:exported="false"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
+        <!-- The widget picker for Ask, Bot and Routines (a bot, or routines): native, no Flutter. -->
+        <activity
+            android:name=".WidgetConfigActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity=""
+            android:theme="@style/WidgetConfigTheme">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+        <!-- Widget refresh pushes (D-405 Phase 3): data-only FCM messages of kind "glance", with no
+             content; they queue a fetch with the widget key (GlanceRefresh). -->
+        <receiver
+            android:name=".GlancePushReceiver"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </receiver>
+        <!-- Quick Settings tile "Ask Casama" (D-405 §6.4). -->
+        <service
+            android:name=".AskTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_shortcut_ask"
+            android:label="@string/tile_ask"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

@@ -42,6 +42,7 @@ import 'features/voice/call_bubble.dart';
 import 'features/selfhost/guided_setup.dart';
 import 'ui/effects.dart';
 import 'features/island/island_bridge.dart';
+import 'features/widgets/glance_sync.dart';
 import 'features/app_lock/lock_screen.dart';
 import 'features/permissions/permissions_reporter.dart';
 
@@ -73,8 +74,9 @@ class CasamaApp extends ConsumerWidget {
     if (isDesktop) keep(desktopShellProvider);
     // The island (D-324): the feed flows to the Mac's notch and menu bar panel.
     keep(islandBridgeProvider);
-    // Mobile: home-screen widget data and share to bot.
-    keep(homeWidgetSyncProvider);
+    // Widgets on iPhone, Android and the Mac (D-405): the glance, carried while the app is open.
+    keep(glanceSyncProvider);
+    // Mobile: share to bot.
     // A live call on the iPhone's lock screen and Dynamic Island (D-327 §9).
     keep(callGlanceSyncProvider);
     keep(shareToBotProvider);

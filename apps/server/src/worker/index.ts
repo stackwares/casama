@@ -1,7 +1,9 @@
 import { readFileSync } from "node:fs";
 import {
   AiSdkGateway,
+  ApnsClient,
   ApnsVoipSender,
+  ApnsWidgetSender,
   builtinTools,
   CloudRelayPushSender,
   ComputerService,
@@ -13,6 +15,7 @@ import {
   FcmPushSender,
   type FixtureFile,
   type FixtureTurn,
+  GlancePusher,
   hashEmbedder,
   LangfuseSink,
   LiveRunPusher,
@@ -67,7 +70,9 @@ import {
   TregProvider,
   TwilioClient,
   type VoipSender,
+  type WidgetPushSender,
   WORKSPACE_SEARCH_PROVIDERS,
+  widgetPushSender,
   workspaceSearchProvider,
 } from "@casama/agent";
 import { contentKeys, createDb, type Database } from "@casama/db";
@@ -140,6 +145,10 @@ export interface WorkerOptions {
   /** iOS call rings (PushKit, D-135): a sender, or APNs settings. */
   voip?: VoipSender;
   apns?: { keyP8: string; keyId: string; teamId: string; topic: string; url?: string };
+  /** Widget refresh pushes (D-405): the app's bundle id they go to; default ai.casama.app. */
+  apnsAppTopic?: string;
+  /** Widget refresh pushes: a sender (tests), else built from the push sender and APNs. */
+  widgets?: WidgetPushSender;
   /** Private address ranges the worker may call (local development and tests only). */
   egressExemptCidrs?: string[];
   /** The API's database role, granted access to DBOS's tables when it isn't the worker's own. */
@@ -395,6 +404,29 @@ export async function startWorker(opts: WorkerOptions) {
   // A server with no way to push (the recording stand-in) keeps the app-driven behaviour.
   const canPush = Boolean(opts.push) || !(push instanceof RecordingPushSender);
   const stopLive = livePusher.enabled && canPush ? EventBus.observe(livePusher.observe) : () => {};
+  // Widget refresh pushes (D-405): run events and inbox rows this worker writes tell the person's
+  // widgets to fetch the glance again (Apple with this server's own key, else the cloud's relay).
+  const appleWidgets = opts.apns
+    ? new ApnsWidgetSender(new ApnsClient(opts.apns), { appBundleId: opts.apnsAppTopic })
+    : null;
+  const glancePusher =
+    opts.widgets || canPush || appleWidgets
+      ? new GlancePusher(
+          db,
+          opts.widgets ??
+            widgetPushSender({
+              push,
+              apple: appleWidgets,
+              onNoApple: () =>
+                opts.logger.info(
+                  "widget pushes to Apple devices are off: set APNS_KEY_P8, APNS_KEY_ID and APNS_TEAM_ID",
+                ),
+            }),
+          { onError: (e) => opts.logger.warn("widget push", { error: e.message }) },
+        )
+      : null;
+  const stopGlance = glancePusher ? EventBus.observe(glancePusher.observe) : () => {};
+  if (glancePusher) notifications.onNotify = glancePusher.notified;
   // The server's own search chain (D-384), built once; vendor APIs through the egress guard.
   const serverSearch = serverSearchChain({
     order: opts.serverSearch?.order,
@@ -850,6 +882,8 @@ export async function startWorker(opts: WorkerOptions) {
       const cut = await drainSteps(opts.drainMs ?? 45_000);
       opts.logger.info("worker drained", { steps_cut: cut });
       stopLive();
+      stopGlance();
+      glancePusher?.stop();
       stopPrices?.();
       await client?.destroy();
       await DBOS.shutdown();

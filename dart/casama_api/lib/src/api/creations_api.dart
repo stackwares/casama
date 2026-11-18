@@ -335,7 +335,7 @@ _responseData = rawData == null ? null : rawData as Uint8List;
     );
   }
 
-  /// The picture for its card, when it has one (has_cover)
+  /// The picture for its card, when it has one (has_cover). Also takes &#x60;Authorization: Widget &lt;key&gt;&#x60; for a creation in the key&#39;s workspace (D-405)
   /// 
   ///
   /// Parameters:

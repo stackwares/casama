@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,6 +31,8 @@ import '../../ui/celebration.dart';
 import '../../core/analytics.dart';
 import 'routine_ideas.dart';
 import 'edit_routine_sheet.dart';
+import '../widgets/widget_nudge.dart';
+import '../widgets/glance_sync.dart' show refreshGlance;
 
 /// A bot's routines: one-time, repeating (cron in a timezone), or webhook-triggered.
 class RoutinesScreen extends ConsumerWidget {
@@ -756,7 +760,12 @@ class _NewRoutineSheetState extends ConsumerState<NewRoutineSheet> {
                     );
                     if (!context.mounted) return;
                     setState(() => _busy = false);
-                    if (created != null) Navigator.of(context).pop(created);
+                    if (created != null) {
+                      // The Routines widget lists it (D-405), and points to itself once.
+                      refreshGlance(ref);
+                      unawaited(nudgeWidget(context, ref, WidgetNudge.routines));
+                      Navigator.of(context).pop(created);
+                    }
                   },
             child: Text(l10n.create),
           ),

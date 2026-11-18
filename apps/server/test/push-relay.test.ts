@@ -8,6 +8,8 @@ import {
   type PushMessage,
   type PushSender,
   type VoipSender,
+  type WidgetPushSender,
+  type WidgetPushTarget,
 } from "@casama/agent";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { resetLinkSettingsCache } from "../src/services/link-settings.ts";
@@ -29,6 +31,14 @@ describe("Casama Link: the push relay", () => {
   let rings: Array<{ tokens: string[]; call: CallPayload }>;
   let lives: Array<{ targets: LiveTarget[]; update: LiveUpdate }>;
   let dead: string[];
+  let refreshed: Array<{ targets: WidgetPushTarget[]; urgent: boolean }>;
+  /** Casama Cloud's widget refresh sender (D-405): records, and reports the dead tokens. */
+  const widgetSender: WidgetPushSender = {
+    async sendWidgets(t, o) {
+      refreshed.push({ targets: t, urgent: o.urgent });
+      return { invalidTokens: t.map((x) => x.token).filter((x) => dead.includes(x)) };
+    },
+  };
 
   /** Casama Cloud's own Firebase sender: records, and reports the tokens marked dead. */
   const firebase: PushSender = {
@@ -107,7 +117,7 @@ describe("Casama Link: the push relay", () => {
   beforeAll(async () => {
     cloud = await startHarness({
       env: { BILLING_ENABLED: "true" },
-      casamaLink: { push: firebase, voip: apple },
+      casamaLink: { push: firebase, voip: apple, widgets: widgetSender },
     });
     owner = await cloud.user("relay-owner@example.com");
     orgId = (
@@ -128,6 +138,7 @@ describe("Casama Link: the push relay", () => {
     rings = [];
     lives = [];
     dead = [];
+    refreshed = [];
   });
 
   it("passes a followed run's state on to the phones (D-324)", async () => {
@@ -155,6 +166,43 @@ describe("Casama Link: the push relay", () => {
         })
       ).status,
     ).toBe(400);
+  });
+
+  it("refreshes a linked server's widgets, with nothing in the push (D-405)", async () => {
+    const widgetTargets: WidgetPushTarget[] = [
+      { token: "ab".repeat(32), kind: "apns_widgets", sandbox: true },
+      { token: "token-android-w", kind: "fcm", sandbox: false },
+    ];
+    dead = ["token-android-w"];
+    const res = await push({
+      tokens: widgetTargets.map((t) => t.token),
+      widget: { targets: widgetTargets, urgent: true },
+    });
+    expect(res.status).toBe(200);
+    expect(await j(res)).toEqual({ sent: 2, invalid_tokens: ["token-android-w"] });
+    expect(refreshed).toEqual([{ targets: widgetTargets, urgent: true }]);
+    expect(sent).toEqual([]);
+    // The targets must be the tokens counted; nothing else rides along; one kind per request.
+    for (const bad of [
+      { tokens: ["someone-else-01"], widget: { targets: [widgetTargets[0]] } },
+      { tokens: ["token-android-w"], widget: { targets: [{ ...widgetTargets[1], kind: "x" }] } },
+      {
+        tokens: ["token-android-w"],
+        widget: { targets: [widgetTargets[1]] },
+        message,
+      },
+      { tokens: ["token-android-w"], widget: { targets: [] } },
+    ])
+      expect((await push(bad)).status, JSON.stringify(bad).slice(0, 80)).toBe(400);
+    expect(refreshed).toHaveLength(1);
+
+    // From the self-hosted side: the relay sender posts the same body.
+    refreshed = [];
+    const relay = new CloudRelayPushSender({ url: CLOUD, key }, { fetch: net });
+    expect(await relay.sendWidgets(widgetTargets, { urgent: false })).toEqual({
+      invalidTokens: ["token-android-w"],
+    });
+    expect(refreshed).toEqual([{ targets: widgetTargets, urgent: false }]);
   });
 
   it("sends a linked server's notification and says which tokens are dead", async () => {

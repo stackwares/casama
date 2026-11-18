@@ -376,6 +376,7 @@ export function registerLiveRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       .where(eq(schema.takeoverRequests.id, id))
       .returning();
     await deps.workflows.signalRun(t.runId).catch(() => {});
+    deps.glance?.changed(claims.sub, { urgent: true });
     return c.json(takeoverOut(updated as typeof t), 200);
   });
 }

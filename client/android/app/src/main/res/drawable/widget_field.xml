@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The ask field inside a widget (Today, Ask 2×2) and a starter chip: a quiet capsule. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/widget_field" />
+    <corners android:radius="999dp" />
+</shape>

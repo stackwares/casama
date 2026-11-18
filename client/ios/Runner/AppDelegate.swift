@@ -45,6 +45,11 @@ import native_geofence
         intentIdentifiers: [],
         options: []),
     ])
+    // Controls and small widgets that open Casama at a place (D-405, ControlIntents.swift) hand
+    // the path over the way Siri's Ask a bot does, queued until Flutter is ready.
+    if #available(iOS 17.0, *) {
+      MainActor.assumeIsolated { WidgetOpen.open = { ShortcutBridge.shared.open($0) } }
+    }
     // Device triggers (D-151): a geofence can wake the app in the background, without a UI scene.
     NativeGeofencePlugin.setPluginRegistrantCallback { registry in
       GeneratedPluginRegistrant.register(with: registry)
@@ -111,6 +116,10 @@ import native_geofence
     // Live calls (D-327 §9): Mute and End Call on the call's Live Activity.
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CasamaCallGlance") {
       CallGlanceBridge.shared.attach(registrar.messenger())
+    }
+    // Widgets (D-405): the widget key, redraws, which widgets are placed.
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CasamaWidgets") {
+      WidgetsBridge.shared.attach(registrar.messenger())
     }
     // System permissions a bot needs on this phone (D-376).
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CasamaPermissions") {

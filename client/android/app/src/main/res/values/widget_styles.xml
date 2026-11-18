@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget text and button styles (D-405 §6.7): the system's font, nothing under 11 sp, capsule
+     buttons with one filled (main) button per row at most. Colours come from widget_colors.xml, so
+     each widget follows light and dark and, on Android 12 and later, the phone's own colours. -->
+<resources>
+    <style name="WidgetRoot">
+        <item name="android:background">@drawable/widget_bg</item>
+        <item name="android:padding">@dimen/widget_padding</item>
+        <item name="android:clipToOutline">true</item>
+    </style>
+
+    <style name="WidgetText">
+        <item name="android:textColor">@color/widget_fg</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="WidgetText.Title">
+        <item name="android:textSize">15sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="WidgetText.Big">
+        <item name="android:textSize">34sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+    </style>
+
+    <style name="WidgetText.Strong">
+        <item name="android:textSize">13.5sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="WidgetText.Second">
+        <item name="android:textColor">@color/widget_fg2</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="WidgetText.Eyebrow">
+        <item name="android:textColor">@color/widget_fg2</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="WidgetText.AsOf">
+        <item name="android:textColor">@color/widget_fg2</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="WidgetButton">
+        <item name="android:background">@drawable/widget_btn_tone</item>
+        <item name="android:textColor">@color/widget_on_tone</item>
+        <item name="android:textSize">12.5sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:minHeight">32dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="WidgetButton.Fill">
+        <item name="android:background">@drawable/widget_btn_fill</item>
+        <item name="android:textColor">@color/widget_on_primary</item>
+    </style>
+
+    <style name="WidgetPill">
+        <item name="android:background">@drawable/widget_pill_green</item>
+        <item name="android:paddingStart">9dp</item>
+        <item name="android:paddingEnd">9dp</item>
+        <item name="android:paddingTop">3dp</item>
+        <item name="android:paddingBottom">3dp</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
+    <!-- The widget picker (WidgetConfigActivity): a small dialog in the widget's colours. -->
+    <style name="WidgetConfigTheme" parent="@android:style/Theme.DeviceDefault.Light.Dialog.NoActionBar">
+        <item name="android:windowBackground">@drawable/widget_dialog_bg</item>
+        <item name="android:windowMinWidthMajor">80%</item>
+        <item name="android:windowMinWidthMinor">90%</item>
+        <item name="android:colorAccent">@color/widget_primary</item>
+        <item name="android:textColorPrimary">@color/widget_fg</item>
+        <item name="android:textColorSecondary">@color/widget_fg2</item>
+    </style>
+</resources>

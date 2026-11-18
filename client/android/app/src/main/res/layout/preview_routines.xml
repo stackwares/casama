@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget picker's preview of Routines (Android 12+): sample content, never drawn live. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    style="@style/WidgetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <TextView style="@style/WidgetText.Eyebrow" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="Up next · 9:00" />
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    <TextView style="@style/WidgetText.Title" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="Inbox sweep" android:textSize="16sp" />
+    <TextView style="@style/WidgetText.Second" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="3dp" android:text="Ada · in 18 min" />
+    <TextView style="@style/WidgetButton.Fill" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_marginTop="10dp" android:text="Run now" />
+</LinearLayout>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- The Mac widget extension signed without a provisioning profile (ad hoc local builds, and what
+     Xcode signs before the packaging scripts sign again): CasamaWidgetsMac.entitlements without the
+     keychain group, which macOS only grants with a profile and otherwise refuses to launch. Such a
+     build's widgets show what the app wrote and don't fetch for themselves. -->
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>V8V5US964Z.ai.casama.app</string>
+	</array>
+</dict>
+</plist>

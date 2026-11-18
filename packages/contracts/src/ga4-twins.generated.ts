@@ -154,6 +154,13 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
   "feature_used": [
     "feature"
   ],
+  "widgets_placed": [
+    "count",
+    "lock_screen"
+  ],
+  "widget_action": [
+    "action"
+  ],
   "enable_analytics_sharing": [],
   "disable_analytics_sharing": []
 };

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Waiting for you": orange means needs you, and nothing else is orange. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/widget_orange_tone" />
+    <corners android:radius="999dp" />
+</shape>

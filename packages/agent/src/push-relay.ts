@@ -10,6 +10,7 @@
  * Calls ring the same way: Android through Firebase, iPhones through Apple's call pushes, which
  * only Casama's own Apple key can send to the store app.
  */
+import type { WidgetPushTarget } from "./glance-push.ts";
 import type { LiveTarget, LiveUpdate } from "./live-runs.ts";
 import type { PushMessage, PushSender } from "./notifications.ts";
 import type { CallPayload, VoipSender } from "./phone-calls.ts";
@@ -64,7 +65,7 @@ export class CloudRelayPushSender implements PushSender {
    * server restarts. Notifications and iPhone call rings are refused separately, since a cloud
    * can run one without the other.
    */
-  private readonly refused = new Set<"push" | "voip">();
+  private readonly refused = new Set<"push" | "voip" | "widget">();
 
   constructor(cloud: { url: string; key: string }, o: CloudRelayOptions = {}) {
     this.base = cloud.url.replace(/\/$/, "");
@@ -72,7 +73,7 @@ export class CloudRelayPushSender implements PushSender {
     this.o = o;
   }
 
-  private async post(body: Record<string, unknown>, kind: "push" | "voip" = "push") {
+  private async post(body: Record<string, unknown>, kind: "push" | "voip" | "widget" = "push") {
     if (this.refused.has(kind)) return { invalidTokens: [] };
     try {
       const res = await (this.o.fetch ?? fetch)(`${this.base}/link/v1/push`, {
@@ -136,5 +137,25 @@ export class CloudRelayPushSender implements PushSender {
   /** This relay as the sender of iPhone call rings. */
   voip(): VoipSender {
     return { send: (tokens, call) => this.sendVoip(tokens, call) };
+  }
+
+  /**
+   * Widget refresh pushes (D-405): only the tokens go, since the pushes carry nothing to read.
+   * The cloud sends iPhone and Mac ones with Casama's Apple key and Android ones with Firebase.
+   */
+  async sendWidgets(targets: WidgetPushTarget[], o: { urgent: boolean }) {
+    if (!targets.length) return { invalidTokens: [] };
+    return this.post(
+      { tokens: targets.map((t) => t.token), widget: { targets, urgent: o.urgent } },
+      "widget",
+    );
+  }
+
+  /** Android widgets only, through the same relay body. */
+  async sendGlance(tokens: string[]) {
+    return this.sendWidgets(
+      tokens.map((token) => ({ token, kind: "fcm" as const, sandbox: false })),
+      { urgent: false },
+    );
   }
 }

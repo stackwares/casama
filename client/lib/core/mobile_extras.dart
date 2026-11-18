@@ -1,14 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:image_picker/image_picker.dart' show XFile;
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
-import '../l10n/generated/app_localizations.dart';
-import 'providers.dart';
 import 'router.dart';
 
 /// App Group shared by the app and its iOS widget and share extensions.
@@ -17,35 +14,7 @@ const appGroupId = 'group.ai.casama.app';
 bool get _ios => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 bool get _android => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
-/// Keeps the home-screen widget (iOS and Android) showing a bot's status and today's cost.
-final homeWidgetSyncProvider = Provider<void>((ref) {
-  if (!_ios && !_android) return;
-  if (_ios) unawaited(HomeWidget.setAppGroupId(appGroupId).catchError((_) => null));
-  final bots = ref.watch(botsProvider).value;
-  final usage = ref.watch(usageTodayProvider).value;
-  if (bots == null || bots.isEmpty) return;
-  final bot = bots.first;
-  final cost = usage?.byBot.where((b) => b.botId == bot.id).firstOrNull?.costUsd ?? 0;
-  // No BuildContext here: resolve the device locale against the app's supported ones.
-  final l10n = lookupAppLocalizations(basicLocaleListResolution(PlatformDispatcher.instance.locales, AppLocalizations.supportedLocales));
-  unawaited(() async {
-    try {
-      await HomeWidget.saveWidgetData('bot_name', bot.name);
-      // `mascot:<name>`, or empty for initials: the widget draws the app's own mark.
-      await HomeWidget.saveWidgetData('bot_avatar', bot.avatarUrl ?? '');
-      await HomeWidget.saveWidgetData('bot_status', switch (bot.status.value) {
-        'working' => l10n.widgetStatusWorking,
-        'waiting' => l10n.botStatusWaiting,
-        'disabled' => l10n.widgetStatusOff,
-        _ => l10n.botStatusIdle,
-      });
-      await HomeWidget.saveWidgetData('bot_cost', l10n.costToday(formatUsd(cost, l10n.localeName)));
-      await HomeWidget.updateWidget(androidName: 'BotStatusWidget', iOSName: 'BotStatusWidget');
-    } catch (e) {
-      debugPrint('home widget update failed: $e');
-    }
-  }());
-});
+// Home-screen widgets moved to features/widgets/glance_sync.dart (D-405).
 
 /// A file shared into Casama from another app, waiting for quick ask to send it (Fix 15).
 class SharedAttachment {

@@ -474,7 +474,8 @@ app with `--dart-define=PHONE_CALLS=true` (admins see **Workspace settings** →
 It needs a public `https://` address, because Twilio calls back to `PUBLIC_API_URL` (Compose sets
 it to `CASAMA_PUBLIC_URL`).
 
-To ring iPhones for calls through PushKit, the worker needs an APNs token key for the app's bundle:
+To ring iPhones for calls through PushKit, and to refresh iPhone and Mac widgets the moment
+something changes, the server needs an APNs token key for the app's bundle:
 
 | Name            | Default   | What it does                                       |
 | --------------- | --------- | -------------------------------------------------- |
@@ -482,6 +483,12 @@ To ring iPhones for calls through PushKit, the worker needs an APNs token key fo
 | `APNS_KEY_ID`   | (empty)   | The key's id.                                      |
 | `APNS_TEAM_ID`  | (empty)   | Your Apple team id.                                |
 | `APNS_VOIP_TOPIC` | `ai.casama.app.voip` | The app's VoIP push topic.              |
+| `APNS_TOPIC_APP` | `ai.casama.app` | The app's bundle id. Widget pushes go to `<bundle id>.push-type.widgets`. |
+
+Without a key, a server linked to Casama Cloud sends widget refresh pushes through Casama Cloud's
+relay, like its other notifications. The push says only that something changed: the widget then
+fetches what it shows from your server. Unlinked and without a key, iPhone and Mac widgets still
+refresh on their own schedule; Android widgets refresh through `FCM_SERVICE_ACCOUNT`.
 
 ## Push notifications
 

@@ -14647,4 +14647,282 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get permissionsNone => 'Nothing to turn on on this device.';
+
+  @override
+  String get widgetNeedsYou => 'Needs you';
+
+  @override
+  String get widgetAllClear => 'All clear';
+
+  @override
+  String get widgetAllow => 'Allow';
+
+  @override
+  String get widgetDeny => 'Deny';
+
+  @override
+  String get widgetReview => 'Review';
+
+  @override
+  String get widgetOpen => 'Open';
+
+  @override
+  String get widgetDoIt => 'Do it';
+
+  @override
+  String get widgetRunNow => 'Run now';
+
+  @override
+  String get widgetStarted => 'Started';
+
+  @override
+  String get widgetStop => 'Stop';
+
+  @override
+  String get widgetAsk => 'Ask';
+
+  @override
+  String widgetAskBot(String bot) {
+    return 'Ask $bot';
+  }
+
+  @override
+  String get widgetTalk => 'Talk';
+
+  @override
+  String get widgetTry => 'Try';
+
+  @override
+  String get widgetUpNext => 'Up next';
+
+  @override
+  String get widgetNoRoutines => 'No routines yet';
+
+  @override
+  String get widgetWorking => 'Working';
+
+  @override
+  String get widgetWaiting => 'Waiting for you';
+
+  @override
+  String get widgetIdle => 'Idle';
+
+  @override
+  String widgetRepliedAt(String time) {
+    return 'Replied $time';
+  }
+
+  @override
+  String get widgetBrief => 'Brief';
+
+  @override
+  String widgetBriefAt(String time) {
+    return 'Brief at $time';
+  }
+
+  @override
+  String get widgetNoBrief => 'No brief yet';
+
+  @override
+  String get widgetToday => 'Today';
+
+  @override
+  String get widgetCredits => 'Credits';
+
+  @override
+  String widgetCreditsLeft(String amount) {
+    return '$amount left';
+  }
+
+  @override
+  String widgetSpentToday(String amount) {
+    return '$amount today';
+  }
+
+  @override
+  String widgetUsedPct(String n) {
+    return '$n% used';
+  }
+
+  @override
+  String widgetResetsAt(String time) {
+    return 'Resets $time';
+  }
+
+  @override
+  String get widgetFinished => 'Finished';
+
+  @override
+  String get widgetLibrary => 'Library';
+
+  @override
+  String get widgetNoCreations => 'Nothing made yet';
+
+  @override
+  String get widgetTasks => 'Tasks';
+
+  @override
+  String get widgetTodo => 'To do';
+
+  @override
+  String get widgetInProgress => 'In progress';
+
+  @override
+  String get widgetInReview => 'In review';
+
+  @override
+  String get widgetBlocked => 'Blocked';
+
+  @override
+  String get widgetSignIn => 'Open Casama to sign in';
+
+  @override
+  String get widgetNoBots => 'Meet your first bot';
+
+  @override
+  String widgetAsOf(String time) {
+    return 'as of $time';
+  }
+
+  @override
+  String get widgetUpdateServer =>
+      'Update your Casama server to use this widget';
+
+  @override
+  String widgetNeedsOkFrom(String bot) {
+    return '$bot needs your OK';
+  }
+
+  @override
+  String widgetSuggests(String bot) {
+    return '$bot suggests';
+  }
+
+  @override
+  String widgetTakeOver(String bot) {
+    return '$bot needs you to take over';
+  }
+
+  @override
+  String widgetNextBrief(String time) {
+    return 'Next brief $time';
+  }
+
+  @override
+  String get widgetNothingNext => 'Nothing scheduled';
+
+  @override
+  String get widgetsTitle => 'Widgets';
+
+  @override
+  String get widgetsRow => 'Your bots on the Home screen and Lock Screen';
+
+  @override
+  String get widgetsIntro =>
+      'Widgets show what your bots are doing and what waits on you, without opening Casama.';
+
+  @override
+  String get widgetNameBot => 'Bot';
+
+  @override
+  String get widgetNameRoutines => 'Routines';
+
+  @override
+  String get widgetDescNeedsYou => 'See which bots are waiting on you';
+
+  @override
+  String get widgetDescBot => 'See what one bot is doing';
+
+  @override
+  String get widgetDescAsk => 'Ask or talk to a bot in one tap';
+
+  @override
+  String get widgetDescRoutines => 'See what runs next and run it now';
+
+  @override
+  String get widgetDescToday => 'See your whole day on one large widget';
+
+  @override
+  String get widgetDescBrief => 'Read your morning brief';
+
+  @override
+  String get widgetDescLibrary => 'See what your bots made lately';
+
+  @override
+  String get widgetDescTasks => 'See where the task board stands';
+
+  @override
+  String get widgetDescCredits => 'Keep an eye on your credits';
+
+  @override
+  String get widgetsAddToHome => 'Add to Home screen';
+
+  @override
+  String get widgetsPinUnsupported =>
+      'Your launcher can\'t add widgets from here. Touch and hold an empty spot on your Home screen, tap Widgets, and pick Casama.';
+
+  @override
+  String get widgetsHowToAdd => 'How to add';
+
+  @override
+  String get widgetsHowToIos =>
+      'Touch and hold an empty spot on your Home Screen, tap Edit, then Add Widget, and pick Casama.';
+
+  @override
+  String get widgetsHowToMac =>
+      'Click the date and time in the menu bar, then Edit Widgets, and pick Casama. Or right-click the desktop and choose Edit Widgets.';
+
+  @override
+  String get widgetsLockScreen => 'Lock Screen and controls';
+
+  @override
+  String get widgetsLockScreenHelp =>
+      'Touch and hold the Lock Screen, tap Customize, then Lock Screen, and tap the space under the clock to add Needs you, Up next, Bot or Credits. A request stays hidden until you unlock.';
+
+  @override
+  String get widgetsControlsHelp =>
+      'Open Control Center, touch and hold, tap Add a Control, and pick Ask Casama, Talk to a bot or Run a routine. They also fit the Lock Screen corners and the Action button.';
+
+  @override
+  String get widgetsShowDetails => 'Show details in widgets';
+
+  @override
+  String get widgetsShowDetailsHelp =>
+      'With the app lock on, widgets show only numbers and bot names, and their buttons open Casama. Turn this on to show requests, messages and routine names too.';
+
+  @override
+  String get widgetsShowDetailsNoLock =>
+      'Only matters while the app lock is on. Without it, widgets show details.';
+
+  @override
+  String widgetsShowDetailsRequired(String workspace) {
+    return '$workspace requires the app lock, so widgets keep details hidden.';
+  }
+
+  @override
+  String get widgetsPinBot => 'Pin a bot to your Home screen';
+
+  @override
+  String get widgetsPinBotHelp =>
+      'Puts the bot on your Home screen as its own icon. Tap it to chat.';
+
+  @override
+  String get widgetsPin => 'Pin';
+
+  @override
+  String get widgetNudgeNeedsYou =>
+      'Answer requests from your Home screen with the Needs you widget.';
+
+  @override
+  String get widgetNudgeRoutines =>
+      'Run routines from your Home screen with the Routines widget.';
+
+  @override
+  String get widgetNudgeAction => 'Show me';
+
+  @override
+  String get widgetLowRisk => 'Low risk';
+
+  @override
+  String get widgetThisMonth => 'This month';
 }

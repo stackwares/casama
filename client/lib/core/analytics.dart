@@ -157,6 +157,17 @@ class Analytics {
   /// The closed list of `feature_used` features (ANALYTICS-PLAN §6.10): a new one is added here and in the catalog.
   static const features = analyticsFeatures;
 
+  /// `widget_action`'s closed list of actions (D-405 §15), as the catalog has it.
+  static const widgetActions = {'run', 'do_it', 'allow', 'deny', 'stop', 'ask', 'talk'};
+
+  /// A widget's or control's button, carried out by the app (D-405 §15): the event, and the
+  /// feature once a day.
+  static void widgetAction(String action) {
+    assert(widgetActions.contains(action), 'Unknown widget action: $action');
+    log('widget_action', {'action': action});
+    feature('widget_action');
+  }
+
   /// Pages that count as using a feature when opened (the route template, never ids).
   static const routeFeatures = {
     '/search': 'search',

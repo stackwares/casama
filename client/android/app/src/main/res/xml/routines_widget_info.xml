@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Routines (§6.1 D): 2×2 (the next one) and 4×2 (three rows), automatic or chosen. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_routines_description"
+    android:initialLayout="@layout/widget_loading"
+    android:previewLayout="@layout/preview_routines"
+    android:minWidth="110dp"
+    android:minHeight="110dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="110dp"
+    android:maxResizeWidth="400dp"
+    android:maxResizeHeight="240dp"
+    android:targetCellWidth="2"
+    android:targetCellHeight="2"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen|keyguard"
+    android:configure="ai.casama.app.WidgetConfigActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional" />

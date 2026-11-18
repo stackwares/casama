@@ -7,6 +7,25 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D3B11A0D2F00000000000002 /* Glance.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000001 /* Glance.swift */; };
+		D3B11A0D2F00000000000005 /* WidgetKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000004 /* WidgetKey.swift */; };
+		D3B11A0D2F00000000000008 /* GlanceIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000007 /* GlanceIntents.swift */; };
+		D3B11A0D2F0000000000000B /* ControlIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F0000000000000A /* ControlIntents.swift */; };
+		D3B11A0D2F0000000000000E /* GlanceFetch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F0000000000000D /* GlanceFetch.swift */; };
+		D3B11A0D2F00000000000010 /* GlanceTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F0000000000000F /* GlanceTimeline.swift */; };
+		D3B11A0D2F00000000000012 /* BotMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000011 /* BotMark.swift */; };
+		D3B11A0D2F00000000000014 /* WidgetPush.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000013 /* WidgetPush.swift */; };
+		D3B11A0D2F00000000000016 /* Widgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000015 /* Widgets.swift */; };
+		D3B11A0D2F00000000000018 /* Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000017 /* Controls.swift */; };
+		D3B11A0D2F0000000000001A /* Style.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000019 /* Style.swift */; };
+		D3B11A0D2F0000000000001C /* HomeViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F0000000000001B /* HomeViews.swift */; };
+		D3B11A0D2F0000000000001E /* MoreViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F0000000000001D /* MoreViews.swift */; };
+		D3B11A0D2F00000000000020 /* AccessoryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F0000000000001F /* AccessoryViews.swift */; };
+		D3B11A0D2F00000000000003 /* Glance.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000001 /* Glance.swift */; };
+		D3B11A0D2F00000000000006 /* WidgetKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000004 /* WidgetKey.swift */; };
+		D3B11A0D2F00000000000009 /* GlanceIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000007 /* GlanceIntents.swift */; };
+		D3B11A0D2F0000000000000C /* ControlIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F0000000000000A /* ControlIntents.swift */; };
+		D3B11A0D2F00000000000022 /* WidgetsBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B11A0D2F00000000000021 /* WidgetsBridge.swift */; };
 		D2A11A0D2F00000000000032 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D2A11A0D2F00000000000031 /* PrivacyInfo.xcprivacy */; };
 		D2A11A0D2F00000000000034 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D2A11A0D2F00000000000033 /* PrivacyInfo.xcprivacy */; };
 		006C4C84C94C846FADF8A364 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DD3D9A9447A0EB3E60E2BC1E /* Foundation.framework */; };
@@ -89,6 +108,21 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D3B11A0D2F00000000000001 /* Glance.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Glance.swift; sourceTree = "<group>"; };
+		D3B11A0D2F00000000000004 /* WidgetKey.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetKey.swift; sourceTree = "<group>"; };
+		D3B11A0D2F00000000000007 /* GlanceIntents.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GlanceIntents.swift; sourceTree = "<group>"; };
+		D3B11A0D2F0000000000000A /* ControlIntents.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ControlIntents.swift; sourceTree = "<group>"; };
+		D3B11A0D2F0000000000000D /* GlanceFetch.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GlanceFetch.swift; sourceTree = "<group>"; };
+		D3B11A0D2F0000000000000F /* GlanceTimeline.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GlanceTimeline.swift; sourceTree = "<group>"; };
+		D3B11A0D2F00000000000011 /* BotMark.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BotMark.swift; sourceTree = "<group>"; };
+		D3B11A0D2F00000000000013 /* WidgetPush.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetPush.swift; sourceTree = "<group>"; };
+		D3B11A0D2F00000000000015 /* Widgets.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Widgets.swift; sourceTree = "<group>"; };
+		D3B11A0D2F00000000000017 /* Controls.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Controls.swift; sourceTree = "<group>"; };
+		D3B11A0D2F00000000000019 /* Style.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Style.swift; sourceTree = "<group>"; };
+		D3B11A0D2F0000000000001B /* HomeViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeViews.swift; sourceTree = "<group>"; };
+		D3B11A0D2F0000000000001D /* MoreViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MoreViews.swift; sourceTree = "<group>"; };
+		D3B11A0D2F0000000000001F /* AccessoryViews.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AccessoryViews.swift; sourceTree = "<group>"; };
+		D3B11A0D2F00000000000021 /* WidgetsBridge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WidgetsBridge.swift; sourceTree = "<group>"; };
 		D2A11A0D2F00000000000031 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		D2A11A0D2F00000000000033 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		0DFECE249481560D952E7018 /* CasamaShare.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = CasamaShare.entitlements; sourceTree = "<group>"; };
@@ -177,6 +211,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		D3B11A0D2F00000000000023 /* WidgetViews */ = {
+			isa = PBXGroup;
+			children = (
+				D3B11A0D2F00000000000019 /* Style.swift */,
+				D3B11A0D2F0000000000001B /* HomeViews.swift */,
+				D3B11A0D2F0000000000001D /* MoreViews.swift */,
+				D3B11A0D2F0000000000001F /* AccessoryViews.swift */,
+			);
+			path = WidgetViews;
+			sourceTree = "<group>";
+		};
 		331C8082294A63A400263BE5 /* RunnerTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -191,6 +236,17 @@
 				C8C7AB9C129CBE2C18D243C8 /* CasamaWidgets.swift */,
 				D2A11A0D2F00000000000001 /* RunActivityAttributes.swift */,
 				D2A11A0D2F00000000000011 /* RunActionIntents.swift */,
+				D3B11A0D2F00000000000001 /* Glance.swift */,
+				D3B11A0D2F00000000000004 /* WidgetKey.swift */,
+				D3B11A0D2F00000000000007 /* GlanceIntents.swift */,
+				D3B11A0D2F0000000000000A /* ControlIntents.swift */,
+				D3B11A0D2F0000000000000D /* GlanceFetch.swift */,
+				D3B11A0D2F0000000000000F /* GlanceTimeline.swift */,
+				D3B11A0D2F00000000000011 /* BotMark.swift */,
+				D3B11A0D2F00000000000013 /* WidgetPush.swift */,
+				D3B11A0D2F00000000000015 /* Widgets.swift */,
+				D3B11A0D2F00000000000017 /* Controls.swift */,
+				D3B11A0D2F00000000000023 /* WidgetViews */,
 				D2A11A0D2F00000000000021 /* Assets.xcassets */,
 				E78A7E61B67619C3B5B9EE10 /* Info.plist */,
 				6ECCE6E669A4EFA857CB2FF7 /* CasamaWidgets.entitlements */,
@@ -276,6 +332,7 @@
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
 				D2A11A0D2F00000000000004 /* IslandActivities.swift */,
+				D3B11A0D2F00000000000021 /* WidgetsBridge.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
@@ -578,6 +635,20 @@
 				4FACE636C169E033D2FA0F60 /* CasamaWidgets.swift in Sources */,
 				D2A11A0D2F00000000000002 /* RunActivityAttributes.swift in Sources */,
 				D2A11A0D2F00000000000012 /* RunActionIntents.swift in Sources */,
+				D3B11A0D2F00000000000002 /* Glance.swift in Sources */,
+				D3B11A0D2F00000000000005 /* WidgetKey.swift in Sources */,
+				D3B11A0D2F00000000000008 /* GlanceIntents.swift in Sources */,
+				D3B11A0D2F0000000000000B /* ControlIntents.swift in Sources */,
+				D3B11A0D2F0000000000000E /* GlanceFetch.swift in Sources */,
+				D3B11A0D2F00000000000010 /* GlanceTimeline.swift in Sources */,
+				D3B11A0D2F00000000000012 /* BotMark.swift in Sources */,
+				D3B11A0D2F00000000000014 /* WidgetPush.swift in Sources */,
+				D3B11A0D2F00000000000016 /* Widgets.swift in Sources */,
+				D3B11A0D2F00000000000018 /* Controls.swift in Sources */,
+				D3B11A0D2F0000000000001A /* Style.swift in Sources */,
+				D3B11A0D2F0000000000001C /* HomeViews.swift in Sources */,
+				D3B11A0D2F0000000000001E /* MoreViews.swift in Sources */,
+				D3B11A0D2F00000000000020 /* AccessoryViews.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -591,6 +662,11 @@
 				D2A11A0D2F00000000000003 /* RunActivityAttributes.swift in Sources */,
 				D2A11A0D2F00000000000005 /* IslandActivities.swift in Sources */,
 				D2A11A0D2F00000000000013 /* RunActionIntents.swift in Sources */,
+				D3B11A0D2F00000000000003 /* Glance.swift in Sources */,
+				D3B11A0D2F00000000000006 /* WidgetKey.swift in Sources */,
+				D3B11A0D2F00000000000009 /* GlanceIntents.swift in Sources */,
+				D3B11A0D2F0000000000000C /* ControlIntents.swift in Sources */,
+				D3B11A0D2F00000000000022 /* WidgetsBridge.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -781,7 +857,7 @@
 				DEVELOPMENT_TEAM = V8V5US964Z;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CasamaWidgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -997,7 +1073,7 @@
 				DEVELOPMENT_TEAM = V8V5US964Z;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CasamaWidgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1051,7 +1127,7 @@
 				DEVELOPMENT_TEAM = V8V5US964Z;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = CasamaWidgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

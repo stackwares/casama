@@ -8,3 +8,8 @@ CODE_SIGN_IDENTITY[config=Debug] = Apple Development
 CASAMA_DEBUG_ENTITLEMENTS = Runner/DebugSigned.entitlements
 CASAMA_DEBUG_SIGN_STYLE = Manual
 CASAMA_DEBUG_PROFILE = Casama Mac Development
+// The widget extension needs its own Mac development profile for ai.casama.app.CasamaWidgetsMac
+// (app group + the ai.casama.app.widgets keychain group) so its widgets can fetch for themselves.
+CASAMA_WIDGET_DEBUG_ENTITLEMENTS = CasamaWidgetsMac/CasamaWidgetsMac.entitlements
+CASAMA_WIDGET_DEBUG_SIGN_STYLE = Manual
+CASAMA_WIDGET_DEBUG_PROFILE = Casama Widgets Mac Development

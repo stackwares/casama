@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget colours, dark, below Android 12: the app's plain dark grey (D-380). -->
+<resources>
+    <color name="widget_bg">#1C1C1E</color>
+    <color name="widget_fg">#F2F2F7</color>
+    <color name="widget_fg2">#AEAEB2</color>
+    <color name="widget_tone">#3A3346</color>
+    <color name="widget_on_tone">#E8DEF8</color>
+    <color name="widget_primary">#D0BCFF</color>
+    <color name="widget_on_primary">#381E72</color>
+    <color name="widget_field">#2C2C2E</color>
+    <color name="widget_placeholder">#2C2C2E</color>
+    <color name="widget_track">#3A3A3C</color>
+    <color name="widget_orange">#F5A04A</color>
+    <color name="widget_orange_tone">#45301A</color>
+    <color name="widget_on_orange">#FFD2A6</color>
+    <color name="widget_green">#4ACF7F</color>
+    <color name="widget_green_tone">#1E3A2A</color>
+    <color name="widget_on_green">#8FE0AE</color>
+</resources>

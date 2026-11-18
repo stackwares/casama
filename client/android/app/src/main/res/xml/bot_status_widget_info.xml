@@ -1,10 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Bot (§6.1 B), under the old Bot status widget's name so placed widgets carry over: 2×2 and 4×2, a bot to pick, live while it runs. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:initialLayout="@layout/bot_status_widget"
-    android:minWidth="180dp"
+    android:description="@string/widget_bot_description"
+    android:initialLayout="@layout/widget_loading"
+    android:previewLayout="@layout/preview_bot"
+    android:minWidth="110dp"
     android:minHeight="110dp"
-    android:resizeMode="horizontal|vertical"
-    android:targetCellWidth="3"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="110dp"
+    android:maxResizeWidth="400dp"
+    android:maxResizeHeight="240dp"
+    android:targetCellWidth="2"
     android:targetCellHeight="2"
+    android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="1800000"
-    android:widgetCategory="home_screen" />
+    android:widgetCategory="home_screen|keyguard"
+    android:configure="ai.casama.app.WidgetConfigActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional" />

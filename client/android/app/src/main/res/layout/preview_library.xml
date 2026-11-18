@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget picker's preview of Library (Android 12+): sample content, never drawn live. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    style="@style/WidgetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <ImageView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:importantForAccessibility="no" android:src="@drawable/widget_tile" android:scaleType="fitXY"
+        android:tint="@color/widget_primary" />
+    <TextView style="@style/WidgetText.Strong" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="8dp" android:text="Lisbon trip plan" />
+    <TextView style="@style/WidgetText.Second" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="2dp" android:text="Milo · 2 hr ago" />
+</LinearLayout>

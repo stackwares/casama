@@ -714,6 +714,55 @@ class FakeBackend implements Backend {
     return AcceptedSuggestion(conversationId: convId, runId: 'r-s');
   }
 
+  // Widgets (D-405)
+  /// What [glance] answers; null is a server from before widgets (404).
+  Map<String, Object?>? glanceJson;
+
+  /// The ETag sent with each glance answer; a matching If-None-Match answers unchanged.
+  String glanceEtag = '"g1"';
+
+  /// Each glance call's If-None-Match, in order.
+  final glanceCalls = <String?>[];
+
+  /// Fails the glance calls while set (offline).
+  Object? glanceError;
+  @override
+  Future<GlanceData?> glance(String orgId, {String? ifNoneMatch}) async {
+    glanceCalls.add(ifNoneMatch);
+    final error = glanceError;
+    if (error != null) throw error;
+    final json = glanceJson;
+    if (json == null) return null;
+    if (ifNoneMatch != null && ifNoneMatch == glanceEtag) return GlanceData.unchanged(ifNoneMatch);
+    return GlanceData.fromJson(json, etag: glanceEtag);
+  }
+
+  /// Whether the server has widget keys (false answers null, as a 404 does).
+  bool widgetKeysSupported = true;
+
+  /// Keys made, as (org, platform, label); deleted ids; privacy changes; push tokens.
+  final widgetKeysCreated = <(String, String, String?)>[];
+  final widgetKeysDeleted = <String>[];
+  final widgetKeyPrivacy = <(String, bool)>[];
+  final widgetPushTokens = <(String, String, String)>[];
+  @override
+  Future<NewWidgetKey?> createWidgetKey(String orgId, String platform, {String? label}) async {
+    if (!widgetKeysSupported) return null;
+    widgetKeysCreated.add((orgId, platform, label));
+    final n = widgetKeysCreated.length;
+    return NewWidgetKey(id: 'wk$n', key: 'cwk_secret$n', createdAt: DateTime(2026, 11, 18));
+  }
+
+  @override
+  Future<void> deleteWidgetKey(String id) async => widgetKeysDeleted.add(id);
+
+  @override
+  Future<void> setWidgetKeyPrivate(String id, bool private) async => widgetKeyPrivacy.add((id, private));
+
+  @override
+  Future<void> registerWidgetPushToken(String widgetKey, String token, {required String kind, bool? sandbox}) async =>
+      widgetPushTokens.add((widgetKey, token, kind));
+
   @override
   Future<void> dismissSuggestion(
     String id, {

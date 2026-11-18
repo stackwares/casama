@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One creation in Library's 4×2 strip: its cover and title. Added by code into widget_strip.xml. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/w_cell"
+    android:layout_width="0dp"
+    android:layout_height="match_parent"
+    android:layout_marginEnd="8dp"
+    android:layout_weight="1"
+    android:orientation="vertical">
+    <ImageView
+        android:id="@+id/w_cover"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop" />
+    <TextView
+        android:id="@+id/w_t1"
+        style="@style/WidgetText.Second"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="@color/widget_fg" />
+</LinearLayout>

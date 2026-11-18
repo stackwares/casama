@@ -37,6 +37,8 @@ const analyticsClientEvents = <String>{
   'app_error_shown',
   'starter_tapped',
   'feature_used',
+  'widgets_placed',
+  'widget_action',
   'enable_analytics_sharing',
   'disable_analytics_sharing',
 };
@@ -72,6 +74,8 @@ const analyticsFeatures = <String>{
   'live_activity_started',
   'live_notification_started',
   'reactions',
+  'widget_opened',
+  'widget_action',
 };
 
 /// Events Google Analytics 4 also gets as one of its recommended events (D-398): the twin's name, the

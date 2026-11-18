@@ -188,6 +188,8 @@ While the lock is on:
   requests. **Allow**, **Deny** and asking a bot open Casama instead. **Stop** still works.
 - Allow and Deny on a phone's Lock Screen and in notifications still need Face ID, your passcode
   or the screen lock, as before.
+- [Widgets](./widgets) show only counts, bot names and times, and their buttons open Casama,
+  unless you turn on **Show details in widgets** in Settings → Widgets.
 
 If unlocking can't work (you removed the device's passcode, or typed the wrong PIN five times),
 tap **Sign Out** on the lock screen and sign in again. Signing out from the lock screen turns the

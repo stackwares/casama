@@ -1,10 +1,13 @@
 /** Builds billing from the environment; every provider is optional (D-070). */
 import { existsSync, readFileSync } from "node:fs";
 import {
+  ApnsClient,
   ApnsVoipSender,
+  ApnsWidgetSender,
   computerProviderCostUsd,
   computerRates,
   FcmPushSender,
+  widgetPushSender,
 } from "@casama/agent";
 import type { Database } from "@casama/db";
 import { SupervisorProvider } from "@casama/sandbox";
@@ -26,6 +29,23 @@ export const inlineOrFile = (v: string) =>
   !v.trim().startsWith("{") && !v.includes("-----BEGIN") && existsSync(v)
     ? readFileSync(v, "utf8")
     : v;
+
+/**
+ * Widget refresh pushes straight to Apple (D-405), with the same Apple key as call rings
+ * (APNS_KEY_P8, APNS_KEY_ID, APNS_TEAM_ID) and the app's own topic. Unset without a key.
+ */
+export function apnsWidgetsFromEnv(env: Env): ApnsWidgetSender | undefined {
+  if (!env.APNS_KEY_P8 || !env.APNS_KEY_ID || !env.APNS_TEAM_ID) return undefined;
+  return new ApnsWidgetSender(
+    new ApnsClient({
+      keyP8: inlineOrFile(env.APNS_KEY_P8),
+      keyId: env.APNS_KEY_ID,
+      teamId: env.APNS_TEAM_ID,
+      url: env.APNS_URL,
+    }),
+    { appBundleId: env.APNS_TOPIC_APP },
+  );
+}
 
 export function billingFromEnv(
   env: Env,
@@ -112,12 +132,16 @@ export function linkUpkeepFromEnv(env: Env, db?: Database) {
 /** Cloud side: what Casama Link forwards to, and the addresses it gives out. */
 export function linkFromEnv(env: Env, db?: Database) {
   if (!env.BILLING_ENABLED || !env.CASAMA_LINK_CLOUD) return undefined;
+  const push = env.FCM_SERVICE_ACCOUNT
+    ? new FcmPushSender(inlineOrFile(env.FCM_SERVICE_ACCOUNT))
+    : undefined;
   return {
     servers: db ? linkServersFromEnv(env, db) : undefined,
     // The push relay (D-296): linked self-hosted servers send through this cloud's Firebase key.
-    push: env.FCM_SERVICE_ACCOUNT
-      ? new FcmPushSender(inlineOrFile(env.FCM_SERVICE_ACCOUNT))
-      : undefined,
+    push,
+    // ...their widget refresh pushes (D-405): Android through Firebase, iPhones and Macs through
+    // this cloud's Apple key (skipped without one).
+    widgets: push ? widgetPushSender({ push, apple: apnsWidgetsFromEnv(env) }) : undefined,
     // ...and their iPhone call rings through this cloud's Apple key.
     voip:
       env.APNS_KEY_P8 && env.APNS_KEY_ID && env.APNS_TEAM_ID

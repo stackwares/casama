@@ -38,6 +38,8 @@ export interface AppDeps {
     push?: import("@casama/agent").PushSender;
     /** The push relay's sender of iPhone call rings. */
     voip?: import("@casama/agent").VoipSender;
+    /** The push relay's sender of widget refresh pushes (D-405). */
+    widgets?: import("@casama/agent").WidgetPushSender;
     /** The relay for live view away from the computer (D-296). */
     turn?: import("../link/turn.ts").TurnProvider;
   };
@@ -70,11 +72,22 @@ export interface AppDeps {
   };
   /** Readiness checks by name; each throws when unhealthy. */
   readiness: Record<string, () => Promise<void>>;
+  /** Widget refresh pushes for changes made through the API (D-405); unset: none. */
+  glance?: import("@casama/agent").GlancePusher;
+}
+
+/** A request signed with a widget key (D-405): who it reads for, in which workspace. */
+export interface WidgetCaller {
+  id: string;
+  userId: string;
+  orgId: string;
+  private: boolean;
 }
 
 export type AppEnv = {
   Variables: {
     claims?: JwtClaims;
     requestId: string;
+    widgetKey?: WidgetCaller;
   };
 };

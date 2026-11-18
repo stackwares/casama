@@ -45,6 +45,7 @@ import { registerDomainRoutes, registerTlsAsk } from "./routes/domains.ts";
 import { registerEncryptionRoutes } from "./routes/encryption.ts";
 import { registerGalleryRoutes } from "./routes/gallery.ts";
 import { registerGalleryContentRoutes } from "./routes/gallery-content.ts";
+import { registerGlanceRoutes, widgetCaller, widgetClaims } from "./routes/glance.ts";
 import { registerJoiningRoutes } from "./routes/joining.ts";
 import { registerKnowledgeRoutes } from "./routes/knowledge.ts";
 import { registerConnectAppRoutes } from "./routes/link.ts";
@@ -296,6 +297,8 @@ export function createApp(deps: AppDeps) {
   });
 
   // Optional bearer auth: verifies the token when present; routes that need it call requireClaims.
+  // A widget key (D-405) reads as its person on the few routes it may use, and nowhere else.
+  const widgetAuth = widgetCaller(deps);
   app.use("/v1/*", async (c, next) => {
     // Hosted MCP tool calls (D-117) arrive in-process with their person already resolved.
     const inProcess = (c.env as InProcessEnv | undefined)?.casamaClaims;
@@ -310,6 +313,10 @@ export function createApp(deps: AppDeps) {
       } catch {
         throw new ApiError(401, "invalid_token", "The access token is invalid or expired");
       }
+    } else if (header?.startsWith("Widget ")) {
+      const widget = await widgetAuth(c.req.method, c.req.path, header.slice(7).trim());
+      c.set("widgetKey", widget);
+      c.set("claims", widgetClaims(widget));
     }
     await next();
   });
@@ -439,6 +446,7 @@ export function createApp(deps: AppDeps) {
   registerStarterRoutes(app, deps);
   registerChatMediaRoutes(app, deps);
   registerCreationRoutes(app, deps);
+  registerGlanceRoutes(app, deps);
   registerChatExportRoutes(app, deps);
   registerConnectAppRoutes(app, deps, instanceOwnerCheck(deps));
   registerSignInCodeRoutes(app, deps);

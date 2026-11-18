@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ask as a bar (4×1, resizable 2×1 to 5×1): the bot's face, "Ask <bot>", and the microphone.
+     A tap opens quick ask with the keyboard up; the microphone starts a voice call. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bar_bg"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="10dp"
+    android:paddingEnd="8dp">
+    <ImageView
+        android:id="@+id/w_mark"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:importantForAccessibility="no"
+        android:scaleType="fitCenter"
+        android:src="@drawable/mascot_winky" />
+    <TextView
+        android:id="@+id/w_title"
+        style="@style/WidgetText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:fontFamily="sans-serif-medium"
+        android:text="Ask Casama"
+        android:textColor="@color/widget_fg2"
+        android:textSize="15sp" />
+    <ImageView
+        android:id="@+id/w_mic"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/widget_fab"
+        android:contentDescription="Talk"
+        android:padding="10dp"
+        android:src="@drawable/ic_widget_mic" />
+</LinearLayout>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget picker's preview of Today (Android 12+): sample content, never drawn live. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    style="@style/WidgetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <TextView style="@style/WidgetText.Eyebrow" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="Today" />
+    <TextView style="@style/WidgetText.Title" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="2dp" android:text="Wednesday, 18 November" android:textSize="17sp" />
+    <TextView style="@style/WidgetText.Eyebrow" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:paddingTop="12dp" android:text="Needs you · 1" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp"
+        android:gravity="center_vertical" android:orientation="horizontal">
+        <ImageView android:layout_width="32dp" android:layout_height="32dp" android:layout_marginEnd="10dp"
+            android:importantForAccessibility="no" android:src="@drawable/mascot_winky" />
+        <TextView style="@style/WidgetText.Strong" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="Search flight prices for Lisbon" />
+        <TextView style="@style/WidgetButton.Fill" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Allow" />
+    </LinearLayout>
+    <TextView style="@style/WidgetText.Eyebrow" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:paddingTop="12dp" android:text="Up next" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp"
+        android:gravity="center_vertical" android:orientation="horizontal">
+        <TextView style="@style/WidgetText.Strong" android:layout_width="44dp" android:layout_height="wrap_content"
+            android:text="9:00" android:textColor="@color/widget_primary" />
+        <TextView style="@style/WidgetText.Strong" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:text="Inbox sweep" />
+        <TextView style="@style/WidgetButton.Fill" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Run now" />
+    </LinearLayout>
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    <TextView style="@style/WidgetText" android:layout_width="match_parent" android:layout_height="40dp"
+        android:background="@drawable/widget_field" android:gravity="center_vertical" android:paddingStart="16dp"
+        android:text="Ask Ada" android:textColor="@color/widget_fg2" android:textSize="14sp" />
+</LinearLayout>

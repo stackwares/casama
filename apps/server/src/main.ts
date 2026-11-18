@@ -5,7 +5,10 @@ import {
   ComputerService,
   computerRates,
   createSafeFetch,
+  GlancePusher,
   NotificationService,
+  RecordingPushSender,
+  widgetPushSender,
 } from "@casama/agent";
 import { GA4_TWINS } from "@casama/contracts";
 import { contentKeys, createDb } from "@casama/db";
@@ -36,6 +39,7 @@ import { attachTelephony, phoneCalls } from "./api/routes/telephony.ts";
 import { pgRunEventHub } from "./api/run-event-hub.ts";
 import { dbosWorkflows } from "./api/workflows.ts";
 import {
+  apnsWidgetsFromEnv,
   billingFromEnv,
   casamaCloudProvider,
   inlineOrFile,
@@ -212,6 +216,9 @@ if (env.MODE === "api") {
         ? chromiumPdf(env.PDF_CHROMIUM_PATH)
         : null,
     readiness: { database: async () => void (await handle.db.execute(sql`select 1`)) },
+    // Widget refresh pushes for answers and routine changes made here (D-405); the worker sends
+    // the ones its runs and inbox rows cause.
+    glance: apiGlancePusher(handle.db),
     // Outbound calls to addresses people type (password managers, Infisical, invites, memory
     // backends) can't reach private networks unless allowed (audit 2026-11: SSRF).
     apps: { fetch: createSafeFetch({ exemptCidrs: allowCidrs }) },
@@ -378,6 +385,7 @@ if (env.MODE === "api") {
             url: env.APNS_URL,
           }
         : undefined,
+    apnsAppTopic: env.APNS_TOPIC_APP,
     fcmServiceAccountJson: env.FCM_SERVICE_ACCOUNT
       ? inlineOrFile(env.FCM_SERVICE_ACCOUNT)
       : undefined,
@@ -472,6 +480,26 @@ if (env.MODE === "api") {
       log: (msg, extra) => logger.info(msg, extra),
     }),
   );
+}
+
+/**
+ * The API's widget refresh pushes (D-405): the same senders as the worker's (its own Firebase key,
+ * else Casama Cloud's relay; Apple with its own key, else the relay). None when it can't push.
+ */
+function apiGlancePusher(db: import("@casama/db").Database) {
+  const push = serverPushSender({
+    db,
+    fcmServiceAccountJson: env.FCM_SERVICE_ACCOUNT
+      ? inlineOrFile(env.FCM_SERVICE_ACCOUNT)
+      : undefined,
+    cloud,
+    onRelayError: (e) => logger.warn("push relay", { error: e.message }),
+  });
+  const apple = apnsWidgetsFromEnv(env);
+  if (push instanceof RecordingPushSender && !apple) return undefined;
+  return new GlancePusher(db, widgetPushSender({ push, apple }), {
+    onError: (e) => logger.warn("widget push", { error: e.message }),
+  });
 }
 
 /**

@@ -6,6 +6,8 @@
 #   APP_SIGN_IDENTITY       "Apple Distribution: …" (or "3rd Party Mac Developer Application: …")
 #   INSTALLER_SIGN_IDENTITY "3rd Party Mac Developer Installer: …"
 #   PROVISIONING_PROFILE    path to the Mac App Store provisioning profile for ai.casama.app
+#   WIDGET_PROVISIONING_PROFILE  the Mac App Store profile for ai.casama.app.CasamaWidgetsMac (the
+#                           widget extension, D-405); App Store Connect refuses the build without it
 #
 # Without them it builds and stops before signing (a local check that the App Store flavor builds).
 # The direct download (every feature, notarized) is scripts/package-macos.sh.
@@ -55,6 +57,29 @@ sed "s/\$(AppIdentifierPrefix)/$prefix./g" macos/Runner/AppStore.entitlements >"
 # Connect takes the build but TestFlight refuses it (warning 90886, PROCESSING_EXCEPTION).
 team=$(security cms -D -i "$PROVISIONING_PROFILE" | plutil -extract TeamIdentifier.0 raw -)
 bundle_id=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$app/Contents/Info.plist")
+# The widget extension (D-405 §8.8) is signed first, with its own sandbox entitlements and its own
+# Mac App Store profile for ai.casama.app.CasamaWidgetsMac (WIDGET_PROVISIONING_PROFILE). App Store
+# Connect refuses an extension without one, so this build needs it.
+widgets="$app/Contents/PlugIns/CasamaWidgetsMac.appex"
+if [[ -d "$widgets" ]]; then
+  if [[ -z "${WIDGET_PROVISIONING_PROFILE:-}" ]]; then
+    echo "Warning: no WIDGET_PROVISIONING_PROFILE: App Store Connect will refuse the widget extension." >&2
+  else
+    cp "$WIDGET_PROVISIONING_PROFILE" "$widgets/Contents/embedded.provisionprofile"
+  fi
+  went=$(mktemp)
+  sed "s/[$](AppIdentifierPrefix)/$prefix./g; s/[$](TeamIdentifierPrefix)/$team./g" \
+    macos/CasamaWidgetsMac/CasamaWidgetsMac.entitlements >"$went"
+  /usr/libexec/PlistBuddy -c "Add :com.apple.application-identifier string $prefix.$bundle_id.CasamaWidgetsMac" "$went"
+  /usr/libexec/PlistBuddy -c "Add :com.apple.developer.team-identifier string $team" "$went"
+  if [[ -n "${WIDGET_PROVISIONING_PROFILE:-}" ]]; then
+    aps=$(security cms -D -i "$WIDGET_PROVISIONING_PROFILE" | plutil -extract 'Entitlements.com\.apple\.developer\.aps-environment' raw - 2>/dev/null || true)
+    [[ -n "$aps" ]] && /usr/libexec/PlistBuddy -c "Add :com.apple.developer.aps-environment string $aps" "$went"
+  fi
+  codesign --force --timestamp --options runtime --entitlements "$went" \
+    --sign "$APP_SIGN_IDENTITY" "$widgets"
+  rm -f "$went"
+fi
 /usr/libexec/PlistBuddy -c "Add :com.apple.application-identifier string $prefix.$bundle_id" "$entitlements"
 /usr/libexec/PlistBuddy -c "Add :com.apple.developer.team-identifier string $team" "$entitlements"
 codesign --force --timestamp --options runtime --entitlements "$entitlements" \

@@ -8,6 +8,8 @@
 # entitlement without the profile, so without it the build leaves it out. Apple doesn't grant Sign
 # in with Apple to Developer ID apps, so this build's Continue with Apple always uses the browser;
 # only the Mac App Store build (package-macos-appstore.sh) gets Apple's own sheet.
+# WIDGET_PROVISIONING_PROFILE (the Developer ID profile for ai.casama.app.CasamaWidgetsMac) lets the
+# widgets fetch for themselves (D-405); without it they show what the app writes.
 # Then it signs the DMG for Sparkle (the key in the login Keychain, account "casama", or
 # SPARKLE_KEY_FILE) and writes dist/appcast-macos.xml for scripts/publish-desktop-release.sh.
 set -euo pipefail
@@ -35,6 +37,43 @@ app="build/macos/Build/Products/Release/Casama.app"
 ../scripts/macos-fix-pdfium.sh "$app"
 out="../dist/Casama-$version-macos.dmg"
 mkdir -p ../dist
+# The widget extension (D-405 §8.8) is signed on its own, before the app, with its own entitlements.
+# With WIDGET_PROVISIONING_PROFILE (a Developer ID profile for ai.casama.app.CasamaWidgetsMac) it gets
+# the keychain group it shares with the app, so the widgets fetch for themselves; without it they
+# show what the app writes. $1 is the identity ("-" for ad hoc).
+widgets="$app/Contents/PlugIns/CasamaWidgetsMac.appex"
+sign_widgets() {
+  [[ -d "$widgets" ]] || return 0
+  local identity=$1 went wprofile wteam wapp_id
+  went=$(mktemp)
+  local options=(--force --sign "$identity")
+  [[ "$identity" != "-" ]] && options+=(--options runtime --timestamp)
+  if [[ "$identity" != "-" && -n "${WIDGET_PROVISIONING_PROFILE:-}" ]]; then
+    wprofile=$(mktemp)
+    security cms -D -i "$WIDGET_PROVISIONING_PROFILE" >"$wprofile"
+    wteam=$(plutil -extract TeamIdentifier.0 raw "$wprofile")
+    wapp_id=$(plutil -extract 'Entitlements.com\.apple\.application-identifier' raw "$wprofile")
+    if [[ "$wapp_id" != "$wteam.ai.casama.app.CasamaWidgetsMac" ]]; then
+      echo "WIDGET_PROVISIONING_PROFILE is for $wapp_id, not $wteam.ai.casama.app.CasamaWidgetsMac." >&2
+      exit 1
+    fi
+    sed "s/[$](AppIdentifierPrefix)/$wteam./g; s/[$](TeamIdentifierPrefix)/$wteam./g" \
+      macos/CasamaWidgetsMac/CasamaWidgetsMac.entitlements >"$went"
+    /usr/libexec/PlistBuddy -c "Add :com.apple.application-identifier string $wapp_id" "$went"
+    /usr/libexec/PlistBuddy -c "Add :com.apple.developer.team-identifier string $wteam" "$went"
+    # Widget pushes (WidgetPushHandler, macOS 26+) when the profile grants them.
+    if plutil -extract 'Entitlements.com\.apple\.developer\.aps-environment' raw "$wprofile" >/dev/null 2>&1; then
+      /usr/libexec/PlistBuddy -c "Add :com.apple.developer.aps-environment string $(plutil -extract 'Entitlements.com\.apple\.developer\.aps-environment' raw "$wprofile")" "$went"
+    fi
+    rm -f "$wprofile"
+    cp "$WIDGET_PROVISIONING_PROFILE" "$widgets/Contents/embedded.provisionprofile"
+  else
+    [[ "$identity" != "-" ]] && echo "No WIDGET_PROVISIONING_PROFILE: the widgets show what the app writes and don't fetch." >&2
+    cp macos/CasamaWidgetsMac/CasamaWidgetsMacLocal.entitlements "$went"
+  fi
+  codesign "${options[@]}" --entitlements "$went" "$widgets"
+  rm -f "$went"
+}
 if [[ -n "${SIGN_IDENTITY:-}" ]]; then
   # Passkeys (associated domains), and Sign in with Apple should Apple ever grant it to Developer ID,
   # are added only on this signed build, and only when the profile grants them. Release.entitlements is also what an unsigned local
@@ -50,6 +89,8 @@ if [[ -n "${SIGN_IDENTITY:-}" ]]; then
     apple=0 domains=0
     grants 'com\.apple\.developer\.applesignin' && apple=1
     grants 'com\.apple\.developer\.associated-domains' && domains=1
+    keychain=0
+    grants 'keychain-access-groups' && keychain=1
     rm -f "$profile"
     if [[ "$app_id" != "$team.ai.casama.app" ]]; then
       echo "PROVISIONING_PROFILE is for $app_id, not $team.ai.casama.app." >&2
@@ -66,14 +107,22 @@ if [[ -n "${SIGN_IDENTITY:-}" ]]; then
       /usr/libexec/PlistBuddy -c "Add :com.apple.developer.associated-domains array" "$entitlements"
       /usr/libexec/PlistBuddy -c "Add :com.apple.developer.associated-domains:0 string webcredentials:casama.ai" "$entitlements"
     fi
+    # The keychain group the app shares with its widgets (D-405 §8.8), so they can fetch for
+    # themselves. Only with a profile: macOS won't launch an app claiming it without one.
+    if ((keychain)); then
+      /usr/libexec/PlistBuddy -c "Add :keychain-access-groups array" "$entitlements"
+      /usr/libexec/PlistBuddy -c "Add :keychain-access-groups:0 string $team.ai.casama.app.widgets" "$entitlements"
+    fi
   else
     echo "No PROVISIONING_PROFILE: signing without passkeys." >&2
   fi
-  # Inside out: frameworks and their helpers (Sparkle's) without the app's entitlements, then the app.
+  # Inside out: frameworks and their helpers (Sparkle's) without the app's entitlements, then the
+  # widget extension with its own, then the app.
   find "$app/Contents/Frameworks" -maxdepth 1 \( -name '*.framework' -o -name '*.dylib' \) -print0 |
     while IFS= read -r -d '' item; do
       codesign --deep --force --options runtime --timestamp --sign "$SIGN_IDENTITY" "$item"
     done
+  sign_widgets "$SIGN_IDENTITY"
   codesign --force --options runtime --timestamp --entitlements "$entitlements" \
     --sign "$SIGN_IDENTITY" "$app"
   codesign --verify --deep --strict "$app"
@@ -81,6 +130,12 @@ if [[ -n "${SIGN_IDENTITY:-}" ]]; then
 else
   # Unsigned: re-seal ad hoc, since macos-fix-pdfium.sh changed a framework after Xcode signed it.
   codesign --force --deep --sign - --entitlements macos/Runner/Release.entitlements "$app"
+  # --deep gave the widget extension the app's entitlements; give it back its own (it must be
+  # sandboxed), then re-seal the app around it.
+  if [[ -d "$widgets" ]]; then
+    sign_widgets -
+    codesign --force --sign - --entitlements macos/Runner/Release.entitlements "$app"
+  fi
 fi
 rm -f "$out"
 if command -v uvx >/dev/null 2>&1; then

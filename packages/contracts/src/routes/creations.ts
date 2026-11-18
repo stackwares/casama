@@ -89,7 +89,8 @@ export const getCreationCover = createRoute({
   path: "/v1/creations/{id}/cover",
   tags: ["creations"],
   security,
-  summary: "The picture for its card, when it has one (has_cover)",
+  summary:
+    "The picture for its card, when it has one (has_cover). Also takes `Authorization: Widget <key>` for a creation in the key's workspace (D-405)",
   request: { params: idParam },
   responses: {
     200: { description: "Cover", content: binary(["image/jpeg", "image/png", "image/webp"]) },

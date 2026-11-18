@@ -107,4 +107,7 @@ dependencies {
     implementation("androidx.browser:browser:1.9.0")
     // The live call notification's CallStyle (CallService.kt, D-327).
     implementation("androidx.core:core-ktx:1.13.1")
+    // Widgets fresh while the app is closed (GlanceRefresh.kt, D-405). home_widget brings WorkManager
+    // in with `implementation`, which doesn't reach this module.
+    implementation("androidx.work:work-runtime-ktx:2.11.2")
 }

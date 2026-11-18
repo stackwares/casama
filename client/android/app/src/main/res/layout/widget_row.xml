@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One row in a list widget or in Today's list: a time or the bot's face, two lines, and up to two
+     capsule buttons (Allow and Deny, Review, Open, Do it, Run now). Added by code, one RemoteViews
+     per row, so the ids repeat safely. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/w_row"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:minHeight="44dp"
+    android:orientation="horizontal"
+    android:paddingTop="3dp"
+    android:paddingBottom="3dp">
+    <TextView
+        android:id="@+id/w_time"
+        style="@style/WidgetText.Strong"
+        android:layout_width="44dp"
+        android:layout_height="wrap_content"
+        android:fontFeatureSettings="tnum"
+        android:textColor="@color/widget_primary"
+        android:visibility="gone" />
+    <ImageView
+        android:id="@+id/w_mark"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="10dp"
+        android:importantForAccessibility="no"
+        android:scaleType="fitCenter"
+        android:visibility="gone" />
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/w_t1"
+            style="@style/WidgetText.Strong"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/w_t2"
+            style="@style/WidgetText.Second"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp" />
+    </LinearLayout>
+    <TextView
+        android:id="@+id/w_btn1"
+        style="@style/WidgetButton.Fill"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:visibility="gone" />
+    <TextView
+        android:id="@+id/w_btn2"
+        style="@style/WidgetButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:visibility="gone" />
+</LinearLayout>

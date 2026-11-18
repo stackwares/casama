@@ -24,6 +24,7 @@ export * from "./events.ts";
 export * from "./ga4-twins.generated.ts";
 export * from "./gallery.ts";
 export * from "./gallery-content.ts";
+export * from "./glance.ts";
 export * from "./knowledge.ts";
 export * from "./link.ts";
 export * from "./links.ts";

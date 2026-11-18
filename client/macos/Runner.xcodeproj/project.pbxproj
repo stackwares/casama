@@ -21,6 +21,22 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		E4C11A0D2F00000000000022 /* Glance.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000001 /* Glance.swift */; };
+		E4C11A0D2F00000000000023 /* WidgetKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000002 /* WidgetKey.swift */; };
+		E4C11A0D2F00000000000024 /* GlanceIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000003 /* GlanceIntents.swift */; };
+		E4C11A0D2F00000000000025 /* GlanceFetch.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000004 /* GlanceFetch.swift */; };
+		E4C11A0D2F00000000000026 /* GlanceTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000005 /* GlanceTimeline.swift */; };
+		E4C11A0D2F00000000000027 /* BotMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000006 /* BotMark.swift */; };
+		E4C11A0D2F00000000000028 /* WidgetPush.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000007 /* WidgetPush.swift */; };
+		E4C11A0D2F00000000000029 /* Style.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000008 /* Style.swift */; };
+		E4C11A0D2F0000000000002A /* HomeViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000009 /* HomeViews.swift */; };
+		E4C11A0D2F0000000000002B /* MoreViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F0000000000000A /* MoreViews.swift */; };
+		E4C11A0D2F0000000000002C /* AccessoryViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F0000000000000B /* AccessoryViews.swift */; };
+		E4C11A0D2F0000000000002D /* MacWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F0000000000000C /* MacWidgets.swift */; };
+		E4C11A0D2F0000000000002E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000010 /* Assets.xcassets */; };
+		E4C11A0D2F0000000000002F /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000011 /* PrivacyInfo.xcprivacy */; };
+		E4C11A0D2F00000000000030 /* WidgetKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000002 /* WidgetKey.swift */; };
+		E4C11A0D2F0000000000001B /* CasamaWidgetsMac.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = E4C11A0D2F00000000000012 /* CasamaWidgetsMac.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		331C80D8294CF71000263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C80D7294CF71000263BE5 /* RunnerTests.swift */; };
 		335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335BBD1A22A9A15E00E9071D /* GeneratedPluginRegistrant.swift */; };
 		33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC10F02044A3C60003C045 /* AppDelegate.swift */; };
@@ -35,6 +51,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		E4C11A0D2F0000000000001C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 33CC10E52044A3C60003C045 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E4C11A0D2F00000000000013;
+			remoteInfo = CasamaWidgetsMac;
+		};
 		331C80D9294CF71000263BE5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 33CC10E52044A3C60003C045 /* Project object */;
@@ -52,6 +75,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		E4C11A0D2F0000000000001A /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				E4C11A0D2F0000000000001B /* CasamaWidgetsMac.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		33CC110E2044A8840003C045 /* Bundle Framework */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -65,6 +99,24 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E4C11A0D2F00000000000001 /* Glance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Glance.swift; sourceTree = "<group>"; };
+		E4C11A0D2F00000000000002 /* WidgetKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetKey.swift; sourceTree = "<group>"; };
+		E4C11A0D2F00000000000003 /* GlanceIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlanceIntents.swift; sourceTree = "<group>"; };
+		E4C11A0D2F00000000000004 /* GlanceFetch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlanceFetch.swift; sourceTree = "<group>"; };
+		E4C11A0D2F00000000000005 /* GlanceTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlanceTimeline.swift; sourceTree = "<group>"; };
+		E4C11A0D2F00000000000006 /* BotMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BotMark.swift; sourceTree = "<group>"; };
+		E4C11A0D2F00000000000007 /* WidgetPush.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetPush.swift; sourceTree = "<group>"; };
+		E4C11A0D2F00000000000008 /* Style.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Style.swift; sourceTree = "<group>"; };
+		E4C11A0D2F00000000000009 /* HomeViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViews.swift; sourceTree = "<group>"; };
+		E4C11A0D2F0000000000000A /* MoreViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreViews.swift; sourceTree = "<group>"; };
+		E4C11A0D2F0000000000000B /* AccessoryViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessoryViews.swift; sourceTree = "<group>"; };
+		E4C11A0D2F0000000000000C /* MacWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacWidgets.swift; sourceTree = "<group>"; };
+		E4C11A0D2F0000000000000D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E4C11A0D2F0000000000000E /* CasamaWidgetsMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CasamaWidgetsMac.entitlements; sourceTree = "<group>"; };
+		E4C11A0D2F0000000000000F /* CasamaWidgetsMacLocal.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CasamaWidgetsMacLocal.entitlements; sourceTree = "<group>"; };
+		E4C11A0D2F00000000000010 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E4C11A0D2F00000000000011 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		E4C11A0D2F00000000000012 /* CasamaWidgetsMac.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CasamaWidgetsMac.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		331C80D5294CF71000263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		331C80D7294CF71000263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		333000ED22D3DE5D00554162 /* Warnings.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Warnings.xcconfig; sourceTree = "<group>"; };
@@ -97,6 +149,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		E4C11A0D2F00000000000018 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		331C80D2294CF70F00263BE5 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -117,6 +176,47 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		E4C11A0D2F00000000000014 /* CasamaWidgetsMac */ = {
+			isa = PBXGroup;
+			children = (
+				E4C11A0D2F0000000000000C /* MacWidgets.swift */,
+				E4C11A0D2F0000000000000D /* Info.plist */,
+				E4C11A0D2F0000000000000E /* CasamaWidgetsMac.entitlements */,
+				E4C11A0D2F0000000000000F /* CasamaWidgetsMacLocal.entitlements */,
+				E4C11A0D2F00000000000015 /* CasamaWidgets (shared with iPhone) */,
+			);
+			path = CasamaWidgetsMac;
+			sourceTree = "<group>";
+		};
+		E4C11A0D2F00000000000015 /* CasamaWidgets (shared with iPhone) */ = {
+			isa = PBXGroup;
+			children = (
+				E4C11A0D2F00000000000001 /* Glance.swift */,
+				E4C11A0D2F00000000000002 /* WidgetKey.swift */,
+				E4C11A0D2F00000000000003 /* GlanceIntents.swift */,
+				E4C11A0D2F00000000000004 /* GlanceFetch.swift */,
+				E4C11A0D2F00000000000005 /* GlanceTimeline.swift */,
+				E4C11A0D2F00000000000006 /* BotMark.swift */,
+				E4C11A0D2F00000000000007 /* WidgetPush.swift */,
+				E4C11A0D2F00000000000016 /* WidgetViews */,
+				E4C11A0D2F00000000000010 /* Assets.xcassets */,
+				E4C11A0D2F00000000000011 /* PrivacyInfo.xcprivacy */,
+			);
+			name = "CasamaWidgets (shared with iPhone)";
+			path = ../../ios/CasamaWidgets;
+			sourceTree = "<group>";
+		};
+		E4C11A0D2F00000000000016 /* WidgetViews */ = {
+			isa = PBXGroup;
+			children = (
+				E4C11A0D2F00000000000008 /* Style.swift */,
+				E4C11A0D2F00000000000009 /* HomeViews.swift */,
+				E4C11A0D2F0000000000000A /* MoreViews.swift */,
+				E4C11A0D2F0000000000000B /* AccessoryViews.swift */,
+			);
+			path = WidgetViews;
+			sourceTree = "<group>";
+		};
 		331C80D6294CF71000263BE5 /* RunnerTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -142,6 +242,7 @@
 				33FAB671232836740065AC1E /* Runner */,
 				33CEB47122A05771004F2AC0 /* Flutter */,
 				331C80D6294CF71000263BE5 /* RunnerTests */,
+				E4C11A0D2F00000000000014 /* CasamaWidgetsMac */,
 				33CC10EE2044A3C60003C045 /* Products */,
 				D73912EC22F37F3D000D13A0 /* Frameworks */,
 				8B46517233547314CE44CD61 /* Pods */,
@@ -153,6 +254,7 @@
 			children = (
 				33CC10ED2044A3C60003C045 /* Casama.app */,
 				331C80D5294CF71000263BE5 /* RunnerTests.xctest */,
+				E4C11A0D2F00000000000012 /* CasamaWidgetsMac.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -221,6 +323,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		E4C11A0D2F00000000000013 /* CasamaWidgetsMac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E4C11A0D2F0000000000001E /* Build configuration list for PBXNativeTarget "CasamaWidgetsMac" */;
+			buildPhases = (
+				E4C11A0D2F00000000000017 /* Sources */,
+				E4C11A0D2F00000000000018 /* Frameworks */,
+				E4C11A0D2F00000000000019 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CasamaWidgetsMac;
+			productName = CasamaWidgetsMac;
+			productReference = E4C11A0D2F00000000000012 /* CasamaWidgetsMac.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		331C80D4294CF70F00263BE5 /* RunnerTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 331C80DE294CF71000263BE5 /* Build configuration list for PBXNativeTarget "RunnerTests" */;
@@ -249,6 +368,7 @@
 				33CC10EA2044A3C60003C045 /* Frameworks */,
 				33CC10EB2044A3C60003C045 /* Resources */,
 				33CC110E2044A8840003C045 /* Bundle Framework */,
+				E4C11A0D2F0000000000001A /* Embed Foundation Extensions */,
 				3399D490228B24CF009A79C7 /* ShellScript */,
 				6A599DE67D459B2F8BB45DF5 /* [CP] Embed Pods Frameworks */,
 			);
@@ -256,6 +376,7 @@
 			);
 			dependencies = (
 				33CC11202044C79F0003C045 /* PBXTargetDependency */,
+				E4C11A0D2F0000000000001D /* PBXTargetDependency */,
 			);
 			name = Runner;
 			packageProductDependencies = (
@@ -294,6 +415,9 @@
 						CreatedOnToolsVersion = 9.2;
 						ProvisioningStyle = Manual;
 					};
+					E4C11A0D2F00000000000013 = {
+						CreatedOnToolsVersion = 27.0;
+					};
 				};
 			};
 			buildConfigurationList = 33CC10E82044A3C60003C045 /* Build configuration list for PBXProject "Runner" */;
@@ -315,11 +439,21 @@
 				33CC10EC2044A3C60003C045 /* Runner */,
 				331C80D4294CF70F00263BE5 /* RunnerTests */,
 				33CC111A2044C6BA0003C045 /* Flutter Assemble */,
+				E4C11A0D2F00000000000013 /* CasamaWidgetsMac */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		E4C11A0D2F00000000000019 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E4C11A0D2F0000000000002E /* Assets.xcassets in Resources */,
+				E4C11A0D2F0000000000002F /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		331C80D3294CF70F00263BE5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -442,6 +576,25 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		E4C11A0D2F00000000000017 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E4C11A0D2F00000000000022 /* Glance.swift in Sources */,
+				E4C11A0D2F00000000000023 /* WidgetKey.swift in Sources */,
+				E4C11A0D2F00000000000024 /* GlanceIntents.swift in Sources */,
+				E4C11A0D2F00000000000025 /* GlanceFetch.swift in Sources */,
+				E4C11A0D2F00000000000026 /* GlanceTimeline.swift in Sources */,
+				E4C11A0D2F00000000000027 /* BotMark.swift in Sources */,
+				E4C11A0D2F00000000000028 /* WidgetPush.swift in Sources */,
+				E4C11A0D2F00000000000029 /* Style.swift in Sources */,
+				E4C11A0D2F0000000000002A /* HomeViews.swift in Sources */,
+				E4C11A0D2F0000000000002B /* MoreViews.swift in Sources */,
+				E4C11A0D2F0000000000002C /* AccessoryViews.swift in Sources */,
+				E4C11A0D2F0000000000002D /* MacWidgets.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		331C80D1294CF70F00263BE5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -456,6 +609,7 @@
 			files = (
 				33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */,
 				C0A11A0D2F00000000000001 /* Island.swift in Sources */,
+				E4C11A0D2F00000000000030 /* WidgetKey.swift in Sources */,
 				33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */,
 				335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */,
 			);
@@ -464,6 +618,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		E4C11A0D2F0000000000001D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E4C11A0D2F00000000000013 /* CasamaWidgetsMac */;
+			targetProxy = E4C11A0D2F0000000000001C /* PBXContainerItemProxy */;
+		};
 		331C80DA294CF71000263BE5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 33CC10EC2044A3C60003C045 /* Runner */;
@@ -489,6 +648,82 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		E4C11A0D2F0000000000001F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "$(CASAMA_WIDGET_DEBUG_ENTITLEMENTS)";
+				CODE_SIGN_STYLE = "$(CASAMA_WIDGET_DEBUG_SIGN_STYLE)";
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CasamaWidgetsMac/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = ai.casama.app.CasamaWidgetsMac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "$(CASAMA_WIDGET_DEBUG_PROFILE)";
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		E4C11A0D2F00000000000020 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = CasamaWidgetsMac/CasamaWidgetsMacLocal.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CasamaWidgetsMac/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = ai.casama.app.CasamaWidgetsMac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		E4C11A0D2F00000000000021 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 33E5194F232828860026EE4D /* AppInfo.xcconfig */;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = CasamaWidgetsMac/CasamaWidgetsMacLocal.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = CasamaWidgetsMac/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = ai.casama.app.CasamaWidgetsMac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Profile;
+		};
 		331C80DB294CF71000263BE5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = A6D0B8F885D69AE8BB06105E /* Pods-RunnerTests.debug.xcconfig */;
@@ -773,6 +1008,16 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		E4C11A0D2F0000000000001E /* Build configuration list for PBXNativeTarget "CasamaWidgetsMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E4C11A0D2F0000000000001F /* Debug */,
+				E4C11A0D2F00000000000020 /* Release */,
+				E4C11A0D2F00000000000021 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		331C80DE294CF71000263BE5 /* Build configuration list for PBXNativeTarget "RunnerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

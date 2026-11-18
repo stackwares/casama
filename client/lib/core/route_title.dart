@@ -153,6 +153,7 @@ String tabTitleFor(String? fullPath, AppLocalizations l10n, {String? botName}) {
     '/settings/appearance' => l10n.appearance,
     '/settings/appearance/customize' => l10n.customize,
     '/settings/usage' => l10n.usage,
+    '/settings/widgets' => l10n.widgetsTitle,
     '/settings/invite' => l10n.inviteFriends,
     '/settings/gallery' || '/settings/gallery/:type/:id' => l10n.gallery,
     '/settings/gallery/author/:handle' => l10n.gallery,

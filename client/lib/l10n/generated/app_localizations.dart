@@ -23433,6 +23433,486 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nothing to turn on on this device.'**
   String get permissionsNone;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Title of the list of requests waiting on the person.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs you'**
+  String get widgetNeedsYou;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Nothing waits on the person.
+  ///
+  /// In en, this message translates to:
+  /// **'All clear'**
+  String get widgetAllClear;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Button: allow a low-risk request.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get widgetAllow;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Button: deny a request.
+  ///
+  /// In en, this message translates to:
+  /// **'Deny'**
+  String get widgetDeny;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Button: open a request to look at it in the app.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get widgetReview;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Button: open a takeover request.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get widgetOpen;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Button: accept a bot's suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Do it'**
+  String get widgetDoIt;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Button: start a routine by hand.
+  ///
+  /// In en, this message translates to:
+  /// **'Run now'**
+  String get widgetRunNow;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Shown after Run now was pressed.
+  ///
+  /// In en, this message translates to:
+  /// **'Started'**
+  String get widgetStarted;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Button: stop a running bot.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get widgetStop;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Button: open quick ask.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask'**
+  String get widgetAsk;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). The ask field, with the bot it goes to.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask {bot}'**
+  String widgetAskBot(String bot);
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Button: start a voice call with the bot.
+  ///
+  /// In en, this message translates to:
+  /// **'Talk'**
+  String get widgetTalk;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Label above starter requests the person can tap.
+  ///
+  /// In en, this message translates to:
+  /// **'Try'**
+  String get widgetTry;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Routines in the order they will run.
+  ///
+  /// In en, this message translates to:
+  /// **'Up next'**
+  String get widgetUpNext;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). The Routines widget when there are none.
+  ///
+  /// In en, this message translates to:
+  /// **'No routines yet'**
+  String get widgetNoRoutines;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). A bot is working on something.
+  ///
+  /// In en, this message translates to:
+  /// **'Working'**
+  String get widgetWorking;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). A bot is blocked on the person.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for you'**
+  String get widgetWaiting;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). A bot is not doing anything.
+  ///
+  /// In en, this message translates to:
+  /// **'Idle'**
+  String get widgetIdle;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). When the bot last replied, e.g. "Replied 9:20".
+  ///
+  /// In en, this message translates to:
+  /// **'Replied {time}'**
+  String widgetRepliedAt(String time);
+
+  /// Shown in a home screen or Lock Screen widget (D-405). The morning brief.
+  ///
+  /// In en, this message translates to:
+  /// **'Brief'**
+  String get widgetBrief;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). When today's brief arrives.
+  ///
+  /// In en, this message translates to:
+  /// **'Brief at {time}'**
+  String widgetBriefAt(String time);
+
+  /// Shown in a home screen or Lock Screen widget (D-405). No morning brief has arrived.
+  ///
+  /// In en, this message translates to:
+  /// **'No brief yet'**
+  String get widgetNoBrief;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Title of the large Today widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get widgetToday;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Title of the credits widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get widgetCredits;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Credits left this period.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} left'**
+  String widgetCreditsLeft(String amount);
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Spent today.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} today'**
+  String widgetSpentToday(String amount);
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Share of this period's credits used.
+  ///
+  /// In en, this message translates to:
+  /// **'{n}% used'**
+  String widgetUsedPct(String n);
+
+  /// Shown in a home screen or Lock Screen widget (D-405). When the daily cap resets.
+  ///
+  /// In en, this message translates to:
+  /// **'Resets {time}'**
+  String widgetResetsAt(String time);
+
+  /// Shown in a home screen or Lock Screen widget (D-405). What a bot finished last.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished'**
+  String get widgetFinished;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Title of the Library widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get widgetLibrary;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). The Library widget when empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing made yet'**
+  String get widgetNoCreations;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Title of the Tasks widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get widgetTasks;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Task board column.
+  ///
+  /// In en, this message translates to:
+  /// **'To do'**
+  String get widgetTodo;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Task board column.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get widgetInProgress;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Task board column.
+  ///
+  /// In en, this message translates to:
+  /// **'In review'**
+  String get widgetInReview;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Task board column.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked'**
+  String get widgetBlocked;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Signed out.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Casama to sign in'**
+  String get widgetSignIn;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). No bots yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Meet your first bot'**
+  String get widgetNoBots;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). How old the data is, e.g. "as of 9:41".
+  ///
+  /// In en, this message translates to:
+  /// **'as of {time}'**
+  String widgetAsOf(String time);
+
+  /// Shown in a home screen or Lock Screen widget (D-405). The server is too old for this widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your Casama server to use this widget'**
+  String get widgetUpdateServer;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). An approval request from a bot.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} needs your OK'**
+  String widgetNeedsOkFrom(String bot);
+
+  /// Shown in a home screen or Lock Screen widget (D-405). A suggestion from a bot.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} suggests'**
+  String widgetSuggests(String bot);
+
+  /// Shown in a home screen or Lock Screen widget (D-405). A takeover request from a bot.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} needs you to take over'**
+  String widgetTakeOver(String bot);
+
+  /// Shown in a home screen or Lock Screen widget (D-405). When the next brief is due.
+  ///
+  /// In en, this message translates to:
+  /// **'Next brief {time}'**
+  String widgetNextBrief(String time);
+
+  /// Shown in a home screen or Lock Screen widget (D-405). No routine or brief is coming up.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing scheduled'**
+  String get widgetNothingNext;
+
+  /// Settings -> Widgets: page title and settings row (D-405).
+  ///
+  /// In en, this message translates to:
+  /// **'Widgets'**
+  String get widgetsTitle;
+
+  /// Settings row subtitle for Widgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bots on the Home screen and Lock Screen'**
+  String get widgetsRow;
+
+  /// Settings -> Widgets: the line at the top.
+  ///
+  /// In en, this message translates to:
+  /// **'Widgets show what your bots are doing and what waits on you, without opening Casama.'**
+  String get widgetsIntro;
+
+  /// Name of the widget that follows one bot.
+  ///
+  /// In en, this message translates to:
+  /// **'Bot'**
+  String get widgetNameBot;
+
+  /// Name of the routines widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Routines'**
+  String get widgetNameRoutines;
+
+  /// Widget description; starts with a verb.
+  ///
+  /// In en, this message translates to:
+  /// **'See which bots are waiting on you'**
+  String get widgetDescNeedsYou;
+
+  /// Widget description; starts with a verb.
+  ///
+  /// In en, this message translates to:
+  /// **'See what one bot is doing'**
+  String get widgetDescBot;
+
+  /// Widget description; starts with a verb.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask or talk to a bot in one tap'**
+  String get widgetDescAsk;
+
+  /// Widget description; starts with a verb.
+  ///
+  /// In en, this message translates to:
+  /// **'See what runs next and run it now'**
+  String get widgetDescRoutines;
+
+  /// Widget description; starts with a verb.
+  ///
+  /// In en, this message translates to:
+  /// **'See your whole day on one large widget'**
+  String get widgetDescToday;
+
+  /// Widget description; starts with a verb.
+  ///
+  /// In en, this message translates to:
+  /// **'Read your morning brief'**
+  String get widgetDescBrief;
+
+  /// Widget description; starts with a verb.
+  ///
+  /// In en, this message translates to:
+  /// **'See what your bots made lately'**
+  String get widgetDescLibrary;
+
+  /// Widget description; starts with a verb.
+  ///
+  /// In en, this message translates to:
+  /// **'See where the task board stands'**
+  String get widgetDescTasks;
+
+  /// Widget description; starts with a verb.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep an eye on your credits'**
+  String get widgetDescCredits;
+
+  /// Android button that asks the launcher to place the widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Home screen'**
+  String get widgetsAddToHome;
+
+  /// Android: the launcher refused to place the widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Your launcher can\'t add widgets from here. Touch and hold an empty spot on your Home screen, tap Widgets, and pick Casama.'**
+  String get widgetsPinUnsupported;
+
+  /// Heading over the steps for adding a widget.
+  ///
+  /// In en, this message translates to:
+  /// **'How to add'**
+  String get widgetsHowToAdd;
+
+  /// iPhone steps to add a widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch and hold an empty spot on your Home Screen, tap Edit, then Add Widget, and pick Casama.'**
+  String get widgetsHowToIos;
+
+  /// Mac steps to add a widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Click the date and time in the menu bar, then Edit Widgets, and pick Casama. Or right-click the desktop and choose Edit Widgets.'**
+  String get widgetsHowToMac;
+
+  /// Settings -> Widgets section about Lock Screen widgets and controls (iPhone).
+  ///
+  /// In en, this message translates to:
+  /// **'Lock Screen and controls'**
+  String get widgetsLockScreen;
+
+  /// iPhone steps to add Lock Screen widgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Touch and hold the Lock Screen, tap Customize, then Lock Screen, and tap the space under the clock to add Needs you, Up next, Bot or Credits. A request stays hidden until you unlock.'**
+  String get widgetsLockScreenHelp;
+
+  /// iPhone steps to add controls.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Control Center, touch and hold, tap Add a Control, and pick Ask Casama, Talk to a bot or Run a routine. They also fit the Lock Screen corners and the Action button.'**
+  String get widgetsControlsHelp;
+
+  /// Switch that lets widgets show requests, messages and routine names while the app lock is on.
+  ///
+  /// In en, this message translates to:
+  /// **'Show details in widgets'**
+  String get widgetsShowDetails;
+
+  /// Help under Show details in widgets.
+  ///
+  /// In en, this message translates to:
+  /// **'With the app lock on, widgets show only numbers and bot names, and their buttons open Casama. Turn this on to show requests, messages and routine names too.'**
+  String get widgetsShowDetailsHelp;
+
+  /// Help under Show details in widgets while the app lock is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Only matters while the app lock is on. Without it, widgets show details.'**
+  String get widgetsShowDetailsNoLock;
+
+  /// Help under Show details in widgets when a workspace requires the app lock.
+  ///
+  /// In en, this message translates to:
+  /// **'{workspace} requires the app lock, so widgets keep details hidden.'**
+  String widgetsShowDetailsRequired(String workspace);
+
+  /// Android section: put a bot on the Home screen as its own icon.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin a bot to your Home screen'**
+  String get widgetsPinBot;
+
+  /// Help for pinning a bot.
+  ///
+  /// In en, this message translates to:
+  /// **'Puts the bot on your Home screen as its own icon. Tap it to chat.'**
+  String get widgetsPinBotHelp;
+
+  /// Button: pin this bot to the Home screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin'**
+  String get widgetsPin;
+
+  /// One-time hint after the first request is answered (D-405).
+  ///
+  /// In en, this message translates to:
+  /// **'Answer requests from your Home screen with the Needs you widget.'**
+  String get widgetNudgeNeedsYou;
+
+  /// One-time hint after the first routine is made (D-405).
+  ///
+  /// In en, this message translates to:
+  /// **'Run routines from your Home screen with the Routines widget.'**
+  String get widgetNudgeRoutines;
+
+  /// Button on the one-time widget hint: opens Settings -> Widgets.
+  ///
+  /// In en, this message translates to:
+  /// **'Show me'**
+  String get widgetNudgeAction;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). Marks a low-risk request that can be allowed from the widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Low risk'**
+  String get widgetLowRisk;
+
+  /// Shown in a home screen or Lock Screen widget (D-405). This month's spend in the Credits widget.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get widgetThisMonth;
 }
 
 class _AppLocalizationsDelegate

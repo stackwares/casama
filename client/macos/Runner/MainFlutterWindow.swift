@@ -6,6 +6,7 @@ import FlutterMacOS
 import ServiceManagement
 import Speech
 import UserNotifications
+import WidgetKit
 
 class MainFlutterWindow: NSWindow {
   private static let frameName = "CasamaMainWindow"
@@ -130,12 +131,54 @@ final class MacBridge: NSObject {
         // Sparkle reads this user default over the Info.plist value.
         UserDefaults.standard.set(call.arguments as? Bool ?? true, forKey: "SUEnableAutomaticChecks")
         result(nil)
+      case "glance":
+        result(Self.writeGlance(call.arguments as? [String: Any] ?? [:]))
       default:
         result(FlutterMethodNotImplemented)
       }
     }
     self.channel = channel
     DispatchQueue.main.async { self.installMenus() }
+  }
+
+  /// The widgets' data (D-405 §8.3, §17): `glance {glance, words, server, signed_in, key,
+  /// unsupported?, checked_at?}` writes
+  /// the glance, its words and the server's address where the Mac widget extension reads them (the
+  /// Team-ID-named app group, which a sandboxed extension can share with this unsandboxed app),
+  /// keeps the widget key in the keychain group they share, and redraws the widgets. Signed out,
+  /// it wipes all of it. Answers whether the key was stored (false where signing doesn't grant the
+  /// keychain group; the widgets then show what this writes and don't fetch for themselves).
+  private static let widgetGroup = "V8V5US964Z.ai.casama.app"
+
+  private static func writeGlance(_ args: [String: Any]) -> Bool {
+    let signedIn = args["signed_in"] as? Bool ?? false
+    if let defaults = UserDefaults(suiteName: widgetGroup) {
+      func put(_ key: String, _ value: String?) {
+        if let value, !value.isEmpty, signedIn { defaults.set(value, forKey: key) } else { defaults.removeObject(forKey: key) }
+      }
+      put("glance", args["glance"] as? String)
+      // The words stay when signed out: the signed-out widget still says "Open Casama to sign in".
+      if let words = args["words"] as? String, !words.isEmpty { defaults.set(words, forKey: "glance_words") }
+      put("glance_server", args["server"] as? String)
+      put("glance_signed_in", signedIn ? "1" : nil)
+      // Optional, as on Android and iPhone: `unsupported` (the server has no /v1/glance, §6.6)
+      // and `checked_at` (epoch ms of the last 200 or 304, the data's age for the "as of" line).
+      put("glance_unsupported", (args["unsupported"] as? Bool ?? false) ? "1" : nil)
+      if let ms = args["checked_at"] as? NSNumber {
+        put("glance_checked_at", ms.int64Value > 0 ? String(ms.int64Value) : nil)
+      } else if let ms = args["checked_at"] as? String {
+        put("glance_checked_at", ms)
+      } else if args["glance"] as? String != nil {
+        // The app calls this after each fetch (200 or 304), so the call itself is the check.
+        put("glance_checked_at", String(Int64(Date().timeIntervalSince1970 * 1000)))
+      }
+      if !signedIn {
+        for key in ["glance_checked_at", "glance_started", "glance_push_token_sent"] { defaults.removeObject(forKey: key) }
+      }
+    }
+    let stored = WidgetKey.write(signedIn ? args["key"] as? String : nil)
+    WidgetCenter.shared.reloadAllTimelines()
+    return stored
   }
 
   @objc private func menuAction(_ sender: NSMenuItem) {

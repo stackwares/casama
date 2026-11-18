@@ -61,8 +61,8 @@ Each run you start gets one notification that stays while the bot works:
 It never makes a sound: the request's own notification is the one that tells you. It keeps up
 while Casama is closed, from the server, in the same way as on an iPhone.
 
-The **home-screen widget** shows the running bot, its step and **Stop** while something runs, and
-today's status otherwise.
+The **Bot** widget shows the running bot, its step and **Stop** while something runs. For every
+widget, see [Widgets and controls](./widgets).
 
 ### Turning it off
 

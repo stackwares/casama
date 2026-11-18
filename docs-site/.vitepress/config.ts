@@ -251,6 +251,7 @@ export default defineConfig({
           { text: "Casama for Chrome", link: "/guide/chrome" },
           { text: "Bots in the notch and menu bar", link: "/guide/notch" },
           { text: "Bots on the Lock Screen", link: "/guide/lock-screen" },
+          { text: "Widgets and controls", link: "/guide/widgets" },
           { text: "Coding agents", link: "/guide/coding-agents" },
           { text: "Teach by showing", link: "/guide/teach" },
           { text: "Routines and triggers", link: "/guide/routines" },

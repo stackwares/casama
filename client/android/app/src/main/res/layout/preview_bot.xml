@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget picker's preview of Bot (Android 12+): sample content, never drawn live. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    style="@style/WidgetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <ImageView android:layout_width="40dp" android:layout_height="40dp" android:importantForAccessibility="no"
+            android:src="@drawable/mascot_focused" />
+        <FrameLayout android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
+        <TextView style="@style/WidgetPill" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium" android:text="Working · 2:14" android:textColor="@color/widget_on_green"
+            android:textSize="11.5sp" />
+    </LinearLayout>
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    <TextView style="@style/WidgetText.Title" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="Ada" android:textSize="16sp" />
+    <TextView style="@style/WidgetText.Second" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="3dp" android:text="Reading your inbox" />
+    <TextView style="@style/WidgetButton" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_marginTop="10dp" android:text="Stop" />
+</LinearLayout>

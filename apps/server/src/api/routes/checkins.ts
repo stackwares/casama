@@ -256,6 +256,7 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
             conversation_id = ${created.conversation_id}::uuid where id = ${s.id}::uuid`,
     );
     resolved(claims, s, "accepted");
+    deps.glance?.changed(claims.sub, { urgent: true });
     // The card is answered: the next waiting suggestion can come into General (D-257).
     void postSuggestions(db).catch(() => 0);
     await deps.workflows.startRun(created.run_id);
@@ -270,6 +271,7 @@ export function registerCheckinRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       sql`update public.suggestions set status = 'dismissed', resolved_at = now() where id = ${s.id}::uuid`,
     );
     resolved(claims, s, dont_suggest_again ? "dismissed_forever" : "dismissed");
+    deps.glance?.changed(claims.sub, { urgent: true });
     void postSuggestions(db).catch(() => 0);
     if (dont_suggest_again)
       await db.execute(sql`

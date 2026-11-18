@@ -23,5 +23,10 @@
 	<array>
 		<string>group.ai.casama.app</string>
 	</array>
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)ai.casama.app</string>
+		<string>$(AppIdentifierPrefix)ai.casama.app.widgets</string>
+	</array>
 </dict>
 </plist>

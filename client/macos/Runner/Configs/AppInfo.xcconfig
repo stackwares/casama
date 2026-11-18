@@ -20,4 +20,10 @@ PRODUCT_COPYRIGHT = Copyright © 2026 Casama. All rights reserved.
 CASAMA_DEBUG_ENTITLEMENTS = Runner/DebugProfile.entitlements
 CASAMA_DEBUG_SIGN_STYLE = Automatic
 CASAMA_DEBUG_PROFILE =
+
+// The widget extension (CasamaWidgetsMac, D-405 §8.8) the same way. Without a profile it leaves
+// out the shared keychain group, so the widgets show what the app writes and don't fetch.
+CASAMA_WIDGET_DEBUG_ENTITLEMENTS = CasamaWidgetsMac/CasamaWidgetsMacLocal.entitlements
+CASAMA_WIDGET_DEBUG_SIGN_STYLE = Automatic
+CASAMA_WIDGET_DEBUG_PROFILE =
 #include? "Signing.local.xcconfig"

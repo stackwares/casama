@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Widget mockups</title>
+<!-- Mockups for docs/WIDGETS-PLAN.md. Mascot art comes from client/assets/mascots. -->
+<style>
+  .wm { font-family: var(--font-sans, system-ui); color: var(--foreground, #1d1b20); font-size: 12px; line-height: 1.35; }
+  .wm * { box-sizing: border-box; }
+  .wm h3 { font-size: 14px; font-weight: 650; margin: 0 0 2px; }
+  .wm .note { color: var(--muted-foreground, #6b6873); font-size: 12.5px; margin: 0 0 12px; max-width: 70ch; }
+  .wm section + section { margin-top: 34px; }
+  .wm .cap { color: var(--muted-foreground, #6b6873); font-size: 11.5px; margin-top: 6px; }
+  .wm .cap b { color: var(--foreground, #1d1b20); font-weight: 650; }
+
+  /* A piece of screen with its own wallpaper. */
+  .stage { border-radius: var(--radius, 14px); padding: 20px; overflow: hidden; }
+  .stage.home  { background: linear-gradient(155deg, #ece6f8 0%, #dbe7f8 52%, #f7e6ee 100%); }
+  .stage.lock  { background: linear-gradient(168deg, #33154d 0%, #1d1c40 55%, #10293f 100%); }
+  .stage.droid { background: linear-gradient(160deg, #eaddff 0%, #d9e4ff 60%, #e6f0e9 100%); }
+  .stage.mac   { background: linear-gradient(140deg, #23304f 0%, #40305f 55%, #7a4a6b 100%); }
+
+  /* ---- Apple widgets ---- */
+  .grid { display: grid; grid-template-columns: repeat(4, 150px); gap: 16px; justify-content: center; }
+  .w { --bg: #fff; --fg: #1d1b20; --fg2: #5f5c66; --line: #e3e2e7; --fill: #f2f2f5;
+       --primary: #7a3fa8; --primary-bg: #f1e2fc; --wait: #c47f00; --work: #1fa463;
+       background: var(--bg); color: var(--fg); border-radius: 22px; padding: 14px; height: 150px;
+       position: relative; overflow: hidden; display: flex; flex-direction: column;
+       font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
+       box-shadow: 0 6px 18px rgba(30, 20, 60, .10); }
+  .w.dark { --bg: #1c1c1e; --fg: #f2f1f4; --fg2: #c9c6d0; --line: #38383c; --fill: #2a2a2d;
+            --primary: #d9b6f7; --primary-bg: #3a2a47; --wait: #f0a84a; --work: #5fd49a; }
+  .w.m { grid-column: span 2; }
+  .w.l { grid-column: span 2; grid-row: span 2; height: 316px; }
+  .w .eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: .03em; color: var(--fg2); text-transform: uppercase; }
+  .w .big { font-size: 44px; font-weight: 750; line-height: 1; letter-spacing: -.02em; }
+  .w .name { font-size: 15px; font-weight: 700; }
+  .w .line { font-size: 12px; color: var(--fg2); }
+  .w .clamp2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .w .clamp4 { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .w .one { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .w .sp { flex: 1; }
+  .wait { color: var(--wait); } .work { color: var(--work); } .pri { color: var(--primary); }
+
+  .mk { width: 30px; height: 30px; flex: none; object-fit: contain; }
+  .mk.lg { width: 58px; height: 58px; margin: -6px 0 0 -6px; }
+  .mk.sm { width: 22px; height: 22px; }
+  .ini { width: 28px; height: 28px; flex: none; border-radius: 9px; display: grid; place-items: center;
+         color: #fff; font-weight: 800; font-size: 12px; background: linear-gradient(135deg, #6366f1, #4338ca); }
+  .ini.sm { width: 20px; height: 20px; border-radius: 6px; font-size: 9px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--work); display: inline-block; margin-right: 5px; }
+  .dot.wait { background: var(--wait); }
+
+  .row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .row + .row { margin-top: 8px; }
+  .row .txt { flex: 1; min-width: 0; }
+  .row .t1 { font-size: 12.5px; font-weight: 650; }
+  .row .t2 { font-size: 11px; color: var(--fg2); }
+  .hr { height: 1px; background: var(--line); margin: 9px 0; }
+  .time { font-size: 12.5px; font-weight: 700; width: 46px; flex: none; font-variant-numeric: tabular-nums; }
+
+  .btn { border-radius: 999px; padding: 5px 11px; font-size: 11.5px; font-weight: 700; flex: none;
+         background: var(--fill); color: var(--fg); display: inline-flex; align-items: center; gap: 4px; }
+  .btn.go { background: var(--primary); color: var(--bg); }
+  .btn.ok { background: var(--wait); color: #fff; }
+  .w.dark .btn.ok { color: #1c1c1e; }
+  .rnd { width: 30px; height: 30px; border-radius: 50%; background: var(--fill); display: grid; place-items: center; flex: none; }
+  .rnd.go { background: var(--primary); }
+  .rnd svg { width: 14px; height: 14px; fill: none; stroke: var(--fg); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .rnd.go svg { stroke: var(--bg); }
+  .rnd.play svg { fill: var(--fg); stroke: none; }
+
+  .pill { display: flex; align-items: center; gap: 8px; background: var(--fill); border-radius: 999px; padding: 6px 6px 6px 8px; }
+  .pill .ph { flex: 1; font-size: 13px; color: var(--fg2); font-weight: 550; }
+  .chip { background: var(--primary-bg); color: var(--primary); border-radius: 12px; padding: 6px 10px; font-size: 11.5px;
+          font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+  .ring { --p: 62; width: 54px; height: 54px; border-radius: 50%; flex: none; display: grid; place-items: center;
+          background: conic-gradient(var(--primary) calc(var(--p) * 1%), var(--fill) 0); }
+  .ring i { width: 42px; height: 42px; border-radius: 50%; background: var(--bg); display: grid; place-items: center;
+            font-style: normal; font-size: 12px; font-weight: 750; }
+  .ring.xs { width: 26px; height: 26px; } .ring.xs i { width: 19px; height: 19px; font-size: 0; }
+
+  .cover { position: absolute; inset: 0; background:
+             radial-gradient(120px 90px at 70% 30%, #ffd27d 0, transparent 70%),
+             radial-gradient(140px 120px at 20% 80%, #ff8fb1 0, transparent 70%),
+             linear-gradient(135deg, #7a90ff, #7de9f4); }
+  .cover + .over { position: relative; margin-top: auto; color: #fff; text-shadow: 0 1px 6px rgba(0,0,0,.35); }
+  .cover + .over .line { color: rgba(255,255,255,.9); }
+
+  /* ---- Lock Screen ---- */
+  .lockwrap { display: grid; grid-template-columns: 300px 1fr; gap: 28px; align-items: start; }
+  .ls { color: #fff; text-align: center; font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif; }
+  .ls .inline { font-size: 13px; font-weight: 650; opacity: .92; }
+  .ls .clock { font-size: 84px; font-weight: 700; line-height: 1; letter-spacing: -.03em; margin: 2px 0 14px; }
+  .acc { display: flex; gap: 10px; justify-content: center; }
+  .rect, .circ { background: rgba(255,255,255,.14); backdrop-filter: blur(8px); color: #fff; }
+  .rect { width: 146px; height: 66px; border-radius: 16px; padding: 9px 11px; text-align: left; }
+  .rect .t1 { font-size: 12.5px; font-weight: 700; } .rect .t2 { font-size: 11.5px; opacity: .85; }
+  .circ { width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center; position: relative; }
+  .circ b { font-size: 24px; font-weight: 750; line-height: 1; }
+  .circ small { display: block; font-size: 8.5px; font-weight: 700; letter-spacing: .04em; opacity: .85; }
+  .circ.gauge { background: conic-gradient(#fff 62%, rgba(255,255,255,.22) 0); }
+  .circ.gauge::before { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: #2a2148; }
+  .circ.gauge span { position: relative; font-size: 15px; font-weight: 750; }
+  .redact { display: inline-block; height: 9px; border-radius: 5px; background: rgba(255,255,255,.4); vertical-align: middle; }
+  .corners { display: flex; justify-content: space-between; margin-top: 46px; padding: 0 6px; }
+  .corner { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,.16); display: grid; place-items: center; }
+  .corner svg, .ctl svg { width: 20px; height: 20px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .side h4 { color: #fff; font-size: 12.5px; font-weight: 650; margin: 0 0 8px; }
+  .side h4 + .acc { justify-content: flex-start; }
+  .side .gap { height: 20px; }
+  .ctls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ctl { background: rgba(255,255,255,.14); border-radius: 22px; padding: 12px; color: #fff; display: flex; align-items: center; gap: 10px;
+         font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif; }
+  .ctl .ic { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.2); display: grid; place-items: center; flex: none; }
+  .ctl .ic.on { background: #d9b6f7; } .ctl .ic.on svg { stroke: #2b1140; }
+  .ctl b { display: block; font-size: 12.5px; font-weight: 700; } .ctl span { font-size: 11px; opacity: .8; }
+  .side .cap { color: rgba(255,255,255,.72); }
+
+  /* ---- Android ---- */
+  .droidgrid { display: grid; grid-template-columns: repeat(4, 150px); gap: 16px; justify-content: center; }
+  .a { --bg: #f6effb; --fg: #1d1b20; --fg2: #5d5866; --tone: #e8def8; --on-tone: #4a2a6b; --primary: #7a3fa8;
+       background: var(--bg); color: var(--fg); border-radius: 28px; padding: 16px; position: relative; overflow: hidden;
+       font-family: "Google Sans", Roboto, system-ui, sans-serif; display: flex; flex-direction: column;
+       box-shadow: 0 2px 8px rgba(40, 20, 80, .10); }
+  .a.bar { grid-column: span 4; border-radius: 999px; padding: 10px 12px; flex-direction: row; align-items: center; gap: 10px; }
+  .a.bar .ph { flex: 1; font-size: 15px; color: var(--fg2); font-weight: 500; }
+  .a.w42 { grid-column: span 4; }
+  .a.w22 { grid-column: span 2; height: 158px; }
+  .a .hd { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .a .hd b { font-size: 15px; font-weight: 600; flex: 1; }
+  .a .badge { background: var(--primary); color: #fff; border-radius: 999px; min-width: 22px; height: 22px; display: grid; place-items: center;
+              font-size: 12px; font-weight: 700; padding: 0 6px; }
+  .a .row .t1 { font-size: 13.5px; font-weight: 600; } .a .row .t2 { font-size: 12px; color: var(--fg2); }
+  .a .tb { border-radius: 999px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; background: var(--tone); color: var(--on-tone); flex: none; }
+  .a .tb.fill { background: var(--primary); color: #fff; }
+  .a .fab { width: 40px; height: 40px; border-radius: 50%; background: var(--tone); display: grid; place-items: center; flex: none; }
+  .a .fab svg { width: 18px; height: 18px; fill: none; stroke: var(--on-tone); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .a .state { display: inline-flex; align-items: center; background: #dff3e6; color: #12653c; border-radius: 999px; padding: 3px 9px; font-size: 11.5px; font-weight: 600; }
+
+  .macrow { display: grid; grid-template-columns: repeat(2, 316px); gap: 16px; justify-content: center; }
+  .macrow .w { box-shadow: 0 10px 30px rgba(0,0,0,.25); background: rgba(28,28,30,.82); }
+  .macrow .w.m { grid-column: auto; }
+
+  @media (max-width: 700px) {
+    .grid, .droidgrid { grid-template-columns: repeat(2, 150px); }
+    .a.bar, .a.w42 { grid-column: span 2; }
+    .lockwrap { grid-template-columns: 1fr; }
+    .macrow { grid-template-columns: 316px; }
+  }
+</style>
+</head>
+<body>
+<div class="wm">
+
+<section>
+  <h3>iPhone Home Screen</h3>
+  <p class="note">One job per widget, the bot's own face on each, plain white or dark grey behind. Orange is only ever "needs you"; green is only ever "working".</p>
+  <div class="stage home">
+    <div class="grid">
+
+      <!-- Needs you, small -->
+      <div class="w">
+        <div class="row" style="align-items:flex-start">
+          <div class="big wait">2</div>
+          <div class="sp"></div>
+          <img class="mk" src="../../client/assets/mascots/winky.png" alt="">
+        </div>
+        <div class="name" style="margin-top:4px">Needs you</div>
+        <div class="sp"></div>
+        <div class="line clamp2">Milo wants to search flight prices for Lisbon</div>
+      </div>
+
+      <!-- Bot, small -->
+      <div class="w">
+        <img class="mk lg" src="../../client/assets/mascots/focused.png" alt="">
+        <div class="sp"></div>
+        <div class="name">Ada</div>
+        <div class="line one"><span class="dot"></span><span class="work" style="font-weight:650">Working</span></div>
+        <div class="line one">Reading your inbox</div>
+      </div>
+
+      <!-- Routines, medium -->
+      <div class="w m">
+        <div class="eyebrow">Up next</div>
+        <div style="height:8px"></div>
+        <div class="row"><div class="time">7:00</div><div class="txt"><div class="t1 one">Morning brief</div><div class="t2 one">Milo · every day</div></div><div class="rnd play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        <div class="row"><div class="time">9:00</div><div class="txt"><div class="t1 one">Inbox sweep</div><div class="t2 one">Ada · weekdays</div></div><div class="rnd play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        <div class="row"><div class="time">Fri</div><div class="txt"><div class="t1 one">Weekly report</div><div class="t2 one">Scout · 16:00</div></div><div class="rnd play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+      </div>
+
+      <!-- Ask, medium -->
+      <div class="w m">
+        <div class="pill">
+          <img class="mk" src="../../client/assets/mascots/winky.png" alt="">
+          <div class="ph">Ask Milo anything</div>
+          <div class="rnd go"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
+        </div>
+        <div class="sp"></div>
+        <div class="eyebrow" style="margin-bottom:6px">Try</div>
+        <div class="row"><div class="chip">🧾 Sum up my inbox</div><div class="chip">🗓 Plan my Friday</div></div>
+      </div>
+
+      <!-- Needs you, medium -->
+      <div class="w m">
+        <div class="row"><div class="eyebrow wait" style="flex:1">Needs you · 2</div></div>
+        <div style="height:8px"></div>
+        <div class="row">
+          <img class="mk" src="../../client/assets/mascots/winky.png" alt="">
+          <div class="txt"><div class="t1 one">Look up flights</div><div class="t2 one">Milo · low risk</div></div>
+          <div class="btn ok">Allow</div><div class="btn">Deny</div>
+        </div>
+        <div class="hr"></div>
+        <div class="row">
+          <img class="mk" src="../../client/assets/mascots/focused.png" alt="">
+          <div class="txt"><div class="t1 one">Move the dentist to Friday?</div><div class="t2 one">Ada suggests</div></div>
+          <div class="btn go">Do it</div>
+        </div>
+      </div>
+
+      <!-- Today, large -->
+      <div class="w l">
+        <div class="row">
+          <div class="txt"><div class="eyebrow">Wednesday 18</div><div class="name" style="font-size:19px">Today</div></div>
+          <div class="ring xs" style="--p:62"><i></i></div><div class="line">62% of credits</div>
+        </div>
+        <div class="hr"></div>
+        <div class="eyebrow wait" style="margin-bottom:7px">Needs you · 2</div>
+        <div class="row"><img class="mk sm" src="../../client/assets/mascots/winky.png" alt=""><div class="txt"><div class="t1 one">Search flight prices for Lisbon</div></div><div class="btn ok">Allow</div></div>
+        <div class="row"><img class="mk sm" src="../../client/assets/mascots/focused.png" alt=""><div class="txt"><div class="t1 one">Move the dentist to Friday?</div></div><div class="btn go">Do it</div></div>
+        <div class="hr"></div>
+        <div class="eyebrow" style="margin-bottom:7px">Up next</div>
+        <div class="row"><div class="time">9:00</div><div class="txt"><div class="t1 one">Inbox sweep · Ada</div></div></div>
+        <div class="row"><div class="time">Fri</div><div class="txt"><div class="t1 one">Weekly report · Scout</div></div></div>
+        <div class="hr"></div>
+        <div class="row"><div class="ini sm">S</div><div class="txt"><div class="t2 one">Scout finished <b style="color:var(--fg)">Q4 pricing page</b> · 9:20</div></div></div>
+        <div class="sp"></div>
+        <div class="pill"><div class="ph" style="padding-left:6px">Ask anything</div><div class="rnd go"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div></div>
+      </div>
+
+      <!-- Brief, medium -->
+      <div class="w m">
+        <div class="row"><div class="eyebrow pri" style="flex:1">Morning brief</div><div class="line">Milo · 7:02</div></div>
+        <div style="height:7px"></div>
+        <div class="clamp4" style="font-size:13px;line-height:1.38">Three emails need a reply, and the Acme invoice is two days overdue. Rain from 3 pm, so leave early for the 4:30 pickup. Your first meeting is at 10:00 with Dana.</div>
+      </div>
+
+      <!-- Library, small -->
+      <div class="w">
+        <div class="cover"></div>
+        <div class="over"><div class="name">Logo ideas</div><div class="line">Image · Scout</div></div>
+      </div>
+
+      <!-- Credits, small, dark -->
+      <div class="w dark">
+        <div class="row"><div class="ring" style="--p:62"><i>62%</i></div><div class="sp"></div></div>
+        <div class="sp"></div>
+        <div class="name">$5.70 left</div>
+        <div class="line">$0.42 today</div>
+      </div>
+
+    </div>
+  </div>
+  <div class="cap"><b>Top row:</b> Needs you, Bot, Routines. <b>Second:</b> Ask (with a starter to try), Needs you with buttons. <b>Below:</b> Today, Brief, Library, Credits (dark).</div>
+</section>
+
+<section>
+  <h3>iPhone Lock Screen and controls</h3>
+  <p class="note">The Lock Screen tells; controls do. Words that come from your own data stay hidden until the phone is unlocked.</p>
+  <div class="stage lock">
+    <div class="lockwrap">
+      <div class="ls">
+        <div class="inline">2 need you · Brief at 7:00</div>
+        <div class="clock">9:41</div>
+        <div class="acc">
+          <div class="rect"><div class="t2">Up next · 9:00</div><div class="t1">Inbox sweep</div><div class="t2">Ada · in 18 min</div></div>
+          <div class="circ"><div><b>2</b><small>NEED YOU</small></div></div>
+          <div class="circ gauge"><span>62%</span></div>
+        </div>
+        <div class="corners">
+          <div class="corner"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></div>
+          <div class="corner"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
+        </div>
+      </div>
+      <div class="side">
+        <h4>Other Lock Screen widgets</h4>
+        <div class="acc">
+          <div class="rect"><div class="t1">Milo needs your OK</div><div class="t2"><span class="redact" style="width:108px"></span></div><div class="t2"><span class="redact" style="width:64px"></span></div></div>
+          <div class="rect"><div class="t1">Ada</div><div class="t2">Working</div><div class="t2">Reading your inbox</div></div>
+        </div>
+        <div class="cap">Left: locked, so the request itself is hidden. Right: a bot's status.</div>
+        <div class="gap"></div>
+        <h4>Controls: Control Center, the Lock Screen corners, the Action button</h4>
+        <div class="ctls">
+          <div class="ctl"><div class="ic on"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></div><div><b>Ask Casama</b><span>Opens quick ask</span></div></div>
+          <div class="ctl"><div class="ic"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div><div><b>Talk to Milo</b><span>Starts a call</span></div></div>
+          <div class="ctl"><div class="ic"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div><div><b>Inbox sweep</b><span>Runs the routine</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h3>Android home screen</h3>
+  <p class="note">Same line-up in Android's own shapes and the phone's own colours. Android's Bot widget is live, because Android lets a push redraw it.</p>
+  <div class="stage droid">
+    <div class="droidgrid">
+      <div class="a bar">
+        <img class="mk" src="../../client/assets/mascots/winky.png" alt="">
+        <div class="ph">Ask Casama</div>
+        <div class="fab"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
+      </div>
+
+      <div class="a w42">
+        <div class="hd"><b>Needs you</b><div class="badge">2</div></div>
+        <div class="row"><img class="mk" src="../../client/assets/mascots/winky.png" alt=""><div class="txt"><div class="t1 one">Search flight prices for Lisbon</div><div class="t2 one">Milo · low risk</div></div><div class="tb fill">Allow</div><div class="tb">Deny</div></div>
+        <div class="row" style="margin-top:12px"><img class="mk" src="../../client/assets/mascots/focused.png" alt=""><div class="txt"><div class="t1 one">Move the dentist to Friday?</div><div class="t2 one">Ada suggests</div></div><div class="tb fill">Do it</div></div>
+      </div>
+
+      <div class="a w22">
+        <div class="row"><img class="mk" style="width:40px;height:40px" src="../../client/assets/mascots/focused.png" alt=""><div class="sp" style="flex:1"></div><div class="state">Working · 2:14</div></div>
+        <div style="flex:1"></div>
+        <div style="font-size:16px;font-weight:600">Ada</div>
+        <div style="font-size:12.5px;color:var(--fg2)" class="one">Reading your inbox</div>
+        <div class="row" style="margin-top:10px"><div class="tb">Stop</div><div class="tb">Open</div></div>
+      </div>
+
+      <div class="a w22">
+        <div style="font-size:12px;font-weight:600;color:var(--fg2)">Up next · 9:00</div>
+        <div style="flex:1"></div>
+        <div style="font-size:16px;font-weight:600">Inbox sweep</div>
+        <div style="font-size:12.5px;color:var(--fg2)">Ada · in 18 min</div>
+        <div class="row" style="margin-top:10px"><div class="tb fill">Run now</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h3>Mac desktop</h3>
+  <p class="note">The iPhone's views, on the desktop and in Notification Center. Clicks open Casama at the right place; acting in place stays with the notch.</p>
+  <div class="stage mac">
+    <div class="macrow">
+      <div class="w m dark">
+        <div class="row"><div class="eyebrow wait" style="flex:1">Needs you · 2</div></div>
+        <div style="height:8px"></div>
+        <div class="row"><img class="mk" src="../../client/assets/mascots/winky.png" alt=""><div class="txt"><div class="t1 one">Search flight prices for Lisbon</div><div class="t2 one">Milo · low risk</div></div><div class="btn">Review</div></div>
+        <div class="hr"></div>
+        <div class="row"><img class="mk" src="../../client/assets/mascots/focused.png" alt=""><div class="txt"><div class="t1 one">Move the dentist to Friday?</div><div class="t2 one">Ada suggests</div></div><div class="btn">Open</div></div>
+      </div>
+      <div class="w m dark">
+        <div class="eyebrow">Up next</div>
+        <div style="height:8px"></div>
+        <div class="row"><div class="time">9:00</div><div class="txt"><div class="t1 one">Inbox sweep</div><div class="t2 one">Ada · weekdays</div></div></div>
+        <div class="row"><div class="time">Fri</div><div class="txt"><div class="t1 one">Weekly report</div><div class="t2 one">Scout · 16:00</div></div></div>
+        <div class="row"><div class="time">Mon</div><div class="txt"><div class="t1 one">Competitor watch</div><div class="t2 one">Scout · 8:00</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

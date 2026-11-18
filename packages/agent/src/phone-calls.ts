@@ -6,12 +6,11 @@
  * Answering opens the live call (D-065) in the run's conversation and the bot speaks first.
  * A declined or missed call becomes a normal push with the reason. Quiet hours apply.
  */
-import { createPrivateKey, createSign } from "node:crypto";
-import { connect } from "node:http2";
 import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
 import { actingUserOf } from "./acting.ts";
+import { ApnsClient, apnsTokenGone } from "./apns.ts";
 import type { NotificationService } from "./notifications.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
 
@@ -39,64 +38,29 @@ export class RecordingVoipSender implements VoipSender {
   }
 }
 
-/** APNs over HTTP/2 with a token (.p8) key, as Apple's provider API documents. */
+/** iPhone call rings through APNs (PushKit), on the shared Apple client. */
 export class ApnsVoipSender implements VoipSender {
-  private readonly o: { keyP8: string; keyId: string; teamId: string; topic: string; url: string };
-  private jwt: { value: string; at: number } | null = null;
+  private readonly client: ApnsClient;
+  private readonly topic: string;
   constructor(o: { keyP8: string; keyId: string; teamId: string; topic: string; url?: string }) {
-    this.o = { ...o, url: o.url ?? "https://api.push.apple.com" };
-  }
-
-  private token() {
-    // Apple wants the token refreshed between 20 and 60 minutes.
-    if (this.jwt && Date.now() - this.jwt.at < 40 * 60_000) return this.jwt.value;
-    const b64 = (x: object) => Buffer.from(JSON.stringify(x)).toString("base64url");
-    const unsigned = `${b64({ alg: "ES256", kid: this.o.keyId })}.${b64({ iss: this.o.teamId, iat: Math.floor(Date.now() / 1000) })}`;
-    const sig = createSign("SHA256")
-      .update(unsigned)
-      .sign({ key: createPrivateKey(this.o.keyP8), dsaEncoding: "ieee-p1363" }, "base64url");
-    this.jwt = { value: `${unsigned}.${sig}`, at: Date.now() };
-    return this.jwt.value;
+    // Call rings always go to one host (production, or the test server in `url`).
+    this.client = new ApnsClient({ ...o, sandboxUrl: o.url });
+    this.topic = o.topic;
   }
 
   async send(tokens: string[], call: CallPayload) {
-    const invalidTokens: string[] = [];
-    if (!tokens.length) return { invalidTokens };
-    const session = connect(this.o.url);
-    try {
-      for (const t of tokens) {
-        const status = await new Promise<{ code: number; body: string }>((resolve, reject) => {
-          const req = session.request({
-            ":method": "POST",
-            ":path": `/3/device/${t}`,
-            authorization: `bearer ${this.token()}`,
-            "apns-topic": this.o.topic,
-            "apns-push-type": "voip",
-            "apns-priority": "10",
-            "apns-expiration": String(Math.floor(Date.now() / 1000) + RING_SECONDS),
-            "content-type": "application/json",
-          });
-          let code = 0;
-          let body = "";
-          req.on("response", (h) => {
-            code = Number(h[":status"]);
-          });
-          req.on("data", (d: Buffer) => {
-            body += d.toString();
-          });
-          req.on("end", () => resolve({ code, body }));
-          req.on("error", reject);
-          req.end(JSON.stringify({ aps: {}, kind: "call", ...call }));
-        });
-        // 410 Unregistered, and 400 only with BadDeviceToken, mean the token is gone; other 400s
-        // are about the request (D-271).
-        if (status.code === 410 || (status.code === 400 && /BadDeviceToken/.test(status.body)))
-          invalidTokens.push(t);
-      }
-    } finally {
-      session.close();
-    }
-    return { invalidTokens };
+    const results = await this.client.sendAll(
+      tokens,
+      () => ({
+        "apns-topic": this.topic,
+        "apns-push-type": "voip",
+        "apns-priority": "10",
+        "apns-expiration": String(Math.floor(Date.now() / 1000) + RING_SECONDS),
+      }),
+      JSON.stringify({ aps: {}, kind: "call", ...call }),
+    );
+    // Other 400s are about the request, not the token (D-271).
+    return { invalidTokens: results.filter(apnsTokenGone).map((r) => r.token) };
   }
 }
 

@@ -3,187 +3,12 @@ import AppIntents
 import SwiftUI
 import WidgetKit
 
-/// Data the app shares with its widgets through the App Group (written by home_widget and
-/// live_activities on the Dart side).
-private let groupId = "group.ai.casama.app"
-private let shared = UserDefaults(suiteName: groupId)
+// The widget extension's entry point and its Live Activities. The Home Screen and Lock Screen
+// widgets are in Widgets.swift, the controls in Controls.swift, the views they share with the Mac
+// in WidgetViews/ (D-405).
 
-// MARK: - A bot's mark, as the app draws it (client/lib/ui/bot_avatar.dart)
-//
-// A bot that picked a mascot shows that mascot (the art is in Assets.xcassets as mascot-<name>,
-// made from assets/mascots/<name>.png); any other bot shows its initials on its gradient, the
-// gradient picked from its name exactly as botPalette does. Keep both lists in step with
-// bot_avatar.dart and mascot.dart.
-
-extension Color {
-  init(hex: UInt32) {
-    self.init(
-      red: Double((hex >> 16) & 0xff) / 255,
-      green: Double((hex >> 8) & 0xff) / 255,
-      blue: Double(hex & 0xff) / 255
-    )
-  }
-}
-
-/// The mascots (mascot.dart, `Mascot`) and their own two colours.
-private let mascotColors: [String: (UInt32, UInt32)] = [
-  "winky": (0x7A90FF, 0x7DE9F4),
-  "sleepy": (0x7C83F2, 0xA59CF6),
-  "starry": (0xFF9F43, 0xFFC94D),
-  "lovey": (0xFF6FAE, 0xFF9CC9),
-  "cool": (0x14B8A6, 0x4FD1C5),
-  "thinker": (0xF59E0B, 0xFBBF24),
-  "giggly": (0x22C55E, 0x4ADE80),
-  "shy": (0xFB7185, 0xFDA4AF),
-  "focused": (0x3B82F6, 0x60A5FA),
-  "wow": (0x8B5CF6, 0xA78BFA),
-]
-
-/// The initials gradients (bot_avatar.dart, `_palettes`).
-private let initialsPalettes: [(UInt32, UInt32)] = [
-  (0x14B8A6, 0x0F766E),
-  (0x6366F1, 0x4338CA),
-  (0xF59E0B, 0xD97706),
-  (0xEC4899, 0xBE185D),
-  (0x3B82F6, 0x1D4ED8),
-  (0x8B5CF6, 0x6D28D9),
-  (0x10B981, 0x047857),
-  (0xF97316, 0xC2410C),
-]
-
-/// Everything needed to draw one bot: its mascot or initials, and its colours.
-struct BotArt {
-  let name: String
-  /// The mascot's key (`winky`), when the bot has one we ship.
-  let mascot: String?
-  let colors: [Color]
-
-  init(name: String, avatar: String?) {
-    self.name = name
-    var key: String?
-    if let avatar, avatar.hasPrefix("mascot:") {
-      let k = String(avatar.dropFirst("mascot:".count))
-      if mascotColors[k] != nil { key = k }
-    }
-    mascot = key
-    if let key, let c = mascotColors[key] {
-      colors = [Color(hex: c.0), Color(hex: c.1)]
-    } else {
-      // botPalette: (h * 31 + code unit) & 0x7fffffff over the lower-cased name's UTF-16.
-      var h = 0
-      for u in name.lowercased().utf16 { h = (h &* 31 &+ Int(u)) & 0x7fffffff }
-      let p = initialsPalettes[h % initialsPalettes.count]
-      colors = [Color(hex: p.0), Color(hex: p.1)]
-    }
-  }
-
-  /// The colour things in the bot's colour use (a timer, a glow).
-  var accent: Color { colors[0] }
-
-  /// One or two letters, as `botInitials` makes them.
-  var initials: String {
-    let parts = name.split(whereSeparator: { $0.isWhitespace })
-    guard let first = parts.first?.first else { return "?" }
-    if parts.count == 1 { return String(first).uppercased() }
-    return (String(first) + String(parts[1].first!)).uppercased()
-  }
-}
-
-/// The bot's mark at [size]: its mascot (transparent, a little larger than the box, as the app
-/// draws it) or its initials on a rounded square in its gradient.
-struct BotMarkView: View {
-  let art: BotArt
-  var size: CGFloat = 24
-  var body: some View {
-    Group {
-      if let mascot = art.mascot {
-        Image("mascot-\(mascot)")
-          .resizable()
-          .interpolation(.high)
-          .scaledToFit()
-          // The art keeps a margin for the cloud's hops (mascot.dart, _zoom).
-          .frame(width: size * 1.14, height: size * 1.14)
-          .frame(width: size, height: size)
-      } else {
-        RoundedRectangle(cornerRadius: size * 0.32, style: .continuous)
-          .fill(LinearGradient(colors: art.colors, startPoint: .topLeading, endPoint: .bottomTrailing))
-          .overlay(
-            Text(art.initials)
-              .font(.system(size: size * (art.name.trimmingCharacters(in: .whitespaces).contains(" ") ? 0.36 : 0.44), weight: .heavy, design: .rounded))
-              .foregroundColor(.white)
-              .minimumScaleFactor(0.5)
-              .lineLimit(1)
-          )
-          .frame(width: size, height: size)
-      }
-    }
-    .accessibilityHidden(true)
-  }
-}
-
-// MARK: - Home-screen widget: bot status and a quick-ask button
-
-struct BotStatusEntry: TimelineEntry {
-  let date: Date
-  let bot: String
-  let avatar: String?
-  let status: String
-  let cost: String
-}
-
-struct BotStatusProvider: TimelineProvider {
-  func placeholder(in context: Context) -> BotStatusEntry {
-    BotStatusEntry(date: Date(), bot: "Assistant", avatar: "mascot:winky", status: "Idle", cost: "$0.00 today")
-  }
-
-  func getSnapshot(in context: Context, completion: @escaping (BotStatusEntry) -> Void) {
-    completion(entry())
-  }
-
-  func getTimeline(in context: Context, completion: @escaping (Timeline<BotStatusEntry>) -> Void) {
-    completion(Timeline(entries: [entry()], policy: .after(Date().addingTimeInterval(15 * 60))))
-  }
-
-  private func entry() -> BotStatusEntry {
-    BotStatusEntry(
-      date: Date(),
-      bot: shared?.string(forKey: "bot_name") ?? "Casama",
-      avatar: shared?.string(forKey: "bot_avatar"),
-      status: shared?.string(forKey: "bot_status") ?? "Open the app to sign in",
-      cost: shared?.string(forKey: "bot_cost") ?? ""
-    )
-  }
-}
-
-struct BotStatusView: View {
-  let entry: BotStatusEntry
-  var body: some View {
-    VStack(alignment: .leading, spacing: 4) {
-      BotMarkView(art: BotArt(name: entry.bot, avatar: entry.avatar), size: 34)
-        .padding(.bottom, 4)
-      Text(entry.bot).font(.headline).lineLimit(1)
-      Text(entry.status).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
-      if !entry.cost.isEmpty { Text(entry.cost).font(.caption).foregroundStyle(.secondary).lineLimit(1) }
-      Spacer(minLength: 0)
-      Link(destination: URL(string: "casama://app/quick-ask")!) {
-        Label("Ask", systemImage: "bubble.left").font(.caption.bold())
-      }
-    }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .containerBackground(.fill.tertiary, for: .widget)
-  }
-}
-
-struct BotStatusWidget: Widget {
-  var body: some WidgetConfiguration {
-    StaticConfiguration(kind: "BotStatusWidget", provider: BotStatusProvider()) { entry in
-      BotStatusView(entry: entry)
-    }
-    .configurationDisplayName("Bot status")
-    .description("Your bot's status and a quick-ask button.")
-    .supportedFamilies([.systemSmall, .systemMedium])
-  }
-}
+/// What live_activities writes for its activities, in the App Group.
+private let shared = GlanceStore.defaults
 
 // MARK: - Live Activity: a followed run on the Lock Screen and in the Dynamic Island (D-324, §6 D)
 //
@@ -197,9 +22,9 @@ struct BotStatusWidget: Widget {
 // glows from behind it and tints its timer; anything that needs the person turns orange, Finished
 // green, a problem yellow. On a dark glass card so it reads on any wallpaper.
 //
-// Apple Watch and CarPlay: iOS 18's .supplementalActivityFamilies([.small]) can't be chosen at run
-// time in a widget bundle, and this extension still runs on iOS 17, so they use the compact views
-// for now (docs/ISLAND-AND-MENU-BAR-PLAN.md §19).
+// Apple Watch and CarPlay: they use the compact views for now. The extension runs on iOS 18 since
+// D-405, so .supplementalActivityFamilies([.small]) is open to a later change
+// (docs/ISLAND-AND-MENU-BAR-PLAN.md §19).
 
 enum RunTone {
   static let needsYou = Color(hex: 0xFF9F0A)
@@ -778,7 +603,20 @@ struct CallActionIntent: AppIntent {
 @main
 struct CasamaWidgets: WidgetBundle {
   var body: some Widget {
-    BotStatusWidget()
+    // The glance widgets (D-405), refreshed by server pushes on iOS 26 and later.
+    GlanceBundle.refreshable(NeedsYouWidget.self)
+    GlanceBundle.refreshable(BotWidget.self)
+    GlanceBundle.refreshable(AskWidget.self)
+    GlanceBundle.refreshable(RoutinesWidget.self)
+    GlanceBundle.refreshable(TodayWidget.self)
+    GlanceBundle.refreshable(BriefWidget.self)
+    GlanceBundle.refreshable(LibraryWidget.self)
+    GlanceBundle.refreshable(TasksWidget.self)
+    GlanceBundle.refreshable(CreditsWidget.self)
+    GlanceBundle.refreshable(CasamaInlineWidget.self)
+    AskCasamaControl()
+    TalkToBotControl()
+    RunRoutineControl()
     RunActivityWidget()
     CallActivityWidget()
   }

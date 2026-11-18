@@ -34,6 +34,11 @@
 	<key>keychain-access-groups</key>
 	<array>
 		<string>$(AppIdentifierPrefix)com.google.GIDSignIn</string>
+		<string>$(AppIdentifierPrefix)ai.casama.app.widgets</string>
+	</array>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>V8V5US964Z.ai.casama.app</string>
 	</array>
 </dict>
 </plist>

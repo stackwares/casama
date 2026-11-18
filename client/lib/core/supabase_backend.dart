@@ -22,6 +22,7 @@ import 'server_reachability.dart';
 import 'web_auth_sheet.dart';
 import 'backend.dart';
 import 'chatgpt_connect.dart';
+import '../features/widgets/widget_key_store.dart';
 import 'telemetry.dart';
 
 const _terminal = {'run.completed', 'run.failed', 'run.cancelled'};
@@ -375,6 +376,15 @@ class SupabaseBackend implements Backend {
     if (start != null) {
       try {
         await removeLiveStartToken(start).timeout(const Duration(seconds: 5));
+      } catch (_) {}
+    }
+    // This device's widget key goes too (D-405 §10), while the session can still delete it. The
+    // app wipes what the widgets show once it sees the sign-out (glance_sync.dart).
+    final widgetKey = await WidgetKeyStore.load();
+    if (widgetKey != null) {
+      await WidgetKeyStore.clear();
+      try {
+        await deleteWidgetKey(widgetKey.id).timeout(const Duration(seconds: 5));
       } catch (_) {}
     }
     // Forget the Google account too, so the next Continue with Google offers every account.
@@ -4175,6 +4185,69 @@ class SupabaseBackend implements Backend {
   @override
   Future<AcceptedSuggestion> acceptSuggestion(String id) async =>
       (await api.checkins.acceptSuggestion(id: id)).data!;
+
+  // Widgets (D-405). Raw JSON: the glance passes through to native code untouched, and these
+  // routes may be newer than the generated client.
+  @override
+  Future<GlanceData?> glance(String orgId, {String? ifNoneMatch}) async {
+    try {
+      final res = await api.api.dio.get<Map<String, dynamic>>(
+        '/v1/glance',
+        queryParameters: {'org_id': orgId},
+        options: Options(
+          headers: {...authHeaders, 'If-None-Match': ?ifNoneMatch},
+          validateStatus: (s) => s != null && ((s >= 200 && s < 300) || s == 304),
+        ),
+      );
+      if (res.statusCode == 304) return GlanceData.unchanged(ifNoneMatch ?? '');
+      return GlanceData.fromJson(Map<String, Object?>.from(res.data!), etag: res.headers.value('etag'));
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<NewWidgetKey?> createWidgetKey(String orgId, String platform, {String? label}) async {
+    try {
+      final res = await api.api.dio.post<Map<String, dynamic>>(
+        '/v1/widget-keys',
+        data: {'org_id': orgId, 'platform': platform, 'label': ?label},
+        options: Options(headers: authHeaders, contentType: 'application/json'),
+      );
+      return NewWidgetKey.fromJson(Map<String, Object?>.from(res.data!));
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> deleteWidgetKey(String id) async {
+    try {
+      await api.api.dio.delete<Object>('/v1/widget-keys/$id', options: Options(headers: authHeaders));
+    } on DioException catch (e) {
+      if (e.response?.statusCode != 404) rethrow;
+    }
+  }
+
+  @override
+  Future<void> setWidgetKeyPrivate(String id, bool private) async {
+    await api.api.dio.patch<Object>(
+      '/v1/widget-keys/$id',
+      data: {'private': private},
+      options: Options(headers: authHeaders, contentType: 'application/json'),
+    );
+  }
+
+  @override
+  Future<void> registerWidgetPushToken(String widgetKey, String token, {required String kind, bool? sandbox}) async {
+    await api.api.dio.put<Object>(
+      '/v1/widget-keys/current/push-token',
+      data: {'token': token, 'kind': kind, 'sandbox': ?sandbox},
+      options: Options(headers: {'Authorization': 'Widget $widgetKey'}, contentType: 'application/json'),
+    );
+  }
 
   @override
   Future<void> dismissSuggestion(

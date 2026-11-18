@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Text Android shows outside the app (D-405): the widget picker's names and descriptions, the
+     Quick Settings tile, and the small native widget picker. Descriptions start with a verb
+     (§6.8). What a widget shows comes from the app (glance_words), not from here. -->
+<resources>
+    <string name="widget_needs_you">Needs you</string>
+    <string name="widget_needs_you_description">See which bots are waiting on you</string>
+    <string name="widget_bot">Bot</string>
+    <string name="widget_bot_description">Follow what a bot is doing right now</string>
+    <string name="widget_ask">Ask</string>
+    <string name="widget_ask_description">Ask or talk to a bot in one tap</string>
+    <string name="widget_routines">Routines</string>
+    <string name="widget_routines_description">See what runs next and run it now</string>
+    <string name="widget_today">Today</string>
+    <string name="widget_today_description">Keep your whole day with your bots in one place</string>
+    <string name="widget_brief">Brief</string>
+    <string name="widget_brief_description">Read your morning brief at a glance</string>
+    <string name="widget_library">Library</string>
+    <string name="widget_library_description">Open what your bots made lately</string>
+    <string name="widget_tasks">Tasks</string>
+    <string name="widget_tasks_description">Track where your task board stands</string>
+    <string name="widget_credits">Credits</string>
+    <string name="widget_credits_description">Check how much you have used</string>
+
+    <string name="tile_ask">Ask Casama</string>
+
+    <string name="widget_config_bot_title">Choose a bot</string>
+    <string name="widget_config_routines_title">Choose routines</string>
+    <string name="widget_config_routines_hint">Pick up to four, for the ones you start by hand</string>
+    <string name="widget_config_automatic">Automatic</string>
+    <string name="widget_config_automatic_hint">The next runs, across your bots</string>
+    <string name="widget_config_done">Done</string>
+    <string name="widget_config_signed_out_title">Nothing to choose yet</string>
+    <string name="widget_config_signed_out">Open Casama and sign in, then choose here.</string>
+</resources>

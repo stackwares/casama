@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget picker's preview of Credits (Android 12+): sample content, never drawn live. The
+     share used stands in for the ring the widget draws in code. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    style="@style/WidgetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <TextView style="@style/WidgetText.Big" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="62%" android:textColor="@color/widget_primary" android:textSize="28sp" />
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    <TextView style="@style/WidgetText.Title" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="$5.70 left" android:textSize="16sp" />
+    <TextView style="@style/WidgetText.Second" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="3dp" android:text="$0.80 today" />
+</LinearLayout>

@@ -42,6 +42,8 @@ export interface LinkOptions {
   push?: import("@casama/agent").PushSender;
   /** The relay's sender of iPhone call rings: this cloud's own Apple key. Unset: none. */
   voip?: import("@casama/agent").VoipSender;
+  /** The relay's sender of widget refresh pushes (D-405). Unset: none. */
+  widgets?: import("@casama/agent").WidgetPushSender;
   /** The relay for live view away from the computer (D-296). Unset: none. */
   turn?: import("../link/turn.ts").TurnProvider;
   /** Signed-out linking is limited per caller address. */
@@ -120,7 +122,8 @@ export function registerCasamaLinkRoutes(app: Hono, opts: LinkOptions) {
       trustedIpHeader: opts.trustedIpHeader,
       liveView: turn ? (orgId) => liveViewIncluded(db, orgId) : undefined,
     });
-  if (opts.push) registerPushRelay(app, { push: opts.push, voip: opts.voip, db });
+  if (opts.push)
+    registerPushRelay(app, { push: opts.push, voip: opts.voip, widgets: opts.widgets, db });
   if (turn) registerTurnRoutes(app, { db, turn });
 
   /**

@@ -1,13 +1,12 @@
 package ai.casama.app
 
 import android.app.Activity
+import android.app.KeyguardManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.appwidget.AppWidgetManager
 import android.content.BroadcastReceiver
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -283,6 +282,7 @@ object LiveRun {
         .put("app_key", if (fromServer) last?.optString("app_key") ?: "" else run.key())
         .put("ended", run.ended)
         .put("bot", run.bot)
+        .put("bot_id", run.botId)
         .put("avatar", run.botAvatar ?: "")
         .put("step", stepText(run, labels))
         .put("phase", run.phase)
@@ -539,11 +539,11 @@ object LiveRun {
     if (stale.isNotEmpty()) p.edit().apply { stale.forEach { remove(it) } }.apply()
   }
 
-  // MARK: The home-screen widget
+  // MARK: The home-screen widgets
 
   /**
-   * Puts the run that matters most (needs you first, then the newest) into the widget's data, or
-   * clears it when nothing runs, and redraws the widget.
+   * Puts the run that matters most (needs you first, then the newest) into the widgets' data, or
+   * clears it when nothing runs, and redraws the widgets that show it live (Bot and Today, D-405).
    */
   fun refreshWidget(context: Context) {
     // From the records, not the active list: notify is asynchronous.
@@ -558,10 +558,14 @@ object LiveRun {
     val before = data.getString("live_run_id", null)
     data.edit().apply {
       if (live == null) {
-        remove("live_run_id"); remove("live_bot"); remove("live_avatar"); remove("live_step"); remove("live_link")
+        remove("live_run_id"); remove("live_bot"); remove("live_bot_id"); remove("live_avatar"); remove("live_step")
+        remove("live_link"); remove("live_phase"); remove("live_started_at")
       } else {
         putString("live_run_id", live.first)
         putString("live_bot", live.second.optString("bot"))
+        putString("live_bot_id", live.second.optString("bot_id"))
+        putString("live_phase", live.second.optString("phase", "working"))
+        putLong("live_started_at", live.second.optLong("started_at", System.currentTimeMillis()))
         putString("live_avatar", live.second.optString("avatar"))
         putString("live_step", live.second.optString("step"))
         putString("live_link", live.second.optString("link", "/"))
@@ -569,14 +573,8 @@ object LiveRun {
       }
     }.apply()
     if (before == null && live == null) return
-    val widgets = AppWidgetManager.getInstance(context)
-    val ids = widgets.getAppWidgetIds(ComponentName(context, BotStatusWidget::class.java))
-    if (ids.isEmpty()) return
-    context.sendBroadcast(
-      Intent(context, BotStatusWidget::class.java)
-        .setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
-        .putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids),
-    )
+    WidgetKit.redraw(context, BotStatusWidget::class.java)
+    WidgetKit.redraw(context, TodayWidget::class.java)
   }
 
   // MARK: Debug (the on-device check reads what is drawn)
@@ -645,6 +643,8 @@ object LiveRun {
   const val EXTRA_RUN_ID = "casama_live_run"
   const val EXTRA_ACTION = "casama_live_action"
   const val EXTRA_TARGET = "casama_live_target"
+  /** The bot a widget's Run now or Do it is for (D-405 §17). */
+  const val EXTRA_BOT = "casama_live_bot"
   private const val EXTRA_RUN = "casama.run_id"
   private const val EXTRA_PHASE = "casama.phase"
   private const val EXTRA_STEPS = "casama.steps"
@@ -678,9 +678,14 @@ class LiveRunDismissReceiver : BroadcastReceiver() {
 }
 
 /**
- * Opens the app at a live notification's link (Stop, Review, Open, or the notification itself).
- * An activity, not a receiver, because Android 12 and later don't let notification receivers start
- * activities. The notification stays: the app's feed updates or ends it.
+ * Opens the app at a live notification's or a widget's link (Stop, Review, Open, a row), or acts
+ * through the running app without showing it. An activity, not a receiver, because Android 12 and
+ * later don't let notification receivers start activities, and so Android asks to unlock first.
+ * The notification stays: the app's feed updates or ends it.
+ *
+ * Kinds handed to Dart over `casama/island` → `action` (D-324 Phase 6, D-405 §17): `stop`
+ * (run_id), `allow` and `deny` (approval_id), `run_routine` (routine_id, bot_id) and `accept`
+ * (suggestion_id, bot_id). Silent while the app is alive; otherwise, or if Dart says no, the link.
  */
 class LiveRunActionActivity : Activity() {
   private var done = false
@@ -691,19 +696,59 @@ class LiveRunActionActivity : Activity() {
     val link = intent.getStringExtra(LiveRun.EXTRA_LINK)
     val kind = intent.getStringExtra(LiveRun.EXTRA_ACTION)
     val target = intent.getStringExtra(LiveRun.EXTRA_TARGET)
-    val channel = LiveRun.channel
-    // Stop, Allow or Deny with the app running: done in place (D-324, Phase 6). Android has
-    // already asked to unlock (this is an activity), so the app may answer a request.
-    if (kind == null || target == null || channel == null) return open(link)
+    if (kind == null || target == null || LiveRun.channel == null) return open(link)
+    // A notification's Allow and Deny already asked to unlock (setAuthenticationRequired); a
+    // widget's button can't, so anything that answers or starts something asks here first.
+    val keyguard = getSystemService(KeyguardManager::class.java)
+    if (kind != "stop" && keyguard != null && keyguard.isKeyguardLocked) {
+      if (Build.VERSION.SDK_INT >= 27) setShowWhenLocked(true)
+      keyguard.requestDismissKeyguard(
+        this,
+        object : KeyguardManager.KeyguardDismissCallback() {
+          override fun onDismissSucceeded() = act(kind, target, link)
+
+          override fun onDismissCancelled() = close()
+
+          override fun onDismissError() = close()
+        },
+      )
+      return
+    }
+    act(kind, target, link)
+  }
+
+  /** Hands the action to the running app; the link if it can't (no answer in 8 s is a no). */
+  private fun act(kind: String, target: String, link: String?) {
+    val channel = LiveRun.channel ?: return open(link)
+    val bot = intent.getStringExtra(LiveRun.EXTRA_BOT) ?: ""
+    val args = when (kind) {
+      "stop" -> mapOf("run_id" to target)
+      "run_routine" -> mapOf("routine_id" to target, "bot_id" to bot)
+      "accept" -> mapOf("suggestion_id" to target, "bot_id" to bot)
+      else -> mapOf("approval_id" to target)
+    }
+    // Widget taps carry a casama-widget:// address (WidgetKit.actionIntent, Today's fill-ins); a
+    // notification's don't. Dart lets a widget answer low-risk requests only (D-405 §10).
+    val from = if (intent.data?.scheme == "casama-widget") mapOf("from" to "widget") else emptyMap()
     val timeout = Runnable { open(link) }
     handler.postDelayed(timeout, 8_000)
     channel.invokeMethod(
       "action",
-      mapOf("kind" to kind, (if (kind == "stop") "run_id" else "approval_id") to target, "unlocked" to true),
+      mapOf<String, Any>("kind" to kind, "unlocked" to true) + args + from,
       object : MethodChannel.Result {
         override fun success(result: Any?) {
           handler.removeCallbacks(timeout)
-          if (result == true) close() else open(link)
+          if (result == true) {
+            // Run now says "Started" on the widgets for a moment (D-405 §6.1 D).
+            if (kind == "run_routine") {
+              WidgetConfig.markStarted(applicationContext, target)
+              WidgetKit.redraw(applicationContext, RoutinesWidget::class.java)
+              WidgetKit.redraw(applicationContext, TodayWidget::class.java)
+            }
+            close()
+          } else {
+            open(link)
+          }
         }
 
         override fun error(code: String, message: String?, details: Any?) {

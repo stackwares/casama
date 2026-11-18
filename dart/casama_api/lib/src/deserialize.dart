@@ -218,6 +218,7 @@ import 'package:casama_api/src/model/deleted_rule.dart';
 import 'package:casama_api/src/model/deleted_teach.dart';
 import 'package:casama_api/src/model/deleted_user_fact.dart';
 import 'package:casama_api/src/model/deleted_watcher.dart';
+import 'package:casama_api/src/model/deleted_widget_key.dart';
 import 'package:casama_api/src/model/device_access_requested_event.dart';
 import 'package:casama_api/src/model/device_access_requested_event_payload.dart';
 import 'package:casama_api/src/model/device_browser_access_requested_event.dart';
@@ -316,6 +317,21 @@ import 'package:casama_api/src/model/gallery_update_result.dart';
 import 'package:casama_api/src/model/git_hub_skill_preview.dart';
 import 'package:casama_api/src/model/git_hub_skill_preview_request.dart';
 import 'package:casama_api/src/model/git_sync_status.dart';
+import 'package:casama_api/src/model/glance.dart';
+import 'package:casama_api/src/model/glance_bot.dart';
+import 'package:casama_api/src/model/glance_brief.dart';
+import 'package:casama_api/src/model/glance_creation.dart';
+import 'package:casama_api/src/model/glance_credits.dart';
+import 'package:casama_api/src/model/glance_done.dart';
+import 'package:casama_api/src/model/glance_flags.dart';
+import 'package:casama_api/src/model/glance_need.dart';
+import 'package:casama_api/src/model/glance_needs.dart';
+import 'package:casama_api/src/model/glance_routine.dart';
+import 'package:casama_api/src/model/glance_routine_choice.dart';
+import 'package:casama_api/src/model/glance_starter.dart';
+import 'package:casama_api/src/model/glance_task.dart';
+import 'package:casama_api/src/model/glance_tasks.dart';
+import 'package:casama_api/src/model/glance_tasks_counts.dart';
 import 'package:casama_api/src/model/group_chat_list.dart';
 import 'package:casama_api/src/model/health.dart';
 import 'package:casama_api/src/model/highlight.dart';
@@ -781,6 +797,12 @@ import 'package:casama_api/src/model/wallpaper_photo_list.dart';
 import 'package:casama_api/src/model/watcher.dart';
 import 'package:casama_api/src/model/watcher_list.dart';
 import 'package:casama_api/src/model/welcome_chat.dart';
+import 'package:casama_api/src/model/widget_key.dart';
+import 'package:casama_api/src/model/widget_key_create.dart';
+import 'package:casama_api/src/model/widget_key_created.dart';
+import 'package:casama_api/src/model/widget_key_update.dart';
+import 'package:casama_api/src/model/widget_push_token.dart';
+import 'package:casama_api/src/model/widget_push_token_saved.dart';
 import 'package:casama_api/src/model/workspace_badge.dart';
 import 'package:casama_api/src/model/workspace_badge_list.dart';
 import 'package:casama_api/src/model/workspace_files_export.dart';
@@ -1267,6 +1289,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedUserFact.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedWatcher':
           return DeletedWatcher.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedWidgetKey':
+          return DeletedWidgetKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeviceAccessRequestedEvent':
           return DeviceAccessRequestedEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeviceAccessRequestedEventPayload':
@@ -1481,6 +1505,36 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return GitHubSkillPreviewRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'GitSyncStatus':
           return GitSyncStatus.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'Glance':
+          return Glance.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GlanceBot':
+          return GlanceBot.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GlanceBrief':
+          return GlanceBrief.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GlanceCreation':
+          return GlanceCreation.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GlanceCredits':
+          return GlanceCredits.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GlanceDone':
+          return GlanceDone.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GlanceFlags':
+          return GlanceFlags.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GlanceNeed':
+          return GlanceNeed.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GlanceNeeds':
+          return GlanceNeeds.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GlanceRoutine':
+          return GlanceRoutine.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GlanceRoutineChoice':
+          return GlanceRoutineChoice.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GlanceStarter':
+          return GlanceStarter.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GlanceTask':
+          return GlanceTask.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GlanceTasks':
+          return GlanceTasks.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GlanceTasksCounts':
+          return GlanceTasksCounts.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'GroupChatList':
           return GroupChatList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'Health':
@@ -2480,6 +2534,18 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return WatcherList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WelcomeChat':
           return WelcomeChat.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WidgetKey':
+          return WidgetKey.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WidgetKeyCreate':
+          return WidgetKeyCreate.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WidgetKeyCreated':
+          return WidgetKeyCreated.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WidgetKeyUpdate':
+          return WidgetKeyUpdate.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WidgetPushToken':
+          return WidgetPushToken.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WidgetPushTokenSaved':
+          return WidgetPushTokenSaved.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WorkspaceBadge':
           return WorkspaceBadge.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WorkspaceBadgeList':

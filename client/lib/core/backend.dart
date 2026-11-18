@@ -7,8 +7,10 @@ import 'package:casama_sdk/casama_sdk.dart' hide GalleryRef, GalleryAccess, Gall
 import 'gallery_models.dart';
 import 'key_providers.dart';
 import 'gallery_parts.dart';
+import '../features/widgets/glance.dart';
 
 export 'gallery_models.dart';
+export '../features/widgets/glance.dart';
 export 'gallery_parts.dart';
 export 'key_providers.dart';
 
@@ -2129,6 +2131,26 @@ abstract class Backend {
   Future<BotCheckins> setBotCheckins(String botId, BotCheckins settings);
   Future<ForYou> forYou(String orgId);
   Future<AcceptedSuggestion> acceptSuggestion(String id);
+
+  // Widgets (D-405)
+  /// What the person's widgets show in [orgId]. With [ifNoneMatch] (the last answer's ETag) an
+  /// unchanged glance comes back as [GlanceData.unchanged]. Null when the server is older and has
+  /// no glance: the app then builds a small one itself.
+  Future<GlanceData?> glance(String orgId, {String? ifNoneMatch});
+
+  /// A key this device's widgets fetch the glance with (§8.3). Null when the server has no widget
+  /// keys yet.
+  Future<NewWidgetKey?> createWidgetKey(String orgId, String platform, {String? label});
+
+  /// Takes a widget key back (sign-out). A key already gone is fine.
+  Future<void> deleteWidgetKey(String id);
+
+  /// Whether the key's glance is made private on the server (the app lock, §10).
+  Future<void> setWidgetKeyPrivate(String id, bool private);
+
+  /// Where the server sends refresh pushes for this key's widgets: an Android phone's Firebase
+  /// token (`fcm`) or a WidgetKit push token (`apns_widgets`). Sent with the widget key itself.
+  Future<void> registerWidgetPushToken(String widgetKey, String token, {required String kind, bool? sandbox});
   Future<void> dismissSuggestion(String id, {bool dontSuggestAgain = false});
 
   /// Where each of these suggestions stands; ones that aren't yours are left out.

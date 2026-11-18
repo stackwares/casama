@@ -244,7 +244,7 @@ Class | Method | HTTP request | Description
 [*CreationsApi*](doc/CreationsApi.md) | [**duplicateCreation**](doc/CreationsApi.md#duplicatecreation) | **POST** /v1/creations/{id}/duplicate | A private copy to change while the original stays as it is (D-291)
 [*CreationsApi*](doc/CreationsApi.md) | [**getCreation**](doc/CreationsApi.md#getcreation) | **GET** /v1/creations/{id} | 
 [*CreationsApi*](doc/CreationsApi.md) | [**getCreationContent**](doc/CreationsApi.md#getcreationcontent) | **GET** /v1/creations/{id}/content | The bytes (pictures, videos, sound; one byte range honoured). Pages open by view link
-[*CreationsApi*](doc/CreationsApi.md) | [**getCreationCover**](doc/CreationsApi.md#getcreationcover) | **GET** /v1/creations/{id}/cover | The picture for its card, when it has one (has_cover)
+[*CreationsApi*](doc/CreationsApi.md) | [**getCreationCover**](doc/CreationsApi.md#getcreationcover) | **GET** /v1/creations/{id}/cover | The picture for its card, when it has one (has_cover). Also takes &#x60;Authorization: Widget &lt;key&gt;&#x60; for a creation in the key&#39;s workspace (D-405)
 [*CreationsApi*](doc/CreationsApi.md) | [**getCreationPreview**](doc/CreationsApi.md#getcreationpreview) | **GET** /v1/creations/{id}/preview | A PDF of a document, made when it was kept, so it opens without its computer (D-280)
 [*CreationsApi*](doc/CreationsApi.md) | [**listCreations**](doc/CreationsApi.md#listcreations) | **GET** /v1/creations | The Library: things bots made that you can open, newest first (D-274)
 [*CreationsApi*](doc/CreationsApi.md) | [**restoreCreation**](doc/CreationsApi.md#restorecreation) | **POST** /v1/creations/{id}/restore | 
@@ -522,6 +522,11 @@ Class | Method | HTTP request | Description
 [*WatchersApi*](doc/WatchersApi.md) | [**updateWatcher**](doc/WatchersApi.md#updatewatcher) | **PATCH** /v1/watchers/{id} | Pause or resume a watcher
 [*WebhooksApi*](doc/WebhooksApi.md) | [**customWebhook**](doc/WebhooksApi.md#customwebhook) | **POST** /hooks/custom/{routine_id} | Custom webhook for a routine (X-Casama-Signature: sha256&#x3D;HMAC-SHA256 of the body)
 [*WebhooksApi*](doc/WebhooksApi.md) | [**githubWebhook**](doc/WebhooksApi.md#githubwebhook) | **POST** /hooks/github/{routine_id} | GitHub webhook for a routine (X-Hub-Signature-256)
+[*WidgetsApi*](doc/WidgetsApi.md) | [**createWidgetKey**](doc/WidgetsApi.md#createwidgetkey) | **POST** /v1/widget-keys | A key this device&#39;s widgets fetch the glance with, shown once. It reads the glance and creation covers and nothing else
+[*WidgetsApi*](doc/WidgetsApi.md) | [**deleteWidgetKey**](doc/WidgetsApi.md#deletewidgetkey) | **DELETE** /v1/widget-keys/{id} | Forget a widget key (sign-out): its widgets stop fetching
+[*WidgetsApi*](doc/WidgetsApi.md) | [**getGlance**](doc/WidgetsApi.md#getglance) | **GET** /v1/glance | What the person&#39;s widgets show, in one small document (D-405). Takes the session or &#x60;Authorization: Widget &lt;key&gt;&#x60;; send &#x60;If-None-Match&#x60; with the last &#x60;version&#x60; to get 304 when nothing changed
+[*WidgetsApi*](doc/WidgetsApi.md) | [**setWidgetPushToken**](doc/WidgetsApi.md#setwidgetpushtoken) | **PUT** /v1/widget-keys/current/push-token | Where to send refresh pushes for a key&#39;s widgets: the widget extension calls it with &#x60;Authorization: Widget &lt;key&gt;&#x60;, the app with the session and &#x60;?key_id&#x3D;&#x60;
+[*WidgetsApi*](doc/WidgetsApi.md) | [**updateWidgetKey**](doc/WidgetsApi.md#updatewidgetkey) | **PATCH** /v1/widget-keys/{id} | Make the glance this key reads private (counts and general words only), or not
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**acceptInvite**](doc/WorkspacesApi.md#acceptinvite) | **POST** /v1/invites/{token}/accept | Join an organization with an invite token
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**acceptInviteLink**](doc/WorkspacesApi.md#acceptinvitelink) | **POST** /v1/invite-links/{token}/accept | Join a workspace with an invite link
 [*WorkspacesApi*](doc/WorkspacesApi.md) | [**createInvite**](doc/WorkspacesApi.md#createinvite) | **POST** /v1/orgs/{id}/invites | Invite someone by email (owners and admins)
@@ -779,6 +784,7 @@ Class | Method | HTTP request | Description
  - [DeletedTeach](doc/DeletedTeach.md)
  - [DeletedUserFact](doc/DeletedUserFact.md)
  - [DeletedWatcher](doc/DeletedWatcher.md)
+ - [DeletedWidgetKey](doc/DeletedWidgetKey.md)
  - [DeviceAccessRequestedEvent](doc/DeviceAccessRequestedEvent.md)
  - [DeviceAccessRequestedEventPayload](doc/DeviceAccessRequestedEventPayload.md)
  - [DeviceBrowserAccessRequestedEvent](doc/DeviceBrowserAccessRequestedEvent.md)
@@ -883,6 +889,21 @@ Class | Method | HTTP request | Description
  - [GitHubSkillPreview](doc/GitHubSkillPreview.md)
  - [GitHubSkillPreviewRequest](doc/GitHubSkillPreviewRequest.md)
  - [GitSyncStatus](doc/GitSyncStatus.md)
+ - [Glance](doc/Glance.md)
+ - [GlanceBot](doc/GlanceBot.md)
+ - [GlanceBrief](doc/GlanceBrief.md)
+ - [GlanceCreation](doc/GlanceCreation.md)
+ - [GlanceCredits](doc/GlanceCredits.md)
+ - [GlanceDone](doc/GlanceDone.md)
+ - [GlanceFlags](doc/GlanceFlags.md)
+ - [GlanceNeed](doc/GlanceNeed.md)
+ - [GlanceNeeds](doc/GlanceNeeds.md)
+ - [GlanceRoutine](doc/GlanceRoutine.md)
+ - [GlanceRoutineChoice](doc/GlanceRoutineChoice.md)
+ - [GlanceStarter](doc/GlanceStarter.md)
+ - [GlanceTask](doc/GlanceTask.md)
+ - [GlanceTasks](doc/GlanceTasks.md)
+ - [GlanceTasksCounts](doc/GlanceTasksCounts.md)
  - [GroupChatList](doc/GroupChatList.md)
  - [Health](doc/Health.md)
  - [Highlight](doc/Highlight.md)
@@ -1371,6 +1392,12 @@ Class | Method | HTTP request | Description
  - [Watcher](doc/Watcher.md)
  - [WatcherList](doc/WatcherList.md)
  - [WelcomeChat](doc/WelcomeChat.md)
+ - [WidgetKey](doc/WidgetKey.md)
+ - [WidgetKeyCreate](doc/WidgetKeyCreate.md)
+ - [WidgetKeyCreated](doc/WidgetKeyCreated.md)
+ - [WidgetKeyUpdate](doc/WidgetKeyUpdate.md)
+ - [WidgetPushToken](doc/WidgetPushToken.md)
+ - [WidgetPushTokenSaved](doc/WidgetPushTokenSaved.md)
  - [WorkspaceBadge](doc/WorkspaceBadge.md)
  - [WorkspaceBadgeList](doc/WorkspaceBadgeList.md)
  - [WorkspaceFilesExport](doc/WorkspaceFilesExport.md)

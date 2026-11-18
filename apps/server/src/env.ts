@@ -339,11 +339,17 @@ export const EnvSchema = z.object({
   AWS_ACCESS_KEY_ID: z.string().optional(),
   AWS_SECRET_ACCESS_KEY: z.string().optional(),
   AWS_SESSION_TOKEN: z.string().optional(),
-  /** iOS call rings through PushKit (D-135): an APNs token key (.p8, inline or a path), its id, the team, and the app's VoIP topic. */
+  /**
+   * Apple's push service with a token key (.p8, inline or a path), its id and the team: iOS call
+   * rings through PushKit (D-135, the app's VoIP topic) and widget refresh pushes (D-405, topic
+   * `<APNS_TOPIC_APP>.push-type.widgets`). APNS_URL replaces Apple's host (tests, a proxy).
+   */
   APNS_KEY_P8: z.string().optional(),
   APNS_KEY_ID: z.string().optional(),
   APNS_TEAM_ID: z.string().optional(),
   APNS_VOIP_TOPIC: z.string().default("ai.casama.app.voip"),
+  /** The app's bundle id, which widget pushes are addressed to. */
+  APNS_TOPIC_APP: z.string().default("ai.casama.app"),
   APNS_URL: z.url().optional(),
   RESEND_API_KEY: z.string().optional(),
   /** Invite and notice email over SMTP instead of Resend (D-174). Resend wins when both are set. */

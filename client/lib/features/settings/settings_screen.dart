@@ -275,6 +275,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   // Which kinds push (D-325).
                   _Find(title: l10n.pushPrefsTitle, child: const PushPrefsTile()),
+                  // Widgets on the Home screen, Lock Screen and desktop (D-405).
+                  if (!kIsWeb &&
+                      const {TargetPlatform.iOS, TargetPlatform.android, TargetPlatform.macOS}.contains(defaultTargetPlatform))
+                    GroupedTile(
+                      key: const Key('settingsWidgets'),
+                      icon: LucideIcons.layoutGrid,
+                      title: l10n.widgetsTitle,
+                      subtitle: l10n.widgetsRow,
+                      onTap: () => open('/settings/widgets'), selected: sel('/settings/widgets'),
+                    ),
                   // Tips and news by email (D-302); account emails have no switch.
                   _Find(title: l10n.emailTips, subtitle: l10n.emailTipsHelp, child: const EmailTipsTile()),
                   // Monthly gallery picks (D-315), opt-in.
@@ -648,6 +658,7 @@ Map<String, String> _settingsSearchWords(AppLocalizations l10n, {String? orgName
   l10n.twoStepSignIn: '2fa mfa two factor authenticator totp otp security code',
   l10n.pairDevice: 'qr code scan sign in pair phone another device',
   l10n.passkeys: 'passkey face id touch id fingerprint biometric',
+  l10n.widgetsTitle: 'widgets home screen lock screen controls control center glance pin shortcut',
   l10n.appLock: 'app lock pin passcode face id touch id fingerprint biometric windows hello screenshots privacy lock screen',
   l10n.privacy: 'data export download delete account analytics tracking history retention blocked people block',
   l10n.secrets: 'secrets passwords credentials vault environment variables',

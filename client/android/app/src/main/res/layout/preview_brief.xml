@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget picker's preview of Brief (Android 12+): sample content, never drawn live. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    style="@style/WidgetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_marginEnd="8dp"
+            android:importantForAccessibility="no" android:src="@drawable/mascot_starry" />
+        <TextView style="@style/WidgetText.Title" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="Brief" />
+        <TextView style="@style/WidgetText.Second" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginStart="8dp" android:text="Ada · 7:02" />
+    </LinearLayout>
+    <TextView style="@style/WidgetText" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="10dp" android:lineSpacingExtra="2dp" android:maxLines="4"
+        android:text="Good morning. Two meetings today, the first at 10:00 with the design team. Rain after 3, so take a coat. Your flight to Lisbon is confirmed for Friday." />
+</LinearLayout>

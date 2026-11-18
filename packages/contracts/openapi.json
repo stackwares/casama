@@ -24814,6 +24814,814 @@
           "emoji",
           "text"
         ]
+      },
+      "WidgetKeyCreated": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string",
+            "description": "Shown once"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "created_at"
+        ]
+      },
+      "WidgetKeyCreate": {
+        "type": "object",
+        "properties": {
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android",
+              "macos"
+            ]
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 80
+          }
+        },
+        "required": [
+          "org_id",
+          "platform"
+        ]
+      },
+      "DeletedWidgetKey": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      },
+      "Glance": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "made_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "needs": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/GlanceNeed"
+                },
+                "maxItems": 4
+              }
+            },
+            "required": [
+              "count",
+              "items"
+            ]
+          },
+          "bots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GlanceBot"
+            },
+            "maxItems": 8
+          },
+          "next": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GlanceRoutine"
+            },
+            "maxItems": 6
+          },
+          "routines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GlanceRoutineChoice"
+            },
+            "maxItems": 20
+          },
+          "brief": {
+            "$ref": "#/components/schemas/GlanceBrief"
+          },
+          "lately": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GlanceDone"
+            },
+            "maxItems": 3
+          },
+          "recent": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GlanceCreation"
+            },
+            "maxItems": 6
+          },
+          "tasks": {
+            "type": "object",
+            "properties": {
+              "counts": {
+                "type": "object",
+                "properties": {
+                  "todo": {
+                    "type": "integer"
+                  },
+                  "in_progress": {
+                    "type": "integer"
+                  },
+                  "in_review": {
+                    "type": "integer"
+                  },
+                  "blocked": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "todo",
+                  "in_progress",
+                  "in_review",
+                  "blocked"
+                ]
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/GlanceTask"
+                },
+                "maxItems": 3
+              }
+            },
+            "required": [
+              "counts",
+              "items"
+            ]
+          },
+          "credits": {
+            "$ref": "#/components/schemas/GlanceCredits"
+          },
+          "starters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GlanceStarter"
+            },
+            "maxItems": 4
+          },
+          "flags": {
+            "type": "object",
+            "properties": {
+              "private": {
+                "type": "boolean"
+              },
+              "hide_reply_text": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "private",
+              "hide_reply_text"
+            ]
+          }
+        },
+        "required": [
+          "version",
+          "made_at",
+          "org_id",
+          "needs",
+          "bots",
+          "next",
+          "routines",
+          "brief",
+          "lately",
+          "recent",
+          "tasks",
+          "credits",
+          "starters",
+          "flags"
+        ]
+      },
+      "GlanceNeed": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "approval",
+              "takeover",
+              "suggestion"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "bot_avatar": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 140
+          },
+          "risk": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              null
+            ]
+          },
+          "urgent": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "link": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "bot_id",
+          "bot",
+          "bot_avatar",
+          "text",
+          "risk",
+          "urgent",
+          "created_at",
+          "link"
+        ]
+      },
+      "GlanceBot": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "avatar": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "idle",
+              "working",
+              "waiting",
+              "disabled"
+            ]
+          },
+          "step": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 80
+          },
+          "last_text": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 160
+          },
+          "last_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "busy_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "link": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "avatar",
+          "status",
+          "step",
+          "last_text",
+          "last_at",
+          "busy_at",
+          "link"
+        ]
+      },
+      "GlanceRoutine": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "bot": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "bot_avatar": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "next_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "every": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "link": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "id",
+          "bot_id",
+          "name",
+          "bot",
+          "bot_avatar",
+          "next_at",
+          "every",
+          "enabled",
+          "link"
+        ]
+      },
+      "GlanceRoutineChoice": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "bot": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "bot_id",
+          "name",
+          "bot",
+          "enabled"
+        ]
+      },
+      "GlanceBrief": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "bot_avatar": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "text": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 640
+          },
+          "at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "next_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "link": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "bot_id",
+          "bot",
+          "bot_avatar",
+          "text",
+          "at",
+          "next_at",
+          "link"
+        ]
+      },
+      "GlanceDone": {
+        "type": "object",
+        "properties": {
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "bot_avatar": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "link": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "bot_id",
+          "bot",
+          "bot_avatar",
+          "title",
+          "at",
+          "link"
+        ]
+      },
+      "GlanceCreation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "page",
+              "image",
+              "video",
+              "audio",
+              "document",
+              "file"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "bot": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 80
+          },
+          "has_cover": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "link": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "bot",
+          "has_cover",
+          "version",
+          "at",
+          "link"
+        ]
+      },
+      "GlanceTask": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "todo",
+              "in_progress",
+              "in_review",
+              "blocked",
+              "done"
+            ]
+          },
+          "bot": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 80
+          },
+          "link": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "bot",
+          "link"
+        ]
+      },
+      "GlanceCredits": {
+        "type": "object",
+        "properties": {
+          "billing": {
+            "type": "boolean"
+          },
+          "unlimited": {
+            "type": "boolean"
+          },
+          "plan": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 40
+          },
+          "used_share": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 1
+          },
+          "left_usd": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "today_usd": {
+            "type": "number"
+          },
+          "month_usd": {
+            "type": "number"
+          },
+          "daily_cap_usd": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "daily_used_usd": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "resets_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "billing",
+          "unlimited",
+          "plan",
+          "used_share",
+          "left_usd",
+          "today_usd",
+          "month_usd",
+          "daily_cap_usd",
+          "daily_used_usd",
+          "resets_at"
+        ]
+      },
+      "GlanceStarter": {
+        "type": "object",
+        "properties": {
+          "emoji": {
+            "type": "string",
+            "maxLength": 16
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "emoji",
+          "text"
+        ]
+      },
+      "WidgetPushTokenSaved": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "WidgetPushToken": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 4096
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "apns_widgets",
+              "fcm"
+            ]
+          },
+          "sandbox": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "token",
+          "kind"
+        ]
+      },
+      "WidgetKey": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "ios",
+              "android",
+              "macos"
+            ]
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "private": {
+            "type": "boolean"
+          },
+          "has_push": {
+            "type": "boolean"
+          },
+          "last_used_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "org_id",
+          "platform",
+          "label",
+          "private",
+          "has_push",
+          "last_used_at",
+          "created_at"
+        ]
+      },
+      "WidgetKeyUpdate": {
+        "type": "object",
+        "properties": {
+          "private": {
+            "type": "boolean"
+          }
+        }
       }
     },
     "parameters": {}
@@ -33456,7 +34264,7 @@
             "bearerAuth": []
           }
         ],
-        "summary": "The picture for its card, when it has one (has_cover)",
+        "summary": "The picture for its card, when it has one (has_cover). Also takes `Authorization: Widget <key>` for a creation in the key's workspace (D-405)",
         "parameters": [
           {
             "schema": {
@@ -56719,6 +57527,383 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/widget-keys": {
+      "post": {
+        "operationId": "createWidgetKey",
+        "tags": [
+          "widgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "A key this device's widgets fetch the glance with, shown once. It reads the glance and creation covers and nothing else",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WidgetKeyCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetKeyCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/widget-keys/{id}": {
+      "delete": {
+        "operationId": "deleteWidgetKey",
+        "tags": [
+          "widgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Forget a widget key (sign-out): its widgets stop fetching",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedWidgetKey"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateWidgetKey",
+        "tags": [
+          "widgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Make the glance this key reads private (counts and general words only), or not",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WidgetKeyUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetKey"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/glance": {
+      "get": {
+        "operationId": "getGlance",
+        "tags": [
+          "widgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "What the person's widgets show, in one small document (D-405). Takes the session or `Authorization: Widget <key>`; send `If-None-Match` with the last `version` to get 304 when nothing changed",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Needed with the session; a widget key reads its own workspace"
+            },
+            "required": false,
+            "description": "Needed with the session; a widget key reads its own workspace",
+            "name": "org_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The glance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Glance"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Not changed since the version in If-None-Match"
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/widget-keys/current/push-token": {
+      "put": {
+        "operationId": "setWidgetPushToken",
+        "tags": [
+          "widgets"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Where to send refresh pushes for a key's widgets: the widget extension calls it with `Authorization: Widget <key>`, the app with the session and `?key_id=`",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "key_id",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WidgetPushToken"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetPushTokenSaved"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
             "content": {
               "application/problem+json": {
                 "schema": {

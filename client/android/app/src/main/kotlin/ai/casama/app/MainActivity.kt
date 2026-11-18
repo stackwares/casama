@@ -58,6 +58,10 @@ class MainActivity : FlutterFragmentActivity() {
                     else -> result.notImplemented()
                 }
             }
+        // Widgets (D-405): the widget key, redraws, what's placed, and adding widgets or a bot's
+        // icon to the home screen. The glance itself goes through home_widget.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "casama/widgets")
+            .setMethodCallHandler { call, result -> WidgetChannel.handle(applicationContext, call, result) }
         // The island on Android (D-324, Phase 5): the app's feed drawn as live notifications.
         val island = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "casama/island")
         LiveRun.channel = island

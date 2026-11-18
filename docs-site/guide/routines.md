@@ -42,6 +42,9 @@ Each routine in the list shows its trigger, when it runs **Next** and when it ra
 - **When It Ends** sets or removes its end (below).
 - **Delete** stops it for good. Results it already posted stay in their conversation.
 
+The **Routines** widget and the **Run a routine** control show what runs next and start a routine
+without opening Casama ([Widgets and controls](./widgets)).
+
 You can also ask the bot to list, change or delete its routines. It can rename one, change its
 instructions, schedule, timezone or device event, pause or resume it, set or remove its end, and
 turn a one-time routine into a repeating one or back ("make that reminder daily", "stop the standup

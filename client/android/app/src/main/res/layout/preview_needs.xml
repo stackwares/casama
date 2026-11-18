@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget picker's preview of Needs you (Android 12+): sample content, never drawn live. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    style="@style/WidgetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <TextView style="@style/WidgetText.Big" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="2" android:textColor="@color/widget_orange" />
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+    <TextView style="@style/WidgetText.Title" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="Needs you" />
+    <TextView style="@style/WidgetText.Second" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="3dp" android:maxLines="2" android:text="Milo wants to search flight prices for Lisbon" />
+</LinearLayout>
