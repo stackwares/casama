@@ -61,7 +61,11 @@ android {
         buildConfigField("String", "FIREBASE_SENDER_ID", quoted(firebaseValue("FIREBASE_MESSAGING_SENDER_ID")))
         buildConfigField("String", "FIREBASE_API_KEY", quoted(firebaseValue("FIREBASE_ANDROID_API_KEY", "FIREBASE_API_KEY")))
         buildConfigField("String", "FIREBASE_APP_ID", quoted(firebaseValue("FIREBASE_ANDROID_APP_ID", "FIREBASE_APP_ID")))
-        buildConfigField("String", "DEFAULT_SERVER", quoted("https://api.casama.ai"))
+        // Code sign-in's server. -PdefaultServer=<https url> points a debug build at a dev stack
+        // (store captures, local testing); store builds keep Casama Cloud.
+        val defaultServer = (project.findProperty("defaultServer") as String?)?.trimEnd('/')
+            ?: "https://api.casama.ai"
+        buildConfigField("String", "DEFAULT_SERVER", quoted(defaultServer))
     }
 
     buildFeatures {

@@ -322,7 +322,8 @@ struct HoldToAllowButton: View {
         }
         Text(WatchL10n.holdToAllow)
           .font(.system(.body, design: .rounded).weight(.semibold))
-          .foregroundStyle(WatchTheme.onAmber)
+          // Light on the dim capsule, dark once the solid fill is under the words.
+          .foregroundStyle(progress < 0.5 ? WatchTheme.amberText : WatchTheme.onAmber)
           .frame(maxWidth: .infinity)
           .lineLimit(2)
           .multilineTextAlignment(.center)

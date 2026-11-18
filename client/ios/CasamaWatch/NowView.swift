@@ -136,16 +136,17 @@ struct NeedsCard: View {
     } label: {
       Card(WatchTheme.needsCard(live)) {
         VStack(alignment: .leading, spacing: 4) {
-          Eyebrow(text: "\(WatchL10n.needsYou) · \(glance.needsCount)", color: hideWords ? WatchTheme.needs(live) : WatchTheme.onAmber)
+          Eyebrow(text: "\(WatchL10n.needsYou) · \(glance.needsCount)", color: WatchTheme.needs(live))
           if let first {
             HStack(alignment: .top, spacing: 6) {
               BotMarkView(name: first.bot, avatar: first.botAvatar, size: 24, muted: hideWords)
               VStack(alignment: .leading, spacing: 1) {
-                Text(first.bot).font(.watchCaption.weight(.semibold)).lineLimit(1)
-                PrivateText(first.text, font: .watchCaption, color: hideWords ? .white : WatchTheme.onAmber, lines: 2)
+                // The card is a dim amber wash on black: light text, as on Wear OS (onAmber is for
+                // solid amber fills).
+                Text(first.bot).font(.watchCaption.weight(.semibold)).foregroundStyle(WatchTheme.needs(live)).lineLimit(1)
+                PrivateText(first.text, font: .watchCaption, color: .white, lines: 2)
               }
             }
-            .foregroundStyle(hideWords ? Color.white : WatchTheme.onAmber)
           }
         }
       }

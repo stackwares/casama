@@ -24,6 +24,7 @@ enum WatchTheme {
   static let cardRaised = Color(hex: 0x2A2A2E)
   static let amber = Color(hex: 0xF0A84A)
   static let onAmber = Color(hex: 0x201300)
+  static let amberText = Color(hex: 0xFFE0B5)
   static let green = Color(hex: 0x5FD49A)
   static let greenText = Color(hex: 0xB9ECD3)
   static let orchid = Color(hex: 0xF2B0EC)

@@ -145,9 +145,24 @@ final class AppModel: ObservableObject {
     } else if WatchAccount.removed {
       phase = .signedOut
     } else {
+      #if DEBUG
+      // Simulator captures and UI tests with no iPhone: `-CasamaWatchCode YES` goes straight to a code.
+      if UserDefaults.standard.bool(forKey: "CasamaWatchCode") {
+        startCode()
+        return
+      }
+      #endif
       askPhoneToSignIn()
     }
     if let link = WatchOpen.takePending() { open(link) }
+    #if DEBUG
+    // Simulator captures: `-CasamaWatchOpen casama://app/…` opens that screen (watchOS simulators
+    // can't open links from simctl).
+    if phase == .signedIn, let raw = UserDefaults.standard.string(forKey: "CasamaWatchOpen"),
+       let url = URL(string: raw) {
+      open(WatchLink.parse(url))
+    }
+    #endif
   }
 
   /// The app came forward: refresh, and pick up anything an intent left.
@@ -391,6 +406,10 @@ final class AppModel: ObservableObject {
   // MARK: Pushes (the watch's own token, §8.5)
 
   func registerForPushes() {
+    #if DEBUG
+    // Simulator captures can't tap the system prompt: `-CasamaWatchNoPush YES` skips it.
+    if UserDefaults.standard.bool(forKey: "CasamaWatchNoPush") { return }
+    #endif
     Task {
       let center = UNUserNotificationCenter.current()
       _ = try? await center.requestAuthorization(options: [.alert, .sound, .badge])
