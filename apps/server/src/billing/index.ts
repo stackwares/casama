@@ -26,10 +26,14 @@ export * from "./service.ts";
 export * from "./types.ts";
 
 /** PEM/JSON given inline or as a file path. */
-export const inlineOrFile = (v: string) =>
-  !v.trim().startsWith("{") && !v.includes("-----BEGIN") && existsSync(v)
+export const inlineOrFile = (v: string) => {
+  // A PEM key kept on one line in an env file (Compose's .env has no multi-line values) writes
+  // its line breaks as \n. JSON keeps its own escapes, so only a bare PEM is unescaped.
+  if (v.trim().startsWith("-----BEGIN")) return v.trim().replace(/\\n/g, "\n");
+  return !v.trim().startsWith("{") && !v.includes("-----BEGIN") && existsSync(v)
     ? readFileSync(v, "utf8")
     : v;
+};
 
 /**
  * Widget refresh pushes straight to Apple (D-405), with the same Apple key as call rings
