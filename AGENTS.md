@@ -10,6 +10,12 @@ Rules for AI coding agents working in this repository.
 - Building on Casama from outside (plugins, the API, A2A, templates, the gallery): the skills in
   `agent-kit/skills/` and `docs-site/develop/agents.md`.
 
+## Before you build
+
+- **Look in the vault before you create a key.** Before making a new API key, token, signing key or
+  account, search the team password vault (Vaultwarden) for one that already exists, and reuse it.
+  Make a new one only when nothing there fits, and say why.
+
 ## Tests and heavy commands
 
 Several agent sessions share this machine. Full suites started at the same time fight over the same
