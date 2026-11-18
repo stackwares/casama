@@ -13,8 +13,15 @@ Oliver picked hero v2 over the other cuts; it has a 9:16 version too
 the 9:16 hero are for social posts only. The web masters, without the corner label, are in
 `Marketing/casama/out/web/en-US/`; the encoded copy is in `site/assets/film/`.
 
+**A 49-second film in the Orly/Saya style is in review (v5 draft, 2026-11-18, Anna's browser on a recreated Google Flights,
+narration from Gemini TTS in a woman's and a man's voice, music from Google Lyria):**
+`Marketing/casama/out/review/film-v5-woman.mp4` and `film-v5-man.mp4`, composition `CasamaFilm`. Oliver asked for "better, like
+the Orly and Saya videos" and picked about 40 s, a night sky with the mascots, and Casama's screens
+rebuilt in code for this film (an exception to §2a, disclosed in `Marketing/casama/README.md`).
+
 Decided so far:
-- The bots' computers are recreated in code; Casama's own screens stay real (§2a).
+- The bots' computers are recreated in code; Casama's own screens stay real (§2a), except in the
+  49-second film above.
 - The cast is Anna, Oliver, Max, Rome and Kelly.
 
 The decisions in §12 and §15 are settled, except the launch date (§12 #13). Platform limits in §3
