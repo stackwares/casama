@@ -49,9 +49,17 @@ Tried on 2026-11-18. What blocks most of them today is that the repository has n
 | AI Agents Directory | **Skipped.** Signed in with stackwares@gmail.com and filled the form, not submitted: a listing is either paid ($19 and up) or needs their badge with a link on our site. We do neither |
 | Open Source Alternatives | **Submitted** 2026-11-18 with listings@casama.ai. A free listing needs their badge on the README or the site; it is on the README only (Oliver left the call to me: one badge in the README for a directory AI assistants cite, nothing on casama.ai). They review within 72 hours of the badge going up |
 | Toolradar | **Submitted** 2026-11-18. Account listings@casama.ai (sign-in by e-mailed code, no password), company Casama verified by e-mail, product sent for review |
-| There's An AI For That | Not tried; submission may be paid, and we skip it if so |
+| There's An AI For That | **Skipped** 2026-11-19. No free listing: the cheapest is a $49 review fee (then $437) |
 | aiagentstore.ai | **Skipped.** Account made with listings@casama.ai (login in Vaultwarden), but a listing costs $49.99; there is no free one |
-| SourceForge | Not tried: a mirror of the GitHub repository; the twins have one |
+| SourceForge | **Live** 2026-11-19: https://sourceforge.net/projects/casama/. Account `casama`, e-mail listings@casama.ai (login in Vaultwarden). Made with SourceForge's GitHub importer (GitHub OAuth from oliverbytes, public data only): code and GitHub releases imported, issues and wiki not. Name, tagline, long description, homepage, logo, three screenshots, categories (AI Agents, AI Assistants, Productivity), AGPL-3.0 and Apache-2.0 filled in. New GitHub releases aren't imported automatically yet: turn on Files → GitHub Integration if we want that |
+| SaaSHub | **Skipped** 2026-11-19, for Oliver to do by hand. Its submit page asks AI agents to have their person submit the product instead of submitting it for them. Free; a casama.ai e-mail address gets the listing verified sooner |
+| LibHunt | **Live** 2026-11-19, approved automatically: https://www.libhunt.com/r/casama. No account needed. One sentence, topics, website, docs, Dart, AGPL-3.0 and self-hosted set; OpenClaw suggested as an alternative (with listings@casama.ai) |
+| selfh.st | **Wait.** Tried 2026-11-19, not sent: its form says newly launched projects aren't considered for the directory. Instead, send Casama to Self-Host Weekly's "Project Launch" slot (selfh.st/submit) when we launch |
+| StackShare | **Live** 2026-11-19: https://stackshare.io/casama (sorted into Agent Platforms). It has no e-mail sign-up, so I signed in with Oliver's GitHub (oliverbytes; read-only e-mail and profile access). Tagline, short description, website, docs, features and logo (the 512 px app icon; it needs at least 200×200) |
+| Slant | **Not reachable** 2026-11-19: slant.co shows a Cloudflare 526 error (invalid SSL certificate on their server). Try again later |
+| Futurepedia | **Skipped** 2026-11-19: the submit page is gone (404) and it is paid only now that HubSpot owns it |
+| Toolify | **Skipped** 2026-11-19: a listing costs $99; there is no free one |
+| AI Tools Directory (aitoolsdirectory.com) | **Skipped** 2026-11-19. The free form wants a description that appears nowhere else and drops text written with AI tools. Oliver could send one in his own words |
 | Product Hunt | With the launch, not before (`product-hunt.md`). The address `/products/casama` belongs to another product |
 
 ## Places self-hosters install from
