@@ -50,6 +50,21 @@ apps on every platform, the terminal, chat apps or your AI coding tools.
   </picture>
 </p>
 
+## Try it
+
+On any machine with Docker and 8 GB of memory:
+
+```sh
+git clone https://github.com/stackwares/casama && cd casama
+./install.sh --local
+```
+
+When it's up, open the Casama app on the same computer ([desktop](https://github.com/stackwares/casama/releases)
+or [web](https://app.casama.ai)), choose **Sign in or create account** → **More options** → **Server**,
+enter the address it prints, and create the first account. Add a model key or a local Ollama
+endpoint, and make your first bot. Running it on a server with a domain:
+[Self-host in about 15 minutes](#self-host-in-about-15-minutes).
+
 ## Two ways to run it
 
 | | Casama Cloud | Self-hosted |
