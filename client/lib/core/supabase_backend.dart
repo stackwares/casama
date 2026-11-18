@@ -1447,6 +1447,31 @@ class SupabaseBackend implements Backend {
   }
 
   @override
+  bool get newsletterAvailable => config?.newsletter ?? false;
+
+  // Casama's monthly email (D-408). A server that doesn't send it answers available: false.
+  @override
+  Future<NewsletterChoice?> newsletter() async {
+    if (!newsletterAvailable) return null;
+    final s = (await api.account.getNewsletter()).data!;
+    return s.available ? NewsletterChoice(subscribed: s.subscribed, asked: s.asked) : null;
+  }
+
+  @override
+  Future<NewsletterChoice?> setNewsletter({bool? subscribed, String from = 'settings'}) async {
+    final s = (await api.account.setNewsletter(
+      setNewsletterRequest: SetNewsletterRequest(
+        subscribed: subscribed,
+        from: SetNewsletterRequestFromEnum.values.firstWhere(
+          (e) => e.value == from,
+          orElse: () => SetNewsletterRequestFromEnum.settings,
+        ),
+      ),
+    )).data!;
+    return s.available ? NewsletterChoice(subscribed: s.subscribed, asked: s.asked) : null;
+  }
+
+  @override
   Future<SupportConfig?> supportConfig() async {
     try {
       return (await api.support.getSupportConfig()).data;

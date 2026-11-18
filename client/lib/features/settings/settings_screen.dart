@@ -37,6 +37,7 @@ import '../link/link_screen.dart';
 import '../link/pair_device_sheet.dart';
 import '../notifications/email_tips.dart';
 import '../notifications/gallery_digest.dart';
+import '../notifications/newsletter.dart';
 import '../app_lock/app_lock.dart';
 import '../notifications/push_prefs.dart';
 import '../notifications/quiet_hours.dart';
@@ -289,6 +290,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   _Find(title: l10n.emailTips, subtitle: l10n.emailTipsHelp, child: const EmailTipsTile()),
                   // Monthly gallery picks (D-315), opt-in.
                   _Find(title: l10n.galleryDigestEmails, subtitle: l10n.galleryDigestHelp, child: const GalleryDigestTile()),
+                  // Casama's monthly email (D-408), opt-in, only where the server sends it.
+                  _Find(title: l10n.newsletterTitle, subtitle: l10n.newsletterHelp, child: const NewsletterTile()),
                   // Wake word (D-144): desktop and Android.
                   if (wakeWordSupported)
                     GroupedTile(
@@ -640,6 +643,7 @@ Map<String, String> _settingsSearchWords(AppLocalizations l10n, {String? orgName
   l10n.pushPrefsTitle: 'notifications push alerts replies sounds',
   l10n.emailTips: 'email newsletter tips news unsubscribe',
   l10n.galleryDigestEmails: 'email gallery digest monthly picks',
+  l10n.newsletterTitle: 'email newsletter monthly news updates subscribe unsubscribe',
   l10n.wakeWord: 'voice hey hands free microphone mic listen',
   l10n.showBotSteps: 'steps tools details progress',
   l10n.showReplyUsage: 'cost tokens price usage per reply',

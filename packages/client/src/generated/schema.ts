@@ -274,6 +274,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/newsletter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether you get Casama's monthly email, and whether this server sends it */
+        get: operations["getNewsletter"];
+        /** Turn Casama's monthly email on or off (only on servers that send it) */
+        put: operations["setNewsletter"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/content-reports": {
         parameters: {
             query?: never;
@@ -7369,6 +7387,7 @@ export interface components {
             signup_proofs?: ("app_check" | "pow")[];
             trace_url_template?: string | null;
             google_client_ids?: string[];
+            newsletter?: boolean;
             sign_in_codes?: boolean;
             signups_open?: boolean;
             signups_by_invitation?: boolean;
@@ -7558,6 +7577,11 @@ export interface components {
             /** @description Monthly gallery picks by email (opt-in, D-315) */
             gallery_digest?: boolean;
         };
+        NewsletterStatus: {
+            available: boolean;
+            subscribed: boolean;
+            asked: boolean;
+        };
         BlockedPersonList: {
             items: components["schemas"]["BlockedPerson"][];
         };
@@ -7588,6 +7612,11 @@ export interface components {
             /** @enum {string} */
             decision: "actioned" | "dismissed";
             suspend_workspace?: boolean;
+        };
+        SetNewsletterRequest: {
+            subscribed?: boolean;
+            /** @enum {string} */
+            from?: "settings" | "signup" | "card";
         };
         Membership: {
             /** Format: uuid */
@@ -14397,6 +14426,86 @@ export interface operations {
             };
             /** @description Not authenticated */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getNewsletter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Monthly email */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewsletterStatus"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setNewsletter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetNewsletterRequest"];
+            };
+        };
+        responses: {
+            /** @description Monthly email */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewsletterStatus"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

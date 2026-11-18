@@ -934,6 +934,13 @@ class PushPrefs {
 }
 
 /// About you (D-169): what bots call the person and what the person shared about themselves.
+/// Casama's monthly email (D-408): on or off, and whether the app already asked.
+class NewsletterChoice {
+  const NewsletterChoice({required this.subscribed, required this.asked});
+  final bool subscribed;
+  final bool asked;
+}
+
 class AboutYouView {
   const AboutYouView({
     this.displayName,
@@ -1362,6 +1369,17 @@ abstract class Backend {
   /// Monthly gallery picks by email (D-315); null on a server that doesn't send them.
   Future<bool?> emailGalleryDigest();
   Future<void> setEmailGalleryDigest(bool on);
+
+  /// Casama's monthly email (D-408): whether this server sends it (Casama Cloud). False on
+  /// self-hosted servers, where the switch, the sign-up box and the card stay hidden.
+  bool get newsletterAvailable;
+
+  /// The person's choice; null when this server doesn't send it.
+  Future<NewsletterChoice?> newsletter();
+
+  /// Turns it on or off; [subscribed] left out only records that the app asked (the card was
+  /// closed). [from]: settings, signup or card.
+  Future<NewsletterChoice?> setNewsletter({bool? subscribed, String from = 'settings'});
   // Help & support (D-298)
   /// What this server offers for help; null on a server older than D-298.
   Future<SupportConfig?> supportConfig();

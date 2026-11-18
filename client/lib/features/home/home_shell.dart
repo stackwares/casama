@@ -1,4 +1,5 @@
 import '../selfhost/setup_screen.dart';
+import '../notifications/newsletter.dart';
 import 'dart:async';
 
 import 'package:flutter/gestures.dart' show kDoubleTapTimeout;
@@ -758,6 +759,8 @@ class _Sidebar extends ConsumerWidget {
             const SizedBox(height: 6),
             // A server this computer runs: what its setup still has left (D-309).
             const FinishSetupCard(),
+            // Casama's monthly email (D-408): asked once, where the server sends it.
+            const NewsletterCard(),
             // A minimised call docks here on wide windows (D-327).
             const CallSidebarCard(),
             // The other two places, then the person: their avatar opens Settings.

@@ -284,6 +284,11 @@ export const PublicConfig = z
      * sheet only when their client id is listed here. Empty: Continue with Google opens the browser.
      */
     google_client_ids: z.array(z.string()).optional(),
+    /**
+     * Whether this server sends Casama's monthly email (D-408, Casama Cloud): the apps offer the
+     * switch in Settings, the sign-up box and the one-time card only then.
+     */
+    newsletter: z.boolean().optional(),
     /** Whether this server makes scan-to-sign-in codes (D-296): the apps show the QR only then. */
     sign_in_codes: z.boolean().optional(),
     /**

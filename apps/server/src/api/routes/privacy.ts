@@ -7,6 +7,7 @@ import { cleanSitePattern } from "@casama/domain";
 import { getProductAnalytics } from "@casama/observability";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
+import { newsletterConfig, newsletterOnAccountDeletion } from "../../services/newsletter.ts";
 import { exportUserData, requestAccountDeletion } from "../../services/privacy.ts";
 import { ApiError } from "../errors.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -60,6 +61,15 @@ export function registerPrivacyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     if (!u?.email || u.email.toLowerCase() !== confirm_email.toLowerCase())
       throw new ApiError(400, "confirm_mismatch", "Type your account's email to confirm");
     const r = await requestAccountDeletion(db, claims.sub, env.ACCOUNT_DELETION_GRACE_DAYS);
+    // The monthly email stops now (D-408). Resend being down never blocks the deletion: the
+    // worker keeps trying until the purge.
+    const newsletter = newsletterConfig(env, deps.newsletterFetch);
+    if (newsletter)
+      await newsletterOnAccountDeletion(db, newsletter, claims.sub, (msg, extra) =>
+        deps.logger.warn(msg, extra),
+      ).catch((e: Error) =>
+        deps.logger.warn("newsletter not updated for a deletion", { error: e.message }),
+      );
     deps.logger.info("account deletion requested", { user_id: claims.sub, orgs: r.solo.length });
     track(db, {
       event: "account_deletion_requested",

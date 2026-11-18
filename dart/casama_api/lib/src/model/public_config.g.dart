@@ -35,6 +35,8 @@ abstract class _$PublicConfigCWProxy {
 
   PublicConfig googleClientIds(List<String>? googleClientIds);
 
+  PublicConfig newsletter(bool? newsletter);
+
   PublicConfig signInCodes(bool? signInCodes);
 
   PublicConfig signupsOpen(bool? signupsOpen);
@@ -69,6 +71,7 @@ abstract class _$PublicConfigCWProxy {
     List<PublicConfigSignupProofsEnum>? signupProofs,
     String? traceUrlTemplate,
     List<String>? googleClientIds,
+    bool? newsletter,
     bool? signInCodes,
     bool? signupsOpen,
     bool? signupsByInvitation,
@@ -138,6 +141,9 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
       call(googleClientIds: googleClientIds);
 
   @override
+  PublicConfig newsletter(bool? newsletter) => call(newsletter: newsletter);
+
+  @override
   PublicConfig signInCodes(bool? signInCodes) => call(signInCodes: signInCodes);
 
   @override
@@ -181,6 +187,7 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
     Object? signupProofs = const $CopyWithPlaceholder(),
     Object? traceUrlTemplate = const $CopyWithPlaceholder(),
     Object? googleClientIds = const $CopyWithPlaceholder(),
+    Object? newsletter = const $CopyWithPlaceholder(),
     Object? signInCodes = const $CopyWithPlaceholder(),
     Object? signupsOpen = const $CopyWithPlaceholder(),
     Object? signupsByInvitation = const $CopyWithPlaceholder(),
@@ -251,6 +258,10 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
           ? _value.googleClientIds
           // ignore: cast_nullable_to_non_nullable
           : googleClientIds as List<String>?,
+      newsletter: newsletter == const $CopyWithPlaceholder()
+          ? _value.newsletter
+          // ignore: cast_nullable_to_non_nullable
+          : newsletter as bool?,
       signInCodes: signInCodes == const $CopyWithPlaceholder()
           ? _value.signInCodes
           // ignore: cast_nullable_to_non_nullable
@@ -347,6 +358,7 @@ PublicConfig _$PublicConfigFromJson(
         'google_client_ids',
         (v) => (v as List<dynamic>?)?.map((e) => e as String).toList(),
       ),
+      newsletter: $checkedConvert('newsletter', (v) => v as bool?),
       signInCodes: $checkedConvert('sign_in_codes', (v) => v as bool?),
       signupsOpen: $checkedConvert('signups_open', (v) => v as bool?),
       signupsByInvitation: $checkedConvert(
@@ -411,6 +423,7 @@ Map<String, dynamic> _$PublicConfigToJson(PublicConfig instance) =>
           .toList(),
       'trace_url_template': ?instance.traceUrlTemplate,
       'google_client_ids': ?instance.googleClientIds,
+      'newsletter': ?instance.newsletter,
       'sign_in_codes': ?instance.signInCodes,
       'signups_open': ?instance.signupsOpen,
       'signups_by_invitation': ?instance.signupsByInvitation,

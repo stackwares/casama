@@ -27,6 +27,7 @@ import '../../ui/revealable.dart';
 import '../link/pairing.dart';
 import '../selfhost/local_server.dart';
 import '../selfhost/guided_setup.dart';
+import '../notifications/newsletter.dart';
 
 /// Starts the guided setup of a server on this computer (D-309).
 void openGuidedSetup(BuildContext context) {
@@ -187,6 +188,9 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   var _signUp = false;
+
+  /// The sign-up box for Casama's monthly email (D-408): unticked until the person ticks it.
+  var _newsletter = false;
   var _busy = false;
   var _showEmail = false;
   var _showMore = false;
@@ -233,6 +237,8 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
     final backend = ref.read(backendProvider);
     final ok = await runGuarded(context, () async {
       if (_signUp) {
+        // Sent once the new account signs in (it may need its address confirmed first).
+        if (backend.newsletterAvailable) await NewsletterSignUpChoice.save(_newsletter);
         final signedIn = await backend.signUp(
           _email.text.trim(),
           _password.text,
@@ -662,6 +668,14 @@ class _SignInOptionsState extends ConsumerState<SignInOptions> {
                                       onFieldSubmitted: (_) => _submit(),
                                     ),
                               ),
+                              if (_signUp && ref.watch(backendProvider).newsletterAvailable)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: AppSpace.xs),
+                                  child: NewsletterSignUpBox(
+                                    value: _newsletter,
+                                    onChanged: (v) => setState(() => _newsletter = v),
+                                  ),
+                                ),
                               if (!_signUp)
                                 Align(
                                   alignment: Alignment.centerRight,

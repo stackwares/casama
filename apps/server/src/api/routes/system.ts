@@ -4,6 +4,7 @@ import type { OpenAPIHono } from "@hono/zod-openapi";
 import { type Env, modelOverrides } from "../../env.ts";
 import { abuseControlsOn, signupProofKinds } from "../../services/abuse.ts";
 import { getCloudModels } from "../../services/cloud-models.ts";
+import { newsletterConfig } from "../../services/newsletter.ts";
 import { sitesSettings } from "../../sites/config.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
 import { chatGptSignInEnabled } from "./chatgpt.ts";
@@ -53,6 +54,8 @@ export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         trace_url_template: deps.env.TRACE_URL_TEMPLATE ?? null,
         google_client_ids: googleClientIds(deps.env),
         sign_in_codes: !!authAdminFor(deps),
+        // Casama's monthly email (D-408): only where the server has its Resend key.
+        newsletter: !!newsletterConfig(deps.env),
         // One list for the apps' add-key form and model pickers (D-374).
         key_providers: KEY_PROVIDERS,
         ...(deps.env.DISABLE_SIGNUP === undefined

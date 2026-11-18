@@ -108,6 +108,8 @@ export async function startHarness(
     objects?: import("@casama/sandbox").ObjectStore;
     /** The support assistant's model calls (D-298). */
     supportFetch?: typeof fetch;
+    /** Resend calls for the monthly email (D-408). */
+    newsletterFetch?: typeof fetch;
   } = {},
 ): Promise<Harness> {
   const tdb = await startTestDatabase();
@@ -215,6 +217,7 @@ export async function startHarness(
     apps: opts.apps,
     objects: opts.objects,
     supportFetch: opts.supportFetch,
+    newsletterFetch: opts.newsletterFetch,
     env,
     db: handle.db,
     logger: createLogger("test", "error"),

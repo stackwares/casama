@@ -1051,6 +1051,19 @@ class FakeBackend implements Backend {
   Future<bool?> emailGalleryDigest() async => galleryDigestEmails;
   @override
   Future<void> setEmailGalleryDigest(bool on) async => galleryDigestEmails = on;
+  // Casama's monthly email (D-408)
+  @override
+  bool newsletterAvailable = false;
+  NewsletterChoice newsletterChoice = const NewsletterChoice(subscribed: false, asked: false);
+  final newsletterCalls = <({bool? subscribed, String from})>[];
+  @override
+  Future<NewsletterChoice?> newsletter() async => newsletterAvailable ? newsletterChoice : null;
+  @override
+  Future<NewsletterChoice?> setNewsletter({bool? subscribed, String from = 'settings'}) async {
+    newsletterCalls.add((subscribed: subscribed, from: from));
+    newsletterChoice = NewsletterChoice(subscribed: subscribed ?? newsletterChoice.subscribed, asked: true);
+    return newsletterAvailable ? newsletterChoice : null;
+  }
   List<GalleryItem> gallerySetItems = const [];
   @override
   Future<List<GalleryItem>> gallerySets() async => gallerySetItems;

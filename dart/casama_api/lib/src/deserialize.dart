@@ -428,6 +428,7 @@ import 'package:casama_api/src/model/model_fallback_event_payload.dart';
 import 'package:casama_api/src/model/model_option.dart';
 import 'package:casama_api/src/model/model_option_list.dart';
 import 'package:casama_api/src/model/model_policy.dart';
+import 'package:casama_api/src/model/newsletter_status.dart';
 import 'package:casama_api/src/model/notice_event.dart';
 import 'package:casama_api/src/model/notice_event_payload.dart';
 import 'package:casama_api/src/model/ok.dart';
@@ -623,6 +624,7 @@ import 'package:casama_api/src/model/set_git_sync_request.dart';
 import 'package:casama_api/src/model/set_join_domain_request.dart';
 import 'package:casama_api/src/model/set_local_mcp_servers_request.dart';
 import 'package:casama_api/src/model/set_memory_backend_request.dart';
+import 'package:casama_api/src/model/set_newsletter_request.dart';
 import 'package:casama_api/src/model/set_org_limits_request.dart';
 import 'package:casama_api/src/model/set_own_coding_agents_request.dart';
 import 'package:casama_api/src/model/set_payment_settings_request.dart';
@@ -1733,6 +1735,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return ModelOptionList.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'ModelPolicy':
           return ModelPolicy.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'NewsletterStatus':
+          return NewsletterStatus.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'NoticeEvent':
           return NoticeEvent.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'NoticeEventPayload':
@@ -2165,6 +2169,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return SetLocalMcpServersRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetMemoryBackendRequest':
           return SetMemoryBackendRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'SetNewsletterRequest':
+          return SetNewsletterRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetOrgLimitsRequest':
           return SetOrgLimitsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'SetOwnCodingAgentsRequest':

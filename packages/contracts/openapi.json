@@ -2475,6 +2475,9 @@
               "type": "string"
             }
           },
+          "newsletter": {
+            "type": "boolean"
+          },
           "sign_in_codes": {
             "type": "boolean"
           },
@@ -3217,6 +3220,25 @@
           "tips"
         ]
       },
+      "NewsletterStatus": {
+        "type": "object",
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "subscribed": {
+            "type": "boolean"
+          },
+          "asked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "available",
+          "subscribed",
+          "asked"
+        ]
+      },
       "BlockedPersonList": {
         "type": "object",
         "properties": {
@@ -3350,6 +3372,22 @@
         "required": [
           "decision"
         ]
+      },
+      "SetNewsletterRequest": {
+        "type": "object",
+        "properties": {
+          "subscribed": {
+            "type": "boolean"
+          },
+          "from": {
+            "type": "string",
+            "enum": [
+              "settings",
+              "signup",
+              "card"
+            ]
+          }
+        }
       },
       "Membership": {
         "type": "object",
@@ -26497,6 +26535,106 @@
           },
           "401": {
             "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/newsletter": {
+      "get": {
+        "operationId": "getNewsletter",
+        "tags": [
+          "account"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Whether you get Casama's monthly email, and whether this server sends it",
+        "responses": {
+          "200": {
+            "description": "Monthly email",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewsletterStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "setNewsletter",
+        "tags": [
+          "account"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Turn Casama's monthly email on or off (only on servers that send it)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetNewsletterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Monthly email",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewsletterStatus"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
             "content": {
               "application/problem+json": {
                 "schema": {
