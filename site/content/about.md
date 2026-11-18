@@ -42,7 +42,7 @@ Casama is made by Stackwares, a small software company. This is the founding tea
 
 <h3 id="oliver">Oliver Martinez, Founder &amp; CEO</h3>
 
-Oliver Martinez started Casama, builds it and writes the posts on the [blog](/blog/).
+Oliver Martinez started Casama, builds it and writes the posts on the [blog](/blog/). Find him at [oliverbytes.dev](https://oliverbytes.dev) and on [GitHub](https://github.com/oliverbytes).
 
 <h3 id="anna-may">Anna May A. Valdez, Co-founder &amp; Head of Product</h3>
 

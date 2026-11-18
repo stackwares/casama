@@ -579,7 +579,7 @@ function homeWithFaqSchema(text) {
 }
 
 const org = { "@type": "Organization", name: product.name, url: `${SITE}/`, logo: `${SITE}/favicon.png`, sameAs: product.profiles };
-const authors = { casama: org, oliver: { "@type": "Person", name: "Oliver Martinez", url: `${SITE}/about#oliver` } };
+const authors = { casama: org, oliver: { "@type": "Person", name: "Oliver Martinez", url: `${SITE}/about#oliver`, sameAs: ["https://oliverbytes.dev", "https://github.com/oliverbytes"] } };
 
 function structuredData(page, crumbs) {
   const { meta } = page;
