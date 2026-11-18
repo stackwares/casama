@@ -17,6 +17,11 @@ export interface CloudModelAssignment {
   video: string;
 }
 
+/**
+ * Changing an OpenRouter model here or in Admin → Cloud models: add it to the OpenRouter
+ * guardrail "Casama privacy" (Only allow) first, or every call on Casama's key fails with 404
+ * "Model blocked by guardrail" (D-364). `node scripts/check-model-updates.mts` lists newer models.
+ */
 export const CLOUD_MODEL_DEFAULTS: CloudModelAssignment = {
   chat: "deepseek/deepseek-v4.1-flash-1017",
   background: "deepseek/deepseek-v4.1-flash-1017",

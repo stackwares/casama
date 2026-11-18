@@ -4939,6 +4939,39 @@ cookies and could set cookies on `.casama.ai`.
 - **Still to do:** compress the new wallpapers (400–816 KB against about 270 KB; five were upscaled from 1254 px),
   re-sign the gallery manifest on deploy, and deploy each site after Oliver's yes.
 
+## D-364 Casama's own model keys only run the models Casama uses
+
+- **Decision (2026-11-18, Oliver: "make stricter our guardrails for what models we currently use
+  only"):** the OpenRouter "Casama" workspace's default guardrail, "Casama privacy"
+  (`6a06bc80-cb40-43ea-931f-223de655a1d9`, on the "Casama server" key), went from "Allow all
+  except" to **Only allow** these six models, the `CLOUD_MODEL_DEFAULTS` that run on OpenRouter:
+  `deepseek/deepseek-v4.1-flash-1017` (chat, background work, Casama Help),
+  `google/gemini-nano-banana-2.1` (images), `google/gemini-3.8-flash-lite-tts` (read aloud),
+  `openai/whisper-large-v3-turbo` (dictation), `openai/text-embedding-3-small` (memory) and
+  `google/gemini-omni-1.2-flash` (video). The allowed-provider list stays empty, so any provider
+  serving those models still works. The training and prompt-publishing switches stay off.
+- **Why:** if the key leaks, it's only worth those six cheap models, on top of the existing caps:
+  $50 a day on the key, and the workspace's $50 a day and $1,500 a month (D-244). The server
+  already sends only these models (`lockCloudPolicy`, `cloudModelIds`); the guardrail enforces the
+  same list at OpenRouter for anyone holding the key.
+- **Checked live:** DeepSeek and the embedding model answer. `anthropic/claude-opus-5.5` and
+  `openai/gpt-6.2-sol` get 404 "Model blocked by guardrail".
+- **Changing a cloud model:** before you switch a model in Admin → Cloud models (or the
+  defaults in `packages/domain/src/cloud-model-assignment.ts`), add it to the guardrail at
+  openrouter.ai/workspaces/casama/guardrails. Otherwise every call on Casama's key fails with
+  that 404.
+- **Google (Gemini Live calls):** the server's key (`GOOGLE_AI_API_KEY`, project `kasama-ai`) is
+  bound to a service account and limited to the Gemini API. The project has a $100 monthly spend
+  cap in AI Studio → Spend. The Firebase keys in the app can't reach Gemini: Gemini keys must be
+  bound to a service account, and Firebase AI Logic isn't enabled. The key has no IP restriction,
+  because phones connect to Gemini Live with one-use tokens the server makes. Restricting it to
+  the server's IP still needs a real call to test.
+- **Newer models:** `node scripts/check-model-updates.mts` lists newer models from the same
+  maker and family as each OpenRouter default, with prices, and marks the ones it hasn't
+  reported before as NEW. It remembers them in `~/.config/casama/model-updates-seen.json`. A
+  weekly T3 scheduled task ("Weekly cloud model check", Mondays 09:00) runs it, also checks
+  Gemini Live and DeepSeek news, and recommends update, wait or ignore. It never changes anything.
+
 ## D-377 One download page, one QR code, one place for store links
 
 casama.ai/download lists every way to get Casama: App Store (iPhone, iPad, Mac), Google Play,
