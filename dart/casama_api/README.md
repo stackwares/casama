@@ -81,7 +81,9 @@ Class | Method | HTTP request | Description
 [*AboutYouApi*](doc/AboutYouApi.md) | [**updateAboutYou**](doc/AboutYouApi.md#updateaboutyou) | **PATCH** /v1/me/about | 
 [*AboutYouApi*](doc/AboutYouApi.md) | [**updateUserFact**](doc/AboutYouApi.md#updateuserfact) | **PATCH** /v1/me/facts/{id} | 
 [*AccountApi*](doc/AccountApi.md) | [**getEmailPreferences**](doc/AccountApi.md#getemailpreferences) | **GET** /v1/me/email-preferences | 
+[*AccountApi*](doc/AccountApi.md) | [**getNewsletter**](doc/AccountApi.md#getnewsletter) | **GET** /v1/me/newsletter | Whether you get Casama&#39;s monthly email, and whether this server sends it
 [*AccountApi*](doc/AccountApi.md) | [**setEmailPreferences**](doc/AccountApi.md#setemailpreferences) | **PUT** /v1/me/email-preferences | 
+[*AccountApi*](doc/AccountApi.md) | [**setNewsletter**](doc/AccountApi.md#setnewsletter) | **PUT** /v1/me/newsletter | Turn Casama&#39;s monthly email on or off (only on servers that send it)
 [*ActionRulesApi*](doc/ActionRulesApi.md) | [**createActionRule**](doc/ActionRulesApi.md#createactionrule) | **POST** /v1/action-rules | 
 [*ActionRulesApi*](doc/ActionRulesApi.md) | [**deleteActionRule**](doc/ActionRulesApi.md#deleteactionrule) | **DELETE** /v1/action-rules/{id} | 
 [*ActionRulesApi*](doc/ActionRulesApi.md) | [**listActionRules**](doc/ActionRulesApi.md#listactionrules) | **GET** /v1/action-rules | A bot&#39;s rules plus the workspace&#39;s (or only the workspace&#39;s without bot_id)
@@ -1002,6 +1004,7 @@ Class | Method | HTTP request | Description
  - [ModelOption](doc/ModelOption.md)
  - [ModelOptionList](doc/ModelOptionList.md)
  - [ModelPolicy](doc/ModelPolicy.md)
+ - [NewsletterStatus](doc/NewsletterStatus.md)
  - [NoticeEvent](doc/NoticeEvent.md)
  - [NoticeEventPayload](doc/NoticeEventPayload.md)
  - [Ok](doc/Ok.md)
@@ -1211,6 +1214,7 @@ Class | Method | HTTP request | Description
  - [SetJoinDomainRequest](doc/SetJoinDomainRequest.md)
  - [SetLocalMcpServersRequest](doc/SetLocalMcpServersRequest.md)
  - [SetMemoryBackendRequest](doc/SetMemoryBackendRequest.md)
+ - [SetNewsletterRequest](doc/SetNewsletterRequest.md)
  - [SetOrgLimitsRequest](doc/SetOrgLimitsRequest.md)
  - [SetOwnCodingAgentsRequest](doc/SetOwnCodingAgentsRequest.md)
  - [SetPaymentSettingsRequest](doc/SetPaymentSettingsRequest.md)

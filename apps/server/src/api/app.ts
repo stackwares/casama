@@ -54,6 +54,7 @@ import { registerLiveRoutes } from "./routes/live.ts";
 import { registerInternalRoutes, registerLocalRoutes } from "./routes/local.ts";
 import { type InProcessEnv, registerMcpRoutes } from "./routes/mcp.ts";
 import { registerModerationRoutes } from "./routes/moderation.ts";
+import { registerNewsletterRoutes } from "./routes/newsletter.ts";
 import { registerPackRoutes } from "./routes/packs.ts";
 import { registerPageRoutes } from "./routes/pages.ts";
 import { registerPasswordManagerRoutes } from "./routes/password-managers.ts";
@@ -83,9 +84,12 @@ import { registerWorkspaceFileRoutes } from "./routes/workspace-files.ts";
 import { registerWorkspaceRoutes } from "./routes/workspaces.ts";
 import type { AppDeps, AppEnv } from "./types.ts";
 
-/** Signed provider webhooks: billing (Dodo, RevenueCat), Stripe Issuing, the domain registrar. */
+/**
+ * Signed provider webhooks: billing (Dodo, RevenueCat), Stripe Issuing, the domain registrar,
+ * Resend for the monthly email (D-408).
+ */
 export const PROVIDER_HOOKS =
-  /^\/hooks\/(?:billing\/(?:dodo|revenuecat)|payments\/[0-9a-f-]{36}|registrar\/[^/]+)\/?$/;
+  /^\/hooks\/(?:billing\/(?:dodo|revenuecat)|payments\/[0-9a-f-]{36}|registrar\/[^/]+|newsletter\/resend)\/?$/;
 
 export function createApp(deps: AppDeps) {
   const app = new OpenAPIHono<AppEnv>({
@@ -388,6 +392,7 @@ export function createApp(deps: AppDeps) {
   registerSupportRoutes(app, deps);
   registerSupportWebRoutes(app, deps);
   registerModerationRoutes(app, deps);
+  registerNewsletterRoutes(app, deps);
   registerWorkspaceRoutes(app, deps);
   registerJoiningRoutes(app, deps);
   registerReferralRoutes(app, deps);

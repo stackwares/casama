@@ -17,6 +17,7 @@ describe("webhook rate limits", () => {
       "/hooks/billing/revenuecat",
       "/hooks/payments/0b0e5c3a-1f2e-4c6d-9a8b-7c6d5e4f3a2b",
       "/hooks/registrar/namecom",
+      "/hooks/newsletter/resend",
     ])
       expect(PROVIDER_HOOKS.test(p), p).toBe(true);
     for (const p of [
@@ -25,6 +26,7 @@ describe("webhook rate limits", () => {
       "/hooks/payments/not-an-org",
       "/hooks/channels/abc",
       "/hooks/registrar/a/b",
+      "/hooks/newsletter/other",
     ])
       expect(PROVIDER_HOOKS.test(p), p).toBe(false);
   });

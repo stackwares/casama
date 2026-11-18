@@ -254,6 +254,8 @@ describe("cross-tenant sweep (Phase 8 security review)", () => {
       "blockPerson",
       "unblockPerson",
       "setEmailPreferences",
+      // The monthly email switch is the caller's own (D-408); newsletter.test.ts checks isolation.
+      "setNewsletter",
       // Gallery v2 (D-315): the requests board and look counts are the caller's own and public;
       // gallery-v2.test.ts checks workspace routes (install, installed, rules) refuse outsiders.
       "createGalleryRequest",

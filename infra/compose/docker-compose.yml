@@ -72,6 +72,9 @@ x-casama: &casama
     TELEMETRY: ${TELEMETRY:-off}
     INSTANCE_ADMIN_EMAILS: ${INSTANCE_ADMIN_EMAILS:-}
     RESEND_API_KEY: ${RESEND_API_KEY:-}
+    # Casama Cloud only: the app's monthly email switch (D-408). Unset on self-hosted servers.
+    NEWSLETTER_RESEND_API_KEY: ${NEWSLETTER_RESEND_API_KEY:-}
+    NEWSLETTER_WEBHOOK_SECRET: ${NEWSLETTER_WEBHOOK_SECRET:-}
     EMAIL_FROM: ${EMAIL_FROM:-Casama <no-reply@localhost>}
     # Invites use the same SMTP server as Auth when there's no Resend key (D-174).
     SMTP_HOST: ${SMTP_HOST:-}

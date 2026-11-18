@@ -15,6 +15,7 @@ import { captureError } from "@casama/observability";
 import { sql } from "drizzle-orm";
 import { strToU8, zipSync } from "fflate";
 import { eraseAnalyticsPerson } from "./analytics-erase.ts";
+import { forgetNewsletterContact, newsletterConfig } from "./newsletter.ts";
 
 /** Per-workspace tables in the export, in a readable order. */
 const ORG_TABLES = [
@@ -217,7 +218,11 @@ async function soleOwnedOrgs(db: Database, userId: string) {
 export async function purgeDueAccounts(
   db: Database,
   computers?: ComputerService,
-  opts: { erase?: (userId: string) => Promise<unknown> } = {},
+  opts: {
+    erase?: (userId: string) => Promise<unknown>;
+    /** Removes the person's address from the monthly email's list (D-408); tests replace it. */
+    forgetNewsletter?: (userId: string) => Promise<boolean>;
+  } = {},
 ) {
   const due = await db.execute<{ user_id: string }>(sql`
     select user_id from public.account_deletions where completed_at is null and purge_after <= now() limit 50`);
@@ -260,6 +265,18 @@ export async function purgeDueAccounts(
     await (opts.erase ?? eraseAnalyticsPerson)(user_id).catch((e) => {
       captureError(e, { service: "casama-worker", step: "purge-analytics", user_id });
     });
+    // The monthly email's contact in Resend (D-408), usually gone already at the deletion request.
+    // Like analytics, a failure is reported and never blocks erasing the account.
+    const forgot = await (
+      opts.forgetNewsletter ??
+      ((id: string) => forgetNewsletterContact(db, newsletterConfig(process.env), id))
+    )(user_id).catch(() => false);
+    if (!forgot)
+      captureError(new Error("newsletter contact not removed"), {
+        service: "casama-worker",
+        step: "purge-newsletter",
+        user_id,
+      });
     await withoutTimeouts(db, (tx) =>
       tx.execute(sql`select public.worker_purge_user(${user_id}::uuid)`),
     );

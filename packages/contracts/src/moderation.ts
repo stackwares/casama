@@ -74,3 +74,26 @@ export const EmailPreferences = z
     }),
   })
   .openapi("EmailPreferences");
+
+/**
+ * Casama's monthly email (D-408): what's new and what's next, once a month at most. Opt-in, off
+ * by default; only on servers that send it (Casama Cloud).
+ */
+export const NewsletterStatus = z
+  .object({
+    /** Whether this server sends it. False: the app hides the switch. */
+    available: z.boolean(),
+    subscribed: z.boolean(),
+    /** The app already asked (the sign-up box or the one-time card), so the card stays away. */
+    asked: z.boolean(),
+  })
+  .openapi("NewsletterStatus");
+
+export const SetNewsletterRequest = z
+  .object({
+    /** Left out: only records that the app asked (the card was closed without an answer). */
+    subscribed: z.boolean().optional(),
+    /** Where the choice was made (default settings). */
+    from: z.enum(["settings", "signup", "card"]).optional(),
+  })
+  .openapi("SetNewsletterRequest");

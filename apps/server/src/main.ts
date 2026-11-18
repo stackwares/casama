@@ -443,6 +443,23 @@ if (env.MODE === "api") {
       }),
     );
   }
+  // Casama's monthly email (D-408): changes Resend missed are sent again every 15 minutes. The
+  // API's connection, because it reads sign-in emails (the worker's own role can't).
+  {
+    const { newsletterConfig, startNewsletterSync } = await import("./services/newsletter.ts");
+    const config = newsletterConfig(env);
+    if (config) {
+      const newsletterDb = createDb(env.DATABASE_URL, { max: 1 });
+      stoppers.push(newsletterDb.close);
+      stoppers.push(
+        startNewsletterSync({
+          db: newsletterDb.db,
+          config,
+          log: (msg, extra) => logger.info(msg, extra),
+        }),
+      );
+    }
+  }
   // Gallery v2 (D-315): use counts and rewards hourly, the health check daily, monthly picks.
   {
     const { startGalleryJobs } = await import("./services/gallery-jobs.ts");

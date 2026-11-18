@@ -45,6 +45,8 @@ export interface AppDeps {
   };
   /** The support assistant's model calls (tests replace it); default: fetch. */
   supportFetch?: typeof fetch;
+  /** Calls to Resend for the monthly email (D-408; tests replace it); default: fetch. */
+  newsletterFetch?: typeof fetch;
   /** Auth's admin API (tests replace it); default: from SUPABASE_SERVICE_ROLE_KEY. */
   authAdmin?: { url: string; serviceRoleKey: string; fetch?: typeof fetch };
   /** Casama Link, self-hosted side (D-296): this server's own public address, when it has one. */

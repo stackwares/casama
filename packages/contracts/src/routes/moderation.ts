@@ -6,8 +6,10 @@ import {
   ContentReport,
   CreateReportRequest,
   EmailPreferences,
+  NewsletterStatus,
   ReportReceipt,
   ReviewReportRequest,
+  SetNewsletterRequest,
 } from "../moderation.ts";
 
 /**
@@ -119,4 +121,30 @@ export const setEmailPreferences = createRoute({
   security,
   request: { body: jsonBody(EmailPreferences) },
   responses: { 200: jsonResponse("Email preferences", EmailPreferences), 400: e400, 401: e401 },
+});
+
+export const getNewsletter = createRoute({
+  operationId: "getNewsletter",
+  method: "get",
+  path: "/v1/me/newsletter",
+  tags: ["account"],
+  security,
+  summary: "Whether you get Casama's monthly email, and whether this server sends it",
+  responses: { 200: jsonResponse("Monthly email", NewsletterStatus), 401: e401 },
+});
+
+export const setNewsletter = createRoute({
+  operationId: "setNewsletter",
+  method: "put",
+  path: "/v1/me/newsletter",
+  tags: ["account"],
+  security,
+  summary: "Turn Casama's monthly email on or off (only on servers that send it)",
+  request: { body: jsonBody(SetNewsletterRequest) },
+  responses: {
+    200: jsonResponse("Monthly email", NewsletterStatus),
+    400: e400,
+    401: e401,
+    404: e404,
+  },
 });

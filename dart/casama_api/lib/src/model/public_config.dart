@@ -48,6 +48,8 @@ class PublicConfig {
 
      this.googleClientIds,
 
+     this.newsletter,
+
      this.signInCodes,
 
      this.signupsOpen,
@@ -220,6 +222,18 @@ class PublicConfig {
 
   @JsonKey(
     
+    name: r'newsletter',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? newsletter;
+
+
+
+  @JsonKey(
+    
     name: r'sign_in_codes',
     required: false,
     includeIfNull: false,
@@ -307,6 +321,7 @@ class PublicConfig {
       other.signupProofs == signupProofs &&
       other.traceUrlTemplate == traceUrlTemplate &&
       other.googleClientIds == googleClientIds &&
+      other.newsletter == newsletter &&
       other.signInCodes == signInCodes &&
       other.signupsOpen == signupsOpen &&
       other.signupsByInvitation == signupsByInvitation &&
@@ -329,6 +344,7 @@ class PublicConfig {
         signupProofs.hashCode +
         (traceUrlTemplate == null ? 0 : traceUrlTemplate.hashCode) +
         googleClientIds.hashCode +
+        newsletter.hashCode +
         signInCodes.hashCode +
         signupsOpen.hashCode +
         signupsByInvitation.hashCode +

@@ -359,6 +359,18 @@ export const EnvSchema = z.object({
   SMTP_PASS: z.string().optional(),
   EMAIL_FROM: z.string().default("Casama <no-reply@localhost>"),
   /**
+   * Casama's monthly email (D-404, D-408), Casama Cloud only: a Resend key with access to contacts,
+   * for the list behind the app's "Casama's monthly email" switch. Kept apart from RESEND_API_KEY,
+   * which a self-hosted server may set for its own invite emails. Unset: the app hides the switch
+   * and the server never calls Resend for it.
+   */
+  NEWSLETTER_RESEND_API_KEY: z.string().optional(),
+  /** Resend webhook signing secret (`whsec_…`) for /hooks/newsletter/resend. */
+  NEWSLETTER_WEBHOOK_SECRET: z.string().optional(),
+  /** The Resend segment and topic people join (Casama's own by default, D-404). */
+  NEWSLETTER_SEGMENT_ID: z.string().default("bcf1b930-13c0-4bbc-a720-aa4cfd544e3c"),
+  NEWSLETTER_TOPIC_ID: z.string().default("4b2d83b2-6f0a-4d6b-9981-de572951bf3c"),
+  /**
    * Help & support (D-298). Messages people send from the app go to SUPPORT_INBOX (with their own
    * address as reply-to). The assistant runs when CLOUD_MODEL_UPSTREAM_KEY is set and is off with
    * SUPPORT_ASSISTANT=false; SUPPORT_MODEL picks its model (default: the cloud chat default).
