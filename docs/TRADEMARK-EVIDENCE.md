@@ -22,9 +22,9 @@ Not legal advice. Keep this file up to date and add new evidence as it happens.
   is, the founder personally owns the copyright and the mark, and "Stackwares" means the founder
   doing business under that name. When a company is formed, assign the copyright, the mark and
   this evidence to it in writing, and record the assignment at IPOPHL/USPTO.
-- **Priority:** file at IPOPHL first. The Paris Convention then gives 6 months to file in the US
-  and other countries with the Philippine filing date (directly, or through the Madrid Protocol
-  from IPOPHL).
+- **Priority:** the plan was IPOPHL first, then the US within the Paris Convention's 6 months.
+  **Deferred (Oliver, 2026-11-19): no Philippine filing and no DTI registration for now.** Keep
+  marking Casama™ and keep this record current; it is what any later filing, anywhere, relies on.
 
 ## Known conflicts to check before filing
 
@@ -46,27 +46,31 @@ Not legal advice. Keep this file up to date and add new evidence as it happens.
 | 2026-11-09 | First commit of the project (then named Kasama); GitHub repo `stackwares/casama` (now `casama-archive`) created 11:31 UTC | archive `git log` 49a6ca66; GitHub API `createdAt` of `casama-archive` |
 | 2026-11-10 | Website and open-source launch prep | `git log` 2a63416e |
 | 2026-11-11 | **Renamed to Casama, on casama.ai** (D-170): product, packages `@casama/*`, CLI `casama`, app id `ai.casama.app`, deep links `casama://` | `git log` 5a040120; `docs/DECISIONS.md` D-170 |
+| 2026-11-11 | casama.ai domain registered | RDAP registration date 2026-11-11 (<https://rdap.org/domain/casama.ai>) |
+| 2026-11-11 | **Earliest public capture of casama.ai** by the Internet Archive, 04:54 UTC | <https://web.archive.org/web/20261111045435/https://casama.ai/> |
 | 2026-11-11 | App records created: Google Play "Casama" (`ai.casama.app`), App Store "Casama AI" (id 6833509960) | Play Console, App Store Connect |
 | 2026-11-12 | Production server set up; Casama Cloud serving users at api.casama.ai | D-199 |
-| 2026-11-13 | First public release: Casama CLI 0.1.0 on GitHub | <https://github.com/stackwares/casama/releases/tag/cli-v0.1.0> |
+| 2026-11-13 | First public release: Casama CLI 0.1.0 on GitHub | release in `casama-archive` (21:54 UTC); recreated with the same files in the public repo on 2026-11-19: <https://github.com/stackwares/casama/releases/tag/cli-v0.1.0> |
+| 2026-11-13 | First accounts on Casama Cloud (17 by 2026-11-19) | production `auth.users`, earliest `created_at` |
 | 2026-11-13 | Paid plans priced under the Casama name (Plus, Pro, Max) | D-249 |
-| 2026-11-14 | casama.link domain registered | WHOIS creation date |
+| 2026-11-14 | casama.link domain registered | RDAP registration date 2026-11-14 |
 | 2026-11-15 | npm packages under `@casama/*` published | `npm view @casama/client time.created` |
 | 2026-11-15 | Purchases live in the stores through RevenueCat | D-297 |
+| 2026-11-16 | casama.page domain registered (share links, sites) | RDAP registration date 2026-11-16 |
 | 2026-11-17 | Builds on Google Play internal testing and TestFlight | D-331 |
-| 2026-11-18 | "Casama™" marking added to casama.ai, casama.link, casama.page and the README | this commit |
+| 2026-11-17 | **First public submissions naming Casama**: awesome lists e2b-dev/awesome-ai-agents, Jenqyang/Awesome-AI-Agents, alvinreal/awesome-opensource-ai, punkpeye/awesome-mcp-servers, and an issue on slavakurilyak/awesome-ai-agents | <https://github.com/e2b-dev/awesome-ai-agents/pull/2016>, <https://github.com/Jenqyang/Awesome-AI-Agents/pull/786>, <https://github.com/alvinreal/awesome-opensource-ai/pull/957>, <https://github.com/punkpeye/awesome-mcp-servers/pull/19871>, <https://github.com/slavakurilyak/awesome-ai-agents/issues/984> |
+| 2026-11-18 | "Casama™" marking added to casama.ai, casama.link, casama.page and the README | archive commit 92b7cf97 |
+| 2026-11-18 | Internet Archive captures of casama.ai (12:27 UTC), casama.link (12:30 UTC) and docs.casama.ai (12:32 UTC) | <https://web.archive.org/web/20261118122757/https://casama.ai/>, <https://web.archive.org/web/20261118123050/https://casama.link/>, <https://web.archive.org/web/20261118123249/https://docs.casama.ai/> |
 
-## To add (needs Oliver's accounts)
+## Still to add
 
-- [ ] casama.ai registration date from Cloudflare Registrar (Dashboard → Domain Registration).
-      Public WHOIS for `.ai` only shows the registry, not our date.
-- [ ] casama.page registration date (Name.com, D-329).
 - [ ] Date of the **first paying customer** and the first invoice (Dodo / RevenueCat). This is
-      the strongest "use in commerce" evidence.
-- [ ] First public posts that name Casama (social media, awesome-list submissions, launch posts),
-      with links.
-- [ ] DTI business name registration for "Casama" (bnrs.dti.gov.ph), certificate number and date.
-- [ ] Internet Archive snapshots: save casama.ai, app.casama.ai, the GitHub repo and both store
-      listings at <https://web.archive.org/save> and list the snapshot links here.
+      the strongest "use in commerce" evidence. As of 2026-11-19 every store purchase in
+      production is a sandbox test (9 subscriptions, all `environment = sandbox`), so there is none yet.
+- [ ] Internet Archive captures of the GitHub repo, the npm package and both store listings. The
+      Archive refused them on 2026-11-19 (rate limits and errors); try again at
+      <https://web.archive.org/save>. The store listings need to be public first.
+- [ ] First social media and launch posts that name Casama, with links, once they're out.
 - [ ] Screenshots of the store listings and the website as they look today, saved with the date
       in the file name (keep them outside the repo, for example in Google Drive).
+- Deferred: DTI business name registration and the IPOPHL filing (Oliver, 2026-11-19).
