@@ -141,6 +141,8 @@ export async function handleNewsletter(request, env, url) {
   if (path === "/newsletter/subscribe" && request.method === "POST") return subscribe(request, env);
   if (path === "/newsletter/confirm" && request.method === "GET") return confirmPage(env, url);
   if (path === "/newsletter/confirm" && request.method === "POST") return confirm(request, env);
+  if (path === "/newsletter/unsubscribe" && request.method === "GET") return unsubscribePage(env, url);
+  if (path === "/newsletter/unsubscribe" && request.method === "POST") return unsubscribe(request, env, url);
   return new Response("Not found", { status: 404 });
 }
 
@@ -202,6 +204,10 @@ async function subscribe(request, env) {
 async function confirmPage(env, url) {
   const email = env.NEWSLETTER_SECRET ? await checkLink(env.NEWSLETTER_SECRET, url.searchParams) : "";
   if (!email) return expired();
+  // Someone opening an old link after confirming sees that, not another Confirm button.
+  if (env.RESEND_API_KEY && (await isSubscribed(env, email))) {
+    return page(200, "You're already on the list", `Casama's monthly email already goes to ${email}. Nothing more to do.`, `<a class="btn primary" href="${SITE}/">Back to casama.ai</a>`);
+  }
   const fields = ["e", "t", "src", "s"]
     .map((k) => `<input type="hidden" name="${k}" value="${esc(url.searchParams.get(k) ?? "")}">`)
     .join("");
@@ -220,8 +226,11 @@ async function confirm(request, env) {
   if (!email) return expired();
   const ip = request.headers.get("cf-connecting-ip") ?? "";
   if (await limited(env, `ip:${ip}`)) return page(429, "One moment", "That was a lot of tries. Wait a minute and try again.");
+  const already = await isSubscribed(env, email);
   const ok = await addContact(env, email, params.get("src") ?? "");
   if (!ok) return page(502, "That didn't work", "Something went wrong on our side. Open the link again in a few minutes.");
+  // The welcome goes out once, when someone joins (or comes back), never on a repeat confirm.
+  if (!already) await sendWelcome(env, email);
   return page(
     200,
     "You're on the list",
@@ -260,6 +269,127 @@ export async function addContact(env, email, source) {
   const bad = steps.filter((r) => !r.ok && r.status !== 409);
   if (bad.length) console.log(`newsletter: contact update failed (${steps.map((r) => r.status).join(",")})`);
   return bad.length === 0;
+}
+
+/** True when the address is a contact that hasn't unsubscribed and is in the newsletter segment. */
+export async function isSubscribed(env, email) {
+  try {
+    const who = encodeURIComponent(email);
+    const res = await resend(env, "GET", `/contacts/${who}`);
+    if (!res.ok) return false;
+    const contact = await res.json();
+    if (contact.unsubscribed) return false;
+    const segs = await resend(env, "GET", `/contacts/${who}/segments`);
+    if (!segs.ok) return false;
+    const list = await segs.json();
+    return (list.data ?? []).some((s) => s.id === SEGMENT_ID);
+  } catch {
+    return false;
+  }
+}
+
+/** The unsubscribe link in the welcome email. It doesn't expire: stopping should always work. */
+export async function unsubscribeLink(secret, email) {
+  const s = await hmac(secret, `unsubscribe\n${email}`);
+  return `${SITE}/newsletter/unsubscribe?${new URLSearchParams({ e: email, s }).toString()}`;
+}
+async function checkUnsubscribe(secret, params) {
+  const email = cleanEmail(params.get("e"));
+  const sig = params.get("s") ?? "";
+  if (!email || !sig) return "";
+  const want = await hmac(secret, `unsubscribe\n${email}`);
+  if (want.length !== sig.length) return "";
+  let diff = 0;
+  for (let i = 0; i < want.length; i++) diff |= want.charCodeAt(i) ^ sig.charCodeAt(i);
+  return diff === 0 ? email : "";
+}
+
+async function unsubscribePage(env, url) {
+  const email = env.NEWSLETTER_SECRET ? await checkUnsubscribe(env.NEWSLETTER_SECRET, url.searchParams) : "";
+  if (!email) return page(400, "This link doesn't work", "Use the Unsubscribe link at the bottom of any of our emails, or write to privacy@casama.ai.");
+  const fields = ["e", "s"].map((k) => `<input type="hidden" name="${k}" value="${esc(url.searchParams.get(k) ?? "")}">`).join("");
+  return page(200, "Stop Casama's monthly email?", `We'll stop sending it to ${email}.`, `<form method="post" action="/newsletter/unsubscribe">${fields}<button class="btn primary" type="submit">Unsubscribe</button></form>`);
+}
+
+/** The button above, and mail apps' one-click unsubscribe (RFC 8058), which posts to the link itself. */
+async function unsubscribe(request, env, url) {
+  const data = await readForm(request);
+  const params = new URLSearchParams(url.search);
+  for (const k of ["e", "s"]) if (!params.get(k) && data[k]) params.set(k, String(data[k]));
+  const email = env.NEWSLETTER_SECRET ? await checkUnsubscribe(env.NEWSLETTER_SECRET, params) : "";
+  if (!email) return page(400, "This link doesn't work", "Use the Unsubscribe link at the bottom of any of our emails, or write to privacy@casama.ai.");
+  const res = await resend(env, "PATCH", `/contacts/${encodeURIComponent(email)}`, { unsubscribed: true });
+  if (!res.ok && res.status !== 404) {
+    console.log(`newsletter: unsubscribe failed (${res.status})`);
+    return page(502, "That didn't work", "Something went wrong on our side. Try again in a few minutes, or write to privacy@casama.ai.");
+  }
+  return page(200, "You're off the list", "You won't get Casama's monthly email any more. Changed your mind? Sign up again at the bottom of any casama.ai page.", `<a class="btn primary" href="${SITE}/">Back to casama.ai</a>`);
+}
+
+/** The welcome email: what to expect and three things to try. Failing to send it never fails the confirm. */
+export async function sendWelcome(env, email) {
+  try {
+    const unsub = await unsubscribeLink(env.NEWSLETTER_SECRET, email);
+    const res = await resend(env, "POST", "/emails", {
+      from: FROM,
+      to: [email],
+      reply_to: REPLY_TO,
+      subject: "Welcome to Casama's monthly email",
+      text: welcomeText(unsub),
+      html: welcomeHtml(unsub),
+      headers: { "List-Unsubscribe": `<${unsub}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
+      tags: [{ name: "kind", value: "newsletter_welcome" }],
+    });
+    if (!res.ok) console.log(`newsletter: welcome email failed (${res.status})`);
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+const TRIES = [
+  ["Give a bot a real job", "Each Casama bot works on its own computer: it can book the trip, answer the email or build the site, and it asks you before it pays, sends or deletes anything.", "https://app.casama.ai", "Start free"],
+  ["Get a brief every morning", "Set a routine and a bot wakes up on time, reads what you've connected, like your calendar or Drive, and sends you a short brief with its sources.", "https://gallery.casama.ai", "Find routines in the gallery"],
+  ["Reach your bots anywhere", "The same chats are on your phone, your computer and the web. You can also text, email or call a bot.", "https://casama.ai/download", "Get the apps"],
+];
+
+export function welcomeText(unsub) {
+  return [
+    "Hi,",
+    "",
+    "You're on the list for Casama's monthly email. Once a month at most, you'll get what shipped, what's coming next and one good way to use it. It comes from this address, and replies go to a person.",
+    "",
+    "Three things to try in the meantime:",
+    "",
+    ...TRIES.flatMap(([title, text, href, label]) => [`${title}. ${text}`, `${label}: ${href}`, ""]),
+    "Questions or ideas? Just reply.",
+    "",
+    "Casama, by Stackwares",
+    "https://casama.ai",
+    "",
+    `Stop these emails: ${unsub}`,
+  ].join("\n");
+}
+
+export function welcomeHtml(unsub) {
+  const font = "font-family:Arial,Helvetica,sans-serif;";
+  const tries = TRIES.map(
+    ([title, text, href, label]) => `<tr><td style="padding-bottom:18px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<tr><td style="${font}font-size:16px;line-height:22px;font-weight:bold;color:#1d1b20;padding-bottom:4px;">${esc(title)}</td></tr>
+<tr><td style="${font}font-size:15px;line-height:22px;color:#5d5a63;padding-bottom:4px;">${esc(text)}</td></tr>
+<tr><td style="${font}font-size:15px;line-height:22px;"><a href="${esc(href)}" style="color:#7a3fa8;font-weight:bold;text-decoration:none;">${esc(label)} &rarr;</a></td></tr>
+</table></td></tr>`,
+  ).join("");
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="IE=edge"><title>Welcome to Casama's monthly email</title></head>
+<body style="margin:0;padding:0;background-color:#ffffff;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff"><tr><td align="center" style="padding-top:32px;padding-bottom:32px;padding-left:16px;padding-right:16px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;">
+<tr><td style="${font}font-size:22px;line-height:28px;font-weight:bold;color:#1d1b20;padding-bottom:20px;">Casama</td></tr>
+<tr><td style="${font}font-size:16px;line-height:24px;color:#1d1b20;padding-bottom:24px;">You're on the list. Once a month at most, you'll get what shipped, what's coming next and one good way to use it. Replies go to a person, so write back any time.</td></tr>
+<tr><td style="${font}font-size:13px;line-height:18px;font-weight:bold;color:#5d5a63;padding-bottom:12px;text-transform:uppercase;letter-spacing:1px;">Three things to try</td></tr>
+${tries}
+<tr><td style="${font}font-size:13px;line-height:20px;color:#5d5a63;padding-top:12px;">Casama, by Stackwares &middot; <a href="https://casama.ai" style="color:#7a3fa8;">casama.ai</a> &middot; <a href="${esc(unsub)}" style="color:#5d5a63;">Unsubscribe</a></td></tr>
+</table></td></tr></table></body></html>`;
 }
 
 function expired() {

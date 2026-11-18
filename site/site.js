@@ -207,6 +207,19 @@
     });
   });
 
+  // On /download, a desktop download starting shows "While it downloads" (D-404) once.
+  var dlNews = document.getElementById("dl-news");
+  if (dlNews) {
+    document.addEventListener("click", function (e) {
+      var a = e.target && e.target.closest ? e.target.closest('a[href^="/get/mac-dmg"], a[href^="/get/windows"], a[href^="/get/linux"]') : null;
+      if (!a || !dlNews.hidden) return;
+      dlNews.hidden = false;
+      setTimeout(function () {
+        try { dlNews.scrollIntoView({ behavior: "smooth", block: "center" }); } catch (err) { /* old browsers */ }
+      }, 400);
+    });
+  }
+
   // Casama Help, the support chat that answers from the docs: a tiny loader draws its button, and the
   // chat itself is fetched on the first click (site/assets/support/).
   var help = document.createElement("script");

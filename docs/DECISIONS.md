@@ -5802,7 +5802,14 @@ cookies and could set cookies on `.casama.ai`.
 - **Secrets:** `RESEND_API_KEY` (full access: contacts need it) and `NEWSLETTER_SECRET` are Worker secrets on `casama-site` and in Vaultwarden ("Casama · Resend API key (newsletter signup…)", "Casama · Newsletter confirm-link signing secret…").
 - **Live 2026-11-18:** deployed with `wrangler deploy` in `site/` only (version `2d5fab33`). Checked end to end: hello@casama.ai signed up, the email reached the inbox, Confirm added the contact with source `home`. hello@ stays on the list, so the team gets each issue.
 - **Limits (Resend free plan, 2026-11-18):** 1,000 contacts, 3,000 emails a month, 100 a day, and confirmations count too. A broadcast to more than 100 people needs a paid plan, so upgrade before the first issue goes to more than about 90 people. Cost is in `docs/COSTS.md`.
-- **Not done:** a "Send me product updates" switch in the app's settings (needs a server route, an app build and consent wording); funnel counts for sign-ups (Resend has the numbers); the first issue.
+- **Update 2026-11-19 (cooldown):** the rate-limit binding let 18 a minute through in a live test, so the Worker also keeps its own counts in the Cache API: one confirmation email per address per 2 minutes, 10 tries per IP per 10 minutes (per data center).
+- **Update 2026-11-19 (Oliver: "how do we onboard users to our newsletter?" then "go with all that now!"):**
+  - **Welcome email** once, when someone confirms (or comes back after leaving), never on a repeat confirm: what to expect and three things to try (start free, routines in the gallery, the apps). Its footer and `List-Unsubscribe` / `List-Unsubscribe-Post` headers (RFC 8058 one-click) point at `/newsletter/unsubscribe`, signed with `NEWSLETTER_SECRET` and never expiring; GET asks, POST marks the contact unsubscribed in Resend.
+  - **An old confirm link** after confirming shows "You're already on the list" instead of another button.
+  - **More places to sign up:** a box at the end of every blog post and the changelog, a `/newsletter` page (`site/content/newsletter.md`, `{{ newsletter }}` token), a "Newsletter" footer link, a "While it downloads" card on `/download` that appears when a desktop download starts, a footer form on every gallery page (posts to casama.ai; source `gallery-…`), and a "Monthly email" link in the docs footer.
+  - **Live 2026-11-19:** casama.ai `e8ab54be`, gallery `850f437d`, docs via `scripts/deploy-web.sh`. Checked live: a gallery sign-up got the confirmation, Confirm sent the welcome, the old link said "already on the list", one-click unsubscribe marked the contact unsubscribed, a tampered link got 400.
+  - **In the app** (Settings switch, sign-up checkbox, one-time card, Resend sync): built on a separate branch with its own decision number.
+- **Not done:** funnel counts for sign-ups (Resend has the numbers); the first issue; a regular monthly issue.
 - **Tests:** `node --test scripts/site-newsletter.test.mjs`.
 
 ## D-405 Widgets: the home screen, the Lock Screen and controls on iPhone, Android and the Mac

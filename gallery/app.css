@@ -428,3 +428,11 @@ h1 { margin: 0; font-size: clamp(36px, 4vw, 48px); line-height: 1.05; }
 .detail-info.wide { max-width: 720px; }
 .set-list { margin: 0 0 18px; }
 .set-list .skill { grid-template-columns: 32px minmax(0, 1fr) auto; }
+/* Casama's monthly email (D-404): posts to casama.ai, which answers with its own page. */
+.foot-news { margin: 14px 0 12px; max-width: 440px; }
+.foot-news label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--muted); }
+.foot-news-row { display: flex; gap: 8px; }
+.foot-news input[type="email"] { flex: 1; min-width: 0; min-height: 40px; padding: 0 16px; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface-solid); color: var(--text); font: inherit; font-size: 14px; }
+.foot-news button { flex: none; min-height: 40px; padding: 0 18px; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.foot-news-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+@media (max-width: 420px) { .foot-news-row { flex-direction: column; } }

@@ -143,6 +143,23 @@
       </div>
     </section>
 
+    <!-- Shown by site.js once a desktop download starts (D-404). -->
+    <section class="wrap dl-news" id="dl-news" aria-labelledby="dl-news-title" hidden>
+      <div class="dl-news-card">
+        <h2 id="dl-news-title">While it downloads</h2>
+        <p>Get Casama's monthly email: what shipped, what's next and one good way to use it. One email a month at most.</p>
+        <form class="footer-news" action="/newsletter/subscribe" method="post" data-newsletter>
+          <label class="visually-hidden" for="dl-news-email">Email address</label>
+          <div class="footer-news-row">
+            <input id="dl-news-email" type="email" name="email" required autocomplete="email" inputmode="email" placeholder="you@example.com">
+            <button class="btn primary sm" type="submit">Subscribe</button>
+          </div>
+          <input class="footer-news-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <p class="footer-news-note" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
     <section class="section wrap" id="browser" aria-labelledby="browser-title">
       <h2 id="browser-title">In your browser.</h2>
       <p class="section-lead">Use Casama with nothing to install, or bring your bots to the pages you're already on.</p>

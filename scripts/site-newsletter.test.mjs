@@ -10,14 +10,17 @@ import {
   signLink,
   sourceFrom,
   TOPIC_ID,
+  unsubscribeLink,
 } from "../site/newsletter.js";
 
 let calls;
 let failWith = 0;
+let subscribed = false;
 const realFetch = globalThis.fetch;
 beforeEach(() => {
   calls = [];
   failWith = 0;
+  subscribed = false;
   globalThis.fetch = async (url, init = {}) => {
     const u = String(url);
     if (u.startsWith("https://api.resend.com/")) {
@@ -27,6 +30,12 @@ beforeEach(() => {
         body: init.body ? JSON.parse(init.body) : undefined,
       });
       if (failWith) return new Response("{}", { status: failWith });
+      if ((init.method ?? "GET") === "GET" && /\/contacts\/[^/]+\/segments$/.test(u))
+        return Response.json({ data: subscribed ? [{ id: SEGMENT_ID }] : [] });
+      if ((init.method ?? "GET") === "GET" && /\/contacts\/[^/]+$/.test(u))
+        return subscribed
+          ? Response.json({ unsubscribed: false })
+          : Response.json({}, { status: 404 });
       return Response.json({ id: "x" });
     }
     return new Response(null, { status: 204 });
@@ -171,7 +180,7 @@ test("opening the link only shows a Confirm button; posting it adds the contact"
   assert.equal(page.status, 200);
   const html = await page.text();
   assert.match(html, /<form method="post" action="\/newsletter\/confirm">/);
-  assert.equal(calls.length, 0);
+  assert.equal(calls.filter((c) => c.method !== "GET").length, 0);
 
   const res = await post("/newsletter/confirm", Object.fromEntries(new URLSearchParams(qs)));
   assert.equal(res.status, 200);
@@ -287,4 +296,52 @@ test("the Mac /open page lets the logo load its animation data too", async () =>
   const res = await worker.fetch(req, env(), { waitUntil() {} });
   assert.equal(res.status, 200);
   assert.match(res.headers.get("content-security-policy"), /connect-src 'self'/);
+});
+
+test("the first confirm sends one welcome email with a one-click unsubscribe", async () => {
+  const qs = await signLink("s3cret", "ana@example.com", "home");
+  await post("/newsletter/confirm", Object.fromEntries(new URLSearchParams(qs)));
+  const mails = calls.filter((c) => c.url === "https://api.resend.com/emails");
+  assert.equal(mails.length, 1);
+  const w = mails[0].body;
+  assert.equal(w.subject, "Welcome to Casama's monthly email");
+  assert.deepEqual(w.to, ["ana@example.com"]);
+  const unsub = await unsubscribeLink("s3cret", "ana@example.com");
+  assert.equal(w.headers["List-Unsubscribe"], `<${unsub}>`);
+  assert.equal(w.headers["List-Unsubscribe-Post"], "List-Unsubscribe=One-Click");
+  assert.ok(w.text.includes(unsub));
+  assert.ok(w.html.includes(unsub.replace(/&/g, "&amp;")));
+});
+
+test("someone already on the list sees that, and confirming again sends no second welcome", async () => {
+  subscribed = true;
+  const qs = await signLink("s3cret", "ana@example.com", "home");
+  const page = await get(`/newsletter/confirm?${qs}`);
+  assert.match(await page.text(), /already on the list/);
+  await post("/newsletter/confirm", Object.fromEntries(new URLSearchParams(qs)));
+  assert.equal(calls.filter((c) => c.url === "https://api.resend.com/emails").length, 0);
+});
+
+test("the unsubscribe link shows a button, and posting it (or a mail app's one-click) unsubscribes", async () => {
+  const link = await unsubscribeLink("s3cret", "ana@example.com");
+  const path = link.replace("https://casama.ai", "");
+  const page = await get(path);
+  assert.equal(page.status, 200);
+  assert.match(await page.text(), /<form method="post" action="\/newsletter\/unsubscribe">/);
+  assert.equal(calls.length, 0);
+  // RFC 8058 one-click: the mail app posts to the link itself.
+  const res = await post(path, { "List-Unsubscribe": "One-Click" });
+  assert.equal(res.status, 200);
+  assert.match(await res.text(), /off the list/);
+  const patch = calls.find((c) => c.method === "PATCH");
+  assert.ok(patch.url.endsWith("/contacts/ana%40example.com"));
+  assert.deepEqual(patch.body, { unsubscribed: true });
+});
+
+test("a changed unsubscribe link does nothing", async () => {
+  const link = new URL(await unsubscribeLink("s3cret", "ana@example.com"));
+  link.searchParams.set("e", "bo@example.com");
+  const res = await post(`${link.pathname}${link.search}`, {});
+  assert.equal(res.status, 400);
+  assert.equal(calls.length, 0);
 });

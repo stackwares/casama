@@ -171,6 +171,11 @@ ${body}
   <div class="wrap foot-inner">
     <p class="foot-name"><span data-casama-mark></span>Casama</p>
     <p class="small">Made in the open by Casama and its contributors. Every item lists its author and license. Developers: the whole catalog is open JSON, see <a href="/add/#data">Public data</a>.</p>
+    <form class="foot-news" action="https://casama.ai/newsletter/subscribe" method="post">
+      <label for="foot-news-email">Casama's monthly email: what's new, once a month at most.</label>
+      <span class="foot-news-row"><input id="foot-news-email" type="email" name="email" required autocomplete="email" placeholder="you@example.com"><button type="submit">Subscribe</button></span>
+      <input class="foot-news-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    </form>
     <p class="small"><a href="/add/">Add to Casama badge</a> · <a href="https://casama.ai/privacy">Privacy</a> · <a href="https://casama.ai/terms">Terms</a> · <a href="https://github.com/${C.REPO}/issues/new">Report an item</a></p>
   </div>
 </footer>

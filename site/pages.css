@@ -84,3 +84,11 @@
 .help-more p { margin: 0 !important; }
 .help-more p + p { margin-top: 8px !important; }
 @media (max-width: 640px) { .prose .qa-a { padding-right: 0; } .help-search input { font-size: var(--fs-body); } }
+/* The monthly email's sign-up box (D-404): end of blog posts, the changelog and /newsletter. */
+.news-box { margin-top: 56px; padding: 24px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); }
+.prose .news-box h2 { margin: 0 0 8px !important; font-size: var(--fs-h3); }
+.prose .news-box p { margin: 0 0 14px !important; color: var(--ink-2); }
+.news-box .footer-news { margin-top: 0; max-width: 460px; }
+.prose .news-box .footer-news-note { margin: 8px 0 0 !important; }
+.prose .news-box .footer-news-note.is-good { color: var(--good); }
+.prose .news-box .footer-news-note.is-bad { color: var(--warn); }

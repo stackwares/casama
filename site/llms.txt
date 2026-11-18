@@ -41,6 +41,7 @@ Each link is the page's markdown copy. Facts about other products carry the date
 - [Contact us](https://casama.ai/contact.md): How to reach the Casama team: help with the apps or your account, plans and refunds, privacy requests, security reports and general questions.
 - [Delete your account](https://casama.ai/delete-account.md): How to delete your Casama account and its data, in the app or by email if you no longer have the app, what is deleted and when, and what is kept.
 - [How can we help?](https://casama.ai/help.md): Answers about Casama's plans, privacy, self-hosting and building on it, and Casama Help, which answers your question from our docs.
+- [Casama's monthly email](https://casama.ai/newsletter.md): Sign up for Casama's monthly email: what shipped, what's coming next and one good way to use it. One email a month at most, and you can stop any time.
 - [Open-source AI agents you can read, run and change](https://casama.ai/open-source.md): Casama is an open-source AI agent app under AGPL-3.0: bots with their own computers, memory and approvals, plus apps for every platform.
 - [Casama pricing](https://casama.ai/pricing.md): Casama Cloud is free to start, then $15, $49 or $99 a month with credits included. Self-hosting is free with no limit on users or bots.
 - [How Casama keeps a bot from doing what you didn't want](https://casama.ai/security.md): Casama bots work on locked-down computers, ask before risky steps, never see your passwords, and save a checkpoint before anything destructive.

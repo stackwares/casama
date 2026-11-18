@@ -430,6 +430,25 @@ function pageList(sectionNames) {
   return `<ul class="page-list">${inSection.map((p) => `<li><a href="${p.path}">${artFor(p) ? `<img src="${artFor(p).webp ?? artFor(p).png}" width="1200" height="630" alt="" loading="lazy">` : ""}<strong>${esc(p.meta.card ?? p.meta.h1 ?? p.meta.title)}</strong><span>${esc(p.meta.description)}</span>${p.meta.published ? `<time datetime="${p.meta.published}">${longDate(p.meta.published)}</time>` : ""}</a></li>`).join("\n")}</ul>`;
 }
 
+/**
+ * The monthly email's sign-up box (D-404): the {{ newsletter }} token, and the end of every blog post
+ * and the changelog. It posts to the casama.ai Worker (site/newsletter.js) like the footer form, and
+ * site.js sends it without leaving the page.
+ */
+const newsBox = (id, heading = "Get what's new, once a month") => `<aside class="news-box" aria-labelledby="${id}-h">
+  <h2 id="${id}-h">${esc(heading)}</h2>
+  <p>Casama's monthly email: what shipped, what's next and one good way to use it. One email a month at most, and every one has a link to stop them.</p>
+  <form class="footer-news" action="/newsletter/subscribe" method="post" data-newsletter>
+    <label class="visually-hidden" for="${id}-email">Email address</label>
+    <div class="footer-news-row">
+      <input id="${id}-email" type="email" name="email" required autocomplete="email" inputmode="email" placeholder="you@example.com">
+      <button class="btn primary sm" type="submit">Subscribe</button>
+    </div>
+    <input class="footer-news-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <p class="footer-news-note" role="status" aria-live="polite"></p>
+  </form>
+</aside>`;
+
 const tokensFor = (page) => (name, args) => {
   if (name === "compare") {
     const rowAt = args.indexOf("rows");
@@ -443,6 +462,7 @@ const tokensFor = (page) => (name, args) => {
   if (name === "list") return pageList(args);
   if (name === "help") return helpPage(page);
   if (name === "faq") return faqSection(page);
+  if (name === "newsletter") return newsBox("news-page", "Sign up");
   if (name === "cta") return `<p class="page-cta"><a class="btn primary" href="https://app.casama.ai">Start free</a> <a class="text-link" href="https://docs.casama.ai/self-hosting/">Run it on your own server</a></p>`;
   fail(`${page.file}: unknown token {{${name}}}`);
   return "";
@@ -645,6 +665,7 @@ ${page.section === "blog" ? '  <link rel="alternate" type="application/rss+xml" 
       <p class="page-meta">${byline}${dates}</p>
       ${figure}
 ${html}
+${(page.section === "blog" && !page.isIndex) || page.slug === "changelog" ? newsBox("news-end") : ""}
     </article>
   </main>
 
@@ -675,6 +696,7 @@ function twin(page) {
     if (name === "list") return pages.filter((p) => ids.includes(p.section) && !p.isIndex).map((p) => `- [${p.meta.h1 ?? p.meta.title}](${p.url}.md): ${p.meta.description}`).join("\n");
     if (name === "help") return faqGroups.map((g) => `## ${g.name}\n\n${faqText(g.items)}`).join("\n\n") + "\n\nStill stuck? Email support@casama.ai. Signed up? Open Help & support in the app for account help.";
     if (name === "faq") { const items = billingQuestions(); return `${items.length ? `## Plans and billing questions\n\n${faqText(items)}\n\n` : ""}More questions: ${SITE}/help`; }
+    if (name === "newsletter") return `Sign up with the form at ${SITE}/newsletter. You'll get an email with a link to confirm.`;
     if (name === "cta") return `Start free at https://app.casama.ai, or run it on your own server: https://docs.casama.ai/self-hosting/`;
     return "";
   });
