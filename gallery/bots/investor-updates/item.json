@@ -1,0 +1,21 @@
+{
+  "name": "Investor updates",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "Write this month's investor update from these notes",
+    "Research this investor before my meeting",
+    "Ask me the hardest questions about my pitch"
+  ]
+}

@@ -4,11 +4,11 @@
   "files": {
     "index.json": "7e49d488b78387a5eea5c00dfc2e7bc3cb8d1c3d211607a863174ef8831ce829",
     "apps.json": "443915a22b0edca9489ab6ae1446e515e644568f5a652619719c331a30f7f499",
-    "bots.json": "7c8c05acd4117977f94a81e09de54b4fc83852ac71fdb8ef563c2052c3e6819f",
+    "bots.json": "fbacabbcfff809f4404bbed4bcd8f2421a55a46f842e28b042457e8e1f6a5d51",
     "routines.json": "ea3b191838a8955d8983d6b49b8da41767bcb53e410c61d5bd02364b2fc3de83",
     "plugins.json": "6bf8b4ecdfad5871c07c658b82384d2501f7636d14c7efb0e3f467b3ea10c3e8",
     "sets.json": "ede2943e490e00bae0fcbccbb09f91b4bece7af422859f983990f7ec6c9ca2f7",
-    "authors.json": "8ee94b874b2e8ed7a397f642b3dee5d9fb2bb8a516c999e0ff21bacd45b856c2",
+    "authors.json": "6e47b807af4990f80495445de011f9f82e8a0fc79341bd6980aeac782a1f2b41",
     "lists.json": "f68b4c6a0c51b1be592c01d8d9a1464fcd2b7f27c916b43efbe3013812d7239e",
     "coding-agents.json": "49e6d8d61310c25c911bb307edf3991c316538ed16833bb997c20ea65a426af1",
     "prompts.json": "11232e8c1cbcb1549b96496e3b7eeaaee2bf86e80c83f90fd8fba5365e56d6c2"

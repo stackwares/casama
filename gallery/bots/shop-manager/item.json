@@ -1,0 +1,21 @@
+{
+  "name": "Online shop",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "Write a product description from these details",
+    "Reply to a customer whose parcel is late",
+    "What's selling and what's running low this month?"
+  ]
+}

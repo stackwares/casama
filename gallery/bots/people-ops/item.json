@@ -1,0 +1,21 @@
+{
+  "name": "People ops",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "Write a job description for a part-time bookkeeper",
+    "Make a first-week onboarding plan for a new hire",
+    "Draft a simple remote work policy"
+  ]
+}

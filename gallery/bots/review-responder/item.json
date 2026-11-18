@@ -1,0 +1,21 @@
+{
+  "name": "Reviews",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "Draft a reply to this one-star review",
+    "What do our reviews keep complaining about?",
+    "Write a short message asking happy customers for a review"
+  ]
+}

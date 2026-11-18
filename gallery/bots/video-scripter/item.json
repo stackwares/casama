@@ -1,0 +1,21 @@
+{
+  "name": "Video scripts",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "create",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "Write a 6-minute YouTube script about this topic",
+    "Turn this blog post into three short clips",
+    "Give me titles and a description for this video"
+  ]
+}

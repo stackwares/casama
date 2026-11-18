@@ -1,0 +1,21 @@
+{
+  "name": "Proposals",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "Turn these call notes into a proposal",
+    "Write a quote for a website redesign",
+    "Make a statement of work from this email thread"
+  ]
+}

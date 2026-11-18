@@ -788,6 +788,15 @@ export const BOT_NAMES = [
   "Carol",
   "Matty",
   "Gerard",
+  "Bea",
+  "Marco",
+  "Nina",
+  "Paolo",
+  "Rafa",
+  "Tess",
+  "Lia",
+  "Gabe",
+  "Sol",
 ] as const;
 
 /**
@@ -837,6 +846,14 @@ const STARTER_BOT_NAMES: Record<string, (typeof BOT_NAMES)[number] | "Casama"> =
   "personal-shopper": "Amy",
   "job-hunt-coach": "Jeff",
   "parenting-organizer": "Matty",
+  "review-responder": "Bea",
+  "code-reviewer": "Marco",
+  "docs-writer": "Nina",
+  "proposal-writer": "Paolo",
+  "video-scripter": "Rafa",
+  "people-ops": "Tess",
+  "shop-manager": "Lia",
+  "investor-updates": "Gabe",
 };
 
 /** Names no Casama starter bot has, for community starter bots, so theirs don't echo Casama's own. */

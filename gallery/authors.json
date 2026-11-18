@@ -307,6 +307,10 @@
         },
         {
           "type": "bot",
+          "id": "code-reviewer"
+        },
+        {
+          "type": "bot",
           "id": "coder"
         },
         {
@@ -331,6 +335,10 @@
         },
         {
           "type": "bot",
+          "id": "docs-writer"
+        },
+        {
+          "type": "bot",
           "id": "event-planner"
         },
         {
@@ -352,6 +360,10 @@
         {
           "type": "bot",
           "id": "inbox-triage"
+        },
+        {
+          "type": "bot",
+          "id": "investor-updates"
         },
         {
           "type": "bot",
@@ -399,11 +411,19 @@
         },
         {
           "type": "bot",
+          "id": "people-ops"
+        },
+        {
+          "type": "bot",
           "id": "personal-shopper"
         },
         {
           "type": "bot",
           "id": "product-manager"
+        },
+        {
+          "type": "bot",
+          "id": "proposal-writer"
         },
         {
           "type": "bot",
@@ -423,11 +443,19 @@
         },
         {
           "type": "bot",
+          "id": "review-responder"
+        },
+        {
+          "type": "bot",
           "id": "sales-researcher"
         },
         {
           "type": "bot",
           "id": "seo-writer"
+        },
+        {
+          "type": "bot",
+          "id": "shop-manager"
         },
         {
           "type": "bot",
@@ -452,6 +480,10 @@
         {
           "type": "bot",
           "id": "tutor"
+        },
+        {
+          "type": "bot",
+          "id": "video-scripter"
         },
         {
           "type": "bot",
