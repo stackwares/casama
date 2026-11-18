@@ -9,6 +9,17 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- The `casama` CLI covers most of the app. New commands: `chats` (read, export, share, branch,
+  delete), `routines` (list, create, edit, run, delete), `approvals` (answer what bots are waiting
+  on), `tasks`, `watchers`, `skills`, `plugins`, `apps`, `secrets`, `knowledge`, `channels`,
+  `projects`, `library` and `billing`. `bot` adds show, export, import, share, check-ins and
+  starters; `runs` adds show and usage; `memory` adds edit, delete and import; `computer` adds
+  restart, reset, processes, screenshot, vitals, storage, history, update and checkpoint; `org`
+  adds members, invites and invite links, join requests, settings, MCP keys, git sync and the
+  encryption status. Anything that deletes, revokes, resets or spends money waits for `--yes`.
+  An error the server sends without a problem body now reads `http_<status>` instead of a
+  library message. See [CLI](https://docs.casama.ai/develop/cli).
+
 - Casama on Linux (D-361):
   - The Linux app no longer quits on start on desktops without a keyring service (i3, Sway and
     others), and no longer crashes when you close it.

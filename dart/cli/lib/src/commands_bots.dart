@@ -6,6 +6,9 @@ import 'package:args/command_runner.dart';
 import 'package:casama_sdk/chatgpt_sign_in.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 
+import 'commands_chats.dart';
+import 'commands_routines.dart';
+import 'commands_work.dart';
 import 'runner.dart';
 
 /// Resolves --org (slug or id), falling back to the default set with `casama org use`.
@@ -279,11 +282,17 @@ class BotCommand extends Command<int> {
   BotCommand(CliContext ctx) {
     addSubcommand(BotCreateCommand(ctx));
     addSubcommand(BotListCommand(ctx));
+    addSubcommand(BotShowCommand(ctx));
+    addSubcommand(BotExportCommand(ctx));
+    addSubcommand(BotImportCommand(ctx));
+    addSubcommand(BotShareCommand(ctx));
+    addSubcommand(BotCheckinsCommand(ctx));
+    addSubcommand(BotStartersCommand(ctx));
   }
   @override
   String get name => 'bot';
   @override
-  String get description => 'Create and list bots.';
+  String get description => 'Create, list, show, export, import and share bots.';
 }
 
 class BotCreateCommand extends KCommand {
@@ -534,11 +543,13 @@ class RunsCommand extends Command<int> {
   RunsCommand(CliContext ctx) {
     addSubcommand(RunsWatchCommand(ctx));
     addSubcommand(RunsCancelCommand(ctx));
+    addSubcommand(RunsShowCommand(ctx));
+    addSubcommand(RunsUsageCommand(ctx));
   }
   @override
   String get name => 'runs';
   @override
-  String get description => 'Watch or cancel runs.';
+  String get description => 'Show, watch or cancel runs, and see what one cost.';
 }
 
 class RunsWatchCommand extends KCommand {
@@ -577,11 +588,15 @@ class RunsCancelCommand extends KCommand {
 class MemoryCommand extends Command<int> {
   MemoryCommand(CliContext ctx) {
     addSubcommand(MemoryListCommand(ctx));
+    addSubcommand(MemoryEditCommand(ctx));
+    addSubcommand(MemoryDeleteCommand(ctx));
+    addSubcommand(MemoryImportCommand(ctx));
+    addSubcommand(MemoryImportPromptCommand(ctx));
   }
   @override
   String get name => 'memory';
   @override
-  String get description => 'See what a bot remembers.';
+  String get description => 'See, change and import what a bot remembers.';
 }
 
 class MemoryListCommand extends KCommand {
@@ -603,7 +618,7 @@ class MemoryListCommand extends KCommand {
     final org = await orgFrom(ctx, c, argResults!['org'] as String?);
     final bot = await botFrom(c, org, rest.single);
     final list = (await c.memory.listMemories(id: bot.id, q: argResults!['search'] as String?)).data!;
-    final lines = list.items.map((m) => '${m.pinned ? '*' : ' '} ${m.kind.value.padRight(10)} ${m.content}').join('\n');
+    final lines = list.items.map((m) => '${m.id}  ${m.pinned ? '*' : ' '} ${m.kind.value.padRight(10)} ${m.content}').join('\n');
     return ctx.emit(list.toJson(), lines.isEmpty ? '${bot.name} has no memories yet.' : lines);
   }
 }

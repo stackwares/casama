@@ -6,15 +6,21 @@ import 'package:dio/dio.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:path/path.dart' as p;
 
+import 'commands_admin.dart';
 import 'commands_bots.dart';
+import 'commands_chats.dart';
 import 'commands_computers.dart';
 import 'commands_files.dart';
 import 'commands_gallery.dart';
+import 'commands_library.dart';
 import 'commands_packs.dart';
+import 'commands_routines.dart';
+import 'commands_setup.dart';
 import 'commands_sites.dart';
 import 'commands_init.dart';
 import 'commands_remote.dart';
 import 'commands_selfhost.dart';
+import 'commands_work.dart';
 import 'store.dart';
 
 const defaultApiUrl = 'https://api.casama.ai';
@@ -36,9 +42,23 @@ Future<int> runCli(List<String> args, {StringSink? out, StringSink? err, Directo
     ..addCommand(CredentialCommand(ctx))
     ..addCommand(BotCommand(ctx))
     ..addCommand(ChatCommand(ctx))
+    ..addCommand(ChatsCommand(ctx))
+    ..addCommand(RoutinesCommand(ctx))
+    ..addCommand(ApprovalsCommand(ctx))
+    ..addCommand(TasksCommand(ctx))
+    ..addCommand(WatchersCommand(ctx))
     ..addCommand(RunsCommand(ctx))
     ..addCommand(MemoryCommand(ctx))
     ..addCommand(UsageCommand(ctx))
+    ..addCommand(BillingCommand(ctx))
+    ..addCommand(SkillsCommand(ctx))
+    ..addCommand(PluginsCommand(ctx))
+    ..addCommand(AppsCommand(ctx))
+    ..addCommand(SecretsCommand(ctx))
+    ..addCommand(KnowledgeCommand(ctx))
+    ..addCommand(ChannelsCommand(ctx))
+    ..addCommand(ProjectsCommand(ctx))
+    ..addCommand(LibraryCommand(ctx))
     ..addCommand(ComputerCommand(ctx))
     ..addCommand(FilesCommand(ctx))
     ..addCommand(AccountCommand(ctx))
@@ -66,6 +86,12 @@ Future<int> runCli(List<String> args, {StringSink? out, StringSink? err, Directo
   } on DioException catch (e) {
     final problem = problemOf(e);
     if (problem != null) return ctx.fail(problem.code, problem.detail ?? problem.title);
+    // The server answered, but not with a problem body (an old server, a proxy, a wrong address).
+    final status = e.response?.statusCode;
+    if (status != null) {
+      return ctx.fail('http_$status',
+          'The server answered $status for ${e.requestOptions.method} ${e.requestOptions.uri.path}. Check the address with `casama config`.');
+    }
     return ctx.fail('network_error', e.message ?? e.type.name);
   } on CliError catch (e) {
     return ctx.fail(e.code, e.message);
@@ -300,6 +326,26 @@ class OrgCommand extends Command<int> {
     addSubcommand(OrgListCommand(ctx));
     addSubcommand(OrgInviteCommand(ctx));
     addSubcommand(OrgUseCommand(ctx));
+    addSubcommand(OrgMembersCommand(ctx));
+    addSubcommand(OrgInvitesCommand(ctx));
+    addSubcommand(OrgInviteResendCommand(ctx));
+    addSubcommand(OrgInviteRevokeCommand(ctx));
+    addSubcommand(OrgInviteBatchCommand(ctx));
+    addSubcommand(OrgInviteLinksCommand(ctx));
+    addSubcommand(OrgInviteLinkCreateCommand(ctx));
+    addSubcommand(OrgInviteLinkDeleteCommand(ctx));
+    addSubcommand(OrgRequestsCommand(ctx));
+    addSubcommand(OrgRequestCommand(ctx));
+    addSubcommand(OrgRenameCommand(ctx));
+    addSubcommand(OrgSettingsCommand(ctx));
+    addSubcommand(OrgMcpKeysCommand(ctx));
+    addSubcommand(OrgMcpKeyCreateCommand(ctx));
+    addSubcommand(OrgMcpKeyDeleteCommand(ctx));
+    addSubcommand(OrgGitSyncCommand(ctx));
+    addSubcommand(OrgGitSyncSetCommand(ctx));
+    addSubcommand(OrgGitSyncRunCommand(ctx));
+    addSubcommand(OrgGitSyncOffCommand(ctx));
+    addSubcommand(OrgEncryptionCommand(ctx));
   }
   @override
   String get name => 'org';

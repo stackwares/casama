@@ -1,9 +1,10 @@
 # CLI
 
 `casama` is the command-line client for Casama. It talks to any Casama server: sign in, manage
-workspaces, model keys and bots, chat with a bot and watch it work, reach into its computer,
-move routines and skills as files, and run your own server. Every command can print JSON for
-scripts.
+workspaces and their people, model keys and bots, chat with a bot and watch it work, read and
+manage conversations, approvals, routines, tasks, watchers, memory, skills, plugins, apps, secrets,
+knowledge, channels, projects, the Library and billing, reach into a bot's computer, move routines
+and skills as files, and run your own server. Every command can print JSON for scripts.
 
 ## Install
 
@@ -27,7 +28,7 @@ has a native binary for each platform, with a SHA-256 checksum file next to it:
 | Windows, x64 | `casama-<version>-windows-x64.zip` |
 
 ```sh
-v=0.1.0
+v=0.1.2
 curl -LO "https://github.com/stackwares/casama/releases/download/cli-v$v/casama-$v-linux-x64.tar.gz"
 curl -LO "https://github.com/stackwares/casama/releases/download/cli-v$v/casama-$v-linux-x64.tar.gz.sha256"
 shasum -a 256 -c "casama-$v-linux-x64.tar.gz.sha256"
@@ -98,6 +99,10 @@ Put global options before the command: `casama --json bot list`.
 Many commands take `--org` (`-o`): a workspace slug or id. Without it they use the default from
 `casama org use`. Bots can be named by id or by name (not case-sensitive).
 
+Commands that delete, revoke, reset or spend money only say what they would do unless you pass
+`--yes` (`-y`). With `--json` they print `{"would": ..., "confirm": "--yes"}`. Long text options
+(`--persona`, `--instructions`, `--notes` and the like) accept `@file` to read the text from a file.
+
 ## Commands
 
 ### Account and sign-in
@@ -128,10 +133,30 @@ or network, `pair` says so: a phone somewhere else needs
 | `casama org use <slug or id>` | Set the default workspace for other commands |
 | `casama org invite <email> [--org <slug>] [--role member\|admin]` | Invite someone to the default workspace, or `--org` (role defaults to `member`) |
 | `casama invite accept <token>` | Join a workspace with an invite token |
+| `casama org members` | The people in the workspace and their roles |
+| `casama org invites` | Pending email invites |
+| `casama org invite-resend <invite id>` | Send a pending invite email again |
+| `casama org invite-revoke <invite id> [--yes]` | Cancel a pending invite |
+| `casama org invite-batch <file> [--role member\|admin]` | Invite many people from a file of email addresses |
+| `casama org invite-links` | Invite links people can join with |
+| `casama org invite-link-create [--role member\|admin] [--expires-in-days <n>] [--max-uses <n>] [--[no-]requires-approval]` | Make an invite link |
+| `casama org invite-link-delete <link id> [--yes]` | Turn an invite link off |
+| `casama org requests` | People waiting to join through a link that needs approval |
+| `casama org request <request id> approve\|deny` | Approve or deny a join request |
+| `casama org rename <new name>` | Change the workspace name |
+| `casama org settings [key=value ...]` | Show the workspace settings, or change some |
+| `casama org mcp-keys` | Keys other tools use to reach the workspace over MCP |
+| `casama org mcp-key-create <name>` | Make an MCP key. The key is shown once. |
+| `casama org mcp-key-delete <key id> [--yes]` | Revoke an MCP key; tools using it stop working |
+| `casama org git-sync` | Show the Git sync of the workspace files |
+| `casama org git-sync-set <repo> [--branch <b>] [--path <p>] [--[no-]enabled]` | Set or change the Git repository the workspace files sync with |
+| `casama org git-sync-run` | Sync with Git now |
+| `casama org git-sync-off [--yes]` | Remove the Git sync setup |
+| `casama org encryption` | Show the workspace's encryption status. Key changes are API-only. |
 
-When the server has no email provider,
-`org invite` prints the `casama invite accept <token>` line
-to send to the person yourself.
+All the `org` commands except `list`, `create` and `use` take `--org`. When the server has no
+email provider, `org invite` prints the `casama invite accept <token>` line to send to the person
+yourself.
 
 ### Model keys: `credential`
 
@@ -163,6 +188,12 @@ casama credential test 3f2a9c1e-7b6d-4e5f-8a9b-0c1d2e3f4a5b
 | --- | --- |
 | `casama bot list` | Bots you can use: id, name, status, primary model and visibility |
 | `casama bot create <name> --credential <id> [options]` | Create a bot |
+| `casama bot show <bot>` | A bot's model, autonomy, budget, visibility and persona |
+| `casama bot export <bot> [--out <file>] [--memories]` | The bot as a shareable file. It has no keys, and memories only with `--memories`. Prints it unless `--out` is given. |
+| `casama bot import <file> --credential <id> [--model <model>] [--no-memories] [--no-routines]` | Create a bot from a file made by `bot export`. Memories and routines come along unless you turn them off. |
+| `casama bot share <bot> [--memories] [--expires-in-days <n>]` | Make a link that lets someone else add a copy of the bot. It works for 30 days by default (1 to 365). |
+| `casama bot checkins <bot> [--on\|--off] [--brief-time HH:MM] [--every <hours>] [--daily-cap <usd>]` | Show the bot's proactive check-ins, or change them: the daily brief time, how often to scan (1 to 24 hours) and the most to spend per day (up to 100) |
+| `casama bot starters <bot>` | The suggested first messages for the bot's empty chat |
 
 Options for `bot create`:
 
@@ -203,21 +234,138 @@ casama chat Invoicer "List overdue invoices as CSV" > overdue.csv
 In a terminal, press Ctrl+C once to cancel the run, twice to quit. (On Windows, Ctrl+C quits the
 CLI without cancelling the run; use `casama runs cancel`.)
 
+### Conversations: `chats`
+
+| Command | What it does |
+| --- | --- |
+| `casama chats list <bot>` | A bot's conversations, newest first |
+| `casama chats show <conversation id> [--limit <n>]` | Print a conversation: who, when and what was said. `-n` is short for `--limit`: only the latest `n` messages. |
+| `casama chats export <conversation id> [--format markdown\|json] [--out <file>]` | Download a conversation (default Markdown). Prints it unless `--out` is given. |
+| `casama chats rename <conversation id> <title>` | Give a conversation a new title |
+| `casama chats share <conversation id> [--stop]` | Make a public read-only link; `--stop` makes the link stop working |
+| `casama chats message-edit <conversation id> <message id> <text \| @file>` | Edit a sent message. The conversation forks there and the bot answers again. |
+| `casama chats branch <conversation id> --from <message id>` | Switch to the branch that holds a message (made by editing a message) |
+| `casama chats message-delete <conversation id> <message id> --yes` | Delete one message |
+| `casama chats delete <conversation id> --yes` | Delete a conversation |
+| `casama chats clear <bot> --yes` | Delete all of a bot's conversations |
+
+`list` and `clear` take `--org`.
+
+```sh
+casama chats list Invoicer
+casama chats export 8d1e... --out invoices.md
+```
+
 ### Runs: `runs`
 
 | Command | What it does |
 | --- | --- |
 | `casama runs watch <run id> [--after <seq>]` | Stream a run's events until it ends, starting after `seq` (default 0) |
 | `casama runs cancel <run id>` | Cancel a run and the helper runs it started |
+| `casama runs show <run id>` | One run: status, bot, timings and cost |
+| `casama runs usage <run id>` | What a run used and what it cost |
 
 `runs watch` catches up on events you missed, then follows live, and reconnects by itself if the
 connection drops.
+
+### Approvals: `approvals`
+
+| Command | What it does |
+| --- | --- |
+| `casama approvals list [--status pending\|approved\|denied\|expired]` | Approvals bots are asking for (default `pending`) |
+| `casama approvals approve <approval id> [--always]` | Allow what a bot is asking to do; `--always` also allows that tool from now on |
+| `casama approvals deny <approval id>` | Refuse it |
+
+### Routines: `routines`
+
+| Command | What it does |
+| --- | --- |
+| `casama routines list [--bot <bot>]` | Routines in the workspace, or one bot's |
+| `casama routines show <routine id>` | One routine: schedule, state and instructions |
+| `casama routines create <bot> --name <name> --schedule <cron> --instructions <text\|@file> [options]` | Make a routine for a bot |
+| `casama routines edit <routine id> [options]` | Change a routine. Only the options you pass change. |
+| `casama routines run <routine id> [--watch]` | Run a routine now; `-w` streams the run until it ends |
+| `casama routines delete <routine id> --yes` | Delete a routine |
+
+Options for `routines create` and `routines edit`:
+
+| Option | Meaning |
+| --- | --- |
+| `--name <name>` | Routine name |
+| `--schedule <cron>` | Cron schedule, like `"0 9 * * 1-5"` (weekdays at 9) |
+| `--at <time>` | Run once at this time instead, like `2026-12-31T09:00:00Z` |
+| `--instructions <text>` | What the bot should do, or `@file` |
+| `--timezone <zone>` | IANA zone, like `Europe/Berlin` |
+| `--ends-at <date>` | Stop after this date |
+| `--max-runs <n>` | Stop after this many runs |
+| `--notify`, `--no-notify` | Notify you when it finishes |
+| `--enable`, `--disable` | `edit` only: turn the routine on or off |
+
+```sh
+casama routines create Invoicer --name "Overdue check" --schedule "0 9 * * 1-5" \
+  --instructions @overdue.md --timezone Europe/Berlin
+```
+
+### Tasks: `tasks`
+
+| Command | What it does |
+| --- | --- |
+| `casama tasks list [--status <status>] [--bot <bot>] [--all]` | Tasks in the workspace. Done tasks are hidden unless you pass `--all`. `-s` is short for `--status`. |
+| `casama tasks add <title> [options]` | Add a task |
+| `casama tasks edit <id> [options]` | Change a task. Only the options you pass change. |
+| `casama tasks done <id>` | Mark a task done |
+| `casama tasks comment <id> <text>` | Add a comment |
+| `casama tasks comments <id>` | Show a task's comments |
+| `casama tasks delete <id> --yes` | Delete a task and its comments |
+
+Options for `tasks add` and `tasks edit`:
+
+| Option | Meaning |
+| --- | --- |
+| `--title <title>` | `edit` only: new title |
+| `--bot <bot>` | Give the task to this bot (name or id) |
+| `--due <date>` | Due date, like `2026-12-01` |
+| `--notes <text>` | Details, or `@file` |
+| `--status <status>` | `todo` (default for `add`), `in_progress`, `in_review`, `blocked` or `done` |
+| `--priority <level>` | `urgent`, `high`, `medium`, `low` or `none` |
+| `--label <label>` | `add` only: a label; repeat for more |
+| `--done` | `edit` only: mark it done |
+
+### Watchers: `watchers`
+
+A watcher checks a page and wakes a bot when it changes.
+
+| Command | What it does |
+| --- | --- |
+| `casama watchers list <bot>` | A bot's watchers |
+| `casama watchers add <bot> <url> [options]` | Watch a page |
+| `casama watchers edit <id> --pause\|--resume` | Stop checking for now, or start again |
+| `casama watchers delete <id> --yes` | Stop and delete a watcher |
+
+Options for `watchers add`:
+
+| Option | Meaning |
+| --- | --- |
+| `--name <name>` | A name for the watcher (default: the address) |
+| `--anchor <text>` | Compare from this text on (a label just before the part that matters) |
+| `--chars <n>` | How many characters after the anchor to compare |
+| `--condition <words>` | What counts as a change worth waking the bot for, in words |
+| `--every <minutes>` | Check every this many minutes |
+| `--where server\|mine` | `server` reads public pages; `mine` reads signed-in pages in your own browser |
+
+```sh
+casama watchers add Shopper https://example.com/shoes --condition "price drops" --every 60
+```
 
 ### Memory: `memory`
 
 | Command | What it does |
 | --- | --- |
 | `casama memory list <bot> [--search <words>]` | A bot's memories, pinned ones first (marked `*`). `-s` is short for `--search`. |
+| `casama memory edit <bot> <memory id> [--content <text\|@file>] [--pin\|--unpin]` | Change a memory's text or pin it so it is always remembered |
+| `casama memory delete <bot> <memory id> --yes` | Make a bot forget one memory |
+| `casama memory import <bot> <file or -> [--dry-run]` | Save memories from the answer another assistant gave to `import-prompt`; `-` reads standard input. `--dry-run` shows what would be saved and saves nothing. |
+| `casama memory import-prompt` | Print a prompt to paste into another assistant (ChatGPT, Claude) so it lists what it knows about you |
 
 ### Usage: `usage`
 
@@ -242,6 +390,18 @@ workspace's team computer when you leave it out. They all take `--org`.
 | `casama computer files rm <path>` | Delete a file |
 | `casama computer checkpoints` | Undo points, newest first |
 | `casama computer restore <checkpoint id>` | Go back to a checkpoint. This replaces the computer's files. |
+| `casama computer checkpoint [--label <name>]` | Make an undo point now (default label `Saved from the CLI`) |
+| `casama computer restart` | Sleep and start again. Files are kept. |
+| `casama computer reset [--erase] [--no-checkpoint] [--yes]` | Reset to a fresh system, keeping your files. `--erase` also empties the home folder, like a new computer. A restore point is saved first unless `--no-checkpoint`. |
+| `casama computer update [--force] [--yes]` | Restart on the newer system now. Files are kept; open windows and programs close. `--force` restarts even while a command is running. |
+| `casama computer processes` | Programs running on the computer |
+| `casama computer kill <pid>` | Stop a program by its PID (see `processes`) |
+| `casama computer screenshot [-O <file>]` | Save a picture of the screen (default `screenshot.png`) |
+| `casama computer vitals` | CPU, memory and disk use right now |
+| `casama computer storage` | Disk space used, by category |
+| `casama computer storage-clean [--yes]` | Free space by removing caches and temporary files (never `~/workspace`) |
+| `casama computer history` | What happened to the computer, newest first |
+| `casama computer usage` | Computer time and cost this month |
 
 ```sh
 casama computer files put ./report.csv data/report.csv
@@ -249,6 +409,153 @@ casama computer files get data/summary.md -O summary.md
 ```
 
 See [Computers](/guide/computers) for what a bot's computer is.
+
+### Skills: `skills`
+
+| Command | What it does |
+| --- | --- |
+| `casama skills catalog [query]` | Skills you can install; add words to search |
+| `casama skills install <catalog id \| github url> [--bot <bot>] [--gallery] [--yes]` | Install a catalog skill, or a skill from a GitHub URL. `--bot` installs for one bot only; `--gallery` means the id is a gallery id. A GitHub skill shows a preview first; `--yes` installs it. |
+| `casama skills stats <skill id>` | How often a skill is used and how often it works |
+| `casama skills update <skill id> [--yes]` | Show a skill's pending update; `--yes` applies it |
+
+### Plugins: `plugins`
+
+Plugins put skills and tools from a Git repository on a bot. See [Plugins](/develop/plugins).
+
+| Command | What it does |
+| --- | --- |
+| `casama plugins list --bot <bot>` | The plugins installed on a bot |
+| `casama plugins preview <git url> [--commit <sha>]` | What a plugin would install and what it can reach |
+| `casama plugins install <git url> --bot <bot> [--commit <sha>] [--secret NAME=VALUE] [--setting NAME=VALUE] [--device <id>] [--yes]` | Install a plugin. It shows the preview first; `--yes` installs. A bare `--secret NAME` asks for the value. `--device` runs it on your own computer. |
+| `casama plugins update <plugin id> [--secret NAME=VALUE] [--setting NAME=VALUE] [--yes]` | Show what an update changes; `--yes` applies it |
+| `casama plugins settings <plugin id> key=value...` | Change a plugin's settings |
+| `casama plugins remove <plugin id> --yes` | Remove a plugin from its bot |
+
+### Apps: `apps`
+
+| Command | What it does |
+| --- | --- |
+| `casama apps list [--connected]` | Apps you can connect (Slack, GitHub, ...) and which are connected; `--connected` shows only your connections, with their ids |
+| `casama apps connect <app id> [--method oauth\|api_key\|none\|managed] [--api-key <key>] [--no-wait] [--no-browser]` | Connect an app. Sign-in opens in your browser and the command waits up to 3 minutes for it. The method defaults to the best one the app offers; without `--api-key` it asks. |
+| `casama apps test <connection id \| app id \| name>` | Check that a connection works and list its tools |
+| `casama apps edit <connection> --risk <tool>=low\|medium\|high` | Change how risky a tool is, so bots ask first; repeat `--risk` for more |
+| `casama apps remove <connection> --yes` | Disconnect an app |
+
+### Secrets: `secrets`
+
+Secrets are API keys and passwords bots can use. The CLI never shows their values.
+
+| Command | What it does |
+| --- | --- |
+| `casama secrets list` | Secret names and where they may be used |
+| `casama secrets add <name> --host <host> [--bot <bot>] [--kind value\|totp] [--value <secret>]` | Save a secret. `--host` is a host it may be sent to; repeat for more. `--bot` limits it to a bot (default: all); repeat for more. `--kind totp` saves a two-step seed. Without `--value` it asks, and nothing is echoed. |
+| `casama secrets remove <id \| name> --yes` | Delete a secret |
+| `casama secrets requests [--all]` | Secrets that bots are asking you for; `--all` includes answered and expired requests |
+| `casama secrets fulfill <request id> [--value <secret>]` | Give a bot the secret it asked for. Without `--value` it asks. |
+| `casama secrets decline <request id>` | Tell a bot no |
+
+### Knowledge: `knowledge`
+
+Knowledge sources are websites, repositories and files bots can search.
+
+| Command | What it does |
+| --- | --- |
+| `casama knowledge list [--bot <bot>]` | The workspace's knowledge sources, or one bot's |
+| `casama knowledge add <name> (--url <url> \| --repo <url> \| --file <file> \| --integration <id> --documents <json>) [options]` | Add a source |
+| `casama knowledge sync <id>` | Read a source again now |
+| `casama knowledge remove <id> --yes` | Delete a source and what was read from it |
+
+Options for `knowledge add`:
+
+| Option | Meaning |
+| --- | --- |
+| `-b`, `--bot <bot>` | Give the source to one bot only (default: the whole workspace) |
+| `--url <url>` | A website to read |
+| `--max-pages <n>` | Pages to read from the website |
+| `--repo <url>` | A GitHub repository URL |
+| `--sync-every-hours <n>` | Re-read the repository this often |
+| `-f`, `--file <file>` | A file to upload; repeat for more |
+| `--integration <id>` | A connection id to read from, used with `--documents` |
+| `--documents <json>` | A JSON list of `{tool, args, title}`, or `@file` |
+
+### Channels: `channels`
+
+Channels are where a bot can be reached.
+
+| Command | What it does |
+| --- | --- |
+| `casama channels list --bot <bot>` | A bot's channels |
+| `casama channels add <kind> <name> --bot <bot> [--config key=value] [--secret key=value] [--allow <sender>]` | Add a channel. `<kind>` is `telegram`, `email`, `sms`, `slack`, `whatsapp`, `messenger`, `feishu`, `imessage`, `teams`, `discord`, `linear` or `jira`. Each option can repeat; a bare `--secret key` asks for the value. For Slack use `channels slack`. |
+| `casama channels slack --bot <bot> [--no-browser]` | Connect a bot to Slack. It opens the Slack install page. |
+| `casama channels edit <id> [--name <name>] [--allow <sender>] [--enabled\|--no-enabled]` | Rename a channel, replace the allowed senders, or turn it on or off |
+| `casama channels events <id>` | Recent messages in and out of a channel |
+| `casama channels remove <id> --yes` | Delete a channel |
+
+### Projects: `projects`
+
+A project has a goal, a plan and milestones that a lead bot works through.
+
+| Command | What it does |
+| --- | --- |
+| `casama projects list` | The workspace's projects |
+| `casama projects show <project id>` | One project with its plan and milestones |
+| `casama projects create <name> --bot <bot> [options]` | Start a project led by a bot |
+| `casama projects edit <project id> [options]` | Change a project. Only the options you pass change. |
+| `casama projects approve-plan <project id>` | Approve the proposed plan so the bot starts work |
+| `casama projects signoff <project id> <milestone id>` | Sign off a finished milestone |
+
+Options for `projects create` and `projects edit`:
+
+| Option | Meaning |
+| --- | --- |
+| `--title <title>` | `edit` only: new name |
+| `--status <status>` | `edit` only: `active`, `paused`, `cancelled` or `done` |
+| `--goal <text>` | What the project is for, or `@file` |
+| `--done <text>` | When it counts as done, or `@file` |
+| `--plan <markdown>` | `edit` only: the plan, or `@file` |
+| `--budget <usd>` | Spending limit in USD |
+| `--deadline <date>` | Due date, like `2026-12-31` |
+| `--autonomous`, `--no-autonomous` | Let the bot keep working without asking |
+
+### Library: `library`
+
+The Library holds the files and pages your bots made.
+
+| Command | What it does |
+| --- | --- |
+| `casama library list [options]` | Files and pages bots made |
+| `casama library show <id>` | Details of one file or page |
+| `casama library download <id> [--out <path>]` | Save a file or page to this computer. `-O` is short for `--out`: a file or folder (default: the item's name, in the current folder). |
+| `casama library duplicate <id>` | Make a copy |
+| `casama library rename <id> <new title>` | Give it a new title |
+| `casama library delete <id> --yes` | Delete it. It can be restored for 30 days, then it is gone. |
+| `casama library restore <id>` | Bring back something deleted in the last 30 days (see `list --deleted`) |
+
+Options for `library list`:
+
+| Option | Meaning |
+| --- | --- |
+| `--project <id>` | Only this project |
+| `--kind <kind>` | `page`, `image`, `video`, `audio`, `document` or `file` |
+| `-s`, `--search <words>` | Search the titles |
+| `--bot <bot>` | Only what this bot made |
+| `--deleted` | Show what was deleted in the last 30 days |
+| `--limit <n>` | How many, 1 to 100 |
+
+### Billing: `billing`
+
+| Command | What it does |
+| --- | --- |
+| `casama billing show` | Plan, period, seats and credits |
+| `casama billing usage` | This month's billable usage and recent credit entries |
+| `casama billing upgrade --plan plus\|pro\|max [--period monthly\|yearly] [--yes] [--no-browser]` | Start checkout for a plan (period defaults to `monthly`). A plan change can bill you, so without `--yes` it only says what would happen. It opens the checkout page unless `--no-browser`. |
+| `casama billing portal [--no-browser]` | Open the page to manage payment methods and invoices. With `--no-browser` it only prints the link. |
+
+```sh
+casama billing upgrade --plan pro --period yearly
+casama billing upgrade --plan pro --period yearly --yes
+```
 
 ### Routines and skills as files: `files`
 
@@ -454,7 +761,12 @@ casama --json bot list | jq -r '.items[] | select(.status == "idle") | .name'
 - Errors go to stderr as `{"error": "<code>", "message": "..."}`. The code is the API's problem code
   when there is one (`forbidden`, `run_finished`, ...), or one of the CLI's own: `not_logged_in`,
   `org_required`, `org_not_found`, `bot_not_found`, `no_computer`, `auth_failed`,
-  `two_step_failed`, `network_error`. `selfhost` adds `not_a_checkout`, `backup_failed`,
+  `two_step_failed`, `network_error`, and `http_<status>` (for example `http_502`: the server
+  answered with an error that wasn't a problem body, often a proxy or a wrong address). The newer
+  commands add `file_not_found` (a `@file` or file argument that isn't there), `not_found`,
+  `routine_not_found`, `app_not_found`, `connection_not_found`, `secret_not_found`, `no_emails`
+  (`org invite-batch` found no addresses), `bad_bot_file` (`bot import`), `connect_failed`,
+  `connect_timeout` and `connect_expired` (`apps connect`). `selfhost` adds `not_a_checkout`, `backup_failed`,
   `identity_required`, `not_a_backup`, `restore_failed`, `not_running` and `no_account`, and
   `selfhost remote` passes on Casama Cloud's codes (`plan_limit`, `suspended`, `link_expired`,
   `unreachable`, ...). `init` adds `file_exists`. `gallery` and `init --from-gallery` add
@@ -473,6 +785,8 @@ casama --json bot list | jq -r '.items[] | select(.status == "idle") | .name'
 | `CASAMA_PASSWORD` | Password for `login` and `signup` |
 | `CASAMA_2FA_CODE` | Two-step sign-in code for `login` |
 | `CASAMA_MODEL_KEY` | Key for `credential add` |
+| `CASAMA_APP_KEY` | API key for `apps connect --method api_key`, when `--api-key` isn't given |
+| `CASAMA_SECRET_VALUE` | Value for `secrets add` and `secrets fulfill`, when `--value` isn't given |
 | `CASAMA_SELFHOST_DIR` | Checkout for `selfhost` |
 | `CASAMA_BACKUP_RECIPIENTS` | age recipients for `selfhost backup --encrypt` |
 | `CASAMA_CLOUD_URL` | Casama Cloud address for `selfhost remote`, when `--cloud` isn't given |

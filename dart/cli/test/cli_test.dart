@@ -36,6 +36,21 @@ void main() {
     expect(jsonDecode(err)['error'], 'network_error');
   });
 
+  test('an error without a problem body names the status', () async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    server.listen((r) => r
+      ..response.statusCode = 404
+      ..response.write('not here')
+      ..response.close());
+    try {
+      final (code, _, err) = await run(['--api', 'http://127.0.0.1:${server.port}', '--json', 'whoami']);
+      expect(code, 1);
+      expect(jsonDecode(err)['error'], 'http_404');
+    } finally {
+      await server.close(force: true);
+    }
+  });
+
   test('logout without a session succeeds', () async {
     final (code, out, _) = await run(['logout']);
     expect(code, 0);

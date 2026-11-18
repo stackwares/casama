@@ -7,6 +7,7 @@ import 'package:args/command_runner.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 
 import 'commands_bots.dart';
+import 'commands_library.dart';
 import 'runner.dart';
 
 /// Resolves --computer (id), else the organization's team computer.
@@ -37,11 +38,23 @@ class ComputerCommand extends Command<int> {
     addSubcommand(ComputerFilesCommand(ctx));
     addSubcommand(ComputerCheckpointsCommand(ctx));
     addSubcommand(ComputerRestoreCommand(ctx));
+    addSubcommand(ComputerRestartCommand(ctx));
+    addSubcommand(ComputerResetCommand(ctx));
+    addSubcommand(ComputerProcessesCommand(ctx));
+    addSubcommand(ComputerKillCommand(ctx));
+    addSubcommand(ComputerScreenshotCommand(ctx));
+    addSubcommand(ComputerVitalsCommand(ctx));
+    addSubcommand(ComputerStorageCommand(ctx));
+    addSubcommand(ComputerStorageCleanCommand(ctx));
+    addSubcommand(ComputerHistoryCommand(ctx));
+    addSubcommand(ComputerUpdateCommand(ctx));
+    addSubcommand(ComputerCheckpointCommand(ctx));
+    addSubcommand(ComputerUsageCommand(ctx));
   }
   @override
   String get name => 'computer';
   @override
-  String get description => 'Work with bot computers: status, shell, files and checkpoints.';
+  String get description => 'Work with bot computers: start, stop, shell, files, undo points, processes and health.';
 }
 
 class ComputerStatusCommand extends KCommand {
