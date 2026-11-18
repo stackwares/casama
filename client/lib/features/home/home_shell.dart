@@ -1,6 +1,7 @@
 import '../selfhost/setup_screen.dart';
 import '../notifications/newsletter.dart';
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart' show kDoubleTapTimeout;
 import 'package:material_ui/material_ui.dart';
@@ -12,7 +13,12 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/app_page.dart';
+import '../../core/fold/fold.dart';
 import '../../core/media_cache.dart';
+import '../../ui/shell_layout.dart';
+import '../../ui/side_strip.dart';
+import '../library/library_screen.dart';
 import '../../core/backend.dart';
 import '../search/search_view.dart';
 import '../referrals/invite_friends.dart' show referralProvider;
@@ -56,18 +62,7 @@ import '../voice/wake_word.dart';
 import '../../ui/mascot.dart';
 import '../../core/review_prompt.dart';
 
-/// Two places on every size (D-176, D-253): Chats and Tasks; what the Inbox held opens from Chats
-/// (Needs you, and the pinned Casama row for updates). Phone: a floating tab bar with a
-/// round search button beside it. Tablet: a navigation rail. Desktop: a sidebar with the chats, the
-/// chat, and the bot's computer beside it. Settings sits behind the person's avatar; a bot's
-/// computer lives in its chat.
-enum LayoutSize { phone, tablet, desktop }
-
-LayoutSize layoutFor(double width) => switch (AppBreakpoints.of(width)) {
-  WindowSize.compact => LayoutSize.phone,
-  WindowSize.medium => LayoutSize.tablet,
-  WindowSize.expanded => LayoutSize.desktop,
-};
+export '../../ui/shell_layout.dart' show LayoutSize, layoutFor;
 
 /// Whether the computer panel is open beside the chat on wide windows.
 class ComputerPanelOpen extends Notifier<bool> {
@@ -133,9 +128,61 @@ class _Dest {
   final String label;
 }
 
+/// A chat the shell opened by itself beside the list (D-411), and whether the person has touched
+/// it. Closing the device untouched goes back to the list they were on.
+class SplitRest extends Notifier<({String? opened, bool touched})> {
+  @override
+  ({String? opened, bool touched}) build() => (opened: null, touched: false);
+
+  void opened(String location) => state = (opened: location, touched: false);
+
+  void touch() {
+    if (state.opened != null && !state.touched) state = (opened: state.opened, touched: true);
+  }
+
+  void clear() {
+    if (state.opened != null) state = (opened: null, touched: false);
+  }
+}
+
+final splitRestProvider = NotifierProvider<SplitRest, ({String? opened, bool touched})>(SplitRest.new);
+
+/// The chats list keeps its place when it moves between being the tab's page (phone) and the left
+/// pane (two panes): one element, wherever it is shown.
+final chatsListKey = GlobalKey(debugLabel: 'chats list');
+
+/// Without a fold or a strip to line up with, the list pane is this wide.
+const double _listPaneWidth = 360;
+
+/// Whether the strip has room for the round button under the tabs and still three of a page's
+/// own buttons above them. Standing on its side (tent) it doesn't, and the button goes.
+bool stripFitsAction(MediaQueryData media, FoldInfo fold, int tabs) {
+  final free = fold.stripBottom - fold.stripTop;
+  return free - StripTabs.heightFor(tabs, action: true) - 12 >= 3 * 44;
+}
+
+/// The zone of the strip a page's header buttons go in: under what iOS draws at its top, above
+/// the tabs (when they show), and above the keyboard.
+Rect stripSlot(MediaQueryData media, FoldInfo fold, double tabsHeight) {
+  // Off the screen's outer edge by the margin iOS keeps there, so the buttons line up with the
+  // clock above them.
+  final onRight = fold.strip == StripSide.right;
+  final left = onRight ? media.size.width - fold.stripWidth : FoldInfo.stripOuterMargin;
+  final width = fold.stripWidth - FoldInfo.stripOuterMargin;
+  final floor = math.max(
+    media.viewInsets.bottom,
+    media.size.height - fold.stripBottom + (tabsHeight > 0 ? tabsHeight + 12 : 0),
+  );
+  final bottom = math.max(media.size.height - floor, fold.stripTop);
+  return Rect.fromLTRB(left, fold.stripTop, left + width, bottom);
+}
+
 class HomeShell extends ConsumerWidget {
-  const HomeShell({super.key, required this.location, required this.child});
+  const HomeShell({super.key, required this.location, required this.child, this.uri});
   final String location;
+
+  /// The whole address, for the lists the shell shows itself (the Library's filters).
+  final Uri? uri;
   final Widget child;
 
   /// The selected place, or -1 on screens outside them (settings, search, the computer).
@@ -159,12 +206,30 @@ class HomeShell extends ConsumerWidget {
   String? get _botId =>
       RegExp(r'^/bots/([^/]+)').firstMatch(location)?.group(1);
 
+  bool get _inChat => _botId != null && location.contains('/chat');
+
   /// The tab screens themselves. Only these show the tab bar on phones; everything opened from
   /// them (a chat, settings, the computer, search, password managers…) takes the whole screen,
   /// with a back button.
   static const _tabRoots = {'/', '/bots', '/library', '/tasks'};
 
   bool get _isDetail => !_tabRoots.contains(location);
+
+  /// The lists themselves, with nothing opened from them yet.
+  bool get _listRoot => location == '/' || location == '/bots' || location == '/library' || location == '/settings';
+
+  /// Where two panes fit, these places show their list beside what is opened from it. A call is
+  /// laid out across the whole window instead, and Tasks has no pages of its own to open.
+  bool get _twoPane =>
+      (_index == 0 && !RegExp(r'^/bots/[^/]+/call').hasMatch(location)) || _index == 1 || location.startsWith('/settings');
+
+  /// Pages that lay themselves out around a fold (the board's columns, the live view, a call).
+  /// Every other page keeps to one half while the fold divides the window.
+  bool get _foldAware =>
+      location == '/tasks' ||
+      location.startsWith('/computer/live') ||
+      location.startsWith('/calls/') ||
+      RegExp(r'^/bots/[^/]+/call').hasMatch(location);
 
   List<_Dest> _destinations(BuildContext context) {
     final l10n = context.l10n;
@@ -188,6 +253,25 @@ class HomeShell extends ConsumerWidget {
         l10n.navTasks,
       ),
     ];
+  }
+
+  /// A chat the shell opened beside the list goes back to the list when the window stops having
+  /// room for both (the device closed) and nobody touched it.
+  void _settleRest(BuildContext context, WidgetRef ref, LayoutSize size) {
+    final opened = ref.read(splitRestProvider).opened;
+    if (opened == null) return;
+    final here = Uri.parse(opened).path == location;
+    if (size == LayoutSize.split && here) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!context.mounted) return;
+      final now = ref.read(splitRestProvider);
+      if (now.opened != opened) return;
+      ref.read(splitRestProvider.notifier).clear();
+      if (here && !now.touched && size == LayoutSize.phone) {
+        PageMotion.snapOnce();
+        context.go('/bots');
+      }
+    });
   }
 
   @override
@@ -228,7 +312,14 @@ class HomeShell extends ConsumerWidget {
     }
     // The chat a wide window opens with next time (D-383).
     LastChat.remember(ref.watch(currentOrgIdProvider), location);
-    final size = layoutFor(MediaQuery.sizeOf(context).width);
+    final fold = FoldInfo.of(context);
+    final width = MediaQuery.sizeOf(context).width;
+    var size = layoutFor(width);
+    // A fold down the middle makes two panes of a narrower window too (Android foldables).
+    if ((size == LayoutSize.phone || size == LayoutSize.tablet) && fold.splitX != null && width >= 600) {
+      size = LayoutSize.split;
+    }
+    _settleRest(context, ref, size);
     final badge = ref.watch(inboxBadgeProvider);
     // Always the same wrapper, so the page under it keeps its state when the banner comes or goes.
     final inner = _SuspendedBanner(suspended: ref.watch(currentOrgProvider)?.suspended == true, child: this.child);
@@ -245,7 +336,7 @@ class HomeShell extends ConsumerWidget {
       context.go(dests[i].path);
     }
 
-    final shell = _buildShell(context, ref, size, badge, child, dests, go);
+    final shell = _buildShell(context, ref, size, fold, badge, child, dests, go);
     if (size == LayoutSize.phone) return shell;
     return CallbackShortcuts(
       bindings: {
@@ -262,14 +353,74 @@ class HomeShell extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     LayoutSize size,
+    FoldInfo fold,
     int badge,
     Widget child,
     List<_Dest> dests,
     void Function(int) go,
   ) {
+    final media = MediaQuery.of(context);
+    final tabs = [
+      for (final d in dests)
+        FloatingTabDestination(
+          icon: d.icon,
+          selectedIcon: d.selectedIcon,
+          label: d.label,
+          badge: d.path == '/bots' ? badge : 0,
+        ),
+    ];
+    // Connecting more apps (and MCP servers) sits beside the tabs; search sits in
+    // the Chats header next to "+" (Cmd/Ctrl+K on larger windows, D-103).
+    final apps = FloatingTabAction(
+      key: const Key('tabApps'),
+      icon: LucideIcons.puzzle,
+      label: context.l10n.connectAppsTitle,
+      onPressed: () => context.pushOnce('/settings/integrations'),
+    );
+    // What a screen needs to know about the shell around it (ui/shell_layout.dart).
+    Widget scope(Widget child, {required NavKind nav, PaneRole pane = PaneRole.single, Rect? slot}) => ShellLayout(
+      size: size,
+      nav: nav,
+      pane: pane,
+      location: location,
+      child: StripSlot(rect: slot, child: child),
+    );
+
     if (size == LayoutSize.phone) {
       final showBar = !_isDetail;
-      final media = MediaQuery.of(context);
+      // An iPhone Duo's outer screen: the page keeps clear of the strip, its buttons and the tabs
+      // go in it (D-411).
+      if (fold.hasStrip) {
+        final onRight = fold.strip == StripSide.right;
+        final pane = Rect.fromLTRB(
+          onRight ? 0 : fold.stripWidth,
+          0,
+          media.size.width - (onRight ? fold.stripWidth : 0),
+          media.size.height,
+        );
+        final action = stripFitsAction(media, fold, tabs.length);
+        final tabsHeight = showBar ? StripTabs.heightFor(tabs.length, action: action) : 0.0;
+        return Scaffold(
+          resizeToAvoidBottomInset: false,
+          body: Stack(
+            children: [
+              Positioned.fromRect(
+                rect: pane,
+                child: MediaQuery(
+                  data: paneMedia(media, pane),
+                  child: scope(child, nav: NavKind.strip, slot: stripSlot(media, fold, tabsHeight)),
+                ),
+              ),
+              _StripChrome(
+                fold: fold,
+                tabs: showBar
+                    ? StripTabs(destinations: tabs, currentIndex: _index, onSelected: go, action: action ? apps : null)
+                    : null,
+              ),
+            ],
+          ),
+        );
+      }
       return Scaffold(
         extendBody: true,
         resizeToAvoidBottomInset: false,
@@ -285,7 +436,7 @@ class HomeShell extends ConsumerWidget {
                         ),
                       )
                     : media,
-                child: child,
+                child: scope(child, nav: NavKind.tabBar),
               ),
             ),
             Positioned(
@@ -304,23 +455,8 @@ class HomeShell extends ConsumerWidget {
                   child: FloatingTabChrome(
                     currentIndex: _index,
                     onDestinationSelected: go,
-                    destinations: [
-                      for (final d in dests)
-                        FloatingTabDestination(
-                          icon: d.icon,
-                          selectedIcon: d.selectedIcon,
-                          label: d.label,
-                          badge: d.path == '/bots' ? badge : 0,
-                        ),
-                    ],
-                    // Connecting more apps (and MCP servers) floats beside the tabs; search sits in
-                    // the Chats header next to "+" (Cmd/Ctrl+K on larger windows, D-103).
-                    action: FloatingTabAction(
-                      key: const Key('tabApps'),
-                      icon: LucideIcons.puzzle,
-                      label: context.l10n.connectAppsTitle,
-                      onPressed: () => context.pushOnce('/settings/integrations'),
-                    ),
+                    destinations: tabs,
+                    action: apps,
                   ),
                 ),
               ),
@@ -350,7 +486,7 @@ class HomeShell extends ConsumerWidget {
               child: MediaQuery.removePadding(
                 context: context,
                 removeLeft: true,
-                child: child,
+                child: scope(child, nav: NavKind.rail),
               ),
             ),
           ],
@@ -358,7 +494,19 @@ class HomeShell extends ConsumerWidget {
       );
     }
 
-    final inChat = _botId != null && location.contains('/chat');
+    if (size == LayoutSize.split) {
+      return _SplitShell(
+        shell: this,
+        fold: fold,
+        badge: badge,
+        dests: dests,
+        tabs: tabs,
+        apps: apps,
+        go: go,
+        child: child,
+      );
+    }
+
     final panelOpen = ref.watch(computerPanelProvider);
     final Widget content;
     // Only the bare Bots page asks to pick a bot; group chats and Pages live under the same tab.
@@ -411,10 +559,11 @@ class HomeShell extends ConsumerWidget {
             child: MediaQuery.removePadding(
               context: context,
               removeLeft: true,
-              child: content,
+              // The sidebar lists the chats, so the Chats tab has no page of its own here.
+              child: scope(content, nav: NavKind.sidebar, pane: _index == 0 ? PaneRole.detail : PaneRole.single),
             ),
           ),
-          if (inChat)
+          if (_inChat)
             AnimatedSize(
               duration: ref.watch(_panelDraggingProvider)
                   ? Duration.zero
@@ -429,6 +578,396 @@ class HomeShell extends ConsumerWidget {
                   : const SizedBox(width: 0, height: double.infinity),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// What the shell draws in the strip itself: the tabs at its bottom. The top belongs to iOS (the
+/// camera, the clock, the battery) and the middle to the page's header (ui/side_strip.dart).
+class _StripChrome extends StatelessWidget {
+  const _StripChrome({required this.fold, required this.tabs});
+  final FoldInfo fold;
+  final Widget? tabs;
+
+  @override
+  Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final onRight = fold.strip == StripSide.right;
+    return Positioned(
+      left: onRight ? null : FoldInfo.stripOuterMargin,
+      right: onRight ? FoldInfo.stripOuterMargin : null,
+      width: fold.stripWidth - FoldInfo.stripOuterMargin,
+      top: fold.stripTop,
+      bottom: media.size.height - fold.stripBottom,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: AnimatedSwitcher(
+          duration: AppMotion.of(context, const Duration(milliseconds: 220)),
+          switchInCurve: AppMotion.curve,
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween(begin: const Offset(0, 0.25), end: Offset.zero).animate(animation),
+              child: child,
+            ),
+          ),
+          child: tabs ?? const SizedBox.shrink(),
+        ),
+      ),
+    );
+  }
+}
+
+/// Two panes (D-411): the tab's list on the left, what is opened from it on the right. On a
+/// folding phone they meet on the fold, and while the fold divides the window the band between
+/// them stays empty. Without a fold the list takes a fixed width beside the rail.
+class _SplitShell extends ConsumerWidget {
+  const _SplitShell({
+    required this.shell,
+    required this.fold,
+    required this.badge,
+    required this.dests,
+    required this.tabs,
+    required this.apps,
+    required this.go,
+    required this.child,
+  });
+  final HomeShell shell;
+  final FoldInfo fold;
+  final int badge;
+  final List<_Dest> dests;
+  final List<FloatingTabDestination> tabs;
+  final FloatingTabAction apps;
+  final void Function(int) go;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final media = MediaQuery.of(context);
+    final width = media.size.width;
+    final height = media.size.height;
+    final location = shell.location;
+    final strip = fold.hasStrip;
+    // The strip where there is one, a rail where there is room for it, else the floating bar.
+    final nav = strip ? NavKind.strip : (width >= AppBreakpoints.split ? NavKind.rail : NavKind.tabBar);
+    final stripLeft = strip && fold.strip == StripSide.left ? fold.stripWidth : 0.0;
+    final stripRight = strip && fold.strip == StripSide.right ? fold.stripWidth : 0.0;
+    // The band to keep empty, while a fold running top to bottom divides the window.
+    final gap = fold.foldVertical ? fold.gap : null;
+    // While the fold divides the window, a page that wasn't made for it keeps to the right half
+    // and the chats take the left one.
+    final twoPane = shell._twoPane || (gap != null && !shell._foldAware);
+    final hidden = twoPane && !shell._listRoot && gap == null && ref.watch(splitExpandedProvider);
+    final onTab = !shell._isDetail;
+    final action = !strip || stripFitsAction(media, fold, tabs.length);
+    final tabsHeight = StripTabs.heightFor(tabs.length, action: action);
+
+    ({bool fits, double leftEnd, double rightStart, double meet}) geometry(double contentLeft, double contentRight) {
+      final meet = fold.splitX ?? (strip ? width / 2 : contentLeft + _listPaneWidth);
+      final leftEnd = gap?.left ?? meet;
+      final rightStart = gap?.right ?? meet;
+      final fits = twoPane && leftEnd - contentLeft >= 280 && contentRight - rightStart >= 300;
+      return (fits: fits, leftEnd: leftEnd, rightStart: rightStart, meet: meet);
+    }
+
+    Widget panes(double contentLeft, double contentRight) {
+      final g = geometry(contentLeft, contentRight);
+      final showList = g.fits && !hidden;
+      // With two panes' worth of room the tabs stay in the strip on every page, as a rail would.
+      final slot = strip ? stripSlot(media, fold, tabsHeight) : null;
+      final left = Rect.fromLTRB(contentLeft, 0, g.leftEnd, height);
+      final right = Rect.fromLTRB(showList ? g.rightStart : contentLeft, 0, contentRight, height);
+      // The floating bar (no strip, no room for a rail) sits under the list, or under the page's
+      // leading half while a fold divides it.
+      final bar = nav == NavKind.tabBar && (showList || onTab);
+      final barWidth = showList ? left.width : (gap != null ? gap.left - contentLeft : right.width);
+
+      Widget pane(Rect at, Widget content, {required PaneRole role, Rect? slot, bool underBar = false, Key? key}) {
+        var data = paneMedia(media, at);
+        if (underBar) data = data.copyWith(padding: data.padding.copyWith(bottom: FloatingTabChrome.bottomInset(context)));
+        return Positioned(
+          key: key,
+          left: at.left - contentLeft,
+          width: at.width,
+          top: 0,
+          bottom: 0,
+          child: MediaQuery(
+            data: data,
+            child: FoldPane(
+              rect: at,
+              child: ShellLayout(
+                size: LayoutSize.split,
+                nav: nav,
+                pane: role,
+                location: location,
+                listHidden: hidden,
+                canToggleList: g.fits && gap == null && !shell._listRoot,
+                child: StripSlot(rect: slot, child: content),
+              ),
+            ),
+          ),
+        );
+      }
+
+      return Stack(
+        children: [
+          if (showList)
+            pane(left, _PaneReveal(child: _ListPane(shell: shell)), role: PaneRole.list, underBar: bar, key: const ValueKey('listPane')),
+          if (showList && gap == null)
+            Positioned(
+              left: g.meet - contentLeft,
+              top: 0,
+              bottom: 0,
+              child: VerticalDivider(width: 1, thickness: 1, color: context.appColors.hairline),
+            ),
+          pane(
+            right,
+            // A touch here makes a chat the shell opened by itself the person's own (see SplitRest).
+            Listener(
+              behavior: HitTestBehavior.translucent,
+              onPointerDown: (_) => ref.read(splitRestProvider.notifier).touch(),
+              child: child,
+            ),
+            role: showList ? PaneRole.detail : PaneRole.single,
+            slot: slot,
+            underBar: bar && !showList && onTab,
+            key: const ValueKey('detailPane'),
+          ),
+          if (bar)
+            Positioned(
+              left: 0,
+              width: barWidth,
+              bottom: 0,
+              child: FloatingTabChrome(
+                currentIndex: shell._index,
+                onDestinationSelected: go,
+                destinations: tabs,
+                action: apps,
+              ),
+            ),
+        ],
+      );
+    }
+
+    final Widget body;
+    if (nav == NavKind.rail) {
+      body = Row(
+        children: [
+          _NavSurface(
+            child: _Rail(
+              dests: dests,
+              index: shell._index,
+              badge: badge,
+              onSelected: go,
+              settingsOpen: location.startsWith('/settings'),
+            ),
+          ),
+          // The rail's own width decides where the panes start.
+          Expanded(child: LayoutBuilder(builder: (context, box) => panes(width - box.maxWidth, width))),
+        ],
+      );
+    } else {
+      body = Stack(
+        children: [
+          Positioned.fill(left: stripLeft, right: stripRight, child: panes(stripLeft, width - stripRight)),
+          if (strip)
+            _StripChrome(
+              fold: fold,
+              tabs: StripTabs(destinations: tabs, currentIndex: shell._index, onSelected: go, action: action ? apps : null),
+            ),
+        ],
+      );
+    }
+    return Scaffold(resizeToAvoidBottomInset: false, body: body);
+  }
+}
+
+/// The list pane arrives from the fold when two panes open (the device opened, or the list was
+/// shown again): a short slide and fade, or none with reduced motion. With [hingeMotionProvider]
+/// on, for the first moments it comes in as far as the hinge is open instead.
+class _PaneReveal extends ConsumerStatefulWidget {
+  const _PaneReveal({required this.child});
+  final Widget child;
+
+  @override
+  ConsumerState<_PaneReveal> createState() => _PaneRevealState();
+}
+
+class _PaneRevealState extends ConsumerState<_PaneReveal> {
+  /// Following the hinge, for a moment after arriving. Then the pane is simply there, however
+  /// the device is held.
+  var _following = false;
+  Timer? _settle;
+
+  @override
+  void initState() {
+    super.initState();
+    if (ref.read(hingeMotionProvider)) {
+      _following = true;
+      _settle = Timer(const Duration(milliseconds: 1200), () {
+        if (mounted) setState(() => _following = false);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _settle?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var shown = 1.0;
+    if (_following && !MediaQuery.disableAnimationsOf(context)) {
+      final angle = ref.watch(nativeFoldProvider.select((n) => n.hinge == HingeStatus.partlyOpen ? n.angle : null));
+      // From a right angle to nearly flat.
+      if (angle != null) shown = ((angle - 90) / 70).clamp(0.0, 1.0);
+    }
+    final fromRight = Directionality.of(context) == TextDirection.ltr;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: shown),
+      duration: AppMotion.of(context, const Duration(milliseconds: 260)),
+      curve: AppMotion.curve,
+      child: widget.child,
+      builder: (context, t, child) => t >= 1
+          ? child!
+          : Opacity(
+              opacity: t.clamp(0.0, 1.0),
+              child: Transform.translate(offset: Offset((1 - t) * (fromRight ? 28 : -28), 0), child: child),
+            ),
+    );
+  }
+}
+
+/// The left pane: the list of the place you are in. The chats, the Library as last filtered, the
+/// settings list, or the bot's computer when its chat asks for it.
+class _ListPane extends ConsumerStatefulWidget {
+  const _ListPane({required this.shell});
+  final HomeShell shell;
+
+  @override
+  ConsumerState<_ListPane> createState() => _ListPaneState();
+}
+
+class _ListPaneState extends ConsumerState<_ListPane> {
+  /// The Library's address with its filters, kept while one of its items is open beside it.
+  Uri? _library;
+
+  @override
+  Widget build(BuildContext context) {
+    final shell = widget.shell;
+    final location = shell.location;
+    if (location.startsWith('/settings')) {
+      return SettingsScreen(key: const Key('settingsPane'), pane: true, current: location);
+    }
+    if (shell._index == 1) {
+      if (location == '/library' && shell.uri != null) _library = shell.uri;
+      final q = _library?.queryParameters ?? const <String, String>{};
+      return LibraryScreen(
+        key: ValueKey('libraryPane?${_library?.query ?? ''}'),
+        kind: CreationKind.values.where((k) => k.value == q['kind']).firstOrNull,
+        botId: q['bot'],
+        projectId: q['project'],
+        query: q['q'] ?? '',
+      );
+    }
+    // The bot's computer in place of the list, with its chat still beside it.
+    if (shell._inChat && ref.watch(splitComputerProvider)) {
+      return SafeArea(
+        right: false,
+        child: ComputerScreen(key: ValueKey('computerPane-${shell._botId}'), botId: shell._botId, embedded: true),
+      );
+    }
+    return BotsScreen(key: chatsListKey, selectedBotId: shell._botId);
+  }
+}
+
+/// The Chats tab's page. On a phone and a tablet it is the list. Where the shell shows the list
+/// itself (two panes, the desktop sidebar) there is nothing to draw here: with two panes it opens
+/// the chat last open on this device beside the list (D-383), as a wide window does.
+class ChatsTabPage extends ConsumerWidget {
+  const ChatsTabPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final shell = ShellLayout.maybeOf(context);
+    if (shell == null || !shell.listInShell) return BotsScreen(key: chatsListKey);
+    // Only while this is the page on screen: under a chat, or fading out behind another place,
+    // it must not open anything.
+    if (shell.size != LayoutSize.split || (shell.location != '/bots' && shell.location != '/')) return const SizedBox.shrink();
+    return _SelectBotPlaceholder(
+      onCreate: () => showCreateBot(context, ref),
+      onOpened: ref.read(splitRestProvider.notifier).opened,
+      quiet: true,
+    );
+  }
+}
+
+/// The Library tab's page: the Library, or nothing where the shell shows it in the left pane.
+class LibraryTabPage extends StatelessWidget {
+  const LibraryTabPage({super.key, required this.uri});
+  final Uri uri;
+
+  @override
+  Widget build(BuildContext context) {
+    final shell = ShellLayout.maybeOf(context);
+    if (shell != null && shell.listInShell) {
+      return PanePlaceholder(icon: LucideIcons.library, message: context.l10n.panePickLibrary);
+    }
+    final q = uri.queryParameters;
+    return LibraryScreen(
+      key: ValueKey(uri.query),
+      kind: CreationKind.values.where((k) => k.value == q['kind']).firstOrNull,
+      botId: q['bot'],
+      projectId: q['project'],
+      query: q['q'] ?? '',
+    );
+  }
+}
+
+/// The Settings page: the list of settings, or nothing where the shell shows that list in the
+/// left pane and a settings page opens beside it.
+class SettingsRootPage extends StatelessWidget {
+  const SettingsRootPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final shell = ShellLayout.maybeOf(context);
+    if (shell != null && shell.size == LayoutSize.split && shell.listInShell) {
+      return PanePlaceholder(icon: LucideIcons.settings, message: context.l10n.panePickSetting);
+    }
+    return const SettingsScreen();
+  }
+}
+
+/// The right pane before anything is opened in it.
+class PanePlaceholder extends StatelessWidget {
+  const PanePlaceholder({super.key, required this.icon, required this.message});
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpace.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 36, color: scheme.onSurfaceVariant.withValues(alpha: 0.5)),
+              const SizedBox(height: AppSpace.sm),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -927,8 +1466,14 @@ class _SectionHeader extends StatelessWidget {
 /// the chat last open on this device, or the most recent bot. Only a workspace without bots stays
 /// here, with the way to make the first one.
 class _SelectBotPlaceholder extends ConsumerStatefulWidget {
-  const _SelectBotPlaceholder({required this.onCreate});
+  const _SelectBotPlaceholder({required this.onCreate, this.onOpened, this.quiet = false});
   final VoidCallback onCreate;
+
+  /// Told which chat this opened by itself.
+  final void Function(String location)? onOpened;
+
+  /// Beside a list that already says there are no bots: stay empty instead of saying it twice.
+  final bool quiet;
 
   @override
   ConsumerState<_SelectBotPlaceholder> createState() => _SelectBotPlaceholderState();
@@ -960,6 +1505,7 @@ class _SelectBotPlaceholderState extends ConsumerState<_SelectBotPlaceholder> {
       }
       // In place of this page, not after it: Back in a browser doesn't land here and bounce.
       Router.neglect(context, () => context.go(target));
+      widget.onOpened?.call(target);
     });
   }
 
@@ -976,6 +1522,7 @@ class _SelectBotPlaceholderState extends ConsumerState<_SelectBotPlaceholder> {
       _openChat(orgId);
       return const SizedBox.expand();
     }
+    if (widget.quiet) return const SizedBox.expand();
     return EmptyState(
       icon: LucideIcons.messagesSquare,
       illustration: const BlankBotImage(size: 132),

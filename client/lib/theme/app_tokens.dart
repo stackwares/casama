@@ -55,6 +55,9 @@ abstract final class AppBreakpoints {
   /// Tablets and narrow desktop windows: navigation rail.
   static const double medium = 700;
 
+  /// Room for two panes: the tab's list beside the page opened from it (D-411).
+  static const double split = 840;
+
   /// Wide windows: sidebar with the bot list, chat, and the computer panel.
   static const double expanded = 1100;
 

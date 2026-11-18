@@ -254,6 +254,7 @@ export default defineConfig({
           { text: "Widgets and controls", link: "/guide/widgets" },
           { text: "Casama on Apple Watch", link: "/guide/apple-watch" },
           { text: "Casama on Wear OS", link: "/guide/wear-os" },
+          { text: "Casama on a folding phone", link: "/guide/folding-phones" },
           { text: "Coding agents", link: "/guide/coding-agents" },
           { text: "Teach by showing", link: "/guide/teach" },
           { text: "Routines and triggers", link: "/guide/routines" },

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../core/fold/fold.dart';
 import '../core/haptics.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
@@ -11,7 +12,12 @@ import 'adaptive_sheet_route.dart';
 import 'form_sheet.dart';
 import 'spring_sheet.dart';
 
-bool _compact(BuildContext context) => AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
+/// A sheet or dialog covers the window, so the window's width decides which it is: inside a pane
+/// of a two-pane layout (D-411) MediaQuery is the pane's.
+bool _compact(BuildContext context) {
+  final view = View.of(context);
+  return AppBreakpoints.of(view.physicalSize.width / view.devicePixelRatio) == WindowSize.compact;
+}
 
 /// Puts the keyboard away before a sheet, dialog, picker or menu opens, so closing it doesn't bring
 /// the keyboard back: the person was done typing. Phones and tablets only. With a hardware keyboard
@@ -70,11 +76,14 @@ Future<T?> showAdaptiveSheet<T>({
   return showDialog<T>(
     context: context,
     useRootNavigator: true,
+    // On a folding phone: off the fold while it divides the window, on the trailing half.
+    anchorPoint: foldAnchor(context),
     builder: (context) {
       final size = MediaQuery.sizeOf(context);
       final width = math.min(dialogMaxWidth, size.width - 80);
       // Tall windows get taller dialogs (up to 90% of the window), so long forms rarely scroll.
       final maxHeight = math.min(math.max(dialogMaxHeight, size.height * 0.9 - 40), size.height * 0.9);
+      // showDialog's own SafeArea keeps it off an iPhone Duo's side strip, centered in the page.
       return Dialog(
         clipBehavior: Clip.antiAlias,
         child: SizedBox(

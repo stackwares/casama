@@ -15557,4 +15557,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get watchChannelOther => 'Other';
+
+  @override
+  String get showList => 'Show the list';
+
+  @override
+  String get hideList => 'Hide the list';
+
+  @override
+  String get panePickLibrary =>
+      'Pick something from the Library to see it here.';
+
+  @override
+  String get panePickSetting => 'Pick a setting to see it here.';
+
+  @override
+  String get trackpad => 'Trackpad';
+
+  @override
+  String get trackpadHint =>
+      'One finger moves the pointer, two scroll, a tap clicks.';
+
+  @override
+  String get trackpadTakeControl => 'Take control to use the trackpad.';
+
+  @override
+  String get foldScreenTitle => 'Folding screen';
+
+  @override
+  String get foldRowHelp => 'What Casama sees of this device\'s screens';
+
+  @override
+  String get foldScreenHelp =>
+      'How this device is held and where its fold is, as Casama sees it now. Open, close or fold the device and the numbers follow. Copy them if a screen looks wrong.';
+
+  @override
+  String get foldPose => 'Pose';
+
+  @override
+  String get foldWindow => 'Window';
+
+  @override
+  String get foldInsets => 'Safe area';
+
+  @override
+  String get foldStrip => 'Side strip';
+
+  @override
+  String get foldFold => 'Fold';
+
+  @override
+  String get foldHinge => 'Hinge';
+
+  @override
+  String get foldSystemSays => 'What the system reports';
 }

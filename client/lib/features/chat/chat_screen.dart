@@ -45,6 +45,8 @@ import '../../ui/motion.dart';
 import '../../ui/shell_header.dart';
 import '../files/file_preview.dart';
 import '../home/home_shell.dart';
+import '../../core/dropped_files.dart';
+import '../../ui/shell_layout.dart';
 import '../projects/make_project.dart';
 import 'chat_controller.dart';
 import 'chat_detail.dart';
@@ -445,6 +447,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     await _addFiles([for (final f in detail.files) (f.name, await f.readAsBytes(), f.mimeType)]);
   }
 
+  /// Dragged in from the app beside this one (D-411, Split View): text goes where the cursor is,
+  /// files are attached.
+  void _droppedFromApp(List<String> files, String text) {
+    if (!mounted) return;
+    if (text.isNotEmpty) {
+      final at = _input.selection.isValid ? _input.selection.end : _input.text.length;
+      _input.value = TextEditingValue(
+        text: _input.text.replaceRange(at, at, text),
+        selection: TextSelection.collapsed(offset: at + text.length),
+      );
+    }
+    if (files.isEmpty) return;
+    unawaited(() async {
+      final read = [for (final path in files) (path.split('/').last, await XFile(path).readAsBytes(), null as String?)];
+      if (mounted) await _addFiles(read);
+    }());
+  }
+
   @override
   void initState() {
     super.initState();
@@ -460,6 +480,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       });
     }
     if (widget.focusMessageId == null) _focusComposerSoon();
+    DroppedFiles.take(_droppedFromApp);
     _lifecycle = AppLifecycleListener(onResume: _markShownRead);
     _input.addListener(_saveDraftSoon);
     // The chat's id changes without a reopen when the first send creates it or New chat clears it.
@@ -550,6 +571,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   void dispose() {
+    DroppedFiles.release(_droppedFromApp);
     _chatFocus.close(_focusedConversation);
     _lifecycle.dispose();
     unawaited(_readAloud.stop(chatKey: widget.botId));
@@ -1143,6 +1165,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // Power users can see what each reply cost under it (D-307).
     final showUsage = ref.watch(showReplyUsageProvider);
     final layout = layoutFor(MediaQuery.sizeOf(context).width);
+    final shell = ShellLayout.maybeOf(context);
+    // The chat list is on screen beside this chat.
+    final besideList = shell != null && shell.size == LayoutSize.split && shell.pane == PaneRole.detail;
     // Only what it's doing right now; an idle bot needs no subtitle (its model lives in its profile).
     final status = chat.running ? l10n.botStatusWorking : (bot?.status == BotStatusEnum.waiting ? l10n.botStatusWaiting : null);
     // The bot is working on its computer: this run has used it, or the computer is waking for it.
@@ -1172,15 +1197,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         subtitleShimmer: chat.running,
         showBack: layout == LayoutSize.phone ? true : null,
         leading: layout == LayoutSize.phone
-            ? Padding(
-                padding: const EdgeInsets.only(left: 12),
-                child: Center(
-                  child: HeaderIconButton(
-                    icon: LucideIcons.arrowLeft,
-                    tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-                    onPressed: () => context.canPop() ? context.pop() : context.go('/bots'),
-                  ),
-                ),
+            ? HeaderIconButton(
+                icon: LucideIcons.arrowLeft,
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                onPressed: () => context.canPop() ? context.pop() : context.go('/bots'),
               )
             : null,
         titleLeading: group != null
@@ -1188,8 +1208,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             : BotAvatar(name: name.isEmpty ? '?' : name, avatar: bot?.avatarUrl, size: 36, status: chat.running ? BotStatusEnum.working : bot?.status),
         onTitleTap: widget.group ? null : () => context.pushOnce('/bots/${widget.botId}/settings'),
         actions: [
+          // Two panes (D-411): the bot's computer takes the list's place beside this chat, and back.
+          if (besideList && !widget.group)
+            _LiveDot(
+              live: computerLive,
+              child: HeaderIconButton(
+                key: const Key('computerPaneToggle'),
+                icon: LucideIcons.monitor,
+                tooltip: ref.watch(splitComputerProvider) ? l10n.hideComputer : l10n.showComputer,
+                selected: ref.watch(splitComputerProvider),
+                onPressed: ref.read(splitComputerProvider.notifier).toggle,
+              ),
+            )
           // Phones and tablets: a live way into the computer while the bot works on it.
-          if (layout != LayoutSize.desktop && computerLive)
+          else if (layout != LayoutSize.desktop && computerLive)
             _LiveDot(
               live: true,
               child: HeaderIconButton(icon: LucideIcons.monitor, tooltip: l10n.chatComputerLive, onPressed: () => context.pushOnce('/computer?bot=${widget.botId}')),

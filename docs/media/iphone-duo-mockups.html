@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iPhone Duo mockups</title>
+<!-- Mockups for docs/IPHONE-DUO-PLAN.md. Screens are drawn at their real size in points and scaled
+     down: outer 466 x 678, inner 951 x 669 (wide) and 669 x 951 (tall). The strip is 84 points wide
+     and the fold band 40. The status area at the top of the strip is drawn from Apple's
+     description, not from a screenshot; Phase 0 of the plan measures it. Mascot art comes from
+     client/assets/mascots. -->
+<style>
+  .dm { font-family: var(--font-sans, system-ui); color: var(--foreground, #1d1b20); font-size: 13px; line-height: 1.4; }
+  .dm * { box-sizing: border-box; }
+  .dm h3 { font-size: 15px; font-weight: 650; margin: 0 0 2px; }
+  .dm .note { color: var(--muted-foreground, #6b6873); font-size: 12.5px; margin: 0 0 14px; max-width: 76ch; }
+  .dm section + section { margin-top: 40px; }
+  .dm .row { display: flex; flex-wrap: wrap; gap: 22px 24px; justify-content: center; align-items: flex-start; overflow-x: auto; }
+  .dm figure { margin: 0; }
+  .dm figcaption { color: var(--muted-foreground, #6b6873); font-size: 11.5px; margin-top: 9px; text-align: center; padding: 0 6px; }
+  .dm figcaption b { color: var(--foreground, #1d1b20); font-weight: 650; display: block; }
+
+  /* ---------- the device ---------- */
+  .dev { position: relative; padding: 6px; background: linear-gradient(150deg, #3b3b40, #17171a 60%); flex: none;
+         box-shadow: 0 10px 28px rgba(0,0,0,.24), inset 0 0 0 1px rgba(255,255,255,.13); }
+  .scr { --on: #1D1B20; --on2: #5F5C66; --hair: #E3E5E8; --cont: #F2F2F5; --low: #F7F7F9; --pri: #7A3FA8; --priC: #F1E2FC;
+         --work: #1FA463; --wait: #D08700; --neg: #D93B3B;
+         position: absolute; left: 6px; top: 6px; transform-origin: 0 0; overflow: hidden; background: #fff; color: var(--on);
+         font: 15px/1.35 "Google Sans", "Google Sans Text", -apple-system, system-ui, sans-serif; }
+  .scr .i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; display: block; }
+  .scr b { font-weight: 700; }
+  .one { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sp { flex: 1; }
+
+  /* ---------- the strip: iOS draws the top, Casama the rest ---------- */
+  .strip { position: absolute; top: 0; bottom: 0; right: 0; width: 84px; display: flex; flex-direction: column; align-items: center; padding-bottom: 34px; z-index: 3; }
+  .strip.l { right: auto; left: 0; }
+  .sys { height: 124px; width: 100%; position: relative; flex: none; }
+  .cam { position: absolute; top: 15px; left: 23.5px; width: 37px; height: 37px; border-radius: 50%; background: #000; box-shadow: inset 0 0 0 9px #0b0b0d, inset 0 0 0 11px #1c1c22; }
+  .sys .clk { position: absolute; top: 62px; left: 0; right: 0; text-align: center; font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
+  .sys .st { position: absolute; top: 86px; left: 0; right: 0; display: flex; justify-content: center; gap: 5px; }
+  .sys .st .i { width: 16px; height: 16px; }
+  .sb { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .ib { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 1px solid var(--hair); position: relative; flex: none; }
+  .ib.sel { background: rgba(122,63,168,.14); border-color: rgba(122,63,168,.4); color: var(--pri); }
+  .ib.live::after { content: ""; position: absolute; top: 1px; right: 1px; width: 10px; height: 10px; border-radius: 50%; background: var(--work); border: 2px solid #fff; }
+  .ib.sm { width: 36px; height: 36px; }
+  .vt { margin-top: auto; background: var(--cont); border: 1px solid var(--hair); border-radius: 27px; padding: 4px; display: flex; flex-direction: column; gap: 3px; }
+  .vt .t { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: var(--on2); position: relative; }
+  .vt .t.on { background: #fff; color: var(--pri); box-shadow: 0 1px 3px rgba(0,0,0,.14); }
+  .bdg { position: absolute; top: 3px; right: 2px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--pri); color: #fff; font-size: 10.5px; font-weight: 700; display: grid; place-items: center; border: 2px solid var(--cont); }
+  .strip .apps { margin-top: 8px; }
+  .home { position: absolute; bottom: 9px; left: 50%; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: #1D1B20; opacity: .82; z-index: 4; }
+  .sbar { height: 82px; padding: 42px 40px 0; display: flex; justify-content: space-between; align-items: flex-start; font-weight: 700; flex: none; }
+  .sbar span { display: flex; gap: 6px; } .sbar .i { width: 17px; height: 17px; }
+
+  /* ---------- pages and panes ---------- */
+  .pg, .pane { position: absolute; top: 0; bottom: 0; display: flex; flex-direction: column; min-width: 0; }
+  .pg { left: 0; }
+  .div { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--hair); }
+  .fold { position: absolute; z-index: 2; background: repeating-linear-gradient(135deg, rgba(29,27,32,.045) 0 6px, rgba(29,27,32,0) 6px 12px), linear-gradient(90deg, rgba(0,0,0,.05), rgba(0,0,0,.11) 50%, rgba(0,0,0,.05)); }
+  .fold.v { top: 0; bottom: 0; left: 455.5px; width: 40px; }
+  .fold.h { left: 0; right: 0; top: 455.5px; height: 40px; background: repeating-linear-gradient(135deg, rgba(29,27,32,.045) 0 6px, rgba(29,27,32,0) 6px 12px), linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.11) 50%, rgba(0,0,0,.05)); }
+
+  .hd { padding: 20px 20px 10px; display: flex; align-items: center; gap: 10px; flex: none; }
+  .hd .ws { width: 30px; height: 30px; border-radius: 9px; background: var(--pri); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 14px; }
+  .hd b { font-size: 26px; font-weight: 800; letter-spacing: -.5px; }
+  .need { margin: 4px 16px 8px; padding: 11px 12px; border-radius: 16px; background: #FFF6E3; border: 1px solid #F3DFB2; display: flex; align-items: center; gap: 10px; flex: none; }
+  .need .t { flex: 1; min-width: 0; } .need .t b { display: block; font-size: 12px; color: var(--wait); text-transform: none; }
+  .need .t span { display: block; font-size: 14px; }
+  .need em { font-style: normal; font-weight: 700; font-size: 13.5px; padding: 7px 13px; border-radius: 99px; background: var(--pri); color: #fff; }
+  .need em.g { background: #fff; color: var(--on); border: 1px solid var(--hair); }
+  .rows { flex: 1; min-height: 0; overflow: hidden; padding: 0 8px; }
+  .r { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; }
+  .r.on { background: var(--priC); }
+  .r .t { flex: 1; min-width: 0; } .r .t b { display: block; font-size: 16px; }
+  .r .t span { display: block; font-size: 14px; color: var(--on2); }
+  .r .tm { font-size: 12px; color: var(--on2); align-self: flex-start; padding-top: 3px; }
+  .av { position: relative; flex: none; display: block; border-radius: 50%; background: var(--low); }
+  .av img { width: 100%; height: 100%; display: block; object-fit: contain; }
+  .sd { position: absolute; right: 0; bottom: 0; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; background: var(--work); }
+  .sd.waiting { background: var(--wait); }
+
+  .ttl { padding: 18px 20px 10px; display: flex; align-items: center; gap: 12px; flex: none; }
+  .ttl .t b { display: block; font-size: 21px; font-weight: 800; letter-spacing: -.4px; line-height: 1.15; }
+  .ttl .t span { font-size: 13px; color: var(--work); font-weight: 500; }
+  .th { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 10px; padding: 8px 16px 12px; }
+  .bu { align-self: flex-end; max-width: 85%; background: var(--priC); padding: 10px 14px; border-radius: 20px 20px 6px 20px; }
+  .bo { align-self: flex-start; max-width: 94%; }
+  .stp { align-self: flex-start; display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--on2); }
+  .stp i { width: 8px; height: 8px; border-radius: 50%; background: var(--work); }
+  .fc { align-self: flex-start; display: flex; align-items: center; gap: 10px; padding: 10px 14px 10px 10px; border: 1px solid var(--hair); border-radius: 14px; font-size: 14px; }
+  .fc .k { width: 34px; height: 34px; border-radius: 9px; background: var(--priC); color: var(--pri); display: grid; place-items: center; }
+  .fc span { display: block; font-size: 12px; color: var(--on2); }
+  .cmp { margin: 0 12px 42px; display: flex; align-items: center; gap: 8px; background: var(--cont); border: 1px solid var(--hair); border-radius: 26px; padding: 7px 7px 7px 12px; flex: none; color: var(--on2); }
+  .cmp .snd { width: 36px; height: 36px; border-radius: 50%; background: var(--pri); color: #fff; display: grid; place-items: center; }
+  .cmp .tx { flex: 1; }
+
+  /* ---------- sheets ---------- */
+  .scrim { position: absolute; inset: 0; background: rgba(20,18,24,.36); z-index: 5; }
+  .dlg { position: absolute; z-index: 6; width: 320px; background: #fff; border-radius: 26px; padding: 22px 20px 16px; box-shadow: 0 18px 50px rgba(0,0,0,.3); }
+  .dlg h4 { margin: 10px 0 4px; font-size: 19px; font-weight: 800; letter-spacing: -.3px; }
+  .dlg p { margin: 0 0 16px; font-size: 14px; color: var(--on2); }
+  .dlg .k { width: 40px; height: 40px; border-radius: 12px; background: #FFF6E3; color: var(--wait); display: grid; place-items: center; }
+  .btn { display: block; text-align: center; font-weight: 700; padding: 12px; border-radius: 99px; background: var(--pri); color: #fff; }
+  .btn.g { background: var(--cont); color: var(--on); margin-top: 8px; }
+
+  /* ---------- the bot's computer ---------- */
+  .pc { background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid #d5d7dc; position: relative; color: #1D1B20; }
+  .pc .bar { height: 26px; background: #ECECF0; display: flex; align-items: center; gap: 5px; padding: 0 9px; font-size: 11px; color: #5F5C66; }
+  .pc .bar i { width: 8px; height: 8px; border-radius: 50%; background: #c9c9cf; }
+  .pc .bar span { margin-left: 8px; background: #fff; border-radius: 6px; padding: 2px 10px; flex: 1; }
+  .pc .bd { padding: 12px 14px; }
+  .pc .bd h5 { margin: 0 0 9px; font-size: 15px; font-weight: 700; }
+  .pc .tr { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid #E3E5E8; border-radius: 9px; margin-bottom: 7px; font-size: 13px; }
+  .pc .tr.on { border-color: var(--pri); background: #FAF5FE; }
+  .pc .tr span { flex: 1; color: #5F5C66; }
+  .pc .tr em { font-style: normal; font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 99px; background: #1D1B20; color: #fff; }
+  .cur { position: absolute; display: flex; align-items: flex-start; gap: 2px; }
+  .cur svg { width: 18px; height: 18px; fill: var(--pri); stroke: #fff; stroke-width: 1.5; }
+  .cur b { background: var(--pri); color: #fff; font-size: 10.5px; padding: 1px 7px; border-radius: 99px; margin-top: 12px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; padding: 6px 12px; border-radius: 99px; background: var(--cont); }
+  .chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--work); }
+  .pill { font-weight: 700; font-size: 13.5px; padding: 8px 15px; border-radius: 99px; background: var(--pri); color: #fff; }
+  .pill.g { background: #fff; color: var(--on); border: 1px solid var(--hair); }
+  .log { padding: 4px 20px; font-size: 13.5px; color: var(--on2); display: flex; flex-direction: column; gap: 7px; }
+  .log div { display: flex; gap: 8px; align-items: center; } .log .i { width: 16px; height: 16px; }
+  .pad { flex: 1; margin: 0 16px; border-radius: 22px; background: var(--low); border: 1px solid var(--hair); display: grid; place-items: center; color: #A0A5AE; font-size: 13px; }
+  .keys { display: flex; gap: 6px; padding: 10px 16px; flex: none; }
+  .keys span { flex: 1; text-align: center; padding: 9px 0; border-radius: 10px; background: var(--cont); border: 1px solid var(--hair); font-size: 13px; font-weight: 500; }
+
+  /* ---------- a call ---------- */
+  .cl { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 4px; }
+  .cl h4 { margin: 6px 0 0; font-size: 26px; font-weight: 800; letter-spacing: -.5px; }
+  .cl .s { color: var(--work); font-weight: 500; }
+  .cap { font-size: 19px; line-height: 1.35; max-width: 30ch; margin-top: 12px; }
+  .cap span { color: #A0A5AE; }
+  .cbs { display: flex; justify-content: center; gap: 22px; }
+  .cb { display: flex; flex-direction: column; align-items: center; gap: 7px; font-size: 13px; color: var(--on2); }
+  .cb i { width: 72px; height: 72px; border-radius: 50%; background: var(--cont); display: grid; place-items: center; color: var(--on); }
+  .cb i .i { width: 28px; height: 28px; }
+  .cb.end i { background: var(--neg); color: #fff; }
+  .cb.big i { width: 84px; height: 84px; }
+
+  /* ---------- the phone layout's floating tab bar ---------- */
+  .ftb { position: absolute; bottom: 46px; left: 0; right: 0; display: flex; justify-content: center; gap: 10px; z-index: 3; }
+  .ftb .p { height: 64px; border-radius: 32px; background: rgba(255,255,255,.92); border: 1px solid var(--hair); box-shadow: 0 6px 22px rgba(0,0,0,.12); display: flex; padding: 5px; }
+  .ftb .p span { width: 88px; border-radius: 27px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 11.5px; font-weight: 500; color: var(--on2); }
+  .ftb .p span.on { background: var(--priC); color: var(--pri); }
+  .ftb .a { width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,.92); border: 1px solid var(--hair); box-shadow: 0 6px 22px rgba(0,0,0,.12); display: grid; place-items: center; }
+</style>
+</head>
+<body>
+<div class="dm">
+
+  <section>
+    <h3>Closed: the outer screen</h3>
+    <p class="note">iOS keeps an 84-point column down the right edge for the camera, the clock and the battery. Casama puts its buttons and tabs under them, where Apple's own apps have theirs, so the page gets the full height.</p>
+    <div class="row">
+      <figure data-s="outerChats"><figcaption><b>Chats</b>Search and new chat at the top of the strip, the three tabs and Apps at the bottom</figcaption></figure>
+      <figure data-s="outerChat"><figcaption><b>A chat</b>Back, the bot's computer (live), call, new topic and more, in thumb's reach</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h3>Open, wide: two panes that meet on the fold</h3>
+    <p class="note">The list is as wide as the outer screen, so it looks the same on both. The chat is as wide as an ordinary iPhone. The strip and its buttons have not moved.</p>
+    <div class="row">
+      <figure data-s="wide"><figcaption><b>Lying flat</b>The crease hides in the divider. The first button in the strip hides the list and gives the chat the whole screen</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h3>Book: partly folded</h3>
+    <p class="note">Nothing rearranges. A 40-point band opens around the fold and stays empty, and anything that pops up does so on the right half.</p>
+    <div class="row">
+      <figure data-s="book"><figcaption><b>An approval while the device is half open</b>The dialog sits in the right pane, clear of the fold</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h3>The bot's computer beside the chat</h3>
+    <p class="note">The monitor button swaps the list for the bot's computer, the same panel desktop shows beside a chat.</p>
+    <div class="row">
+      <figure data-s="wideComputer"><figcaption><b>Watching Nova book the train</b>Take over, or take the computer full screen</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h3>Laptop: propped up, the fold across the middle</h3>
+    <p class="note">The top half is for what you watch, the bottom half for what you touch.</p>
+    <div class="row">
+      <figure data-s="laptopLive"><figcaption><b>Taking over the bot's computer</b>Its screen on top; a trackpad, keys and the chat line below</figcaption></figure>
+      <figure data-s="laptopCall"><figcaption><b>A call</b>The bot and live captions on top, the buttons below</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h3>Tent, and open tall</h3>
+    <p class="note">Standing on its edges, the outer screen is for hands-free use. Held tall and flat, the inner screen goes back to the phone layout, as Apple's apps do.</p>
+    <div class="row">
+      <figure data-s="tentCall"><figcaption><b>Tent: a hands-free call</b>Big captions, three big buttons, and the screen stays awake</figcaption></figure>
+      <figure data-s="tall"><figcaption><b>Open, tall</b>Horizontal header and the floating tab bar</figcaption></figure>
+    </div>
+  </section>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.4 2.6a2.1 2.1 0 1 1 3 3L12 15l-4 1 1-4z"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+    <symbol id="i-chats" viewBox="0 0 24 24"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/></symbol>
+    <symbol id="i-library" viewBox="0 0 24 24"><path d="M16 6l4 14M12 6v14M8 8v12M4 4v16"/></symbol>
+    <symbol id="i-tasks" viewBox="0 0 24 24"><rect x="3" y="5" width="6" height="6" rx="1"/><path d="M3 17l2 2 4-4M13 6h8M13 12h8M13 18h8"/></symbol>
+    <symbol id="i-apps" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></symbol>
+    <symbol id="i-min" viewBox="0 0 24 24"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/></symbol>
+    <symbol id="i-vol" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4zM15.5 8.5a5 5 0 0 1 0 7M18.4 5.6a9 9 0 0 1 0 12.8"/></symbol>
+    <symbol id="i-cc" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 15h4M15 15h2M7 11h2M13 11h4"/></symbol>
+    <symbol id="i-end" viewBox="0 0 24 24"><path d="M10.7 13.3a16 16 0 0 0 3.4 2.6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.4 2.1L8.1 9.9M22 2L2 22"/></symbol>
+    <symbol id="i-kbd" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h6M9 13h6M9 17h4"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M12 20h.01M2 8.8a15 15 0 0 1 20 0M5 12.9a10 10 0 0 1 14 0M8.5 16.4a5 5 0 0 1 7 0"/></symbol>
+    <symbol id="i-bat" viewBox="0 0 24 24"><rect x="2" y="7" width="17" height="10" rx="2.5"/><path d="M22 11v2"/><rect x="4.5" y="9.5" width="10" height="5" rx="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-warn" viewBox="0 0 24 24"><path d="M21.7 18l-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3zM12 9v4M12 17h.01"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></symbol>
+  </defs>
+</svg>
+
+<div hidden>
+  <img id="m-cool" src="../../client/assets/mascots/cool.webp" alt="">
+  <img id="m-focused" src="../../client/assets/mascots/focused.webp" alt="">
+  <img id="m-giggly" src="../../client/assets/mascots/giggly.webp" alt="">
+  <img id="m-starry" src="../../client/assets/mascots/starry.webp" alt="">
+  <img id="m-thinker" src="../../client/assets/mascots/thinker.webp" alt="">
+  <img id="m-wow" src="../../client/assets/mascots/wow.webp" alt="">
+</div>
+
+<script>
+(() => {
+  const src = id => document.getElementById('m-' + id).src;
+  const ic = n => `<svg class="i"><use href="#i-${n}"/></svg>`;
+  const ib = (n, cls = '') => `<span class="ib ${cls}">${ic(n)}</span>`;
+  const av = (m, s = 46, st = '') => `<span class="av" style="width:${s}px;height:${s}px"><img src="${src(m)}" alt="">${st ? `<i class="sd ${st}"></i>` : ''}</span>`;
+
+  // The device: screen drawn at its size in points, then scaled.
+  const scr = (w, h, kind, s, inner) => {
+    const r = kind === 'o' ? [8, 59, 59, 8] : kind === 'ol' ? [59, 59, 8, 8] : [55, 55, 55, 55];
+    const px = a => a.map(x => x + 'px').join(' ');
+    return `<div class="dev" style="width:${w * s + 12}px;height:${h * s + 12}px;border-radius:${px(r.map(x => x * s + 6))}">` +
+      `<div class="scr" style="width:${w}px;height:${h}px;transform:scale(${s});border-radius:${px(r)}">${inner}</div></div>`;
+  };
+
+  // What iOS draws at the top of the strip.
+  const sys = () => `<div class="sys"><i class="cam"></i><b class="clk">9:41</b><span class="st">${ic('wifi')}${ic('bat')}</span></div>`;
+  const tabs = on => `<div class="vt">${['chats', 'library', 'tasks'].map((t, i) =>
+    `<span class="t ${on === i ? 'on' : ''}">${ic(t)}${i === 0 ? '<b class="bdg">2</b>' : ''}</span>`).join('')}</div>${ib('apps', 'apps')}`;
+  const strip = (btns, tab, side = '') => `<div class="strip ${side}">${sys()}<div class="sb">${btns.join('')}</div>${tab === undefined ? '' : tabs(tab)}</div>`;
+  const home = '<i class="home"></i>';
+  const sbar = `<div class="sbar"><span>9:41</span><span>${ic('wifi')}${ic('bat')}</span></div>`;
+
+  const bots = [
+    ['cool', 'Nova', 'Booking the 9:40 to Lisbon', 'now', 'working'],
+    ['focused', 'Atlas', 'Wants to send the invoice to Marta', '2m', 'waiting'],
+    ['giggly', 'Juno', 'Three ideas for the launch post', '18m', ''],
+    ['starry', 'Orion', 'Your morning brief is ready', '8:02', ''],
+    ['thinker', 'Sage', 'Summarised the 42-page contract', 'Tue', ''],
+    ['wow', 'Pixel', 'Resized all 30 product photos', 'Mon', ''],
+  ];
+  const rows = (n, on = -1) => `<div class="rows">${bots.slice(0, n).map((b, i) =>
+    `<div class="r ${i === on ? 'on' : ''}">${av(b[0], 46, b[4])}<div class="t"><b>${b[1]}</b><span class="one">${b[2]}</span></div><span class="tm">${b[3]}</span></div>`).join('')}</div>`;
+  const head = withButtons => `<div class="hd"><span class="ws">A</span><b>Chats</b>${withButtons ? `<span class="sp"></span>${ib('search', 'sm')}${ib('plus', 'sm')}` : ''}</div>`;
+  const need = `<div class="need"><div class="t"><b>Needs you</b><span class="one">Atlas wants to send an email</span></div><em>Allow</em><em class="g">Deny</em></div>`;
+
+  const title = `<div class="ttl">${av('cool', 42)}<div class="t"><b>Nova</b><span>Working on her computer…</span></div></div>`;
+  const thread = `<div class="th">
+    <div class="bu">Find me a morning train to Lisbon on Friday</div>
+    <div class="bo">The 9:40 gets in at 12:35 and has Comfort seats for €38. Shall I book it?</div>
+    <div class="bu">Yes, a window seat</div>
+    <div class="stp"><i></i>Booking it on her computer…</div>
+  </div>`;
+  const composer = (ph = 'Message Nova') => `<div class="cmp">${ic('plus')}<span class="tx">${ph}</span>${ic('mic')}<span class="snd">${ic('up')}</span></div>`;
+  const chat = () => title + thread + composer();
+  // Atlas, waiting for an OK: the chat behind the approval in the book mockup.
+  const atlasChat = `<div class="ttl">${av('focused', 42)}<div class="t"><b>Atlas</b><span style="color:var(--wait)">Waiting for you</span></div></div>
+    <div class="th">
+      <div class="bo">Invoice 2026-114 for Northwind is ready: €2,400, due 3 December.</div>
+      <div class="bu">Looks right. Send it to Marta</div>
+      <div class="stp"><i style="background:var(--wait)"></i>Waiting for your OK</div>
+    </div>${composer('Message Atlas')}`;
+
+  const pc = (w, h) => `<div class="pc" style="width:${w}px;height:${h}px">
+    <div class="bar"><i></i><i></i><i></i><span>cp.pt/tickets</span></div>
+    <div class="bd"><h5>Porto → Lisbon · Fri 20 Nov</h5>
+      <div class="tr"><b>07:52</b><span>arrives 10:49 · €31</span><em>Select</em></div>
+      <div class="tr on"><b>09:40</b><span>arrives 12:35 · Comfort · €38</span><em>Select</em></div>
+      ${h > 250 ? '<div class="tr"><b>11:39</b><span>arrives 14:30 · €29</span><em>Select</em></div>' : ''}
+    </div>
+    <span class="cur" style="right:${w * 0.07}px;top:${h > 250 ? 118 : 110}px"><svg viewBox="0 0 24 24"><path d="M4 3l7 17 2.5-7L21 10.5z"/></svg><b>Nova</b></span>
+  </div>`;
+
+  const cb = (icon, label, cls = '') => `<span class="cb ${cls}"><i>${ic(icon)}</i>${label}</span>`;
+
+  const S = {
+    outerChats: () => scr(466, 678, 'o', 0.62,
+      `<div class="pg" style="right:84px">${head(false)}${need}${rows(6)}</div>${strip([ib('search'), ib('plus')], 0)}${home}`),
+
+    outerChat: () => scr(466, 678, 'o', 0.62,
+      `<div class="pg" style="right:84px">${chat()}</div>${strip([ib('back'), ib('monitor', 'live'), ib('phone'), ib('pen'), ib('more')])}${home}`),
+
+    wide: () => scr(951, 669, 'i', 0.7,
+      `<div class="pane" style="left:0;width:475.5px">${head(true)}${need}${rows(6, 0)}</div>
+       <i class="div" style="left:475px"></i>
+       <div class="pane" style="left:475.5px;right:84px">${chat()}</div>
+       ${strip([ib('expand'), ib('monitor', 'live'), ib('phone'), ib('pen'), ib('more')], 0)}${home}`),
+
+    book: () => scr(951, 669, 'i', 0.7,
+      `<div class="pane" style="left:0;width:455.5px">${head(true)}${need}${rows(6, 1)}</div>
+       <i class="fold v"></i>
+       <div class="pane" style="left:495.5px;right:84px">${atlasChat}</div>
+       ${strip([ib('expand'), ib('phone'), ib('pen'), ib('more')], 0)}${home}
+       <i class="scrim"></i>
+       <div class="dlg" style="left:521px;top:168px"><span class="k">${ic('warn')}</span><h4>Send this email?</h4><p>Atlas wants to send “Invoice 2026-114” to marta@northwind.co from your Gmail.</p><span class="btn">Allow</span><span class="btn g">Deny</span></div>`),
+
+    wideComputer: () => scr(951, 669, 'i', 0.7,
+      `<div class="pane" style="left:0;width:475.5px">
+         <div class="hd" style="padding-bottom:12px"><b style="font-size:21px">Nova's computer</b><span class="sp"></span><span class="chip"><i></i>Nova is in control</span></div>
+         <div style="padding:0 20px">${pc(435, 272)}</div>
+         <div class="log" style="margin-top:14px"><div>${ic('check')}Opened cp.pt</div><div>${ic('check')}Searched Porto to Lisbon, Friday</div><div><b style="color:var(--on)">Choosing the 9:40, Comfort, window seat</b></div></div>
+         <span class="sp"></span>
+         <div style="display:flex;gap:10px;padding:0 20px 46px"><span class="pill">Take over</span><span class="pill g">Full screen</span></div>
+       </div>
+       <i class="div" style="left:475px"></i>
+       <div class="pane" style="left:475.5px;right:84px">${chat()}</div>
+       ${strip([ib('expand'), ib('monitor', 'sel live'), ib('phone'), ib('pen'), ib('more')], 0)}${home}`),
+
+    laptopLive: () => scr(669, 951, 'i', 0.48,
+      `<div class="pane" style="left:0;right:0;bottom:auto;height:455.5px;background:#111214;color:#fff">${sbar}
+         <div style="flex:1;display:grid;place-items:center">${pc(580, 356)}</div></div>
+       <i class="fold h"></i>
+       <div class="pane" style="left:0;right:0;top:495.5px">
+         <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px"><span class="chip"><i></i>You're in control</span><span class="sp"></span><span class="pill g">Hand back to Nova</span>${ib('more', 'sm')}</div>
+         <div class="pad">Trackpad · two fingers to scroll</div>
+         <div class="keys"><span>esc</span><span>tab</span><span>⌘</span><span>ctrl</span><span>←</span><span>↑</span><span>↓</span><span>→</span><span>${ic('kbd').replace('class="i"', 'class="i" style="margin:0 auto"')}</span></div>
+         ${composer('Tell Nova what to do next')}
+       </div>${home}`),
+
+    laptopCall: () => scr(669, 951, 'i', 0.48,
+      `<div class="pane cl" style="left:0;right:0;bottom:auto;height:455.5px;padding-top:60px">
+         <div class="sbar" style="position:absolute;top:0;left:0;right:0"><span>9:41</span><span>${ic('wifi')}${ic('bat')}</span></div>
+         ${av('cool', 170)}<h4>Nova</h4><span class="s">Speaking · 02:14</span>
+         <div class="cap">The 9:40 has a window seat left in Comfort. <span>Do you want me to…</span></div></div>
+       <i class="fold h"></i>
+       <div class="pane" style="left:0;right:0;top:495.5px;justify-content:center;gap:34px;padding-bottom:40px">
+         <div class="cbs">${cb('mic', 'Mute')}${cb('vol', 'Speaker')}${cb('cc', 'Captions', '')}</div>
+         <div class="cbs">${cb('min', 'Back to chat')}${cb('end', 'End', 'end')}${cb('monitor', 'Her computer')}</div>
+       </div>${home}`),
+
+    tentCall: () => scr(678, 466, 'ol', 0.5,
+      `<div class="pg" style="left:84px;right:0;flex-direction:row;align-items:center;padding:0 28px 34px 10px;gap:22px">
+         <div class="cl" style="flex:none">${av('cool', 180)}<h4>Nova</h4><span class="s">Speaking · 02:14</span></div>
+         <div style="flex:1;display:flex;flex-direction:column;gap:26px;align-items:center">
+           <div class="cap" style="font-size:24px;margin:0;text-align:center">The 9:40 has a window seat left in Comfort. <span>Do you want…</span></div>
+           <div class="cbs">${cb('mic', 'Mute', 'big')}${cb('cc', 'Captions', 'big')}${cb('end', 'End', 'end big')}</div>
+         </div>
+       </div>${strip([ib('min'), ib('more')], undefined, 'l')}${home}`),
+
+    tall: () => scr(669, 951, 'i', 0.48,
+      `<div class="pg" style="right:0">${sbar}<div class="hd" style="padding-top:6px"><span class="ws">A</span><b>Chats</b><span class="sp"></span>${ib('search', 'sm')}${ib('plus', 'sm')}</div>${need}${rows(6)}</div>
+       <div class="ftb"><div class="p"><span class="on">${ic('chats')}Chats</span><span>${ic('library')}Library</span><span>${ic('tasks')}Tasks</span></div><div class="a">${ic('apps')}</div></div>${home}`),
+  };
+
+  document.querySelectorAll('figure[data-s]').forEach(f => {
+    f.insertAdjacentHTML('afterbegin', S[f.dataset.s]());
+    f.style.width = f.firstElementChild.style.width;
+  });
+})();
+</script>
+</body>
+</html>

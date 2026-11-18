@@ -25041,6 +25041,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Other'**
   String get watchChannelOther;
+
+  /// No description provided for @showList.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the list'**
+  String get showList;
+
+  /// No description provided for @hideList.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide the list'**
+  String get hideList;
+
+  /// No description provided for @panePickLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick something from the Library to see it here.'**
+  String get panePickLibrary;
+
+  /// No description provided for @panePickSetting.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a setting to see it here.'**
+  String get panePickSetting;
+
+  /// No description provided for @trackpad.
+  ///
+  /// In en, this message translates to:
+  /// **'Trackpad'**
+  String get trackpad;
+
+  /// No description provided for @trackpadHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One finger moves the pointer, two scroll, a tap clicks.'**
+  String get trackpadHint;
+
+  /// No description provided for @trackpadTakeControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Take control to use the trackpad.'**
+  String get trackpadTakeControl;
+
+  /// No description provided for @foldScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Folding screen'**
+  String get foldScreenTitle;
+
+  /// No description provided for @foldRowHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'What Casama sees of this device\'s screens'**
+  String get foldRowHelp;
+
+  /// No description provided for @foldScreenHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'How this device is held and where its fold is, as Casama sees it now. Open, close or fold the device and the numbers follow. Copy them if a screen looks wrong.'**
+  String get foldScreenHelp;
+
+  /// No description provided for @foldPose.
+  ///
+  /// In en, this message translates to:
+  /// **'Pose'**
+  String get foldPose;
+
+  /// No description provided for @foldWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Window'**
+  String get foldWindow;
+
+  /// No description provided for @foldInsets.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe area'**
+  String get foldInsets;
+
+  /// No description provided for @foldStrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Side strip'**
+  String get foldStrip;
+
+  /// No description provided for @foldFold.
+  ///
+  /// In en, this message translates to:
+  /// **'Fold'**
+  String get foldFold;
+
+  /// No description provided for @foldHinge.
+  ///
+  /// In en, this message translates to:
+  /// **'Hinge'**
+  String get foldHinge;
+
+  /// No description provided for @foldSystemSays.
+  ///
+  /// In en, this message translates to:
+  /// **'What the system reports'**
+  String get foldSystemSays;
 }
 
 class _AppLocalizationsDelegate

@@ -10,6 +10,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/fold/fold.dart';
 import '../../core/providers.dart';
 import '../../core/router.dart';
 import '../../core/widgets.dart';
@@ -328,7 +329,12 @@ class _BubbleState extends ConsumerState<_Bubble>
     final left = pad.left + margin;
     final right = screen.width - pad.right - margin - size;
     final restX = _right ? right : left;
-    final restY = top + (math.max(bottom, top) - top) * _y;
+    var restY = top + (math.max(bottom, top) - top) * _y;
+    // A folding phone propped up (D-411): not on the fold, where it is hard to see and to tap.
+    final fold = FoldInfo.of(context);
+    if (fold.gap case final gap? when !fold.foldVertical && restY + size > gap.top && restY < gap.bottom) {
+      restY = restY + size / 2 < gap.center.dy ? gap.top - size - AppSpace.xs : gap.bottom + AppSpace.xs;
+    }
     final pos = _drag ?? Offset(restX, restY);
     final minutes = c.elapsed.inMinutes;
     final name = bot?.name ?? '';

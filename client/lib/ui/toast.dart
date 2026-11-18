@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../core/fold/fold.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
@@ -23,11 +24,21 @@ SnackBar toastSnackBar(
 }) {
   final theme = Theme.of(context);
   final style = toastStyle(context, kind);
-  final wide = MediaQuery.sizeOf(context).width >= 640;
+  // The window, not the pane the caller is in (D-411): the shell's own Scaffold shows the toast.
+  final window = Navigator.maybeOf(context, rootNavigator: true)?.context ?? context;
+  final windowWidth = MediaQuery.sizeOf(window).width;
+  // On a folding phone: clear of the side strip, and on the trailing half while the fold divides
+  // the window.
+  final sides = foldSideInsets(window);
+  final room = windowWidth - sides.horizontal;
+  final wide = room >= 640;
+  final width = wide ? toastMaxWidth : room - 30;
+  final spare = (room - width) / 2;
   return SnackBar(
     key: key,
     behavior: SnackBarBehavior.floating,
-    width: wide ? toastMaxWidth : null,
+    width: wide && sides == EdgeInsets.zero ? toastMaxWidth : null,
+    margin: sides == EdgeInsets.zero ? null : EdgeInsets.fromLTRB(sides.left + spare, 5, sides.right + spare, 10),
     backgroundColor: style.background,
     elevation: 0,
     padding: EdgeInsets.fromLTRB(14, 10, copyText == null ? 14 : 4, 10),

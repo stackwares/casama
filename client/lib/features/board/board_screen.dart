@@ -4,6 +4,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/display_text.dart';
+import '../../core/fold/fold.dart';
 import '../../core/number_format.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
@@ -18,6 +19,7 @@ import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/page.dart';
 import '../../ui/property_row.dart';
+import '../../ui/shell_header.dart';
 import '../../ui/tab_reselect.dart';
 import '../projects/projects_screen.dart' show projectsProvider, showNewProject;
 import '../../core/remote_content.dart';
@@ -176,9 +178,12 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
       child: SubPage(
         title: l10n.navTasks,
         actions: [
-          _ProjectFilter(
-            selected: project,
-            onChanged: (id) => setState(() => _project = id),
+          // Words, so it stays with the title when the icon buttons go to the side strip.
+          HeaderTextAction(
+            child: _ProjectFilter(
+              selected: project,
+              onChanged: (id) => setState(() => _project = id),
+            ),
           ),
           IconButton(
             key: const Key('newTicket'),
@@ -286,26 +291,35 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
                 else
                   Expanded(
                     child: EdgeFade(
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: EdgeInsets.fromLTRB(
-                          AppSpace.md,
-                          0,
-                          AppSpace.md,
-                          BottomPadding.of(context, minimum: AppSpace.md),
-                        ),
-                        children: [
-                          for (final s in BoardScreen.statuses)
-                            _Column(
-                              status: s,
-                              tasks: _inStatus(shown, s),
-                              onDrop: (t) => _move(
-                                t,
-                                s,
-                                shown.where((x) => x.status == s).toList(),
-                              ),
+                      child: LayoutBuilder(
+                        builder: (context, box) {
+                          // On a folding phone the columns line up with the fold (D-411).
+                          final around = _FoldColumns.of(FoldInfo.of(context), box.maxWidth);
+                          return ListView(
+                            scrollDirection: Axis.horizontal,
+                            physics: around == null ? null : _ColumnSnap(pitch: around.pitch),
+                            padding: EdgeInsets.fromLTRB(
+                              around?.lead ?? AppSpace.md,
+                              0,
+                              around?.trail ?? AppSpace.md,
+                              BottomPadding.of(context, minimum: AppSpace.md),
                             ),
-                        ],
+                            children: [
+                              for (final s in BoardScreen.statuses)
+                                _Column(
+                                  status: s,
+                                  tasks: _inStatus(shown, s),
+                                  width: around?.width ?? 280,
+                                  gutter: around == null ? AppSpace.xs : around.spacing / 2,
+                                  onDrop: (t) => _move(
+                                    t,
+                                    s,
+                                    shown.where((x) => x.status == s).toList(),
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -819,15 +833,82 @@ class _StatusHeader extends StatelessWidget {
   }
 }
 
+/// Columns laid out around a fold that runs down the board (D-411): one column ends at the fold
+/// and the next starts after it, so no card sits on the crease, and the band between them is as
+/// wide as the fold while it divides the window. Columns are all the width of the narrower half;
+/// what is left over on the wider side shows the edge of the column before.
+class _FoldColumns {
+  const _FoldColumns({required this.width, required this.spacing, required this.lead, required this.trail});
+  final double width;
+
+  /// Between two columns.
+  final double spacing;
+
+  /// Before the first column and after the last, on top of half a [spacing].
+  final double lead;
+  final double trail;
+
+  /// From one column's edge to the next one's: the board comes to rest on these.
+  double get pitch => width + spacing;
+
+  static _FoldColumns? of(FoldInfo fold, double boardWidth) {
+    final x = fold.splitX;
+    if (x == null) return null;
+    final spacing = (fold.gap?.width ?? 0) < AppSpace.md ? AppSpace.md : fold.gap!.width;
+    final edge = spacing / 2 > AppSpace.md ? spacing / 2 : AppSpace.md;
+    // The half after the fold, edge to edge; the half before it gets the same width.
+    final width = boardWidth - edge - (x + spacing / 2);
+    final first = x - spacing / 2 - width;
+    if (width < 240 || first < spacing / 2) return null;
+    return _FoldColumns(width: width, spacing: spacing, lead: first - spacing / 2, trail: edge - spacing / 2);
+  }
+}
+
+/// The board stops with a column's edge on the fold, however it was flicked.
+class _ColumnSnap extends ScrollPhysics {
+  const _ColumnSnap({required this.pitch, super.parent});
+  final double pitch;
+
+  @override
+  _ColumnSnap applyTo(ScrollPhysics? ancestor) => _ColumnSnap(pitch: pitch, parent: buildParent(ancestor));
+
+  @override
+  Simulation? createBallisticSimulation(ScrollMetrics position, double velocity) {
+    if ((velocity <= 0.0 && position.pixels <= position.minScrollExtent) ||
+        (velocity >= 0.0 && position.pixels >= position.maxScrollExtent)) {
+      return super.createBallisticSimulation(position, velocity);
+    }
+    final tolerance = toleranceFor(position);
+    var column = position.pixels / pitch;
+    if (velocity < -tolerance.velocity) {
+      column -= 0.5;
+    } else if (velocity > tolerance.velocity) {
+      column += 0.5;
+    }
+    final target = (column.roundToDouble() * pitch).clamp(position.minScrollExtent, position.maxScrollExtent);
+    if ((target - position.pixels).abs() < tolerance.distance) return null;
+    return ScrollSpringSimulation(spring, position.pixels, target, velocity, tolerance: tolerance);
+  }
+
+  @override
+  bool get allowImplicitScrolling => false;
+}
+
 class _Column extends ConsumerWidget {
   const _Column({
     required this.status,
     required this.tasks,
     required this.onDrop,
+    this.width = 280,
+    this.gutter = AppSpace.xs,
   });
   final TaskStatus status;
   final List<Task> tasks;
   final void Function(Task) onDrop;
+  final double width;
+
+  /// The space on each side of the column.
+  final double gutter;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -837,8 +918,8 @@ class _Column extends ConsumerWidget {
       onAcceptWithDetails: (d) => onDrop(d.data),
       builder: (context, candidates, _) => Container(
         key: Key('column-${status.value}'),
-        width: 280,
-        margin: const EdgeInsets.symmetric(horizontal: AppSpace.xs),
+        width: width,
+        margin: EdgeInsets.symmetric(horizontal: gutter),
         padding: const EdgeInsets.all(AppSpace.sm),
         decoration: BoxDecoration(
           color: candidates.isNotEmpty

@@ -16,6 +16,7 @@ import '../../core/widgets.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
+import '../../ui/outside_shell.dart';
 import '../../ui/celebration.dart';
 import '../../ui/effects.dart';
 import '../../ui/form_sheet.dart';
@@ -42,7 +43,8 @@ Future<bool> openPaywall(
   final upgraded = await Navigator.of(context, rootNavigator: true).push<bool>(
     MaterialPageRoute(
       fullscreenDialog: true,
-      builder: (_) => PaywallScreen(reason: reason, source: source),
+      // Over the whole app, so it keeps clear of a folding phone's strip and fold itself (D-411).
+      builder: (_) => OutsideShell(child: PaywallScreen(reason: reason, source: source)),
     ),
   );
   if (upgraded != true) {
