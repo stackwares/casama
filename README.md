@@ -5,7 +5,7 @@
 <h1 align="center">Casama</h1>
 
 <p align="center">
-  <strong>Casama™: AI teammates with their own computers, on your own server.</strong><br>
+  <strong>Casama™: open-source AI teammates with their own computers.</strong><br>
   Bots that remember, reach out first, work on real computers, ask before risky steps, and run on any model.
 </p>
 
@@ -28,12 +28,49 @@
 
 ---
 
-Casama gives you bots that keep working after you close the chat. Each one has its own instructions,
-memory, skills and a sandboxed Linux computer with a shell, files and a browser. Bots research,
-write, code and build things on schedules and triggers, send you a morning brief, and ask before
-doing anything risky. Everything they make lands in a Library you can search and share. You run the
-whole thing with one script, bring your own model keys (or a local model), and reach your bots from
-apps on every platform, the terminal, chat apps or your AI coding tools.
+## What is Casama?
+
+Casama is an open-source app for AI teammates that each have their own computer, remember how you
+work and ask before anything risky. Its bots browse, fill in forms, write files and run code on a
+sandboxed Linux machine you can watch and take over, and they start work on schedules and triggers,
+so they keep going after you close the chat. It is for people and small teams who want an AI agent
+that does real work without setting it up in code. Casama is open source under AGPL-3.0 and free to
+self-host with any AI model, and it is also offered as Casama Cloud.
+
+## Key facts
+
+- **License:** AGPL-3.0 for the product. The SDKs, CLI, MCP server and plugin kit are Apache-2.0.
+  One optional folder, `ee/`, has its own license; Casama works fully without it. [LICENSING.md](LICENSING.md)
+- **Platforms:** native apps for iPhone, iPad, Android, Mac, Windows and Linux, plus the web, a
+  command-line tool and an MCP server.
+- **Models:** any provider (OpenAI, Anthropic, Google, xAI, OpenRouter or any OpenAI-compatible
+  endpoint), local models through Ollama, LM Studio or vLLM, or a ChatGPT plan when self-hosted.
+  On Casama Cloud, Casama picks the models.
+- **Pricing:** free to self-host, with no paywall and no limits. Casama Cloud: Free, $15, $49 or
+  $99 a month. [Pricing](https://casama.ai/pricing)
+- **Where it runs:** your own server, Mac or Linux computer (Docker and 8 GB of memory), or Casama Cloud.
+- **Status:** pre-1.0. Expect rough edges, and please [report them](https://github.com/stackwares/casama/issues).
+- **Made by:** Stackwares.
+- **Links:** [casama.ai](https://casama.ai) · [docs](https://docs.casama.ai) ·
+  [gallery](https://gallery.casama.ai) · [download](https://casama.ai/download) ·
+  [web app](https://app.casama.ai)
+
+## What a bot can do
+
+- **Work on a computer of its own.** Each bot has an isolated Linux computer with a shell, files and
+  a browser. Watch it live, take control, or restore a checkpoint.
+- **Remember.** Bots keep memory you can read and edit, plus instructions, skills and knowledge sources.
+- **Work while you're away.** Schedules, webhooks, email, calendar events and check-ins start work
+  without you, and a morning brief tells you what happened.
+- **Ask before risky steps.** By default a bot waits for your OK before sending email or chat
+  messages, calling people, making a page public or deleting outside its workspace. Payments always
+  ask. A checkpoint is saved before destructive commands.
+- **Meet you in your chat apps.** Telegram, email, SMS, Slack, WhatsApp, Messenger, Feishu,
+  iMessage, Microsoft Teams and Discord.
+- **Connect to your tools.** One-click apps such as GitHub, Notion, Linear and Google, any MCP
+  server, plugins, and an MCP server of its own so AI apps and coding tools can reach your bots.
+
+The full list is under [Features](#features).
 
 <p align="center">
   <a href="https://casama.ai/assets/film/casama-film-16x9.mp4">
@@ -49,6 +86,80 @@ apps on every platform, the terminal, chat apps or your AI coding tools.
     <img src="docs/media/screenshots/hero-light.png" alt="Casama on Mac and iPhone: Milo publishes Stardust Drift, a game he made, while his computer's live desktop plays it in the side panel">
   </picture>
 </p>
+
+## How Casama compares
+
+| | License | Where it runs | A computer for the agent | Asks before risky steps | Choice of model | Chat apps | Price |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| **Casama** | AGPL-3.0 | Your own server, Mac or Linux computer, or Casama Cloud | Each bot has its own sandboxed Linux computer you can watch and take over | Yes, by default; a checkpoint is saved before destructive commands | Any provider, a ChatGPT plan or local models when self-hosted; Casama picks on Cloud | 10, including Slack, Teams, WhatsApp, Telegram and iMessage | Self-hosted: free. Cloud: Free, $15, $49 or $99 a month |
+| **OpenClaw** | MIT | Your own computer or server only; no hosted version | Runs on your machine; a sandbox is optional and off by default | Optional, and off by default | Your own keys, a ChatGPT or Claude plan, or local models | About 29, including WhatsApp, Telegram, Discord, Slack, Signal, iMessage and Teams | Free; you pay your model provider |
+| **Hermes Agent** | MIT | Your own computer or server; a hosted agent comes with paid Nous Portal plans | Your machine by default; Docker, SSH or cloud sandboxes are optional | For shell commands that match risky patterns | Your own keys, Nous Portal, some subscriptions, or local models | More than 20, including Telegram, Discord, Slack, WhatsApp, Signal, Teams and iMessage | Free; optional Nous Portal at $0, $20, $100 or $200 a month |
+| **Manus** | Closed | Manus's cloud; a desktop app can run commands on your computer | A cloud sandbox with a browser, per person | None described in the cloud; three modes on your own computer | Manus picks; no choice on standard plans | Slack and email | Free plan with 300 credits a day; Pro from $20 up to $200 a month; Team from $20 a seat |
+| **Grok Bot** | Closed | xAI's cloud only | One cloud computer per person, shared by all of that person's Bots | An automatic check decides; you can add up to 20 "ask first" rules | No choice, and you aren't shown which model ran | X, Slack, Microsoft Teams | $30, $100 or $200 a month; no free plan |
+| **Rakazo** | Apache-2.0 | Your own server, a desktop app, or Rakazo's cloud | Each bot has its own container or cloud computer | Yes: an Ask mode, or an Auto mode where a model decides when to ask | Your own keys, a ChatGPT plan, local models, or Rakazo credits at the provider's price | Slack and Teams; iMessage, WhatsApp and Telegram only when self-hosted | Self-hosted: free. Cloud: $15, $49 or $99 a month, or credits from $20 |
+| **Claude Cowork and Duet** | Closed | Anthropic's cloud; it reaches your computer through the desktop app | Cowork: cloud sessions you can watch. Duet: its own cloud computer that you can't watch | Cowork: depends on the mode you pick. Duet: asks before sending, paying, signing or deleting | Claude models only | The Claude apps only | Included in paid Claude plans and counted against their limits |
+
+Where others are ahead:
+
+- **OpenClaw** reaches about 29 chat apps, has no paid tier at all, is run by a nonprofit, and has
+  the largest community of any project here.
+- **Hermes Agent** writes and refines its own skills, and lets you choose where commands run:
+  locally, in Docker, over SSH or in a cloud sandbox.
+- **Manus** needs nothing set up and turns out finished slide decks, websites and wide research.
+- **Rakazo** charges for hosted model usage at the provider's price, with no markup.
+- **Claude Cowork** makes finished Word, Excel, PowerPoint and PDF documents from your own files.
+- **Casama** is the newest here, with a small community, and it has fewer chat apps than OpenClaw
+  or Hermes Agent. On Casama Cloud you don't choose the model.
+
+Facts about other products were checked on November 18, 2026, against their own sites and docs.
+Every one has its source at [casama.ai/compare](https://casama.ai/compare), along with head-to-head
+pages such as [Casama vs OpenClaw](https://casama.ai/compare/casama-vs-openclaw) and
+[the best open-source AI agents](https://casama.ai/compare/best-open-source-ai-agents). We make
+Casama, so check the sources for anything that matters to you.
+
+## Questions people ask
+
+### Is Casama free?
+
+Yes, to self-host. The software is open source under AGPL-3.0, with no paywall, no limit on users or
+bots, and no license key. You pay only for the AI model you use, or nothing with a local model.
+Casama Cloud, the hosted service, has a free plan and paid plans at $15, $49 and $99 a month.
+
+### Can I self-host Casama?
+
+Yes. On any machine with Docker and 8 GB of memory, clone this repository and run
+`./install.sh --local` for a trial, or `./install.sh --domain <your domain>` for a server. On a Mac
+or Linux computer, the desktop app's **Run on This Mac** (or **Run on This Computer**) sets it up for
+you. [Casama Link](#casama-link) lets your phone reach that server with no domain or open ports.
+
+### Does Casama work with local models?
+
+Yes, on a self-hosted server. Point a bot at Ollama, LM Studio, vLLM or any server with an
+OpenAI-style API, and it runs for free on your own hardware. Local models that read pictures get
+them, and memory search can run on the same machine. Long, tool-heavy tasks still go better on the
+strongest hosted models.
+
+### How is Casama different from OpenClaw?
+
+OpenClaw is one free, MIT-licensed agent that runs on your own computer, with about 29 chat apps;
+its sandbox and approval prompts are off until you turn them on. Casama is a team of bots, each on
+its own sandboxed Linux computer, that ask before risky steps from the start and can be shared in a
+workspace with roles. You can self-host Casama free or use Casama Cloud. OpenClaw has more chat apps
+and a much larger community. [Casama vs OpenClaw](https://casama.ai/compare/casama-vs-openclaw)
+
+### Is it safe to let Casama use my email?
+
+Casama is built so mistakes are small and visible. By default a bot asks before sending email or
+chat messages, and payments always ask. Passwords and keys never reach the AI model: a bot uses a
+placeholder that Casama fills in only for the site that secret belongs to. Text in emails and web
+pages is treated as untrusted, and after a bot has read it, actions that send data out ask first.
+Budgets and a loop guard stop a run that goes wrong. [How Casama keeps bots safe](https://casama.ai/security)
+
+### Does Casama train AI models on my data?
+
+No. Your chats, memories and files are used to run Casama for you and are not used to train AI
+models. On a self-hosted server they never leave your machine, apart from what you send to the model
+provider you chose.
 
 ## Try it
 
@@ -75,9 +186,6 @@ endpoint, and make your first bot. Running it on a server with a domain:
 | **Price** | Free plan, then paid plans ([below](#casama-cloud)) | Free, with no paywall and no limits |
 
 Both use the same apps, CLI and API.
-
-> **Status:** pre-1.0 and preparing for the first public release. Expect rough edges, and please
-> [report them](https://github.com/stackwares/casama/issues).
 
 ## Features
 
