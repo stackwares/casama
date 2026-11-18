@@ -1,6 +1,6 @@
 name: casama_cli
 description: Command-line client for Casama.
-version: 0.1.1
+version: 0.1.2
 publish_to: none
 resolution: workspace
 environment:
