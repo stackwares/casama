@@ -181,6 +181,19 @@ To hear less from a bot, tap **Less like this**. The bot saves a pinned preferen
 only when they really matter, or fold them into your brief. Only you can do this for your own
 notifications.
 
+## Casama's monthly email
+
+On Casama Cloud you can get one email a month at most about what's new and what's next in
+Casama. It's off unless you turn it on.
+
+1. Open **Settings**, and under **App**, find **Casama's monthly email**.
+2. Turn it on or off.
+
+You can also tick the box when you create an account, or answer the small card above your
+chats. Every email has a link to unsubscribe, and unsubscribing there turns the switch off in
+the app too. Deleting your account takes you off the list. Self-hosted servers don't show the
+option.
+
 ## Limits
 
 - Quiet hours follow the time zone your devices report. The app saves it after you sign in and
