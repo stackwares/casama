@@ -1,4 +1,5 @@
 import '../selfhost/setup_screen.dart';
+import '../notifications/newsletter.dart';
 import 'bot_history_screen.dart';
 import 'agent_import.dart';
 import 'bot_template.dart';
@@ -625,6 +626,8 @@ class BotsScreen extends ConsumerWidget {
         body: const Column(
           children: [
             FinishSetupCard(),
+            // Casama's monthly email (D-408): asked once, where the server sends it.
+            NewsletterCard(),
             Expanded(child: BotsList()),
           ],
         ),

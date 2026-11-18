@@ -12220,6 +12220,34 @@ class AppLocalizationsEn extends AppLocalizations {
       'Up to six new skills, apps and routines that fit what you use, once a month.';
 
   @override
+  String get newsletterTitle => 'Casama\'s monthly email';
+
+  @override
+  String get newsletterHelp =>
+      'What\'s new and what\'s next, once a month at most.';
+
+  @override
+  String get newsletterSignUp =>
+      'Send me Casama\'s monthly email: what\'s new and what\'s next, once a month at most.';
+
+  @override
+  String get newsletterCardTitle => 'Get Casama\'s monthly email?';
+
+  @override
+  String get newsletterCardBody =>
+      'What\'s new and what\'s next, once a month at most. Stop any time.';
+
+  @override
+  String get newsletterCardYes => 'Yes, send it';
+
+  @override
+  String get newsletterCardNo => 'No thanks';
+
+  @override
+  String get newsletterCardDone =>
+      'You\'re on the list. Turn it off any time in Settings.';
+
+  @override
   String get galleryKindApp => 'App';
 
   @override

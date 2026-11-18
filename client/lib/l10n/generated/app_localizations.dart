@@ -19438,6 +19438,54 @@ abstract class AppLocalizations {
   /// **'Up to six new skills, apps and routines that fit what you use, once a month.'**
   String get galleryDigestHelp;
 
+  /// No description provided for @newsletterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama\'s monthly email'**
+  String get newsletterTitle;
+
+  /// No description provided for @newsletterHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new and what\'s next, once a month at most.'**
+  String get newsletterHelp;
+
+  /// No description provided for @newsletterSignUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Send me Casama\'s monthly email: what\'s new and what\'s next, once a month at most.'**
+  String get newsletterSignUp;
+
+  /// No description provided for @newsletterCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Casama\'s monthly email?'**
+  String get newsletterCardTitle;
+
+  /// No description provided for @newsletterCardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new and what\'s next, once a month at most. Stop any time.'**
+  String get newsletterCardBody;
+
+  /// No description provided for @newsletterCardYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, send it'**
+  String get newsletterCardYes;
+
+  /// No description provided for @newsletterCardNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No thanks'**
+  String get newsletterCardNo;
+
+  /// No description provided for @newsletterCardDone.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re on the list. Turn it off any time in Settings.'**
+  String get newsletterCardDone;
+
   /// No description provided for @galleryKindApp.
   ///
   /// In en, this message translates to:
