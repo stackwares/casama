@@ -276,3 +276,15 @@ test("the Worker's pages let the logo load its animation data", async () => {
   const res = await get(`/newsletter/confirm?${qs}`);
   assert.match(res.headers.get("content-security-policy"), /connect-src 'self'/);
 });
+
+test("the Mac /open page lets the logo load its animation data too", async () => {
+  const req = new Request("https://casama.ai/open/bots", {
+    headers: {
+      "user-agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Safari/605.1.15",
+    },
+  });
+  const res = await worker.fetch(req, env(), { waitUntil() {} });
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get("content-security-policy"), /connect-src 'self'/);
+});
