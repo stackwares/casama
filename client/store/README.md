@@ -67,8 +67,9 @@ Data safety API replaces the whole form.
 
 ## Still open
 
-- Screenshots, the Play feature graphic and icon, and the review screenshots for the
-  subscriptions: made in `~/Desktop/Projects/Marketing/casama`.
+- Screenshots (Play phone 1080x1920, tablets 1440x2560) and the review screenshots for the
+  subscriptions: made in `~/Desktop/Projects/Marketing/casama`. Play's store listing is complete
+  apart from its phone screenshots (2 to 8 needed).
 - A build attached to each App Store version. TestFlight builds are 0.1.0 and the store versions
   say 1.0, so one of the two has to change first.
 - Google Play trader status (due February 2027). The Play account is a personal account whose
@@ -77,6 +78,9 @@ Data safety API replaces the whole form.
 
 ## Done
 
+- Play listing graphics, 2026-11-19: icon `google_play/icon-512.png` (the app icon with its black
+  rounded corners filled in plum, since Play rounds the corners itself), feature graphic
+  `Marketing/casama/art/play-feature-graphic.png`, video https://www.youtube.com/watch?v=E9x6E04ueoY.
 - App Privacy published 2026-11-18 (18 data types, all linked to the user, no tracking).
 - App Store Digital Services Act: the account is already declared a trader for this app.
 - China mainland: excluded from the App Store (iOS and Mac share one availability; 174 of 175
