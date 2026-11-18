@@ -1,0 +1,29 @@
+{
+  "name": "Cal.com",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "scheduling",
+    "calendar"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "What bookings do I have tomorrow on Cal.com?",
+    "Find an open 30-minute slot next week",
+    "Reschedule my Friday call to Monday"
+  ],
+  "access": {
+    "reads": [
+      "Cal.com bookings"
+    ],
+    "writes": [
+      "reschedules and cancels bookings"
+    ],
+    "credits": "low"
+  }
+}

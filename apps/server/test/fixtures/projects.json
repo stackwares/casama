@@ -1,0 +1,228 @@
+{
+  "name": "projects",
+  "turns": [
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[]}"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 50,
+            "outputTokens": 5
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "Plan this project"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "p1",
+            "name": "projects__plan",
+            "args": {
+              "project": "Launch site",
+              "plan_md": "Build the page, then ship it.",
+              "milestones": [
+                {
+                  "name": "Build",
+                  "tickets": [
+                    {
+                      "title": "Write the page"
+                    }
+                  ]
+                },
+                {
+                  "name": "Ship",
+                  "tickets": [
+                    {
+                      "title": "Publish the page"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 1000,
+            "outputTokens": 100
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "projects.plan"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Plan proposed."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 1000,
+            "outputTokens": 100
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "Every ticket is done"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "w1",
+            "name": "projects__update",
+            "args": {
+              "project": "Launch site",
+              "status": "done",
+              "plan_md": "Both milestones finished."
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 1000,
+            "outputTokens": 100
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "Write the page"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "s1",
+            "name": "tasks__update",
+            "args": {
+              "task_id": "00000000-0000-4000-8000-0000000000a1",
+              "status": "done",
+              "result": "Page written."
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 1000,
+            "outputTokens": 100
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "Publish the page"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "s2",
+            "name": "tasks__update",
+            "args": {
+              "task_id": "00000000-0000-4000-8000-0000000000a2",
+              "status": "done",
+              "result": "Published."
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 1000,
+            "outputTokens": 100
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "tasks.update"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "u1",
+            "name": "projects__update",
+            "args": {
+              "project": "Launch site",
+              "plan_md": "Progress noted."
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 1000,
+            "outputTokens": 100
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "projects.update"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Session done."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 1000,
+            "outputTokens": 100
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

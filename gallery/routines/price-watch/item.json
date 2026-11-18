@@ -1,0 +1,43 @@
+{
+  "name": "Price watch",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "shopping",
+    "prices",
+    "money"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "the web",
+      "memory"
+    ],
+    "writes": [
+      "saves prices to memory"
+    ],
+    "credits": "low"
+  },
+  "inputs": [
+    {
+      "key": "product",
+      "label": "Product page to watch",
+      "type": "text",
+      "default": "the product page in your memory",
+      "help": "Paste the page's web address."
+    },
+    {
+      "key": "target",
+      "label": "Tell me when the price is",
+      "type": "text",
+      "default": "lower than last time",
+      "help": "A price such as under 199, or leave it as is for any drop."
+    }
+  ]
+}

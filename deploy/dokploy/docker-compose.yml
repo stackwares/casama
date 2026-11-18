@@ -1,0 +1,335 @@
+# Casama on Dokploy: the core self-host stack from infra/compose/docker-compose.yml, with
+# published images only. template.toml generates every secret and writes the files under
+# ../files/ (they mirror infra/compose/selfhost/: keep them in step).
+#
+# Casama images use the `latest` tag (the release the git tag `selfhost` marks). Set
+# CASAMA_VERSION to a short commit id to pin one release.
+
+x-casama-env: &casama-env
+  NODE_ENV: production
+  DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
+  SUPABASE_URL: ${CASAMA_PUBLIC_URL}
+  SUPABASE_INTERNAL_URL: http://kong:8000
+  SUPABASE_ANON_KEY: ${ANON_KEY}
+  SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+  SUPABASE_JWT_SECRET: ${JWT_SECRET}
+  PUBLIC_API_URL: ${CASAMA_PUBLIC_URL}
+  PUBLIC_APP_URL: ${CASAMA_APP_URL:-${CASAMA_PUBLIC_URL}}
+  PAGES_URL: ${CASAMA_PAGES_URL}
+  API_INTERNAL_URL: http://api:8787
+  INTERNAL_TOKEN: ${INTERNAL_TOKEN}
+  METRICS_TOKEN: ${METRICS_TOKEN}
+  SUPERVISOR_URL: http://supervisor:8788
+  SUPERVISOR_TOKEN: ${SUPERVISOR_TOKEN}
+  TURN_SECRET: ${TURN_SECRET}
+  TURN_PUBLIC_HOST: ${TURN_PUBLIC_HOST}
+  TURN_PORT: ${TURN_HOST_PORT:-3478}
+  CONTENT_ENCRYPTION_KEY: ${CONTENT_ENCRYPTION_KEY}
+  AUTH_HOOK_SECRET: ${AUTH_HOOK_SECRET}
+  OBJECT_STORE_DIR: /data/library
+  BILLING_ENABLED: "false"
+  TELEMETRY: ${TELEMETRY:-off}
+  INSTANCE_ADMIN_EMAILS: ${INSTANCE_ADMIN_EMAILS:-}
+  DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
+  COMPUTER_HOST_MEMORY_GB: ${COMPUTER_HOST_MEMORY_GB:-4}
+  COMPUTER_MEMORY_MB: ${COMPUTER_MEMORY_MB:-2048}
+  EMAIL_FROM: ${EMAIL_FROM:-Casama <no-reply@localhost>}
+  RESEND_API_KEY: ${RESEND_API_KEY:-}
+  SMTP_HOST: ${SMTP_HOST:-}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASS: ${SMTP_PASS:-}
+
+services:
+  db:
+    image: public.ecr.aws/supabase/postgres:17.11.0.011
+    restart: unless-stopped
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - log_min_messages=fatal
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXP: 3600
+    volumes:
+      - ../files/volumes/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro
+      - ../files/volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ../files/volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
+      - db-data:/var/lib/postgresql/data
+      # Holds the Vault root key: back it up with the database.
+      - db-config:/etc/postgresql-custom
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  auth:
+    image: public.ecr.aws/supabase/gotrue:v2.197.0
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${CASAMA_PUBLIC_URL}
+      GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      GOTRUE_SITE_URL: ${AUTH_SITE_URL:-${CASAMA_PUBLIC_URL}}
+      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-casama://app/login-callback,http://127.0.0.1:*/auth/callback}
+      GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
+      # The sign-up hook. Auth refuses to start on an http hook address, so SIGNUP_HOOK_URI stays
+      # empty until the server has an https address.
+      GOTRUE_HOOK_BEFORE_USER_CREATED_ENABLED: ${SIGNUP_HOOK_ENABLED:-false}
+      GOTRUE_HOOK_BEFORE_USER_CREATED_URI: ${SIGNUP_HOOK_URI:-}
+      GOTRUE_HOOK_BEFORE_USER_CREATED_SECRETS: ${AUTH_HOOK_SECRET}
+      GOTRUE_MFA_TOTP_ENROLL_ENABLED: "true"
+      GOTRUE_MFA_TOTP_VERIFY_ENABLED: "true"
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      # New accounts sign in without a confirmation email until you set up SMTP and turn this off.
+      GOTRUE_MAILER_AUTOCONFIRM: ${EMAIL_AUTOCONFIRM:-true}
+      # Casama's emails, read from the release the images come from.
+      GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: ${EMAIL_TEMPLATE_MAGIC_LINK:-https://raw.githubusercontent.com/stackwares/casama/selfhost/supabase/templates/magic_link.html}
+      GOTRUE_MAILER_TEMPLATES_CONFIRMATION: ${EMAIL_TEMPLATE_CONFIRMATION:-https://raw.githubusercontent.com/stackwares/casama/selfhost/supabase/templates/confirmation.html}
+      GOTRUE_MAILER_TEMPLATES_INVITE: ${EMAIL_TEMPLATE_INVITE:-https://raw.githubusercontent.com/stackwares/casama/selfhost/supabase/templates/invite.html}
+      GOTRUE_MAILER_TEMPLATES_RECOVERY: ${EMAIL_TEMPLATE_RECOVERY:-https://raw.githubusercontent.com/stackwares/casama/selfhost/supabase/templates/recovery.html}
+      GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE: ${EMAIL_TEMPLATE_EMAIL_CHANGE:-https://raw.githubusercontent.com/stackwares/casama/selfhost/supabase/templates/email_change.html}
+      GOTRUE_MAILER_TEMPLATES_REAUTHENTICATION: ${EMAIL_TEMPLATE_REAUTHENTICATION:-https://raw.githubusercontent.com/stackwares/casama/selfhost/supabase/templates/reauthentication.html}
+      GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: Your Casama sign-in link
+      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: Confirm your Casama account
+      GOTRUE_MAILER_SUBJECTS_INVITE: You're invited to Casama
+      GOTRUE_MAILER_SUBJECTS_RECOVERY: Reset your Casama password
+      GOTRUE_MAILER_SUBJECTS_EMAIL_CHANGE: Confirm your new email for Casama
+      GOTRUE_MAILER_SUBJECTS_REAUTHENTICATION: Your Casama security code
+      GOTRUE_SMTP_HOST: ${SMTP_HOST:-}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT:-587}
+      GOTRUE_SMTP_USER: ${SMTP_USER:-}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS:-}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL:-}
+      # SAML SSO needs an RSA key that Dokploy cannot generate. See deploy/dokploy/README.md.
+      GOTRUE_SAML_ENABLED: ${SAML_ENABLED:-false}
+      GOTRUE_SAML_PRIVATE_KEY: ${SAML_PRIVATE_KEY:-}
+
+  rest:
+    image: public.ecr.aws/supabase/postgrest:v16.5
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["postgrest"]
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+
+  # Realtime reads its tenant id (realtime-dev) from the host name it is called by: keep this name.
+  realtime-dev:
+    image: public.ecr.aws/supabase/realtime:v2.151.3
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: supabase_admin
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: postgres
+      DB_AFTER_CONNECT_QUERY: SET search_path TO _realtime
+      DB_ENC_KEY: ${REALTIME_ENC_KEY}
+      API_JWT_SECRET: ${JWT_SECRET}
+      METRICS_JWT_SECRET: ${JWT_SECRET}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      ERL_AFLAGS: -proto_dist inet_tcp
+      DNS_NODES: "''"
+      RLIMIT_NOFILE: "10000"
+      APP_NAME: realtime
+      SEED_SELF_HOST: "true"
+      RUN_JANITOR: "true"
+
+  kong:
+    image: public.ecr.aws/supabase/kong:2.8.1
+    restart: unless-stopped
+    depends_on: [auth, rest, realtime-dev]
+    entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+    volumes:
+      - ../files/volumes/kong/kong.yml:/home/kong/temp.yml:ro
+
+  # One-shot: copies this release's database migrations out of the server image, so the
+  # migrations always match the API and worker.
+  migrations:
+    image: ghcr.io/stackwares/casama/server:${CASAMA_VERSION:-latest}
+    restart: "no"
+    user: "0:0"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - rm -f /out/*.sql && cp /app/supabase/migrations/*.sql /out/
+    volumes:
+      - migrations:/out
+
+  # One-shot: waits for Auth and Realtime to make their tables, then applies the migrations.
+  migrate:
+    image: public.ecr.aws/supabase/postgres:17.11.0.011
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    entrypoint: ["/bin/sh", "/migrate.sh"]
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      WORKER_DB_PASSWORD: ${WORKER_DB_PASSWORD}
+    volumes:
+      - ../files/volumes/migrate/migrate.sh:/migrate.sh:ro
+      - migrations:/migrations:ro
+
+  api:
+    image: ghcr.io/stackwares/casama/server:${CASAMA_VERSION:-latest}
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      <<: *casama-env
+      MODE: api
+      PAGES_PORT: "8790"
+    expose:
+      - 8787
+      - 8790
+    volumes:
+      - library:/data/library
+      - link:/link
+
+  worker:
+    image: ghcr.io/stackwares/casama/server:${CASAMA_VERSION:-latest}
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      <<: *casama-env
+      MODE: worker
+      RUN_CONCURRENCY: ${RUN_CONCURRENCY:-20}
+      WORKER_DATABASE_URL: postgres://casama_worker:${WORKER_DB_PASSWORD}@db:5432/postgres
+    volumes:
+      - library:/data/library
+    # The worker serves no HTTP: it touches /tmp/worker-alive every minute.
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "const s=require('fs').statSync('/tmp/worker-alive',{throwIfNoEntry:false});process.exit(s&&Date.now()-s.mtimeMs<180000?0:1)"
+      interval: 60s
+      timeout: 5s
+      start_period: 180s
+      retries: 2
+
+  # The only service with Docker access. It creates the bots' computers as containers on this
+  # server and joins each computer's private network. It finds the egress proxy, the TURN relay
+  # and itself by container name: Compose names them <project>-<service>-1.
+  supervisor:
+    image: ghcr.io/stackwares/casama/supervisor:${CASAMA_VERSION:-latest}
+    restart: unless-stopped
+    depends_on:
+      computer-image:
+        condition: service_completed_successfully
+    environment:
+      SUPERVISOR_TOKEN: ${SUPERVISOR_TOKEN}
+      COMPUTER_TOKEN_SECRET: ${COMPUTER_TOKEN_SECRET}
+      SUPERVISOR_CONTAINER: ${COMPOSE_PROJECT_NAME}-supervisor-1
+      EGRESS_CONTAINER: ${COMPOSE_PROJECT_NAME}-egress-1
+      TURN_CONTAINER: ${COMPOSE_PROJECT_NAME}-turn-1
+      # Computers, their networks and volumes start with this, so two installs never mix.
+      NAME_PREFIX: ${COMPOSE_PROJECT_NAME}
+      EGRESS_CONTROL_URL: http://egress:3129
+      EGRESS_CONTROL_TOKEN: ${EGRESS_CONTROL_TOKEN}
+      COMPUTER_IMAGE_HEADLESS: ghcr.io/stackwares/casama/computer-headless:${CASAMA_VERSION:-latest}
+      COMPUTER_IMAGE_DESKTOP: ghcr.io/stackwares/casama/computer-desktop:${CASAMA_VERSION:-latest}
+      COMPUTER_MEMORY_MB: ${COMPUTER_MEMORY_MB:-2048}
+      WARM_POOL_SIZE: ${WARM_POOL_SIZE:-0}
+      OBJECT_STORE_DIR: /data/objects
+      TURN_SECRET: ${TURN_SECRET}
+      TURN_PUBLIC_HOST: ${TURN_PUBLIC_HOST}
+      # runsc when gVisor is installed on the server (recommended); empty uses runc.
+      SANDBOX_RUNTIME: ${SANDBOX_RUNTIME:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - objects:/data/objects
+
+  # One-shot: makes Dokploy pull the computer image. The supervisor starts computers from it
+  # but does not pull it.
+  computer-image:
+    image: ghcr.io/stackwares/casama/computer-headless:${CASAMA_VERSION:-latest}
+    restart: "no"
+    entrypoint: ["/bin/true"]
+
+  # The only route from computers to the internet. Blocks private and metadata addresses.
+  egress:
+    image: ghcr.io/stackwares/casama/egress-proxy:${CASAMA_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      EGRESS_CONTROL_TOKEN: ${EGRESS_CONTROL_TOKEN}
+      EGRESS_ABUSE: "off"
+
+  # TURN relay for live view of desktop computers. It is not HTTP, so Dokploy's proxy cannot
+  # carry it: the port is published on the server itself (UDP and TCP).
+  turn:
+    image: ghcr.io/stackwares/casama/turn:${CASAMA_VERSION:-latest}
+    restart: unless-stopped
+    environment:
+      TURN_SECRET: ${TURN_SECRET}
+    ports:
+      - "${TURN_HOST_PORT:-3478}:3478/udp"
+      - "${TURN_HOST_PORT:-3478}:3478/tcp"
+
+  # Routes the one public address to the API and to Supabase. Dokploy's proxy sends everything
+  # here on port 80.
+  caddy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    depends_on: [api, kong]
+    expose:
+      - 80
+    volumes:
+      - ../files/volumes/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+
+volumes:
+  db-data: {}
+  db-config: {}
+  migrations: {}
+  library: {}
+  link: {}
+  objects: {}

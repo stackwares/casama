@@ -1,0 +1,20 @@
+{
+  "format": "casama.pack",
+  "version": 1,
+  "icon": "megaphone",
+  "summary": "A stand-up bot that writes and saves your daily stand-up, and a Monday recap.",
+  "inputs": [
+    { "key": "team", "label": "Your team's name", "type": "text", "default": "the team" },
+    {
+      "key": "time",
+      "label": "When should the Monday recap arrive?",
+      "type": "time",
+      "default": "09:00",
+      "help": "Mondays, in your time zone."
+    }
+  ],
+  "needs": { "apps": ["notion"] },
+  "includes": [{ "type": "skill", "id": "weekly-report" }],
+  "workspace_skills": ["house-style"],
+  "examples": ["Write my stand-up for today", "What did I say on Tuesday?"]
+}

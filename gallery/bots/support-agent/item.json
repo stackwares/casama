@@ -1,0 +1,21 @@
+{
+  "name": "Support",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-09",
+  "examples": [
+    "Draft a reply to this customer email",
+    "Summarise the top questions from this week",
+    "Turn these answers into an FAQ page"
+  ]
+}

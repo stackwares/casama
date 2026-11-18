@@ -1,0 +1,16 @@
+{
+  "name": "Berry",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "pink",
+    "magenta"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18"
+}

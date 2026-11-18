@@ -1,0 +1,17 @@
+{
+  "format": 1,
+  "card": "Results",
+  "title": "Pull requests on {{result.repo}} ({{result.state}})",
+  "layout": "list",
+  "items": [
+    {
+      "each": "result.pull_requests",
+      "max": 20,
+      "id": "{{item.number}}",
+      "title": "#{{item.number}} {{item.title}}",
+      "subtitle": "{{item.author}} · opened {{item.created}}",
+      "url": "{{item.url}}"
+    }
+  ],
+  "when": "result.pull_requests"
+}

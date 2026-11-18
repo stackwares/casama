@@ -1,0 +1,8 @@
+{
+  "name": "Meeting notes",
+  "description": "Each weekday evening: today's meeting notes filed, with decisions and who does what next.",
+  "category": "work",
+  "icon": "notebook-pen",
+  "instructions_md": "Gather today's meeting notes from my notes app if one is connected (Fireflies, Granola or others), otherwise from today's calendar events and anything I sent you. For each meeting: a three-line summary, the decisions, and the action items with owners and dates. Save one Markdown file per meeting in shared/meetings/ and ask me before sending anything to anyone.",
+  "schedule_cron": "30 18 * * 1-5"
+}

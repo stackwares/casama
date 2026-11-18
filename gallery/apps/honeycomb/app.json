@@ -1,0 +1,10 @@
+{
+  "description": "Query traces and events and investigate issues in Honeycomb.",
+  "category": "developer",
+  "color": "0278CD",
+  "homepage": "https://www.honeycomb.io",
+  "url": "https://mcp.honeycomb.io/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Query your data", "Investigate slow requests", "See boards and triggers"]
+}

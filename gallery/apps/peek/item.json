@@ -1,0 +1,26 @@
+{
+  "name": "Peek",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "travel",
+    "activities"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Find kayak tours near San Diego this weekend",
+    "What activities are there in Austin for a group?",
+    "Show times and prices for this tour"
+  ],
+  "access": {
+    "reads": [
+      "Peek activities"
+    ],
+    "credits": "low"
+  }
+}

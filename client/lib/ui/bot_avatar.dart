@@ -1,0 +1,158 @@
+import 'package:material_ui/material_ui.dart';
+import 'package:casama_sdk/casama_sdk.dart';
+
+import '../theme/app_colors.dart';
+import 'mascot.dart';
+import 'motion.dart';
+
+/// Gradients bots draw from, picked by name so a bot keeps its color everywhere.
+const _palettes = <List<Color>>[
+  [Color(0xFF14B8A6), Color(0xFF0F766E)],
+  [Color(0xFF6366F1), Color(0xFF4338CA)],
+  [Color(0xFFF59E0B), Color(0xFFD97706)],
+  [Color(0xFFEC4899), Color(0xFFBE185D)],
+  [Color(0xFF3B82F6), Color(0xFF1D4ED8)],
+  [Color(0xFF8B5CF6), Color(0xFF6D28D9)],
+  [Color(0xFF10B981), Color(0xFF047857)],
+  [Color(0xFFF97316), Color(0xFFC2410C)],
+];
+
+List<Color> botPalette(String name) {
+  var h = 0;
+  for (final c in name.toLowerCase().codeUnits) {
+    h = (h * 31 + c) & 0x7fffffff;
+  }
+  return _palettes[h % _palettes.length];
+}
+
+/// A bot's colors as people see them: its mascot's when it has one, otherwise its initials gradient.
+List<Color> botColors(String name, String? avatar) => Mascot.fromAvatar(avatar)?.colors ?? botPalette(name);
+
+/// A bot's initials, as its avatar shows them.
+String botInitials(String name) => _initials(name);
+
+String _initials(String name) {
+  final parts = name
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((p) => p.isNotEmpty)
+      .toList();
+  if (parts.isEmpty) return '?';
+  if (parts.length == 1) return parts.first.characters.first.toUpperCase();
+  return (parts.first.characters.first + parts[1].characters.first)
+      .toUpperCase();
+}
+
+/// A bot's mark: its chosen mascot (transparent, no tile), or a rounded square in its gradient with its
+/// initials; plus a status dot that pulses while it works.
+class BotAvatar extends StatelessWidget {
+  const BotAvatar({
+    super.key,
+    required this.name,
+    this.avatar,
+    this.size = 40,
+    this.status,
+    this.ringColor,
+    this.animate,
+  });
+
+  final String name;
+
+  /// The bot's `avatar_url`; `mascot:<name>` picks one of the cloud bots.
+  final String? avatar;
+  final double size;
+  final BotStatusEnum? status;
+
+  /// Whether a mascot plays its animation. Defaults to large avatars only, so lists stay calm.
+  final bool? animate;
+
+  /// The surface behind the avatar, for the gap around the status dot.
+  final Color? ringColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = botPalette(name);
+    final radius = size * 0.32;
+    final dotColor = switch (status) {
+      BotStatusEnum.working => context.appColors.working,
+      BotStatusEnum.waiting => context.appColors.waiting,
+      _ => null,
+    };
+    final dot = size * 0.3;
+    Widget? statusDot;
+    if (dotColor != null) {
+      statusDot = Container(
+        width: dot,
+        height: dot,
+        decoration: BoxDecoration(
+          color: dotColor,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: ringColor ?? context.colorScheme.surface,
+            width: size * 0.06,
+          ),
+        ),
+      );
+      if (status == BotStatusEnum.working) statusDot = Pulse(child: statusDot);
+    }
+    final mascot = Mascot.fromAvatar(avatar);
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          if (mascot != null)
+            MascotImage(
+              mascot,
+              size: size,
+              animate: animate ?? size >= 52,
+              semanticLabel: name,
+            )
+          else
+            Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(radius),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: colors,
+                ),
+                boxShadow: [
+                  if (size >= 56)
+                    BoxShadow(
+                      color: colors.last.withValues(
+                        alpha: context.isDark ? 0.5 : 0.3,
+                      ),
+                      blurRadius: size * 0.3,
+                      offset: Offset(0, size * 0.1),
+                    ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: ExcludeSemantics(
+                child: Text(
+                  _initials(name),
+                  style: (Theme.of(context).textTheme.headlineSmall ?? const TextStyle()).copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: size * (name.trim().contains(' ') ? 0.36 : 0.44),
+                    height: 1,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ),
+            ),
+          if (statusDot != null)
+            Positioned(
+              right: -size * 0.06,
+              bottom: -size * 0.06,
+              child: statusDot,
+            ),
+        ],
+      ),
+    );
+  }
+}

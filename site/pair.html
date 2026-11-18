@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in with a code | Casama</title>
+<meta name="description" content="Open the Casama app to finish signing in with the code you scanned.">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; font-src 'self'">
+<link rel="icon" type="image/svg+xml" href="/assets/bots/casama-winky-animated.svg">
+<link rel="stylesheet" href="/site.css">
+<style>
+  .pair-art { display: block; width: 100%; height: auto; border-radius: var(--radius); margin: 0 0 28px; }
+  main { max-width: 46ch; margin: 0 auto; padding: 72px var(--gutter) 96px; text-align: center; }
+  main h1 { font-size: var(--fs-h2); margin: 0 0 16px; }
+  main p { margin: 0 0 16px; color: var(--ink-2); }
+  main ol { text-align: left; margin: 0 auto 28px; padding-left: 22px; list-style: revert; max-width: 34ch; }
+  main li { margin-bottom: 8px; }
+  .actions { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+  .note { font-size: var(--fs-small); margin-top: 32px; }
+  /* Opened without a code in the link: there is nothing to hand to the app. */
+  .no-code #open-app { display: none; }
+  .legal-footer { padding: 36px 0 44px; border-top: 1px solid var(--line); font-size: var(--fs-small); color: var(--ink-2); }
+  .legal-footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px 28px; }
+  .legal-footer nav { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+  .legal-footer a { color: var(--ink); text-decoration: none; font-weight: 700; }
+</style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/" aria-label="Casama home">
+        <span class="brand-mark" data-casama-mark></span>
+        <span class="brand-word">Casama</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <img class="pair-art" src="/assets/art/pair-800.webp" width="800" height="450" alt="">
+    <h1>Finish signing in in the app</h1>
+    <p>You scanned a sign-in code. It only works inside the Casama app on this phone.</p>
+    <ol>
+      <li>Open Casama (get it first if it isn't installed).</li>
+      <li>Tap <strong>Sign in</strong>, then <strong>Scan a Code from Your Computer</strong>.</li>
+      <li>Scan the code on your computer again.</li>
+    </ol>
+    <div class="actions">
+      <a class="btn primary" id="open-app" href="casama://app/pair">Open in Casama</a>
+      <a class="btn" href="/">Get the app</a>
+    </div>
+    <p class="note">The code in the link stays on this phone. This page never sends it anywhere.</p>
+  </main>
+
+  <footer class="legal-footer">
+    <div class="wrap">
+      <nav aria-label="Site"><a href="/">Home</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="https://docs.casama.ai">Docs</a><a href="https://status.casama.ai">Status</a></nav>
+      <span>&copy; 2026 Stackwares.</span>
+    </div>
+  </footer>
+  <script src="/pair.js"></script>
+  <script src="/assets/brand/casama-mark.js"></script>
+</body>
+</html>

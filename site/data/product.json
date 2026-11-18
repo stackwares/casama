@@ -1,0 +1,16 @@
+{
+  "name": "Casama",
+  "description": "Casama is an open-source app for AI teammates that each have their own computer. They remember, work while you're away and ask before anything risky. Self-host it free, or use Casama Cloud.",
+  "maker": "Stackwares",
+  "maker_url": "https://stackwares.com/",
+  "email": "hello@casama.ai",
+  "license": "AGPL-3.0",
+  "license_url": "https://www.gnu.org/licenses/agpl-3.0.html",
+  "platforms": ["iOS", "iPadOS", "Android", "macOS", "Windows", "Linux", "Web"],
+  "profiles": [
+    "https://github.com/stackwares/casama",
+    "https://www.npmjs.com/package/@casama/mcp",
+    "https://pub.dev/publishers/casama.ai/packages",
+    "https://www.wikidata.org/wiki/Q142202801"
+  ]
+}

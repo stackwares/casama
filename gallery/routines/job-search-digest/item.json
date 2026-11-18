@@ -1,0 +1,36 @@
+{
+  "name": "Job search digest",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "jobs",
+    "career",
+    "search"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "the web",
+      "memory"
+    ],
+    "writes": [
+      "saves seen postings to memory"
+    ],
+    "credits": "medium"
+  },
+  "inputs": [
+    {
+      "key": "role",
+      "label": "What are you looking for?",
+      "type": "text",
+      "default": "the roles in your memory",
+      "help": "Such as product designer, remote or in Berlin."
+    }
+  ]
+}

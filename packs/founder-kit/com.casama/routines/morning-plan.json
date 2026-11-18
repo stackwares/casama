@@ -1,0 +1,8 @@
+{
+  "name": "Morning plan",
+  "description": "Each weekday morning: today's meetings, deadlines and the one thing to start with.",
+  "category": "work",
+  "icon": "sunrise",
+  "instructions_md": "Plan my day for {{company}}. Look at today's calendar (if it's connected), open tasks and anything due in memory. Give me today's meetings with times, the deadlines, and the one task to start with. Five lines at most.",
+  "schedule_cron": "{{time.minute}} {{time.hour}} * * 1-5"
+}

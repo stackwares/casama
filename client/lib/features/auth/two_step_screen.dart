@@ -1,0 +1,482 @@
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
+import 'package:casama_sdk/casama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../../core/backend.dart';
+import '../../core/open_links.dart';
+import '../../core/providers.dart';
+import '../../core/widgets.dart';
+import '../../core/haptics.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
+import '../../ui/bottom_padding.dart';
+import '../../ui/adaptive_modal.dart';
+import '../../ui/app_card.dart';
+import '../../ui/form_sheet.dart';
+import '../../ui/glow_button.dart';
+import '../../ui/otp_code_field.dart';
+import '../../ui/page.dart';
+import '../../ui/progressive_fade.dart';
+import '../../core/analytics.dart';
+
+/// The person's authenticator apps (refreshed after changes).
+final twoStepFactorsProvider = FutureProvider<List<TwoStepFactor>>(
+  (ref) => ref.watch(backendProvider).twoStepFactors(),
+);
+
+final _requireTwoStepProvider = FutureProvider<bool?>((ref) async {
+  final org = ref.watch(currentOrgProvider);
+  if (org == null || org.role == OrgRole.member) return null;
+  return ref.watch(backendProvider).requireTwoStep(org.id);
+});
+
+/// Settings → Two-step sign-in: authenticator apps, and the workspace requirement for admins.
+class TwoStepSettingsScreen extends ConsumerStatefulWidget {
+  const TwoStepSettingsScreen({super.key});
+
+  @override
+  ConsumerState<TwoStepSettingsScreen> createState() =>
+      _TwoStepSettingsScreenState();
+}
+
+class _TwoStepSettingsScreenState extends ConsumerState<TwoStepSettingsScreen> {
+  TwoStepEnrollment? _enrolling;
+  final _code = TextEditingController();
+  var _codeInvalid = false;
+  var _busy = false;
+
+  @override
+  void dispose() {
+    _code.dispose();
+    super.dispose();
+  }
+
+  Future<void> _start() async {
+    setState(() => _busy = true);
+    final e = await runGuarded(
+      context,
+      () => ref.read(backendProvider).startTwoStep(),
+    );
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _enrolling = e;
+      _code.clear();
+      _codeInvalid = false;
+    });
+  }
+
+  Future<void> _verify() async {
+    final e = _enrolling;
+    final code = _code.text;
+    if (e == null || code.length != OtpCodeField.length || _busy) return;
+    setState(() => _busy = true);
+    final ok = await runGuarded(context, () async {
+      await ref.read(backendProvider).verifyTwoStep(e.factorId, code);
+      return true;
+    });
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _codeInvalid = ok != true;
+      if (ok == true) _enrolling = null;
+    });
+    if (ok == true) {
+      showSuccess(context, context.l10n.twoStepNowOn);
+      ref.invalidate(twoStepFactorsProvider);
+    }
+  }
+
+  Future<void> _rename(TwoStepFactor f) async {
+    final l10n = context.l10n;
+    final name = await showTextPrompt(
+      context,
+      title: l10n.twoStepRenameTitle,
+      label: l10n.twoStepNameLabel,
+      hint: l10n.twoStepNameHint,
+      initial: f.name.split(' · ').first,
+      submitLabel: l10n.save,
+      icon: LucideIcons.smartphone,
+    );
+    if (name == null || name.trim().isEmpty || !mounted) return;
+    await runGuarded(
+      context,
+      () => ref.read(backendProvider).renameTwoStep(f.id, name.trim()),
+    );
+    ref.invalidate(twoStepFactorsProvider);
+  }
+
+  Future<void> _remove(TwoStepFactor f) async {
+    final l10n = context.l10n;
+    final ok = await showConfirm(
+      context: context,
+      title: l10n.twoStepRemove,
+      message: l10n.twoStepRemoveConfirm,
+      confirmLabel: l10n.twoStepRemove,
+      destructive: true,
+    );
+    if (!ok || !mounted) return;
+    await runGuarded(
+      context,
+      () => ref.read(backendProvider).removeTwoStep(f.id),
+    );
+    ref.invalidate(twoStepFactorsProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final factors = ref.watch(twoStepFactorsProvider);
+    final require = ref.watch(_requireTwoStepProvider).value;
+    final org = ref.watch(currentOrgProvider);
+    final enrolling = _enrolling;
+    return SubPage(
+      title: l10n.twoStepSignIn,
+      children: [
+        FormNote(l10n.twoStepHelp, icon: LucideIcons.shieldCheck),
+        SectionHeader(title: l10n.twoStepAuthenticators),
+        AsyncView(
+          value: factors,
+          onRetry: () => ref.invalidate(twoStepFactorsProvider),
+          loading: const _FactorsSkeleton(),
+          data: (items) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: AppSpace.md,
+            children: [
+              if (items.isNotEmpty)
+                GroupedCard(
+                  children: [
+                    for (final f in items)
+                      GroupedTile(
+                        icon: LucideIcons.smartphone,
+                        title: f.name.split(' · ').first,
+                        onTap: () => _rename(f),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              key: Key('renameFactor-${f.id}'),
+                              tooltip: l10n.twoStepRename,
+                              icon: const Icon(LucideIcons.pencil, size: 18),
+                              onPressed: () => _rename(f),
+                            ),
+                            TextButton(
+                              key: Key('removeFactor-${f.id}'),
+                              onPressed: () => _remove(f),
+                              child: Text(l10n.twoStepRemove),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              if (enrolling == null)
+                OutlinedButton.icon(
+                  key: const Key('startTwoStep'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                  onPressed: _busy ? null : _start,
+                  icon: const Icon(LucideIcons.plus, size: 20),
+                  label: Text(
+                    items.isEmpty ? l10n.twoStepSetUp : l10n.twoStepAddAnother,
+                  ),
+                )
+              else
+                AppCard(
+                  padding: const EdgeInsets.all(AppSpace.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    spacing: AppSpace.md,
+                    children: [
+                      FormNote(l10n.twoStepScan),
+                      Center(
+                        child: Container(
+                          color: Colors.white,
+                          padding: const EdgeInsets.all(AppSpace.sm),
+                          child: SvgPicture.string(
+                            enrolling.qrSvg,
+                            width: 180,
+                            height: 180,
+                          ),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SelectableText(
+                              '${l10n.twoStepKey}: ${enrolling.secret}',
+                              style: const TextStyle(
+                                fontFamily: 'JetBrains Mono',
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: l10n.copy,
+                            icon: const Icon(LucideIcons.copy, size: 18),
+                            onPressed: () async {
+                              await Clipboard.setData(
+                                ClipboardData(text: enrolling.secret),
+                              );
+                              if (context.mounted) {
+                                showMessage(context, l10n.copied);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                      OtpCodeField(
+                        key: const Key('enrollCode'),
+                        controller: _code,
+                        label: l10n.twoStepCode,
+                        invalid: _codeInvalid,
+                        onChanged: (_) {
+                          if (_codeInvalid) {
+                            setState(() => _codeInvalid = false);
+                          }
+                        },
+                        onCompleted: (_) => _verify(),
+                        onSubmitted: _verify,
+                      ),
+                      GlowButton.icon(
+                        key: const Key('verifyTwoStep'),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48),
+                        ),
+                        onPressed: _busy ? null : _verify,
+                        icon: const Icon(LucideIcons.check, size: 20),
+                        label: Text(l10n.twoStepVerify),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (require != null && org != null) ...[
+          SectionHeader(title: l10n.workspace),
+          GroupedCard(
+            children: [
+              SwitchListTile(
+                key: const Key('requireTwoStep'),
+                title: Text(l10n.requireTwoStep),
+                subtitle: Text(l10n.requireTwoStepHelp),
+                value: require,
+                onChanged: hapticOnChanged((v) async {
+                  await runGuarded(
+                    context,
+                    () =>
+                        ref.read(backendProvider).setRequireTwoStep(org.id, v),
+                  );
+                  ref.invalidate(_requireTwoStepProvider);
+                  ref.invalidate(organizationsProvider);
+                }),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// The authenticators before they load: one app row with rename and remove, and the add button.
+class _FactorsSkeleton extends StatelessWidget {
+  const _FactorsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SkeletonScope(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpace.md,
+        children: [
+          SkeletonGroupedCard(
+            rows: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SkeletonRow(
+                        padding: EdgeInsets.zero,
+                        trailing: SkeletonTrailing.none,
+                        subtitle: false,
+                        titleWidth: 0.6,
+                      ),
+                    ),
+                    SizedBox(width: AppSpace.xs),
+                    SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 18, height: 18, radius: 5))),
+                    SizedBox(width: 72, height: 40, child: Center(child: SkeletonBone(width: 52, height: 11))),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SkeletonBone(height: 48, radius: AppRadius.pill),
+        ],
+      ),
+    );
+  }
+}
+
+/// Shown after the password step when the account has two-step sign-in (route /two-step).
+class TwoStepPromptScreen extends ConsumerStatefulWidget {
+  const TwoStepPromptScreen({super.key});
+
+  @override
+  ConsumerState<TwoStepPromptScreen> createState() =>
+      _TwoStepPromptScreenState();
+}
+
+class _TwoStepPromptScreenState extends ConsumerState<TwoStepPromptScreen> {
+  final _code = TextEditingController();
+  var _codeInvalid = false;
+  var _busy = false;
+
+  @override
+  void dispose() {
+    _code.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final code = _code.text;
+    if (code.length != OtpCodeField.length || _busy) return;
+    setState(() => _busy = true);
+    final ok = await runGuarded(context, () async {
+      await ref.read(backendProvider).passTwoStep(code);
+      return true;
+    });
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _codeInvalid = ok != true;
+    });
+    if (ok == true) {
+      Analytics.log('two_step_completed');
+      ref.invalidate(twoStepCodeNeededProvider);
+      ref.invalidate(organizationsProvider);
+      // A link opened before signing in (D-326) comes first.
+      context.go(ref.read(pendingOpenLinkProvider.notifier).fresh ?? '/bots');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final scheme = context.colorScheme;
+    final statusBar = MediaQuery.paddingOf(context).top;
+    return Scaffold(
+      body: ProgressiveFade(child: SafeArea(
+        top: false,
+        bottom: false,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final bottom = BottomPadding.of(context, minimum: AppSpace.lg);
+            final minHeight = constraints.maxHeight - AppSpace.lg - statusBar - bottom;
+            return SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              // Starts under the status bar, so content dissolves there as it scrolls up.
+              padding: EdgeInsets.fromLTRB(AppSpace.lg, AppSpace.lg + statusBar, AppSpace.lg, bottom),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: minHeight < 0 ? 0 : minHeight,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      spacing: AppSpace.md,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              color: scheme.primary.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              LucideIcons.shieldCheck,
+                              size: 32,
+                              color: scheme.primary,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          l10n.twoStepPromptTitle,
+                          textAlign: TextAlign.center,
+                          style: context.textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        Text(
+                          l10n.twoStepPromptBody,
+                          textAlign: TextAlign.center,
+                          style: context.textTheme.bodyMedium?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                            height: 1.4,
+                          ),
+                        ),
+                        OtpCodeField(
+                          key: const Key('signInCode'),
+                          controller: _code,
+                          label: l10n.twoStepCode,
+                          invalid: _codeInvalid,
+                          onChanged: (_) {
+                            if (_codeInvalid) {
+                              setState(() => _codeInvalid = false);
+                            }
+                          },
+                          onCompleted: (_) => _submit(),
+                          onSubmitted: _submit,
+                        ),
+                        GlowButton(
+                          key: const Key('submitCode'),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(50),
+                          ),
+                          onPressed: _busy ? null : _submit,
+                          child: _busy
+                              ? SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: scheme.onPrimary,
+                                  ),
+                                )
+                              : Text(l10n.twoStepVerify),
+                        ),
+                        TextButton(
+                          style: TextButton.styleFrom(
+                            foregroundColor: scheme.onSurfaceVariant,
+                          ),
+                          onPressed: _busy
+                              ? null
+                              : () => runGuarded(
+                                  context,
+                                  ref.read(backendProvider).signOut,
+                                ),
+                          child: Text(l10n.signOut),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      )),
+    );
+  }
+}

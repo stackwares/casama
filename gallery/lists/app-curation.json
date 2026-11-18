@@ -1,0 +1,8 @@
+{
+  "name": "App catalog curation",
+  "version": 1,
+  "updated": "2026-11-18",
+  "apps": [],
+  "order": [],
+  "starter_apps": ["gmail", "google_calendar", "google_drive", "notion", "github", "slack"]
+}

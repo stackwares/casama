@@ -1,0 +1,28 @@
+{
+  "name": "Spreadsheet formulas",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "data"
+  ],
+  "category": "data",
+  "icon": "sigma",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Write a formula that sums sales by month",
+    "Why does this VLOOKUP return #N/A?",
+    "Explain this nested IF formula in plain words"
+  ],
+  "access": {
+    "reads": [
+      "what you share"
+    ],
+    "credits": "low"
+  }
+}

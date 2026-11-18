@@ -1,0 +1,11 @@
+{
+  "name": "casama",
+  "owner": { "name": "Casama" },
+  "plugins": [
+    {
+      "name": "casama-dev",
+      "source": "./agent-kit",
+      "description": "Skills and a docs MCP server that help coding agents build on Casama: plugins, the HTTP API, webhooks, A2A, bot templates, gallery items and the Casama repo."
+    }
+  ]
+}

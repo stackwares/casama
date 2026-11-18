@@ -1,0 +1,9 @@
+{
+  "note": "Casama Cloud plans (D-249). site/index.html shows the same prices by hand; site/build.mjs fails if they differ.",
+  "plans": [
+    { "name": "Free", "monthly": 0, "price": "$0", "credits": "$1", "bots": "3", "computers": "1, with 5 hours", "storage": "Included", "seats": "1" },
+    { "name": "Plus", "monthly": 15, "price": "$15 a month, or $150 a year", "credits": "$5", "bots": "10", "computers": "2, with 30 hours", "storage": "10 GB", "seats": "1" },
+    { "name": "Pro", "monthly": 49, "price": "$49 a month, or $490 a year", "credits": "$15", "bots": "Unlimited", "computers": "5, with 100 hours", "storage": "50 GB", "seats": "3, then $12 each" },
+    { "name": "Max", "monthly": 99, "price": "$99 a month, or $899 a year", "credits": "$30", "bots": "Unlimited", "computers": "10, with 300 hours", "storage": "200 GB", "seats": "10, then $12 each" }
+  ]
+}

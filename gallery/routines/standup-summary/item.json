@@ -1,0 +1,35 @@
+{
+  "name": "Standup summary",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "standup",
+    "team",
+    "developers"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "code repositories",
+      "tickets",
+      "chats",
+      "memory"
+    ],
+    "credits": "low"
+  },
+  "inputs": [
+    {
+      "key": "time",
+      "label": "What time should it arrive?",
+      "type": "time",
+      "default": "09:00",
+      "help": "Weekdays, in your workspace's time zone."
+    }
+  ]
+}

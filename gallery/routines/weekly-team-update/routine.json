@@ -1,0 +1,7 @@
+{
+  "description": "Every Friday afternoon: a draft update for your team, grouped into done, in progress, blocked and next.",
+  "category": "work",
+  "icon": "users",
+  "instructions_md": "Write this week's update for my team, as a draft.\n\n1. Open with two sentences on how the week went.\n2. From tickets, chats and notes, list what's done, in progress, blocked and next, with the owner's name where you know it.\n3. End with anything the team has to decide.\n\nKeep it under 250 words and leave out anything that's private to me. Show me the draft and ask before you post or send it anywhere.",
+  "schedule_cron": "{{time.minute}} {{time.hour}} * * 5"
+}

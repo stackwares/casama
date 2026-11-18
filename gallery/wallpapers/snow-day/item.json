@@ -1,0 +1,38 @@
+{
+  "name": "Snow day",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "winter",
+    "holiday",
+    "seasonal"
+  ],
+  "featured": false,
+  "version": 3,
+  "added": "2026-11-16",
+  "season": {
+    "from": "12-01",
+    "to": "01-06"
+  },
+  "changelog": [
+    {
+      "version": 3,
+      "date": "2026-11-18",
+      "note": "A day and a night version: it follows light and dark mode."
+    },
+    {
+      "version": 2,
+      "date": "2026-11-18",
+      "note": "New painted art in the same mood."
+    },
+    {
+      "version": 1,
+      "date": "2026-11-16",
+      "note": "First version."
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "v": 2,
+  "scheme": {
+    "light": {
+      "seed": "#2B684B",
+      "background": "#F7FBF9",
+      "onBackground": "#161C19",
+      "primary": "#2B684B",
+      "primaryContainer": "#D7EFE1",
+      "secondary": "#2C656B",
+      "secondaryContainer": "#D6EDEF",
+      "tertiary": "#50632E",
+      "tertiaryContainer": "#E3ECD5",
+      "appBar": "#EFF8F3"
+    },
+    "dark": {
+      "seed": "#A5D0B8",
+      "background": "#0D1310",
+      "onBackground": "#E1EAE5",
+      "primary": "#A5D0B8",
+      "primaryContainer": "#253E31",
+      "secondary": "#A5CDD1",
+      "secondaryContainer": "#253D3F",
+      "tertiary": "#BCCBA4",
+      "tertiaryContainer": "#333C25",
+      "appBar": "#0F1A14"
+    }
+  },
+  "headingFont": "Source Serif 4",
+  "bodyFont": "Lato",
+  "wallpaper": {
+    "image": "northern-pines",
+    "pattern": "garden",
+    "palette": "forest",
+    "intensity": 0.5
+  }
+}

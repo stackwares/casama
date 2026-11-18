@@ -1,0 +1,11 @@
+{
+  "description": "Run Apify's ready-made scrapers and web tools.",
+  "category": "automation",
+  "color": "246DFF",
+  "homepage": "https://apify.com",
+  "url": "https://mcp.apify.com",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "note": "Runs use your Apify plan.",
+  "capabilities": ["Find a scraper", "Run it on a site", "Get the results"]
+}

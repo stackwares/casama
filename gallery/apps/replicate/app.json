@@ -1,0 +1,11 @@
+{
+  "description": "Find and run AI models on Replicate.",
+  "category": "developer",
+  "color": "111111",
+  "homepage": "https://replicate.com",
+  "url": "https://mcp.replicate.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "note": "Running models uses your Replicate credit.",
+  "capabilities": ["Search models", "Run a model", "Check predictions"]
+}

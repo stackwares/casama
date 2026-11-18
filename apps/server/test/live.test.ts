@@ -1,0 +1,421 @@
+import type { Server } from "node:http";
+import type { AddressInfo } from "node:net";
+import { fileURLToPath } from "node:url";
+import { dockerAvailable, type SandboxStack, startSandboxStack } from "@casama/sandbox/testing";
+import { connectLive, type LiveClient } from "@casama/sandbox/testing-stream";
+import { serve } from "@hono/node-server";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { TOUCH_THROTTLE_MS } from "../src/api/keep-awake.ts";
+import { attachStream, STREAM_RESTART_CODE, signStreamToken } from "../src/api/routes/live.ts";
+import { fakeComputer, proxyServer, settle } from "./fake-upstream.ts";
+import { type Harness, j, startHarness } from "./helpers.ts";
+
+const enabled = (await dockerAvailable()) && process.env.SKIP_DOCKER_TESTS !== "1";
+const FIXTURES = fileURLToPath(new URL("./fixtures/live.json", import.meta.url));
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+describe.skipIf(!enabled)("live computer (Phase 5 gate)", () => {
+  let stack: SandboxStack;
+  let h: Harness;
+  let server: Server;
+  let base: string;
+  let owner: { id: string; token: string };
+  let orgId: string;
+  let botId: string;
+  let computerId: string;
+  const clients: LiveClient[] = [];
+
+  const session = async (mode: "view" | "control") => {
+    const res = await h.request(`/v1/computers/${computerId}/stream-session`, {
+      method: "POST",
+      token: owner.token,
+      json: { mode },
+    });
+    expect(res.status).toBe(200);
+    const s = await j(res);
+    // The harness app answers on its own origin; point the signaling URL at the real server.
+    const url = new URL(s.signaling_url);
+    return { ...s, signaling_url: `${base.replace("http", "ws")}${url.pathname}${url.search}` };
+  };
+  const open = async (mode: "view" | "control") => {
+    const s = await session(mode);
+    const c = await connectLive({ url: s.signaling_url, iceServers: s.ice_servers });
+    clients.push(c);
+    return c;
+  };
+  const chat = async (text: string) => {
+    const conv = await j(
+      await h.request("/v1/conversations", {
+        method: "POST",
+        token: owner.token,
+        json: { bot_id: botId },
+      }),
+    );
+    const sent = await j(
+      await h.request(`/v1/conversations/${conv.id}/messages`, {
+        method: "POST",
+        token: owner.token,
+        json: { text },
+      }),
+    );
+    return sent.run_id as string;
+  };
+  const run = async (id: string) => j(await h.request(`/v1/runs/${id}`, { token: owner.token }));
+  const waitStatus = async (id: string, status: string, timeoutMs = 90_000) => {
+    const until = Date.now() + timeoutMs;
+    for (;;) {
+      const r = await run(id);
+      if (r.status === status) return r;
+      if (Date.now() > until) throw new Error(`run ${id} is ${r.status}, wanted ${status}`);
+      await sleep(250);
+    }
+  };
+  const events = async (id: string) =>
+    (await j(await h.request(`/v1/runs/${id}/events?limit=1000`, { token: owner.token })))
+      .items as Array<{
+      type: string;
+      payload: Record<string, unknown>;
+    }>;
+
+  beforeAll(async () => {
+    stack = await startSandboxStack({ streamIdleStopMs: 2000 });
+    h = await startHarness({ worker: { fixtures: FIXTURES }, sandbox: stack });
+    server = serve({ fetch: h.app.fetch, port: 0 }) as unknown as Server;
+    await new Promise((r) => server.once("listening", r));
+    attachStream(server, h.deps);
+    base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    owner = await h.user("live-owner@example.com");
+    orgId = (
+      await j(
+        await h.request("/v1/orgs", {
+          method: "POST",
+          token: owner.token,
+          json: { name: "Live Org" },
+        }),
+      )
+    ).id;
+    const cred = await j(
+      await h.request("/v1/credentials", {
+        method: "POST",
+        token: owner.token,
+        json: { org_id: orgId, provider: "openrouter", label: "k", api_key: "sk-live-test-key" },
+      }),
+    );
+    botId = (
+      await j(
+        await h.request("/v1/bots", {
+          method: "POST",
+          token: owner.token,
+          json: {
+            org_id: orgId,
+            name: "Ada",
+            autonomy: "autonomous",
+            model_policy: { primary: { credential_id: cred.id, model: "fixture-main" } },
+          },
+        }),
+      )
+    ).id;
+    const list = await j(await h.request(`/v1/computers?org_id=${orgId}`, { token: owner.token }));
+    computerId = list.items[0].id;
+    const patched = await h.request(`/v1/computers/${computerId}`, {
+      method: "PATCH",
+      token: owner.token,
+      json: { profile: "desktop", name: "Team desktop" },
+    });
+    expect((await j(patched)).profile).toBe("desktop");
+  }, 240_000);
+
+  afterAll(async () => {
+    for (const c of clients) await c.close().catch(() => {});
+    server?.close();
+    await h?.stop();
+    await stack?.stop();
+  }, 180_000);
+
+  it("streams live through the API and TURN relay with low latency; viewers cannot control", async () => {
+    const viewer = await open("view");
+    const firstFrame = await viewer.firstFrameMs;
+    const rtts: number[] = [];
+    for (let i = 0; i < 7; i++) rtts.push(await viewer.ping());
+    rtts.sort((a, b) => a - b);
+    console.log(`first frame ${firstFrame} ms; data-channel RTT median ${rtts[3]?.toFixed(1)} ms`);
+    expect(rtts[3]).toBeLessThan(500);
+
+    viewer.send("control/request");
+    await sleep(800);
+    expect(viewer.events.some((e) => e.event === "control/host" && e.payload?.has_host)).toBe(
+      false,
+    );
+    // A control token without the lease cannot take control either.
+    const sneaky = await open("control");
+    await sneaky.firstFrameMs;
+    sneaky.send("control/request");
+    await sleep(800);
+    expect(sneaky.events.some((e) => e.event === "control/host" && e.payload?.has_host)).toBe(
+      false,
+    );
+    await sneaky.close();
+  }, 120_000);
+
+  it("take control mid-run pauses the bot; hand back with a note resumes it", async () => {
+    const taken = await j(
+      await h.request(`/v1/computers/${computerId}/lease`, {
+        method: "POST",
+        token: owner.token,
+        json: {},
+      }),
+    );
+    expect(taken).toMatchObject({ holder_type: "user", you: true });
+
+    const runId = await chat("Please check the screen for me.");
+    await waitStatus(runId, "waiting_takeover");
+
+    const controller = await open("control");
+    await controller.firstFrameMs;
+    controller.send("control/request");
+    expect((await controller.waitFor("control/host")).payload?.has_host).toBe(true);
+    await controller.ping();
+    controller.move(400, 300);
+    await sleep(500);
+    const handle = await h.computers?.ensureRunning(computerId);
+    const { collectExec } = await import("@casama/sandbox");
+    expect((await collectExec(handle!.exec("xdotool getmouselocation"))).stdout).toContain(
+      "x:400 y:300",
+    );
+
+    const released = await j(
+      await h.request(`/v1/computers/${computerId}/lease`, {
+        method: "DELETE",
+        token: owner.token,
+        json: { note: "I closed the popup." },
+      }),
+    );
+    expect(released.holder_type).toBe("bot");
+    await waitStatus(runId, "completed");
+    const evs = await events(runId);
+    const leases = evs.filter((e) => e.type === "lease.changed").map((e) => e.payload.holder_type);
+    expect(leases).toEqual(["user", "bot"]);
+    const done = evs.find((e) => e.type === "tool.completed");
+    expect(done).toBeTruthy();
+    // The proxy took control away once the lease ended.
+    await sleep(6000);
+    expect(
+      controller.events.filter((e) => e.event === "control/host").pop()?.payload?.has_host,
+    ).toBe(false);
+    await controller.close();
+  }, 180_000);
+
+  it("shell waits while a person has control until they let the bot keep using it", async () => {
+    const lease = (allow_shell: boolean) =>
+      h
+        .request(`/v1/computers/${computerId}/lease`, {
+          method: "POST",
+          token: owner.token,
+          json: { allow_shell },
+        })
+        .then(j);
+    expect(await lease(false)).toMatchObject({ you: true, allow_shell: false });
+
+    const runId = await chat("Please count the files.");
+    await waitStatus(runId, "waiting_takeover");
+
+    // Switching it on mid-takeover wakes the run right away; the person keeps the screen.
+    const on = await lease(true);
+    expect(on).toMatchObject({ holder_type: "user", you: true, allow_shell: true });
+    await waitStatus(runId, "completed", 30_000);
+    const evs = await events(runId);
+    expect(evs.filter((e) => e.type === "lease.changed").map((e) => e.payload.holder_type)).toEqual(
+      ["user"],
+    );
+    expect(evs.find((e) => e.type === "notice")?.payload.code).toBe("shell_beside_user");
+    expect(evs.find((e) => e.type === "tool.completed")).toBeTruthy();
+    expect(
+      (await j(await h.request(`/v1/computers/${computerId}/lease`, { token: owner.token })))
+        .allow_shell,
+    ).toBe(true);
+
+    const released = await j(
+      await h.request(`/v1/computers/${computerId}/lease`, {
+        method: "DELETE",
+        token: owner.token,
+        json: {},
+      }),
+    );
+    expect(released).toMatchObject({ holder_type: "bot", allow_shell: false });
+  }, 180_000);
+
+  it("request_takeover waits for a person, notifies them and returns their note", async () => {
+    const runId = await chat("Please sign in to the site for me.");
+    await waitStatus(runId, "waiting_takeover");
+    const open = await j(await h.request(`/v1/takeovers?org_id=${orgId}`, { token: owner.token }));
+    expect(open.items).toHaveLength(1);
+    expect(open.items[0].reason).toContain("sign in");
+    const [note] = await h.handle.db.execute<{ payload: { link: string } }>(
+      (await import("drizzle-orm"))
+        .sql`select payload from public.notifications where kind = 'takeover'`,
+    );
+    expect(note?.payload.link).toContain(`/computer/live?c=${computerId}`);
+
+    await h.request(`/v1/computers/${computerId}/lease`, {
+      method: "POST",
+      token: owner.token,
+      json: {},
+    });
+    await h.request(`/v1/computers/${computerId}/lease`, {
+      method: "DELETE",
+      token: owner.token,
+      json: { note: "Signed in as the team account." },
+    });
+    await waitStatus(runId, "completed");
+    const evs = await events(runId);
+    expect(evs.find((e) => e.type === "takeover.resolved")?.payload).toMatchObject({
+      outcome: "completed",
+      note: "Signed in as the team account.",
+    });
+  }, 120_000);
+
+  it("a dismissed takeover lets the bot continue", async () => {
+    const runId = await chat("Please sign in to the site again.");
+    await waitStatus(runId, "waiting_takeover");
+    const open = await j(await h.request(`/v1/takeovers?org_id=${orgId}`, { token: owner.token }));
+    const res = await h.request(`/v1/takeovers/${open.items[0].id}/dismiss`, {
+      method: "POST",
+      token: owner.token,
+      json: { note: "Not now." },
+    });
+    expect(res.status).toBe(200);
+    await waitStatus(runId, "completed");
+    const evs = await events(runId);
+    expect(evs.find((e) => e.type === "takeover.resolved")?.payload.outcome).toBe("dismissed");
+  }, 120_000);
+
+  it("a taken takeover whose control ran out without a hand back finishes and leaves the list", async () => {
+    const { sql } = await import("drizzle-orm");
+    const runId = await chat("Please sign in to the site once more.");
+    await waitStatus(runId, "waiting_takeover");
+    await h.request(`/v1/computers/${computerId}/lease`, {
+      method: "POST",
+      token: owner.token,
+      json: {},
+    });
+    // The app closed: the lease lapses instead of being handed back.
+    await h.handle.db.execute(sql`update public.computer_leases set expires_at = now() - interval '1 second'
+      where computer_id = ${computerId}::uuid and holder_type = 'user' and released_at is null`);
+    await waitStatus(runId, "completed");
+    const evs = await events(runId);
+    expect(evs.find((e) => e.type === "takeover.resolved")?.payload.outcome).toBe("completed");
+    const open = await j(await h.request(`/v1/takeovers?org_id=${orgId}`, { token: owner.token }));
+    expect(open.items).toHaveLength(0);
+  }, 120_000);
+
+  it("a takeover whose run ended no longer counts as waiting on the person", async () => {
+    const { sql } = await import("drizzle-orm");
+    const runId = await chat("Please sign in to the site, last time.");
+    await waitStatus(runId, "waiting_takeover");
+    // A deploy fails the waiting run outside the agent loop, leaving its request open.
+    await h.handle.db.execute(
+      sql`update public.runs set status = 'failed', ended_at = now() where id = ${runId}::uuid`,
+    );
+    const open = await j(await h.request(`/v1/takeovers?org_id=${orgId}`, { token: owner.token }));
+    expect(open.items).toHaveLength(0);
+    // Let the still-waiting workflow end so it doesn't hold the computer for the next test.
+    await h.handle.db.execute(
+      sql`update public.takeover_requests set status = 'dismissed' where run_id = ${runId}::uuid`,
+    );
+    await sleep(3000);
+  }, 120_000);
+
+  it("a bot completes a task in a Linux desktop app (Mousepad)", async () => {
+    const runId = await chat("Please write a note in Mousepad.");
+    const final = await waitStatus(runId, "completed", 120_000);
+    expect(final.status).toBe("completed");
+    const file = await h.request(
+      `/v1/computers/${computerId}/files?path=${encodeURIComponent("note.txt")}`,
+      { token: owner.token },
+    );
+    expect(file.status).toBe(200);
+    expect((await file.text()).trim()).toBe("Hello from Casama");
+  }, 180_000);
+});
+
+/** Activity-based keep-awake (D-195): an open stream alone no longer keeps the computer awake. */
+describe("live view keep-awake", () => {
+  const CID = "11111111-2222-4333-8444-555555555555";
+  const SECRET = "stream-secret";
+
+  it("touches only on presence or control input, throttled, and never forwards presence", async () => {
+    vi.useFakeTimers({ toFake: ["Date", "setInterval", "clearInterval"] });
+    const fake = await fakeComputer();
+    const proxy = await proxyServer((s) =>
+      attachStream(s, {
+        live: { tokenSecret: SECRET },
+        computers: fake.computers,
+        db: {},
+      } as never),
+    );
+    try {
+      const token = signStreamToken(SECRET, {
+        sub: "user-1",
+        cid: CID,
+        mode: "control",
+        exp: Date.now() + 3_600_000,
+      });
+      const ws = await proxy.connect(`/v1/computers/${CID}/stream?token=${token}`);
+      ws.send(JSON.stringify({ event: "signal/request", payload: {} }));
+      await settle();
+      // Open for two minutes with only signaling: no touch (it used to touch every 5 s).
+      vi.advanceTimersByTime(120_000);
+      await settle();
+      expect(fake.touch).not.toHaveBeenCalled();
+
+      ws.send(JSON.stringify({ event: "presence" }));
+      await settle();
+      expect(fake.touch).toHaveBeenCalledTimes(1);
+      // Throttled: more presence and input within 30 s doesn't touch again.
+      ws.send(JSON.stringify({ event: "presence" }));
+      ws.send(JSON.stringify({ event: "clipboard/set", payload: { text: "hi" } }));
+      await settle();
+      expect(fake.touch).toHaveBeenCalledTimes(1);
+      vi.setSystemTime(Date.now() + TOUCH_THROTTLE_MS);
+      ws.send(JSON.stringify({ event: "clipboard/set", payload: { text: "again" } }));
+      await settle();
+      expect(fake.touch).toHaveBeenCalledTimes(2);
+      expect(fake.touch).toHaveBeenCalledWith(CID);
+
+      const events = fake.received.map((r) => JSON.parse(r.data).event);
+      expect(events).toEqual(["signal/request", "clipboard/set", "clipboard/set"]);
+      ws.close();
+    } finally {
+      vi.useRealTimers();
+      proxy.close();
+      fake.close();
+    }
+  });
+
+  it("closes open views with 1012 on shutdown, so the app redials instead of giving up (D-360)", async () => {
+    const fake = await fakeComputer();
+    let views: ReturnType<typeof attachStream> | undefined;
+    const proxy = await proxyServer((s) => {
+      views = attachStream(s, {
+        live: { tokenSecret: SECRET },
+        computers: fake.computers,
+        db: {},
+      } as never);
+    });
+    try {
+      const token = signStreamToken(SECRET, {
+        sub: "user-1",
+        cid: CID,
+        mode: "view",
+        exp: Date.now() + 3_600_000,
+      });
+      const ws = await proxy.connect(`/v1/computers/${CID}/stream?token=${token}`);
+      const closed = new Promise<number>((r) => ws.once("close", (code: number) => r(code)));
+      views?.closeAll();
+      expect(await closed).toBe(STREAM_RESTART_CODE);
+    } finally {
+      proxy.close();
+      fake.close();
+    }
+  });
+});

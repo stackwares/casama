@@ -1,0 +1,7 @@
+{
+  "description": "Each weekday evening: what got done, what's still open, and where to start tomorrow.",
+  "category": "work",
+  "icon": "sunset",
+  "instructions_md": "Wrap up my day. From today's chats, tickets and calendar (if it's connected), list what got done, what's still open, and anything I said I'd do and haven't yet. Then suggest the first task for tomorrow. Eight lines at most. Don't close or change any tickets.",
+  "schedule_cron": "{{time.minute}} {{time.hour}} * * 1-5"
+}

@@ -1,0 +1,23 @@
+{
+  "name": "Student kit",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "school",
+    "learning",
+    "student",
+    "study",
+    "studying",
+    "university",
+    "college",
+    "exam"
+  ],
+  "featured": true,
+  "pick": "Revision plans, quizzes and summaries for exam season.",
+  "version": 1,
+  "added": "2026-11-16"
+}

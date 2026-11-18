@@ -1,0 +1,102 @@
+import { parseRunEventPayload, RUN_EVENT_TYPES, type RunEventType } from "@casama/contracts";
+import { contentKeys, type Database } from "@casama/db";
+import { sql } from "drizzle-orm";
+import type { Redactor } from "./redact.ts";
+
+/** Hears every run event this process appends, after it is written (the island's pushes, D-324). */
+export type RunEventObserver = (
+  runId: string,
+  type: string,
+  payload: Record<string, unknown>,
+) => void;
+const observers = new Set<RunEventObserver>();
+
+/**
+ * Appends run events: written to Postgres first (gap-free seq per run, in one transaction);
+ * a trigger then broadcasts on Realtime and notifies the API's SSE listeners.
+ */
+export class EventBus {
+  /**
+   * Hears every event any EventBus in this process appends, with its redacted payload (before
+   * sealing). Observers must not throw or block; returns a function that stops listening.
+   */
+  static observe(fn: RunEventObserver): () => void {
+    observers.add(fn);
+    return () => observers.delete(fn);
+  }
+
+  private readonly db: Database;
+  private readonly redactor?: Redactor;
+  constructor(db: Database, redactor?: Redactor) {
+    this.db = db;
+    this.redactor = redactor;
+  }
+
+  async append(runId: string, type: string, payload: Record<string, unknown>): Promise<number> {
+    const clean = this.redactor ? this.redactor.value(payload) : payload;
+    if ((RUN_EVENT_TYPES as string[]).includes(type))
+      parseRunEventPayload(type as RunEventType, clean);
+    const rows = await this.db.execute<{ seq: number }>(
+      sql`select seq from public.append_run_event(${runId}::uuid, ${type}, ${await sealRunPayload(this.db, runId, clean)}::jsonb)`,
+    );
+    for (const fn of observers) {
+      try {
+        fn(runId, type, clean as Record<string, unknown>);
+      } catch {
+        // An observer's trouble is its own.
+      }
+    }
+    return rows[0]?.seq ?? 0;
+  }
+}
+
+const runOrgs = new Map<string, string>();
+/** A run event payload as JSON, sealed when the run's workspace encrypts content (D-136). */
+export async function sealRunPayload(db: Database, runId: string, payload: unknown) {
+  if (!contentKeys.anySealing) return JSON.stringify(payload);
+  let org = runOrgs.get(runId);
+  if (!org) {
+    const [r] = await db.execute<{ org_id: string }>(
+      sql`select org_id from public.runs where id = ${runId}::uuid`,
+    );
+    org = r?.org_id ?? "";
+    if (runOrgs.size > 5000) runOrgs.clear();
+    runOrgs.set(runId, org);
+  }
+  return contentKeys.sealJson(org, payload);
+}
+
+/** Buffers message.delta text so a run writes at most one delta per interval (default 200 ms = 5/s). */
+export class DeltaCoalescer {
+  private buffer = "";
+  private timer: ReturnType<typeof setTimeout> | undefined;
+  private chain: Promise<void> = Promise.resolve();
+
+  private readonly flushFn: (text: string) => Promise<void>;
+  private readonly intervalMs: number;
+  constructor(flushFn: (text: string) => Promise<void>, intervalMs = 200) {
+    this.flushFn = flushFn;
+    this.intervalMs = intervalMs;
+  }
+
+  push(text: string) {
+    this.buffer += text;
+    if (!this.timer) this.timer = setTimeout(() => this.flush(), this.intervalMs);
+  }
+
+  private flush() {
+    this.timer = undefined;
+    if (!this.buffer) return this.chain;
+    const text = this.buffer;
+    this.buffer = "";
+    this.chain = this.chain.then(() => this.flushFn(text));
+    return this.chain;
+  }
+
+  /** Writes anything buffered and waits for pending writes. */
+  async drain() {
+    if (this.timer) clearTimeout(this.timer);
+    await this.flush();
+    await this.chain;
+  }
+}

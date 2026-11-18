@@ -1,0 +1,31 @@
+{
+  "name": "Todoist",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "tasks",
+    "todo"
+  ],
+  "featured": true,
+  "pick": "Tell your bot what to do and it lands in Todoist with a due date.",
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Add 'call the dentist' to Todoist for tomorrow",
+    "What's on my Todoist list today?",
+    "Move my overdue tasks to next week"
+  ],
+  "access": {
+    "reads": [
+      "Todoist tasks and projects"
+    ],
+    "writes": [
+      "adds, updates and completes tasks"
+    ],
+    "credits": "low"
+  }
+}

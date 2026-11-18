@@ -1,0 +1,38 @@
+{
+  "description": "Know what's due, where the money went and what to cancel: bills, receipts, subscriptions and a budget review.",
+  "icon": "wallet",
+  "items": [
+    {
+      "type": "bot",
+      "id": "money-helper"
+    },
+    {
+      "type": "bot",
+      "id": "expense-matcher"
+    },
+    {
+      "type": "routine",
+      "id": "bill-reminders"
+    },
+    {
+      "type": "routine",
+      "id": "receipt-collector"
+    },
+    {
+      "type": "routine",
+      "id": "subscription-audit"
+    },
+    {
+      "type": "routine",
+      "id": "price-watch"
+    },
+    {
+      "type": "skill",
+      "id": "budget-review"
+    },
+    {
+      "type": "skill",
+      "id": "invoice-check"
+    }
+  ]
+}

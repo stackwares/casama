@@ -1,0 +1,181 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+  # Run by hand on a branch nobody pushes to when main moves too fast for a run to finish:
+  # gh workflow run CI --ref <branch>
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Lint, typecheck, tests
+    runs-on: ubuntu-24.04
+    env:
+      # Same major version as production and local development: drizzle-kit pulls differ across versions.
+      PG_BIN: /usr/lib/postgresql/17/bin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - uses: actions/setup-java@v6
+        with: { distribution: temurin, java-version: 17 }
+      - uses: dart-lang/setup-dart@v1
+        with: { sdk: stable }
+      - name: Postgres extensions
+        run: |
+          # The runners' Azure apt mirror sometimes doesn't resolve: use Ubuntu's archive and retry.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            echo "http://archive.ubuntu.com/ubuntu/	priority:1" | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          fi
+          for i in 1 2 3; do
+            sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y &&
+              sudo apt-get install -y postgresql-17 postgresql-17-pgvector postgresql-server-dev-17 && break
+            [ "$i" = 3 ] && exit 1
+            sleep 20
+          done
+          # Build pgTAP outside the checkout so Biome doesn't lint its files.
+          cd "$RUNNER_TEMP"
+          curl -sL https://github.com/theory/pgtap/archive/refs/tags/v1.3.3.tar.gz | tar xz
+          (cd pgtap-1.3.3 && make PG_CONFIG=$PG_BIN/pg_config && sudo make install PG_CONFIG=$PG_BIN/pg_config)
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+        env:
+          SKIP_DOCKER_TESTS: "1"
+      - name: pgTAP (RLS)
+        run: pnpm --filter @casama/db test:pgtap
+      # LICENSING.md, D-339, D-403: everything outside ee/ is open source (AGPL-3.0 and
+      # Apache-2.0) and must run without it.
+      - name: Open-source edition (without ee/)
+        run: scripts/oss-edition.sh "$RUNNER_TEMP/oss" --check
+      - name: Generated code is up to date (OpenAPI, Dart client, Drizzle schema)
+        run: |
+          pnpm gen
+          cp -r packages/db/src/generated "$RUNNER_TEMP/drizzle-before"
+          pnpm --filter @casama/db pull
+          git diff --exit-code -- packages/contracts/openapi.json dart/casama_api/lib dart/casama_sdk/lib/src/generated
+          # drizzle-kit pull doesn't order tables, relations and constraints the same way on every
+          # machine, so the Drizzle files are compared by content, not order.
+          for f in schema.ts relations.ts; do
+            diff <(sort "$RUNNER_TEMP/drizzle-before/$f") <(sort "packages/db/src/generated/$f")
+          done
+      # computerd's tests run below, once the sandbox images exist; here they hung the job.
+      - name: Dart analyze and test
+        working-directory: dart
+        timeout-minutes: 10
+        run: |
+          dart pub get
+          dart analyze
+          dart test cli casama_sdk --reporter expanded
+      - name: Build sandbox images
+        run: |
+          docker build -q -f infra/images/computer/Dockerfile.headless -t casama/computer-headless:dev .
+          docker build -q -f apps/supervisor/Dockerfile -t casama/supervisor:dev .
+          docker build -q -f infra/egress-proxy/Dockerfile -t casama/egress-proxy:dev .
+          docker build -q -f infra/turn/Dockerfile -t casama/turn:dev .
+          # The desktop image compiles Neko (about 12 minutes); the Images workflow builds it from
+          # this commit, so the tests here use the published one.
+          docker pull -q ghcr.io/stackwares/casama/computer-desktop:latest
+          docker tag ghcr.io/stackwares/casama/computer-desktop:latest casama/computer-desktop:dev
+      - name: Sandbox and computer tests (Docker)
+        run: pnpm --filter @casama/sandbox --filter @casama/server test
+      - name: Dart computerd tests
+        working-directory: dart
+        timeout-minutes: 10
+        run: dart test computerd
+      - name: CLI end to end (phase gates, with computers)
+        env:
+          E2E_SANDBOX: "1"
+        run: ./scripts/e2e-cli.sh
+
+  app:
+    name: Flutter app (analyze, widget tests, web build)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      # Pinned to the version the app ships with (D-212).
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, flutter-version: 3.50.0, cache: true }
+      - name: Native build packages (cnativeapi builds against GTK 3, X11 and Xi on Linux)
+        run: |
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            echo "http://archive.ubuntu.com/ubuntu/	priority:1" | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          fi
+          for i in 1 2 3; do
+            sudo apt-get update && sudo apt-get install -y pkg-config libgtk-3-dev libx11-dev libxi-dev && break
+            [ "$i" = 3 ] && exit 1
+            sleep 20
+          done
+      - name: Analyze and test
+        working-directory: client
+        run: |
+          flutter pub get
+          flutter gen-l10n
+          flutter analyze
+          flutter test
+      - name: Release web build (Wasm)
+        run: scripts/build-web.sh
+
+  extension:
+    name: Browser extension (tests, Chrome and Firefox zips)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @casama/extension typecheck
+      - run: pnpm --filter @casama/extension test
+      - name: Store zip (D-323; Edge Add-ons takes the same zip)
+        run: scripts/build-extension.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: casama-chrome
+          path: apps/extension/dist/casama-chrome-*.zip
+          if-no-files-found: error
+      - name: Firefox zip and Mozilla's linter (D-323 Phase 5)
+        run: |
+          scripts/build-extension.sh firefox
+          npx --yes addons-linter@10.15.0 apps/extension/dist/firefox
+      - uses: actions/upload-artifact@v4
+        with:
+          name: casama-firefox
+          path: apps/extension/dist/casama-firefox-*.zip
+          if-no-files-found: error
+      # The built extension in Chromium. With no Casama server here, the sign-in tests skip and
+      # the first-run and remote-settings tests run; locally they all run against the dev stack.
+      - name: End-to-end (Playwright)
+        run: |
+          pnpm --filter @casama/extension exec playwright install --with-deps chromium firefox
+          pnpm --filter @casama/extension e2e
+
+  supabase:
+    name: RLS tests on the real Supabase stack
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v3
+        with: { version: latest }
+      - run: supabase db start
+      - run: supabase test db
+
+  image:
+    name: Server image builds
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: apps/server/Dockerfile
+          push: false
+          tags: casama/server:ci

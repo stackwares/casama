@@ -1,0 +1,368 @@
+# Routines and skills as files
+
+Every routine and skill in a workspace can live as a Markdown file. Export them to a folder, edit
+them in any editor, review changes in pull requests, and import them back. Or connect a GitHub
+repository and let Casama keep both sides in sync.
+
+Exporting, importing and git sync are for workspace owners and admins, because the files cover
+every bot in the workspace.
+
+## The folder layout
+
+```text
+casama-files/
+├── casama.json                     which folder is which bot
+├── invoicer/                       one folder per bot
+│   ├── routines/
+│   │   └── weekly-chase.md         one file per routine
+│   └── skills/
+│       └── dunning/
+│           ├── SKILL.md            one folder per skill
+│           └── templates/
+│               └── reminder.md     files the skill uses
+└── workspace/
+    └── skills/
+        └── house-style/
+            └── SKILL.md            a skill every bot in the workspace has
+```
+
+Bot folders are named after the bot (lowercase, with dashes). `workspace/` is reserved for skills
+the whole workspace shares.
+
+### casama.json
+
+The index that ties folders to bots:
+
+```json
+{
+  "format": "casama.files",
+  "version": 1,
+  "bots": {
+    "invoicer": { "id": "5d0c1e6a-8b7f-4e8a-a1d2-3c4b5a6f7e80", "name": "Invoicer" }
+  }
+}
+```
+
+On import, a folder matches a bot by the `id` in `casama.json`. Without a match there (or without
+`casama.json` at all), Casama matches the folder name against the bot names. Renaming a bot in the
+app doesn't break the link, as long as `casama.json` keeps its id.
+
+### Routine files
+
+`<bot>/routines/<name>.md`: front matter between `---` lines, then the instructions.
+
+```markdown
+---
+id: 8c3e5f0a-2b1d-4c6e-9f7a-1d2c3b4a5e6f
+name: Weekly chase
+schedule: 0 9 * * 1
+timezone: America/Chicago
+trigger: schedule
+enabled: true
+notify: true
+ends_at: null
+max_runs: null
+---
+
+Check for overdue invoices and follow the dunning skill. Send me a short summary of who you
+contacted.
+```
+
+| Field | Required | Meaning |
+| --- | --- | --- |
+| `id` | no | The routine's id. Casama writes it on export; leave it out for a new routine. |
+| `name` | yes | Up to 120 characters |
+| `schedule` | for `schedule` triggers | A 5-field cron expression; `null` for other triggers |
+| `run_at` | for `once` triggers | When a one-time routine runs, such as `2027-01-15T09:00:00.000Z`. See [One-time routines](#one-time-routines). |
+| `timezone` | no | An IANA time zone, such as `America/Chicago`. Defaults to `UTC`. |
+| `trigger` | no | `schedule` (default), `once`, `webhook`, `github`, `calendar_event`, `message` or `device` |
+| `calendar`, `message`, `device` | for those triggers | The trigger's settings. See [Event triggers](#event-triggers). |
+| `enabled` | no | `true` (default) or `false` |
+| `notify` | no | Whether to notify you when it runs: `true` (default) or `false` |
+| `ends_at` | no | When the routine switches itself off, or `null` for never. Not for `once`. |
+| `max_runs` | no | How many more runs before it switches itself off (1 to 10,000), or `null` for no limit. Not for `once`. |
+
+The body after the front matter is the instructions: required, up to 20,000 characters.
+
+#### One-time routines
+
+```markdown
+---
+name: Renew the passport
+schedule: null
+run_at: 2027-01-15T09:00:00.000Z
+timezone: Asia/Manila
+trigger: once
+enabled: true
+notify: true
+---
+
+Remind me to renew my passport and list the documents I need.
+```
+
+Export writes the pending run as `run_at`, and `null` once the routine has run. On import, a
+`run_at` moves the run; a missing `run_at` (or `null`) keeps the routine's pending run, so
+editing the instructions doesn't cancel it. Switching on a one-time routine needs a `run_at` in
+the future. Changing `trigger` between `schedule` and `once` switches the routine between
+repeating and running once, as in the app.
+
+#### Event triggers
+
+Calendar, message and device routines keep their settings under a key named after the trigger:
+`calendar` for `calendar_event`, `message` and `device`. Export writes them as one line of JSON
+(which is also YAML); the fields are the same as the API's
+[`calendar`, `message` and `device` fields](/develop/api):
+
+```markdown
+---
+name: Arrive home
+schedule: null
+timezone: Asia/Manila
+trigger: device
+device: {"event":"arrive","place":"Home"}
+enabled: true
+notify: true
+ends_at: null
+max_runs: 20
+---
+
+Turn on the porch light routine and tell me what's on tonight.
+```
+
+By hand, an indented map works too:
+
+```yaml
+trigger: message
+message:
+  channel_kind: email
+  sender: "*@acme.com"
+```
+
+Import checks them like the API does: a message routine needs at least one filter, arrive and
+leave need a `place`, notification routines need an `app`, file routines need a `folder`, and a
+calendar routine's `integration_id` must be a calendar connected in this workspace (so a calendar
+routine from another workspace needs its id changed first). Git sync can't create device
+routines, because they follow one person's phone or computer: import those from the app or the
+CLI.
+
+#### When a routine ends
+
+`ends_at` and `max_runs` work as in the app's **When It Ends** and `PATCH /v1/routines/{id}`:
+
+- Export writes both for every routine but `once`, `null` when there's no end.
+- On import, `null` removes the end and a missing key leaves it as it is (files from before
+  ends existed don't carry them).
+- A changed `max_runs` counts from the import, so `max_runs: 3` means three more runs. An
+  unchanged one keeps counting.
+- A routine can't be switched on (`enabled: true`) past its `ends_at` or after it ran its
+  `max_runs` times. The file is reported in `errors` and the routine stays off until the file
+  moves the end, raises the runs or removes them. A paused routine may keep a past `ends_at`, so
+  exports of ended routines import back as they are.
+
+::: warning Webhook and GitHub triggers
+A file can't create a webhook or GitHub routine, or switch a routine to one, because those need a
+secret that only the app shows. Create them in the app or the API (see
+[Webhooks](/develop/webhooks)); after that, their files can update the name, instructions and
+other fields like any routine.
+:::
+
+::: tip Changing the trigger
+A file can switch a routine between `schedule` and `once`. Calendar, message, device, webhook and
+GitHub routines keep their trigger kind (their settings can change); to change the kind, create a
+new routine.
+:::
+
+### Skill files
+
+`<bot>/skills/<name>/SKILL.md` for one bot's skill, or `workspace/skills/<name>/SKILL.md` for a
+skill every bot in the workspace has. It's a normal [Agent Skills](https://agentskills.io)
+`SKILL.md`, plus Casama's `id` and `enabled`:
+
+```markdown
+---
+name: dunning
+description: Follow-up cadence for overdue invoices. Use when an invoice is past due.
+id: 0f9e8d7c-6b5a-4c3d-2e1f-0a9b8c7d6e5f
+enabled: true
+---
+
+1. Day 7: a friendly reminder, using templates/reminder.md.
+2. Day 14: a firmer note with the invoice attached.
+3. Day 30: tell me before sending anything else.
+```
+
+| Field | Required | Meaning |
+| --- | --- | --- |
+| `name` | yes | Lowercase letters, digits, `-` and `_`, up to 63 characters. Must match the folder's name. |
+| `description` | yes | When to use the skill. Casama keeps the first 300 characters. |
+| `id` | no | Written on export |
+| `enabled` | no | `true` (default) or `false` |
+
+The body is the skill's instructions (up to 50,000 characters). Every other file in the skill's
+folder goes with it, so the bot finds it on its computer. Files imported this way aren't marked
+executable, so start scripts with their interpreter (`bash scripts/check.sh`,
+`python3 tool.py`). See [Skills](/guide/skills).
+
+### What's left out
+
+Export skips skills installed by [plugins](/develop/plugins) (change the plugin instead) and
+check-in routines, which Casama manages for you. Archived bots aren't exported.
+
+Routine files don't carry a routine's run count (how many times it ran toward `max_runs`), a
+webhook's secret or a GitHub routine's event list; those stay as they are.
+
+## Export
+
+**In the app:** Workspace settings → **Routines and skills as files** → **Export as files** saves a
+ZIP.
+
+**With the CLI:**
+
+```sh
+casama files export ./casama-files --org acme
+```
+
+**With the API:** `POST /v1/orgs/{id}/files/export` returns the same files both as one ZIP and
+one by one, base64-encoded:
+
+```sh
+curl -s -X POST "https://casama.example.com/v1/orgs/$ORG/files/export" \
+  -H "authorization: Bearer $TOKEN" | jq -r .zip_base64 | base64 --decode > casama-files.zip
+```
+
+```json
+{
+  "zip_base64": "UEsDBBQ...",
+  "count": 4,
+  "files": [{ "path": "casama.json", "content_base64": "ewogICJmb3JtYXQi..." }]
+}
+```
+
+## Import
+
+**In the app:** Workspace settings → **Routines and skills as files** → **Import files**, pick a
+ZIP, review the preview (new, changed and unchanged), then **Apply**.
+
+**With the CLI:**
+
+```sh
+casama files import ./casama-files --dry-run
+casama files import ./casama-files
+```
+
+The CLI skips files and folders whose names start with `.`, such as `.git`.
+
+**With the API:** `POST /v1/orgs/{id}/files/import` takes either a ZIP or a list of files:
+
+```sh
+jq -n --arg zip "$(base64 < casama-files.zip | tr -d '\n')" '{zip_base64: $zip, dry_run: true}' |
+curl -s -X POST "https://casama.example.com/v1/orgs/$ORG/files/import" \
+  -H "authorization: Bearer $TOKEN" \
+  -H "content-type: application/json" \
+  -d @-
+```
+
+| Field | Meaning |
+| --- | --- |
+| `zip_base64` | A ZIP of the folder, base64-encoded. A ZIP whose files all sit in one top folder with `casama.json` inside works too. |
+| `files` | Instead of a ZIP: `[{ "path": "invoicer/routines/weekly-chase.md", "content_base64": "..." }]` |
+| `dry_run` | `true` to see what would change without changing anything |
+
+```json
+{
+  "created": ["invoicer/routines/month-end.md"],
+  "updated": ["invoicer/skills/dunning/SKILL.md"],
+  "deleted": [],
+  "unchanged": 2,
+  "errors": ["invoicer/routines/bad.md: \"0 9 * *\" isn't a valid cron schedule"],
+  "dry_run": true
+}
+```
+
+### How import decides
+
+- **Matching.** A routine matches by its `id`, else by bot and name. A skill matches by bot and
+  name.
+- **Changes.** A changed file updates its routine or skill; a new file creates one. Changing a
+  schedule or time zone moves the next run.
+- **Nothing is deleted.** Removing a file and importing leaves the routine or skill in place.
+  Delete it in the app. (Git sync is different; see below.)
+- **Bad files are skipped.** Every file is checked: front matter, cron, time zone, names, trigger
+  settings, ends (as above), and that a skill's folder matches its name. Problems are listed in `errors`, and the other files still
+  apply. The CLI exits with code 1 when there are errors.
+- **Plugin skills stay as they are.** A file for a skill that came from a plugin is reported as an
+  error.
+
+## Git sync
+
+Git sync keeps a workspace's routines and skills in a GitHub repository, both ways. Edit a routine
+in the app and Casama commits the change; push a change to the repository and Casama applies it.
+
+### Set it up
+
+1. **Add a GitHub token.** In workspace secrets, add a secret named `GITHUB_TOKEN`, allowed for the
+   host `api.github.com`, with a token that can push to the repository and open pull requests.
+2. **Connect the repository.** In Workspace settings → **Routines and skills as files** → **Git
+   sync**, enter the repository (`owner/name`), the branch (default `main`) and, optionally, a
+   folder inside the repository. Or use the API:
+
+   ```sh
+   curl -s -X PUT "https://casama.example.com/v1/orgs/$ORG/git-sync" \
+     -H "authorization: Bearer $TOKEN" \
+     -H "content-type: application/json" \
+     -d '{"repo": "acme/casama-config", "branch": "main", "path": "bots"}'
+   ```
+
+3. **Add the webhook.** The first setup returns a `webhook_url` and a `webhook_secret`, shown only
+   this once. In the repository's **Settings → Webhooks**, add a webhook for push events with that
+   payload URL and secret, and the content type `application/json`. See
+   [Git sync webhook](/develop/webhooks#git-sync-webhook).
+
+The webhook is optional but makes changes from the repository arrive within a minute instead of
+within 10 minutes.
+
+### How sync works
+
+Each sync compares three versions of every file: what was synced last time, what Casama has now,
+and what the branch has now.
+
+| Changed in | Result |
+| --- | --- |
+| Casama only | Casama commits the change to the branch |
+| The repository only | Casama checks the file and applies it. A bad file is reported and retried once it's fixed. |
+| Both | Casama keeps its version and opens a pull request with it on a `casama/sync-...` branch. Merging it makes both sides agree. |
+
+- **When.** Changes in Casama sync within about a minute. Casama also checks the repository every
+  10 minutes, and a push webhook makes it check on the next minute. **Sync now** in the app (or
+  `POST /v1/orgs/{id}/git-sync/run`) does the same.
+- **Same rules as import.** Git sync applies the repository's files with the checks above, so a
+  push can't switch on a routine past its end or out of runs either.
+- **Deletions.** Unlike import, git sync deletes a routine or skill when you remove its file from
+  the repository (only files that carry an `id`).
+- **Moving.** Changing the repository, branch or folder starts over, as if syncing for the first
+  time.
+
+`GET /v1/orgs/{id}/git-sync` shows the state: `last_synced_at`, `last_commit`, `last_error` (bad
+files and other problems) and `open_pr_url` when a pull request is waiting for you. `has_token`
+tells you whether the `GITHUB_TOKEN` secret is in place. `DELETE /v1/orgs/{id}/git-sync` stops
+syncing and leaves the repository as it is.
+
+## Limits
+
+| What | Limit |
+| --- | --- |
+| Routine name | 120 characters |
+| Routine instructions | 20,000 characters |
+| Skill name | 63 characters |
+| Skill description | 300 characters kept |
+| Skill body | 50,000 characters kept |
+| Files in an API import's `files` list | 5,000 |
+| Who | Workspace owners and admins |
+
+## Related
+
+- [Routines](/guide/routines)
+- [Skills](/guide/skills)
+- [Webhooks](/develop/webhooks)
+- [Bot template format](/develop/bot-templates): one bot as a shareable file
+- [CLI](/develop/cli#routines-and-skills-as-files-files)

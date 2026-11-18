@@ -1,0 +1,13 @@
+name: casama_computerd
+description: "Daemon inside each Casama computer: exec with streaming, files, archives, terminal, health."
+version: 0.1.0
+publish_to: none
+resolution: workspace
+environment:
+  sdk: ^3.13.0
+dependencies:
+  crypto: ^3.0.8
+  path: ^1.9.1
+dev_dependencies:
+  http: ^1.6.0
+  test: ^1.33.0

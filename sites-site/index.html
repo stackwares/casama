@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ZONE}} | Sites made with Casama</title>
+<meta name="description" content="Every {{ZONE}} address is a website someone made with Casama. Find out what these addresses are, who writes the sites, and how to report one.">
+<link rel="canonical" href="https://{{ZONE}}/">
+<meta property="og:title" content="{{ZONE}} | Sites made with Casama">
+<meta property="og:description" content="Every {{ZONE}} address is a website someone made with Casama.">
+<meta property="og:url" content="https://{{ZONE}}/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://{{ZONE}}/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/casama-winky-animated.svg">
+<link rel="preload" href="/assets/fonts/GoogleSans-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/link.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/" aria-label="{{ZONE}} home">
+        <span class="brand-mark" data-casama-mark></span>
+        <span class="brand-word">Casama</span><span class="brand-tag">Sites</span>
+      </a>
+      <nav class="site-nav" aria-label="Page">
+        <a href="#what">What these are</a>
+        <a href="#report">Report</a>
+      </nav>
+      <a class="btn sm primary" href="https://casama.ai/download">Get Casama</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero wrap">
+      <p class="eyebrow">{{ZONE}}</p>
+      <h1>Websites people made with Casama.</h1>
+      <p class="lead">An address like <code>bakery.{{ZONE}}</code> is a site someone built with their Casama bot and put on the web. Casama hosts it; the person who published it wrote it.</p>
+      <div class="hero-figure">
+        <img class="hero-art" src="/assets/hero.webp" srcset="/assets/hero-800.webp 800w, /assets/hero.webp 1600w" sizes="(max-width: 900px) 100vw, 1100px" width="1600" height="900" alt="" decoding="async">
+        <img class="hero-mascot" src="/assets/casama-brand-animated.svg" alt="" width="120" height="120">
+      </div>
+    </section>
+
+    <section class="section wrap" id="what" aria-labelledby="what-title">
+      <h2 id="what-title">What these addresses are</h2>
+      <ul class="steps">
+        <li>Each address is one site, published by one Casama workspace.</li>
+        <li>Casama doesn't write, check or endorse the sites. A site never asks for a Casama password.</li>
+        <li>Sites can only send what you type in their forms to Casama, never to another server.</li>
+        <li>A site on its own domain shows the same small <strong>Report</strong> link at <code>/_casama/report</code>.</li>
+      </ul>
+    </section>
+
+    <section class="section wrap" id="report" aria-labelledby="report-title">
+      <div class="report">
+        <div class="report-intro">
+          <h2 id="report-title">Report a site</h2>
+          <p>Seen phishing, malware, spam or anything illegal on a site? Tell us. Reports from several people take a site offline at once while we look.</p>
+          <ul class="steps">
+            <li>We read every report.</li>
+            <li>If a site breaks our <a href="https://casama.ai/terms">terms</a>, we take it down on every address it has.</li>
+          </ul>
+          <p class="mail">Or write to <a href="mailto:abuse@casama.ai">abuse@casama.ai</a></p>
+        </div>
+
+        <form class="report-form" id="report-form" data-api="{{API}}">
+          <label for="r-address">Site address</label>
+          <input id="r-address" name="address" type="text" required spellcheck="false" autocapitalize="off"
+                 placeholder="https://bakery.{{ZONE}}">
+          <label for="r-details">What's wrong with it?</label>
+          <textarea id="r-details" name="reason" rows="5" minlength="3" maxlength="1000" required
+                    placeholder="What the page asked for, where you found the link, when you saw it."></textarea>
+          <p class="form-error" id="r-error" role="alert" hidden></p>
+          <p class="form-note" id="r-done" role="status" hidden>Thanks. Your report was sent.</p>
+          <button class="btn primary" type="submit">Send report</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p>{{ZONE}} is run by Casama™, from Stackwares. Casama is a trademark of Stackwares.</p>
+      <nav aria-label="Casama">
+        <a href="https://casama.ai">casama.ai</a>
+        <a href="https://docs.casama.ai/guide/sites-and-domains">Docs</a>
+        <a href="https://casama.ai/privacy">Privacy</a>
+        <a href="https://casama.ai/terms">Terms</a>
+        <a href="/.well-known/security.txt">security.txt</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="/sites.js"></script>
+  <script src="/assets/brand/casama-mark.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+{
+  "name": "@casama/plugin-check",
+  "version": "0.1.0",
+  "description": "Check an Agent Plugins 1.0 package the way Casama checks it at install.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "bin": {
+    "casama-plugin-check": "./src/main.ts"
+  },
+  "exports": {
+    ".": "./src/check.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/plugin-check/src/main.js",
+    "prepublishOnly": "pnpm run build"
+  },
+  "homepage": "https://docs.casama.ai/develop/plugins",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stackwares/casama.git",
+    "directory": "packages/plugin-check"
+  },
+  "bugs": {
+    "email": "support@casama.ai"
+  },
+  "keywords": [
+    "casama",
+    "agent-plugins",
+    "mcp",
+    "skills",
+    "plugin",
+    "lint"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "bin": {
+      "casama-plugin-check": "./dist/plugin-check/src/main.js",
+      "plugin-check": "./dist/plugin-check/src/main.js"
+    },
+    "exports": {
+      ".": {
+        "types": "./dist/plugin-check/src/check.d.ts",
+        "default": "./dist/plugin-check/src/check.js"
+      }
+    }
+  }
+}

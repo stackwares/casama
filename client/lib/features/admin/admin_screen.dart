@@ -1,0 +1,840 @@
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:casama_sdk/casama_sdk.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../../core/display_text.dart';
+import '../../core/number_format.dart';
+import '../../core/providers.dart';
+import '../../core/widgets.dart';
+import '../../core/haptics.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
+import '../../ui/motion.dart';
+import '../../ui/adaptive_modal.dart';
+import '../../ui/edge_fade.dart';
+import '../../ui/app_card.dart';
+import '../../ui/form_sheet.dart';
+import '../../ui/page.dart';
+import 'app_settings_card.dart';
+import 'capacity_card.dart';
+import 'domains_tab.dart';
+import 'margin_card.dart';
+import 'pricing_tab.dart';
+import 'remote_settings_cards.dart';
+import 'reports_tab.dart';
+
+/// Null when the signed-in user is not this instance's owner.
+final adminOverviewProvider = FutureProvider<AdminOverview?>((ref) async {
+  final signedIn = ref.watch(signedInProvider).value ?? false;
+  if (!signedIn) return null;
+  return ref.watch(backendProvider).adminOverview();
+});
+
+final _adminUpdatesProvider = FutureProvider<UpdateNotice>((r) => r.watch(backendProvider).adminUpdates());
+final _adminUsersProvider = FutureProvider<List<AdminUser>>((r) => r.watch(backendProvider).adminUsers());
+final _adminServicesProvider = FutureProvider<List<AdminService>>((r) => r.watch(backendProvider).adminServices());
+final _connectionSettingsProvider = FutureProvider.autoDispose<ConnectionSettings>((r) => r.watch(backendProvider).adminConnectionSettings());
+final _cloudModelsProvider = FutureProvider.autoDispose<CloudModels>((r) => r.watch(backendProvider).adminCloudModels());
+final _adminOrgsProvider = FutureProvider.autoDispose<List<AdminOrg>>((r) => r.watch(backendProvider).adminOrgs());
+final _adminAbuseProvider = FutureProvider.autoDispose<List<AbuseEvent>>((r) => r.watch(backendProvider).adminAbuseEvents());
+
+/// Owner admin console: overview and update notice, users, workspace quotas, services.
+class AdminScreen extends ConsumerWidget {
+  const AdminScreen({super.key, this.tab});
+
+  /// The tab to open on (`?tab=domains` from a notification), or the overview.
+  final String? tab;
+
+  static const _tabs = ['overview', 'users', 'workspaces', 'services', 'pricing', 'reports', 'domains', 'support', 'abuse'];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return DefaultTabController(
+      length: _tabs.length,
+      initialIndex: _tabs.indexOf(tab ?? '').clamp(0, _tabs.length - 1),
+      child: SubPage(
+        title: l10n.adminConsole,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(52),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: AppSpace.xs),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: EdgeFade(child: TabBar(
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
+                onTap: (_) => HapticsHelper.light(),
+                tabs: [
+                  Tab(height: 40, text: l10n.adminOverview),
+                  Tab(height: 40, text: l10n.adminUsers),
+                  Tab(height: 40, text: l10n.adminWorkspaces),
+                  Tab(height: 40, text: l10n.adminServices),
+                  Tab(height: 40, text: l10n.adminPricing),
+                  Tab(height: 40, text: l10n.adminReports),
+                  Tab(height: 40, text: l10n.adminDomains),
+                  Tab(height: 40, text: l10n.adminSupport),
+                  Tab(height: 40, text: l10n.adminAbuse),
+                ],
+              )),
+            ),
+          ),
+        ),
+        body: const TabBarView(
+          children: [_Overview(), _Users(), _Orgs(), _Services(), PricingTab(), ReportsTab(), AdminDomainsTab(), SupportTicketsTab(), _Abuse()],
+        ),
+      ),
+    );
+  }
+}
+
+class _Stat extends StatelessWidget {
+  const _Stat({required this.icon, required this.label, required this.value, this.color});
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = color ?? context.colorScheme.primary;
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpace.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(color: tint.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.icon)),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 18, color: tint),
+          ),
+          const SizedBox(height: AppSpace.sm),
+          Text(
+            value,
+            style: context.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800, fontFeatures: AppText.tabular, height: 1.1),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: context.textTheme.bodySmall?.copyWith(color: context.colorScheme.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Overview extends ConsumerWidget {
+  const _Overview();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final colors = context.appColors;
+    final updates = ref.watch(_adminUpdatesProvider);
+    return AsyncView(
+      value: ref.watch(adminOverviewProvider),
+      onRetry: () => ref.invalidate(adminOverviewProvider),
+      loading: const _OverviewSkeleton(),
+      data: (o) {
+        if (o == null) return EmptyState(icon: LucideIcons.lock, message: l10n.notInstanceOwner);
+        final u = updates.value;
+        final stats = [
+          _Stat(icon: LucideIcons.user, label: l10n.adminUsers, value: o.users.humanizedCount(context.l10n.localeName)),
+          _Stat(icon: LucideIcons.boxes, label: l10n.adminWorkspaces, value: o.orgs.humanizedCount(context.l10n.localeName)),
+          _Stat(icon: LucideIcons.bot, label: l10n.bots, value: o.bots.humanizedCount(context.l10n.localeName)),
+          _Stat(icon: LucideIcons.circlePlay, label: l10n.runs24h, value: o.runs24h.humanizedCount(context.l10n.localeName), color: colors.info),
+          _Stat(
+            icon: LucideIcons.circleAlert,
+            label: l10n.failedRuns24h,
+            value: o.failedRuns24h.humanizedCount(context.l10n.localeName),
+            color: o.failedRuns24h > 0 ? colors.negative : colors.positive,
+          ),
+          _Stat(icon: LucideIcons.banknote, label: l10n.cost24h, value: formatUsd(o.cost24hUsd, context.l10n.localeName), color: colors.positive),
+          _Stat(icon: LucideIcons.monitor, label: l10n.computersRunning, value: o.computersRunning.humanizedCount(context.l10n.localeName), color: colors.working),
+          _Stat(icon: LucideIcons.monitorSmartphone, label: l10n.devicesOnline, value: o.devicesOnline.humanizedCount(context.l10n.localeName)),
+        ];
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final side = AppSpace.gutter + AppBreakpoints.centeringInset(constraints.maxWidth, maxWidth: kPageMaxWidth);
+            final columns = constraints.maxWidth - side * 2 >= 440 ? 3 : 2;
+            return ListView(
+              padding: EdgeInsets.fromLTRB(side, AppSpace.xs, side, AppSpace.xxl + MediaQuery.paddingOf(context).bottom),
+              children: [
+                // The update check answers after the overview: the notice slides in above the tiles.
+                ShowHide(
+                  child: u == null || !u.updateAvailable
+                      ? null
+                      : Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpace.md),
+                          child: AppCard(
+                          key: const Key('updateNotice'),
+                          borderColor: context.colorScheme.primary.withValues(alpha: 0.45),
+                          child: Row(
+                            children: [
+                              Icon(LucideIcons.arrowDownToLine, color: context.colorScheme.primary),
+                              const SizedBox(width: AppSpace.sm),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(l10n.updateAvailable(u.latest.orPlaceholder(), u.current), style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+                                    if (u.url.isUsable) SelectableText(u.url!, style: context.textTheme.bodySmall),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        ),
+                ),
+                // Rows of tiles at their natural height (equal within a row), rather than a fixed
+                // ratio that cuts them off on narrow phones, with other fonts or larger text.
+                Column(
+                  spacing: AppSpace.sm,
+                  children: [
+                    for (var r = 0; r < stats.length; r += columns)
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          spacing: AppSpace.sm,
+                          children: [
+                            for (var c = r; c < r + columns; c++) Expanded(child: c < stats.length ? stats[c] : const SizedBox()),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: AppSpace.md),
+                const CapacityCard(),
+                const MarginCard(),
+                FormNote(l10n.casamaVersion(o.version), icon: LucideIcons.badgeCheck),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+/// The overview before it loads: the grid of stat tiles in the same columns, and the version line.
+class _OverviewSkeleton extends StatelessWidget {
+  const _OverviewSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    final stat = SkeletonCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: SkeletonBone(width: 32, height: 32, radius: AppRadius.icon),
+          ),
+          const SizedBox(height: AppSpace.sm),
+          SkeletonText(style: text.headlineSmall?.copyWith(fontWeight: FontWeight.w800, height: 1.1), widthFactor: 0.4),
+          const SizedBox(height: 2),
+          SkeletonText(style: text.bodySmall, widthFactor: 0.6),
+        ],
+      ),
+    );
+    return SkeletonPage(
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 440 ? 3 : 2;
+            const count = 8;
+            return Column(
+              spacing: AppSpace.sm,
+              children: [
+                for (var r = 0; r < count; r += columns)
+                  Row(
+                    spacing: AppSpace.sm,
+                    children: [
+                      for (var c = r; c < r + columns; c++) Expanded(child: c < count ? stat : const SizedBox()),
+                    ],
+                  ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: AppSpace.md),
+        Row(
+          children: [
+            const SkeletonBone(width: 16, height: 16, radius: 4),
+            const SizedBox(width: 6),
+            Expanded(child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.35), widthFactor: 0.4)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _Users extends ConsumerWidget {
+  const _Users();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final users = ref.watch(_adminUsersProvider);
+    return AsyncView(
+      value: users,
+      loading: const SkeletonPage(
+        children: [
+          SkeletonGroupedCard(count: 6, row: SkeletonRow(trailing: SkeletonTrailing.none)),
+        ],
+      ),
+      data: (items) => PageColumn(
+        children: [
+          GroupedCard(
+            children: [
+              for (final u in items)
+                GroupedTile(
+                  icon: LucideIcons.user,
+                  title: u.email.orPlaceholder(u.id),
+                  subtitle: [
+                    context.l10n.workspacesCount(u.orgs),
+                    if (u.lastSignInAt != null) context.l10n.lastSignIn(relativeTime(u.lastSignInAt!, context)),
+                  ].join(' · '),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Orgs extends ConsumerStatefulWidget {
+  const _Orgs();
+
+  @override
+  ConsumerState<_Orgs> createState() => _OrgsState();
+}
+
+class _OrgsState extends ConsumerState<_Orgs> {
+  Future<void> _edit(AdminOrg o) async {
+    final limits = await showAdaptiveSheet<Map<String, num>>(
+      context: context,
+      builder: (_) => _QuotaForm(org: o),
+    );
+    if (limits == null || !mounted) return;
+    await runGuarded(context, () => ref.read(backendProvider).setOrgLimits(o.id, limits));
+    if (!mounted) return;
+    ref.invalidate(_adminOrgsProvider);
+  }
+
+  Future<void> _toggleSuspend(AdminOrg o) async {
+    final l10n = context.l10n;
+    final backend = ref.read(backendProvider);
+    if (o.suspendedAt != null) {
+      await runGuarded(context, () => backend.unsuspendOrg(o.id));
+    } else {
+      final reason = TextEditingController();
+      final ok = await showAdaptiveSheet<bool>(
+        context: context,
+        builder: (c) => FormSheet(
+          icon: LucideIcons.ban,
+          title: '${l10n.suspendWorkspace}: ${o.name}',
+          subtitle: l10n.suspendWorkspaceHelp,
+          submitLabel: l10n.suspendWorkspace,
+          submitKey: const Key('confirmSuspend'),
+          destructive: true,
+          onSubmit: () => Navigator.pop(c, true),
+          children: [
+            TextField(key: const Key('suspendReason'), controller: reason, decoration: InputDecoration(labelText: l10n.suspendReason)),
+          ],
+        ),
+      );
+      if (ok != true || !mounted) return;
+      final text = reason.text.trim().isEmpty ? l10n.suspendedByInstanceOwner : reason.text.trim();
+      await runGuarded(context, () => backend.suspendOrg(o.id, text));
+    }
+    if (!mounted) return;
+    ref.invalidate(_adminOrgsProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AsyncView<List<AdminOrg>>(
+      value: ref.watch(_adminOrgsProvider),
+      onRetry: () => ref.invalidate(_adminOrgsProvider),
+      loading: const _OrgsSkeleton(),
+      data: (orgs) {
+        if (orgs.isEmpty) return EmptyState(icon: LucideIcons.boxes, message: l10n.adminNoWorkspaces);
+        return PageColumn(
+          children: [
+            GroupedCard(
+              children: [
+                for (final o in orgs)
+                  GroupedTile(
+                    key: Key('adminOrg-${o.id}'),
+                    icon: LucideIcons.boxes,
+                    title: o.name,
+                    subtitle: [
+                      l10n.membersCount(o.members),
+                      l10n.botsCount(o.bots),
+                      l10n.cost30d(formatUsd(o.cost30dUsd, context.l10n.localeName)),
+                      if (o.limits.isNotEmpty) o.limits.entries.map((e) => '${e.key}: ${e.value}').join(', '),
+                      if (o.suspendedAt != null) l10n.workspaceSuspended(o.suspendedReason.orPlaceholder()),
+                    ].join(' · '),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(tooltip: l10n.editQuotas, icon: const Icon(LucideIcons.slidersHorizontal), onPressed: () => _edit(o)),
+                        IconButton(
+                          key: Key('suspend-${o.id}'),
+                          tooltip: o.suspendedAt != null ? l10n.unsuspendWorkspace : l10n.suspendWorkspace,
+                          icon: Icon(o.suspendedAt != null ? LucideIcons.circlePlay : LucideIcons.ban),
+                          onPressed: () => _toggleSuspend(o),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// The workspaces before they load: workspace rows with the quota and suspend buttons.
+class _OrgsSkeleton extends StatelessWidget {
+  const _OrgsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonPage(
+      children: [
+        SkeletonGroupedCard(
+          rows: [
+            for (final (t, st) in const [(0.44, 0.8), (0.3, 0.7), (0.52, 0.86), (0.36, 0.64)])
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SkeletonRow(padding: EdgeInsets.zero, trailing: SkeletonTrailing.none, titleWidth: t, subtitleWidth: st),
+                    ),
+                    const SizedBox(width: AppSpace.xs),
+                    for (var i = 0; i < 2; i++)
+                      const SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 20, height: 20, radius: 5))),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _QuotaForm extends StatefulWidget {
+  const _QuotaForm({required this.org});
+  final AdminOrg org;
+
+  @override
+  State<_QuotaForm> createState() => _QuotaFormState();
+}
+
+class _QuotaFormState extends State<_QuotaForm> {
+  late final _bots = TextEditingController(text: '${widget.org.limits['max_bots'] ?? ''}');
+  late final _usd = TextEditingController(text: '${widget.org.limits['monthly_usd'] ?? ''}');
+
+  @override
+  void dispose() {
+    _bots.dispose();
+    _usd.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    VoidCallback? submit;
+    return FormSheet(
+      icon: LucideIcons.slidersHorizontal,
+      title: l10n.quotasFor(widget.org.name),
+      subtitle: l10n.quotasHelp,
+      submitLabel: l10n.save,
+      submitKey: const Key('saveQuota'),
+      // Also run by the keyboard's Done key on the last field.
+      onSubmit: submit = () => Navigator.pop(context, <String, num>{
+        if (num.tryParse(_bots.text) != null) 'max_bots': num.parse(_bots.text),
+        if (num.tryParse(_usd.text) != null) 'monthly_usd': num.parse(_usd.text),
+      }),
+      children: [
+        TextField(
+          key: const Key('maxBots'),
+          controller: _bots,
+          textInputAction: TextInputAction.next,
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(labelText: l10n.maxBots, prefixIcon: const Icon(LucideIcons.bot, size: 20)),
+        ),
+        TextField(
+          key: const Key('monthlyUsd'),
+          controller: _usd,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => submit?.call(),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(labelText: l10n.monthlyUsd, prefixIcon: const Icon(LucideIcons.circleDollarSign, size: 20)),
+        ),
+      ],
+    );
+  }
+}
+
+class _Services extends ConsumerWidget {
+  const _Services();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final colors = context.appColors;
+    final services = ref.watch(_adminServicesProvider);
+    return AsyncView(
+      value: services,
+      loading: const _ServicesSkeleton(),
+      data: (items) => PageColumn(
+        children: [
+          const _CloudModelsCard(),
+          const _ConnectionSettingsCard(),
+          const AppSettingsCard(),
+          const SizedBox(height: AppSpace.lg),
+          GroupedCard(
+            children: [
+              for (final s in items)
+                GroupedTile(
+                  icon: !s.configured ? LucideIcons.circleMinus : (s.healthy == false ? LucideIcons.circleAlert : LucideIcons.circleCheck),
+                  iconColor: !s.configured ? context.colorScheme.onSurfaceVariant : (s.healthy == false ? colors.negative : colors.positive),
+                  title: s.name,
+                  subtitle: s.detail,
+                  trailing: StatusLabel(
+                    text: !s.configured ? l10n.serviceOff : (s.healthy == false ? l10n.serviceDown : l10n.serviceOk),
+                    color: !s.configured ? context.colorScheme.onSurfaceVariant : (s.healthy == false ? colors.negative : colors.positive),
+                    pill: true,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpace.lg),
+          // Lists the owner edits without a release (D-373, D-374).
+          const GroupedCard(
+            children: [
+              AdminJsonSettingTile(kind: AdminJsonSettingKind.modelCatalog),
+              AdminJsonSettingTile(kind: AdminJsonSettingKind.browserGuard),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The services before they load: the gap above the list, then service rows with a status pill.
+class _ServicesSkeleton extends StatelessWidget {
+  const _ServicesSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SkeletonPage(
+      children: [
+        const SizedBox(height: AppSpace.lg),
+        SkeletonGroupedCard(
+          rows: [
+            for (final (t, st) in const [(0.34, 0.6), (0.46, 0.72), (0.28, 0.5), (0.4, 0.66), (0.5, 0.56)])
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SkeletonRow(padding: EdgeInsets.zero, trailing: SkeletonTrailing.none, titleWidth: t, subtitleWidth: st),
+                    ),
+                    const SizedBox(width: AppSpace.xs),
+                    const SkeletonBone(width: 44, height: 22, radius: AppRadius.pill),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// The models Casama Cloud runs (D-188). A save reaches every server within a few seconds.
+class _CloudModelsCard extends ConsumerWidget {
+  const _CloudModelsCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final models = ref.watch(_cloudModelsProvider).value;
+    if (models == null) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(title: l10n.cloudModelsTitle),
+        GroupedCard(
+          children: [
+            GroupedTile(
+              key: const Key('cloudModels'),
+              icon: LucideIcons.sparkles,
+              title: models.chat,
+              subtitle: l10n.cloudModelsHelp,
+              onTap: () async {
+                final next = await showAdaptiveSheet<CloudModels>(
+                  context: context,
+                  builder: (_) => _CloudModelsSheet(current: models),
+                );
+                if (next == null || !context.mounted) return;
+                final ok = await runGuarded(context, () => ref.read(backendProvider).setAdminCloudModels(next));
+                if (ok != null) ref.invalidate(_cloudModelsProvider);
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpace.lg),
+      ],
+    );
+  }
+}
+
+class _CloudModelsSheet extends StatefulWidget {
+  const _CloudModelsSheet({required this.current});
+  final CloudModels current;
+
+  @override
+  State<_CloudModelsSheet> createState() => _CloudModelsSheetState();
+}
+
+class _CloudModelsSheetState extends State<_CloudModelsSheet> {
+  late final _chat = TextEditingController(text: widget.current.chat);
+  late final _background = TextEditingController(text: widget.current.background);
+  late final _image = TextEditingController(text: widget.current.image);
+  late final _live = TextEditingController(text: widget.current.live);
+  late final _tts = TextEditingController(text: widget.current.tts);
+  late final _stt = TextEditingController(text: widget.current.stt);
+  late final _embedding = TextEditingController(text: widget.current.embedding);
+  late final _video = TextEditingController(text: widget.current.video);
+  late var _resolution = widget.current.imageResolution;
+
+  @override
+  void dispose() {
+    for (final c in [_chat, _background, _image, _live, _tts, _stt, _embedding, _video]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    InputDecoration field(String label) => InputDecoration(labelText: label);
+    VoidCallback? submit;
+    // Next moves down the list. Images is followed by the resolution dropdown, so its key just
+    // closes the keyboard. Done on the last field saves.
+    Widget box(Key key, TextEditingController controller, String label, {TextInputAction action = TextInputAction.next, bool last = false}) => TextField(
+      key: key,
+      controller: controller,
+      textInputAction: last ? TextInputAction.done : action,
+      onSubmitted: last ? (_) => submit?.call() : null,
+      decoration: field(label),
+    );
+    return FormSheet(
+      icon: LucideIcons.sparkles,
+      title: l10n.cloudModelsTitle,
+      subtitle: l10n.cloudModelsHelp,
+      submitLabel: l10n.save,
+      submitKey: const Key('saveCloudModels'),
+      // Also run by the keyboard's Done key on the last field.
+      onSubmit: submit = () {
+        final values = [_chat, _background, _image, _live, _tts, _stt, _embedding, _video];
+        if (values.any((c) => c.text.trim().isEmpty)) return;
+        Navigator.pop(
+          context,
+          widget.current.copyWith(
+            chat: _chat.text.trim(),
+            background: _background.text.trim(),
+            image: _image.text.trim(),
+            imageResolution: _resolution,
+            live: _live.text.trim(),
+            tts: _tts.text.trim(),
+            stt: _stt.text.trim(),
+            embedding: _embedding.text.trim(),
+            video: _video.text.trim(),
+          ),
+        );
+      },
+      children: [
+        box(const Key('cloudChat'), _chat, 'Chat'),
+        box(const Key('cloudBackground'), _background, 'Background'),
+        box(const Key('cloudImage'), _image, 'Images', action: TextInputAction.done),
+        DropdownButtonFormField<CloudModelsImageResolutionEnum>(
+          key: const Key('cloudImageResolution'),
+          initialValue: _resolution,
+          decoration: field('Image size'),
+          items: [
+            for (final r in CloudModelsImageResolutionEnum.values)
+              DropdownMenuItem(value: r, child: Text(r.value)),
+          ],
+          onChanged: hapticOnChanged((v) {
+            if (v != null) setState(() => _resolution = v);
+          }, haptic: HapticsHelper.selection),
+        ),
+        // Calls go to Google's Gemini Live; the rest are OpenRouter model ids (D-261).
+        box(const Key('cloudLive'), _live, 'Calls (Gemini Live on Google)'),
+        box(const Key('cloudTts'), _tts, 'Read aloud (OpenRouter)'),
+        box(const Key('cloudStt'), _stt, 'Dictation (OpenRouter)'),
+        box(const Key('cloudEmbedding'), _embedding, 'Embeddings'),
+        box(const Key('cloudVideo'), _video, 'Video (OpenRouter)', last: true),
+      ],
+    );
+  }
+}
+
+/// How apps without their own sign-in connect (D-173): Casama's Composio account (one click) or
+/// people's own accounts. Takes effect on the server within seconds.
+class _ConnectionSettingsCard extends ConsumerWidget {
+  const _ConnectionSettingsCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final settings = ref.watch(_connectionSettingsProvider).value;
+    if (settings == null) return const SizedBox.shrink();
+    final server = settings.composio == ConnectionSettingsComposioEnum.server && settings.composioKey;
+    Future<void> save({bool? serverComposio, bool? googleDirect}) async {
+      await runGuarded(
+        context,
+        () => ref
+            .read(backendProvider)
+            .setAdminConnectionSettings(serverComposio: serverComposio, googleDirect: googleDirect),
+      );
+      ref.invalidate(_connectionSettingsProvider);
+      ref.invalidate(appCatalogProvider);
+    }
+
+    Future<void> choose(bool serverComposio) => save(serverComposio: serverComposio);
+    // Google's own servers vs Composio (D-166): a real choice only with both a Google client and
+    // the server's Composio account in use, and never on Casama Cloud.
+    final googleChoice = settings.googleDirectAvailable && server;
+    final googleDirect = settings.google == ConnectionSettingsGoogleEnum.direct;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(title: l10n.connectionsTitle),
+        GroupedCard(
+          children: [
+            GroupedTile(
+              key: const Key('connectionsServer'),
+              icon: server ? LucideIcons.circleCheck : LucideIcons.circle,
+              iconColor: server ? context.colorScheme.primary : null,
+              title: l10n.connectionsServerComposio,
+              subtitle: settings.composioKey ? l10n.connectionsServerComposioHelp : l10n.connectionsNoComposioKey,
+              onTap: settings.composioKey && !server ? () => choose(true) : null,
+            ),
+            GroupedTile(
+              key: const Key('connectionsOwn'),
+              icon: !server ? LucideIcons.circleCheck : LucideIcons.circle,
+              iconColor: !server ? context.colorScheme.primary : null,
+              title: l10n.connectionsOwnAccounts,
+              subtitle: l10n.connectionsOwnAccountsHelp,
+              onTap: server ? () => choose(false) : null,
+            ),
+          ],
+        ),
+        if (googleChoice) ...[
+          SectionHeader(title: l10n.connectionsGoogleTitle),
+          GroupedCard(
+            children: [
+              GroupedTile(
+                key: const Key('connectionsGoogleComposio'),
+                icon: !googleDirect ? LucideIcons.circleCheck : LucideIcons.circle,
+                iconColor: !googleDirect ? context.colorScheme.primary : null,
+                title: l10n.connectionsGoogleComposio,
+                subtitle: l10n.connectionsGoogleComposioHelp,
+                onTap: googleDirect ? () => save(googleDirect: false) : null,
+              ),
+              GroupedTile(
+                key: const Key('connectionsGoogleDirect'),
+                icon: googleDirect ? LucideIcons.circleCheck : LucideIcons.circle,
+                iconColor: googleDirect ? context.colorScheme.primary : null,
+                title: l10n.connectionsGoogleDirect,
+                subtitle: l10n.connectionsGoogleDirectHelp,
+                onTap: !googleDirect ? () => save(googleDirect: true) : null,
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Recent abuse signals and actions (D-094).
+class _Abuse extends ConsumerWidget {
+  const _Abuse();
+
+  String _label(BuildContext context, String kind) {
+    final l10n = context.l10n;
+    return switch (kind) {
+      'mining_pool' => l10n.abuseKind_mining_pool,
+      'blocked_port' => l10n.abuseKind_blocked_port,
+      'egress_flood' => l10n.abuseKind_egress_flood,
+      'signup_blocked' => l10n.abuseKind_signup_blocked,
+      'suspended' => l10n.abuseKind_suspended,
+      'unsuspended' => l10n.abuseKind_unsuspended,
+      _ => kind,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return AsyncView<List<AbuseEvent>>(
+      value: ref.watch(_adminAbuseProvider),
+      onRetry: () => ref.invalidate(_adminAbuseProvider),
+      loading: const SkeletonPage(
+        children: [
+          SkeletonGroupedCard(count: 5, row: SkeletonRow(trailing: SkeletonTrailing.none)),
+        ],
+      ),
+      data: (items) {
+        return PageColumn(
+          children: [
+            if (items.isEmpty)
+              AppCard(child: FormNote(context.l10n.adminNoAbuse, icon: LucideIcons.shieldCheck))
+            else
+              GroupedCard(
+                children: [
+                  for (final e in items)
+                    GroupedTile(
+                      icon: e.kind == 'unsuspended' ? LucideIcons.circlePlay : LucideIcons.shieldAlert,
+                      title: _label(context, e.kind),
+                      subtitle: [
+                        ?e.orgName,
+                        if (e.detail['target'] case final String t) t,
+                        if (e.detail['reason'] case final String r) r,
+                        e.createdAt.replaceFirst('T', ' ').substring(0, 16),
+                      ].join(' · '),
+                    ),
+                ],
+              ),
+          ],
+        );
+      },
+    );
+  }
+}

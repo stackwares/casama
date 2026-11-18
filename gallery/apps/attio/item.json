@@ -1,0 +1,28 @@
+{
+  "name": "Attio",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "crm"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Find every deal in Attio that hasn't moved in two weeks",
+    "Add a note to Acme's record about today's call",
+    "Who are our newest companies in Attio?"
+  ],
+  "access": {
+    "reads": [
+      "Attio CRM records"
+    ],
+    "writes": [
+      "updates records, notes and tasks"
+    ],
+    "credits": "low"
+  }
+}

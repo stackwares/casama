@@ -1,0 +1,26 @@
+{
+  "name": "Otter.ai",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "meetings",
+    "transcripts"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Summarize my Otter conversations from today",
+    "Search my transcripts for the client's name",
+    "What did we decide in the standup?"
+  ],
+  "access": {
+    "reads": [
+      "Otter transcripts"
+    ],
+    "credits": "low"
+  }
+}

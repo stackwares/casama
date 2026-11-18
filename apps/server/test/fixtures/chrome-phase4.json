@@ -1,0 +1,213 @@
+{
+  "name": "chrome-phase4",
+  "turns": [
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[]}"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "look at my browser"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "a1",
+            "name": "device__request_access",
+            "args": {
+              "kind": "browser_tab",
+              "reason": "To see the page you're on."
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "device.request_access"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "I asked to see your browser's tab."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "what's on my screen"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "t1",
+            "name": "device__read",
+            "args": {
+              "kind": "browser_tab"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "device.read",
+        "lastUserIncludes": "what's on my screen"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "You're on the team wiki's release notes page."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "find the article about tides"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "h1",
+            "name": "device__read",
+            "args": {
+              "kind": "browser_history",
+              "query": "tides"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "device.read",
+        "lastUserIncludes": "find the article about tides"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "It's \"How tides work\"."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Done."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Done."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

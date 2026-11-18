@@ -1,0 +1,38 @@
+{
+  "description": "New postings each morning, applications written with you, follow-ups chased and a brief before each interview.",
+  "icon": "briefcase-business",
+  "items": [
+    {
+      "type": "bot",
+      "id": "writer"
+    },
+    {
+      "type": "bot",
+      "id": "research-assistant"
+    },
+    {
+      "type": "routine",
+      "id": "job-search-digest"
+    },
+    {
+      "type": "routine",
+      "id": "follow-up-chaser"
+    },
+    {
+      "type": "routine",
+      "id": "meeting-prep"
+    },
+    {
+      "type": "skill",
+      "id": "email-drafter"
+    },
+    {
+      "type": "skill",
+      "id": "proofread"
+    },
+    {
+      "type": "skill",
+      "id": "meeting-prep"
+    }
+  ]
+}

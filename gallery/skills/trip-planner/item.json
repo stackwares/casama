@@ -1,0 +1,29 @@
+{
+  "name": "Trip planner",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "travel",
+    "life"
+  ],
+  "category": "life",
+  "icon": "plane",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-11",
+  "examples": [
+    "Plan four days in Lisbon on a mid-range budget",
+    "Make a weekend itinerary in the mountains with travel times",
+    "What should I pack for a week in Japan in spring?"
+  ],
+  "access": {
+    "reads": [
+      "the web"
+    ],
+    "credits": "medium"
+  }
+}

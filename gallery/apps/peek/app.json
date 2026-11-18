@@ -1,0 +1,10 @@
+{
+  "description": "Find tours, activities and things to do with Peek.",
+  "category": "productivity",
+  "color": "111111",
+  "homepage": "https://www.peek.com",
+  "url": "https://mcp.peek.com/mcp",
+  "auth": ["none"],
+  "note": "Search only. Booking finishes on Peek. No sign-in needed.",
+  "capabilities": ["Search activities by place", "See dates, times and prices", "Get an activity's details"]
+}

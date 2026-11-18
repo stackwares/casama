@@ -1,0 +1,8 @@
+wrangler.jsonc
+.assetsignore
+.gitignore
+.wrangler
+.github
+check.mjs
+sign.mjs
+build-pages.mjs

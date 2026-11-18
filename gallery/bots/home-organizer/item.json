@@ -1,0 +1,40 @@
+{
+  "name": "Home organizer",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "home",
+    "family"
+  ],
+  "featured": true,
+  "pick": "Shopping lists, chores and appointments for the whole house, kept in one place.",
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Add milk, eggs and dish soap to the shopping list",
+    "Split the chores fairly between the three of us",
+    "What's coming up for the family this week?"
+  ],
+  "access": {
+    "reads": [
+      "memory"
+    ],
+    "writes": [
+      "keeps lists in memory"
+    ],
+    "credits": "low"
+  },
+  "inputs": [
+    {
+      "key": "household",
+      "label": "Who is it for?",
+      "type": "text",
+      "default": "a household",
+      "help": "Such as: the Garcia family, or me and two flatmates."
+    }
+  ]
+}

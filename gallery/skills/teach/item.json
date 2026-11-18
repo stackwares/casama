@@ -1,0 +1,30 @@
+{
+  "name": "Teach",
+  "author": {
+    "name": "Matt Pocock",
+    "url": "https://github.com/mattpocock/skills"
+  },
+  "license": "MIT",
+  "tags": [
+    "life"
+  ],
+  "category": "life",
+  "icon": "graduation-cap",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Teach me how Git branches work",
+    "I want to learn SQL. Start me off",
+    "Help me understand compound interest with examples"
+  ],
+  "access": {
+    "reads": [
+      "your workspace files"
+    ],
+    "writes": [
+      "saves learning notes"
+    ],
+    "credits": "medium"
+  }
+}

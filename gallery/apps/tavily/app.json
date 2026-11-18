@@ -1,0 +1,10 @@
+{
+  "description": "Search the web and pull clean content from pages with Tavily.",
+  "category": "data",
+  "color": "0B0907",
+  "homepage": "https://www.tavily.com",
+  "url": "https://mcp.tavily.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Search the web", "Extract a page's content", "Crawl a site"]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "Lagoon",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "teal"
+  ],
+  "featured": true,
+  "pick": "Bright teal for light mode, deep sea for night.",
+  "version": 1,
+  "added": "2026-11-11"
+}

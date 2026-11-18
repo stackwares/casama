@@ -1,0 +1,30 @@
+{
+  "description": "A study partner that quizzes you, skills to summarize and learn, and a quiet night look for late revision.",
+  "icon": "graduation-cap",
+  "items": [
+    {
+      "type": "bot",
+      "id": "study-buddy"
+    },
+    {
+      "type": "skill",
+      "id": "teach"
+    },
+    {
+      "type": "skill",
+      "id": "summarize-document"
+    },
+    {
+      "type": "skill",
+      "id": "fact-check"
+    },
+    {
+      "type": "routine",
+      "id": "weekly-review"
+    },
+    {
+      "type": "wallpaper",
+      "id": "night-sky"
+    }
+  ]
+}

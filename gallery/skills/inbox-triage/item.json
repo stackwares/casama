@@ -1,0 +1,29 @@
+{
+  "name": "Inbox triage",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work"
+  ],
+  "category": "work",
+  "icon": "inbox",
+  "featured": true,
+  "pick": "Know what needs a reply today and what can wait.",
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Sort these emails into reply now, later, read and ignore",
+    "Which of my messages today actually need an answer?",
+    "Triage this inbox export and draft the urgent replies"
+  ],
+  "access": {
+    "reads": [
+      "emails and messages you share"
+    ],
+    "credits": "low"
+  }
+}

@@ -1,0 +1,122 @@
+import { lookup } from "node:dns";
+import { isIP } from "node:net";
+import { Agent, fetch as undiciFetch } from "undici";
+import { isBlocked, makeBlockList, makeExemptList } from "./net-policy.ts";
+
+export class BlockedAddressError extends Error {
+  readonly code = "blocked_address";
+}
+
+/**
+ * fetch for calls the worker makes on a bot's behalf (http.request, MCP, OpenAPI, media downloads).
+ * Every connection's resolved address is vetted at connect time, so private ranges, cloud metadata
+ * and DNS rebinding are refused. `exemptCidrs` exists for tests and local development only.
+ */
+export function createSafeFetch(
+  opts: { exemptCidrs?: string[]; timeoutMs?: number } = {},
+): typeof fetch {
+  const blocked = makeBlockList();
+  const exempt = opts.exemptCidrs?.length ? makeExemptList(opts.exemptCidrs) : null;
+  const denied = (ip: string) => isBlocked(blocked, ip) && !(exempt && isBlocked(exempt, ip));
+  const agent = new Agent({
+    connect: {
+      timeout: opts.timeoutMs ?? 15_000,
+      lookup(hostname, options, callback) {
+        if (isIP(hostname)) {
+          if (denied(hostname))
+            return callback(new BlockedAddressError(`blocked address ${hostname}`), "", 0);
+          return callback(null, hostname, isIP(hostname));
+        }
+        lookup(hostname, { all: true }, (err, addresses) => {
+          if (err) return callback(err, "", 0);
+          const list = addresses as Array<{ address: string; family: number }>;
+          if (!list.length || list.some((a) => denied(a.address))) {
+            return callback(new BlockedAddressError(`blocked address for ${hostname}`), "", 0);
+          }
+          const first = list[0] as { address: string; family: number };
+          if ((options as { all?: boolean }).all)
+            return (callback as unknown as (e: null, a: typeof list) => void)(null, list);
+          callback(null, first.address, first.family);
+        });
+      },
+    },
+  });
+  const f = (async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+    const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+    const host = new URL(url).hostname.replace(/^\[|\]$/g, "");
+    if (isIP(host) && denied(host)) throw new BlockedAddressError(`blocked address ${host}`);
+    // A Request object (SDKs build them) is Node's built-in class, which npm undici doesn't
+    // recognise: pass its parts instead.
+    const fromRequest: RequestInit =
+      typeof input === "string" || input instanceof URL
+        ? {}
+        : {
+            method: input.method,
+            headers: input.headers,
+            body: input.body,
+            signal: input.signal,
+            redirect: input.redirect,
+            ...(input.body ? { duplex: "half" } : {}),
+          };
+    const res = await undiciFetch(url, {
+      ...fromRequest,
+      ...(await encodedForm(init)),
+      dispatcher: agent,
+    } as never);
+    return asNativeResponse(res as unknown as Response);
+  }) as typeof fetch;
+  return f;
+}
+
+/**
+ * Node's built-in FormData is a different class from npm undici's, which doesn't recognise it and
+ * sends the text "[object FormData]" in its place (every dictation upload failed that way). The
+ * built-in Response does know it: encode the form there and pass the bytes with their multipart
+ * content type.
+ */
+async function encodedForm(init: RequestInit | undefined): Promise<RequestInit> {
+  if (!(init?.body instanceof FormData)) return init ?? {};
+  const encoded = new Response(init.body);
+  const headers = new Headers(init.headers);
+  headers.set("content-type", encoded.headers.get("content-type") ?? "multipart/form-data");
+  return { ...init, headers: [...headers], body: new Uint8Array(await encoded.arrayBuffer()) };
+}
+
+/**
+ * npm undici's Response is a different class from Node's built-in one, so `instanceof Response`
+ * is false for it. Libraries check that (the MCP SDK's OAuth code then read an error response as
+ * the text "[object Response]" and hid the real error), so hand back a built-in Response.
+ */
+export function asNativeResponse(res: Response): Response {
+  if (res instanceof Response) return res;
+  return wrap(res);
+}
+
+function wrap(res: Response): Response {
+  const empty = [101, 103, 204, 205, 304].includes(res.status);
+  const out = new Response(empty ? null : res.body, {
+    status: res.status,
+    statusText: res.statusText,
+    headers: [...res.headers],
+  });
+  Object.defineProperty(out, "url", { value: res.url });
+  Object.defineProperty(out, "redirected", { value: res.redirected });
+  return out;
+}
+
+/**
+ * [f] with a deadline on every call (headers and body together), combined with any signal the
+ * caller passes. For vendor APIs, whose answers are small and quick: a hung vendor fails in
+ * seconds instead of waiting out Node's five-minute defaults. Not for bot traffic (MCP tool calls
+ * and http.request can legitimately take minutes; those have their own limits).
+ */
+export function withTimeout(f: typeof fetch, ms: number): typeof fetch {
+  return ((input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+    const own = init?.signal ?? (input instanceof Request ? input.signal : undefined);
+    const deadline = AbortSignal.timeout(ms);
+    return f(input, { ...init, signal: own ? AbortSignal.any([own, deadline]) : deadline });
+  }) as typeof fetch;
+}
+
+/** The default guarded fetch (no exemptions). */
+export const safeFetch = createSafeFetch();

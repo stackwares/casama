@@ -1,0 +1,38 @@
+{
+  "description": "Decide, plan and report without a chief of staff: memos, specs, competitor briefs and a weekly review.",
+  "icon": "rocket",
+  "items": [
+    {
+      "type": "skill",
+      "id": "decision-memo"
+    },
+    {
+      "type": "skill",
+      "id": "write-spec"
+    },
+    {
+      "type": "skill",
+      "id": "competitive-brief"
+    },
+    {
+      "type": "skill",
+      "id": "weekly-report"
+    },
+    {
+      "type": "routine",
+      "id": "morning-plan"
+    },
+    {
+      "type": "routine",
+      "id": "weekly-review"
+    },
+    {
+      "type": "app",
+      "id": "todoist"
+    },
+    {
+      "type": "app",
+      "id": "attio"
+    }
+  ]
+}

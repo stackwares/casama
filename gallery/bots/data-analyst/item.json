@@ -1,0 +1,21 @@
+{
+  "name": "Analyst",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "research",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-09",
+  "examples": [
+    "Analyse this CSV and tell me what stands out",
+    "Chart monthly revenue by product",
+    "Clean up this messy spreadsheet"
+  ]
+}

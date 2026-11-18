@@ -1,0 +1,25 @@
+{
+  "name": "Amplitude",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "analytics"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "How many people signed up last week in Amplitude?",
+    "Show me our retention dashboard",
+    "Which cohort grew fastest this month?"
+  ],
+  "access": {
+    "reads": [
+      "Amplitude analytics"
+    ],
+    "credits": "low"
+  }
+}

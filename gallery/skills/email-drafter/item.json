@@ -1,0 +1,28 @@
+{
+  "name": "Email drafter",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work"
+  ],
+  "category": "work",
+  "icon": "mail",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Draft a polite reply declining this meeting",
+    "Write an email asking for a deadline extension from these notes",
+    "Make this follow-up shorter and friendlier"
+  ],
+  "access": {
+    "reads": [
+      "what you share"
+    ],
+    "credits": "low"
+  }
+}

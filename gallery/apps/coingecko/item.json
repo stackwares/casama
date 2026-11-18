@@ -1,0 +1,26 @@
+{
+  "name": "CoinGecko",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "crypto",
+    "prices"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "What's the price of Bitcoin and Ethereum right now?",
+    "Compare Solana and Cardano over the past month",
+    "What coins are trending today?"
+  ],
+  "access": {
+    "reads": [
+      "CoinGecko market data"
+    ],
+    "credits": "low"
+  }
+}

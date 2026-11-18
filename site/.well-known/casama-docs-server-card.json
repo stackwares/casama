@@ -1,0 +1,10 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
+  "name": "ai.casama/docs",
+  "title": "Casama docs",
+  "description": "Search and read Casama's documentation and look up its HTTP API. No sign-in needed.",
+  "version": "0.2.0",
+  "websiteUrl": "https://docs.casama.ai/develop/agents",
+  "repository": { "url": "https://github.com/stackwares/casama", "source": "github" },
+  "remotes": [{ "type": "streamable-http", "url": "https://api.casama.ai/mcp/docs" }]
+}

@@ -1,0 +1,7 @@
+{
+  "description": "Every morning: new job postings that match what you're looking for, best match first, with links.",
+  "category": "life",
+  "icon": "briefcase-business",
+  "instructions_md": "Search the web for job postings from the last 24 hours that match {{role}}. Check company career pages and job boards you can read without signing in. List up to eight, best match first: the title, the company, the place or remote, the pay if it's given, one line on why it fits and a link to the posting. Leave out postings you've shown me before (keep a list in memory), reposts and ones that don't name the company. Don't apply to anything or contact anyone for me. If nothing new matched, say so in one line.",
+  "schedule_cron": "0 8 * * *"
+}

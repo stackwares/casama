@@ -1,0 +1,11 @@
+{
+  "description": "Generate videos and images with Runway.",
+  "category": "design",
+  "color": "0C0C0C",
+  "homepage": "https://runwayml.com",
+  "url": "https://mcp.runwayml.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "note": "Generating uses your Runway credits.",
+  "capabilities": ["Generate video from a prompt", "Generate images"]
+}

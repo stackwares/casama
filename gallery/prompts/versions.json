@@ -1,0 +1,26 @@
+{
+  "checkin.brief": {
+    "version": 1,
+    "sha256": "74c6bbbb8e164360b83e1b93de6f433086a4b7b93617aaa6a43169c20790b2d0"
+  },
+  "checkin.reason.connection": {
+    "version": 1,
+    "sha256": "e18d8b5451328401d07fb7135b1300c7a8e10361148e738e6cfd885c18264740"
+  },
+  "checkin.reason.event": {
+    "version": 1,
+    "sha256": "f62b013b6d45ef4c774a2d943da7402d555f3a4e092bdaf468a25391662abba9"
+  },
+  "checkin.scan": {
+    "version": 1,
+    "sha256": "5ad6d8c1726dbfdbfca534071232ccc2e91670c668caa3a3c9b81903ed84f9b4"
+  },
+  "checkin.setup_scan": {
+    "version": 1,
+    "sha256": "903b49ff9888ec5cf87b1f0d87e8a312de3d822c04c80f4c8a648f8c1ea98c3b"
+  },
+  "setup.guide": {
+    "version": 1,
+    "sha256": "f110e84f07a920bce142e4f829c8b434f7989327fc458c5198f448a0f990667f"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@casama/extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "description": "Casama for Chrome, Edge and Firefox: connects the browser to your Casama bots (D-323).",
+  "scripts": {
+    "build": "vite build --mode dev && vite build --mode store && vite build --mode firefox",
+    "build:dev": "vite build --mode dev",
+    "build:store": "vite build --mode store",
+    "build:firefox": "vite build --mode firefox",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "e2e": "vite build --mode e2e && vite build --mode firefox-e2e && playwright test"
+  },
+  "dependencies": {
+    "@casama/client": "workspace:*",
+    "pdfjs-dist": "6.5.438"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/chrome": "0.3.7",
+    "@types/node": "^26.6.6",
+    "vite": "8.3.6"
+  }
+}

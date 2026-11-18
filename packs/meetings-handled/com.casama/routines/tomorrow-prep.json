@@ -1,0 +1,8 @@
+{
+  "name": "Tomorrow's meetings",
+  "description": "Each weekday evening: a short brief for each of tomorrow's meetings.",
+  "category": "work",
+  "icon": "calendar-clock",
+  "instructions_md": "Look at tomorrow's calendar. For each meeting with other people: the time, who's coming, what it's about, what was decided last time (from shared/meetings/ or memory), and up to three questions worth asking. Skip focus blocks and holds. If the calendar isn't connected, say so in one line.",
+  "schedule_cron": "{{time.minute}} {{time.hour}} * * 1-5"
+}

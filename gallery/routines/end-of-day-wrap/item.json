@@ -1,0 +1,34 @@
+{
+  "name": "End of day wrap",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "planning",
+    "work"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "chats",
+      "tickets",
+      "calendar",
+      "memory"
+    ],
+    "credits": "low"
+  },
+  "inputs": [
+    {
+      "key": "time",
+      "label": "What time does your day end?",
+      "type": "time",
+      "default": "17:30",
+      "help": "Weekdays, in your workspace's time zone."
+    }
+  ]
+}

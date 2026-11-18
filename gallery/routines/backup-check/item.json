@@ -1,0 +1,33 @@
+{
+  "name": "Backup check",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "backup",
+    "self-hosting",
+    "ops"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "backup reports you point it to",
+      "memory"
+    ],
+    "credits": "low"
+  },
+  "inputs": [
+    {
+      "key": "where",
+      "label": "Where do your backups report?",
+      "type": "text",
+      "default": "the backup reports you know about in memory",
+      "help": "A status page, a report email's subject or a log file on the bot's computer."
+    }
+  ]
+}

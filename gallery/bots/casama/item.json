@@ -1,0 +1,21 @@
+{
+  "name": "Personal assistant",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "starter"
+  ],
+  "featured": true,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "What can you do for me?",
+    "What needs my attention today?",
+    "Plan a weekend in Lisbon under $800"
+  ]
+}

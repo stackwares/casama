@@ -1,0 +1,10 @@
+{
+  "description": "Work with your Postman workspaces, collections and APIs.",
+  "category": "developer",
+  "color": "FF6C37",
+  "homepage": "https://www.postman.com",
+  "url": "https://mcp.postman.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Search collections", "Read and edit requests", "Manage workspaces"]
+}

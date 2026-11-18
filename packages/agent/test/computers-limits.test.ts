@@ -1,0 +1,131 @@
+import { describe, expect, it, vi } from "vitest";
+import { ComputerService } from "../src/computers.ts";
+
+/** Computer limits from the monetization audit (D-248): after a downgrade, a full server, credits. */
+describe("checkCanStart (D-248)", () => {
+  /** A db that answers the start check's one query, then the server's memory in use (D-252). */
+  const svc = (row: Record<string, unknown>, usedMb?: number, mineMb = 4096) => {
+    const answers: unknown[][] = [
+      [row],
+      ...(usedMb == null ? [] : [[{ used: String(usedMb), mine: String(mineMb) }]]),
+    ];
+    const execute = vi.fn(async () => answers.shift() ?? []);
+    return { s: new ComputerService({ execute } as never, {} as never), execute };
+  };
+  const ok = {
+    suspended: false,
+    plan: "pro",
+    verified: true,
+    gate: true,
+    credits: "5",
+    unbilled: "0",
+  };
+
+  it("after a downgrade, only the plan's number of computers (the oldest) start", async () => {
+    await expect(
+      svc({ ...ok, max_computers: "2", rank: "2" }).s.checkCanStart("org", {
+        credits: true,
+        computerId: "c3",
+      }),
+    ).rejects.toThrow("plan_limit");
+    await expect(
+      svc({ ...ok, max_computers: "2", rank: "1" }).s.checkCanStart("org", {
+        credits: true,
+        computerId: "c2",
+      }),
+    ).resolves.toBeUndefined();
+  });
+
+  it("a full server says so instead of starting one more, counting memory", async () => {
+    // 9 GB budget: two 4 GB computers run, a third 4 GB one doesn't fit; a 1 GB one does.
+    const full = svc({ ...ok, max_computers: null, rank: "0" }, 8192, 4096);
+    full.s.hostMemoryMb = 9216;
+    await expect(full.s.checkCanStart("org", { credits: true, computerId: "c1" })).rejects.toThrow(
+      "capacity_full",
+    );
+    const room = svc({ ...ok, max_computers: null, rank: "0" }, 8192, 1024);
+    room.s.hostMemoryMb = 9216;
+    await expect(
+      room.s.checkCanStart("org", { credits: true, computerId: "c1" }),
+    ).resolves.toBeUndefined();
+    // No limit set: the count isn't even read.
+    const free = svc({ ...ok, max_computers: null, rank: "0" });
+    await free.s.checkCanStart("org", { credits: true, computerId: "c1" });
+    expect(free.execute).toHaveBeenCalledTimes(1);
+  });
+
+  it("credits left after unsettled usage, not the bare balance, decide", async () => {
+    await expect(
+      svc({
+        ...ok,
+        credits: "1",
+        unbilled: "1.5",
+        max_computers: null,
+        rank: null,
+      }).s.checkCanStart("org", {
+        credits: true,
+      }),
+    ).rejects.toThrow("out_of_credits");
+  });
+
+  it("the plan's computer hours hold for every start (billing audit 2026-11-17)", async () => {
+    const used = { ...ok, max_computers: null, rank: null, computer_hours: "5" };
+    await expect(
+      svc({ ...used, computer_seconds: String(5 * 3600) }).s.checkCanStart("org", {
+        credits: true,
+      }),
+    ).rejects.toThrow("computer_hours_exceeded");
+    await expect(
+      svc({ ...used, computer_seconds: String(4 * 3600) }).s.checkCanStart("org", {
+        credits: true,
+      }),
+    ).resolves.toBeUndefined();
+    // The user's own computer isn't counted against hosted hours.
+    await expect(
+      svc({ ...used, computer_seconds: String(9 * 3600) }).s.checkCanStart("org", {}),
+    ).resolves.toBeUndefined();
+  });
+});
+
+describe("meterRunning (D-248)", () => {
+  it("bills a running computer as it runs, and puts one to sleep when its workspace is out of credits", async () => {
+    const since = new Date(Date.now() - 10 * 60_000);
+    const running = {
+      id: "c1",
+      org_id: "org",
+      owner_bot_id: null,
+      kind: "team",
+      provider: "docker",
+      size: { cpus: 1, memory_mb: 1024 },
+      running_since: since,
+    };
+    const answers: unknown[][] = [
+      [running], // running computers past the interval
+      [{ id: "c1" }], // the interval claimed
+      [], // the usage row
+      [{ id: "c1", org_id: "org" }], // running computers of workspaces with no credits
+    ];
+    const execute = vi.fn(async () => answers.shift() ?? []);
+    const s = new ComputerService({ execute } as never, {} as never);
+    const sleep = vi.spyOn(s, "sleep").mockResolvedValue(undefined);
+    const r = await s.meterRunning();
+    expect(r).toEqual({ metered: 1, slept: 1 });
+    expect(sleep).toHaveBeenCalledWith("c1");
+    // The usage row was written for the ten minutes that ran.
+    const usage = (execute.mock.calls[2] as unknown[] | undefined)?.[0];
+    expect(JSON.stringify(usage)).toContain("computer_seconds");
+  });
+
+  it("puts a computer to sleep once its workspace used the month's computer hours", async () => {
+    const answers: unknown[][] = [
+      [], // nothing past the interval
+      [], // no workspace out of credits
+      [{ id: "c2", org_id: "org" }], // running computers past their plan's hours
+    ];
+    const execute = vi.fn(async () => answers.shift() ?? []);
+    const s = new ComputerService({ execute } as never, {} as never);
+    const sleep = vi.spyOn(s, "sleep").mockResolvedValue(undefined);
+    expect(await s.meterRunning()).toEqual({ metered: 0, slept: 1 });
+    expect(sleep).toHaveBeenCalledWith("c2");
+  });
+});

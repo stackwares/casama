@@ -1,0 +1,148 @@
+// Three places on every size: Chats, Library and Tasks (D-176, D-253, D-274). Settings sits behind the person's
+// avatar, search beside the phone tab bar, and a bot's computer inside its chat.
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:casama/app.dart';
+import 'package:casama/core/providers.dart';
+import 'package:casama/features/bots/bots_screen.dart';
+import 'package:casama/features/integrations/integrations_screen.dart';
+import 'package:casama/features/search/search_view.dart';
+import 'package:casama/features/settings/settings_screen.dart';
+import 'package:casama/ui/floating_tab_chrome.dart';
+
+import 'app_test.dart' show setSize;
+import 'fake_backend.dart';
+
+Future<void> _pumpApp(WidgetTester tester, Size size) async {
+  await setSize(tester, size);
+  await tester.pumpWidget(ProviderScope(overrides: [backendProvider.overrideWithValue(FakeBackend())], child: const CasamaApp()));
+  await tester.pumpAndSettle();
+}
+
+void main() {
+  testWidgets('phones have three tabs (D-274) and a search button beside them', (tester) async {
+    await _pumpApp(tester, const Size(400, 860));
+    final bar = find.byType(FloatingTabChrome);
+    for (final label in ['Chats', 'Library', 'Tasks']) {
+      expect(
+        find.descendant(of: bar, matching: find.text(label)),
+        findsOneWidget,
+        reason: label,
+      );
+    }
+    for (final label in ['Inbox', 'Bots', 'Board', 'Computer', 'Settings', 'Search']) {
+      expect(
+        find.descendant(of: bar, matching: find.text(label)),
+        findsNothing,
+        reason: label,
+      );
+    }
+
+    // Search sits in the Chats header beside "+", and opens over the tabs as Cmd/Ctrl+K does.
+    expect(find.descendant(of: bar, matching: find.byKey(const Key('tabSearch'))), findsNothing);
+    await tester.tap(find.byKey(const Key('tabSearch')));
+    await tester.pumpAndSettle();
+    expect(find.byType(SearchView), findsOneWidget);
+    Navigator.of(tester.element(find.byType(SearchView))).pop();
+    await tester.pumpAndSettle();
+
+    // The round button beside the tabs connects more apps and MCP servers.
+    await tester.tap(find.byKey(const Key('tabApps')));
+    await tester.pumpAndSettle();
+    expect(find.byType(IntegrationsScreen), findsOneWidget);
+    expect(GoRouter.of(tester.element(find.byType(IntegrationsScreen))).state.uri.path, '/settings/integrations');
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    // Tasks is a tab.
+    await tester.tap(find.descendant(of: bar, matching: find.text('Tasks')));
+    await tester.pumpAndSettle();
+    expect(GoRouter.of(tester.element(find.byType(FloatingTabChrome))).state.uri.path, '/tasks');
+  });
+
+  testWidgets('on phones only the three tabs show the tab bar; pages opened from them hide it', (tester) async {
+    await _pumpApp(tester, const Size(400, 860));
+    final router = GoRouter.of(tester.element(find.byType(FloatingTabChrome)));
+    Offset slide() => tester.widget<AnimatedSlide>(find.ancestor(of: find.byType(FloatingTabChrome), matching: find.byType(AnimatedSlide))).offset;
+    for (final path in ['/bots', '/library', '/tasks']) {
+      router.go(path);
+      await tester.pumpAndSettle();
+      expect(slide(), Offset.zero, reason: path);
+    }
+    // What the Inbox held opens from Chats now, full screen (D-253).
+    for (final path in ['/inbox', '/password-managers', '/settings', '/search', '/computer']) {
+      router.go(path);
+      await tester.pumpAndSettle();
+      expect(slide(), isNot(Offset.zero), reason: path);
+    }
+  });
+
+  testWidgets('on phones the avatar opens Settings full screen, and back returns to the chats', (tester) async {
+    await _pumpApp(tester, const Size(400, 860));
+    expect(find.text('Chats'), findsWidgets);
+    // Read once, as Settings: no label repeating the tooltip, nor the avatar's initial.
+    final handle = tester.ensureSemantics();
+    final me = tester.getSemantics(find.byKey(const Key('meButton')));
+    expect(me.label, isEmpty);
+    expect(me.tooltip, startsWith('Settings'));
+    handle.dispose();
+    await tester.tap(find.byKey(const Key('meButton')));
+    await tester.pumpAndSettle();
+    expect(find.byType(SettingsScreen), findsOneWidget);
+    for (final section in ['Workspace', 'App', 'Connections', 'Sign-in & security']) {
+      await tester.scrollUntilVisible(
+        find.text(section),
+        200,
+        scrollable: find.descendant(of: find.byType(SettingsScreen), matching: find.byType(Scrollable)).first,
+      );
+      expect(find.text(section), findsOneWidget, reason: section);
+    }
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SettingsScreen), findsNothing);
+    expect(find.byType(BotsScreen), findsOneWidget);
+  });
+
+  testWidgets('a link straight to Settings or the computer on a phone still has a way back', (tester) async {
+    await _pumpApp(tester, const Size(400, 860));
+    for (final path in ['/settings', '/computer', '/search']) {
+      GoRouter.of(tester.element(find.byType(BotsScreen))).go(path);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Back'));
+      await tester.pumpAndSettle();
+      expect(find.byType(BotsScreen), findsOneWidget, reason: path);
+    }
+  });
+
+  testWidgets('tablets get a rail with the three places, search, and the avatar for Settings', (tester) async {
+    await _pumpApp(tester, const Size(900, 1000));
+    final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
+    expect(rail.destinations, hasLength(3));
+    expect(find.byKey(const Key('railSearch')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('railMe')));
+    await tester.pumpAndSettle();
+    expect(find.byType(SettingsScreen), findsOneWidget);
+    expect(tester.widget<NavigationRail>(find.byType(NavigationRail)).selectedIndex, isNull);
+  });
+
+  testWidgets('wide windows list Needs you and Casama over the chats, Library, Tasks and the person under them', (tester) async {
+    await _pumpApp(tester, const Size(1600, 1000));
+    expect(find.byKey(const Key('sidebar-needs-you')), findsOneWidget);
+    expect(find.byKey(const Key('sidebar-updates')), findsOneWidget);
+    expect(find.byKey(const Key('sidebar-nav-/library')), findsOneWidget);
+    expect(find.byKey(const Key('sidebar-nav-/tasks')), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.byKey(const Key('sidebar-nav-/library'))).dy,
+      lessThan(tester.getTopLeft(find.byKey(const Key('sidebar-nav-/tasks'))).dy),
+    );
+    expect(find.byKey(const Key('sidebarMe')), findsOneWidget);
+    for (final gone in ['sidebar-nav-/inbox', 'sidebarPages', 'sidebar-nav-/computer', 'sidebar-nav-/settings']) {
+      expect(find.byKey(Key(gone)), findsNothing, reason: gone);
+    }
+    await tester.tap(find.byKey(const Key('sidebarMe')));
+    await tester.pumpAndSettle();
+    expect(find.byType(SettingsScreen), findsOneWidget);
+  });
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Personal shopper",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "life",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "Find me a good office chair under $300",
+    "Compare these two laptops for me",
+    "Gift ideas for my dad who likes cooking"
+  ]
+}

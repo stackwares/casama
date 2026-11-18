@@ -1,0 +1,34 @@
+{
+  "name": "Aurora",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "night",
+    "green"
+  ],
+  "featured": true,
+  "pick": "Northern lights colors in a soft gradient.",
+  "version": 3,
+  "added": "2026-11-11",
+  "changelog": [
+    {
+      "version": 3,
+      "date": "2026-11-18",
+      "note": "A day and a night version: it follows light and dark mode."
+    },
+    {
+      "version": 2,
+      "date": "2026-11-18",
+      "note": "New painted art in the same mood."
+    },
+    {
+      "version": 1,
+      "date": "2026-11-11",
+      "note": "First version."
+    }
+  ]
+}

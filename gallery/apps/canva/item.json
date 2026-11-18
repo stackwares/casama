@@ -1,0 +1,31 @@
+{
+  "name": "Canva",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "design",
+    "presentations"
+  ],
+  "featured": true,
+  "pick": "Make social posts, slides and flyers from a sentence, right in chat.",
+  "version": 1,
+  "added": "2026-11-12",
+  "examples": [
+    "Make an Instagram post for our summer sale in Canva",
+    "Find my presentation about Q3 results",
+    "Export my flyer as a PDF"
+  ],
+  "access": {
+    "reads": [
+      "Canva designs"
+    ],
+    "writes": [
+      "creates and edits designs"
+    ],
+    "credits": "low"
+  }
+}

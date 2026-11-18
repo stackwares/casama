@@ -1,0 +1,19 @@
+// The web app at app.casama.ai (D-193). Deploy with scripts/deploy-app-web.sh, never a bare
+// `wrangler deploy`: the script moves files of 25 MiB or more to R2 first (D-316).
+{
+  "name": "casama-app",
+  "compatibility_date": "2026-11-01",
+  "main": "cloudflare/worker.js",
+  "assets": {
+    "directory": "build/web",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "html_handling": "none",
+    // Every path that may be 25 MiB or more. cloudflare/prepare.mjs refuses to deploy a large file
+    // that isn't listed here; the rest of the app never runs the Worker.
+    "run_worker_first": ["/main.dart.wasm", "/main.dart.js"]
+  },
+  "r2_buckets": [{ "binding": "LARGE", "bucket_name": "casama-app-large" }],
+  "routes": [{ "pattern": "app.casama.ai", "custom_domain": true }],
+  "workers_dev": false
+}

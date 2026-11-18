@@ -1,0 +1,37 @@
+{
+  "name": "Meeting notes",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "meetings",
+    "calendar",
+    "work"
+  ],
+  "featured": true,
+  "pick": "Every meeting filed each evening, with decisions and who does what.",
+  "version": 1,
+  "added": "2026-11-14",
+  "access": {
+    "reads": [
+      "calendar",
+      "meeting notes apps",
+      "memory"
+    ],
+    "writes": [
+      "saves notes to the team folder"
+    ],
+    "credits": "medium"
+  },
+  "needs": {
+    "apps": [
+      "google_calendar"
+    ],
+    "skills": [
+      "meeting-notes"
+    ]
+  }
+}

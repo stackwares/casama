@@ -1,0 +1,204 @@
+{
+  "name": "chrome-phase3",
+  "turns": [
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[]}"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "check my last order"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "b1",
+            "name": "browser__open",
+            "args": {
+              "url": "https://shop.example/orders"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "browser.open",
+        "lastUserIncludes": "check my last order"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "b2",
+            "name": "browser__snapshot",
+            "args": {}
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "browser.snapshot",
+        "lastUserIncludes": "check my last order"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "b3",
+            "name": "browser__click",
+            "args": {
+              "ref": "e2"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "browser.click",
+        "lastUserIncludes": "check my last order"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "b4",
+            "name": "browser__read",
+            "args": {}
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "browser.read",
+        "lastUserIncludes": "check my last order"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Your last order, a blue kettle, shipped yesterday."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "open the approvals page"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "c1",
+            "name": "browser__open",
+            "args": {
+              "url": "https://app.casama.ai/approvals",
+              "where": "mine"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "browser.open",
+        "lastUserIncludes": "open the approvals page"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "I can't open Casama's own pages."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 300,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

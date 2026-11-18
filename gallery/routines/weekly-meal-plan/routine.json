@@ -1,0 +1,7 @@
+{
+  "description": "Saturday mornings: next week's dinners for your household, with recipes and one shopping list grouped by aisle.",
+  "category": "life",
+  "icon": "chef-hat",
+  "instructions_md": "Plan next week's dinners for {{people}} people. Use what you know from memory about our tastes, allergies, diet, budget and how much time we have on weeknights, and don't repeat last week's meals. Give me five dinners from Monday to Friday, each with the prep time and a short recipe with quantities. Reuse ingredients across meals so less goes to waste. Finish with one shopping list grouped by aisle, leaving out things I've said we always have. Always respect allergies. Don't order anything. If you don't know our tastes yet, ask me three questions first.",
+  "schedule_cron": "0 9 * * 6"
+}

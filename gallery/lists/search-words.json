@@ -1,0 +1,269 @@
+{
+  "name": "Search words",
+  "version": 1,
+  "updated": "2026-11-18",
+  "words": {
+    "background": [
+      "wallpaper"
+    ],
+    "bill": [
+      "money",
+      "finance"
+    ],
+    "blog": [
+      "writing",
+      "article"
+    ],
+    "brief": [
+      "digest",
+      "summary"
+    ],
+    "budget": [
+      "money",
+      "finance"
+    ],
+    "cal": [
+      "calendar",
+      "schedule"
+    ],
+    "calendar": [
+      "cal",
+      "schedule",
+      "meeting",
+      "events",
+      "event"
+    ],
+    "chat": [
+      "slack",
+      "messages",
+      "discord",
+      "teams",
+      "message"
+    ],
+    "code": [
+      "github",
+      "developer",
+      "programming",
+      "coding"
+    ],
+    "color": [
+      "colour",
+      "scheme",
+      "palette"
+    ],
+    "colour": [
+      "color",
+      "scheme",
+      "palette"
+    ],
+    "crm": [
+      "sales",
+      "hubspot",
+      "salesforce",
+      "leads"
+    ],
+    "dark": [
+      "night",
+      "black",
+      "midnight"
+    ],
+    "dev": [
+      "developer",
+      "github",
+      "code"
+    ],
+    "digest": [
+      "brief",
+      "summary",
+      "news"
+    ],
+    "doc": [
+      "docs",
+      "document",
+      "notion",
+      "writing"
+    ],
+    "docs": [
+      "doc",
+      "document",
+      "notion"
+    ],
+    "email": [
+      "mail",
+      "gmail",
+      "outlook",
+      "inbox"
+    ],
+    "finance": [
+      "money",
+      "budget",
+      "accounting"
+    ],
+    "fitness": [
+      "workout",
+      "health"
+    ],
+    "food": [
+      "recipe",
+      "recipes",
+      "meal",
+      "cooking"
+    ],
+    "github": [
+      "code",
+      "git"
+    ],
+    "health": [
+      "fitness",
+      "workout",
+      "sleep"
+    ],
+    "inbox": [
+      "email",
+      "mail"
+    ],
+    "light": [
+      "bright",
+      "white",
+      "day"
+    ],
+    "look": [
+      "theme",
+      "scheme",
+      "wallpaper"
+    ],
+    "mail": [
+      "email",
+      "gmail",
+      "outlook",
+      "inbox"
+    ],
+    "meal": [
+      "recipe",
+      "food"
+    ],
+    "meeting": [
+      "meetings",
+      "calendar",
+      "notes"
+    ],
+    "money": [
+      "finance",
+      "budget",
+      "invoice",
+      "bills",
+      "expenses",
+      "bill",
+      "expense"
+    ],
+    "news": [
+      "newsletter",
+      "headlines",
+      "digest",
+      "brief"
+    ],
+    "note": [
+      "notes",
+      "notion",
+      "obsidian"
+    ],
+    "notes": [
+      "note",
+      "notion",
+      "obsidian"
+    ],
+    "photo": [
+      "image",
+      "picture",
+      "photos"
+    ],
+    "recipe": [
+      "cooking",
+      "meal",
+      "food"
+    ],
+    "sales": [
+      "crm",
+      "leads",
+      "deals"
+    ],
+    "schedule": [
+      "calendar",
+      "cal"
+    ],
+    "sheet": [
+      "sheets",
+      "spreadsheet",
+      "excel"
+    ],
+    "social": [
+      "twitter",
+      "linkedin",
+      "instagram",
+      "post"
+    ],
+    "spreadsheet": [
+      "sheet",
+      "sheets",
+      "excel"
+    ],
+    "student": [
+      "study",
+      "school",
+      "learn"
+    ],
+    "study": [
+      "student",
+      "school",
+      "learn"
+    ],
+    "summarize": [
+      "summary",
+      "digest"
+    ],
+    "summary": [
+      "digest",
+      "summarize"
+    ],
+    "task": [
+      "tasks",
+      "todo",
+      "linear",
+      "asana",
+      "jira"
+    ],
+    "theme": [
+      "look",
+      "scheme"
+    ],
+    "todo": [
+      "task",
+      "tasks",
+      "checklist"
+    ],
+    "travel": [
+      "trip",
+      "flight",
+      "flights",
+      "hotel"
+    ],
+    "trip": [
+      "travel"
+    ],
+    "wallpaper": [
+      "background",
+      "pattern"
+    ],
+    "workout": [
+      "fitness",
+      "health",
+      "exercise"
+    ],
+    "write": [
+      "writing",
+      "writer",
+      "blog",
+      "draft"
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "name": "Inbox zero pass",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "email",
+    "inbox",
+    "work"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "email",
+      "memory"
+    ],
+    "writes": [
+      "saves draft replies in your mail"
+    ],
+    "credits": "medium"
+  },
+  "needs": {
+    "apps": [
+      "gmail"
+    ],
+    "skills": [
+      "inbox-triage",
+      "email-drafter"
+    ]
+  },
+  "inputs": [
+    {
+      "key": "time",
+      "label": "What time should it run?",
+      "type": "time",
+      "default": "08:00",
+      "help": "Weekdays, in your workspace's time zone."
+    }
+  ]
+}

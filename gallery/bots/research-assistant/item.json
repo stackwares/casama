@@ -1,0 +1,21 @@
+{
+  "name": "Researcher",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "research",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-09",
+  "examples": [
+    "What's the evidence on four-day work weeks?",
+    "Compare the top three vector databases",
+    "Summarise this paper and its criticisms"
+  ]
+}

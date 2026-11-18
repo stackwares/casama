@@ -1,0 +1,56 @@
+name: Bug report
+description: Something isn't working
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please check [Troubleshooting](https://github.com/stackwares/casama/blob/main/docs-site/self-hosting/troubleshooting.md) and existing issues first. Never paste secrets, keys or tokens.
+  - type: textarea
+    id: what
+    attributes: { label: What happened, description: Steps to reproduce, as exact as you can. }
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: What you expected }
+    validations: { required: true }
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      multiple: true
+      options:
+        [
+          Server,
+          CLI,
+          App (web),
+          App (iOS),
+          App (Android),
+          App (macOS),
+          App (Windows),
+          App (Linux),
+          Self-host install,
+          Docs,
+        ]
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes:
+      {
+        label: Version or commit,
+        description: "For example the app's About screen, `casama --version`, or `git rev-parse --short HEAD`.",
+      }
+  - type: dropdown
+    id: hosting
+    attributes:
+      label: Server
+      options:
+        [Self-hosted (Docker Compose), Self-hosted (Helm or other), Casama Cloud, Local development]
+  - type: textarea
+    id: logs
+    attributes:
+      {
+        label: Logs,
+        description: "Relevant output (`casama selfhost logs`, browser console, app error details).",
+        render: shell,
+      }

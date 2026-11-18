@@ -1,0 +1,7 @@
+{
+  "description": "Every Friday afternoon: this week's merged changes written up as release notes for your users, as a draft.",
+  "category": "build",
+  "icon": "file-text",
+  "instructions_md": "Draft release notes for this week's changes in {{repos}}. Read the pull requests merged since last Friday and the tickets they close. Group them into new, improved and fixed, and write each in one plain sentence about what changes for the user, not how it was built. Leave out internal changes such as tests, refactors and dependency bumps, but list them in one line at the end for the team. Link each item to its pull request. Don't publish, tag a release or post anywhere: show me the draft. If nothing was merged, say so in one line.",
+  "schedule_cron": "0 15 * * 5"
+}

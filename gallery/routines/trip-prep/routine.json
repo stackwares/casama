@@ -1,0 +1,7 @@
+{
+  "description": "Every morning: a check on any trip in the next week, with times, documents, weather and a packing list.",
+  "category": "life",
+  "icon": "plane",
+  "instructions_md": "Look for trips starting in the next seven days, in my calendar, booking emails (if mail is connected) and what's in memory. For each trip: departure times and how long before to leave for the airport or station, when check-in opens, the bookings I have and any I seem to be missing, documents I need (passport, visa, tickets), the weather at the destination and a packing list for it. Mention anything that needs doing today. Don't book, change or cancel anything. If no trip is coming up, reply in one short line.",
+  "schedule_cron": "0 8 * * *"
+}

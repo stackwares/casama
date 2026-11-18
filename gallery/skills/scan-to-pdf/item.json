@@ -1,0 +1,31 @@
+{
+  "name": "Scan to PDF",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work"
+  ],
+  "category": "work",
+  "icon": "camera",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-17",
+  "examples": [
+    "Turn these photos of my lease into one searchable PDF",
+    "Read the total and date off this receipt",
+    "Make a PDF of these pages and get the text out"
+  ],
+  "access": {
+    "reads": [
+      "photos and scans you share"
+    ],
+    "writes": [
+      "creates PDFs"
+    ],
+    "credits": "low"
+  }
+}

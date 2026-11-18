@@ -1,0 +1,26 @@
+{
+  "description": "Walk in prepared and walk out with notes, decisions and action items filed for you.",
+  "icon": "notebook-pen",
+  "items": [
+    {
+      "type": "skill",
+      "id": "meeting-prep"
+    },
+    {
+      "type": "skill",
+      "id": "meeting-notes"
+    },
+    {
+      "type": "routine",
+      "id": "meeting-notes"
+    },
+    {
+      "type": "app",
+      "id": "granola"
+    },
+    {
+      "type": "app",
+      "id": "fireflies"
+    }
+  ]
+}

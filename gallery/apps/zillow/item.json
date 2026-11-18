@@ -1,0 +1,26 @@
+{
+  "name": "Zillow",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "home",
+    "real-estate"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Find three-bedroom homes for sale in Austin under $500k",
+    "What's the Zestimate for this address?",
+    "Estimate the monthly payment on a $400k home"
+  ],
+  "access": {
+    "reads": [
+      "Zillow listings"
+    ],
+    "credits": "low"
+  }
+}

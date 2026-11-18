@@ -1,0 +1,7 @@
+{
+  "description": "On the 25th of each month: the bills and subscriptions due next month.",
+  "category": "life",
+  "icon": "receipt",
+  "instructions_md": "List the bills and subscriptions due next month from what's in your memory, with amounts and due dates, and the total. If you don't know of any yet, ask me which ones to track.",
+  "schedule_cron": "0 9 25 * *"
+}

@@ -1,0 +1,10 @@
+# Flutter-related
+**/Flutter/ephemeral/
+**/Pods/
+
+# Xcode-related
+**/dgph
+**/xcuserdata/
+
+# Per-machine signing for Debug builds (see Runner/Configs/Signing.local.xcconfig.example)
+**/Signing.local.xcconfig

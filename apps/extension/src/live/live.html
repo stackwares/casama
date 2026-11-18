@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Live view</title>
+    <link rel="icon" href="/icons/icon-32.png" />
+    <link rel="stylesheet" href="../ui/theme.css" />
+    <style>
+      main { padding: 12px; }
+      header { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+      header h1 { font-size: 16px; margin: 0; flex: 1; }
+      .muted { font-size: 12px; }
+      img { width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--hairline); background: var(--surface-1); display: block; }
+    </style>
+  </head>
+  <body>
+    <main id="app" aria-live="polite"></main>
+    <script type="module" src="./live.ts"></script>
+  </body>
+</html>

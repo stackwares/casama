@@ -1,0 +1,15 @@
+packages:
+  - apps/*
+  - packages/*
+  - infra/egress-proxy
+  - ee
+  - docs-site
+
+# Install scripts stay off (as before); none of these are needed: protobufjs only checks versions,
+# esbuild ships its binary as an optional dependency, and the OpenAPI generator fetches its JAR on use;
+# sharp ships prebuilt libvips per platform (@img/sharp-*), and its script only builds from source.
+allowBuilds:
+  protobufjs: false
+  esbuild: false
+  sharp: false
+  "@openapitools/openapi-generator-cli": false

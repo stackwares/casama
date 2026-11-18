@@ -1,0 +1,847 @@
+# Casama self-host stack (SPEC "Self-host"): Supabase (Postgres, Auth, REST, Realtime, gateway),
+# the Casama API and worker, the sandbox supervisor, egress proxy, TURN relay and Caddy.
+# Run ./install.sh from the repository root (it writes infra/compose/.env and starts this file).
+#   docker compose -f infra/compose/docker-compose.yml --env-file infra/compose/.env up -d
+# Optional profiles: s3 (SeaweedFS object storage), monitoring (Prometheus, Grafana),
+# web (the Flutter web app), images (build-only computer images), search (SearXNG web search),
+# pdf (page PDFs in an isolated Chromium; set PDF_RENDERER_URL=http://pdf:3000),
+# link (Casama Link's connector: a public address with no domain; `casama selfhost remote on`).
+name: casama
+
+# Every container's log is capped (D-272): 5 files of 20 MB, so logs can't fill the disk.
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "20m", max-file: "5" }
+
+x-casama: &casama
+  logging: *logging
+  # CASAMA_SERVER_IMAGE pins the API and worker to one image, such as a build made on this
+  # machine (scripts/deploy-prod.sh builds on the server and sets it). Empty: the registry image.
+  image: ${CASAMA_SERVER_IMAGE:-${CASAMA_REGISTRY:-casama}/server:${CASAMA_VERSION:-local}}
+  build:
+    context: ../..
+    dockerfile: apps/server/Dockerfile
+  restart: unless-stopped
+  networks: [internal]
+  environment: &casama-env
+    NODE_ENV: production
+    DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
+    SUPABASE_URL: ${CASAMA_PUBLIC_URL}
+    SUPABASE_ANON_KEY: ${ANON_KEY}
+    SUPABASE_JWT_SECRET: ${JWT_SECRET}
+    # Where links in emails and invites open; set CASAMA_APP_URL when the web app has its own host.
+    PUBLIC_APP_URL: ${CASAMA_APP_URL:-${CASAMA_PUBLIC_URL}}
+    # A page that opens the installed app, else the web app (D-326); empty: links go to the web app.
+    PUBLIC_OPEN_URL: ${CASAMA_OPEN_URL:-}
+    PUBLIC_API_URL: ${CASAMA_PUBLIC_URL}
+    # Invite links open the app (D-167): iOS app ids and Android signing fingerprints for the
+    # /.well-known files, plus the store pages shown on the join page. Empty: the join page only.
+    APPLE_APP_IDS: ${APPLE_APP_IDS:-}
+    ANDROID_APP_PACKAGE: ${ANDROID_APP_PACKAGE:-ai.casama.app}
+    ANDROID_CERT_SHA256: ${ANDROID_CERT_SHA256:-}
+    APP_STORE_URL: ${APP_STORE_URL:-}
+    PLAY_STORE_URL: ${PLAY_STORE_URL:-}
+    # Pages (D-119) live on their own origin: a separate domain, or another port for trials.
+    PAGES_URL: ${CASAMA_PAGES_URL:-http://localhost:8790}
+    # Sites (D-329): pages at <name>.<zone> on the pages port. Unset: sites are off.
+    CASAMA_SITES_ZONE: ${CASAMA_SITES_ZONE:-}
+    CASAMA_SITES_OWN_EDGE: ${CASAMA_SITES_OWN_EDGE:-false}
+    CASAMA_SITES_CF_ZONE_ID: ${CASAMA_SITES_CF_ZONE_ID:-}
+    CASAMA_SITES_CF_API_TOKEN: ${CASAMA_SITES_CF_API_TOKEN:-}
+    CASAMA_SITES_SERVER_IPV4: ${CASAMA_SITES_SERVER_IPV4:-}
+    CASAMA_SITES_SERVER_IPV6: ${CASAMA_SITES_SERVER_IPV6:-}
+    CASAMA_SITES_APEX: ${CASAMA_SITES_APEX:-forward}
+    CASAMA_DOMAINS_REGISTRAR: ${CASAMA_DOMAINS_REGISTRAR:-none}
+    CASAMA_DOMAINS_TLDS: ${CASAMA_DOMAINS_TLDS:-}
+    NAMECOM_USERNAME: ${NAMECOM_USERNAME:-}
+    NAMECOM_API_TOKEN: ${NAMECOM_API_TOKEN:-}
+    NAMECOM_API_URL: ${NAMECOM_API_URL:-https://api.name.com}
+    NAMECOM_WEBHOOK_SECRET: ${NAMECOM_WEBHOOK_SECRET:-}
+    DODO_DOMAIN_PRODUCT_ID: ${DODO_DOMAIN_PRODUCT_ID:-}
+    DODO_DOMAIN_RENEWAL_PRODUCT_ID: ${DODO_DOMAIN_RENEWAL_PRODUCT_ID:-}
+    CASAMA_DOMAINS_BALANCE_ALERT: ${CASAMA_DOMAINS_BALANCE_ALERT:-100}
+    SUPERVISOR_URL: http://${CASAMA_CONTAINER_PREFIX:-casama}-supervisor:8788
+    SUPERVISOR_TOKEN: ${SUPERVISOR_TOKEN}
+    INTERNAL_TOKEN: ${INTERNAL_TOKEN}
+    API_INTERNAL_URL: http://api:8787
+    TURN_SECRET: ${TURN_SECRET}
+    TURN_PUBLIC_HOST: ${TURN_PUBLIC_HOST}
+    # The port clients reach TURN on (a local install may move it off 3478 when that's taken).
+    TURN_PORT: ${TURN_HOST_PORT:-3478}
+    METRICS_TOKEN: ${METRICS_TOKEN}
+    TELEMETRY: ${TELEMETRY:-off}
+    INSTANCE_ADMIN_EMAILS: ${INSTANCE_ADMIN_EMAILS:-}
+    RESEND_API_KEY: ${RESEND_API_KEY:-}
+    EMAIL_FROM: ${EMAIL_FROM:-Casama <no-reply@localhost>}
+    # Invites use the same SMTP server as Auth when there's no Resend key (D-174).
+    SMTP_HOST: ${SMTP_HOST:-}
+    SMTP_PORT: ${SMTP_PORT:-587}
+    SMTP_USER: ${SMTP_USER:-}
+    SMTP_PASS: ${SMTP_PASS:-}
+    ERROR_REPORTING: ${ERROR_REPORTING:-auto}
+    SENTRY_DSN: ${SENTRY_DSN:-}
+    POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
+    POSTHOG_HOST: ${POSTHOG_HOST:-https://us.i.posthog.com}
+    ANALYTICS_ENVIRONMENT: ${ANALYTICS_ENVIRONMENT:-}
+    PRODUCT_ANALYTICS: ${PRODUCT_ANALYTICS:-off}
+    POSTHOG_PERSONAL_API_KEY: ${POSTHOG_PERSONAL_API_KEY:-}
+    POSTHOG_PROJECT_ID: ${POSTHOG_PROJECT_ID:-}
+    POSTHOG_APP_HOST: ${POSTHOG_APP_HOST:-https://us.posthog.com}
+    ANALYTICS_PROVIDERS: ${ANALYTICS_PROVIDERS:-}
+    GA4_MEASUREMENT_ID: ${GA4_MEASUREMENT_ID:-}
+    GA4_API_SECRET: ${GA4_API_SECRET:-}
+    GA4_PROPERTY_ID: ${GA4_PROPERTY_ID:-}
+    GA4_SERVICE_ACCOUNT_JSON: ${GA4_SERVICE_ACCOUNT_JSON:-}
+    CASAMA_CLOUD_URL: ${CASAMA_CLOUD_URL:-}
+    CASAMA_CLOUD_KEY: ${CASAMA_CLOUD_KEY:-}
+    # Casama Link (D-296): on gives this server a public address through Casama Cloud.
+    # CASAMA_LOCAL_URL is the address on this machine, which its own app keeps using.
+    CASAMA_REMOTE_ACCESS: ${CASAMA_REMOTE_ACCESS:-off}
+    CASAMA_INSTANCE_ID: ${CASAMA_INSTANCE_ID:-}
+    CASAMA_LOCAL_URL: ${CASAMA_LOCAL_URL:-}
+    CASAMA_LICENSE_KEY: ${CASAMA_LICENSE_KEY:-}
+    CHATGPT_SIGN_IN: ${CHATGPT_SIGN_IN:-auto}
+    ABUSE_CONTROLS: ${ABUSE_CONTROLS:-auto}
+    SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+    # Server-to-Auth calls stay inside the stack (the public address may not answer from in here).
+    SUPABASE_INTERNAL_URL: http://kong:8000
+    # Auth enforces this; the API only tells the apps, so they don't offer a sign-up that fails.
+    DISABLE_SIGNUP: ${DISABLE_SIGNUP:-}
+    # New accounts by invitation only (D-296); the sign-up hook checks it. Needs SIGNUP_HOOK_ENABLED.
+    SIGNUP_INVITED_ONLY: ${SIGNUP_INVITED_ONLY:-}
+    # Plans and payments (Phase 7): off for self-hosting; Casama Cloud turns it on (D-197).
+    BILLING_ENABLED: ${BILLING_ENABLED:-false}
+    # Signed-out rate limits: the header holding the caller's address (cf-connecting-ip behind Cloudflare).
+    TRUSTED_CLIENT_IP_HEADER: ${TRUSTED_CLIENT_IP_HEADER:-}
+    # Invite friends (D-211): on with billing; amounts in US dollars of credits.
+    REFERRALS: ${REFERRALS:-auto}
+    REFERRAL_REWARD_USD: ${REFERRAL_REWARD_USD:-2}
+    REFERRAL_WELCOME_USD: ${REFERRAL_WELCOME_USD:-2}
+    REFERRAL_REWARD_CAP: ${REFERRAL_REWARD_CAP:-20}
+    REFERRAL_REDEEM_DAYS: ${REFERRAL_REDEEM_DAYS:-7}
+    DODO_API_KEY: ${DODO_API_KEY:-}
+    DODO_WEBHOOK_SECRET: ${DODO_WEBHOOK_SECRET:-}
+    DODO_ENVIRONMENT: ${DODO_ENVIRONMENT:-}
+    # App Store and Google Play purchases through RevenueCat (D-297).
+    REVENUECAT_PROJECT_ID: ${REVENUECAT_PROJECT_ID:-}
+    REVENUECAT_API_KEY: ${REVENUECAT_API_KEY:-}
+    REVENUECAT_WEBHOOK_AUTH: ${REVENUECAT_WEBHOOK_AUTH:-}
+    REVENUECAT_WEBHOOK_SIGNING_SECRET: ${REVENUECAT_WEBHOOK_SIGNING_SECRET:-}
+    CASAMA_LINK_CLOUD: ${CASAMA_LINK_CLOUD:-}
+    # Casama Link, cloud side (D-296; Casama Cloud only): the zone addresses are made in and
+    # the Cloudflare account that holds their tunnels, when idle tunnels are parked, and the
+    # relay for live view away from the computer. Unset: this server gives out none of it.
+    CASAMA_LINK_ZONE: ${CASAMA_LINK_ZONE:-}
+    CASAMA_LINK_CF_ACCOUNT_ID: ${CASAMA_LINK_CF_ACCOUNT_ID:-}
+    CASAMA_LINK_CF_ZONE_ID: ${CASAMA_LINK_CF_ZONE_ID:-}
+    CASAMA_LINK_CF_API_TOKEN: ${CASAMA_LINK_CF_API_TOKEN:-}
+    CASAMA_LINK_SIGN_IN_URL: ${CASAMA_LINK_SIGN_IN_URL:-}
+    CASAMA_LINK_PARKING: ${CASAMA_LINK_PARKING:-}
+    CASAMA_LINK_PARK_AFTER_DAYS: ${CASAMA_LINK_PARK_AFTER_DAYS:-}
+    CASAMA_LINK_TUNNEL_ALERT: ${CASAMA_LINK_TUNNEL_ALERT:-}
+    CASAMA_LINK_RECORD_LIMIT: ${CASAMA_LINK_RECORD_LIMIT:-}
+    CASAMA_LINK_TURN_KEY_ID: ${CASAMA_LINK_TURN_KEY_ID:-}
+    CASAMA_LINK_TURN_API_TOKEN: ${CASAMA_LINK_TURN_API_TOKEN:-}
+    # Self-hosted side: the relay outside that the relay container forwards computers to.
+    CASAMA_LINK_RELAY_UPSTREAM: ${CASAMA_LINK_RELAY_UPSTREAM:-}
+    PAIR_LINK_URL: ${PAIR_LINK_URL:-}
+    CLOUD_MODEL_UPSTREAM_URL: ${CLOUD_MODEL_UPSTREAM_URL:-}
+    CLOUD_MODEL_UPSTREAM_KEY: ${CLOUD_MODEL_UPSTREAM_KEY:-}
+    # Which OpenRouter providers serve that key (D-354): cheapest first unless set.
+    CLOUD_MODEL_PROVIDER_SORT: ${CLOUD_MODEL_PROVIDER_SORT:-}
+    CLOUD_MODEL_PROVIDERS: ${CLOUD_MODEL_PROVIDERS:-}
+    CLOUD_MODEL_CHAT_SORT: ${CLOUD_MODEL_CHAT_SORT:-}
+    # Help & support (D-298): the support inbox and the free assistant's limits.
+    SUPPORT_INBOX: ${SUPPORT_INBOX:-}
+    SUPPORT_ASSISTANT: ${SUPPORT_ASSISTANT:-}
+    SUPPORT_MODEL: ${SUPPORT_MODEL:-}
+    SUPPORT_DAILY_USD: ${SUPPORT_DAILY_USD:-}
+    SUPPORT_MESSAGES_PER_DAY: ${SUPPORT_MESSAGES_PER_DAY:-}
+    SUPPORT_WEB: ${SUPPORT_WEB:-}
+    SUPPORT_WEB_UPSTREAM_KEY: ${SUPPORT_WEB_UPSTREAM_KEY:-}
+    SUPPORT_WEB_MODEL: ${SUPPORT_WEB_MODEL:-}
+    SUPPORT_WEB_DAILY_USD: ${SUPPORT_WEB_DAILY_USD:-}
+    SUPPORT_WEB_MESSAGES_PER_DAY: ${SUPPORT_WEB_MESSAGES_PER_DAY:-}
+    SUPPORT_WEB_ORIGINS: ${SUPPORT_WEB_ORIGINS:-}
+    TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+    TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+    DOCS_URL: ${DOCS_URL:-}
+    # Reports (D-301) and account emails (D-302).
+    ABUSE_INBOX: ${ABUSE_INBOX:-}
+    ACCOUNT_EMAILS: ${ACCOUNT_EMAILS:-}
+    EMAIL_POSTAL_ADDRESS: ${EMAIL_POSTAL_ADDRESS:-}
+    CLOUD_MODEL_MARKUP: ${CLOUD_MODEL_MARKUP:-}
+    CLOUD_COMPUTER_USD_PER_HOUR: ${CLOUD_COMPUTER_USD_PER_HOUR:-}
+    COMPUTER_RATES: ${COMPUTER_RATES:-}
+    # Memory hosted computers may use on this server, in GB (D-252); past it starts answer capacity_full.
+    COMPUTER_HOST_MEMORY_GB: ${COMPUTER_HOST_MEMORY_GB:-0}
+    # What a computer without a recorded size takes, for the room check above (the supervisor's default).
+    COMPUTER_MEMORY_MB: ${COMPUTER_MEMORY_MB:-2048}
+    # The Library's kept files (D-276): this folder (the library volume), or S3 with OBJECT_STORE=s3.
+    OBJECT_STORE: ${LIBRARY_OBJECT_STORE:-}
+    OBJECT_STORE_DIR: ${LIBRARY_OBJECT_DIR:-/data/library}
+    S3_BUCKET: ${LIBRARY_S3_BUCKET:-}
+    S3_ENDPOINT: ${LIBRARY_S3_ENDPOINT:-}
+    S3_REGION: ${LIBRARY_S3_REGION:-auto}
+    S3_ACCESS_KEY_ID: ${LIBRARY_S3_ACCESS_KEY_ID:-}
+    S3_SECRET_ACCESS_KEY: ${LIBRARY_S3_SECRET_ACCESS_KEY:-}
+    S3_PREFIX: ${LIBRARY_S3_PREFIX:-library/}
+    # Abuse controls (D-094): sign-up proofs, App Check project, OAuth redirect for app connections.
+    SIGNUP_PROOFS: ${SIGNUP_PROOFS:-}
+    SIGNUP_POW_DIFFICULTY: ${SIGNUP_POW_DIFFICULTY:-}
+    APP_CHECK_PROJECT_NUMBER: ${APP_CHECK_PROJECT_NUMBER:-}
+    OAUTH_REDIRECT_URL: ${OAUTH_REDIRECT_URL:-}
+    PHONE_CALLS: ${PHONE_CALLS:-}
+    APNS_VOIP_TOPIC: ${APNS_VOIP_TOPIC:-}
+    LOG_LEVEL: ${LOG_LEVEL:-}
+    # Shared by the API and the worker: encryption at rest (D-136) and the sign-up hook (D-145).
+    CONTENT_ENCRYPTION_KEY: ${CONTENT_ENCRYPTION_KEY:-}
+    CONTENT_ENCRYPTION_KEY_PREVIOUS: ${CONTENT_ENCRYPTION_KEY_PREVIOUS:-}
+    CONTENT_KMS_KEY_ID: ${CONTENT_KMS_KEY_ID:-}
+    CONTENT_KMS_REGION: ${CONTENT_KMS_REGION:-}
+    SIGNUP_ALLOWED_EMAILS: ${SIGNUP_ALLOWED_EMAILS:-}
+    AUTH_HOOK_SECRET: ${AUTH_HOOK_SECRET:-}
+    # Optional settings (empty = not set); see docs-site/self-hosting/configuration.md (audit 2026-11: these were read by
+    # the server but never passed through).
+    ACCOUNT_DELETION_GRACE_DAYS: ${ACCOUNT_DELETION_GRACE_DAYS:-}
+    TELEMETRY_URL: ${TELEMETRY_URL:-}
+    AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+    AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+    AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN:-}
+    OUTBOUND_ALLOW_CIDRS: ${OUTBOUND_ALLOW_CIDRS:-}
+    HEALTH_REQUIRES_ENCRYPTION: ${HEALTH_REQUIRES_ENCRYPTION:-}
+    CORS_ORIGINS: ${CORS_ORIGINS:-}
+    CHROME_EXTENSION_IDS: ${CHROME_EXTENSION_IDS:-ppbkfncjfhfhkgbkdleajcpacfljphpl}
+    FIREFOX_EXTENSIONS: ${FIREFOX_EXTENSIONS:-true}
+    RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-}
+    GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
+    GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
+    MCP_OAUTH_CLIENTS: ${MCP_OAUTH_CLIENTS:-}
+    # Casama's own Zoho sign-in (D-350): a Zoho "Server-based application" client.
+    ZOHO_OAUTH_CLIENT_ID: ${ZOHO_OAUTH_CLIENT_ID:-}
+    ZOHO_OAUTH_CLIENT_SECRET: ${ZOHO_OAUTH_CLIENT_SECRET:-}
+    COMPOSIO_API_KEY: ${COMPOSIO_API_KEY:-}
+    # Composio webhook signing secret: new mail and calendar changes start check-in scans (D-247).
+    COMPOSIO_WEBHOOK_SECRET: ${COMPOSIO_WEBHOOK_SECRET:-}
+    UNSPLASH_ACCESS_KEY: ${UNSPLASH_ACCESS_KEY:-}
+    # Tells the apps which Google client ids Auth accepts, for Google's own sign-in sheet (D-217).
+    GOOGLE_AUTH_ENABLED: ${GOOGLE_AUTH_ENABLED:-false}
+    GOOGLE_AUTH_CLIENT_ID: ${GOOGLE_AUTH_CLIENT_ID:-}
+    GALLERY_URL: ${GALLERY_URL:-https://gallery.casama.ai}
+    # Raises GitHub's limit for plugin, pack and skill fetches from 60 to 5,000 calls an hour (D-343).
+    # A fine-grained token with public repositories (read-only) is enough.
+    GITHUB_API_TOKEN: ${GITHUB_API_TOKEN:-}
+    # Gallery v2 (D-315): signature mode and key, extra catalogs, shared stats, in-app submissions, rewards.
+    GALLERY_SIGNATURE: ${GALLERY_SIGNATURE:-}
+    GALLERY_PUBLIC_KEY: ${GALLERY_PUBLIC_KEY:-}
+    GALLERY_SOURCES: ${GALLERY_SOURCES:-}
+    GALLERY_STATS_URL: ${GALLERY_STATS_URL:-}
+    GALLERY_SUBMIT_REPO: ${GALLERY_SUBMIT_REPO:-}
+    GALLERY_SUBMIT_TOKEN: ${GALLERY_SUBMIT_TOKEN:-}
+    GALLERY_REWARDS: ${GALLERY_REWARDS:-}
+    TREG_API_KEY: ${TREG_API_KEY:-}
+    DEFAULT_MODEL_OPENROUTER: ${DEFAULT_MODEL_OPENROUTER:-}
+    DEFAULT_MODEL_OPENAI: ${DEFAULT_MODEL_OPENAI:-}
+    # Live calls for workspaces without their own key (D-177).
+    GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
+    # When a live call's oldest turns are dropped, and down to how much (tokens of conversation;
+    # 8000 and 3000).
+    VOICE_CONTEXT_TRIGGER_TOKENS: ${VOICE_CONTEXT_TRIGGER_TOKENS:-}
+    VOICE_CONTEXT_TARGET_TOKENS: ${VOICE_CONTEXT_TARGET_TOKENS:-}
+    DEFAULT_REASONING_EFFORT: ${DEFAULT_REASONING_EFFORT:-}
+    LAZY_TOOLS_THRESHOLD: ${LAZY_TOOLS_THRESHOLD:-}
+    LANGFUSE_BASE_URL: ${LANGFUSE_BASE_URL:-}
+    LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-}
+    LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-}
+    OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    UPDATE_CHECK_URL: ${UPDATE_CHECK_URL:-}
+
+services:
+  # ---------------------------------------------------------------- Supabase
+  db:
+    logging: *logging
+    image: public.ecr.aws/supabase/postgres:17.11.0.011
+    restart: unless-stopped
+    networks: [internal]
+    command:
+      [
+        "postgres",
+        "-c",
+        "config_file=/etc/postgresql/postgresql.conf",
+        "-c",
+        "log_min_messages=fatal",
+      ]
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXP: 3600
+    volumes:
+      - ./selfhost/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro
+      - ./selfhost/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ./selfhost/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
+      - db-data:/var/lib/postgresql/data
+      - db-config:/etc/postgresql-custom
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  auth:
+    logging: *logging
+    image: public.ecr.aws/supabase/gotrue:v2.197.0
+    restart: unless-stopped
+    networks: [internal]
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${CASAMA_PUBLIC_URL}
+      # Email links keep only the host above and add these paths. Auth is served under /auth/v1
+      # (Kong), so without them links go to <url>/verify and fail (as in Supabase's own compose).
+      GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      # Where email links land when the app didn't ask for a place (set it to your web app).
+      GOTRUE_SITE_URL: ${AUTH_SITE_URL:-${CASAMA_PUBLIC_URL}}
+      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-casama://app/login-callback,http://127.0.0.1:*/auth/callback}
+      GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
+      # Casama's sign-up hook (abuse controls, D-094; the sign-up allowlist, D-145). Turn it on with
+      # SIGNUP_HOOK_ENABLED=true and the same AUTH_HOOK_SECRET ("v1,whsec_…") here and on the API.
+      # Supabase Auth only calls https hooks (plain http only on localhost), so the hook goes through
+      # the public address: install.sh sets SIGNUP_HOOK_URI to https://<domain>/hooks/auth/before-user-created.
+      # An http URL here (even with the hook off) stops Auth from starting.
+      # Per-caller sign-in limits need the caller's real address: behind Casama Link or another
+      # Cloudflare tunnel that is cf-connecting-ip. Empty: Auth's own default.
+      GOTRUE_RATE_LIMIT_HEADER: ${AUTH_RATE_LIMIT_HEADER:-}
+      GOTRUE_HOOK_BEFORE_USER_CREATED_ENABLED: ${SIGNUP_HOOK_ENABLED:-false}
+      GOTRUE_HOOK_BEFORE_USER_CREATED_URI: ${SIGNUP_HOOK_URI:-}
+      GOTRUE_HOOK_BEFORE_USER_CREATED_SECRETS: ${AUTH_HOOK_SECRET:-}
+      # Two-step sign-in with authenticator apps (D-093).
+      GOTRUE_MFA_TOTP_ENROLL_ENABLED: "true"
+      GOTRUE_MFA_TOTP_VERIFY_ENABLED: "true"
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      # Continue with Apple and Google. Off until the credentials are set (see
+      # docs-site/self-hosting/configuration.md). Apple's client id list is the Services ID first,
+      # then the app id ai.casama.app. The callback is the public /auth/v1/callback Kong serves;
+      # GoTrue's own default would be the site root, which Kong does not route. AUTH_CALLBACK_URL
+      # overrides it when Apple and Google know Auth by another name than CASAMA_PUBLIC_URL.
+      GOTRUE_EXTERNAL_APPLE_ENABLED: ${APPLE_AUTH_ENABLED:-false}
+      GOTRUE_EXTERNAL_APPLE_CLIENT_ID: ${APPLE_AUTH_CLIENT_IDS:-}
+      GOTRUE_EXTERNAL_APPLE_SECRET: ${APPLE_AUTH_SECRET:-}
+      GOTRUE_EXTERNAL_APPLE_REDIRECT_URI: ${AUTH_CALLBACK_URL:-${CASAMA_PUBLIC_URL}/auth/v1/callback}
+      GOTRUE_EXTERNAL_GOOGLE_ENABLED: ${GOOGLE_AUTH_ENABLED:-false}
+      GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${GOOGLE_AUTH_CLIENT_ID:-}
+      GOTRUE_EXTERNAL_GOOGLE_SECRET: ${GOOGLE_AUTH_SECRET:-}
+      GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: ${AUTH_CALLBACK_URL:-${CASAMA_PUBLIC_URL}/auth/v1/callback}
+      GOTRUE_MAILER_AUTOCONFIRM: ${EMAIL_AUTOCONFIRM:-true}
+      # Casama's branded emails (supabase/templates, built by apps/server/scripts/build-email-templates.ts),
+      # fetched from Caddy's internal-only :8081. Override a URL to use your own.
+      GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: ${EMAIL_TEMPLATE_MAGIC_LINK:-http://caddy:8081/magic_link.html}
+      GOTRUE_MAILER_TEMPLATES_CONFIRMATION: ${EMAIL_TEMPLATE_CONFIRMATION:-http://caddy:8081/confirmation.html}
+      GOTRUE_MAILER_TEMPLATES_INVITE: ${EMAIL_TEMPLATE_INVITE:-http://caddy:8081/invite.html}
+      GOTRUE_MAILER_TEMPLATES_RECOVERY: ${EMAIL_TEMPLATE_RECOVERY:-http://caddy:8081/recovery.html}
+      GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE: ${EMAIL_TEMPLATE_EMAIL_CHANGE:-http://caddy:8081/email_change.html}
+      GOTRUE_MAILER_TEMPLATES_REAUTHENTICATION: ${EMAIL_TEMPLATE_REAUTHENTICATION:-http://caddy:8081/reauthentication.html}
+      GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: Your Casama sign-in link
+      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: Confirm your Casama account
+      GOTRUE_MAILER_SUBJECTS_INVITE: You're invited to Casama
+      GOTRUE_MAILER_SUBJECTS_RECOVERY: Reset your Casama password
+      GOTRUE_MAILER_SUBJECTS_EMAIL_CHANGE: Confirm your new email for Casama
+      GOTRUE_MAILER_SUBJECTS_REAUTHENTICATION: Your Casama security code
+      GOTRUE_SMTP_HOST: ${SMTP_HOST:-}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT:-587}
+      GOTRUE_SMTP_USER: ${SMTP_USER:-}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS:-}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL:-}
+      # Passkeys (D-183), off until set. In the browser they work under your own domain:
+      # PASSKEY_RP_ID is that domain without https://, PASSKEY_RP_ORIGINS the addresses the web
+      # app is served from. The store apps only use passkeys made for casama.ai.
+      GOTRUE_PASSKEY_ENABLED: ${PASSKEYS_ENABLED:-false}
+      GOTRUE_WEBAUTHN_RP_DISPLAY_NAME: Casama
+      GOTRUE_WEBAUTHN_RP_ID: ${PASSKEY_RP_ID:-}
+      GOTRUE_WEBAUTHN_RP_ORIGINS: ${PASSKEY_RP_ORIGINS:-${CASAMA_PUBLIC_URL}}
+      # SAML SSO (enterprise, ee/): workspaces register their identity provider through the API.
+      GOTRUE_SAML_ENABLED: ${SAML_ENABLED:-true}
+      GOTRUE_SAML_PRIVATE_KEY: ${SAML_PRIVATE_KEY}
+
+  rest:
+    logging: *logging
+    image: public.ecr.aws/supabase/postgrest:v16.5
+    restart: unless-stopped
+    networks: [internal]
+    depends_on: { db: { condition: service_healthy } }
+    command: ["postgrest"]
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+
+  realtime:
+    logging: *logging
+    # The tenant id comes from this name (realtime-dev); keep it.
+    container_name: realtime-dev.supabase-realtime
+    image: public.ecr.aws/supabase/realtime:v2.151.3
+    restart: unless-stopped
+    networks: [internal]
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      PORT: 4000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: supabase_admin
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: postgres
+      DB_AFTER_CONNECT_QUERY: SET search_path TO _realtime
+      DB_ENC_KEY: ${REALTIME_ENC_KEY}
+      API_JWT_SECRET: ${JWT_SECRET}
+      METRICS_JWT_SECRET: ${JWT_SECRET}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      ERL_AFLAGS: -proto_dist inet_tcp
+      DNS_NODES: "''"
+      RLIMIT_NOFILE: "10000"
+      APP_NAME: realtime
+      SEED_SELF_HOST: "true"
+      RUN_JANITOR: "true"
+
+  kong:
+    logging: *logging
+    image: public.ecr.aws/supabase/kong:2.8.1
+    restart: unless-stopped
+    networks: [internal]
+    depends_on: [auth, rest, realtime]
+    entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+    volumes:
+      - ./selfhost/kong.yml:/home/kong/temp.yml:ro
+
+  # ---------------------------------------------------------------- Casama
+  migrate:
+    logging: *logging
+    image: public.ecr.aws/supabase/postgres:17.11.0.011
+    networks: [internal]
+    depends_on: { db: { condition: service_healthy } }
+    entrypoint: ["/bin/sh", "/migrate.sh"]
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      WORKER_DB_PASSWORD: ${WORKER_DB_PASSWORD:-}
+    volumes:
+      - ./selfhost/migrate.sh:/migrate.sh:ro
+      - ../../supabase/migrations:/migrations:ro
+    restart: "no"
+
+  api:
+    <<: *casama
+    # pdf: the private network to the PDF sidecar (profile pdf); it exists either way.
+    networks: [internal, pdf]
+    environment:
+      <<: *casama-env
+      MODE: api
+      PAGES_PORT: "8790"
+      # Page PDFs (D-119): http://pdf:3000 with the pdf profile. Empty: PDF export is off.
+      PDF_RENDERER_URL: ${PDF_RENDERER_URL:-}
+      # Casama Link (D-296): the API keeps the connector's secret and reports its state.
+      CASAMA_LINK_TOKEN_FILE: /link/token
+      CONNECTOR_URL: http://connector:2000
+      # A server with its own Firebase key says so on its status page; a cloud that runs the push
+      # relay sends with it, and rings iPhones with its Apple key.
+      FCM_SERVICE_ACCOUNT: ${FCM_SERVICE_ACCOUNT:-}
+      FCM_SENDER_ID: ${FCM_SENDER_ID:-}
+      APNS_KEY_P8: ${APNS_KEY_P8:-}
+      APNS_KEY_ID: ${APNS_KEY_ID:-}
+      APNS_TEAM_ID: ${APNS_TEAM_ID:-}
+      # Stopping without dropping people (D-402): requests in flight get API_DRAIN_SECONDS; a
+      # deploy's handover (SIGUSR2) carries calls up to CALL_HANDOVER_SECONDS before closing them.
+      API_DRAIN_SECONDS: ${API_DRAIN_SECONDS:-30}
+      CALL_HANDOVER_SECONDS: ${CALL_HANDOVER_SECONDS:-600}
+    volumes:
+      - library:/data/library
+      - link:/link
+    depends_on: { migrate: { condition: service_completed_successfully } }
+    # A plain stop (SIGTERM) lets requests in flight finish first.
+    stop_grace_period: 45s
+
+  worker:
+    <<: *casama
+    environment:
+      <<: *casama-env
+      MODE: worker
+      RUN_CONCURRENCY: ${RUN_CONCURRENCY:-20}
+      # Least-privilege database role (D-095); empty falls back to DATABASE_URL.
+      WORKER_DATABASE_URL: ${WORKER_DB_PASSWORD:+postgres://casama_worker:${WORKER_DB_PASSWORD}@db:5432/postgres}
+      # Push notifications: the Firebase service account JSON on one line (optional).
+      FCM_SERVICE_ACCOUNT: ${FCM_SERVICE_ACCOUNT:-}
+      FCM_SENDER_ID: ${FCM_SENDER_ID:-}
+      APNS_KEY_P8: ${APNS_KEY_P8:-}
+      APNS_KEY_ID: ${APNS_KEY_ID:-}
+      APNS_TEAM_ID: ${APNS_TEAM_ID:-}
+      AI_GATEWAY_URL: ${AI_GATEWAY_URL:-}
+      AI_GATEWAY_TOKEN: ${AI_GATEWAY_TOKEN:-}
+      # Web search without a workspace key (D-179): http://searxng:8080 with the search profile.
+      SEARXNG_URL: ${SEARXNG_URL:-}
+      # The server's own search keys, tried before SearXNG (D-384). Empty order: parallel,serper,searxng.
+      SEARCH_PROVIDER_ORDER: ${SEARCH_PROVIDER_ORDER:-}
+      PARALLEL_API_KEY: ${PARALLEL_API_KEY:-}
+      SERPER_API_KEY: ${SERPER_API_KEY:-}
+      DEEPSEEK_SEARCH_API_KEY: ${DEEPSEEK_SEARCH_API_KEY:-}
+      # A stopping worker lets steps in flight finish (D-402); runs continue on the next worker.
+      WORKER_DRAIN_SECONDS: ${WORKER_DRAIN_SECONDS:-45}
+    volumes:
+      - library:/data/library
+    depends_on: { migrate: { condition: service_completed_successfully } }
+    stop_grace_period: 60s
+    # The worker serves no HTTP: it touches /tmp/worker-alive every minute tick, and is unhealthy
+    # when that's over 3 minutes old (D-272).
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "const s=require('fs').statSync('/tmp/worker-alive',{throwIfNoEntry:false});process.exit(s&&Date.now()-s.mtimeMs<180000?0:1)",
+        ]
+      interval: 60s
+      timeout: 5s
+      start_period: 180s
+      retries: 2
+
+  # Page PDFs (profile pdf). Chromium can't keep its sandbox in a normal container, so it runs here:
+  # no secrets, no internet, and its only network holds nothing but the API. It loads only the page
+  # it was sent (and its inline images), never a URL or another file.
+  pdf:
+    logging: *logging
+    image: gotenberg/gotenberg:8.39.0-chromium
+    profiles: [pdf]
+    restart: unless-stopped
+    networks: [pdf]
+    command:
+      - gotenberg
+      - --api-port=3000
+      - --chromium-deny-list=^file:(?!//\/tmp/).*|^(https?|wss?|ftp):.*
+      - --api-disable-health-check-logging
+      - --log-level=warn
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+
+  # The only service with Docker access. It joins each computer's private network to reach computerd.
+  supervisor:
+    logging: *logging
+    image: ${CASAMA_REGISTRY:-casama}/supervisor:${CASAMA_VERSION:-local}
+    build:
+      context: ../..
+      dockerfile: apps/supervisor/Dockerfile
+    container_name: ${CASAMA_CONTAINER_PREFIX:-casama}-supervisor
+    restart: unless-stopped
+    networks: [internal]
+    environment:
+      SUPERVISOR_TOKEN: ${SUPERVISOR_TOKEN}
+      COMPUTER_TOKEN_SECRET: ${COMPUTER_TOKEN_SECRET}
+      EGRESS_CONTAINER: ${CASAMA_CONTAINER_PREFIX:-casama}-egress
+      EGRESS_CONTROL_URL: http://${CASAMA_CONTAINER_PREFIX:-casama}-egress:3129
+      EGRESS_CONTROL_TOKEN: ${EGRESS_CONTROL_TOKEN}
+      SUPERVISOR_CONTAINER: ${CASAMA_CONTAINER_PREFIX:-casama}-supervisor
+      COMPUTER_IMAGE_HEADLESS: ${CASAMA_REGISTRY:-casama}/computer-headless:${CASAMA_VERSION:-local}
+      COMPUTER_IMAGE_DESKTOP: ${CASAMA_REGISTRY:-casama}/computer-desktop:${CASAMA_VERSION:-local}
+      COMPUTER_MEMORY_MB: ${COMPUTER_MEMORY_MB:-2048}
+      WARM_POOL_SIZE: ${WARM_POOL_SIZE:-0}
+      OBJECT_STORE_DIR: /data/objects
+      TURN_CONTAINER: ${CASAMA_CONTAINER_PREFIX:-casama}-turn
+      # Bot computers' containers, networks and volumes start with this too, so two stacks on one
+      # machine never see each other's computers.
+      NAME_PREFIX: ${CASAMA_CONTAINER_PREFIX:-casama}
+      TURN_SECRET: ${TURN_SECRET}
+      TURN_PUBLIC_HOST: ${TURN_PUBLIC_HOST}
+      SANDBOX_RUNTIME: ${SANDBOX_RUNTIME:-}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - objects:/data/objects
+
+  # The only route from computers to the internet; blocks private and metadata addresses.
+  egress:
+    logging: *logging
+    image: ${CASAMA_REGISTRY:-casama}/egress-proxy:${CASAMA_VERSION:-local}
+    build:
+      context: ../..
+      dockerfile: infra/egress-proxy/Dockerfile
+    container_name: ${CASAMA_CONTAINER_PREFIX:-casama}-egress
+    restart: unless-stopped
+    networks: [internal, egress]
+    environment:
+      EGRESS_CONTROL_TOKEN: ${EGRESS_CONTROL_TOKEN}
+      # Abuse controls (D-094; Casama Cloud): refuse mail and mining traffic and report it to the API.
+      EGRESS_ABUSE: ${EGRESS_ABUSE:-off}
+      EGRESS_ABUSE_URL: http://api:8787/internal/abuse
+      EGRESS_ABUSE_TOKEN: ${INTERNAL_TOKEN}
+
+  # TURN relay for live view (D-055). Production also wants TLS on 5349 (turns:).
+  turn:
+    logging: *logging
+    image: ${CASAMA_REGISTRY:-casama}/turn:${CASAMA_VERSION:-local}
+    build:
+      context: ../..
+      dockerfile: infra/turn/Dockerfile
+    container_name: ${CASAMA_CONTAINER_PREFIX:-casama}-turn
+    restart: unless-stopped
+    networks: [internal]
+    environment:
+      TURN_SECRET: ${TURN_SECRET}
+      # Casama Link (D-296): with remote access on, bots' computers reach the relay outside
+      # through this container (port 3479, never published), for people watching from away.
+      TURN_FORWARD: ${CASAMA_REMOTE_ACCESS:-off}
+      TURN_FORWARD_TO: ${CASAMA_LINK_RELAY_UPSTREAM:-turn.cloudflare.com:3478}
+    # TURN_BIND is 127.0.0.1 for a local install (install.sh --local): only this machine reaches it.
+    ports:
+      - "${TURN_BIND:-0.0.0.0}:${TURN_HOST_PORT:-3478}:3478/udp"
+      - "${TURN_BIND:-0.0.0.0}:${TURN_HOST_PORT:-3478}:3478/tcp"
+
+  # Casama Link (D-296, profile "link"): holds this server's tunnel open, so phones reach it
+  # at its address with no domain and no open port. It only dials out (TCP and UDP 7844) and
+  # nothing is published. The API writes the tunnel's secret to the shared volume; this starts
+  # when the secret is there and restarts when it changes. `casama selfhost remote on` turns it on.
+  connector:
+    logging: *logging
+    image: ${CASAMA_REGISTRY:-casama}/connector:${CASAMA_VERSION:-local}
+    build:
+      context: ../..
+      dockerfile: infra/connector/Dockerfile
+    container_name: ${CASAMA_CONTAINER_PREFIX:-casama}-connector
+    restart: unless-stopped
+    networks: [internal]
+    profiles: [link]
+    depends_on: [caddy]
+    volumes:
+      - link:/link:ro
+
+  # Daily off-site backups (D-197, profile "backup"): the database, the .env (only age-encrypted)
+  # and optionally computer archives, to any S3-compatible bucket. install.sh --backups turns it on.
+  # Run one now: docker compose ... --profile backup run --rm backup now
+  backup:
+    logging: *logging
+    image: ${CASAMA_REGISTRY:-casama}/backup:${CASAMA_VERSION:-local}
+    build:
+      context: ../..
+      dockerfile: infra/backup/Dockerfile
+    container_name: ${CASAMA_CONTAINER_PREFIX:-casama}-backup
+    profiles: [backup]
+    restart: unless-stopped
+    networks: [internal, egress]
+    depends_on: [db]
+    environment:
+      PGHOST: db
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: postgres
+      BACKUP_TIME: ${BACKUP_TIME:-03:30}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-30}
+      BACKUP_S3_BUCKET: ${BACKUP_S3_BUCKET:-}
+      BACKUP_S3_ENDPOINT: ${BACKUP_S3_ENDPOINT:-}
+      BACKUP_S3_REGION: ${BACKUP_S3_REGION:-auto}
+      BACKUP_S3_ACCESS_KEY_ID: ${BACKUP_S3_ACCESS_KEY_ID:-}
+      BACKUP_S3_SECRET_ACCESS_KEY: ${BACKUP_S3_SECRET_ACCESS_KEY:-}
+      BACKUP_S3_PREFIX: ${BACKUP_S3_PREFIX:-casama}
+      BACKUP_AGE_RECIPIENTS: ${BACKUP_AGE_RECIPIENTS:-}
+      BACKUP_OBJECTS: ${BACKUP_OBJECTS:-false}
+      BACKUP_PING_URL: ${BACKUP_PING_URL:-}
+    volumes:
+      - backups:/backups
+      - objects:/objects:ro
+      - library:/library:ro
+      - ./.env:/env:ro
+      # The Vault root key (D-267): the dump's secrets are unreadable without it.
+      - db-config:/db-config:ro
+
+  # Free web search for bots (D-179, profile "search"). Set SEARXNG_URL=http://searxng:8080 too.
+  # Internal only: no published port; it needs outbound internet to ask the search engines.
+  searxng:
+    logging: *logging
+    image: searxng/searxng:2026.10.29-c15647b5a
+    profiles: [search]
+    restart: unless-stopped
+    networks: [internal, egress]
+    environment:
+      SEARXNG_SECRET: ${SEARXNG_SECRET:-}
+    volumes:
+      - ./selfhost/searxng/settings.yml:/etc/searxng/settings.yml:ro
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETGID, SETUID]
+
+  caddy:
+    logging: *logging
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    networks: [internal]
+    depends_on: [api, kong]
+    environment:
+      CASAMA_SITE: ${CASAMA_SITE}
+      CASAMA_PAGES_SITE: ${CASAMA_PAGES_SITE:-:8790}
+      CASAMA_SITES_OWN_EDGE: ${CASAMA_SITES_OWN_EDGE:-false}
+    ports:
+      - "${HTTP_BIND:-0.0.0.0}:${HTTP_PORT:-80}:80"
+      - "${HTTP_BIND:-0.0.0.0}:${HTTPS_PORT:-443}:443"
+      # Pages follow HTTP_BIND too: behind a tunnel they stay on loopback (Docker skips ufw).
+      - "${HTTP_BIND:-0.0.0.0}:${PAGES_PORT:-8790}:8790"
+    volumes:
+      - ./selfhost/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./selfhost/sites-edge-true.caddy:/etc/caddy/sites-edge-true.caddy:ro
+      - ./selfhost/sites-edge-false.caddy:/etc/caddy/sites-edge-false.caddy:ro
+      - caddy-data:/data
+      # Casama's branded auth emails, served to Supabase Auth on the internal network only.
+      - ../../supabase/templates:/srv/email-templates:ro
+
+  # ---------------------------------------------------------------- optional
+  web:
+    logging: *logging
+    image: ${CASAMA_REGISTRY:-casama}/web:${CASAMA_VERSION:-local}
+    profiles: [web]
+    build:
+      context: ../..
+      dockerfile: client/Dockerfile.web
+    restart: unless-stopped
+    networks: [internal]
+
+  s3:
+    logging: *logging
+    image: chrislusf/seaweedfs:4.53
+    container_name: ${CASAMA_CONTAINER_PREFIX:-casama}-s3
+    profiles: [s3]
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        printf '{"identities":[{"name":"casama","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Read","Write","List","Admin"]}]}'
+        "$$S3_ACCESS_KEY_ID" "$$S3_SECRET_ACCESS_KEY" > /tmp/s3.json
+        && exec weed server -s3 -s3.config=/tmp/s3.json -dir=/data
+    environment:
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+    volumes:
+      - s3data:/data
+    networks: [internal]
+    restart: unless-stopped
+
+  prometheus:
+    logging: *logging
+    image: prom/prometheus:v3.5.0
+    profiles: [monitoring]
+    restart: unless-stopped
+    networks: [internal]
+    entrypoint:
+      [
+        "/bin/sh",
+        "-c",
+        'printf ''%s'' "$$METRICS_TOKEN" > /tmp/metrics_token && exec /bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.retention.time=30d',
+      ]
+    environment:
+      METRICS_TOKEN: ${METRICS_TOKEN}
+    volumes:
+      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+
+  # Sends Prometheus alerts to ALERT_EMAIL through the same SMTP server as Auth (D-272). With no
+  # address set, alerts show only in Prometheus.
+  alertmanager:
+    logging: *logging
+    image: prom/alertmanager:v0.28.1
+    profiles: [monitoring]
+    restart: unless-stopped
+    networks: [internal]
+    entrypoint:
+      [
+        "/bin/sh",
+        "-c",
+        'if [ -n "$$ALERT_EMAIL" ]; then printf ''route:\n  receiver: owner\n  group_wait: 1m\n  repeat_interval: 4h\nreceivers:\n  - name: owner\n    email_configs:\n      - to: "%s"\n        from: "%s"\n        smarthost: "%s:%s"\n        auth_username: "%s"\n        auth_password: "%s"\n'' "$$ALERT_EMAIL" "$$SMTP_ADMIN_EMAIL" "$$SMTP_HOST" "$$SMTP_PORT" "$$SMTP_USER" "$$SMTP_PASS" > /tmp/am.yml; else printf ''route:\n  receiver: none\nreceivers:\n  - name: none\n'' > /tmp/am.yml; fi; exec /bin/alertmanager --config.file=/tmp/am.yml --storage.path=/alertmanager',
+      ]
+    environment:
+      ALERT_EMAIL: ${ALERT_EMAIL:-}
+      SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+
+  node-exporter:
+    logging: *logging
+    image: prom/node-exporter:v1.9.1
+    profiles: [monitoring]
+    restart: unless-stopped
+    networks: [internal]
+    command: ["--path.rootfs=/host"]
+    volumes:
+      - /:/host:ro,rslave
+
+  grafana:
+    logging: *logging
+    image: grafana/grafana:12.1.1
+    profiles: [monitoring]
+    restart: unless-stopped
+    networks: [internal]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "127.0.0.1:3001:3000"
+    volumes:
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+
+  # Build-only services so `compose --profile images build` builds the computer images.
+  computer-headless:
+    logging: *logging
+    build:
+      context: ../..
+      dockerfile: infra/images/computer/Dockerfile.headless
+    image: ${CASAMA_REGISTRY:-casama}/computer-headless:${CASAMA_VERSION:-local}
+    profiles: [images]
+
+  computer-desktop:
+    logging: *logging
+    build:
+      context: ../..
+      dockerfile: infra/images/computer/Dockerfile.desktop
+      args:
+        BASE: ${CASAMA_REGISTRY:-casama}/computer-headless:${CASAMA_VERSION:-local}
+    image: ${CASAMA_REGISTRY:-casama}/computer-desktop:${CASAMA_VERSION:-local}
+    profiles: [images]
+
+networks:
+  internal: {}
+  egress: {}
+  # The API and the PDF sidecar only; no route out.
+  pdf: { internal: true }
+
+volumes:
+  db-data: {}
+  db-config: {}
+  objects: {}
+  library: {}
+  backups: {}
+  caddy-data: {}
+  link: {}
+  s3data: {}
+  prometheus-data: {}
+  grafana-data: {}

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Share card</title>
+<!-- Composes one 1200x630 share card: generated background + real mascot + type. Rendered to PNG by visuals/render-og.sh.
+     Query: bg=<raw file>, title=..., sub=..., word=... -->
+<style>
+@font-face { font-family: "Google Sans"; src: url("/site/assets/fonts/GoogleSans-Regular.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "Google Sans"; src: url("/site/assets/fonts/GoogleSans-Bold.woff2") format("woff2"); font-weight: 700; }
+@font-face { font-family: "Libre Baskerville"; src: url("/site/assets/fonts/LibreBaskerville-Bold.woff2") format("woff2"); font-weight: 700; }
+html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #24112f; }
+.og { position: relative; width: 1200px; height: 630px; background: #24112f center / cover no-repeat; }
+.mascot { position: absolute; width: 300px; height: 300px; right: 150px; top: 150px; filter: drop-shadow(0 18px 40px rgba(20, 0, 40, .35)); }
+.copy { position: absolute; left: 80px; top: 0; bottom: 0; width: 640px; display: flex; flex-direction: column; justify-content: center; color: #fbf6ff; }
+.word { font: 700 34px "Libre Baskerville", Georgia, serif; opacity: .92; margin-bottom: 26px; }
+.title { font: 700 64px/1.08 "Google Sans", system-ui, sans-serif; letter-spacing: -.01em; text-wrap: balance; text-shadow: 0 2px 24px rgba(20, 0, 40, .45); }
+.sub { font: 400 26px/1.35 "Google Sans", system-ui, sans-serif; margin-top: 20px; opacity: .86; }
+</style>
+</head>
+<body>
+<div class="og" id="og"><div class="copy"><div class="word" id="word"></div><div class="title" id="title"></div><div class="sub" id="sub"></div></div>
+<img class="mascot" src="/site/assets/bots/casama-brand.svg" alt=""></div>
+<script>
+const q = new URLSearchParams(location.search);
+document.getElementById("og").style.backgroundImage = `url('/visuals/round-1/raw/${q.get("bg")}')`;
+document.getElementById("word").textContent = q.get("word") || "Casama";
+document.getElementById("title").textContent = q.get("title") || "";
+const sub = q.get("sub"); if (sub) document.getElementById("sub").textContent = sub; else document.getElementById("sub").remove();
+</script>
+</body>
+</html>

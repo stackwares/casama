@@ -1,0 +1,573 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'creation_detail.dart';
+
+// **************************************************************************
+// CopyWithGenerator
+// **************************************************************************
+
+abstract class _$CreationDetailCWProxy {
+  CreationDetail id(String id);
+
+  CreationDetail orgId(String orgId);
+
+  CreationDetail botId(String? botId);
+
+  CreationDetail botName(String? botName);
+
+  CreationDetail madeFor(String? madeFor);
+
+  CreationDetail conversationId(String? conversationId);
+
+  CreationDetail runId(String? runId);
+
+  CreationDetail projectId(String? projectId);
+
+  CreationDetail projectTitle(String? projectTitle);
+
+  CreationDetail kind(CreationKind kind);
+
+  CreationDetail label(String? label);
+
+  CreationDetail title(String title);
+
+  CreationDetail pageId(String? pageId);
+
+  CreationDetail mediaId(String? mediaId);
+
+  CreationDetail mime(String? mime);
+
+  CreationDetail size(int size);
+
+  CreationDetail width(int? width);
+
+  CreationDetail height(int? height);
+
+  CreationDetail durationS(num? durationS);
+
+  CreationDetail hasCover(bool hasCover);
+
+  CreationDetail hasPreview(bool hasPreview);
+
+  CreationDetail version(int version);
+
+  CreationDetail visibility(CreationDetailVisibilityEnum visibility);
+
+  CreationDetail pinned(bool pinned);
+
+  CreationDetail lastOpenedAt(DateTime? lastOpenedAt);
+
+  CreationDetail canChange(bool canChange);
+
+  CreationDetail publicUrl(String? publicUrl);
+
+  CreationDetail deletedAt(DateTime? deletedAt);
+
+  CreationDetail createdAt(DateTime createdAt);
+
+  CreationDetail updatedAt(DateTime updatedAt);
+
+  CreationDetail siblings(List<Creation> siblings);
+
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreationDetail(...).copyWith.fieldName(value)`.
+  ///
+  /// Example:
+  /// ```dart
+  /// CreationDetail(...).copyWith(id: 12, name: "My name")
+  /// ```
+  CreationDetail call({
+    String id,
+    String orgId,
+    String? botId,
+    String? botName,
+    String? madeFor,
+    String? conversationId,
+    String? runId,
+    String? projectId,
+    String? projectTitle,
+    CreationKind kind,
+    String? label,
+    String title,
+    String? pageId,
+    String? mediaId,
+    String? mime,
+    int size,
+    int? width,
+    int? height,
+    num? durationS,
+    bool hasCover,
+    bool hasPreview,
+    int version,
+    CreationDetailVisibilityEnum visibility,
+    bool pinned,
+    DateTime? lastOpenedAt,
+    bool canChange,
+    String? publicUrl,
+    DateTime? deletedAt,
+    DateTime createdAt,
+    DateTime updatedAt,
+    List<Creation> siblings,
+  });
+}
+
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfCreationDetail.copyWith(...)` or call `instanceOfCreationDetail.copyWith.fieldName(value)` for a single field.
+class _$CreationDetailCWProxyImpl implements _$CreationDetailCWProxy {
+  const _$CreationDetailCWProxyImpl(this._value);
+
+  final CreationDetail _value;
+
+  @override
+  CreationDetail id(String id) => call(id: id);
+
+  @override
+  CreationDetail orgId(String orgId) => call(orgId: orgId);
+
+  @override
+  CreationDetail botId(String? botId) => call(botId: botId);
+
+  @override
+  CreationDetail botName(String? botName) => call(botName: botName);
+
+  @override
+  CreationDetail madeFor(String? madeFor) => call(madeFor: madeFor);
+
+  @override
+  CreationDetail conversationId(String? conversationId) =>
+      call(conversationId: conversationId);
+
+  @override
+  CreationDetail runId(String? runId) => call(runId: runId);
+
+  @override
+  CreationDetail projectId(String? projectId) => call(projectId: projectId);
+
+  @override
+  CreationDetail projectTitle(String? projectTitle) =>
+      call(projectTitle: projectTitle);
+
+  @override
+  CreationDetail kind(CreationKind kind) => call(kind: kind);
+
+  @override
+  CreationDetail label(String? label) => call(label: label);
+
+  @override
+  CreationDetail title(String title) => call(title: title);
+
+  @override
+  CreationDetail pageId(String? pageId) => call(pageId: pageId);
+
+  @override
+  CreationDetail mediaId(String? mediaId) => call(mediaId: mediaId);
+
+  @override
+  CreationDetail mime(String? mime) => call(mime: mime);
+
+  @override
+  CreationDetail size(int size) => call(size: size);
+
+  @override
+  CreationDetail width(int? width) => call(width: width);
+
+  @override
+  CreationDetail height(int? height) => call(height: height);
+
+  @override
+  CreationDetail durationS(num? durationS) => call(durationS: durationS);
+
+  @override
+  CreationDetail hasCover(bool hasCover) => call(hasCover: hasCover);
+
+  @override
+  CreationDetail hasPreview(bool hasPreview) => call(hasPreview: hasPreview);
+
+  @override
+  CreationDetail version(int version) => call(version: version);
+
+  @override
+  CreationDetail visibility(CreationDetailVisibilityEnum visibility) =>
+      call(visibility: visibility);
+
+  @override
+  CreationDetail pinned(bool pinned) => call(pinned: pinned);
+
+  @override
+  CreationDetail lastOpenedAt(DateTime? lastOpenedAt) =>
+      call(lastOpenedAt: lastOpenedAt);
+
+  @override
+  CreationDetail canChange(bool canChange) => call(canChange: canChange);
+
+  @override
+  CreationDetail publicUrl(String? publicUrl) => call(publicUrl: publicUrl);
+
+  @override
+  CreationDetail deletedAt(DateTime? deletedAt) => call(deletedAt: deletedAt);
+
+  @override
+  CreationDetail createdAt(DateTime createdAt) => call(createdAt: createdAt);
+
+  @override
+  CreationDetail updatedAt(DateTime updatedAt) => call(updatedAt: updatedAt);
+
+  @override
+  CreationDetail siblings(List<Creation> siblings) => call(siblings: siblings);
+
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `CreationDetail(...).copyWith.fieldName(value)`.
+  ///
+  /// Example:
+  /// ```dart
+  /// CreationDetail(...).copyWith(id: 12, name: "My name")
+  /// ```
+  @override
+  CreationDetail call({
+    Object? id = const $CopyWithPlaceholder(),
+    Object? orgId = const $CopyWithPlaceholder(),
+    Object? botId = const $CopyWithPlaceholder(),
+    Object? botName = const $CopyWithPlaceholder(),
+    Object? madeFor = const $CopyWithPlaceholder(),
+    Object? conversationId = const $CopyWithPlaceholder(),
+    Object? runId = const $CopyWithPlaceholder(),
+    Object? projectId = const $CopyWithPlaceholder(),
+    Object? projectTitle = const $CopyWithPlaceholder(),
+    Object? kind = const $CopyWithPlaceholder(),
+    Object? label = const $CopyWithPlaceholder(),
+    Object? title = const $CopyWithPlaceholder(),
+    Object? pageId = const $CopyWithPlaceholder(),
+    Object? mediaId = const $CopyWithPlaceholder(),
+    Object? mime = const $CopyWithPlaceholder(),
+    Object? size = const $CopyWithPlaceholder(),
+    Object? width = const $CopyWithPlaceholder(),
+    Object? height = const $CopyWithPlaceholder(),
+    Object? durationS = const $CopyWithPlaceholder(),
+    Object? hasCover = const $CopyWithPlaceholder(),
+    Object? hasPreview = const $CopyWithPlaceholder(),
+    Object? version = const $CopyWithPlaceholder(),
+    Object? visibility = const $CopyWithPlaceholder(),
+    Object? pinned = const $CopyWithPlaceholder(),
+    Object? lastOpenedAt = const $CopyWithPlaceholder(),
+    Object? canChange = const $CopyWithPlaceholder(),
+    Object? publicUrl = const $CopyWithPlaceholder(),
+    Object? deletedAt = const $CopyWithPlaceholder(),
+    Object? createdAt = const $CopyWithPlaceholder(),
+    Object? updatedAt = const $CopyWithPlaceholder(),
+    Object? siblings = const $CopyWithPlaceholder(),
+  }) {
+    return CreationDetail(
+      id: id == const $CopyWithPlaceholder() || id == null
+          ? _value.id
+          // ignore: cast_nullable_to_non_nullable
+          : id as String,
+      orgId: orgId == const $CopyWithPlaceholder() || orgId == null
+          ? _value.orgId
+          // ignore: cast_nullable_to_non_nullable
+          : orgId as String,
+      botId: botId == const $CopyWithPlaceholder()
+          ? _value.botId
+          // ignore: cast_nullable_to_non_nullable
+          : botId as String?,
+      botName: botName == const $CopyWithPlaceholder()
+          ? _value.botName
+          // ignore: cast_nullable_to_non_nullable
+          : botName as String?,
+      madeFor: madeFor == const $CopyWithPlaceholder()
+          ? _value.madeFor
+          // ignore: cast_nullable_to_non_nullable
+          : madeFor as String?,
+      conversationId: conversationId == const $CopyWithPlaceholder()
+          ? _value.conversationId
+          // ignore: cast_nullable_to_non_nullable
+          : conversationId as String?,
+      runId: runId == const $CopyWithPlaceholder()
+          ? _value.runId
+          // ignore: cast_nullable_to_non_nullable
+          : runId as String?,
+      projectId: projectId == const $CopyWithPlaceholder()
+          ? _value.projectId
+          // ignore: cast_nullable_to_non_nullable
+          : projectId as String?,
+      projectTitle: projectTitle == const $CopyWithPlaceholder()
+          ? _value.projectTitle
+          // ignore: cast_nullable_to_non_nullable
+          : projectTitle as String?,
+      kind: kind == const $CopyWithPlaceholder() || kind == null
+          ? _value.kind
+          // ignore: cast_nullable_to_non_nullable
+          : kind as CreationKind,
+      label: label == const $CopyWithPlaceholder()
+          ? _value.label
+          // ignore: cast_nullable_to_non_nullable
+          : label as String?,
+      title: title == const $CopyWithPlaceholder() || title == null
+          ? _value.title
+          // ignore: cast_nullable_to_non_nullable
+          : title as String,
+      pageId: pageId == const $CopyWithPlaceholder()
+          ? _value.pageId
+          // ignore: cast_nullable_to_non_nullable
+          : pageId as String?,
+      mediaId: mediaId == const $CopyWithPlaceholder()
+          ? _value.mediaId
+          // ignore: cast_nullable_to_non_nullable
+          : mediaId as String?,
+      mime: mime == const $CopyWithPlaceholder()
+          ? _value.mime
+          // ignore: cast_nullable_to_non_nullable
+          : mime as String?,
+      size: size == const $CopyWithPlaceholder() || size == null
+          ? _value.size
+          // ignore: cast_nullable_to_non_nullable
+          : size as int,
+      width: width == const $CopyWithPlaceholder()
+          ? _value.width
+          // ignore: cast_nullable_to_non_nullable
+          : width as int?,
+      height: height == const $CopyWithPlaceholder()
+          ? _value.height
+          // ignore: cast_nullable_to_non_nullable
+          : height as int?,
+      durationS: durationS == const $CopyWithPlaceholder()
+          ? _value.durationS
+          // ignore: cast_nullable_to_non_nullable
+          : durationS as num?,
+      hasCover: hasCover == const $CopyWithPlaceholder() || hasCover == null
+          ? _value.hasCover
+          // ignore: cast_nullable_to_non_nullable
+          : hasCover as bool,
+      hasPreview:
+          hasPreview == const $CopyWithPlaceholder() || hasPreview == null
+          ? _value.hasPreview
+          // ignore: cast_nullable_to_non_nullable
+          : hasPreview as bool,
+      version: version == const $CopyWithPlaceholder() || version == null
+          ? _value.version
+          // ignore: cast_nullable_to_non_nullable
+          : version as int,
+      visibility:
+          visibility == const $CopyWithPlaceholder() || visibility == null
+          ? _value.visibility
+          // ignore: cast_nullable_to_non_nullable
+          : visibility as CreationDetailVisibilityEnum,
+      pinned: pinned == const $CopyWithPlaceholder() || pinned == null
+          ? _value.pinned
+          // ignore: cast_nullable_to_non_nullable
+          : pinned as bool,
+      lastOpenedAt: lastOpenedAt == const $CopyWithPlaceholder()
+          ? _value.lastOpenedAt
+          // ignore: cast_nullable_to_non_nullable
+          : lastOpenedAt as DateTime?,
+      canChange: canChange == const $CopyWithPlaceholder() || canChange == null
+          ? _value.canChange
+          // ignore: cast_nullable_to_non_nullable
+          : canChange as bool,
+      publicUrl: publicUrl == const $CopyWithPlaceholder()
+          ? _value.publicUrl
+          // ignore: cast_nullable_to_non_nullable
+          : publicUrl as String?,
+      deletedAt: deletedAt == const $CopyWithPlaceholder()
+          ? _value.deletedAt
+          // ignore: cast_nullable_to_non_nullable
+          : deletedAt as DateTime?,
+      createdAt: createdAt == const $CopyWithPlaceholder() || createdAt == null
+          ? _value.createdAt
+          // ignore: cast_nullable_to_non_nullable
+          : createdAt as DateTime,
+      updatedAt: updatedAt == const $CopyWithPlaceholder() || updatedAt == null
+          ? _value.updatedAt
+          // ignore: cast_nullable_to_non_nullable
+          : updatedAt as DateTime,
+      siblings: siblings == const $CopyWithPlaceholder() || siblings == null
+          ? _value.siblings
+          // ignore: cast_nullable_to_non_nullable
+          : siblings as List<Creation>,
+    );
+  }
+}
+
+extension $CreationDetailCopyWith on CreationDetail {
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfCreationDetail.copyWith(...)` or `instanceOfCreationDetail.copyWith.fieldName(...)`.
+  // ignore: library_private_types_in_public_api
+  _$CreationDetailCWProxy get copyWith => _$CreationDetailCWProxyImpl(this);
+}
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+CreationDetail _$CreationDetailFromJson(Map<String, dynamic> json) =>
+    $checkedCreate(
+      'CreationDetail',
+      json,
+      ($checkedConvert) {
+        $checkKeys(
+          json,
+          requiredKeys: const [
+            'id',
+            'org_id',
+            'bot_id',
+            'bot_name',
+            'made_for',
+            'conversation_id',
+            'run_id',
+            'kind',
+            'label',
+            'title',
+            'page_id',
+            'media_id',
+            'mime',
+            'size',
+            'width',
+            'height',
+            'duration_s',
+            'has_cover',
+            'has_preview',
+            'version',
+            'visibility',
+            'pinned',
+            'last_opened_at',
+            'can_change',
+            'deleted_at',
+            'created_at',
+            'updated_at',
+            'siblings',
+          ],
+        );
+        final val = CreationDetail(
+          id: $checkedConvert('id', (v) => v as String),
+          orgId: $checkedConvert('org_id', (v) => v as String),
+          botId: $checkedConvert('bot_id', (v) => v as String?),
+          botName: $checkedConvert('bot_name', (v) => v as String?),
+          madeFor: $checkedConvert('made_for', (v) => v as String?),
+          conversationId: $checkedConvert(
+            'conversation_id',
+            (v) => v as String?,
+          ),
+          runId: $checkedConvert('run_id', (v) => v as String?),
+          projectId: $checkedConvert('project_id', (v) => v as String?),
+          projectTitle: $checkedConvert('project_title', (v) => v as String?),
+          kind: $checkedConvert(
+            'kind',
+            (v) => $enumDecode(_$CreationKindEnumMap, v),
+          ),
+          label: $checkedConvert('label', (v) => v as String?),
+          title: $checkedConvert('title', (v) => v as String),
+          pageId: $checkedConvert('page_id', (v) => v as String?),
+          mediaId: $checkedConvert('media_id', (v) => v as String?),
+          mime: $checkedConvert('mime', (v) => v as String?),
+          size: $checkedConvert('size', (v) => (v as num).toInt()),
+          width: $checkedConvert('width', (v) => (v as num?)?.toInt()),
+          height: $checkedConvert('height', (v) => (v as num?)?.toInt()),
+          durationS: $checkedConvert('duration_s', (v) => v as num?),
+          hasCover: $checkedConvert('has_cover', (v) => v as bool),
+          hasPreview: $checkedConvert('has_preview', (v) => v as bool),
+          version: $checkedConvert('version', (v) => (v as num).toInt()),
+          visibility: $checkedConvert(
+            'visibility',
+            (v) => $enumDecode(_$CreationDetailVisibilityEnumEnumMap, v),
+          ),
+          pinned: $checkedConvert('pinned', (v) => v as bool),
+          lastOpenedAt: $checkedConvert(
+            'last_opened_at',
+            (v) => v == null ? null : DateTime.parse(v as String),
+          ),
+          canChange: $checkedConvert('can_change', (v) => v as bool),
+          publicUrl: $checkedConvert('public_url', (v) => v as String?),
+          deletedAt: $checkedConvert(
+            'deleted_at',
+            (v) => v == null ? null : DateTime.parse(v as String),
+          ),
+          createdAt: $checkedConvert(
+            'created_at',
+            (v) => DateTime.parse(v as String),
+          ),
+          updatedAt: $checkedConvert(
+            'updated_at',
+            (v) => DateTime.parse(v as String),
+          ),
+          siblings: $checkedConvert(
+            'siblings',
+            (v) => (v as List<dynamic>)
+                .map((e) => Creation.fromJson(e as Map<String, dynamic>))
+                .toList(),
+          ),
+        );
+        return val;
+      },
+      fieldKeyMap: const {
+        'orgId': 'org_id',
+        'botId': 'bot_id',
+        'botName': 'bot_name',
+        'madeFor': 'made_for',
+        'conversationId': 'conversation_id',
+        'runId': 'run_id',
+        'projectId': 'project_id',
+        'projectTitle': 'project_title',
+        'pageId': 'page_id',
+        'mediaId': 'media_id',
+        'durationS': 'duration_s',
+        'hasCover': 'has_cover',
+        'hasPreview': 'has_preview',
+        'lastOpenedAt': 'last_opened_at',
+        'canChange': 'can_change',
+        'publicUrl': 'public_url',
+        'deletedAt': 'deleted_at',
+        'createdAt': 'created_at',
+        'updatedAt': 'updated_at',
+      },
+    );
+
+Map<String, dynamic> _$CreationDetailToJson(CreationDetail instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'org_id': instance.orgId,
+      'bot_id': instance.botId,
+      'bot_name': instance.botName,
+      'made_for': instance.madeFor,
+      'conversation_id': instance.conversationId,
+      'run_id': instance.runId,
+      'project_id': ?instance.projectId,
+      'project_title': ?instance.projectTitle,
+      'kind': _$CreationKindEnumMap[instance.kind]!,
+      'label': instance.label,
+      'title': instance.title,
+      'page_id': instance.pageId,
+      'media_id': instance.mediaId,
+      'mime': instance.mime,
+      'size': instance.size,
+      'width': instance.width,
+      'height': instance.height,
+      'duration_s': instance.durationS,
+      'has_cover': instance.hasCover,
+      'has_preview': instance.hasPreview,
+      'version': instance.version,
+      'visibility': _$CreationDetailVisibilityEnumEnumMap[instance.visibility]!,
+      'pinned': instance.pinned,
+      'last_opened_at': instance.lastOpenedAt?.toIso8601String(),
+      'can_change': instance.canChange,
+      'public_url': ?instance.publicUrl,
+      'deleted_at': instance.deletedAt?.toIso8601String(),
+      'created_at': instance.createdAt.toIso8601String(),
+      'updated_at': instance.updatedAt.toIso8601String(),
+      'siblings': instance.siblings.map((e) => e.toJson()).toList(),
+    };
+
+const _$CreationKindEnumMap = {
+  CreationKind.page: 'page',
+  CreationKind.image: 'image',
+  CreationKind.video: 'video',
+  CreationKind.audio: 'audio',
+  CreationKind.document: 'document',
+  CreationKind.file: 'file',
+};
+
+const _$CreationDetailVisibilityEnumEnumMap = {
+  CreationDetailVisibilityEnum.private: 'private',
+  CreationDetailVisibilityEnum.workspace: 'workspace',
+  CreationDetailVisibilityEnum.public: 'public',
+};

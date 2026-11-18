@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "prompt": "Tables: orders(id, customer_id, total, created_at), customers(id, name). Write a query for the top 5 customers by total spend in 2025.",
+      "expect": "A correct SQL query joining orders to customers, filtering 2025 dates, grouping by customer, summing total, ordering descending and limiting to 5. Brief explanation."
+    },
+    {
+      "prompt": "Explain: SELECT department, COUNT(*) FROM employees GROUP BY department HAVING COUNT(*) > 10;",
+      "expect": "Explains it counts employees per department and keeps only departments with more than 10, in plain words."
+    }
+  ]
+}

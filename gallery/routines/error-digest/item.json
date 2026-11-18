@@ -1,0 +1,29 @@
+{
+  "name": "Error digest",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "errors",
+    "monitoring",
+    "developers"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "error reports",
+      "code repositories"
+    ],
+    "credits": "medium"
+  },
+  "needs": {
+    "apps": [
+      "sentry"
+    ]
+  }
+}

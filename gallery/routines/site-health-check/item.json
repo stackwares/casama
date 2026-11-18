@@ -1,0 +1,36 @@
+{
+  "name": "Website health check",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "website",
+    "uptime",
+    "ops"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "the web",
+      "memory"
+    ],
+    "writes": [
+      "saves results to memory"
+    ],
+    "credits": "low"
+  },
+  "inputs": [
+    {
+      "key": "site",
+      "label": "Which website?",
+      "type": "text",
+      "default": "the websites in your memory",
+      "help": "A web address, such as example.com."
+    }
+  ]
+}

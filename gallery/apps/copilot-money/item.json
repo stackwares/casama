@@ -1,0 +1,26 @@
+{
+  "name": "Copilot Money",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "budget",
+    "finance"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "How much did I spend on restaurants this month?",
+    "Am I over budget anywhere?",
+    "What are my account balances?"
+  ],
+  "access": {
+    "reads": [
+      "Copilot Money spending and budgets"
+    ],
+    "credits": "low"
+  }
+}

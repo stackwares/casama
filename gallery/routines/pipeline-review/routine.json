@@ -1,0 +1,7 @@
+{
+  "description": "Monday mornings: the deals that went quiet, the ones closing soon, and the next step for each.",
+  "category": "work",
+  "icon": "target",
+  "instructions_md": "Review my sales pipeline from my CRM if one is connected (such as HubSpot, Zoho CRM, Attio or Close), otherwise from what's in memory. List:\n\n1. Deals expected to close in the next 30 days, with the amount, the stage and the next step.\n2. Deals with no activity for 14 days or more, with the last thing that happened.\n3. Deals missing an amount, a close date or a next step.\n\nFor each quiet deal, suggest one next step and draft a short follow-up I could send. Don't send anything, and don't change stages, amounts or dates in the CRM. End with the total open pipeline. If no CRM is connected, tell me which one to connect.",
+  "schedule_cron": "0 8 * * 1"
+}

@@ -1,0 +1,8 @@
+{
+  "cases": [
+    {
+      "prompt": "Write a decision memo: should our 8-person team move from Slack to Microsoft Teams? We already pay for Microsoft 365; people like Slack; Slack costs $8.75 per user per month.",
+      "expect": "One page with the decision, at least two options, trade-offs (cost saving vs. switching pain and preference), a clear recommendation, and what would change it."
+    }
+  ]
+}

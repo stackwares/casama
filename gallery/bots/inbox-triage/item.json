@@ -1,0 +1,21 @@
+{
+  "name": "Inbox triage",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-09",
+  "examples": [
+    "Triage my inbox from today",
+    "Draft replies to anything waiting on me",
+    "What did I miss this week?"
+  ]
+}

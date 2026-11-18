@@ -1,0 +1,36 @@
+{
+  "name": "Competitor watch",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "competitors",
+    "research",
+    "business"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "the web",
+      "memory"
+    ],
+    "writes": [
+      "saves notes to memory"
+    ],
+    "credits": "medium"
+  },
+  "inputs": [
+    {
+      "key": "competitors",
+      "label": "Competitors to watch",
+      "type": "text",
+      "default": "the competitors in your memory",
+      "help": "Names or web addresses, such as acme.com and example.io."
+    }
+  ]
+}

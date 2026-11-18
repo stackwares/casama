@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "prompt": "Draft a reply to my landlord: the heater broke on Monday, I need it fixed this week, I'm home after 5pm.",
+      "expect": "A polite, clear email that says the heater broke Monday, asks for a fix this week, and gives availability after 5pm. Has a subject line."
+    },
+    {
+      "prompt": "Write a short email declining a vendor's proposal. We chose another supplier on price. Keep the door open.",
+      "expect": "Declines clearly and kindly, gives price as the reason without detail overload, and leaves the door open for the future. Short."
+    }
+  ]
+}

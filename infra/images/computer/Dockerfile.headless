@@ -1,0 +1,94 @@
+# Headless computer: Ubuntu 24.04, computerd, shell tools, Node.js, Python, Chromium,
+# agent-browser, and the document tools the catalog skills call (LibreOffice, pandoc, Poppler).
+# Build from the repo root:
+#   docker build -f infra/images/computer/Dockerfile.headless -t casama/computer-headless:dev .
+
+# --- computerd (Dart, compiled to one native binary) ---
+FROM dart:stable AS computerd
+WORKDIR /src
+COPY dart/ ./
+RUN mkdir -p /out && dart pub get && dart compile exe computerd/bin/computerd.dart -o /out/computerd
+
+# --- computer image ---
+FROM ubuntu:24.04
+ARG AGENT_BROWSER_VERSION=0.43.0
+ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8 TZ=UTC
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates curl wget git openssh-client bash tar gzip xz-utils zstd unzip zip jq ripgrep \
+      less nano vim-tiny procps psmisc iproute2 iputils-ping dnsutils file bsdextrautils util-linux \
+      python3 python3-pip python3-venv build-essential tzdata locales fonts-liberation fonts-noto-color-emoji \
+    && rm -rf /var/lib/apt/lists/*
+
+# Node.js 24 LTS
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs && rm -rf /var/lib/apt/lists/*
+
+# agent-browser plus Playwright's Chromium build (Chrome for Testing has no Linux arm64 build).
+# Installed outside the home directory so it is not archived on sleep.
+ARG PLAYWRIGHT_VERSION=1.65.1
+RUN npm install -g agent-browser@${AGENT_BROWSER_VERSION} playwright@${PLAYWRIGHT_VERSION} \
+    && PLAYWRIGHT_BROWSERS_PATH=/opt/browser playwright install --with-deps --no-shell chromium \
+    && rm -rf /var/lib/apt/lists/* \
+    && CHROME="$(find /opt/browser -type f -name chrome -perm -u+x | head -1)" \
+    && test -n "$CHROME" && ln -sf "$CHROME" /usr/local/bin/chrome \
+    && chmod -R a+rX /opt/browser \
+    && chrome --version
+
+# Document skills (pdf, docx, xlsx, pptx) call these by name and treat them as already installed.
+# LibreOffice is for conversion; ffmpeg for video and audio (crop, trim, GIFs). The bot cannot
+# apt-install later (it is not root), so a missing tool sends it hunting for workarounds.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      libreoffice-writer libreoffice-calc libreoffice-impress \
+      poppler-utils pandoc qpdf tesseract-ocr ffmpeg \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip3 install --break-system-packages --no-cache-dir \
+      pypdf pdfplumber pandas reportlab pytesseract pdf2image openpyxl Pillow defusedxml lxml 'markitdown[pptx]' \
+    && npm install -g docx pptxgenjs
+
+# Everyday tools (D-347). Anything that needs root has to be here: the bot can't apt-install.
+# Developer basics; photos (iPhone HEIC, WebP, metadata); scans to searchable PDFs, shrinking and
+# forms; OCR in more languages; archives people get sent; QR codes; CJK fonts so screenshots and
+# PDFs of Chinese, Japanese or Korean pages don't show empty boxes. gh comes from GitHub's own repo.
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg -o /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && chmod a+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+      > /etc/apt/sources.list.d/github-cli.list \
+    && apt-get update && apt-get install -y --no-install-recommends \
+      gh git-lfs sqlite3 postgresql-client openssl rsync tree fd-find htop bc \
+      imagemagick libimage-exiftool-perl libheif-examples libheif-plugin-libde265 webp graphviz \
+      ocrmypdf ghostscript pdftk-java \
+      tesseract-ocr-spa tesseract-ocr-fra tesseract-ocr-deu tesseract-ocr-por tesseract-ocr-ita \
+      tesseract-ocr-jpn tesseract-ocr-chi-sim tesseract-ocr-kor \
+      unar p7zip-full zbar-tools fonts-noto-cjk \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -sf /usr/bin/fdfind /usr/local/bin/fd \
+    && pip3 install --break-system-packages --no-cache-dir \
+      pillow-heif icalendar vobject qrcode segno matplotlib beautifulsoup4 requests python-pptx python-docx \
+    && curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin UV_NO_MODIFY_PATH=1 sh \
+    && uv --version
+
+# Unprivileged user; home is the only persistent, writable place (plus /tmp).
+RUN userdel -r ubuntu 2>/dev/null || true \
+    && useradd --create-home --uid 1000 --shell /bin/bash casama \
+    && mkdir -p /home/casama/workspace && chown -R casama:casama /home/casama
+COPY --from=computerd /out/computerd /usr/local/bin/computerd
+COPY infra/images/computer/bashrc /etc/casama-bashrc
+RUN echo '. /etc/casama-bashrc' >> /etc/bash.bashrc
+
+ENV HOME=/home/casama \
+    COMPUTERD_HOME=/home/casama \
+    AGENT_BROWSER_EXECUTABLE_PATH=/usr/local/bin/chrome \
+    AGENT_BROWSER_PROFILE=/home/casama/.browser-profile \
+    AGENT_BROWSER_SOCKET_DIR=/tmp/agent-browser \
+    AGENT_BROWSER_NO_VERSION_CHECK=1 \
+    PIP_USER=1 \
+    NPM_CONFIG_PREFIX=/home/casama/.npm-global \
+    PATH=/home/casama/.npm-global/bin:/home/casama/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+LABEL org.opencontainers.image.title="casama-computer-headless" \
+      org.opencontainers.image.licenses="AGPL-3.0-only"
+USER casama
+WORKDIR /home/casama/workspace
+EXPOSE 7070
+CMD ["computerd"]

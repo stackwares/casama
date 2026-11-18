@@ -1,0 +1,154 @@
+# Local development stack. Supabase itself runs through `supabase start`
+# (Postgres :54322, API :54321); this file adds the Casama services next to it.
+#   supabase start
+#   docker compose -f infra/compose/docker-compose.dev.yml up --build
+# Secrets come from ../../.env (see .env.example).
+name: casama-dev
+
+x-server: &server
+  build:
+    context: ../..
+    dockerfile: apps/server/Dockerfile
+  env_file: ../../.env
+  extra_hosts:
+    - host.docker.internal:host-gateway
+  networks: [control]
+  restart: unless-stopped
+
+services:
+  api:
+    <<: *server
+    environment:
+      MODE: api
+      DATABASE_URL: postgres://postgres:postgres@host.docker.internal:54322/postgres
+      SUPABASE_URL: http://host.docker.internal:54321
+      SUPERVISOR_URL: http://casama-supervisor:8788
+    ports:
+      - "127.0.0.1:8787:8787"
+
+  worker:
+    <<: *server
+    environment:
+      MODE: worker
+      # The companion tunnel (D-066) goes through the API's internal endpoints.
+      API_INTERNAL_URL: http://api:8787
+      DATABASE_URL: postgres://postgres:postgres@host.docker.internal:54322/postgres
+      # casama_worker's local password comes from supabase/seed.sql.
+      WORKER_DATABASE_URL: postgres://casama_worker:casama_worker_dev@host.docker.internal:54322/postgres
+      SUPABASE_URL: http://host.docker.internal:54321
+      SUPERVISOR_URL: http://casama-supervisor:8788
+
+  # The only service with Docker access. It joins each computer's private network to reach computerd.
+  supervisor:
+    build:
+      context: ../..
+      dockerfile: apps/supervisor/Dockerfile
+    container_name: casama-supervisor
+    env_file: ../../.env
+    # Loopback only: for an API and worker run on the host (`node src/main.ts`, SUPERVISOR_URL
+    # http://localhost:8788). The containerised ones reach it by name on the control network.
+    ports:
+      - "127.0.0.1:8788:8788"
+    environment:
+      # .env's PORT is the API's (8787); the supervisor is on 8788, where SUPERVISOR_URL points.
+      PORT: "8788"
+      EGRESS_CONTAINER: casama-egress
+      EGRESS_CONTROL_URL: http://casama-egress:3129
+      SUPERVISOR_CONTAINER: casama-supervisor
+      COMPUTER_IMAGE_HEADLESS: casama/computer-headless:dev
+      COMPUTER_IMAGE_DESKTOP: casama/computer-desktop:dev
+      OBJECT_STORE_DIR: /data/objects
+      # Live view: the relay joins each desktop computer's network as "turn" (D-055).
+      TURN_CONTAINER: casama-turn
+      # SANDBOX_RUNTIME: runsc   # gVisor on a Linux host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - objects:/data/objects
+    networks: [control]
+    restart: unless-stopped
+
+  # The only route from computers to the internet; blocks private and metadata addresses.
+  egress:
+    build:
+      context: ../..
+      dockerfile: infra/egress-proxy/Dockerfile
+    container_name: casama-egress
+    env_file: ../../.env
+    networks: [control, egress]
+    restart: unless-stopped
+
+  # TURN relay for live view: the only media path between viewers and computers (D-055).
+  # Production also needs TLS on 5349 (turns:) for networks that only allow HTTPS.
+  turn:
+    build:
+      context: ../..
+      dockerfile: infra/turn/Dockerfile
+    container_name: casama-turn
+    env_file: ../../.env
+    ports:
+      - "3478:3478/udp"
+      - "3478:3478/tcp"
+    networks: [control]
+    restart: unless-stopped
+
+  # Optional S3-compatible storage for snapshots and checkpoints (D-062): `--profile s3`, then set
+  # OBJECT_STORE=s3 S3_ENDPOINT=http://casama-s3:8333 S3_BUCKET=casama S3_CREATE_BUCKET=true and keys.
+  # Without it the supervisor keeps archives on the `objects` volume. Hosted installs can point the
+  # same settings at Cloudflare R2, AWS S3 or Supabase Storage's S3 endpoint instead.
+  s3:
+    image: chrislusf/seaweedfs:4.53
+    container_name: casama-s3
+    profiles: [s3]
+    env_file: ../../.env
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        printf '{"identities":[{"name":"casama","credentials":[{"accessKey":"%s","secretKey":"%s"}],"actions":["Read","Write","List","Admin"]}]}'
+        "$$S3_ACCESS_KEY_ID" "$$S3_SECRET_ACCESS_KEY" > /tmp/s3.json
+        && exec weed server -s3 -s3.config=/tmp/s3.json -dir=/data
+    volumes:
+      - s3data:/data
+    networks: [control]
+    restart: unless-stopped
+
+  # Free web search (D-179): `--profile search`, then SEARXNG_URL=http://127.0.0.1:18080 in .env
+  # (the API and worker run on the host in development).
+  searxng:
+    image: searxng/searxng:2026.10.29-c15647b5a
+    container_name: casama-searxng
+    profiles: [search]
+    environment:
+      SEARXNG_SECRET: ${SEARXNG_SECRET:-}
+    volumes:
+      - ./selfhost/searxng/settings.yml:/etc/searxng/settings.yml:ro
+    ports:
+      - "127.0.0.1:18080:8080"
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETGID, SETUID]
+    networks: [control, egress]
+    restart: unless-stopped
+
+  # Build-only services so `compose build` also builds the computer images.
+  computer-headless:
+    build:
+      context: ../..
+      dockerfile: infra/images/computer/Dockerfile.headless
+    image: casama/computer-headless:dev
+    profiles: [images]
+
+  computer-desktop:
+    build:
+      context: ../..
+      dockerfile: infra/images/computer/Dockerfile.desktop
+      args:
+        BASE: casama/computer-headless:dev
+    image: casama/computer-desktop:dev
+    profiles: [images]
+
+networks:
+  control: {}
+  egress: {}
+
+volumes:
+  objects: {}
+  s3data: {}

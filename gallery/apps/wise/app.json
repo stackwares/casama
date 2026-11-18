@@ -1,0 +1,10 @@
+{
+  "description": "See your Wise balances and exchange rates, and prepare money transfers.",
+  "category": "payments",
+  "color": "9FE870",
+  "homepage": "https://wise.com",
+  "url": "https://mcp.wise.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "cimd",
+  "capabilities": ["See your balances", "Check exchange rates", "Prepare a transfer"]
+}

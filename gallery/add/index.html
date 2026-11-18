@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add to Casama badge and public data · Casama Gallery</title>
+<meta name="description" content="Link your theme, skill, app or bot to its Casama gallery page with the Add to Casama badge, and read the gallery's public JSON and usage numbers.">
+<link rel="canonical" href="https://gallery.casama.ai/add/">
+<meta property="og:title" content="Add to Casama badge and public data">
+<meta property="og:image" content="https://gallery.casama.ai/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/casama-winky-animated.svg">
+<link rel="stylesheet" href="/gallery.css">
+<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/page.css">
+<script>document.documentElement.setAttribute("data-theme", matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="bar">
+  <div class="wrap bar-inner">
+    <a class="logo" href="https://casama.ai" aria-label="Casama home"><span data-casama-mark></span><span>Casama</span></a>
+    <span class="crumb" aria-hidden="true">/</span>
+    <a class="crumb-page" href="/">Gallery</a>
+    <nav class="bar-nav" aria-label="Gallery">
+      <a href="/make.html">Make a look</a>
+      <a href="/#contribute">Contribute</a>
+      <a class="btn primary" href="https://casama.ai/download">Get Casama</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap page" id="main">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Gallery</a><span aria-hidden="true">/</span><span>Developers</span></nav>
+<div class="doc">
+<div class="title-row">
+  <h1>Add to Casama</h1>
+  <p class="sub">Made something for the gallery? Put the badge in your README, docs or site. It links to the item's page, which opens it in Casama or helps people get the app.</p>
+</div>
+
+<p><a href="/i/skill/meeting-notes/"><img src="/badge.svg" alt="Add to Casama" width="172" height="40"></a></p>
+
+<p>Every item has a page at <code>https://gallery.casama.ai/i/&lt;type&gt;/&lt;id&gt;/</code>, where the type is <code>theme</code>, <code>scheme</code>, <code>wallpaper</code>, <code>skill</code>, <code>app</code>, <code>bot</code>, <code>routine</code>, <code>plugin</code> or <code>set</code>, and the id is the item's folder name. Each page also has the ready-made snippet for that item under <em>Add a badge to your README</em>.</p>
+
+<h2 id="markdown">Markdown</h2>
+<pre class="sample"><code>[![Add to Casama](https://gallery.casama.ai/badge.svg)](https://gallery.casama.ai/i/skill/meeting-notes/)</code></pre>
+<button class="btn" type="button" data-copy="[![Add to Casama](https://gallery.casama.ai/badge.svg)](https://gallery.casama.ai/i/skill/meeting-notes/)"><span>Copy Markdown</span></button>
+
+<h2 id="html">HTML</h2>
+<pre class="sample"><code>&lt;a href="https://gallery.casama.ai/i/skill/meeting-notes/"&gt;&lt;img src="https://gallery.casama.ai/badge.svg" alt="Add to Casama" height="40"&gt;&lt;/a&gt;</code></pre>
+<button class="btn" type="button" data-copy='<a href="https://gallery.casama.ai/i/skill/meeting-notes/"><img src="https://gallery.casama.ai/badge.svg" alt="Add to Casama" height="40"></a>'><span>Copy HTML</span></button>
+<p class="small">Replace <code>skill/meeting-notes</code> with your item. Links straight into the app use <code>casama://app/gallery/&lt;type&gt;/&lt;id&gt;</code>; on the web prefer the page, which works with or without the app.</p>
+
+<h2 id="data">Public data</h2>
+<p>The whole catalog is static JSON on this site, free to read from anywhere (CORS is open, no key). Casama servers read the same files. Each item keeps its own license, named in its record.</p>
+<table>
+<thead><tr><th>File</th><th>What's in it</th></tr></thead>
+<tbody>
+<tr><td><a href="/index.json"><code>/index.json</code></a></td><td>Themes, color schemes, wallpapers and skills, with each look's full document so a preview can be drawn from the list alone.</td></tr>
+<tr><td><a href="/apps.json"><code>/apps.json</code></a>, <a href="/bots.json"><code>/bots.json</code></a>, <a href="/routines.json"><code>/routines.json</code></a>, <a href="/plugins.json"><code>/plugins.json</code></a></td><td>Apps (vendor MCP servers), starter bots, routine ideas and reviewed plugins, in the same record shape.</td></tr>
+<tr><td><a href="/sets.json"><code>/sets.json</code></a></td><td>Starter sets: a few items that work well together.</td></tr>
+<tr><td><a href="/authors.json"><code>/authors.json</code></a></td><td>Authors by handle, with the items each one made.</td></tr>
+<tr><td><a href="/manifest.json"><code>/manifest.json</code></a>, <code>/manifest.sig</code></td><td>SHA-256 of every file above, and its Ed25519 signature, so a copy can be checked.</td></tr>
+<tr><td><code>/&lt;type&gt;s/&lt;id&gt;/</code></td><td>An item's own files, as listed in its record's <code>files</code> (for example <code>/skills/meeting-notes/SKILL.md</code>).</td></tr>
+<tr><td><a href="/sitemap.xml"><code>/sitemap.xml</code></a></td><td>Every item and author page.</td></tr>
+</tbody>
+</table>
+<p>A record carries <code>id</code>, <code>type</code>, <code>name</code>, <code>author</code>, <code>license</code>, <code>tags</code>, <code>version</code>, <code>added</code> and <code>updated</code>, and when they apply <code>description</code>, <code>examples</code>, <code>access</code> (what it can read and change, whether it runs code or needs a computer, how many credits it uses), <code>needs</code>, <code>changelog</code> and <code>document</code>. The catalog format is in the gallery's <a href="https://github.com/stackwares/casama-gallery#readme">README</a>.</p>
+
+<h3 class="h3" id="stats">Usage numbers</h3>
+<p><code>GET https://api.casama.ai/v1/gallery/stats</code> needs no sign-in and is cached for ten minutes. It returns <code>{ "items": { "&lt;type&gt;/&lt;id&gt;": { "installers", "trending", "active", "success" } } }</code>: people who added it, new this week, active in the last 14 days, and the share of runs that finish. Numbers are aggregate only. An item with fewer than 10 people has no numbers, and <code>success</code> needs at least 20 runs.</p>
+</div>
+</main>
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <p class="foot-name"><span data-casama-mark></span>Casama</p>
+    <p class="small">Made in the open by Casama and its contributors. Every item lists its author and license.</p>
+    <p class="small"><a href="/add/">Add to Casama badge</a> · <a href="/add/#data">Public data</a> · <a href="https://casama.ai/privacy">Privacy</a> · <a href="https://casama.ai/terms">Terms</a></p>
+  </div>
+</footer>
+<script src="/gallery.js"></script>
+<script src="/page.js"></script>
+<script src="/assets/brand/casama-mark.js"></script>
+</body>
+</html>

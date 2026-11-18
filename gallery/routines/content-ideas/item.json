@@ -1,0 +1,33 @@
+{
+  "name": "Content ideas",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "content",
+    "blog",
+    "marketing"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "the web",
+      "memory"
+    ],
+    "credits": "medium"
+  },
+  "inputs": [
+    {
+      "key": "topic",
+      "label": "What do you write about?",
+      "type": "text",
+      "default": "my work, from your memory",
+      "help": "Your field or product, such as bookkeeping for freelancers."
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Family organizer",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "life",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "What's coming up for the kids this week?",
+    "Turn this school letter into a to-do list",
+    "Plan pickups for a busy week"
+  ]
+}

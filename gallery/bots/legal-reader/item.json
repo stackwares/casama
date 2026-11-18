@@ -1,0 +1,21 @@
+{
+  "name": "Contract reader",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "Read this contract and flag anything unusual",
+    "Explain this clause in plain words",
+    "What should I ask before I sign this lease?"
+  ]
+}

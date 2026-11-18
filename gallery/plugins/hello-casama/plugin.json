@@ -1,0 +1,7 @@
+{
+  "description": "A small example plugin: a stand-up skill and a notes server that asks for one setting.",
+  "url": "https://github.com/stackwares/casama/tree/main/examples/hello-plugin",
+  "commit": "6efc18250f69b9c2938b689076384237324136e3",
+  "icon": "puzzle",
+  "adds": ["A stand-up skill", "A notes server on the bot's computer", "Asks for a note signature"]
+}

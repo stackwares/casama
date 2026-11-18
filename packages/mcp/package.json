@@ -1,0 +1,62 @@
+{
+  "name": "@casama/mcp",
+  "version": "0.2.0",
+  "description": "Casama MCP server: search Casama's docs and API reference, check plugins, and control your Casama bots from AI coding tools (Claude Code, Cursor, Codex, and others).",
+  "type": "module",
+  "license": "Apache-2.0",
+  "homepage": "https://docs.casama.ai/guide/mcp",
+  "bugs": {
+    "email": "support@casama.ai"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "casama",
+    "ai-agents",
+    "claude-code",
+    "cursor",
+    "docs",
+    "llms"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "casama-mcp": "./src/main.ts"
+  },
+  "exports": {
+    ".": "./src/server.ts",
+    "./docs": "./src/docs.ts"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/main.js",
+    "prepublishOnly": "pnpm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7",
+    "@casama/plugin-check": "workspace:^"
+  },
+  "publishConfig": {
+    "access": "public",
+    "bin": {
+      "casama-mcp": "./dist/main.js"
+    },
+    "exports": {
+      ".": {
+        "types": "./dist/server.d.ts",
+        "default": "./dist/server.js"
+      },
+      "./docs": {
+        "types": "./dist/docs.d.ts",
+        "default": "./dist/docs.js"
+      }
+    }
+  }
+}

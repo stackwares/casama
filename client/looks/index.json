@@ -1,0 +1,32 @@
+{
+  "schemes": [
+    "casama",
+    "plain"
+  ],
+  "meshes": [
+    "casama",
+    "lavender",
+    "cotton",
+    "peach",
+    "sunset",
+    "mint",
+    "ocean",
+    "forest",
+    "graphite",
+    "northern",
+    "twilight",
+    "berry",
+    "citrus",
+    "reef"
+  ],
+  "patterns": [
+    "clouds",
+    "doodles",
+    "treats",
+    "garden",
+    "space",
+    "pets",
+    "sea",
+    "tech"
+  ]
+}

@@ -1,0 +1,1336 @@
+import { randomBytes } from "node:crypto";
+import { EventBus, milestone, secretStoreFor, startTicketWork, track } from "@casama/agent";
+import { routes } from "@casama/contracts";
+import {
+  contentKeys,
+  type Database,
+  type JwtClaims,
+  pgErrorCode,
+  schema,
+  withUserSession,
+} from "@casama/db";
+import {
+  type BotTemplate,
+  browserTriggerSite,
+  checkMcpAnswer,
+  isValidCron,
+  isValidTimezone,
+  nextRunAt,
+  parseTotp,
+  starterBotName,
+  TotpError,
+} from "@casama/domain";
+import type { OpenAPIHono } from "@hono/zod-openapi";
+import { and, desc, eq, sql } from "drizzle-orm";
+import { type GalleryExtras, galleryRecord, starterBots } from "../../services/gallery.ts";
+import { enforceGalleryPolicy } from "../../services/gallery-install.ts";
+import {
+  galleryStats,
+  linkGalleryInstallQuietly,
+  withStats,
+} from "../../services/gallery-usage.ts";
+
+/** The gallery v2 fields a starter bot's template carries (D-315). */
+function pickTemplateExtras(t: GalleryExtras & { stats?: object }) {
+  const out: Record<string, unknown> = {};
+  for (const k of [
+    "added",
+    "updated",
+    "pick",
+    "examples",
+    "access",
+    "needs",
+    "inputs",
+    "min_app",
+    "season",
+    "source",
+    "version",
+    "stats",
+  ] as const)
+    if (t[k] !== undefined) out[k] = t[k];
+  return out as Record<string, never>;
+}
+
+import { ApiError } from "../errors.ts";
+import type { AppDeps, AppEnv } from "../types.ts";
+import { iso } from "../util.ts";
+
+const { approvals, secrets, integrations, routines, tasks, bots } = schema;
+const MAX_WEBHOOK_BODY = 1024 * 1024;
+
+export function requireClaims(claims: JwtClaims | undefined): JwtClaims {
+  if (!claims) throw new ApiError(401, "unauthorized", "Missing or invalid bearer token");
+  return claims;
+}
+
+/** A sign-in code secret must hold a readable two-step seed (D-102). */
+const checkTotpValue = (value: string) => {
+  try {
+    parseTotp(value);
+  } catch (err) {
+    if (err instanceof TotpError) throw new ApiError(400, "invalid_totp", err.message);
+    throw err;
+  }
+};
+
+export const isAdmin = async (db: Database, claims: JwtClaims, orgId: string) => {
+  const [r] = await withUserSession(db, claims, (tx) =>
+    tx.execute<{ ok: boolean }>(sql`select public.has_role(${orgId}::uuid, 'admin') as ok`),
+  );
+  return !!r?.ok;
+};
+const isMember = async (db: Database, claims: JwtClaims, orgId: string) => {
+  const [r] = await withUserSession(db, claims, (tx) =>
+    tx.execute<{ ok: boolean }>(sql`select public.is_member(${orgId}::uuid) as ok`),
+  );
+  return !!r?.ok;
+};
+
+type ApprovalRow = typeof approvals.$inferSelect;
+const approvalOut = (a: ApprovalRow) => ({
+  id: a.id,
+  bot_id: a.botId,
+  run_id: a.runId,
+  tool_name: a.toolName,
+  args_redacted: a.argsRedacted as Record<string, unknown>,
+  summary: a.summary,
+  risk: a.risk as "high",
+  status: a.status as "pending",
+  decided_at: a.decidedAt ? iso(a.decidedAt) : null,
+  expires_at: iso(a.expiresAt),
+  created_at: iso(a.createdAt),
+});
+
+type SecretRow = typeof secrets.$inferSelect;
+const secretOut = (s: SecretRow) => ({
+  id: s.id,
+  org_id: s.orgId,
+  name: s.name,
+  allowed_hosts: s.allowedHosts,
+  allowed_bot_ids: s.allowedBotIds,
+  kind: (s.kind ?? "value") as "value" | "totp",
+  created_at: iso(s.createdAt),
+});
+
+export type IntegrationRow = typeof integrations.$inferSelect;
+export const integrationOut = (i: IntegrationRow, botIds?: string[]) => ({
+  id: i.id,
+  org_id: i.orgId,
+  kind: i.kind as "mcp",
+  name: i.name,
+  status: i.status as "ok",
+  error: i.error,
+  tools: ((i.toolsCache as Array<{ name: string; description: string; risk?: string }>) ?? []).map(
+    (t) => ({
+      name: t.name,
+      description: t.description,
+      risk: t.risk as "low" | undefined,
+    }),
+  ),
+  tools_cached_at: i.toolsCachedAt ? iso(i.toolsCachedAt) : null,
+  created_at: iso(i.createdAt),
+  app_id:
+    typeof (i.config as Record<string, unknown>)?.app === "string"
+      ? ((i.config as Record<string, string>).app ?? null)
+      : null,
+  auth: (((i.config as Record<string, unknown>)?.auth as string | undefined) ??
+    (i.vaultSecretId ? "api_key" : "none")) as "oauth" | "api_key" | "none",
+  risk_overrides: (i.riskOverrides as Record<string, "low" | "medium" | "high">) ?? {},
+  ...(botIds ? { bot_ids: botIds } : {}),
+  device:
+    i.kind === "local_mcp"
+      ? (() => {
+          const c = i.config as Record<string, string | null>;
+          return {
+            id: String(c.device_id ?? ""),
+            computer_id: c.computer_id ?? null,
+            owner_user_id: String(c.owner_user_id ?? ""),
+            label: String(c.label ?? i.name),
+          };
+        })()
+      : null,
+});
+
+type RoutineRow = typeof routines.$inferSelect;
+/** Casama for Chrome's trigger events (D-323 Phase 4), which app builds before it can't parse. */
+const BROWSER_EVENTS = new Set(["site_opened", "download_done", "bookmark_added"]);
+
+/**
+ * A routine for the API. [allEvents]: the client reads every device event; otherwise a browser
+ * event's `device` is left out, since older apps decode the event strictly and would fail to load
+ * the whole list.
+ */
+const routineOut = (r: RoutineRow, allEvents = true) => ({
+  id: r.id,
+  bot_id: r.botId,
+  name: r.name,
+  instructions_md: r.instructionsMd,
+  schedule_cron: r.scheduleCron,
+  timezone: r.timezone,
+  trigger: ((r.trigger as { type?: string })?.type ?? "schedule") as
+    | "schedule"
+    | "once"
+    | "github"
+    | "webhook"
+    | "calendar_event"
+    | "message"
+    | "device",
+  message: (() => {
+    const t = r.trigger as Record<string, unknown> & { type?: string };
+    if (t?.type !== "message") return null;
+    const { type: _t, ...rest } = t;
+    return rest as {
+      channel_id?: string;
+      channel_kind?: "email";
+      sender?: string;
+      subject_match?: string;
+      text_match?: string;
+    };
+  })(),
+  calendar: (() => {
+    const t = r.trigger as {
+      type?: string;
+      integration_id?: string;
+      offset_minutes?: number;
+      anchor?: "start" | "end";
+      calendar?: string;
+      outside_guests?: boolean;
+      title_match?: string;
+      has_video_link?: boolean;
+    };
+    if (t?.type !== "calendar_event" || !t.integration_id) return null;
+    return {
+      integration_id: t.integration_id,
+      offset_minutes: Number(t.offset_minutes ?? 0),
+      ...(t.anchor === "end" ? { anchor: "end" as const } : {}),
+      ...(t.calendar ? { calendar: t.calendar } : {}),
+      ...(t.outside_guests !== undefined ? { outside_guests: t.outside_guests } : {}),
+      ...(t.title_match ? { title_match: t.title_match } : {}),
+      ...(t.has_video_link !== undefined ? { has_video_link: t.has_video_link } : {}),
+    };
+  })(),
+  device: (() => {
+    const t = r.trigger as {
+      type?: string;
+      event?: string;
+      place?: string;
+      app?: string;
+      minutes_before?: number;
+      folder?: string;
+      pattern?: string;
+      site?: string;
+    };
+    if (t?.type !== "device" || !t.event) return null;
+    if (!allEvents && BROWSER_EVENTS.has(t.event)) return null;
+    return {
+      event: t.event as "wake",
+      ...(t.place ? { place: t.place } : {}),
+      ...(t.app ? { app: t.app } : {}),
+      ...(t.minutes_before !== undefined ? { minutes_before: t.minutes_before } : {}),
+      ...(t.folder ? { folder: t.folder } : {}),
+      ...(t.pattern ? { pattern: t.pattern } : {}),
+      ...(t.site ? { site: t.site } : {}),
+    };
+  })(),
+  notify: r.notify,
+  enabled: r.enabled,
+  next_run_at: r.nextRunAt ? iso(r.nextRunAt) : null,
+  last_run_at: r.lastRunAt ? iso(r.lastRunAt) : null,
+  ends_at: r.endsAt ? iso(r.endsAt) : null,
+  max_runs: r.maxRuns,
+  run_count: r.runCount,
+  browser: (r.browser ?? "computer") as "computer",
+  conversation_id: r.conversationId,
+  created_at: iso(r.createdAt),
+});
+
+/** An end time for a routine (D-262): must be in the future. */
+const routineEnd = (v: string) => {
+  const at = new Date(v);
+  if (Number.isNaN(at.getTime()) || at.getTime() <= Date.now())
+    throw new ApiError(400, "validation_failed", "The end time must be in the future", {
+      errors: [{ path: "ends_at", message: "Pick a time in the future" }],
+    });
+  return at;
+};
+
+/** Applies a starter template to a new bot: persona, autonomy, skills and routines. */
+export async function applyTemplate(
+  db: Database,
+  botId: string,
+  orgId: string,
+  userId: string,
+  t: BotTemplate,
+) {
+  for (const s of t.skills) {
+    await db.execute(sql`insert into public.skills (org_id, bot_id, name, description, body_md)
+      values (${orgId}::uuid, ${botId}::uuid, ${s.name}, ${s.description}, ${s.body_md}) on conflict do nothing`);
+  }
+  const [p] = await db.execute<{ timezone: string }>(
+    sql`select timezone from public.profiles where user_id = ${userId}::uuid`,
+  );
+  const tz = p?.timezone ?? "UTC";
+  for (const r of t.routines ?? []) {
+    await db.execute(sql`insert into public.routines (org_id, bot_id, created_by, name, instructions_md, schedule_cron, timezone, next_run_at)
+      values (${orgId}::uuid, ${botId}::uuid, ${userId}::uuid, ${r.name}, ${r.instructions_md}, ${r.schedule_cron}, ${tz},
+              ${nextRunAt(r.schedule_cron, tz).toISOString()}::timestamptz)`);
+  }
+}
+
+export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
+  const { db } = deps;
+  const vault = async (value: string, description: string) => {
+    const [r] = await db.execute<{ id: string }>(
+      sql`select vault.create_secret(${value}, null, ${description}) as id`,
+    );
+    return r?.id as string;
+  };
+
+  // --- approvals ---------------------------------------------------------------
+
+  app.openapi(routes.listApprovals, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { org_id, status } = c.req.valid("query");
+    const rows = await withUserSession(db, claims, (tx) =>
+      tx
+        .select()
+        .from(approvals)
+        .where(
+          status
+            ? and(eq(approvals.orgId, org_id), eq(approvals.status, status))
+            : eq(approvals.orgId, org_id),
+        )
+        .orderBy(desc(approvals.createdAt))
+        .limit(200),
+    );
+    return c.json({ items: rows.map(approvalOut) }, 200);
+  });
+
+  app.openapi(routes.decideApproval, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const { decision, always_allow } = c.req.valid("json");
+    let row: ApprovalRow | undefined;
+    try {
+      await withUserSession(db, claims, (tx) =>
+        tx.execute(
+          // Payments always ask (D-142): they can't be "always allowed".
+          sql`select public.decide_approval(${id}::uuid, ${decision}, ${always_allow ?? false} and not exists (
+                select 1 from public.approvals where id = ${id}::uuid and tool_name = any(array['payments.request'])))`,
+        ),
+      );
+      [row] = await db.select().from(approvals).where(eq(approvals.id, id));
+    } catch (err) {
+      const code = pgErrorCode(err);
+      if (code === "P0002") throw new ApiError(404, "approval_not_found", "Approval not found");
+      if (code === "55000")
+        throw new ApiError(409, "approval_already_decided", "This approval was already decided");
+      throw err;
+    }
+    if (!row) throw new ApiError(404, "approval_not_found", "Approval not found");
+    await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+      values (${row.orgId}::uuid, 'user', ${claims.sub}::uuid, ${`approval.${row.status}`}, 'approval', ${row.id}::uuid,
+              ${JSON.stringify({ tool: row.toolName, always_allow: row.alwaysAllow })}::jsonb)`);
+    milestone(db, claims.sub, "first_approval", row.orgId);
+    await deps.workflows.signalRun(row.runId);
+    return c.json(approvalOut(row), 200);
+  });
+
+  // --- secrets -------------------------------------------------------------------
+
+  // --- secret requests from bots (D-101) --------------------------------------------
+
+  type AskRow = {
+    id: string;
+    org_id: string;
+    bot_id: string;
+    run_id: string;
+    conversation_id: string | null;
+    name: string;
+    service: string;
+    allowed_hosts: string[];
+    reason: string;
+    kind: "value" | "totp";
+    status: "pending";
+    expires_at: Date | string;
+    created_at: Date | string;
+    run_by: string | null;
+  };
+  const askOut = (r: AskRow) => ({
+    id: r.id,
+    org_id: r.org_id,
+    bot_id: r.bot_id,
+    run_id: r.run_id,
+    conversation_id: r.conversation_id,
+    name: r.name,
+    service: r.service,
+    allowed_hosts: r.allowed_hosts,
+    reason: r.reason,
+    kind: r.kind,
+    status: r.status,
+    expires_at: iso(r.expires_at),
+    created_at: iso(r.created_at),
+  });
+  const ASK_COLUMNS = sql`s.id, s.org_id, s.bot_id, s.run_id, s.conversation_id, s.name, s.service, s.allowed_hosts,
+    s.reason, s.kind, case when s.status = 'pending' and s.expires_at <= now() then 'expired' else s.status end as status,
+    s.expires_at, s.created_at, r.created_by as run_by`;
+
+  /** The request, if this person can see it (RLS) and may answer it: an admin or the run's sender. */
+  const askFor = async (claims: JwtClaims, id: string) => {
+    const [row] = await withUserSession(db, claims, (tx) =>
+      tx.execute<AskRow>(sql`select ${ASK_COLUMNS} from public.secret_requests s
+        join public.runs r on r.id = s.run_id where s.id = ${id}::uuid`),
+    );
+    if (!row) throw new ApiError(404, "secret_request_not_found", "Secret request not found");
+    if (row.run_by !== claims.sub && !(await isAdmin(db, claims, row.org_id)))
+      throw new ApiError(
+        403,
+        "forbidden",
+        "Only the person who started this chat or an admin can answer",
+      );
+    if (row.status !== "pending")
+      throw new ApiError(409, "secret_request_closed", `This request is already ${row.status}`);
+    return row;
+  };
+
+  /**
+   * The run writes secret.resolved when its wait wakes up. A run that already ended (cancelled,
+   * failed, finished after a stall) never will, so the card would stay open in the chat: write it here.
+   */
+  const recordIfRunEnded = async (
+    runId: string,
+    requestId: string,
+    outcome: "fulfilled" | "declined",
+  ) => {
+    const [run] = await db.execute<{ status: string }>(
+      sql`select status from public.runs where id = ${runId}::uuid`,
+    );
+    if (run && ["completed", "failed", "cancelled"].includes(run.status))
+      await new EventBus(db).append(runId, "secret.resolved", { request_id: requestId, outcome });
+  };
+
+  app.openapi(routes.listSecretRequests, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const rows = await withUserSession(db, claims, (tx) =>
+      tx.execute<AskRow>(sql`select ${ASK_COLUMNS} from public.secret_requests s
+        join public.runs r on r.id = s.run_id
+        where s.org_id = ${c.req.valid("query").org_id}::uuid and s.status = 'pending' and s.expires_at > now()
+        order by s.created_at desc limit 50`),
+    );
+    return c.json({ items: rows.map(askOut) }, 200);
+  });
+
+  app.openapi(routes.fulfillSecretRequest, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const { value } = c.req.valid("json");
+    const ask = await askFor(claims, id);
+    if (ask.kind === "totp") checkTotpValue(value);
+    const admin = await isAdmin(db, claims, ask.org_id);
+    const store = await secretStoreFor(db, ask.org_id, deps.apps?.fetch ?? fetch);
+    if (store.kind === "infisical") {
+      // Infisical keeps the value (D-145); Casama keeps the name, hosts and bot.
+      const [existing] = await db.execute<{ id: string }>(
+        sql`select id from public.secrets where org_id = ${ask.org_id}::uuid and name = ${ask.name}`,
+      );
+      if (existing && !admin)
+        throw new ApiError(
+          409,
+          "secret_exists",
+          `A secret named ${ask.name} already exists. Ask an admin to replace it.`,
+        );
+      await store.put(ask.name, value);
+    }
+    const secretId = await db.transaction(async (tx) => {
+      if (store.kind === "infisical") {
+        const [r] = await tx.execute<{ id: string }>(sql`
+          insert into public.secrets (org_id, name, kind, store, allowed_hosts, allowed_bot_ids, created_by)
+          values (${ask.org_id}::uuid, ${ask.name}, ${ask.kind}, 'infisical', array(select jsonb_array_elements_text(${JSON.stringify(ask.allowed_hosts)}::jsonb)), array[${ask.bot_id}::uuid], ${claims.sub}::uuid)
+          on conflict (org_id, name) do update set store = 'infisical', allowed_hosts = excluded.allowed_hosts
+          returning id`);
+        return r?.id;
+      }
+      const [existing] = await tx.execute<{ id: string; vault_secret_id: string | null }>(sql`
+        select id, vault_secret_id from public.secrets where org_id = ${ask.org_id}::uuid and name = ${ask.name} for update`);
+      if (existing) {
+        // Replacing a workspace secret is an admin's call; the hosts become the requested ones.
+        if (!admin)
+          throw new ApiError(
+            409,
+            "secret_exists",
+            `A secret named ${ask.name} already exists. Ask an admin to replace it.`,
+          );
+        if (existing.vault_secret_id)
+          await tx.execute(
+            sql`select vault.update_secret(${existing.vault_secret_id}::uuid, ${value})`,
+          );
+        else {
+          const [v] = await tx.execute<{ id: string }>(
+            sql`select vault.create_secret(${value}, null, 'named secret') as id`,
+          );
+          await tx.execute(
+            sql`update public.secrets set vault_secret_id = ${v?.id}::uuid where id = ${existing.id}::uuid`,
+          );
+        }
+        await tx.execute(
+          sql`update public.secrets set allowed_hosts = array(select jsonb_array_elements_text(${JSON.stringify(ask.allowed_hosts)}::jsonb)) where id = ${existing.id}::uuid`,
+        );
+        return existing.id;
+      }
+      const [v] = await tx.execute<{ id: string }>(
+        sql`select vault.create_secret(${value}, null, 'named secret') as id`,
+      );
+      // Only the bot that asked may use it, and only on the hosts it named.
+      const [r] = await tx.execute<{ id: string }>(sql`
+        insert into public.secrets (org_id, name, kind, vault_secret_id, allowed_hosts, allowed_bot_ids, created_by)
+        values (${ask.org_id}::uuid, ${ask.name}, ${ask.kind}, ${v?.id}::uuid, array(select jsonb_array_elements_text(${JSON.stringify(ask.allowed_hosts)}::jsonb)), array[${ask.bot_id}::uuid], ${claims.sub}::uuid)
+        returning id`);
+      return r?.id;
+    });
+    const [done] = await db.execute<{ id: string }>(sql`
+      update public.secret_requests set status = 'fulfilled', secret_id = ${secretId}::uuid, resolved_by = ${claims.sub}::uuid, resolved_at = now()
+      where id = ${id}::uuid and status = 'pending' returning id`);
+    if (!done)
+      throw new ApiError(409, "secret_request_closed", "This request was already answered");
+    await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+      values (${ask.org_id}::uuid, 'user', ${claims.sub}::uuid, 'secret.request_fulfilled', 'secret', ${secretId}::uuid,
+              ${JSON.stringify({ name: ask.name, bot_id: ask.bot_id, hosts: ask.allowed_hosts })}::jsonb)`);
+    await deps.workflows.signalRun(ask.run_id);
+    await recordIfRunEnded(ask.run_id, id, "fulfilled");
+    return c.json(askOut({ ...ask, status: "fulfilled" as never }), 200);
+  });
+
+  app.openapi(routes.declineSecretRequest, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const ask = await askFor(claims, id);
+    await db.execute(sql`update public.secret_requests set status = 'declined', resolved_by = ${claims.sub}::uuid, resolved_at = now()
+      where id = ${id}::uuid and status = 'pending'`);
+    await deps.workflows.signalRun(ask.run_id);
+    await recordIfRunEnded(ask.run_id, id, "declined");
+    return c.json(askOut({ ...ask, status: "declined" as never }), 200);
+  });
+
+  // A connected MCP server's question to the person (MCP elicitation, D-363). The run's call is
+  // waiting on the row; it reads the answer, clears it and writes mcp.question_resolved.
+  app.openapi(routes.answerMcpQuestion, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const body = c.req.valid("json");
+    type QRow = {
+      id: string;
+      org_id: string;
+      bot_id: string;
+      run_id: string;
+      connection: string;
+      message: string;
+      schema: Record<string, unknown>;
+      status: "pending" | "accepted" | "declined" | "cancelled" | "expired";
+      expires_at: Date | string;
+      created_at: Date | string;
+      run_by: string | null;
+    };
+    const [q] = await withUserSession(db, claims, (tx) =>
+      tx.execute<QRow>(sql`select q.id, q.org_id, q.bot_id, q.run_id, q.connection, q.message, q.schema,
+        case when q.status = 'pending' and q.expires_at <= now() then 'expired' else q.status end as status,
+        q.expires_at, q.created_at, r.created_by as run_by
+        from public.mcp_questions q join public.runs r on r.id = q.run_id where q.id = ${id}::uuid`),
+    );
+    if (!q) throw new ApiError(404, "mcp_question_not_found", "Question not found");
+    if (q.run_by !== claims.sub && !(await isAdmin(db, claims, q.org_id)))
+      throw new ApiError(
+        403,
+        "forbidden",
+        "Only the person who started this chat or an admin can answer",
+      );
+    if (q.status !== "pending")
+      throw new ApiError(409, "mcp_question_closed", `This question is already ${q.status}`);
+    const content = body.action === "accept" ? (body.content ?? {}) : null;
+    if (content) {
+      const problem = checkMcpAnswer(q.schema, content);
+      if (problem) throw new ApiError(400, "invalid_answer", problem);
+    }
+    const status: "accepted" | "declined" | "cancelled" =
+      body.action === "accept" ? "accepted" : body.action === "decline" ? "declined" : "cancelled";
+    const [done] = await db.execute<{ id: string }>(sql`
+      update public.mcp_questions set status = ${status}, answer = ${content ? JSON.stringify(content) : null}::jsonb,
+        resolved_by = ${claims.sub}::uuid, resolved_at = now()
+      where id = ${id}::uuid and status = 'pending' and expires_at > now() returning id`);
+    if (!done) throw new ApiError(409, "mcp_question_closed", "This question was already answered");
+    // A run that already ended never writes the outcome, so the card would stay open: write it here.
+    const [run] = await db.execute<{ status: string }>(
+      sql`select status from public.runs where id = ${q.run_id}::uuid`,
+    );
+    if (run && ["completed", "failed", "cancelled"].includes(run.status))
+      await new EventBus(db).append(q.run_id, "mcp.question_resolved", {
+        question_id: id,
+        outcome: status,
+      });
+    return c.json(
+      {
+        id: q.id,
+        org_id: q.org_id,
+        bot_id: q.bot_id,
+        run_id: q.run_id,
+        connection: q.connection,
+        message: q.message,
+        schema: q.schema,
+        status,
+        expires_at: iso(q.expires_at),
+        created_at: iso(q.created_at),
+      },
+      200,
+    );
+  });
+
+  app.openapi(routes.listSecrets, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const rows = await withUserSession(db, claims, (tx) =>
+      tx
+        .select()
+        .from(secrets)
+        .where(eq(secrets.orgId, c.req.valid("query").org_id))
+        .orderBy(secrets.name),
+    );
+    return c.json({ items: rows.map(secretOut) }, 200);
+  });
+
+  app.openapi(routes.createSecret, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const body = c.req.valid("json");
+    if (!(await isAdmin(db, claims, body.org_id)))
+      throw new ApiError(403, "forbidden", "Only owners and admins can add secrets");
+    if (body.kind === "totp") checkTotpValue(body.value);
+    // The workspace's secret store (D-145): Vault, or its own Infisical project.
+    const store = await secretStoreFor(db, body.org_id, deps.apps?.fetch ?? fetch);
+    if (store.kind === "infisical") {
+      const [dup] = await db.execute<{ id: string }>(
+        sql`select id from public.secrets where org_id = ${body.org_id}::uuid and name = ${body.name}`,
+      );
+      if (dup)
+        throw new ApiError(409, "secret_exists", `A secret named ${body.name} already exists`);
+      await store.put(body.name, body.value).catch((e: Error) => {
+        throw new ApiError(502, "secret_store_failed", e.message);
+      });
+    }
+    try {
+      const row = await db.transaction(async (tx) => {
+        const [v] =
+          store.kind === "vault"
+            ? await tx.execute<{ id: string }>(
+                sql`select vault.create_secret(${body.value}, null, 'named secret') as id`,
+              )
+            : [];
+        const [r] = await tx
+          .insert(secrets)
+          .values({
+            orgId: body.org_id,
+            name: body.name,
+            kind: body.kind ?? "value",
+            store: store.kind,
+            vaultSecretId: v?.id ?? null,
+            allowedHosts: body.allowed_hosts.map((h) => h.toLowerCase()),
+            allowedBotIds: body.allowed_bot_ids ?? null,
+            createdBy: claims.sub,
+          })
+          .returning();
+        return r;
+      });
+      if (!row) throw new Error("secret insert returned nothing");
+      await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id)
+        values (${row.orgId}::uuid, 'user', ${claims.sub}::uuid, 'secret.created', 'secret', ${row.id}::uuid)`);
+      return c.json(secretOut(row), 201);
+    } catch (err) {
+      if (pgErrorCode(err) === "23505")
+        throw new ApiError(409, "secret_exists", `A secret named ${body.name} already exists`);
+      throw err;
+    }
+  });
+
+  app.openapi(routes.deleteSecret, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const rows = await withUserSession(db, claims, (tx) =>
+      tx.delete(secrets).where(eq(secrets.id, id)).returning(),
+    );
+    if (!rows.length)
+      throw new ApiError(404, "secret_not_found", "Secret not found (or you are not an admin)");
+    const vaultId = rows[0]?.vaultSecretId;
+    if (vaultId) await db.execute(sql`delete from vault.secrets where id = ${vaultId}::uuid`);
+    if (rows[0]?.store === "infisical")
+      await (await secretStoreFor(db, rows[0].orgId, deps.apps?.fetch ?? fetch))
+        .delete(rows[0].name)
+        .catch(() => {});
+    await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+      values (${rows[0]?.orgId}::uuid, 'user', ${claims.sub}::uuid, 'secret.deleted', 'secret', ${id}::uuid,
+              ${JSON.stringify({ name: rows[0]?.name })}::jsonb)`);
+    return c.json({ deleted: id }, 200);
+  });
+
+  // --- integrations ---------------------------------------------------------------
+
+  app.openapi(routes.listIntegrations, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const rows = await withUserSession(db, claims, (tx) =>
+      tx
+        .select()
+        .from(integrations)
+        .where(eq(integrations.orgId, c.req.valid("query").org_id))
+        .orderBy(integrations.name),
+    );
+    const links = await withUserSession(db, claims, (tx) =>
+      tx.execute<{ integration_id: string; bot_id: string }>(sql`
+        select integration_id, bot_id from public.bot_integrations
+        where org_id = ${c.req.valid("query").org_id}::uuid`),
+    );
+    const byIntegration = new Map<string, string[]>();
+    for (const l of links)
+      byIntegration.set(l.integration_id, [
+        ...(byIntegration.get(l.integration_id) ?? []),
+        l.bot_id,
+      ]);
+    return c.json(
+      { items: rows.map((r) => integrationOut(r, byIntegration.get(r.id) ?? [])) },
+      200,
+    );
+  });
+
+  app.openapi(routes.createIntegration, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const body = c.req.valid("json");
+    if (!(await isAdmin(db, claims, body.org_id)))
+      throw new ApiError(403, "forbidden", "Only owners and admins can add integrations");
+    if (body.kind === "a2a" && typeof body.config.url !== "string")
+      throw new ApiError(
+        400,
+        "validation_failed",
+        "A2A agents need config.url (their address or agent card)",
+        {
+          errors: [{ path: "config.url", message: "Required" }],
+        },
+      );
+    if (body.kind === "mcp" && typeof body.config.url !== "string") {
+      throw new ApiError(400, "validation_failed", "MCP integrations need config.url", {
+        errors: [{ path: "config.url", message: "Required" }],
+      });
+    }
+    if ((body.kind === "composio" || body.kind === "pipedream") && !body.secret) {
+      throw new ApiError(
+        400,
+        "validation_failed",
+        `${body.kind} needs its API key or client secret`,
+        { errors: [{ path: "secret", message: "Required" }] },
+      );
+    }
+    let row: IntegrationRow | undefined;
+    try {
+      const vaultId = body.secret ? await vault(body.secret, `integration ${body.kind}`) : null;
+      [row] = await db
+        .insert(integrations)
+        .values({
+          orgId: body.org_id,
+          kind: body.kind,
+          name: body.name,
+          config: body.config,
+          vaultSecretId: vaultId,
+          createdBy: claims.sub,
+        })
+        .returning();
+    } catch (err) {
+      if (pgErrorCode(err) === "23505")
+        throw new ApiError(
+          409,
+          "integration_exists",
+          `An integration named ${body.name} already exists`,
+        );
+      throw err;
+    }
+    if (!row) throw new Error("integration insert returned nothing");
+    await db.execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+      values (${row.orgId}::uuid, 'user', ${claims.sub}::uuid, 'integration.created', 'integration', ${row.id}::uuid, ${JSON.stringify({ kind: row.kind })}::jsonb)`);
+    // List tools right away (best effort) so the integration is ready to attach.
+    await deps.workflows.testIntegration(row.id).catch(() => null);
+    const [fresh] = await db.select().from(integrations).where(eq(integrations.id, row.id));
+    return c.json(integrationOut(fresh ?? row), 201);
+  });
+
+  app.openapi(routes.testIntegration, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const [row] = await withUserSession(db, claims, (tx) =>
+      tx.select().from(integrations).where(eq(integrations.id, id)),
+    );
+    if (!row) throw new ApiError(404, "integration_not_found", "Integration not found");
+    // A local MCP server runs on someone's own computer: they can test it without being an admin.
+    const ownLocal =
+      row.kind === "local_mcp" &&
+      (row.config as Record<string, unknown>)?.owner_user_id === claims.sub;
+    if (!ownLocal && !(await isAdmin(db, claims, row.orgId)))
+      throw new ApiError(403, "forbidden", "Only owners and admins can test integrations");
+    return c.json(await deps.workflows.testIntegration(id), 200);
+  });
+
+  app.openapi(routes.attachIntegration, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const body = c.req.valid("json");
+    await withUserSession(db, claims, async (tx) => {
+      const [bot] = await tx.select({ orgId: bots.orgId }).from(bots).where(eq(bots.id, id));
+      if (!bot) throw new ApiError(404, "bot_not_found", "Bot not found");
+      // A local MCP server runs on someone's own computer: only they choose which bots use it.
+      const [local] = await tx.execute<{ owner: string | null }>(sql`
+        select config->>'owner_user_id' as owner from public.integrations
+        where id = ${body.integration_id}::uuid and kind = 'local_mcp'`);
+      if (local && local.owner !== claims.sub)
+        throw new ApiError(
+          403,
+          "forbidden",
+          "Only the person whose computer runs this server can attach it",
+        );
+      try {
+        await tx.execute(sql`
+          insert into public.bot_integrations (org_id, bot_id, integration_id, tool_allowlist)
+          values (${bot.orgId}::uuid, ${id}::uuid, ${body.integration_id}::uuid, ${body.tool_allowlist ? `{${body.tool_allowlist.map((t) => `"${t.replaceAll('"', "")}"`).join(",")}}` : null}::text[])
+          on conflict (bot_id, integration_id) do update set tool_allowlist = excluded.tool_allowlist`);
+      } catch (err) {
+        if (pgErrorCode(err) === "42501")
+          throw new ApiError(404, "not_found", "Bot or integration not found");
+        throw err;
+      }
+    });
+    return c.json({ ok: true }, 200);
+  });
+
+  // --- routines -------------------------------------------------------------------
+
+  app.openapi(routes.listRoutines, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const rows = await withUserSession(db, claims, (tx) =>
+      tx.select().from(routines).where(eq(routines.botId, id)).orderBy(routines.createdAt),
+    );
+    const allEvents = c.req.valid("query").all_events === "true";
+    return c.json({ items: rows.map((r) => routineOut(r, allEvents)) }, 200);
+  });
+
+  app.openapi(routes.createRoutine, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const body = c.req.valid("json");
+    const trigger = body.trigger ?? "schedule";
+    const [bot] = await withUserSession(db, claims, (tx) =>
+      tx.select().from(bots).where(eq(bots.id, body.bot_id)),
+    );
+    if (!bot) throw new ApiError(404, "bot_not_found", "Bot not found");
+    // A routine from a gallery idea follows the workspace's gallery rules (D-315).
+    const galleryIdea = body.gallery_id
+      ? await galleryRecord(deps.env, "routine", body.gallery_id)
+      : undefined;
+    if (body.gallery_id && galleryIdea)
+      await enforceGalleryPolicy(deps, claims, bot.orgId, "routine", body.gallery_id);
+    const [profile] = await db.execute<{ timezone: string }>(
+      sql`select timezone from public.profiles where user_id = ${claims.sub}::uuid`,
+    );
+    const tz = body.timezone ?? profile?.timezone ?? "UTC";
+    if (!isValidTimezone(tz))
+      throw new ApiError(400, "validation_failed", `Unknown timezone ${tz}`, {
+        errors: [{ path: "timezone", message: "Unknown timezone" }],
+      });
+    if (trigger === "schedule" && (!body.schedule_cron || !isValidCron(body.schedule_cron))) {
+      throw new ApiError(400, "validation_failed", "A 5-field cron expression is required", {
+        errors: [{ path: "schedule_cron", message: "Invalid cron" }],
+      });
+    }
+    if (trigger === "once" && (!body.run_at || Date.parse(body.run_at) < Date.now() - 60_000)) {
+      throw new ApiError(400, "validation_failed", "A once routine needs a run_at in the future", {
+        errors: [{ path: "run_at", message: "Pick a time in the future" }],
+      });
+    }
+    if (trigger === "once" && (body.ends_at || body.max_runs != null))
+      throw new ApiError(400, "validation_failed", "A once routine already ends after its run", {
+        errors: [{ path: "ends_at", message: "Only for repeating or event routines" }],
+      });
+    const endsAt = body.ends_at ? routineEnd(body.ends_at) : null;
+    let webhookSecret: string | undefined;
+    let triggerJson: Record<string, unknown> = { type: trigger };
+    if (trigger === "message") {
+      const m = body.message ?? {};
+      if (!m.channel_id && !m.channel_kind && !m.sender && !m.subject_match && !m.text_match)
+        throw new ApiError(
+          400,
+          "validation_failed",
+          "A message routine needs at least one filter (chat app, sender, subject or words)",
+        );
+      triggerJson = { type: trigger, ...m };
+    }
+    if (trigger === "calendar_event") {
+      const cal = body.calendar;
+      if (!cal)
+        throw new ApiError(
+          400,
+          "validation_failed",
+          "A calendar routine needs its calendar and offset",
+        );
+      const [i] = await db.execute<{ id: string }>(sql`
+        select id from public.integrations where id = ${cal.integration_id}::uuid and org_id = ${bot.orgId}::uuid`);
+      if (!i) throw new ApiError(404, "integration_not_found", "Connect a calendar first");
+      triggerJson = { type: trigger, ...cal };
+    }
+    if (trigger === "device") {
+      const d = body.device;
+      if (!d) throw new ApiError(400, "validation_failed", "A device routine needs its event");
+      if ((d.event === "arrive" || d.event === "leave") && !d.place)
+        throw new ApiError(
+          400,
+          "validation_failed",
+          "Arrive and leave routines need a named place",
+        );
+      if (d.event === "notification" && !d.app)
+        throw new ApiError(400, "validation_failed", "Notification routines need the app to watch");
+      if (d.event === "file_added" && !d.folder)
+        throw new ApiError(400, "validation_failed", "File routines need the watched folder");
+      if (d.event === "site_opened") {
+        const r = browserTriggerSite(d.site ?? "");
+        if ("error" in r) throw new ApiError(400, "validation_failed", r.error);
+        d.site = r.site;
+      }
+      triggerJson = { type: trigger, ...d };
+    }
+    if (trigger === "github" || trigger === "webhook") {
+      webhookSecret = randomBytes(24).toString("hex");
+      triggerJson = {
+        type: trigger,
+        vault_secret_id: await vault(webhookSecret, "routine webhook"),
+        ...(body.events ? { events: body.events } : {}),
+      };
+    }
+    const cron = trigger === "schedule" ? (body.schedule_cron as string) : null;
+    const firstRun = cron ? nextRunAt(cron, tz) : null;
+    if (endsAt && firstRun && firstRun > endsAt)
+      throw new ApiError(400, "validation_failed", "It would end before its first run", {
+        errors: [{ path: "ends_at", message: "Pick a later end time" }],
+      });
+    const [row] = await db
+      .insert(routines)
+      .values({
+        orgId: bot.orgId,
+        botId: bot.id,
+        createdBy: claims.sub,
+        name: body.name,
+        instructionsMd: body.instructions,
+        scheduleCron: cron,
+        timezone: tz,
+        trigger: triggerJson,
+        notify: body.notify ?? true,
+        endsAt: endsAt?.toISOString() ?? null,
+        maxRuns: body.max_runs ?? null,
+        browser: body.browser ?? "computer",
+        nextRunAt: firstRun
+          ? firstRun.toISOString()
+          : trigger === "once"
+            ? new Date(body.run_at as string).toISOString()
+            : null,
+      })
+      .returning();
+    if (!row) throw new Error("routine insert returned nothing");
+    track(db, {
+      event: "routine_created",
+      userId: claims.sub,
+      orgId: bot.orgId,
+      properties: { trigger_kind: trigger },
+    });
+    milestone(db, claims.sub, "first_routine", bot.orgId);
+    if (body.gallery_id && galleryIdea)
+      await linkGalleryInstallQuietly(db, deps.env, {
+        orgId: bot.orgId,
+        userId: claims.sub,
+        type: "routine",
+        id: body.gallery_id,
+        targetKind: "routine",
+        targetId: row.id,
+        version: typeof galleryIdea.version === "number" ? galleryIdea.version : 1,
+        access: galleryIdea.access,
+      });
+    const base = new URL(c.req.url).origin;
+    return c.json(
+      {
+        ...routineOut(row),
+        ...(webhookSecret
+          ? {
+              webhook_secret: webhookSecret,
+              webhook_url: `${base}/hooks/${trigger === "github" ? "github" : "custom"}/${row.id}`,
+            }
+          : {}),
+      },
+      201,
+    );
+  });
+
+  app.openapi(routes.updateRoutine, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const body = c.req.valid("json");
+    const [cur] = await withUserSession(db, claims, (tx) =>
+      tx.select().from(routines).where(eq(routines.id, id)),
+    );
+    if (!cur) throw new ApiError(404, "routine_not_found", "Routine not found");
+    const bad = (path: string, message: string): never => {
+      throw new ApiError(400, "validation_failed", message, { errors: [{ path, message }] });
+    };
+    // A routine runs for its creator: only they may point it at their own browser, and an edit by
+    // anyone else sends its browser work back to the bot's computer (D-323 Phase 3 review).
+    const byCreator = cur.createdBy === claims.sub;
+    if (!byCreator && body.browser && body.browser !== "computer")
+      bad("browser", "Only the person who made this routine can point it at their own browser");
+    const tz = body.timezone ?? cur.timezone;
+    if (!isValidTimezone(tz)) bad("timezone", `Unknown timezone ${tz}`);
+    if (body.schedule_cron && !isValidCron(body.schedule_cron))
+      bad("schedule_cron", "Invalid cron expression");
+    if (body.schedule_cron && body.run_at) bad("run_at", "Pass a cron or a time, not both");
+    // A once routine given a cron repeats; a repeating one given run_at runs once (D-262).
+    const was = (cur.trigger as { type?: string })?.type ?? "schedule";
+    if ((body.schedule_cron || body.run_at) && was !== "once" && was !== "schedule")
+      bad("trigger", "An event routine keeps its trigger; create a scheduled one instead");
+    const type = body.run_at ? "once" : body.schedule_cron ? "schedule" : was;
+    const isOnce = type === "once";
+    const cron = type === "schedule" ? (body.schedule_cron ?? cur.scheduleCron) : null;
+    if (isOnce && (body.ends_at || body.max_runs))
+      bad("ends_at", "A once routine already ends after its run");
+    const endsAt = isOnce
+      ? null
+      : body.ends_at === null
+        ? null
+        : body.ends_at
+          ? routineEnd(body.ends_at)
+          : cur.endsAt
+            ? new Date(cur.endsAt)
+            : null;
+    const maxRuns = isOnce ? null : body.max_runs === undefined ? cur.maxRuns : body.max_runs;
+    // A new max_runs counts from now.
+    const runCount = body.max_runs === undefined ? cur.runCount : 0;
+    const enabled = body.enabled ?? cur.enabled;
+    let next: string | null = null;
+    if (enabled) {
+      if (endsAt && endsAt.getTime() <= Date.now())
+        bad("ends_at", "Its end time has passed: pick a later one or remove it");
+      if (maxRuns != null && runCount >= maxRuns)
+        bad("max_runs", `It already ran its ${maxRuns} times: raise the runs or remove the limit`);
+      if (isOnce) {
+        const at = body.run_at
+          ? new Date(body.run_at)
+          : cur.nextRunAt && new Date(cur.nextRunAt).getTime() > Date.now() - 60_000
+            ? new Date(cur.nextRunAt)
+            : null;
+        if (!at || at.getTime() < Date.now() - 60_000) bad("run_at", "Pick a time in the future");
+        next = (at as Date).toISOString();
+      } else if (cron) {
+        const n = nextRunAt(cron, tz);
+        if (endsAt && n > endsAt) bad("ends_at", "It would end before its next run");
+        next = n.toISOString();
+      }
+    }
+    const [row] = await withUserSession(db, claims, (tx) =>
+      tx
+        .update(routines)
+        .set({
+          name: body.name ?? cur.name,
+          instructionsMd: body.instructions ?? cur.instructionsMd,
+          scheduleCron: cron,
+          timezone: tz,
+          trigger: type === was ? cur.trigger : { type },
+          notify: body.notify ?? cur.notify,
+          enabled,
+          endsAt: endsAt?.toISOString() ?? null,
+          maxRuns,
+          runCount,
+          browser: byCreator ? (body.browser ?? cur.browser) : "computer",
+          editedByOther: !byCreator,
+          nextRunAt: next,
+          retimePending: false,
+        })
+        .where(eq(routines.id, id))
+        .returning(),
+    );
+    return c.json(routineOut(row as RoutineRow, c.req.valid("query").all_events === "true"), 200);
+  });
+
+  app.openapi(routes.deleteRoutine, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const [row] = await withUserSession(db, claims, (tx) =>
+      tx
+        .delete(routines)
+        .where(eq(routines.id, id))
+        .returning({ id: routines.id, botId: routines.botId }),
+    );
+    if (!row) throw new ApiError(404, "routine_not_found", "Routine not found");
+    return c.json({ deleted: row.id }, 200);
+  });
+
+  app.openapi(routes.runRoutine, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const [cur] = await withUserSession(db, claims, (tx) =>
+      tx.select({ id: routines.id }).from(routines).where(eq(routines.id, id)),
+    );
+    if (!cur) throw new ApiError(404, "routine_not_found", "Routine not found");
+    const { runRoutineNow } = await import("../../worker/routines.ts");
+    const runId = await runRoutineNow(db, id);
+    await deps.workflows.startRun(runId);
+    return c.json({ run_id: runId }, 202);
+  });
+
+  // --- templates and tasks -----------------------------------------------------------
+
+  // Built-in starter bots first, each replaced by the gallery's copy when it has one (D-372), then
+  // the gallery's own (D-241), credited to their authors.
+  app.openapi(routes.listTemplates, async (c) => {
+    requireClaims(c.get("claims"));
+    const stats = await galleryStats(db, deps.env).catch(() => ({}));
+    const all: (BotTemplate & { author?: { name: string; url?: string } } & GalleryExtras & {
+        stats?: object;
+      })[] = withStats("bot", await starterBots(deps.env), stats);
+    return c.json(
+      {
+        items: all.map((t) => ({
+          id: t.id,
+          name: t.name,
+          bot_name: starterBotName(t.id),
+          description: t.description,
+          autonomy: t.autonomy,
+          skills: t.skills.map((s) => s.name),
+          routines: (t.routines ?? []).map((r) => ({
+            name: r.name,
+            schedule_cron: r.schedule_cron,
+          })),
+          persona: t.persona,
+          category: t.category,
+          icon: t.icon,
+          mascot: t.mascot,
+          starters: t.starters,
+          ...(t.author ? { author: t.author } : {}),
+          // Gallery v2 (D-315): what it needs and asks, what it can touch, how it's used.
+          ...pickTemplateExtras(t),
+        })),
+      },
+      200,
+    );
+  });
+
+  type TaskRow = typeof tasks.$inferSelect;
+  const taskOut = (t: TaskRow, comments = 0) => ({
+    id: t.id,
+    title: t.title,
+    details_md: t.detailsMd,
+    status: t.status as "todo",
+    priority: t.priority as "none",
+    assignee_bot_id: t.assigneeBotId,
+    assignee_user_id: t.assigneeUserId ?? null,
+    created_by_bot_id: t.createdByBotId,
+    created_by_user_id: t.createdByUserId ?? null,
+    result_md: t.resultMd,
+    due_at: t.dueAt ? iso(t.dueAt) : null,
+    labels: t.labels ?? [],
+    position: Number(t.position ?? 0),
+    review_required: t.reviewRequired ?? false,
+    conversation_id: t.conversationId ?? null,
+    comments,
+    updated_at: iso(t.updatedAt),
+    project_id: t.projectId ?? null,
+    milestone_id: t.milestoneId ?? null,
+    parent_task_id: t.parentTaskId ?? null,
+    created_at: iso(t.createdAt),
+  });
+  const commentCounts = async (ids: string[]) => {
+    if (!ids.length) return new Map<string, number>();
+    const rows = await db.execute<{ task_id: string; n: number }>(sql`
+      select task_id, count(*)::int as n from public.task_comments
+      where task_id = any(${`{${ids.join(",")}}`}::uuid[]) group by task_id`);
+    return new Map(rows.map((r) => [r.task_id, r.n]));
+  };
+  /** Bots and people a ticket is given to must be in its workspace. */
+  const checkAssignees = async (orgId: string, botId?: string | null, userId?: string | null) => {
+    if (botId) {
+      const [b] = await db.execute<{ id: string }>(
+        sql`select id from public.bots where id = ${botId}::uuid and org_id = ${orgId}::uuid`,
+      );
+      if (!b) throw new ApiError(400, "bad_assignee", "That bot is not in this workspace");
+    }
+    if (userId) {
+      const [m] = await db.execute<{ id: string }>(
+        sql`select id from public.memberships where user_id = ${userId}::uuid and org_id = ${orgId}::uuid`,
+      );
+      if (!m) throw new ApiError(400, "bad_assignee", "That person is not in this workspace");
+    }
+  };
+  const startWork = (ticketId: string, actor: string, comment?: string) =>
+    startTicketWork(db, { ticketId, actorUserId: actor, comment }, (runId) =>
+      deps.workflows.startRun(runId),
+    );
+
+  app.openapi(routes.listTasks, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { org_id, project_id } = c.req.valid("query");
+    if (!(await isMember(db, claims, org_id))) return c.json({ items: [] }, 200);
+    const rows = await withUserSession(db, claims, (tx) =>
+      tx
+        .select()
+        .from(tasks)
+        .where(
+          project_id
+            ? and(eq(tasks.orgId, org_id), eq(tasks.projectId, project_id))
+            : eq(tasks.orgId, org_id),
+        )
+        .orderBy(tasks.position, desc(tasks.updatedAt))
+        .limit(500),
+    );
+    const counts = await commentCounts(rows.map((r) => r.id));
+    return c.json({ items: rows.map((t) => taskOut(t, counts.get(t.id) ?? 0)) }, 200);
+  });
+
+  app.openapi(routes.createTask, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const b = c.req.valid("json");
+    if (!(await isMember(db, claims, b.org_id)))
+      throw new ApiError(404, "org_not_found", "Workspace not found");
+    await checkAssignees(b.org_id, b.assignee_bot_id, b.assignee_user_id);
+    const [row] = await withUserSession(db, claims, (tx) =>
+      tx
+        .insert(tasks)
+        .values({
+          orgId: b.org_id,
+          title: b.title,
+          detailsMd: contentKeys.seal(b.org_id, b.details_md ?? ""),
+          status: b.status ?? "todo",
+          priority: b.priority ?? "none",
+          assigneeBotId: b.assignee_bot_id ?? null,
+          assigneeUserId: b.assignee_user_id ?? null,
+          dueAt: b.due_at ?? null,
+          labels: b.labels ?? [],
+          reviewRequired: b.review_required ?? false,
+          createdByUserId: claims.sub,
+          position: Date.now() / 1000,
+        })
+        .returning(),
+    );
+    if (!row) throw new Error("task insert returned nothing");
+    if (row.assigneeBotId) await startWork(row.id, claims.sub);
+    const [fresh] = await db.select().from(tasks).where(eq(tasks.id, row.id));
+    return c.json(taskOut(fresh ?? row), 201);
+  });
+
+  app.openapi(routes.updateTask, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const b = c.req.valid("json");
+    const [cur] = await withUserSession(db, claims, (tx) =>
+      tx.select().from(tasks).where(eq(tasks.id, id)),
+    );
+    if (!cur) throw new ApiError(404, "task_not_found", "Ticket not found");
+    await checkAssignees(cur.orgId, b.assignee_bot_id, b.assignee_user_id);
+    const [row] = await withUserSession(db, claims, (tx) =>
+      tx
+        .update(tasks)
+        .set({
+          ...(b.title !== undefined ? { title: b.title } : {}),
+          ...(b.details_md !== undefined
+            ? { detailsMd: contentKeys.seal(cur.orgId, b.details_md) }
+            : {}),
+          ...(b.status !== undefined ? { status: b.status } : {}),
+          ...(b.priority !== undefined ? { priority: b.priority } : {}),
+          ...(b.assignee_bot_id !== undefined ? { assigneeBotId: b.assignee_bot_id } : {}),
+          ...(b.assignee_user_id !== undefined ? { assigneeUserId: b.assignee_user_id } : {}),
+          ...(b.due_at !== undefined ? { dueAt: b.due_at } : {}),
+          ...(b.labels !== undefined ? { labels: b.labels } : {}),
+          ...(b.review_required !== undefined ? { reviewRequired: b.review_required } : {}),
+          ...(b.position !== undefined ? { position: b.position } : {}),
+          updatedAt: sql`now()`,
+        })
+        .where(eq(tasks.id, id))
+        .returning(),
+    );
+    if (!row) throw new ApiError(404, "task_not_found", "Ticket not found");
+    // A newly assigned bot starts on it (moving a ticket by hand never wakes a bot).
+    if (row.assigneeBotId && row.assigneeBotId !== cur.assigneeBotId && row.status !== "done")
+      await startWork(row.id, claims.sub);
+    const [fresh] = await db.select().from(tasks).where(eq(tasks.id, id));
+    const counts = await commentCounts([id]);
+    return c.json(taskOut(fresh ?? row, counts.get(id) ?? 0), 200);
+  });
+
+  app.openapi(routes.deleteTask, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const rows = await withUserSession(db, claims, (tx) =>
+      tx.delete(tasks).where(eq(tasks.id, id)).returning({ id: tasks.id }),
+    );
+    if (!rows.length) throw new ApiError(404, "task_not_found", "Ticket not found");
+    return c.body(null, 204);
+  });
+
+  const commentOut = (r: {
+    id: string;
+    task_id: string;
+    author_type: string;
+    author_user_id: string | null;
+    author_bot_id: string | null;
+    body_md: string;
+    created_at: Date | string;
+  }) => ({ ...r, author_type: r.author_type as "user", created_at: iso(r.created_at) });
+
+  app.openapi(routes.listTaskComments, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const rows = await withUserSession(db, claims, (tx) =>
+      tx.execute<Parameters<typeof commentOut>[0]>(sql`
+        select id, task_id, author_type, author_user_id, author_bot_id, body_md, created_at
+        from public.task_comments where task_id = ${id}::uuid order by created_at`),
+    );
+    return c.json({ items: rows.map(commentOut) }, 200);
+  });
+
+  app.openapi(routes.createTaskComment, async (c) => {
+    const claims = requireClaims(c.get("claims"));
+    const { id } = c.req.valid("param");
+    const { body_md } = c.req.valid("json");
+    const [t] = await withUserSession(db, claims, (tx) =>
+      tx.select().from(tasks).where(eq(tasks.id, id)),
+    );
+    if (!t) throw new ApiError(404, "task_not_found", "Ticket not found");
+    const [row] = await withUserSession(db, claims, (tx) =>
+      tx.execute<Parameters<typeof commentOut>[0]>(sql`
+        insert into public.task_comments (org_id, task_id, author_type, author_user_id, body_md)
+        values (${t.orgId}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid, ${contentKeys.seal(t.orgId, body_md)})
+        returning id, task_id, author_type, author_user_id, author_bot_id, body_md, created_at`),
+    );
+    if (!row) throw new Error("comment insert returned nothing");
+    await db.execute(sql`update public.tasks set updated_at = now() where id = ${id}::uuid`);
+    // A person's comment on a bot's ticket wakes that bot.
+    if (t.assigneeBotId && t.status !== "done") await startWork(id, claims.sub, body_md);
+    return c.json(commentOut(row), 201);
+  });
+
+  // --- webhooks (no JWT; the worker verifies the HMAC signature) --------------------
+
+  const webhook =
+    (kind: "github" | "custom") => async (c: Parameters<Parameters<typeof app.openapi>[1]>[0]) => {
+      const routineId = c.req.param("routine_id") as string;
+      const length = Number(c.req.header("content-length") ?? 0);
+      if (length > MAX_WEBHOOK_BODY) return c.json({ accepted: false }, 413 as never);
+      const body = await c.req.text();
+      if (body.length > MAX_WEBHOOK_BODY) return c.json({ accepted: false }, 413 as never);
+      const headers: Record<string, string> = {};
+      for (const h of [
+        "x-hub-signature-256",
+        "x-github-event",
+        "x-casama-signature",
+        "x-casama-event",
+      ]) {
+        const v = c.req.header(h);
+        if (v) headers[h] = v;
+      }
+      await deps.workflows.routineWebhook(routineId, kind, body, headers);
+      return c.json({ accepted: true }, 202);
+    };
+  app.openapi(routes.githubWebhook, webhook("github") as never);
+  app.openapi(routes.customWebhook, webhook("custom") as never);
+}

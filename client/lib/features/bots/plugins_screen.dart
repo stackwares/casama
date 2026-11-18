@@ -1,0 +1,622 @@
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:casama_sdk/casama_sdk.dart';
+import 'package:go_router/go_router.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../../core/display_text.dart';
+import '../../core/providers.dart';
+import '../../core/widgets.dart';
+import '../../theme/app_tokens.dart';
+import '../../ui/adaptive_modal.dart';
+import '../../ui/app_card.dart';
+import '../../ui/form_sheet.dart';
+import '../../ui/page.dart';
+import '../../ui/revealable.dart';
+import 'plugin_directory.dart';
+
+/// A bot's plugins (D-121): Agent Plugins 1.0 packages from GitHub, with what each one added.
+final pluginsProvider = FutureProvider.autoDispose.family<List<Plugin>, String>((ref, botId) => ref.watch(backendProvider).plugins(botId));
+
+/// The person's own paired computers a plugin's stdio servers can run on (D-344): theirs, set up
+/// for bots, with local tools (MCP) on, and online now.
+final pluginPlacesProvider = FutureProvider.autoDispose.family<List<LocalDevice>, String>((ref, orgId) async {
+  final backend = ref.watch(backendProvider);
+  final me = backend.userId;
+  final all = await backend.localDevices(orgId).catchError((Object _) => const <LocalDevice>[]);
+  return [
+    for (final d in all)
+      if (d.userId == me && d.computerId != null && d.enabled && d.online && d.capabilities.mcp == true) d,
+  ];
+});
+
+class PluginsScreen extends ConsumerStatefulWidget {
+  const PluginsScreen({super.key, required this.botId, this.install});
+  final String botId;
+
+  /// A plugin a bot suggested (D-242): its install sheet opens with this address and previews it.
+  final String? install;
+
+  @override
+  ConsumerState<PluginsScreen> createState() => _PluginsScreenState();
+}
+
+class _PluginsScreenState extends ConsumerState<PluginsScreen> {
+  String get botId => widget.botId;
+
+  @override
+  void initState() {
+    super.initState();
+    final url = widget.install;
+    if (url == null || !url.startsWith('https://github.com/')) return;
+    // Once the workspace is known (it may still be loading when the screen opens).
+    var opened = false;
+    ref.listenManual(currentOrgProvider, (_, org) {
+      if (opened || org == null) return;
+      opened = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _add(url);
+      });
+    }, fireImmediately: true);
+  }
+
+  Future<void> _add([String? url]) async {
+    final org = ref.read(currentOrgProvider);
+    if (org == null) return;
+    await showAdaptiveSheet<void>(
+      context: context,
+      builder: (_) => _AddPlugin(orgId: org.id, botId: botId, initialUrl: url),
+    );
+    ref.invalidate(pluginsProvider(botId));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    Future<void> add() => _add();
+
+    return SubPage(
+      title: l10n.plugins,
+      subtitle: ref.watch(botProvider(botId))?.name,
+      actions: [IconButton(key: const Key('addPlugin'), tooltip: l10n.addPlugin, icon: const Icon(LucideIcons.plus), onPressed: add)],
+      body: AsyncView(
+        value: ref.watch(pluginsProvider(botId)),
+        onRetry: () => ref.invalidate(pluginsProvider(botId)),
+        loading: const _PluginsSkeleton(),
+        data: (items) => items.isEmpty
+            ? EmptyState(
+                icon: LucideIcons.puzzle,
+                title: l10n.noPlugins,
+                message: l10n.pluginsHelp,
+                action: FilledButton(onPressed: add, child: Text(l10n.addPlugin)),
+              )
+            : PageColumn(
+                children: [
+                  FormNote(l10n.pluginsHelp),
+                  const SizedBox(height: AppSpace.md),
+                  for (final p in items) ...[_PluginCard(plugin: p, botId: botId), const SizedBox(height: AppSpace.md)],
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class _PluginCard extends ConsumerWidget {
+  const _PluginCard({required this.plugin, required this.botId});
+  final Plugin plugin;
+  final String botId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final p = plugin;
+    final backend = ref.read(backendProvider);
+    Future<void> update() async {
+      final u = await runGuarded(context, () => backend.pluginUpdate(p.id));
+      if (u == null || !context.mounted) return;
+      if (u.upToDate) return showMessage(context, l10n.pluginUpToDate);
+      await showAdaptiveSheet<void>(
+        context: context,
+        builder: (_) => _UpdatePlugin(plugin: p, update: u),
+      );
+      ref.invalidate(pluginsProvider(botId));
+    }
+
+    Future<void> uninstall() async {
+      final ok = await showConfirm(
+        context: context,
+        title: l10n.uninstallPluginTitle(p.name),
+        message: l10n.uninstallPluginBody,
+        confirmLabel: l10n.uninstall,
+        destructive: true,
+        confirmKey: const Key('confirmUninstall'),
+      );
+      if (!ok || !context.mounted) return;
+      await runGuarded(context, () => backend.uninstallPlugin(p.id));
+      ref.invalidate(pluginsProvider(botId));
+    }
+
+    final settings = p.settings ?? const <PluginSettingsInner>[];
+    // A pack's tools are updated and removed with the pack (docs/PLUGINS-AND-PACKS-PLAN.md D.26).
+    final packName = p.packName;
+    final fromPack = p.packId != null || (packName != null && packName.isNotEmpty);
+    Future<void> editSettings() async {
+      final saved = await showAdaptiveSheet<bool>(
+        context: context,
+        builder: (_) => _EditPluginSettings(plugin: p),
+      );
+      if (saved == true && context.mounted) {
+        showSuccess(context, l10n.pluginSettingsSaved);
+        ref.invalidate(pluginsProvider(botId));
+      }
+    }
+
+    return GroupedCard(
+      key: Key('plugin-${p.id}'),
+      children: [
+        GroupedTile(
+          icon: LucideIcons.puzzle,
+          title: '${p.name}${p.version.isUsable ? ' ${p.version}' : ''}',
+          subtitle: '${p.repo}${p.path.isEmpty ? '' : '/${p.path}'} @ ${p.commit.substring(0, 7)}',
+          trailing: fromPack && settings.isEmpty ? null : PopupMenuButton<String>(
+            key: Key('pluginMenu-${p.id}'),
+            icon: const Icon(LucideIcons.ellipsis, size: 18),
+            onSelected: (v) => switch (v) {
+              'update' => update(),
+              'settings' => editSettings(),
+              _ => uninstall(),
+            },
+            itemBuilder: (_) => [
+              if (settings.isNotEmpty) PopupMenuItem(value: 'settings', child: Text(l10n.pluginEditSettings)),
+              if (!fromPack) ...[
+                PopupMenuItem(value: 'update', child: Text(l10n.checkForUpdate)),
+                PopupMenuItem(value: 'uninstall', child: Text(l10n.uninstall)),
+              ],
+            ],
+          ),
+        ),
+        if (p.runsOn case final at?)
+          GroupedTile(
+            key: Key('pluginRunsOn-${p.id}'),
+            icon: LucideIcons.laptop,
+            title: l10n.pluginRunsOnDevice(at.deviceName),
+            subtitle: at.online ? l10n.pluginRunsOnDeviceHelp : l10n.pluginRunsOnDeviceOffline,
+          ),
+        if (fromPack)
+          GroupedTile(
+            key: Key('pluginFromPack-${p.id}'),
+            icon: LucideIcons.package,
+            title: l10n.pluginFromPack(packName == null || packName.isEmpty ? p.name : packName),
+            subtitle: l10n.pluginFromPackHelp,
+            showChevron: p.packId != null,
+            onTap: p.packId == null ? null : () => context.push('/settings/gallery/packs/${p.packId}'),
+          ),
+        for (final s in settings)
+          GroupedTile(
+            key: Key('pluginSetting-${s.name}'),
+            icon: LucideIcons.slidersHorizontal,
+            title: s.label.isEmpty ? s.name : s.label,
+            subtitle: s.value.isEmpty ? (s.default_ ?? '—') : s.value,
+            onTap: editSettings,
+          ),
+        for (final s in p.skills) GroupedTile(icon: LucideIcons.bookOpen, title: s.name, subtitle: l10n.pluginSkill),
+        for (final s in p.servers)
+          GroupedTile(
+            key: Key('pluginServer-${s.key}'),
+            icon: s.type == InstalledPluginServerTypeEnum.stdio ? LucideIcons.cpu : LucideIcons.globe,
+            title: s.key,
+            subtitle: s.status == InstalledPluginServerStatusEnum.error
+                ? s.error.orPlaceholder(l10n.pluginServerError)
+                : s.tools.isEmpty
+                ? (s.type == InstalledPluginServerTypeEnum.stdio
+                      ? (p.runsOn == null ? l10n.pluginRunsOnComputer : l10n.pluginRunsOnDevice(p.runsOn!.deviceName))
+                      : s.url.orPlaceholder())
+                : s.tools.map((t) => '${t.name} (${riskLabel(context, t.risk.name)})').join(', '),
+          ),
+        if (p.hosts.isNotEmpty) GroupedTile(icon: LucideIcons.network, title: l10n.pluginHosts, subtitle: p.hosts.join(', ')),
+      ],
+    );
+  }
+}
+
+String riskLabel(BuildContext context, String risk) => switch (risk) {
+  'low' => context.l10n.riskLow,
+  'high' => context.l10n.riskHigh,
+  _ => context.l10n.riskMedium,
+};
+
+/// What a package would add, before anything is installed.
+class _PreviewList extends StatelessWidget {
+  const _PreviewList({required this.preview});
+  final PluginPreview preview;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final p = preview;
+    final style = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('${p.name}${p.version.isUsable ? ' ${p.version}' : ''}', style: style.titleMedium),
+        if (p.description.isNotEmpty) Text(p.description),
+        Text('${p.repo} @ ${p.commit.substring(0, 7)}', style: style.bodySmall),
+        const SizedBox(height: AppSpace.sm),
+        Text(l10n.pluginAdds, style: style.labelLarge),
+        for (final s in p.skills) ListTile(dense: true, contentPadding: EdgeInsets.zero, leading: const Icon(LucideIcons.bookOpen, size: 18), title: Text(s.name), subtitle: Text(s.description)),
+        for (final s in p.servers)
+          ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(s.type == PluginServerInfoTypeEnum.stdio ? LucideIcons.cpu : LucideIcons.globe, size: 18),
+            title: Text(s.key),
+            subtitle: Text(s.type == PluginServerInfoTypeEnum.stdio ? l10n.pluginStdio([s.command.orPlaceholder(), ...s.args].join(' ')) : l10n.pluginRemote(s.url.orPlaceholder())),
+          ),
+        if (p.hosts.isNotEmpty) Text(l10n.pluginTalksTo(p.hosts.join(', ')), style: style.bodySmall),
+        for (final w in p.warnings) Text(w, style: style.bodySmall?.copyWith(color: Theme.of(context).colorScheme.error)),
+      ],
+    );
+  }
+}
+
+class _AddPlugin extends ConsumerStatefulWidget {
+  const _AddPlugin({required this.orgId, required this.botId, this.initialUrl});
+  final String orgId;
+  final String botId;
+  final String? initialUrl;
+
+  @override
+  ConsumerState<_AddPlugin> createState() => _AddPluginState();
+}
+
+class _AddPluginState extends ConsumerState<_AddPlugin> {
+  final _url = TextEditingController();
+  final _secrets = <String, TextEditingController>{};
+  PluginPreview? _preview;
+  // The reviewed commit, when the plugin came from the directory (D-241).
+  String? _commit;
+  // Where its stdio servers run (D-344): null is the bot's computer, else one of my computers.
+  String? _deviceId;
+  var _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final url = widget.initialUrl;
+    if (url != null) {
+      _url.text = url;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _submit();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _url.dispose();
+    for (final c in _secrets.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final backend = ref.read(backendProvider);
+    setState(() => _busy = true);
+    if (_preview == null) {
+      final p = await runGuarded(context, () => backend.previewPlugin(widget.orgId, _url.text.trim(), commit: _commit));
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _preview = p;
+        for (final s in p?.secrets ?? const <PluginSecretInfo>[]) {
+          _secrets[s.name] = TextEditingController();
+        }
+      });
+      return;
+    }
+    final p = _preview!;
+    final done = await runGuarded(context, () => backend.installPlugin(widget.orgId, widget.botId, _url.text.trim(), p.commit, {for (final e in _secrets.entries) e.key: e.value.text}, deviceId: _deviceId));
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (done != null) Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final p = _preview;
+    final ready = p == null ? _url.text.trim().isNotEmpty : _secrets.values.every((c) => c.text.trim().isNotEmpty);
+    return FormSheet(
+      icon: LucideIcons.puzzle,
+      title: l10n.addPlugin,
+      subtitle: l10n.addPluginHelp,
+      submitLabel: p == null ? l10n.preview : l10n.install,
+      submitKey: const Key('pluginSubmit'),
+      onSubmit: !ready || _busy ? null : _submit,
+      children: [
+        if (p == null)
+          PluginDirectoryList(
+            enabled: !_busy,
+            onPick: (d) {
+              setState(() {
+                _url.text = d.url;
+                _commit = d.commit;
+              });
+              _submit();
+            },
+          ),
+        TextField(
+          key: const Key('pluginUrl'),
+          controller: _url,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) {
+            if (ready && !_busy) _submit();
+          },
+          enabled: p == null,
+          onChanged: (_) => setState(() => _commit = null),
+          decoration: const InputDecoration(labelText: 'GitHub', hintText: 'https://github.com/owner/repo/tree/main/plugin'),
+        ),
+        if (p != null) ...[
+          _PreviewList(preview: p),
+          if (p.servers.any((s) => s.type == PluginServerInfoTypeEnum.stdio))
+            PluginPlacePicker(
+              places: ref.watch(pluginPlacesProvider(widget.orgId)).value ?? const [],
+              selected: _deviceId,
+              enabled: !_busy,
+              onChanged: (id) => setState(() => _deviceId = id),
+            ),
+          for (final s in p.secrets)
+            Revealable(builder: (context, hidden, toggle) => TextField(
+              key: Key('pluginSecret-${s.name}'),
+              controller: _secrets[s.name],
+              textInputAction: s == p.secrets.last ? TextInputAction.done : TextInputAction.next,
+              onSubmitted: s == p.secrets.last
+                  ? (_) {
+                      if (ready && !_busy) _submit();
+                    }
+                  : null,
+              obscureText: hidden,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(labelText: s.name, helperText: s.description.isEmpty ? null : s.description, suffixIcon: toggle),
+            )),
+        ],
+      ],
+    );
+  }
+}
+
+/// Where a plugin's stdio servers run (D-344): the bot's computer, or one of the person's own
+/// computers that can take them. Shows nothing when they have none.
+class PluginPlacePicker extends StatelessWidget {
+  const PluginPlacePicker({super.key, required this.places, required this.selected, required this.enabled, required this.onChanged});
+  final List<LocalDevice> places;
+  final String? selected;
+  final bool enabled;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    if (places.isEmpty) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    final style = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.pluginWhereToolsRun, style: style.labelLarge),
+        const SizedBox(height: AppSpace.xs),
+        Wrap(
+          spacing: AppSpace.sm,
+          runSpacing: AppSpace.xs,
+          children: [
+            ChoiceChip(
+              key: const Key('pluginPlace-bot'),
+              avatar: const Icon(LucideIcons.cloud, size: 16),
+              label: Text(l10n.pluginPlaceBot),
+              selected: selected == null,
+              onSelected: enabled ? (_) => onChanged(null) : null,
+            ),
+            for (final d in places)
+              ChoiceChip(
+                key: Key('pluginPlace-${d.id}'),
+                avatar: const Icon(LucideIcons.laptop, size: 16),
+                label: Text(l10n.pluginPlaceMine(d.name)),
+                selected: selected == d.id,
+                onSelected: enabled ? (_) => onChanged(d.id) : null,
+              ),
+          ],
+        ),
+        const SizedBox(height: AppSpace.xs),
+        Text(l10n.pluginWhereToolsRunHelp, style: style.bodySmall),
+      ],
+    );
+  }
+}
+
+/// Changes a plugin's plain settings (docs/PLUGINS-AND-PACKS-PLAN.md F.34). Pops true once saved.
+class _EditPluginSettings extends ConsumerStatefulWidget {
+  const _EditPluginSettings({required this.plugin});
+  final Plugin plugin;
+
+  @override
+  ConsumerState<_EditPluginSettings> createState() => _EditPluginSettingsState();
+}
+
+class _EditPluginSettingsState extends ConsumerState<_EditPluginSettings> {
+  late final _fields = {
+    for (final s in widget.plugin.settings ?? const <PluginSettingsInner>[]) s.name: TextEditingController(text: s.value),
+  };
+  var _busy = false;
+
+  @override
+  void dispose() {
+    for (final c in _fields.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() => _busy = true);
+    final done = await runGuarded(
+      context,
+      () => ref.read(backendProvider).updatePluginSettings(widget.plugin.id, {for (final e in _fields.entries) e.key: e.value.text.trim()}),
+    );
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (done != null) Navigator.pop(context, true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final settings = widget.plugin.settings ?? const <PluginSettingsInner>[];
+    return FormSheet(
+      key: const Key('pluginSettingsSheet'),
+      icon: LucideIcons.slidersHorizontal,
+      title: l10n.pluginSettings,
+      subtitle: widget.plugin.name,
+      submitLabel: l10n.save,
+      submitKey: const Key('pluginSettingsSave'),
+      busy: _busy,
+      onSubmit: _busy ? null : _save,
+      children: [
+        for (final s in settings)
+          TextField(
+            key: Key('pluginSettingField-${s.name}'),
+            controller: _fields[s.name],
+            textInputAction: s == settings.last ? TextInputAction.done : TextInputAction.next,
+            decoration: InputDecoration(
+              labelText: s.label.isEmpty ? s.name : s.label,
+              helperText: s.description.isEmpty ? null : s.description,
+              hintText: s.default_,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _UpdatePlugin extends ConsumerStatefulWidget {
+  const _UpdatePlugin({required this.plugin, required this.update});
+  final Plugin plugin;
+  final PluginUpdatePreview update;
+
+  @override
+  ConsumerState<_UpdatePlugin> createState() => _UpdatePluginState();
+}
+
+class _UpdatePluginState extends ConsumerState<_UpdatePlugin> {
+  final _secrets = <String, TextEditingController>{};
+  var _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    for (final n in widget.update.secretsAdded) {
+      _secrets[n] = TextEditingController();
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final c in _secrets.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final u = widget.update;
+    String list(List<String> xs) => xs.join(', ');
+    final lines = [
+      if (u.skillsAdded.isNotEmpty) l10n.pluginDiffSkillsAdded(list(u.skillsAdded)),
+      if (u.skillsChanged.isNotEmpty) l10n.pluginDiffSkillsChanged(list(u.skillsChanged)),
+      if (u.skillsRemoved.isNotEmpty) l10n.pluginDiffSkillsRemoved(list(u.skillsRemoved)),
+      if (u.serversAdded.isNotEmpty) l10n.pluginDiffServersAdded(list(u.serversAdded)),
+      if (u.serversChanged.isNotEmpty) l10n.pluginDiffServersChanged(list(u.serversChanged)),
+      if (u.serversRemoved.isNotEmpty) l10n.pluginDiffServersRemoved(list(u.serversRemoved)),
+      if (u.hostsAdded.isNotEmpty) l10n.pluginDiffHosts(list(u.hostsAdded)),
+    ];
+    VoidCallback? submit;
+    return FormSheet(
+      icon: LucideIcons.refreshCw,
+      title: l10n.updatePluginTitle(widget.plugin.name),
+      subtitle: '${u.fromVersion ?? u.fromCommit.substring(0, 7)} → ${u.toVersion ?? u.toCommit.substring(0, 7)}',
+      submitLabel: l10n.update,
+      submitKey: const Key('pluginUpdate'),
+      // Also run by the keyboard's Done key on the last field.
+      onSubmit: submit = _busy || _secrets.values.any((c) => c.text.trim().isEmpty)
+          ? null
+          : () async {
+              setState(() => _busy = true);
+              final r = await runGuarded(context, () => ref.read(backendProvider).updatePlugin(widget.plugin.id, u.toCommit, secrets: {for (final e in _secrets.entries) e.key: e.value.text}));
+              if (!mounted) return;
+              setState(() => _busy = false);
+              if (!context.mounted) return;
+              if (r != null) Navigator.pop(context);
+            },
+      children: [
+        for (final l in lines.isEmpty ? [l10n.pluginDiffNone] : lines) Text(l),
+        for (final e in _secrets.entries)
+          Revealable(builder: (context, hidden, toggle) => TextField(
+            key: Key('pluginSecret-${e.key}'),
+            controller: e.value,
+            textInputAction: e.key == _secrets.keys.last ? TextInputAction.done : TextInputAction.next,
+            onSubmitted: e.key == _secrets.keys.last ? (_) => submit?.call() : null,
+            obscureText: hidden,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(labelText: e.key, suffixIcon: toggle),
+          )),
+      ],
+    );
+  }
+}
+
+/// The page while plugins load: the help note, then two plugin cards, each its header row with
+/// the menu button over rows for what it added, in the real rows' sizes.
+class _PluginsSkeleton extends StatelessWidget {
+  const _PluginsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    Widget card() => SkeletonGroupedCard(
+      rows: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(child: SkeletonRow(trailing: SkeletonTrailing.none, padding: EdgeInsets.zero, titleWidth: 0.44, subtitleWidth: 0.82)),
+              SizedBox(width: AppSpace.xs),
+              // The menu button's tap target.
+              SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 18, height: 6, radius: 3))),
+            ],
+          ),
+        ),
+        const SkeletonRow(trailing: SkeletonTrailing.none, titleWidth: 0.36, subtitleWidth: 0.3),
+        const SkeletonRow(trailing: SkeletonTrailing.none, titleWidth: 0.3, subtitleWidth: 0.7),
+      ],
+    );
+    return SkeletonPage(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(padding: EdgeInsets.only(top: 1), child: SkeletonBone(width: 16, height: 16, radius: 4)),
+            const SizedBox(width: 6),
+            Expanded(child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.35), lines: 2, widthFactor: 0.8)),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        card(),
+        const SizedBox(height: AppSpace.md),
+        card(),
+        const SizedBox(height: AppSpace.md),
+      ],
+    );
+  }
+}

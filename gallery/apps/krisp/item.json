@@ -1,0 +1,26 @@
+{
+  "name": "Krisp",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "meetings",
+    "notes"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Summarize my Krisp meeting notes from today",
+    "Find the meeting where we discussed onboarding",
+    "What did I promise to do in yesterday's calls?"
+  ],
+  "access": {
+    "reads": [
+      "Krisp transcripts and notes"
+    ],
+    "credits": "low"
+  }
+}

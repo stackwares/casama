@@ -1,0 +1,10 @@
+{
+  "specVersion": "1.0",
+  "entries": [
+    {
+      "identifier": "urn:air:casama.ai:mcp:docs",
+      "type": "application/mcp-server-card+json",
+      "url": "https://api.casama.ai/mcp/docs/server-card"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "description": "Search, read and create notes in your Evernote.",
+  "category": "productivity",
+  "color": "00A82D",
+  "homepage": "https://evernote.com",
+  "url": "https://mcp.evernote.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Search your notes", "Read a note", "Create notes"]
+}

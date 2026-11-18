@@ -1,0 +1,42 @@
+{
+  "format": "casama.pack",
+  "version": 1,
+  "icon": "users",
+  "summary": "A meeting assistant that preps tomorrow's meetings, files notes with action items and drafts follow-ups.",
+  "inputs": [
+    {
+      "key": "time",
+      "label": "When should tomorrow's prep arrive?",
+      "type": "time",
+      "default": "17:00",
+      "help": "Weekday evenings, in your time zone."
+    }
+  ],
+  "needs": {
+    "apps": ["google_calendar"]
+  },
+  "includes": [
+    {
+      "type": "skill",
+      "id": "meeting-prep"
+    },
+    {
+      "type": "skill",
+      "id": "meeting-notes"
+    },
+    {
+      "type": "app",
+      "id": "granola"
+    },
+    {
+      "type": "app",
+      "id": "fireflies"
+    }
+  ],
+  "workspace_skills": [],
+  "examples": [
+    "Prep me for my 2pm",
+    "What did we decide in yesterday's planning?",
+    "Draft the follow-up for the client call"
+  ]
+}

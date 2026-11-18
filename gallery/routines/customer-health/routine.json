@@ -1,0 +1,7 @@
+{
+  "description": "Every Tuesday: customers who went quiet, complained or are up for renewal, with a check-in drafted for each.",
+  "category": "work",
+  "icon": "heart-pulse",
+  "instructions_md": "Check on my customers. From the CRM, support tickets and mail (whichever are connected) and what's in memory, list the accounts that need attention: no contact in 30 days, more support tickets than usual, an unhappy message, a drop in use if I can see it, or a renewal in the next 60 days. For each: the customer, the reason, the last contact and one suggested next step. Draft a short, personal check-in for the five most urgent. Don't send anything or change any records. If every account looks fine, say so in one line. If you don't know who my customers are, ask me where to look.",
+  "schedule_cron": "0 9 * * 2"
+}

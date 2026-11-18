@@ -1,0 +1,28 @@
+{
+  "name": "Fact check",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "research"
+  ],
+  "category": "research",
+  "icon": "badge-check",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Fact-check this article before I share it",
+    "Is this statistic about remote work true?",
+    "Mark each claim in this post as supported or not"
+  ],
+  "access": {
+    "reads": [
+      "the web"
+    ],
+    "credits": "medium"
+  }
+}

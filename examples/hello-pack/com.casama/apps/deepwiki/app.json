@@ -1,0 +1,10 @@
+{
+  "name": "DeepWiki",
+  "description": "Ask questions about any public GitHub repository's docs.",
+  "category": "developer",
+  "color": "1F2937",
+  "homepage": "https://deepwiki.com",
+  "url": "https://mcp.deepwiki.com/mcp",
+  "auth": ["none"],
+  "capabilities": ["Read a repository's docs", "Answer questions about a codebase"]
+}

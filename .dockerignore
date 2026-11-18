@@ -1,0 +1,11 @@
+**/node_modules
+**/.turbo
+**/dist
+**/.dart_tool
+**/build
+.git
+client
+# Except the built-in apps' marks, which the API serves (apps/server/src/services/app-logos.ts).
+!client/assets/apps
+supabase/.temp
+.env

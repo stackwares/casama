@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>ai.casama.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>casama</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.278631205206-ma3i1l9a9q2sb3ac2coeucm43nqqt2lj</string>
+			</array>
+		</dict>
+	</array>
+
+	<key>NSFaceIDUsageDescription</key>
+	<string>Casama uses Face ID to unlock the app when you turn on the app lock, and to confirm risky actions.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Casama uses the camera when you take a photo to send to a bot or for your profile.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Casama opens your photo library when you choose a photo to send to a bot or for your profile.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Your bots can answer questions about your schedule and add events, only when you turn on Calendar in Device connections.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Your bots can answer questions about your schedule and add events, only when you turn on Calendar in Device connections.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Your bots can look up people you know, only when you turn on Contacts in Device connections.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Your bots can see daily summaries of your sleep, activity and workouts, only when you turn on Health in Device connections. Casama never writes to Health and never uses it for ads.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Casama only reads Health data; it never writes to it.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Save named places (Home, Work) and tell your bots when it's time to leave, only when you turn on Places in Device connections.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Tell your bots when you arrive at or leave your named places, even when Casama is closed. Only the place name and time are shared, never your route.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Casama uses the microphone for dictation and voice calls with your bots.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>When Casama's dictation service can't be reached, your device's own speech recognition turns what you say into text.</string>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Casama</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Casama</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneDelegateClassName</key>
+					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<!-- PostHog stays off until Dart calls setup() with a build-time key (D-063). Native auto-init
+	     would otherwise log an error on every launch because the token is not in this file. -->
+	<key>com.posthog.posthog.AUTO_INIT</key>
+	<false/>
+	<key>com.posthog.posthog.CAPTURE_PUSH_NOTIFICATION_OPENED</key>
+	<false/>
+	<!-- Google Analytics (GA4) stays off until Dart turns it on for Casama Cloud with consent (D-397).
+	     No ad ids, no ad personalization, no automatic screen names (only route templates are sent). -->
+	<key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
+	<false/>
+	<key>GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS</key>
+	<false/>
+	<key>FirebaseAutomaticScreenReportingEnabled</key>
+	<false/>
+	<!-- Phone-call voice (D-135): PushKit VoIP pushes ring through CallKit; the live call keeps audio. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>remote-notification</string>
+		<string>voip</string>
+	</array>
+	<!-- Only standard HTTPS and the OS's own encryption: no export-compliance questions per upload. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+</dict>
+</plist>

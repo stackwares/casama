@@ -1,0 +1,38 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  X-Frame-Options: DENY
+
+# Passkeys: iOS/macOS and Android read these to tie the apps to casama.ai.
+/.well-known/apple-app-site-association
+  Content-Type: application/json
+/.well-known/assetlinks.json
+  Content-Type: application/json
+
+/assets/fonts/*
+  Access-Control-Allow-Origin: *
+
+# The film (D-390): a day in browsers and Cloudflare's edge. A new cut keeps
+# its name, so it reaches everyone within a day.
+/assets/film/*
+  Cache-Control: public, max-age=86400
+
+# Markdown copies of the written pages (site/build.mjs), for AI agents. The pages are what search
+# engines index, so the copies stay out.
+/*.md
+  Content-Type: text/markdown; charset=utf-8
+  X-Robots-Tag: noindex
+  Access-Control-Allow-Origin: *
+
+/*.xml
+  X-Robots-Tag: noindex
+
+# For AI agents (docs/SEO-PLAN.md §10.6): what this domain offers, and the docs MCP server's card.
+/.well-known/ai-catalog.json
+  Content-Type: application/ai-catalog+json
+  Access-Control-Allow-Origin: *
+/.well-known/casama-docs-server-card.json
+  Content-Type: application/mcp-server-card+json
+  Access-Control-Allow-Origin: *

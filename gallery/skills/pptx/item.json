@@ -1,0 +1,30 @@
+{
+  "name": "PowerPoint decks",
+  "author": {
+    "name": "Anthropic",
+    "url": "https://github.com/anthropics/skills"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work"
+  ],
+  "category": "work",
+  "icon": "presentation",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Make a 10-slide deck from this outline",
+    "Add speaker notes to every slide in this presentation",
+    "Pull all the text out of this deck"
+  ],
+  "access": {
+    "reads": [
+      "decks you share"
+    ],
+    "writes": [
+      "creates and edits slide decks"
+    ],
+    "credits": "medium"
+  }
+}

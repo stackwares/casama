@@ -1,0 +1,10 @@
+{
+  "description": "Search and read your Circleback meeting notes and action items.",
+  "category": "productivity",
+  "color": "111111",
+  "homepage": "https://circleback.ai",
+  "url": "https://app.circleback.ai/api/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Search your meetings", "Read meeting notes", "Pull action items"]
+}

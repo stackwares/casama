@@ -1,0 +1,156 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:casama/core/call_audio.dart';
+import 'package:casama/core/device_dictation.dart';
+import 'package:casama/core/voice.dart';
+import 'package:casama_sdk/casama_sdk.dart';
+
+class FakeDictation implements Dictation {
+  var started = 0;
+  (Uint8List, String)? clip = (Uint8List.fromList([1, 2]), 'audio/wav');
+  @override
+  Future<bool> start() async {
+    started++;
+    return true;
+  }
+
+  @override
+  Future<(Uint8List, String)?> stop() async => clip;
+  @override
+  Future<void> cancel() async {}
+}
+
+class FakeDeviceDictation implements DeviceDictation {
+  FakeDeviceDictation({this.supported = true, this.starts = true});
+  @override
+  final bool supported;
+  final bool starts;
+  var started = 0;
+  void Function(String words)? onWords;
+  void Function(DeviceDictationEnd end)? onEnd;
+
+  @override
+  Future<bool> start({required void Function(String words) onWords, required void Function(DeviceDictationEnd end) onEnd}) async {
+    started++;
+    if (!starts) return false;
+    this.onWords = onWords;
+    this.onEnd = onEnd;
+    return true;
+  }
+
+  /// The recognizer stops by itself or after [stop].
+  void end(DeviceDictationEnd how) {
+    final cb = onEnd;
+    onEnd = null;
+    cb?.call(how);
+  }
+
+  @override
+  Future<void> stop() async => end(DeviceDictationEnd.done);
+  @override
+  Future<void> cancel() async => onEnd = null;
+}
+
+class FakePlayer implements SpeechPlayer {
+  final played = <int>[];
+  final speeds = <double>[];
+  var stopped = 0;
+  var paused = false;
+  Duration? seekedTo;
+  final _playback = StreamController<SpeechPlayback>.broadcast();
+
+  /// Reports playback as the real player would.
+  void report(Duration position, {Duration duration = const Duration(seconds: 40), bool completed = false}) =>
+      _playback.add(SpeechPlayback(playing: !paused && !completed, position: position, duration: duration, completed: completed));
+
+  @override
+  Future<void> play(Uint8List mp3) async {
+    paused = false;
+    played.add(mp3.length);
+  }
+
+  @override
+  Future<void> stop() async => stopped++;
+  @override
+  Future<void> pause() async {
+    paused = true;
+    report(Duration.zero);
+  }
+
+  @override
+  Future<void> resume() async {
+    paused = false;
+    report(Duration.zero);
+  }
+
+  @override
+  Future<void> seek(Duration position) async => seekedTo = position;
+  @override
+  Future<void> setSpeed(double speed) async => speeds.add(speed);
+  @override
+  Stream<SpeechPlayback> get playback => _playback.stream;
+}
+
+class FakeCall implements VoiceCall {
+  final _state = ValueNotifier(CallState.live);
+  final _transcript = ValueNotifier<List<CallTurn>>(const []);
+  final _latency = ValueNotifier<int?>(null);
+  final speakingNow = ValueNotifier(false);
+  final _tools = StreamController<CallToolRequest>.broadcast();
+  final results = <String, String>{};
+  var hungUp = false;
+  var muted = false;
+
+  void say(String role, String text) => _transcript.value = [..._transcript.value, CallTurn(role, text)];
+  void reply(int ms) => _latency.value = ms;
+  void askTool(String id, String name, [Map<String, Object?> args = const {'query': 'plants'}]) => _tools.add(CallToolRequest(id, name, args));
+
+  @override
+  ValueListenable<CallState> get state => _state;
+  @override
+  ValueListenable<List<CallTurn>> get transcript => _transcript;
+  @override
+  ValueListenable<int?> get replyLatencyMs => _latency;
+  @override
+  ValueListenable<bool> get speaking => speakingNow;
+  final reconnectingNow = ValueNotifier(false);
+  @override
+  ValueListenable<bool> get reconnecting => reconnectingNow;
+
+  /// The connection drops and can't come back (the call ends).
+  void drop() => _state.value = CallState.failed;
+  @override
+  Stream<CallToolRequest> get toolCalls => _tools.stream;
+  @override
+  void sendToolResult(String callId, String output) => results[callId] = output;
+  final notes = <String>[];
+  @override
+  void tellModel(String note) => notes.add(note);
+  @override
+  void setMuted(bool m) => muted = m;
+  var held = false;
+  @override
+  void setOnHold(bool h) => held = h;
+  @override
+  Map<String, int>? usage;
+  @override
+  CallLevels? levels;
+  @override
+  CallAudioRoutes? routes;
+  @override
+  Future<void> hangUp() async {
+    hungUp = true;
+    _state.value = CallState.ended;
+  }
+}
+
+class FakeCallConnector implements VoiceCallConnector {
+  final call = FakeCall();
+  VoiceSession? session;
+  @override
+  Future<VoiceCall> connect(VoiceSession s) async {
+    session = s;
+    return call;
+  }
+}

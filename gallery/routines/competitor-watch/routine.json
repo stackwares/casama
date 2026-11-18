@@ -1,0 +1,7 @@
+{
+  "description": "Monday mornings: what changed on your competitors' pages since last week, with a source for each change.",
+  "category": "research",
+  "icon": "binoculars",
+  "instructions_md": "Check {{competitors}} for changes since last week. For each one, look at the homepage, the pricing page, the changelog or blog, and recent news about them. Report only what changed: new features, price changes, new wording, hires or funding, each with the date and a link to the source. Don't report anything you can't link to. Save what each page says now in memory, so you can compare next week. On the first run, record the starting point and tell me what you'll watch. If nothing changed for a competitor, say so in one line. If you don't know which competitors to watch, ask me.",
+  "schedule_cron": "0 9 * * 1"
+}

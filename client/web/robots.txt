@@ -1,0 +1,5 @@
+# The web app. Only its front page is a real address; everything else is inside the app.
+User-agent: *
+Allow: /
+
+Sitemap: https://casama.ai/sitemap.xml

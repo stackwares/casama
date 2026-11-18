@@ -1,0 +1,28 @@
+{
+  "name": "Plain",
+  "description": "Casama's purple on plain white or dark grey, like casama.ai.",
+  "light": {
+    "seed": "#7A3FA8",
+    "background": "#FFFFFF",
+    "onBackground": "#1D1B20",
+    "primary": "#7A3FA8",
+    "primaryContainer": "#F1E2FC",
+    "secondary": "#5F5C66",
+    "secondaryContainer": "#ECEBF0",
+    "tertiary": "#6B4E9B",
+    "tertiaryContainer": "#ECE3F8",
+    "appBar": "#FFFFFF"
+  },
+  "dark": {
+    "seed": "#D9B6F7",
+    "background": "#1C1C1E",
+    "onBackground": "#F2F1F4",
+    "primary": "#D9B6F7",
+    "primaryContainer": "#3A2A47",
+    "secondary": "#C9C6D0",
+    "secondaryContainer": "#38383C",
+    "tertiary": "#CDB8F0",
+    "tertiaryContainer": "#3B3350",
+    "appBar": "#1C1C1E"
+  }
+}

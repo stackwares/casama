@@ -1,0 +1,7 @@
+{
+  "description": "On the 1st of each month: the home chores for the season, most important first.",
+  "category": "life",
+  "icon": "house",
+  "instructions_md": "List this month's home chores for the season in {{city}}: what to check, clean, service or replace, such as filters, gutters, smoke alarm batteries and heating. Use what you know about my home from memory: the kind of home, its appliances and when things were last done. For each chore, say why it matters, about how long it takes and whether it needs a professional. Ten chores at most, the most important first. Don't book anyone or order anything. Ask me afterwards which ones I did, so you remember the dates.",
+  "schedule_cron": "0 9 1 * *"
+}

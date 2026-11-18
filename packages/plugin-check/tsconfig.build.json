@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "..",
+    "outDir": "dist",
+    "declaration": true,
+    "sourceMap": false,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "erasableSyntaxOnly": true,
+    "types": ["node"]
+  },
+  "include": [
+    "src",
+    "../domain/src/agent-plugins.ts",
+    "../domain/src/skill-format.ts",
+    "../domain/src/plugin-cards.ts",
+    "../domain/src/a2ui.ts"
+  ]
+}

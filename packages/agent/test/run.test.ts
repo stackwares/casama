@@ -1,0 +1,1079 @@
+import { createDb, type DbHandle } from "@casama/db";
+import { createAuthUser, startTestDatabase, type TestDatabase } from "@casama/db/testing";
+import { forcedIds, runSpanId, runTraceId } from "@casama/observability";
+import { trace } from "@opentelemetry/api";
+import {
+  InMemorySpanExporter,
+  SimpleSpanProcessor,
+  TracerProvider,
+} from "@opentelemetry/sdk-trace";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { z } from "zod";
+import {
+  builtinTools,
+  CredentialResolver,
+  directSteps,
+  type FixtureFile,
+  followUpLeftovers,
+  hashEmbedder,
+  MemoryService,
+  PostgresMemoryStore,
+  ReplayGateway,
+  runAgent,
+} from "../src/index.ts";
+import { LangfuseSink } from "../src/langfuse.ts";
+import {
+  mergeToolGroups,
+  planLazyTools,
+  REMEMBERED_TOOL_TOKENS,
+  registerToolsLoad,
+  rememberedTools,
+  resolveToolsLoad,
+  toolGroup,
+} from "../src/lazy-tools.ts";
+
+const SECRET = "sk-live-SECRET-1234567890";
+
+let tdb: TestDatabase;
+let h: DbHandle;
+let orgId: string;
+let userId: string;
+let credId: string;
+
+beforeAll(async () => {
+  tdb = await startTestDatabase();
+  h = createDb(tdb.url, { max: 5 });
+  const user = await createAuthUser(tdb.admin, "runner@example.com");
+  userId = user.id;
+  const [org] = await tdb.admin<
+    { id: string }[]
+  >`insert into public.organizations (name, slug) values ('Run Org', 'run-org') returning id`;
+  orgId = org!.id;
+  await tdb.admin`insert into public.memberships (org_id, user_id, role) values (${orgId}, ${userId}, 'owner')`;
+  await tdb.admin`update public.profiles set timezone = 'America/Chicago' where user_id = ${userId}`;
+  const [cred] = await tdb.admin<{ id: string }[]>`
+    insert into public.model_credentials (org_id, provider, label, vault_secret_id)
+    values (${orgId}, 'openrouter', 'Main', vault.create_secret(${SECRET})) returning id`;
+  credId = cred!.id;
+});
+afterAll(async () => {
+  await h?.close();
+  await tdb?.stop();
+});
+
+async function makeBot(opts: { budget?: object; fallbacks?: boolean } = {}) {
+  const policy = {
+    primary: { credential_id: credId, model: "fixture-primary" },
+    ...(opts.fallbacks ? { fallbacks: [{ credential_id: credId, model: "fixture-backup" }] } : {}),
+    cheap: { credential_id: credId, model: "fixture-cheap" },
+  };
+  const [bot] = await tdb.admin<{ id: string }[]>`
+    insert into public.bots (org_id, created_by, name, persona_md, model_policy, budget)
+    values (${orgId}, ${userId}, 'Ada', 'Friendly and brief.', ${tdb.admin.json(policy)},
+            ${tdb.admin.json(opts.budget ?? { per_run_usd: 5, daily_usd: 50 })})
+    returning id`;
+  return bot!.id;
+}
+
+async function startRun(botId: string, text: string, conversationId?: string) {
+  const convo =
+    conversationId ??
+    (
+      await tdb.admin<
+        { id: string }[]
+      >`insert into public.conversations (org_id, bot_id) values (${orgId}, ${botId}) returning id`
+    )[0]!.id;
+  const [run] = await tdb.admin<{ id: string }[]>`
+    insert into public.runs (org_id, bot_id, conversation_id, created_by) values (${orgId}, ${botId}, ${convo}, ${userId}) returning id`;
+  await tdb.admin`
+    insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
+    values (${orgId}, ${convo}, 'user', ${userId}, ${tdb.admin.json([{ type: "text", text }])}, ${run!.id})`;
+  return { runId: run!.id, conversationId: convo };
+}
+
+const events = (runId: string) =>
+  tdb.admin<{ seq: number; type: string; payload: Record<string, unknown> }[]>`
+    select seq, type, payload from public.run_events where run_id = ${runId} order by seq`;
+
+const finish = (n = 10) => ({
+  type: "finish" as const,
+  usage: { inputTokens: 1000 * n, outputTokens: 100 * n },
+  finishReason: "stop",
+  model: "",
+});
+
+const fixtures: FixtureFile[] = [
+  {
+    name: "limits-and-stops",
+    turns: [
+      {
+        when: { lastRole: "user", lastUserIncludes: "reached its limit" },
+        events: [
+          { type: "text", text: "I ran out of steps: my computer has no ffmpeg." },
+          finish(1),
+        ],
+      },
+      {
+        when: { lastRole: "user", lastUserIncludes: "say hi to me" },
+        events: [{ type: "text", text: "Hi Oliver!" }, finish(1)],
+      },
+    ],
+  },
+  {
+    name: "memory-extraction",
+    turns: [
+      {
+        when: { systemIncludes: "extract lasting memories", lastUserIncludes: "teal" },
+        events: [
+          {
+            type: "text",
+            text: '{"memories":[{"kind":"preference","content":"The user\'s favorite color is teal.","importance":0.8}]}',
+          },
+          finish(1),
+        ],
+      },
+      {
+        when: { systemIncludes: "extract lasting memories" },
+        events: [{ type: "text", text: '{"memories":[]}' }, finish(1)],
+      },
+    ],
+  },
+  {
+    name: "chat",
+    turns: [
+      {
+        when: { lastRole: "user", lastUserIncludes: "favorite color is teal" },
+        events: [
+          { type: "text", text: "Noted, saving that. " },
+          {
+            type: "tool_call",
+            call: {
+              callId: "c1",
+              name: "memory__write",
+              args: { content: "Favorite color: teal", kind: "preference" },
+            },
+          },
+          finish(),
+        ],
+      },
+      {
+        when: { lastRole: "tool", lastToolName: "memory.write" },
+        events: [{ type: "text", text: "Got it, teal it is." }, finish()],
+      },
+      {
+        when: { lastUserIncludes: "what is my favorite color" },
+        events: [{ type: "text", text: "Your favorite color is teal." }, finish()],
+      },
+      {
+        when: { lastUserIncludes: "leak" },
+        events: [{ type: "text", text: `The key is ${SECRET} ok` }, finish()],
+      },
+      {
+        when: { lastUserIncludes: "slow", lastRole: "user" },
+        delayMs: 150,
+        events: Array.from({ length: 40 }, () => ({ type: "text" as const, text: "word " })).concat(
+          [finish()] as never,
+        ),
+      },
+      {
+        when: { lastUserIncludes: "loop" },
+        events: [
+          {
+            type: "tool_call",
+            call: { callId: "x", name: "memory__search", args: { query: "anything" } },
+          },
+          finish(100),
+        ],
+      },
+      {
+        when: { model: "fixture-primary", lastUserIncludes: "failover" },
+        error: { message: "rate limited", status: 429 },
+        events: [],
+      },
+      {
+        when: { model: "fixture-backup", lastUserIncludes: "failover" },
+        events: [{ type: "text", text: "Answered by the backup." }, finish()],
+      },
+      {
+        when: { lastUserIncludes: "weekly report", lastRole: "user" },
+        events: [
+          {
+            type: "tool_call",
+            call: { callId: "s1", name: "skills__load", args: { name: "weekly-report" } },
+          },
+          finish(),
+        ],
+      },
+      {
+        when: { lastUserIncludes: "weekly report", lastRole: "tool", lastToolName: "skills.load" },
+        events: [{ type: "text", text: "Here is the report in three bullets." }, finish()],
+      },
+      {
+        when: { lastUserIncludes: "keep clicking" },
+        events: [
+          {
+            type: "tool_call",
+            call: { callId: "k", name: "files__write", args: { path: "a.txt", content: "x" } },
+          },
+          finish(),
+        ],
+      },
+      {
+        when: { lastUserIncludes: "Sent while you were working on this" },
+        events: [{ type: "text", text: "Sure, I'll use the blue one instead." }, finish()],
+      },
+      {
+        when: { lastUserIncludes: "set me up", lastRole: "user" },
+        events: [
+          { type: "text", text: "A couple of questions." },
+          {
+            type: "tool_call",
+            call: {
+              callId: "u1",
+              name: "ui__show",
+              args: { components: [{ id: "root", component: "Text", text: "Question one?" }] },
+            },
+          },
+          {
+            type: "tool_call",
+            call: {
+              callId: "u2",
+              name: "ui__show",
+              args: { components: [{ id: "root", component: "Text", text: "Question two?" }] },
+            },
+          },
+          finish(),
+        ],
+      },
+      {
+        // Never reached: the turn ends after the first card.
+        when: { lastUserIncludes: "set me up", lastRole: "tool" },
+        events: [
+          {
+            type: "tool_call",
+            call: {
+              callId: "u3",
+              name: "ui__show",
+              args: { components: [{ id: "root", component: "Text", text: "Question three?" }] },
+            },
+          },
+          finish(),
+        ],
+      },
+      {
+        when: { lastUserIncludes: "bad tool", lastRole: "user" },
+        events: [
+          {
+            type: "tool_call",
+            call: { callId: "b1", name: "skills__load", args: { name: "nope" } },
+          },
+          finish(),
+        ],
+      },
+      {
+        when: { lastRole: "tool", lastToolName: "skills.load" },
+        events: [{ type: "text", text: "That skill does not exist." }, finish()],
+      },
+    ],
+  },
+];
+
+function deps(gateway: ReplayGateway, extra: Partial<Parameters<typeof runAgent>[1]> = {}) {
+  const embedder = hashEmbedder();
+  return {
+    db: h.db,
+    gateway,
+    tools: builtinTools({ db: h.db, memory: async () => new PostgresMemoryStore(h.db, embedder) }),
+    credentials: new CredentialResolver(h.db),
+    embedderFor: async () => embedder,
+    step: directSteps,
+    deltaIntervalMs: 20,
+    cancelPollMs: 50,
+    fallback: { backoffMs: 1 },
+    ...extra,
+  };
+}
+
+describe("runAgent", () => {
+  it("runs tools, streams events with gap-free seq, saves the message and extracts memories", async () => {
+    const gateway = new ReplayGateway(fixtures);
+    const botId = await makeBot();
+    const { runId, conversationId } = await startRun(
+      botId,
+      "Please remember my favorite color is teal",
+    );
+    expect(await runAgent(runId, deps(gateway))).toEqual({ status: "completed" });
+
+    const evs = await events(runId);
+    expect(evs.map((e) => e.seq)).toEqual(evs.map((_, i) => i + 1));
+    const types = evs.map((e) => e.type);
+    expect(types[0]).toBe("run.started");
+    expect(types.at(-1)).toBe("run.completed");
+    expect(types).toEqual(
+      expect.arrayContaining([
+        "message.delta",
+        "tool.started",
+        "memory.written",
+        "tool.completed",
+        "message.completed",
+        "usage",
+      ]),
+    );
+    expect(types.indexOf("tool.started")).toBeLessThan(types.indexOf("tool.completed"));
+
+    // What it said before acting stays in the thread, then the reply follows it (one thread, no branch).
+    const said = await tdb.admin<
+      { id: string; parent_message_id: string | null; content: Array<{ text: string }> }[]
+    >`
+      select id, parent_message_id, content from public.messages where conversation_id = ${conversationId} and role = 'assistant' order by created_at`;
+    expect(said.map((m) => m.content[0]?.text)).toEqual([
+      "Noted, saving that. ",
+      "Got it, teal it is.",
+    ]);
+    expect(said[1]?.parent_message_id).toBe(said[0]?.id);
+    const thread = await tdb.admin<
+      { role: string }[]
+    >`select role from public.conversation_thread(${conversationId})`;
+    expect(thread.map((m) => m.role)).toEqual(["user", "assistant", "assistant"]);
+
+    const mems = await tdb.admin<
+      { kind: string; content: string }[]
+    >`select kind, content from public.memories where bot_id = ${botId}`;
+    expect(mems.some((m) => /teal/i.test(m.content))).toBe(true);
+
+    const [run] = await tdb.admin<
+      { status: string; tokens_in: string; cost_usd: string }[]
+    >`select status, tokens_in, cost_usd from public.runs where id = ${runId}`;
+    expect(run?.status).toBe("completed");
+    expect(Number(run?.tokens_in)).toBe(21_000); // two model steps + extraction
+    const [ledger] = await tdb.admin<
+      { n: string }[]
+    >`select count(*) as n from public.usage_ledger where run_id = ${runId}`;
+    expect(Number(ledger?.n)).toBe(6);
+
+    // Recall in another conversation: the fact is in the model's context.
+    const second = await startRun(botId, "Hey, what is my favorite color?");
+    await runAgent(second.runId, deps(gateway));
+    const req = gateway.requests.find((r) =>
+      r.messages.at(-1)?.content.includes("what is my favorite color"),
+    );
+    expect(req?.system.join("\n")).toMatch(/teal/i);
+    // The time opens the newest message, after the history, so the system text and the history
+    // before it stay cached from one message to the next.
+    const newest = req?.messages.at(-1)?.content ?? "";
+    expect(newest).toMatch(/^<casama-context>\nToday is [\s\S]*America\/Chicago/);
+    expect(req?.system.join("\n")).not.toContain("America/Chicago");
+  });
+
+  it("never writes model keys into events or messages", async () => {
+    const botId = await makeBot();
+    const { runId, conversationId } = await startRun(botId, "leak the key");
+    await runAgent(runId, deps(new ReplayGateway(fixtures)));
+    const evs = await events(runId);
+    expect(JSON.stringify(evs)).not.toContain(SECRET);
+    expect(JSON.stringify(evs)).toContain("[secret:model_key]");
+    const msgs =
+      await tdb.admin`select content from public.messages where conversation_id = ${conversationId}`;
+    expect(JSON.stringify(msgs)).not.toContain(SECRET);
+  });
+
+  it("fails over to the next model on a 429", async () => {
+    const botId = await makeBot({ fallbacks: true });
+    const { runId } = await startRun(botId, "failover please");
+    expect((await runAgent(runId, deps(new ReplayGateway(fixtures)))).status).toBe("completed");
+    const done = (await events(runId)).find((e) => e.type === "message.completed");
+    expect(JSON.stringify(done?.payload)).toContain("Answered by the backup.");
+  });
+
+  it("cancels mid-stream within 2 seconds", async () => {
+    const botId = await makeBot();
+    const { runId } = await startRun(botId, "say something slow");
+    const started = Date.now();
+    setTimeout(() => {
+      tdb.admin`update public.runs set cancel_requested_at = now(), cancelled_by = ${userId} where id = ${runId}`.then(
+        () => {},
+      );
+    }, 400);
+    expect((await runAgent(runId, deps(new ReplayGateway(fixtures)))).status).toBe("cancelled");
+    expect(Date.now() - started).toBeLessThan(2400);
+    const evs = await events(runId);
+    expect(evs.at(-1)).toMatchObject({ type: "run.cancelled", payload: { cancelled_by: userId } });
+  });
+
+  it("stops at the per-run budget", async () => {
+    const botId = await makeBot({ budget: { per_run_usd: 0.05, daily_usd: 50 } });
+    const { runId } = await startRun(botId, "loop forever");
+    expect((await runAgent(runId, deps(new ReplayGateway(fixtures)))).status).toBe("failed");
+    expect((await events(runId)).at(-1)).toMatchObject({
+      type: "run.failed",
+      payload: { error_code: "budget_exceeded" },
+    });
+  });
+
+  it("stops at max steps, and says where it got to instead of going quiet", async () => {
+    const botId = await makeBot({ budget: { per_run_usd: 1000, daily_usd: 1000 } });
+    const { runId } = await startRun(botId, "loop forever");
+    const gateway = new ReplayGateway(fixtures);
+    await runAgent(runId, deps(gateway, { limits: { maxSteps: 3 } }));
+    expect((await events(runId)).at(-1)).toMatchObject({
+      type: "run.failed",
+      payload: { error_code: "max_steps_exceeded" },
+    });
+    // The wrap-up turn has no tools, and its words are saved as the reply.
+    expect(gateway.requests.at(-1)?.tools ?? []).toHaveLength(0);
+    const [reply] = await tdb.admin<{ content: Array<{ text?: string }> }[]>`
+      select content from public.messages where run_id = ${runId} and role = 'assistant'
+      order by created_at desc limit 1`;
+    expect(reply?.content[0]?.text).toBe("I ran out of steps: my computer has no ffmpeg.");
+  });
+
+  it("a bot asked from another chat knows it's busy elsewhere", async () => {
+    const botId = await makeBot();
+    const busy = await startRun(botId, "crop the video to 1:1");
+    await tdb.admin`update public.runs set status = 'running', started_at = now() where id = ${busy.runId}`;
+    const asked = await startRun(botId, "Can you say hi to me here?");
+    const gateway = new ReplayGateway(fixtures);
+    expect((await runAgent(asked.runId, deps(gateway))).status).toBe("completed");
+    const req = gateway.requests.find((r) => JSON.stringify(r.messages).includes("say hi to me"));
+    const last = req?.messages.at(-1)?.content;
+    expect(last).toContain("you're also working in another chat right now");
+    expect(last).toContain("crop the video to 1:1");
+    await tdb.admin`update public.runs set status = 'cancelled', ended_at = now() where id = ${busy.runId}`;
+  });
+
+  it("after the person stops a run, the next message doesn't pick the stopped work back up", async () => {
+    const botId = await makeBot();
+    const first = await startRun(botId, "crop the video to 1:1");
+    await tdb.admin`update public.runs set status = 'cancelled', cancel_requested_at = now(), cancelled_by = ${userId}, ended_at = now() where id = ${first.runId}`;
+    const next = await startRun(botId, "Can you say hi to me here?", first.conversationId);
+    const gateway = new ReplayGateway(fixtures);
+    expect((await runAgent(next.runId, deps(gateway))).status).toBe("completed");
+    const asked = gateway.requests.find((r) => JSON.stringify(r.messages).includes("say hi to me"));
+    const crop = asked?.messages.find(
+      (m) => typeof m.content === "string" && m.content.startsWith("crop the video"),
+    );
+    expect(crop?.content).toContain("The person stopped your work on this before you replied");
+  });
+
+  it("reports tool errors to the model instead of failing the run", async () => {
+    const botId = await makeBot();
+    const { runId } = await startRun(botId, "use a bad tool");
+    expect((await runAgent(runId, deps(new ReplayGateway(fixtures)))).status).toBe("completed");
+    expect((await events(runId)).find((e) => e.type === "tool.failed")?.payload).toMatchObject({
+      error_code: "skill_not_found",
+    });
+  });
+
+  it("shows one card at a time: the turn ends after a card and a second one is refused", async () => {
+    const botId = await makeBot();
+    const { runId, conversationId } = await startRun(botId, "set me up");
+    expect((await runAgent(runId, deps(new ReplayGateway(fixtures)))).status).toBe("completed");
+    const evs = await events(runId);
+    expect(evs.filter((e) => e.type === "ui.shown")).toHaveLength(1);
+    expect(evs.filter((e) => e.type === "tool.started").map((e) => e.payload.call_id)).toEqual([
+      "u1",
+    ]);
+    expect(evs.find((e) => e.type === "tool.failed")?.payload).toMatchObject({ call_id: "u2" });
+    const [msg] = await tdb.admin<{ content: Array<{ type: string; text?: string }> }[]>`
+      select content from public.messages where conversation_id = ${conversationId} and role = 'assistant'`;
+    expect(msg?.content.filter((p) => p.type === "ui")).toHaveLength(1);
+    expect(msg?.content[0]?.text).toBe("A couple of questions.");
+  });
+
+  it("a run stuck retrying the same failing action stops early instead of burning its budget", async () => {
+    const botId = await makeBot({ budget: { per_run_usd: 1000, daily_usd: 1000 } });
+    const { runId } = await startRun(botId, "keep clicking");
+    expect((await runAgent(runId, deps(new ReplayGateway(fixtures)))).status).toBe("failed");
+    const evs = await events(runId);
+    // Tried twice for real; the third identical try onward isn't run.
+    expect(evs.filter((e) => e.type === "tool.started")).toHaveLength(2);
+    expect(evs.at(-1)).toMatchObject({
+      type: "run.failed",
+      payload: { error_code: "stuck_looping" },
+    });
+  });
+
+  it("a message sent mid-task reaches the run before its next step", async () => {
+    const botId = await makeBot();
+    const { runId, conversationId } = await startRun(botId, "paint the fence");
+    await tdb.admin`
+      insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
+      values (${orgId}, ${conversationId}, 'user', ${userId}, ${tdb.admin.json([{ type: "text", text: "actually use blue" }])}, ${runId})`;
+    expect((await runAgent(runId, deps(new ReplayGateway(fixtures)))).status).toBe("completed");
+    const [reply] = await tdb.admin<{ content: Array<{ text: string }> }[]>`
+      select content from public.messages where conversation_id = ${conversationId} and role = 'assistant' order by created_at desc limit 1`;
+    expect(reply?.content[0]?.text).toContain("blue one");
+    // Seen, so no follow-up run for it.
+    const [n] = await tdb.admin<
+      { n: number }[]
+    >`select count(*)::int as n from public.runs where conversation_id = ${conversationId}`;
+    expect(n?.n).toBe(1);
+  });
+
+  it("after a stopped run, what the person sent meanwhile gets a run of its own", async () => {
+    const botId = await makeBot();
+    const { runId, conversationId } = await startRun(botId, "first thing");
+    const [late] = await tdb.admin<{ id: string }[]>`
+      insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
+      values (${orgId}, ${conversationId}, 'user', ${userId}, ${tdb.admin.json([{ type: "text", text: "and this" }])}, ${runId}) returning id`;
+    const next = await followUpLeftovers(h.db, runId);
+    expect(next).toBeTruthy();
+    const [moved] = await tdb.admin<
+      { run_id: string }[]
+    >`select run_id from public.messages where id = ${late!.id}`;
+    expect(moved?.run_id).toBe(next);
+    expect(await followUpLeftovers(h.db, runId)).toBeNull();
+  });
+
+  it("rejects runs when the org quota is used up", async () => {
+    const botId = await makeBot();
+    await tdb.admin`insert into public.quotas (org_id, period, max_cost_usd) values (${orgId}, 'month', 0.0001) on conflict (org_id, period) do update set max_cost_usd = 0.0001`;
+    const { runId } = await startRun(botId, "what is my favorite color");
+    expect((await runAgent(runId, deps(new ReplayGateway(fixtures)))).status).toBe("failed");
+    expect((await events(runId)).map((e) => e.type)).toEqual(["run.failed"]);
+    await tdb.admin`delete from public.quotas where org_id = ${orgId}`;
+  });
+
+  it("does nothing for a run that already finished", async () => {
+    const botId = await makeBot();
+    const { runId } = await startRun(botId, "what is my favorite color");
+    await runAgent(runId, deps(new ReplayGateway(fixtures)));
+    const before = (await events(runId)).length;
+    expect((await runAgent(runId, deps(new ReplayGateway(fixtures)))).status).toBe("completed");
+    expect((await events(runId)).length).toBe(before);
+  });
+});
+
+describe("skills", () => {
+  it("lists skills in the index and loads one on demand", async () => {
+    const botId = await makeBot();
+    await tdb.admin`insert into public.skills (org_id, name, description, body_md)
+      values (${orgId}, 'weekly-report', 'How to write the weekly report', '1. Three bullets. 2. Mention blockers.')`;
+    const gateway = new ReplayGateway(fixtures);
+    const { runId } = await startRun(botId, "Write my weekly report");
+    expect((await runAgent(runId, deps(gateway))).status).toBe("completed");
+    expect(gateway.requests[0]?.system[1]).toContain(
+      "- weekly-report: How to write the weekly report",
+    );
+    expect(gateway.requests[0]?.system.join("\n")).not.toContain("Mention blockers");
+    const evs = await events(runId);
+    expect(evs.find((e) => e.type === "skill.loaded")?.payload).toMatchObject({
+      name: "weekly-report",
+    });
+    const toolResult = gateway.requests[1]?.messages.at(-1);
+    expect(toolResult).toMatchObject({ role: "tool", name: "skills.load" });
+    expect(toolResult?.content).toContain("Mention blockers");
+  });
+});
+
+describe("memory search", () => {
+  it("finds memories by meaning-ish overlap and merges near-duplicates", async () => {
+    const botId = await makeBot();
+    const memory = new MemoryService(h.db, hashEmbedder());
+    const a = await memory.write({
+      orgId,
+      botId,
+      kind: "fact",
+      content: "Oliver works from Chicago.",
+    });
+    const b = await memory.write({
+      orgId,
+      botId,
+      kind: "fact",
+      content: "oliver works from chicago",
+    });
+    expect(b).toEqual({ id: a.id, created: false });
+    await memory.write({ orgId, botId, kind: "fact", content: "The launch is planned for March." });
+    const hits = await memory.recall(botId, "Where does Oliver work from?");
+    expect(hits[0]?.content).toMatch(/chicago/i);
+    const [{ n } = { n: "0" }] = await tdb.admin<
+      { n: string }[]
+    >`select count(*) as n from public.memories where bot_id = ${botId}`;
+    expect(Number(n)).toBe(2);
+  });
+});
+
+describe("lazy tool loading (D-106)", () => {
+  const manyTools = () => {
+    const tools = builtinTools({
+      db: h.db,
+      memory: async () => new PostgresMemoryStore(h.db, hashEmbedder()),
+    });
+    registerToolsLoad(tools);
+    for (const g of ["crm", "sheets", "mail"])
+      for (let k = 0; k < 4; k++)
+        tools.register({
+          name: `${g}.action_${k}`,
+          description:
+            `${g} action ${k}, with a fairly long description that costs tokens every turn.`.repeat(
+              3,
+            ),
+          risk: "low",
+          readOnly: true,
+          schema: z.object({ id: z.string().optional() }),
+          async execute() {
+            return { content: `${g} ${k} done` };
+          },
+        });
+    return tools;
+  };
+
+  it("groups tools and keeps the index byte-stable", () => {
+    expect(toolGroup("mcp.github.create_issue")).toBe("mcp.github");
+    expect(toolGroup("browser.open")).toBe("browser");
+    const tools = manyTools();
+    const all = tools.available({ computer: false, desktop: false, vision: false });
+    const a = planLazyTools(all, 5);
+    const b = planLazyTools([...all].reverse(), 5);
+    expect(a?.index).toBe(b?.index);
+    expect(a?.core.map((t) => t.name)).toContain("tools.load");
+    expect(a?.core.map((t) => t.name)).toContain("memory.write");
+    expect(planLazyTools(all, 0)).toBeNull();
+    expect(planLazyTools(all, 500)).toBeNull();
+  });
+
+  it("loads a tool by its own name when one tool ends with it", () => {
+    const tools = manyTools();
+    const all = tools.available({ computer: false, desktop: false, vision: false });
+    const plan = planLazyTools(all, 5);
+    if (!plan) throw new Error("expected a lazy plan");
+    expect(resolveToolsLoad(plan, { names: ["action_1"] }).unknown).toEqual(["action_1"]); // crm, sheets and mail all have one
+    const extra = {
+      ...(all[0] as (typeof all)[number]),
+      name: "local_mcp.t3code_ab12cd.t3_list_threads",
+    };
+    plan.groups.set("local_mcp.t3code_ab12cd", [extra]);
+    const r = resolveToolsLoad(plan, { names: ["t3_list_threads"] });
+    expect(r.tools.map((t) => t.name)).toEqual(["local_mcp.t3code_ab12cd.t3_list_threads"]);
+    expect(r.unknown).toEqual([]);
+  });
+
+  it("a model that keeps loading nothing is stopped by the loop guard, told what exists", async () => {
+    const empty: FixtureFile[] = [
+      fixtures[0] as FixtureFile,
+      {
+        name: "empty-loads",
+        turns: [
+          {
+            when: { lastRole: "user", lastUserIncludes: "load nothing" },
+            events: [
+              { type: "tool_call", call: { callId: "e0", name: "tools__load", args: {} } },
+              finish(1),
+            ],
+          },
+          {
+            when: { lastRole: "tool", lastToolName: "tools.load" },
+            events: [
+              { type: "tool_call", call: { callId: "e1", name: "tools__load", args: {} } },
+              finish(1),
+            ],
+          },
+        ],
+      },
+    ];
+    const botId = await makeBot({ budget: { per_run_usd: 1000, daily_usd: 1000 } });
+    const { runId } = await startRun(botId, "Please load nothing");
+    const result = await runAgent(
+      runId,
+      deps(new ReplayGateway(empty), { tools: manyTools(), lazyToolsThreshold: 5 }),
+    );
+    expect(result.status).toBe("failed");
+    const evs = await events(runId);
+    expect(evs.filter((e) => e.type === "tool.started").length).toBeLessThanOrEqual(5);
+    const done = evs.find((e) => e.type === "tool.completed") as
+      | { payload: { result_preview?: string } }
+      | undefined;
+    expect(JSON.stringify(done?.payload)).toContain("Groups: ");
+    expect(evs.at(-1)).toMatchObject({
+      type: "run.failed",
+      payload: { error_code: "stuck_looping" },
+    });
+  });
+
+  it("starts with core tools and the index, then loads a group for the rest of the run", async () => {
+    const lazyFixtures: FixtureFile[] = [
+      fixtures[0] as FixtureFile,
+      {
+        name: "lazy",
+        turns: [
+          {
+            when: { lastRole: "user", lastUserIncludes: "update the crm" },
+            events: [
+              {
+                type: "tool_call",
+                call: { callId: "l1", name: "tools__load", args: { groups: ["crm"] } },
+              },
+              finish(1),
+            ],
+          },
+          {
+            when: { lastRole: "tool", lastToolName: "tools.load" },
+            events: [
+              { type: "tool_call", call: { callId: "l2", name: "crm__action_1", args: {} } },
+              finish(1),
+            ],
+          },
+          {
+            when: { lastRole: "tool", lastToolName: "crm.action_1" },
+            events: [{ type: "text", text: "CRM updated." }, finish(1)],
+          },
+        ],
+      },
+    ];
+    const gateway = new ReplayGateway(lazyFixtures);
+    const botId = await makeBot();
+    const { runId } = await startRun(botId, "Please update the crm");
+    expect(
+      await runAgent(runId, deps(gateway, { tools: manyTools(), lazyToolsThreshold: 5 })),
+    ).toEqual({ status: "completed" });
+    const chat = gateway.requests.filter(
+      (r) => !r.system.join("").includes("extract lasting memories"),
+    );
+    const first = chat[0]!;
+    expect(first.tools?.some((t) => t.name === "crm__action_1")).toBe(false);
+    expect(first.tools?.some((t) => t.name === "tools__load")).toBe(true);
+    expect(first.system.at(-1)).toContain("- crm (4): action_0, action_1, action_2, action_3");
+    const second = chat[1]!;
+    expect(second.tools?.map((t) => t.name).slice(-4)).toEqual([
+      "crm__action_0",
+      "crm__action_1",
+      "crm__action_2",
+      "crm__action_3",
+    ]);
+    expect(second.tools?.slice(0, first.tools?.length).map((t) => t.name)).toEqual(
+      first.tools?.map((t) => t.name),
+    );
+    expect(JSON.stringify(first.tools).length).toBeLessThan(
+      JSON.stringify(
+        manyTools().specs(
+          manyTools().available({ computer: false, desktop: false, vision: false }),
+        ),
+      ).length * 0.7,
+    );
+  });
+
+  it("remembers a conversation's groups: the next message starts with them and loads nothing", async () => {
+    const turns: FixtureFile[] = [
+      fixtures[0] as FixtureFile,
+      {
+        name: "lazy-remembered",
+        turns: [
+          {
+            when: { lastRole: "user", lastUserIncludes: "once more" },
+            events: [
+              { type: "tool_call", call: { callId: "m1", name: "crm__action_2", args: {} } },
+              finish(1),
+            ],
+          },
+          {
+            when: { lastRole: "tool", lastToolName: "crm.action_2" },
+            events: [{ type: "text", text: "Done again." }, finish(1)],
+          },
+          {
+            when: { lastRole: "user", lastUserIncludes: "update the crm" },
+            events: [
+              {
+                type: "tool_call",
+                call: { callId: "l1", name: "tools__load", args: { groups: ["crm"] } },
+              },
+              finish(1),
+            ],
+          },
+          {
+            when: { lastRole: "tool", lastToolName: "tools.load" },
+            events: [
+              { type: "tool_call", call: { callId: "l2", name: "crm__action_1", args: {} } },
+              finish(1),
+            ],
+          },
+          {
+            when: { lastRole: "tool", lastToolName: "crm.action_1" },
+            events: [{ type: "text", text: "CRM updated." }, finish(1)],
+          },
+        ],
+      },
+    ];
+    const chatOf = (g: ReplayGateway) =>
+      g.requests.filter((r) => !r.system.join("").includes("extract lasting memories"));
+    const botId = await makeBot();
+    const first = new ReplayGateway(turns);
+    const { runId, conversationId } = await startRun(botId, "Please update the crm");
+    await runAgent(runId, deps(first, { tools: manyTools(), lazyToolsThreshold: 5 }));
+    const [convo] = await tdb.admin<
+      { tool_groups: string[] }[]
+    >`select tool_groups from public.conversations where id = ${conversationId}`;
+    expect(convo?.tool_groups).toEqual(["crm"]);
+
+    const second = new ReplayGateway(turns);
+    const next = await startRun(botId, "Do it once more", conversationId);
+    expect(
+      await runAgent(next.runId, deps(second, { tools: manyTools(), lazyToolsThreshold: 5 })),
+    ).toEqual({ status: "completed" });
+    const chat = chatOf(second);
+    // No load step: two model calls, the action and the reply.
+    expect(chat).toHaveLength(2);
+    expect(chat[0]?.tools?.some((t) => t.name === "crm__action_2")).toBe(true);
+    expect(chat[0]?.system.at(-1)).toContain("Already loaded, call them directly: crm.");
+    // The same tool list as the last call of the run before, which is what a provider's cache keys on.
+    expect(chat[0]?.tools?.map((t) => t.name)).toEqual(
+      chatOf(first)
+        .at(-1)
+        ?.tools?.map((t) => t.name),
+    );
+  });
+
+  it("starts with remembered groups only while they fit, most recent first", () => {
+    const tools = manyTools();
+    const plan = planLazyTools(
+      tools.available({ computer: false, desktop: false, vision: false }),
+      5,
+    )!;
+    const names = (defs: Array<{ name: string }>) => [
+      ...new Set(defs.map((t) => toolGroup(t.name))),
+    ];
+    // Sorted by name whatever the order remembered, so the tool list is the same every time.
+    expect(names(rememberedTools(plan, ["sheets", "crm", "gone"], () => 100))).toEqual([
+      "crm",
+      "sheets",
+    ]);
+    // A budget of tokens: the most recent groups win, an older one that doesn't fit waits.
+    expect(
+      names(rememberedTools(plan, ["mail", "crm", "sheets"], () => REMEMBERED_TOOL_TOKENS / 2)),
+    ).toEqual(["crm", "mail"]);
+    expect(rememberedTools(plan, [], () => 1)).toEqual([]);
+    expect(mergeToolGroups(["crm", "mail"], ["mail", "sheets"])).toEqual(["mail", "sheets", "crm"]);
+    expect(mergeToolGroups(["crm"], ["bad name!", "mcp.github"])).toEqual(["mcp.github", "crm"]);
+  });
+
+  it("sends every tool when the bot has few", async () => {
+    const gateway = new ReplayGateway(fixtures);
+    const botId = await makeBot();
+    const { runId } = await startRun(botId, "Hey, what is my favorite color?");
+    await runAgent(runId, deps(gateway, { tools: manyTools(), lazyToolsThreshold: 0 }));
+    const req = gateway.requests.find((r) =>
+      r.messages.at(-1)?.content.includes("what is my favorite color"),
+    );
+    expect(req?.tools?.some((t) => t.name === "crm__action_1")).toBe(true);
+    expect(req?.tools?.some((t) => t.name === "tools__load")).toBe(false);
+  });
+});
+
+describe("run tracing (D-107)", () => {
+  const exporter = new InMemorySpanExporter();
+  beforeAll(() => {
+    const provider = new TracerProvider({
+      idGenerator: forcedIds,
+      spanProcessors: [new SimpleSpanProcessor({ exporter })],
+    });
+    trace.setGlobalTracerProvider(provider);
+  });
+
+  it("emits one trace per run: the run span, model steps and tool calls, with no prompt text", async () => {
+    exporter.reset();
+    const gateway = new ReplayGateway(fixtures);
+    const botId = await makeBot();
+    const { runId } = await startRun(botId, "Please remember my favorite color is teal");
+    expect(await runAgent(runId, deps(gateway))).toEqual({ status: "completed" });
+    const spans = exporter
+      .getFinishedSpans()
+      .filter((s) => s.spanContext().traceId === runTraceId(runId));
+    const run = spans.find((s) => s.name.startsWith("invoke_agent"));
+    expect(run?.spanContext().spanId).toBe(runSpanId(runId, "run"));
+    expect(run?.attributes["casama.run.status"]).toBe("completed");
+    expect(Number(run?.attributes["gen_ai.usage.input_tokens"])).toBeGreaterThan(0);
+    const chats = spans.filter((s) => s.attributes["gen_ai.operation.name"] === "chat");
+    expect(chats.length).toBeGreaterThanOrEqual(2);
+    for (const c of chats) expect(c.parentSpanContext?.spanId).toBe(runSpanId(runId, "run"));
+    expect(chats[0]?.attributes["gen_ai.usage.input_tokens"]).toBe(10_000);
+    expect(typeof chats[0]?.attributes["casama.cost_usd"]).toBe("number");
+    const tool = spans.find((s) => s.attributes["gen_ai.tool.name"] === "memory.write");
+    expect(tool?.attributes["casama.tool.outcome"]).toBe("ok");
+    expect(tool?.attributes["casama.tool.risk"]).toBeDefined();
+    const all = JSON.stringify(spans.map((s) => ({ n: s.name, a: s.attributes, e: s.events })));
+    expect(all).not.toMatch(/teal/i);
+    const [row] = await tdb.admin<
+      { trace_id: string }[]
+    >`select trace_id from public.runs where id = ${runId}`;
+    expect(row?.trace_id).toBe(runTraceId(runId));
+  });
+
+  it("logs every model attempt to Langfuse with secrets redacted, unless the workspace opts out", async () => {
+    const batches: Array<{ batch: Array<{ type: string; body: Record<string, unknown> }> }> = [];
+    const langfuse = new LangfuseSink({
+      baseUrl: "http://langfuse.test",
+      publicKey: "pk",
+      secretKey: "sk",
+      fetch: (async (_u: string, init: RequestInit) => {
+        batches.push(JSON.parse(String(init.body)));
+        return new Response("{}");
+      }) as typeof fetch,
+    });
+    const gateway = new ReplayGateway(fixtures);
+    const botId = await makeBot();
+    const { runId } = await startRun(
+      botId,
+      `My key is ${SECRET}, remember my favorite color is teal`,
+    );
+    await runAgent(runId, deps(gateway, { langfuse }));
+    await new Promise((r) => setTimeout(r, 50));
+    const gens = batches.flatMap((b) => b.batch).filter((e) => e.type === "generation-create");
+    expect(gens.length).toBeGreaterThanOrEqual(2);
+    expect(gens[0]?.body.traceId).toBe(runTraceId(runId));
+    expect(JSON.stringify(batches)).not.toContain(SECRET);
+
+    batches.length = 0;
+    await tdb.admin`update public.organizations set llm_tracing = false where id = ${orgId}`;
+    const second = await startRun(botId, "Hey, what is my favorite color?");
+    await runAgent(second.runId, deps(gateway, { langfuse }));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(batches).toEqual([]);
+    await tdb.admin`update public.organizations set llm_tracing = true where id = ${orgId}`;
+  });
+});
+
+describe("About you (D-169)", () => {
+  const aboutFixtures: FixtureFile[] = [
+    {
+      name: "about-you",
+      turns: [
+        {
+          when: { systemIncludes: "extract lasting memories", lastUserIncludes: "two kids" },
+          events: [
+            {
+              type: "text",
+              text: '{"memories":[{"kind":"fact","about":"person","content":"Has two kids.","importance":0.7},{"kind":"fact","about":"work","content":"The bakery launch is in May.","importance":0.6}]}',
+            },
+            finish(1),
+          ],
+        },
+        {
+          when: { systemIncludes: "extract lasting memories" },
+          events: [{ type: "text", text: '{"memories":[]}' }, finish(1)],
+        },
+        { when: { lastRole: "user" }, events: [{ type: "text", text: "Got it." }, finish()] },
+      ],
+    },
+  ];
+
+  it("reads the person's profile, keeps person facts out of the bot's memory, and respects team spaces", async () => {
+    await tdb.admin`update public.profiles set preferred_name = 'Sam', pronouns = 'they/them' where user_id = ${userId}`;
+    await tdb.admin`insert into public.user_about (user_id, about, reply_style)
+      values (${userId}, 'Runs a small bakery.', 'Short answers, no emoji.')`;
+    const gateway = new ReplayGateway(aboutFixtures);
+
+    // A personal space (the person is its only member): everything applies, and facts are learned.
+    const botId = await makeBot();
+    const first = await startRun(botId, "I have two kids and the bakery launch is in May");
+    expect(await runAgent(first.runId, deps(gateway))).toEqual({ status: "completed" });
+    const facts = await tdb.admin<{ content: string; source_bot_id: string }[]>`
+      select content, source_bot_id from public.user_facts where user_id = ${userId}`;
+    expect(facts.map((f) => f.content)).toEqual(["Has two kids."]);
+    expect(facts[0]?.source_bot_id).toBe(botId);
+    const mems = await tdb.admin<{ content: string }[]>`
+      select content from public.memories where bot_id = ${botId}`;
+    expect(mems.map((m) => m.content)).toEqual(["The bakery launch is in May."]);
+    const written = (await events(first.runId)).filter((e) => e.type === "memory.written");
+    expect(written.some((e) => e.payload.scope === "profile")).toBe(true);
+    expect(JSON.stringify(written)).not.toContain("two kids");
+
+    const second = await startRun(botId, "What should I plan this week?");
+    await runAgent(second.runId, deps(gateway));
+    const personal = gateway.requests
+      .find((r) => r.messages.at(-1)?.content.includes("plan this week"))
+      ?.system.join("\n");
+    expect(personal).toContain("You're talking with Sam (pronouns: they/them)");
+    expect(personal).toContain("Short answers, no emoji.");
+    expect(personal).toContain("Runs a small bakery.");
+    expect(personal).toContain("- Has two kids.");
+
+    // A team space: name and reply style only, until the person turns it on there.
+    const other = await createAuthUser(tdb.admin, "teammate@example.com");
+    const [team] = await tdb.admin<{ id: string }[]>`
+      insert into public.organizations (name, slug) values ('Team', 'about-team') returning id`;
+    const teamId = team!.id;
+    await tdb.admin`insert into public.memberships (org_id, user_id, role)
+      values (${teamId}, ${userId}, 'owner'), (${teamId}, ${other.id}, 'member')`;
+    const [cred] = await tdb.admin<{ id: string }[]>`
+      insert into public.model_credentials (org_id, provider, label, vault_secret_id)
+      values (${teamId}, 'openrouter', 'Main', vault.create_secret(${SECRET})) returning id`;
+    const policy = {
+      primary: { credential_id: cred!.id, model: "fixture-primary" },
+      cheap: { credential_id: cred!.id, model: "fixture-cheap" },
+    };
+    const [tb] = await tdb.admin<{ id: string }[]>`
+      insert into public.bots (org_id, created_by, name, persona_md, model_policy, budget)
+      values (${teamId}, ${userId}, 'Teamy', '', ${tdb.admin.json(policy)}, ${tdb.admin.json({ per_run_usd: 5, daily_usd: 50 })})
+      returning id`;
+    const ask = async (text: string) => {
+      const [c] = await tdb.admin<{ id: string }[]>`
+        insert into public.conversations (org_id, bot_id) values (${teamId}, ${tb!.id}) returning id`;
+      const [run] = await tdb.admin<{ id: string }[]>`
+        insert into public.runs (org_id, bot_id, conversation_id, created_by) values (${teamId}, ${tb!.id}, ${c!.id}, ${userId}) returning id`;
+      await tdb.admin`insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
+        values (${teamId}, ${c!.id}, 'user', ${userId}, ${tdb.admin.json([{ type: "text", text }])}, ${run!.id})`;
+      await runAgent(run!.id, deps(gateway));
+      return gateway.requests
+        .find((r) => r.messages.at(-1)?.content.includes(text))
+        ?.system.join("\n");
+    };
+    const teamPrompt = await ask("Team question one");
+    expect(teamPrompt).toContain("You're talking with Sam");
+    expect(teamPrompt).toContain("Short answers, no emoji.");
+    expect(teamPrompt).not.toContain("bakery");
+    expect(teamPrompt).not.toContain("two kids");
+
+    await tdb.admin`insert into public.profile_spaces (user_id, org_id, share_about) values (${userId}, ${teamId}, true)`;
+    expect(await ask("Team question two")).toContain("- Has two kids.");
+
+    // Learning off: facts about the person are dropped, not moved into the bot's memory.
+    await tdb.admin`delete from public.user_facts where user_id = ${userId}`;
+    await tdb.admin`update public.user_about set learn = false where user_id = ${userId}`;
+    const third = await startRun(botId, "Again: I have two kids");
+    await runAgent(third.runId, deps(gateway));
+    expect(
+      (await tdb.admin`select 1 from public.user_facts where user_id = ${userId}`).length,
+    ).toBe(0);
+    expect(
+      (
+        await tdb.admin`select 1 from public.memories where bot_id = ${botId} and content ilike '%kids%'`
+      ).length,
+    ).toBe(0);
+    await tdb.admin`delete from public.user_about where user_id = ${userId}`;
+    await tdb.admin`update public.profiles set preferred_name = null, pronouns = null where user_id = ${userId}`;
+  });
+
+  it("memory.write with about: person saves to the profile", async () => {
+    const tools = builtinTools({
+      db: h.db,
+      memory: async () => new PostgresMemoryStore(h.db, hashEmbedder()),
+    });
+    const def = tools.get("memory.write");
+    const emitted: Array<Record<string, unknown>> = [];
+    const botId = await makeBot();
+    const ctx = {
+      runId: (await startRun(botId, "x")).runId,
+      botId,
+      orgId,
+      actingUserId: userId,
+      output: async () => {},
+      emit: async (_t: string, p: Record<string, unknown>) => {
+        emitted.push(p);
+      },
+    };
+    const r = await def!.execute(
+      { content: "Prefers tea over coffee.", kind: "preference", about: "person" } as never,
+      ctx,
+    );
+    expect(r.content).toBe("Saved to their profile.");
+    expect(emitted[0]?.scope).toBe("profile");
+    const again = await def!.execute(
+      { content: "prefers tea over coffee", about: "person" } as never,
+      ctx,
+    );
+    expect(again.content).toBe("Already in their profile.");
+    await expect(
+      def!.execute({ content: "x", about: "person" } as never, { ...ctx, actingUserId: null }),
+    ).rejects.toThrow(/isn't for a person/);
+    await tdb.admin`delete from public.user_facts where user_id = ${userId}`;
+  });
+});

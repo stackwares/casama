@@ -1,0 +1,262 @@
+name: Publish images
+# Publishes Casama's images to GHCR, like scripts/publish-images.sh but on GitHub's machines:
+# each architecture builds natively (ubuntu-24.04 for amd64, ubuntu-24.04-arm for arm64, no QEMU)
+# with a layer cache, so nothing goes up from a laptop. Manual only: publishing is a release.
+#   gh workflow run "Publish images" -f ref=main -f only=server
+# Tags match the script: <short sha> (12), edge, and latest unless latest=false. With latest, the
+# images left out of `only` get the new <short sha> on their current latest build, and the git tag
+# "selfhost" moves to the commit (the desktop app downloads that commit and pulls its images).
+# GITHUB_TOKEN pushes only to packages that give this repository write access: on each package,
+# Package settings -> Manage Actions access -> add stackwares/casama with the Write role.
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit or branch to publish (must be on main when latest is on)
+        default: main
+      only:
+        description: "Comma-separated images (server,supervisor,egress-proxy,turn,connector,backup,computer-headless,computer-desktop); empty = all"
+        default: ""
+      latest:
+        description: Also tag latest and move the selfhost git tag
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: publish-images
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io/stackwares/casama
+
+jobs:
+  prep:
+    runs-on: ubuntu-24.04
+    outputs:
+      sha: ${{ steps.r.outputs.sha }}
+      short: ${{ steps.r.outputs.short }}
+      build: ${{ steps.r.outputs.build }}
+      merge: ${{ steps.r.outputs.merge }}
+      desktop: ${{ steps.r.outputs.desktop }}
+      headless_built: ${{ steps.r.outputs.headless_built }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+      - id: r
+        env:
+          ONLY: ${{ inputs.only }}
+          LATEST: ${{ inputs.latest }}
+        run: |
+          sha=$(git rev-parse HEAD)
+          if [[ "$LATEST" == true ]] && ! git merge-base --is-ancestor "$sha" origin/main; then
+            echo "::error::$sha is not on main; publish it with latest=false"; exit 1
+          fi
+          wanted() { [[ -z "$ONLY" ]] || [[ ",${ONLY// /}," == *",$1,"* ]]; }
+          all="server:apps/server/Dockerfile supervisor:apps/supervisor/Dockerfile
+            egress-proxy:infra/egress-proxy/Dockerfile turn:infra/turn/Dockerfile
+            connector:infra/connector/Dockerfile backup:infra/backup/Dockerfile
+            computer-headless:infra/images/computer/Dockerfile.headless"
+          build='[]'; merge='[]'
+          for e in $all; do
+            name=${e%%:*}; file=${e#*:}
+            wanted "$name" || continue
+            [[ -f "$file" ]] || { echo "skip $name: no $file"; continue; }
+            merge=$(jq -c --arg n "$name" '. + [$n]' <<<"$merge")
+            for arch in amd64 arm64; do
+              runner=ubuntu-24.04; [[ $arch == arm64 ]] && runner=ubuntu-24.04-arm
+              build=$(jq -c --arg n "$name" --arg f "$file" --arg a "$arch" --arg r "$runner" \
+                '. + [{name:$n,file:$f,arch:$a,runner:$r}]' <<<"$build")
+            done
+          done
+          desktop=false; wanted computer-desktop && desktop=true
+          headless_built=false; wanted computer-headless && headless_built=true
+          {
+            echo "sha=$sha"; echo "short=${sha:0:12}"
+            echo "build=$build"; echo "merge=$merge"
+            echo "desktop=$desktop"; echo "headless_built=$headless_built"
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: prep
+    if: needs.prep.outputs.build != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.prep.outputs.build) }}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prep.outputs.sha }}
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: b
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ${{ matrix.file }}
+          platforms: linux/${{ matrix.arch }}
+          labels: |
+            org.opencontainers.image.revision=${{ needs.prep.outputs.sha }}
+            org.opencontainers.image.licenses=AGPL-3.0-only
+            org.opencontainers.image.source=https://github.com/stackwares/casama
+            org.opencontainers.image.title=casama-${{ matrix.name }}
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ matrix.name }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=${{ matrix.name }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}-${{ matrix.arch }}
+      - run: mkdir -p digests && touch "digests/${DIGEST#sha256:}"
+        env:
+          DIGEST: ${{ steps.b.outputs.digest }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.name }}-${{ matrix.arch }}
+          path: digests/*
+          retention-days: 1
+
+  merge:
+    needs: [prep, build]
+    if: needs.prep.outputs.merge != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        name: ${{ fromJSON(needs.prep.outputs.merge) }}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: digest-${{ matrix.name }}-*
+          path: digests
+          merge-multiple: true
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Tag the multi-arch image
+        env:
+          IMG: ${{ env.REGISTRY }}/${{ matrix.name }}
+          SHORT: ${{ needs.prep.outputs.short }}
+          LATEST: ${{ inputs.latest }}
+        run: |
+          tags=(-t "$IMG:$SHORT" -t "$IMG:edge")
+          [[ "$LATEST" == true ]] && tags+=(-t "$IMG:latest")
+          docker buildx imagetools create "${tags[@]}" $(printf "$IMG@sha256:%s " $(ls digests))
+
+  # The desktop image builds on the headless one (Neko is compiled in it, D-054), so it waits for
+  # the headless tags: this commit's when headless was built, otherwise its current latest.
+  desktop:
+    needs: [prep, merge]
+    if: always() && needs.prep.outputs.desktop == 'true' && (needs.merge.result == 'success' || needs.merge.result == 'skipped')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: amd64, runner: ubuntu-24.04 }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prep.outputs.sha }}
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: b
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: infra/images/computer/Dockerfile.desktop
+          platforms: linux/${{ matrix.arch }}
+          build-args: BASE=${{ env.REGISTRY }}/computer-headless:${{ needs.prep.outputs.headless_built == 'true' && needs.prep.outputs.short || 'latest' }}
+          labels: |
+            org.opencontainers.image.revision=${{ needs.prep.outputs.sha }}
+            org.opencontainers.image.licenses=AGPL-3.0-only
+            org.opencontainers.image.source=https://github.com/stackwares/casama
+            org.opencontainers.image.title=casama-computer-desktop
+          outputs: type=image,name=${{ env.REGISTRY }}/computer-desktop,push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=gha,scope=computer-desktop-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=computer-desktop-${{ matrix.arch }}
+      - run: mkdir -p digests && touch "digests/${DIGEST#sha256:}"
+        env:
+          DIGEST: ${{ steps.b.outputs.digest }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: digest-computer-desktop-${{ matrix.arch }}
+          path: digests/*
+          retention-days: 1
+
+  desktop-merge:
+    needs: [prep, desktop]
+    if: always() && needs.desktop.result == 'success'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: digest-computer-desktop-*
+          path: digests
+          merge-multiple: true
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - env:
+          IMG: ${{ env.REGISTRY }}/computer-desktop
+          SHORT: ${{ needs.prep.outputs.short }}
+          LATEST: ${{ inputs.latest }}
+        run: |
+          tags=(-t "$IMG:$SHORT" -t "$IMG:edge")
+          [[ "$LATEST" == true ]] && tags+=(-t "$IMG:latest")
+          docker buildx imagetools create "${tags[@]}" $(printf "$IMG@sha256:%s " $(ls digests))
+
+  # Every image carries every published <short sha>, so one tag pins a whole install; then the
+  # selfhost git tag moves. Runs only when everything that was asked for published.
+  finish:
+    needs: [prep, merge, desktop-merge]
+    if: >-
+      always() && inputs.latest &&
+      (needs.merge.result == 'success' || needs.merge.result == 'skipped') &&
+      (needs.desktop-merge.result == 'success' || needs.desktop-merge.result == 'skipped')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prep.outputs.sha }}
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Give the images left out this commit's tags
+        if: inputs.only != ''
+        env:
+          ONLY: ${{ inputs.only }}
+          SHORT: ${{ needs.prep.outputs.short }}
+        run: |
+          for name in server supervisor egress-proxy turn connector backup computer-headless computer-desktop; do
+            [[ ",${ONLY// /}," == *",$name,"* ]] && continue
+            echo "$name: latest -> $SHORT"
+            docker buildx imagetools create -t "$REGISTRY/$name:$SHORT" -t "$REGISTRY/$name:edge" "$REGISTRY/$name:latest"
+          done
+      - name: Move the selfhost tag
+        env:
+          SHA: ${{ needs.prep.outputs.sha }}
+        run: |
+          git tag -f selfhost "$SHA"
+          git push -f origin refs/tags/selfhost

@@ -1,0 +1,206 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "id": "dev-kit",
+      "type": "plugin",
+      "name": "Dev kit",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "developer",
+        "github",
+        "code-review"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-17",
+      "updated": "2026-11-17",
+      "sha256": "2314bfabd916cd5096bdc3a2ab029fc7c0a1b29fb0664767c9f8a87158ea7272",
+      "size": 1088,
+      "description": "A code reviewer bot: reviews pull requests, helps debug, and a weekday digest of open pull requests.",
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-17",
+          "note": "A small tool server that reads public pull requests and shows them as cards."
+        }
+      ],
+      "access": {
+        "reads": [
+          "GitHub pull requests",
+          "public GitHub repositories"
+        ],
+        "writes": [
+          "comments on pull requests"
+        ],
+        "credits": "medium"
+      },
+      "document": {
+        "description": "A code reviewer bot: reviews pull requests, helps debug, and a weekday digest of open pull requests.",
+        "url": "https://github.com/stackwares/casama/tree/main/packs/dev-kit",
+        "commit": "882b4d02f2efcbc2229704bd6a819d5d8b821012",
+        "icon": "git-pull-request",
+        "adds": [
+          "A code reviewer bot",
+          "Pull request reviews and debugging help",
+          "A weekday digest of open pull requests",
+          "Pull requests shown as cards"
+        ]
+      },
+      "files": [
+        "plugins/dev-kit/item.json",
+        "plugins/dev-kit/plugin.json"
+      ]
+    },
+    {
+      "id": "founder-kit",
+      "type": "plugin",
+      "name": "Founder kit",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "founder",
+        "startup",
+        "planning"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-17",
+      "updated": "2026-11-17",
+      "sha256": "ab7ed6fa3e3014002e3417d05a7a47bc008b242ce3a15b9bb3baf00113e8ce37",
+      "size": 843,
+      "description": "A chief of staff for a small company: investor updates, decision memos, specs, a morning plan and a Friday review.",
+      "access": {
+        "reads": [
+          "notes",
+          "calendar"
+        ],
+        "writes": [
+          "writes documents"
+        ],
+        "credits": "medium"
+      },
+      "document": {
+        "description": "A chief of staff for a small company: investor updates, decision memos, specs, a morning plan and a Friday review.",
+        "url": "https://github.com/stackwares/casama/tree/main/packs/founder-kit",
+        "commit": "ca3813c705e42aaf297493a2d889207c79cf657b",
+        "icon": "rocket",
+        "adds": [
+          "A chief of staff bot",
+          "Investor updates, decision memos and specs",
+          "A morning plan and a Friday review"
+        ]
+      },
+      "files": [
+        "plugins/founder-kit/item.json",
+        "plugins/founder-kit/plugin.json"
+      ]
+    },
+    {
+      "id": "hello-casama",
+      "type": "plugin",
+      "name": "Hello Casama",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "example",
+        "notes"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "e351f9bcda604ff8c0190caf38be0d90dfed0963f55252e5e59d2ca3d14a7954",
+      "size": 759,
+      "description": "A small example plugin: a stand-up skill and a notes server that asks for one setting.",
+      "access": {
+        "writes": [
+          "runs a notes server"
+        ],
+        "runs_code": true,
+        "computer": true,
+        "credits": "low"
+      },
+      "document": {
+        "description": "A small example plugin: a stand-up skill and a notes server that asks for one setting.",
+        "url": "https://github.com/stackwares/casama/tree/main/examples/hello-plugin",
+        "commit": "6efc18250f69b9c2938b689076384237324136e3",
+        "icon": "puzzle",
+        "adds": [
+          "A stand-up skill",
+          "A notes server on the bot's computer",
+          "Asks for a note signature"
+        ]
+      },
+      "files": [
+        "plugins/hello-casama/item.json",
+        "plugins/hello-casama/plugin.json"
+      ]
+    },
+    {
+      "id": "meetings-handled",
+      "type": "plugin",
+      "name": "Meetings handled",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "meetings",
+        "calendar",
+        "notes"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-17",
+      "updated": "2026-11-17",
+      "sha256": "66ac7e9bd487f0cee45476e1bde388d20453c87cf8c7c7f32cc822c91539930c",
+      "size": 856,
+      "description": "A meeting assistant: prepares tomorrow's meetings, files notes with decisions and action items, and follows up.",
+      "access": {
+        "reads": [
+          "calendar",
+          "meeting notes"
+        ],
+        "writes": [
+          "drafts follow-ups"
+        ],
+        "credits": "medium"
+      },
+      "document": {
+        "description": "A meeting assistant: prepares tomorrow's meetings, files notes with decisions and action items, and follows up.",
+        "url": "https://github.com/stackwares/casama/tree/main/packs/meetings-handled",
+        "commit": "ca3813c705e42aaf297493a2d889207c79cf657b",
+        "icon": "users",
+        "adds": [
+          "A meeting assistant bot",
+          "Prep for tomorrow's meetings",
+          "Notes with action items and follow-up drafts"
+        ]
+      },
+      "files": [
+        "plugins/meetings-handled/item.json",
+        "plugins/meetings-handled/plugin.json"
+      ]
+    }
+  ]
+}

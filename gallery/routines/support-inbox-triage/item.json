@@ -1,0 +1,45 @@
+{
+  "name": "Support inbox triage",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "support",
+    "email",
+    "customers"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "email",
+      "the web",
+      "memory"
+    ],
+    "writes": [
+      "saves draft replies in your mail"
+    ],
+    "credits": "medium"
+  },
+  "needs": {
+    "apps": [
+      "gmail"
+    ],
+    "skills": [
+      "inbox-triage"
+    ]
+  },
+  "inputs": [
+    {
+      "key": "docs",
+      "label": "Where are your help docs?",
+      "type": "text",
+      "default": "the help docs in your memory",
+      "help": "A web address, such as help.example.com."
+    }
+  ]
+}

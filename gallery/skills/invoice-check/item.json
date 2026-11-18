@@ -1,0 +1,28 @@
+{
+  "name": "Invoice check",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "money"
+  ],
+  "category": "money",
+  "icon": "receipt",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Check this invoice against the quote",
+    "Is anything on this bill charged twice?",
+    "Compare this invoice to the contract and list the differences"
+  ],
+  "access": {
+    "reads": [
+      "invoices and contracts you share"
+    ],
+    "credits": "low"
+  }
+}

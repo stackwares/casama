@@ -1,0 +1,40 @@
+{
+  "format": "casama.pack",
+  "version": 1,
+  "icon": "git-pull-request",
+  "summary": "A code reviewer bot for GitHub: pull request reviews, debugging help and a weekday digest of open pull requests.",
+  "inputs": [
+    {
+      "key": "repo",
+      "label": "The main repository (owner/name)",
+      "type": "text",
+      "default": "your repository"
+    },
+    {
+      "key": "time",
+      "label": "What time should it arrive?",
+      "type": "time",
+      "default": "08:30",
+      "help": "In your time zone."
+    }
+  ],
+  "needs": {
+    "apps": ["github"]
+  },
+  "includes": [
+    {
+      "type": "skill",
+      "id": "code-review"
+    },
+    {
+      "type": "skill",
+      "id": "systematic-debugging"
+    }
+  ],
+  "workspace_skills": [],
+  "examples": [
+    "Review my latest pull request",
+    "Why is this test failing?",
+    "What's waiting for review?"
+  ]
+}

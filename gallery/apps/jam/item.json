@@ -1,0 +1,25 @@
+{
+  "name": "Jam",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "bugs"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Read this Jam bug report and tell me what went wrong",
+    "What do the console logs in this Jam show?",
+    "Turn this Jam into a ticket with repro steps"
+  ],
+  "access": {
+    "reads": [
+      "Jam bug reports"
+    ],
+    "credits": "low"
+  }
+}

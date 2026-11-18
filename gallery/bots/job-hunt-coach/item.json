@@ -1,0 +1,21 @@
+{
+  "name": "Job hunt coach",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "life",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "Review my CV for a product manager role",
+    "Find roles that fit my experience",
+    "Run a practice interview with me"
+  ]
+}

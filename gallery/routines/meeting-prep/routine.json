@@ -1,0 +1,7 @@
+{
+  "description": "Each weekday morning: a short brief for every meeting today, with the people, the goal and questions to ask.",
+  "category": "work",
+  "icon": "calendar-clock",
+  "instructions_md": "Prepare me for today's meetings. For each event on my calendar today that has other guests, give me: who's coming and what you know about them from memory and past mail (if mail is connected), the goal of the meeting, what's still open from last time, and two or three questions to ask. Six lines at most for each meeting. Skip focus blocks and events with no guests. Don't message the guests or change any event. If there are no meetings today, say so in one line.",
+  "schedule_cron": "{{time.minute}} {{time.hour}} * * 1-5"
+}

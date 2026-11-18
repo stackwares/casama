@@ -1,0 +1,27 @@
+# Written by build.mjs from content/ and data/ (scripts/deploy-web.sh and scripts/serve-web.py run it).
+/alternatives/
+/compare/
+/use-cases/
+/learn/
+/blog/
+/changelog/
+/changelog.html
+/changelog.md
+/pricing.html
+/pricing.md
+/self-hosted.html
+/self-hosted.md
+/open-source.html
+/open-source.md
+/security.html
+/security.md
+/about.html
+/about.md
+/bots.html
+/bots.md
+/help.html
+/help.md
+/contact.html
+/contact.md
+/delete-account.html
+/delete-account.md

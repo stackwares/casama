@@ -1,0 +1,10 @@
+{
+  "description": "Read Jam bug reports with their console logs, network requests and steps.",
+  "category": "developer",
+  "color": "202020",
+  "homepage": "https://jam.dev",
+  "url": "https://mcp.jam.dev/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Read a bug report", "See console and network logs", "Follow repro steps"]
+}

@@ -1,0 +1,8 @@
+{
+  "cases": [
+    {
+      "prompt": "Sort these: 1) Boss: 'Need the Q3 numbers by noon.' 2) Newsletter: '10 productivity tips'. 3) Client: 'Can we move Thursday's call?' 4) Promo: '50% off shoes'.",
+      "expect": "Boss email is reply now; client is reply now or soon; newsletter is read later or ignore; promo is ignore. One-line reason each."
+    }
+  ]
+}

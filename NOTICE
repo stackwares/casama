@@ -1,0 +1,16 @@
+Casama
+Copyright 2026 Stackwares
+
+This product includes software developed by Stackwares (https://casama.ai).
+
+Casama is licensed under the GNU Affero General Public License, version 3 (LICENSE). The SDKs,
+CLI, MCP server, plugin kit, examples, docs and the files marked "SPDX-License-Identifier:
+Apache-2.0" are licensed under the Apache License, Version 2.0 (LICENSES/Apache-2.0.txt). The "ee/"
+directory is licensed under the Casama Enterprise License (ee/LICENSE). See LICENSING.md.
+
+Third-party software included or used by Casama, and its licenses, is listed in
+THIRD_PARTY_NOTICES.md. Skills adapted from other projects keep their license file in their folder
+under skills/.
+
+"Casama" and the Casama logo are trademarks of Stackwares. Neither license grants
+permission to use them (AGPL-3.0 section 7(e), Apache-2.0 section 6); see TRADEMARKS.md.

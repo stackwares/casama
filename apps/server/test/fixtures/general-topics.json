@@ -1,0 +1,67 @@
+{
+  "name": "general-topics",
+  "turns": [
+    {
+      "when": { "systemIncludes": "extract lasting memories" },
+      "events": [
+        { "type": "text", "text": "{\"memories\":[]}" },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 10, "outputTokens": 5 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastUserIncludes": "Write my morning brief" },
+      "events": [
+        { "type": "text", "text": "Morning! Two meetings today and nothing urgent." },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 100, "outputTokens": 10 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastUserIncludes": "Please do this now: Book a ride" },
+      "events": [
+        {
+          "type": "text",
+          "text": "**Booked** an Uber for 7:15 tonight. The driver's details are in your email."
+        },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 100, "outputTokens": 20 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastUserIncludes": "make it 7:30" },
+      "events": [
+        { "type": "text", "text": "Moved it to 7:30." },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 100, "outputTokens": 5 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "events": [
+        { "type": "text", "text": "Sure." },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 50, "outputTokens": 2 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

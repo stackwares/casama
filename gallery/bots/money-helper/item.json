@@ -1,0 +1,21 @@
+{
+  "name": "Budget",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "life",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-09",
+  "examples": [
+    "Categorise this bank export",
+    "Build a monthly budget from my income and bills",
+    "Explain how an index fund works"
+  ]
+}

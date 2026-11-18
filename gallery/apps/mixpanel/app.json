@@ -1,0 +1,10 @@
+{
+  "description": "Ask questions about your product analytics in Mixpanel.",
+  "category": "data",
+  "color": "7856FF",
+  "homepage": "https://mixpanel.com",
+  "url": "https://mcp.mixpanel.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Query events and funnels", "See reports", "Look up users"]
+}

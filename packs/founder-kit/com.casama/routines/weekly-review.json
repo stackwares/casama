@@ -1,0 +1,8 @@
+{
+  "name": "Friday review",
+  "description": "Every Friday afternoon: what got done, what slipped, and next week's three priorities.",
+  "category": "work",
+  "icon": "calendar-check",
+  "instructions_md": "Write my weekly review for {{company}}.\n\n1. What got done this week, from our chats, tasks and memory.\n2. What slipped and why, one line each.\n3. The three most important things for next week.\n\nKeep it under 200 words.",
+  "schedule_cron": "0 16 * * 5"
+}

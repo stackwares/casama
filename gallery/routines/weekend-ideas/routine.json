@@ -1,0 +1,7 @@
+{
+  "description": "Thursday afternoons: things to do in your city this weekend that fit what you like, with the weather and links.",
+  "category": "life",
+  "icon": "map",
+  "instructions_md": "Find things to do in {{city}} this weekend. Look for events, markets, exhibitions, concerts, outdoor activities and new places to eat, and check the weekend's weather forecast. Pick up to six that fit what you know about me and who I do things with from memory, with a mix of free and paid. For each: what it is, when and where, the price if it's given, why it fits and a link. Put indoor options first if it's going to rain. Don't book or buy anything. If nothing fits, say so and suggest one thing to do at home.",
+  "schedule_cron": "0 16 * * 4"
+}

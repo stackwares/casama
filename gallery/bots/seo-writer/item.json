@@ -1,0 +1,21 @@
+{
+  "name": "SEO writer",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "create",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "Find article ideas for my site",
+    "Outline an article that answers this question",
+    "Improve the title and description of this page"
+  ]
+}

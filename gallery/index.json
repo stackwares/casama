@@ -1,0 +1,6084 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "id": "amber",
+      "type": "scheme",
+      "name": "Amber",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "yellow",
+        "warm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "7f9e7635078d7f736411f413793e95df19664e9f17c82f0abd9e300fbbad4900",
+      "size": 448,
+      "document": {
+        "light": {
+          "seed": "#856000",
+          "background": "#FFFFFF",
+          "onBackground": "#1F1D19"
+        },
+        "dark": {
+          "seed": "#FFD25E",
+          "background": "#1C1C1E",
+          "onBackground": "#F5F3EF"
+        }
+      },
+      "files": [
+        "schemes/amber/item.json",
+        "schemes/amber/scheme.json"
+      ]
+    },
+    {
+      "id": "berry",
+      "type": "scheme",
+      "name": "Berry",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "pink",
+        "magenta"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "ea2f129bd8a2cbb4806b6bd5ca11a0a1e033e3343154156bda104dc47e1cc616",
+      "size": 449,
+      "document": {
+        "light": {
+          "seed": "#A3247A",
+          "background": "#FFFFFF",
+          "onBackground": "#201B1F"
+        },
+        "dark": {
+          "seed": "#FFADDD",
+          "background": "#1C1C1E",
+          "onBackground": "#F5F1F4"
+        }
+      },
+      "files": [
+        "schemes/berry/item.json",
+        "schemes/berry/scheme.json"
+      ]
+    },
+    {
+      "id": "coral",
+      "type": "scheme",
+      "name": "Coral",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "red"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-11",
+      "updated": "2026-11-11",
+      "sha256": "16fd2c591a71077403b0fe4b75f9ce7795db1b159a23ac4d5532ff5750e6d517",
+      "size": 445,
+      "document": {
+        "light": {
+          "seed": "#C2412D",
+          "background": "#FFF6F3",
+          "onBackground": "#2E1410"
+        },
+        "dark": {
+          "seed": "#FF9E8A",
+          "background": "#1F0F0C",
+          "onBackground": "#FCE9E4"
+        }
+      },
+      "files": [
+        "schemes/coral/item.json",
+        "schemes/coral/scheme.json"
+      ]
+    },
+    {
+      "id": "ember",
+      "type": "scheme",
+      "name": "Ember",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-11",
+      "updated": "2026-11-11",
+      "sha256": "438cf47e73e10e3547d3dbb406cdef8b552d25a8764298a2efc7e3f2442dd522",
+      "size": 406,
+      "document": {
+        "light": {
+          "seed": "#C4552A",
+          "background": "#FFF8F3",
+          "onBackground": "#2A140C"
+        },
+        "dark": {
+          "seed": "#FFB089",
+          "background": "#2A140C",
+          "onBackground": "#FFF1E8"
+        }
+      },
+      "files": [
+        "schemes/ember/item.json",
+        "schemes/ember/scheme.json"
+      ]
+    },
+    {
+      "id": "fjord",
+      "type": "scheme",
+      "name": "Fjord",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "blue",
+        "cool"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-11",
+      "updated": "2026-11-11",
+      "sha256": "15b311fa1a0690d532849efc93fee39f906ec8f1b337bd07a9bc411074a7d659",
+      "size": 505,
+      "pick": "Cool blues that stay easy on the eyes all day.",
+      "document": {
+        "light": {
+          "seed": "#2F5DA8",
+          "background": "#F3F6FB",
+          "onBackground": "#121B2C"
+        },
+        "dark": {
+          "seed": "#9DBDF5",
+          "background": "#0D1420",
+          "onBackground": "#E3EBF8"
+        }
+      },
+      "files": [
+        "schemes/fjord/item.json",
+        "schemes/fjord/scheme.json"
+      ]
+    },
+    {
+      "id": "forest",
+      "type": "scheme",
+      "name": "Forest",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "green",
+        "deep"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "4d961291de92576105fb4867cc5767f77832d517594dd49de7e220c4545b7ddb",
+      "size": 448,
+      "document": {
+        "light": {
+          "seed": "#24643A",
+          "background": "#FFFFFF",
+          "onBackground": "#1A1E1B"
+        },
+        "dark": {
+          "seed": "#9BDBA8",
+          "background": "#1C1C1E",
+          "onBackground": "#F0F4F1"
+        }
+      },
+      "files": [
+        "schemes/forest/item.json",
+        "schemes/forest/scheme.json"
+      ]
+    },
+    {
+      "id": "indigo",
+      "type": "scheme",
+      "name": "Indigo",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "blue",
+        "deep"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "d6273e83db7b0a03c3e910093f35215dab9f790e3ed098913bcb48ca88007cc4",
+      "size": 447,
+      "document": {
+        "light": {
+          "seed": "#4450C4",
+          "background": "#FFFFFF",
+          "onBackground": "#1B1C21"
+        },
+        "dark": {
+          "seed": "#B5BDFF",
+          "background": "#1C1C1E",
+          "onBackground": "#F1F2F5"
+        }
+      },
+      "files": [
+        "schemes/indigo/item.json",
+        "schemes/indigo/scheme.json"
+      ]
+    },
+    {
+      "id": "ink",
+      "type": "scheme",
+      "name": "Ink",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "neutral",
+        "mono"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-11",
+      "updated": "2026-11-11",
+      "sha256": "45db306c692b72be9983317dc7ec3f53a1b42a6cf2b38fcc07876c94dff4ac3f",
+      "size": 447,
+      "document": {
+        "light": {
+          "seed": "#3A3F47",
+          "background": "#F6F6F5",
+          "onBackground": "#161718"
+        },
+        "dark": {
+          "seed": "#C9CDD4",
+          "background": "#121314",
+          "onBackground": "#ECEDEE"
+        }
+      },
+      "files": [
+        "schemes/ink/item.json",
+        "schemes/ink/scheme.json"
+      ]
+    },
+    {
+      "id": "lagoon",
+      "type": "scheme",
+      "name": "Lagoon",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "teal"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-11",
+      "updated": "2026-11-11",
+      "sha256": "8877bbd980d353526414a8ee923609a91a9507c5f23fe88a3b56dffa408254f4",
+      "size": 467,
+      "pick": "Bright teal for light mode, deep sea for night.",
+      "document": {
+        "light": {
+          "seed": "#0E6E78",
+          "background": "#F4FBFC",
+          "onBackground": "#102226"
+        },
+        "dark": {
+          "seed": "#8FE8E2",
+          "background": "#0C2428",
+          "onBackground": "#E7F6F5"
+        }
+      },
+      "files": [
+        "schemes/lagoon/item.json",
+        "schemes/lagoon/scheme.json"
+      ]
+    },
+    {
+      "id": "lavender",
+      "type": "scheme",
+      "name": "Lavender",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "purple",
+        "soft"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "afd077c89853c113bf2e62e2b00d43fdce07ad3bd0f2bc48e78070a3f982e8de",
+      "size": 451,
+      "document": {
+        "light": {
+          "seed": "#6B57C9",
+          "background": "#FFFFFF",
+          "onBackground": "#1C1B21"
+        },
+        "dark": {
+          "seed": "#C4B8FF",
+          "background": "#1C1C1E",
+          "onBackground": "#F2F1F5"
+        }
+      },
+      "files": [
+        "schemes/lavender/item.json",
+        "schemes/lavender/scheme.json"
+      ]
+    },
+    {
+      "id": "marigold",
+      "type": "scheme",
+      "name": "Marigold",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "yellow"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-11",
+      "updated": "2026-11-11",
+      "sha256": "1d2a04da81dfd0ea070edbc7910820adde019cf43361a8d3ca97a786d737d8ab",
+      "size": 451,
+      "document": {
+        "light": {
+          "seed": "#A35F00",
+          "background": "#FFF8EE",
+          "onBackground": "#2B1D08"
+        },
+        "dark": {
+          "seed": "#FFC266",
+          "background": "#1E1608",
+          "onBackground": "#FBEFDC"
+        }
+      },
+      "files": [
+        "schemes/marigold/item.json",
+        "schemes/marigold/scheme.json"
+      ]
+    },
+    {
+      "id": "mint",
+      "type": "scheme",
+      "name": "Mint",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "green",
+        "fresh"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "441cb4316a47de99d3d9b53af24709daeb30f53e54471cf9c63d907bbe7773ef",
+      "size": 447,
+      "document": {
+        "light": {
+          "seed": "#17794F",
+          "background": "#FFFFFF",
+          "onBackground": "#1A1E1C"
+        },
+        "dark": {
+          "seed": "#8EE8B8",
+          "background": "#1C1C1E",
+          "onBackground": "#F0F4F2"
+        }
+      },
+      "files": [
+        "schemes/mint/item.json",
+        "schemes/mint/scheme.json"
+      ]
+    },
+    {
+      "id": "mocha",
+      "type": "scheme",
+      "name": "Mocha",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "brown",
+        "warm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "5e32f0470fc4505b6e00c552e19378cd0f1c09f7a104e908e825c41d4367e63a",
+      "size": 447,
+      "document": {
+        "light": {
+          "seed": "#7A4F3A",
+          "background": "#FFFFFF",
+          "onBackground": "#201C1A"
+        },
+        "dark": {
+          "seed": "#E3BCA6",
+          "background": "#1C1C1E",
+          "onBackground": "#F5F2F0"
+        }
+      },
+      "files": [
+        "schemes/mocha/item.json",
+        "schemes/mocha/scheme.json"
+      ]
+    },
+    {
+      "id": "mono",
+      "type": "scheme",
+      "name": "Mono",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "neutral",
+        "grey"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "8a92afb629d0ee7c179b0a9c41bb00ba6570b39ab5affc10618f252496f853d4",
+      "size": 448,
+      "document": {
+        "light": {
+          "seed": "#1F1F1F",
+          "background": "#FFFFFF",
+          "onBackground": "#1A1A1A"
+        },
+        "dark": {
+          "seed": "#EDEDED",
+          "background": "#1C1C1C",
+          "onBackground": "#F2F2F2"
+        }
+      },
+      "files": [
+        "schemes/mono/item.json",
+        "schemes/mono/scheme.json"
+      ]
+    },
+    {
+      "id": "moss",
+      "type": "scheme",
+      "name": "Moss",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "green",
+        "calm"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-11",
+      "updated": "2026-11-11",
+      "sha256": "f77e72d4d1fd630f5dd455cdb522fbbc53e2912afe54d36a69d4c722089f1c2d",
+      "size": 515,
+      "pick": "Soft greens with gentle contrast, made for long reading.",
+      "document": {
+        "light": {
+          "seed": "#3F6B2A",
+          "background": "#F5F8F1",
+          "onBackground": "#1B2414"
+        },
+        "dark": {
+          "seed": "#A8D88A",
+          "background": "#121A0E",
+          "onBackground": "#E6F0DE"
+        }
+      },
+      "files": [
+        "schemes/moss/item.json",
+        "schemes/moss/scheme.json"
+      ]
+    },
+    {
+      "id": "olive",
+      "type": "scheme",
+      "name": "Olive",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "green",
+        "earthy"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "23d85df2b8209dfb5edbd18e84d356911c9b1105120666785b79719530a65b8f",
+      "size": 449,
+      "document": {
+        "light": {
+          "seed": "#636A1E",
+          "background": "#FFFFFF",
+          "onBackground": "#1D1E19"
+        },
+        "dark": {
+          "seed": "#CFD67E",
+          "background": "#1C1C1E",
+          "onBackground": "#F3F4EF"
+        }
+      },
+      "files": [
+        "schemes/olive/item.json",
+        "schemes/olive/scheme.json"
+      ]
+    },
+    {
+      "id": "orchid",
+      "type": "scheme",
+      "name": "Orchid",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "purple",
+        "pink"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-12",
+      "updated": "2026-11-12",
+      "sha256": "e1f888fab66f7a42d6e29b689b6cce88394d20c6486a1a43397e5dcecd9234ed",
+      "size": 877,
+      "requires": [
+        "scheme-colors"
+      ],
+      "document": {
+        "light": {
+          "seed": "#9C3A9E",
+          "background": "#FCF3FB",
+          "onBackground": "#201A1E",
+          "primary": "#9C3A9E",
+          "primaryContainer": "#FADDF5",
+          "secondary": "#B8407F",
+          "secondaryContainer": "#FFD9EA",
+          "tertiary": "#5562CF",
+          "tertiaryContainer": "#E0E2FF",
+          "appBar": "#FCF3FB"
+        },
+        "dark": {
+          "seed": "#F2B0EC",
+          "background": "#211920",
+          "onBackground": "#EBDFE6",
+          "primary": "#F2B0EC",
+          "primaryContainer": "#6B1F69",
+          "secondary": "#FFB1D4",
+          "secondaryContainer": "#7A2152",
+          "tertiary": "#BDC2FF",
+          "tertiaryContainer": "#323C8A",
+          "appBar": "#25102F"
+        }
+      },
+      "files": [
+        "schemes/orchid/item.json",
+        "schemes/orchid/scheme.json"
+      ]
+    },
+    {
+      "id": "plum",
+      "type": "scheme",
+      "name": "Plum",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "purple"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-11",
+      "updated": "2026-11-11",
+      "sha256": "36e36f36e4ed77cee2f624bd987bbdbe3b26f4f3cd723825310fba75016466b0",
+      "size": 435,
+      "document": {
+        "light": {
+          "seed": "#7A3F8F",
+          "background": "#FAF5FB",
+          "onBackground": "#24122A"
+        },
+        "dark": {
+          "seed": "#DDB0EE",
+          "background": "#1B1020",
+          "onBackground": "#F3E6F7"
+        }
+      },
+      "files": [
+        "schemes/plum/item.json",
+        "schemes/plum/scheme.json"
+      ]
+    },
+    {
+      "id": "rose",
+      "type": "scheme",
+      "name": "Rose",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "pink",
+        "warm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "1e81f1015bd553164b2902d354f7b1a2724f7461ff24b3409eac92765a191192",
+      "size": 445,
+      "document": {
+        "light": {
+          "seed": "#B8305F",
+          "background": "#FFFFFF",
+          "onBackground": "#201B1C"
+        },
+        "dark": {
+          "seed": "#FFB0C6",
+          "background": "#1C1C1E",
+          "onBackground": "#F5F1F2"
+        }
+      },
+      "files": [
+        "schemes/rose/item.json",
+        "schemes/rose/scheme.json"
+      ]
+    },
+    {
+      "id": "sand",
+      "type": "scheme",
+      "name": "Sand",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "neutral",
+        "warm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "25a8fc4ebf5eabc6c384e9656ca6469fbee303a3504da8670b68359d5808554b",
+      "size": 448,
+      "document": {
+        "light": {
+          "seed": "#806640",
+          "background": "#FFFFFF",
+          "onBackground": "#1F1D1A"
+        },
+        "dark": {
+          "seed": "#E0C79E",
+          "background": "#1C1C1E",
+          "onBackground": "#F4F2EF"
+        }
+      },
+      "files": [
+        "schemes/sand/item.json",
+        "schemes/sand/scheme.json"
+      ]
+    },
+    {
+      "id": "sky",
+      "type": "scheme",
+      "name": "Sky",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "blue",
+        "bright"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "0b59613e1ac078cfa88124984d6719db3838bb87f8610d3d8b817e8f6db34416",
+      "size": 446,
+      "document": {
+        "light": {
+          "seed": "#0A6CA6",
+          "background": "#FFFFFF",
+          "onBackground": "#191D20"
+        },
+        "dark": {
+          "seed": "#8FD0FF",
+          "background": "#1C1C1E",
+          "onBackground": "#EFF3F5"
+        }
+      },
+      "files": [
+        "schemes/sky/item.json",
+        "schemes/sky/scheme.json"
+      ]
+    },
+    {
+      "id": "slate",
+      "type": "scheme",
+      "name": "Slate",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "neutral",
+        "cool"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "51d4dfaefb377a4c7c59866791dc0911e0b5426b570c5ce1bc0f20ed181b806e",
+      "size": 449,
+      "document": {
+        "light": {
+          "seed": "#4B5E75",
+          "background": "#FFFFFF",
+          "onBackground": "#1B1D20"
+        },
+        "dark": {
+          "seed": "#B4C4D8",
+          "background": "#1C1C1E",
+          "onBackground": "#F1F2F4"
+        }
+      },
+      "files": [
+        "schemes/slate/item.json",
+        "schemes/slate/scheme.json"
+      ]
+    },
+    {
+      "id": "teal",
+      "type": "scheme",
+      "name": "Teal",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "teal",
+        "cool"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "c791db8ca3cf971f8b5447cee017968c8538cc09f331cb17677ff0b05c5a3d61",
+      "size": 445,
+      "document": {
+        "light": {
+          "seed": "#00756B",
+          "background": "#FFFFFF",
+          "onBackground": "#191E1D"
+        },
+        "dark": {
+          "seed": "#6FDCCB",
+          "background": "#1C1C1E",
+          "onBackground": "#EFF4F3"
+        }
+      },
+      "files": [
+        "schemes/teal/item.json",
+        "schemes/teal/scheme.json"
+      ]
+    },
+    {
+      "id": "article-outline",
+      "type": "skill",
+      "name": "Article outline",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "writing"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "f12016b81d1aaa2d3284b7096a881c65c40b08d7a660ee815f866dc46a88d91f",
+      "size": 1387,
+      "category": "writing",
+      "icon": "list-tree",
+      "description": "Outline a blog post, article or talk with a working title, the main argument, sections with key points and sources to find.",
+      "examples": [
+        "Outline a blog post on why small teams should write things down",
+        "Turn my talk notes into a 20-minute outline with sections",
+        "Give me three working titles and an outline for an article on remote onboarding"
+      ],
+      "access": {
+        "reads": [
+          "what you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/article-outline/SKILL.md",
+        "skills/article-outline/item.json"
+      ]
+    },
+    {
+      "id": "budget-review",
+      "type": "skill",
+      "name": "Budget review",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "money"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "8d9b734aeb6012555aa532000dbe3b93c4ac9bd4ac9b03e430d05a91cd89eabd",
+      "size": 1421,
+      "category": "money",
+      "icon": "wallet",
+      "description": "Review income and spending from a statement or spreadsheet, group it into categories and point out where money could be saved.",
+      "examples": [
+        "Review my spending from this bank statement and find savings",
+        "Group last month's transactions into categories with totals",
+        "Where did most of my money go this quarter?"
+      ],
+      "access": {
+        "reads": [
+          "statements and sheets you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/budget-review/SKILL.md",
+        "skills/budget-review/item.json"
+      ]
+    },
+    {
+      "id": "bug-report",
+      "type": "skill",
+      "name": "Bug report",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "build"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "339d34f8f2785f2c8a1aee430b0dbe4fc0a10052f96775d2acd001212a1cd86a",
+      "size": 1435,
+      "category": "build",
+      "icon": "bug",
+      "description": "Turn a vague problem description into a clear bug report with steps to reproduce, expected and actual behaviour, and environment.",
+      "examples": [
+        "Turn this into a bug report: the app crashes when I upload a photo",
+        "Write steps to reproduce from this support message",
+        "Make this vague complaint into a ticket with expected and actual behaviour"
+      ],
+      "access": {
+        "reads": [
+          "what you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/bug-report/SKILL.md",
+        "skills/bug-report/item.json"
+      ]
+    },
+    {
+      "id": "build-dashboard",
+      "type": "skill",
+      "name": "Build dashboard",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/knowledge-work-plugins"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "data"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "8f7899f1e95ea8b725189c6e7d92499e554de4225c02007f1530b238a339cf7f",
+      "size": 38180,
+      "category": "data",
+      "icon": "layout-dashboard",
+      "description": "Build an interactive HTML dashboard with charts, filters, and tables. Use when creating an executive overview with KPI cards, turning query results into a shareable self-contained report, building a team monitoring snapshot, or needing multiple charts with filters in one browser-openable file.",
+      "examples": [
+        "Build a dashboard from this sales CSV with a chart per region",
+        "Make an executive overview with KPI cards from these numbers",
+        "Turn this query result into a page with filters and a table"
+      ],
+      "access": {
+        "reads": [
+          "data you share"
+        ],
+        "writes": [
+          "creates an HTML file"
+        ],
+        "credits": "medium"
+      },
+      "files": [
+        "skills/build-dashboard/LICENSE.txt",
+        "skills/build-dashboard/SKILL.md",
+        "skills/build-dashboard/item.json"
+      ]
+    },
+    {
+      "id": "calendar-invite",
+      "type": "skill",
+      "name": "Calendar invite",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "life"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-17",
+      "updated": "2026-11-17",
+      "sha256": "65b8b7dbbc66e1550fd637e1f40f43825163ed6c94a51229a1c3b222e3cf1308",
+      "size": 2286,
+      "category": "life",
+      "icon": "calendar-days",
+      "description": "Use when the person wants something added to their calendar from text, an email, a ticket or an itinerary, as an .ics file that opens in any calendar app.",
+      "examples": [
+        "Add my flight and hotel to my calendar",
+        "Make a calendar invite from this email",
+        "Turn this class schedule into calendar events"
+      ],
+      "access": {
+        "reads": [
+          "text, emails and tickets you share"
+        ],
+        "writes": [
+          "creates .ics calendar files"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/calendar-invite/SKILL.md",
+        "skills/calendar-invite/item.json"
+      ]
+    },
+    {
+      "id": "chart-from-data",
+      "type": "skill",
+      "name": "Chart from data",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "data"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "6d7e404db12e1d5a826f556083277b4e991e499430aef2523f4033ce6554eecc",
+      "size": 1448,
+      "category": "data",
+      "icon": "chart-line",
+      "description": "Turn a table or CSV into a clear chart, choosing the right chart type and writing a one-line takeaway.",
+      "examples": [
+        "Chart monthly revenue from this table",
+        "Which chart fits this survey data? Make it",
+        "Turn this CSV into a chart with a one-line takeaway"
+      ],
+      "access": {
+        "reads": [
+          "data you share"
+        ],
+        "writes": [
+          "creates a chart"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/chart-from-data/SKILL.md",
+        "skills/chart-from-data/item.json"
+      ]
+    },
+    {
+      "id": "code-review",
+      "type": "skill",
+      "name": "Code review",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "code"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-11",
+      "updated": "2026-11-11",
+      "sha256": "3961f701cddbfff4ca1f0ece36fa68d894d2da08b15dbf0927f42e799e21d373",
+      "size": 1621,
+      "category": "build",
+      "icon": "git-pull-request",
+      "description": "Review a code change for bugs first, then clarity and tests, and report findings ranked by severity with file and line.",
+      "examples": [
+        "Review this pull request for bugs",
+        "Check this function for edge cases and missing tests",
+        "Rank the problems in this diff by severity"
+      ],
+      "access": {
+        "reads": [
+          "code you share"
+        ],
+        "credits": "medium"
+      },
+      "files": [
+        "skills/code-review/LICENSE.txt",
+        "skills/code-review/SKILL.md",
+        "skills/code-review/item.json"
+      ]
+    },
+    {
+      "id": "compare-options",
+      "type": "skill",
+      "name": "Compare options",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "research"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "55b78c4e5711b673cc81d28526cd142b8ebd4330831827a0de7731adeefb6429",
+      "size": 1427,
+      "category": "research",
+      "icon": "columns-3",
+      "description": "Compare products, services or plans side by side on what matters to the person, and recommend one with the reasons.",
+      "examples": [
+        "Compare these three phone plans for someone who travels a lot",
+        "Which project tool fits a team of five: Asana, Linear or Notion?",
+        "Put these two job offers side by side and recommend one"
+      ],
+      "access": {
+        "reads": [
+          "the web",
+          "what you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/compare-options/SKILL.md",
+        "skills/compare-options/item.json"
+      ]
+    },
+    {
+      "id": "competitive-brief",
+      "type": "skill",
+      "name": "Competitive brief",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/knowledge-work-plugins"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "research"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "2086f9327c8690e9e498967e01c9c17d4ee4c2f6ecf9e242dec3b82e71f1747f",
+      "size": 25176,
+      "category": "research",
+      "icon": "binoculars",
+      "description": "Research competitors and write a positioning and messaging comparison with gaps, opportunities, and threats. Use for a sales battlecard, an unclaimed angle, or a competitor's move.",
+      "examples": [
+        "Write a competitive brief on our three main rivals",
+        "Make a sales battlecard against this competitor",
+        "Find a positioning angle nobody in our market claims yet"
+      ],
+      "access": {
+        "reads": [
+          "the web"
+        ],
+        "credits": "medium"
+      },
+      "files": [
+        "skills/competitive-brief/LICENSE.txt",
+        "skills/competitive-brief/SKILL.md",
+        "skills/competitive-brief/item.json"
+      ]
+    },
+    {
+      "id": "convert-photos",
+      "type": "skill",
+      "name": "Convert photos",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "life"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-17",
+      "updated": "2026-11-17",
+      "sha256": "f72292a9ae65f506b66c9446162a73058fa4b8e510a6ea4ee7c774de7fcf8dc5",
+      "size": 2093,
+      "category": "life",
+      "icon": "image",
+      "description": "Use when the person shares photos to convert, resize, compress, rotate or strip location from, including iPhone HEIC photos that won't open elsewhere.",
+      "examples": [
+        "Turn these iPhone photos into JPGs",
+        "Make these photos small enough to email",
+        "Remove the location from these pictures before I post them"
+      ],
+      "access": {
+        "reads": [
+          "photos you share"
+        ],
+        "writes": [
+          "creates converted copies"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/convert-photos/SKILL.md",
+        "skills/convert-photos/item.json"
+      ]
+    },
+    {
+      "id": "csv-cleanup",
+      "type": "skill",
+      "name": "CSV cleanup",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "data",
+        "spreadsheets"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-11",
+      "updated": "2026-11-11",
+      "sha256": "64c9206106c66f5f00297985b7bb6decb1c13ed143f6a97e5dc9634051151ed3",
+      "size": 2764,
+      "category": "data",
+      "icon": "sheet",
+      "description": "Clean a messy CSV file - trim spaces, normalize headers, drop empty and duplicate rows - and report what changed.",
+      "examples": [
+        "Clean up this messy CSV and tell me what changed",
+        "Remove duplicate and empty rows from this export",
+        "Normalize the headers in this spreadsheet export"
+      ],
+      "access": {
+        "reads": [
+          "files you share"
+        ],
+        "writes": [
+          "creates a cleaned file"
+        ],
+        "credits": "low",
+        "runs_code": true,
+        "computer": true
+      },
+      "files": [
+        "skills/csv-cleanup/LICENSE.txt",
+        "skills/csv-cleanup/SKILL.md",
+        "skills/csv-cleanup/item.json",
+        "skills/csv-cleanup/scripts/clean.py"
+      ]
+    },
+    {
+      "id": "decision-memo",
+      "type": "skill",
+      "name": "Decision memo",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "4353ccd4b67df285d5bed5d16f7955c9bca7079120272c953e99400f67761ab6",
+      "size": 1798,
+      "category": "work",
+      "icon": "scale",
+      "description": "Write a one-page decision memo that lays out the options, trade-offs, a recommendation and what would change it.",
+      "examples": [
+        "Write a decision memo on whether to hire or outsource support",
+        "Lay out the options and trade-offs for moving to a four-day week",
+        "Make a one-page memo recommending a CRM"
+      ],
+      "access": {
+        "reads": [
+          "what you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/decision-memo/SKILL.md",
+        "skills/decision-memo/item.json",
+        "skills/decision-memo/tests.json"
+      ]
+    },
+    {
+      "id": "digest",
+      "type": "skill",
+      "name": "Digest",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/knowledge-work-plugins"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "6ea3c80206f9ca15e7c96cbfa50160d50f62c5e37ce525fc5d4cfa356d4aaa72",
+      "size": 18024,
+      "category": "work",
+      "icon": "newspaper",
+      "description": "Generate a daily or weekly digest of activity across all connected sources. Use when catching up after time away, starting the day and wanting a summary of mentions and action items, or reviewing a week's decisions and document updates grouped by project.",
+      "examples": [
+        "Catch me up on what happened while I was away",
+        "Give me a digest of today across my connected apps",
+        "What changed this week in email, chat and tickets?"
+      ],
+      "access": {
+        "reads": [
+          "connected apps"
+        ],
+        "credits": "medium"
+      },
+      "files": [
+        "skills/digest/LICENSE.txt",
+        "skills/digest/SKILL.md",
+        "skills/digest/item.json"
+      ]
+    },
+    {
+      "id": "docx",
+      "type": "skill",
+      "name": "Word documents",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/skills"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "715c9c3deafde8285b3379dd4453621999c0a19246856d7e846d0056e3a9095f",
+      "size": 1138718,
+      "category": "work",
+      "icon": "file-pen",
+      "description": "Use when creating, reading, or editing a Word document (.docx or .dotx): reports, memos, letters, templates, tracked changes, comments, or find-and-replace. Not for PDFs or spreadsheets.",
+      "examples": [
+        "Turn these notes into a formatted Word report",
+        "Find and replace the client name in this contract",
+        "Add comments to this document where the wording is unclear"
+      ],
+      "access": {
+        "reads": [
+          "documents you share"
+        ],
+        "writes": [
+          "creates and edits Word files"
+        ],
+        "credits": "medium",
+        "runs_code": true,
+        "computer": true
+      },
+      "files": [
+        "skills/docx/LICENSE.txt",
+        "skills/docx/SKILL.md",
+        "skills/docx/item.json",
+        "skills/docx/scripts/__init__.py",
+        "skills/docx/scripts/accept_changes.py",
+        "skills/docx/scripts/comment.py",
+        "skills/docx/scripts/merge_runs.py",
+        "skills/docx/scripts/office/helpers/__init__.py",
+        "skills/docx/scripts/office/helpers/pptx_chart.py",
+        "skills/docx/scripts/office/helpers/pptx_slide.py",
+        "skills/docx/scripts/office/helpers/pptx_theme.py",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chart.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chartDrawing.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-diagram.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-lockedCanvas.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-main.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-picture.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-spreadsheetDrawing.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-wordprocessingDrawing.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/pml.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-additionalCharacteristics.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-bibliography.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-commonSimpleTypes.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlDataProperties.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlSchemaProperties.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesCustom.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesExtended.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesVariantTypes.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-math.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-relationshipReference.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/sml.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-main.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-officeDrawing.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-presentationDrawing.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-spreadsheetDrawing.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-wordprocessingDrawing.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/wml.xsd",
+        "skills/docx/scripts/office/schemas/ISO-IEC29500-4_2016/xml.xsd",
+        "skills/docx/scripts/office/schemas/ecma/fouth-edition/opc-contentTypes.xsd",
+        "skills/docx/scripts/office/schemas/ecma/fouth-edition/opc-coreProperties.xsd",
+        "skills/docx/scripts/office/schemas/ecma/fouth-edition/opc-digSig.xsd",
+        "skills/docx/scripts/office/schemas/ecma/fouth-edition/opc-relationships.xsd",
+        "skills/docx/scripts/office/schemas/mce/mc.xsd",
+        "skills/docx/scripts/office/schemas/microsoft/wml-2010.xsd",
+        "skills/docx/scripts/office/schemas/microsoft/wml-2012.xsd",
+        "skills/docx/scripts/office/schemas/microsoft/wml-2018.xsd",
+        "skills/docx/scripts/office/schemas/microsoft/wml-cex-2018.xsd",
+        "skills/docx/scripts/office/schemas/microsoft/wml-cid-2016.xsd",
+        "skills/docx/scripts/office/schemas/microsoft/wml-sdtdatahash-2020.xsd",
+        "skills/docx/scripts/office/schemas/microsoft/wml-symex-2015.xsd",
+        "skills/docx/scripts/office/soffice.py",
+        "skills/docx/scripts/office/validate.py",
+        "skills/docx/scripts/office/validators/__init__.py",
+        "skills/docx/scripts/office/validators/base.py",
+        "skills/docx/scripts/office/validators/docx.py",
+        "skills/docx/scripts/office/validators/pptx.py",
+        "skills/docx/scripts/office/validators/redlining.py",
+        "skills/docx/scripts/templates/comments.xml",
+        "skills/docx/scripts/templates/commentsExtended.xml",
+        "skills/docx/scripts/templates/commentsExtensible.xml",
+        "skills/docx/scripts/templates/commentsIds.xml",
+        "skills/docx/scripts/templates/people.xml"
+      ]
+    },
+    {
+      "id": "doublecheck",
+      "type": "skill",
+      "name": "Doublecheck",
+      "author": {
+        "name": "GitHub",
+        "url": "https://github.com/github/awesome-copilot"
+      },
+      "license": "MIT",
+      "tags": [
+        "research"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "dff08c2c2bd9ccbfe09d5900358943ab357c90e9ca7d74d7443557521e75adb3",
+      "size": 20340,
+      "category": "research",
+      "icon": "badge-check",
+      "description": "Three-layer verification pipeline for AI output. Extracts verifiable claims, finds supporting or contradicting sources via web search, runs adversarial review for hallucination patterns, and produces a structured verification report with source links for human review.",
+      "examples": [
+        "Double-check this answer before I send it to a client",
+        "Verify the claims in this report against sources",
+        "Find what's wrong in this summary"
+      ],
+      "access": {
+        "reads": [
+          "the web",
+          "what you share"
+        ],
+        "credits": "high"
+      },
+      "files": [
+        "skills/doublecheck/LICENSE.txt",
+        "skills/doublecheck/SKILL.md",
+        "skills/doublecheck/assets/verification-report-template.md",
+        "skills/doublecheck/item.json"
+      ]
+    },
+    {
+      "id": "email-drafter",
+      "type": "skill",
+      "name": "Email drafter",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "c0aafe8c377160f3092ab6071e788fcc88d42befda20f60fb83a7039c25b09e9",
+      "size": 2056,
+      "category": "work",
+      "icon": "mail",
+      "description": "Draft a clear email or reply from a few notes, matched to the reader and the tone the person wants.",
+      "examples": [
+        "Draft a polite reply declining this meeting",
+        "Write an email asking for a deadline extension from these notes",
+        "Make this follow-up shorter and friendlier"
+      ],
+      "access": {
+        "reads": [
+          "what you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/email-drafter/SKILL.md",
+        "skills/email-drafter/item.json",
+        "skills/email-drafter/tests.json"
+      ]
+    },
+    {
+      "id": "fact-check",
+      "type": "skill",
+      "name": "Fact check",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "research"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "10826a09171160cf97297b405380711a8be02edf21cb662b234d93ea4d2fab5a",
+      "size": 1356,
+      "category": "research",
+      "icon": "badge-check",
+      "description": "Check the claims in a text against reliable sources and mark each one as supported, wrong, misleading or unverified.",
+      "examples": [
+        "Fact-check this article before I share it",
+        "Is this statistic about remote work true?",
+        "Mark each claim in this post as supported or not"
+      ],
+      "access": {
+        "reads": [
+          "the web"
+        ],
+        "credits": "medium"
+      },
+      "files": [
+        "skills/fact-check/SKILL.md",
+        "skills/fact-check/item.json"
+      ]
+    },
+    {
+      "id": "gift-ideas",
+      "type": "skill",
+      "name": "Gift ideas",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "life"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "2dc1250f46cf29ac3f0b4fc7bf70718443e3b814a98026296dc0e68cbebdd5e4",
+      "size": 1280,
+      "category": "life",
+      "icon": "gift",
+      "description": "Suggest thoughtful gift ideas for a person and occasion within a budget, with where to get them.",
+      "examples": [
+        "Gift ideas for my dad who loves gardening, under $50",
+        "What should I get a coworker who is leaving?",
+        "Birthday ideas for a 10-year-old into space"
+      ],
+      "access": {
+        "reads": [
+          "the web"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/gift-ideas/SKILL.md",
+        "skills/gift-ideas/item.json"
+      ]
+    },
+    {
+      "id": "inbox-triage",
+      "type": "skill",
+      "name": "Inbox triage",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "7ee49733900483aca731f0194bb187d79a1e6c779864f9d919ed62e95ad60927",
+      "size": 1828,
+      "category": "work",
+      "icon": "inbox",
+      "description": "Sort a pile of emails or messages into reply now, do later, read and ignore, with a one-line reason for each.",
+      "pick": "Know what needs a reply today and what can wait.",
+      "examples": [
+        "Sort these emails into reply now, later, read and ignore",
+        "Which of my messages today actually need an answer?",
+        "Triage this inbox export and draft the urgent replies"
+      ],
+      "access": {
+        "reads": [
+          "emails and messages you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/inbox-triage/SKILL.md",
+        "skills/inbox-triage/item.json",
+        "skills/inbox-triage/tests.json"
+      ]
+    },
+    {
+      "id": "invoice-check",
+      "type": "skill",
+      "name": "Invoice check",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "money"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "e4bccf8be4f09211caa0d686822ce45bb7ef79f30de35a19a0b3915cfae8d436",
+      "size": 1501,
+      "category": "money",
+      "icon": "receipt",
+      "description": "Check an invoice or bill against the quote, contract or order for wrong amounts, duplicates, missing details and due dates.",
+      "examples": [
+        "Check this invoice against the quote",
+        "Is anything on this bill charged twice?",
+        "Compare this invoice to the contract and list the differences"
+      ],
+      "access": {
+        "reads": [
+          "invoices and contracts you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/invoice-check/SKILL.md",
+        "skills/invoice-check/item.json"
+      ]
+    },
+    {
+      "id": "meal-planner",
+      "type": "skill",
+      "name": "Meal planner",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "life"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "44b76a00c99009aeeb65003fd78a2520ded5ec14d6d0c9050133fde2ad16a336",
+      "size": 1297,
+      "category": "life",
+      "icon": "utensils",
+      "description": "Plan a week of meals around diet, budget and time, with simple recipes and one combined shopping list.",
+      "examples": [
+        "Plan a week of vegetarian dinners under 30 minutes each",
+        "Make a meal plan for a family of four on a budget",
+        "Give me a shopping list for this week's meals"
+      ],
+      "access": {
+        "credits": "low"
+      },
+      "files": [
+        "skills/meal-planner/SKILL.md",
+        "skills/meal-planner/item.json"
+      ]
+    },
+    {
+      "id": "meeting-notes",
+      "type": "skill",
+      "name": "Meeting notes",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-11",
+      "updated": "2026-11-11",
+      "sha256": "681d6e86a84a88c8040934be3f4abe4cda20f4e170c386d481369bdebb777bd7",
+      "size": 2252,
+      "category": "work",
+      "icon": "notebook-pen",
+      "description": "Turn a meeting transcript or rough notes into a short summary with decisions, action items and open questions.",
+      "pick": "Turns any transcript into decisions and action items in seconds.",
+      "examples": [
+        "Turn this transcript into notes with decisions and action items",
+        "Summarize this call and list who does what by when",
+        "What questions were left open in this meeting?"
+      ],
+      "access": {
+        "reads": [
+          "transcripts and notes you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/meeting-notes/LICENSE.txt",
+        "skills/meeting-notes/SKILL.md",
+        "skills/meeting-notes/item.json",
+        "skills/meeting-notes/tests.json"
+      ]
+    },
+    {
+      "id": "meeting-prep",
+      "type": "skill",
+      "name": "Meeting prep",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "d6b1b5d07b694c33dbfe74bd7fdc46b55ade034d3623806829be7b73cea2a145",
+      "size": 1424,
+      "category": "work",
+      "icon": "calendar-clock",
+      "description": "Prepare for a meeting with a short brief on the people, the goal, open items from last time and questions to ask.",
+      "examples": [
+        "Prepare me for my call with Acme tomorrow",
+        "Brief me on the people in this meeting",
+        "What should I ask in my one-on-one this week?"
+      ],
+      "access": {
+        "reads": [
+          "the web",
+          "what you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/meeting-prep/SKILL.md",
+        "skills/meeting-prep/item.json"
+      ]
+    },
+    {
+      "id": "pdf",
+      "type": "skill",
+      "name": "PDF",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/skills"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "497f94910aa1fe2c5393418c3a63d136371fa1193d2eba62cf1c28eb57a7c502",
+      "size": 69105,
+      "category": "work",
+      "icon": "file-text",
+      "description": "Use when the person wants anything done with a PDF: read or extract text and tables, merge, split, rotate, watermark, create, fill a form, encrypt, pull images out, or OCR a scan.",
+      "examples": [
+        "Pull the tables out of this PDF into a spreadsheet",
+        "Merge these three PDFs and add page numbers",
+        "Fill in this PDF form with my details"
+      ],
+      "access": {
+        "reads": [
+          "PDFs you share"
+        ],
+        "writes": [
+          "creates and edits PDFs"
+        ],
+        "credits": "medium",
+        "runs_code": true,
+        "computer": true
+      },
+      "files": [
+        "skills/pdf/LICENSE.txt",
+        "skills/pdf/SKILL.md",
+        "skills/pdf/forms.md",
+        "skills/pdf/item.json",
+        "skills/pdf/reference.md",
+        "skills/pdf/scripts/check_bounding_boxes.py",
+        "skills/pdf/scripts/check_fillable_fields.py",
+        "skills/pdf/scripts/convert_pdf_to_images.py",
+        "skills/pdf/scripts/create_validation_image.py",
+        "skills/pdf/scripts/extract_form_field_info.py",
+        "skills/pdf/scripts/extract_form_structure.py",
+        "skills/pdf/scripts/fill_fillable_fields.py",
+        "skills/pdf/scripts/fill_pdf_form_with_annotations.py"
+      ]
+    },
+    {
+      "id": "pptx",
+      "type": "skill",
+      "name": "PowerPoint decks",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/skills"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "b6e172930b95ab2c7703c5ca09aeaad276b49d3d62825e6ee38fa31f1b5662c4",
+      "size": 1149238,
+      "category": "work",
+      "icon": "presentation",
+      "description": "Use whenever a .pptx or .potx file is involved: create or edit a slide deck, read text out of one, combine or split slides, or work with notes and comments.",
+      "examples": [
+        "Make a 10-slide deck from this outline",
+        "Add speaker notes to every slide in this presentation",
+        "Pull all the text out of this deck"
+      ],
+      "access": {
+        "reads": [
+          "decks you share"
+        ],
+        "writes": [
+          "creates and edits slide decks"
+        ],
+        "credits": "medium",
+        "runs_code": true,
+        "computer": true
+      },
+      "files": [
+        "skills/pptx/LICENSE.txt",
+        "skills/pptx/SKILL.md",
+        "skills/pptx/item.json",
+        "skills/pptx/scripts/__init__.py",
+        "skills/pptx/scripts/add_slide.py",
+        "skills/pptx/scripts/clean.py",
+        "skills/pptx/scripts/office/helpers/__init__.py",
+        "skills/pptx/scripts/office/helpers/pptx_chart.py",
+        "skills/pptx/scripts/office/helpers/pptx_slide.py",
+        "skills/pptx/scripts/office/helpers/pptx_theme.py",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chart.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chartDrawing.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-diagram.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-lockedCanvas.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-main.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-picture.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-spreadsheetDrawing.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-wordprocessingDrawing.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/pml.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-additionalCharacteristics.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-bibliography.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-commonSimpleTypes.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlDataProperties.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlSchemaProperties.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesCustom.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesExtended.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesVariantTypes.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-math.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-relationshipReference.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/sml.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-main.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-officeDrawing.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-presentationDrawing.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-spreadsheetDrawing.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-wordprocessingDrawing.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/wml.xsd",
+        "skills/pptx/scripts/office/schemas/ISO-IEC29500-4_2016/xml.xsd",
+        "skills/pptx/scripts/office/schemas/ecma/fouth-edition/opc-contentTypes.xsd",
+        "skills/pptx/scripts/office/schemas/ecma/fouth-edition/opc-coreProperties.xsd",
+        "skills/pptx/scripts/office/schemas/ecma/fouth-edition/opc-digSig.xsd",
+        "skills/pptx/scripts/office/schemas/ecma/fouth-edition/opc-relationships.xsd",
+        "skills/pptx/scripts/office/schemas/mce/mc.xsd",
+        "skills/pptx/scripts/office/schemas/microsoft/wml-2010.xsd",
+        "skills/pptx/scripts/office/schemas/microsoft/wml-2012.xsd",
+        "skills/pptx/scripts/office/schemas/microsoft/wml-2018.xsd",
+        "skills/pptx/scripts/office/schemas/microsoft/wml-cex-2018.xsd",
+        "skills/pptx/scripts/office/schemas/microsoft/wml-cid-2016.xsd",
+        "skills/pptx/scripts/office/schemas/microsoft/wml-sdtdatahash-2020.xsd",
+        "skills/pptx/scripts/office/schemas/microsoft/wml-symex-2015.xsd",
+        "skills/pptx/scripts/office/soffice.py",
+        "skills/pptx/scripts/office/validate.py",
+        "skills/pptx/scripts/office/validators/__init__.py",
+        "skills/pptx/scripts/office/validators/base.py",
+        "skills/pptx/scripts/office/validators/docx.py",
+        "skills/pptx/scripts/office/validators/pptx.py",
+        "skills/pptx/scripts/office/validators/redlining.py",
+        "skills/pptx/scripts/thumbnail.py"
+      ]
+    },
+    {
+      "id": "proofread",
+      "type": "skill",
+      "name": "Proofread",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "writing"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "9c1f253f0eb25983d1317aa67985a368d35f322430baf1dcb738b22320926181",
+      "size": 1887,
+      "category": "writing",
+      "icon": "spell-check",
+      "description": "Proofread a text for spelling, grammar, punctuation and clarity, keeping the author's voice, and list what changed.",
+      "examples": [
+        "Proofread this cover letter",
+        "Fix the grammar in this post without changing my voice",
+        "Check this report for typos and list what you changed"
+      ],
+      "access": {
+        "reads": [
+          "what you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/proofread/SKILL.md",
+        "skills/proofread/item.json",
+        "skills/proofread/tests.json"
+      ]
+    },
+    {
+      "id": "research-brief",
+      "type": "skill",
+      "name": "Research brief",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "research"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-11",
+      "updated": "2026-11-11",
+      "sha256": "10126b0e5bfee073234a852a04cd8c8b939b2e7a8ff853d763edfa580d72fe64",
+      "size": 1645,
+      "category": "research",
+      "icon": "file-search",
+      "description": "Research a question on the web and write a sourced brief with the answer first, key facts, disagreements and links.",
+      "pick": "Answer first, sources after: research you can actually check.",
+      "examples": [
+        "Research whether heat pumps work in cold climates",
+        "Write a sourced brief on the four-day work week",
+        "What do studies say about standing desks? Answer first, then sources"
+      ],
+      "access": {
+        "reads": [
+          "the web"
+        ],
+        "credits": "medium"
+      },
+      "files": [
+        "skills/research-brief/LICENSE.txt",
+        "skills/research-brief/SKILL.md",
+        "skills/research-brief/item.json"
+      ]
+    },
+    {
+      "id": "rewrite-tone",
+      "type": "skill",
+      "name": "Rewrite tone",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "writing"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "f2cdde1e54fd031ed5d3e725a02dad480f372393c11c4d46f312db6e7e94f582",
+      "size": 1818,
+      "category": "writing",
+      "icon": "wand-sparkles",
+      "description": "Rewrite a text in a different tone or for a different reader, such as friendlier, more formal, shorter or simpler.",
+      "examples": [
+        "Make this message friendlier",
+        "Rewrite this for a ten-year-old",
+        "Turn this rant into a calm, professional email"
+      ],
+      "access": {
+        "reads": [
+          "what you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/rewrite-tone/SKILL.md",
+        "skills/rewrite-tone/item.json",
+        "skills/rewrite-tone/tests.json"
+      ]
+    },
+    {
+      "id": "scan-to-pdf",
+      "type": "skill",
+      "name": "Scan to PDF",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-17",
+      "updated": "2026-11-17",
+      "sha256": "069356c7c4c09ce4786759db2c14b4ded07552e52df3f5aa0610775fd2c238ed",
+      "size": 1942,
+      "category": "work",
+      "icon": "camera",
+      "description": "Use when the person shares phone photos or scans of paper (receipts, letters, forms, book pages) and wants a clean, searchable PDF or the text from them.",
+      "examples": [
+        "Turn these photos of my lease into one searchable PDF",
+        "Read the total and date off this receipt",
+        "Make a PDF of these pages and get the text out"
+      ],
+      "access": {
+        "reads": [
+          "photos and scans you share"
+        ],
+        "writes": [
+          "creates PDFs"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/scan-to-pdf/SKILL.md",
+        "skills/scan-to-pdf/item.json"
+      ]
+    },
+    {
+      "id": "shrink-file",
+      "type": "skill",
+      "name": "Shrink a file",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-17",
+      "updated": "2026-11-17",
+      "sha256": "b6aa4e12f4e73aee270463facb5ec857c41820c36c955d037d8ce8ad3eef0de5",
+      "size": 2194,
+      "category": "work",
+      "icon": "archive",
+      "description": "Use when a file is too big to send or upload (a PDF, photo, video, slide deck or folder) and the person needs it smaller, often under a size limit.",
+      "examples": [
+        "Make this PDF small enough to email",
+        "Get this video under 25 MB",
+        "Compress this slide deck"
+      ],
+      "access": {
+        "reads": [
+          "files you share"
+        ],
+        "writes": [
+          "creates smaller copies"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/shrink-file/SKILL.md",
+        "skills/shrink-file/item.json"
+      ]
+    },
+    {
+      "id": "social-post",
+      "type": "skill",
+      "name": "Social post",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "writing"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "fd005392a86e6f6560581317f83f3666af2c2f78693f69539a0800b8f68a8ebb",
+      "size": 1306,
+      "category": "writing",
+      "icon": "megaphone",
+      "description": "Turn an announcement, article or idea into short social posts sized for each network, with a few variations to choose from.",
+      "examples": [
+        "Turn this announcement into posts for LinkedIn and X",
+        "Write three versions of a post about our launch",
+        "Make a short thread from this blog post"
+      ],
+      "access": {
+        "reads": [
+          "what you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/social-post/SKILL.md",
+        "skills/social-post/item.json"
+      ]
+    },
+    {
+      "id": "spreadsheet-formulas",
+      "type": "skill",
+      "name": "Spreadsheet formulas",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "data"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "439dc697ab227955b9b5e801e8827a77c297d20538b6e4050cbff0e637095ca7",
+      "size": 1951,
+      "category": "data",
+      "icon": "sigma",
+      "description": "Write, explain or fix spreadsheet formulas for Excel or Google Sheets from a plain-language description of what is needed.",
+      "examples": [
+        "Write a formula that sums sales by month",
+        "Why does this VLOOKUP return #N/A?",
+        "Explain this nested IF formula in plain words"
+      ],
+      "access": {
+        "reads": [
+          "what you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/spreadsheet-formulas/SKILL.md",
+        "skills/spreadsheet-formulas/item.json",
+        "skills/spreadsheet-formulas/tests.json"
+      ]
+    },
+    {
+      "id": "sql-helper",
+      "type": "skill",
+      "name": "SQL helper",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "build"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "7aa746b08e65fceac8a7457dd75c982b776a341436c7d64fc639d16f004da414",
+      "size": 1955,
+      "category": "build",
+      "icon": "database",
+      "description": "Write, explain or speed up a SQL query from a plain-language question and the table structure.",
+      "examples": [
+        "Write a query for the top 10 customers by revenue last year",
+        "Why is this query slow?",
+        "Explain what this SQL does"
+      ],
+      "access": {
+        "reads": [
+          "what you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/sql-helper/SKILL.md",
+        "skills/sql-helper/item.json",
+        "skills/sql-helper/tests.json"
+      ]
+    },
+    {
+      "id": "summarize-document",
+      "type": "skill",
+      "name": "Summarize document",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "research"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "556090b78baa4b0bd83cc0a1fe641b5ad4c0836f1ab472e11ccce661d8320541",
+      "size": 1979,
+      "category": "research",
+      "icon": "file-text",
+      "description": "Summarize a long document, report or contract into the key points, numbers, obligations and anything that needs attention.",
+      "examples": [
+        "Summarize this contract and list my obligations",
+        "Give me the key numbers from this annual report",
+        "What in this policy needs my attention?"
+      ],
+      "access": {
+        "reads": [
+          "documents you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/summarize-document/SKILL.md",
+        "skills/summarize-document/item.json",
+        "skills/summarize-document/tests.json"
+      ]
+    },
+    {
+      "id": "systematic-debugging",
+      "type": "skill",
+      "name": "Systematic debugging",
+      "author": {
+        "name": "Jesse Vincent",
+        "url": "https://github.com/obra/superpowers"
+      },
+      "license": "MIT",
+      "tags": [
+        "build"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "a3217343e849a617c86835a7b3b9f7462be1559629642436bc1b467b419a3a0b",
+      "size": 30781,
+      "category": "build",
+      "icon": "bug",
+      "description": "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes",
+      "examples": [
+        "My tests pass locally but fail in CI. Help me find out why",
+        "This function returns the wrong total sometimes. Debug it step by step",
+        "Find the root cause of this crash before suggesting a fix"
+      ],
+      "access": {
+        "reads": [
+          "code you share"
+        ],
+        "runs_code": true,
+        "computer": true,
+        "credits": "medium"
+      },
+      "files": [
+        "skills/systematic-debugging/LICENSE.txt",
+        "skills/systematic-debugging/SKILL.md",
+        "skills/systematic-debugging/condition-based-waiting-example.ts",
+        "skills/systematic-debugging/condition-based-waiting.md",
+        "skills/systematic-debugging/defense-in-depth.md",
+        "skills/systematic-debugging/find-polluter.sh",
+        "skills/systematic-debugging/item.json",
+        "skills/systematic-debugging/root-cause-tracing.md"
+      ]
+    },
+    {
+      "id": "teach",
+      "type": "skill",
+      "name": "Teach",
+      "author": {
+        "name": "Matt Pocock",
+        "url": "https://github.com/mattpocock/skills"
+      },
+      "license": "MIT",
+      "tags": [
+        "life"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "a13ed11053d6f68baf8e273dad8c43b3bac9987e16ba7944b52e9e049308e8e2",
+      "size": 19697,
+      "category": "life",
+      "icon": "graduation-cap",
+      "description": "Teach the user a new skill or concept, within this workspace.",
+      "examples": [
+        "Teach me how Git branches work",
+        "I want to learn SQL. Start me off",
+        "Help me understand compound interest with examples"
+      ],
+      "access": {
+        "reads": [
+          "your workspace files"
+        ],
+        "writes": [
+          "saves learning notes"
+        ],
+        "credits": "medium"
+      },
+      "files": [
+        "skills/teach/GLOSSARY-FORMAT.md",
+        "skills/teach/LEARNING-RECORD-FORMAT.md",
+        "skills/teach/LICENSE.txt",
+        "skills/teach/MISSION-FORMAT.md",
+        "skills/teach/RESOURCES-FORMAT.md",
+        "skills/teach/SKILL.md",
+        "skills/teach/item.json"
+      ]
+    },
+    {
+      "id": "trip-planner",
+      "type": "skill",
+      "name": "Trip planner",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "travel",
+        "life"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-11",
+      "updated": "2026-11-11",
+      "sha256": "42bc2e99e941fa2267f60830ad32c6fe82e71325fc5e6fff3e3f786dc6c35cc5",
+      "size": 1507,
+      "category": "life",
+      "icon": "plane",
+      "description": "Plan a trip day by day within a budget, with travel times, bookings to make and a packing list.",
+      "examples": [
+        "Plan four days in Lisbon on a mid-range budget",
+        "Make a weekend itinerary in the mountains with travel times",
+        "What should I pack for a week in Japan in spring?"
+      ],
+      "access": {
+        "reads": [
+          "the web"
+        ],
+        "credits": "medium"
+      },
+      "files": [
+        "skills/trip-planner/LICENSE.txt",
+        "skills/trip-planner/SKILL.md",
+        "skills/trip-planner/item.json"
+      ]
+    },
+    {
+      "id": "webapp-testing",
+      "type": "skill",
+      "name": "Web app testing",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/skills"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "build"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "b923db6745edb721db337c6e9e01d16853a83b6a83bedb1bc4a7da3153db606a",
+      "size": 23101,
+      "category": "build",
+      "icon": "app-window",
+      "description": "Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs.",
+      "examples": [
+        "Test the sign-up flow of my local app",
+        "Take a screenshot of my web app after logging in",
+        "Check my page's console for errors while clicking around"
+      ],
+      "access": {
+        "reads": [
+          "your local web app"
+        ],
+        "credits": "medium",
+        "runs_code": true,
+        "computer": true
+      },
+      "files": [
+        "skills/webapp-testing/LICENSE.txt",
+        "skills/webapp-testing/SKILL.md",
+        "skills/webapp-testing/examples/console_logging.py",
+        "skills/webapp-testing/examples/element_discovery.py",
+        "skills/webapp-testing/examples/static_html_automation.py",
+        "skills/webapp-testing/item.json",
+        "skills/webapp-testing/scripts/with_server.py"
+      ]
+    },
+    {
+      "id": "weekly-report",
+      "type": "skill",
+      "name": "Weekly report",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work",
+        "writing"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-11",
+      "updated": "2026-11-11",
+      "sha256": "ef50db88497fc09b8f15ce3559c73f80a7a1c2700974e2d9e1c1b68c78a306e6",
+      "size": 1501,
+      "category": "work",
+      "icon": "calendar-check",
+      "description": "Write a concise weekly status report from tickets, chats and notes, grouped into done, in progress, blocked and next.",
+      "examples": [
+        "Write my weekly status report from these notes",
+        "Group this week's tickets into done, in progress and blocked",
+        "Draft a short update for my manager"
+      ],
+      "access": {
+        "reads": [
+          "tickets, chats and notes you share"
+        ],
+        "credits": "low"
+      },
+      "files": [
+        "skills/weekly-report/LICENSE.txt",
+        "skills/weekly-report/SKILL.md",
+        "skills/weekly-report/item.json"
+      ]
+    },
+    {
+      "id": "workout-plan",
+      "type": "skill",
+      "name": "Workout plan",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "life"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "e489b87bbba44c016cc699a3b298d78d626064c9bbe530467cb9ab595ecb0fe6",
+      "size": 1301,
+      "category": "life",
+      "icon": "dumbbell",
+      "description": "Build a simple weekly workout plan around goals, fitness level, equipment and time, with how to progress.",
+      "examples": [
+        "Make a three-day gym plan for a beginner",
+        "Plan home workouts with only dumbbells",
+        "How should I progress my running over eight weeks?"
+      ],
+      "access": {
+        "credits": "low"
+      },
+      "files": [
+        "skills/workout-plan/SKILL.md",
+        "skills/workout-plan/item.json"
+      ]
+    },
+    {
+      "id": "write-spec",
+      "type": "skill",
+      "name": "Write spec",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/knowledge-work-plugins"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "work"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "5d3dc592cc9864c2af383061274789fc629120cccb69ca252ec12e5be8da31c4",
+      "size": 24455,
+      "category": "work",
+      "icon": "clipboard-list",
+      "description": "Write a feature spec or PRD from a problem statement or feature idea. Use when turning a vague idea or user request into a structured document, scoping a feature with goals and non-goals, defining success metrics and acceptance criteria, or breaking a big ask into a phased spec.",
+      "examples": [
+        "Write a spec for adding dark mode to our app",
+        "Turn this feature request into a PRD",
+        "Scope a first version of team invitations"
+      ],
+      "access": {
+        "reads": [
+          "what you share"
+        ],
+        "credits": "medium"
+      },
+      "files": [
+        "skills/write-spec/LICENSE.txt",
+        "skills/write-spec/SKILL.md",
+        "skills/write-spec/item.json"
+      ]
+    },
+    {
+      "id": "xlsx",
+      "type": "skill",
+      "name": "Excel spreadsheets",
+      "author": {
+        "name": "Anthropic",
+        "url": "https://github.com/anthropics/skills"
+      },
+      "license": "Apache-2.0",
+      "tags": [
+        "data"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-13",
+      "updated": "2026-11-13",
+      "sha256": "213c7e120745f3a88802a7215c7e593e2363952426a27074708d8902c85cdde6",
+      "size": 1112758,
+      "category": "data",
+      "icon": "sheet",
+      "description": "Use when a spreadsheet is the main input or output: open, edit, or create .xlsx, .xlsm, .csv, or .tsv files, including formulas, charts, and cleaning messy tables.",
+      "examples": [
+        "Clean this spreadsheet and add totals per column",
+        "Build a budget workbook with formulas and a chart",
+        "Convert this CSV into a formatted Excel file"
+      ],
+      "access": {
+        "reads": [
+          "spreadsheets you share"
+        ],
+        "writes": [
+          "creates and edits spreadsheets"
+        ],
+        "credits": "medium",
+        "runs_code": true,
+        "computer": true
+      },
+      "files": [
+        "skills/xlsx/LICENSE.txt",
+        "skills/xlsx/SKILL.md",
+        "skills/xlsx/item.json",
+        "skills/xlsx/scripts/office/helpers/__init__.py",
+        "skills/xlsx/scripts/office/helpers/pptx_chart.py",
+        "skills/xlsx/scripts/office/helpers/pptx_slide.py",
+        "skills/xlsx/scripts/office/helpers/pptx_theme.py",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chart.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-chartDrawing.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-diagram.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-lockedCanvas.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-main.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-picture.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-spreadsheetDrawing.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/dml-wordprocessingDrawing.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/pml.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-additionalCharacteristics.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-bibliography.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-commonSimpleTypes.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlDataProperties.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-customXmlSchemaProperties.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesCustom.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesExtended.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-documentPropertiesVariantTypes.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-math.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/shared-relationshipReference.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/sml.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-main.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-officeDrawing.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-presentationDrawing.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-spreadsheetDrawing.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/vml-wordprocessingDrawing.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/wml.xsd",
+        "skills/xlsx/scripts/office/schemas/ISO-IEC29500-4_2016/xml.xsd",
+        "skills/xlsx/scripts/office/schemas/ecma/fouth-edition/opc-contentTypes.xsd",
+        "skills/xlsx/scripts/office/schemas/ecma/fouth-edition/opc-coreProperties.xsd",
+        "skills/xlsx/scripts/office/schemas/ecma/fouth-edition/opc-digSig.xsd",
+        "skills/xlsx/scripts/office/schemas/ecma/fouth-edition/opc-relationships.xsd",
+        "skills/xlsx/scripts/office/schemas/mce/mc.xsd",
+        "skills/xlsx/scripts/office/schemas/microsoft/wml-2010.xsd",
+        "skills/xlsx/scripts/office/schemas/microsoft/wml-2012.xsd",
+        "skills/xlsx/scripts/office/schemas/microsoft/wml-2018.xsd",
+        "skills/xlsx/scripts/office/schemas/microsoft/wml-cex-2018.xsd",
+        "skills/xlsx/scripts/office/schemas/microsoft/wml-cid-2016.xsd",
+        "skills/xlsx/scripts/office/schemas/microsoft/wml-sdtdatahash-2020.xsd",
+        "skills/xlsx/scripts/office/schemas/microsoft/wml-symex-2015.xsd",
+        "skills/xlsx/scripts/office/soffice.py",
+        "skills/xlsx/scripts/office/validate.py",
+        "skills/xlsx/scripts/office/validators/__init__.py",
+        "skills/xlsx/scripts/office/validators/base.py",
+        "skills/xlsx/scripts/office/validators/docx.py",
+        "skills/xlsx/scripts/office/validators/pptx.py",
+        "skills/xlsx/scripts/office/validators/redlining.py",
+        "skills/xlsx/scripts/recalc.py"
+      ]
+    },
+    {
+      "id": "candy",
+      "type": "theme",
+      "name": "Candy",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "pink",
+        "playful"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "e8608690a6c7322622ef80c89f9c764148b50fcd540ed9f01f26c154f065d270",
+      "size": 1367,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#942D66",
+            "background": "#FEF8FB",
+            "onBackground": "#1F181B",
+            "primary": "#942D66",
+            "primaryContainer": "#FFDDEC",
+            "secondary": "#125F94",
+            "secondaryContainer": "#D5EBFF",
+            "tertiary": "#8B4501",
+            "tertiaryContainer": "#FFE1CE",
+            "appBar": "#FDF3F7"
+          },
+          "dark": {
+            "seed": "#F8A8CE",
+            "background": "#160F12",
+            "onBackground": "#EFE5E9",
+            "primary": "#F8A8CE",
+            "primaryContainer": "#54263D",
+            "secondary": "#9ACAF3",
+            "secondaryContainer": "#1D3B53",
+            "tertiary": "#EFB690",
+            "tertiaryContainer": "#502F17",
+            "appBar": "#1E1318"
+          }
+        },
+        "headingFont": "Baloo 2",
+        "bodyFont": "Nunito",
+        "wallpaper": {
+          "image": "candy-sky",
+          "pattern": "clouds",
+          "palette": "cotton",
+          "intensity": 0.5,
+          "kind": "image",
+          "file": "../candy-sky/candy-sky.jpg",
+          "thumb": "../candy-sky/thumb.jpg",
+          "dark": "../candy-sky/candy-sky-dark.jpg",
+          "darkThumb": "../candy-sky/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/candy/item.json",
+        "themes/candy/theme.json"
+      ]
+    },
+    {
+      "id": "casama",
+      "type": "theme",
+      "name": "Casama",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "purple",
+        "playful"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "c56a0249acbabbc309b8a7d395a88eec0c67395cb6cf2f4c633b9b3b1b45db3f",
+      "size": 1436,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "Redesigned around the Lavender hills painting: new colors and fonts."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#6941A1",
+            "background": "#FBF9FE",
+            "onBackground": "#1B191F",
+            "primary": "#6941A1",
+            "primaryContainer": "#EBE3FE",
+            "secondary": "#8A3A64",
+            "secondaryContainer": "#FFDDEC",
+            "tertiary": "#315C92",
+            "tertiaryContainer": "#D9EAFF",
+            "appBar": "#F7F4FD"
+          },
+          "dark": {
+            "seed": "#CEB5FE",
+            "background": "#121016",
+            "onBackground": "#E9E6EF",
+            "primary": "#CEB5FE",
+            "primaryContainer": "#3E2E59",
+            "secondary": "#EFAECC",
+            "secondaryContainer": "#4F2A3C",
+            "tertiary": "#A6C7F1",
+            "tertiaryContainer": "#263951",
+            "appBar": "#18151F"
+          }
+        },
+        "headingFont": "Google Sans",
+        "bodyFont": "Google Sans",
+        "wallpaper": {
+          "image": "lavender-hills",
+          "pattern": "clouds",
+          "palette": "theme",
+          "intensity": 0.5,
+          "kind": "image",
+          "file": "../lavender-hills/lavender-hills.jpg",
+          "thumb": "../lavender-hills/thumb.jpg",
+          "dark": "../lavender-hills/lavender-hills-dark.jpg",
+          "darkThumb": "../lavender-hills/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/casama/item.json",
+        "themes/casama/theme.json"
+      ]
+    },
+    {
+      "id": "cosmos",
+      "type": "theme",
+      "name": "Cosmos",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "purple",
+        "dark"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "21d971679f995a28ff298c7bf72b4bd74f7577473eb0f6abd55730c5a603fde6",
+      "size": 1407,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "Redesigned around the Aurora painting: new colors and fonts."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#5D43AC",
+            "background": "#FAF9FE",
+            "onBackground": "#1A1A20",
+            "primary": "#5D43AC",
+            "primaryContainer": "#E7E4FF",
+            "secondary": "#016C46",
+            "secondaryContainer": "#D0F2DE",
+            "tertiary": "#345A98",
+            "tertiaryContainer": "#DCE9FE",
+            "appBar": "#F5F5FE"
+          },
+          "dark": {
+            "seed": "#C3BAFF",
+            "background": "#111117",
+            "onBackground": "#E7E7F0",
+            "primary": "#C3BAFF",
+            "primaryContainer": "#382F5E",
+            "secondary": "#98D4B3",
+            "secondaryContainer": "#1B412E",
+            "tertiary": "#A7C6F7",
+            "tertiaryContainer": "#273854",
+            "appBar": "#171620"
+          }
+        },
+        "headingFont": "Sora",
+        "bodyFont": "Inter",
+        "wallpaper": {
+          "image": "aurora",
+          "pattern": "space",
+          "palette": "lavender",
+          "intensity": 0.5,
+          "kind": "image",
+          "file": "../aurora/aurora.jpg",
+          "thumb": "../aurora/thumb.jpg",
+          "dark": "../aurora/aurora-dark.jpg",
+          "darkThumb": "../aurora/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/cosmos/item.json",
+        "themes/cosmos/theme.json"
+      ]
+    },
+    {
+      "id": "editorial",
+      "type": "theme",
+      "name": "Editorial",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "calm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "5eda9b1daa09add80f79e0a6c3ea22bb97bb13e7167f3f225e88536dde5c1800",
+      "size": 1410,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "Redesigned around the Margins painting: new colors and fonts."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#5D5479",
+            "background": "#FAF9FE",
+            "onBackground": "#1B1A20",
+            "primary": "#5D5479",
+            "primaryContainer": "#E9E5F7",
+            "secondary": "#804462",
+            "secondaryContainer": "#FCDFEB",
+            "tertiary": "#755421",
+            "tertiaryContainer": "#F5E5D1",
+            "appBar": "#F6F4FD"
+          },
+          "dark": {
+            "seed": "#C5BFDD",
+            "background": "#121116",
+            "onBackground": "#E8E6EF",
+            "primary": "#C5BFDD",
+            "primaryContainer": "#393546",
+            "secondary": "#E5B4CA",
+            "secondaryContainer": "#4A2E3B",
+            "tertiary": "#DAC09C",
+            "tertiaryContainer": "#443520",
+            "appBar": "#18151F"
+          }
+        },
+        "headingFont": "Fraunces",
+        "bodyFont": "Inter",
+        "wallpaper": {
+          "image": "margins",
+          "pattern": "none",
+          "palette": "peach",
+          "intensity": 0.3,
+          "kind": "image",
+          "file": "../margins/margins.jpg",
+          "thumb": "../margins/thumb.jpg",
+          "dark": "../margins/margins-dark.jpg",
+          "darkThumb": "../margins/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/editorial/item.json",
+        "themes/editorial/theme.json"
+      ]
+    },
+    {
+      "id": "ember",
+      "type": "theme",
+      "name": "Ember",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "playful"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "d2a7fe7477fa72f1bbe66e00112b82ff0c0e527a164d2cf2cbd71d76c1ea24df",
+      "size": 1419,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "Redesigned around the Dusk painting: new colors and fonts."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#9D3013",
+            "background": "#FEF9F7",
+            "onBackground": "#201917",
+            "primary": "#9D3013",
+            "primaryContainer": "#FFE0D8",
+            "secondary": "#834163",
+            "secondaryContainer": "#FEDEEC",
+            "tertiary": "#864900",
+            "tertiaryContainer": "#FFE2CB",
+            "appBar": "#FEF3F0"
+          },
+          "dark": {
+            "seed": "#FFAC97",
+            "background": "#16100E",
+            "onBackground": "#F0E5E2",
+            "primary": "#FFAC97",
+            "primaryContainer": "#58281C",
+            "secondary": "#E8B2CA",
+            "secondaryContainer": "#4C2D3C",
+            "tertiary": "#EDB88D",
+            "tertiaryContainer": "#4E3015",
+            "appBar": "#1F1411"
+          }
+        },
+        "headingFont": "Bricolage Grotesque",
+        "bodyFont": "Onest",
+        "wallpaper": {
+          "image": "dusk",
+          "pattern": "doodles",
+          "palette": "sunset",
+          "intensity": 0.45,
+          "kind": "image",
+          "file": "../dusk/dusk.jpg",
+          "thumb": "../dusk/thumb.jpg",
+          "dark": "../dusk/dusk-dark.jpg",
+          "darkThumb": "../dusk/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/ember/item.json",
+        "themes/ember/theme.json"
+      ]
+    },
+    {
+      "id": "forest",
+      "type": "theme",
+      "name": "Forest",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "green",
+        "calm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "e43f236cbbeb3a252155f04039181f986a298be7df274ae5f93cf6f30f620fcd",
+      "size": 1430,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "Redesigned around the Northern pines painting: new colors and fonts."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#2B684B",
+            "background": "#F7FBF9",
+            "onBackground": "#161C19",
+            "primary": "#2B684B",
+            "primaryContainer": "#D7EFE1",
+            "secondary": "#2C656B",
+            "secondaryContainer": "#D6EDEF",
+            "tertiary": "#50632E",
+            "tertiaryContainer": "#E3ECD5",
+            "appBar": "#EFF8F3"
+          },
+          "dark": {
+            "seed": "#A5D0B8",
+            "background": "#0D1310",
+            "onBackground": "#E1EAE5",
+            "primary": "#A5D0B8",
+            "primaryContainer": "#253E31",
+            "secondary": "#A5CDD1",
+            "secondaryContainer": "#253D3F",
+            "tertiary": "#BCCBA4",
+            "tertiaryContainer": "#333C25",
+            "appBar": "#0F1A14"
+          }
+        },
+        "headingFont": "Source Serif 4",
+        "bodyFont": "Lato",
+        "wallpaper": {
+          "image": "northern-pines",
+          "pattern": "garden",
+          "palette": "forest",
+          "intensity": 0.5,
+          "kind": "image",
+          "file": "../northern-pines/northern-pines.jpg",
+          "thumb": "../northern-pines/thumb.jpg",
+          "dark": "../northern-pines/northern-pines-dark.jpg",
+          "darkThumb": "../northern-pines/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/forest/item.json",
+        "themes/forest/theme.json"
+      ]
+    },
+    {
+      "id": "graphite",
+      "type": "theme",
+      "name": "Graphite",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "neutral",
+        "calm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "a467650fee0c03c66f7f97dcb905f1d159464a0ccb78b38b8460bb27d3b76001",
+      "size": 1405,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "Redesigned around the Fog painting: new colors and fonts."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#515B6C",
+            "background": "#F8FAFE",
+            "onBackground": "#171B20",
+            "primary": "#515B6C",
+            "primaryContainer": "#E3E8F0",
+            "secondary": "#535C66",
+            "secondaryContainer": "#E4E8ED",
+            "tertiary": "#405F74",
+            "tertiaryContainer": "#DCEAF4",
+            "appBar": "#F1F6FE"
+          },
+          "dark": {
+            "seed": "#BCC5D2",
+            "background": "#0E1217",
+            "onBackground": "#E3E8F0",
+            "primary": "#BCC5D2",
+            "primaryContainer": "#333840",
+            "secondary": "#BEC5CD",
+            "secondaryContainer": "#34383D",
+            "tertiary": "#B1C8D9",
+            "tertiaryContainer": "#2C3A44",
+            "appBar": "#121720"
+          }
+        },
+        "headingFont": "Geist",
+        "bodyFont": "Geist",
+        "wallpaper": {
+          "image": "fog",
+          "pattern": "tech",
+          "palette": "graphite",
+          "intensity": 0.35,
+          "kind": "image",
+          "file": "../fog/fog.jpg",
+          "thumb": "../fog/thumb.jpg",
+          "dark": "../fog/fog-dark.jpg",
+          "darkThumb": "../fog/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/graphite/item.json",
+        "themes/graphite/theme.json"
+      ]
+    },
+    {
+      "id": "lagoon",
+      "type": "theme",
+      "name": "Lagoon",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "teal",
+        "calm"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "90ef2a8f4aac617431eaeddc82a907fe878eed9da240c0ce08961be6b46436d0",
+      "size": 1479,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "Redesigned around the Koi pond painting: new colors and fonts."
+        }
+      ],
+      "pick": "Sea colors, Fraunces headings and a playful sea pattern.",
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#196958",
+            "background": "#F6FBFA",
+            "onBackground": "#151C1A",
+            "primary": "#196958",
+            "primaryContainer": "#D3EFE7",
+            "secondary": "#8F4100",
+            "secondaryContainer": "#FEE1D2",
+            "tertiary": "#3E6735",
+            "tertiaryContainer": "#DCEED8",
+            "appBar": "#EEF9F5"
+          },
+          "dark": {
+            "seed": "#9FD1C2",
+            "background": "#0C1311",
+            "onBackground": "#E0EBE7",
+            "primary": "#9FD1C2",
+            "primaryContainer": "#203F37",
+            "secondary": "#F5B38F",
+            "secondaryContainer": "#522D17",
+            "tertiary": "#AFCFA8",
+            "tertiaryContainer": "#2B3E27",
+            "appBar": "#0D1A17"
+          }
+        },
+        "headingFont": "Quicksand",
+        "bodyFont": "Nunito",
+        "wallpaper": {
+          "image": "koi-pond",
+          "pattern": "sea",
+          "palette": "ocean",
+          "intensity": 0.5,
+          "kind": "image",
+          "file": "../koi-pond/koi-pond.jpg",
+          "thumb": "../koi-pond/thumb.jpg",
+          "dark": "../koi-pond/koi-pond-dark.jpg",
+          "darkThumb": "../koi-pond/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/lagoon/item.json",
+        "themes/lagoon/theme.json"
+      ]
+    },
+    {
+      "id": "lanterns",
+      "type": "theme",
+      "name": "Lanterns",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "night"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "e0f7e83e1f3fef9029c8e6e71b5d6c31e745bd8c637edc9e72271226b3c49120",
+      "size": 1370,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#8B4501",
+            "background": "#FDF9F6",
+            "onBackground": "#1F1915",
+            "primary": "#8B4501",
+            "primaryContainer": "#FFE1CE",
+            "secondary": "#7F426C",
+            "secondaryContainer": "#FBDEF0",
+            "tertiary": "#7A5103",
+            "tertiaryContainer": "#FAE4C8",
+            "appBar": "#FDF4EE"
+          },
+          "dark": {
+            "seed": "#F6B386",
+            "background": "#16100D",
+            "onBackground": "#EFE6E0",
+            "primary": "#F6B386",
+            "primaryContainer": "#532D0F",
+            "secondary": "#E4B3D2",
+            "secondaryContainer": "#492D40",
+            "tertiary": "#E2BE8C",
+            "tertiaryContainer": "#493314",
+            "appBar": "#1E150E"
+          }
+        },
+        "headingFont": "Lora",
+        "bodyFont": "DM Sans",
+        "wallpaper": {
+          "image": "lantern-night",
+          "pattern": "space",
+          "palette": "sunset",
+          "intensity": 0.45,
+          "kind": "image",
+          "file": "../lantern-night/lantern-night.jpg",
+          "thumb": "../lantern-night/thumb.jpg",
+          "dark": "../lantern-night/lantern-night-dark.jpg",
+          "darkThumb": "../lantern-night/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/lanterns/item.json",
+        "themes/lanterns/theme.json"
+      ]
+    },
+    {
+      "id": "marigold",
+      "type": "theme",
+      "name": "Marigold",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "playful"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "9a710b042af0ec56234938f0490091d7d7f45eff4912824a4b7cf526a8cb2d39",
+      "size": 1430,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "Redesigned around the Citrus grove painting: new colors and fonts."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#864900",
+            "background": "#FDF9F6",
+            "onBackground": "#1F1915",
+            "primary": "#864900",
+            "primaryContainer": "#FFE2CB",
+            "secondary": "#46661A",
+            "secondaryContainer": "#DEEED0",
+            "tertiary": "#705800",
+            "tertiaryContainer": "#F3E7C7",
+            "appBar": "#FCF4EE"
+          },
+          "dark": {
+            "seed": "#F0B688",
+            "background": "#16100C",
+            "onBackground": "#EEE6E0",
+            "primary": "#F0B688",
+            "primaryContainer": "#502F10",
+            "secondary": "#B4CF9A",
+            "secondaryContainer": "#2E3E1E",
+            "tertiary": "#D7C38A",
+            "tertiaryContainer": "#433612",
+            "appBar": "#1E150E"
+          }
+        },
+        "headingFont": "Young Serif",
+        "bodyFont": "DM Sans",
+        "wallpaper": {
+          "image": "citrus-grove",
+          "pattern": "treats",
+          "palette": "peach",
+          "intensity": 0.45,
+          "kind": "image",
+          "file": "../citrus-grove/citrus-grove.jpg",
+          "thumb": "../citrus-grove/thumb.jpg",
+          "dark": "../citrus-grove/citrus-grove-dark.jpg",
+          "darkThumb": "../citrus-grove/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/marigold/item.json",
+        "themes/marigold/theme.json"
+      ]
+    },
+    {
+      "id": "nightshift",
+      "type": "theme",
+      "name": "Nightshift",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "neutral",
+        "focus"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "71c02522220fdba2cd1b4dacb56fbf3f0257d79731ab686074d6defdfe9438f2",
+      "size": 1512,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "Redesigned around the Rain window painting: new colors and fonts."
+        }
+      ],
+      "pick": "A dark theme for late work, with calm colors and clear type.",
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#42598D",
+            "background": "#F8FAFE",
+            "onBackground": "#181B20",
+            "primary": "#42598D",
+            "primaryContainer": "#DDE8FE",
+            "secondary": "#864900",
+            "secondaryContainer": "#FFE2CB",
+            "tertiary": "#61527C",
+            "tertiaryContainer": "#EAE4F8",
+            "appBar": "#F2F6FE"
+          },
+          "dark": {
+            "seed": "#B0C4EE",
+            "background": "#0F1217",
+            "onBackground": "#E4E8F0",
+            "primary": "#B0C4EE",
+            "primaryContainer": "#2C3850",
+            "secondary": "#EDB88D",
+            "secondaryContainer": "#4E3015",
+            "tertiary": "#C9BEE0",
+            "tertiaryContainer": "#3B3448",
+            "appBar": "#131720"
+          }
+        },
+        "headingFont": "Space Grotesk",
+        "bodyFont": "IBM Plex Sans",
+        "wallpaper": {
+          "image": "rain-window",
+          "pattern": "tech",
+          "palette": "graphite",
+          "intensity": 0.4,
+          "kind": "image",
+          "file": "../rain-window/rain-window.jpg",
+          "thumb": "../rain-window/thumb.jpg",
+          "dark": "../rain-window/rain-window-dark.jpg",
+          "darkThumb": "../rain-window/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/nightshift/item.json",
+        "themes/nightshift/theme.json"
+      ]
+    },
+    {
+      "id": "north",
+      "type": "theme",
+      "name": "North",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "blue",
+        "calm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "27c797d9dd491d9b7b1cc60a40dd521bdf6f30cf5eb37f58684b1945fcf5ae9d",
+      "size": 1420,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "Redesigned around the Snow day painting: new colors and fonts."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#305E8B",
+            "background": "#F7FAFE",
+            "onBackground": "#161B20",
+            "primary": "#305E8B",
+            "primaryContainer": "#D7EAFE",
+            "secondary": "#3E6073",
+            "secondaryContainer": "#DCEAF4",
+            "tertiary": "#804D0C",
+            "tertiaryContainer": "#FBE3CD",
+            "appBar": "#F0F7FE"
+          },
+          "dark": {
+            "seed": "#A6C8EC",
+            "background": "#0E1217",
+            "onBackground": "#E2E9F0",
+            "primary": "#A6C8EC",
+            "primaryContainer": "#263A4E",
+            "secondary": "#AFC8D8",
+            "secondaryContainer": "#2B3A43",
+            "tertiary": "#E4BB95",
+            "tertiaryContainer": "#4A321B",
+            "appBar": "#101820"
+          }
+        },
+        "headingFont": "Newsreader",
+        "bodyFont": "Source Sans 3",
+        "wallpaper": {
+          "image": "snow-day",
+          "pattern": "clouds",
+          "palette": "ocean",
+          "intensity": 0.4,
+          "kind": "image",
+          "file": "../snow-day/snow-day.jpg",
+          "thumb": "../snow-day/thumb.jpg",
+          "dark": "../snow-day/snow-day-dark.jpg",
+          "darkThumb": "../snow-day/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/north/item.json",
+        "themes/north/theme.json"
+      ]
+    },
+    {
+      "id": "ocean",
+      "type": "theme",
+      "name": "Ocean",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "blue",
+        "calm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "a9e45e8d40063a04f3c48653cf9b2cbf815ab1b9e8273dfbd983eba51d38439c",
+      "size": 1399,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "Redesigned around the Tide painting: new colors and fonts."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#056774",
+            "background": "#F6FBFC",
+            "onBackground": "#141C1E",
+            "primary": "#056774",
+            "primaryContainer": "#CAF0F7",
+            "secondary": "#74542C",
+            "secondaryContainer": "#F4E5D4",
+            "tertiary": "#295F8A",
+            "tertiaryContainer": "#D5EBFF",
+            "appBar": "#EDF8FA"
+          },
+          "dark": {
+            "seed": "#8DD1DD",
+            "background": "#0B1314",
+            "onBackground": "#DFEAEC",
+            "primary": "#8DD1DD",
+            "primaryContainer": "#113F46",
+            "secondary": "#D9BFA2",
+            "secondaryContainer": "#443524",
+            "tertiary": "#A3C9EB",
+            "tertiaryContainer": "#233A4E",
+            "appBar": "#0C1A1C"
+          }
+        },
+        "headingFont": "Outfit",
+        "bodyFont": "Figtree",
+        "wallpaper": {
+          "image": "tide",
+          "pattern": "sea",
+          "palette": "ocean",
+          "intensity": 0.5,
+          "kind": "image",
+          "file": "../tide/tide.jpg",
+          "thumb": "../tide/thumb.jpg",
+          "dark": "../tide/tide-dark.jpg",
+          "darkThumb": "../tide/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/ocean/item.json",
+        "themes/ocean/theme.json"
+      ]
+    },
+    {
+      "id": "orchard",
+      "type": "theme",
+      "name": "Orchard",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "green",
+        "calm"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "daea322811b73353ba1e84c0377a9f5753035011492a3e549d614c6421c59533",
+      "size": 1473,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "Redesigned around the Greenhouse painting: new colors and fonts."
+        }
+      ],
+      "pick": "Warm and friendly, like a sunny afternoon.",
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#416729",
+            "background": "#F8FBF7",
+            "onBackground": "#181C16",
+            "primary": "#416729",
+            "primaryContainer": "#DDEED4",
+            "secondary": "#326659",
+            "secondaryContainer": "#D8EDE7",
+            "tertiary": "#6F571E",
+            "tertiaryContainer": "#F2E7D0",
+            "appBar": "#F2F8F0"
+          },
+          "dark": {
+            "seed": "#B1CFA1",
+            "background": "#0F130E",
+            "onBackground": "#E4EAE2",
+            "primary": "#B1CFA1",
+            "primaryContainer": "#2D3E23",
+            "secondary": "#A9CDC2",
+            "secondaryContainer": "#273D37",
+            "tertiary": "#D5C29B",
+            "tertiaryContainer": "#41361F",
+            "appBar": "#131910"
+          }
+        },
+        "headingFont": "Lora",
+        "bodyFont": "Work Sans",
+        "wallpaper": {
+          "image": "greenhouse",
+          "pattern": "garden",
+          "palette": "forest",
+          "intensity": 0.5,
+          "kind": "image",
+          "file": "../greenhouse/greenhouse.jpg",
+          "thumb": "../greenhouse/thumb.jpg",
+          "dark": "../greenhouse/greenhouse-dark.jpg",
+          "darkThumb": "../greenhouse/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/orchard/item.json",
+        "themes/orchard/theme.json"
+      ]
+    },
+    {
+      "id": "picnic",
+      "type": "theme",
+      "name": "Picnic",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "bright",
+        "playful"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "43ac434ce2857ede05bd25aee129e7c02ca518aca184514996e50e85cbf81104",
+      "size": 1363,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#9D2A3F",
+            "background": "#FEF9F9",
+            "onBackground": "#201819",
+            "primary": "#9D2A3F",
+            "primaryContainer": "#FEDFE0",
+            "secondary": "#705800",
+            "secondaryContainer": "#F3E7C7",
+            "tertiary": "#3A6830",
+            "tertiaryContainer": "#DAEFD6",
+            "appBar": "#FEF3F3"
+          },
+          "dark": {
+            "seed": "#FFA9AF",
+            "background": "#170F10",
+            "onBackground": "#F0E5E5",
+            "primary": "#FFA9AF",
+            "primaryContainer": "#58262B",
+            "secondary": "#D7C38A",
+            "secondaryContainer": "#433612",
+            "tertiary": "#ADD0A5",
+            "tertiaryContainer": "#2A3E25",
+            "appBar": "#1F1314"
+          }
+        },
+        "headingFont": "Rubik",
+        "bodyFont": "Rubik",
+        "wallpaper": {
+          "image": "picnic",
+          "pattern": "treats",
+          "palette": "peach",
+          "intensity": 0.5,
+          "kind": "image",
+          "file": "../picnic/picnic.jpg",
+          "thumb": "../picnic/thumb.jpg",
+          "dark": "../picnic/picnic-dark.jpg",
+          "darkThumb": "../picnic/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/picnic/item.json",
+        "themes/picnic/theme.json"
+      ]
+    },
+    {
+      "id": "postcard",
+      "type": "theme",
+      "name": "Postcard",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "sea"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "b85b7085301e6105f2726ebdf6b17883d9d33c26a7d2267fadae9529131e6458",
+      "size": 1427,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "Redesigned around the Desert bloom painting: new colors and fonts."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#953922",
+            "background": "#FEF9F7",
+            "onBackground": "#201917",
+            "primary": "#953922",
+            "primaryContainer": "#FFE0D8",
+            "secondary": "#446630",
+            "secondaryContainer": "#DEEED6",
+            "tertiary": "#903952",
+            "tertiaryContainer": "#FEDEE4",
+            "appBar": "#FEF3F0"
+          },
+          "dark": {
+            "seed": "#F9AF9C",
+            "background": "#16100E",
+            "onBackground": "#F0E5E2",
+            "primary": "#F9AF9C",
+            "primaryContainer": "#542A20",
+            "secondary": "#B3CEA5",
+            "secondaryContainer": "#2E3D25",
+            "tertiary": "#F4AEBD",
+            "tertiaryContainer": "#522A34",
+            "appBar": "#1F1411"
+          }
+        },
+        "headingFont": "DM Serif Display",
+        "bodyFont": "Nunito",
+        "wallpaper": {
+          "image": "desert-bloom",
+          "pattern": "sea",
+          "palette": "sunset",
+          "intensity": 0.5,
+          "kind": "image",
+          "file": "../desert-bloom/desert-bloom.jpg",
+          "thumb": "../desert-bloom/thumb.jpg",
+          "dark": "../desert-bloom/desert-bloom-dark.jpg",
+          "darkThumb": "../desert-bloom/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/postcard/item.json",
+        "themes/postcard/theme.json"
+      ]
+    },
+    {
+      "id": "purr",
+      "type": "theme",
+      "name": "Purr",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "cozy",
+        "orange",
+        "cats"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "3aa6e87a0b48ebd5322eb52240f2bd75254c6a25aa373fc999bb04de7cbb65b8",
+      "size": 1369,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#953B01",
+            "background": "#FEF9F7",
+            "onBackground": "#201916",
+            "primary": "#953B01",
+            "primaryContainer": "#FFE1D3",
+            "secondary": "#745338",
+            "secondaryContainer": "#F5E5D8",
+            "tertiary": "#8B3D58",
+            "tertiaryContainer": "#FFDEE7",
+            "appBar": "#FDF3EF"
+          },
+          "dark": {
+            "seed": "#FAB08F",
+            "background": "#16100D",
+            "onBackground": "#EFE6E1",
+            "primary": "#FAB08F",
+            "primaryContainer": "#552B17",
+            "secondary": "#D9BEA9",
+            "secondaryContainer": "#443428",
+            "tertiary": "#EFB0C2",
+            "tertiaryContainer": "#4F2B37",
+            "appBar": "#1F1410"
+          }
+        },
+        "headingFont": "Fredoka",
+        "bodyFont": "Nunito",
+        "wallpaper": {
+          "image": "purr",
+          "pattern": "pets",
+          "palette": "peach",
+          "intensity": 0.5,
+          "kind": "image",
+          "file": "../purr/purr.jpg",
+          "thumb": "../purr/thumb.jpg",
+          "dark": "../purr/purr-dark.jpg",
+          "darkThumb": "../purr/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/purr/item.json",
+        "themes/purr/theme.json"
+      ]
+    },
+    {
+      "id": "sakura",
+      "type": "theme",
+      "name": "Sakura",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "pink",
+        "playful"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "86346eb1ab46c4d328a99136e6dc9398167a43ca0e8b78db980830dacbea1ed2",
+      "size": 1416,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "Redesigned around the Petal painting: new colors and fonts."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#953058",
+            "background": "#FEF8FA",
+            "onBackground": "#20181A",
+            "primary": "#953058",
+            "primaryContainer": "#FFDEE7",
+            "secondary": "#73477D",
+            "secondaryContainer": "#F4E0F9",
+            "tertiary": "#3B5C87",
+            "tertiaryContainer": "#DAE9FE",
+            "appBar": "#FDF3F5"
+          },
+          "dark": {
+            "seed": "#F9AAC1",
+            "background": "#160F11",
+            "onBackground": "#EFE5E7",
+            "primary": "#F9AAC1",
+            "primaryContainer": "#542736",
+            "secondary": "#D9B6E1",
+            "secondaryContainer": "#432F48",
+            "tertiary": "#ACC7E9",
+            "tertiaryContainer": "#2A394D",
+            "appBar": "#1F1317"
+          }
+        },
+        "headingFont": "Crimson Pro",
+        "bodyFont": "Quicksand",
+        "wallpaper": {
+          "image": "petal",
+          "pattern": "treats",
+          "palette": "cotton",
+          "intensity": 0.5,
+          "kind": "image",
+          "file": "../petal/petal.jpg",
+          "thumb": "../petal/thumb.jpg",
+          "dark": "../petal/petal-dark.jpg",
+          "darkThumb": "../petal/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/sakura/item.json",
+        "themes/sakura/theme.json"
+      ]
+    },
+    {
+      "id": "stargazer",
+      "type": "theme",
+      "name": "Stargazer",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "purple",
+        "dreamy"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "fff79daa44d12eddad9e7bb61cb3eb094e19eb13a721d0218ded281066ba92ac",
+      "size": 1376,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#6343A4",
+            "background": "#FAF9FE",
+            "onBackground": "#1B1A20",
+            "primary": "#6343A4",
+            "primaryContainer": "#E9E4FE",
+            "secondary": "#823D75",
+            "secondaryContainer": "#FDDCF5",
+            "tertiary": "#2B5C97",
+            "tertiaryContainer": "#D9EAFF",
+            "appBar": "#F6F4FD"
+          },
+          "dark": {
+            "seed": "#C8B7FF",
+            "background": "#121116",
+            "onBackground": "#E8E6EF",
+            "primary": "#C8B7FF",
+            "primaryContainer": "#3B2F5A",
+            "secondary": "#E7B0DA",
+            "secondaryContainer": "#4B2B44",
+            "tertiary": "#A3C7F6",
+            "tertiaryContainer": "#243954",
+            "appBar": "#18151F"
+          }
+        },
+        "headingFont": "Urbanist",
+        "bodyFont": "Urbanist",
+        "wallpaper": {
+          "image": "stargazer",
+          "pattern": "space",
+          "palette": "lavender",
+          "intensity": 0.5,
+          "kind": "image",
+          "file": "../stargazer/stargazer.jpg",
+          "thumb": "../stargazer/thumb.jpg",
+          "dark": "../stargazer/stargazer-dark.jpg",
+          "darkThumb": "../stargazer/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/stargazer/item.json",
+        "themes/stargazer/theme.json"
+      ]
+    },
+    {
+      "id": "starlit",
+      "type": "theme",
+      "name": "Starlit",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "blue",
+        "night",
+        "calm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "cd2c2dc94a85d4414685f686b811cd3da645749ed1d238d9bf3c5838122d55db",
+      "size": 1388,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#435698",
+            "background": "#F8FAFE",
+            "onBackground": "#181A20",
+            "primary": "#435698",
+            "primaryContainer": "#DFE7FE",
+            "secondary": "#5F5088",
+            "secondaryContainer": "#E9E4FE",
+            "tertiary": "#1D676A",
+            "tertiaryContainer": "#D3EEEF",
+            "appBar": "#F2F6FE"
+          },
+          "dark": {
+            "seed": "#B0C2F7",
+            "background": "#0F1117",
+            "onBackground": "#E5E8F0",
+            "primary": "#B0C2F7",
+            "primaryContainer": "#2D3655",
+            "secondary": "#C6BDE9",
+            "secondaryContainer": "#39334D",
+            "tertiary": "#9FCED1",
+            "tertiaryContainer": "#213E3F",
+            "appBar": "#141720"
+          }
+        },
+        "headingFont": "EB Garamond",
+        "bodyFont": "Work Sans",
+        "wallpaper": {
+          "image": "starlit-lake",
+          "pattern": "space",
+          "palette": "ocean",
+          "intensity": 0.45,
+          "kind": "image",
+          "file": "../starlit-lake/starlit-lake.jpg",
+          "thumb": "../starlit-lake/thumb.jpg",
+          "dark": "../starlit-lake/starlit-lake-dark.jpg",
+          "darkThumb": "../starlit-lake/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/starlit/item.json",
+        "themes/starlit/theme.json"
+      ]
+    },
+    {
+      "id": "sunset",
+      "type": "theme",
+      "name": "Sunset",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "playful"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "ef0b653d099fa5d8a4c35f381553599ebd292e89b4c549512ad9f15cb7e46391",
+      "size": 1437,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "Redesigned around the Tea morning painting: new colors and fonts."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#8B4501",
+            "background": "#FDF9F6",
+            "onBackground": "#1F1915",
+            "primary": "#8B4501",
+            "primaryContainer": "#FFE1CE",
+            "secondary": "#8A4148",
+            "secondaryContainer": "#FEDFE0",
+            "tertiary": "#72560F",
+            "tertiaryContainer": "#F3E7CD",
+            "appBar": "#FDF4EE"
+          },
+          "dark": {
+            "seed": "#F3B58B",
+            "background": "#16100D",
+            "onBackground": "#EFE6E0",
+            "primary": "#F3B58B",
+            "primaryContainer": "#512E13",
+            "secondary": "#EEB2B5",
+            "secondaryContainer": "#4F2D2F",
+            "tertiary": "#D7C296",
+            "tertiaryContainer": "#43361B",
+            "appBar": "#1E150E"
+          }
+        },
+        "headingFont": "Young Serif",
+        "bodyFont": "Plus Jakarta Sans",
+        "wallpaper": {
+          "image": "tea-morning",
+          "pattern": "doodles",
+          "palette": "sunset",
+          "intensity": 0.5,
+          "kind": "image",
+          "file": "../tea-morning/tea-morning.jpg",
+          "thumb": "../tea-morning/thumb.jpg",
+          "dark": "../tea-morning/tea-morning-dark.jpg",
+          "darkThumb": "../tea-morning/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/sunset/item.json",
+        "themes/sunset/theme.json"
+      ]
+    },
+    {
+      "id": "velvet",
+      "type": "theme",
+      "name": "Velvet",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "purple",
+        "night"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "31543c25c3d0ae3e0bc037a7461872179c9d512b4ffac3999cb7f7bbcab18573",
+      "size": 1436,
+      "requires": [
+        "scheme-colors"
+      ],
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "The painting has a night version now, for dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "Redesigned around the Moonlit garden painting: new colors and fonts."
+        }
+      ],
+      "document": {
+        "v": 2,
+        "scheme": {
+          "light": {
+            "seed": "#76408C",
+            "background": "#FCF9FD",
+            "onBackground": "#1D191E",
+            "primary": "#76408C",
+            "primaryContainer": "#F4DFFF",
+            "secondary": "#893D5E",
+            "secondaryContainer": "#FFDDE9",
+            "tertiary": "#72560F",
+            "tertiaryContainer": "#F3E7CD",
+            "appBar": "#F9F3FB"
+          },
+          "dark": {
+            "seed": "#DBB3ED",
+            "background": "#141015",
+            "onBackground": "#EBE6ED",
+            "primary": "#DBB3ED",
+            "primaryContainer": "#452D4F",
+            "secondary": "#EDB0C7",
+            "secondaryContainer": "#4E2B39",
+            "tertiary": "#D7C296",
+            "tertiaryContainer": "#43361B",
+            "appBar": "#1B141E"
+          }
+        },
+        "headingFont": "Playfair Display",
+        "bodyFont": "Manrope",
+        "wallpaper": {
+          "image": "moonlit-garden",
+          "pattern": "space",
+          "palette": "casama",
+          "intensity": 0.5,
+          "kind": "image",
+          "file": "../moonlit-garden/moonlit-garden.jpg",
+          "thumb": "../moonlit-garden/thumb.jpg",
+          "dark": "../moonlit-garden/moonlit-garden-dark.jpg",
+          "darkThumb": "../moonlit-garden/thumb-dark.jpg"
+        }
+      },
+      "files": [
+        "themes/velvet/item.json",
+        "themes/velvet/theme.json"
+      ]
+    },
+    {
+      "id": "aurora",
+      "type": "wallpaper",
+      "name": "Aurora",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "night",
+        "green"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "337f374b1be09de484482c5062c9f878f95d7db1a26f9ea38d14f0c11be71460",
+      "size": 1039731,
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "New painted art in the same mood."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-11",
+          "note": "First version."
+        }
+      ],
+      "pick": "Northern lights colors in a soft gradient.",
+      "document": {
+        "kind": "image",
+        "file": "aurora.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "aurora-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/aurora/aurora-dark.jpg",
+        "wallpapers/aurora/aurora.jpg",
+        "wallpapers/aurora/item.json",
+        "wallpapers/aurora/thumb-dark.jpg",
+        "wallpapers/aurora/thumb.jpg",
+        "wallpapers/aurora/wallpaper.json"
+      ]
+    },
+    {
+      "id": "candy-sky",
+      "type": "wallpaper",
+      "name": "Candy sky",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "pastel",
+        "playful"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "468c4fbd59182a8f6ac2b1b9cefa5a86735332f9fff1a4e305a3c96a9199eb96",
+      "size": 922541,
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "candy-sky.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "candy-sky-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/candy-sky/candy-sky-dark.jpg",
+        "wallpapers/candy-sky/candy-sky.jpg",
+        "wallpapers/candy-sky/item.json",
+        "wallpapers/candy-sky/thumb-dark.jpg",
+        "wallpapers/candy-sky/thumb.jpg",
+        "wallpapers/candy-sky/wallpaper.json"
+      ]
+    },
+    {
+      "id": "circuit",
+      "type": "wallpaper",
+      "name": "Circuit",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "tech",
+        "neutral"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "affa61f5c211ab7f44244a518813175c6c2493d784d070807abf8221c4b46e3b",
+      "size": 558431,
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "New painted art in the same mood."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-11",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "circuit.jpg",
+        "thumb": "thumb.jpg"
+      },
+      "files": [
+        "wallpapers/circuit/circuit.jpg",
+        "wallpapers/circuit/item.json",
+        "wallpapers/circuit/thumb.jpg",
+        "wallpapers/circuit/wallpaper.json"
+      ]
+    },
+    {
+      "id": "citrus-grove",
+      "type": "wallpaper",
+      "name": "Citrus grove",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "bright",
+        "warm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "bb44fb619ff8d5546bb9f76a9ec5d847a0599fe62363b882cc70b4e37d189ba3",
+      "size": 1071848,
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "citrus-grove.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "citrus-grove-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/citrus-grove/citrus-grove-dark.jpg",
+        "wallpapers/citrus-grove/citrus-grove.jpg",
+        "wallpapers/citrus-grove/item.json",
+        "wallpapers/citrus-grove/thumb-dark.jpg",
+        "wallpapers/citrus-grove/thumb.jpg",
+        "wallpapers/citrus-grove/wallpaper.json"
+      ]
+    },
+    {
+      "id": "cloud-sea",
+      "type": "wallpaper",
+      "name": "Cloud sea",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "calm",
+        "sky"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "b5cefa1fd881ac5f977adb9ba3edb098ead733e95b039ff0e225a41021a085d1",
+      "size": 370131,
+      "document": {
+        "kind": "image",
+        "file": "cloud-sea.jpg",
+        "thumb": "thumb.jpg"
+      },
+      "files": [
+        "wallpapers/cloud-sea/cloud-sea.jpg",
+        "wallpapers/cloud-sea/item.json",
+        "wallpapers/cloud-sea/thumb.jpg",
+        "wallpapers/cloud-sea/wallpaper.json"
+      ]
+    },
+    {
+      "id": "desert-bloom",
+      "type": "wallpaper",
+      "name": "Desert bloom",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "flowers"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "e57056c3529742b0438e2da7eea1aadea0a50806faf0aa83d9080887aa50b948",
+      "size": 991540,
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "desert-bloom.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "desert-bloom-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/desert-bloom/desert-bloom-dark.jpg",
+        "wallpapers/desert-bloom/desert-bloom.jpg",
+        "wallpapers/desert-bloom/item.json",
+        "wallpapers/desert-bloom/thumb-dark.jpg",
+        "wallpapers/desert-bloom/thumb.jpg",
+        "wallpapers/desert-bloom/wallpaper.json"
+      ]
+    },
+    {
+      "id": "dune",
+      "type": "wallpaper",
+      "name": "Dune",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "calm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "322f0bbdd4acaf1bb6bbb23bbb285911b12f711ca97f1d9cdfec503493cbe274",
+      "size": 528001,
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "New painted art in the same mood."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-11",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "dune.jpg",
+        "thumb": "thumb.jpg"
+      },
+      "files": [
+        "wallpapers/dune/dune.jpg",
+        "wallpapers/dune/item.json",
+        "wallpapers/dune/thumb.jpg",
+        "wallpapers/dune/wallpaper.json"
+      ]
+    },
+    {
+      "id": "dusk",
+      "type": "wallpaper",
+      "name": "Dusk",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "sunset",
+        "warm"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 4,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "f9d5351a1919473fdce2e62911ccc1d43ee0768a3bae45d01160779354d973cf",
+      "size": 959198,
+      "changelog": [
+        {
+          "version": 4,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "New painted art in the same mood."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-11",
+          "note": "Adds a small thumbnail so cards load faster."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-11",
+          "note": "First version."
+        }
+      ],
+      "pick": "A warm painted sunset that sits quietly behind your chats.",
+      "document": {
+        "kind": "image",
+        "file": "dusk.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "dusk-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/dusk/dusk-dark.jpg",
+        "wallpapers/dusk/dusk.jpg",
+        "wallpapers/dusk/item.json",
+        "wallpapers/dusk/thumb-dark.jpg",
+        "wallpapers/dusk/thumb.jpg",
+        "wallpapers/dusk/wallpaper.json"
+      ]
+    },
+    {
+      "id": "fog",
+      "type": "wallpaper",
+      "name": "Fog",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "calm",
+        "cool"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "71338617c8d495500d684271d29eef4182f227c58e435a385edb7854487bb68c",
+      "size": 937922,
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "New painted art in the same mood."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-11",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "fog.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "fog-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/fog/fog-dark.jpg",
+        "wallpapers/fog/fog.jpg",
+        "wallpapers/fog/item.json",
+        "wallpapers/fog/thumb-dark.jpg",
+        "wallpapers/fog/thumb.jpg",
+        "wallpapers/fog/wallpaper.json"
+      ]
+    },
+    {
+      "id": "greenhouse",
+      "type": "wallpaper",
+      "name": "Greenhouse",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "garden",
+        "green"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "4d89d2ab6bd9f415948c688dd5408b0ed6a0c599922f55873a86b1699db359c4",
+      "size": 1231430,
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "New painted art in the same mood."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-11",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "greenhouse.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "greenhouse-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/greenhouse/greenhouse-dark.jpg",
+        "wallpapers/greenhouse/greenhouse.jpg",
+        "wallpapers/greenhouse/item.json",
+        "wallpapers/greenhouse/thumb-dark.jpg",
+        "wallpapers/greenhouse/thumb.jpg",
+        "wallpapers/greenhouse/wallpaper.json"
+      ]
+    },
+    {
+      "id": "koi-pond",
+      "type": "wallpaper",
+      "name": "Koi pond",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "water",
+        "calm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "0bf5eb6ae087e1b827798272a33c0adcd8ffa3fc009feaa9500a5f46ce163add",
+      "size": 944347,
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "koi-pond.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "koi-pond-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/koi-pond/item.json",
+        "wallpapers/koi-pond/koi-pond-dark.jpg",
+        "wallpapers/koi-pond/koi-pond.jpg",
+        "wallpapers/koi-pond/thumb-dark.jpg",
+        "wallpapers/koi-pond/thumb.jpg",
+        "wallpapers/koi-pond/wallpaper.json"
+      ]
+    },
+    {
+      "id": "lantern-night",
+      "type": "wallpaper",
+      "name": "Lantern night",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "night",
+        "warm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "20d72125e08637e42950bd207b8202a10b0d4224d49204a3a604e750c99b6c7b",
+      "size": 753091,
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "lantern-night.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "lantern-night-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/lantern-night/item.json",
+        "wallpapers/lantern-night/lantern-night-dark.jpg",
+        "wallpapers/lantern-night/lantern-night.jpg",
+        "wallpapers/lantern-night/thumb-dark.jpg",
+        "wallpapers/lantern-night/thumb.jpg",
+        "wallpapers/lantern-night/wallpaper.json"
+      ]
+    },
+    {
+      "id": "lavender-hills",
+      "type": "wallpaper",
+      "name": "Lavender hills",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "calm",
+        "purple"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "c407197dc17166786d771fa5b393c9d60c77cd822f2f28d2809c3f10a3a502f3",
+      "size": 1157424,
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "lavender-hills.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "lavender-hills-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/lavender-hills/item.json",
+        "wallpapers/lavender-hills/lavender-hills-dark.jpg",
+        "wallpapers/lavender-hills/lavender-hills.jpg",
+        "wallpapers/lavender-hills/thumb-dark.jpg",
+        "wallpapers/lavender-hills/thumb.jpg",
+        "wallpapers/lavender-hills/wallpaper.json"
+      ]
+    },
+    {
+      "id": "margins",
+      "type": "wallpaper",
+      "name": "Margins",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "doodles"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "d27ece30610ae9b5f7568ba5706f4d6d6f3c099ac3b0c5df4186eea55a3a9c90",
+      "size": 1013170,
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "New painted art in the same mood."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-11",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "margins.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "margins-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/margins/item.json",
+        "wallpapers/margins/margins-dark.jpg",
+        "wallpapers/margins/margins.jpg",
+        "wallpapers/margins/thumb-dark.jpg",
+        "wallpapers/margins/thumb.jpg",
+        "wallpapers/margins/wallpaper.json"
+      ]
+    },
+    {
+      "id": "moonlit-garden",
+      "type": "wallpaper",
+      "name": "Moonlit garden",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "night",
+        "flowers"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "65f82f88fb16fbf1a0ea272e67cc46bb1a08a81685d61e0e4427a285eb6c4d39",
+      "size": 1375549,
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "moonlit-garden.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "moonlit-garden-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/moonlit-garden/item.json",
+        "wallpapers/moonlit-garden/moonlit-garden-dark.jpg",
+        "wallpapers/moonlit-garden/moonlit-garden.jpg",
+        "wallpapers/moonlit-garden/thumb-dark.jpg",
+        "wallpapers/moonlit-garden/thumb.jpg",
+        "wallpapers/moonlit-garden/wallpaper.json"
+      ]
+    },
+    {
+      "id": "mountain-mist",
+      "type": "wallpaper",
+      "name": "Mountain mist",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "calm",
+        "cool"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "2f015046ee67ceadab7483ef1ffc9ea9d84d939dba4491dcec90d9247062f6c9",
+      "size": 497240,
+      "document": {
+        "kind": "image",
+        "file": "mountain-mist.jpg",
+        "thumb": "thumb.jpg"
+      },
+      "files": [
+        "wallpapers/mountain-mist/item.json",
+        "wallpapers/mountain-mist/mountain-mist.jpg",
+        "wallpapers/mountain-mist/thumb.jpg",
+        "wallpapers/mountain-mist/wallpaper.json"
+      ]
+    },
+    {
+      "id": "night-sky",
+      "type": "wallpaper",
+      "name": "Night sky",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "space"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "0be2e30caeda66761c1214968209d84c653aeec8b75cdffef66a51f1f02c3c65",
+      "size": 485204,
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "New painted art in the same mood."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-11",
+          "note": "First version."
+        }
+      ],
+      "pick": "Stars for night owls.",
+      "document": {
+        "kind": "image",
+        "file": "night-sky.jpg",
+        "thumb": "thumb.jpg"
+      },
+      "files": [
+        "wallpapers/night-sky/item.json",
+        "wallpapers/night-sky/night-sky.jpg",
+        "wallpapers/night-sky/thumb.jpg",
+        "wallpapers/night-sky/wallpaper.json"
+      ]
+    },
+    {
+      "id": "northern-pines",
+      "type": "wallpaper",
+      "name": "Northern pines",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "forest",
+        "green"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "6654e9e7b3586f257c4f7defaa01e0acf67e36a27ee30b2ea36534aeed607eab",
+      "size": 1333334,
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "northern-pines.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "northern-pines-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/northern-pines/item.json",
+        "wallpapers/northern-pines/northern-pines-dark.jpg",
+        "wallpapers/northern-pines/northern-pines.jpg",
+        "wallpapers/northern-pines/thumb-dark.jpg",
+        "wallpapers/northern-pines/thumb.jpg",
+        "wallpapers/northern-pines/wallpaper.json"
+      ]
+    },
+    {
+      "id": "paper-cranes",
+      "type": "wallpaper",
+      "name": "Paper cranes",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "calm",
+        "light"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "c6c87cd5a453543bdfb24b67274e1d0157c2521833cacc71804a4361f596c334",
+      "size": 513544,
+      "document": {
+        "kind": "image",
+        "file": "paper-cranes.jpg",
+        "thumb": "thumb.jpg"
+      },
+      "files": [
+        "wallpapers/paper-cranes/item.json",
+        "wallpapers/paper-cranes/paper-cranes.jpg",
+        "wallpapers/paper-cranes/thumb.jpg",
+        "wallpapers/paper-cranes/wallpaper.json"
+      ]
+    },
+    {
+      "id": "petal",
+      "type": "wallpaper",
+      "name": "Petal",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "pink",
+        "calm"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-12",
+      "updated": "2026-11-18",
+      "sha256": "46bb6c02c8bbbd61c5d85f484bc812dc5c241eda9f7ef1307adca44885651f6d",
+      "size": 780751,
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "New painted art in the same mood."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-12",
+          "note": "First version."
+        }
+      ],
+      "pick": "Soft pink petals drifting over a blush wash.",
+      "document": {
+        "kind": "image",
+        "file": "petal.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "petal-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/petal/item.json",
+        "wallpapers/petal/petal-dark.jpg",
+        "wallpapers/petal/petal.jpg",
+        "wallpapers/petal/thumb-dark.jpg",
+        "wallpapers/petal/thumb.jpg",
+        "wallpapers/petal/wallpaper.json"
+      ]
+    },
+    {
+      "id": "picnic",
+      "type": "wallpaper",
+      "name": "Picnic",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "treats",
+        "playful"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "a06a6abc09d23d8201b2bd83b870e74ebef6c6565ef67a86fa3fbbbe12b87e32",
+      "size": 1024856,
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "New painted art in the same mood."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-11",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "picnic.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "picnic-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/picnic/item.json",
+        "wallpapers/picnic/picnic-dark.jpg",
+        "wallpapers/picnic/picnic.jpg",
+        "wallpapers/picnic/thumb-dark.jpg",
+        "wallpapers/picnic/thumb.jpg",
+        "wallpapers/picnic/wallpaper.json"
+      ]
+    },
+    {
+      "id": "purr",
+      "type": "wallpaper",
+      "name": "Purr",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "pets",
+        "warm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "8c7e38efb329c5756f5a7a9c1986eb2ab2016c4beb9d09b6e23c305835e82a1c",
+      "size": 1215075,
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "New painted art in the same mood."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-11",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "purr.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "purr-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/purr/item.json",
+        "wallpapers/purr/purr-dark.jpg",
+        "wallpapers/purr/purr.jpg",
+        "wallpapers/purr/thumb-dark.jpg",
+        "wallpapers/purr/thumb.jpg",
+        "wallpapers/purr/wallpaper.json"
+      ]
+    },
+    {
+      "id": "rain-window",
+      "type": "wallpaper",
+      "name": "Rain window",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "cozy",
+        "city"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "c3e60537771815260175f9be49a120a70a57c732cf129414ab7c6e7990423dce",
+      "size": 918049,
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "rain-window.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "rain-window-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/rain-window/item.json",
+        "wallpapers/rain-window/rain-window-dark.jpg",
+        "wallpapers/rain-window/rain-window.jpg",
+        "wallpapers/rain-window/thumb-dark.jpg",
+        "wallpapers/rain-window/thumb.jpg",
+        "wallpapers/rain-window/wallpaper.json"
+      ]
+    },
+    {
+      "id": "scribbles",
+      "type": "wallpaper",
+      "name": "Scribbles",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "playful",
+        "pink"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-12",
+      "updated": "2026-11-18",
+      "sha256": "9c26645533c4b6d53c0189fdc7a2e55be1ad4fe5ad25d72f88ac10ac6d29c4d4",
+      "size": 643527,
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "New painted art in the same mood."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-12",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "scribbles.jpg",
+        "thumb": "thumb.jpg"
+      },
+      "files": [
+        "wallpapers/scribbles/item.json",
+        "wallpapers/scribbles/scribbles.jpg",
+        "wallpapers/scribbles/thumb.jpg",
+        "wallpapers/scribbles/wallpaper.json"
+      ]
+    },
+    {
+      "id": "snow-day",
+      "type": "wallpaper",
+      "name": "Snow day",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "winter",
+        "holiday",
+        "seasonal"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-16",
+      "updated": "2026-11-18",
+      "sha256": "b5300e7a90e61d11ff6f50205919557c078812738ec9d3cea044e8c113ab1227",
+      "size": 1123151,
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "New painted art in the same mood."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-16",
+          "note": "First version."
+        }
+      ],
+      "season": {
+        "from": "12-01",
+        "to": "01-06"
+      },
+      "document": {
+        "kind": "image",
+        "file": "snow-day.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "snow-day-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/snow-day/item.json",
+        "wallpapers/snow-day/snow-day-dark.jpg",
+        "wallpapers/snow-day/snow-day.jpg",
+        "wallpapers/snow-day/thumb-dark.jpg",
+        "wallpapers/snow-day/thumb.jpg",
+        "wallpapers/snow-day/wallpaper.json"
+      ]
+    },
+    {
+      "id": "stargazer",
+      "type": "wallpaper",
+      "name": "Stargazer",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "night",
+        "space"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 3,
+      "added": "2026-11-12",
+      "updated": "2026-11-18",
+      "sha256": "ee67075e70945e9048a28208c1104df48b5819967e946228e99d9d8f8e203bd9",
+      "size": 808118,
+      "changelog": [
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "New painted art in the same mood."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-12",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "stargazer.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "stargazer-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/stargazer/item.json",
+        "wallpapers/stargazer/stargazer-dark.jpg",
+        "wallpapers/stargazer/stargazer.jpg",
+        "wallpapers/stargazer/thumb-dark.jpg",
+        "wallpapers/stargazer/thumb.jpg",
+        "wallpapers/stargazer/wallpaper.json"
+      ]
+    },
+    {
+      "id": "starlit-lake",
+      "type": "wallpaper",
+      "name": "Starlit lake",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "night",
+        "calm"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "f3dc0bee7b75f6285529cb993c2082f24e949c1a10be905156e54985379df1fe",
+      "size": 1168247,
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "starlit-lake.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "starlit-lake-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/starlit-lake/item.json",
+        "wallpapers/starlit-lake/starlit-lake-dark.jpg",
+        "wallpapers/starlit-lake/starlit-lake.jpg",
+        "wallpapers/starlit-lake/thumb-dark.jpg",
+        "wallpapers/starlit-lake/thumb.jpg",
+        "wallpapers/starlit-lake/wallpaper.json"
+      ]
+    },
+    {
+      "id": "tea-morning",
+      "type": "wallpaper",
+      "name": "Tea morning",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "warm",
+        "light"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 2,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "2191d5204072c875b31cb9e30fdf0abc9907c233525c14383e05231ff2c6f49c",
+      "size": 633112,
+      "changelog": [
+        {
+          "version": 2,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-18",
+          "note": "First version."
+        }
+      ],
+      "document": {
+        "kind": "image",
+        "file": "tea-morning.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "tea-morning-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/tea-morning/item.json",
+        "wallpapers/tea-morning/tea-morning-dark.jpg",
+        "wallpapers/tea-morning/tea-morning.jpg",
+        "wallpapers/tea-morning/thumb-dark.jpg",
+        "wallpapers/tea-morning/thumb.jpg",
+        "wallpapers/tea-morning/wallpaper.json"
+      ]
+    },
+    {
+      "id": "tide",
+      "type": "wallpaper",
+      "name": "Tide",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "sea"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 4,
+      "added": "2026-11-11",
+      "updated": "2026-11-18",
+      "sha256": "47b7f55c09eebeb2503cd525837dcf83169aaeb84e80a658d7a0b9e632e79d27",
+      "size": 1154688,
+      "changelog": [
+        {
+          "version": 4,
+          "date": "2026-11-18",
+          "note": "A day and a night version: it follows light and dark mode."
+        },
+        {
+          "version": 3,
+          "date": "2026-11-18",
+          "note": "New painted art in the same mood."
+        },
+        {
+          "version": 2,
+          "date": "2026-11-11",
+          "note": "Adds a small thumbnail so cards load faster."
+        },
+        {
+          "version": 1,
+          "date": "2026-11-11",
+          "note": "First version."
+        }
+      ],
+      "pick": "Calm ocean blues from the shore.",
+      "document": {
+        "kind": "image",
+        "file": "tide.jpg",
+        "thumb": "thumb.jpg",
+        "dark": "tide-dark.jpg",
+        "darkThumb": "thumb-dark.jpg"
+      },
+      "files": [
+        "wallpapers/tide/item.json",
+        "wallpapers/tide/thumb-dark.jpg",
+        "wallpapers/tide/thumb.jpg",
+        "wallpapers/tide/tide-dark.jpg",
+        "wallpapers/tide/tide.jpg",
+        "wallpapers/tide/wallpaper.json"
+      ]
+    },
+    {
+      "id": "tidepool",
+      "type": "wallpaper",
+      "name": "Tidepool",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "sea",
+        "pastel"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "cdbec02d554e12b7c94133db63cd32dee3d40c80e1955771e1bedb9a7032b230",
+      "size": 615199,
+      "document": {
+        "kind": "image",
+        "file": "tidepool.jpg",
+        "thumb": "thumb.jpg"
+      },
+      "files": [
+        "wallpapers/tidepool/item.json",
+        "wallpapers/tidepool/thumb.jpg",
+        "wallpapers/tidepool/tidepool.jpg",
+        "wallpapers/tidepool/wallpaper.json"
+      ]
+    }
+  ]
+}

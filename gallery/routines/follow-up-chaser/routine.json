@@ -1,0 +1,7 @@
+{
+  "description": "Each weekday morning: the threads still waiting on a reply, with a short nudge drafted for each.",
+  "category": "work",
+  "icon": "reply",
+  "instructions_md": "Look through my sent mail for threads where I asked for something or was promised an answer, and nobody has replied for {{days}} days or more. List each one, oldest first: who it's to, the subject, what I'm waiting for and how many days it has been. For each, write a short, friendly nudge and save it as a draft. Don't send anything: I'll read the drafts and send them myself. Leave out newsletters, automatic mail and threads I already chased in the last {{days}} days. If nothing is waiting, say so in one line.",
+  "schedule_cron": "0 9 * * 1-5"
+}

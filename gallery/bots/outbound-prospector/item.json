@@ -1,0 +1,21 @@
+{
+  "name": "Outbound prospector",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-09",
+  "examples": [
+    "Find 20 companies like our best customer",
+    "Who just raised a seed round in fintech?",
+    "Draft first touches for the top five"
+  ]
+}

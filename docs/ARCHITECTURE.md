@@ -1,0 +1,463 @@
+# Architecture
+
+This is the as-built view. [SPEC.md](../SPEC.md) is the target; this file tracks what exists today.
+
+## Status
+
+**v1 (Phases 0 to 8) and the post-v1 roadmap (Waves 1 to 4): built; the public launch is pending.** See "Build status" at the end, [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md) for the launch gate and [AUDIT-2026-11.md](AUDIT-2026-11.md) for the latest full audit. User-facing documentation is in [`docs-site/`](../docs-site/).
+
+## Components today
+
+```
+Dart CLI ──(casama_sdk)──▶ API (Hono, MODE=api) ── enqueue (DBOSClient) ──▶ Worker (DBOS, MODE=worker)
+   ▲  SSE                    │ withUserSession(claims)                       │ agentRun: model + tool steps
+   │                         ▼                                               ▼
+   └──── LISTEN/NOTIFY ── Supabase Postgres (RLS on every table) ◀── append_run_event ──┘
+                          │ run_events trigger → realtime.send (topics run:{id}, bot:{id})
+                          ▼
+                     Supabase Realtime ──▶ Flutter app (Phase 3)
+```
+
+- **apps/server**: one TypeScript codebase. `MODE=api` serves HTTP; `MODE=worker` launches DBOS. Node.js runs the TypeScript sources directly (type stripping), so there is no build step.
+  - `src/api`: routes, JWT auth, rate limit, Idempotency-Key, problem JSON, the SSE run stream (`run-event-hub.ts` fans out Postgres NOTIFY), and `workflows.ts` (enqueues worker workflows with DBOSClient).
+  - `src/worker`: DBOS workflows `agentRun`, `testCredential`, the hourly `maintenance` schedule, and the gateway choice (real providers, fixture replay, or recording).
+- **packages/agent**: the agent runtime, independent of DBOS.
+  - `gateway/`: the neutral `ModelGateway` interface, the Vercel AI SDK adapter (OpenAI, Anthropic, Google, xAI, OpenRouter, any OpenAI-compatible endpoint), `withFallback` (429, 5xx and timeout failover with backoff), the capability and price registry, and `ReplayGateway`/`recordingGateway` for recorded fixtures. `openrouter.ts` reads each call's real cost and, on the server's shared key, sets which providers serve it (`CLOUD_MODEL_PROVIDER_SORT`, `CLOUD_MODEL_PROVIDERS`; D-354).
+  - `run.ts`: `runAgent(runId, deps)`. Every side effect runs inside `deps.step` (DBOS `runStep` in the worker), so a crash resumes at the last finished step.
+  - `context.ts`: the context builder (spec order, byte-stable cacheable prefix, compaction at 70% of the window, large-output offload, untrusted-content wrapping).
+  - `memory.ts`: hybrid recall (pgvector + full text, reciprocal rank fusion, plus pinned), near-duplicate merge, extraction with the cheap model.
+  - `tools/`: the tool registry (Zod schema, risk, capability needs, executor) and Phase 1 tools `memory.search`, `memory.write`, `skills.load`.
+  - `events.ts`, `redact.ts`: gap-free event appends, delta coalescing (at most 5 writes per second per run) and secret redaction.
+- **packages/contracts**: Zod schemas, route definitions, the run event protocol and the OpenAPI generator.
+- **packages/db**: the Drizzle schema pulled from the SQL migrations, `createDb`, and `withUserSession`.
+- **packages/domain**: pure logic (roles, slugs, budgets and run limits).
+- **packages/observability**: OpenTelemetry, Sentry and a JSON logger.
+- **dart/casama_api**: the generated REST client. **dart/casama_sdk**: auth, typed run events, `watchRun` (SSE with catch-up and reconnect) and `RunEventBuffer`. **dart/cli**: the `casama` CLI.
+- **supabase/**: migrations (source of truth) and pgTAP tests.
+
+## Request path for one chat message
+
+1. `POST /v1/conversations/{id}/messages`: under the user's session the API inserts a `runs` row (queued) and the user message, then enqueues `agentRun` with the run id as the workflow id.
+2. The worker's `agentRun` loads the run, admits it (quota, daily budget, model configured), recalls memories, and builds context.
+3. Model steps stream through the fallback chain; text deltas are coalesced into `message.delta` events. Tool calls run as their own steps with `tool.started`, `tool.completed` or `tool.failed` events.
+4. Each event goes through `append_run_event` (gap-free seq, one transaction). A trigger broadcasts it on Realtime and sends NOTIFY, which the API's SSE stream forwards.
+5. On the final answer: the assistant message is saved, memories are extracted with the cheap model, usage is recorded, and `run.completed` is emitted.
+6. Cancel: `POST /v1/runs/{id}/cancel` sets `cancel_requested_at`; the worker notices within 500 ms (mid-stream) or at the next step boundary and emits `run.cancelled`.
+
+## Computers (Phase 2)
+
+```
+Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor container (Docker socket, stateless)
+                                                          │ joins each computer network
+                                                          ▼
+              per-computer internal network:  computer container (computerd :7070, user 1000, read-only root)
+                                                          │ HTTPS_PROXY (per-computer credentials)
+                                                          ▼
+                                              Egress proxy container ──▶ internet (private ranges blocked)
+```
+
+- **dart/computerd**: HTTP daemon inside each computer: streamed exec with kill and timeouts (process groups), files, search, home-directory archive and restore, a WebSocket terminal, screenshots and input when a display exists. Compiled to one native binary.
+- **infra/images/computer**: `Dockerfile.headless` (Ubuntu 24.04, Node.js 24, Python, Playwright's Chromium, agent-browser, computerd, plus LibreOffice, pandoc, Poppler, qpdf and Tesseract for the document skills) and `Dockerfile.desktop` (adds Xvfb, Openbox, AT-SPI, agent-desktop, xdotool). Both build for arm64 and amd64.
+- **packages/sandbox**: the `SandboxProvider` interface, the `computerd` client, object stores (filesystem and S3), the Docker provider, the supervisor client, the provider contract suite (`sandboxContract`) and a throwaway test stack.
+- **apps/supervisor**: the supervisor HTTP API and terminal WebSocket proxy.
+- **infra/egress-proxy**: the egress proxy with its control API.
+- **packages/agent/src/computers.ts**: `ComputerService` (which computer a bot uses, start or restore under an advisory lock, idle sleep, checkpoints with retention, usage seconds). **tools/computer.ts**: `shell.exec`, `files.*`, `browser.*`, `checkpoint.create`.
+- **API**: `/v1/computers` list, get, start, stop, restart, files (list, download, upload, delete), checkpoints (list, create, restore) and the terminal WebSocket. **CLI**: `casama computer status|start|stop|shell|files|checkpoints|restore`.
+
+## Flutter app (Phase 3)
+
+`client/` is one Flutter app for web, iOS, Android, macOS, Windows and Linux.
+
+- **core/**: `Backend` (interface) and `SupabaseBackend` (Supabase for reads and simple edits under RLS, the generated API client for commands, Realtime plus catch-up for live run events), Riverpod providers, go_router routes with auth and onboarding redirects, theme.
+- **features/**: auth (email and password, magic link, Google, Apple), onboarding (workspace, model key, first bot), bots list with status and today's cost, chat (streaming text, tool cards with live output, notices, stop, conversations), activity timeline with filters and checkpoint restore, computer (state, screen, terminal, files, checkpoints), memory (edit, pin, delete), skills, settings (workspace, invites, model keys, usage), bot settings.
+- **Layout**: bottom navigation under 700 px, a navigation rail under 1200 px, and three panes (bots, chat, computer) on wider screens.
+- **Strings**: every user-facing string is in `lib/l10n/app_en.arb` (English only in v1).
+- **Tests**: widget tests with a fake backend (`flutter test`); `integration_test/app_flow_test.dart` runs sign-up, onboarding, streaming chat and memory recall against the real local stack (`scripts/e2e-app.sh`), verified on macOS, the iOS Simulator, the Android emulator and web (headless Chrome for Testing).
+
+## Autonomy and integrations (Phase 4)
+
+- **Approvals**: `needsApproval` (packages/domain) combines the bot's autonomy level, the tool's risk (static or per call, for example destructive `shell.exec`), `confirm` tools (media generation) and standing grants ("always allow"). The run emits `approval.requested`, waits durably (D-048) and resumes with `approval.resolved`. Owners get an in-app notification and a push that deep links to `/approvals/{id}`.
+- **Secrets**: named secrets in Vault with host allowlists. Tools write `{{secret:NAME}}`; the worker substitutes the value only when the destination host is allowed and seeds the redactor with it. Outbound HTTP from tools uses `createSafeFetch` (blocks private, loopback and metadata addresses after DNS resolution).
+- **Tools**: `http.request`, `web.search` (workspace key, else the server's chain and SearXNG, D-384), `web.fetch` (a page as readable text), `notify.user`, `tasks.create/update`, `routines.create/update`, `subagent.spawn`, `bots.delegate`, `media.image.generate`, `media.video.generate` (fal.ai through `MediaProvider`).
+- **Integrations** (`packages/agent/src/integrations.ts`): MCP (official SDK, Streamable HTTP), OpenAPI (operations become tools; auth from a named secret), Composio and Pipedream Connect (D-052). Tools are loaded per run for the bot's attached integrations (D-053).
+- **Routines**: cron in an IANA timezone (cron-parser), claimed by a `routines-tick` schedule with `FOR UPDATE SKIP LOCKED`, or triggered by signed GitHub/custom webhooks (D-047). Results notify the creator.
+- **Templates**: five starter bots (research assistant, daily briefing, coder, ops assistant, writer) that create skills and routines.
+- **App**: Inbox tab (approvals with approve, deny and always allow; live notifications; the shared task board), approval cards inline in chat, routines per bot, integrations (add, test, attach to a bot), secrets, template picker in onboarding and "New bot", FCM push registration (D-051).
+
+## Live computer (Phase 5)
+
+- **Streaming** (D-054, D-055): the desktop image (Xorg dummy, Openbox, AT-SPI, agent-desktop, Mousepad, Neko) streams only while someone watches. `POST /v1/computers/{id}/stream-session` returns a 5-minute signaling URL bound to the user, computer and mode plus TURN credentials; the API proxies signaling to the supervisor, which logs in to Neko and pipes the WebSocket. Media is relayed by coturn (`infra/turn`), which joins each desktop computer's network.
+- **Control** (D-058): `GET/POST/DELETE /v1/computers/{id}/lease`; screen tools wait while a person holds control; `computer.request_takeover` and `/v1/takeovers` (list, dismiss). Lease changes and takeovers are in `audit_log` and on the run timeline.
+- **Desktop tools** (D-059): `desktop.snapshot`, `desktop.launch`, `desktop.click`, `desktop.type`, `desktop.press`, `desktop.screenshot`, offered when the bot's computer has the desktop profile.
+- **Providers** (D-056, D-057): Docker, E2B and Daytona behind the same contract suite; hosted providers run in the supervisor and are chosen per computer.
+- **Computers**: `POST/PATCH/DELETE /v1/computers` (private computers per bot, profile switch with restart, delete with archives); a bot's computer is `bots.default_computer_id`.
+- **App**: live view (`/computer/live?c=&takeover=`) with flutter_webrtc over TURN, pinch zoom, mouse, touch and keyboard input on the data channel, take control and hand back with a note, lease renewal on input, latency display, screenshot fallback, pause in the background; takeover cards in the inbox and chat; Computers screen; a computer picker in bot settings.
+
+## Reach and Flutter extras (Phase 6)
+
+- **Voice** (D-065): `/v1/voice/transcribe`, `/v1/messages/{id}/speech`, `/v1/voice/session`, `/v1/voice/tool`, `/v1/voice/transcript`; worker workflows on the `voice` queue; app dictation (record), read aloud (just_audio) and live calls (flutter_webrtc to OpenAI Realtime) with tool forwarding.
+- **Desktop companion** (D-066): `/v1/local-devices`, the device WebSocket and the internal tunnel; computerd companion mode; the `local` provider; app pairing screen, overlay with Stop, tray.
+- **Extras** (D-067): home-screen widgets (iOS, Android), iOS Live Activities, share to bot, quick ask with a global shortcut, startup gate.
+- **Island** (D-324): `client/lib/features/island/`: `run_tracker.dart` (runs an open chat reports, plus a 3-second query of unfinished runs while a bot works), `island_feed.dart` (the one list every surface draws), `island_bridge.dart` (method channel `casama/island`). On the Mac, `client/macos/Runner/Island.swift` draws the notch (a non-activating panel above the menu bar) and the menu bar item and panel, which replace tray_manager there; closing the window only hides it. On the iPhone, `client/ios/Runner/IslandActivities.swift` starts, updates and ends Live Activities from the feed and hands their push tokens to Dart; `client/ios/CasamaWidgets/RunActivityAttributes.swift` (shared with the widget) holds the typed state the widget draws in `CasamaWidgets.swift`. The server keeps them current while the app sleeps: tokens in `run_live_tokens`, `LiveRunPusher` (`packages/agent/src/live-runs.ts`) watching run events through `EventBus.observe` in the worker, sending through `PushSender.sendLive` (Firebase, or Casama Cloud's relay for linked servers). On Android, `client/android/app/src/main/kotlin/ai/casama/app/LiveRun.kt` draws a live notification per run (a Live Update on Android 16 and later, RemoteViews before) from the feed and, through `LiveRunReceiver`, from the server's data-only `live` messages while the app sleeps; it also feeds the home-screen widget. Phase 6: Windows and Linux carry the feed in the tray menu (`island_tray.dart`); Stop, Allow and Deny act without opening the app (iPhone: `RunActionIntents.swift`, App Intents run in the app's process, Allow and Deny behind Face ID; Android: `LiveRunActionActivity` hands them to the running engine); push-to-start puts a run the person started elsewhere on their phones (`live_start_tokens`, `LiveRunPusher.startElsewhere`); a voice call on the Mac shows in the notch (`island_call.dart`, its level as its own `level` message).
+- **Owner console** (D-068): `/v1/admin/*` and the Admin screens.
+- **SDK and CLI** (D-069): publishable packages, release workflow, Homebrew formula, `examples/sdk_sample`.
+
+## Billing and Casama Link (Phase 7)
+
+- **Billing** (D-070): `apps/server/src/billing` (`BillingProvider`, Dodo, App Store and Google Play adapters, `BillingService`), `/v1/billing/plans`, `/v1/orgs/{id}/billing` (summary, checkout, portal, purchases, usage), `/hooks/billing/{dodo,app_store,google_play}`, and the worker's `billingSettle` job (every minute). Tables: `subscriptions`, `credit_ledger`, `credit_packs`, `billing_events`, plus `entitlements.overrides` and `usage_ledger.billable`. App: Billing screen (plans, store purchases through `in_app_purchase`, Restore Purchases, web checkout and portal, usage, Casama Link keys) and a paywall on 402.
+- **Casama Link** (D-071): `/v1/orgs/{id}/link/keys`, `/link/v1/{whoami,sandbox/*,models/chat/completions}` on the cloud; the `casama-cloud` provider on self-hosted servers. Tables: `link_keys`, `link_computers`.
+- Off by default (`BILLING_ENABLED=false`).
+
+## ChatGPT plan sign-in (D-091)
+
+- **API** (`routes/chatgpt.ts`): `/v1/credentials/chatgpt/start|complete` (loopback sign-in; the server exchanges the code, verifies the ID token and writes the tokens to Vault), plus `PATCH/DELETE /v1/credentials/{id}` for every key. `CHATGPT_SIGN_IN` (auto: off when billing is on), reported as `chatgpt_sign_in` in `/v1/config`.
+- **Agent** (`chatgpt-auth.ts`, `gateway/chatgpt.ts`, `credentials.ts`): OAuth helpers, the Responses adapter with OpenAI's plan-usage constraints and error codes, owner-only resolution, refresh under an advisory lock. Runs know the person they act for (`actingUserId`); plan usage is recorded at cost 0 (`usage_ledger.source = 'chatgpt_plan'`); skipped plans emit `model.fallback`.
+- **Worker:** ChatGPT key test (model list), `revokeCredential`, idle refresh in the hourly maintenance job.
+- **Clients:** `casama_sdk/chatgpt_sign_in.dart` (loopback listener) used by `casama credential chatgpt` and the desktop app's "Continue with ChatGPT"; Model keys shows plans with status, reconnect, the next-model setting, Manage usage and Remove.
+
+## App lock (D-375)
+
+- `client/lib/features/app_lock/`: `app_lock.dart` (settings, the unlock methods over `local_auth`, the PIN and passkeys, and `AppLockController`, which locks at launch and after time away), `lock_screen.dart` (`AppLockGate` in `MaterialApp.builder`: the lock screen, the setup a workspace requires, the app-switcher cover), `confirm_identity.dart` (turning the lock on, and `confirmIdentity` before risky actions), `pin_store.dart` (PBKDF2 hash in the keychain), `session_store.dart` (`AuthSessionStore`: the Supabase session in the keychain while the lock is on), `app_lock_screen.dart` (Settings → App lock). Android's `casama/app_lock` channel in `MainActivity.kt` blanks Recents and sets `FLAG_SECURE`. Server: `organizations.require_app_lock`, through the org settings route and the workspace list.
+
+## Two-step sign-in (D-093)
+
+- Supabase Auth TOTP; `organizations.require_mfa`; `has_role` requires aal2 for owner and admin powers when it is on; `mfa_required` errors from the API. App: Settings → Two-step sign-in and the `/two-step` code screen. CLI: `casama login --code`.
+
+## Casama Cloud abuse controls (D-094)
+
+- `services/abuse.ts` and `routes/abuse.ts`: sign-up hook (App Check or proof of work), `/v1/signup/challenge`, `/internal/abuse` for egress reports, suspension; admin suspend/lift and `/v1/admin/abuse`. Egress proxy: mail and mining ports and pools refused and reported. `ComputerService.checkCanStart` (suspended, unverified free workspaces). App: sign-up proof, banner, owner console Abuse tab.
+
+## Worker database role (D-095)
+
+- The worker connects as `casama_worker` (`WORKER_DATABASE_URL`): explicit per-table policies, Vault read and update, two narrow `public.worker_*` functions instead of `auth.users`, its own `dbos` schema; no superuser or RLS bypass. New tables call `public.allow_worker`.
+
+## Local MCP servers (D-096)
+
+- computerd `POST /mcp/<key>` bridges MCP Streamable HTTP to a stdio or loopback server on the user's computer; servers are `local_mcp` integrations registered by the app (`PUT /v1/local-devices/{id}/mcp-servers`); the worker's `LocalMcpAdapter` reaches them through the device tunnel. App: companion screen → Local tools (MCP), env kept in secure storage.
+
+## Coding agents (D-097)
+
+- `tools/coding.ts`: `coding.delegate` runs Claude Code, Codex or Cursor's agent headless on the user's companion computer or the bot's computer, or starts a Cursor cloud agent; the companion screen lists agents found on the computer.
+
+## Ticket board (D-098)
+
+- `tasks` with five statuses, priorities, owners, order and a bot thread; `task_comments`; `packages/agent/src/tickets.ts` starts and settles bot work; app Board tab (`features/board`).
+
+## Spaces (D-099)
+
+- Workspaces get an icon and color, invite links (`invite_links`, `accept_invite_link`) and per-workspace badges; the app has a workspace switcher, workspace settings and `/join/<token>`.
+
+## Bots that manage bots (D-100)
+
+- `packages/agent/src/tools/settings.ts` (D-242): bots changing their own setup: `mcp.add|remove`, `connections.list|attach|offer` (offer: `app:connect` buttons, D-259), `plugins.suggest` and `appearance.suggest` (cards with `app:route` and `app:appearance`, handled by `client/lib/features/chat/local_actions.dart` and `client/lib/theme/suggested_look.dart`), `rules.*`, `knowledge.add|list|remove` and `notifications.quiet`. `ToolDefinition.alwaysAskFor` asks for some arguments only. Plugin-less `computer_mcp` rows (`config.added_by_bot`, no `plugin_id`) run from `~/.casama/mcp/<name>`.
+- `packages/agent/src/tools/bots.ts`: `bots.list|create|update|archive` and `sidebar.organize`, capped at the acting bot's autonomy and budget; routine tools take `bot`. `bot_folders`, `bots.folder_id|sort_key|archived_at`, and `bot_revisions` (trigger `bots_record_revision`; the acting bot comes from `casama.actor_bot`). App: sidebar folders, bot settings → Folder, Settings history (restore), Archive; Archived bots on the bot list.
+
+## Ask for a secret (D-101)
+
+- `packages/agent/src/secret-requests.ts` (`secrets.request`, handled in the run loop like takeovers), `secret_requests`, `/v1/secrets/requests` (list, fulfill, decline), events `secret.requested`/`secret.resolved`, and the chat's protected `SecretPrompt` card.
+- Sign-in codes (D-102): `secrets.kind = totp`, `{{totp:NAME}}` resolved by `resolvePlaceholders` with `@casama/domain` `totp.ts`; QR scanning in `client/lib/features/settings/totp_scan.dart`.
+
+## Search (D-103)
+
+- `public.search_workspace` (security invoker; `messages.tsv`, trigram indexes), `GET /v1/search` (`apps/server/src/api/routes/search.ts`, plus file search on awake computers), and `client/lib/features/search/search_view.dart` (Cmd/Ctrl+K, the round button beside the phone tab bar (D-176), jump to message).
+
+## Skills library (D-104)
+
+- `skills/` (bundled catalog), `apps/server/src/services/skills.ts` (catalog, `GitHubReader`), `apps/server/src/api/routes/skills.ts`, `skill_files`, agent `tools/skills.ts` (`skills.create`, `skills.update`, `approvalDetails`), `skills.load` file sync, and the app's `skill_catalog_screen.dart`, `skill_visuals.dart` (icons, category colors, titles) and `skill_library.dart`, plus the composer's `/` picker.
+
+## Setup interview and starter bots (D-105)
+
+- `bots.setup_status`, `conversations.purpose`, `POST /v1/bots/{id}/setup`, agent `tools/setup.ts` (`SETUP_GUIDE`, `setup.apply`), the chat's setup card, and six more templates in `packages/domain/src/templates.ts`.
+
+## Lazy tool loading (D-106)
+
+- `packages/agent/src/lazy-tools.ts` (`planLazyTools`, `tools.load`), handled in the run loop; `LAZY_TOOLS_THRESHOLD`; `ToolSpec.deferred` and `ModelCapabilities.deferredTools` for native support; `packages/evals/src/compare.ts`.
+
+## Run tracing (D-107)
+
+- `packages/observability/src/run-trace.ts` (deterministic ids, `ForcedIdGenerator`, run and child spans), spans in `run.ts`, `packages/agent/src/langfuse.ts` (`LANGFUSE_*`, `organizations.llm_tracing`), `runs.trace_id`, `TRACE_URL_TEMPLATE` and the timeline's trace link.
+
+## Edit and resend (D-108)
+
+- `messages.parent_message_id`, `conversations.head_message_id`, triggers `messages_branch`/`messages_set_head`, `conversation_thread`/`branch_leaf`, `POST …/messages/{id}/edit` and `POST …/branch`, branch-aware history in `runAgent`, and the chat's Edit action and version arrows.
+
+## Quiet hours (D-109)
+
+- `profiles.quiet_hours`, `user_bot_settings`, `notifications.push_status`/`push_after`, `NotificationService.quietUntil`/`sendDeferred` (worker minute tick), `@casama/domain` `quiet-hours.ts`, and the app's `features/notifications/quiet_hours.dart`.
+
+## Bot templates (D-110)
+
+- `BotTemplateFile` (contracts), `apps/server/src/api/routes/bot-template.ts` (export, share links in `bot_shares`, import), `docs-site/develop/bot-templates.md`, and the app's `features/bots/bot_template.dart` (share sheet, import preview, `/import/<token>`).
+
+## Shortcuts (D-111)
+
+- App Intents and `ShortcutBridge` in `client/ios/Runner/AppDelegate.swift` and `client/macos/Runner/AppDelegate.swift`, `client/lib/core/shortcuts.dart` (list sync, `casama/shortcuts` channel, Android `quick_actions`), `/run-routine/<ref>`.
+
+## Offline cache (D-112)
+
+- `client/lib/core/local_cache.dart` (drift key/value cache, `openLocalCache` installed in `main.dart`), cache-first `BotsNotifier` and `ChatController.open`, cleared on sign-out.
+
+## Projects (D-113, D-295)
+
+- `packages/agent/src/projects.ts` (`projectHeartbeat` in the worker's minute tick, `startProjectRun`, `projects.create|open|plan|update|status`), `projects`/`project_milestones`, `project_id` on tickets, runs, conversations and routines, `apps/server/src/api/routes/projects.ts`, and the app's `features/projects/`.
+- **Light projects (D-295):** `projects.autonomous` (the heartbeat only runs these) and `projects.personal` (`can_view_project`: a project that grew out of someone's chat follows that chat). `creations.project_id` is filled by the `creations_set_project` trigger from the run, else the chat; `runs_set_project` gives a run its chat's project. `adoptChat` makes a topic a project's chat, `fileRunUnderProject` files one run, and `projectContext` is the prompt block a run gets (`run.ts`, step `project-context`). In the app: `project_tile.dart` (the Library's Projects row), `make_project.dart` (a topic becomes a project), `/library?project=`, and the Files tab's `initialPath`.
+
+## Check-ins (D-114)
+
+- `packages/agent/src/checkins.ts` (`applyCheckins`, cap, scan context, `suggestions.add`), `routines.kind`, `bot_checkins`, `suggestions`, scan runs without a conversation in `worker/routines.ts`, `apps/server/src/api/routes/checkins.ts` (`/v1/bots/{id}/checkins`, `/v1/for-you`, accept and dismiss), and the Inbox's For you tab.
+
+## Action rules (D-115)
+
+- `packages/domain/src/action-rules.ts` (categories, targets, resolution, previews), `action_rules`, the approval gate in `run.ts` (allow, ask, hand off; credential changes always handed off), `apps/server/src/api/routes/action-rules.ts`, and the bot's Action rules screen.
+
+## Watchers (D-116)
+
+- `packages/agent/src/watchers.ts` (`checkWatchers` in the worker's minute tick, `watchers.create|list|delete`), `watchers`, `apps/server/src/api/routes/watchers.ts`, and the bot's Watchers screen.
+
+## Hosted MCP endpoint (D-117)
+
+- `apps/server/src/api/routes/mcp.ts` (`/mcp` with `@casama/mcp` tools over in-process API calls, the OAuth server, consent, API keys), `mcp_clients`/`mcp_auth_requests`/`mcp_tokens`, `organizations.mcp_decide_approvals`, `docs-site/guide/mcp.md`, and the app's consent screen and Connect AI apps section.
+
+## Group chats (D-118)
+
+- `conversation_bots`, `conversations.kind`, `messages.bot_id`, `runs.trigger_message_id|hop`; `packages/domain/src/mentions.ts`; group handling in `run.ts` (other bots' messages as labelled chat, `wakeMentioned` with a 6-hop cap, `RunDeps.startRun`); `sendGroup` and `/v1/group-chats` in `apps/server/src/api/routes/bots.ts`; `client/lib/features/groups/`.
+
+## Pages (D-119)
+
+- `packages/domain/src/pages.ts` (CSP, document assembly), `packages/agent/src/pages.ts` (`pages.publish|update_data|share|list`, versions, refresh routines), `pages`/`page_versions`/`page_view_tokens`, `apps/server/src/api/routes/pages.ts` (list, view links, share, revert, delete), `apps/server/src/pages/app.ts` (the pages origin on `PAGES_PORT`), `apps/server/src/services/pdf.ts`, and `client/lib/features/pages/`.
+
+## Teach a task (D-120)
+
+- `packages/domain/src/teach.ts` (password detection, transcript), `packages/agent/src/teach.ts` (`captureTeachContext`, `teach.save_draft`), `teach_sessions`/`teach_steps`, `apps/server/src/api/routes/teach.ts`, and in the app `features/teach/` (`TeachRecorder`, the draft screen) plus the recording banner in the live view.
+
+## Plugins (D-121)
+
+- `packages/domain/src/agent-plugins.ts` (Agent Plugins 1.0 checks), `packages/agent/src/plugins.ts` (`syncPluginComputer`, `computerMcpFor`) and `ComputerMcpAdapter` in `integrations.ts`, `plugins`/`plugin_files` plus `skills.plugin_id`/`integrations.plugin_id`, `apps/server/src/api/routes/plugins.ts`, computerd `PUT /mcp-servers`, the supervisor's `/computers/:ref/mcp*` passthrough, `SandboxHandle.setMcpServers|mcpFetch`, and the bot's Plugins screen. Developer kit (D-160): `docs-site/develop/plugins.md`, `examples/hello-plugin`, `packages/plugin-check` and the `.github/actions/plugin-check` action.
+
+## Import an agent (D-122)
+
+- `packages/domain/src/agent-import.ts` (OpenClaw and Hermes Agent folders → a `casama.bot` template; ChatGPT/Claude memory prompt and parser), `agent_imports`/`agent_import_files`, `apps/server/src/api/routes/agent-import.ts`, and `client/lib/features/bots/agent_import.dart` (review screen, memory sheet).
+
+## Routines and skills as files (D-124)
+
+- `packages/domain/src/workspace-files.ts` (file formats), `packages/agent/src/workspace-files.ts` (export, apply) and `git-sync.ts` (`syncWorkspaceRepo`, `gitSyncTick` in the worker's minute tick), `org_git_sync` with change triggers, `apps/server/src/api/routes/workspace-files.ts` (export, import, git sync setup, `/hooks/git-sync/<org>`), `casama files export|import`, and the workspace settings section.
+
+## Knowledge sources (D-125)
+
+- `packages/agent/src/knowledge-parse.ts` (PDF, DOCX, Markdown, HTML, CSV, chunking), `packages/agent/src/knowledge.ts` (website crawl with robots.txt, GitHub, connections, `knowledgeTick` in the minute tick, `knowledge.search`), `knowledge_sources`/`knowledge_uploads`/`knowledge_chunks` and `search_knowledge`, `apps/server/src/api/routes/knowledge.ts`, and the bot's Knowledge screen.
+
+## Self-improving skills (D-126)
+
+- `packages/agent/src/skill-learning.ts` (`learnFromRun` from the run loop's `learn` steps, proposals, `applySkillProposal`), `run_digests`/`skill_proposals`/`skill_revisions` (with the revision trigger), `apps/server/src/api/routes/skill-learning.ts`, and the For you cards and skill stats sheet.
+
+## Step replay (D-127)
+
+- `packages/agent/src/replays.ts` (`executeReplay`, `replay.run|save`, `replayFromTeach`), the replay-run path at the start of `run.ts`, `replays` and `runs.replay`, `apps/server/src/api/routes/replays.ts`, and the bot's Replays screen.
+
+## Password managers (D-128)
+
+- `packages/agent/src/password-managers.ts` (1Password Connect and Bitwarden `bw serve` clients, `{{login:Name:field}}` resolution in `run.ts` and replays, `logins.list`), `password_managers`, `apps/server/src/api/routes/password-managers.ts`, and the Password managers screen.
+
+## Welcome chat and Google permissions (D-129, D-130)
+
+- `packages/agent/src/welcome.ts` (scripted cards, `handleWelcomeAction` from the send route, `afterWelcomeRun` in the run loop, `startWelcome`), `conversations.welcome` and purpose `welcome`, `POST /v1/welcome`, the app's `/welcome` screen and `local_actions.dart` (`app:*` card actions); the Google catalog split (`gmail` send, `gmail_inbox` restricted) with `catalogFor` and Composio managed sign-in in `routes/apps.ts`.
+
+## Bot sharing (D-131)
+
+- `bot_access` with `bot_grant`, the updated `can_access_bot`/`can_manage_bot`, `can_admin_bot` and bots select policy; acting-user limits for personal computers and local MCP servers in `run.ts`; `apps/server/src/api/routes/bot-sharing.ts` (access, members), and the bot's Sharing screen.
+
+## Calendar triggers (D-132)
+
+- `packages/agent/src/calendar-triggers.ts` (`checkCalendarTriggers`, event parsing and filters), `fireDueCalendarRuns` in `worker/routines.ts`, both in the minute tick; `calendar_fires`, `worker_user_email_domain`, the `calendar_event` routine trigger, and the routine sheet's Meetings option.
+
+## Bot-to-bot switch (D-133)
+
+- `organizations.allow_bot_to_bot` (workspace settings), checked in `wakeMentioned` (group chats, with a `notice` run event) and `bots.delegate`; the app's switch in workspace settings and `NoticeKind.info` in chat.
+
+## Chat apps (D-134)
+
+- `packages/agent/src/channels/` (`adapters.ts` per provider; `service.ts` with `handleInbound`, `replyToChannel`, `channel.send`, `pollIMessage`); `channels`, `channel_threads`, `channel_events`; `apps/server/src/api/routes/channels.ts` (CRUD and `/hooks/channels/{id}`); the `channel-reply` run step; the `message` routine trigger (`startRoutineForMessage`); computerd `/imessage/new` and `/imessage/send` behind the companion's Messages permission; the bot's Chat apps screen.
+
+## Live calls that keep going (D-327)
+
+- `client/lib/features/voice/active_call.dart` (`ActiveCall`, the app's one call; `CallController`, the session, connection, tools, idle check, `TurnSaver` and heartbeat), `call_bubble.dart` (the bubble over the router, `CallSidebarCard`, `CallReturnBar`), `call_screen.dart` (a view of the call), `client/lib/core/screen_awake.dart` and the `casama/screen_awake` channel in `AppDelegate.swift` and `MainActivity.kt`.
+- Server: `live_calls`, `live_call_turns`; `/v1/voice/transcript/turns`, `/v1/voice/live/{id}/heartbeat` and `live_call_id` in `routes/voice.ts`; `apps/server/src/billing/live-calls.ts` (`settleCall`, `claimCallEnd`, `endSilentCalls` in the worker's minute tick); `earlierInConversation` in `packages/agent/src/voice.ts`.
+- The bot's work on a call (Phase 2): `CallJob` and the run-event follower in `CallController`; `call_live_tile.dart` (the tile, its corner, the job strip), `call_recap.dart` (the recap card, from a message's `call` part via `MessageCall`), `GoRouter.swapTo` in `core/nav.dart`; `stop_task`/`show_screen` in `routes/voice.ts`, `live_calls.task_run_ids`, `postCallRecap` in `billing/live-calls.ts`, the call tools in `apps/server/src/worker/voice.ts`.
+- Calls in the background (Phase 3): `client/lib/features/voice/call_system.dart` (`CallSystem`: `CallKitCallSystem`, `AndroidCallService`; `CallInterruptions`; the shared `callKitEvents` stream, also used by `phone_calls.dart`), `VoiceCall.setOnHold` in `gemini_live.dart`, `CallService.kt`/`CallBridge` and `casama/call_service` in `MainActivity.kt`, `CallTabTitle` in `call_bubble.dart`.
+- The call outside the window (Phase 4): `client/lib/features/voice/call_glance.dart` (`CallGlance`, `callGlanceProvider`, `LiveActivityCallGlance`, `callGlanceSyncProvider` kept in `app.dart`, the menu bar's `callMenu`), `ActiveCall.act`, the call items in `features/companion/desktop_shell.dart`, the `kind: call` branch and `CallActionIntent` in `ios/CasamaWidgets/CasamaWidgets.swift`, `CallGlanceBridge` in `AppDelegate.swift`.
+
+## Phone-call voice (D-135)
+
+- `packages/agent/src/phone-calls.ts` (`voice.call_user`, `ApnsVoipSender`, `ringCall`, `callNotAnswered`, `expireCalls` in the minute tick), `PushSender.sendCall` (FCM high priority); `voice_calls`, `voip_tokens`; `/v1/calls/*` and `call_id` on `/v1/voice/session` in `routes/voice.ts`; the app's `features/voice/phone_calls.dart` (CallKit and Android calling screen through flutter_callkit_incoming, the desktop/web ringing banner) and PushKit in `ios/Runner/AppDelegate.swift`.
+
+## Encryption at rest (D-136)
+
+- `packages/db/src/content-crypto.ts` (`KeyRing`/`contentKeys`, `LocalKeyWrapper`, `AwsKmsKeyWrapper`, and the value transform in `createDb`); `packages/agent/src/encryption.ts` (on/off, rotation, `sweepEncryption` in the minute tick); `org_keys` and `organizations.content_encryption`; `apps/server/src/content-keys.ts` (server key configuration); `/v1/orgs/{id}/encryption*`, `/v1/conversations/{id}/thread`, `PATCH /v1/memories/{id}`; the workspace settings section in the app.
+
+## Memory backends (D-137)
+
+- `packages/agent/src/memory-store.ts` (`MemoryStore`, `PostgresMemoryStore`, `SupermemoryStore`, `HonchoMemoryStore`, `memoryStoreFor`); `org_memory_backends`; `RunDeps.memoryFor` and the `memory` dep of the built-in tools; `/v1/bots/{id}/memories/{memoryId}` and `/v1/orgs/{id}/memory-backend` in `routes/bots.ts`; the privacy export and purge in `services/privacy.ts`; "Where memory is kept" in workspace settings.
+
+## Paid data services (D-138)
+
+- `packages/agent/src/data.ts` (`DataProvider`, `TregProvider`, `data.search`, `data.call`, `DATA_MARKUP`), registered in the worker with the workspace's `treg` key or Casama's resale key (`TREG_RESALE`); `usage_ledger.kind = data_calls`; the price in approval summaries in `run.ts`.
+
+## More sandbox providers (D-139)
+
+- `packages/sandbox/src/hosted-more.ts` (Novita, Kubernetes, Incus, Boat, Railway control planes and `tlsFetch`), their stand-ins in `testing-hosted.ts` and the contract runs in `hosted.test.ts`; supervisor configuration in `apps/supervisor/src/main.ts`; `X-Computerd-Token` in computerd and `ComputerdClient`.
+
+## Agent-to-agent (D-140)
+
+- `packages/agent/src/a2a.ts` (A2A 1.0 shapes, `A2aClient`, `A2aAdapter` for `integrations.kind = a2a`); `apps/server/src/api/routes/a2a.ts` (agent cards, the JSON-RPC endpoint, bot publishing); `organizations.a2a_enabled`, `bots.a2a_published`, `a2a_tasks`; the app's A2A switch, the bot's publish sheet and the A2A integration type.
+
+## Calls for you (D-141)
+
+- `packages/agent/src/telephony.ts` (`voice.call`, `TwilioClient`, number rules, call instructions); phone mode in `createRealtimeSession` and the worker's `voiceSession`; `apps/server/src/api/routes/telephony.ts` (Twilio settings, call status, end and take over, the signed status webhook, and the Media Streams ⇄ realtime bridge `attachTelephony`); `org_telephony`, `outbound_calls`, `call_deny_list`, `profiles.phone_number`; the app's `/calls/{id}` screen and Phone calls settings.
+
+## Payments (D-142)
+
+- `packages/agent/src/payments.ts` (`PaymentProvider`, `StripeIssuingProvider`, `payments.request` with `alwaysAsk`, `{{card:…}}` placeholders, bans, `expireCards`); `apps/server/src/api/routes/payments.ts` (owner settings, request list, the Stripe real-time authorization webhook); `org_payments`, `payment_requests`, `bots.payments_monthly_cap_usd`; the Payments section in workspace settings.
+
+## Linked agents (D-143)
+
+- `packages/agent/src/links.ts` (`links.ask`, linked runs, tokens); `apps/server/src/api/routes/links.ts` (invites, accept on this or another server, revoke, exchanges, and the server-to-server `/links/{id}/accept|revoke`); `klink_` tokens at the A2A endpoint and agent card; `bot_links`, `link_exchanges`; the app's Linked bots screen.
+
+## Voice upgrades (D-144)
+
+- Barge-in in `RealtimeEvents` (`client/lib/core/voice.dart`) and `turn_detection` in `createRealtimeSession`; `client/lib/features/voice/talking_avatar.dart`; the wake word in `client/lib/features/voice/wake_word.dart` (sherpa-onnx keyword spotting, model download and checksum, keyword tokenizer, `WakeWordController`) and `wake_word_sheet.dart`.
+
+## Ops extras (D-145 to D-148)
+
+- D-145: the sign-up allowlist in `routes/abuse.ts` (compose wires the hook); `AiGatewayConfig` in `CredentialResolver`; `packages/agent/src/secret-store.ts` (`SecretStore`, Vault and Infisical), `org_secret_stores`, `secrets.store`, `routes/secret-store.ts`, and "Where secrets are kept" in workspace settings.
+- D-146: `ee/server/audit-forward.ts` (webhook, OTLP and S3 senders and the cursor pass), `audit_forwarders`, the forwarder routes in `ee/server/index.ts`, and the worker's minute tick.
+- D-147: `dart/cli/lib/src/backups.dart` (age encryption and retention) and the backup and restore flags in `commands_selfhost.dart`; `infra/helm/casama` and `scripts/check-helm.sh`; `DEFAULT_PROVIDER` in `apps/supervisor/src/main.ts`; `client/lib/features/selfhost/` (`LocalServerManager` and the sign-in sheet).
+- D-148: `packages/agent/src/team-computer.ts` (folder names, `inTeamFolder`, desktop leases), the wrapping and the `desktop_busy` check in `run.ts`, `computer_desktop_leases`, `computers.max_desktops`, `bots.team_folder`; the warm pool in `packages/sandbox/src/docker/provider.ts` (`fillPool`, claim by rename, `dev.casama.pool` alias) and `WARM_POOL_SIZE` in the supervisor.
+
+## Devices (Wave 4, D-149 onward)
+
+- D-149: `device_sources`, `device_readings`, `device_grants`, `device_requests` (realtime broadcast trigger); `apps/server/src/api/routes/device-data.ts`; `packages/agent/src/device-data.ts` (`device.read`, `device.request_access`, `device.calendar.create`, `device.reminders.create`, `purgeDeviceData`); `client/lib/features/devices/` (collectors, `DeviceSync`, Settings → Device connections) and `DeviceAccessPrompt` in chat.
+- D-150: `HealthSummary` schemas in `packages/contracts/src/device-data.ts`; health validation, extras and sealing in `routes/device-data.ts`; `healthTrends` in `packages/agent/src/device-data.ts`; `client/lib/features/devices/health_summary.dart` and the `health` plugin collector; the "Health and habits" welcome pick.
+- D-151: `device_places`, `device_event_log`; `apps/server/src/worker/device-triggers.ts` (`fireDeviceEvent`, `checkLeaveNow`, `maskCodes`); `packages/agent/src/travel.ts`; device events and places routes in `routes/device-data.ts`; `client/lib/features/devices/device_events.dart` (queue, background geofence callback, `PluginTriggerPlatform`).
+- D-152: `packages/agent/src/desktop-context.ts` (`desktop.files.search`); `file_added` device events; `ActivitySummary` schema; `client/lib/features/desktop/` (`DesktopContextReader`, `FolderWatcher`, `ActivityTracker`) and the quick-ask context chips.
+- D-153: `packages/agent/src/attention.ts` (`attentionHold`, `takeHeldForBrief`, `deviceDataOfRun`); `NotificationService.notify(..., proactive)`; held messages added to briefs in `createRoutineRun`; `routes/attention.ts` ("Less like this"); `WhySheet` in the inbox.
+
+## November 2026 plan (D-267 to D-292, `docs/MASTER-PLAN-2026-11.md`)
+
+- **Making credits last (D-354, D-355; docs/USAGE-PLAN.md):** `gateway/openrouter.ts` routes the shared key (cheapest provider first, a session per run, an optional faster sort for chat steps); `checkin-prefetch.ts` holds a check-in's first reads and their digest, and `run.ts` runs them as a scripted first step, skips an unchanged scheduled scan and gives a check-in a last step for its suggestions; `checkins.ts` has the share of the day's limit (`CHECKIN_DAY_SHARE`) and `scanCronFor`; `context.ts` trims a run's own steps on a fixed budget (`TURN_BUDGET`, `TURN_KEEP`) and puts the date, project and hints in a `<casama-context>` block with the newest message; `lazy-tools.ts` starts a run with the tool groups its conversation used before (`conversations.tool_groups`). `tools/ui.ts` keeps a short `ui.show` and `tools/ui-catalog.ts` the full card reference (`ui.catalog`); `leanSchema` in `tools/registry.ts` and the size guard in `test/core-tools-size.test.ts` keep the always-sent tools under 3,000 tokens. `voice.ts` has the call tool set with its short schemas (`VOICE_CALL_TOOLS`), the persona and earlier-turn cuts, and the trim settings (`VOICE_CONTEXT_*`).
+- **Runs that survive (D-268):** `packages/agent/src/run.ts` brackets every wait for a person with recorded steps so the run's time limit skips them; continues replies cut off at the output limit; `trimTurn` and `isContextOverflow` in `context.ts` keep long runs inside the context; `modelStep` retries a stream that broke after it started; `run_tool_attempts` stops a restarted worker repeating an action; `failOrphanedRuns` in the worker. Gateways emit a `progress` event for thinking (`gateway/types.ts`, `fallback.ts`).
+- **A more capable bot (D-269):** `ToolResult.image` (screenshots and image files reach vision models; `keepNewestImages`), `files.edit`, read-only calls batched in one step, `subagent.spawn_many`, memory from the run's steps (`memoryTranscript`, `replaces`), `verifyReply` before a long run's reply counts, `schedulesWork` in `packages/domain/src/approvals.ts`.
+- **Workflow steps sealed and purged (D-267):** `sealStepOutput` / `purgeEndedWorkflows` in `apps/server/src/worker/workflows.ts`. Backups carry the Vault key (`infra/backup/backup.sh`, `casama selfhost backup|restore`).
+- **The Library (D-274, D-276, D-280, D-281, D-283 app, D-290, D-291):** `public.creations` (+ `creation_marks`, `creation_versions`, `creation_reports`) filled by triggers on `pages` and `chat_media`; `apps/server/src/api/routes/creations.ts`; `packages/agent/src/creations.ts` (`keepFile`, `keepDocumentPreview`, `library.*` tools, storage caps, purge); `file-links.ts` `keepLinkedFiles`; `media-store.ts` (`readMedia`, `moveMediaToStore`, `deleteQueuedBlobs` over `deleted_blobs`). Bytes live in the object store from `objectStoreFromEnv` (`packages/sandbox/src/object-store.ts`; Compose's `library` volume). Public creations and read-only chats are served by the pages origin (`apps/server/src/pages/app.ts`: `/c/{token}`, `/t/{token}`).
+- **Pages (D-279, D-289):** `collect` pages get a form runtime and `connect-src 'self'` (`PAGE_CSP_COLLECT`, `page_submissions`, `pages.submissions`); `folder` pages keep their files in `page_assets` and load them under `PAGE_CSP_ASSETS` with a `<base>`.
+- **Chat apps (D-270, D-277, D-278, D-285):** `channel_inbound_seen` dedupe, `decode`/`enrich`/`verifyAsync`/`respond`/`acknowledge`/`sendApproval`/`parseAction` on adapters, Casama's own Slack app routes (`/hooks/slack/*`), and the kinds `teams`, `discord`, `linear`, `jira`.
+- **Billing (D-275):** `packages/agent/src/waive.ts` (failed runs waived, low-credit notices); `GET /v1/usage` `by_person` and `waived_usd`.
+- **Self-hosting (D-271, D-272):** local models priced at zero and usable for memory search (`embeddingCredential`, `fitDimensions`); capped logs, a worker health file, Alertmanager in the monitoring profile, a default `COMPUTER_HOST_MEMORY_GB`.
+- **Knowledge (D-273, D-286):** PDFs through pdf.js; `sync_every_hours`, `text_hash` and `content_hash` for cheap frequent syncs. Chat export and sharing: `apps/server/src/api/routes/chat-export.ts` (D-282).
+
+## Production and launch (Phase 8)
+
+- **Privacy** (D-072): `/v1/me/export`, `DELETE /v1/me`, `/v1/orgs/{id}/settings`; worker job `privacy` (daily purge and retention).
+- **Enterprise** (D-073): `ee/` (`@casama/ee`): license keys, `/v1/orgs/{id}/audit-log/export`, `/v1/orgs/{id}/sso`.
+- **Telemetry** (D-074): opt-in weekly ping; `/telemetry/v1/ping` on Casama Cloud.
+- **Metrics** (D-075): `/metrics`; `infra/monitoring/` (Prometheus, alerts, Grafana).
+- **Self-host** (D-076): `install.sh`, `infra/compose/docker-compose.yml`, `casama selfhost`, `deploy/`, `docs-site/self-hosting/`.
+- **MCP server** (D-077): `packages/mcp`.
+- **Evals and load** (D-078): `packages/evals`, `apps/server/load`.
+- **Launch prep**: `site/`, `client/store/`, `docs/launch/`, `scripts/package-*`; gate status in `docs/LAUNCH_CHECKLIST.md`, security in `docs/SECURITY_REVIEW.md`.
+
+## Self-hosting defaults and optional services
+
+Everything hosted is optional, behind an interface, with a default that runs in `docker compose`:
+
+| Concern                   | Self-hosted default                                  | Optional                                                                         | Decision            |
+| ------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------- |
+| Snapshots and checkpoints | Filesystem volume                                    | SeaweedFS (`--profile s3`), Cloudflare R2 (hosted), AWS S3, Supabase Storage     | D-062               |
+| Error reporting           | Off                                                  | Sentry protocol (sentry.io, self-hosted Sentry, GlitchTip) or PostHog (any host); Casama Cloud and official apps use PostHog | D-063, D-207 |
+| Product analytics         | Off                                                  | PostHog (any host): `PRODUCT_ANALYTICS=on`; Casama Cloud and the official app on it. Catalog: `packages/contracts/analytics/catalog.json` | D-063, D-208, D-210 |
+| Computers                 | Docker, plus users' own machines (desktop companion) | E2B, Daytona                                                                     | D-056, D-057, D-066 |
+| Voice                     | Off                                                  | The workspace's own OpenAI, Deepgram, ElevenLabs, Cartesia or Fish Audio keys    | D-065               |
+| Live view relay           | coturn container                                     | any TURN service                                                                 | D-055               |
+| Default model             | GPT-6 Luna via the org's own key                     | any provider and model                                                           | D-064               |
+| Billing                   | Off: no paywall, no limits                           | Dodo Payments, App Store, Google Play (Casama Cloud)                             | D-070               |
+| Cloud computers, credits  | Off                                                  | Casama Link key to a Casama Cloud workspace                                    | D-071               |
+| Telemetry                 | Off                                                  | Weekly anonymous counts (`TELEMETRY=on`)                                         | D-074               |
+| Monitoring                | `/metrics` only                                      | Prometheus and Grafana (`--profile monitoring`)                                  | D-075               |
+| Enterprise features       | Off (open-source features only)                      | License key for `ee/` (audit export, SAML SSO)                                   | D-073               |
+
+## Model keys
+
+Keys go into Supabase Vault through the API's server role and are never returned. Only the worker reads `vault.decrypted_secrets`. The credential test is a worker workflow. Every event, message and tool result passes through a redactor seeded with the bot's model keys.
+
+## Code generation
+
+`pnpm gen` writes `packages/contracts/openapi.json`, regenerates `dart/casama_api` and `dart/casama_sdk/lib/src/generated/`. `pnpm --filter @casama/db pull` regenerates the Drizzle schema. CI fails if any generated file is stale.
+
+## Testing
+
+- `@casama/db/testing` starts throwaway Postgres clusters from local binaries with a Supabase shim (roles, auth, Vault and Realtime stand-ins). CI also runs pgTAP on the real Supabase stack.
+- Model calls in tests replay recorded fixtures (`apps/server/test/fixtures/chat.json`, `packages/agent/test/run.test.ts`). Turns are matched by request content, so re-executed steps get the same answer. Set `CASAMA_MODEL_RECORD=file.jsonl` on a worker with real keys to record new fixtures.
+- `apps/server/test/crash-resume.test.ts` kills a real worker process mid-run with SIGKILL and proves a new worker finishes it without repeating finished steps.
+- `scripts/e2e-cli.sh` runs the Phase 0 and Phase 1 gates through the real CLI.
+- `scripts/live-check.sh` runs the few live checks against a real model (key from `~/.config/casama/openrouter.env`); everything else uses fixtures.
+- `apps/server/test/live.test.ts` is the Phase 5 gate (desktop computer, TURN relay and a werift WebRTC client); `packages/sandbox/test/live.test.ts` and `hosted.test.ts` cover the streamer and the E2B/Daytona adapters; `client/integration_test/live_flow_test.dart` runs the live view in the real app.
+- `apps/server/test/autonomy.test.ts` is the Phase 4 gate (fixtures in `test/fixtures/autonomy.json`, a local MCP server and a fal.ai mock).
+
+## Build status
+
+| Phase                   | State                  | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ----------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0 Backend foundations   | Built                  | CLI signup, login, workspace, invite and join; RLS isolation; CI config                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| 1 Backend MVP           | Built                  | Gate verified locally with recorded model fixtures: CLI chat streams; killing the worker mid-run resumes; a fact from one chat is recalled in another; no API response contains a key                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 2 Computers             | Built                  | Gate verified locally on Docker Desktop (runc): from the CLI a bot researches a web page and writes a report; sleep and restore keep files and browser logins; restoring a checkpoint reverts files; metadata and internal addresses are blocked. gVisor not verified (needs a Linux host)                                                                                                                                                                                                                                                                                                   |
+| 3 MVP app               | Built                  | Same end-to-end flow passes on macOS, iOS Simulator, Android emulator and web against real local Supabase. The tester gate (10 testers for a week) needs store accounts and people                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 4 Autonomy              | Built                  | Gate verified locally: high-risk calls wait for approval and resume or fail the step on deny/expiry; scheduled routines fire in America/Chicago and notify; signed webhooks start runs and unsigned ones do not; MCP tools work end to end; media generation needs confirmation; subagents stop at their budget. App end-to-end adds a routine run and its notification on macOS, iOS Simulator and Android emulator. Composio, Pipedream, fal.ai, Brave/Tavily and FCM tested against mocks only                                                                                            |
+| 5 Live computer         | Built                  | Gate verified locally: live view through the API and TURN relay (data-channel RTT 1–3 ms, first frame about 2.4 s including streamer start) in a WebRTC test client and in the app on macOS and the iOS Simulator; take control and hand back mid-run resumes the bot with the user's note; request_takeover waits for a person; the same live flow works on E2B and the contract suite passes on E2B and Daytona (local control-plane mocks); a bot completes a task in Mousepad. 4G latency, real E2B/Daytona accounts and gVisor not verified                                             |
+| 6 Reach and extras      | Built                  | Gate verified locally: the desktop companion completed a browser task on this Mac (agent-browser read a page served on the machine, through the tunnel, in the real app); an external app streamed a run with casama_sdk; live-call plumbing measured against a mock provider (session mint about 30 ms, forwarded tool call about 200 ms). The "reply within 1 s" part is the realtime provider's latency and needs an OpenAI key. Widgets, Live Activities and the iOS share extension build; deep links verified on the Android emulator; release APK starts normally; publishing pending |
+| 7 Monetization          | Built                  | Gate verified locally against provider fakes: a Dodo web purchase unlocked the plan in the app on the iOS Simulator, the Android emulator and macOS (same workspace entitlement); an App Store purchase unlocked the web API; Dodo cancel and refund, App Store refund and expiry, and Play voided-purchase notifications removed access; a self-hosted instance ran a bot's command on a cloud computer through Casama Link and the time showed on the cloud bill. One live model call through the Casama Link proxy to OpenRouter. Real Dodo, Apple and Google accounts not used       |
+| 8 Production and launch | Built (launch pending) | Locally verified: k6 load test (200 bots woken at once, 100 concurrent chat streams) p95 time to first token 0.14 s and 0.82 s with recorded models; evals quick subset 100% (fixtures) and a 3-task live run 100%; security review with a cross-tenant sweep of all API routes and sandbox penetration checks (one memory-limit bug fixed); fresh self-host install in 2 min 47 s with a cold build, then a bot ran a command on a computer. Store approval and the public launch need Oliver                                                                                               |
+
+Known gaps carried forward: live provider calls are wired but mostly exercised with recorded fixtures (a few live checks run through `scripts/live-check.sh`); real store, payment and hosted-sandbox accounts are pending (see [NEEDS-FROM-OLIVER.md](NEEDS-FROM-OLIVER.md)). Attachments (D-082) and the least-privilege worker role (D-095) were built after this table was first written.
+
+## Sites and domains (D-329)
+
+- A site is a page (D-119) put on the web at an address: `<name>.<CASAMA_SITES_ZONE>`, and later
+  a connected or bought domain. `sites` holds a published page's settings, `site_hosts` every host
+  name that serves one, `domains` the workspace's domains; plan `docs/SITES-AND-DOMAINS-PLAN.md`.
+- The pages port runs a host dispatcher (`apps/server/src/pages/hosts.ts`): the pages host and any
+  unknown host go to the pages app as before; a host under the sites zone or in `site_hosts` goes
+  to the sites app (`pages/sites.ts`), which serves the page at `/`, its files at their paths,
+  `robots.txt`, `sitemap.xml`, the site's own `404.html`, and Casama's own routes under
+  `/_casama/` (form answers, reports, the probe). Host rows are cached for 60 s; whether the page
+  may be served (public, not trashed or taken down, workspace not suspended) is checked on every
+  request.
+- Publishing goes through `publishSite` in `packages/agent/src/sites.ts`, used by
+  `PUT /v1/pages/{id}/site` and the bot's `sites.publish` (high risk: asks first). Limits come
+  from `max_sites` and `max_custom_domains` in the plan's limits.
+- Reports (`/_casama/report` on a site, `POST /v1/site-reports` from the zone's own page in
+  `sites-site/`) take a site down at three different reporters.
+- Connected domains (`apps/server/src/sites/domains.ts`): each domain has its own target
+  (`d-<16>.<zone>`); hosts walk `pending_dns → pending_cert → active` and are served only with
+  Casama's own proof (`hostIsLive`), checked over DNS-over-HTTPS (`sites/dns.ts`) against two
+  resolvers. The edge is a `HostnameProvider` (`sites/hostnames.ts`): Cloudflare for SaaS on
+  Casama Cloud, Caddy's on-demand TLS on a self-hosted server (asking `/internal/tls-ask`). The
+  worker's `domainsUpkeep` runs each minute (checks, edge cleanups) and the hourly maintenance
+  runs the plan pause rule.
+- Bought domains (`sites/buying.ts`): a `Registrar` (`sites/registrar.ts`, Name.com in
+  `namecom.ts`) and `DomainPayments` (`sites/payments.ts`, Dodo: an exact-price checkout, or an
+  on-demand "mandate" subscription charged for later purchases and renewals). Domain payments
+  ride the Dodo webhook: `BillingService.domains` takes them before plan billing. A paid order
+  starts the `domainRegister` workflow with id `domain-order:<order id>`; each attempt holds a
+  lease on the order, re-reads the name and its cost, registers with the order id as reference,
+  writes the `domains` row, sets the records at the registrar (ids kept in `managed_records`),
+  and refunds by itself when it can't (a failed refund → `needs_attention`, Admin → Domains).
+  Registrar webhooks arrive at `/hooks/registrar/namecom`, are stored once as a domain event, and
+  the domain is read again. Runbook: `docs/DOMAINS-RUNBOOK.md`.
+- Keeping bought domains (`sites/lifecycle.ts`): the hourly maintenance runs `domainsLifecycle`:
+  for each bought domain the step it's due (renewal notices with that day's price, charges on the
+  mandate, expired → lapsed → gone), each once by its `domain_events.dedupe` key
+  (`<domain>:<expiry date>:<step>`); registrant reminders; relocking an unused transfer unlock;
+  releasing domains whose workspace was deleted (one email to the registrant by address); and a
+  daily reconcile with the registrar. A renewal is a `renew` order that runs through the same
+  workflow (`registerOrder` hands it to `renewOrder`). DNS records are read and written live
+  through the registrar; only the ids Casama manages are stored.
+

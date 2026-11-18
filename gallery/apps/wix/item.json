@@ -1,0 +1,28 @@
+{
+  "name": "Wix",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "websites"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Update the opening hours on my Wix site",
+    "Add a new product to my Wix store",
+    "Show this week's bookings"
+  ],
+  "access": {
+    "reads": [
+      "Wix sites, store and bookings"
+    ],
+    "writes": [
+      "edits site content and products"
+    ],
+    "credits": "low"
+  }
+}

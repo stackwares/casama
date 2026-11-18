@@ -1,0 +1,954 @@
+// Render-object fields are private with public setters; their constructor can't use this._x.
+// ignore_for_file: prefer_initializing_formals
+
+import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
+import 'package:flutter/rendering.dart' show PipelineOwner;
+import 'package:material_ui/material_ui.dart';
+
+import '../core/local_image.dart';
+import 'doodles.dart';
+import 'looks.g.dart';
+import 'mesh_gradient.dart';
+
+export 'doodles.dart' show Doodle;
+export 'looks.g.dart' show WallpaperPalette, WallpaperPattern;
+
+/// What a palette paints. The palettes themselves are data (`client/looks`, `looks.g.dart`).
+extension WallpaperPaletteColors on WallpaperPalette {
+  /// The nine mesh colors for [scheme]'s brightness.
+  List<Color> colorsFor(ColorScheme scheme) {
+    final isDark = scheme.brightness == Brightness.dark;
+    if (this == WallpaperPalette.flat) return List.filled(9, scheme.surface);
+    if (this == WallpaperPalette.theme) {
+      // The scheme's own hues, washed out (light) or deepened (dark), so every scheme gets a
+      // matching wallpaper.
+      final toward = isDark ? const Color(0xFF0C0B11) : Colors.white;
+      final k = isDark ? -0.04 : -0.05;
+      Color mix(Color c, double t) => Color.lerp(c, toward, t + k)!;
+      final (p, s, t) = (scheme.primary, scheme.secondary, scheme.tertiary);
+      return [
+        mix(p, 0.84), mix(t, 0.84), mix(s, 0.88),
+        mix(s, 0.85), mix(p, 0.88), mix(t, 0.86),
+        mix(t, 0.85), mix(s, 0.86), mix(p, 0.83),
+      ];
+    }
+    if (!isDark) return light;
+    // Night versions: the same hues, deep and quiet.
+    return dark ??
+        [for (final c in light) Color.lerp(c, const Color(0xFF0C0B11), 0.86)!];
+  }
+}
+
+/// What Customize → Background chose.
+@immutable
+class WallpaperSpec {
+  const WallpaperSpec({
+    this.pattern = WallpaperPattern.clouds,
+    this.palette = WallpaperPalette.theme,
+    this.intensity = 0.5,
+    this.everywhere = true,
+    this.photo,
+    this.photoDark,
+    this.photoBlur = 0.3,
+    this.photoDim = 0.15,
+    this.photoCredit,
+    this.photoCreditUrl,
+    this.mesh,
+    this.doodles,
+  });
+
+  final WallpaperPattern pattern;
+  final WallpaperPalette palette;
+
+  /// A mesh from the gallery, drawn instead of [palette]. [palette] stays as the fallback older
+  /// app versions draw.
+  final WallpaperMesh? mesh;
+
+  /// The mesh colors for [scheme]'s brightness: the gallery mesh, or the palette's.
+  List<Color> colorsFor(ColorScheme scheme) =>
+      mesh?.colorsFor(scheme.brightness) ?? palette.colorsFor(scheme);
+
+  /// Where the mesh colors sit.
+  List<Offset> get points => mesh?.points ?? palette.points;
+
+  /// Drawings from the gallery, scattered instead of [pattern]'s. [pattern] stays as the fallback
+  /// older app versions draw.
+  final List<Doodle>? doodles;
+
+  /// What the pattern scatters: the gallery's drawings, or the pattern's own.
+  List<Doodle> get drawings => doodles ?? pattern.drawings;
+
+  /// How strongly the pattern shows, 0 to 1.
+  final double intensity;
+
+  /// Behind every screen, or only behind chats.
+  final bool everywhere;
+
+  /// A photo instead of the gradient: a file path, an https URL (Unsplash), or a data: URI (web).
+  final String? photo;
+
+  /// The same picture for dark mode, such as a gallery painting's night version (D-388). Without
+  /// one, dark mode veils [photo] more strongly instead.
+  final String? photoDark;
+
+  /// Photo blur and darkening (0 to 1), so text on top stays readable.
+  final double photoBlur;
+  final double photoDim;
+
+  /// Who took the photo, for Unsplash attribution.
+  final String? photoCredit;
+  final String? photoCreditUrl;
+
+  WallpaperSpec copyWith({
+    WallpaperPattern? pattern,
+    WallpaperPalette? palette,
+    double? intensity,
+    bool? everywhere,
+    String? photo,
+    String? photoDark,
+    bool clearPhoto = false,
+    double? photoBlur,
+    double? photoDim,
+    String? photoCredit,
+    String? photoCreditUrl,
+    WallpaperMesh? mesh,
+    bool clearMesh = false,
+    List<Doodle>? doodles,
+    bool clearDoodles = false,
+  }) => WallpaperSpec(
+    pattern: pattern ?? this.pattern,
+    // Picking a pattern replaces gallery drawings.
+    doodles: clearDoodles || pattern != null
+        ? null
+        : (doodles ?? this.doodles),
+    palette: palette ?? this.palette,
+    // Picking a palette replaces a gallery mesh.
+    mesh: clearMesh || palette != null ? null : (mesh ?? this.mesh),
+    intensity: intensity ?? this.intensity,
+    everywhere: everywhere ?? this.everywhere,
+    photo: clearPhoto ? null : (photo ?? this.photo),
+    // A new photo drops the old one's night version unless it brings its own.
+    photoDark: clearPhoto || (photo != null && photoDark == null)
+        ? null
+        : (photoDark ?? this.photoDark),
+    photoBlur: photoBlur ?? this.photoBlur,
+    photoDim: photoDim ?? this.photoDim,
+    photoCredit: clearPhoto ? null : (photoCredit ?? this.photoCredit),
+    photoCreditUrl: clearPhoto ? null : (photoCreditUrl ?? this.photoCreditUrl),
+  );
+
+  /// The same wallpaper with its photo credit replaced (null clears it).
+  WallpaperSpec copyWithCredit(String? credit, String? url) => WallpaperSpec(
+    pattern: pattern,
+    palette: palette,
+    intensity: intensity,
+    everywhere: everywhere,
+    photo: photo,
+    photoDark: photoDark,
+    photoBlur: photoBlur,
+    photoDim: photoDim,
+    photoCredit: credit,
+    photoCreditUrl: url,
+    mesh: mesh,
+    doodles: doodles,
+  );
+
+  Map<String, Object?> toJson() => {
+    'pattern': pattern.name,
+    'palette': palette.name,
+    'intensity': intensity,
+    'everywhere': everywhere,
+    if (photo != null) 'photo': photo,
+    if (photoDark != null) 'photoDark': photoDark,
+    'photoBlur': photoBlur,
+    'photoDim': photoDim,
+    if (photoCredit != null) 'photoCredit': photoCredit,
+    if (photoCreditUrl != null) 'photoCreditUrl': photoCreditUrl,
+    if (mesh != null) 'mesh': mesh!.toJson(),
+    if (doodles != null) 'doodles': [for (final d in doodles!) d.toJson()],
+  };
+
+  factory WallpaperSpec.fromJson(Map<String, Object?> j) {
+    const d = WallpaperSpec();
+    double unit(Object? v, double fallback) =>
+        v is num ? v.toDouble().clamp(0, 1) : fallback;
+    return WallpaperSpec(
+      pattern: WallpaperPattern.values.asNameMap()[j['pattern']] ?? d.pattern,
+      palette: WallpaperPalette.values.asNameMap()[j['palette']] ?? d.palette,
+      intensity: unit(j['intensity'], d.intensity),
+      everywhere: j['everywhere'] is bool
+          ? j['everywhere']! as bool
+          : d.everywhere,
+      photo: j['photo'] as String?,
+      photoDark: j['photoDark'] as String?,
+      photoBlur: unit(j['photoBlur'], d.photoBlur),
+      photoDim: unit(j['photoDim'], d.photoDim),
+      photoCredit: j['photoCredit'] as String?,
+      photoCreditUrl: j['photoCreditUrl'] as String?,
+      mesh: WallpaperMesh.fromJson(j['mesh']),
+      doodles: Doodle.listFromJson(j['doodles']),
+    );
+  }
+
+  /// The JSON fields without the mesh and drawings, which aren't flat and are compared on their own.
+  Map<String, Object?> _flat() => toJson()
+    ..remove('mesh')
+    ..remove('doodles');
+
+  @override
+  bool operator ==(Object other) =>
+      other is WallpaperSpec &&
+      other.mesh == mesh &&
+      _sameDoodles(other.doodles, doodles) &&
+      const DeepCollectionEqualityLite().equals(_flat(), other._flat());
+
+  static bool _sameDoodles(List<Doodle>? a, List<Doodle>? b) {
+    if (a == null || b == null) return a == b;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    mesh,
+    doodles == null ? null : Object.hashAll(doodles!),
+    Object.hashAll(_flat().entries.map((e) => Object.hash(e.key, e.value))),
+  );
+}
+
+/// Map equality for flat JSON maps, without pulling in package:collection.
+class DeepCollectionEqualityLite {
+  const DeepCollectionEqualityLite();
+  bool equals(Map<String, Object?> a, Map<String, Object?> b) =>
+      a.length == b.length && a.entries.every((e) => b[e.key] == e.value);
+}
+
+/// The wallpaper as the theme carries it, so every page can paint it without reaching for state.
+class WallpaperTheme extends ThemeExtension<WallpaperTheme> {
+  const WallpaperTheme({
+    required this.spec,
+    required this.colors,
+    required this.ink,
+    required this.surface,
+  });
+
+  factory WallpaperTheme.of(WallpaperSpec spec, ColorScheme scheme) {
+    final isDark = scheme.brightness == Brightness.dark;
+    final ink = isDark
+        ? Color.lerp(scheme.primary, Colors.white, 0.35)!
+        : Color.lerp(scheme.primary, Colors.black, 0.25)!;
+    return WallpaperTheme(
+      spec: spec,
+      colors: spec.colorsFor(scheme),
+      ink: ink,
+      surface: scheme.surface,
+    );
+  }
+
+  final WallpaperSpec spec;
+  final List<Color> colors;
+
+  /// The doodles' color before [WallpaperSpec.intensity] is applied.
+  final Color ink;
+
+  /// Plain background, for pages when the wallpaper is set to chats only.
+  final Color surface;
+
+  /// Whether this is a dark theme, judged by [surface].
+  bool get isDark => surface.computeLuminance() < 0.2;
+
+  // Equal values compare equal, so a rebuilt theme with the same wallpaper isn't a theme change
+  // (which would animate the whole app) and the wallpaper isn't repainted.
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! WallpaperTheme ||
+        other.spec != spec ||
+        other.ink != ink ||
+        other.surface != surface ||
+        other.colors.length != colors.length) {
+      return false;
+    }
+    for (var i = 0; i < colors.length; i++) {
+      if (other.colors[i] != colors[i]) return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode => Object.hash(spec, ink, surface, Object.hashAll(colors));
+
+  @override
+  WallpaperTheme copyWith({
+    WallpaperSpec? spec,
+    List<Color>? colors,
+    Color? ink,
+    Color? surface,
+  }) => WallpaperTheme(
+    spec: spec ?? this.spec,
+    colors: colors ?? this.colors,
+    ink: ink ?? this.ink,
+    surface: surface ?? this.surface,
+  );
+
+  @override
+  WallpaperTheme lerp(covariant WallpaperTheme? other, double t) {
+    if (other == null) return this;
+    return WallpaperTheme(
+      spec: t < 0.5 ? spec : other.spec,
+      colors: [
+        for (var i = 0; i < colors.length && i < other.colors.length; i++)
+          Color.lerp(colors[i], other.colors[i], t)!,
+      ],
+      ink: Color.lerp(ink, other.ink, t)!,
+      surface: Color.lerp(surface, other.surface, t)!,
+    );
+  }
+}
+
+/// Marks that an ancestor [Wallpaper] already paints the wallpaper for this subtree, so a nested
+/// `Wallpaper(force: true)` on [ChatScreen] doesn't paint a second copy when `everywhere` is on.
+class _WallpaperScope extends InheritedWidget {
+  const _WallpaperScope({required this.painting, required super.child});
+  final bool painting;
+
+  static bool isPainting(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_WallpaperScope>()?.painting ??
+      false;
+
+  @override
+  bool updateShouldNotify(_WallpaperScope old) => old.painting != painting;
+}
+
+/// Paints the wallpaper behind [child]. The app paints one behind every navigator, under the
+/// see-through pages; on iOS each page paints its own as well, since sliding pages must cover the
+/// page under them (see `OpaquePageTransitionsBuilder`). Chats use `force` so they keep it when the
+/// wallpaper is set to chats only.
+class Wallpaper extends StatefulWidget {
+  const Wallpaper({
+    super.key,
+    required this.child,
+    this.force = false,
+    this.specOverride,
+  });
+  final Widget child;
+  final bool force;
+
+  /// Previews in Settings show a choice before it is applied.
+  final WallpaperTheme? specOverride;
+
+  @override
+  State<Wallpaper> createState() => _WallpaperState();
+}
+
+class _WallpaperState extends State<Wallpaper> {
+  // The layer paints in window coordinates, measured as it paints. While its page moves (a page
+  // transition, a swipe back) it repaints on every frame of that move, so the wallpaper stays
+  // lined up with the window instead of travelling with the page and jumping back when it lands.
+  final _routeAnimations = <Animation<double>>[];
+  Listenable? _moves;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    final now = [?route?.animation, ?route?.secondaryAnimation];
+    if (now.length == _routeAnimations.length &&
+        now.indexed.every((e) => identical(e.$2, _routeAnimations[e.$1]))) {
+      return;
+    }
+    _routeAnimations
+      ..clear()
+      ..addAll(now);
+    _moves = now.isEmpty ? null : Listenable.merge(now);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final specOverride = widget.specOverride;
+    final child = widget.child;
+    final force = widget.force;
+    final theme = specOverride ?? Theme.of(context).extension<WallpaperTheme>();
+    if (theme == null) return child;
+    // When a wallpaper above already paints it everywhere (the app's own, behind every navigator),
+    // a nested forced wallpaper (ChatScreen) lets that one show through instead of painting a
+    // second copy. When the wallpaper is for chats only, the one above paints plain and the chat's
+    // forced Wallpaper paints the wallpaper under the chat.
+    if (force && specOverride == null && _WallpaperScope.isPainting(context)) {
+      return child;
+    }
+    final plain = !force && !theme.spec.everywhere;
+    final spec = theme.spec;
+    final source = theme.isDark ? spec.photoDark ?? spec.photo : spec.photo;
+    return _WallpaperScope(
+      painting: !plain && specOverride == null,
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: [
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: _PhotoLoader(
+                source: plain ? null : source,
+                builder: (photo) => _WallpaperLayer(
+                  moves: _moves,
+                  theme: theme,
+                  plain: plain,
+                  photo: photo,
+                  screen: specOverride != null
+                      ? null
+                      : MediaQuery.sizeOf(context),
+                  textDirection: Directionality.of(context),
+                ),
+              ),
+            ),
+          ),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+/// Loads the wallpaper photo, if there is one, and hands the decoded image to [builder]. Until it
+/// arrives (or if it fails) the gradient shows.
+class _PhotoLoader extends StatefulWidget {
+  const _PhotoLoader({required this.source, required this.builder});
+  final String? source;
+  final Widget Function(ui.Image? photo) builder;
+
+  @override
+  State<_PhotoLoader> createState() => _PhotoLoaderState();
+}
+
+class _PhotoLoaderState extends State<_PhotoLoader> {
+  ImageStream? _stream;
+  ImageStreamListener? _listener;
+  ImageInfo? _info;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _resolve();
+  }
+
+  @override
+  void didUpdateWidget(_PhotoLoader old) {
+    super.didUpdateWidget(old);
+    if (old.source != widget.source) _resolve();
+  }
+
+  void _resolve() {
+    final source = widget.source;
+    if (source == null) {
+      _stop();
+      if (_info != null) setState(() => _info = null);
+      return;
+    }
+    // Decoded no larger than this display (a 24-megapixel photo is ~100 MB as pixels otherwise).
+    final display = View.maybeOf(context)?.display.size;
+    final longest = display == null
+        ? 2560
+        : math.max(display.width, display.height).round().clamp(1024, 2560);
+    final provider = ResizeImage.resizeIfNeeded(
+      longest,
+      longest,
+      imageProviderFor(source),
+    );
+    final stream =
+        (provider is ResizeImage
+                ? ResizeImage(
+                    provider.imageProvider,
+                    width: longest,
+                    height: longest,
+                    policy: ResizeImagePolicy.fit,
+                  )
+                : provider)
+            .resolve(createLocalImageConfiguration(context));
+    if (stream.key == _stream?.key) return;
+    _stop();
+    _stream = stream;
+    _listener = ImageStreamListener((info, _) {
+      if (mounted) setState(() => _info = info);
+    }, onError: (e, _) => debugPrint('wallpaper photo: $e'));
+    stream.addListener(_listener!);
+  }
+
+  void _stop() {
+    if (_listener != null) _stream?.removeListener(_listener!);
+    _stream = null;
+    _listener = null;
+  }
+
+  @override
+  void dispose() {
+    _stop();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      widget.builder(widget.source == null ? null : _info?.image);
+}
+
+class _WallpaperLayer extends LeafRenderObjectWidget {
+  const _WallpaperLayer({
+    required this.theme,
+    required this.plain,
+    required this.screen,
+    required this.textDirection,
+    this.photo,
+    this.moves,
+  });
+  final WallpaperTheme theme;
+
+  /// Notifies while the page moves, so the layer repaints in place (see [_WallpaperState]).
+  final Listenable? moves;
+  final bool plain;
+  final ui.Image? photo;
+
+  /// The window size, so the gradient and pattern line up across the shell's panes. Null in
+  /// previews, which paint relative to themselves.
+  final Size? screen;
+  final TextDirection textDirection;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderWallpaper(
+    theme: theme,
+    plain: plain,
+    screen: screen,
+    textDirection: textDirection,
+    photo: photo,
+    moves: moves,
+  )..pixelRatio = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1;
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderWallpaper renderObject) {
+    renderObject
+      ..pixelRatio = MediaQuery.maybeDevicePixelRatioOf(context) ?? 1
+      ..theme = theme
+      ..plain = plain
+      ..photo = photo
+      ..screen = screen
+      ..textDirection = textDirection
+      ..moves = moves;
+  }
+}
+
+class _RenderWallpaper extends RenderBox {
+  _RenderWallpaper({
+    required WallpaperTheme theme,
+    required bool plain,
+    required Size? screen,
+    required TextDirection textDirection,
+    ui.Image? photo,
+    Listenable? moves,
+  }) : _theme = theme,
+       _photo = photo,
+       _plain = plain,
+       _screen = screen,
+       _textDirection = textDirection,
+       _moves = moves;
+
+  WallpaperTheme _theme;
+  set theme(WallpaperTheme v) {
+    if (v == _theme) return;
+    _theme = v;
+    markNeedsPaint();
+  }
+
+  ui.Image? _photo;
+  set photo(ui.Image? v) {
+    if (v == _photo) return;
+    _photo = v;
+    markNeedsPaint();
+  }
+
+  bool _plain;
+  set plain(bool v) {
+    if (v == _plain) return;
+    _plain = v;
+    markNeedsPaint();
+  }
+
+  Size? _screen;
+  set screen(Size? v) {
+    if (v == _screen) return;
+    _screen = v;
+    markNeedsPaint();
+  }
+
+  Listenable? _moves;
+  set moves(Listenable? v) {
+    if (identical(v, _moves)) return;
+    if (attached) _moves?.removeListener(markNeedsPaint);
+    _moves = v;
+    if (attached) {
+      _moves?.addListener(markNeedsPaint);
+      markNeedsPaint();
+    }
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _moves?.addListener(markNeedsPaint);
+  }
+
+  @override
+  void detach() {
+    _moves?.removeListener(markNeedsPaint);
+    super.detach();
+  }
+
+  TextDirection _textDirection;
+  set textDirection(TextDirection v) {
+    if (v == _textDirection) return;
+    _textDirection = v;
+    markNeedsPaint();
+  }
+
+  /// The screen's pixel density, so the pattern tile is drawn sharp.
+  double _pixelRatio = 1;
+  set pixelRatio(double v) {
+    if (v == _pixelRatio) return;
+    _pixelRatio = v;
+    markNeedsPaint();
+  }
+
+  @override
+  bool get sizedByParent => true;
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) => constraints.biggest;
+
+  @override
+  bool hitTestSelf(Offset position) => false;
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final canvas = context.canvas;
+    final rect = offset & size;
+    if (_plain) {
+      canvas.drawRect(rect, Paint()..color = _theme.surface);
+      return;
+    }
+    // Paint in window coordinates so neighbouring panes (sidebar, chat, computer panel) join up.
+    final global = _screen == null ? Offset.zero : localToGlobal(Offset.zero);
+    final world = Rect.fromLTWH(
+      offset.dx - global.dx,
+      offset.dy - global.dy,
+      (_screen ?? size).width,
+      (_screen ?? size).height,
+    );
+    canvas.save();
+    canvas.clipRect(rect);
+    final spec = _theme.spec;
+    final photo = _photo;
+    if (photo != null) {
+      _paintPhoto(
+        canvas,
+        world,
+        photo,
+        spec,
+        _theme.surface,
+        // A light photo in dark mode, with no night version to swap in: veil it more, so it
+        // doesn't glare behind light text.
+        minDim: _theme.isDark && spec.photoDark == null ? _darkPhotoDim : 0,
+      );
+    } else {
+      _paintGradient(
+        canvas,
+        world,
+        _theme.colors,
+        spec.points,
+        cover: world.expandToInclude(rect),
+      );
+    }
+    final drawings = spec.drawings;
+    if (drawings.isNotEmpty && spec.intensity > 0) {
+      final dark = _theme.isDark;
+      final alpha = (dark ? 0.16 : 0.22) * spec.intensity;
+      _paintPattern(
+        canvas,
+        rect,
+        world.topLeft,
+        _Drawings.of(spec),
+        _theme.ink.withValues(alpha: alpha.clamp(0, 1)),
+        _pixelRatio,
+      );
+    }
+    canvas.restore();
+  }
+
+  /// How much dark mode veils a photo that has no night version, at least.
+  static const _darkPhotoDim = 0.5;
+
+  /// The photo covering the whole window, blurred and dimmed toward the surface color so text on
+  /// top stays readable.
+  static void _paintPhoto(
+    Canvas canvas,
+    Rect world,
+    ui.Image photo,
+    WallpaperSpec spec,
+    Color surface, {
+    double minDim = 0,
+  }) {
+    final sigma = spec.photoBlur * 40;
+    // Over the window, a little larger so the blur doesn't fade at the edges. A page sliding in is
+    // partly off screen; that part isn't seen, and stretching the photo over it would distort it.
+    final cover = world;
+    final target = cover.inflate(sigma * 2);
+    if (sigma > 0.5) {
+      final blurred = _blurredPhoto(photo, sigma, target.size);
+      canvas.drawImageRect(
+        blurred,
+        Offset.zero & Size(blurred.width.toDouble(), blurred.height.toDouble()),
+        target,
+        Paint()
+          ..filterQuality = FilterQuality.low
+          ..isAntiAlias = false,
+      );
+    } else {
+      final src =
+          Offset.zero & Size(photo.width.toDouble(), photo.height.toDouble());
+      final fitted = applyBoxFit(BoxFit.cover, src.size, target.size);
+      final paint = Paint()
+        ..filterQuality = FilterQuality.medium
+        ..isAntiAlias = false;
+      canvas.drawImageRect(
+        photo,
+        Alignment.center.inscribe(fitted.source, src),
+        target,
+        paint,
+      );
+    }
+    final dim = math.max(spec.photoDim * 0.85, minDim);
+    if (dim > 0) {
+      canvas.drawRect(cover, Paint()..color = surface.withValues(alpha: dim));
+    }
+  }
+
+  static void _paintGradient(
+    Canvas canvas,
+    Rect world,
+    List<Color> c,
+    List<Offset> points, {
+    Rect? cover,
+  }) {
+    if (c.length != 9 || points.length != 9) {
+      canvas.drawRect(
+        cover ?? world,
+        Paint()..color = c.isEmpty ? Colors.transparent : c.first,
+      );
+      return;
+    }
+    MeshGradient.paint(canvas, world, c, points);
+  }
+
+  // The blurred photo, made once at a fraction of the window's size and then only stretched: a
+  // Gaussian blur over the whole window on every frame is the most a page could cost the GPU, and
+  // a blurred picture loses nothing at low resolution. Pages share it.
+  static ({
+    ui.Image photo,
+    double sigma,
+    int width,
+    int height,
+    ui.Image image,
+  })?
+  _blur;
+
+  static ui.Image _blurredPhoto(ui.Image photo, double sigma, Size target) {
+    // Small enough to be cheap, large enough that the blur still spans 4 pixels.
+    final scale = (sigma / 4).clamp(1.0, 8.0);
+    // Sizes in steps of 16 pixels, so resizing a window doesn't redo it on every frame.
+    int step(double v) => math.max(16, ((v / scale) / 16).ceil() * 16);
+    final width = step(target.width), height = step(target.height);
+    final cached = _blur;
+    if (cached != null &&
+        cached.sigma == sigma &&
+        cached.width == width &&
+        cached.height == height &&
+        cached.photo.isCloneOf(photo)) {
+      return cached.image;
+    }
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final src =
+        Offset.zero & Size(photo.width.toDouble(), photo.height.toDouble());
+    final size = Size(width.toDouble(), height.toDouble());
+    final fitted = applyBoxFit(BoxFit.cover, src.size, size);
+    canvas.drawImageRect(
+      photo,
+      Alignment.center.inscribe(fitted.source, src),
+      Offset.zero & size,
+      Paint()
+        ..filterQuality = FilterQuality.medium
+        ..imageFilter = ui.ImageFilter.blur(
+          sigmaX: sigma / scale,
+          sigmaY: sigma / scale,
+          tileMode: TileMode.clamp,
+        ),
+    );
+    final picture = recorder.endRecording();
+    final image = picture.toImageSync(width, height);
+    picture.dispose();
+    // The old picture may still be on screen in a layer, which keeps its own reference.
+    cached?.photo.dispose();
+    _blur = (
+      photo: photo.clone(),
+      sigma: sigma,
+      width: width,
+      height: height,
+      image: image,
+    );
+    return image;
+  }
+
+  static const _tile = 260.0;
+  static final Map<(_Drawings, int), ui.Picture> _tiles = {};
+  static final Map<(_Drawings, int), ui.Image> _masks = {};
+
+  /// The pattern tile as a white mask at the screen's density, tinted when drawn: the pattern is
+  /// then one draw of a repeating image rather than hundreds of rotated drawings on every frame.
+  static ui.Image _maskFor(_Drawings drawings, double pixelRatio) {
+    final px = (_tile * pixelRatio).ceil();
+    final key = (drawings, px);
+    final cached = _masks[key];
+    if (cached != null) return cached;
+    if (_masks.length >= 4) _masks.clear();
+    final recorder = ui.PictureRecorder();
+    Canvas(recorder)
+      ..scale(px / _tile)
+      ..clipRect(const Rect.fromLTWH(0, 0, _tile, _tile))
+      ..drawPicture(_tileFor(drawings, const Color(0xFFFFFFFF)));
+    final picture = recorder.endRecording();
+    final image = picture.toImageSync(px, px);
+    picture.dispose();
+    return _masks[key] = image;
+  }
+
+  static ui.Picture _tileFor(_Drawings drawings, Color ink) {
+    final key = (drawings, ink.toARGB32());
+    final cached = _tiles[key];
+    if (cached != null) return cached;
+    if (_tiles.length > 24) _tiles.clear();
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final rnd = math.Random(drawings.seed);
+    final list = drawings.doodles;
+    const cells = 4;
+    const cell = _tile / cells;
+    for (var row = 0; row < cells; row++) {
+      for (var col = 0; col < cells; col++) {
+        final doodle = list[rnd.nextInt(list.length)];
+        final size = 17 + rnd.nextDouble() * 10;
+        // Offset every other row by half a cell so the doodles don't line up in columns.
+        final x =
+            (col + 0.5 + (row.isOdd ? 0.5 : 0)) * cell +
+            (rnd.nextDouble() - 0.5) * cell * 0.35;
+        final y = (row + 0.5) * cell + (rnd.nextDouble() - 0.5) * cell * 0.35;
+        // Lucide's 24-unit grid at [size]. The icon font these replaced drew a little heavier than
+        // Lucide's 2-unit stroke; 2.6 matches its weight (measured, D-201).
+        final scale = size / 24;
+        final paint = Paint()
+          ..color = ink
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.6
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round
+          ..isAntiAlias = true;
+        final angle = (rnd.nextDouble() - 0.5) * 0.7;
+        // Drawings that cross an edge are drawn again on the far side, so tiles join seamlessly.
+        for (final dx in const [0.0, -_tile, _tile]) {
+          for (final dy in const [0.0, -_tile, _tile]) {
+            final px = x + dx, py = y + dy;
+            if (px < -size ||
+                px > _tile + size ||
+                py < -size ||
+                py > _tile + size) {
+              continue;
+            }
+            canvas
+              ..save()
+              ..translate(px, py)
+              ..rotate(angle)
+              ..scale(scale)
+              ..translate(-12, -12)
+              ..drawPath(doodle.path, paint)
+              ..restore();
+          }
+        }
+      }
+    }
+    return _tiles[key] = recorder.endRecording();
+  }
+
+  static void _paintPattern(
+    Canvas canvas,
+    Rect rect,
+    Offset origin,
+    _Drawings drawings,
+    Color ink,
+    double pixelRatio,
+  ) {
+    final mask = _maskFor(drawings, pixelRatio);
+    // Image pixels to canvas: scaled to one tile, and anchored at the window's origin so panes join.
+    final s = _tile / mask.width;
+    final matrix = Float64List(16)
+      ..[0] = s
+      ..[5] = s
+      ..[10] = 1
+      ..[12] = origin.dx
+      ..[13] = origin.dy
+      ..[15] = 1;
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = ImageShader(
+          mask,
+          TileMode.repeated,
+          TileMode.repeated,
+          matrix,
+          filterQuality: FilterQuality.low,
+        )
+        ..colorFilter = ColorFilter.mode(ink, BlendMode.srcIn),
+    );
+  }
+}
+
+/// What a pattern tile scatters and the seed that lays it out, compared by value so built-in
+/// patterns and gallery drawings share the tile cache.
+@immutable
+class _Drawings {
+  const _Drawings(this.doodles, this.seed);
+
+  factory _Drawings.of(WallpaperSpec spec) => spec.doodles != null
+      ? _Drawings(spec.doodles!, 101 + spec.doodles!.length)
+      // The seeds built-in patterns always had, so they keep their layout.
+      : _Drawings(spec.pattern.drawings, spec.pattern.index * 7919 + 17);
+
+  final List<Doodle> doodles;
+  final int seed;
+
+  @override
+  bool operator ==(Object other) {
+    if (other is! _Drawings ||
+        other.seed != seed ||
+        other.doodles.length != doodles.length) {
+      return false;
+    }
+    for (var i = 0; i < doodles.length; i++) {
+      if (other.doodles[i] != doodles[i]) return false;
+    }
+    return true;
+  }
+
+  @override
+  int get hashCode => Object.hash(seed, Object.hashAll(doodles));
+}

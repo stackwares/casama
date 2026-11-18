@@ -1,0 +1,21 @@
+{
+  "name": "Briefing",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-09",
+  "examples": [
+    "Brief me on AI regulation news",
+    "Add 'climate tech funding' to my topics",
+    "What happened in my topics this week?"
+  ]
+}

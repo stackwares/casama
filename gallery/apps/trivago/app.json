@@ -1,0 +1,10 @@
+{
+  "description": "Search hotels and stays across major booking sites with trivago.",
+  "category": "productivity",
+  "color": "E32851",
+  "homepage": "https://www.trivago.com",
+  "url": "https://mcp.trivago.com/mcp",
+  "auth": ["none"],
+  "note": "Search only. Booking finishes on the site with the deal. No sign-in needed.",
+  "capabilities": ["Search hotels near a place", "Search hotels by name", "Compare prices across sites", "See when a destination is cheapest"]
+}

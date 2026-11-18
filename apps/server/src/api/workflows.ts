@@ -1,0 +1,204 @@
+import { createDb } from "@casama/db";
+import { DBOSClient } from "@dbos-inc/dbos-sdk";
+import { runPartitionKey } from "../worker/run-queue.ts";
+
+export interface CredentialTestOutcome {
+  ok: boolean;
+  model: string;
+  latency_ms: number;
+  error?: string;
+}
+
+export interface ModelListOutcome {
+  models: Array<{ id: string; name: string; context_length?: number; featured?: boolean }>;
+  source: "live" | "featured";
+  error?: string;
+}
+
+/** How the API hands work to the worker. */
+export interface Workflows {
+  startRun(runId: string): Promise<void>;
+  testCredential(
+    credentialId: string,
+    orgId: string,
+    model?: string,
+  ): Promise<CredentialTestOutcome>;
+  /** The model picker's list for a key (live from the provider, or Casama's short list). */
+  listCredentialModels(credentialId: string, orgId: string): Promise<ModelListOutcome>;
+  /** Revokes a ChatGPT sign-in at OpenAI before its credential is deleted (best effort). */
+  revokeCredential(credentialId: string): Promise<{ ok: boolean; error?: string }>;
+  /** Wakes a run that waits for an approval (decided or cancelled). */
+  signalRun(runId: string): Promise<void>;
+  testIntegration(integrationId: string): Promise<{ ok: boolean; tools: string[]; error?: string }>;
+  /** Hands a webhook to the worker, which verifies its signature and starts the routine. */
+  routineWebhook(
+    routineId: string,
+    kind: "github" | "custom",
+    body: string,
+    headers: Record<string, string>,
+  ): Promise<void>;
+  /** Registers a paid domain order (D-329); the order id is the workflow id, so never twice. */
+  startDomainOrder(orderId: string): Promise<void>;
+  /** Writes a person's starter requests for a bot again (D-338); at most once an hour each. */
+  refreshStarters(userId: string, orgId: string, botId: string): Promise<void>;
+  /** Voice (D-065): keyed operations run in the worker; each returns quickly. */
+  voiceTranscribe(
+    orgId: string,
+    botId: string,
+    audioB64: string,
+    mime: string,
+    language?: string,
+  ): Promise<VoiceResult<{ text: string; provider: string; seconds: number }>>;
+  voiceSpeak(
+    orgId: string,
+    messageId: string,
+  ): Promise<VoiceResult<{ voiceKey: string; cached: boolean }>>;
+  voiceSession(
+    orgId: string,
+    botId: string,
+    greeting?: string,
+    phone?: boolean,
+  ): Promise<
+    VoiceResult<{
+      provider: "gemini";
+      model: string;
+      clientSecret: string;
+      /** Gemini Live: the setup message the client sends first (the token locks most of it). */
+      setup: Record<string, unknown> | null;
+      expiresAt: string;
+      connectUrl: string;
+      tools: number;
+    }>
+  >;
+  close(): Promise<void>;
+}
+
+export type VoiceResult<T> = ({ ok: true } & T) | { ok: false; error: string; code?: string };
+
+const withTimeout = <T>(p: Promise<T>, ms: number, what: string) =>
+  Promise.race([
+    p,
+    new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`${what} timed out`)), ms)),
+  ]);
+
+/** Enqueues DBOS workflows from the API process; the worker executes them. */
+export async function dbosWorkflows(databaseUrl: string): Promise<Workflows> {
+  const client = await DBOSClient.create({
+    systemDatabaseUrl: databaseUrl,
+    systemDatabaseSchemaName: "dbos",
+  });
+  // Reads a run's workspace: runs wait in their workspace's line (billing audit 2026-11-17).
+  const db = createDb(databaseUrl, { max: 2 }).db;
+  return {
+    async startRun(runId) {
+      // The run id is the workflow id, so a retried enqueue never starts a second run.
+      await client.enqueue(
+        {
+          queueName: "runs",
+          workflowName: "agentRun",
+          workflowID: runId,
+          queuePartitionKey: await runPartitionKey(db, runId),
+        },
+        runId,
+      );
+    },
+    async testCredential(credentialId, orgId, model) {
+      const handle = await client.enqueue<
+        (c: string, o: string, m?: string) => Promise<CredentialTestOutcome>
+      >({ queueName: "system", workflowName: "testCredential" }, credentialId, orgId, model);
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("credential test timed out")), 30_000),
+      );
+      return Promise.race([handle.getResult({ pollingIntervalMs: 200 }), timeout]);
+    },
+    async listCredentialModels(credentialId, orgId) {
+      const handle = await client.enqueue<(c: string, o: string) => Promise<ModelListOutcome>>(
+        { queueName: "system", workflowName: "listCredentialModels" },
+        credentialId,
+        orgId,
+      );
+      return withTimeout(handle.getResult({ pollingIntervalMs: 200 }), 20_000, "model list");
+    },
+    async revokeCredential(credentialId) {
+      const handle = await client.enqueue<(c: string) => Promise<{ ok: boolean; error?: string }>>(
+        { queueName: "system", workflowName: "revokeCredential" },
+        credentialId,
+      );
+      return withTimeout(handle.getResult({ pollingIntervalMs: 200 }), 20_000, "revocation");
+    },
+    async startDomainOrder(orderId) {
+      await client.enqueue(
+        {
+          queueName: "system",
+          workflowName: "domainRegister",
+          workflowID: `domain-order:${orderId}`,
+        },
+        orderId,
+      );
+    },
+    async refreshStarters(userId, orgId, botId) {
+      const hour = Math.floor(Date.now() / 3_600_000);
+      await client.enqueue(
+        {
+          queueName: "system",
+          workflowName: "refreshStarters",
+          workflowID: `starters:${userId}:${botId}:${hour}`,
+        },
+        userId,
+        orgId,
+        botId,
+      );
+    },
+    async signalRun(runId) {
+      await client.send(runId, { at: Date.now() }, "signal").catch(() => {});
+    },
+    async testIntegration(integrationId) {
+      const handle = await client.enqueue<
+        (id: string) => Promise<{ ok: boolean; tools: string[]; error?: string }>
+      >({ queueName: "system", workflowName: "testIntegration" }, integrationId);
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("integration test timed out")), 60_000),
+      );
+      return Promise.race([handle.getResult({ pollingIntervalMs: 200 }), timeout]);
+    },
+    async routineWebhook(routineId, kind, body, headers) {
+      await client.enqueue(
+        { queueName: "system", workflowName: "routineWebhook" },
+        routineId,
+        kind,
+        body,
+        headers,
+      );
+    },
+    async voiceTranscribe(orgId, botId, audioB64, mime, language) {
+      const h = await client.enqueue<(...a: unknown[]) => Promise<never>>(
+        { queueName: "voice", workflowName: "voiceTranscribe" },
+        orgId,
+        botId,
+        audioB64,
+        mime,
+        language,
+      );
+      return withTimeout(h.getResult({ pollingIntervalMs: 50 }), 60_000, "transcription");
+    },
+    async voiceSpeak(orgId, messageId) {
+      const h = await client.enqueue<(...a: unknown[]) => Promise<never>>(
+        { queueName: "voice", workflowName: "voiceSpeak" },
+        orgId,
+        messageId,
+      );
+      return withTimeout(h.getResult({ pollingIntervalMs: 50 }), 60_000, "speech");
+    },
+    async voiceSession(orgId, botId, greeting, phone) {
+      const h = await client.enqueue<(...a: unknown[]) => Promise<never>>(
+        { queueName: "voice", workflowName: "voiceSession" },
+        orgId,
+        botId,
+        greeting ?? null,
+        phone ?? null,
+      );
+      return withTimeout(h.getResult({ pollingIntervalMs: 25 }), 20_000, "voice session");
+    },
+    close: () => client.destroy(),
+  };
+}

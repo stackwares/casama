@@ -1,0 +1,25 @@
+{
+  "name": "Subscription audit",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "subscriptions",
+    "money",
+    "budget"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "email",
+      "files you share",
+      "memory"
+    ],
+    "credits": "medium"
+  }
+}

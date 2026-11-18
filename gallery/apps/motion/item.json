@@ -1,0 +1,29 @@
+{
+  "name": "Motion",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "tasks",
+    "calendar"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Add 'prepare board deck' to Motion, due Friday",
+    "What does my schedule look like tomorrow?",
+    "Create a project for the website relaunch"
+  ],
+  "access": {
+    "reads": [
+      "Motion tasks and schedule"
+    ],
+    "writes": [
+      "adds tasks and projects"
+    ],
+    "credits": "low"
+  }
+}

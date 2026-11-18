@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Browser
+Comment=Open the web browser (the bot's signed-in profile)
+Exec=/usr/local/bin/casama-open-browser
+Icon=web-browser
+Terminal=false
+Categories=Network;WebBrowser;

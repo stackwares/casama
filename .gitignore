@@ -1,0 +1,38 @@
+node_modules/
+dist/
+.turbo/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+# Dart / Flutter
+.dart_tool/
+build/
+pubspec_overrides.yaml
+# Supabase
+supabase/.branches
+supabase/.temp
+# test databases
+.pgdata*/
+# Anything that could hold a real key for live checks (never commit these)
+*.secret
+*.secrets.json
+dart-defines*.json
+client/config/telemetry.json
+client/config/maps.json
+.live/
+live-check*.log
+
+# Firebase / Google credentials and native config files (never commit)
+*service-account*.json
+GoogleService-Info.plist
+google-services.json
+
+# Local caches
+__pycache__/
+.wrangler/
+
+# Local Library files (OBJECT_STORE_DIR in dev)
+/.data/

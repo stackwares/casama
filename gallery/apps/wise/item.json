@@ -1,0 +1,29 @@
+{
+  "name": "Wise",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "money",
+    "transfers"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "What's my Wise balance in euros?",
+    "What's today's USD to PHP rate?",
+    "Prepare a transfer of 200 euros to my landlord"
+  ],
+  "access": {
+    "reads": [
+      "Wise balances and rates"
+    ],
+    "writes": [
+      "prepares transfers"
+    ],
+    "credits": "low"
+  }
+}

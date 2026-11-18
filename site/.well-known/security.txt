@@ -1,0 +1,4 @@
+Contact: mailto:security@casama.ai
+Expires: 2027-11-11T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://casama.ai/.well-known/security.txt

@@ -1,0 +1,52 @@
+# Desktop computer: the headless image plus an X server (Xorg dummy driver, so the screen can be
+# resized), a lightweight window manager, AT-SPI accessibility, agent-desktop, xdotool, a text
+# editor for desktop tasks, and the Neko WebRTC streamer (D-054), which computerd starts on demand.
+#   docker build -f infra/images/computer/Dockerfile.desktop --build-arg BASE=casama/computer-headless:dev -t casama/computer-desktop:dev .
+ARG BASE=ghcr.io/stackwares/casama/computer-headless:latest
+
+# --- Neko server, built on the same Ubuntu release as the runtime (glibc and GStreamer match) ---
+FROM ubuntu:24.04 AS neko
+ARG NEKO_REF=v3.2.0
+ARG GO_VERSION=1.26.3
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates curl git build-essential pkg-config \
+      libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev libxcvt-dev \
+      libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+    && rm -rf /var/lib/apt/lists/*
+RUN arch="$(dpkg --print-architecture)" \
+    && curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${arch}.tar.gz" | tar -xz -C /usr/local
+ENV PATH=/usr/local/go/bin:$PATH
+RUN git clone --depth 1 --branch "${NEKO_REF}" https://github.com/m1k1o/neko.git /src/neko
+WORKDIR /src/neko/server
+RUN go build -trimpath -ldflags "-s -w -X 'm1k1o/neko.gitTag=${NEKO_REF}'" -o /out/neko cmd/neko/main.go
+
+# --- runtime ---
+FROM ${BASE}
+ARG AGENT_DESKTOP_VERSION=1.3.1
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      xserver-xorg-core xserver-xorg-video-dummy x11-utils x11-xserver-utils openbox xdotool xclip \
+      imagemagick xterm mousepad tint2 \
+      at-spi2-core libatk-adaptor dbus-x11 fonts-dejavu-core \
+      libxcvt0 libxrandr2 libxtst6 libgtk-3-0 libopus0 libvpx9 \
+      gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
+    && rm -rf /var/lib/apt/lists/* \
+    # Installed outside the home folder: root-owned files there break restores and get archived on sleep.
+    && NPM_CONFIG_PREFIX=/usr/local npm_config_cache=/tmp/npm-cache npm install -g agent-desktop@${AGENT_DESKTOP_VERSION} \
+    && rm -rf /tmp/npm-cache \
+    && chown -R casama:casama /home/casama
+COPY --from=neko /out/neko /usr/local/bin/neko
+COPY infra/images/computer/xorg.conf /etc/casama/xorg.conf
+COPY infra/images/computer/desktop-start.sh /usr/local/bin/desktop-start
+COPY infra/images/computer/openbox-menu.xml /etc/xdg/openbox/menu.xml
+COPY infra/images/computer/tint2rc /etc/xdg/tint2/tint2rc
+RUN chmod +x /usr/local/bin/desktop-start
+COPY infra/images/computer/casama-open-browser.sh /usr/local/bin/casama-open-browser
+COPY infra/images/computer/casama-proxy-relay.mjs /usr/local/lib/casama/proxy-relay.mjs
+RUN chmod +x /usr/local/bin/casama-open-browser
+COPY infra/images/computer/casama-browser.desktop /usr/share/applications/casama-browser.desktop
+# The bot's browser runs as a visible window here, so a person taking over sees what the bot sees.
+ENV DISPLAY=:1 CASAMA_PROFILE=desktop AGENT_BROWSER_HEADED=1 AGENT_BROWSER_ARGS=--start-maximized,--hide-crash-restore-bubble,--test-type,--no-default-browser-check
+USER casama
+CMD ["desktop-start"]

@@ -1,0 +1,31 @@
+{
+  "name": "Trip prep",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "travel",
+    "trips",
+    "packing"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "calendar",
+      "email",
+      "the web",
+      "memory"
+    ],
+    "credits": "low"
+  },
+  "needs": {
+    "skills": [
+      "trip-planner"
+    ]
+  }
+}

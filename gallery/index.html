@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Casama Gallery</title>
+<meta name="description" content="Themes, color schemes, wallpapers and skills for Casama, free and open source. See each one as it looks in the app, then open it in Casama.">
+<link rel="canonical" href="https://gallery.casama.ai/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://gallery.casama.ai/">
+<meta property="og:title" content="Casama Gallery">
+<meta property="og:description" content="Themes, color schemes, wallpapers, skills, apps, starter bots, routine ideas and plugins for Casama, free and open source.">
+<meta property="og:image" content="https://gallery.casama.ai/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://gallery.casama.ai/og.png">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
+<!-- Public usage numbers for the Trending and Most used rows. Local work: ?stats=<url> or ?stats=off. -->
+<meta name="casama-stats" content="https://api.casama.ai/v1/gallery/stats">
+<link rel="alternate" type="application/json" href="https://gallery.casama.ai/index.json" title="Gallery catalog">
+<link rel="icon" type="image/svg+xml" href="/assets/casama-winky-animated.svg">
+<link rel="stylesheet" href="/gallery.css">
+<link rel="stylesheet" href="/app.css">
+<script>
+  // Old item links (#theme/lagoon) moved to their own pages (/i/theme/lagoon/).
+  (function (m) { if (m) location.replace("/i/" + m[1] + "/" + m[2] + "/"); })(/^#(theme|scheme|wallpaper|skill|app|bot|routine|plugin|set)\/([a-z0-9][a-z0-9-]{0,62})$/.exec(location.hash));
+  document.documentElement.setAttribute("data-theme", matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to the gallery</a>
+<header class="bar">
+  <div class="wrap bar-inner">
+    <a class="logo" href="https://casama.ai" aria-label="Casama home"><span data-casama-mark></span><span>Casama</span></a>
+    <a class="brand-tag" href="/">Gallery</a>
+    <nav class="bar-nav" aria-label="Gallery">
+      <a href="/make.html">Make a look</a>
+      <a href="#contribute">Contribute</a>
+      <a href="/add/">Add to Casama badge</a>
+      <a href="https://github.com/stackwares/casama-gallery">GitHub</a>
+      <a class="btn primary" href="https://casama.ai/download">Get Casama</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="top">
+  <div class="title-row">
+    <h1>Gallery</h1>
+    <p class="sub" id="summary">Themes, color schemes, wallpapers and skills for Casama, free and open source. See each one as it looks in the app, then open it in Casama.</p>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Kinds" id="tabs"></div>
+
+  <div class="toolbar">
+    <label class="search">
+      <span class="sr-only">Search the gallery</span>
+      <span class="search-icon" id="search-icon"></span>
+      <input type="search" id="q" placeholder="Search everything, like email or dark" autocomplete="off" spellcheck="false">
+    </label>
+    <p class="count" id="count" aria-live="polite"></p>
+    <div class="seg" role="group" aria-label="Preview in">
+      <button type="button" data-mode="light" aria-pressed="true">Light</button>
+      <button type="button" data-mode="dark" aria-pressed="false">Dark</button>
+    </div>
+  </div>
+
+  <div class="filters" role="group" aria-label="Filters">
+    <label class="sr-only" for="topic">Topic</label>
+    <select class="select" id="topic"><option value="">Any topic</option></select>
+    <button type="button" class="chip" data-filter="free" aria-pressed="false">Free to run</button>
+    <button type="button" class="chip" data-filter="self" aria-pressed="false">Works self-hosted</button>
+    <button type="button" class="chip" data-filter="computer" aria-pressed="false">Needs a computer</button>
+    <button type="button" class="chip quiet" id="clear-filters" hidden>Clear</button>
+  </div>
+
+  <div id="content" tabindex="-1"></div>
+  <noscript><p class="note">The gallery draws its previews with JavaScript. Every item also has its own page (see the <a href="/sitemap.xml">sitemap</a>) and is listed in <a href="/index.json">index.json</a>.</p></noscript>
+
+  <section class="contribute" id="contribute" aria-labelledby="contribute-title">
+    <div class="contribute-text">
+      <h2 id="contribute-title">Add your own</h2>
+      <p>The gallery is a GitHub repository. Each item is a folder with a short <code>item.json</code> and its file. A pull request adds it, and once it is merged every Casama app sees it within half an hour, with no app update.</p>
+      <ol class="steps">
+        <li>Fork <a href="https://github.com/stackwares/casama-gallery">stackwares/casama-gallery</a>.</li>
+        <li>Add a folder under <code>themes/</code>, <code>schemes/</code>, <code>wallpapers/</code>, <code>skills/</code>, <code>apps/</code>, <code>bots/</code>, <code>routines/</code> or <code>plugins/</code> with <code>item.json</code> and its document (the README lists each).</li>
+        <li>Run <code>node check.mjs</code>. It checks the license, text contrast, fonts and file sizes, and updates <code>index.json</code> and the other lists.</li>
+        <li>Open a pull request. Casama reviews it; skills with scripts get a second review, an app is checked against the vendor's own docs, and a plugin's exact commit is read before it's listed.</li>
+      </ol>
+      <p class="small">Looks use CC0 1.0 or CC BY 4.0, skills MIT or Apache 2.0, apps CC0 1.0. An app is a vendor's own hosted MCP server, added by anyone. Photos from Unsplash's API can't be added here: use your own. In the app, Settings → Appearance → Share to gallery fills in an issue with your current look.</p>
+    </div>
+    <pre class="sample" aria-label="themes/lagoon/item.json"><code>// themes/lagoon/item.json
+{
+  "name": "Lagoon",
+  "author": { "name": "Casama",
+              "url": "https://casama.ai" },
+  "license": "CC0-1.0",
+  "tags": ["teal", "calm"],
+  "featured": true,
+  "version": 1
+}</code></pre>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <p class="foot-name"><span data-casama-mark></span>Casama</p>
+    <p class="small">Made in the open by Casama and its contributors. Every item lists its author and license. Developers: the whole catalog is open JSON, see <a href="/add/#data">Public data</a>. Pattern glyphs are <a href="https://lucide.dev">Lucide</a> icons (ISC).</p>
+    <p class="small"><a href="/add/">Add to Casama badge</a> · <a href="/add/#data">Public data</a> · <a href="https://github.com/stackwares/casama-gallery/issues?q=label%3Arequest">Requests</a> · <a href="https://casama.ai/privacy">Privacy</a> · <a href="https://casama.ai/terms">Terms</a> · <a href="https://github.com/stackwares/casama-gallery/issues/new">Report an item</a></p>
+  </div>
+</footer>
+
+<dialog class="detail" id="detail" aria-labelledby="detail-title"></dialog>
+
+<script src="/gallery.js"></script>
+<script src="/catalog.js"></script>
+<script src="/app.js"></script>
+<script src="/assets/brand/casama-mark.js"></script>
+<script src="/count.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+{
+  "name": "Weekly metrics",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "metrics",
+    "reports",
+    "business"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "payments",
+      "analytics",
+      "files you share",
+      "memory"
+    ],
+    "writes": [
+      "saves numbers to memory"
+    ],
+    "credits": "medium"
+  },
+  "inputs": [
+    {
+      "key": "metrics",
+      "label": "Which numbers?",
+      "type": "text",
+      "default": "revenue, new customers, sign-ups and cancellations",
+      "help": "The few numbers you check every week."
+    }
+  ]
+}

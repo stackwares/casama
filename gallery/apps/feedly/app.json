@@ -1,0 +1,10 @@
+{
+  "description": "Read and search the news and feeds you follow in Feedly.",
+  "category": "productivity",
+  "color": "2BB24C",
+  "homepage": "https://feedly.com",
+  "url": "https://mcp.feedly.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Read your latest articles", "Search your feeds", "Save articles"]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "Ramp",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "expenses",
+    "business"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Show Ramp card spending by team this month",
+    "Which reimbursements are pending?",
+    "Find all transactions with this vendor"
+  ],
+  "access": {
+    "reads": [
+      "Ramp transactions and reimbursements"
+    ],
+    "credits": "low"
+  }
+}

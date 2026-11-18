@@ -1,0 +1,29 @@
+{
+  "name": "WordPress.com",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "websites",
+    "blog"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Draft a WordPress post from these notes",
+    "How many visitors did my site get this week?",
+    "Update the About page"
+  ],
+  "access": {
+    "reads": [
+      "WordPress.com posts and stats"
+    ],
+    "writes": [
+      "drafts and edits posts and pages"
+    ],
+    "credits": "low"
+  }
+}

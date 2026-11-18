@@ -1,0 +1,81 @@
+# Casama app
+
+The Flutter app for iOS, Android, macOS, Windows, Linux and the web. It talks to a Casama server
+through the generated Dart SDK (`dart/casama_sdk`) and Supabase (sign-in and live updates).
+
+## Run it
+
+The app needs Flutter 3.50 (Dart 3.14), the version CI and the web image use. Don't mix Flutter
+versions in one checkout, and run one Flutter command in `client/` at a time: they share `build/` and
+`.dart_tool/`.
+
+Start a local server first (see [CONTRIBUTING.md](../CONTRIBUTING.md#development-setup)), then:
+
+```sh
+flutter pub get
+flutter run -d macos --dart-define=CASAMA_API_URL=http://localhost:8787
+```
+
+Any Flutter device works: `-d chrome`, an iOS simulator, an Android emulator, `-d windows` or
+`-d linux`. The app reads the Supabase address and key from the server, so the server address is
+the only setting. People can also change it at sign-in (**More Options** → **Server**).
+
+On a physical iPhone or Android phone, point it at an address the phone can reach, such as an https
+tunnel to your machine (see [CONTRIBUTING.md](../CONTRIBUTING.md#run-the-app)):
+
+```sh
+flutter run -d <device-id> --dart-define=CASAMA_API_URL=https://api-dev.casama.ai
+```
+
+## Release web build
+
+A release build, deploy or publish of the web app goes through
+[`scripts/build-web.sh`](../scripts/build-web.sh) at the repo root. That script compiles WebAssembly
+and stops if the Wasm output is missing. The self-host image uses the same script. `flutter run`
+stays on the debug compiler so hot reload keeps working.
+
+## Build settings
+
+Pass these with `--dart-define=NAME=value`. All are optional.
+
+| Setting | What it does |
+| --- | --- |
+| `CASAMA_API_URL` | The default server address (default `http://localhost:8787`; empty on web means the page's own origin) |
+| `CASAMA_DISTRIBUTION` | `direct` (default; a signed download with every feature) or `appstore` (the sandboxed Mac App Store build, which turns off features that reach outside the app) |
+| `CASAMA_HELP_URL` | Where **Help** in the macOS menu bar points (default: the docs on GitHub) |
+| `CASAMA_SELFHOST_BUNDLE` | A fixed bundle for **Run Casama on this computer** (with `latest` images). Unset, it downloads the commit tagged `selfhost` and pulls that commit's published images |
+| `SENTRY_DSN`, `POSTHOG_API_KEY`, `POSTHOG_HOST`, `ERROR_REPORTING` | Error reporting and screen analytics (off unless set). Official builds (the `scripts/package-*` scripts with `CASAMA_OFFICIAL_BUILD=1`) pass `--dart-define-from-file=config/telemetry.json`, which is gitignored (template: `config/telemetry.example.json`): Sentry project `casama-app` and the Stackwares PostHog project. Self-hosters building their own apps leave it out or point it at their own projects |
+| `ANALYTICS_PROVIDERS`, `GA4_ENABLED`, `FIREBASE_WEB_MEASUREMENT_ID` | Which product analytics run (D-397): `posthog`, `ga4`, `posthog,ga4` or `none`. Empty means PostHog when its key is set, plus Google Analytics 4 when `GA4_ENABLED=true` (iOS, Android, macOS and web through the Firebase project in `config/firebase.json`, the web also needing its stream's measurement id; Windows and Linux send through the server's `/v1/analytics/events`, D-399). Either way only on Casama Cloud and only with the person's "Share usage data" switch on |
+| `FIREBASE_*` | Push notifications for official builds (see `config/firebase.json`) |
+
+## Layout
+
+| Path | What it is |
+| --- | --- |
+| `lib/core/` | App-wide services: the `Backend` interface and its Supabase implementation, routing, providers, push, voice, the offline cache, shortcuts |
+| `lib/features/` | One folder per feature (chat, bots, computer, routines, settings and so on) |
+| `lib/ui/` | Shared widgets: sheets, cards, buttons, the page layout |
+| `lib/theme/` | Colors, type, spacing and motion tokens |
+| `lib/l10n/` | `app_en.arb`, the source of every string in the app; run `flutter gen-l10n` after editing |
+| `test/` | Widget tests against a fake backend (`test/fake_backend.dart`) |
+| `integration_test/` | End-to-end tests against a running local server (`scripts/e2e-app.sh`) |
+
+## Checks
+
+```sh
+flutter gen-l10n
+flutter analyze
+flutter test
+```
+
+`scripts/e2e-app.sh [device]` runs the end-to-end tests against a local server with recorded model
+responses. Format only the files you change (`dart format <files>`).
+
+## Conventions
+
+- State with Riverpod (no code generation); navigation with go_router.
+- Import `package:material_ui/material_ui.dart` and `package:cupertino_ui/cupertino_ui.dart`, not
+  Flutter's deprecated `material.dart` and `cupertino.dart`.
+- Every user-facing string goes in `lib/l10n/app_en.arb`.
+- The app stays fully native: no embedded web views.
+- New screens use the shared page layout and form components in `lib/ui/`.

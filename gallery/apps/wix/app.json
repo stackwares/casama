@@ -1,0 +1,10 @@
+{
+  "description": "Manage your Wix sites, content and store.",
+  "category": "productivity",
+  "color": "0C6EFC",
+  "homepage": "https://www.wix.com",
+  "url": "https://mcp.wix.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Manage site content", "Work with your store products", "See bookings and contacts"]
+}

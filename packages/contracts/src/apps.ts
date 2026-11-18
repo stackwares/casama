@@ -1,0 +1,126 @@
+import { z } from "@hono/zod-openapi";
+import { Integration } from "./autonomy.ts";
+import { Uuid } from "./common.ts";
+import { galleryExtras } from "./gallery.ts";
+
+/** A built-in app: a vendor's hosted MCP server Casama connects to (D-089). */
+export const CatalogApp = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string(),
+    category: z.enum([
+      "developer",
+      "productivity",
+      "google",
+      "payments",
+      "design",
+      "sales",
+      "data",
+      "automation",
+    ]),
+    color: z.string().openapi({ description: "Brand color, hex without #" }),
+    homepage: z.string(),
+    url: z.string(),
+    auth: z.array(z.enum(["oauth", "api_key", "none", "managed"])),
+    api_key: z
+      .object({
+        label: z.string(),
+        placeholder: z.string().optional(),
+        url: z.string(),
+        steps: z.array(z.string()),
+      })
+      .optional(),
+    capabilities: z.array(z.string()),
+    popular: z.boolean(),
+    note: z.string().optional(),
+    /** Whether one-click sign-in works on this server (some vendors need a client the admin sets up). */
+    oauth_available: z.boolean(),
+    /** Composio's toolkit slug for this app, so apps connected through a Composio hub can be matched to it. */
+    composio: z.string().optional(),
+    /**
+     * A single-color SVG mark for apps from the open gallery (D-239), tinted by the app like its
+     * bundled logos. Built-in apps have none: the app ships their marks.
+     */
+    logo_url: z.string().optional(),
+    /** Gallery v2 (D-315), gallery apps only. */
+    added: galleryExtras.added,
+    pick: galleryExtras.pick,
+    examples: galleryExtras.examples,
+    access: galleryExtras.access,
+    min_app: galleryExtras.min_app,
+    source: galleryExtras.source,
+    version: z.number().int().optional(),
+    stats: galleryExtras.stats,
+  })
+  .openapi("CatalogApp");
+
+export const AppCatalog = z
+  .object({
+    apps: z.array(CatalogApp),
+    /** The OAuth redirect address vendors must allow, for admins registering a client. */
+    redirect_uri: z.string(),
+    /** The apps an empty chat offers to connect first, in order (D-372); the app's own list when absent. */
+    starter_apps: z.array(z.string()).optional(),
+  })
+  .openapi("AppCatalog");
+
+export const ConnectAppRequest = z
+  .object({
+    org_id: Uuid,
+    app_id: z.string().max(100),
+    method: z.enum(["oauth", "api_key", "none", "managed"]),
+    api_key: z.string().min(1).max(10_000).optional(),
+    /** Reconnect this integration instead of adding a new one. */
+    integration_id: Uuid.optional(),
+    /**
+     * Signing in from the app's sign-in sheet: when it finishes, send the browser to
+     * casama-auth://done so the sheet closes, instead of showing a "go back to Casama" page.
+     */
+    return_to_app: z.boolean().optional(),
+  })
+  .openapi("ConnectAppRequest");
+
+export const ConnectAppResponse = z
+  .object({
+    status: z.enum(["connected", "authorize", "error"]),
+    integration: Integration.optional(),
+    /** Open in a browser; the vendor redirects back to the API when done. */
+    authorize_url: z.string().optional(),
+    flow_id: Uuid.optional(),
+    error: z.string().optional(),
+  })
+  .openapi("ConnectAppResponse");
+
+export const ConnectFlowStatus = z
+  .object({
+    status: z.enum(["pending", "connected", "error", "expired"]),
+    integration: Integration.optional(),
+    error: z.string().optional(),
+  })
+  .openapi("ConnectFlowStatus");
+
+export const UpdateIntegrationRequest = z
+  .object({ risk_overrides: z.record(z.string(), z.enum(["low", "medium", "high"])).optional() })
+  .openapi("UpdateIntegrationRequest");
+
+export const ProviderApp = z
+  .object({
+    slug: z.string(),
+    name: z.string(),
+    description: z.string(),
+    logo: z.string().nullable(),
+  })
+  .openapi("ProviderApp");
+
+export const ProviderAccount = z
+  .object({ app: z.string(), status: z.enum(["connected", "pending", "error"]) })
+  .openapi("ProviderAccount");
+
+export const ProviderConnectRequest = z
+  .object({
+    app: z.string().min(1).max(100),
+    /** As in ConnectAppRequest: finish on casama-auth://done so the app's sign-in sheet closes. */
+    return_to_app: z.boolean().optional(),
+  })
+  .openapi("ProviderConnectRequest");

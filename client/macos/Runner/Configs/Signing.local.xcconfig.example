@@ -1,0 +1,10 @@
+// Copy to Signing.local.xcconfig (gitignored) to sign Debug builds with your Apple Development
+// certificate and the "Casama Mac Development" profile (a Mac development profile for
+// ai.casama.app that lists this Mac). That turns on Apple's own Sign in with Apple sheet, Google's
+// sheet and passkeys in `flutter run -d macos`. Without it, Debug builds are signed ad hoc and
+// those sign-ins open the sign-in window instead.
+DEVELOPMENT_TEAM[config=Debug] = V8V5US964Z
+CODE_SIGN_IDENTITY[config=Debug] = Apple Development
+CASAMA_DEBUG_ENTITLEMENTS = Runner/DebugSigned.entitlements
+CASAMA_DEBUG_SIGN_STYLE = Manual
+CASAMA_DEBUG_PROFILE = Casama Mac Development

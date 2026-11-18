@@ -1,0 +1,42 @@
+{
+  "description": "Answer customers, get invoices paid, post each week and keep an eye on competitors, with every send left to you.",
+  "icon": "store",
+  "items": [
+    {
+      "type": "bot",
+      "id": "support-agent"
+    },
+    {
+      "type": "bot",
+      "id": "social-manager"
+    },
+    {
+      "type": "routine",
+      "id": "support-inbox-triage"
+    },
+    {
+      "type": "routine",
+      "id": "invoice-chaser"
+    },
+    {
+      "type": "routine",
+      "id": "social-post-planner"
+    },
+    {
+      "type": "routine",
+      "id": "competitor-watch"
+    },
+    {
+      "type": "routine",
+      "id": "weekly-team-update"
+    },
+    {
+      "type": "skill",
+      "id": "invoice-check"
+    },
+    {
+      "type": "skill",
+      "id": "email-drafter"
+    }
+  ]
+}

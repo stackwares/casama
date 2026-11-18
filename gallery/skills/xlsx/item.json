@@ -1,0 +1,30 @@
+{
+  "name": "Excel spreadsheets",
+  "author": {
+    "name": "Anthropic",
+    "url": "https://github.com/anthropics/skills"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "data"
+  ],
+  "category": "data",
+  "icon": "sheet",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Clean this spreadsheet and add totals per column",
+    "Build a budget workbook with formulas and a chart",
+    "Convert this CSV into a formatted Excel file"
+  ],
+  "access": {
+    "reads": [
+      "spreadsheets you share"
+    ],
+    "writes": [
+      "creates and edits spreadsheets"
+    ],
+    "credits": "medium"
+  }
+}

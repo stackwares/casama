@@ -1,0 +1,7 @@
+{
+  "description": "On the 2nd of each month: last month's transactions sorted into categories, missing receipts listed, and a summary for your accountant.",
+  "category": "work",
+  "icon": "calculator",
+  "instructions_md": "Close last month's books. From my accounting app if one is connected, otherwise from the bank and card exports I've shared, sort last month's transactions into my categories and mark the ones you're unsure about. List transactions over 50 in my currency that have no receipt or invoice yet, and look for the receipts in my mail if it's connected. Save a spreadsheet for the month with every transaction, and write a short summary: income, spending by category, unpaid invoices and anything that looks wrong. You aren't an accountant: for tax questions, say what you found and leave the answer to one. Don't change records in any app, pay or send anything. If I haven't shared last month's statements, ask me for them.",
+  "schedule_cron": "0 9 2 * *"
+}

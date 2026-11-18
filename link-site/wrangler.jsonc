@@ -1,0 +1,22 @@
+{
+  // casama.link's own page (D-317). Every other name on the zone is a Casama Link address
+  // (<label>.casama.link, <label>-p.casama.link), a CNAME to a tunnel made by apps/server/src/link.
+  // This worker answers only the bare domain and www, so it never sits in front of anyone's server.
+  // Publish with scripts/deploy-link-web.sh (production: ask first).
+  "name": "casama-link-site",
+  "compatibility_date": "2026-11-01",
+  "main": "worker.js",
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    "html_handling": "drop-trailing-slash",
+    // www has to reach the worker to be redirected, so it runs before the files.
+    "run_worker_first": true
+  },
+  "routes": [
+    { "pattern": "casama.link", "custom_domain": true },
+    { "pattern": "www.casama.link", "custom_domain": true }
+  ],
+  "workers_dev": false
+}

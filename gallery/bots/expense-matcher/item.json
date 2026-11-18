@@ -1,0 +1,21 @@
+{
+  "name": "Expense matcher",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "life",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-09",
+  "examples": [
+    "Match this month's receipts",
+    "Which transactions have no receipt?",
+    "Categorize last month's spending"
+  ]
+}

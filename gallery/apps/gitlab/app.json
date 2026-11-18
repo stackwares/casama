@@ -1,0 +1,11 @@
+{
+  "description": "Issues, merge requests and pipelines on GitLab.com.",
+  "category": "developer",
+  "color": "FC6D26",
+  "homepage": "https://gitlab.com",
+  "url": "https://gitlab.com/api/v4/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "note": "GitLab.com only.",
+  "capabilities": ["Search issues and merge requests", "Read and comment on issues", "Check pipelines"]
+}

@@ -1,0 +1,30 @@
+{
+  "name": "Build dashboard",
+  "author": {
+    "name": "Anthropic",
+    "url": "https://github.com/anthropics/knowledge-work-plugins"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "data"
+  ],
+  "category": "data",
+  "icon": "layout-dashboard",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Build a dashboard from this sales CSV with a chart per region",
+    "Make an executive overview with KPI cards from these numbers",
+    "Turn this query result into a page with filters and a table"
+  ],
+  "access": {
+    "reads": [
+      "data you share"
+    ],
+    "writes": [
+      "creates an HTML file"
+    ],
+    "credits": "medium"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "description": "Plan tasks and projects that Motion schedules into your calendar.",
+  "category": "productivity",
+  "color": "3F6254",
+  "homepage": "https://www.usemotion.com",
+  "url": "https://mcp.motion.so/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Add tasks", "See your schedule", "Manage projects"]
+}

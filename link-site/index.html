@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>casama.link | Addresses for Casama servers</title>
+<meta name="description" content="Every casama.link address leads to a Casama server someone runs on their own computer. Find out what an address is, how Casama Link works, and how to report one.">
+<link rel="canonical" href="https://casama.link/">
+<meta property="og:title" content="casama.link">
+<meta property="og:description" content="Addresses for Casama servers people run on their own computers.">
+<meta property="og:url" content="https://casama.link/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://casama.link/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="/assets/casama-winky-animated.svg">
+<link rel="preload" href="/assets/fonts/GoogleSans-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/link.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/" aria-label="casama.link home">
+        <span class="brand-mark" data-casama-mark></span>
+        <span class="brand-word">Casama</span><span class="brand-tag">Link</span>
+      </a>
+      <nav class="site-nav" aria-label="Page">
+        <a href="#how">How it works</a>
+        <a href="#privacy">What we see</a>
+        <a href="#report">Report</a>
+      </nav>
+      <a class="btn sm primary" href="https://casama.ai/download">Get Casama</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero wrap">
+      <p class="eyebrow">casama.link</p>
+      <h1>Addresses for Casama servers people run at home.</h1>
+      <p class="lead">
+        Every address here, like <code class="addr">k7qm2xfd9abc.casama.link</code>, leads to a
+        Casama server running on someone's own computer. Casama Link gives it that address so its
+        owner's phone can reach it from anywhere, with no domain and no open ports.
+      </p>
+
+      <form class="check" id="check" autocomplete="off" novalidate>
+        <label for="check-input">Found one of these addresses? Paste it to see what it is.</label>
+        <div class="check-row">
+          <input id="check-input" name="address" type="text" inputmode="url" spellcheck="false"
+                 autocapitalize="off" placeholder="k7qm2xfd9abc.casama.link" aria-describedby="check-note">
+          <button class="btn primary" type="submit">Check</button>
+        </div>
+        <p class="check-note" id="check-note">Checked on this page only. It doesn't contact the server or tell anyone.</p>
+        <div class="check-result" id="check-result" role="status" aria-live="polite" hidden></div>
+      </form>
+      <img class="hero-art" src="/assets/hero.webp" srcset="/assets/hero-800.webp 800w, /assets/hero.webp 1600w" sizes="(max-width: 900px) 100vw, 1100px" width="1600" height="900" alt="" decoding="async">
+    </section>
+
+    <section class="section wrap" id="how" aria-labelledby="how-title">
+      <h2 id="how-title">How it works</h2>
+      <p class="section-lead">Your phone talks to your computer through Cloudflare. Casama Cloud hands out the address and checks who's signing in, but your chats and files never pass through it.</p>
+
+      <ol class="flow" aria-label="The path a request takes">
+        <li class="node">
+          <span class="node-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M10.5 18.5h3"/></svg>
+          </span>
+          <strong>Your phone</strong>
+          <span>Opens your address in the Casama app, on Wi-Fi or mobile data.</span>
+        </li>
+        <li class="wire" aria-hidden="true"><span>https</span></li>
+        <li class="node">
+          <span class="node-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.6 9.1 4.7 4.7 0 0 0 7 18.5Z"/></svg>
+          </span>
+          <strong>Cloudflare</strong>
+          <span>Carries the traffic down a tunnel your computer opened. No ports open at home.</span>
+        </li>
+        <li class="wire" aria-hidden="true"><span>tunnel</span></li>
+        <li class="node node-home">
+          <span class="node-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4" width="19" height="12.5" rx="2"/><path d="M8 20.5h8M12 16.5v4"/></svg>
+          </span>
+          <strong>Your computer</strong>
+          <span>Runs your Casama server, your bots and their computers. Everything stays here.</span>
+        </li>
+      </ol>
+      <p class="flow-aside">
+        <span class="dot" aria-hidden="true"></span>
+        <strong>Casama Cloud</strong>, off to the side: gives out the address, links the server to your
+        account, signs in your phone by QR code, and passes on notifications.
+      </p>
+
+      <div class="cards">
+        <article class="card">
+          <h3>For the owner</h3>
+          <p>Turn it on from the desktop app (<b>Settings → Casama Link → Use on Your Phone</b>) or with <code>casama selfhost remote on</code>, then scan the QR code with your phone.</p>
+          <a class="text-link" href="https://docs.casama.ai/self-hosting/remote-access">Set it up</a>
+        </article>
+        <article class="card">
+          <h3>What it costs</h3>
+          <p>The address, QR sign-in and notifications are free on every plan. Live video of a bot's screen away from home comes with Plus and up. Free and Plus link one server, Pro three and Max ten.</p>
+          <a class="text-link" href="https://docs.casama.ai/guide/casama-link">About Casama Link</a>
+        </article>
+        <article class="card">
+          <h3>Who can get in</h3>
+          <p>Turning on an address closes sign-ups on that server, so whoever finds it can't make an account. The owner can let invited people sign up.</p>
+          <a class="text-link" href="https://docs.casama.ai/self-hosting/remote-access#who-can-sign-up">Sign-ups</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="section wrap" id="privacy" aria-labelledby="privacy-title">
+      <h2 id="privacy-title">What Casama can and can't see</h2>
+      <div class="split">
+        <div class="col">
+          <h3>Casama Cloud keeps</h3>
+          <ul class="ticks">
+            <li>Which workspace the server is linked to, its name, its address, the version it runs and when it last checked in.</li>
+            <li>The text of notifications as it passes them to Apple and Google, without storing it. The owner can turn on <b>Private Notifications</b> to keep even that on the server.</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3>It never gets</h3>
+          <ul class="crosses">
+            <li>Your chats, files, bots, memory or passwords. They live on your computer and travel through the tunnel, not through Casama's servers.</li>
+            <li>Live video of a bot's screen. The relay passes it encrypted between the bot's computer and your phone.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="fine">
+        Casama runs the names and tunnels in its own Cloudflare account, so it can take an address
+        down. The address is random, but it isn't a secret: owners should treat their server as
+        public, with a good password and two-step sign-in. If you want no one else in the path,
+        give your server your own domain or use a VPN.
+        <a href="https://docs.casama.ai/self-hosting/remote-access">Read the details</a>.
+      </p>
+    </section>
+
+    <section class="section wrap" id="report" aria-labelledby="report-title">
+      <div class="report">
+        <div class="report-intro">
+          <h2 id="report-title">Report an address</h2>
+          <p>Seen phishing, malware, spam or anything illegal on a casama.link address? Tell us. Casama doesn't run these servers, but it can turn an address off.</p>
+          <ul class="steps">
+            <li>We read every report.</li>
+            <li>If the address breaks our <a href="https://casama.ai/terms">terms</a>, we turn it off. It stays off until we lift it.</li>
+            <li>Include the full address. Screenshots help.</li>
+          </ul>
+          <p class="mail">Or write to <a href="mailto:security@casama.ai">security@casama.ai</a></p>
+        </div>
+
+        <form class="report-form" id="report-form" action="mailto:security@casama.ai" method="post" enctype="text/plain">
+          <label for="r-address">Address</label>
+          <input id="r-address" name="address" type="text" required spellcheck="false" autocapitalize="off"
+                 placeholder="https://k7qm2xfd9abc.casama.link">
+
+          <fieldset>
+            <legend>What's wrong</legend>
+            <div class="chips">
+              <label><input type="radio" name="kind" value="Phishing" checked><span>Phishing</span></label>
+              <label><input type="radio" name="kind" value="Malware"><span>Malware</span></label>
+              <label><input type="radio" name="kind" value="Spam"><span>Spam</span></label>
+              <label><input type="radio" name="kind" value="Illegal content"><span>Illegal content</span></label>
+              <label><input type="radio" name="kind" value="Copyright"><span>Copyright</span></label>
+              <label><input type="radio" name="kind" value="Something else"><span>Something else</span></label>
+            </div>
+          </fieldset>
+
+          <label for="r-details">What did you see?</label>
+          <textarea id="r-details" name="details" rows="5" maxlength="1500"
+                    placeholder="Where you found the link, what the page asked for, when you saw it."></textarea>
+
+          <p class="form-error" id="r-error" role="alert" hidden></p>
+          <button class="btn primary" type="submit">Write the email</button>
+          <p class="form-note">Opens your email app with the report filled in. Nothing is sent from this page.</p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p>casama.link is run by Casama™, from Stackwares. Casama is a trademark of Stackwares.</p>
+      <nav aria-label="Casama">
+        <a href="https://casama.ai">casama.ai</a>
+        <a href="https://docs.casama.ai/guide/casama-link">Docs</a>
+        <a href="https://casama.ai/privacy">Privacy</a>
+        <a href="https://casama.ai/terms">Terms</a>
+        <a href="https://status.casama.ai">Status</a>
+        <a href="/.well-known/security.txt">security.txt</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="/link.js"></script>
+  <script src="/assets/brand/casama-mark.js"></script>
+</body>
+</html>

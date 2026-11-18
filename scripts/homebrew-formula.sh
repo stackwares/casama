@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Writes the Homebrew formula for a release from its checksum files.
+# Usage: scripts/homebrew-formula.sh <version> <dir with casama-<v>-<os>-<arch>.tar.gz.sha256 files>
+set -euo pipefail
+v="$1"; dir="$2"
+sum() { awk '{print $1}' "$dir/casama-$v-$1.tar.gz.sha256"; }
+# The source repo is private; CLI archives are mirrored to the public casama-releases repo.
+base="https://github.com/stackwares/casama-releases/releases/download/cli-v$v"
+cat <<RUBY
+class Casama < Formula
+  desc "Command-line client for Casama, the self-hostable home for AI bots with computers"
+  homepage "https://casama.ai"
+  version "$v"
+  # The CLI went from 0.8.0 back to 0.1.0 (version reset); this makes brew treat 0.1.x as newer.
+  version_scheme 1
+  license "Apache-2.0"
+
+  on_macos do
+    on_arm do
+      url "$base/casama-$v-darwin-arm64.tar.gz"
+      sha256 "$(sum darwin-arm64)"
+    end
+    on_intel do
+      url "$base/casama-$v-darwin-x64.tar.gz"
+      sha256 "$(sum darwin-x64)"
+    end
+  end
+  on_linux do
+    on_arm do
+      url "$base/casama-$v-linux-arm64.tar.gz"
+      sha256 "$(sum linux-arm64)"
+    end
+    on_intel do
+      url "$base/casama-$v-linux-x64.tar.gz"
+      sha256 "$(sum linux-x64)"
+    end
+  end
+
+  def install
+    bin.install "casama"
+  end
+
+  test do
+    assert_match version.to_s, shell_output("#{bin}/casama --version")
+  end
+end
+RUBY

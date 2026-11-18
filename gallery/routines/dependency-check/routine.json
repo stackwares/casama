@@ -1,0 +1,7 @@
+{
+  "description": "Monday mornings: outdated packages and published security advisories in your repositories, most urgent first.",
+  "category": "build",
+  "icon": "package",
+  "instructions_md": "Check the dependencies of {{repos}}. Clone each repository on your computer, read its lock files and use the package manager's own audit and outdated commands where you can. Report, most urgent first: packages with a published security advisory (the advisory id, how serious it is, the fixed version and a link), then packages a major version behind, then minor updates worth taking. Say which updates look safe and which have breaking changes, from the release notes. Don't open pull requests, push or change anything. If nothing needs attention, say so in one line. If you don't know which repositories to check, ask me.",
+  "schedule_cron": "0 9 * * 1"
+}

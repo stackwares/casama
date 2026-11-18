@@ -1,0 +1,117 @@
+name: Evals
+# Nightly: the full suite against the default model in real computers (live mode, needs the
+# OPENROUTER_API_KEY secret). On pull requests that touch the agent or prompts: the quick 10-task
+# subset, which fails the PR if it drops below the stored baseline (packages/evals/baseline.json).
+# Check-in and setup prompts (D-374, gallery/prompts): a pull request that changes one runs the
+# prompt checks live (job `prompts`, needs the secret, so not on forks); nightly runs them too.
+on:
+  schedule:
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "packages/agent/**"
+      - "packages/evals/**"
+      - "gallery/prompts/**"
+
+jobs:
+  evals:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 26, cache: pnpm }
+      - uses: supabase/setup-cli@v3
+        with: { version: latest }
+      - run: pnpm install --frozen-lockfile
+      - name: Local Supabase and migrations
+        env:
+          # Google sign-in is on in config.toml. Placeholders keep Auth from refusing to boot.
+          GOOGLE_AUTH_CLIENT_ID: ci-placeholder.apps.googleusercontent.com
+          GOOGLE_AUTH_SECRET: ci-placeholder
+          SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID: ai.casama.app.signin
+          SUPABASE_AUTH_EXTERNAL_APPLE_SECRET: ci-placeholder
+        run: supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector
+      - name: Computer and sandbox images
+        run: docker compose -f infra/compose/docker-compose.dev.yml --profile images build supervisor egress computer-headless
+      - name: Start API and worker
+        env:
+          MODE_FIXTURES: ${{ github.event_name == 'pull_request' && 'packages/evals/fixtures/quick.json' || '' }}
+        run: |
+          supabase status -o env > .env.supabase
+          scripts/evals-stack.sh "$MODE_FIXTURES"
+      - name: Quick subset (pull requests)
+        if: github.event_name == 'pull_request'
+        run: node --env-file=.env packages/evals/src/run.ts --mode fixtures --subset quick
+      - name: Full suite, live (nightly)
+        if: github.event_name != 'pull_request'
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          EVAL_CAPABILITIES: internet
+        run: node --env-file=.env packages/evals/src/run.ts --mode live --subset all --out packages/evals/results/nightly.json
+      - name: Prompt checks, live (nightly)
+        if: always() && github.event_name != 'pull_request'
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: node --env-file=.env packages/evals/src/run.ts --mode live --subset prompts --min-rate 0.75 --out packages/evals/results/prompts.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: eval-results, path: packages/evals/results/ }
+
+  # A pull request that changes a check-in or setup prompt: the prompt checks against a live model,
+  # with the PR's own gallery/prompts text (packages/evals/src/prompts.ts reads it from the checkout).
+  prompts:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Did a prompt change?
+        id: diff
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HAS_KEY: ${{ secrets.OPENROUTER_API_KEY != '' }}
+        run: |
+          changed=false
+          if git diff --name-only "$BASE" HEAD -- gallery/prompts packages/agent/src/prompts.ts | grep -q .; then changed=true; fi
+          run=false
+          if [[ $changed == true && $HAS_KEY == true ]]; then run=true; fi
+          if [[ $changed == true && $HAS_KEY != true ]]; then echo "::warning::A prompt changed, but there's no OPENROUTER_API_KEY here: run the prompt checks by hand."; fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+      - uses: pnpm/action-setup@v4
+        if: steps.diff.outputs.run == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.diff.outputs.run == 'true'
+        with: { node-version: 26, cache: pnpm }
+      - uses: supabase/setup-cli@v3
+        if: steps.diff.outputs.run == 'true'
+        with: { version: latest }
+      - if: steps.diff.outputs.run == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Local Supabase and migrations
+        if: steps.diff.outputs.run == 'true'
+        env:
+          GOOGLE_AUTH_CLIENT_ID: ci-placeholder.apps.googleusercontent.com
+          GOOGLE_AUTH_SECRET: ci-placeholder
+          SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID: ai.casama.app.signin
+          SUPABASE_AUTH_EXTERNAL_APPLE_SECRET: ci-placeholder
+        run: supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector
+      - name: Computer and sandbox images
+        if: steps.diff.outputs.run == 'true'
+        run: docker compose -f infra/compose/docker-compose.dev.yml --profile images build supervisor egress computer-headless
+      - name: Start API and worker (live models)
+        if: steps.diff.outputs.run == 'true'
+        run: |
+          supabase status -o env > .env.supabase
+          scripts/evals-stack.sh ""
+      - name: Prompt checks, live
+        if: steps.diff.outputs.run == 'true'
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: node --env-file=.env packages/evals/src/run.ts --mode live --subset prompts --min-rate 0.75 --out packages/evals/results/prompts.json
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.diff.outputs.run == 'true'
+        with: { name: prompt-eval-results, path: packages/evals/results/ }

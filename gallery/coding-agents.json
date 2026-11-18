@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "id": "claude_code",
+      "label": "Claude Code",
+      "bin": "claude",
+      "where": [
+        "my_computer",
+        "bot_computer"
+      ],
+      "install": "npm install -g @anthropic-ai/claude-code",
+      "key_name": "ANTHROPIC_API_KEY",
+      "command": {
+        "my_computer": "claude -p {task} --output-format json --permission-mode acceptEdits --settings '{\"sandbox\":{\"enabled\":true,\"autoAllowBashIfSandboxed\":true}}'",
+        "bot_computer": "claude -p {task} --output-format json --dangerously-skip-permissions"
+      },
+      "result": "json_result",
+      "browser": "claude"
+    },
+    {
+      "id": "codex",
+      "label": "Codex",
+      "bin": "codex",
+      "where": [
+        "my_computer",
+        "bot_computer"
+      ],
+      "install": "npm install -g @openai/codex",
+      "key_name": "OPENAI_API_KEY",
+      "command": {
+        "my_computer": "codex exec --sandbox workspace-write -o {result_file} {task}",
+        "bot_computer": "codex exec --dangerously-bypass-approvals-and-sandbox -o {result_file} {task}"
+      },
+      "result": "marker",
+      "browser": "codex",
+      "commits_for_agent": true
+    },
+    {
+      "id": "cursor",
+      "label": "Cursor",
+      "bin": "cursor-agent",
+      "where": [
+        "my_computer",
+        "bot_computer"
+      ],
+      "install": "curl -fsS https://cursor.com/install | bash",
+      "key_name": "CURSOR_API_KEY",
+      "command": {
+        "my_computer": "cursor-agent -p --force --output-format json {task}",
+        "bot_computer": "cursor-agent -p --force --output-format json {task}"
+      },
+      "result": "json_result"
+    },
+    {
+      "id": "pi",
+      "label": "Pi",
+      "bin": "pi",
+      "where": [
+        "my_computer"
+      ],
+      "command": {
+        "my_computer": "pi -p --no-session {task}"
+      },
+      "result": "tail"
+    },
+    {
+      "id": "t3code",
+      "label": "T3 Code",
+      "bin": "t3",
+      "where": [
+        "my_computer"
+      ],
+      "command": {
+        "my_computer": "t3 thread list --json >/dev/null 2>&1 || t3 project add . >/dev/null 2>&1; t3 thread start . {task} --wait --json"
+      },
+      "result": "json_field:reply",
+      "needs_folder": true,
+      "hint": "needs the T3 Code app running",
+      "exit_messages": {
+        "2": {
+          "status": "is waiting for an answer",
+          "note": "T3 Code stopped to ask a question: answer it in its thread in T3 Code."
+        }
+      }
+    },
+    {
+      "id": "kimi",
+      "label": "Kimi Code",
+      "bin": "kimi",
+      "where": [
+        "my_computer"
+      ],
+      "command": {
+        "my_computer": "kimi -p {task} --output-format stream-json"
+      },
+      "result": "stream_json"
+    }
+  ]
+}

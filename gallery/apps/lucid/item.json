@@ -1,0 +1,28 @@
+{
+  "name": "Lucid",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "diagrams"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Find my Lucidchart org chart",
+    "Create a flowchart of our refund process",
+    "Explain what this diagram shows"
+  ],
+  "access": {
+    "reads": [
+      "Lucid documents"
+    ],
+    "writes": [
+      "creates diagrams"
+    ],
+    "credits": "low"
+  }
+}

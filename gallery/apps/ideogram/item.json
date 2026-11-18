@@ -1,0 +1,26 @@
+{
+  "name": "Ideogram",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "images",
+    "ai"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Make a poster that says 'Grand opening' with Ideogram",
+    "Generate a logo idea for a coffee shop",
+    "Create a birthday card image with my daughter's name"
+  ],
+  "access": {
+    "writes": [
+      "generates images on your plan"
+    ],
+    "credits": "medium"
+  }
+}

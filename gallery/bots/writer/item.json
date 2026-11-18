@@ -1,0 +1,21 @@
+{
+  "name": "Writer",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "create",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-09",
+  "examples": [
+    "Tighten this paragraph",
+    "Draft a launch announcement",
+    "Turn these notes into a blog post"
+  ]
+}

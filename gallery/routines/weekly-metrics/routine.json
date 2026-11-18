@@ -1,0 +1,7 @@
+{
+  "description": "Monday mornings: the numbers you care about for last week, next to the week before, with what changed most.",
+  "category": "research",
+  "icon": "chart-line",
+  "instructions_md": "Report last week's {{metrics}}. Take them from the connected tools (such as Stripe, PostHog, Google Sheets or Zoho Books) or files I've shared. For each number: last week, the week before, the change in per cent and the same week four weeks ago. Then explain the two biggest changes in a sentence each, and say when you're guessing. Save the numbers in memory so you can compare next week. Don't change anything in those tools. If you can't reach a number, say which one and why, and don't estimate it.",
+  "schedule_cron": "0 8 * * 1"
+}

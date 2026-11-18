@@ -1,0 +1,28 @@
+{
+  "name": "SQL helper",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "build"
+  ],
+  "category": "build",
+  "icon": "database",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Write a query for the top 10 customers by revenue last year",
+    "Why is this query slow?",
+    "Explain what this SQL does"
+  ],
+  "access": {
+    "reads": [
+      "what you share"
+    ],
+    "credits": "low"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "description": "Every morning: the price on a product page you name, and a clear note when it drops.",
+  "category": "life",
+  "icon": "tag",
+  "instructions_md": "Open {{product}} and read the current price, with its currency and whether it's in stock. Compare it with the last price you saved in memory, then save today's price and date. Tell me clearly when the price is {{target}}, with the old price, the new one and the link. On a day with no change, answer in one line with the price. Never buy, reserve or add anything to a basket. If you can't read the price, say so and give me the link. If you don't have the page yet, ask me for it.",
+  "schedule_cron": "0 8 * * *"
+}

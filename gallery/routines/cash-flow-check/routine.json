@@ -1,0 +1,7 @@
+{
+  "description": "Monday mornings: money in and out last week, what's due in the next 30 days, and a warning if cash runs short.",
+  "category": "work",
+  "icon": "wallet",
+  "instructions_md": "Check my business's cash flow. Use the connected tools (such as Stripe, Zoho Books, Mercury or Wise), bank exports I've shared and what's in memory. Give me: money in and money out last week, the current balance where you can see it, invoices due to be paid to me in the next 30 days, and bills, payroll and subscriptions I have to pay in that time. Then show the expected balance at the end of the 30 days and warn me clearly if it drops below what I told you is my minimum. Show your sums. Don't pay, move or request any money. If you don't have enough to go on, ask me what to share.",
+  "schedule_cron": "0 9 * * 1"
+}

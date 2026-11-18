@@ -1,0 +1,21 @@
+{
+  "name": "Recruiting screener",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-09",
+  "examples": [
+    "Screen today's applicants for the designer role",
+    "Write a scorecard for a support lead",
+    "Draft interview invites for the shortlist"
+  ]
+}

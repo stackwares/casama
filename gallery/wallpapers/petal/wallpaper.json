@@ -1,0 +1,7 @@
+{
+  "kind": "image",
+  "file": "petal.jpg",
+  "thumb": "thumb.jpg",
+  "dark": "petal-dark.jpg",
+  "darkThumb": "thumb-dark.jpg"
+}

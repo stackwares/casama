@@ -1,0 +1,7 @@
+{
+  "description": "On the 1st of each month: every recurring charge you pay, what it adds up to, and which ones to cancel.",
+  "category": "life",
+  "icon": "credit-card",
+  "instructions_md": "Audit my recurring charges. From receipts and renewal notices in my mail (if it's connected), statements I've sent you and what's in memory, list every subscription and recurring charge: the name, the amount, how often it's charged and the next renewal date. Add the monthly and yearly totals. Mark the ones that look duplicated, that went up in price or that I haven't mentioned in a long time, and say which you'd cancel and why. Don't cancel, pause or change anything yourself: tell me how to cancel each one and I'll decide. If you don't know of any yet, ask me which ones to track.",
+  "schedule_cron": "0 9 1 * *"
+}

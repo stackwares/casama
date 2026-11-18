@@ -1,0 +1,27 @@
+{
+  "name": "Competitive brief",
+  "author": {
+    "name": "Anthropic",
+    "url": "https://github.com/anthropics/knowledge-work-plugins"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "research"
+  ],
+  "category": "research",
+  "icon": "binoculars",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Write a competitive brief on our three main rivals",
+    "Make a sales battlecard against this competitor",
+    "Find a positioning angle nobody in our market claims yet"
+  ],
+  "access": {
+    "reads": [
+      "the web"
+    ],
+    "credits": "medium"
+  }
+}

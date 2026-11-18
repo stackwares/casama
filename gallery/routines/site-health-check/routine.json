@@ -1,0 +1,7 @@
+{
+  "description": "Every morning: whether your website's main pages load, how fast, broken links, and certificates or domains about to expire.",
+  "category": "build",
+  "icon": "globe",
+  "instructions_md": "Check {{site}}. Open the home page and the main pages it links to, and report any that fail, redirect in a loop or take more than three seconds. Follow the links on those pages and list the broken ones with the page they're on. Check when the security certificate expires and, if you can find it, when the domain does, and warn me when either is less than 30 days away. Compare with yesterday's results in memory and save today's. Only read: don't submit forms or sign in. If everything is fine, say so in one line. If you don't know which site to check, ask me.",
+  "schedule_cron": "0 7 * * *"
+}
