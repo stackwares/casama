@@ -85,6 +85,49 @@ async function limited(env, key) {
   }
 }
 
+/** Sign-up tries per IP per window, and how long one address waits between confirmation emails. */
+export const IP_CAP = 10;
+export const IP_WINDOW = 600;
+export const EMAIL_COOLDOWN = 120;
+
+/**
+ * True once `key` has been seen `cap` times within `seconds`, counting this time. The rate-limit
+ * binding alone let 18 tries a minute through in testing (it is approximate by design), so this
+ * keeps a count in the Cache API, which holds within each Cloudflare data center. The count isn't
+ * atomic, so a burst can slip a little past the cap; the window still stops a steady stream.
+ */
+export async function overCap(env, key, cap, seconds) {
+  const cache = env.NEWSLETTER_CACHE ?? globalThis.caches?.default;
+  if (!cache) return false;
+  try {
+    const id = b64url(await crypto.subtle.digest("SHA-256", enc.encode(key)));
+    const req = new Request(`https://newsletter-limit.casama.ai/${id}`);
+    const hit = await cache.match(req);
+    let count = 0;
+    let until = Date.now() + seconds * 1000;
+    if (hit) {
+      const saved = await hit.json();
+      count = Number(saved.count) || 0;
+      until = Number(saved.until) || until;
+    }
+    if (count >= cap && until > Date.now()) return true;
+    if (until <= Date.now()) {
+      count = 0;
+      until = Date.now() + seconds * 1000;
+    }
+    const left = Math.max(1, Math.ceil((until - Date.now()) / 1000));
+    await cache.put(
+      req,
+      new Response(JSON.stringify({ count: count + 1, until }), {
+        headers: { "content-type": "application/json", "cache-control": `max-age=${left}` },
+      }),
+    );
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 function resend(env, method, path, body) {
   return fetch(`${RESEND}${path}`, {
     method,
@@ -116,20 +159,25 @@ async function subscribe(request, env) {
   const wantsJson =
     (request.headers.get("accept") ?? "").includes("application/json") ||
     (request.headers.get("content-type") ?? "").includes("application/json");
-  const reply = (status, code, title, text) =>
+  // `inline` is the shorter wording the footer shows under the field; the page has room for more.
+  const reply = (status, code, title, text, inline = text) =>
     wantsJson
-      ? Response.json({ ok: status < 400, code, message: text }, { status, headers: { "cache-control": "no-store" } })
+      ? Response.json({ ok: status < 400, code, message: inline }, { status, headers: { "cache-control": "no-store" } })
       : page(status, title, text);
+  const slowDown = () =>
+    reply(429, "slow_down", "One moment", "That was a lot of tries. Wait a few minutes and try again.", "That was a lot of tries. Wait a few minutes and try again.");
 
+  const ip = request.headers.get("cf-connecting-ip") ?? "";
+  if ((await overCap(env, `ip/${ip}`, IP_CAP, IP_WINDOW)) || (await limited(env, `ip:${ip}`))) return slowDown();
   const data = await readForm(request);
   // Bots fill in every field; people never see this one. Answer as if it worked.
   if (data.website) return reply(200, "sent", "Check your inbox", "We sent you a link to confirm.");
   const email = cleanEmail(data.email);
-  if (!email) return reply(400, "bad_email", "That address doesn't look right", "Go back and check the email address.");
-  const ip = request.headers.get("cf-connecting-ip") ?? "";
-  if ((await limited(env, `ip:${ip}`)) || (await limited(env, `email:${email}`))) {
-    return reply(429, "slow_down", "One moment", "That was a lot of tries. Wait a minute and try again.");
+  if (!email) {
+    return reply(400, "bad_email", "That address doesn't look right", "Go back and check the email address.", "That address doesn't look right. Check it and try again.");
   }
+  // One confirmation email per address per cooldown, so nobody can flood someone else's inbox.
+  if ((await overCap(env, `email/${email}`, 1, EMAIL_COOLDOWN)) || (await limited(env, `email:${email}`))) return slowDown();
   if (!env.RESEND_API_KEY || !env.NEWSLETTER_SECRET) {
     return reply(503, "unavailable", "Not working right now", "Sign-ups are paused for a moment. Try again later.");
   }
@@ -282,7 +330,7 @@ function page(status, title, text, extra = "") {
       "x-robots-tag": "noindex",
       "referrer-policy": "no-referrer",
       "content-security-policy":
-        "default-src 'none'; style-src 'unsafe-inline'; script-src 'self'; font-src 'self'; img-src 'self' data:; form-action 'self'; frame-ancestors 'none'",
+        "default-src 'none'; style-src 'unsafe-inline'; script-src 'self'; connect-src 'self'; font-src 'self'; img-src 'self' data:; form-action 'self'; frame-ancestors 'none'",
     },
   });
 }

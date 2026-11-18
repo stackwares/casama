@@ -211,3 +211,68 @@ test("other methods and paths under /newsletter/ are not found", async () => {
   assert.equal((await get("/newsletter/subscribe")).status, 404);
   assert.equal((await get("/newsletter/other")).status, 404);
 });
+
+/** A stand-in for the Workers Cache API (caches.default) that honours max-age. */
+function memoryCache() {
+  const rows = new Map();
+  return {
+    async match(req) {
+      const row = rows.get(req.url);
+      if (!row || row.expires <= Date.now()) return undefined;
+      return new Response(row.body, { headers: row.headers });
+    },
+    async put(req, res) {
+      const age = Number(/max-age=(\d+)/.exec(res.headers.get("cache-control") ?? "")?.[1] ?? 0);
+      rows.set(req.url, {
+        body: await res.text(),
+        headers: res.headers,
+        expires: Date.now() + age * 1000,
+      });
+    },
+  };
+}
+
+test("one address gets one confirmation email per cooldown, even when the binding lets it through", async () => {
+  const e = { ...env(), NEWSLETTER_CACHE: memoryCache() };
+  const json = { headers: { accept: "application/json" }, environment: e };
+  assert.equal(
+    (await post("/newsletter/subscribe", { email: "ana@example.com" }, json)).status,
+    200,
+  );
+  const again = await post("/newsletter/subscribe", { email: "Ana@example.com" }, json);
+  assert.equal(again.status, 429);
+  assert.match((await again.json()).message, /Wait a few minutes/);
+  assert.equal(
+    (await post("/newsletter/subscribe", { email: "bo@example.com" }, json)).status,
+    200,
+  );
+  assert.equal(calls.length, 2);
+});
+
+test("one IP is capped across addresses", async () => {
+  const e = { ...env(), NEWSLETTER_CACHE: memoryCache() };
+  const json = { headers: { accept: "application/json" }, environment: e };
+  const codes = [];
+  for (let i = 0; i < 12; i++)
+    codes.push((await post("/newsletter/subscribe", { email: `p${i}@example.com` }, json)).status);
+  assert.deepEqual(codes, [...Array(10).fill(200), 429, 429]);
+  assert.equal(calls.length, 10);
+});
+
+test("the footer gets short wording for a bad address", async () => {
+  const res = await post(
+    "/newsletter/subscribe",
+    { email: "nope" },
+    { headers: { accept: "application/json" } },
+  );
+  assert.equal(
+    (await res.json()).message,
+    "That address doesn't look right. Check it and try again.",
+  );
+});
+
+test("the Worker's pages let the logo load its animation data", async () => {
+  const qs = await signLink("s3cret", "ana@example.com", "home");
+  const res = await get(`/newsletter/confirm?${qs}`);
+  assert.match(res.headers.get("content-security-policy"), /connect-src 'self'/);
+});
