@@ -35,7 +35,7 @@ jobs:
           name="casama-$v-${{ matrix.target }}"
           if [[ -n "$ext" ]]; then (cd pkg && 7z a "../$name.zip" casama.exe >/dev/null); sha256sum "$name.zip" > "$name.zip.sha256"
           else tar -C pkg -czf "$name.tar.gz" casama; shasum -a 256 "$name.tar.gz" > "$name.tar.gz.sha256"; fi
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: cli-${{ matrix.target }}
           path: dist/casama-*

@@ -136,7 +136,7 @@ jobs:
       - run: pnpm --filter @casama/extension test
       - name: Store zip (D-323; Edge Add-ons takes the same zip)
         run: scripts/build-extension.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: casama-chrome
           path: apps/extension/dist/casama-chrome-*.zip
@@ -145,7 +145,7 @@ jobs:
         run: |
           scripts/build-extension.sh firefox
           npx --yes addons-linter@10.15.0 apps/extension/dist/firefox
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: casama-firefox
           path: apps/extension/dist/casama-firefox-*.zip

@@ -56,7 +56,7 @@ jobs:
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: node --env-file=.env packages/evals/src/run.ts --mode live --subset prompts --min-rate 0.75 --out packages/evals/results/prompts.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with: { name: eval-results, path: packages/evals/results/ }
 
@@ -112,6 +112,6 @@ jobs:
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: node --env-file=.env packages/evals/src/run.ts --mode live --subset prompts --min-rate 0.75 --out packages/evals/results/prompts.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always() && steps.diff.outputs.run == 'true'
         with: { name: prompt-eval-results, path: packages/evals/results/ }
