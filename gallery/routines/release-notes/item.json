@@ -1,0 +1,38 @@
+{
+  "name": "Release notes",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "changelog",
+    "releases",
+    "developers"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "code repositories",
+      "tickets"
+    ],
+    "credits": "low"
+  },
+  "needs": {
+    "apps": [
+      "github"
+    ]
+  },
+  "inputs": [
+    {
+      "key": "repos",
+      "label": "Which repositories?",
+      "type": "text",
+      "default": "the repositories in your memory",
+      "help": "Such as acme/web and acme/api."
+    }
+  ]
+}

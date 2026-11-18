@@ -1,0 +1,28 @@
+{
+  "name": "Jotform",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "forms"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Create a Jotform event registration form",
+    "How many submissions did my survey get this week?",
+    "Summarize the answers to my feedback form"
+  ],
+  "access": {
+    "reads": [
+      "Jotform forms and submissions"
+    ],
+    "writes": [
+      "creates forms"
+    ],
+    "credits": "low"
+  }
+}

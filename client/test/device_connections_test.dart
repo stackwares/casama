@@ -1,0 +1,377 @@
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:casama/core/backend.dart' show ChatMessageView;
+import 'package:casama/features/chat/chat_controller.dart' show chatControllerProvider;
+import 'package:casama/features/chat/chat_screen.dart';
+import 'package:casama/features/devices/device_collector.dart';
+import 'package:casama/features/devices/device_connections_screen.dart';
+import 'package:casama/features/devices/device_events.dart';
+import 'package:casama/features/devices/device_sync.dart';
+import 'package:casama/features/devices/health_summary.dart';
+import 'dart:async';
+
+import 'package:casama_sdk/casama_sdk.dart';
+import 'package:native_geofence/native_geofence.dart' show GeofenceEvent;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'app_test.dart' show harness, setSize;
+import 'fake_backend.dart';
+
+class FakeCollector implements DeviceCollector {
+  FakeCollector({this.allow = true});
+  bool allow;
+  final asked = <DeviceKind>[];
+  final writes = <(String, Map<String, Object?>)>[];
+  final ranges = <(DeviceKind, DateTime, DateTime)>[];
+
+  @override
+  Set<DeviceKind> get supported => {DeviceKind.calendar, DeviceKind.contacts};
+
+  @override
+  Future<bool> requestPermission(DeviceKind kind, {DeviceKindSettings? settings}) async {
+    asked.add(kind);
+    return allow;
+  }
+
+  @override
+  Future<List<DeviceReadingInput>> collect(DeviceKind kind, DateTime from, DateTime to, {DeviceKindSettings? settings}) async {
+    ranges.add((kind, from, to));
+    return [
+      DeviceReadingInput(kind: kind, periodStart: from, periodEnd: to, externalId: '${kind.value}-1', summary: {'n': 1}),
+    ];
+  }
+
+  @override
+  Future<Map<String, Object?>> write(String action, Map<String, Object?> params) async {
+    writes.add((action, params));
+    return {'event_id': 'E1'};
+  }
+}
+
+class _HealthCollector extends FakeCollector {
+  @override
+  Set<DeviceKind> get supported => {DeviceKind.health};
+}
+
+class FakeTriggers implements DeviceTriggerPlatform {
+  final watched = <List<String>>[];
+  final notes = StreamController<({String app, String title, String text})>.broadcast();
+  var stopped = 0;
+  @override
+  bool get supportsPlaces => true;
+  @override
+  bool get supportsNotifications => true;
+  @override
+  Future<bool> requestPlaces() async => true;
+  @override
+  Future<({double lat, double lng})?> currentLocation() async => (lat: 40.7, lng: -74.0);
+  @override
+  Future<void> watchPlaces(List<DevicePlace> places) async => watched.add([for (final p in places) p.name]);
+  @override
+  Future<void> stopPlaces() async => stopped++;
+  @override
+  Future<bool> requestNotifications() async => true;
+  @override
+  Stream<({String app, String title, String text})> notifications() => notes.stream;
+}
+
+DeviceRequest req(String id, String kind, String action, [Map<String, Object?> params = const {}]) =>
+    DeviceRequest(id: id, sourceId: 's', kind: kind, action: DeviceRequestActionEnum.values.firstWhere((a) => a.value == action), params: params, createdAt: DateTime(2027));
+
+/// Device connections (D-149).
+void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  test('calendar events become one summary per day; contacts go in chunks', () {
+    final from = DateTime(2027, 1, 7);
+    final to = DateTime(2027, 1, 8, 23);
+    final days = calendarDays(
+      [
+        (title: 'Lunch', start: DateTime(2027, 1, 7, 12), end: DateTime(2027, 1, 7, 13), allDay: false, location: 'Cafe', calendar: 'Home'),
+        (title: 'Standup', start: DateTime(2027, 1, 7, 9), end: DateTime(2027, 1, 7, 9, 15), allDay: false, location: null, calendar: 'Work'),
+        (title: 'Out of range', start: DateTime(2027, 1, 20, 9), end: DateTime(2027, 1, 20, 10), allDay: false, location: null, calendar: 'Work'),
+      ],
+      from,
+      to,
+    );
+    expect(days.map((d) => d.externalId), ['cal-2027-01-07', 'cal-2027-01-08']);
+    final events = days.first.summary['events'] as List;
+    expect(events.map((e) => (e as Map)['title']), ['Standup', 'Lunch']);
+    expect((events[1] as Map)['location'], 'Cafe');
+    expect(days.last.summary['events'], isEmpty);
+
+    final people = [
+      for (var i = 0; i < 450; i++) (name: 'P$i', phones: ['+1555$i'], emails: <String>[]),
+    ];
+    final chunks = contactChunks(people, DateTime(2027));
+    expect(chunks.map((c) => c.externalId), ['contacts-0', 'contacts-1', 'contacts-2']);
+    expect((chunks.last.summary['contacts'] as List).length, 50);
+  });
+
+  test('health: one summary per day (sleep counts for the morning it ends) and one per workout, no raw samples', () {
+    HealthPoint p(String type, DateTime from, DateTime to, [num value = 0]) => (type: type, from: from, to: to, value: value, activity: null, energy: null, distance: null);
+    final night = DateTime(2027, 1, 9, 23, 30);
+    final points = <HealthPoint>[
+      p('sleep_deep', night, night.add(const Duration(minutes: 90))),
+      p('sleep_rem', night.add(const Duration(minutes: 90)), night.add(const Duration(minutes: 180))),
+      p('sleep_light', night.add(const Duration(minutes: 180)), night.add(const Duration(minutes: 420))),
+      p('sleep_awake', night.add(const Duration(minutes: 420)), night.add(const Duration(minutes: 430))),
+      p('steps', DateTime(2027, 1, 10, 9), DateTime(2027, 1, 10, 10), 3000),
+      p('steps', DateTime(2027, 1, 10, 17), DateTime(2027, 1, 10, 18), 4200),
+      p('resting_hr', DateTime(2027, 1, 10, 8), DateTime(2027, 1, 10, 8), 58),
+      p('resting_hr', DateTime(2027, 1, 10, 20), DateTime(2027, 1, 10, 20), 62),
+      p('glucose', DateTime(2027, 1, 10, 8), DateTime(2027, 1, 10, 8), 99),
+      (type: 'workout', from: DateTime(2027, 1, 10, 7), to: DateTime(2027, 1, 10, 7, 45), value: 0, activity: 'RUNNING', energy: 420.4, distance: 7012.6),
+    ];
+    final out = healthSummaries(points, DateTime(2027, 1, 10), DateTime(2027, 1, 10, 23, 59));
+    final day = out.firstWhere((r) => r.externalId == 'health-2027-01-10').summary;
+    expect(day['sleep'], {'start': '23:30', 'end': '06:40', 'minutes': 420, 'stages': {'deep': 90, 'rem': 90, 'light': 240, 'awake': 10}});
+    expect(day['steps'], 7200);
+    expect(day['resting_hr'], 60);
+    expect(day['workouts'], 1);
+    expect(day.containsKey('glucose'), isFalse);
+    final w = out.firstWhere((r) => r.externalId.startsWith('workout-')).summary;
+    expect(w, containsPair('activity', 'running'));
+    expect(w['minutes'], 45);
+    expect(w['distance_m'], 7013);
+    // Extras only when turned on.
+    final withExtras = healthSummaries(points, DateTime(2027, 1, 10), DateTime(2027, 1, 10, 23, 59), extras: {'glucose'});
+    expect(withExtras.firstWhere((r) => r.externalId == 'health-2027-01-10').summary['glucose'], {'avg_mg_dl': 99, 'min_mg_dl': 99, 'max_mg_dl': 99});
+  });
+
+  test('turning a kind on asks the system first, then registers and uploads; off removes it', () async {
+    final backend = FakeBackend();
+    final collector = FakeCollector(allow: false);
+    final sync = DeviceSync(backend, collector);
+    expect(await sync.setKind(DeviceKind.calendar, true), isFalse);
+    expect(backend.deviceSourcesSaved, isEmpty);
+    collector.allow = true;
+    expect(await sync.setKind(DeviceKind.calendar, true), isTrue);
+    final key = await sync.deviceKey();
+    expect(backend.deviceSourcesSaved[key]!.kinds.keys, ['calendar']);
+    expect(backend.uploadedReadings.single.$2.externalId, 'calendar-1');
+    // The calendar window looks a month ahead.
+    expect(collector.ranges.single.$3.difference(collector.ranges.single.$2).inDays, 31);
+    await sync.setKind(DeviceKind.calendar, false);
+    expect(backend.deviceSourcesSaved[key]!.kinds, isEmpty);
+    expect(await sync.deviceKey(), key);
+  });
+
+  test('answers fresh reads and writes, and refuses kinds it does not share', () async {
+    final backend = FakeBackend();
+    final collector = FakeCollector();
+    final sync = DeviceSync(backend, collector);
+    await sync.setKind(DeviceKind.calendar, true);
+    backend.uploadedReadings.clear();
+    backend.pendingDeviceRequests.addAll([
+      req('r1', 'calendar', 'read', {'from': '2027-01-07T00:00:00Z', 'to': '2027-01-09T00:00:00Z'}),
+      req('w1', 'calendar', 'calendar.create', {'title': 'Lunch'}),
+      req('h1', 'health', 'read'),
+    ]);
+    await sync.answerPending();
+    expect(backend.uploadedReadings.single.$3, 'r1');
+    expect(collector.ranges.last.$2, DateTime.utc(2027, 1, 7));
+    expect(collector.writes.single.$1, 'calendar.create');
+    expect(collector.writes.single.$2, {'title': 'Lunch'});
+    expect(backend.deviceAnswers.map((a) => (a.$1, a.$2)), [('w1', true), ('h1', false)]);
+    expect(backend.pendingDeviceRequests, isEmpty);
+  });
+
+  test('geofence events become arrive and leave with the place name only; codes are masked', () {
+    final at = DateTime.utc(2027, 1, 10, 18, 2);
+    expect(geofenceEvent('place:Home', GeofenceEvent.enter, at), {'id': 'geo-Home-arrive-${at.millisecondsSinceEpoch ~/ 60000}', 'type': 'arrive', 'at': '2027-01-10T18:02:00.000Z', 'place': 'Home'});
+    expect(geofenceEvent('place:Work', GeofenceEvent.exit, at)!['type'], 'leave');
+    expect(geofenceEvent('place:Gym', GeofenceEvent.dwell, at), isNull);
+    expect(geofenceEvent('other', GeofenceEvent.enter, at), isNull);
+    expect(maskCodes('Your code is 482913, ref AB12-CD34.'), 'Your code is ••••, ref ••••.');
+    expect(maskCodes('Lunch at 12?'), 'Lunch at 12?');
+  });
+
+  test('places watch the named places; picked apps only, masked; "where am I" answered once', () async {
+    final backend = FakeBackend();
+    final triggers = FakeTriggers();
+    final sync = DeviceSync(backend, FakeCollector(), triggers: triggers);
+    await backend.saveDevicePlace(name: 'Home', latitude: 1, longitude: 2);
+    expect(sync.supported, containsAll([DeviceKind.places, DeviceKind.notifications]));
+    await sync.setKind(DeviceKind.places, true);
+    expect(triggers.watched.single, ['Home']);
+    await sync.setKind(DeviceKind.notifications, true, settings: DeviceKindSettings(apps: ['bank']));
+    triggers.notes.add((app: 'com.mybank.app', title: 'Code', text: 'Your code is 482913'));
+    triggers.notes.add((app: 'com.games.app', title: 'Play', text: 'now'));
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(backend.reportedEvents.map((e) => e.$2.app), ['com.mybank.app']);
+    expect(backend.reportedEvents.single.$2.text, 'Your code is ••••');
+    expect(await DeviceEventQueue.pending(), isEmpty);
+
+    backend.pendingDeviceRequests.add(req('loc1', 'places', 'locate'));
+    await sync.answerPending();
+    expect((backend.deviceAnswers.single.$1, backend.deviceAnswers.single.$2), ('loc1', true));
+    expect(backend.deviceAnswers.single.$3, {'lat': 40.7, 'lng': -74.0});
+    await sync.setKind(DeviceKind.places, false);
+    expect(triggers.stopped, 1);
+    sync.dispose();
+  });
+
+  testWidgets('settings: turn a kind on, keep it shorter, and stop a bot reading it', (tester) async {
+    await setSize(tester, const Size(500, 1200));
+    final backend = FakeBackend();
+    final collector = FakeCollector();
+    backend.grants.add(DeviceGrant(botId: botId, botName: 'Pal', kind: DeviceKind.calendar, createdAt: DateTime(2026)));
+    await tester.pumpWidget(harness(backend, const DeviceConnectionsScreen(), overrides: [deviceCollectorProvider.overrideWithValue(collector), deviceTriggerPlatformProvider.overrideWithValue(FakeTriggers())]));
+    await tester.pumpAndSettle();
+    expect(find.text('Calendar'), findsOneWidget);
+    expect(find.text('Contacts'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('deviceSwitch-calendar')));
+    await tester.pumpAndSettle();
+    expect(collector.asked, [DeviceKind.calendar]);
+    expect(backend.deviceSourcesSaved.values.single.kinds.keys, ['calendar']);
+    // How long it's kept and which bots read it are under Advanced (D-182).
+    await tester.tap(find.byKey(const Key('advanced-devices')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('grant-$botId-calendar')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('deviceKeep-calendar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('30 days').last);
+    await tester.pumpAndSettle();
+    expect(backend.deviceSourcesSaved.values.single.kinds['calendar']!.retentionDays, 30);
+
+    await tester.tap(find.descendant(of: find.byKey(const Key('grant-$botId-calendar')), matching: find.byType(Icon)).last);
+    await tester.pumpAndSettle();
+    expect(backend.grants, isEmpty);
+
+    // A bot can be allowed from here too, without waiting for it to ask.
+    await tester.tap(find.byKey(const Key('grantAdd-calendar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('grantPick-$botId')));
+    await tester.pumpAndSettle();
+    expect(backend.grants.map((g) => (g.botId, g.kind)), [(botId, DeviceKind.calendar)]);
+    expect(find.byKey(const Key('grantAdd-calendar')), findsNothing);
+  });
+
+  testWidgets('browsers paired in Casama for Chrome show with their bots, and unpair', (tester) async {
+    await setSize(tester, const Size(500, 1400));
+    final backend = FakeBackend();
+    backend.browsers.add(
+      LocalDevice(
+        id: 'b1000000-0000-4000-8000-000000000001',
+        orgId: 'o1',
+        userId: 'u1',
+        computerId: null,
+        name: 'Chrome on macOS',
+        platform: LocalDevicePlatformEnum.chrome,
+        capabilities: LocalCapabilities(browser: true),
+        allowedRoots: const [],
+        allowedBotIds: const ['bot-1'],
+        enabled: true,
+        online: true,
+        lastSeenAt: null,
+        createdAt: DateTime(2026),
+      ),
+    );
+    await tester.pumpWidget(harness(backend, const DeviceConnectionsScreen(), overrides: [deviceCollectorProvider.overrideWithValue(FakeCollector()), deviceTriggerPlatformProvider.overrideWithValue(FakeTriggers())]));
+    await tester.pumpAndSettle();
+    expect(find.text('Browsers Bots Can Use'), findsOneWidget);
+    expect(find.text('Chrome on macOS'), findsOneWidget);
+    expect(find.text('1 bot · Online'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('unpairBrowser-b1000000-0000-4000-8000-000000000001')));
+    await tester.pumpAndSettle();
+    expect(backend.browsers, isEmpty);
+    expect(find.text('Browsers Bots Can Use'), findsNothing);
+  });
+
+  testWidgets('bots allowed to ask Casama for Chrome show, and can be stopped (D-323 E2)', (tester) async {
+    await setSize(tester, const Size(500, 1400));
+    final backend = FakeBackend();
+    backend.grants.add(DeviceGrant(botId: botId, botName: 'Pal', kind: DeviceKind.browserTab, createdAt: DateTime(2026)));
+    await tester.pumpWidget(harness(backend, const DeviceConnectionsScreen(), overrides: [deviceCollectorProvider.overrideWithValue(FakeCollector()), deviceTriggerPlatformProvider.overrideWithValue(FakeTriggers())]));
+    await tester.pumpAndSettle();
+    expect(find.text('What Bots May Ask Your Browser'), findsOneWidget);
+    expect(find.text('Current browser tab'), findsOneWidget);
+    await tester.tap(find.byKey(Key('revokeBrowserAsk-$botId-browser_tab')));
+    await tester.pumpAndSettle();
+    expect(backend.grants, isEmpty);
+    expect(find.text('What Bots May Ask Your Browser'), findsNothing);
+  });
+
+  testWidgets('turning on Health on a server without encryption at rest says why', (tester) async {
+    await setSize(tester, const Size(500, 1200));
+    final backend = FakeBackend()..healthNeedsEncryption = true;
+    final collector = _HealthCollector();
+    await tester.pumpWidget(harness(backend, const DeviceConnectionsScreen(), overrides: [deviceCollectorProvider.overrideWithValue(collector), deviceTriggerPlatformProvider.overrideWithValue(FakeTriggers())]));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('deviceSwitch-health')));
+    await tester.pumpAndSettle();
+    expect(collector.asked, [DeviceKind.health]);
+    expect(find.text('Health data needs encryption at rest. Turn it on for a workspace you own, then try again.'), findsOneWidget);
+    expect(find.text('Health data is stored only with encryption at rest on.'), findsNothing);
+    expect(backend.uploadedReadings, isEmpty);
+    // Health went back off, so the switch doesn't show on with nothing shared.
+    expect(backend.deviceSourcesSaved.values.single.kinds.containsKey('health'), isFalse);
+  });
+
+  testWidgets('a bot asking for the calendar gets a one-tap card in chat', (tester) async {
+    await setSize(tester, const Size(500, 900));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const ChatScreen(botId: botId, conversationId: convId)));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('messageInput')), "what's on tomorrow?");
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('sendButton')));
+    await tester.pump();
+    backend.runEventsController.add(ev(1, 'device.access_requested', {'kind': 'calendar', 'reason': 'To see your day.', 'bot_id': botId}));
+    // The bot doesn't wait for the card; its run goes on and ends.
+    backend.runEventsController.add(ev(2, 'run.completed', {'final_message_id': null}));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('chatDeviceAccess')), findsOneWidget);
+    expect(find.textContaining('would like to use your calendar'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('deviceAccessAllow')));
+    await tester.pumpAndSettle();
+    expect(backend.grants.single.kind, DeviceKind.calendar);
+    expect(find.text('Allowed to use your calendar'), findsOneWidget);
+  });
+
+  // The card is a run event, not part of the saved messages: a reload of the thread (it changed,
+  // the chat reopened) dropped it, leaving the bot's "tap the Allow card" pointing at nothing.
+  testWidgets('the Allow card stays when the thread reloads', (tester) async {
+    await setSize(tester, const Size(500, 900));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const ChatScreen(botId: botId, conversationId: convId)));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('messageInput')), 'check my contacts');
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('sendButton')));
+    await tester.pump();
+    backend.runEventsController.add(ev(1, 'device.access_requested', {'kind': 'contacts', 'reason': 'To read your contacts.', 'bot_id': botId}));
+    backend.runEventsController.add(ev(2, 'run.completed', {'final_message_id': null}));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('chatDeviceAccess')), findsOneWidget);
+    backend.storedMessages = [
+      ChatMessageView(id: 'm1', role: 'user', text: 'check my contacts', runId: runId, createdAt: DateTime(2026, 11, 10, 9)),
+      ChatMessageView(id: 'm2', role: 'assistant', text: 'Tap the Allow contacts card.', runId: runId, createdAt: DateTime(2026, 11, 10, 9, 1)),
+    ];
+    final chat = ProviderScope.containerOf(tester.element(find.byType(ChatScreen))).read(chatControllerProvider(botId).notifier);
+    await chat.open(convId);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('chatDeviceAccess')), findsOneWidget);
+    // Under the run's reply, not lost or moved to the top.
+    expect(tester.getTopLeft(find.byKey(const Key('chatDeviceAccess'))).dy, greaterThan(tester.getTopLeft(find.textContaining('Tap the Allow contacts card.')).dy));
+  });
+
+  testWidgets('a chat opened later brings back the Allow card from its last run', (tester) async {
+    await setSize(tester, const Size(500, 900));
+    final backend = FakeBackend()
+      ..storedMessages = [
+        ChatMessageView(id: 'm1', role: 'user', text: 'check my contacts', runId: runId, createdAt: DateTime(2026, 11, 10, 9)),
+        ChatMessageView(id: 'm2', role: 'assistant', text: 'Tap the Allow contacts card.', runId: runId, createdAt: DateTime(2026, 11, 10, 9, 1)),
+      ]
+      ..storedEvents = [ev(1, 'device.access_requested', {'kind': 'contacts', 'reason': 'To read your contacts.', 'bot_id': botId})];
+    await tester.pumpWidget(harness(backend, const ChatScreen(botId: botId, conversationId: convId)));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('chatDeviceAccess')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('deviceAccessAllow')));
+    await tester.pumpAndSettle();
+    expect(backend.grants.single.kind, DeviceKind.contacts);
+  });
+}

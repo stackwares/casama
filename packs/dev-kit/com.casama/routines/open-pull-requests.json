@@ -1,0 +1,8 @@
+{
+  "name": "Open pull requests",
+  "description": "Each weekday morning: pull requests waiting for review on {{repo}}, oldest first.",
+  "category": "build",
+  "icon": "git-pull-request",
+  "instructions_md": "List the open pull requests on {{repo}} with the GitHub tools, oldest first. For each: the title, the author, how long it has waited, whether checks pass, and a one-line risk note. Flag anything waiting more than two days. If GitHub isn't connected, say so in one line.",
+  "schedule_cron": "{{time.minute}} {{time.hour}} * * 1-5"
+}

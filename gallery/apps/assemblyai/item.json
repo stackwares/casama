@@ -1,0 +1,29 @@
+{
+  "name": "AssemblyAI",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "speech",
+    "transcripts"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Transcribe this interview recording",
+    "Pull the key quotes from this podcast audio",
+    "Transcribe this voice memo and summarize it"
+  ],
+  "access": {
+    "reads": [
+      "audio you share"
+    ],
+    "writes": [
+      "uses your AssemblyAI balance"
+    ],
+    "credits": "medium"
+  }
+}

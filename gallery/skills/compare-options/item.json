@@ -1,0 +1,29 @@
+{
+  "name": "Compare options",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "research"
+  ],
+  "category": "research",
+  "icon": "columns-3",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Compare these three phone plans for someone who travels a lot",
+    "Which project tool fits a team of five: Asana, Linear or Notion?",
+    "Put these two job offers side by side and recommend one"
+  ],
+  "access": {
+    "reads": [
+      "the web",
+      "what you share"
+    ],
+    "credits": "low"
+  }
+}

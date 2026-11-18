@@ -1,0 +1,916 @@
+/*
+ * The side panel: Chat, Inbox, Library and More. Tokens and shared controls come from
+ * ../ui/theme.css (the app's Plain theme); the pieces here follow the app's chat (ChatLook), its
+ * floating tab bar's pill, SectionHeader, AppCard and EmptyState.
+ */
+
+body.panel {
+  height: 100vh;
+  overflow: hidden;
+}
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+.view {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--s-xxs) var(--s-md) var(--s-md);
+}
+.view.chat {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+/* Panel buttons a touch smaller than the settings page's: 36px pills, 14px labels. */
+.view :where(button:not(.link)) {
+  min-height: 36px;
+  padding: 0 var(--s-md);
+  font-size: var(--t-label);
+}
+.view :where(input:not([type="checkbox"]):not([type="radio"]), select) {
+  min-height: 40px;
+  font-size: var(--t-body);
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+.view :where(textarea) {
+  font-size: var(--t-body);
+}
+.view :where(label) {
+  padding: 0 var(--s-xxs);
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+  margin: var(--s-sm) 0 6px;
+}
+
+/* ---- Tabs: the app's tab pill (a soft accent capsule, no underline) --------------------- */
+
+nav.tabs {
+  display: flex;
+  gap: var(--s-xxs);
+  padding: var(--s-xs) var(--s-sm);
+  flex: none;
+}
+nav.tabs button {
+  flex: 1;
+  min-height: 36px;
+  padding: 0 var(--s-xs);
+  border: 0;
+  border-radius: var(--r-pill);
+  font-size: var(--t-label);
+  font-weight: 500;
+  color: var(--muted);
+  background: transparent;
+}
+nav.tabs button:hover {
+  background: var(--primary-faint);
+}
+nav.tabs button[aria-selected="true"] {
+  color: var(--primary);
+  font-weight: 700;
+  background: var(--primary-soft);
+}
+nav.tabs .count {
+  display: inline-block;
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: var(--r-pill);
+  background: var(--negative);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Chat header: bot and conversation as tonal pills, New and Call as round icons ------- */
+
+.topbar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: var(--s-xxs) var(--s-sm) var(--s-xs);
+  border-bottom: 1px solid var(--hairline);
+}
+.topbar select {
+  flex: 1;
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 32px 0 var(--s-sm);
+  font-size: var(--t-label);
+  font-weight: 600;
+  border: 0;
+  border-radius: var(--r-pill);
+  background-color: var(--surface-1);
+  background-position: right 10px center;
+  background-size: 14px;
+  text-overflow: ellipsis;
+}
+.topbar select:first-child {
+  flex: 0 1 auto;
+  max-width: 42%;
+}
+.topbar select:focus {
+  box-shadow: none;
+  outline: 2px solid var(--focus);
+  outline-offset: 0;
+}
+
+/* Icon buttons: 36px circles, text kept for screen readers and tests, the Lucide icon drawn. */
+/* A fixed 36px square; the label stays in the DOM (font-size 0) and the 20px icon is laid over the
+   exact centre, so nothing in the text flow (gap, line height) can push it off. */
+.icon-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 0;
+  width: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  height: 36px;
+  padding: 0;
+  line-height: 0;
+  border: 0;
+  border-radius: 50%;
+  font-size: 0;
+  color: var(--muted);
+  background: transparent;
+  flex: none;
+}
+.icon-btn:hover:not(:disabled) {
+  color: var(--fg);
+  background: var(--primary-faint);
+}
+.icon-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+.icon-btn[aria-pressed="true"] {
+  color: var(--negative);
+  background: color-mix(in srgb, var(--negative) 14%, transparent);
+}
+[data-icon="attach"] {
+  --icon: var(--i-attach);
+}
+/* The paperclip runs corner to corner on Lucide's grid, so it reads larger: a step smaller. */
+[data-icon="attach"]::before {
+  width: 18px;
+  height: 18px;
+}
+/* The pointer's mass sits up and left in its viewBox: nudge it to the optical centre. */
+[data-icon="point"]::before {
+  transform: translate(1px, 1px);
+}
+[data-icon="region"] {
+  --icon: var(--i-region);
+}
+[data-icon="record"] {
+  --icon: var(--i-record);
+}
+[data-icon="point"] {
+  --icon: var(--i-point);
+}
+[data-icon="mic"] {
+  --icon: var(--i-mic);
+}
+[data-icon="new"] {
+  --icon: var(--i-new);
+}
+[data-icon="call"] {
+  --icon: var(--i-call);
+}
+.topbar .icon-btn {
+  color: var(--fg);
+}
+
+/* ---- The thread ------------------------------------------------------------------------- */
+
+.thread {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--s-md) var(--s-md) var(--s-xs);
+}
+.msg {
+  margin: 0 0 var(--s-md);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.msg .who {
+  font-size: var(--t-small);
+  font-weight: 600;
+  color: var(--muted);
+  padding: 0 var(--s-xxs);
+  margin-bottom: -2px;
+}
+/* Cards and other blocks under a reply span the column. */
+.msg.assistant > div:not(.body):not(.who):not(.msg-actions) {
+  align-self: stretch;
+}
+/* Bubbles: filled, the same 22px on every corner, no tail (ChatLook, D-256). */
+.msg > .body {
+  max-width: 100%;
+  padding: 11px var(--s-md);
+  border-radius: var(--r-bubble);
+  background: var(--surface-2);
+  font-size: var(--t-body-l);
+  line-height: 1.45;
+}
+/* A reply with no text (only a card, or nothing yet) draws no bubble. */
+.msg > .body:empty:not(.typing) {
+  display: none;
+}
+.msg.user {
+  align-items: flex-end;
+}
+.msg.user > .body {
+  max-width: 85%;
+  background: var(--primary);
+  color: var(--on-primary);
+  white-space: pre-wrap;
+}
+.msg.local > .body {
+  background: transparent;
+  border: 1px dashed var(--outline);
+}
+.msg .body > :first-child {
+  margin-top: 0;
+}
+.msg .body > :last-child {
+  margin-bottom: 0;
+}
+.msg .body p {
+  margin: 0 0 var(--s-xs);
+}
+.msg .body ul,
+.msg .body ol {
+  margin: var(--s-xxs) 0 var(--s-xs);
+  padding-left: 22px;
+}
+.msg .body li {
+  margin: 2px 0;
+}
+.msg .body a {
+  color: inherit;
+}
+.msg .body pre {
+  overflow-x: auto;
+  background: var(--code-bg);
+  border: 1px solid var(--hairline);
+  padding: 10px var(--s-sm);
+  border-radius: var(--r-icon);
+}
+.msg .body :not(pre) > code {
+  background: var(--code-bg);
+  padding: 1px 5px;
+  border-radius: 6px;
+}
+.msg .body table {
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.msg .body td,
+.msg .body th {
+  border: 1px solid var(--hairline);
+  padding: 4px var(--s-xs);
+}
+.msg .body img {
+  max-width: 100%;
+  border-radius: var(--r-row);
+}
+.msg-actions {
+  display: flex;
+  gap: var(--s-sm);
+  padding: 0 var(--s-xxs);
+}
+.msg-actions button.link,
+.msg-actions button {
+  font-size: var(--t-small);
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+}
+.msg-actions button.link:hover {
+  color: var(--fg);
+}
+/* Reactions under a message (D-331): small pills, yours outlined in the accent. */
+.reactions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-xxs);
+  padding: 0 var(--s-xxs);
+}
+.reactions .reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+  padding: 2px var(--s-xs);
+  border-radius: 999px;
+  border: 1px solid var(--outline);
+  background: var(--surface-2);
+  font-size: var(--t-small);
+  line-height: 1;
+  cursor: pointer;
+}
+.reactions .reaction.mine {
+  border: 1.5px solid var(--primary);
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+}
+.reactions .reaction .count {
+  font-weight: 700;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.reactions .reaction.mine .count {
+  color: var(--primary);
+}
+.reactions .reaction.add {
+  color: var(--muted);
+  opacity: 0.7;
+}
+.msg:not(:hover) .reactions .reaction.add:not(:focus-visible) {
+  opacity: 0;
+}
+.quick-reactions {
+  display: inline-flex;
+  gap: 2px;
+}
+.quick-reactions[hidden] {
+  display: none;
+}
+.quick-reactions button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.quick-reactions button.mine,
+.quick-reactions button:hover {
+  background: color-mix(in srgb, var(--primary) 16%, transparent);
+}
+details.sent {
+  font-size: var(--t-small);
+  color: var(--muted);
+  max-width: 85%;
+  text-align: right;
+  padding: 0 var(--s-xxs);
+}
+details.sent[open] {
+  text-align: left;
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-row);
+  padding: var(--s-xs) var(--s-sm);
+}
+details.sent > summary {
+  font-weight: 600;
+}
+details.sent a {
+  color: inherit;
+}
+.thumb {
+  max-width: 200px;
+  max-height: 160px;
+  border-radius: var(--r-tile);
+  display: block;
+}
+.file-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--t-small);
+  font-weight: 600;
+  border: 1px solid var(--hairline);
+  background: var(--surface-1);
+  color: var(--fg);
+  border-radius: var(--r-pill);
+  padding: 4px var(--s-sm);
+  text-decoration: none;
+}
+/* While it writes: a pulsing dot at the end of the last line, inside the last paragraph or list
+   item rather than on a line of its own. */
+.typing::after,
+.typing > :is(p, h1, h2, h3, h4, blockquote):last-child::after,
+.typing > :is(ul, ol):last-child > li:last-child::after {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: 0.05em;
+  animation: pulse 1s ease-in-out infinite;
+}
+.typing:has(> :is(p, h1, h2, h3, h4, blockquote, ul, ol):last-child)::after {
+  display: none;
+}
+.msg > .body.typing:empty::after {
+  margin-left: 0;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* Empty states: centred, muted, generous room (EmptyState). */
+.empty {
+  color: var(--muted);
+  padding: var(--s-md) var(--s-xl);
+  text-align: center;
+  font-size: var(--t-body);
+  line-height: 1.5;
+  margin: 0;
+}
+/* The whole view empty: more room, as EmptyState. */
+[data-testid="empty-thread"],
+[data-testid="inbox-empty"],
+.thread > .empty:only-child {
+  padding: 48px var(--s-xl);
+}
+.notice-line {
+  font-size: var(--t-small);
+  color: var(--muted);
+  margin: var(--s-xxs) 0;
+}
+.notice-line:empty {
+  display: none;
+}
+
+/* ---- Cards in the chat: the bot's fill, a hairline, 24px corners (ChatLook.card) -------- */
+
+.ui-card {
+  width: 100%;
+  align-self: stretch;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-chat-card);
+  padding: var(--s-md) 18px;
+}
+.ui-card.answered {
+  opacity: 0.6;
+}
+.ui-card button {
+  width: auto;
+}
+.ui-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ui-col > button {
+  align-self: stretch;
+}
+.ui-row {
+  display: flex;
+  gap: var(--s-xs);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.ui-inner-card {
+  background: var(--surface-3);
+  border-radius: var(--r-tile);
+  padding: var(--s-sm);
+}
+.ui-image,
+.ui-media {
+  max-width: 100%;
+  border-radius: var(--r-tile);
+}
+.ui-field {
+  font-weight: 600;
+  color: var(--fg);
+}
+.ui-field input,
+.ui-field textarea,
+.ui-field select {
+  margin-top: 6px;
+  background: var(--surface-3);
+  border-color: transparent;
+}
+.ui-check,
+.ui-choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 400;
+  color: var(--fg);
+  margin: 2px 0;
+}
+fieldset.ui-choices {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+fieldset.ui-choices.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ui-text {
+  font-size: var(--t-body-l);
+}
+.ui-text.caption {
+  font-size: var(--t-small);
+  color: var(--muted);
+}
+.ui-tabs {
+  display: flex;
+  gap: var(--s-xxs);
+  margin-bottom: var(--s-xs);
+}
+.ui-tabs button {
+  border: 0;
+  color: var(--muted);
+}
+.ui-tabs button[aria-selected="true"] {
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* ---- Composer: one rounded box, the field over a row of icons and the round send ---------- */
+
+.composer {
+  position: relative;
+  padding: var(--s-xs) var(--s-sm) var(--s-sm);
+}
+.composer-box {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-composer);
+  background: var(--field);
+  box-shadow: var(--shadow-composer);
+  padding: 2px 6px 6px;
+  transition: border-color var(--fast) var(--ease);
+}
+.composer-box:focus-within {
+  border-color: var(--focus);
+  box-shadow:
+    0 0 0 0.5px var(--focus),
+    var(--shadow-composer);
+}
+.composer-box textarea {
+  grid-column: 1 / -1;
+  min-height: 48px;
+  max-height: 200px;
+  border: 0;
+  background: transparent;
+  padding: 12px 10px 4px;
+  font-size: var(--t-body-l);
+  resize: none;
+  box-shadow: none;
+}
+.composer-box textarea:focus {
+  box-shadow: none;
+}
+.composer-tools {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  min-width: 0;
+}
+.composer-box [data-testid="send"],
+.composer-box [data-testid="stop"] {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 0;
+  line-height: 0;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 0;
+}
+.composer-box [data-testid="send"]::before,
+.composer-box [data-testid="stop"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+  -webkit-mask: var(--i-send) center / contain no-repeat;
+  mask: var(--i-send) center / contain no-repeat;
+}
+.composer-box [data-testid="stop"] {
+  border: 0;
+  background: var(--surface-2);
+}
+.composer-box [data-testid="stop"]::before {
+  -webkit-mask-image: var(--i-stop);
+  mask-image: var(--i-stop);
+}
+.composer > .notice-line {
+  padding: 0 var(--s-sm);
+}
+
+/* What goes with the message: chips (the app's 20px chip, hairline; selected in the accent tint). */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: var(--s-xs);
+}
+.chips:empty {
+  display: none;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  font-size: var(--t-small);
+  font-weight: 600;
+  padding: 0 var(--s-sm);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--hairline);
+  color: var(--muted);
+  background: transparent;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chip[aria-pressed="true"] {
+  background: var(--primary-soft);
+  border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+  color: var(--fg);
+}
+.chip .x {
+  opacity: 0.7;
+}
+
+/* The "/" and "@" menu: a popup with 14px corners and a lift (popupMenuTheme). */
+.menu {
+  position: absolute;
+  left: var(--s-sm);
+  right: var(--s-sm);
+  bottom: calc(100% - 4px);
+  max-height: 280px;
+  overflow: auto;
+  background: var(--menu-bg);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-menu);
+  box-shadow: var(--shadow-menu);
+  padding: 6px;
+  z-index: 5;
+}
+.menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  border-radius: var(--r-icon);
+  padding: var(--s-xs) 10px;
+  text-align: left;
+  font-size: var(--t-body);
+  font-weight: 600;
+  background: transparent;
+}
+.menu-item[aria-selected="true"],
+.menu-item:hover:not(:disabled) {
+  background: var(--primary-faint);
+}
+.menu-item[aria-selected="true"] {
+  background: var(--primary-soft);
+}
+.menu-item .hint {
+  font-size: var(--t-small);
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* Bars above the thread: this page before, the live call. */
+.page-before,
+.call {
+  padding: var(--s-xs) var(--s-md);
+  border-bottom: 1px solid var(--hairline);
+  font-size: 13px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-xs);
+  align-items: center;
+}
+.call {
+  flex-direction: column;
+  align-items: stretch;
+  background: var(--surface-1);
+}
+.call .row {
+  justify-content: space-between;
+}
+.call .turn {
+  font-size: 13px;
+}
+.call .turn.user {
+  color: var(--muted);
+}
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-xxs);
+  width: 100%;
+}
+.history .hl {
+  display: flex;
+  gap: var(--s-xs);
+  justify-content: space-between;
+}
+.quick {
+  display: flex;
+  gap: var(--s-xs);
+  align-items: center;
+  font-size: var(--t-small);
+  margin-bottom: var(--s-xs);
+}
+
+/* ---- Inbox, Library, More ---------------------------------------------------------------- */
+
+/* SectionHeader: 15px bold, sentence case. */
+.section-title {
+  font-size: var(--t-section);
+  font-weight: 700;
+  letter-spacing: -0.1px;
+  color: var(--fg);
+  margin: var(--s-lg) var(--s-xxs) var(--s-xs);
+}
+/* Empty states fill the view, centred, as the app's. */
+.view > .empty-state:only-child,
+.thread > .empty-state:first-child {
+  min-height: 70%;
+  justify-content: center;
+}
+.view > .section-title:first-child,
+.view > :first-child > .section-title:first-child {
+  margin-top: var(--s-sm);
+}
+
+/* AppCard: surfaceContainerLow, hairline, 18px corners. */
+.item {
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  padding: 14px var(--s-md);
+  margin: 0 0 var(--s-xs);
+}
+.item-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-sm);
+}
+.item-head > div {
+  min-width: 0;
+  flex: 1;
+  padding-top: 1px;
+}
+.item h3 {
+  font-size: var(--t-body);
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0 0 3px;
+}
+.item .meta,
+.meta {
+  font-size: var(--t-small);
+  color: var(--muted);
+  line-height: 1.4;
+}
+.item .row {
+  margin-top: var(--s-sm);
+}
+.item > p {
+  margin: var(--s-xs) 0 0;
+}
+.item .body {
+  margin-top: var(--s-xs);
+}
+.item .body p {
+  margin: 0 0 var(--s-xs);
+}
+.item.brief {
+  background: var(--surface-2);
+}
+.view > .row:first-child,
+.view .section-title + .row {
+  margin-top: 0;
+}
+
+.toast {
+  position: fixed;
+  left: var(--s-sm);
+  right: var(--s-sm);
+  bottom: var(--s-sm);
+  background: var(--snack-bg);
+  color: var(--snack-fg);
+  border-radius: var(--r-tile);
+  padding: var(--s-sm) var(--s-md);
+  font-size: var(--t-body);
+  line-height: 1.4;
+  z-index: 10;
+  animation: rise var(--fast) var(--ease);
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Before sign-in and when switched off: the app's empty state, centred. */
+.center {
+  padding: 64px var(--s-xl);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-xs);
+}
+.center img {
+  margin-bottom: var(--s-xs);
+}
+.center h1 {
+  font-size: var(--t-title-l);
+  font-weight: 800;
+  margin: 0;
+}
+.center p {
+  max-width: 300px;
+  margin-bottom: var(--s-sm);
+}
+.center button.primary {
+  min-width: 160px;
+}
+
+/* Your browser (D-323 Phase 3). */
+.checks {
+  display: flex;
+  flex-direction: column;
+  margin: var(--s-xs) 0;
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  overflow: hidden;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--s-sm);
+  margin: 0;
+  padding: var(--s-sm) var(--s-md);
+  font-size: var(--t-body);
+  font-weight: 600;
+  color: var(--fg);
+  cursor: pointer;
+}
+.check + .check {
+  border-top: 1px solid var(--hairline);
+}
+ol.steps {
+  margin: var(--s-xs) 0 0;
+  padding-left: 20px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.view label.choice {
+  color: var(--fg);
+  font-weight: 400;
+  font-size: var(--t-body);
+}
+
+/* A run that failed: the reason under your message, on its side. */
+.msg.user > .error {
+  max-width: 85%;
+  margin: 0;
+  padding: 0 var(--s-xxs);
+  font-size: var(--t-small);
+  text-align: right;
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "dev-kit",
+  "version": "1.0.0",
+  "description": "A code reviewer bot: reviews pull requests, helps debug, and a weekday digest of open pull requests.",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "repository": "https://github.com/stackwares/casama",
+  "license": "Apache-2.0",
+  "keywords": ["developer", "github", "code-review"]
+}

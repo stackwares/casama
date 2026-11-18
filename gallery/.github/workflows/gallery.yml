@@ -1,0 +1,74 @@
+name: Gallery
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # The merge commit and its base, to see what a pull request changes.
+          fetch-depth: 2
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      # Checks every item and that index.json, the other kinds' files, authors.json and
+      # manifest.json are up to date. Needs no key.
+      - run: node check.mjs --check
+      # coding-agents.json becomes commands on people's computers (D-370): first-party only.
+      - name: Coding agents are Casama's own
+        if: github.event_name == 'pull_request'
+        env:
+          ASSOCIATION: ${{ github.event.pull_request.author_association }}
+        run: |
+          if git diff --name-only HEAD^1 HEAD -- coding-agents.json | grep -q .; then
+            case "$ASSOCIATION" in
+              OWNER|MEMBER) ;;
+              *) echo "::error::coding-agents.json runs commands on people's computers, so only Casama changes it."; exit 1 ;;
+            esac
+          fi
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+      - run: node check.mjs
+      # Signs manifest.json (D-315). Servers verify manifest.sig with the gallery's public key. Until
+      # the key is set, servers run with GALLERY_SIGNATURE=optional and this publishes unsigned.
+      - name: Sign the manifest
+        env:
+          GALLERY_SIGNING_KEY: ${{ secrets.GALLERY_SIGNING_KEY }}
+        run: |
+          if [ -z "$GALLERY_SIGNING_KEY" ]; then
+            echo "::warning::GALLERY_SIGNING_KEY is not set, so this gallery is published without manifest.sig."
+            exit 0
+          fi
+          node sign.mjs
+          if [ -n "${{ vars.GALLERY_PUBLIC_KEY }}" ]; then node sign.mjs --verify "${{ vars.GALLERY_PUBLIC_KEY }}"; fi
+      # gallery.casama.ai is published from the Casama monorepo (scripts/deploy-web.sh), which this
+      # repository is synced from (scripts/sync-gallery.sh). Setting CLOUDFLARE_API_TOKEN here makes
+      # merges publish straight away instead; then the monorepo must sync back before its next deploy.
+      - name: Deploy when a Cloudflare token is configured
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 0e39b3b828e0c3f87f8f45fa626fa720
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "CLOUDFLARE_API_TOKEN is not set, so this merge was checked and signed but not published."
+            echo "Casama publishes it from the monorepo with scripts/deploy-web.sh after the next sync."
+            exit 0
+          fi
+          # Item and author pages, share images and the sitemap, as deploy-web.sh builds them.
+          npm install --no-save --no-package-lock @resvg/resvg-js@2.6.2
+          node build-pages.mjs
+          npx --yes wrangler@4 deploy

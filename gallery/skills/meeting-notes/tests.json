@@ -1,0 +1,8 @@
+{
+  "cases": [
+    {
+      "prompt": "Notes from this: 'Ana: launch slips to May 3 because QA found bugs. Ben will fix the login bug by Friday. Cara asks if marketing knows. Nobody was sure. Agreed to tell marketing today, Ana owns it.'",
+      "expect": "Summary mentions the launch moving to May 3; decisions include telling marketing today; action items: Ben fixes login bug by Friday, Ana tells marketing today. Open question about marketing awareness is resolved or noted."
+    }
+  ]
+}

@@ -1,0 +1,390 @@
+# Casama on CasaOS: the core self-host stack from infra/compose/docker-compose.yml, with
+# published images only.
+#
+# Do not import this file as it is. CasaOS cannot generate secrets, so every ${...} below is a
+# placeholder. Run deploy/casaos/setup.sh on the CasaOS machine: it generates the secrets, puts
+# the config files under the data folder, and writes a filled-in copy of this file to import.
+# See deploy/casaos/README.md.
+name: casama
+
+services:
+  db:
+    image: public.ecr.aws/supabase/postgres:17.11.0.011
+    container_name: casama-db
+    restart: unless-stopped
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - log_min_messages=fatal
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXP: 3600
+    volumes:
+      - ${CASAMA_DATA_DIR}/config/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro
+      - ${CASAMA_DATA_DIR}/config/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ${CASAMA_DATA_DIR}/config/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
+      - db-data:/var/lib/postgresql/data
+      # Holds the Vault root key: back it up with the database.
+      - db-config:/etc/postgresql-custom
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  auth:
+    image: public.ecr.aws/supabase/gotrue:v2.197.0
+    container_name: casama-auth
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${CASAMA_PUBLIC_URL}
+      GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      GOTRUE_SITE_URL: ${CASAMA_PUBLIC_URL}
+      GOTRUE_URI_ALLOW_LIST: casama://app/login-callback,http://127.0.0.1:*/auth/callback
+      GOTRUE_DISABLE_SIGNUP: "false"
+      # The sign-up hook. Auth refuses to start on an http hook address, so the address stays
+      # empty unless the public address is https.
+      GOTRUE_HOOK_BEFORE_USER_CREATED_ENABLED: "false"
+      GOTRUE_HOOK_BEFORE_USER_CREATED_URI: "${SIGNUP_HOOK_URI}"
+      GOTRUE_HOOK_BEFORE_USER_CREATED_SECRETS: ${AUTH_HOOK_SECRET}
+      GOTRUE_MFA_TOTP_ENROLL_ENABLED: "true"
+      GOTRUE_MFA_TOTP_VERIFY_ENABLED: "true"
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: 3600
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      # New accounts sign in without a confirmation email. Set false once SMTP is set up.
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      # Casama's emails, served by the caddy service on the internal network only.
+      GOTRUE_MAILER_TEMPLATES_MAGIC_LINK: http://caddy:8081/magic_link.html
+      GOTRUE_MAILER_TEMPLATES_CONFIRMATION: http://caddy:8081/confirmation.html
+      GOTRUE_MAILER_TEMPLATES_INVITE: http://caddy:8081/invite.html
+      GOTRUE_MAILER_TEMPLATES_RECOVERY: http://caddy:8081/recovery.html
+      GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE: http://caddy:8081/email_change.html
+      GOTRUE_MAILER_TEMPLATES_REAUTHENTICATION: http://caddy:8081/reauthentication.html
+      GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: Your Casama sign-in link
+      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: Confirm your Casama account
+      GOTRUE_MAILER_SUBJECTS_INVITE: You're invited to Casama
+      GOTRUE_MAILER_SUBJECTS_RECOVERY: Reset your Casama password
+      GOTRUE_MAILER_SUBJECTS_EMAIL_CHANGE: Confirm your new email for Casama
+      GOTRUE_MAILER_SUBJECTS_REAUTHENTICATION: Your Casama security code
+      # Email: fill these in to send sign-in and invite emails.
+      GOTRUE_SMTP_HOST: ""
+      GOTRUE_SMTP_PORT: "587"
+      GOTRUE_SMTP_USER: ""
+      GOTRUE_SMTP_PASS: ""
+      GOTRUE_SMTP_ADMIN_EMAIL: ""
+      GOTRUE_SAML_ENABLED: "true"
+      GOTRUE_SAML_PRIVATE_KEY: ${SAML_PRIVATE_KEY}
+
+  rest:
+    image: public.ecr.aws/supabase/postgrest:v16.5
+    container_name: casama-rest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["postgrest"]
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+
+  realtime:
+    image: public.ecr.aws/supabase/realtime:v2.151.3
+    # The tenant id comes from this name (realtime-dev); keep it.
+    container_name: realtime-dev.supabase-realtime
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: supabase_admin
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: postgres
+      DB_AFTER_CONNECT_QUERY: SET search_path TO _realtime
+      DB_ENC_KEY: ${REALTIME_ENC_KEY}
+      API_JWT_SECRET: ${JWT_SECRET}
+      METRICS_JWT_SECRET: ${JWT_SECRET}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      ERL_AFLAGS: -proto_dist inet_tcp
+      DNS_NODES: "''"
+      RLIMIT_NOFILE: "10000"
+      APP_NAME: realtime
+      SEED_SELF_HOST: "true"
+      RUN_JANITOR: "true"
+
+  kong:
+    image: public.ecr.aws/supabase/kong:2.8.1
+    container_name: casama-kong
+    restart: unless-stopped
+    depends_on: [auth, rest, realtime]
+    entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+    volumes:
+      - ${CASAMA_DATA_DIR}/config/kong.yml:/home/kong/temp.yml:ro
+
+  # One-shot: copies this release's database migrations out of the server image, so the
+  # migrations always match the API and worker.
+  migrations:
+    image: ghcr.io/stackwares/casama/server:${CASAMA_VERSION}
+    container_name: casama-migrations
+    restart: "no"
+    user: "0:0"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - rm -f /out/*.sql && cp /app/supabase/migrations/*.sql /out/
+    volumes:
+      - migrations:/out
+
+  # One-shot: waits for Auth and Realtime to make their tables, then applies the migrations.
+  migrate:
+    image: public.ecr.aws/supabase/postgres:17.11.0.011
+    container_name: casama-migrate
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    entrypoint: ["/bin/sh", "/migrate.sh"]
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      WORKER_DB_PASSWORD: ${WORKER_DB_PASSWORD}
+    volumes:
+      - ${CASAMA_DATA_DIR}/config/migrate.sh:/migrate.sh:ro
+      - migrations:/migrations:ro
+
+  api:
+    image: ghcr.io/stackwares/casama/server:${CASAMA_VERSION}
+    container_name: casama-api
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment: &casama-env
+      MODE: api
+      PAGES_PORT: "8790"
+      NODE_ENV: production
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
+      SUPABASE_URL: ${CASAMA_PUBLIC_URL}
+      SUPABASE_INTERNAL_URL: http://kong:8000
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      SUPABASE_JWT_SECRET: ${JWT_SECRET}
+      PUBLIC_API_URL: ${CASAMA_PUBLIC_URL}
+      PUBLIC_APP_URL: ${CASAMA_PUBLIC_URL}
+      PAGES_URL: ${CASAMA_PAGES_URL}
+      API_INTERNAL_URL: http://api:8787
+      INTERNAL_TOKEN: ${INTERNAL_TOKEN}
+      METRICS_TOKEN: ${METRICS_TOKEN}
+      SUPERVISOR_URL: http://casama-supervisor:8788
+      SUPERVISOR_TOKEN: ${SUPERVISOR_TOKEN}
+      TURN_SECRET: ${TURN_SECRET}
+      TURN_PUBLIC_HOST: ${TURN_PUBLIC_HOST}
+      TURN_PORT: "3478"
+      CONTENT_ENCRYPTION_KEY: ${CONTENT_ENCRYPTION_KEY}
+      AUTH_HOOK_SECRET: ${AUTH_HOOK_SECRET}
+      OBJECT_STORE_DIR: /data/library
+      BILLING_ENABLED: "false"
+      TELEMETRY: "off"
+      # The first account is the instance owner. Add more admins here, comma-separated.
+      INSTANCE_ADMIN_EMAILS: ""
+      COMPUTER_HOST_MEMORY_GB: "${COMPUTER_HOST_MEMORY_GB}"
+      COMPUTER_MEMORY_MB: "2048"
+      SMTP_HOST: ""
+      SMTP_PORT: "587"
+      SMTP_USER: ""
+      SMTP_PASS: ""
+    volumes:
+      - library:/data/library
+      - link:/link
+
+  worker:
+    image: ghcr.io/stackwares/casama/server:${CASAMA_VERSION}
+    container_name: casama-worker
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      <<: *casama-env
+      MODE: worker
+      RUN_CONCURRENCY: "20"
+      WORKER_DATABASE_URL: postgres://casama_worker:${WORKER_DB_PASSWORD}@db:5432/postgres
+    volumes:
+      - library:/data/library
+    # The worker serves no HTTP: it touches /tmp/worker-alive every minute.
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "const s=require('fs').statSync('/tmp/worker-alive',{throwIfNoEntry:false});process.exit(s&&Date.now()-s.mtimeMs<180000?0:1)"
+      interval: 60s
+      timeout: 5s
+      start_period: 180s
+      retries: 2
+
+  # The only service with Docker access. It creates the bots' computers as containers on this
+  # machine and joins each computer's private network.
+  supervisor:
+    image: ghcr.io/stackwares/casama/supervisor:${CASAMA_VERSION}
+    container_name: casama-supervisor
+    restart: unless-stopped
+    depends_on:
+      computer-image:
+        condition: service_completed_successfully
+    environment:
+      SUPERVISOR_TOKEN: ${SUPERVISOR_TOKEN}
+      COMPUTER_TOKEN_SECRET: ${COMPUTER_TOKEN_SECRET}
+      SUPERVISOR_CONTAINER: casama-supervisor
+      EGRESS_CONTAINER: casama-egress
+      TURN_CONTAINER: casama-turn
+      NAME_PREFIX: casama
+      EGRESS_CONTROL_URL: http://casama-egress:3129
+      EGRESS_CONTROL_TOKEN: ${EGRESS_CONTROL_TOKEN}
+      COMPUTER_IMAGE_HEADLESS: ghcr.io/stackwares/casama/computer-headless:${CASAMA_VERSION}
+      COMPUTER_IMAGE_DESKTOP: ghcr.io/stackwares/casama/computer-desktop:${CASAMA_VERSION}
+      COMPUTER_MEMORY_MB: "2048"
+      WARM_POOL_SIZE: "0"
+      OBJECT_STORE_DIR: /data/objects
+      TURN_SECRET: ${TURN_SECRET}
+      TURN_PUBLIC_HOST: ${TURN_PUBLIC_HOST}
+      SANDBOX_RUNTIME: "${SANDBOX_RUNTIME}"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - objects:/data/objects
+
+  # One-shot: makes CasaOS pull the computer image. The supervisor starts computers from it
+  # but does not pull it.
+  computer-image:
+    image: ghcr.io/stackwares/casama/computer-headless:${CASAMA_VERSION}
+    container_name: casama-computer-image
+    restart: "no"
+    entrypoint: ["/bin/true"]
+
+  # The only route from computers to the internet. Blocks private and metadata addresses.
+  egress:
+    image: ghcr.io/stackwares/casama/egress-proxy:${CASAMA_VERSION}
+    container_name: casama-egress
+    restart: unless-stopped
+    environment:
+      EGRESS_CONTROL_TOKEN: ${EGRESS_CONTROL_TOKEN}
+      EGRESS_ABUSE: "off"
+
+  # TURN relay for live view of desktop computers.
+  turn:
+    image: ghcr.io/stackwares/casama/turn:${CASAMA_VERSION}
+    container_name: casama-turn
+    restart: unless-stopped
+    environment:
+      TURN_SECRET: ${TURN_SECRET}
+    ports:
+      - target: 3478
+        published: "3478"
+        protocol: udp
+      - target: 3478
+        published: "3478"
+        protocol: tcp
+
+  # The one address for the apps: routes to the API and to Supabase. Plain HTTP, because
+  # CasaOS itself uses port 80.
+  caddy:
+    image: caddy:2.10.2-alpine
+    container_name: casama-caddy
+    restart: unless-stopped
+    depends_on: [api, kong]
+    environment:
+      CASAMA_SITE: ":80"
+      CASAMA_PAGES_SITE: ":8790"
+      CASAMA_SITES_OWN_EDGE: "false"
+    ports:
+      - target: 80
+        published: "${CASAMA_HTTP_PORT}"
+        protocol: tcp
+      - target: 8790
+        published: "${CASAMA_PAGES_PORT}"
+        protocol: tcp
+    volumes:
+      - ${CASAMA_DATA_DIR}/config/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${CASAMA_DATA_DIR}/config/sites-edge-true.caddy:/etc/caddy/sites-edge-true.caddy:ro
+      - ${CASAMA_DATA_DIR}/config/sites-edge-false.caddy:/etc/caddy/sites-edge-false.caddy:ro
+      - ${CASAMA_DATA_DIR}/config/email-templates:/srv/email-templates:ro
+      - caddy-data:/data
+
+volumes:
+  db-data: {}
+  db-config: {}
+  migrations: {}
+  library: {}
+  link: {}
+  objects: {}
+  caddy-data: {}
+
+x-casaos:
+  id: ai.casama.server
+  main: caddy
+  index: /
+  port_map: "${CASAMA_HTTP_PORT}"
+  scheme: http
+  icon: https://docs.casama.ai/logo.png
+  title:
+    en_US: Casama
+  tagline:
+    en_US: AI teammates with their own computers
+  description:
+    en_US: |
+      Casama is an open-source app for AI teammates. Each bot has its own computer, a
+      sandboxed container on this machine. This app runs the Casama server: the API, the
+      worker, Supabase (database and sign-in), and the supervisor that creates the bots'
+      computers. Use the Casama app or CLI and point it at this server's address.
+  tips:
+    before_install:
+      en_US: |
+        Run deploy/casaos/setup.sh on this machine first. It generates the secrets and writes
+        the file to import. Casama needs 8 GB of memory and access to the Docker socket.
+  author: Stackwares
+  developer: Stackwares
+  category: AI
+  architectures:
+    - amd64
+    - arm64
+  version: "0.1.0"
+  website: https://casama.ai
+  repo: https://github.com/stackwares/casama
+  docs: https://docs.casama.ai/self-hosting/

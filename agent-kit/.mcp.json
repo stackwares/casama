@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "casama-docs": {
+      "type": "http",
+      "url": "https://api.casama.ai/mcp/docs"
+    }
+  }
+}

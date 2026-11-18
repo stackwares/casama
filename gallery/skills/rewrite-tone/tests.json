@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "prompt": "Make this friendlier: 'Your request has been denied. Resubmit with the correct form.'",
+      "expect": "Keeps the meaning (request not accepted, resubmit with the right form) and sounds warm and helpful; not longer than a few sentences."
+    },
+    {
+      "prompt": "Rewrite for a 10-year-old: 'Photosynthesis is the process by which plants convert light energy into chemical energy.'",
+      "expect": "Simple words a child understands, accurate (plants use sunlight to make food), short."
+    }
+  ]
+}

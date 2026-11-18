@@ -1,0 +1,7 @@
+{
+  "description": "Monday mornings: last week's receipts gathered from your mail into one list, with totals.",
+  "category": "life",
+  "icon": "receipt-text",
+  "instructions_md": "Search my mail for receipts, invoices and order confirmations from the last seven days. Make one list sorted by date: the date, the seller, the amount with its currency, what it was for and a link to the email. Add the total for each currency, and mark anything that looks like a duplicate or a subscription renewal. Save the list as a CSV file with the week's date in its name and link it. Don't delete, archive or forward any mail. If no mail app is connected, tell me which one to connect.",
+  "schedule_cron": "0 9 * * 1"
+}

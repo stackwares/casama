@@ -1,0 +1,28 @@
+{
+  "name": "Budget review",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "money"
+  ],
+  "category": "money",
+  "icon": "wallet",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Review my spending from this bank statement and find savings",
+    "Group last month's transactions into categories with totals",
+    "Where did most of my money go this quarter?"
+  ],
+  "access": {
+    "reads": [
+      "statements and sheets you share"
+    ],
+    "credits": "low"
+  }
+}

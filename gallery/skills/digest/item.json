@@ -1,0 +1,27 @@
+{
+  "name": "Digest",
+  "author": {
+    "name": "Anthropic",
+    "url": "https://github.com/anthropics/knowledge-work-plugins"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work"
+  ],
+  "category": "work",
+  "icon": "newspaper",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Catch me up on what happened while I was away",
+    "Give me a digest of today across my connected apps",
+    "What changed this week in email, chat and tickets?"
+  ],
+  "access": {
+    "reads": [
+      "connected apps"
+    ],
+    "credits": "medium"
+  }
+}

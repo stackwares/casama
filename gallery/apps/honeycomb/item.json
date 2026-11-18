@@ -1,0 +1,25 @@
+{
+  "name": "Honeycomb",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "observability"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Why are checkout requests slow in Honeycomb?",
+    "Query errors by endpoint for the last day",
+    "Which triggers fired this morning?"
+  ],
+  "access": {
+    "reads": [
+      "Honeycomb traces and events"
+    ],
+    "credits": "low"
+  }
+}

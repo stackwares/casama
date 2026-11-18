@@ -1,0 +1,28 @@
+{
+  "name": "Gift ideas",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "life"
+  ],
+  "category": "life",
+  "icon": "gift",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Gift ideas for my dad who loves gardening, under $50",
+    "What should I get a coworker who is leaving?",
+    "Birthday ideas for a 10-year-old into space"
+  ],
+  "access": {
+    "reads": [
+      "the web"
+    ],
+    "credits": "low"
+  }
+}

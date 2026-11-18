@@ -1,0 +1,21 @@
+{
+  "name": "Product",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-09",
+  "examples": [
+    "Write a one-page spec for team invites",
+    "Turn this feedback into user stories",
+    "Help me prioritise next quarter's roadmap"
+  ]
+}

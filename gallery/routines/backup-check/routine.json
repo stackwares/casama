@@ -1,0 +1,7 @@
+{
+  "description": "Monday mornings: whether last week's backups ran, how big they were, and a warning when one is missing.",
+  "category": "build",
+  "icon": "database-backup",
+  "instructions_md": "Check that my backups ran this week. Look at {{where}}. For each backup, tell me when it last finished, whether it succeeded, its size next to the one before, and where it's stored. Warn me clearly when the newest backup is older than it should be, failed, or is much smaller than usual. Only read: don't start, restore, move or delete a backup, and don't change any settings. If you can't reach a report, say what you tried. If you don't know where my backups report yet, ask me.",
+  "schedule_cron": "0 8 * * 1"
+}

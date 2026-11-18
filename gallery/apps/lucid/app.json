@@ -1,0 +1,10 @@
+{
+  "description": "Find, read and create Lucidchart and Lucidspark documents.",
+  "category": "design",
+  "color": "282C33",
+  "homepage": "https://lucid.co",
+  "url": "https://mcp.lucid.app/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Search your documents", "Read a diagram", "Create diagrams"]
+}

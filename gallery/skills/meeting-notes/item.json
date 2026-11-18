@@ -1,0 +1,29 @@
+{
+  "name": "Meeting notes",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work"
+  ],
+  "category": "work",
+  "icon": "notebook-pen",
+  "featured": true,
+  "pick": "Turns any transcript into decisions and action items in seconds.",
+  "version": 1,
+  "added": "2026-11-11",
+  "examples": [
+    "Turn this transcript into notes with decisions and action items",
+    "Summarize this call and list who does what by when",
+    "What questions were left open in this meeting?"
+  ],
+  "access": {
+    "reads": [
+      "transcripts and notes you share"
+    ],
+    "credits": "low"
+  }
+}

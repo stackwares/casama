@@ -1,0 +1,16 @@
+{
+  "name": "Forest",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "green",
+    "deep"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18"
+}

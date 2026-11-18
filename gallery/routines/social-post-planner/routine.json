@@ -1,0 +1,7 @@
+{
+  "description": "Every Friday morning: next week's posts written as drafts, one for each weekday.",
+  "category": "create",
+  "icon": "megaphone",
+  "instructions_md": "Plan next week's posts for {{channels}}. Use what you know about my work, audience and voice from memory, and anything new I shipped, wrote or told you this week. Give me Monday to Friday with one post a day: the channel, the full text sized for that channel, and a note on any picture it needs. Vary the kinds of post and don't repeat last week's. These are drafts: don't post or schedule anything until I say so. If you don't know enough about what I do yet, ask me three questions first.",
+  "schedule_cron": "0 10 * * 5"
+}

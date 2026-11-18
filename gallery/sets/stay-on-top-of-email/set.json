@@ -1,0 +1,22 @@
+{
+  "description": "Sort what needs a reply, draft the answers, and start each day knowing what matters.",
+  "icon": "mail",
+  "items": [
+    {
+      "type": "skill",
+      "id": "inbox-triage"
+    },
+    {
+      "type": "skill",
+      "id": "email-drafter"
+    },
+    {
+      "type": "skill",
+      "id": "digest"
+    },
+    {
+      "type": "routine",
+      "id": "morning-plan"
+    }
+  ]
+}

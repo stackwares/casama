@@ -1,0 +1,37 @@
+{
+  "v": 2,
+  "scheme": {
+    "light": {
+      "seed": "#305E8B",
+      "background": "#F7FAFE",
+      "onBackground": "#161B20",
+      "primary": "#305E8B",
+      "primaryContainer": "#D7EAFE",
+      "secondary": "#3E6073",
+      "secondaryContainer": "#DCEAF4",
+      "tertiary": "#804D0C",
+      "tertiaryContainer": "#FBE3CD",
+      "appBar": "#F0F7FE"
+    },
+    "dark": {
+      "seed": "#A6C8EC",
+      "background": "#0E1217",
+      "onBackground": "#E2E9F0",
+      "primary": "#A6C8EC",
+      "primaryContainer": "#263A4E",
+      "secondary": "#AFC8D8",
+      "secondaryContainer": "#2B3A43",
+      "tertiary": "#E4BB95",
+      "tertiaryContainer": "#4A321B",
+      "appBar": "#101820"
+    }
+  },
+  "headingFont": "Newsreader",
+  "bodyFont": "Source Sans 3",
+  "wallpaper": {
+    "image": "snow-day",
+    "pattern": "clouds",
+    "palette": "ocean",
+    "intensity": 0.4
+  }
+}

@@ -1,0 +1,4 @@
+# Generated art lives here while we pick. The picks are copied into the sites; the raw files stay local.
+round-*/raw/*.png
+round-*/final/
+round-*/original/

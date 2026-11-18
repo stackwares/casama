@@ -1,0 +1,11 @@
+{
+  "description": "A chief of staff for a small company: investor updates, decision memos, specs, a morning plan and a Friday review.",
+  "url": "https://github.com/stackwares/casama/tree/main/packs/founder-kit",
+  "commit": "ca3813c705e42aaf297493a2d889207c79cf657b",
+  "icon": "rocket",
+  "adds": [
+    "A chief of staff bot",
+    "Investor updates, decision memos and specs",
+    "A morning plan and a Friday review"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Purr",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "cozy",
+    "orange",
+    "cats"
+  ],
+  "featured": false,
+  "version": 2,
+  "added": "2026-11-18",
+  "changelog": [
+    {
+      "version": 2,
+      "date": "2026-11-18",
+      "note": "The painting has a night version now, for dark mode."
+    },
+    {
+      "version": 1,
+      "date": "2026-11-18",
+      "note": "First version."
+    }
+  ]
+}

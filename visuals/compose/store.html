@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Store tile</title>
+<!-- Chrome Web Store promo tiles for Casama for Chrome (D-379): painted background + real mascot + words.
+     Rendered by visuals/render-store.sh. Query: size=marquee (1400x560) or small (440x280). -->
+<style>
+@font-face { font-family: "Google Sans"; src: url("/site/assets/fonts/GoogleSans-Regular.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "Google Sans"; src: url("/site/assets/fonts/GoogleSans-Bold.woff2") format("woff2"); font-weight: 700; }
+html, body { margin: 0; overflow: hidden; background: #24112f; }
+.tile { position: relative; background: #24112f url("/visuals/cards/store.jpg") right center / cover no-repeat; color: #fbf6ff; font-family: "Google Sans", system-ui, sans-serif; display: flex; align-items: center; }
+.tile img { filter: drop-shadow(0 16px 36px rgba(20, 0, 40, .4)); flex: none; }
+h1 { margin: 0; font-weight: 700; letter-spacing: -.01em; }
+p { margin: 0; opacity: .9; }
+.marquee { width: 1400px; height: 560px; padding-left: 96px; box-sizing: border-box; gap: 48px; }
+.marquee img { width: 180px; height: 180px; }
+.marquee h1 { font-size: 64px; }
+.marquee .sub { font-size: 28px; margin-top: 14px; }
+.marquee .more { font-size: 20px; margin-top: 22px; opacity: .78; }
+.small { width: 440px; height: 280px; padding-left: 36px; box-sizing: border-box; gap: 22px; }
+.small img { width: 96px; height: 96px; }
+.small h1 { font-size: 38px; }
+.small .sub { font-size: 17px; margin-top: 8px; }
+.small .more { display: none; }
+</style>
+</head>
+<body>
+<div class="tile" id="tile">
+  <img src="/site/assets/bots/casama-brand.svg" alt="">
+  <div><h1>Casama</h1><p class="sub">Your AI bots in Chrome</p><p class="more">Ask about any page · Save what matters · Approve from anywhere</p></div>
+</div>
+<script>document.getElementById("tile").classList.add(new URLSearchParams(location.search).get("size") === "small" ? "small" : "marquee");</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "description": "Clients, projects, invoices and time in your Bonsai account.",
+  "category": "sales",
+  "color": "00B289",
+  "homepage": "https://www.hellobonsai.com",
+  "url": "https://mcp.hellobonsai.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["See clients and projects", "Check invoices", "Track time"]
+}

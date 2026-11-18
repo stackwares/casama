@@ -1,0 +1,31 @@
+{
+  "name": "Chart from data",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "data"
+  ],
+  "category": "data",
+  "icon": "chart-line",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Chart monthly revenue from this table",
+    "Which chart fits this survey data? Make it",
+    "Turn this CSV into a chart with a one-line takeaway"
+  ],
+  "access": {
+    "reads": [
+      "data you share"
+    ],
+    "writes": [
+      "creates a chart"
+    ],
+    "credits": "low"
+  }
+}

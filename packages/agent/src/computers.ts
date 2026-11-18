@@ -1,0 +1,801 @@
+import { type Database, liftTimeouts } from "@casama/db";
+import { costTables } from "@casama/domain";
+import { captureError } from "@casama/observability";
+import type {
+  CheckpointRef,
+  ComputerImageStatus,
+  SandboxHandle,
+  SandboxProvider,
+  SnapshotRef,
+} from "@casama/sandbox";
+import { sql } from "drizzle-orm";
+import { track } from "./analytics.ts";
+
+/**
+ * Idle computers sleep after 5 minutes (D-178); waking restores their files. Only bots, running
+ * commands and a person's input or presence keep them awake (D-195, apps/server/src/api/keep-awake.ts).
+ */
+export const IDLE_SLEEP_MS = 5 * 60_000;
+/** The sleep timers a person can pick per computer (D-240), in minutes. */
+export const IDLE_SLEEP_CHOICES = [5, 15, 30, 60] as const;
+/** A reset that has not finished after this long is treated as abandoned (the API restarted). */
+export const RESET_STALE_MS = 20 * 60_000;
+export const CHECKPOINT_KEEP = 20;
+export const CHECKPOINT_MAX_AGE_DAYS = 7;
+
+/** What a computer costs per hour: per vCPU plus per GiB of memory (USD, D-180). */
+export interface ComputerRate {
+  cpu_hour: number;
+  gb_hour: number;
+}
+
+/**
+ * Default computer prices by provider. E2B and Daytona: their published per-second prices
+ * ($0.000014 per vCPU-second, $0.0000045 per GiB-second; 2 vCPU / 4 GiB ≈ $0.166 an hour).
+ * Docker on our own servers: a Hetzner CPX42 (8 vCPU / 16 GB, about $75 a month) spread over what
+ * it holds, memory being the limit (1 vCPU / 1 GB ≈ $0.008 an hour). Local computers are the
+ * person's own. Casama Link computers: Casama Cloud's price per computer-hour.
+ * Override with COMPUTER_RATES (JSON by provider) or in Admin → Pricing (`computers`, D-373),
+ * which wins over both. See docs/COSTS.md.
+ */
+const DOCKER_RATE: ComputerRate = { cpu_hour: 0.003, gb_hour: 0.005 };
+export const COMPUTER_RATES: Record<string, ComputerRate> = {
+  docker: DOCKER_RATE,
+  e2b: { cpu_hour: 0.0504, gb_hour: 0.0162 },
+  daytona: { cpu_hour: 0.0504, gb_hour: 0.0162 },
+  local: { cpu_hour: 0, gb_hour: 0 },
+  "casama-cloud": { cpu_hour: 0.05, gb_hour: 0 },
+};
+
+/** The default rates with COMPUTER_RATES' overrides (JSON by provider) on top. */
+export function computerRates(json?: string): Record<string, ComputerRate> {
+  if (!json) return COMPUTER_RATES;
+  const parsed = JSON.parse(json) as Record<string, Partial<ComputerRate>>;
+  const out = { ...COMPUTER_RATES };
+  for (const [id, r] of Object.entries(parsed)) {
+    const base = out[id] ?? DOCKER_RATE;
+    const cpu = r.cpu_hour ?? base.cpu_hour;
+    const gb = r.gb_hour ?? base.gb_hour;
+    if (!(cpu >= 0 && gb >= 0)) throw new Error(`COMPUTER_RATES: bad rate for ${id}`);
+    out[id] = { cpu_hour: cpu, gb_hour: gb };
+  }
+  return out;
+}
+
+/** What `seconds` of a computer of this size cost on this provider, in USD. */
+export function computerCostUsd(
+  provider: string,
+  size: { cpus?: number; memory_mb?: number } | null | undefined,
+  seconds: number,
+  rates: Record<string, ComputerRate> = COMPUTER_RATES,
+): number {
+  // Admin → Pricing first (D-373), then COMPUTER_RATES and the defaults in [rates].
+  const admin = costTables().computers ?? {};
+  const r = admin[provider] ?? rates[provider] ?? admin.docker ?? rates.docker ?? DOCKER_RATE;
+  const cpus = size?.cpus ?? 1;
+  const gb = (size?.memory_mb ?? 1024) / 1024;
+  return (seconds / 3600) * (r.cpu_hour * cpus + r.gb_hour * gb);
+}
+
+/**
+ * What `seconds` of a computer cost the server (D-400): the provider's rate from COMPUTER_RATES
+ * and its defaults, never Admin → Pricing, which is what workspaces are charged. Null for a
+ * person's own computer, which costs the server nothing.
+ */
+export function computerProviderCostUsd(
+  provider: string,
+  size: { cpus?: number; memory_mb?: number } | null | undefined,
+  seconds: number,
+  rates: Record<string, ComputerRate> = COMPUTER_RATES,
+): number | null {
+  if (provider === "local") return null;
+  const r = rates[provider] ?? rates.docker ?? DOCKER_RATE;
+  const cpus = size?.cpus ?? 1;
+  const gb = (size?.memory_mb ?? 1024) / 1024;
+  return (seconds / 3600) * (r.cpu_hour * cpus + r.gb_hour * gb);
+}
+
+export interface ComputerRow {
+  id: string;
+  org_id: string;
+  kind: string;
+  owner_bot_id: string | null;
+  profile: "headless" | "desktop";
+  /** Switched to the desktop only for a takeover: back to headless on the next sleep. */
+  desktop_for_takeover?: boolean;
+  provider?: string;
+  state: string;
+  size: { cpus?: number; memory_mb?: number; disk_gb?: number };
+  snapshot_ref: SnapshotRef | null;
+  running_since: Date | null;
+  [key: string]: unknown;
+}
+
+/** The provider plus optional object deletion (the supervisor client has it). */
+export type ComputerProvider = SandboxProvider & {
+  deleteObjects?: (keys: string[]) => Promise<void>;
+  /** The same backend scoped to one provider (docker, e2b, daytona); see D-056. */
+  forProvider?: (id: string) => ComputerProvider;
+  /** Running Docker computers behind the current image (D-360); null when it can't tell. */
+  imageStatus?: () => Promise<ComputerImageStatus[] | null>;
+};
+
+type Emit = (type: string, payload: Record<string, unknown>) => Promise<void>;
+
+/** The plan's limit on hosted computers running at once was reached (D-249). */
+export class RunningLimitError extends Error {
+  readonly limit: number;
+  constructor(limit: number) {
+    super("running_limit");
+    this.limit = limit;
+  }
+}
+
+/** A computer someone used this recently is never put to sleep to make room for another. */
+export const MAKE_ROOM_IDLE_MS = 2 * 60_000;
+
+/**
+ * Computer lifecycle on top of a SandboxProvider: provisioning on demand, idle sleep to object
+ * storage, restore on the next use, checkpoints with retention, and computer-second usage.
+ */
+export class ComputerService {
+  readonly db: Database;
+  readonly provider: ComputerProvider;
+  /** Providers that are not behind the supervisor (the `local` desktop companion, D-066). */
+  readonly extra: Record<string, ComputerProvider>;
+  /** Casama Cloud (D-094): free-plan workspaces start computers only with a verified owner email. */
+  requireVerifiedEmail = false;
+  /** Prices for computer-seconds usage (D-180). */
+  rates: Record<string, ComputerRate> = COMPUTER_RATES;
+  constructor(
+    db: Database,
+    provider: ComputerProvider,
+    extra: Record<string, ComputerProvider> = {},
+  ) {
+    this.db = db;
+    this.provider = provider;
+    this.extra = extra;
+  }
+
+  /** The computer a bot uses: its default, else its private computer, else the org's team computer. */
+  async forBot(botId: string): Promise<ComputerRow> {
+    const [row] = await this.db.execute<ComputerRow>(sql`
+      select c.* from public.bots b
+      join public.computers c on c.org_id = b.org_id
+      where b.id = ${botId}::uuid
+        and (c.id = b.default_computer_id or (b.default_computer_id is null and (c.owner_bot_id = b.id or c.kind = 'team')))
+      order by (c.id = b.default_computer_id) desc nulls last, (c.owner_bot_id = b.id) desc nulls last
+      limit 1`);
+    if (!row) throw new Error("no_computer");
+    return row;
+  }
+
+  /** The provider a computer runs on. */
+  providerFor(c: ComputerRow): ComputerProvider {
+    const id = typeof c.provider === "string" ? c.provider : "docker";
+    if (this.extra[id]) return this.extra[id];
+    return id === "docker" ? this.provider : (this.provider.forProvider?.(id) ?? this.provider);
+  }
+
+  /** Destroys a computer's sandbox and stored archives, then deletes it. */
+  async remove(computerId: string) {
+    const c = await this.byId(computerId);
+    if (!c) return;
+    const p = this.providerFor(c);
+    if (await p.get(computerId).catch(() => null)) await this.recordUsage(c);
+    await p.destroy(computerId);
+    const cps = await this.db.execute<{ key: string }>(
+      sql`select storage_ref ->> 'key' as key from public.checkpoints where computer_id = ${computerId}::uuid`,
+    );
+    const keys = [...cps.map((r) => r.key), ...(c.snapshot_ref?.key ? [c.snapshot_ref.key] : [])];
+    if (keys.length) await this.provider.deleteObjects?.(keys).catch(() => {});
+    await this.db.execute(sql`delete from public.computers where id = ${computerId}::uuid`);
+  }
+
+  async byId(id: string): Promise<ComputerRow | null> {
+    const [row] = await this.db.execute<ComputerRow>(
+      sql`select * from public.computers where id = ${id}::uuid`,
+    );
+    return row ?? null;
+  }
+
+  private async setState(
+    id: string,
+    state: string,
+    emit?: Emit,
+    extra: Record<string, unknown> = {},
+  ) {
+    await this.db.execute(sql`
+      update public.computers set state = ${state}, error = ${(extra.error as string) ?? null},
+        running_since = case when ${state} = 'running' then coalesce(running_since, now()) when ${state} in ('sleeping', 'stopped', 'error') then null else running_since end,
+        last_active_at = case when ${state} = 'running' then now() else last_active_at end
+      where id = ${id}::uuid`);
+    await emit?.("computer.state", { computer_id: id, state });
+  }
+
+  /**
+   * Makes the stored state match the sandbox: a row says running but the container is gone (host
+   * restart, crash), or says asleep but the container is still up (a sleep that didn't finish).
+   * Returns the state it settled on. Starting, provisioning and local computers are left alone.
+   */
+  async reconcile(computerId: string): Promise<string | null> {
+    const c = await this.byId(computerId);
+    if (!c || c.kind === "local") return c?.state ?? null;
+    if (c.state === "starting" || c.state === "provisioning") return c.state;
+    const h = await this.providerFor(c)
+      .get(computerId)
+      .catch(() => undefined);
+    if (h === undefined) return c.state; // provider unreachable: don't guess
+    const up = !!h && !!(await h.health().catch(() => null));
+    const saysUp = c.state === "running" || c.state === "idle";
+    if (saysUp && !up) {
+      await this.recordUsage(c);
+      await this.setState(computerId, c.snapshot_ref ? "sleeping" : "stopped");
+      return c.snapshot_ref ? "sleeping" : "stopped";
+    }
+    if (!saysUp && up) {
+      await this.setState(computerId, "running");
+      return "running";
+    }
+    return c.state;
+  }
+
+  /** Records computer-seconds for the interval that is ending. */
+  private async recordUsage(c: ComputerRow) {
+    if (!c.running_since) return;
+    const seconds = Math.max(
+      0,
+      Math.round((Date.now() - new Date(c.running_since).getTime()) / 1000),
+    );
+    if (seconds === 0) return;
+    const provider = typeof c.provider === "string" ? c.provider : "docker";
+    const cost = computerCostUsd(provider, c.size, seconds, this.rates);
+    const upstream = computerProviderCostUsd(provider, c.size, seconds, this.rates);
+    await this.db.execute(sql`
+      insert into public.usage_ledger (org_id, bot_id, computer_id, kind, quantity, cost_usd, upstream_cost_usd)
+      values (${c.org_id}::uuid, ${c.owner_bot_id}::uuid, ${c.id}::uuid, 'computer_seconds', ${seconds}, ${cost}, ${upstream})`);
+  }
+
+  /**
+   * The computer's handle only when it is already up (a personal computer: connected). Never
+   * starts, wakes or restores it and doesn't count as activity, so looking costs nothing (D-226).
+   */
+  async ifRunning(computerId: string): Promise<SandboxHandle | null> {
+    const c = await this.byId(computerId);
+    if (!c) return null;
+    if (c.kind !== "local" && c.state !== "running" && c.state !== "idle") return null;
+    return (
+      (await this.providerFor(c)
+        .get(computerId)
+        .catch(() => null)) ?? null
+    );
+  }
+
+  /** Makes sure the computer is running and returns its handle. Serialized per computer. */
+  async ensureRunning(computerId: string, emit?: Emit): Promise<SandboxHandle> {
+    return this.db.transaction(async (tx) => {
+      // Provisioning can take minutes while this holds the lock (and others wait on it).
+      await liftTimeouts(tx);
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${`computer:${computerId}`}))`);
+      const [c] = await tx.execute<ComputerRow>(
+        sql`select * from public.computers where id = ${computerId}::uuid`,
+      );
+      if (!c) throw new Error("computer_not_found");
+      if (c.state === "running" || c.state === "idle") {
+        const h = await this.providerFor(c).get(computerId);
+        if (h) {
+          await tx.execute(
+            sql`update public.computers set last_active_at = now(), state = 'running' where id = ${computerId}::uuid`,
+          );
+          return h;
+        }
+      }
+      // The computer funnel (F5): requested → ready or failed. Workspace-level (no person), ids and enums only.
+      const started = Date.now();
+      const facts = {
+        kind: c.kind,
+        provider: c.provider ?? null,
+        mode: c.snapshot_ref ? "restore" : "provision",
+      };
+      track(this.db, { event: "computer_start_requested", orgId: c.org_id, properties: facts });
+      try {
+        await this.checkCanStart(c.org_id, {
+          credits: c.kind !== "local",
+          computerId: c.kind !== "local" ? c.id : undefined,
+        });
+      } catch (err) {
+        track(this.db, {
+          event: "computer_start_failed",
+          orgId: c.org_id,
+          properties: { ...facts, reason: (err as { code?: string }).code ?? "refused" },
+        });
+        throw err;
+      }
+      if (c.kind !== "local") {
+        const size = await this.fitPlan(c);
+        if (size) c.size = { ...c.size, ...size };
+      }
+      await this.setState(computerId, c.snapshot_ref ? "starting" : "provisioning", emit);
+      try {
+        const spec = {
+          profile: c.profile,
+          size: { cpus: c.size?.cpus, memoryMb: c.size?.memory_mb },
+          labels: { "dev.casama.org": c.org_id },
+        };
+        const h = await this.providerFor(c).resume(computerId, c.snapshot_ref ?? undefined, spec);
+        // A new container always starts from the current image (D-360). Outside this
+        // transaction, like setState: a row lock here would block setState's own update.
+        await this.db.execute(
+          sql`update public.computers set update_available_since = null where id = ${computerId}::uuid`,
+        );
+        await this.setState(computerId, "running", emit);
+        if (c.kind !== "local")
+          await auditComputer(this.db, c.org_id, computerId, "computer.started", null, {
+            mode: facts.mode,
+          });
+        track(this.db, {
+          event: "computer_ready",
+          orgId: c.org_id,
+          properties: { ...facts, start_ms: Date.now() - started },
+        });
+        return h;
+      } catch (err) {
+        track(this.db, {
+          event: "computer_start_failed",
+          orgId: c.org_id,
+          properties: { ...facts, reason: "provider_error" },
+        });
+        await this.setState(computerId, "error", emit, {
+          error: (err as Error).message.slice(0, 500),
+        });
+        throw err;
+      }
+    });
+  }
+
+  /**
+   * Applies the plan's computer limits before a hosted computer starts (D-249). With
+   * max_running_computers reached, the computer nobody has used the longest goes to sleep to make
+   * room; if every running one is in use, the start is refused (RunningLimitError). With
+   * computer_size, the computer gets that many vCPUs and GB of memory; returns the new size when it
+   * changed.
+   */
+  private async fitPlan(c: ComputerRow) {
+    const [e] = await this.db.execute<{ running: unknown; size: unknown }>(sql`
+      select limits -> 'max_running_computers' as running, limits -> 'computer_size' as size
+      from public.entitlements where org_id = ${c.org_id}::uuid order by created_at desc limit 1`);
+    const limit = typeof e?.running === "number" ? e.running : null;
+    if (limit != null) {
+      const others = await this.db.execute<{ id: string; idle: boolean }>(sql`
+        select id, coalesce(last_active_at, running_since, now() - interval '1 day')
+                 < now() - (${MAKE_ROOM_IDLE_MS} * interval '1 millisecond') as idle
+        from public.computers
+        where org_id = ${c.org_id}::uuid and id <> ${c.id}::uuid and kind <> 'local'
+          and state in ('provisioning', 'starting', 'running', 'idle')
+        order by last_active_at asc nulls first`);
+      let over = others.length - limit + 1;
+      for (const o of others) {
+        if (over <= 0) break;
+        if (!o.idle) continue;
+        await this.sleep(o.id).catch(() => undefined);
+        over--;
+      }
+      if (over > 0) throw new RunningLimitError(limit);
+    }
+    const factor = typeof e?.size === "number" && e.size > 0 ? e.size : null;
+    if (factor == null) return null;
+    const size = { cpus: factor, memory_mb: Math.round(1024 * factor) };
+    if (c.size?.cpus === size.cpus && c.size?.memory_mb === size.memory_mb) return null;
+    await this.db.execute(sql`
+      update public.computers set size = size || ${JSON.stringify(size)}::jsonb where id = ${c.id}::uuid`);
+    return size;
+  }
+
+  /**
+   * Throws workspace_suspended or email_unverified when a computer must not start (D-094).
+   * With credits, a credit-gated workspace that has nothing left cannot start a hosted computer.
+   */
+  /**
+   * Memory this server can give hosted computers, in MB; 0 = no limit (D-252). Counted in memory,
+   * not computers, because computers come in plan sizes of 1, 2 and 4 GB (D-249).
+   */
+  hostMemoryMb = 0;
+  /** What a computer with no recorded size takes (the supervisor's COMPUTER_MEMORY_MB, D-272). */
+  defaultMemoryMb = 2048;
+
+  async checkCanStart(orgId: string, opts: { credits?: boolean; computerId?: string } = {}) {
+    const [o] = await this.db.execute<{
+      suspended: boolean;
+      plan: string | null;
+      verified: boolean;
+      gate: boolean | null;
+      credits: string | null;
+      unbilled: string | null;
+      max_computers: string | null;
+      computer_hours: string | null;
+      computer_seconds: string | null;
+      rank: string | null;
+    }>(sql`
+      select o.suspended_at is not null as suspended,
+             (select e.plan_code from public.entitlements e where e.org_id = o.id order by e.created_at desc limit 1) as plan,
+             public.worker_owner_email_verified(o.id) as verified,
+             (select (e.limits->>'credit_gate')::boolean from public.entitlements e where e.org_id = o.id order by e.created_at desc limit 1) as gate,
+             (select balance_after from public.credit_ledger where org_id = o.id order by seq desc limit 1) as credits,
+             (select coalesce(sum(cost_usd), 0) from public.usage_ledger where org_id = o.id and billable and billed_at is null) as unbilled,
+             (select e.limits->>'max_computers' from public.entitlements e where e.org_id = o.id order by e.created_at desc limit 1) as max_computers,
+             (select e.limits->>'computer_hours' from public.entitlements e where e.org_id = o.id order by e.created_at desc limit 1) as computer_hours,
+             (select coalesce(sum(quantity), 0) from public.usage_ledger where org_id = o.id and kind = 'computer_seconds'
+                and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc') as computer_seconds,
+             ${
+               opts.computerId
+                 ? sql`(select count(*) from public.computers x join public.computers me on me.id = ${opts.computerId}::uuid
+                     where x.org_id = me.org_id and x.provider <> 'local' and x.id <> me.id
+                       and (x.created_at, x.id) < (me.created_at, me.id))`
+                 : sql`null`
+             } as rank
+      from public.organizations o where o.id = ${orgId}::uuid`);
+    if (o?.suspended) throw new Error("workspace_suspended");
+    if (this.requireVerifiedEmail && (o?.plan ?? "free") === "free" && !o?.verified)
+      throw new Error("email_unverified");
+    if (opts.credits && o?.gate && Number(o.credits ?? 0) - Number(o.unbilled ?? 0) <= 0)
+      throw new Error("out_of_credits");
+    // The plan's computer hours hold for every start, not only for runs: live view or a terminal
+    // could otherwise keep a hosted computer up past them (billing audit 2026-11-17).
+    if (
+      opts.credits &&
+      o?.computer_hours != null &&
+      Number(o.computer_seconds ?? 0) / 3600 >= Number(o.computer_hours)
+    )
+      throw new Error("computer_hours_exceeded");
+    // After a downgrade only the plan's number of hosted computers (the oldest) start (D-248).
+    if (o?.max_computers != null && o.rank != null && Number(o.rank) >= Number(o.max_computers))
+      throw new Error("plan_limit");
+    // The server's own room: past it a start waits rather than starving the API and database.
+    // The new computer counts at its plan's size, which it gets when it starts (fitPlan).
+    if (this.hostMemoryMb > 0 && opts.computerId) {
+      const [m] = await this.db.execute<{ used: string; mine: string }>(sql`
+        select
+          (select coalesce(sum(coalesce((size ->> 'memory_mb')::int, ${this.defaultMemoryMb}::int)), 0) from public.computers
+            where kind <> 'local' and state in ('running', 'idle', 'starting', 'provisioning')
+              and id <> ${opts.computerId}::uuid)::text as used,
+          (select coalesce(
+             1024 * (select (e.limits ->> 'computer_size')::numeric from public.entitlements e
+                     where e.org_id = me.org_id order by e.created_at desc limit 1),
+             (me.size ->> 'memory_mb')::int, ${this.defaultMemoryMb}::int)
+           from public.computers me where me.id = ${opts.computerId}::uuid)::text as mine`);
+      const used = Number(m?.used ?? 0);
+      const mine = Number(m?.mine ?? this.defaultMemoryMb);
+      if (used + mine > this.hostMemoryMb) {
+        // Recorded for the Admin screen's capacity card and the act-now alert (D-252).
+        await this.db
+          .execute(sql`
+            insert into public.capacity_events (kind, org_id, computer_id, detail)
+            values ('capacity_full', ${orgId}::uuid, ${opts.computerId}::uuid,
+              ${JSON.stringify({ used_mb: used, needed_mb: mine, budget_mb: this.hostMemoryMb })}::jsonb)`)
+          .catch(() => undefined);
+        throw new Error("capacity_full");
+      }
+    }
+  }
+
+  /**
+   * Bills running hosted computers as they run, not only when they stop, and puts to sleep the
+   * ones whose credit-gated workspace has no credits left (D-248). Run every few minutes.
+   */
+  async meterRunning(minIntervalMs = 5 * 60_000) {
+    const rows = await this.db.execute<ComputerRow>(sql`
+      select * from public.computers
+      where kind <> 'local' and state in ('running', 'idle') and running_since is not null
+        and running_since < now() - (${minIntervalMs} * interval '1 millisecond')`);
+    for (const c of rows) {
+      // Claims the interval: only one worker writes it, and the next one starts now.
+      const [claimed] = await this.db.execute<{ id: string }>(sql`
+        update public.computers set running_since = now()
+        where id = ${c.id}::uuid and running_since = ${new Date(c.running_since as Date).toISOString()}::timestamptz
+        returning id`);
+      if (claimed) await this.recordUsage(c);
+    }
+    const broke = await this.db.execute<{ id: string; org_id: string }>(sql`
+      select c.id, c.org_id from public.computers c
+      where c.kind <> 'local' and c.state in ('running', 'idle')
+        and (select (e.limits->>'credit_gate')::boolean from public.entitlements e
+              where e.org_id = c.org_id order by e.created_at desc limit 1)
+        and coalesce((select balance_after from public.credit_ledger where org_id = c.org_id order by seq desc limit 1), 0)
+          - (select coalesce(sum(cost_usd), 0) from public.usage_ledger where org_id = c.org_id and billable and billed_at is null) <= 0`);
+    // Past the plan's computer hours for the month: asleep too (billing audit 2026-11-17).
+    const overHours = await this.db.execute<{ id: string; org_id: string }>(sql`
+      select c.id, c.org_id from public.computers c
+      cross join lateral (select (e.limits->>'computer_hours')::numeric as hours from public.entitlements e
+              where e.org_id = c.org_id order by e.created_at desc limit 1) lim
+      where c.kind <> 'local' and c.state in ('running', 'idle') and lim.hours is not null
+        and (select coalesce(sum(quantity), 0) from public.usage_ledger
+              where org_id = c.org_id and kind = 'computer_seconds'
+                and created_at >= date_trunc('month', now() at time zone 'utc') at time zone 'utc') / 3600.0 >= lim.hours`);
+    const seen = new Set(broke.map((c) => c.id));
+    for (const c of overHours) if (!seen.has(c.id)) broke.push(c);
+    for (const c of broke) {
+      const ok = await this.sleep(c.id).then(
+        () => true,
+        (err) => {
+          captureError(err, {
+            service: "casama-worker",
+            step: "out-of-credits-sleep",
+            computer_id: c.id,
+          });
+          return false;
+        },
+      );
+      if (ok)
+        await auditComputer(this.db, c.org_id, c.id, "computer.slept", null, {
+          reason: seen.has(c.id) ? "out_of_credits" : "computer_hours",
+        });
+    }
+    return { metered: rows.length, slept: broke.length };
+  }
+
+  /**
+   * Marks which running Docker computers are behind the current image (D-360): an update is
+   * waiting since the first minute it was seen, and the mark goes when the computer is current
+   * again or stops running. Run every minute. Returns the computers marked behind.
+   */
+  async checkUpdates(): Promise<number> {
+    const status = await this.provider.imageStatus?.().catch(() => null);
+    if (!status) return 0;
+    const behind = status.filter((s) => !s.current).map((s) => s.ref);
+    const ids = (refs: string[]) =>
+      sql.join(
+        refs.map((r) => sql`${r}`),
+        sql`, `,
+      );
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const valid = behind.filter((r) => uuid.test(r));
+    if (valid.length)
+      await this.db.execute(sql`
+        update public.computers set update_available_since = now()
+        where provider = 'docker' and kind <> 'local' and update_available_since is null
+          and id::text in (${ids(valid)})`);
+    await this.db.execute(sql`
+      update public.computers set update_available_since = null
+      where update_available_since is not null
+        ${valid.length ? sql`and id::text not in (${ids(valid)})` : sql``}`);
+    return valid.length;
+  }
+
+  async touch(computerId: string) {
+    await this.db.execute(
+      sql`update public.computers set last_active_at = now() where id = ${computerId}::uuid`,
+    );
+  }
+
+  /** Archives the home directory to object storage and stops the computer. */
+  async sleep(computerId: string, emit?: Emit) {
+    const c = await this.byId(computerId);
+    if (!c) throw new Error("computer_not_found");
+    const p = this.providerFor(c);
+    if (!(await p.get(computerId))) {
+      await this.setState(computerId, c.snapshot_ref ? "sleeping" : "stopped", emit);
+      await this.endTakeoverDesktop(c);
+      return;
+    }
+    const snap = await p.sleep(computerId);
+    await this.recordUsage(c);
+    await this.db.execute(
+      sql`update public.computers set snapshot_ref = ${JSON.stringify(snap)}::jsonb where id = ${computerId}::uuid`,
+    );
+    await this.setState(computerId, "sleeping", emit);
+    await this.endTakeoverDesktop(c);
+    if (c.snapshot_ref?.key && c.snapshot_ref.key !== snap.key)
+      await this.provider.deleteObjects?.([c.snapshot_ref.key]).catch(() => {});
+  }
+
+  /**
+   * A computer switched to the desktop only for a takeover wakes up headless once no takeover is
+   * open (D-178): a desktop needs about four times the memory.
+   */
+  private async endTakeoverDesktop(c: ComputerRow) {
+    if (c.profile !== "desktop" || !c.desktop_for_takeover) return;
+    await this.db.execute(sql`
+      update public.computers set profile = 'headless', desktop_for_takeover = false
+      where id = ${c.id}::uuid and not exists (
+        select 1 from public.takeover_requests t
+        where t.computer_id = ${c.id}::uuid and t.status in ('pending', 'taken') and t.expires_at > now())`);
+  }
+
+  /**
+   * Sleeps running computers with no activity or running commands for idleMs. An open terminal
+   * alone no longer counts (D-195): its keystrokes and the app's presence beat touch the computer,
+   * so a terminal someone is using, or a command they watch, stays awake through last_active_at.
+   */
+  async sleepIdle(idleMs = IDLE_SLEEP_MS) {
+    const rows = await this.db.execute<ComputerRow>(sql`
+      select * from public.computers
+      where state in ('running', 'idle') and kind <> 'local'
+        and coalesce(last_active_at, created_at) < now() - (coalesce(idle_sleep_minutes * 60000, ${idleMs}) * interval '1 millisecond')
+        and (operation is null or operation ->> 'step' in ('done', 'failed')
+          or (operation ->> 'started_at')::timestamptz < now() - (${RESET_STALE_MS} * interval '1 millisecond'))`);
+    const slept: string[] = [];
+    for (const c of rows) {
+      const h = await this.providerFor(c)
+        .get(c.id)
+        .catch(() => null);
+      if (h) {
+        const health = await h.health().catch(() => null);
+        if (health && health.runningExecs > 0) {
+          await this.touch(c.id);
+          continue;
+        }
+      }
+      const ok = await this.sleep(c.id).then(
+        () => true,
+        (err) => {
+          captureError(err, { service: "casama-worker", step: "idle-sleep", computer_id: c.id });
+          return false;
+        },
+      );
+      if (ok)
+        await auditComputer(this.db, c.org_id, c.id, "computer.slept", null, { reason: "idle" });
+      slept.push(c.id);
+    }
+    return slept;
+  }
+
+  /** Stops a computer, keeping its files (sleep). */
+  async stop(computerId: string, emit?: Emit) {
+    await this.sleep(computerId, emit);
+  }
+
+  async checkpoint(
+    computerId: string,
+    label: string,
+    runId: string | null,
+    handle?: SandboxHandle,
+  ) {
+    const c = await this.byId(computerId);
+    if (!c) throw new Error("computer_not_found");
+    const h = handle ?? (await this.ensureRunning(computerId));
+    const ref: CheckpointRef = await h.checkpoint(label);
+    const [row] = await this.db.execute<{ id: string }>(sql`
+      insert into public.checkpoints (org_id, computer_id, run_id, label, storage_ref)
+      values (${c.org_id}::uuid, ${computerId}::uuid, ${runId}::uuid, ${label.slice(0, 200)}, ${JSON.stringify(ref)}::jsonb)
+      returning id`);
+    await this.prune(computerId);
+    return { checkpointId: row?.id as string, ref };
+  }
+
+  /** Keeps the last 20 checkpoints per computer or 7 days, whichever is fewer. */
+  async prune(computerId: string) {
+    const doomed = await this.db.execute<{ id: string; key: string }>(sql`
+      delete from public.checkpoints where id in (
+        select id from (
+          select id, created_at, row_number() over (order by created_at desc) as n
+          from public.checkpoints where computer_id = ${computerId}::uuid
+        ) t where n > ${CHECKPOINT_KEEP} or created_at < now() - (${CHECKPOINT_MAX_AGE_DAYS} * interval '1 day')
+      ) returning id, storage_ref ->> 'key' as key`);
+    if (doomed.length)
+      await this.provider.deleteObjects?.(doomed.map((d) => d.key)).catch(() => {});
+    return doomed.length;
+  }
+
+  /**
+   * Claims the computer for a reset (D-240): fails with reset_in_progress while another one runs.
+   * Returns false when it is busy.
+   */
+  async claimReset(computerId: string, mode: ResetMode, checkpoint: boolean) {
+    const op: ComputerOperation = {
+      kind: mode === "erase" ? "erase" : "reset_system",
+      step: checkpoint ? "saving" : "wiping",
+      checkpoint_id: null,
+      error: null,
+      started_at: new Date().toISOString(),
+      finished_at: null,
+    };
+    const rows = await this.db.execute<{ id: string }>(sql`
+      update public.computers set operation = ${JSON.stringify(op)}::jsonb
+      where id = ${computerId}::uuid and (operation is null or operation ->> 'step' in ('done', 'failed')
+        or (operation ->> 'started_at')::timestamptz < now() - (${RESET_STALE_MS} * interval '1 millisecond'))
+      returning id`);
+    return rows.length > 0;
+  }
+
+  private async setOperation(computerId: string, patch: Partial<ComputerOperation>) {
+    await this.db.execute(sql`
+      update public.computers set operation = coalesce(operation, '{}'::jsonb) || ${JSON.stringify(patch)}::jsonb
+      where id = ${computerId}::uuid`);
+  }
+
+  /**
+   * Resets a computer (D-240), after [claimReset]. A restore point first (unless asked not to),
+   * then the home folder is cleared (all of it to erase; all but ~/workspace otherwise) and the
+   * computer sleeps and wakes, which is a brand-new system with what's left of the home folder.
+   * Progress goes to `operation` so the app can follow it; failures end there too, never thrown.
+   */
+  async reset(computerId: string, mode: ResetMode, opts: { checkpoint?: boolean } = {}) {
+    const c = await this.byId(computerId);
+    if (!c) return;
+    try {
+      let h = await this.ensureRunning(computerId);
+      if (opts.checkpoint !== false) {
+        const { checkpointId } = await this.checkpoint(
+          computerId,
+          mode === "erase" ? "Before erase" : "Before reset",
+          null,
+          h,
+        );
+        await this.setOperation(computerId, { checkpoint_id: checkpointId, step: "wiping" });
+      }
+      const { collectExec } = await import("@casama/sandbox");
+      const r = await collectExec(h.exec(resetScript(mode), { timeoutMs: 120_000 }));
+      if (r.code !== 0) throw new Error(`Couldn't clear the home folder (${r.code})`);
+      await this.setOperation(computerId, { step: "restarting" });
+      await this.sleep(computerId);
+      h = await this.ensureRunning(computerId);
+      await this.setOperation(computerId, {
+        step: "done",
+        finished_at: new Date().toISOString(),
+      });
+      return h;
+    } catch (err) {
+      captureError(err, { service: "casama-api", step: "computer-reset", computer_id: computerId });
+      await this.setOperation(computerId, {
+        step: "failed",
+        error: (err as Error).message.slice(0, 300),
+        finished_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  async restoreCheckpoint(checkpointId: string) {
+    const [cp] = await this.db.execute<{ computer_id: string; storage_ref: CheckpointRef }>(
+      sql`select computer_id, storage_ref from public.checkpoints where id = ${checkpointId}::uuid`,
+    );
+    if (!cp) throw new Error("checkpoint_not_found");
+    const h = await this.ensureRunning(cp.computer_id);
+    await h.restore(cp.storage_ref);
+    await this.touch(cp.computer_id);
+    return cp.computer_id;
+  }
+}
+
+export type ResetMode = "system" | "erase";
+
+/** A reset on a computer (D-240), kept in `computers.operation`. */
+export interface ComputerOperation {
+  kind: "reset_system" | "erase";
+  step: "saving" | "wiping" | "restarting" | "done" | "failed";
+  checkpoint_id: string | null;
+  error: string | null;
+  started_at: string;
+  finished_at: string | null;
+}
+
+/**
+ * Clears the home folder for a reset: everything but ~/workspace, or everything to erase. The
+ * image's starting files (/etc/skel) go back, and ~/workspace always exists afterwards.
+ */
+export function resetScript(mode: ResetMode) {
+  const keep = mode === "erase" ? "" : " ! -name workspace";
+  return [
+    'cd "$HOME" || exit 3',
+    `find . -mindepth 1 -maxdepth 1${keep} ! -name '.casama-restore-*' -exec rm -rf {} + 2>/dev/null`,
+    // Anything rm could not remove (an open file, a root-owned leftover) must not fail the reset.
+    "true",
+    '[ -d /etc/skel ] && cp -a /etc/skel/. "$HOME"/ 2>/dev/null',
+    'mkdir -p "$HOME/workspace"',
+    "exit 0",
+  ].join("\n");
+}
+
+/** One line in a computer's history (D-240). Never fails the action it records. */
+export async function auditComputer(
+  db: Database,
+  orgId: string,
+  computerId: string,
+  action: string,
+  actor: { type: "user" | "bot"; id: string } | null,
+  metadata: Record<string, unknown> = {},
+) {
+  await db
+    .execute(sql`insert into public.audit_log (org_id, actor_type, actor_id, action, target_type, target_id, metadata)
+      values (${orgId}::uuid, ${actor?.type ?? "system"}, ${actor?.id ?? null}::uuid, ${action}, 'computer', ${computerId}::uuid, ${JSON.stringify(metadata)}::jsonb)`)
+    .catch((err) => captureError(err, { step: "computer-audit", computer_id: computerId }));
+}

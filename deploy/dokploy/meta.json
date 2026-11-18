@@ -1,0 +1,13 @@
+{
+  "id": "casama",
+  "name": "Casama",
+  "version": "latest",
+  "description": "Casama is an open-source app for AI teammates with their own computers. This template runs the Casama server: the API, the worker, Supabase, and the supervisor that creates the bots' computers as containers on this server.",
+  "logo": "casama.png",
+  "links": {
+    "github": "https://github.com/stackwares/casama",
+    "website": "https://casama.ai/",
+    "docs": "https://docs.casama.ai/self-hosting/"
+  },
+  "tags": ["ai", "agents", "self-hosted", "open-source"]
+}

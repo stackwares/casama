@@ -1,0 +1,26 @@
+{
+  "name": "Circleback",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "meetings",
+    "notes"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "What did we decide in yesterday's design review?",
+    "List my action items from this week's meetings",
+    "Search my Circleback notes for the pricing discussion"
+  ],
+  "access": {
+    "reads": [
+      "Circleback meeting notes"
+    ],
+    "credits": "low"
+  }
+}

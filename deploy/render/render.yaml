@@ -1,0 +1,35 @@
+# Render Blueprint: Casama API and worker (computers via Casama Link, E2B/Daytona or the desktop
+# companion; see deploy/README.md). Supabase provides Postgres and Auth.
+services:
+  - type: web
+    name: casama-api
+    runtime: docker
+    dockerfilePath: apps/server/Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - { key: MODE, value: api }
+      - { key: PORT, value: "8787" }
+      - { fromGroup: casama }
+  - type: worker
+    name: casama-worker
+    runtime: docker
+    dockerfilePath: apps/server/Dockerfile
+    dockerContext: .
+    envVars:
+      - { key: MODE, value: worker }
+      - { key: API_INTERNAL_URL, fromService: { type: web, name: casama-api, property: hostport } }
+      - { fromGroup: casama }
+envVarGroups:
+  - name: casama
+    envVars:
+      - { key: NODE_ENV, value: production }
+      - { key: DATABASE_URL, sync: false }
+      - { key: SUPABASE_URL, sync: false }
+      - { key: SUPABASE_ANON_KEY, sync: false }
+      - { key: SUPABASE_JWT_SECRET, sync: false }
+      - { key: PUBLIC_APP_URL, sync: false }
+      - { key: INTERNAL_TOKEN, generateValue: true }
+      - { key: METRICS_TOKEN, generateValue: true }
+      - { key: CASAMA_CLOUD_URL, sync: false }
+      - { key: CASAMA_CLOUD_KEY, sync: false }

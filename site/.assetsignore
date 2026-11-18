@@ -1,0 +1,8 @@
+wrangler.jsonc
+.assetsignore
+.wrangler
+build.mjs
+content
+data
+.gitignore
+newsletter.js

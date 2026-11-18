@@ -1,0 +1,38 @@
+{
+  "name": "Social post planner",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "social",
+    "marketing",
+    "writing"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "chats",
+      "memory"
+    ],
+    "credits": "low"
+  },
+  "needs": {
+    "skills": [
+      "social-post"
+    ]
+  },
+  "inputs": [
+    {
+      "key": "channels",
+      "label": "Which channels?",
+      "type": "text",
+      "default": "LinkedIn and X",
+      "help": "The networks you post on."
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "description": "Each weekday morning: the pull requests waiting on a review, oldest first, with what each one changes.",
+  "category": "build",
+  "icon": "git-pull-request",
+  "instructions_md": "List the open pull requests in {{repos}} that are waiting on a review. For each, oldest first: the title, the author, how many days it has waited, its size in files and lines, whether the checks pass, and two sentences on what it changes. Mark the ones where I'm a requested reviewer and the ones with failing checks or merge conflicts. Leave out drafts. Don't comment, approve, merge or close anything. If nothing is waiting, say so in one line. If you don't know which repositories to watch, ask me.",
+  "schedule_cron": "30 8 * * 1-5"
+}

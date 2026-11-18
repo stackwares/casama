@@ -1,0 +1,21 @@
+{
+  "name": "Event planner",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "life",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "Plan a birthday dinner for twelve",
+    "Make a timeline for a wedding in June",
+    "Compare three venues for a team offsite"
+  ]
+}

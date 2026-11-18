@@ -1,0 +1,1136 @@
+{
+  "schema": 1,
+  "authors": [
+    {
+      "handle": "anthropic",
+      "name": "Anthropic",
+      "url": "https://github.com/anthropics/knowledge-work-plugins",
+      "items": [
+        {
+          "type": "skill",
+          "id": "build-dashboard"
+        },
+        {
+          "type": "skill",
+          "id": "competitive-brief"
+        },
+        {
+          "type": "skill",
+          "id": "digest"
+        },
+        {
+          "type": "skill",
+          "id": "docx"
+        },
+        {
+          "type": "skill",
+          "id": "pdf"
+        },
+        {
+          "type": "skill",
+          "id": "pptx"
+        },
+        {
+          "type": "skill",
+          "id": "webapp-testing"
+        },
+        {
+          "type": "skill",
+          "id": "write-spec"
+        },
+        {
+          "type": "skill",
+          "id": "xlsx"
+        }
+      ]
+    },
+    {
+      "handle": "casama",
+      "name": "Casama",
+      "url": "https://casama.ai",
+      "items": [
+        {
+          "type": "app",
+          "id": "amplitude"
+        },
+        {
+          "type": "app",
+          "id": "apify"
+        },
+        {
+          "type": "app",
+          "id": "assemblyai"
+        },
+        {
+          "type": "app",
+          "id": "attio"
+        },
+        {
+          "type": "app",
+          "id": "beehiiv"
+        },
+        {
+          "type": "app",
+          "id": "bonsai"
+        },
+        {
+          "type": "app",
+          "id": "cal-com"
+        },
+        {
+          "type": "app",
+          "id": "canva"
+        },
+        {
+          "type": "app",
+          "id": "circleback"
+        },
+        {
+          "type": "app",
+          "id": "close"
+        },
+        {
+          "type": "app",
+          "id": "coingecko"
+        },
+        {
+          "type": "app",
+          "id": "copilot-money"
+        },
+        {
+          "type": "app",
+          "id": "deepwiki"
+        },
+        {
+          "type": "app",
+          "id": "evernote"
+        },
+        {
+          "type": "app",
+          "id": "excalidraw"
+        },
+        {
+          "type": "app",
+          "id": "fathom"
+        },
+        {
+          "type": "app",
+          "id": "feedly"
+        },
+        {
+          "type": "app",
+          "id": "fireflies"
+        },
+        {
+          "type": "app",
+          "id": "gitlab"
+        },
+        {
+          "type": "app",
+          "id": "grafana"
+        },
+        {
+          "type": "app",
+          "id": "granola"
+        },
+        {
+          "type": "app",
+          "id": "greetwell"
+        },
+        {
+          "type": "app",
+          "id": "honeycomb"
+        },
+        {
+          "type": "app",
+          "id": "hootsuite"
+        },
+        {
+          "type": "app",
+          "id": "ideogram"
+        },
+        {
+          "type": "app",
+          "id": "instacart"
+        },
+        {
+          "type": "app",
+          "id": "jam"
+        },
+        {
+          "type": "app",
+          "id": "jina"
+        },
+        {
+          "type": "app",
+          "id": "jotform"
+        },
+        {
+          "type": "app",
+          "id": "kiwi"
+        },
+        {
+          "type": "app",
+          "id": "klaviyo"
+        },
+        {
+          "type": "app",
+          "id": "krisp"
+        },
+        {
+          "type": "app",
+          "id": "launchdarkly"
+        },
+        {
+          "type": "app",
+          "id": "lucid"
+        },
+        {
+          "type": "app",
+          "id": "meetgeek"
+        },
+        {
+          "type": "app",
+          "id": "mercury"
+        },
+        {
+          "type": "app",
+          "id": "miro"
+        },
+        {
+          "type": "app",
+          "id": "mixpanel"
+        },
+        {
+          "type": "app",
+          "id": "motion"
+        },
+        {
+          "type": "app",
+          "id": "netlify"
+        },
+        {
+          "type": "app",
+          "id": "otter"
+        },
+        {
+          "type": "app",
+          "id": "paypal"
+        },
+        {
+          "type": "app",
+          "id": "peek"
+        },
+        {
+          "type": "app",
+          "id": "plaud"
+        },
+        {
+          "type": "app",
+          "id": "postman"
+        },
+        {
+          "type": "app",
+          "id": "prisma"
+        },
+        {
+          "type": "app",
+          "id": "ramp"
+        },
+        {
+          "type": "app",
+          "id": "replicate"
+        },
+        {
+          "type": "app",
+          "id": "resend"
+        },
+        {
+          "type": "app",
+          "id": "runway"
+        },
+        {
+          "type": "app",
+          "id": "tally"
+        },
+        {
+          "type": "app",
+          "id": "tavily"
+        },
+        {
+          "type": "app",
+          "id": "tldv"
+        },
+        {
+          "type": "app",
+          "id": "todoist"
+        },
+        {
+          "type": "app",
+          "id": "trivago"
+        },
+        {
+          "type": "app",
+          "id": "turkish-airlines"
+        },
+        {
+          "type": "app",
+          "id": "unsplash"
+        },
+        {
+          "type": "app",
+          "id": "wise"
+        },
+        {
+          "type": "app",
+          "id": "wix"
+        },
+        {
+          "type": "app",
+          "id": "wordpress"
+        },
+        {
+          "type": "app",
+          "id": "zillow"
+        },
+        {
+          "type": "bot",
+          "id": "bookkeeper"
+        },
+        {
+          "type": "bot",
+          "id": "bug-triager"
+        },
+        {
+          "type": "bot",
+          "id": "casama"
+        },
+        {
+          "type": "bot",
+          "id": "coder"
+        },
+        {
+          "type": "bot",
+          "id": "coordinator"
+        },
+        {
+          "type": "bot",
+          "id": "customer-success"
+        },
+        {
+          "type": "bot",
+          "id": "daily-briefing"
+        },
+        {
+          "type": "bot",
+          "id": "data-analyst"
+        },
+        {
+          "type": "bot",
+          "id": "designer"
+        },
+        {
+          "type": "bot",
+          "id": "event-planner"
+        },
+        {
+          "type": "bot",
+          "id": "executive-assistant"
+        },
+        {
+          "type": "bot",
+          "id": "expense-matcher"
+        },
+        {
+          "type": "bot",
+          "id": "fitness-coach"
+        },
+        {
+          "type": "bot",
+          "id": "home-organizer"
+        },
+        {
+          "type": "bot",
+          "id": "inbox-triage"
+        },
+        {
+          "type": "bot",
+          "id": "it-helpdesk"
+        },
+        {
+          "type": "bot",
+          "id": "job-hunt-coach"
+        },
+        {
+          "type": "bot",
+          "id": "language-partner"
+        },
+        {
+          "type": "bot",
+          "id": "legal-reader"
+        },
+        {
+          "type": "bot",
+          "id": "marketer"
+        },
+        {
+          "type": "bot",
+          "id": "meal-planner"
+        },
+        {
+          "type": "bot",
+          "id": "money-helper"
+        },
+        {
+          "type": "bot",
+          "id": "newsletter-editor"
+        },
+        {
+          "type": "bot",
+          "id": "ops-assistant"
+        },
+        {
+          "type": "bot",
+          "id": "outbound-prospector"
+        },
+        {
+          "type": "bot",
+          "id": "parenting-organizer"
+        },
+        {
+          "type": "bot",
+          "id": "personal-shopper"
+        },
+        {
+          "type": "bot",
+          "id": "product-manager"
+        },
+        {
+          "type": "bot",
+          "id": "qa-tester"
+        },
+        {
+          "type": "bot",
+          "id": "real-estate-scout"
+        },
+        {
+          "type": "bot",
+          "id": "recruiting-screener"
+        },
+        {
+          "type": "bot",
+          "id": "research-assistant"
+        },
+        {
+          "type": "bot",
+          "id": "sales-researcher"
+        },
+        {
+          "type": "bot",
+          "id": "seo-writer"
+        },
+        {
+          "type": "bot",
+          "id": "social-manager"
+        },
+        {
+          "type": "bot",
+          "id": "study-buddy"
+        },
+        {
+          "type": "bot",
+          "id": "support-agent"
+        },
+        {
+          "type": "bot",
+          "id": "translator"
+        },
+        {
+          "type": "bot",
+          "id": "travel-planner"
+        },
+        {
+          "type": "bot",
+          "id": "tutor"
+        },
+        {
+          "type": "bot",
+          "id": "writer"
+        },
+        {
+          "type": "plugin",
+          "id": "dev-kit"
+        },
+        {
+          "type": "plugin",
+          "id": "founder-kit"
+        },
+        {
+          "type": "plugin",
+          "id": "hello-casama"
+        },
+        {
+          "type": "plugin",
+          "id": "meetings-handled"
+        },
+        {
+          "type": "routine",
+          "id": "backup-check"
+        },
+        {
+          "type": "routine",
+          "id": "bill-reminders"
+        },
+        {
+          "type": "routine",
+          "id": "birthday-and-dates"
+        },
+        {
+          "type": "routine",
+          "id": "brand-mentions"
+        },
+        {
+          "type": "routine",
+          "id": "cash-flow-check"
+        },
+        {
+          "type": "routine",
+          "id": "competitor-watch"
+        },
+        {
+          "type": "routine",
+          "id": "content-ideas"
+        },
+        {
+          "type": "routine",
+          "id": "customer-health"
+        },
+        {
+          "type": "routine",
+          "id": "dependency-check"
+        },
+        {
+          "type": "routine",
+          "id": "end-of-day-wrap"
+        },
+        {
+          "type": "routine",
+          "id": "error-digest"
+        },
+        {
+          "type": "routine",
+          "id": "follow-up-chaser"
+        },
+        {
+          "type": "routine",
+          "id": "home-maintenance"
+        },
+        {
+          "type": "routine",
+          "id": "inbox-zero-pass"
+        },
+        {
+          "type": "routine",
+          "id": "invoice-chaser"
+        },
+        {
+          "type": "routine",
+          "id": "job-search-digest"
+        },
+        {
+          "type": "routine",
+          "id": "language-practice"
+        },
+        {
+          "type": "routine",
+          "id": "meeting-notes"
+        },
+        {
+          "type": "routine",
+          "id": "meeting-prep"
+        },
+        {
+          "type": "routine",
+          "id": "month-end-books"
+        },
+        {
+          "type": "routine",
+          "id": "morning-plan"
+        },
+        {
+          "type": "routine",
+          "id": "news-brief"
+        },
+        {
+          "type": "routine",
+          "id": "newsletter-draft"
+        },
+        {
+          "type": "routine",
+          "id": "pipeline-review"
+        },
+        {
+          "type": "routine",
+          "id": "pr-review-queue"
+        },
+        {
+          "type": "routine",
+          "id": "price-watch"
+        },
+        {
+          "type": "routine",
+          "id": "reading-digest"
+        },
+        {
+          "type": "routine",
+          "id": "receipt-collector"
+        },
+        {
+          "type": "routine",
+          "id": "release-notes"
+        },
+        {
+          "type": "routine",
+          "id": "review-replies"
+        },
+        {
+          "type": "routine",
+          "id": "site-health-check"
+        },
+        {
+          "type": "routine",
+          "id": "social-post-planner"
+        },
+        {
+          "type": "routine",
+          "id": "standup-summary"
+        },
+        {
+          "type": "routine",
+          "id": "subscription-audit"
+        },
+        {
+          "type": "routine",
+          "id": "support-inbox-triage"
+        },
+        {
+          "type": "routine",
+          "id": "trip-prep"
+        },
+        {
+          "type": "routine",
+          "id": "week-ahead"
+        },
+        {
+          "type": "routine",
+          "id": "weekend-ideas"
+        },
+        {
+          "type": "routine",
+          "id": "weekly-budget-check"
+        },
+        {
+          "type": "routine",
+          "id": "weekly-meal-plan"
+        },
+        {
+          "type": "routine",
+          "id": "weekly-metrics"
+        },
+        {
+          "type": "routine",
+          "id": "weekly-review"
+        },
+        {
+          "type": "routine",
+          "id": "weekly-team-update"
+        },
+        {
+          "type": "scheme",
+          "id": "amber"
+        },
+        {
+          "type": "scheme",
+          "id": "berry"
+        },
+        {
+          "type": "scheme",
+          "id": "coral"
+        },
+        {
+          "type": "scheme",
+          "id": "ember"
+        },
+        {
+          "type": "scheme",
+          "id": "fjord"
+        },
+        {
+          "type": "scheme",
+          "id": "forest"
+        },
+        {
+          "type": "scheme",
+          "id": "indigo"
+        },
+        {
+          "type": "scheme",
+          "id": "ink"
+        },
+        {
+          "type": "scheme",
+          "id": "lagoon"
+        },
+        {
+          "type": "scheme",
+          "id": "lavender"
+        },
+        {
+          "type": "scheme",
+          "id": "marigold"
+        },
+        {
+          "type": "scheme",
+          "id": "mint"
+        },
+        {
+          "type": "scheme",
+          "id": "mocha"
+        },
+        {
+          "type": "scheme",
+          "id": "mono"
+        },
+        {
+          "type": "scheme",
+          "id": "moss"
+        },
+        {
+          "type": "scheme",
+          "id": "olive"
+        },
+        {
+          "type": "scheme",
+          "id": "orchid"
+        },
+        {
+          "type": "scheme",
+          "id": "plum"
+        },
+        {
+          "type": "scheme",
+          "id": "rose"
+        },
+        {
+          "type": "scheme",
+          "id": "sand"
+        },
+        {
+          "type": "scheme",
+          "id": "sky"
+        },
+        {
+          "type": "scheme",
+          "id": "slate"
+        },
+        {
+          "type": "scheme",
+          "id": "teal"
+        },
+        {
+          "type": "set",
+          "id": "founder-kit"
+        },
+        {
+          "type": "set",
+          "id": "job-search-kit"
+        },
+        {
+          "type": "set",
+          "id": "meetings-handled"
+        },
+        {
+          "type": "set",
+          "id": "money-in-order"
+        },
+        {
+          "type": "set",
+          "id": "small-business-kit"
+        },
+        {
+          "type": "set",
+          "id": "stay-on-top-of-email"
+        },
+        {
+          "type": "set",
+          "id": "student-kit"
+        },
+        {
+          "type": "set",
+          "id": "writer-kit"
+        },
+        {
+          "type": "skill",
+          "id": "article-outline"
+        },
+        {
+          "type": "skill",
+          "id": "budget-review"
+        },
+        {
+          "type": "skill",
+          "id": "bug-report"
+        },
+        {
+          "type": "skill",
+          "id": "calendar-invite"
+        },
+        {
+          "type": "skill",
+          "id": "chart-from-data"
+        },
+        {
+          "type": "skill",
+          "id": "code-review"
+        },
+        {
+          "type": "skill",
+          "id": "compare-options"
+        },
+        {
+          "type": "skill",
+          "id": "convert-photos"
+        },
+        {
+          "type": "skill",
+          "id": "csv-cleanup"
+        },
+        {
+          "type": "skill",
+          "id": "decision-memo"
+        },
+        {
+          "type": "skill",
+          "id": "email-drafter"
+        },
+        {
+          "type": "skill",
+          "id": "fact-check"
+        },
+        {
+          "type": "skill",
+          "id": "gift-ideas"
+        },
+        {
+          "type": "skill",
+          "id": "inbox-triage"
+        },
+        {
+          "type": "skill",
+          "id": "invoice-check"
+        },
+        {
+          "type": "skill",
+          "id": "meal-planner"
+        },
+        {
+          "type": "skill",
+          "id": "meeting-notes"
+        },
+        {
+          "type": "skill",
+          "id": "meeting-prep"
+        },
+        {
+          "type": "skill",
+          "id": "proofread"
+        },
+        {
+          "type": "skill",
+          "id": "research-brief"
+        },
+        {
+          "type": "skill",
+          "id": "rewrite-tone"
+        },
+        {
+          "type": "skill",
+          "id": "scan-to-pdf"
+        },
+        {
+          "type": "skill",
+          "id": "shrink-file"
+        },
+        {
+          "type": "skill",
+          "id": "social-post"
+        },
+        {
+          "type": "skill",
+          "id": "spreadsheet-formulas"
+        },
+        {
+          "type": "skill",
+          "id": "sql-helper"
+        },
+        {
+          "type": "skill",
+          "id": "summarize-document"
+        },
+        {
+          "type": "skill",
+          "id": "trip-planner"
+        },
+        {
+          "type": "skill",
+          "id": "weekly-report"
+        },
+        {
+          "type": "skill",
+          "id": "workout-plan"
+        },
+        {
+          "type": "theme",
+          "id": "candy"
+        },
+        {
+          "type": "theme",
+          "id": "casama"
+        },
+        {
+          "type": "theme",
+          "id": "cosmos"
+        },
+        {
+          "type": "theme",
+          "id": "editorial"
+        },
+        {
+          "type": "theme",
+          "id": "ember"
+        },
+        {
+          "type": "theme",
+          "id": "forest"
+        },
+        {
+          "type": "theme",
+          "id": "graphite"
+        },
+        {
+          "type": "theme",
+          "id": "lagoon"
+        },
+        {
+          "type": "theme",
+          "id": "lanterns"
+        },
+        {
+          "type": "theme",
+          "id": "marigold"
+        },
+        {
+          "type": "theme",
+          "id": "nightshift"
+        },
+        {
+          "type": "theme",
+          "id": "north"
+        },
+        {
+          "type": "theme",
+          "id": "ocean"
+        },
+        {
+          "type": "theme",
+          "id": "orchard"
+        },
+        {
+          "type": "theme",
+          "id": "picnic"
+        },
+        {
+          "type": "theme",
+          "id": "postcard"
+        },
+        {
+          "type": "theme",
+          "id": "purr"
+        },
+        {
+          "type": "theme",
+          "id": "sakura"
+        },
+        {
+          "type": "theme",
+          "id": "stargazer"
+        },
+        {
+          "type": "theme",
+          "id": "starlit"
+        },
+        {
+          "type": "theme",
+          "id": "sunset"
+        },
+        {
+          "type": "theme",
+          "id": "velvet"
+        },
+        {
+          "type": "wallpaper",
+          "id": "aurora"
+        },
+        {
+          "type": "wallpaper",
+          "id": "candy-sky"
+        },
+        {
+          "type": "wallpaper",
+          "id": "circuit"
+        },
+        {
+          "type": "wallpaper",
+          "id": "citrus-grove"
+        },
+        {
+          "type": "wallpaper",
+          "id": "cloud-sea"
+        },
+        {
+          "type": "wallpaper",
+          "id": "desert-bloom"
+        },
+        {
+          "type": "wallpaper",
+          "id": "dune"
+        },
+        {
+          "type": "wallpaper",
+          "id": "dusk"
+        },
+        {
+          "type": "wallpaper",
+          "id": "fog"
+        },
+        {
+          "type": "wallpaper",
+          "id": "greenhouse"
+        },
+        {
+          "type": "wallpaper",
+          "id": "koi-pond"
+        },
+        {
+          "type": "wallpaper",
+          "id": "lantern-night"
+        },
+        {
+          "type": "wallpaper",
+          "id": "lavender-hills"
+        },
+        {
+          "type": "wallpaper",
+          "id": "margins"
+        },
+        {
+          "type": "wallpaper",
+          "id": "moonlit-garden"
+        },
+        {
+          "type": "wallpaper",
+          "id": "mountain-mist"
+        },
+        {
+          "type": "wallpaper",
+          "id": "night-sky"
+        },
+        {
+          "type": "wallpaper",
+          "id": "northern-pines"
+        },
+        {
+          "type": "wallpaper",
+          "id": "paper-cranes"
+        },
+        {
+          "type": "wallpaper",
+          "id": "petal"
+        },
+        {
+          "type": "wallpaper",
+          "id": "picnic"
+        },
+        {
+          "type": "wallpaper",
+          "id": "purr"
+        },
+        {
+          "type": "wallpaper",
+          "id": "rain-window"
+        },
+        {
+          "type": "wallpaper",
+          "id": "scribbles"
+        },
+        {
+          "type": "wallpaper",
+          "id": "snow-day"
+        },
+        {
+          "type": "wallpaper",
+          "id": "stargazer"
+        },
+        {
+          "type": "wallpaper",
+          "id": "starlit-lake"
+        },
+        {
+          "type": "wallpaper",
+          "id": "tea-morning"
+        },
+        {
+          "type": "wallpaper",
+          "id": "tide"
+        },
+        {
+          "type": "wallpaper",
+          "id": "tidepool"
+        }
+      ]
+    },
+    {
+      "handle": "github",
+      "name": "GitHub",
+      "url": "https://github.com/github/awesome-copilot",
+      "items": [
+        {
+          "type": "skill",
+          "id": "doublecheck"
+        }
+      ]
+    },
+    {
+      "handle": "jesse-vincent",
+      "name": "Jesse Vincent",
+      "url": "https://github.com/obra/superpowers",
+      "items": [
+        {
+          "type": "skill",
+          "id": "systematic-debugging"
+        }
+      ]
+    },
+    {
+      "handle": "matt-pocock",
+      "name": "Matt Pocock",
+      "url": "https://github.com/mattpocock/skills",
+      "items": [
+        {
+          "type": "skill",
+          "id": "teach"
+        }
+      ]
+    }
+  ]
+}

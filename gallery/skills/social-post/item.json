@@ -1,0 +1,28 @@
+{
+  "name": "Social post",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "writing"
+  ],
+  "category": "writing",
+  "icon": "megaphone",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Turn this announcement into posts for LinkedIn and X",
+    "Write three versions of a post about our launch",
+    "Make a short thread from this blog post"
+  ],
+  "access": {
+    "reads": [
+      "what you share"
+    ],
+    "credits": "low"
+  }
+}

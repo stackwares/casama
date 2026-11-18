@@ -1,0 +1,7 @@
+{
+  "description": "Every morning: new mentions of your name or product on the web, forums and news, with the ones worth answering first.",
+  "category": "research",
+  "icon": "radar",
+  "instructions_md": "Search for new mentions of {{names}} from the last 24 hours: news, blogs, forums such as Reddit and Hacker News, and review sites you can read without signing in. For each: where, who, the date, one line on what they said, whether it's positive, negative or a question, and a link. Put questions and complaints first, and suggest a short reply for each, as a draft. Leave out my own posts and pages, and mentions you've shown me before (keep a list in memory). Don't post or reply anywhere. If there's nothing new, say so in one line.",
+  "schedule_cron": "0 8 * * *"
+}

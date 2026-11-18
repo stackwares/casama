@@ -1,0 +1,32 @@
+{
+  "type": "object",
+  "properties": {
+    "ServerAddress": {
+      "title": "Casama server",
+      "description": "The Casama server people sign in to, for example https://casama.example.com. Leave unset for Casama Cloud.",
+      "type": "string"
+    },
+    "ActDisabled": {
+      "title": "Don't let bots use this browser",
+      "description": "When true, bots can't open or act on pages in this browser. Asking about pages still works.",
+      "type": "boolean"
+    },
+    "BlockedSites": {
+      "title": "Sites bots may never act on",
+      "description": "Host names such as example.com (includes subdomains) or *.example.com (only subdomains).",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "AllowedSites": {
+      "title": "Sites bots may act on without asking",
+      "description": "Host names such as wiki.example.com. Banking, health, password manager and government ID sites still ask.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "ExtensionDisabled": {
+      "title": "Turn Casama for Chrome off",
+      "description": "When true, the extension does nothing except say it's turned off by your administrator.",
+      "type": "boolean"
+    }
+  }
+}

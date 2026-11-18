@@ -1,0 +1,28 @@
+{
+  "name": "Rain window",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "cozy",
+    "city"
+  ],
+  "featured": false,
+  "version": 2,
+  "added": "2026-11-18",
+  "changelog": [
+    {
+      "version": 2,
+      "date": "2026-11-18",
+      "note": "A day and a night version: it follows light and dark mode."
+    },
+    {
+      "version": 1,
+      "date": "2026-11-18",
+      "note": "First version."
+    }
+  ]
+}

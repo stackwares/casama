@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>ai.casama.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>casama</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.278631205206-ma3i1l9a9q2sb3ac2coeucm43nqqt2lj</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSContactsUsageDescription</key>
+	<string>Your bots can look up people you know, only when you turn on Contacts in Device connections.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Quick ask reads the front window's title and your browser's current tab, only when you press the shortcut.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Casama uses the microphone for dictation and voice calls with your bots.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>When Casama's dictation service can't be reached, your device's own speech recognition turns what you say into text.</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIconFile</key>
+	<string></string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Casama</string>
+	<key>CFBundleDisplayName</key>
+	<string>Casama</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<!-- Sparkle (direct download only): updates must be signed with the matching private key
+	     (login Keychain, account "casama"; backup in ~/.config/casama). The Mac App Store build
+	     never starts the updater. -->
+	<key>SUPublicEDKey</key>
+	<string>GjC+He1N0LPq8LjS8d8BCclJL3MnzTS/vy2CtXSxlLY=</string>
+	<!-- Checks every 6 hours and installs on quit, without Sparkle's first-run question; Settings
+	     turns automatic checks off (casama/mac setAutoUpdateChecks). -->
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUAutomaticallyUpdate</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>21600</integer>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+	<!-- Only standard HTTPS and the OS's own encryption: no export-compliance questions per upload. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSMinimumSystemVersion</key>
+	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>$(PRODUCT_COPYRIGHT)</string>
+	<key>NSMainNibFile</key>
+	<string>MainMenu</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<!-- PostHog stays off until Dart calls setup() with a build-time key (D-063). -->
+	<key>com.posthog.posthog.AUTO_INIT</key>
+	<false/>
+	<key>com.posthog.posthog.CAPTURE_PUSH_NOTIFICATION_OPENED</key>
+	<false/>
+	<!-- Google Analytics (GA4) stays off until Dart turns it on for Casama Cloud with consent (D-397).
+	     No ad ids, no ad personalization, no automatic screen names (only route templates are sent). -->
+	<key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
+	<false/>
+	<key>GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS</key>
+	<false/>
+	<key>FirebaseAutomaticScreenReportingEnabled</key>
+	<false/>
+</dict>
+</plist>

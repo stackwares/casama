@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visuals review</title>
+<style>
+@font-face { font-family: "Google Sans"; src: url("/site/assets/fonts/GoogleSans-Regular.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "Google Sans"; src: url("/site/assets/fonts/GoogleSans-Medium.woff2") format("woff2"); font-weight: 500 600; }
+@font-face { font-family: "Google Sans"; src: url("/site/assets/fonts/GoogleSans-Bold.woff2") format("woff2"); font-weight: 700; }
+@font-face { font-family: "Libre Baskerville"; src: url("/site/assets/fonts/LibreBaskerville-Bold.woff2") format("woff2"); font-weight: 700; }
+
+:root {
+  --bg: #ffffff; --bg-2: #f4f4f6; --card: #f7f7f9; --ink: #1d1b20; --ink-2: #5d5a63; --line: #e3e2e7;
+  --accent: #7a3fa8; --accent-soft: #f1e2fc;
+  --sans: "Google Sans", -apple-system, system-ui, sans-serif; --serif: "Libre Baskerville", Georgia, serif;
+}
+:root[data-theme="dark"] {
+  --bg: #1c1c1e; --bg-2: #2a2a2d; --card: #242427; --ink: #f2f1f4; --ink-2: #b4b1b9; --line: #38383c;
+  --accent: #d9b6f7; --accent-soft: #3a2a47;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 var(--sans); }
+header.top { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+.top .wrap { display: flex; gap: 16px; align-items: center; height: 60px; }
+.top h1 { font: 700 20px var(--serif); margin: 0; flex: 1; }
+.top nav { display: flex; gap: 14px; flex-wrap: wrap; font-size: 14px; }
+.top nav a { color: var(--ink-2); text-decoration: none; }
+button.theme { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; cursor: pointer; }
+section { padding: 48px 0 16px; }
+section > .wrap > h2 { font: 700 28px var(--serif); margin: 0 0 4px; }
+.lead { color: var(--ink-2); margin: 0 0 24px; max-width: 760px; }
+.grid { display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)); }
+.grid.small { grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
+.item { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px; }
+.item.missing { display: none; }
+.tag { display: inline-block; font: 600 12px var(--sans); letter-spacing: .04em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); border-radius: 6px; padding: 2px 8px; margin-bottom: 10px; }
+.tag.current { color: var(--ink-2); background: var(--bg-2); }
+.waiting { color: var(--ink-2); font-style: italic; }
+
+/* Share card: composed at 1200x630, scaled to fit */
+.card-scale { position: relative; width: 100%; aspect-ratio: 1200 / 630; overflow: hidden; border-radius: 12px; container-type: inline-size; }
+.og { position: absolute; left: 0; top: 0; width: 1200px; height: 630px; transform-origin: 0 0; transform: scale(calc(100cqw / 1200px)); }
+.og { background: #24112f center / cover no-repeat; }
+.og .mascot { position: absolute; width: 300px; height: 300px; right: 150px; top: 150px; filter: drop-shadow(0 18px 40px rgba(20, 0, 40, .35)); }
+.og .copy { position: absolute; left: 80px; top: 0; bottom: 0; width: 640px; display: flex; flex-direction: column; justify-content: center; color: #fbf6ff; }
+.og .word { font: 700 34px var(--serif); opacity: .9; margin-bottom: 26px; }
+.og .title { font: 700 64px/1.08 var(--sans); letter-spacing: -.01em; text-wrap: balance; text-shadow: 0 2px 24px rgba(20, 0, 40, .45); }
+.og .sub { font: 400 26px/1.35 var(--sans); margin-top: 20px; opacity: .85; }
+/* Chat link preview frame around a share card */
+.chat-preview { margin-top: 12px; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: var(--bg); max-width: 420px; }
+.chat-preview .card-scale { border-radius: 0; }
+.chat-preview .meta { padding: 10px 12px; font-size: 13px; }
+.chat-preview .meta b { display: block; font-size: 14px; }
+.chat-preview .meta span { color: var(--ink-2); }
+img.raw { width: 100%; display: block; border-radius: 12px; }
+
+/* Wallpaper in a phone chat */
+.phone { width: 100%; max-width: 320px; aspect-ratio: 9 / 17; margin: 12px auto 0; border-radius: 34px; border: 8px solid #111; overflow: hidden; position: relative; background: center / cover no-repeat; display: flex; flex-direction: column; justify-content: flex-end; padding: 16px 12px; gap: 8px; }
+.bubble { max-width: 78%; padding: 8px 12px; border-radius: 18px; font-size: 13px; line-height: 1.35; }
+.bubble.bot { background: rgba(255, 255, 255, .92); color: #1d1b20; align-self: flex-start; border-bottom-left-radius: 6px; }
+.bubble.me { background: #7a3fa8; color: #fff; align-self: flex-end; border-bottom-right-radius: 6px; }
+:root[data-theme="dark"] .bubble.bot { background: rgba(36, 36, 39, .92); color: #f2f1f4; }
+:root[data-theme="dark"] .phone::before { content: ""; position: absolute; inset: 0; background: rgba(0, 0, 0, .35); }
+.phone > * { position: relative; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+.pair img.raw { aspect-ratio: 1; object-fit: cover; }
+
+/* Mock pages */
+.page-mock { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--bg); margin-top: 12px; }
+.page-mock .bar { height: 36px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; padding: 0 14px; font: 700 14px var(--serif); }
+.page-mock .bar img { width: 20px; }
+.hero-mock { padding: 28px 24px 24px; text-align: center; }
+.hero-mock h3 { font: 700 30px/1.15 var(--sans); margin: 0 0 8px; }
+.hero-mock p { color: var(--ink-2); margin: 0 0 18px; font-size: 14px; }
+.hero-mock img { width: 100%; border-radius: 14px; display: block; }
+.nf-mock { position: relative; aspect-ratio: 16 / 10; background: center / cover no-repeat; }
+.nf-mock .fade { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 55%, var(--bg) 100%); }
+.nf-mock .center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.nf-mock .center img { width: 22%; filter: drop-shadow(0 10px 24px rgba(40, 0, 80, .25)); }
+.nf-mock h3 { font: 700 26px var(--serif); margin: 10px 0 2px; color: var(--ink); }
+.nf-mock p { margin: 0; font-size: 14px; color: var(--ink-2); }
+.status { padding: 10px 0; font-size: 14px; color: var(--ink-2); }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <h1>Visuals review, round 1</h1>
+    <nav>
+      <a href="#share">Share cards</a><a href="#gallery">Gallery cards</a><a href="#walls">Wallpapers</a><a href="#hero">casama.page hero</a><a href="#nf">404</a>
+    </nav>
+    <button type="button" class="theme" id="theme">Dark</button>
+  </div>
+</header>
+<main>
+  <div class="wrap status" id="status"></div>
+
+  <section id="final"><div class="wrap">
+    <h2>In the sites now (local)</h2>
+    <p class="lead">The finished share cards, as wired into each site's tags. You only see these when a link is pasted somewhere, so they're shown here. Pages: <a href="http://localhost:8735/">casama.page</a> · <a href="http://localhost:8735/nope">its 404</a> · <a href="http://localhost:8734/nope">casama.link 404</a> · <a href="http://localhost:8732/nope">gallery 404</a> · <a href="http://localhost:8732/i/wallpaper/cloud-sea/">a new wallpaper</a></p>
+    <div class="grid">
+      <div class="item"><span class="tag">casama.ai · site/og-image.png</span><img class="raw" src="/visuals/round-1/final/og-home.png" alt=""></div>
+      <div class="item"><span class="tag">docs · docs-site/public/og-image.png</span><img class="raw" src="/visuals/round-1/final/og-docs.png" alt=""></div>
+      <div class="item"><span class="tag">casama.link · link-site/og-image.png</span><img class="raw" src="/visuals/round-1/final/og-link.png" alt=""></div>
+      <div class="item"><span class="tag">casama.page · sites-site/og-image.png</span><img class="raw" src="/visuals/round-1/final/og-page.png" alt=""></div>
+    </div>
+  </div></section>
+
+  <section id="link-hero"><div class="wrap">
+    <h2>casama.link hero</h2>
+    <p class="lead">v1 is on the local page (<a href="http://localhost:8734/">localhost:8734</a>); v2 is the alternative.</p>
+    <div class="grid">
+      <div class="item"><span class="tag">Link hero v1 (in the page)</span><img class="raw" src="/visuals/round-3/raw/hero-link-v1.png" alt=""></div>
+      <div class="item"><span class="tag">Link hero v2</span><img class="raw" src="/visuals/round-3/raw/hero-link-v2.png" alt=""></div>
+    </div>
+  </div></section>
+
+  <section id="share"><div class="wrap">
+    <h2>Share cards</h2>
+    <p class="lead">What shows when someone pastes a link into a chat or a post. Generated background, with the real mascot and type laid on top in HTML (they'll be rendered to PNG once picked). Labels like <b>A1 v2</b> are what to tell me.</p>
+    <div class="grid" id="share-grid"></div>
+  </div></section>
+
+  <section id="gallery"><div class="wrap">
+    <h2>Gallery cards, one per type</h2>
+    <p class="lead">For gallery item pages; today every item shares one picture.</p>
+    <div class="grid" id="gallery-grid"></div>
+  </div></section>
+
+  <section id="walls"><div class="wrap">
+    <h2>Wallpapers</h2>
+    <p class="lead">New chat backgrounds for the gallery, shown full and behind chat bubbles. Toggle dark to see them under the app's dark dimming.</p>
+    <div class="grid small" id="wall-grid"></div>
+  </div></section>
+
+  <section id="hero"><div class="wrap">
+    <h2>casama.page hero</h2>
+    <p class="lead">casama.page has no pictures today. Shown under its real headline.</p>
+    <div class="grid" id="hero-grid"></div>
+  </div></section>
+
+  <section id="nf"><div class="wrap">
+    <h2>404 scene</h2>
+    <p class="lead">One scene shared by the four sites' "not found" pages, with the real mascot in the middle. Check both themes.</p>
+    <div class="grid" id="nf-grid"></div>
+  </div></section>
+</main>
+
+<script>
+const RAW = "/visuals/round-1/raw/";
+const MASCOT = "/site/assets/bots/casama-winky-animated.svg";
+const LOST = "/site/assets/bots/casama-thinker-animated.svg";
+
+const SHARE = [
+  { id: "A1", key: "home", domain: "casama.ai", title: "AI teammates with their own computers.", sub: "Open source. Phone, computer and web.", meta: "Casama: AI teammates with their own computers" },
+  { id: "A2", key: "docs", domain: "docs.casama.ai", title: "Casama docs", sub: "Guides for using, hosting and building on Casama.", meta: "Casama docs" },
+  { id: "A3", key: "link", domain: "casama.link", title: "Addresses for Casama servers people run at home.", sub: "", meta: "casama.link" },
+  { id: "A4", key: "page", domain: "casama.page", title: "Websites people made with Casama.", sub: "", meta: "casama.page" },
+];
+const GALLERY = [
+  ["apps", "Apps"], ["bots", "Bots"], ["routines", "Routines"], ["plugins", "Plugins"], ["skills", "Skills"], ["looks", "Looks"],
+];
+const WALLS = [
+  ["lavender-hills", "Lavender hills"], ["cloud-sea", "Cloud sea"], ["moonlit-garden", "Moonlit garden"],
+  ["paper-cranes", "Paper cranes"], ["tea-morning", "Tea morning"], ["tidepool", "Tidepool"],
+];
+
+const el = (html) => { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstElementChild; };
+let found = 0, expected = 0;
+
+// Adds an item only once its image loads, so missing files simply don't show.
+function addWhenLoaded(grid, src, build) {
+  expected++;
+  const probe = new Image();
+  probe.onload = () => { found++; grid.append(build()); status(); };
+  probe.onerror = status;
+  probe.src = src + "?t=" + Date.now();
+}
+function status() {
+  document.getElementById("status").textContent = found
+    ? `${found} of ${expected} images in. Reload to pick up new ones.`
+    : "Waiting for images from gpt-6-luna. Reload in a bit.";
+}
+
+function ogCard(bg, s, mascot = MASCOT) {
+  return `<div class="card-scale"><div class="og" style="background-image:url('${bg}')">
+    <div class="copy"><div class="word">Casama</div><div class="title">${s.title}</div>${s.sub ? `<div class="sub">${s.sub}</div>` : ""}</div>
+    <img class="mascot" src="${mascot}" alt=""></div></div>`;
+}
+function chatPreview(inner, s) {
+  return `<div class="chat-preview">${inner}<div class="meta"><b>${s.meta}</b><span>${s.domain}</span></div></div>`;
+}
+
+// Share cards, with the current card first for comparison.
+const shareGrid = document.getElementById("share-grid");
+shareGrid.append(el(`<div class="item"><span class="tag current">Current casama.ai card</span><img class="raw" src="/site/og-image.png" alt=""></div>`));
+for (const s of SHARE) for (const v of ["v1", "v2"]) {
+  const src = `${RAW}og-bg-${s.key}-${v}.png`;
+  addWhenLoaded(shareGrid, src, () => el(`<div class="item"><span class="tag">${s.id} ${v} · ${s.domain}</span>${ogCard(src, s)}${chatPreview(ogCard(src, s), s)}</div>`));
+}
+
+// Gallery type cards.
+const galleryGrid = document.getElementById("gallery-grid");
+GALLERY.forEach(([key, name], i) => {
+  const src = `${RAW}og-bg-gallery-${key}-v1.png`;
+  const s = { title: name, sub: "Casama Gallery", domain: "gallery.casama.ai", meta: `${name} · Casama Gallery` };
+  addWhenLoaded(galleryGrid, src, () => el(`<div class="item"><span class="tag">A5 ${key}</span>${ogCard(src, s)}</div>`));
+});
+
+// Wallpapers.
+const wallGrid = document.getElementById("wall-grid");
+WALLS.forEach(([key, name], i) => {
+  const src = `${RAW}wall-${key}.png`;
+  addWhenLoaded(wallGrid, src, () => el(`<div class="item"><span class="tag">B${i + 1} · ${name}</span>
+    <div class="pair"><img class="raw" src="${src}" alt="">
+    <div class="phone" style="background-image:url('${src}')">
+      <div class="bubble me">Can you find us a cabin for the long weekend?</div>
+      <div class="bubble bot">Found three near the lake. The second has a hot tub and is under budget. Want me to hold it?</div>
+      <div class="bubble me">Yes please!</div>
+    </div></div></div>`));
+});
+
+// casama.page hero.
+const heroGrid = document.getElementById("hero-grid");
+for (const v of ["v1", "v2"]) {
+  const src = `${RAW}hero-page-${v}.png`;
+  addWhenLoaded(heroGrid, src, () => el(`<div class="item"><span class="tag">C ${v}</span>
+    <div class="page-mock"><div class="bar"><img src="${MASCOT}" alt="">casama.page</div>
+    <div class="hero-mock"><h3>Websites people made with Casama.</h3><p>Every address here is a site someone's bot built and they chose to publish.</p><img src="${src}" alt=""></div></div></div>`));
+}
+
+// 404.
+const nfGrid = document.getElementById("nf-grid");
+for (const v of ["v1", "v2"]) {
+  const src = `${RAW}scene-404-${v}.png`;
+  addWhenLoaded(nfGrid, src, () => el(`<div class="item"><span class="tag">D ${v}</span>
+    <div class="page-mock"><div class="bar"><img src="${MASCOT}" alt="">Casama</div>
+    <div class="nf-mock" style="background-image:url('${src}')"><div class="fade"></div>
+    <div class="center"><img src="${LOST}" alt=""><h3>This page wandered off.</h3><p>Let's get you back home.</p></div></div></div></div>`));
+}
+status();
+
+// Theme toggle.
+const btn = document.getElementById("theme");
+function setTheme(t) { document.documentElement.dataset.theme = t; btn.textContent = t === "dark" ? "Light" : "Dark"; try { localStorage.setItem("vr-theme", t); } catch {} }
+let saved = null; try { saved = localStorage.getItem("vr-theme"); } catch {}
+setTheme(saved || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+btn.onclick = () => setTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+</script>
+</body>
+</html>

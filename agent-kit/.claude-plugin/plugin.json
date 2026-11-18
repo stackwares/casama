@@ -1,0 +1,10 @@
+{
+  "name": "casama-dev",
+  "description": "Skills and a docs MCP server that help coding agents build on Casama: plugins, the HTTP API, webhooks, A2A, bot templates, gallery items and the Casama repo.",
+  "version": "0.1.0",
+  "author": { "name": "Casama" },
+  "homepage": "https://docs.casama.ai/develop/agents",
+  "repository": "https://github.com/stackwares/casama",
+  "license": "Apache-2.0",
+  "keywords": ["casama", "developer", "plugins", "api", "a2a", "mcp", "skills"]
+}

@@ -1,0 +1,42 @@
+{
+  "name": "Language practice",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "languages",
+    "learning",
+    "practice"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "memory"
+    ],
+    "writes": [
+      "saves progress to memory"
+    ],
+    "credits": "low"
+  },
+  "inputs": [
+    {
+      "key": "language",
+      "label": "Which language?",
+      "type": "text",
+      "default": "the language in your memory",
+      "help": "Such as Spanish or Japanese."
+    },
+    {
+      "key": "time",
+      "label": "What time should it arrive?",
+      "type": "time",
+      "default": "08:00",
+      "help": "Every day, in your workspace's time zone."
+    }
+  ]
+}

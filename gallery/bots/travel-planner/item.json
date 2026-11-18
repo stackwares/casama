@@ -1,0 +1,21 @@
+{
+  "name": "Travel",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "life",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-09",
+  "examples": [
+    "Plan five relaxed days in Lisbon",
+    "Make a packing list for a ski trip",
+    "Find a weekend getaway within three hours"
+  ]
+}

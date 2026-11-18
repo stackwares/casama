@@ -1,0 +1,28 @@
+{
+  "name": "Rewrite tone",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "writing"
+  ],
+  "category": "writing",
+  "icon": "wand-sparkles",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Make this message friendlier",
+    "Rewrite this for a ten-year-old",
+    "Turn this rant into a calm, professional email"
+  ],
+  "access": {
+    "reads": [
+      "what you share"
+    ],
+    "credits": "low"
+  }
+}

@@ -1,0 +1,9 @@
+# Written by build-pages.mjs at deploy time (scripts/deploy-web.sh); never committed.
+/i/
+/by/
+/c/
+/og.png
+/sitemap.xml
+/llms.txt
+# Signed at deploy time from manifest.json (D-315); the key never enters the repo.
+/manifest.sig

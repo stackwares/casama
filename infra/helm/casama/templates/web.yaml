@@ -1,0 +1,27 @@
+{{- if .Values.web.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-web
+  labels: {{- include "casama.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector: { matchLabels: { app.kubernetes.io/instance: {{ .Release.Name }}, app.kubernetes.io/component: web } }
+  template:
+    metadata: { labels: { app.kubernetes.io/instance: {{ .Release.Name }}, app.kubernetes.io/component: web } }
+    spec:
+      containers:
+        - name: web
+          {{- /* The web image isn't published with the others (scripts/publish-images.sh): you build and push it. */}}
+          image: {{ required "web.enabled needs web.image: build client/Dockerfile.web, push it, and set web.image (see values.yaml)" .Values.web.image | quote }}
+          ports: [{ name: http, containerPort: 80 }]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-web
+  labels: {{- include "casama.labels" . | nindent 4 }}
+spec:
+  selector: { app.kubernetes.io/instance: {{ .Release.Name }}, app.kubernetes.io/component: web }
+  ports: [{ name: http, port: 80, targetPort: http }]
+{{- end }}

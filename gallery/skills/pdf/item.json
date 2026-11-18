@@ -1,0 +1,30 @@
+{
+  "name": "PDF",
+  "author": {
+    "name": "Anthropic",
+    "url": "https://github.com/anthropics/skills"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work"
+  ],
+  "category": "work",
+  "icon": "file-text",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Pull the tables out of this PDF into a spreadsheet",
+    "Merge these three PDFs and add page numbers",
+    "Fill in this PDF form with my details"
+  ],
+  "access": {
+    "reads": [
+      "PDFs you share"
+    ],
+    "writes": [
+      "creates and edits PDFs"
+    ],
+    "credits": "medium"
+  }
+}

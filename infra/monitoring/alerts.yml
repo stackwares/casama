@@ -1,0 +1,41 @@
+# Alert rules from SPEC "Observability": run failures above 5% over 15 minutes, and the sandbox
+# host above 85% memory. Route them with Alertmanager (or Grafana alerting) to email or chat.
+groups:
+  - name: casama
+    rules:
+      - alert: CasamaRunFailuresHigh
+        expr: casama_run_failure_ratio_15m > 0.05 and sum(casama_runs_15m{status=~"completed|failed"}) >= 20
+        for: 5m
+        labels: { severity: page }
+        annotations:
+          summary: "More than 5% of runs failed in the last 15 minutes"
+      - alert: CasamaSandboxMemoryHigh
+        expr: (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 0.85
+        for: 10m
+        labels: { severity: page }
+        annotations:
+          summary: "Host {{ $labels.instance }} is above 85% memory"
+      - alert: CasamaTimeToFirstTokenSlow
+        expr: casama_time_to_first_token_seconds{quantile="0.95"} > 3
+        for: 15m
+        labels: { severity: warn }
+        annotations:
+          summary: "p95 time to first token is above 3 s"
+      - alert: CasamaQueueBacklog
+        expr: sum(casama_queue_depth{queue="runs"}) > 200
+        for: 10m
+        labels: { severity: warn }
+        annotations:
+          summary: "More than 200 runs waiting in the queue"
+      - alert: CasamaApiDown
+        expr: up{job="casama-api"} == 0
+        for: 2m
+        labels: { severity: page }
+        annotations:
+          summary: "The Casama API is not answering /metrics"
+      - alert: CasamaDiskFilling
+        expr: (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"}) > 0.85
+        for: 15m
+        labels: { severity: page }
+        annotations:
+          summary: "Disk {{ $labels.mountpoint }} on {{ $labels.instance }} is over 85% full"

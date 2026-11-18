@@ -1,0 +1,25 @@
+{
+  "note": "Header pictures for blog posts, made with codex/gpt-6-luna under the rules in docs/VISUALS-PLAN.md (no text, no app screens, no mascot). site/build.mjs reads the alt text from here.",
+  "images": [
+    {
+      "slug": "what-ai-assistants-say-about-ai-agents",
+      "alt": "Three glowing lanterns in a row at dusk, each lighting a small object on the ground: a leaf, a stone and a flower. A fourth pool of light beside them is empty.",
+      "prompt": "Three softly glowing lanterns or orbs in a row, each casting light on a different small object, with a fourth empty place among them. Painted, purple dusk, no text."
+    },
+    {
+      "slug": "why-every-bot-gets-its-own-computer",
+      "alt": "Three small floating islands in a purple evening sky, each with its own cosy room, a lit window, a desk and a lamp, set apart from the others.",
+      "prompt": "A row of small, cosy, separate floating islands, each with its own softly lit window and desk lamp, clearly apart from one another. Painted, purple sky, no text."
+    },
+    {
+      "slug": "how-approvals-work",
+      "alt": "A winding path through purple hills at dusk passes under an arched gate of warm light wrapped in leaves, then carries on into the distance.",
+      "prompt": "A calm winding path through soft purple hills at dusk that pauses at a gentle arched gate made of warm light; beyond it the path continues. Painted, no text."
+    },
+    {
+      "slug": "your-own-server-in-your-pocket",
+      "alt": "A small house with one lit window on a hill at night. A thin arc of light rises from its roof across a starry purple sky to a tiny glow far away over distant hills.",
+      "prompt": "A small cosy house with one warmly lit window on a hill at night; a thin arc of light crosses a starry purple sky to a tiny glowing point far away. Painted, no text."
+    }
+  ]
+}

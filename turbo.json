@@ -1,0 +1,27 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "env": ["SKIP_DOCKER_TESTS", "PG_BIN", "TEST_*", "SEARXNG_TEST_URL", "CASAMA_LIVE"],
+      "passThroughEnv": [
+        "VITEST_MAX_WORKERS",
+        "DATABASE_URL",
+        "OPENROUTER_API_KEY",
+        "FAKE_BILLING_PORT",
+        "DOCKER_HOST"
+      ]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

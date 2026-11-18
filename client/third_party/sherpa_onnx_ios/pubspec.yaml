@@ -1,0 +1,16 @@
+name: sherpa_onnx_ios
+description: >
+  Empty iOS half of sherpa_onnx. Wake word doesn't run on iOS, so the app doesn't ship the 25 MB
+  SherpaOnnxC framework there. Swapped in through dependency_overrides in client/pubspec.yaml.
+version: 2.0.1
+publish_to: none
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=2.8.1"
+
+flutter:
+  plugin:
+    platforms:
+      ios:
+        ffiPlugin: true

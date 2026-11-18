@@ -1,0 +1,56 @@
+name: Images
+# Builds the server, supervisor, egress proxy and computer images for amd64 and arm64.
+# Build only: publishing to GHCR is a manual decision (no automatic deploys).
+on:
+  pull_request:
+    paths: ["infra/**", "dart/computerd/**", "apps/supervisor/**", "apps/server/**", "packages/**"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: server, file: apps/server/Dockerfile }
+          - { name: supervisor, file: apps/supervisor/Dockerfile }
+          - { name: egress-proxy, file: infra/egress-proxy/Dockerfile }
+          - { name: computer-headless, file: infra/images/computer/Dockerfile.headless }
+          - { name: turn, file: infra/turn/Dockerfile }
+          - { name: backup, file: infra/backup/Dockerfile }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ${{ matrix.file }}
+          platforms: linux/amd64,linux/arm64
+          push: false
+          tags: casama/${{ matrix.name }}:ci
+
+  # The desktop image builds on the headless one (Neko is compiled in it, D-054).
+  desktop:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      # The docker driver builds into the local image store, so the second build can use the
+      # headless image the first one loaded (the default container driver can't see it).
+      - uses: docker/setup-buildx-action@v4
+        with:
+          driver: docker
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: infra/images/computer/Dockerfile.headless
+          load: true
+          tags: casama/computer-headless:ci
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: infra/images/computer/Dockerfile.desktop
+          build-args: BASE=casama/computer-headless:ci
+          push: false
+          tags: casama/computer-desktop:ci

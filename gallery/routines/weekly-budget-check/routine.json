@@ -1,0 +1,7 @@
+{
+  "description": "Sunday evenings: what you spent this week, how it compares with your budget, and where the month is heading.",
+  "category": "life",
+  "icon": "piggy-bank",
+  "instructions_md": "Check my spending this week against my budget. Use the receipts in my mail (if it's connected), statements or exports I've shared and what's in memory. Show what I spent in each budget category this week and so far this month, next to the monthly amount, and which categories will run over at this pace. Point out unusual or one-off spending in a line each. Keep it to ten lines, and be plain, not preachy. Don't move money or change anything. If I haven't set a budget yet, help me set one first.",
+  "schedule_cron": "0 19 * * 0"
+}

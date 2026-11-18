@@ -1,0 +1,5 @@
+wrangler.template.jsonc
+wrangler.jsonc
+worker.js
+.assetsignore
+.wrangler

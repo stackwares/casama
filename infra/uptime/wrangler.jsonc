@@ -1,0 +1,20 @@
+{
+  // Outside uptime check for Casama Cloud (D-252): every 5 minutes it fetches the API's /readyz
+  // (API + database) and the web app, and emails the instance owner after two failures in a row,
+  // then again when it's back. It runs on Cloudflare, so it still works when the server is down.
+  // Secrets (wrangler secret put): SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM, ALERT_TO,
+  // and TEST_TOKEN for the test mail. The public status page (D-304) is served at status.casama.ai.
+  "name": "casama-uptime",
+  "compatibility_date": "2026-11-01",
+  "main": "uptime.js",
+  "workers_dev": false,
+  "routes": [{ "pattern": "status.casama.ai", "custom_domain": true }],
+  "triggers": { "crons": ["*/5 * * * *"] },
+  "kv_namespaces": [{ "binding": "STATE", "id": "e7c67c87df044c2a9b20ade3e55aae2a" }],
+  "vars": {
+    // The public sign-in (anon) key every app gets from /v1/config; not a secret.
+    "AUTH_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzk0NDE0ODg2LCJleHAiOjIxMDk3NzQ4ODZ9.GV_XqxshiB1ot3qdkbT2yuk_IxLaRJykwbDAgav1JOk",
+    // auth uses the public sign-in key that /v1/config serves to every app.
+    "CHECKS": "api=https://api.casama.ai/readyz,app=https://app.casama.ai/,auth=https://auth.casama.ai/auth/v1/health?apikey=AUTH_ANON_KEY,docs=https://docs.casama.ai/"
+  }
+}

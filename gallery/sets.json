@@ -1,0 +1,541 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "id": "founder-kit",
+      "type": "set",
+      "name": "Founder kit",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "founder",
+        "startup",
+        "work",
+        "business",
+        "company",
+        "ceo",
+        "entrepreneur",
+        "investor"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-16",
+      "updated": "2026-11-16",
+      "sha256": "d310997d503cd0807c0c5cef0c401321d921ad6966a0d74b805588b54695a0b3",
+      "size": 1070,
+      "description": "Decide, plan and report without a chief of staff: memos, specs, competitor briefs and a weekly review.",
+      "pick": "Everything a solo founder reaches for in week one.",
+      "document": {
+        "description": "Decide, plan and report without a chief of staff: memos, specs, competitor briefs and a weekly review.",
+        "icon": "rocket",
+        "items": [
+          {
+            "type": "skill",
+            "id": "decision-memo"
+          },
+          {
+            "type": "skill",
+            "id": "write-spec"
+          },
+          {
+            "type": "skill",
+            "id": "competitive-brief"
+          },
+          {
+            "type": "skill",
+            "id": "weekly-report"
+          },
+          {
+            "type": "routine",
+            "id": "morning-plan"
+          },
+          {
+            "type": "routine",
+            "id": "weekly-review"
+          },
+          {
+            "type": "app",
+            "id": "todoist"
+          },
+          {
+            "type": "app",
+            "id": "attio"
+          }
+        ]
+      },
+      "files": [
+        "sets/founder-kit/item.json",
+        "sets/founder-kit/set.json"
+      ]
+    },
+    {
+      "id": "job-search-kit",
+      "type": "set",
+      "name": "Job search kit",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "jobs",
+        "job",
+        "career",
+        "hiring",
+        "interview",
+        "resume",
+        "work",
+        "applications"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "b07f39173837984aaa547c023398dae3ff73e6aec662a970caa1e7ed243a7ec5",
+      "size": 1039,
+      "description": "New postings each morning, applications written with you, follow-ups chased and a brief before each interview.",
+      "document": {
+        "description": "New postings each morning, applications written with you, follow-ups chased and a brief before each interview.",
+        "icon": "briefcase-business",
+        "items": [
+          {
+            "type": "bot",
+            "id": "writer"
+          },
+          {
+            "type": "bot",
+            "id": "research-assistant"
+          },
+          {
+            "type": "routine",
+            "id": "job-search-digest"
+          },
+          {
+            "type": "routine",
+            "id": "follow-up-chaser"
+          },
+          {
+            "type": "routine",
+            "id": "meeting-prep"
+          },
+          {
+            "type": "skill",
+            "id": "email-drafter"
+          },
+          {
+            "type": "skill",
+            "id": "proofread"
+          },
+          {
+            "type": "skill",
+            "id": "meeting-prep"
+          }
+        ]
+      },
+      "files": [
+        "sets/job-search-kit/item.json",
+        "sets/job-search-kit/set.json"
+      ]
+    },
+    {
+      "id": "meetings-handled",
+      "type": "set",
+      "name": "Meetings, handled",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "meetings",
+        "work",
+        "meeting",
+        "calendar",
+        "notes",
+        "calls"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-16",
+      "updated": "2026-11-16",
+      "sha256": "01257b43a9c8ad9e011bbfba5af0baef93fc08ab084b51c256fa3cfc99f4535c",
+      "size": 774,
+      "description": "Walk in prepared and walk out with notes, decisions and action items filed for you.",
+      "document": {
+        "description": "Walk in prepared and walk out with notes, decisions and action items filed for you.",
+        "icon": "notebook-pen",
+        "items": [
+          {
+            "type": "skill",
+            "id": "meeting-prep"
+          },
+          {
+            "type": "skill",
+            "id": "meeting-notes"
+          },
+          {
+            "type": "routine",
+            "id": "meeting-notes"
+          },
+          {
+            "type": "app",
+            "id": "granola"
+          },
+          {
+            "type": "app",
+            "id": "fireflies"
+          }
+        ]
+      },
+      "files": [
+        "sets/meetings-handled/item.json",
+        "sets/meetings-handled/set.json"
+      ]
+    },
+    {
+      "id": "money-in-order",
+      "type": "set",
+      "name": "Money in order",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "money",
+        "budget",
+        "bills",
+        "receipts",
+        "expenses",
+        "subscriptions",
+        "finance",
+        "savings"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "0f3d8e46907292031b09158b6df85c8c5ce88bcd34084ba234cb5e7895d5a6f6",
+      "size": 1047,
+      "description": "Know what's due, where the money went and what to cancel: bills, receipts, subscriptions and a budget review.",
+      "document": {
+        "description": "Know what's due, where the money went and what to cancel: bills, receipts, subscriptions and a budget review.",
+        "icon": "wallet",
+        "items": [
+          {
+            "type": "bot",
+            "id": "money-helper"
+          },
+          {
+            "type": "bot",
+            "id": "expense-matcher"
+          },
+          {
+            "type": "routine",
+            "id": "bill-reminders"
+          },
+          {
+            "type": "routine",
+            "id": "receipt-collector"
+          },
+          {
+            "type": "routine",
+            "id": "subscription-audit"
+          },
+          {
+            "type": "routine",
+            "id": "price-watch"
+          },
+          {
+            "type": "skill",
+            "id": "budget-review"
+          },
+          {
+            "type": "skill",
+            "id": "invoice-check"
+          }
+        ]
+      },
+      "files": [
+        "sets/money-in-order/item.json",
+        "sets/money-in-order/set.json"
+      ]
+    },
+    {
+      "id": "small-business-kit",
+      "type": "set",
+      "name": "Small business kit",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "business",
+        "small-business",
+        "shop",
+        "customers",
+        "support",
+        "invoices",
+        "marketing",
+        "freelance"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-18",
+      "updated": "2026-11-18",
+      "sha256": "04af124c0ff23bf5f72e6e3f91b15273f81fdedc9c079bc94f62bcf916f447e4",
+      "size": 1142,
+      "description": "Answer customers, get invoices paid, post each week and keep an eye on competitors, with every send left to you.",
+      "document": {
+        "description": "Answer customers, get invoices paid, post each week and keep an eye on competitors, with every send left to you.",
+        "icon": "store",
+        "items": [
+          {
+            "type": "bot",
+            "id": "support-agent"
+          },
+          {
+            "type": "bot",
+            "id": "social-manager"
+          },
+          {
+            "type": "routine",
+            "id": "support-inbox-triage"
+          },
+          {
+            "type": "routine",
+            "id": "invoice-chaser"
+          },
+          {
+            "type": "routine",
+            "id": "social-post-planner"
+          },
+          {
+            "type": "routine",
+            "id": "competitor-watch"
+          },
+          {
+            "type": "routine",
+            "id": "weekly-team-update"
+          },
+          {
+            "type": "skill",
+            "id": "invoice-check"
+          },
+          {
+            "type": "skill",
+            "id": "email-drafter"
+          }
+        ]
+      },
+      "files": [
+        "sets/small-business-kit/item.json",
+        "sets/small-business-kit/set.json"
+      ]
+    },
+    {
+      "id": "stay-on-top-of-email",
+      "type": "set",
+      "name": "Stay on top of email",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "email",
+        "inbox",
+        "productivity",
+        "mail",
+        "gmail",
+        "outlook",
+        "busy",
+        "meetings"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-16",
+      "updated": "2026-11-16",
+      "sha256": "131d093dcb3f281b90be7d976b8e9318eca35b642b35c5bf4691c53b51635d53",
+      "size": 741,
+      "description": "Sort what needs a reply, draft the answers, and start each day knowing what matters.",
+      "document": {
+        "description": "Sort what needs a reply, draft the answers, and start each day knowing what matters.",
+        "icon": "mail",
+        "items": [
+          {
+            "type": "skill",
+            "id": "inbox-triage"
+          },
+          {
+            "type": "skill",
+            "id": "email-drafter"
+          },
+          {
+            "type": "skill",
+            "id": "digest"
+          },
+          {
+            "type": "routine",
+            "id": "morning-plan"
+          }
+        ]
+      },
+      "files": [
+        "sets/stay-on-top-of-email/item.json",
+        "sets/stay-on-top-of-email/set.json"
+      ]
+    },
+    {
+      "id": "student-kit",
+      "type": "set",
+      "name": "Student kit",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "school",
+        "learning",
+        "student",
+        "study",
+        "studying",
+        "university",
+        "college",
+        "exam"
+      ],
+      "featured": true,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-16",
+      "updated": "2026-11-16",
+      "sha256": "e152b171ad76a034d33a780eb8215556c689c00b177cc814975982213c0f2ff5",
+      "size": 963,
+      "description": "A study partner that quizzes you, skills to summarize and learn, and a quiet night look for late revision.",
+      "pick": "Revision plans, quizzes and summaries for exam season.",
+      "document": {
+        "description": "A study partner that quizzes you, skills to summarize and learn, and a quiet night look for late revision.",
+        "icon": "graduation-cap",
+        "items": [
+          {
+            "type": "bot",
+            "id": "study-buddy"
+          },
+          {
+            "type": "skill",
+            "id": "teach"
+          },
+          {
+            "type": "skill",
+            "id": "summarize-document"
+          },
+          {
+            "type": "skill",
+            "id": "fact-check"
+          },
+          {
+            "type": "routine",
+            "id": "weekly-review"
+          },
+          {
+            "type": "wallpaper",
+            "id": "night-sky"
+          }
+        ]
+      },
+      "files": [
+        "sets/student-kit/item.json",
+        "sets/student-kit/set.json"
+      ]
+    },
+    {
+      "id": "writer-kit",
+      "type": "set",
+      "name": "Writer kit",
+      "author": {
+        "name": "Casama",
+        "url": "https://casama.ai",
+        "handle": "casama"
+      },
+      "license": "CC0-1.0",
+      "tags": [
+        "writing",
+        "content",
+        "writer",
+        "write",
+        "author",
+        "blog",
+        "novel",
+        "journalist"
+      ],
+      "featured": false,
+      "retired": false,
+      "version": 1,
+      "added": "2026-11-16",
+      "updated": "2026-11-16",
+      "sha256": "3a6fb7ef68faaf01b3533c4c0bdc2d864763f610a7fbe4c20a926c802d75f144",
+      "size": 985,
+      "description": "Outline, draft, proofread and share: skills for writing, plus a calm theme to write in.",
+      "document": {
+        "description": "Outline, draft, proofread and share: skills for writing, plus a calm theme to write in.",
+        "icon": "pen-line",
+        "items": [
+          {
+            "type": "skill",
+            "id": "article-outline"
+          },
+          {
+            "type": "skill",
+            "id": "proofread"
+          },
+          {
+            "type": "skill",
+            "id": "rewrite-tone"
+          },
+          {
+            "type": "skill",
+            "id": "fact-check"
+          },
+          {
+            "type": "skill",
+            "id": "social-post"
+          },
+          {
+            "type": "routine",
+            "id": "reading-digest"
+          },
+          {
+            "type": "app",
+            "id": "wordpress"
+          },
+          {
+            "type": "theme",
+            "id": "postcard"
+          }
+        ]
+      },
+      "files": [
+        "sets/writer-kit/item.json",
+        "sets/writer-kit/set.json"
+      ]
+    }
+  ]
+}

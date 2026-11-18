@@ -1,0 +1,29 @@
+Casama is an app for AI assistants ("bots"). Each bot runs on Casama's servers and works on its own sandboxed cloud computer; nothing is executed on the reviewer's device.
+
+SIGN IN WITH THE DEMO ACCOUNT
+1. On the first screen, tap "Continue with Email".
+2. Tap "Use a Password Instead".
+3. Enter the demo email and password, then tap "Sign in".
+No email code or two-step sign-in is needed for this account. It opens a workspace with one bot, called Casama.
+
+WHAT TO TRY
+- Open the chat with the bot "Casama" and ask for something, for example: "Find three well-reviewed Italian restaurants in Lisbon and compare them in a short table."
+- While the bot works, open its computer from the chat to watch it live.
+- Actions such as sending, booking, paying or deleting show an approval card with Allow and Deny before anything happens.
+- The Library keeps what the bot makes. Settings has Billing, Privacy and Help & support.
+
+PURCHASES
+The demo workspace is on the Free plan, which includes monthly credits. Paid plans (Plus, Pro and Max, monthly or yearly) are auto-renewing subscriptions, and credit packs are consumables. All are in-app purchases under Settings > Billing. Credits pay for AI model use and cloud computer time inside the app.
+
+ACCOUNT DELETION
+Settings > Privacy > Danger Zone > Delete My Account. Please do not delete the demo account. The same steps are at https://casama.ai/delete-account.
+
+AI AND USER CONTENT
+Replies are written by AI models. Long-press a reply (right-click on a Mac) and choose "Report reply" to report it. People can be reported and blocked, and shared pages have a report link. Reports go to our team at abuse@casama.ai.
+
+OTHER NOTES
+- Casama is open source. The app can also connect to a server that someone runs themselves; the demo account uses our hosted service, Casama Cloud.
+- Sign in with Apple, Google, passkeys and email links are also offered on the sign-in screen.
+- Microphone access is used for dictation and live voice calls, and only when the person starts them. Calendar, contacts, health and location are shared with a bot only if the person turns each one on in Settings.
+
+Contact: support@casama.ai

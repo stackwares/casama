@@ -1,0 +1,137 @@
+name: Desktop apps (Linux, Windows)
+# Builds the Linux and Windows desktop apps with scripts/package-linux.sh and
+# scripts/package-windows.ps1 and keeps the results as run artifacts. Started by hand only: these
+# are Flutter builds, so ask before running one (AGENTS.md).
+#
+# Nothing here publishes. To release: download the artifacts into dist/
+# (gh run download <run id> -D dist --pattern 'desktop-*', then move the files up into dist/),
+# add the Mac DMG from scripts/package-macos.sh, then run scripts/publish-desktop-release.sh.
+#
+# Optional repo secrets (the build works without them, but then it's a test build):
+#   CASAMA_TELEMETRY_JSON  contents of client/config/telemetry.json (official builds)
+#   CASAMA_MAPS_JSON       contents of client/config/maps.json (MapTiler key, D-310)
+#   MSIX_CERT_BASE64       the code-signing .pfx, base64; without it no MSIX, only the zip
+#   MSIX_CERT_PASSWORD     its password
+#   WINSPARKLE_KEY         the WinSparkle DSA private key (PEM); signs the MSIX for updates and
+#                          writes appcast-windows.xml (D-159)
+on:
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: API the apps talk to
+        default: https://api.casama.ai
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CASAMA_API_URL: ${{ inputs.api_url }}
+
+jobs:
+  linux:
+    name: Linux (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-24.04, arch: x64 }
+          - { os: ubuntu-24.04-arm, arch: arm64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build packages (GTK for Flutter; libsecret for secure storage; libcurl for Sentry)
+        run: |
+          # The runners' Azure apt mirror sometimes doesn't resolve: use Ubuntu's archive and retry.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            echo "http://archive.ubuntu.com/ubuntu/	priority:1" | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          fi
+          for i in 1 2 3; do
+            sudo apt-get update && sudo apt-get install -y \
+              clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev \
+              libsecret-1-dev libjsoncpp-dev libcurl4-openssl-dev libx11-dev libxi-dev \
+              libayatana-appindicator3-dev && break
+            [ "$i" = 3 ] && exit 1
+            sleep 20
+          done
+      # Pinned to the version the app ships with (D-212).
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, flutter-version: 3.50.0, cache: true }
+      - name: Config for official builds
+        env:
+          TELEMETRY: ${{ secrets.CASAMA_TELEMETRY_JSON }}
+          MAPS: ${{ secrets.CASAMA_MAPS_JSON }}
+        run: |
+          [ -n "$TELEMETRY" ] && printf '%s' "$TELEMETRY" > client/config/telemetry.json
+          [ -n "$MAPS" ] && printf '%s' "$MAPS" > client/config/maps.json
+          true
+      - name: Build and package
+        env:
+          CASAMA_OFFICIAL_BUILD: "1"
+        run: |
+          (cd client && flutter pub get)
+          scripts/package-linux.sh
+      # The snap (D-392) packs the same bundle; the runner is Ubuntu 24.04, core24's own base.
+      # Kept as an artifact only: uploading to the Snap Store is a release (ask first).
+      - name: Snap
+        run: |
+          sudo snap install snapcraft --classic
+          sudo scripts/package-snap.sh --destructive-mode
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-linux-${{ matrix.arch }}
+          path: |
+            dist/*.tar.gz
+            dist/*.snap
+          if-no-files-found: error
+
+  windows:
+    name: Windows (x64)
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      # Pinned to the version the app ships with (D-212). Visual Studio's C++ tools are on the image.
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, flutter-version: 3.50.0, cache: true }
+      - name: Config and signing files
+        shell: bash
+        env:
+          TELEMETRY: ${{ secrets.CASAMA_TELEMETRY_JSON }}
+          MAPS: ${{ secrets.CASAMA_MAPS_JSON }}
+          CERT: ${{ secrets.MSIX_CERT_BASE64 }}
+          SPARKLE: ${{ secrets.WINSPARKLE_KEY }}
+        run: |
+          [ -n "$TELEMETRY" ] && printf '%s' "$TELEMETRY" > client/config/telemetry.json
+          [ -n "$MAPS" ] && printf '%s' "$MAPS" > client/config/maps.json
+          if [ -n "$CERT" ]; then
+            printf '%s' "$CERT" | base64 -d > "$RUNNER_TEMP/casama.pfx"
+            echo "MSIX_CERT=$RUNNER_TEMP\\casama.pfx" >> "$GITHUB_ENV"
+          fi
+          if [ -n "$SPARKLE" ]; then
+            printf '%s\n' "$SPARKLE" > "$RUNNER_TEMP/winsparkle.pem"
+            echo "WINSPARKLE_KEY=$RUNNER_TEMP\\winsparkle.pem" >> "$GITHUB_ENV"
+          fi
+          true
+      - name: Build and package
+        shell: pwsh
+        env:
+          CASAMA_OFFICIAL_BUILD: "1"
+          MSIX_CERT_PASSWORD: ${{ secrets.MSIX_CERT_PASSWORD }}
+        run: |
+          Push-Location client; flutter pub get; Pop-Location
+          ./scripts/package-windows.ps1
+      - name: Remove signing files
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/casama.pfx" "$RUNNER_TEMP/winsparkle.pem"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-windows-x64
+          path: |
+            dist/*.zip
+            dist/*.msix
+            dist/appcast-windows.xml
+          if-no-files-found: error

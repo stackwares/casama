@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Casama
+Comment=Bots that do the work, on every screen you own
+Exec=casama %u
+Icon=${SNAP}/meta/gui/casama.png
+Terminal=false
+Categories=Office;Utility;Chat;
+MimeType=x-scheme-handler/casama;
+StartupWMClass=ai.casama.app
+StartupNotify=true

@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "prompt": "In Google Sheets, column A has dates and column B has amounts. I want the total for March 2026.",
+      "expect": "Gives a working SUMIFS (or equivalent) formula bounded by March 1 and March 31 2026 (or start/end of month) over A and B, and explains it briefly."
+    },
+    {
+      "prompt": "Why does =VLOOKUP(D2, A:B, 2) give wrong results?",
+      "expect": "Points out the missing exact-match argument (FALSE or 0) and that approximate match needs sorted data; gives the fixed formula."
+    }
+  ]
+}

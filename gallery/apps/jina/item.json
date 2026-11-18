@@ -1,0 +1,26 @@
+{
+  "name": "Jina AI",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "web",
+    "search"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Read this web page and summarize it",
+    "Search arXiv for recent papers on retrieval",
+    "Pull the text out of this PDF link"
+  ],
+  "access": {
+    "reads": [
+      "web pages and arXiv"
+    ],
+    "credits": "low"
+  }
+}

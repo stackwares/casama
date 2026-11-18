@@ -1,0 +1,377 @@
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../../core/backend.dart';
+import '../../core/display_text.dart';
+import '../../core/providers.dart';
+import 'skill_proposals.dart';
+import '../../core/widgets.dart';
+import '../../core/haptics.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_tokens.dart';
+import '../../ui/adaptive_modal.dart';
+import '../../ui/app_card.dart';
+import '../../ui/form_sheet.dart';
+import '../../ui/page.dart';
+import '../../ui/shell_header.dart';
+import '../../ui/glow_button.dart';
+import '../../ui/route_focus.dart';
+import 'skill_catalog_screen.dart';
+import 'skill_library.dart';
+
+/// Skills: Markdown instruction packs that bots load on demand.
+class SkillsScreen extends ConsumerWidget {
+  const SkillsScreen({super.key});
+
+  Future<void> _edit(
+    BuildContext context,
+    WidgetRef ref, [
+    SkillView? skill,
+  ]) async {
+    await showAdaptiveSheet<void>(
+      context: context,
+      dialogMaxWidth: 680,
+      builder: (_) => _SkillEditor(skill: skill),
+    );
+    ref.invalidate(skillsProvider);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final skills = ref.watch(skillsProvider);
+    // For each catalog skill's own icon; rows fall back to category icons until it loads.
+    final catalog = ref.watch(skillCatalogProvider).value;
+    // A search result links here with `?focus=<skill>` (D-235): open that skill.
+    final focus = routeFocus(context);
+    final focused = skills.value?.where((s) => s.id == focus).firstOrNull;
+    return OpenOnce(
+      id: focused?.id,
+      ready: focused != null,
+      open: (_) => _edit(context, ref, focused),
+      child: SubPage(
+      title: l10n.skills,
+      actions: [
+        HeaderIconButton(
+          key: const Key('openCatalog'),
+          icon: LucideIcons.library,
+          tooltip: l10n.skillCatalog,
+          onPressed: () => openSkillCatalog(context),
+        ),
+        HeaderIconButton(
+          key: const Key('openGitHubImport'),
+          icon: LucideIcons.gitBranch,
+          tooltip: l10n.importFromGitHub,
+          onPressed: () => showGitHubSkillImport(context),
+        ),
+        HeaderIconButton(
+          icon: LucideIcons.plus,
+          tooltip: l10n.newSkill,
+          onPressed: () => _edit(context, ref),
+        ),
+      ],
+      body: AsyncView(
+        value: skills,
+        onRetry: () => ref.invalidate(skillsProvider),
+        loading: const _SkillsSkeleton(),
+        data: (items) => items.isEmpty
+            ? EmptyState(
+                icon: LucideIcons.bookOpen,
+                title: l10n.noSkills,
+                message: l10n.skillsHelp,
+                action: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: AppSpace.sm,
+                  children: [
+                    GlowButton.icon(
+                      key: const Key('browseCatalog'),
+                      onPressed: () => openSkillCatalog(context),
+                      icon: const Icon(LucideIcons.library, size: 18),
+                      label: Text(l10n.skillCatalog),
+                    ),
+                    OutlinedButton.icon(
+                      key: const Key('browseGallery'),
+                      onPressed: () =>
+                          context.pushOnce('/settings/gallery?type=skill'),
+                      icon: const Icon(LucideIcons.layoutGrid, size: 18),
+                      label: Text(l10n.gallery),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => _edit(context, ref),
+                      icon: const Icon(LucideIcons.plus, size: 18),
+                      label: Text(l10n.newSkill),
+                    ),
+                  ],
+                ),
+              )
+            : PageColumn(
+                children: [
+                  FormNote(l10n.skillsHelp),
+                  const SizedBox(height: AppSpace.md),
+                  GroupedCard(
+                    children: [
+                      for (final s in items)
+                        GroupedTile(
+                          key: Key('skill-${s.id}'),
+                          icon: installedSkillLook(context, s, catalog).$1,
+                          iconColor: s.enabled
+                              ? installedSkillLook(context, s, catalog).$2
+                              : context.colorScheme.onSurfaceVariant,
+                          title: s.name,
+                          subtitle: [
+                            s.description,
+                            switch (s.source) {
+                              'github' => 'GitHub ${(s.sourceRef['repo']?.toString()).orPlaceholder()}',
+                              'catalog' => l10n.fromCatalog,
+                              'gallery' => l10n.fromGallery,
+                              'bot' => l10n.savedByBot,
+                              _ => null,
+                            },
+                          ].whereType<String>().join(' · '),
+                          onTap: () => _edit(context, ref, s),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                key: Key('skillStats-${s.id}'),
+                                tooltip: l10n.skillStats,
+                                icon: const Icon(
+                                  LucideIcons.chartColumn,
+                                  size: 18,
+                                ),
+                                onPressed: () => showAdaptiveSheet<void>(
+                                  context: context,
+                                  builder: (_) => SkillStatsSheet(
+                                    skillId: s.id,
+                                    name: s.name,
+                                  ),
+                                ),
+                              ),
+                              if (s.source == 'github')
+                                IconButton(
+                                  key: Key('checkUpdate-${s.id}'),
+                                  tooltip: l10n.checkForUpdates,
+                                  icon: const Icon(
+                                    LucideIcons.refreshCw,
+                                    size: 18,
+                                  ),
+                                  onPressed: () => showSkillUpdate(context, s),
+                                ),
+                              Switch(
+                                value: s.enabled,
+                                onChanged: hapticOnChanged((v) async {
+                                  final org = ref.read(currentOrgProvider)!;
+                                  await runGuarded(
+                                    context,
+                                    () => ref
+                                        .read(backendProvider)
+                                        .saveSkill(
+                                          org.id,
+                                          id: s.id,
+                                          botId: s.botId,
+                                          name: s.name,
+                                          description: s.description,
+                                          bodyMd: s.bodyMd,
+                                          enabled: v,
+                                        ),
+                                  );
+                                  ref.invalidate(skillsProvider);
+                                }),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+      ),
+      ),
+    );
+  }
+}
+
+/// The skills list still loading: the help note, then a card of skill rows with their stats
+/// button and switch.
+class _SkillsSkeleton extends StatelessWidget {
+  const _SkillsSkeleton();
+
+  static const _titles = [0.42, 0.56, 0.34, 0.5, 0.46];
+  static const _subtitles = [0.78, 0.64, 0.86, 0.7, 0.6];
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.textTheme;
+    return SkeletonPage(
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(padding: EdgeInsets.only(top: 1), child: SkeletonBone(width: 16, height: 16, radius: 8)),
+            const SizedBox(width: 6),
+            Expanded(child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.35), lines: 2, widthFactor: 0.8)),
+          ],
+        ),
+        const SizedBox(height: AppSpace.md),
+        SkeletonGroupedCard(
+          rows: [
+            for (var i = 0; i < _titles.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.md, vertical: 12),
+                child: Row(
+                  children: [
+                    const SkeletonBone(width: 32, height: 32, radius: AppRadius.icon),
+                    const SizedBox(width: AppSpace.sm),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          SkeletonText(style: text.bodyLarge?.copyWith(fontWeight: FontWeight.w600), widthFactor: _titles[i]),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 1),
+                            child: SkeletonText(style: text.bodySmall?.copyWith(height: 1.3), widthFactor: _subtitles[i]),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AppSpace.xs),
+                    const SizedBox(width: 48, height: 48, child: Center(child: SkeletonBone(width: 18, height: 18, radius: 4))),
+                    const SizedBox(width: 60, height: 48, child: Center(child: SkeletonBone(width: 52, height: 32, radius: AppRadius.pill))),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _SkillEditor extends ConsumerStatefulWidget {
+  const _SkillEditor({this.skill});
+  final SkillView? skill;
+
+  @override
+  ConsumerState<_SkillEditor> createState() => _SkillEditorState();
+}
+
+class _SkillEditorState extends ConsumerState<_SkillEditor> {
+  late final _name = TextEditingController(text: widget.skill?.name ?? '');
+  late final _description = TextEditingController(
+    text: widget.skill?.description ?? '',
+  );
+  late final _body = TextEditingController(text: widget.skill?.bodyMd ?? '');
+  var _busy = false;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _description.dispose();
+    _body.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() => _busy = true);
+    final org = ref.read(currentOrgProvider)!;
+    final ok = await runGuarded(context, () async {
+      await ref
+          .read(backendProvider)
+          .saveSkill(
+            org.id,
+            id: widget.skill?.id,
+            botId: widget.skill?.botId,
+            name: _name.text.trim(),
+            description: _description.text.trim(),
+            bodyMd: _body.text,
+            enabled: widget.skill?.enabled ?? true,
+          );
+      return true;
+    });
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (ok == true) Navigator.pop(context);
+  }
+
+  Future<void> _delete() async {
+    final l10n = context.l10n;
+    final ok = await showConfirm(
+      context: context,
+      title: l10n.deleteSkillTitle(widget.skill!.name),
+      confirmLabel: l10n.delete,
+      destructive: true,
+    );
+    if (!ok || !mounted) return;
+    await runGuarded(
+      context,
+      () => ref.read(backendProvider).deleteSkill(widget.skill!.id),
+    );
+    if (mounted) Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final valid =
+        _name.text.trim().isNotEmpty &&
+        _description.text.trim().isNotEmpty &&
+        _body.text.trim().isNotEmpty;
+    return FormSheet(
+      icon: LucideIcons.bookOpen,
+      title: widget.skill == null ? l10n.newSkill : l10n.editSkill,
+      subtitle: l10n.skillsHelp,
+      submitLabel: l10n.save,
+      busy: _busy,
+      onSubmit: valid ? _save : null,
+      footer: widget.skill == null
+          ? null
+          : Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                onPressed: _busy ? null : _delete,
+                style: TextButton.styleFrom(
+                  foregroundColor: context.colorScheme.error,
+                ),
+                icon: const Icon(LucideIcons.trash2, size: 18),
+                label: Text(l10n.deleteSkill),
+              ),
+            ),
+      children: [
+        TextField(
+          controller: _name,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            labelText: l10n.skillName,
+            hintText: 'weekly-report',
+            prefixIcon: const Icon(LucideIcons.hash, size: 20),
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+        TextField(
+          controller: _description,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            labelText: l10n.skillDescription,
+            helperText: l10n.skillDescriptionHelp,
+            prefixIcon: const Icon(LucideIcons.text, size: 20),
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+        TextField(
+          controller: _body,
+          style: AppText.mono.copyWith(fontSize: 14),
+          decoration: InputDecoration(
+            labelText: l10n.skillBody,
+            alignLabelWithHint: true,
+            hintText: l10n.skillBodyHint,
+          ),
+          maxLines: 14,
+          minLines: 6,
+          onChanged: (_) => setState(() {}),
+        ),
+      ],
+    );
+  }
+}

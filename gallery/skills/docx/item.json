@@ -1,0 +1,30 @@
+{
+  "name": "Word documents",
+  "author": {
+    "name": "Anthropic",
+    "url": "https://github.com/anthropics/skills"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work"
+  ],
+  "category": "work",
+  "icon": "file-pen",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Turn these notes into a formatted Word report",
+    "Find and replace the client name in this contract",
+    "Add comments to this document where the wording is unclear"
+  ],
+  "access": {
+    "reads": [
+      "documents you share"
+    ],
+    "writes": [
+      "creates and edits Word files"
+    ],
+    "credits": "medium"
+  }
+}

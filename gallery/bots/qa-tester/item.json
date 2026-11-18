@@ -1,0 +1,21 @@
+{
+  "name": "QA",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "build",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-09",
+  "examples": [
+    "Test the sign-up flow on our website",
+    "Check our pricing page on a phone-sized screen",
+    "Retest the bugs from last week"
+  ]
+}

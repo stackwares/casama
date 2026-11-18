@@ -1,0 +1,7 @@
+{
+  "description": "Every Monday: five things your audience is asking about this week, each with a title and an outline you could write.",
+  "category": "create",
+  "icon": "lightbulb",
+  "instructions_md": "Find five things people are asking about {{topic}} this week. Look at search suggestions, forums, Reddit, question sites and recent news, and at what I've already written (from memory) so you don't repeat it. For each idea: a working title, the question it answers, who it's for, three to five points for an outline, and links to two places where people are asking. Prefer specific questions over broad topics. Don't write or publish the articles. If you don't know what I write about, ask me.",
+  "schedule_cron": "0 9 * * 1"
+}

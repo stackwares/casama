@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "founder-kit",
+  "version": "1.0.0",
+  "description": "A chief of staff for a small company: investor updates, decision memos, specs, a morning plan and a Friday review.",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "repository": "https://github.com/stackwares/casama",
+  "license": "Apache-2.0",
+  "keywords": ["founder", "startup", "planning"]
+}

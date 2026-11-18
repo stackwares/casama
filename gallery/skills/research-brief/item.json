@@ -1,0 +1,29 @@
+{
+  "name": "Research brief",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "research"
+  ],
+  "category": "research",
+  "icon": "file-search",
+  "featured": true,
+  "pick": "Answer first, sources after: research you can actually check.",
+  "version": 1,
+  "added": "2026-11-11",
+  "examples": [
+    "Research whether heat pumps work in cold climates",
+    "Write a sourced brief on the four-day work week",
+    "What do studies say about standing desks? Answer first, then sources"
+  ],
+  "access": {
+    "reads": [
+      "the web"
+    ],
+    "credits": "medium"
+  }
+}

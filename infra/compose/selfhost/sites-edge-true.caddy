@@ -1,0 +1,13 @@
+# Sites and connected domains (D-329, CASAMA_SITES_OWN_EDGE=true): any other host name that reaches
+# this server gets a certificate on its first visit, but only after the API says yes (the global
+# on_demand_tls block in the Caddyfile), and is served by the pages port, which picks the site by
+# host name. Port 443 must reach Caddy directly, not through a tunnel.
+https:// {
+	tls {
+		on_demand
+	}
+	encode zstd gzip
+	reverse_proxy api:8790 {
+		import api_hold
+	}
+}

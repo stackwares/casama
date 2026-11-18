@@ -1,0 +1,34 @@
+{
+  "name": "Petal",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "pink",
+    "calm"
+  ],
+  "featured": true,
+  "pick": "Soft pink petals drifting over a blush wash.",
+  "version": 3,
+  "added": "2026-11-12",
+  "changelog": [
+    {
+      "version": 3,
+      "date": "2026-11-18",
+      "note": "A day and a night version: it follows light and dark mode."
+    },
+    {
+      "version": 2,
+      "date": "2026-11-18",
+      "note": "New painted art in the same mood."
+    },
+    {
+      "version": 1,
+      "date": "2026-11-12",
+      "note": "First version."
+    }
+  ]
+}

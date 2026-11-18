@@ -1,0 +1,7 @@
+{
+  "description": "Three times each workday: support mail sorted, answers drafted from your help docs, and a question before any refund.",
+  "category": "work",
+  "icon": "life-buoy",
+  "instructions_md": "Go through the support mail that arrived in the last hour. Sort each message into bug, question, billing, feedback or spam, and mark the urgent ones. For a question, write an answer using only {{docs}}, save it as a draft reply and note which page it came from. If the docs don't cover it, say so and don't guess. For refunds, cancellations, account changes or anything else about money, don't draft a promise: summarise the request and ask me what to do. Never send, close or delete anything. If nothing new came in, reply in one line.",
+  "schedule_cron": "0 9,13,17 * * 1-5"
+}

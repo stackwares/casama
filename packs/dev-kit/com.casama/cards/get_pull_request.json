@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "card": "Details",
+  "title": "#{{result.number}} {{result.title}}",
+  "rows": [
+    { "label": "State", "value": "{{result.state}}" },
+    { "label": "Author", "value": "{{result.author}}" },
+    { "label": "Branches", "value": "{{result.head}} → {{result.base}}" },
+    { "label": "Changes", "value": "{{result.changes}}" },
+    { "label": "Comments", "value": "{{result.comments}}" },
+    { "label": "Opened", "value": "{{result.created}}" },
+    { "label": "Updated", "value": "{{result.updated}}" }
+  ],
+  "footer": "{{result.url}}",
+  "when": "result.number"
+}

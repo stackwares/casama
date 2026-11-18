@@ -1,0 +1,26 @@
+{
+  "name": "Cash flow check",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "cashflow",
+    "money",
+    "business"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "payments",
+      "invoices",
+      "files you share",
+      "memory"
+    ],
+    "credits": "low"
+  }
+}

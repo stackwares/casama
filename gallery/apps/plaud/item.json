@@ -1,0 +1,26 @@
+{
+  "name": "Plaud",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "recordings",
+    "notes"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Summarize my latest Plaud recording",
+    "Search my recordings for the doctor's advice",
+    "Pull the to-dos from yesterday's recordings"
+  ],
+  "access": {
+    "reads": [
+      "Plaud recordings and transcripts"
+    ],
+    "credits": "low"
+  }
+}

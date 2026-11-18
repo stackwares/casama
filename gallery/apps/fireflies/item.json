@@ -1,0 +1,26 @@
+{
+  "name": "Fireflies",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "meetings",
+    "transcripts"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "What were the action items from my last Fireflies meeting?",
+    "Search my transcripts for mentions of the budget",
+    "Summarize this week's customer calls"
+  ],
+  "access": {
+    "reads": [
+      "Fireflies transcripts"
+    ],
+    "credits": "low"
+  }
+}

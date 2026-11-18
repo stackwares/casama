@@ -1,0 +1,560 @@
+# documentation: https://docs.casama.ai/self-hosting/
+# slogan: AI teammates with their own computers, on your own server.
+# category: ai
+# tags: ai,agents,assistant,automation,chat,supabase
+# logo: svgs/casama.svg
+# port: 80
+
+# Casama on Coolify: the core self-host stack from infra/compose/docker-compose.yml, with
+# published images only. Coolify generates every secret (see deploy/coolify/README.md for the
+# map to install.sh). The inline files mirror infra/compose/selfhost/: keep them in step.
+#
+# Casama images use the `latest` tag (the release the git tag `selfhost` marks). Set
+# CASAMA_VERSION to a short commit id to pin one release.
+
+services:
+  kong:
+    image: public.ecr.aws/supabase/kong:2.8.1
+    entrypoint: ["bash", "/home/kong/kong-entrypoint.sh"]
+    depends_on:
+      - auth
+      - rest
+      - realtime-dev
+    environment:
+      # SERVICE_PASSWORD_JWT comes first: Coolify signs the two Supabase keys below with it.
+      - JWT_SECRET=${SERVICE_PASSWORD_JWT}
+      - SUPABASE_ANON_KEY=${SERVICE_SUPABASEANON_KEY}
+      - SUPABASE_SERVICE_KEY=${SERVICE_SUPABASESERVICE_KEY}
+      - KONG_DATABASE=off
+      - KONG_DECLARATIVE_CONFIG=/home/kong/kong.yml
+      - KONG_DNS_ORDER=LAST,A,CNAME
+      - KONG_PLUGINS=request-transformer,cors,key-auth,acl
+      - KONG_NGINX_PROXY_PROXY_BUFFER_SIZE=160k
+      - KONG_NGINX_PROXY_PROXY_BUFFERS=64 160k
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - type: bind
+        source: ./volumes/kong/kong-entrypoint.sh
+        target: /home/kong/kong-entrypoint.sh
+        content: |
+          #!/bin/bash
+          # Fills the two keys into the gateway file, then starts Kong.
+          eval "echo \"$(cat /home/kong/temp.yml)\"" > /home/kong/kong.yml
+          exec /docker-entrypoint.sh kong docker-start
+      # infra/compose/selfhost/kong.yml, with Realtime at its service name here.
+      - type: bind
+        source: ./volumes/kong/kong.yml
+        target: /home/kong/temp.yml
+        content: |
+          _format_version: '2.1'
+          _transform: true
+          consumers:
+            - username: anon
+              keyauth_credentials:
+                - key: $SUPABASE_ANON_KEY
+            - username: service_role
+              keyauth_credentials:
+                - key: $SUPABASE_SERVICE_KEY
+          acls:
+            - consumer: anon
+              group: anon
+            - consumer: service_role
+              group: admin
+          services:
+            - name: auth-v1-open
+              url: http://auth:9999/verify
+              routes: [{ name: auth-v1-open, strip_path: true, paths: [/auth/v1/verify] }]
+              plugins: [{ name: cors }]
+            - name: auth-v1-open-callback
+              url: http://auth:9999/callback
+              routes: [{ name: auth-v1-open-callback, strip_path: true, paths: [/auth/v1/callback] }]
+              plugins: [{ name: cors }]
+            - name: auth-v1-open-authorize
+              url: http://auth:9999/authorize
+              routes: [{ name: auth-v1-open-authorize, strip_path: true, paths: [/auth/v1/authorize] }]
+              plugins: [{ name: cors }]
+            - name: auth-v1
+              url: http://auth:9999/
+              routes: [{ name: auth-v1-all, strip_path: true, paths: [/auth/v1/] }]
+              plugins:
+                - name: cors
+                - name: key-auth
+                  config: { hide_credentials: false }
+                - name: acl
+                  config: { hide_groups_header: true, allow: [admin, anon] }
+            - name: rest-v1
+              url: http://rest:3000/
+              routes: [{ name: rest-v1-all, strip_path: true, paths: [/rest/v1/] }]
+              plugins:
+                - name: cors
+                - name: key-auth
+                  config: { hide_credentials: true }
+                - name: acl
+                  config: { hide_groups_header: true, allow: [admin, anon] }
+            - name: realtime-v1-ws
+              url: http://realtime-dev:4000/socket
+              protocol: ws
+              routes: [{ name: realtime-v1-ws, strip_path: true, paths: [/realtime/v1/] }]
+              plugins:
+                - name: cors
+                - name: key-auth
+                  config: { hide_credentials: false }
+                - name: acl
+                  config: { hide_groups_header: true, allow: [admin, anon] }
+            - name: realtime-v1-rest
+              url: http://realtime-dev:4000/api
+              protocol: http
+              routes: [{ name: realtime-v1-rest, strip_path: true, paths: [/realtime/v1/api] }]
+              plugins:
+                - name: cors
+                - name: key-auth
+                  config: { hide_credentials: false }
+                - name: acl
+                  config: { hide_groups_header: true, allow: [admin, anon] }
+
+  db:
+    image: public.ecr.aws/supabase/postgres:17.11.0.011
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - log_min_messages=fatal
+    environment:
+      - POSTGRES_HOST=/var/run/postgresql
+      - PGPORT=5432
+      - POSTGRES_PORT=5432
+      - PGPASSWORD=${SERVICE_PASSWORD_POSTGRES}
+      - POSTGRES_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
+      - PGDATABASE=postgres
+      - POSTGRES_DB=postgres
+      - JWT_SECRET=${SERVICE_PASSWORD_JWT}
+      - JWT_EXP=3600
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - casama-db-data:/var/lib/postgresql/data
+      # Holds the Vault root key: back it up with the database.
+      - casama-db-config:/etc/postgresql-custom
+      - type: bind
+        source: ./volumes/db/realtime.sql
+        target: /docker-entrypoint-initdb.d/migrations/99-realtime.sql
+        content: |
+          \set pguser `echo "$POSTGRES_USER"`
+          create schema if not exists _realtime;
+          alter schema _realtime owner to :pguser;
+      - type: bind
+        source: ./volumes/db/roles.sql
+        target: /docker-entrypoint-initdb.d/init-scripts/99-roles.sql
+        content: |
+          -- Passwords for the Supabase service roles (the image creates the roles).
+          \set pgpass `echo "$POSTGRES_PASSWORD"`
+          ALTER USER authenticator WITH PASSWORD :'pgpass';
+          ALTER USER pgbouncer WITH PASSWORD :'pgpass';
+          ALTER USER supabase_auth_admin WITH PASSWORD :'pgpass';
+          ALTER USER supabase_storage_admin WITH PASSWORD :'pgpass';
+      - type: bind
+        source: ./volumes/db/jwt.sql
+        target: /docker-entrypoint-initdb.d/init-scripts/99-jwt.sql
+        content: |
+          \set jwt_secret `echo "$JWT_SECRET"`
+          \set jwt_exp `echo "$JWT_EXP"`
+          ALTER DATABASE postgres SET "app.settings.jwt_secret" TO :'jwt_secret';
+          ALTER DATABASE postgres SET "app.settings.jwt_exp" TO :'jwt_exp';
+
+  auth:
+    image: public.ecr.aws/supabase/gotrue:v2.197.0
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:9999/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    environment:
+      - GOTRUE_API_HOST=0.0.0.0
+      - GOTRUE_API_PORT=9999
+      - API_EXTERNAL_URL=${SERVICE_URL_CADDY}
+      - GOTRUE_MAILER_URLPATHS_INVITE=/auth/v1/verify
+      - GOTRUE_MAILER_URLPATHS_CONFIRMATION=/auth/v1/verify
+      - GOTRUE_MAILER_URLPATHS_RECOVERY=/auth/v1/verify
+      - GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE=/auth/v1/verify
+      - GOTRUE_DB_DRIVER=postgres
+      - GOTRUE_DB_DATABASE_URL=postgres://supabase_auth_admin:${SERVICE_PASSWORD_POSTGRES}@db:5432/postgres
+      - GOTRUE_SITE_URL=${AUTH_SITE_URL:-${SERVICE_URL_CADDY}}
+      - GOTRUE_URI_ALLOW_LIST=${ADDITIONAL_REDIRECT_URLS:-casama://app/login-callback,http://127.0.0.1:*/auth/callback}
+      - GOTRUE_DISABLE_SIGNUP=${DISABLE_SIGNUP:-false}
+      # The sign-up hook. Auth refuses to start on an http hook address, so this stays empty
+      # until you set it to https://<your domain>/hooks/auth/before-user-created.
+      - GOTRUE_HOOK_BEFORE_USER_CREATED_ENABLED=${SIGNUP_HOOK_ENABLED:-false}
+      - GOTRUE_HOOK_BEFORE_USER_CREATED_URI=${SIGNUP_HOOK_URI}
+      - GOTRUE_HOOK_BEFORE_USER_CREATED_SECRETS=v1,whsec_${SERVICE_REALBASE64_AUTHHOOK}
+      - GOTRUE_MFA_TOTP_ENROLL_ENABLED=true
+      - GOTRUE_MFA_TOTP_VERIFY_ENABLED=true
+      - GOTRUE_JWT_ADMIN_ROLES=service_role
+      - GOTRUE_JWT_AUD=authenticated
+      - GOTRUE_JWT_DEFAULT_GROUP_NAME=authenticated
+      - GOTRUE_JWT_EXP=3600
+      - GOTRUE_JWT_SECRET=${SERVICE_PASSWORD_JWT}
+      - GOTRUE_EXTERNAL_EMAIL_ENABLED=true
+      # New accounts sign in without a confirmation email until you set up SMTP and turn this off.
+      - GOTRUE_MAILER_AUTOCONFIRM=${EMAIL_AUTOCONFIRM:-true}
+      # Casama's emails, read from the release the images come from.
+      - GOTRUE_MAILER_TEMPLATES_MAGIC_LINK=${EMAIL_TEMPLATE_MAGIC_LINK:-https://raw.githubusercontent.com/stackwares/casama/selfhost/supabase/templates/magic_link.html}
+      - GOTRUE_MAILER_TEMPLATES_CONFIRMATION=${EMAIL_TEMPLATE_CONFIRMATION:-https://raw.githubusercontent.com/stackwares/casama/selfhost/supabase/templates/confirmation.html}
+      - GOTRUE_MAILER_TEMPLATES_INVITE=${EMAIL_TEMPLATE_INVITE:-https://raw.githubusercontent.com/stackwares/casama/selfhost/supabase/templates/invite.html}
+      - GOTRUE_MAILER_TEMPLATES_RECOVERY=${EMAIL_TEMPLATE_RECOVERY:-https://raw.githubusercontent.com/stackwares/casama/selfhost/supabase/templates/recovery.html}
+      - GOTRUE_MAILER_TEMPLATES_EMAIL_CHANGE=${EMAIL_TEMPLATE_EMAIL_CHANGE:-https://raw.githubusercontent.com/stackwares/casama/selfhost/supabase/templates/email_change.html}
+      - GOTRUE_MAILER_TEMPLATES_REAUTHENTICATION=${EMAIL_TEMPLATE_REAUTHENTICATION:-https://raw.githubusercontent.com/stackwares/casama/selfhost/supabase/templates/reauthentication.html}
+      - GOTRUE_MAILER_SUBJECTS_MAGIC_LINK=Your Casama sign-in link
+      - GOTRUE_MAILER_SUBJECTS_CONFIRMATION=Confirm your Casama account
+      - GOTRUE_MAILER_SUBJECTS_INVITE=You're invited to Casama
+      - GOTRUE_MAILER_SUBJECTS_RECOVERY=Reset your Casama password
+      - GOTRUE_MAILER_SUBJECTS_EMAIL_CHANGE=Confirm your new email for Casama
+      - GOTRUE_MAILER_SUBJECTS_REAUTHENTICATION=Your Casama security code
+      - GOTRUE_SMTP_HOST=${SMTP_HOST}
+      - GOTRUE_SMTP_PORT=${SMTP_PORT:-587}
+      - GOTRUE_SMTP_USER=${SMTP_USER}
+      - GOTRUE_SMTP_PASS=${SMTP_PASS}
+      - GOTRUE_SMTP_ADMIN_EMAIL=${SMTP_ADMIN_EMAIL}
+      # SAML SSO needs an RSA key that Coolify cannot generate. See deploy/coolify/README.md.
+      - GOTRUE_SAML_ENABLED=${SAML_ENABLED:-false}
+      - GOTRUE_SAML_PRIVATE_KEY=${SAML_PRIVATE_KEY}
+
+  rest:
+    image: public.ecr.aws/supabase/postgrest:v16.5
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["postgrest"]
+    environment:
+      - PGRST_DB_URI=postgres://authenticator:${SERVICE_PASSWORD_POSTGRES}@db:5432/postgres
+      - PGRST_DB_SCHEMAS=public
+      - PGRST_DB_ANON_ROLE=anon
+      - PGRST_JWT_SECRET=${SERVICE_PASSWORD_JWT}
+      - PGRST_DB_USE_LEGACY_GUCS=false
+
+  # Realtime reads its tenant id (realtime-dev) from the host name it is called by: keep this name.
+  realtime-dev:
+    image: public.ecr.aws/supabase/realtime:v2.151.3
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - PORT=4000
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=supabase_admin
+      - DB_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
+      - DB_NAME=postgres
+      - DB_AFTER_CONNECT_QUERY=SET search_path TO _realtime
+      # Realtime needs exactly 16 characters here. Coolify's only 16-character generator is
+      # SERVICE_USER_*, a random string of letters and digits.
+      - DB_ENC_KEY=${SERVICE_USER_REALTIMEENC}
+      - API_JWT_SECRET=${SERVICE_PASSWORD_JWT}
+      - METRICS_JWT_SECRET=${SERVICE_PASSWORD_JWT}
+      - SECRET_KEY_BASE=${SERVICE_PASSWORD_64_REALTIME}
+      - ERL_AFLAGS=-proto_dist inet_tcp
+      - DNS_NODES=''
+      - RLIMIT_NOFILE=10000
+      - APP_NAME=realtime
+      - SEED_SELF_HOST=true
+      - RUN_JANITOR=true
+
+  # One-shot: copies this release's database migrations out of the server image, so the
+  # migrations always match the API and worker.
+  migrations:
+    image: ghcr.io/stackwares/casama/server:${CASAMA_VERSION:-latest}
+    restart: "no"
+    exclude_from_hc: true
+    user: "0:0"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - rm -f /out/*.sql && cp /app/supabase/migrations/*.sql /out/
+    volumes:
+      - casama-migrations:/out
+
+  # One-shot: waits for Auth and Realtime to make their tables, then applies the migrations.
+  migrate:
+    image: public.ecr.aws/supabase/postgres:17.11.0.011
+    restart: "no"
+    exclude_from_hc: true
+    depends_on:
+      db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    entrypoint: ["/bin/sh", "/migrate.sh"]
+    environment:
+      - POSTGRES_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
+      - WORKER_DB_PASSWORD=${SERVICE_PASSWORD_WORKERDB}
+    volumes:
+      - casama-migrations:/migrations:ro
+      # infra/compose/selfhost/migrate.sh
+      - type: bind
+        source: ./volumes/migrate/migrate.sh
+        target: /migrate.sh
+        content: |
+          #!/bin/sh
+          set -eu
+          export PGPASSWORD="$POSTGRES_PASSWORD"
+          PSQL="psql -h db -U supabase_admin -d postgres -v ON_ERROR_STOP=1 -qtA"
+          for i in $(seq 1 120); do
+            if $PSQL -c "select to_regclass('auth.mfa_factors') is not null and to_regclass('auth.flow_state') is not null
+                and exists (select 1 from information_schema.columns where table_schema = 'auth' and table_name = 'users' and column_name = 'email_confirmed_at')
+                and to_regclass('realtime.messages') is not null" 2>/dev/null | grep -q t; then break; fi
+            [ "$i" = 120 ] && { echo "Auth/Realtime schemas did not appear"; exit 1; }
+            sleep 2
+          done
+          $PSQL -c "create table if not exists public.casama_migrations (name text primary key, applied_at timestamptz not null default now())"
+          for f in $(ls /migrations/*.sql | sort); do
+            name=$(basename "$f")
+            if [ -z "$($PSQL -c "select 1 from public.casama_migrations where name = '$name'")" ]; then
+              echo "applying $name"
+              $PSQL -1 -f "$f"
+              $PSQL -c "insert into public.casama_migrations (name) values ('$name')"
+            fi
+          done
+          if [ -n "${WORKER_DB_PASSWORD:-}" ]; then
+            $PSQL -c "alter role casama_worker with login password '$WORKER_DB_PASSWORD'"
+          fi
+          echo "migrations up to date"
+
+  api:
+    image: ghcr.io/stackwares/casama/server:${CASAMA_VERSION:-latest}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      # Pages (bots' web pages) get their own address, served by this container on port 8790.
+      - SERVICE_URL_API_8790
+      - MODE=api
+      - PAGES_PORT=8790
+      - NODE_ENV=production
+      - DATABASE_URL=postgres://postgres:${SERVICE_PASSWORD_POSTGRES}@db:5432/postgres
+      - SUPABASE_URL=${SERVICE_URL_CADDY}
+      - SUPABASE_INTERNAL_URL=http://kong:8000
+      - SUPABASE_ANON_KEY=${SERVICE_SUPABASEANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SERVICE_SUPABASESERVICE_KEY}
+      - SUPABASE_JWT_SECRET=${SERVICE_PASSWORD_JWT}
+      - PUBLIC_API_URL=${SERVICE_URL_CADDY}
+      - PUBLIC_APP_URL=${CASAMA_APP_URL:-${SERVICE_URL_CADDY}}
+      - PAGES_URL=${CASAMA_PAGES_URL:-${SERVICE_URL_API}}
+      - API_INTERNAL_URL=http://api:8787
+      - INTERNAL_TOKEN=${SERVICE_PASSWORD_64_INTERNAL}
+      - METRICS_TOKEN=${SERVICE_PASSWORD_METRICS}
+      - SUPERVISOR_URL=http://supervisor:8788
+      - SUPERVISOR_TOKEN=${SERVICE_PASSWORD_SUPERVISOR}
+      - TURN_SECRET=${SERVICE_PASSWORD_TURN}
+      - TURN_PUBLIC_HOST=${TURN_PUBLIC_HOST:-${SERVICE_FQDN_CADDY}}
+      - TURN_PORT=3478
+      - CONTENT_ENCRYPTION_KEY=${SERVICE_REALBASE64_CONTENTKEY}
+      - AUTH_HOOK_SECRET=v1,whsec_${SERVICE_REALBASE64_AUTHHOOK}
+      - OBJECT_STORE_DIR=/data/library
+      - BILLING_ENABLED=false
+      - TELEMETRY=${TELEMETRY:-off}
+      - INSTANCE_ADMIN_EMAILS=${INSTANCE_ADMIN_EMAILS}
+      - DISABLE_SIGNUP=${DISABLE_SIGNUP:-false}
+      - COMPUTER_HOST_MEMORY_GB=${COMPUTER_HOST_MEMORY_GB:-4}
+      - COMPUTER_MEMORY_MB=${COMPUTER_MEMORY_MB:-2048}
+      - EMAIL_FROM=${EMAIL_FROM:-Casama <no-reply@localhost>}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+    volumes:
+      - casama-library:/data/library
+      - casama-link:/link
+
+  worker:
+    image: ghcr.io/stackwares/casama/server:${CASAMA_VERSION:-latest}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      - MODE=worker
+      - RUN_CONCURRENCY=${RUN_CONCURRENCY:-20}
+      - NODE_ENV=production
+      - DATABASE_URL=postgres://postgres:${SERVICE_PASSWORD_POSTGRES}@db:5432/postgres
+      - WORKER_DATABASE_URL=postgres://casama_worker:${SERVICE_PASSWORD_WORKERDB}@db:5432/postgres
+      - SUPABASE_URL=${SERVICE_URL_CADDY}
+      - SUPABASE_INTERNAL_URL=http://kong:8000
+      - SUPABASE_ANON_KEY=${SERVICE_SUPABASEANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SERVICE_SUPABASESERVICE_KEY}
+      - SUPABASE_JWT_SECRET=${SERVICE_PASSWORD_JWT}
+      - PUBLIC_API_URL=${SERVICE_URL_CADDY}
+      - PUBLIC_APP_URL=${CASAMA_APP_URL:-${SERVICE_URL_CADDY}}
+      - PAGES_URL=${CASAMA_PAGES_URL:-${SERVICE_URL_API}}
+      - API_INTERNAL_URL=http://api:8787
+      - INTERNAL_TOKEN=${SERVICE_PASSWORD_64_INTERNAL}
+      - METRICS_TOKEN=${SERVICE_PASSWORD_METRICS}
+      - SUPERVISOR_URL=http://supervisor:8788
+      - SUPERVISOR_TOKEN=${SERVICE_PASSWORD_SUPERVISOR}
+      - TURN_SECRET=${SERVICE_PASSWORD_TURN}
+      - TURN_PUBLIC_HOST=${TURN_PUBLIC_HOST:-${SERVICE_FQDN_CADDY}}
+      - TURN_PORT=3478
+      - CONTENT_ENCRYPTION_KEY=${SERVICE_REALBASE64_CONTENTKEY}
+      - AUTH_HOOK_SECRET=v1,whsec_${SERVICE_REALBASE64_AUTHHOOK}
+      - OBJECT_STORE_DIR=/data/library
+      - BILLING_ENABLED=false
+      - TELEMETRY=${TELEMETRY:-off}
+      - INSTANCE_ADMIN_EMAILS=${INSTANCE_ADMIN_EMAILS}
+      - DISABLE_SIGNUP=${DISABLE_SIGNUP:-false}
+      - COMPUTER_HOST_MEMORY_GB=${COMPUTER_HOST_MEMORY_GB:-4}
+      - COMPUTER_MEMORY_MB=${COMPUTER_MEMORY_MB:-2048}
+      - EMAIL_FROM=${EMAIL_FROM:-Casama <no-reply@localhost>}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+    volumes:
+      - casama-library:/data/library
+    # The worker serves no HTTP: it touches /tmp/worker-alive every minute.
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "const s=require('fs').statSync('/tmp/worker-alive',{throwIfNoEntry:false});process.exit(s&&Date.now()-s.mtimeMs<180000?0:1)"
+      interval: 60s
+      timeout: 5s
+      start_period: 180s
+      retries: 2
+
+  # The only service with Docker access. It creates the bots' computers as containers on this
+  # server and joins each computer's private network.
+  supervisor:
+    image: ghcr.io/stackwares/casama/supervisor:${CASAMA_VERSION:-latest}
+    entrypoint: ["/bin/sh", "/supervisor-entrypoint.sh"]
+    depends_on:
+      computer-image:
+        condition: service_completed_successfully
+    environment:
+      - SUPERVISOR_TOKEN=${SERVICE_PASSWORD_SUPERVISOR}
+      - COMPUTER_TOKEN_SECRET=${SERVICE_PASSWORD_64_COMPUTERTOKEN}
+      - EGRESS_CONTROL_URL=http://egress:3129
+      - EGRESS_CONTROL_TOKEN=${SERVICE_PASSWORD_EGRESS}
+      - COMPUTER_IMAGE_HEADLESS=ghcr.io/stackwares/casama/computer-headless:${CASAMA_VERSION:-latest}
+      - COMPUTER_IMAGE_DESKTOP=ghcr.io/stackwares/casama/computer-desktop:${CASAMA_VERSION:-latest}
+      - COMPUTER_MEMORY_MB=${COMPUTER_MEMORY_MB:-2048}
+      - WARM_POOL_SIZE=${WARM_POOL_SIZE:-0}
+      - OBJECT_STORE_DIR=/data/objects
+      - TURN_SECRET=${SERVICE_PASSWORD_TURN}
+      - TURN_PUBLIC_HOST=${TURN_PUBLIC_HOST:-${SERVICE_FQDN_CADDY}}
+      # runsc when gVisor is installed on the server (recommended); empty uses runc.
+      - SANDBOX_RUNTIME=${SANDBOX_RUNTIME}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - casama-objects:/data/objects
+      - type: bind
+        source: ./volumes/supervisor/supervisor-entrypoint.sh
+        target: /supervisor-entrypoint.sh
+        content: |
+          #!/bin/sh
+          # The supervisor attaches the egress proxy, the TURN relay and itself to each computer's
+          # network by container name. Coolify names containers <service>-<resource uuid>, and
+          # tells each container that uuid.
+          set -eu
+          id="${COOLIFY_RESOURCE_UUID:-}"
+          if [ -z "$id" ] && [ -n "${COOLIFY_CONTAINER_NAME:-}" ]; then
+            id="${COOLIFY_CONTAINER_NAME#supervisor-}"
+          fi
+          if [ -z "$id" ]; then
+            echo "COOLIFY_RESOURCE_UUID is not set: cannot work out the container names." >&2
+            exit 1
+          fi
+          export SUPERVISOR_CONTAINER="supervisor-$id"
+          export EGRESS_CONTAINER="egress-$id"
+          export TURN_CONTAINER="turn-$id"
+          # Computers, their networks and volumes start with this, so two installs never mix.
+          export NAME_PREFIX="casama-$id"
+          exec node src/main.ts
+
+  # One-shot: makes Coolify pull the computer image. The supervisor starts computers from it
+  # but does not pull it.
+  computer-image:
+    image: ghcr.io/stackwares/casama/computer-headless:${CASAMA_VERSION:-latest}
+    restart: "no"
+    exclude_from_hc: true
+    entrypoint: ["/bin/true"]
+
+  # The only route from computers to the internet. Blocks private and metadata addresses.
+  egress:
+    image: ghcr.io/stackwares/casama/egress-proxy:${CASAMA_VERSION:-latest}
+    environment:
+      - EGRESS_CONTROL_TOKEN=${SERVICE_PASSWORD_EGRESS}
+      - EGRESS_ABUSE=off
+
+  # TURN relay for live view of desktop computers. Port 3478 (UDP and TCP) must reach this
+  # server directly, not through the HTTP proxy.
+  turn:
+    image: ghcr.io/stackwares/casama/turn:${CASAMA_VERSION:-latest}
+    environment:
+      - TURN_SECRET=${SERVICE_PASSWORD_TURN}
+    ports:
+      - "3478:3478/udp"
+      - "3478:3478/tcp"
+
+  # Routes the one public address to the API and to Supabase. Coolify's proxy ends TLS and
+  # sends everything here on port 80.
+  caddy:
+    image: caddy:2.10.2-alpine
+    depends_on:
+      - api
+      - kong
+    environment:
+      - SERVICE_URL_CADDY_80
+    volumes:
+      # infra/compose/selfhost/Caddyfile, for plain HTTP behind Coolify's proxy.
+      - type: bind
+        source: ./volumes/caddy/Caddyfile
+        target: /etc/caddy/Caddyfile
+        content: |
+          :80 {
+            encode zstd gzip
+            @supabase path /auth/v1/* /rest/v1/* /realtime/v1/*
+            handle @supabase {
+              reverse_proxy kong:8000
+            }
+            @api path /v1/* /hooks/* /link/* /telemetry/* /telephony/* /oauth/* /mcp /mcp/* /a2a/* /links/* /openapi.json /docs /docs/* /healthz /readyz /.well-known/apple-app-site-association /.well-known/assetlinks.json /.well-known/oauth-protected-resource /.well-known/oauth-protected-resource/* /.well-known/oauth-authorization-server
+            handle @api {
+              reverse_proxy api:8787
+            }
+            handle {
+              reverse_proxy web:80
+            }
+            handle_errors 502 {
+              @join path /join/* /invites/*
+              handle @join {
+                rewrite /invites/* /join/{path.1}
+                reverse_proxy api:8787
+              }
+              handle {
+                @root path /
+                respond @root "Casama is running. Point the Casama app or CLI at this address." 200
+                respond "Casama isn't ready yet (or this part isn't running)." 502
+              }
+            }
+            header {
+              X-Content-Type-Options nosniff
+              Referrer-Policy no-referrer
+            }
+          }
+
+volumes:
+  casama-db-data:
+  casama-db-config:
+  casama-migrations:
+  casama-library:
+  casama-link:
+  casama-objects:

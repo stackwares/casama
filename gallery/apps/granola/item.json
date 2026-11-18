@@ -1,0 +1,28 @@
+{
+  "name": "Granola",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "meetings",
+    "notes"
+  ],
+  "featured": true,
+  "pick": "Your meeting notes become something your bot can search and act on.",
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "What did we agree in my Granola notes from Monday?",
+    "List my open action items from this week's meetings",
+    "Find the meeting where we talked about hiring"
+  ],
+  "access": {
+    "reads": [
+      "Granola meeting notes"
+    ],
+    "credits": "low"
+  }
+}

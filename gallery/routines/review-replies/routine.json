@@ -1,0 +1,7 @@
+{
+  "description": "Each weekday morning: new reviews of your business, with a reply drafted for each one for you to post.",
+  "category": "work",
+  "icon": "star",
+  "instructions_md": "Check {{pages}} for reviews posted since the last run. For each new review: the site, the star rating, the reviewer's name, the date, the text in one line and a link. Write a reply in my voice for each one: thank people for good reviews by naming what they liked, and for poor ones apologise once, answer the actual complaint and offer a way to reach us. Never argue, never offer refunds or discounts, and never mention the customer's private details. These are drafts: don't post anything. Keep a list of reviews you've shown me in memory so you don't repeat them. If there are no new reviews, say so in one line. If you don't know where my reviews are, ask me.",
+  "schedule_cron": "0 9 * * 1-5"
+}

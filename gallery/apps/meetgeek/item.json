@@ -1,0 +1,26 @@
+{
+  "name": "MeetGeek",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "meetings",
+    "notes"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Summarize today's MeetGeek recordings",
+    "Find the meeting about the product launch",
+    "What were the next steps from my client call?"
+  ],
+  "access": {
+    "reads": [
+      "MeetGeek recordings"
+    ],
+    "credits": "low"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "name": "Follow-up chaser",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "email",
+    "follow-up",
+    "work"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "email",
+      "memory"
+    ],
+    "writes": [
+      "saves draft nudges in your mail"
+    ],
+    "credits": "medium"
+  },
+  "needs": {
+    "apps": [
+      "gmail"
+    ],
+    "skills": [
+      "email-drafter"
+    ]
+  },
+  "inputs": [
+    {
+      "key": "days",
+      "label": "Chase after how many days?",
+      "type": "choice",
+      "options": [
+        "2",
+        "3",
+        "5",
+        "7"
+      ],
+      "default": "3"
+    }
+  ]
+}

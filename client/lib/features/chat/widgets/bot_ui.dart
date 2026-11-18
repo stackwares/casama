@@ -1,0 +1,216 @@
+import 'package:a2ui_core/a2ui_core.dart';
+import 'package:a2ui_flutter/a2ui_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+
+import '../../../core/widgets.dart';
+import '../../integrations/integrations_screen.dart' show connectedAppIdsProvider;
+import '../../../theme/app_colors.dart';
+import '../../../theme/app_tokens.dart';
+import 'bot_ui_components.dart';
+import 'chat_look.dart';
+import 'sdk_material_bridge.dart';
+import '../../../core/link_browser.dart';
+
+/// What a person did on a bot's interactive UI: the action's name and its resolved values.
+class BotUiAction {
+  const BotUiAction({
+    required this.surfaceId,
+    required this.name,
+    required this.context,
+    required this.sourceComponentId,
+    this.label,
+    this.optionLabels = const {},
+    this.connectApps = const {},
+  });
+  final String surfaceId;
+  final String name;
+  final Map<String, Object?> context;
+  final String sourceComponentId;
+
+  /// The text on the button that sent it, for the message shown in the chat.
+  final String? label;
+
+  /// Choice values and what they say on screen ("email_calendar" -> "Email and calendar").
+  final Map<String, String> optionLabels;
+
+  /// The apps the card's Connect buttons connect, to tell when all of them are.
+  final Set<String> connectApps;
+
+  Map<String, Object?> toJson() => {'surface_id': surfaceId, 'name': name, 'context': context, 'source_component_id': sourceComponentId};
+}
+
+/// Casama's cards that answer with their own buttons (D-335, D-337), and their events' prefixes.
+const ownButtonCards = {'MessageDraft', 'Event', 'MessageList', 'Checklist', 'Results', 'PersonPicker', 'Schedule'};
+const ownCardEvents = ['draft.', 'event.', 'message.', 'checklist.', 'result.', 'person.', 'schedule.'];
+
+/// The text of the message an action sends: the chosen values as they read on screen, or the
+/// button's label (also when the values are only flags), or (with neither) the action's name.
+String uiActionSummary(BotUiAction a) {
+  // Casama's cards (D-335, D-337) send their values for the bot; the chat shows the button pressed.
+  if (ownCardEvents.any(a.name.startsWith)) return a.label ?? a.name;
+  String one(Object? v) => a.optionLabels['$v'] ?? '$v';
+  String show(Object? v) => v is List ? v.map(one).join(', ') : one(v);
+  final values = a.context.entries.where((e) => e.value != null && '${e.value}'.isNotEmpty && !(e.value is List && (e.value as List).isEmpty)).toList();
+  // Flags like {skip: true} read as the button that sent them ("Skip"), not "true".
+  if (values.isEmpty || (a.label != null && values.every((e) => e.value is bool))) return a.label ?? a.name;
+  if (values.length == 1) return show(values.single.value);
+  return values.map((e) => '${e.key}: ${show(e.value)}').join('\n');
+}
+
+/// Holds the A2UI surfaces of one chat (D-086). Bots send small interactive UIs (choices, short
+/// forms, cards) as A2UI v1.0 messages in a `ui` message part; this renders them with the basic
+/// catalog in the app's own theme, and reports what the person does.
+class BotUiHost {
+  BotUiHost({required this.onAction}) {
+    _actionSub = _processor.model.onAction.subscribe((a) {
+      final components = _components[a.surfaceId] ?? const {};
+      onAction(
+        BotUiAction(
+          surfaceId: a.surfaceId,
+          name: a.name,
+          context: Map<String, Object?>.from(a.context),
+          sourceComponentId: a.sourceComponentId,
+          // A draft's Send and Discard (D-335) carry their label; other buttons have a Text child.
+          label: a.userMessage ?? _labelOf(components, a.sourceComponentId),
+          optionLabels: {
+            for (final c in components.values)
+              if (c['options'] case final List<Object?> options)
+                for (final o in options.whereType<Map<Object?, Object?>>())
+                  if (o['value'] case final String v)
+                    if (o['label'] case final String l) v: l,
+          },
+          connectApps: connectApps(a.surfaceId),
+        ),
+      );
+    });
+  }
+
+  final void Function(BotUiAction action) onAction;
+
+  final _processor = MessageProcessor<ComponentImplementation>(
+    catalogs: [
+      casamaUiCatalog(
+        // Links in bot UI open in the browser chosen in Settings, and only web addresses.
+        openUrl: openWebLink,
+      ),
+    ],
+  );
+  late final Subscription _actionSub;
+  final _failed = <String>{};
+
+  /// Each surface's components by id, as the bot sent them, to name what an action came from.
+  final _components = <String, Map<String, Map<Object?, Object?>>>{};
+
+  static String? _labelOf(Map<String, Map<Object?, Object?>> components, String id) {
+    final child = components[id]?['child'];
+    if (child is! String) return null;
+    final text = components[child]?['text'];
+    return text is String && text.trim().isNotEmpty ? text.trim() : null;
+  }
+
+  /// The apps the Connect buttons on [surfaceId] connect ("app:connect" actions, D-256).
+  Set<String> connectApps(String surfaceId) => {
+    for (final c in (_components[surfaceId] ?? const {}).values)
+      if (c['action'] case {'event': {'name': 'app:connect', 'context': {'app': final String app}}}) app,
+  };
+
+  /// Whether [surfaceId] shows one of Casama's cards with its own buttons (D-335, D-337): those
+  /// answer it, so the card doesn't add "Sent" under it (the person's next message says which).
+  bool isDraft(String surfaceId) => (_components[surfaceId] ?? const {}).values.any((c) => ownButtonCards.contains(c['component']));
+
+  /// The surface for [surfaceId], built from [messages] the first time it is asked for. Null when
+  /// the messages don't describe a valid surface.
+  SurfaceModel<ComponentImplementation>? surface(String surfaceId, List<Object?> messages) {
+    if (_failed.contains(surfaceId)) return null;
+    final existing = _processor.model.getSurface(surfaceId);
+    if (existing != null) return existing;
+    for (final m in messages.whereType<Map<Object?, Object?>>()) {
+      if (m['updateComponents'] case {'components': final List<Object?> list}) {
+        final byId = _components.putIfAbsent(surfaceId, () => {});
+        for (final c in list.whereType<Map<Object?, Object?>>()) {
+          if (c['id'] case final String id) byId[id] = c;
+        }
+      }
+    }
+    try {
+      _processor.processMessages(messages);
+    } catch (e) {
+      debugPrint('bot ui $surfaceId: $e');
+      _failed.add(surfaceId);
+    }
+    return _processor.model.getSurface(surfaceId);
+  }
+
+  void dispose() {
+    _actionSub.unsubscribe();
+    _processor.dispose();
+  }
+}
+
+/// A bot's interactive UI in the thread: a card around the A2UI surface. Once answered it stays
+/// visible, dimmed, with a note that it was sent. A card of Connect buttons closes the same way
+/// once all its apps are connected, from the card or anywhere else.
+class BotUiCard extends ConsumerWidget {
+  const BotUiCard({super.key, required this.host, required this.surfaceId, required this.messages, this.answered = false});
+  final BotUiHost host;
+  final String surfaceId;
+  final List<Object?> messages;
+  final bool answered;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final scheme = context.colorScheme;
+    final surface = host.surface(surfaceId, messages);
+    final apps = host.connectApps(surfaceId);
+    final connected = apps.isNotEmpty && (ref.watch(connectedAppIdsProvider).value?.containsAll(apps) ?? false);
+    final answered = this.answered || connected;
+    final Widget body = surface == null
+        ? Text(context.l10n.botUiBroken, style: context.textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant))
+        // Plain text in the card takes the body style; buttons and chips set their own.
+        : DefaultTextStyle.merge(
+            style: context.textTheme.bodyMedium?.copyWith(height: 1.45, color: scheme.onSurface),
+            child: A2uiSurface(key: ObjectKey(surface), surface: surface),
+          );
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: Container(
+          key: Key('botUi-$surfaceId'),
+          // The chat's card look (D-256): the bubble's fill, a hairline edge, even corners.
+          padding: ChatLook.cardPadding,
+          decoration: ChatLook.card(context),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Casama's components need a Material ancestor; the basic ones are Flutter SDK Material
+              // widgets and need an SDK Material and Theme too.
+              Material(
+                type: MaterialType.transparency,
+                child: SdkMaterialBridge(
+                  child: IgnorePointer(
+                    ignoring: answered,
+                    child: AnimatedOpacity(opacity: answered ? 0.6 : 1, duration: AppMotion.fast, child: body),
+                  ),
+                ),
+              ),
+              if (answered && !host.isDraft(surfaceId)) ...[
+                const SizedBox(height: AppSpace.xs),
+                Row(
+                  children: [
+                    Icon(LucideIcons.circleCheck, size: 14, color: context.appColors.positive),
+                    const SizedBox(width: 6),
+                    Text(connected ? context.l10n.botUiConnected : context.l10n.botUiSent, style: context.textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant)),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

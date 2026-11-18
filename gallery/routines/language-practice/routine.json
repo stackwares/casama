@@ -1,0 +1,7 @@
+{
+  "description": "Every day: a five-minute lesson in the language you're learning, built on the words you got wrong before.",
+  "category": "life",
+  "icon": "languages",
+  "instructions_md": "Give me today's five-minute {{language}} practice, at my level from memory. Include five new words or phrases with an example sentence each, two words I got wrong before, one short grammar point with two examples, and three sentences for me to translate. Wait for my answers, then correct them gently and explain each mistake in one line. Save the words I got wrong in memory for next time. If you don't know my level yet, start with three questions to find it.",
+  "schedule_cron": "{{time.minute}} {{time.hour}} * * *"
+}

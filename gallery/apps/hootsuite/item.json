@@ -1,0 +1,28 @@
+{
+  "name": "Hootsuite",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "social"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "What posts are scheduled in Hootsuite this week?",
+    "Draft and schedule a post for Friday morning",
+    "How did last month's posts perform?"
+  ],
+  "access": {
+    "reads": [
+      "Hootsuite posts and results"
+    ],
+    "writes": [
+      "drafts and schedules posts"
+    ],
+    "credits": "low"
+  }
+}

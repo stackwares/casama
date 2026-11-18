@@ -1,0 +1,41 @@
+{
+  "name": "Study buddy",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "school",
+    "learning"
+  ],
+  "featured": true,
+  "pick": "Quizzes one question at a time and remembers what you find hard.",
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Quiz me on photosynthesis",
+    "I have a chemistry exam in 10 days. Make me a plan",
+    "Explain this paragraph like I'm new to the topic"
+  ],
+  "access": {
+    "reads": [
+      "memory"
+    ],
+    "credits": "low"
+  },
+  "inputs": [
+    {
+      "key": "level",
+      "label": "Where are you studying?",
+      "type": "choice",
+      "options": [
+        "school",
+        "university",
+        "a certification"
+      ],
+      "default": "school"
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+# Casama
+
+> Casama gives people AI teammates (bots) with their own computers. Bots remember, work on a real Linux computer, ask before risky steps, run on schedules and triggers, and can be self-hosted with any model. Open source (AGPL-3.0; SDKs Apache-2.0), or hosted as Casama Cloud.
+
+- [Docs index for AI agents](https://docs.casama.ai/llms.txt): every docs page with a summary and a link to its markdown
+- [Build with AI agents](https://docs.casama.ai/develop/agents.md): the agent kit (skills for Claude Code, Codex and Cursor), the docs MCP server and starter projects
+- [What is Casama](https://docs.casama.ai/introduction.md)
+- [Quick start](https://docs.casama.ai/quick-start.md)
+- [Download](https://casama.ai/download): the apps for iPhone, iPad, Android, Mac, Windows and Linux, the web app, the browser extension, the CLI and self-hosting
+- [HTTP API](https://docs.casama.ai/develop/api.md), described by [OpenAPI 3.1](https://docs.casama.ai/api/openapi.json)
+- [Plans and usage](https://docs.casama.ai/guide/usage.md)
+- [Plugins](https://docs.casama.ai/develop/plugins.md) and [packs](https://docs.casama.ai/develop/packs.md): a bot's skills and tools from GitHub; packs add whole bots, routines, apps and looks (`casama init pack`)
+- [Sites and domains](https://docs.casama.ai/guide/sites-and-domains.md): pages on the web at their own address, connected and bought domains
+- [Source code](https://github.com/stackwares/casama)
+- [Gallery](https://gallery.casama.ai): ready-made skills, apps, routines, bots, plugins, starter sets and looks. Check it before building one
+
+## Gallery catalog
+
+Public JSON, no sign-in. Item files have `schema` and `items`.
+
+- [index.json](https://gallery.casama.ai/index.json): themes, color schemes, wallpapers and skills
+- [apps.json](https://gallery.casama.ai/apps.json): apps bots can connect to
+- [bots.json](https://gallery.casama.ai/bots.json): starter bots
+- [routines.json](https://gallery.casama.ai/routines.json): routine ideas
+- [plugins.json](https://gallery.casama.ai/plugins.json): reviewed plugins and packs, pinned to a commit
+- [sets.json](https://gallery.casama.ai/sets.json): starter sets of items that go together
+- [authors.json](https://gallery.casama.ai/authors.json): authors and their items
+- [manifest.json](https://gallery.casama.ai/manifest.json): sha256 of every file above, signed with Ed25519 in [manifest.sig](https://gallery.casama.ai/manifest.sig)
+- [Usage stats](https://api.casama.ai/v1/gallery/stats): installs, trending, active users and run success per `<type>/<id>`; small numbers are left out
+
+Docs over MCP, no sign-in: https://api.casama.ai/mcp/docs. `npx -y @casama/mcp` adds gallery_search.
+
+## Pages on casama.ai
+
+Each link is the page's markdown copy. Facts about other products carry the date they were checked.
+
+### About the product
+
+- [About Casama](https://casama.ai/about.md): Casama is an open-source app for AI teammates with their own computers, made by Stackwares. Who we are, how to reach us, and a press kit.
+- [Starter bots](https://casama.ai/bots.md): Every Casama starter bot, from a travel planner to a coder, each with its own name, instructions and routines. Pick one and change anything.
+- [Contact us](https://casama.ai/contact.md): How to reach the Casama team: help with the apps or your account, plans and refunds, privacy requests, security reports and general questions.
+- [Delete your account](https://casama.ai/delete-account.md): How to delete your Casama account and its data, in the app or by email if you no longer have the app, what is deleted and when, and what is kept.
+- [How can we help?](https://casama.ai/help.md): Answers about Casama's plans, privacy, self-hosting and building on it, and Casama Help, which answers your question from our docs.
+- [Open-source AI agents you can read, run and change](https://casama.ai/open-source.md): Casama is an open-source AI agent app under AGPL-3.0: bots with their own computers, memory and approvals, plus apps for every platform.
+- [Casama pricing](https://casama.ai/pricing.md): Casama Cloud is free to start, then $15, $49 or $99 a month with credits included. Self-hosting is free with no limit on users or bots.
+- [How Casama keeps a bot from doing what you didn't want](https://casama.ai/security.md): Casama bots work on locked-down computers, ask before risky steps, never see your passwords, and save a checkpoint before anything destructive.
+- [Self-hosted AI agents, on a server you own](https://casama.ai/self-hosted.md): Run Casama's AI agents on your own VPS, home server or laptop with one command. Free, open source, any model, and reachable from your phone.
+- [Changelog](https://casama.ai/changelog.md): Every change to Casama's server, apps, CLI, SDK and MCP server, version by version, newest first.
+
+### Alternatives
+
+- [Agent Zero alternative: how Casama compares](https://casama.ai/alternatives/agent-zero.md): An Agent Zero alternative with approvals on by default, phone apps and a hosted plan. How Casama and Agent Zero differ, with sources.
+- [ChatGPT Dots alternative: how Casama compares](https://casama.ai/alternatives/chatgpt-agent.md): An open-source alternative to ChatGPT Dots: Casama has a free plan, works in the EU and UK, and lets you self-host with any model.
+- [Claude Cowork and Duet alternative: how Casama compares](https://casama.ai/alternatives/claude-cowork.md): An open-source Claude Cowork alternative: Casama runs on your own server with any model, gives each bot a computer, and has a free plan.
+- [Grok Bot alternative: how Casama compares](https://casama.ai/alternatives/grok-bot.md): An open-source Grok Bot alternative: Casama gives each bot its own computer, lets you choose the model when self-hosted, and has a free plan.
+- [Hark Pro alternative: how Casama compares](https://casama.ai/alternatives/hark.md): An open-source Hark Pro alternative: Casama has desktop apps, team workspaces and a choice of model, and can run on your own server.
+- [Hermes Agent alternative: how Casama compares](https://casama.ai/alternatives/hermes-agent.md): Looking for a Hermes Agent alternative? Casama adds a computer per bot, native phone apps and team workspaces. Compared with sources and dates.
+- [Instinct alternative: how Casama compares](https://casama.ai/alternatives/instinct.md): An open-source Instinct alternative you can use today: Casama needs no invite, asks before risky steps, and doesn't train on your data.
+- [Lindy alternative: how Casama compares](https://casama.ai/alternatives/lindy.md): A Lindy alternative that is open source, has a free plan that doesn't expire and can run on your own server. How Casama and Lindy differ, with sources.
+- [Manus alternative: how Casama compares](https://casama.ai/alternatives/manus.md): An open-source Manus alternative: Casama asks before risky steps, lets you self-host with any model, and charges in dollars, not task credits.
+- [MausBot alternative: how Casama compares](https://casama.ai/alternatives/mausbot.md): A MausBot alternative with a computer for every bot and approvals built in. How Casama and MausBot (OpenMausBot) differ, with sources.
+- [Meta Muse alternative: how Casama compares](https://casama.ai/alternatives/meta-muse.md): An open-source Meta Muse alternative available outside the US: Casama doesn't train on your data and can run on your own server.
+- [n8n alternative: how Casama compares](https://casama.ai/alternatives/n8n.md): Looking for an n8n alternative? n8n is for building workflows step by step. Casama is for handing a task to a bot with its own computer. Compared with sources.
+- [nanobot alternative: how Casama compares](https://casama.ai/alternatives/nanobot.md): A nanobot alternative where each bot gets its own sandboxed computer and asks before risky steps. How Casama and HKUDS's nanobot differ, with sources.
+- [NanoClaw alternative: how Casama compares](https://casama.ai/alternatives/nanoclaw.md): A NanoClaw alternative with apps, settings screens and a hosted plan. How Casama and NanoClaw differ on sandboxing, approvals and setup, with sources.
+- [OpenBot alternative: how Casama compares](https://casama.ai/alternatives/openbot.md): An OpenBot alternative that is fully open source: Casama needs no separately licensed component and has apps on every platform.
+- [OpenClaw alternative: how Casama compares](https://casama.ai/alternatives/openclaw.md): Looking for an OpenClaw alternative? Casama gives each bot its own sandboxed computer and asks before risky steps by default. Compared with sources.
+- [Rakazo alternative: how Casama compares](https://casama.ai/alternatives/rakazo.md): A Rakazo alternative, compared honestly: both are open source with a computer per bot. Where Casama and Rakazo differ, with sources.
+
+### Comparisons
+
+- [Best AI agents for small business in 2026](https://casama.ai/compare/best-ai-agents-for-small-business.md): AI agents for a small business, sorted by need: support inbox, admin, research, team use, budget and self-hosting. Six compared side by side, with sources.
+- [Best AI personal assistants in 2026](https://casama.ai/compare/best-ai-personal-assistants.md): AI personal assistants that do tasks, sorted by need: free, no app, privacy, your own server. Meta Muse, Hark Pro, Instinct, Duet, Dots, Manus, OpenClaw and Casama.
+- [Best open-source AI agents in 2026](https://casama.ai/compare/best-open-source-ai-agents.md): Nine open-source AI agents you can run yourself, compared on licence, safety, models, apps and price: OpenClaw, Hermes Agent, nanobot, NanoClaw, Agent Zero and more.
+- [Casama vs Grok Bot: which should you choose?](https://casama.ai/compare/casama-vs-grok-bot.md): Casama vs Grok Bot, head to head: a closed hosted agent from xAI against an open-source one. Computers, approvals, model choice, price and teams. With sources.
+- [Casama vs Hermes Agent: which should you choose?](https://casama.ai/compare/casama-vs-hermes-agent.md): Casama vs Hermes Agent, head to head: self-improving skills against a computer per bot, approvals, phone apps, teams and price. When to pick each. With sources.
+- [Casama vs Manus: which should you choose?](https://casama.ai/compare/casama-vs-manus.md): Casama vs Manus, head to head: a closed hosted agent against an open-source one you can run yourself. Approvals, chat apps, credits and teams. With sources.
+- [Casama vs n8n: which should you choose?](https://casama.ai/compare/casama-vs-n8n.md): Casama vs n8n, head to head: a workflow builder against bots with their own computers. Which fits fixed processes, which fits varied work, and how to use both.
+- [Casama vs OpenClaw: which should you choose?](https://casama.ai/compare/casama-vs-openclaw.md): Casama vs OpenClaw, head to head: where the agent works, safety defaults, chat apps, teams and price. When to pick each, and what moving costs. With sources.
+- [Casama vs Rakazo: which should you choose?](https://casama.ai/compare/casama-vs-rakazo.md): Casama vs Rakazo, head to head. Both are open source and give each bot its own computer. They differ on model pricing, free plans, chat apps and team roles.
+- [The best Grok Bot alternatives in 2026](https://casama.ai/compare/grok-bot-alternatives.md): Grok Bot alternatives compared on price, model choice and self-hosting: Rakazo, MausBot, OpenBot, Agent Zero, Manus, ChatGPT Dots, Claude Cowork and Casama.
+- [Grok Bot vs Instinct vs Hark Pro](https://casama.ai/compare/grok-bot-vs-instinct-vs-hark.md): Grok Bot, Instinct and Hark Pro compared on price, access, approvals, apps and data use, with Casama as the open-source option. Sources and dates.
+- [The best Hermes Agent alternatives in 2026](https://casama.ai/compare/hermes-agent-alternatives.md): Seven Hermes Agent alternatives compared on sandboxing, approvals, models, apps and price: OpenClaw, nanobot, NanoClaw, Agent Zero, MausBot, Rakazo and Casama.
+- [The best Manus alternatives in 2026](https://casama.ai/compare/manus-alternatives.md): Eight Manus alternatives compared on price, model choice and approvals: Claude Cowork, ChatGPT Dots, Grok Bot, Meta Muse, Hark Pro, Lindy, Agent Zero and Casama.
+- [The best OpenClaw alternatives in 2026](https://casama.ai/compare/openclaw-alternatives.md): Eight OpenClaw alternatives compared on sandboxing, approvals, models, apps and price: Hermes Agent, nanobot, NanoClaw, Agent Zero, MausBot, Rakazo, OpenBot and Casama.
+- [OpenClaw vs Hermes Agent: which should you run?](https://casama.ai/compare/openclaw-vs-hermes-agent.md): OpenClaw vs Hermes Agent compared on licence, safety defaults, models, apps, chat channels and price, with Casama as a third option. Sources and dates.
+- [Rakazo vs OpenBot vs MausBot vs Casama](https://casama.ai/compare/rakazo-vs-openbot-vs-mausbot.md): Four open-source AI teammate apps compared on licence, a computer per bot, approvals, apps, chat channels, teams and price, with sources and dates.
+
+### Use cases
+
+- [AI agents for small business](https://casama.ai/use-cases/ai-agents-for-small-business.md): Give a small team AI employees for support, admin and research. Each Casama bot has a job, a budget and its own computer, and asks before risky steps.
+- [An AI bookkeeping assistant that prepares the books and asks before paying](https://casama.ai/use-cases/ai-bookkeeping-assistant.md): A Casama bot matches receipts to transactions, sorts expenses and flags what's missing. It prepares everything for review, and every payment asks first.
+- [AI coding agents your bot can hand work to](https://casama.ai/use-cases/ai-coding-agent.md): A Casama bot can hand a coding task to Claude Code, Codex or Cursor on its own sandboxed computer or yours, and report back with what changed.
+- [An AI customer support agent that asks before refunds](https://casama.ai/use-cases/ai-customer-support.md): A Casama bot answers customers from your help docs in email and chat apps, looks up their orders, and asks you before giving any refund.
+- [An AI email assistant that waits for your OK](https://casama.ai/use-cases/ai-email-assistant.md): A Casama bot reads your inbox, drafts replies in your voice and sorts what matters. Sending waits for your approval by default.
+- [An AI executive assistant and chief of staff](https://casama.ai/use-cases/ai-executive-assistant.md): A Casama bot preps your meetings, drafts replies for you to send, keeps your calendar clear and holds pings during quiet hours.
+- [An AI meeting assistant for the work before and after the call](https://casama.ai/use-cases/ai-meeting-assistant.md): A Casama bot briefs you before each meeting, files the notes afterwards and drafts the follow-ups. It doesn't join or record your calls, and it asks before sending.
+- [An AI personal assistant that does the task](https://casama.ai/use-cases/ai-personal-assistant.md): A Casama bot books trips and tables, compares prices in its own browser, fills in forms and asks before paying. Free to start.
+- [An AI recruiting assistant that screens to a scorecard and leaves the decision to you](https://casama.ai/use-cases/ai-recruiting-assistant.md): A Casama bot scores applicants against a written scorecard, quotes its evidence and drafts replies. A person makes every decision, and nothing is sent unasked.
+- [An AI research assistant that cites every source](https://casama.ai/use-cases/ai-research-assistant.md): A Casama bot reads the web and your own files on its own computer, and returns a brief or a table with every source cited. It can run every morning.
+- [An AI sales assistant that researches first and never sends for you](https://casama.ai/use-cases/ai-sales-assistant.md): A Casama bot researches leads, builds prospect lists with sources, and drafts outreach and follow-ups. It hands the drafts to you and never sends them itself.
+- [An AI scheduling assistant for your calendar and inbox](https://casama.ai/use-cases/ai-scheduling-assistant.md): A Casama bot finds times, drafts the replies, spots clashes and preps you before each meeting. It works from your calendar and mail.
+- [An AI social media assistant that drafts the week and waits for your OK](https://casama.ai/use-cases/ai-social-media-assistant.md): A Casama bot plans a weekly content calendar and drafts posts for each channel in your voice. It queues drafts for approval and doesn't post by itself.
+- [An AI travel planner that builds the trip and asks before paying](https://casama.ai/use-cases/ai-travel-planner.md): A Casama bot plans trips day by day with real travel times, rough costs and links to official sites. It lists what to book, and every payment asks first.
+
+### Questions
+
+- [AI agent vs chatbot: what's the difference?](https://casama.ai/learn/ai-agent-vs-chatbot.md): A chatbot answers in a text box. An AI agent has tools, a place to work, memory and a schedule, so it does the task itself. A side-by-side table.
+- [Are there free AI agents?](https://casama.ai/learn/are-there-free-ai-agents.md): Yes. Open-source AI agents are free to run and some hosted ones have free plans, but the AI model usually costs money unless you run one locally.
+- [Can AI agents run on my own models?](https://casama.ai/learn/can-ai-agents-run-on-local-models.md): Yes. An AI agent can use a local model through Ollama, LM Studio or vLLM if the agent software accepts an OpenAI-style endpoint. What works and what doesn't.
+- [How do AI agents work?](https://casama.ai/learn/how-do-ai-agents-work.md): An AI agent runs a loop: the model picks a step, a tool carries it out, the model reads the result and picks the next step, until the task is done.
+- [How much does an AI agent cost a month?](https://casama.ai/learn/how-much-does-an-ai-agent-cost.md): From $0 for free software and a local model, to $15 to $200 a month for most hosted AI agents. What you pay for, and the published prices of 17 agents.
+- [How do I self-host an AI agent?](https://casama.ai/learn/how-to-self-host-an-ai-agent.md): To self-host an AI agent you need a machine with Docker, an AI model key or a local model, and about 15 minutes. The steps, with Casama as the example.
+- [Is it safe to give an AI agent access to my email and accounts?](https://casama.ai/learn/is-it-safe-to-give-an-ai-agent-access-to-my-email.md): It can be, if the agent asks before sending, can't see your passwords, treats message content as untrusted, and you can see and undo what it did.
+- [Is OpenClaw safe, and is it free?](https://casama.ai/learn/is-openclaw-safe.md): OpenClaw is free and MIT-licensed. It can be run safely, but its sandbox and approvals are off by default. What that means, and how to set it up more safely.
+- [How do I run AI agents on my own server from my phone?](https://casama.ai/learn/run-ai-agents-on-your-own-server-from-your-phone.md): Run the agent software on a computer at home, give it an address your phone can reach without port forwarding, and sign in with a native app.
+- [Self-hosted or hosted AI agent: which should you choose?](https://casama.ai/learn/self-hosted-or-hosted-ai-agent.md): Host it yourself for control over data, models and cost. Use a hosted agent for no setup and no upkeep. A table of trade-offs and a way to decide.
+- [What is a computer use agent, and which ones let you take over?](https://casama.ai/learn/what-is-a-computer-use-agent.md): A computer use agent works a computer the way you do: screen, mouse, keyboard, browser. Where it runs, why it matters, and which agents let you watch and take over.
+- [What is an AI agent?](https://casama.ai/learn/what-is-an-ai-agent.md): An AI agent is software that uses an AI model to carry out a task step by step with tools, instead of only answering. Examples, limits and how it differs from a chatbot.
+- [What is an AI employee?](https://casama.ai/learn/what-is-an-ai-employee.md): An AI employee is an AI agent given a standing job, with tools, memory, a schedule and limits. What AI workers and AI interns can do, what they cost, and where they fail.
+- [What is an AI teammate?](https://casama.ai/learn/what-is-an-ai-teammate.md): An AI teammate is an AI agent that stays: it has a role, remembers your work, starts tasks without being asked and works alongside people.
+- [What is MCP, and what is an MCP client?](https://casama.ai/learn/what-is-mcp.md): MCP (Model Context Protocol) is a standard way for AI apps to use outside tools and data. A server offers tools; a client is the AI app that uses them.
+- [Which AI agents ask before they act?](https://casama.ai/learn/which-ai-agents-ask-before-they-act.md): Most AI agents ask before some actions. They differ in which actions, whether you can set the rules, whether payments always ask, and whether you can undo.
+- [Which AI agents don't train on your data?](https://casama.ai/learn/which-ai-agents-dont-train-on-your-data.md): Which AI agents say they don't train on your data, which train by default until you opt out, and which don't say. Seventeen agents checked, with sources.
+- [Which AI agents have iPhone and Android apps?](https://casama.ai/learn/which-ai-agents-have-iphone-and-android-apps.md): Which AI agents have real phone apps, which are in early access, and which you reach through chat apps instead. Seventeen agents checked, with sources.
+- [Which AI agents let you choose the model or use your own API keys?](https://casama.ai/learn/which-ai-agents-let-you-choose-the-model.md): Open-source AI agents usually take your own API keys, subscriptions and local models; hosted ones usually pick for you. Seventeen agents checked, with sources.
+- [Which AI agents can run tasks on a schedule?](https://casama.ai/learn/which-ai-agents-run-tasks-on-a-schedule.md): Most AI agents can run on a schedule now. They differ in what else can start them, the limits, whether your computer must stay on, and what still asks first.
+- [Why give an AI agent its own computer?](https://casama.ai/learn/why-give-an-ai-agent-its-own-computer.md): An AI agent with its own computer works apart from your devices, keeps going while you're away, keeps its files and sign-ins, and can be rolled back.
+
+### Blog
+
+- [How approvals work in Casama, and what never asks](https://casama.ai/blog/how-approvals-work.md): The rules that decide when a Casama bot must ask first: risk levels, three autonomy settings, payments that always ask, and what changes after a bot reads a web page.
+- [We asked ChatGPT, Claude and Perplexity which AI agent to use](https://casama.ai/blog/what-ai-assistants-say-about-ai-agents.md): Twelve answers from three AI assistants about AI agents with their own computers. Who they named, which pages they cited, and what it says about the field.
+- [Why every Casama bot gets its own computer](https://casama.ai/blog/why-every-bot-gets-its-own-computer.md): The design choice behind Casama: one sandboxed Linux computer per bot. What it costs, what it buys, and why sharing one machine wasn't enough.
+- [Your own AI server, reachable from your phone](https://casama.ai/blog/your-own-server-in-your-pocket.md): How Casama Link gives a self-hosted Casama server an address your phone can reach, with store apps and push notifications, and what passes through Casama.

@@ -1,0 +1,407 @@
+//
+// AUTO-GENERATED FILE, DO NOT MODIFY!
+//
+
+// ignore_for_file: unused_element
+import 'package:casama_api/src/model/sites_config.dart';
+import 'package:casama_api/src/model/public_config_key_providers.dart';
+import 'package:copy_with_extension/copy_with_extension.dart';
+import 'package:json_annotation/json_annotation.dart';
+
+part 'public_config.g.dart';
+
+
+@CopyWith()
+@JsonSerializable(
+  checked: true,
+  createToJson: true,
+  disallowUnrecognizedKeys: false,
+  explicitToJson: true,
+)
+class PublicConfig {
+  /// Returns a new [PublicConfig] instance.
+  PublicConfig({
+
+    required  this.productName,
+
+    required  this.apiVersion,
+
+    required  this.supabaseUrl,
+
+    required  this.supabaseAnonKey,
+
+    required  this.billingEnabled,
+
+    required  this.defaultModels,
+
+    required  this.defaultReasoningEffort,
+
+     this.wallpapersEnabled,
+
+     this.chatgptSignIn,
+
+     this.serverVoice,
+
+     this.signupProofs,
+
+     this.traceUrlTemplate,
+
+     this.googleClientIds,
+
+     this.signInCodes,
+
+     this.signupsOpen,
+
+     this.signupsByInvitation,
+
+     this.pushSenderId,
+
+     this.sites,
+
+     this.keyProviders,
+  });
+
+  @JsonKey(
+    
+    name: r'product_name',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final String productName;
+
+
+
+  @JsonKey(
+    
+    name: r'api_version',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final String apiVersion;
+
+
+
+  @JsonKey(
+    
+    name: r'supabase_url',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final String supabaseUrl;
+
+
+
+  @JsonKey(
+    
+    name: r'supabase_anon_key',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final String supabaseAnonKey;
+
+
+
+  @JsonKey(
+    
+    name: r'billing_enabled',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final bool billingEnabled;
+
+
+
+      /// Default model id per provider (for example openrouter, openai)
+  @JsonKey(
+    
+    name: r'default_models',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final Map<String, String> defaultModels;
+
+
+
+  @JsonKey(
+    
+    name: r'default_reasoning_effort',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final PublicConfigDefaultReasoningEffortEnum defaultReasoningEffort;
+
+
+
+  @JsonKey(
+    
+    name: r'wallpapers_enabled',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? wallpapersEnabled;
+
+
+
+  @JsonKey(
+    
+    name: r'chatgpt_sign_in',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? chatgptSignIn;
+
+
+
+  @JsonKey(
+    
+    name: r'server_voice',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<PublicConfigServerVoiceEnum>? serverVoice;
+
+
+
+  @JsonKey(
+    
+    name: r'signup_proofs',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<PublicConfigSignupProofsEnum>? signupProofs;
+
+
+
+  @JsonKey(
+    
+    name: r'trace_url_template',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? traceUrlTemplate;
+
+
+
+  @JsonKey(
+    
+    name: r'google_client_ids',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<String>? googleClientIds;
+
+
+
+  @JsonKey(
+    
+    name: r'sign_in_codes',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? signInCodes;
+
+
+
+  @JsonKey(
+    
+    name: r'signups_open',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? signupsOpen;
+
+
+
+  @JsonKey(
+    
+    name: r'signups_by_invitation',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? signupsByInvitation;
+
+
+
+  @JsonKey(
+    
+    name: r'push_sender_id',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? pushSenderId;
+
+
+
+  @JsonKey(
+    
+    name: r'sites',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final SitesConfig? sites;
+
+
+
+  @JsonKey(
+    
+    name: r'key_providers',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final PublicConfigKeyProviders? keyProviders;
+
+
+
+
+
+    @override
+    bool operator ==(Object other) => identical(this, other) || other is PublicConfig &&
+      other.productName == productName &&
+      other.apiVersion == apiVersion &&
+      other.supabaseUrl == supabaseUrl &&
+      other.supabaseAnonKey == supabaseAnonKey &&
+      other.billingEnabled == billingEnabled &&
+      other.defaultModels == defaultModels &&
+      other.defaultReasoningEffort == defaultReasoningEffort &&
+      other.wallpapersEnabled == wallpapersEnabled &&
+      other.chatgptSignIn == chatgptSignIn &&
+      other.serverVoice == serverVoice &&
+      other.signupProofs == signupProofs &&
+      other.traceUrlTemplate == traceUrlTemplate &&
+      other.googleClientIds == googleClientIds &&
+      other.signInCodes == signInCodes &&
+      other.signupsOpen == signupsOpen &&
+      other.signupsByInvitation == signupsByInvitation &&
+      other.pushSenderId == pushSenderId &&
+      other.sites == sites &&
+      other.keyProviders == keyProviders;
+
+    @override
+    int get hashCode =>
+        productName.hashCode +
+        apiVersion.hashCode +
+        supabaseUrl.hashCode +
+        supabaseAnonKey.hashCode +
+        billingEnabled.hashCode +
+        defaultModels.hashCode +
+        defaultReasoningEffort.hashCode +
+        wallpapersEnabled.hashCode +
+        chatgptSignIn.hashCode +
+        serverVoice.hashCode +
+        signupProofs.hashCode +
+        (traceUrlTemplate == null ? 0 : traceUrlTemplate.hashCode) +
+        googleClientIds.hashCode +
+        signInCodes.hashCode +
+        signupsOpen.hashCode +
+        signupsByInvitation.hashCode +
+        pushSenderId.hashCode +
+        sites.hashCode +
+        keyProviders.hashCode;
+
+  factory PublicConfig.fromJson(Map<String, dynamic> json) => _$PublicConfigFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PublicConfigToJson(this);
+
+  @override
+  String toString() {
+    return toJson().toString();
+  }
+
+}
+
+
+enum PublicConfigDefaultReasoningEffortEnum {
+@JsonValue(r'none')
+none(r'none'),
+@JsonValue(r'low')
+low(r'low'),
+@JsonValue(r'medium')
+medium(r'medium'),
+@JsonValue(r'high')
+high(r'high'),
+@JsonValue(r'xhigh')
+xhigh(r'xhigh'),
+@JsonValue(r'max')
+max(r'max');
+
+const PublicConfigDefaultReasoningEffortEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
+
+
+enum PublicConfigServerVoiceEnum {
+@JsonValue(r'live')
+live(r'live'),
+@JsonValue(r'read_aloud')
+readAloud(r'read_aloud'),
+@JsonValue(r'dictation')
+dictation(r'dictation');
+
+const PublicConfigServerVoiceEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
+
+
+enum PublicConfigSignupProofsEnum {
+@JsonValue(r'app_check')
+appCheck(r'app_check'),
+@JsonValue(r'pow')
+pow(r'pow');
+
+const PublicConfigSignupProofsEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
+

@@ -1,0 +1,7 @@
+{
+  "description": "Monday mornings: your unpaid invoices, how late each one is, and a reminder drafted for every overdue one.",
+  "category": "work",
+  "icon": "hand-coins",
+  "instructions_md": "List my unpaid invoices: from my invoicing app if one is connected (such as Stripe or Zoho Books), otherwise from what I've told you or sent you. For each: the customer, the invoice number, the amount, the due date and how many days overdue it is. For every overdue one, draft a polite reminder that names the invoice, the amount and the due date, and make it firmer when it's more than 30 days late. Show me the drafts and ask before sending anything. Never mark an invoice as paid, change it or cancel it. End with the total outstanding. If you don't know of any invoices, ask me where they are.",
+  "schedule_cron": "0 10 * * 1"
+}

@@ -1,0 +1,36 @@
+{
+  "name": "Review replies",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "reviews",
+    "customers",
+    "business"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "the web",
+      "memory"
+    ],
+    "writes": [
+      "saves seen reviews to memory"
+    ],
+    "credits": "low"
+  },
+  "inputs": [
+    {
+      "key": "pages",
+      "label": "Where are your reviews?",
+      "type": "text",
+      "default": "the review pages in your memory",
+      "help": "Web addresses, such as your Google Business, Trustpilot or app store page."
+    }
+  ]
+}

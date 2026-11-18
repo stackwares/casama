@@ -1,0 +1,7 @@
+{
+  "description": "Each weekday morning: new and growing errors from the last day, grouped, with a likely cause for the worst ones.",
+  "category": "build",
+  "icon": "bug",
+  "instructions_md": "Look at the errors reported in the last 24 hours. List the new issues and the ones that grew the most: the title, how many times it happened, how many users it hit, when it started, the release it appeared in and a link. For the three worst, read the stack trace and say in two sentences where the cause probably is, and how sure you are. Leave out issues that are marked resolved or ignored. Don't resolve, assign, ignore or comment on anything. If nothing new happened, say so in one line.",
+  "schedule_cron": "0 8 * * 1-5"
+}

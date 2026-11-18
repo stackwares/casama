@@ -1,0 +1,1 @@
+agent,assistant,chatbot,automation,workflow,tasks,email,inbox,research,travel,voice,self-hosted,llm

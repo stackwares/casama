@@ -1,0 +1,517 @@
+{
+  "schema": 1,
+  "items": [
+    {
+      "type": "list",
+      "id": "app-curation",
+      "name": "App catalog curation",
+      "version": 1,
+      "updated": "2026-11-18",
+      "document": {
+        "apps": [],
+        "order": [],
+        "starter_apps": [
+          "gmail",
+          "google_calendar",
+          "google_drive",
+          "notion",
+          "github",
+          "slack"
+        ]
+      }
+    },
+    {
+      "type": "list",
+      "id": "search-words",
+      "name": "Search words",
+      "version": 1,
+      "updated": "2026-11-18",
+      "document": {
+        "words": {
+          "background": [
+            "wallpaper"
+          ],
+          "bill": [
+            "money",
+            "finance"
+          ],
+          "blog": [
+            "writing",
+            "article"
+          ],
+          "brief": [
+            "digest",
+            "summary"
+          ],
+          "budget": [
+            "money",
+            "finance"
+          ],
+          "cal": [
+            "calendar",
+            "schedule"
+          ],
+          "calendar": [
+            "cal",
+            "schedule",
+            "meeting",
+            "events",
+            "event"
+          ],
+          "chat": [
+            "slack",
+            "messages",
+            "discord",
+            "teams",
+            "message"
+          ],
+          "code": [
+            "github",
+            "developer",
+            "programming",
+            "coding"
+          ],
+          "color": [
+            "colour",
+            "scheme",
+            "palette"
+          ],
+          "colour": [
+            "color",
+            "scheme",
+            "palette"
+          ],
+          "crm": [
+            "sales",
+            "hubspot",
+            "salesforce",
+            "leads"
+          ],
+          "dark": [
+            "night",
+            "black",
+            "midnight"
+          ],
+          "dev": [
+            "developer",
+            "github",
+            "code"
+          ],
+          "digest": [
+            "brief",
+            "summary",
+            "news"
+          ],
+          "doc": [
+            "docs",
+            "document",
+            "notion",
+            "writing"
+          ],
+          "docs": [
+            "doc",
+            "document",
+            "notion"
+          ],
+          "email": [
+            "mail",
+            "gmail",
+            "outlook",
+            "inbox"
+          ],
+          "finance": [
+            "money",
+            "budget",
+            "accounting"
+          ],
+          "fitness": [
+            "workout",
+            "health"
+          ],
+          "food": [
+            "recipe",
+            "recipes",
+            "meal",
+            "cooking"
+          ],
+          "github": [
+            "code",
+            "git"
+          ],
+          "health": [
+            "fitness",
+            "workout",
+            "sleep"
+          ],
+          "inbox": [
+            "email",
+            "mail"
+          ],
+          "light": [
+            "bright",
+            "white",
+            "day"
+          ],
+          "look": [
+            "theme",
+            "scheme",
+            "wallpaper"
+          ],
+          "mail": [
+            "email",
+            "gmail",
+            "outlook",
+            "inbox"
+          ],
+          "meal": [
+            "recipe",
+            "food"
+          ],
+          "meeting": [
+            "meetings",
+            "calendar",
+            "notes"
+          ],
+          "money": [
+            "finance",
+            "budget",
+            "invoice",
+            "bills",
+            "expenses",
+            "bill",
+            "expense"
+          ],
+          "news": [
+            "newsletter",
+            "headlines",
+            "digest",
+            "brief"
+          ],
+          "note": [
+            "notes",
+            "notion",
+            "obsidian"
+          ],
+          "notes": [
+            "note",
+            "notion",
+            "obsidian"
+          ],
+          "photo": [
+            "image",
+            "picture",
+            "photos"
+          ],
+          "recipe": [
+            "cooking",
+            "meal",
+            "food"
+          ],
+          "sales": [
+            "crm",
+            "leads",
+            "deals"
+          ],
+          "schedule": [
+            "calendar",
+            "cal"
+          ],
+          "sheet": [
+            "sheets",
+            "spreadsheet",
+            "excel"
+          ],
+          "social": [
+            "twitter",
+            "linkedin",
+            "instagram",
+            "post"
+          ],
+          "spreadsheet": [
+            "sheet",
+            "sheets",
+            "excel"
+          ],
+          "student": [
+            "study",
+            "school",
+            "learn"
+          ],
+          "study": [
+            "student",
+            "school",
+            "learn"
+          ],
+          "summarize": [
+            "summary",
+            "digest"
+          ],
+          "summary": [
+            "digest",
+            "summarize"
+          ],
+          "task": [
+            "tasks",
+            "todo",
+            "linear",
+            "asana",
+            "jira"
+          ],
+          "theme": [
+            "look",
+            "scheme"
+          ],
+          "todo": [
+            "task",
+            "tasks",
+            "checklist"
+          ],
+          "travel": [
+            "trip",
+            "flight",
+            "flights",
+            "hotel"
+          ],
+          "trip": [
+            "travel"
+          ],
+          "wallpaper": [
+            "background",
+            "pattern"
+          ],
+          "workout": [
+            "fitness",
+            "health",
+            "exercise"
+          ],
+          "write": [
+            "writing",
+            "writer",
+            "blog",
+            "draft"
+          ]
+        }
+      }
+    },
+    {
+      "type": "list",
+      "id": "starters",
+      "name": "Empty-state starters",
+      "version": 1,
+      "updated": "2026-11-18",
+      "document": {
+        "library": [
+          {
+            "id": "game",
+            "label": "A small game",
+            "prompt": "Make me a small game I can play in the browser.",
+            "icon": "gamepad-2",
+            "hue": 265
+          },
+          {
+            "id": "logo",
+            "label": "A logo",
+            "prompt": "Design a logo for my project.",
+            "icon": "image",
+            "hue": 330
+          },
+          {
+            "id": "site",
+            "label": "A one-page site",
+            "prompt": "Make a one-page website for my business.",
+            "icon": "globe",
+            "hue": 210
+          },
+          {
+            "id": "video",
+            "label": "A short video",
+            "prompt": "Make a short video of ",
+            "icon": "film",
+            "hue": 15
+          },
+          {
+            "id": "card",
+            "label": "A birthday card",
+            "prompt": "Make a birthday card for ",
+            "icon": "party-popper",
+            "hue": 40
+          },
+          {
+            "id": "report",
+            "label": "A report",
+            "prompt": "Research and write a report on ",
+            "icon": "file-text",
+            "hue": 150
+          }
+        ],
+        "tasks": [
+          {
+            "id": "research",
+            "text": "Research my top three competitors"
+          },
+          {
+            "id": "draft",
+            "text": "Draft a launch announcement"
+          },
+          {
+            "id": "tidy",
+            "text": "Tidy up my files"
+          }
+        ],
+        "support": [
+          {
+            "id": "purchase",
+            "text": "My purchase didn't go through"
+          },
+          {
+            "id": "cancel",
+            "text": "How do I cancel my plan?"
+          },
+          {
+            "id": "bot",
+            "text": "My bot isn't answering"
+          },
+          {
+            "id": "how-to",
+            "text": "What can my bots do?"
+          }
+        ]
+      }
+    },
+    {
+      "type": "list",
+      "id": "welcome",
+      "name": "Welcome chat",
+      "version": 1,
+      "updated": "2026-11-18",
+      "document": {
+        "focus": [
+          {
+            "id": "email_calendar",
+            "label": "Email and calendar",
+            "intro": "I can keep an eye on your calendar, draft replies, and tell you each morning what needs you.",
+            "first_task": {
+              "label": "What should I keep an eye on this week?",
+              "placeholder": "A deadline, a meeting, a reply you're waiting for",
+              "prefix": "Please keep an eye on this for me: "
+            },
+            "starters": [
+              "executive-assistant"
+            ],
+            "apps": [
+              "google_calendar",
+              "gmail"
+            ]
+          },
+          {
+            "id": "work_projects",
+            "label": "Work projects",
+            "intro": "I can turn projects into tasks, keep them moving, and tell you when something needs a decision.",
+            "first_task": {
+              "label": "Tell me a project you're working on.",
+              "placeholder": "Launch the new pricing page by Friday",
+              "prefix": "Let's set up this project: "
+            },
+            "starters": [
+              "project-manager"
+            ],
+            "apps": [
+              "notion",
+              "linear",
+              "atlassian"
+            ]
+          },
+          {
+            "id": "coding",
+            "label": "Coding",
+            "intro": "I can work in your repositories on my computer: read code, fix issues and open pull requests for you to review.",
+            "first_task": {
+              "label": "Point me at a repo.",
+              "placeholder": "https://github.com/you/your-repo",
+              "prefix": "Please take a look at this repository and tell me what you'd improve first: "
+            },
+            "starters": [
+              "software-engineer"
+            ],
+            "apps": [
+              "github"
+            ]
+          },
+          {
+            "id": "research",
+            "label": "Research",
+            "intro": "I can dig into a topic, compare sources, and write it up as a report or a page you can share.",
+            "first_task": {
+              "label": "Give me a topic to research.",
+              "placeholder": "The best CRM for a 5-person team",
+              "prefix": "Please research this and write it up as a short report: "
+            },
+            "starters": [
+              "researcher"
+            ],
+            "apps": []
+          },
+          {
+            "id": "sales",
+            "label": "Sales and customers",
+            "intro": "I can research the people and companies you talk to, prepare for meetings, and keep your CRM tidy.",
+            "first_task": {
+              "label": "Who should I research first?",
+              "placeholder": "A company or a person",
+              "prefix": "Please research this for an upcoming conversation: "
+            },
+            "starters": [
+              "sales-assistant"
+            ],
+            "apps": [
+              "hubspot",
+              "google_calendar"
+            ]
+          },
+          {
+            "id": "errands",
+            "label": "Personal errands",
+            "intro": "I can take small things off your plate: bookings, reminders, comparisons and forms.",
+            "first_task": {
+              "label": "What's one errand I can take off your plate?",
+              "placeholder": "Find a dentist near me who takes my insurance",
+              "prefix": "Please help me with this errand: "
+            },
+            "starters": [
+              "personal-assistant"
+            ],
+            "apps": [
+              "google_calendar"
+            ]
+          },
+          {
+            "id": "health",
+            "label": "Health and habits",
+            "intro": "I can keep track of your sleep, activity and workouts from your phone, notice how they compare with your usual, and help you build habits. I'm not a doctor and won't give medical advice.",
+            "first_task": {
+              "label": "What habit would you like to build?",
+              "placeholder": "Sleep before 11 on weeknights",
+              "prefix": "Please help me build this habit, and check in on it: "
+            },
+            "starters": [
+              "personal-assistant"
+            ],
+            "apps": []
+          },
+          {
+            "id": "other",
+            "label": "Something else",
+            "intro": "Tell me a bit more about what you need and I'll suggest how to start.",
+            "first_task": {
+              "label": "What would you like me to do first?",
+              "placeholder": "Describe the task",
+              "prefix": ""
+            },
+            "starters": [],
+            "apps": []
+          }
+        ]
+      }
+    }
+  ]
+}

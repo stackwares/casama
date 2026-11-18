@@ -1,0 +1,21 @@
+{
+  "name": "Ops",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-09",
+  "examples": [
+    "Check if our website is up",
+    "Add https://api.example.com/health to the watchlist",
+    "What changed since yesterday?"
+  ]
+}

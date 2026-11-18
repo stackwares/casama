@@ -1,0 +1,1678 @@
+{
+  "note": "Facts for the alternatives and comparison pages. Every rival fact needs a source and the rival a checked date; site/build.mjs fails on a fact with no source or a check older than 45 days.",
+  "checked": "2026-11-18",
+  "rows": [
+    {
+      "key": "license",
+      "label": "Licence"
+    },
+    {
+      "key": "runs",
+      "label": "Where it runs"
+    },
+    {
+      "key": "computer",
+      "label": "A computer for the agent"
+    },
+    {
+      "key": "approvals",
+      "label": "Asks before risky steps"
+    },
+    {
+      "key": "models",
+      "label": "Choice of AI model"
+    },
+    {
+      "key": "apps",
+      "label": "Apps"
+    },
+    {
+      "key": "channels",
+      "label": "Chat apps"
+    },
+    {
+      "key": "memory",
+      "label": "Memory"
+    },
+    {
+      "key": "routines",
+      "label": "Starts on its own"
+    },
+    {
+      "key": "teams",
+      "label": "Teams"
+    },
+    {
+      "key": "pricing",
+      "label": "Price"
+    },
+    {
+      "key": "free",
+      "label": "Free to start"
+    },
+    {
+      "key": "access",
+      "label": "Who can use it"
+    },
+    {
+      "key": "training",
+      "label": "Training on your data"
+    }
+  ],
+  "casama": {
+    "license": "AGPL-3.0 (SDKs and CLI Apache-2.0); a separate `ee/` folder has its own licence",
+    "runs": "Your own server, Mac or Linux computer, or Casama Cloud",
+    "computer": "Each bot has its own sandboxed Linux computer; you can watch it live and take over",
+    "approvals": "Yes. Rules per action, risky steps wait for your OK, and a checkpoint is saved before destructive commands",
+    "models": "Any provider, a ChatGPT plan or local models when self-hosted; Casama picks on Cloud",
+    "apps": "iPhone, iPad, Android, Mac, Windows, Linux, web",
+    "channels": "Telegram, email, SMS, Slack, WhatsApp, Messenger, Feishu, iMessage, Microsoft Teams, Discord",
+    "memory": "Yes, and you can read and edit it",
+    "routines": "Schedules, webhooks, email, calendar events, check-ins",
+    "teams": "Workspaces with roles, group chats with people and bots, extra seats",
+    "pricing": "Self-hosted: free. Cloud: Free, $15, $49 or $99 a month, credits included",
+    "free": "Yes: a free Cloud plan, and self-hosting is free",
+    "access": "Open to everyone",
+    "training": "Not used to train models"
+  },
+  "rivals": [
+    {
+      "id": "openclaw",
+      "name": "OpenClaw",
+      "maker": "OpenClaw Foundation (independent US 501(c)(3) nonprofit); created by Peter Steinberger and the community. Formerly Clawdbot, then Moltbot.",
+      "homepage": "https://openclaw.ai",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "MIT",
+          "source": "https://api.github.com/repos/openclaw/openclaw"
+        },
+        "runs": {
+          "value": "Your own computer or server only; there is no hosted version",
+          "source": "https://openclaw.ai"
+        },
+        "computer": {
+          "value": "Runs on your machine; a sandbox is optional and off by default",
+          "source": "https://docs.openclaw.ai/gateway/sandboxing"
+        },
+        "approvals": {
+          "value": "Optional, and off by default",
+          "source": "https://docs.openclaw.ai/tools/exec-approvals"
+        },
+        "models": {
+          "value": "Your own keys, a ChatGPT or Claude plan, or local models",
+          "source": "https://openclaw.ai"
+        },
+        "apps": {
+          "value": "Mac, Windows, Linux, iPhone, Android; no hosted web app",
+          "source": "https://github.com/openclaw/openclaw"
+        },
+        "channels": {
+          "value": "About 29, including WhatsApp, Telegram, Discord, Slack, Signal, iMessage and Teams",
+          "source": "https://openclaw.ai"
+        },
+        "memory": {
+          "value": "Yes, as Markdown files on your disk",
+          "source": "https://docs.openclaw.ai/concepts/memory"
+        },
+        "routines": {
+          "value": "Schedules, event triggers, webhooks",
+          "source": "https://docs.openclaw.ai/automation/cron-jobs"
+        },
+        "teams": {
+          "value": "A group that trusts each other can share one; it isn't built to separate users",
+          "source": "https://docs.openclaw.ai/gateway/security"
+        },
+        "pricing": {
+          "value": "Free; you pay your model provider",
+          "source": "https://openclaw.ai"
+        },
+        "free": {
+          "value": "Yes, entirely",
+          "source": "https://openclaw.ai"
+        },
+        "access": {
+          "value": "Open to everyone",
+          "source": "https://openclaw.ai"
+        },
+        "training": {
+          "value": "There is no OpenClaw cloud; your model provider's policy applies",
+          "source": "https://openclaw.ai/privacy"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You want the most chat apps: about 29 channels, plus apps on every desktop and phone platform.",
+          "source": "https://openclaw.ai"
+        },
+        {
+          "text": "You want software with no paid tier at all, run by a nonprofit.",
+          "source": "https://openclaw.ai"
+        },
+        {
+          "text": "You want the largest community: about 395,000 GitHub stars.",
+          "source": "https://api.github.com/repos/openclaw/openclaw"
+        }
+      ],
+      "limits": [
+        {
+          "text": "Tools run on your own machine, and both the sandbox and approval prompts are off until you turn them on.",
+          "source": "https://docs.openclaw.ai/gateway/sandboxing"
+        },
+        {
+          "text": "The Register reported three high-impact security advisories in three days in February 2026, and malicious skills on its skill registry.",
+          "source": "https://www.theregister.com/2026/02/03/openclaw_security_problems/"
+        },
+        {
+          "text": "It isn't designed for people who don't trust each other to share one agent.",
+          "source": "https://docs.openclaw.ai/gateway/security"
+        }
+      ],
+      "stars": 394675,
+      "latest_release": "v2026.11.5, published 2026-11-17"
+    },
+    {
+      "id": "hermes-agent",
+      "name": "Hermes Agent",
+      "maker": "Nous Research, Inc.",
+      "homepage": "https://hermes-agent.nousresearch.com",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "MIT",
+          "source": "https://api.github.com/repos/NousResearch/hermes-agent"
+        },
+        "runs": {
+          "value": "Your own computer or server; a hosted agent comes with paid Nous Portal plans",
+          "source": "https://hermes-agent.nousresearch.com"
+        },
+        "computer": {
+          "value": "Your machine by default; Docker, SSH or cloud sandboxes are optional",
+          "source": "https://github.com/NousResearch/hermes-agent"
+        },
+        "approvals": {
+          "value": "For shell commands that match risky patterns",
+          "source": "https://hermes-agent.nousresearch.com/docs/user-guide/security"
+        },
+        "models": {
+          "value": "Your own keys, Nous Portal, some subscriptions, or local models",
+          "source": "https://hermes-agent.nousresearch.com/docs/integrations/providers"
+        },
+        "apps": {
+          "value": "Mac and Windows desktop apps and a terminal app; no phone app yet",
+          "source": "https://hermes-agent.nousresearch.com/compare"
+        },
+        "channels": {
+          "value": "More than 20, including Telegram, Discord, Slack, WhatsApp, Signal, Teams and iMessage",
+          "source": "https://hermes-agent.nousresearch.com/compare"
+        },
+        "memory": {
+          "value": "Yes, and it writes and improves its own skills",
+          "source": "https://github.com/NousResearch/hermes-agent"
+        },
+        "routines": {
+          "value": "Schedules set up in plain language",
+          "source": "https://hermes-agent.nousresearch.com"
+        },
+        "teams": {
+          "value": "Limited; separate user accounts aren't described",
+          "source": "https://hermes-agent.nousresearch.com/compare"
+        },
+        "pricing": {
+          "value": "Free; optional Nous Portal at $0, $20, $100 or $200 a month",
+          "source": "https://hermes-agent.nousresearch.com"
+        },
+        "free": {
+          "value": "Yes",
+          "source": "https://hermes-agent.nousresearch.com"
+        },
+        "access": {
+          "value": "Open to everyone",
+          "source": "https://hermes-agent.nousresearch.com/compare"
+        },
+        "training": {
+          "value": "With your own keys only your provider sees your data; Nous Portal may train on prompts unless Privacy Mode is on",
+          "source": "https://portal.nousresearch.com/privacy"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You want one agent that teaches itself: it writes and refines its own skills and keeps searchable memory.",
+          "source": "https://github.com/NousResearch/hermes-agent"
+        },
+        {
+          "text": "You want wide model choice, including local models and several subscription sign-ins.",
+          "source": "https://hermes-agent.nousresearch.com/docs/integrations/providers"
+        },
+        {
+          "text": "You want to choose where commands run: locally, in Docker, over SSH or in a cloud sandbox.",
+          "source": "https://github.com/NousResearch/hermes-agent"
+        }
+      ],
+      "limits": [
+        {
+          "text": "Commands run on your own machine by default, and its docs say the deny rules are pattern matching that scripts can get around.",
+          "source": "https://hermes-agent.nousresearch.com/docs/user-guide/security"
+        },
+        {
+          "text": "There is no phone app yet.",
+          "source": "https://hermes-agent.nousresearch.com/compare"
+        },
+        {
+          "text": "It is still before version 1.0, with a very large backlog of open issues.",
+          "source": "https://api.github.com/search/issues?q=repo:NousResearch/hermes-agent+type:issue+state:open"
+        }
+      ],
+      "stars": 264188,
+      "latest_release": "v0.23.2, published 2026-11-16"
+    },
+    {
+      "id": "rakazo",
+      "name": "Rakazo",
+      "maker": "Inbox Zero Inc. (Delaware, US; maker of the Inbox Zero email tool); repo under elie222",
+      "homepage": "https://rakazo.com",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "Apache-2.0",
+          "source": "https://api.github.com/repos/elie222/rakazo"
+        },
+        "runs": {
+          "value": "Your own server, a desktop app, or Rakazo's cloud",
+          "source": "https://rakazo.com"
+        },
+        "computer": {
+          "value": "Each bot has its own container or cloud computer",
+          "source": "https://rakazo.com/docs/self-host/"
+        },
+        "approvals": {
+          "value": "Yes: an Ask mode, or an Auto mode where a model decides when to ask",
+          "source": "https://rakazo.com/docs/approvals/"
+        },
+        "models": {
+          "value": "Your own keys, a ChatGPT plan, local models, or Rakazo credits at the provider's price",
+          "source": "https://rakazo.com"
+        },
+        "apps": {
+          "value": "Web, Mac, Windows, Linux, iPhone, iPad, Android",
+          "source": "https://rakazo.com"
+        },
+        "channels": {
+          "value": "Slack and Teams; iMessage, WhatsApp and Telegram only when self-hosted",
+          "source": "https://rakazo.com"
+        },
+        "memory": {
+          "value": "Yes, per bot, and bots can share what they learn",
+          "source": "https://rakazo.com"
+        },
+        "routines": {
+          "value": "Schedules, email, webhooks, GitHub events, watched changes",
+          "source": "https://rakazo.com"
+        },
+        "teams": {
+          "value": "Organizations, spaces and group chats; roles for people aren't described",
+          "source": "https://rakazo.com/docs/groups/"
+        },
+        "pricing": {
+          "value": "Self-hosted: free. Cloud: $15, $49 or $99 a month, or credits from $20",
+          "source": "https://rakazo.com/pricing/"
+        },
+        "free": {
+          "value": "Self-hosting is free; hosted plans have a 7-day trial",
+          "source": "https://rakazo.com/pricing/"
+        },
+        "access": {
+          "value": "Open to everyone",
+          "source": "https://rakazo.com/privacy/"
+        },
+        "training": {
+          "value": "Not stated either way",
+          "source": "https://rakazo.com/privacy/"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You want hosted model usage at the provider's price with no markup.",
+          "source": "https://rakazo.com"
+        },
+        {
+          "text": "You want a wide choice of sandbox providers for bot computers when self-hosting.",
+          "source": "https://rakazo.com/docs/self-host/"
+        },
+        {
+          "text": "You want every way to run it (self-hosted, desktop, hosted) from one project.",
+          "source": "https://rakazo.com/pricing/"
+        }
+      ],
+      "limits": [
+        {
+          "text": "It is young: the repository was created in August 2026 and it is before version 1.0.",
+          "source": "https://api.github.com/repos/elie222/rakazo"
+        },
+        {
+          "text": "iMessage, WhatsApp and Telegram work only when self-hosted.",
+          "source": "https://rakazo.com"
+        },
+        {
+          "text": "The entry hosted plan has 25 computer hours a month.",
+          "source": "https://rakazo.com/pricing/"
+        }
+      ],
+      "stars": 9015,
+      "latest_release": "v0.12.0, published 2026-11-16"
+    },
+    {
+      "id": "openbot",
+      "name": "OpenBot",
+      "maker": "CopilotKit (creators of the AG-UI protocol)",
+      "homepage": "https://open.bot",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "MIT app; it needs CopilotKit Intelligence, which is licensed separately",
+          "source": "https://github.com/CopilotKit/OpenBot"
+        },
+        "runs": {
+          "value": "Your Mac or Windows desktop, or your own server or Kubernetes; hosted is early access",
+          "source": "https://open.bot/pricing"
+        },
+        "computer": {
+          "value": "A container per person; a bot can be given its own",
+          "source": "https://github.com/CopilotKit/OpenBot"
+        },
+        "approvals": {
+          "value": "Yes: admin policies block, allow or require approval",
+          "source": "https://open.bot"
+        },
+        "models": {
+          "value": "Your own keys or subscriptions, or any OpenAI-style endpoint",
+          "source": "https://open.bot"
+        },
+        "apps": {
+          "value": "Mac and Windows; phone, web, Slack and Teams are early access",
+          "source": "https://open.bot"
+        },
+        "channels": {
+          "value": "Slack and Teams, both early access",
+          "source": "https://open.bot"
+        },
+        "memory": {
+          "value": "Yes",
+          "source": "https://github.com/CopilotKit/OpenBot"
+        },
+        "routines": {
+          "value": "Schedules, at most every 15 minutes, up to 20",
+          "source": "https://github.com/CopilotKit/OpenBot"
+        },
+        "teams": {
+          "value": "Yes: roles, single sign-on, audit export and spend limits, on the paid edition",
+          "source": "https://github.com/CopilotKit/OpenBot"
+        },
+        "pricing": {
+          "value": "Free for personal use; Business up to $29 per active user a month",
+          "source": "https://open.bot/pricing"
+        },
+        "free": {
+          "value": "Yes, for one person on their own laptop",
+          "source": "https://open.bot/pricing"
+        },
+        "access": {
+          "value": "The desktop app is open; the other apps are by request",
+          "source": "https://open.bot"
+        },
+        "training": {
+          "value": "Not stated for OpenBot",
+          "source": "https://www.copilotkit.ai/privacy-policy"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You are rolling AI coworkers out across a company and need roles, single sign-on, audit export and spend limits.",
+          "source": "https://open.bot"
+        },
+        {
+          "text": "You want to deploy inside your own cloud with Kubernetes.",
+          "source": "https://open.bot/pricing"
+        },
+        {
+          "text": "You want to plug in agents you built yourself.",
+          "source": "https://open.bot"
+        }
+      ],
+      "limits": [
+        {
+          "text": "The MIT app can't run without CopilotKit Intelligence, which needs a paid licence for production.",
+          "source": "https://github.com/CopilotKit/OpenBot"
+        },
+        {
+          "text": "Only the Mac and Windows desktop apps are generally available.",
+          "source": "https://open.bot"
+        },
+        {
+          "text": "An independent review of version 1.0.2 found the default policy allows every action.",
+          "source": "https://wavect.io/blog/openbot-self-hosted-ai-coworkers-review.md"
+        }
+      ],
+      "stars": 12724,
+      "latest_release": "v1.1.0, published 2026-11-17"
+    },
+    {
+      "id": "mausbot",
+      "name": "MausBot",
+      "maker": "Supamaus Software Private Limited; created by Omkar Satpute and Milind Soni. Formerly OpenGrokBot.",
+      "homepage": "https://www.mausbot.com/",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "Apache-2.0, with a source-available `enterprise/` folder",
+          "source": "https://github.com/milind-soni/OpenMausBot"
+        },
+        "runs": {
+          "value": "Your desktop, your own server, or MausBot Cloud",
+          "source": "https://www.mausbot.com/"
+        },
+        "computer": {
+          "value": "Your machine by default; a cloud computer per bot on paid Cloud plans",
+          "source": "https://github.com/milind-soni/OpenMausBot"
+        },
+        "approvals": {
+          "value": "Allow and Deny cards; the vendor says not every action is guaranteed to pause",
+          "source": "https://www.mausbot.com/"
+        },
+        "models": {
+          "value": "None included: it drives AI tools you're already signed in to, or API keys",
+          "source": "https://www.mausbot.com/"
+        },
+        "apps": {
+          "value": "Mac, Windows, Linux (beta); phone apps are handed out through Discord",
+          "source": "https://www.mausbot.com/"
+        },
+        "channels": {
+          "value": "Slack, on paid plans",
+          "source": "https://www.mausbot.com/pricing"
+        },
+        "memory": {
+          "value": "Basic, per bot",
+          "source": "https://github.com/milind-soni/OpenMausBot"
+        },
+        "routines": {
+          "value": "Schedules, webhooks, app events",
+          "source": "https://github.com/milind-soni/OpenMausBot"
+        },
+        "teams": {
+          "value": "A paid Team plan, for up to 50 people",
+          "source": "https://www.mausbot.com/pricing"
+        },
+        "pricing": {
+          "value": "Desktop app: free. Cloud: $15, $49 or $99 a month; Team $40 for two people",
+          "source": "https://www.mausbot.com/pricing"
+        },
+        "free": {
+          "value": "Yes, the desktop app",
+          "source": "https://www.mausbot.com/pricing"
+        },
+        "access": {
+          "value": "Open to everyone",
+          "source": "https://www.mausbot.com/"
+        },
+        "training": {
+          "value": "Not stated",
+          "source": "https://www.mausbot.com/privacy"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You already pay for Claude Code, Codex or Grok and want to reuse those sign-ins with no markup.",
+          "source": "https://github.com/milind-soni/OpenMausBot"
+        },
+        {
+          "text": "You want a free desktop app that runs bots on your own computer.",
+          "source": "https://www.mausbot.com/pricing"
+        },
+        {
+          "text": "You want many cloud computer hours for the price.",
+          "source": "https://www.mausbot.com/pricing"
+        }
+      ],
+      "limits": [
+        {
+          "text": "The vendor itself says approvals aren't guaranteed to pause every action.",
+          "source": "https://www.mausbot.com/"
+        },
+        {
+          "text": "Slack is the only chat app, and only on paid plans.",
+          "source": "https://www.mausbot.com/pricing"
+        },
+        {
+          "text": "Free bots stop when your computer is off, and the phone apps aren't in the stores.",
+          "source": "https://www.mausbot.com/"
+        }
+      ],
+      "stars": 24731,
+      "latest_release": "v0.1.169, published 2026-11-17"
+    },
+    {
+      "id": "manus",
+      "name": "Manus",
+      "maker": "Butterfly Effect Pte. Ltd. (Singapore). Announced joining Meta in Dec 2025; the deal was blocked and Manus says it resumed independent operations on 1 Sep 2026.",
+      "homepage": "https://manus.im",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "Closed",
+          "source": "https://manus.im"
+        },
+        "runs": {
+          "value": "Manus's cloud; a desktop app can run commands on your computer",
+          "source": "https://manus.im/docs/features/desktop.md"
+        },
+        "computer": {
+          "value": "A cloud sandbox with a browser, per person",
+          "source": "https://manus.im/docs/introduction/welcome.md"
+        },
+        "approvals": {
+          "value": "None described in the cloud; three modes on your own computer",
+          "source": "https://manus.im/docs/features/desktop.md"
+        },
+        "models": {
+          "value": "Manus picks; no choice on standard plans",
+          "source": "https://manus.im/team"
+        },
+        "apps": {
+          "value": "Web, iPhone, iPad, Mac (Apple silicon), Windows",
+          "source": "https://apps.apple.com/us/app/manus-ai-agent-automation/id6740909540"
+        },
+        "channels": {
+          "value": "Slack and email",
+          "source": "https://manus.im/docs/llms.txt"
+        },
+        "memory": {
+          "value": "Projects keep instructions and files; no separate memory is described",
+          "source": "https://manus.im/docs/llms.txt"
+        },
+        "routines": {
+          "value": "Schedules and events: 2 on Free, 20 on Pro",
+          "source": "https://help.manus.im/en/articles/11711111-what-is-the-current-membership-pricing-for-manus"
+        },
+        "teams": {
+          "value": "Yes: shared credits, single sign-on, audit logs",
+          "source": "https://manus.im/team"
+        },
+        "pricing": {
+          "value": "Credits: Free; Pro from $20 a month for 4,000 credits, up to $200; Team from $20 a seat",
+          "source": "https://help.manus.im/en/articles/11711111-what-is-the-current-membership-pricing-for-manus"
+        },
+        "free": {
+          "value": "Yes: 300 credits a day",
+          "source": "https://help.manus.im/en/articles/11711097-what-are-the-pricing-plans"
+        },
+        "access": {
+          "value": "Open; sales were paused in some regions in August 2026",
+          "source": "https://help.manus.im/en/articles/16147831-service-change-overview-what-s-happening-and-am-i-affected"
+        },
+        "training": {
+          "value": "Team plans say no; individual plans are unclear",
+          "source": "https://manus.im/team"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You want nothing to set up: a hosted agent with its own cloud computer on web, phone and desktop.",
+          "source": "https://manus.im/docs/introduction/welcome.md"
+        },
+        {
+          "text": "You want finished deliverables such as slide decks, websites and wide research.",
+          "source": "https://manus.im"
+        },
+        {
+          "text": "You want team administration on a hosted product.",
+          "source": "https://manus.im/team"
+        }
+      ],
+      "limits": [
+        {
+          "text": "It is closed and cloud-only, and you don't choose the model on standard plans.",
+          "source": "https://manus.im/team"
+        },
+        {
+          "text": "Credit use depends on how complex a task turns out to be, and Trustpilot reviewers complain about credits lost to errors.",
+          "source": "https://www.trustpilot.com/review/manus.im"
+        },
+        {
+          "text": "In August 2026 it deleted data and paused sales for users in regions it didn't name.",
+          "source": "https://help.manus.im/en/articles/16147831-service-change-overview-what-s-happening-and-am-i-affected"
+        }
+      ]
+    },
+    {
+      "id": "grok-bot",
+      "name": "Grok Bot",
+      "maker": "xAI / SpaceXSI (app published by X Corp.; accounts and billing run through Cursor)",
+      "homepage": "https://x.ai/bot",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "Closed",
+          "source": "https://docs.x.ai/grok-bot/security"
+        },
+        "runs": {
+          "value": "xAI's cloud only",
+          "source": "https://docs.x.ai/grok-bot/faq"
+        },
+        "computer": {
+          "value": "One cloud computer per person, shared by all of that person's Bots",
+          "source": "https://docs.x.ai/grok-bot/faq"
+        },
+        "approvals": {
+          "value": "An automatic check decides; you can add up to 20 \"ask first\" rules",
+          "source": "https://docs.x.ai/grok-bot/approvals-security-and-privacy"
+        },
+        "models": {
+          "value": "No choice, and you aren't shown which model ran",
+          "source": "https://docs.x.ai/grok-bot/faq"
+        },
+        "apps": {
+          "value": "Mac, Windows, Linux, iPhone, iPad, Android",
+          "source": "https://docs.x.ai/grok-bot/faq"
+        },
+        "channels": {
+          "value": "X, Slack, Microsoft Teams",
+          "source": "https://x.ai/bot"
+        },
+        "memory": {
+          "value": "Yes",
+          "source": "https://docs.x.ai/grok-bot/faq"
+        },
+        "routines": {
+          "value": "Schedules and some events",
+          "source": "https://docs.x.ai/grok-bot/faq"
+        },
+        "teams": {
+          "value": "Team Bots in Slack; admin controls on Enterprise",
+          "source": "https://docs.x.ai/grok-bot/security"
+        },
+        "pricing": {
+          "value": "Paid plans at $30, $100 or $200 a month; a weekly usage pool, then pay per use",
+          "source": "https://x.ai/bot"
+        },
+        "free": {
+          "value": "No free plan",
+          "source": "https://docs.x.ai/grok-bot/faq"
+        },
+        "access": {
+          "value": "Open; its computers run in the United States",
+          "source": "https://docs.x.ai/grok-bot/security"
+        },
+        "training": {
+          "value": "A training opt-out exists",
+          "source": "https://docs.x.ai/grok-bot/faq"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You want native apps on every desktop and phone platform from a large vendor.",
+          "source": "https://docs.x.ai/grok-bot/faq"
+        },
+        {
+          "text": "You want shared team Bots in Slack and Teams with ready-made roles.",
+          "source": "https://x.ai/bot"
+        },
+        {
+          "text": "You want to teach a workflow by recording it once.",
+          "source": "https://docs.x.ai/grok-bot/faq"
+        }
+      ],
+      "limits": [
+        {
+          "text": "Subscribers reported weekly limits being cut in late October 2026 without warning.",
+          "source": "https://cryptobriefing.com/musk-grok-bot-usage-limits-high-costs/"
+        },
+        {
+          "text": "All of a person's Bots share one computer, files and sign-ins.",
+          "source": "https://docs.x.ai/grok-bot/faq"
+        },
+        {
+          "text": "You can't choose or see the model, and you can't host it yourself.",
+          "source": "https://docs.x.ai/grok-bot/security"
+        }
+      ]
+    },
+    {
+      "id": "instinct",
+      "name": "Instinct",
+      "maker": "Spear Street Technology, Inc. (doing business as Instinct)",
+      "homepage": "https://instinct.com",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "Closed",
+          "source": "https://www.instinct.com/terms"
+        },
+        "runs": {
+          "value": "Instinct's cloud; you text or call it",
+          "source": "https://www.instinct.com/terms"
+        },
+        "computer": {
+          "value": "Reviews describe its own cloud computer; the vendor's pages don't say",
+          "source": "https://builtin.com/articles/instinct-ai"
+        },
+        "approvals": {
+          "value": "Not documented; its terms don't promise any",
+          "source": "https://www.instinct.com/terms"
+        },
+        "models": {
+          "value": "Not stated",
+          "source": "https://instinct.com"
+        },
+        "apps": {
+          "value": "None needed; there is a web workspace for settings",
+          "source": "https://www.instinct.com/terms"
+        },
+        "channels": {
+          "value": "Text message and phone call",
+          "source": "https://instinct.com"
+        },
+        "memory": {
+          "value": "Implied, with no controls described",
+          "source": "https://instinct.com"
+        },
+        "routines": {
+          "value": "Reviews say it texts or calls you first",
+          "source": "https://builtin.com/articles/instinct-ai"
+        },
+        "teams": {
+          "value": "None published",
+          "source": "https://www.eesel.ai/blog/instinct-ai-review"
+        },
+        "pricing": {
+          "value": "Not published; reported free during the beta",
+          "source": "https://www.instinct.com/terms"
+        },
+        "free": {
+          "value": "Reported free while invite-only",
+          "source": "https://builtin.com/articles/instinct-ai"
+        },
+        "access": {
+          "value": "Invite or waitlist only",
+          "source": "https://www.instinct.com/terms"
+        },
+        "training": {
+          "value": "On by default; you can opt out",
+          "source": "https://instinct.com/privacy-policy"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You want nothing to install: you text or call it like a person.",
+          "source": "https://instinct.com"
+        },
+        {
+          "text": "You want everyday errands done for one person, such as groceries and tickets.",
+          "source": "https://instinct.com"
+        },
+        {
+          "text": "You want an assistant that follows up without being asked.",
+          "source": "https://www.eesel.ai/blog/instinct-ai-review"
+        }
+      ],
+      "limits": [
+        {
+          "text": "Its terms bind you to agreements it makes for you and cap its liability at $100 or six months of fees.",
+          "source": "https://www.instinct.com/terms"
+        },
+        {
+          "text": "Training on your data is on by default.",
+          "source": "https://instinct.com/privacy-policy"
+        },
+        {
+          "text": "Early testers reported an email sent without permission and a successful phishing test.",
+          "source": "https://aiunderstanding.org/news/startup-fortune-instinct-revised-ai-assistant-data-terms-after-tester-backlash-and"
+        }
+      ]
+    },
+    {
+      "id": "hark",
+      "name": "Hark Pro",
+      "maker": "Hark Labs, Inc.",
+      "homepage": "https://hark.com",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "Closed",
+          "source": "https://hark.com"
+        },
+        "runs": {
+          "value": "Hark's cloud only",
+          "source": "https://hark.com/using-hark"
+        },
+        "computer": {
+          "value": "Its own cloud browser per person; you can watch it",
+          "source": "https://hark.com/security"
+        },
+        "approvals": {
+          "value": "It checks in before actions that need approval; there is no published list",
+          "source": "https://hark.com/security"
+        },
+        "models": {
+          "value": "Hark chooses; no choice",
+          "source": "https://hark.com/security"
+        },
+        "apps": {
+          "value": "Web, iPhone, iPad, Android",
+          "source": "https://apps.apple.com/us/app/hark-pro/id6772362941"
+        },
+        "channels": {
+          "value": "Its own app only",
+          "source": "https://hark.com/using-hark"
+        },
+        "memory": {
+          "value": "Yes; not in the EEA, the UK or Switzerland",
+          "source": "https://hark.com/privacy-policy"
+        },
+        "routines": {
+          "value": "Scheduled tasks",
+          "source": "https://hark.com/using-hark"
+        },
+        "teams": {
+          "value": "None found",
+          "source": "https://hark.com/pricing"
+        },
+        "pricing": {
+          "value": "Free; $20 or $100 a month for more usage",
+          "source": "https://hark.com/pricing"
+        },
+        "free": {
+          "value": "Yes, with every feature; the cap isn't published",
+          "source": "https://hark.com/pricing"
+        },
+        "access": {
+          "value": "Open sign-up",
+          "source": "https://hark.com/privacy-policy"
+        },
+        "training": {
+          "value": "Says it doesn't train on your data",
+          "source": "https://hark.com/privacy-policy"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You want a free plan that includes every feature.",
+          "source": "https://hark.com/pricing"
+        },
+        {
+          "text": "You want everyday errands on websites done from a cloud browser you can watch.",
+          "source": "https://hark.com/security"
+        },
+        {
+          "text": "You want a clear default of no training on your content.",
+          "source": "https://hark.com/privacy-policy"
+        }
+      ],
+      "limits": [
+        {
+          "text": "Usage caps aren't published, and reviewers call them hard to predict.",
+          "source": "https://www.usecarly.com/blog/hark-ai/"
+        },
+        {
+          "text": "There are no desktop apps, no team plan, and no calls or texts.",
+          "source": "https://www.usecarly.com/blog/hark-ai/"
+        },
+        {
+          "text": "Memory is unavailable in the EEA, the UK and Switzerland.",
+          "source": "https://hark.com/privacy-policy"
+        }
+      ]
+    },
+    {
+      "id": "claude-cowork",
+      "name": "Claude Cowork and Duet",
+      "maker": "Anthropic",
+      "homepage": "https://claude.com/product/cowork",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "Closed",
+          "source": "https://claude.com/product/cowork"
+        },
+        "runs": {
+          "value": "Anthropic's cloud; it reaches your computer through the desktop app",
+          "source": "https://support.claude.com/en/articles/15520349-use-claude-cowork-on-web-desktop-and-mobile"
+        },
+        "computer": {
+          "value": "Cowork: cloud sessions you can watch. Duet: its own cloud computer that you can't watch",
+          "source": "https://support.claude.com/en/articles/17631495-get-started-with-claude-duet.md"
+        },
+        "approvals": {
+          "value": "Cowork: depends on the mode you pick. Duet: asks before sending, paying, signing or deleting",
+          "source": "https://support.claude.com/en/articles/13364135-use-claude-cowork-safely"
+        },
+        "models": {
+          "value": "Claude models only",
+          "source": "https://support.claude.com/en/articles/17631495-get-started-with-claude-duet.md"
+        },
+        "apps": {
+          "value": "Mac, Windows, Linux (beta), web, iPhone, Android",
+          "source": "https://support.claude.com/en/articles/15520349-use-claude-cowork-on-web-desktop-and-mobile"
+        },
+        "channels": {
+          "value": "The Claude apps only",
+          "source": "https://support.claude.com/en/articles/17631495-get-started-with-claude-duet.md"
+        },
+        "memory": {
+          "value": "Yes for Duet",
+          "source": "https://support.claude.com/en/articles/17631495-get-started-with-claude-duet.md"
+        },
+        "routines": {
+          "value": "Scheduled tasks; Duet sends a morning brief",
+          "source": "https://claude.com/product/cowork"
+        },
+        "teams": {
+          "value": "Cowork on Team and Enterprise plans; Duet not yet",
+          "source": "https://claude.com/product/cowork"
+        },
+        "pricing": {
+          "value": "Included in paid Claude plans and counted against their limits",
+          "source": "https://claude.com/pricing"
+        },
+        "free": {
+          "value": "No",
+          "source": "https://support.claude.com/en/articles/15520349-use-claude-cowork-on-web-desktop-and-mobile"
+        },
+        "access": {
+          "value": "Cowork: paid plans. Duet: United States only, by waitlist",
+          "source": "https://support.claude.com/en/articles/17631495-get-started-with-claude-duet.md"
+        },
+        "training": {
+          "value": "On for consumer plans unless you switch it off",
+          "source": "https://privacy.claude.com/en/articles/10023580-is-my-data-used-for-model-training"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You want finished documents made from your own files: Word, Excel, PowerPoint, PDF.",
+          "source": "https://claude.com/product/cowork"
+        },
+        {
+          "text": "You already pay for Claude and want agents inside it.",
+          "source": "https://claude.com/product/cowork"
+        },
+        {
+          "text": "You want firm approval rules: Duet has a short list of actions it won't do even if you approve.",
+          "source": "https://support.claude.com/en/articles/17631495-get-started-with-claude-duet.md"
+        }
+      ],
+      "limits": [
+        {
+          "text": "Duet is US-only and waitlisted, and you can't watch or take over its browser.",
+          "source": "https://support.claude.com/en/articles/17631495-get-started-with-claude-duet.md"
+        },
+        {
+          "text": "Anthropic advises against scheduling tasks that send, buy or do things that are hard to undo.",
+          "source": "https://support.claude.com/en/articles/13364135-use-claude-cowork-safely"
+        },
+        {
+          "text": "Both draw on your Claude plan's usage limits, and Cowork uses them faster than chat.",
+          "source": "https://support.claude.com/en/articles/15520349-use-claude-cowork-on-web-desktop-and-mobile"
+        }
+      ]
+    },
+    {
+      "id": "chatgpt-agent",
+      "name": "ChatGPT Dots",
+      "maker": "OpenAI",
+      "homepage": "https://openai.com/index/introducing-dots/",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "Closed",
+          "source": "https://siliconangle.com/2026/09/29/openai-launches-dots-always-on-ai-agents-in-chatgpt-with-their-own-cloud-computers/"
+        },
+        "runs": {
+          "value": "OpenAI's cloud",
+          "source": "https://thenextweb.com/news/openai-dots-always-on-ai-agents-cloud-computers-devday"
+        },
+        "computer": {
+          "value": "Each dot has its own cloud computer that you can open",
+          "source": "https://siliconangle.com/2026/09/29/openai-launches-dots-always-on-ai-agents-in-chatgpt-with-their-own-cloud-computers/"
+        },
+        "approvals": {
+          "value": "Built-in rules plus your own; some confirmations can't be removed",
+          "source": "https://thenextweb.com/news/openai-dots-always-on-ai-agents-cloud-computers-devday"
+        },
+        "models": {
+          "value": "OpenAI's model; no choice",
+          "source": "https://thenextweb.com/news/openai-dots-always-on-ai-agents-cloud-computers-devday"
+        },
+        "apps": {
+          "value": "ChatGPT on desktop, web and phone",
+          "source": "https://siliconangle.com/2026/09/29/openai-launches-dots-always-on-ai-agents-in-chatgpt-with-their-own-cloud-computers/"
+        },
+        "channels": {
+          "value": "ChatGPT, Slack, Microsoft Teams",
+          "source": "https://thenextweb.com/news/openai-dots-always-on-ai-agents-cloud-computers-devday"
+        },
+        "memory": {
+          "value": "Yes; a review reports you can't view or delete single memories",
+          "source": "https://siliconangle.com/2026/09/29/openai-launches-dots-always-on-ai-agents-in-chatgpt-with-their-own-cloud-computers/"
+        },
+        "routines": {
+          "value": "Looks for ways to help when idle; schedules aren't described",
+          "source": "https://thenextweb.com/news/openai-dots-always-on-ai-agents-cloud-computers-devday"
+        },
+        "teams": {
+          "value": "One dot per Business Premium seat",
+          "source": "https://thenextweb.com/news/openai-dots-always-on-ai-agents-cloud-computers-devday"
+        },
+        "pricing": {
+          "value": "One dot is included with ChatGPT Pro and Business Premium",
+          "source": "https://chatgpt.com/pricing"
+        },
+        "free": {
+          "value": "No",
+          "source": "https://chatgpt.com/pricing"
+        },
+        "access": {
+          "value": "Not for Pro subscribers in the EEA, Switzerland or the UK",
+          "source": "https://thenextweb.com/news/openai-dots-always-on-ai-agents-cloud-computers-devday"
+        },
+        "training": {
+          "value": null,
+          "source": "https://openai.com/index/introducing-dots/"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You already pay for ChatGPT Pro and want an always-on agent inside it.",
+          "source": "https://siliconangle.com/2026/09/29/openai-launches-dots-always-on-ai-agents-in-chatgpt-with-their-own-cloud-computers/"
+        },
+        {
+          "text": "You want a very large set of app connections.",
+          "source": "https://thenextweb.com/news/openai-dots-always-on-ai-agents-cloud-computers-devday"
+        },
+        {
+          "text": "You want cautious background behaviour: unprompted work is read-only.",
+          "source": "https://thenextweb.com/news/openai-dots-always-on-ai-agents-cloud-computers-devday"
+        }
+      ],
+      "limits": [
+        {
+          "text": "It is only on the most expensive plans, and not for Pro subscribers in the EEA, Switzerland or the UK.",
+          "source": "https://thenextweb.com/news/openai-dots-always-on-ai-agents-cloud-computers-devday"
+        },
+        {
+          "text": "Users reported dots stopping for hours at a limit with no meter or reset time.",
+          "source": "https://community.openai.com/t/don-t-stay-on-calls-with-chatgpt-dots-for-long-periods-you-can-hit-the-limit-on-pro-5x/1402443"
+        },
+        {
+          "text": "Early users described repeated confirmation prompts.",
+          "source": "https://www.eesel.ai/blog/openai-dots-review"
+        }
+      ]
+    },
+    {
+      "id": "meta-muse",
+      "name": "Meta Muse",
+      "maker": "Meta",
+      "homepage": "https://muse.ai",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "Closed",
+          "source": "https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/"
+        },
+        "runs": {
+          "value": "Meta's cloud only",
+          "source": "https://muse.ai/security-and-privacy"
+        },
+        "computer": {
+          "value": "One cloud computer per person; you can watch and take over",
+          "source": "https://muse.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse"
+        },
+        "approvals": {
+          "value": "Sending email, moving data out and every purchase need approval, through a separate guard",
+          "source": "https://muse.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse"
+        },
+        "models": {
+          "value": "Meta's Muse Spark model only",
+          "source": "https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/"
+        },
+        "apps": {
+          "value": "iPhone, Android, web",
+          "source": "https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/"
+        },
+        "channels": {
+          "value": "The Muse app and WhatsApp",
+          "source": "https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/"
+        },
+        "memory": {
+          "value": "Yes, as files you can read and edit",
+          "source": "https://muse.ai/security-and-privacy"
+        },
+        "routines": {
+          "value": "Schedules and events",
+          "source": "https://muse.ai/blog/how-we-designed-muse"
+        },
+        "teams": {
+          "value": "None found",
+          "source": "https://muse.ai/blog/how-we-designed-muse"
+        },
+        "pricing": {
+          "value": "Free for most use; paid plans add usage (reported at $20 and $100 a month)",
+          "source": "https://techcrunch.com/2026/09/08/meta-debuts-its-muse-ai-agent-will-consumers-trust-it/"
+        },
+        "free": {
+          "value": "Yes; a card is reportedly needed to sign up",
+          "source": "https://techcrunch.com/2026/09/08/meta-debuts-its-muse-ai-agent-will-consumers-trust-it/"
+        },
+        "access": {
+          "value": "United States only",
+          "source": "https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/"
+        },
+        "training": {
+          "value": "On by default; you can turn it off",
+          "source": "https://muse.ai/privacy"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You want a generous free plan for a full cloud-computer agent.",
+          "source": "https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/"
+        },
+        {
+          "text": "You want to message your agent inside WhatsApp.",
+          "source": "https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/"
+        },
+        {
+          "text": "You want a documented safety design with a separate guard that approves outbound actions.",
+          "source": "https://muse.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse"
+        }
+      ],
+      "limits": [
+        {
+          "text": "It is available in the United States only.",
+          "source": "https://about.fb.com/news/2026/09/introducing-muse-personal-ai-agent/"
+        },
+        {
+          "text": "Training on your interactions is on by default until you switch it off.",
+          "source": "https://muse.ai/privacy"
+        },
+        {
+          "text": "Meta can technically access the agent's computer today; the stronger private mode hasn't shipped.",
+          "source": "https://muse.ai/blog/security-and-safety-for-ai-agents-our-approach-with-muse"
+        }
+      ]
+    },
+    {
+      "id": "n8n",
+      "name": "n8n",
+      "maker": "n8n GmbH",
+      "homepage": "https://n8n.io",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "Sustainable Use License: source-available, not open source; for internal, personal or non-commercial use",
+          "source": "https://docs.n8n.io/n8n-community-license/community-license.md"
+        },
+        "runs": {
+          "value": "Your own server, or n8n Cloud",
+          "source": "https://docs.n8n.io/choose-n8n/"
+        },
+        "computer": {
+          "value": "No computer per agent; agents share one code sandbox, and shell commands are self-hosted only",
+          "source": "https://docs.n8n.io/build/build-and-manage-agents.md"
+        },
+        "approvals": {
+          "value": "Approve or reject on an agent's tool calls",
+          "source": "https://docs.n8n.io/build/integrate-ai/ai-examples/human-in-the-loop-for-tools.md"
+        },
+        "models": {
+          "value": "Many providers with your own keys, or local models through Ollama",
+          "source": "https://docs.n8n.io/llms.txt"
+        },
+        "apps": {
+          "value": "A web editor; no desktop app",
+          "source": "https://community.n8n.io/t/sunsetting-self-hosted-team-plan-desktop-version/25830"
+        },
+        "channels": {
+          "value": "Slack, Telegram, Teams and Linear for agents; hundreds of apps as workflow steps",
+          "source": "https://docs.n8n.io/build/build-and-manage-agents.md"
+        },
+        "memory": {
+          "value": "Yes, across sessions for agents",
+          "source": "https://docs.n8n.io/build/integrate-ai/understand-ai-components/how-memory-works.md"
+        },
+        "routines": {
+          "value": "Schedules and app triggers",
+          "source": "https://docs.n8n.io/integrations/builtin/core-nodes/n8n-nodes-base.scheduletrigger.md"
+        },
+        "teams": {
+          "value": "Users and roles; single sign-on on Enterprise or self-hosted Business",
+          "source": "https://n8n.io/pricing/"
+        },
+        "pricing": {
+          "value": "Self-hosted Community: free. Cloud: €20 or €50 a month by executions; Business €667",
+          "source": "https://n8n.io/pricing/"
+        },
+        "free": {
+          "value": "A self-hosted free edition; Cloud has a trial only",
+          "source": "https://n8n.io/pricing/"
+        },
+        "access": {
+          "value": "Open to everyone",
+          "source": "https://n8n.io/pricing/"
+        },
+        "training": {
+          "value": "Says assistant data isn't used to train AI providers' models",
+          "source": "https://docs.n8n.io/privacy-and-security/privacy.md"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You want to build exact, repeatable workflows step by step in a visual editor.",
+          "source": "https://n8n.io/"
+        },
+        {
+          "text": "You need hundreds of ready-made app connections.",
+          "source": "https://n8n.io/pricing/"
+        },
+        {
+          "text": "You have someone technical who wants full control of each step.",
+          "source": "https://docs.n8n.io/choose-n8n/"
+        }
+      ],
+      "limits": [
+        {
+          "text": "Its licence isn't open source: it limits use to internal, personal or non-commercial purposes.",
+          "source": "https://docs.n8n.io/n8n-community-license/community-license.md"
+        },
+        {
+          "text": "Agents don't get a computer of their own with a browser and files.",
+          "source": "https://docs.n8n.io/build/build-and-manage-agents.md"
+        },
+        {
+          "text": "Cloud plans are priced by executions, and there is no free Cloud plan.",
+          "source": "https://n8n.io/pricing/"
+        }
+      ],
+      "stars": 210914
+    },
+    {
+      "id": "agent-zero",
+      "name": "Agent Zero",
+      "maker": "Agent Zero s.r.o., Brno, Czech Republic",
+      "homepage": "https://www.agent-zero.ai/",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "MIT",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/LICENSE"
+        },
+        "runs": {
+          "value": "Your computer or your own server, in Docker; no hosted version",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/README.md"
+        },
+        "computer": {
+          "value": "A Docker container with its own Linux desktop, terminal and browser; can also be given access to your computer",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/README.md"
+        },
+        "approvals": {
+          "value": "None by default: every tool is allowed until you block it in an agent profile",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/plugins/_tool_access/default_config.yaml"
+        },
+        "models": {
+          "value": "Your own keys, a ChatGPT sign-in, or local models through Ollama or LM Studio",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/docs/setup/installation.md"
+        },
+        "apps": {
+          "value": "A0 Launcher for Windows, Mac and Linux, a web app and a CLI; no phone app",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/docs/setup/installation.md"
+        },
+        "channels": {
+          "value": "Telegram, WhatsApp and email; more through plugins",
+          "source": "https://github.com/agent0ai/agent-zero/tree/main/plugins"
+        },
+        "memory": {
+          "value": "Long-term memory you can search and edit, per project",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/docs/guides/memory.md"
+        },
+        "routines": {
+          "value": "Scheduled tasks: cron, one-time or by hand",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/docs/guides/task-scheduler.md"
+        },
+        "teams": {
+          "value": "Not described: one login per instance",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/docs/setup/installation.md"
+        },
+        "pricing": {
+          "value": "Free; you pay your model provider",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/README.md"
+        },
+        "free": {
+          "value": "Yes, all of it",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/README.md"
+        },
+        "access": {
+          "value": "Open to everyone",
+          "source": "https://www.agent-zero.ai/p/docs/installation/"
+        },
+        "training": {
+          "value": "Not stated; it runs on your machine and sends prompts to the model you choose",
+          "source": "https://www.agent-zero.ai/p/cookies/"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You want an agent with a full Linux desktop you can watch, including apps like LibreOffice and Blender.",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/README.md"
+        },
+        {
+          "text": "You want free software you can read and change, with plugins, MCP and A2A.",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/README.md"
+        },
+        {
+          "text": "You want to choose any model, including local ones.",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/docs/setup/installation.md"
+        }
+      ],
+      "limits": [
+        {
+          "text": "There is no hosted version: you run Docker and bring your own model keys or model server.",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/README.md"
+        },
+        {
+          "text": "Tools are allowed by default and nothing asks before acting; limits are set in agent profiles.",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/plugins/_tool_access/default_config.yaml"
+        },
+        {
+          "text": "No phone apps and no team accounts.",
+          "source": "https://github.com/agent0ai/agent-zero/blob/main/docs/setup/installation.md"
+        }
+      ],
+      "stars": 19904,
+      "latest_release": "v2.16, published 2026-11-17"
+    },
+    {
+      "id": "nanoclaw",
+      "name": "NanoClaw",
+      "maker": "NanoCo AI Inc.",
+      "homepage": "https://nanoclaw.dev/",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "MIT",
+          "source": "https://github.com/nanocoai/nanoclaw"
+        },
+        "runs": {
+          "value": "Your own machine with Docker (macOS, Linux, Windows via WSL2); a hosted version is invite-only",
+          "source": "https://nanoclaw.dev/"
+        },
+        "computer": {
+          "value": "Each session in its own Docker container that sees only the folders you mount",
+          "source": "https://docs.nanoclaw.dev/concepts/security.md"
+        },
+        "approvals": {
+          "value": "Asks an admin before installing packages, adding MCP servers or admitting new senders; shell commands in the container don't ask",
+          "source": "https://docs.nanoclaw.dev/extend/self-modification.md"
+        },
+        "models": {
+          "value": "Claude by default (key or subscription); Codex, Cursor and OpenCode as options",
+          "source": "https://docs.nanoclaw.dev/extend/providers.md"
+        },
+        "apps": {
+          "value": "None: chat apps and a terminal",
+          "source": "https://docs.nanoclaw.dev/channels/overview.md"
+        },
+        "channels": {
+          "value": "WhatsApp, Telegram, Discord, Slack, Teams, iMessage, Signal, Matrix and more, each added with a skill",
+          "source": "https://nanoclaw.dev/"
+        },
+        "memory": {
+          "value": "Markdown files per agent group",
+          "source": "https://docs.nanoclaw.dev/concepts/agent-memory.md"
+        },
+        "routines": {
+          "value": "One-time or cron tasks",
+          "source": "https://docs.nanoclaw.dev/guides/scheduled-tasks.md"
+        },
+        "teams": {
+          "value": "Owner and admin roles and agent teams; built for one person",
+          "source": "https://github.com/nanocoai/nanoclaw/blob/main/README.md"
+        },
+        "pricing": {
+          "value": "Free; you pay your model provider",
+          "source": "https://nanoclaw.dev/"
+        },
+        "free": {
+          "value": "Yes, all of it",
+          "source": "https://nanoclaw.dev/"
+        },
+        "access": {
+          "value": "Open to everyone; needs a terminal, git and Docker",
+          "source": "https://github.com/nanocoai/nanoclaw/blob/main/README.md"
+        },
+        "training": {
+          "value": "Not stated; self-hosted data stays on your machine",
+          "source": "https://nanoclaw.dev/privacy"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You want each agent sandboxed in its own container, with API keys kept out of it.",
+          "source": "https://docs.nanoclaw.dev/concepts/security.md"
+        },
+        {
+          "text": "You want to message your agent from many chat apps, including WhatsApp, Signal and iMessage.",
+          "source": "https://nanoclaw.dev/"
+        },
+        {
+          "text": "You want a small codebase you can read in an afternoon and change with a coding agent.",
+          "source": "https://nanoclaw.dev/"
+        }
+      ],
+      "limits": [
+        {
+          "text": "It needs Docker and comfort with a terminal; there is no desktop or phone app.",
+          "source": "https://nanoclaw.dev/"
+        },
+        {
+          "text": "There are no settings screens: you customize it by changing code, and adding chat apps needs Claude Code.",
+          "source": "https://github.com/nanocoai/nanoclaw/blob/main/README.md"
+        },
+        {
+          "text": "Containers have open internet access by default, and asking before each credential use is opt-in.",
+          "source": "https://docs.nanoclaw.dev/operate/hardening.md"
+        }
+      ],
+      "stars": 31119,
+      "latest_release": "v2026.10.0, published 2026-10-09"
+    },
+    {
+      "id": "nanobot",
+      "name": "nanobot",
+      "maker": "HKUDS, the Data Intelligence Lab at the University of Hong Kong",
+      "homepage": "https://nanobot.wiki/",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "MIT",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/LICENSE"
+        },
+        "runs": {
+          "value": "Your own machine or server, as a Python app or in Docker",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/docs/deployment.md"
+        },
+        "computer": {
+          "value": "The machine it's installed on; an optional shell sandbox",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/docs/configuration.md"
+        },
+        "approvals": {
+          "value": "No ask-before-acting step; workspace limits and the sandbox are off by default in the config",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/docs/configuration.md"
+        },
+        "models": {
+          "value": "Your own keys, Codex, Copilot or Grok sign-in, or local models; fallbacks supported",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/docs/providers.md"
+        },
+        "apps": {
+          "value": "A web app (works on phones), a terminal UI and a CLI",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/README.md"
+        },
+        "channels": {
+          "value": "Telegram, Discord, Slack, WhatsApp, WeChat, Feishu, Signal, Matrix, email and more",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/docs/chat-apps.md"
+        },
+        "memory": {
+          "value": "Layered files, tidied on a schedule and tracked in git",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/docs/memory.md"
+        },
+        "routines": {
+          "value": "Time, interval or cron schedules, command triggers and long-running goals",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/docs/automations.md"
+        },
+        "teams": {
+          "value": "No team accounts; separate people need separate instances",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/docs/multiple-instances.md"
+        },
+        "pricing": {
+          "value": "Free; you pay your model provider",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/README.md"
+        },
+        "free": {
+          "value": "Yes, all of it",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/README.md"
+        },
+        "access": {
+          "value": "Open to everyone",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/README.md"
+        },
+        "training": {
+          "value": "Not stated",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/docs/configuration.md"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You want an agent in many chat apps, including WeChat, Feishu, QQ and DingTalk.",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/docs/chat-apps.md"
+        },
+        {
+          "text": "You want any model, including local ones, with fallbacks.",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/docs/providers.md"
+        },
+        {
+          "text": "You want a small Python codebase you can read, extend or embed.",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/README.md"
+        }
+      ],
+      "limits": [
+        {
+          "text": "There is no hosted version: you install it, bring a model and keep it running for chat apps and schedules.",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/README.md"
+        },
+        {
+          "text": "The workspace limit and shell sandbox are off by default, and plugins run with full permissions.",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/docs/configuration.md"
+        },
+        {
+          "text": "One instance has one memory and one admin, so keeping people apart takes separate instances.",
+          "source": "https://github.com/HKUDS/nanobot/blob/main/docs/multiple-instances.md"
+        }
+      ],
+      "stars": 50155,
+      "latest_release": "v0.4.1, published 2026-11-06"
+    },
+    {
+      "id": "lindy",
+      "name": "Lindy",
+      "maker": "Crivello Corp, doing business as Lindy, Beaverton, Oregon",
+      "homepage": "https://www.lindy.ai/",
+      "checked": "2026-11-18",
+      "facts": {
+        "license": {
+          "value": "Hosted service; no source code offered",
+          "source": "https://www.lindy.ai/pricing"
+        },
+        "runs": {
+          "value": "Lindy's cloud only",
+          "source": "https://www.lindy.ai/privacy"
+        },
+        "computer": {
+          "value": "Can drive a browser for tools without an integration, on higher plans",
+          "source": "https://www.lindy.ai/"
+        },
+        "approvals": {
+          "value": "Actions with outside impact wait for your OK",
+          "source": "https://www.lindy.ai/"
+        },
+        "models": {
+          "value": "Lindy picks per task; you can choose per task",
+          "source": "https://docs.lindy.ai/pricing.md"
+        },
+        "apps": {
+          "value": "Web app and a Chrome extension for Gmail",
+          "source": "https://www.lindy.ai/"
+        },
+        "channels": {
+          "value": "Slack, iMessage and SMS, email; Teams coming",
+          "source": "https://docs.lindy.ai/features/imessage-sms.md"
+        },
+        "memory": {
+          "value": "Files you can view, edit and restore, personal and team",
+          "source": "https://docs.lindy.ai/teammate/memory.md"
+        },
+        "routines": {
+          "value": "Schedules, plus email, Slack, calendar and meeting events",
+          "source": "https://docs.lindy.ai/teammate/routines.md"
+        },
+        "teams": {
+          "value": "Per-seat plans with shared credits and team memory; SSO on Enterprise",
+          "source": "https://www.lindy.ai/pricing"
+        },
+        "pricing": {
+          "value": "From $29.99 a month per seat for 3,000 credits; Enterprise custom",
+          "source": "https://www.lindy.ai/pricing"
+        },
+        "free": {
+          "value": "$50 of credits for 7 days",
+          "source": "https://www.lindy.ai/pricing"
+        },
+        "access": {
+          "value": "Open to everyone",
+          "source": "https://docs.lindy.ai/start-here/quickstart.md"
+        },
+        "training": {
+          "value": "No, says Lindy",
+          "source": "https://www.lindy.ai/security"
+        }
+      },
+      "best_at": [
+        {
+          "text": "You want one assistant your whole team shares in Slack, called with an @mention.",
+          "source": "https://docs.lindy.ai/start-here/quickstart.md"
+        },
+        {
+          "text": "You want routines that start on emails, Slack messages, calendar events or meetings ending.",
+          "source": "https://docs.lindy.ai/teammate/routines.md"
+        },
+        {
+          "text": "You want to see and edit what the assistant remembers, with version history.",
+          "source": "https://docs.lindy.ai/teammate/memory.md"
+        }
+      ],
+      "limits": [
+        {
+          "text": "The free plan is $50 of credits that expire after 7 days; after that you pay per seat.",
+          "source": "https://www.lindy.ai/pricing"
+        },
+        {
+          "text": "Microsoft Teams isn't supported yet.",
+          "source": "https://docs.lindy.ai/"
+        },
+        {
+          "text": "Hosted only, and the privacy notice doesn't say which region holds your data.",
+          "source": "https://www.lindy.ai/privacy"
+        }
+      ]
+    }
+  ]
+}

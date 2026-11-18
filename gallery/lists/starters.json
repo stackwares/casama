@@ -1,0 +1,24 @@
+{
+  "name": "Empty-state starters",
+  "version": 1,
+  "updated": "2026-11-18",
+  "library": [
+    { "id": "game", "label": "A small game", "prompt": "Make me a small game I can play in the browser.", "icon": "gamepad-2", "hue": 265 },
+    { "id": "logo", "label": "A logo", "prompt": "Design a logo for my project.", "icon": "image", "hue": 330 },
+    { "id": "site", "label": "A one-page site", "prompt": "Make a one-page website for my business.", "icon": "globe", "hue": 210 },
+    { "id": "video", "label": "A short video", "prompt": "Make a short video of ", "icon": "film", "hue": 15 },
+    { "id": "card", "label": "A birthday card", "prompt": "Make a birthday card for ", "icon": "party-popper", "hue": 40 },
+    { "id": "report", "label": "A report", "prompt": "Research and write a report on ", "icon": "file-text", "hue": 150 }
+  ],
+  "tasks": [
+    { "id": "research", "text": "Research my top three competitors" },
+    { "id": "draft", "text": "Draft a launch announcement" },
+    { "id": "tidy", "text": "Tidy up my files" }
+  ],
+  "support": [
+    { "id": "purchase", "text": "My purchase didn't go through" },
+    { "id": "cancel", "text": "How do I cancel my plan?" },
+    { "id": "bot", "text": "My bot isn't answering" },
+    { "id": "how-to", "text": "What can my bots do?" }
+  ]
+}

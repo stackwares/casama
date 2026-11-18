@@ -1,0 +1,26 @@
+{
+  "light": {
+    "seed": "#9C3A9E",
+    "background": "#FCF3FB",
+    "onBackground": "#201A1E",
+    "primary": "#9C3A9E",
+    "primaryContainer": "#FADDF5",
+    "secondary": "#B8407F",
+    "secondaryContainer": "#FFD9EA",
+    "tertiary": "#5562CF",
+    "tertiaryContainer": "#E0E2FF",
+    "appBar": "#FCF3FB"
+  },
+  "dark": {
+    "seed": "#F2B0EC",
+    "background": "#211920",
+    "onBackground": "#EBDFE6",
+    "primary": "#F2B0EC",
+    "primaryContainer": "#6B1F69",
+    "secondary": "#FFB1D4",
+    "secondaryContainer": "#7A2152",
+    "tertiary": "#BDC2FF",
+    "tertiaryContainer": "#323C8A",
+    "appBar": "#25102F"
+  }
+}

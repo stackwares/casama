@@ -1,0 +1,359 @@
+import 'dart:async';
+
+import 'package:dio/dio.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:casama_sdk/casama_sdk.dart';
+import 'package:lottie/lottie.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'app.dart';
+import 'core/linux_file_dialogs.dart';
+import 'core/local_cache.dart';
+import 'core/config.dart';
+import 'core/desktop_window.dart';
+import 'core/open_links.dart';
+import 'core/link_browser.dart';
+import 'core/providers.dart';
+import 'core/server_address.dart';
+import 'core/server_config_cache.dart';
+import 'core/server_reachability.dart';
+import 'core/startup_assets.dart';
+import 'core/supabase_backend.dart';
+import 'core/telemetry.dart';
+import 'core/timeout_http_client.dart';
+import 'core/theme.dart';
+import 'features/app_lock/app_lock.dart';
+import 'features/app_lock/session_store.dart';
+import 'features/link/keep_awake.dart';
+import 'features/selfhost/guided_setup.dart';
+import 'theme/appearance.dart';
+import 'theme/bundled_font_loader.dart';
+import 'theme/fonts.dart';
+import 'l10n/generated/app_localizations.dart';
+import 'ui/brand_splash.dart';
+import 'ui/server_unreachable_view.dart';
+import 'ui/text_scale.dart';
+import 'ui/friendly_error_view.dart';
+import 'core/analytics.dart';
+
+/// Connects to the API and Supabase and returns the app widget with its backend.
+///
+/// Supabase settings come from the API, so a build only needs the API URL. They are saved, and a
+/// later launch starts from the saved ones at once (no network wait, and it opens offline with the
+/// offline cache) while the server's are fetched in the background (D-158). If the server has
+/// moved to another Supabase project since, [onServerMoved] reconnects.
+Future<(Widget, SupabaseBackend)> bootstrap(AppConfig config, {VoidCallback? onServerMoved}) async {
+  // The saved look and its Google Fonts load alongside the connection, so the app's first frame
+  // already draws them and no text swaps fonts a moment later.
+  final look = _savedLookWithFonts();
+  final selectedOrg = SelectedOrg.preload();
+  final setup = GuidedSetup.preload();
+  final pendingOpen = PendingOpenLink.preload();
+  final linkBrowser = LinkBrowserInApp.preload();
+  // The app lock (D-375) is read before the first frame, so a locked app never shows itself.
+  final appLock = AppLockSettingsNotifier.preload();
+  final saved = await ServerConfigCache.read(config.apiUrl);
+  final server = saved ?? (await CasamaClient.connect(config.apiUrl)).config;
+  if (saved == null) unawaited(ServerConfigCache.write(config.apiUrl, server));
+  unawaited(Telemetry.updateServerKind(apiUrl: config.apiUrl, billingEnabled: server.billingEnabled));
+  unawaited(Analytics.dailyPing());
+  await Supabase.initialize(
+    url: server.supabaseUrl,
+    publishableKey: server.supabaseAnonKey,
+    httpClient: TimeoutHttpClient(),
+    // While the app lock is on, the sign-in lives in the keychain (D-375).
+    authOptions: FlutterAuthClientOptions(localStorage: AuthSessionStore.create(server.supabaseUrl)),
+  );
+  final supabase = Supabase.instance.client;
+  final api = await SupabaseBackend.connectApi(config.apiUrl, supabase, config: server);
+  final backend = SupabaseBackend(supabase, api, config: server);
+  if (saved != null) unawaited(_refreshServerConfig(config.apiUrl, api, backend, saved, onServerMoved));
+  // A Mac that serves a phone stays awake while plugged in, if its owner chose so (D-296).
+  unawaited(KeepAwake.restore());
+  final appearance = await look;
+  await selectedOrg;
+  await setup;
+  await pendingOpen;
+  await linkBrowser;
+  await appLock;
+  final app = ProviderScope(
+    overrides: [
+      backendProvider.overrideWithValue(backend),
+      localCacheProvider.overrideWithValue(openLocalCache()),
+      appearanceProvider.overrideWith(() => AppearanceNotifier(appearance)),
+    ],
+    child: const CasamaApp(),
+  );
+  return (app as Widget, backend);
+}
+
+/// The look saved on this device once its Google Fonts have loaded (see [preloadFonts]); null when
+/// preferences are slow or unreadable, and the app then reads the look itself, as before.
+Future<Appearance?> _savedLookWithFonts() async {
+  try {
+    final look = await AppearanceNotifier.readSaved().timeout(const Duration(seconds: 2));
+    if (look != null) await preloadFonts(heading: look.headingFont, body: look.bodyFont);
+    return look;
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Replaces the saved server settings with the server's; offline, the saved ones stay.
+Future<void> _refreshServerConfig(String apiUrl, CasamaClient api, SupabaseBackend backend, PublicConfig saved, VoidCallback? onServerMoved) async {
+  try {
+    final fresh = (await api.system.getConfig()).data;
+    if (fresh == null) return;
+    await ServerConfigCache.write(apiUrl, fresh);
+    backend.config = fresh;
+    if (ServerConfigCache.moved(saved, fresh)) onServerMoved?.call();
+  } catch (_) {}
+}
+
+/// Whether a startup failure is a tunnel saying the computer behind it doesn't answer: Cloudflare
+/// answers 530 for a tunnel with no connector (a Casama Link address whose computer is asleep,
+/// off or offline, D-296), and 502 to 504 when the connector is up but the server behind it isn't.
+/// The phone's own connection is fine in all of these. Only for a server someone runs themselves:
+/// on Casama Cloud there is no computer of theirs to wake.
+bool tunnelSaysOffline(Object? error, String apiUrl) {
+  if (error is! DioException) return false;
+  if (isCasamaCloud(apiUrl)) return false;
+  final status = error.response?.statusCode;
+  return status == 530 || status == 502 || status == 503 || status == 504;
+}
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // A widget that fails to build shows a calm "Something went wrong" in the app's colors instead of
+  // Flutter's red screen (debug) or an empty grey box (release). Telemetry still reports the error.
+  ErrorWidget.builder = (details) => FriendlyErrorView(details: details);
+  // Linux without a desktop portal: file dialogs fall back to GTK's own (linux_file_dialogs.dart).
+  useLinuxFileDialogFallback();
+  // Desktop: a window sized for the sidebar, chat and computer panel, or where it was last.
+  await setUpDesktopWindow();
+  // Draw at once; connecting happens behind the startup gate (never block runApp on the network).
+  await Telemetry.run(const StartupGate(config: AppConfig.fromEnvironment));
+}
+
+/// Connects to the server. The first frame is the launch cloud, which then plays; a failure offers a retry.
+class StartupGate extends StatefulWidget {
+  const StartupGate({super.key, required this.config, this.connect});
+  final AppConfig config;
+
+  /// Builds the connected app (tests pass their own); defaults to [bootstrap].
+  final Future<Widget> Function(AppConfig)? connect;
+
+  @override
+  State<StartupGate> createState() => _StartupGateState();
+}
+
+class _StartupGateState extends State<StartupGate> {
+  Widget? _app;
+  Object? _error;
+  late AppConfig _config = widget.config;
+
+  /// The first screens' pictures, decoding while the app connects (see [precacheStartupAssets]).
+  Future<void>? _assets;
+
+  /// The brand loop, decoded while the launch still is up. Null until then; the still stands in.
+  LottieComposition? _brand;
+
+  /// Stays up over the ready app until the cloud has faded out.
+  var _splash = true;
+
+  /// A try from the error screen is under way; the error screen stays up while it runs.
+  var _retrying = false;
+
+  /// Failed tries in a row, for the wait before the next automatic one.
+  var _failures = 0;
+  Timer? _autoRetry;
+  DateTime? _nextRetryAt;
+
+  /// Tries again as soon as the app comes back to the front.
+  late final _lifecycle = AppLifecycleListener(onResume: () {
+    if (_error != null) _retry();
+  });
+
+  /// Waits between automatic tries, longest last.
+  static const _retryDelays = [5, 10, 20, 30, 60];
+
+  @override
+  void initState() {
+    super.initState();
+    // Self-hosters point the app at their own server (D-076); the choice is remembered.
+    onChangeServer = _switchServer;
+    unawaited(_loadBrand());
+    _lifecycle;
+    _start();
+  }
+
+  @override
+  void dispose() {
+    _autoRetry?.cancel();
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
+  /// Tries again with the error screen still up, so a failure doesn't flash the splash.
+  Future<void> _retry() async {
+    if (_retrying) return;
+    _autoRetry?.cancel();
+    setState(() {
+      _retrying = true;
+      _nextRetryAt = null;
+    });
+    await _start(keepError: true);
+    if (mounted) setState(() => _retrying = false);
+  }
+
+  void _scheduleRetry() {
+    final seconds = _retryDelays[(_failures - 1).clamp(0, _retryDelays.length - 1)];
+    _autoRetry?.cancel();
+    _autoRetry = Timer(Duration(seconds: seconds), _retry);
+    _nextRetryAt = DateTime.now().add(Duration(seconds: seconds));
+  }
+
+  Future<void> _loadBrand() async {
+    try {
+      final composition = await AssetLottie(BrandSplash.lottieAsset).load();
+      if (mounted) setState(() => _brand = composition);
+    } catch (_) {}
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _assets ??= precacheStartupAssets(context);
+  }
+
+  Future<void> _start({bool keepError = false}) async {
+    _autoRetry?.cancel();
+    if (!keepError) setState(() => _error = null);
+    try {
+      _config = await ServerAddress.load(fallback: widget.config);
+      final connect = widget.connect ?? (c) async => (await bootstrap(c, onServerMoved: _reconnect)).$1;
+      final app = await connect(_config).timeout(const Duration(seconds: 20));
+      // The first screen opens with its pictures decoded; never more than half a second's wait.
+      await (_assets ?? Future<void>.value()).timeout(const Duration(milliseconds: 500), onTimeout: () {});
+      _failures = 0;
+      // Code's mono face isn't a launch font (see lazyBundledFonts): fetch it once the app shows.
+      WidgetsBinding.instance.addPostFrameCallback((_) => unawaited(loadBundledFont(AppFonts.mono)));
+      if (mounted) {
+        setState(() {
+          _app = app;
+          _error = null;
+          _nextRetryAt = null;
+        });
+      }
+    } catch (e) {
+      Analytics.log('app_startup_failed', {
+        'reason': e is TimeoutException ? 'timeout' : (e is DioException && e.response == null ? 'unreachable' : 'error'),
+      });
+      _failures++;
+      if (mounted) {
+        setState(() {
+          _error = e;
+          _scheduleRetry();
+        });
+      }
+    }
+  }
+
+  Future<void> _switchServer(String url) async {
+    await ServerAddress.save(url);
+    await _reconnect();
+  }
+
+  /// Starts over with a fresh Supabase client (another server, or the server moved projects).
+  Future<void> _reconnect() async {
+    try {
+      await Supabase.instance.dispose();
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() {
+      _app = null;
+      _splash = true;
+    });
+    await _start();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final app = _app;
+    // The same splash element stays mounted when the app arrives underneath it, so the loop and
+    // the delayed label are not rebuilt for the fade. Keys keep that element when the stack gains
+    // the app as a sibling. The app stays in this stack after the splash has gone: returning it
+    // on its own would mount it a second time, restarting every provider and the router (which
+    // then dropped the page a reload opened on, and fetched everything twice).
+    if (app != null && !_splash) {
+      return Stack(alignment: Alignment.topLeft, fit: StackFit.expand, children: [KeyedSubtree(key: const ValueKey('startup-app'), child: app)]);
+    }
+    final gate = SplashHandoff(
+      key: const ValueKey('startup-splash'),
+      leaving: app != null && _error == null,
+      onLeft: () {
+        if (mounted) setState(() => _splash = false);
+      },
+      child: _frame(),
+    );
+    return Stack(
+      alignment: Alignment.topLeft,
+      fit: StackFit.expand,
+      children: [
+        if (app != null) KeyedSubtree(key: const ValueKey('startup-app'), child: app),
+        gate,
+      ],
+    );
+  }
+
+  Widget _frame() {
+    return MaterialApp(
+      onGenerateTitle: (c) => AppLocalizations.of(c).appTitle,
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      // The splash has its own navigator rather than the app's (no `home`). On the web a root
+      // navigator switches the browser to single-entry history, and handing over to the router
+      // later rewinds the address to "/", so a reload on /settings landed on /bots.
+      builder: (context, _) => limitTextScale(
+        context,
+        Navigator(
+          pages: [MaterialPage<void>(key: const ValueKey('startup-splash-page'), child: Builder(builder: _splashPage))],
+          onDidRemovePage: (_) {},
+        ),
+      ),
+    );
+  }
+
+  Widget _splashPage(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final failed = _error != null;
+    return Scaffold(
+      key: failed ? null : const Key('startupSplash'),
+      backgroundColor: BrandSplash.backgroundOf(context),
+      body: failed
+          ? ServerUnreachableView(
+              apiUrl: _config.apiUrl,
+              serverOffline: tunnelSaysOffline(_error, _config.apiUrl),
+              retrying: _retrying,
+              nextRetryAt: _nextRetryAt,
+              onRetry: _retry,
+              onChangeServer: () => changeServerDialog(
+                context,
+                _config.apiUrl,
+                title: l10n.server,
+                label: l10n.serverAddress,
+                cancel: l10n.cancel,
+                connect: l10n.connect,
+              ),
+            )
+          : BrandSplash(
+              composition: _brand,
+              label: Text(l10n.connectingToServer, key: const Key('startupConnecting'), textAlign: TextAlign.center),
+            ),
+    );
+  }
+}

@@ -1,0 +1,25 @@
+name: google_sign_in_web
+description: >
+  Empty web half of google_sign_in. The web app signs in with Google by redirect, never through
+  Google's script, so it doesn't load that script on every page. Swapped in through
+  dependency_overrides in client/pubspec.yaml.
+version: 1.1.3
+publish_to: none
+
+environment:
+  sdk: ^3.9.0
+  flutter: ">=3.35.0"
+
+flutter:
+  plugin:
+    implements: google_sign_in
+    platforms:
+      web:
+        pluginClass: GoogleSignInPlugin
+        fileName: google_sign_in_web.dart
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter

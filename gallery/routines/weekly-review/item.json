@@ -1,0 +1,32 @@
+{
+  "name": "Weekly review",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "planning"
+  ],
+  "featured": true,
+  "pick": "A calm Friday wrap-up: done, slipped, and next week's three priorities.",
+  "version": 1,
+  "added": "2026-11-13",
+  "access": {
+    "reads": [
+      "chats",
+      "tickets",
+      "memory"
+    ],
+    "credits": "low"
+  },
+  "inputs": [
+    {
+      "key": "time",
+      "label": "What time on Friday?",
+      "type": "time",
+      "default": "16:00"
+    }
+  ]
+}

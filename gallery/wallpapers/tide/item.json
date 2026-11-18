@@ -1,0 +1,38 @@
+{
+  "name": "Tide",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "sea"
+  ],
+  "featured": true,
+  "pick": "Calm ocean blues from the shore.",
+  "version": 4,
+  "added": "2026-11-11",
+  "changelog": [
+    {
+      "version": 4,
+      "date": "2026-11-18",
+      "note": "A day and a night version: it follows light and dark mode."
+    },
+    {
+      "version": 3,
+      "date": "2026-11-18",
+      "note": "New painted art in the same mood."
+    },
+    {
+      "version": 2,
+      "date": "2026-11-11",
+      "note": "Adds a small thumbnail so cards load faster."
+    },
+    {
+      "version": 1,
+      "date": "2026-11-11",
+      "note": "First version."
+    }
+  ]
+}

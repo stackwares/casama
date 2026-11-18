@@ -1,0 +1,120 @@
+import 'dart:async';
+
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../core/providers.dart';
+import '../../core/widgets.dart';
+import '../../core/backend.dart' show GalleryItem;
+import '../settings/gallery_looks.dart';
+import '../settings/model_keys_screen.dart';
+import '../../theme/appearance.dart';
+import '../../theme/suggested_look.dart';
+import '../integrations/connect_app_sheet.dart';
+import '../integrations/integrations_screen.dart' show connectedAppIdsProvider;
+import 'widgets/bot_ui.dart';
+
+/// Card actions the app handles itself (D-129): "app:connect" opens a connection, "app:route" a
+/// screen, "app:invite" makes an invite link, "app:appearance" applies a look a bot suggested
+/// (D-242). They never reach the server. Returns whether the
+/// action was one of these.
+///
+/// An "app:connect" with `after` in its context sends that action to the server through [send]
+/// once the app is connected, so the welcome chat goes straight on to the catch-up (D-204).
+Future<bool> handleLocalUiAction(
+  BuildContext context,
+  WidgetRef ref,
+  BotUiAction action, {
+  Future<void> Function(BotUiAction action)? send,
+}) async {
+  if (!action.name.startsWith('app:')) return false;
+  final ctx = action.context;
+  switch (action.name) {
+    case 'app:route':
+      final path = ctx['path'];
+      if (path is String && path.startsWith('/')) {
+        final provider = ctx['provider'];
+        // "Continue with ChatGPT" signs in right here where the app can (desktop, D-091).
+        if (provider == 'chatgpt' && ref.read(backendProvider).canConnectChatGpt) {
+          final cred = await connectChatGptPlan(context, ref);
+          if (cred != null) ref.invalidate(credentialsProvider);
+          return true;
+        }
+        // Elsewhere ChatGPT sign-in can't run; say so and offer a key instead.
+        if (provider == 'chatgpt') showWarning(context, context.l10n.chatGptDesktopOnly);
+        final target = provider is String && provider != 'chatgpt' ? '$path?provider=$provider' : path;
+        unawaited(GoRouter.maybeOf(context)?.pushOnce(target) ?? Future<void>.value());
+      }
+    case 'app:connect':
+      final id = ctx['app'];
+      final catalog = await runGuarded(context, () => ref.read(appCatalogProvider.future));
+      final app = catalog?.apps.where((a) => a.id == id).firstOrNull;
+      if (app != null && context.mounted) {
+        final connected = await showConnectApp(context, app);
+        ref.invalidate(integrationsProvider);
+        final after = ctx['after'];
+        if (connected == null || send == null || !context.mounted) return true;
+        if (after is String && after.startsWith('welcome.')) {
+          await send(BotUiAction(
+            surfaceId: action.surfaceId,
+            name: after,
+            context: {'app': app.id},
+            sourceComponentId: action.sourceComponentId,
+            // Shown in the chat as what the person did: "Connected Google Calendar".
+            optionLabels: {app.id: context.l10n.connectedAppSummary(app.name)},
+          ));
+        } else if (after == null) {
+          // A bot's Connect card: once every app on it is in, the person's answer is that they
+          // connected, so the bot goes on without being told "done".
+          final have = await ref.read(connectedAppIdsProvider.future).catchError((_) => <String>{});
+          if (!context.mounted || !{...have, app.id}.containsAll(action.connectApps)) return true;
+          await send(BotUiAction(
+            surfaceId: action.surfaceId,
+            name: 'connected',
+            context: {'app': app.id},
+            sourceComponentId: action.sourceComponentId,
+            optionLabels: {app.id: context.l10n.connectedAppSummary(app.name)},
+          ));
+        }
+      }
+    case 'app:appearance':
+      final notifier = ref.read(appearanceProvider.notifier);
+      final before = await applySuggestedLook(
+        ref.read(appearanceProvider),
+        notifier,
+        ctx,
+        galleryTheme: (id) async {
+          final looks = await ref.read(galleryLooksProvider.future).catchError((_) => const <GalleryItem>[]);
+          final item = looks.where((i) => i.type == 'theme' && i.id == id).firstOrNull;
+          if (item == null) return false;
+          await useGalleryLook(ref, item);
+          return true;
+        },
+      );
+      if (!context.mounted) return true;
+      if (before == null) {
+        showWarning(context, context.l10n.suggestedLookUnavailable);
+      } else {
+        showToast(
+          context,
+          context.l10n.suggestedLookApplied,
+          kind: ToastKind.success,
+          action: SnackBarAction(label: context.l10n.undo, onPressed: () => unawaited(restoreLook(notifier, before))),
+        );
+      }
+    case 'app:invite':
+      final org = ref.read(currentOrgProvider);
+      if (org == null) return true;
+      // The workspace's standing link (D-167), not a new one each time.
+      final link = await runGuarded(context, () => ref.read(backendProvider).defaultInvite(org.id));
+      if (link != null && context.mounted) {
+        try {
+          await Clipboard.setData(ClipboardData(text: link.url));
+        } catch (_) {}
+        if (context.mounted) showMessage(context, context.l10n.inviteLinkCopied);
+      }
+  }
+  return true;
+}

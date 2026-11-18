@@ -1,0 +1,44 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}
+  labels: {{- include "casama.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations: {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- with .Values.ingress.tls }}
+  tls: {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.apiHost | quote }}
+      http:
+        paths:
+          {{- /* Keep in step with the @api paths in infra/compose/selfhost/Caddyfile. /internal and /metrics stay
+               in the cluster (worker, egress proxy and Prometheus reach the api Service directly). */}}
+          {{- range $p := list "/v1" "/hooks" "/link" "/telemetry" "/telephony" "/healthz" "/readyz" "/a2a" "/links" "/oauth" "/mcp" "/.well-known" "/openapi.json" "/docs" }}
+          - { path: {{ $p }}, pathType: Prefix, backend: { service: { name: {{ $.Release.Name }}-api, port: { name: http } } } }
+          {{- end }}
+          {{- if .Values.web.enabled }}
+          - { path: /, pathType: Prefix, backend: { service: { name: {{ .Release.Name }}-web, port: { name: http } } } }
+          {{- end }}
+    - host: {{ .Values.ingress.pagesHost | quote }}
+      http:
+        paths:
+          - { path: /, pathType: Prefix, backend: { service: { name: {{ .Release.Name }}-api, port: { name: pages } } } }
+    {{- with .Values.ingress.sitesZone }}
+    {{- /* Sites (D-329): every name under the sites zone goes to the pages port, which picks the
+         site by host name. Connected domains need an ingress controller that passes unknown
+         hosts to the pages service too (see the chart README). */}}
+    {{- range $h := list (printf "*.%s" .) . }}
+    - host: {{ $h | quote }}
+      http:
+        paths:
+          - { path: /, pathType: Prefix, backend: { service: { name: {{ $.Release.Name }}-api, port: { name: pages } } } }
+    {{- end }}
+    {{- end }}
+{{- end }}

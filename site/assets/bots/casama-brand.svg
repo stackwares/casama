@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="kcTitle">
+  <title id="kcTitle">Casama Casama</title>
+  <defs>
+    <linearGradient id="kcBody" gradientUnits="userSpaceOnUse" x1="96" y1="62" x2="150" y2="226">
+      <stop offset="0" stop-color="#FFFCF8"/><stop offset=".46" stop-color="#F7EEFB"/><stop offset=".8" stop-color="#E2D2F6"/><stop offset="1" stop-color="#C9B1EC"/>
+    </linearGradient>
+    <radialGradient id="kcShade" gradientUnits="userSpaceOnUse" cx="226" cy="214" r="120">
+      <stop offset="0" stop-color="#A88BDB" stop-opacity=".5"/><stop offset="1" stop-color="#A88BDB" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="kcSheen" gradientUnits="userSpaceOnUse" cx="92" cy="92" r="62">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".95"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="kcGround"><stop offset="0" stop-color="#2B0E42" stop-opacity=".2"/><stop offset="1" stop-color="#2B0E42" stop-opacity="0"/></radialGradient>
+    <radialGradient id="kcCheek"><stop offset="0" stop-color="#FF8F9E" stop-opacity=".85"/><stop offset=".6" stop-color="#FF8F9E" stop-opacity=".4"/><stop offset="1" stop-color="#FF8F9E" stop-opacity="0"/></radialGradient>
+    <linearGradient id="kcSclera" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9DDF6"/><stop offset=".38" stop-color="#FFFFFF"/><stop offset="1" stop-color="#FFFDFB"/></linearGradient>
+    <radialGradient id="kcIris" cx=".5" cy=".78" r=".78"><stop offset="0" stop-color="#B07AF0"/><stop offset=".45" stop-color="#6A2BA8"/><stop offset="1" stop-color="#2A0C40"/></radialGradient>
+    <linearGradient id="kcTail" gradientUnits="userSpaceOnUse" x1="40" y1="112" x2="190" y2="44">
+      <stop offset="0" stop-color="#7A90FF"/><stop offset=".5" stop-color="#B09EFF"/><stop offset="1" stop-color="#7DE9F4"/>
+    </linearGradient>
+    <radialGradient id="kcOrb" cx=".34" cy=".28" r=".85"><stop offset="0" stop-color="#F2FFFE"/><stop offset=".22" stop-color="#7AF2E6"/><stop offset=".62" stop-color="#5EC2FF"/><stop offset="1" stop-color="#A585FF"/></radialGradient>
+    <radialGradient id="kcGlow"><stop offset="0" stop-color="#7EF0F4" stop-opacity=".9"/><stop offset=".45" stop-color="#7EF0F4" stop-opacity=".35"/><stop offset="1" stop-color="#7EF0F4" stop-opacity="0"/></radialGradient>
+    <filter id="kcLift" x="-15%" y="-15%" width="130%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="#2B0E42" flood-opacity=".2"/></filter>
+    <filter id="kcPuff" x="-5%" y="-5%" width="110%" height="110%">
+      <feOffset in="SourceAlpha" dy="-7" result="up"/><feGaussianBlur in="up" stdDeviation="5" result="upBlur"/>
+      <feComposite in="SourceAlpha" in2="upBlur" operator="out" result="rim"/>
+      <feFlood flood-color="#9C7DD6" flood-opacity=".5"/><feComposite in2="rim" operator="in" result="shade"/>
+      <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="shade"/></feMerge>
+    </filter>
+    <filter id="kcEdge" x="-10%" y="-10%" width="120%" height="125%"><feDropShadow dx="0" dy="1.2" stdDeviation="1.2" flood-color="#2B0E42" flood-opacity=".3"/></filter>
+    <filter id="kcSoft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6"/></filter>
+    <clipPath id="kcCloud"><circle cx="110" cy="112" r="50"/><circle cx="176" cy="130" r="36"/><circle cx="205" cy="163" r="27"/><circle cx="178" cy="190" r="29"/><circle cx="128" cy="197" r="28"/><circle cx="80" cy="189" r="29"/><circle cx="50" cy="158" r="28"/><circle cx="68" cy="130" r="23"/><ellipse cx="128" cy="158" rx="84" ry="44"/></clipPath>
+    <clipPath id="kcEyeL"><ellipse cx="97" cy="142" rx="21" ry="23"/></clipPath>
+    <clipPath id="kcEyeR"><ellipse cx="163" cy="138" rx="17.5" ry="19.5"/></clipPath>
+    <clipPath id="kcEyeLLid"><ellipse cx="97" cy="142" rx="22.5" ry="24.5"/></clipPath>
+    <clipPath id="kcEyeRLid"><ellipse cx="163" cy="138" rx="19.0" ry="21.0"/></clipPath>
+    <clipPath id="kcMouth"><path d="M116 160Q130 164 144 160Q143.5 180 130 180Q116.5 180 116 160Z"/></clipPath>
+  </defs>
+  <ellipse cx="128" cy="238" rx="66" ry="8" fill="url(#kcGround)"/>
+  <path d="M82.8 104.8C44.8 99.2 27.9 79.4 51.6 59.1C75.2 38.6 134.9 32.5 183.1 53.9L184.9 50.1C137.1 27.5 70.8 33.4 46.4 52.9C22.1 72.6 43.2 108.8 81.2 115.2Z" fill="url(#kcTail)" filter="url(#kcEdge)"/><circle cx="184" cy="52" r="36" fill="url(#kcGlow)"/><g><circle cx="184" cy="52" r="18" fill="url(#kcOrb)"/><ellipse cx="178.5" cy="46" rx="5.5" ry="3.6" fill="#FFFFFF" opacity=".92" transform="rotate(-25 178.5 46)"/></g>
+  <g filter="url(#kcLift)"><g filter="url(#kcPuff)">
+      <g clip-path="url(#kcCloud)">
+        <rect x="10" y="50" width="236" height="190" fill="url(#kcBody)"/>
+        <rect x="10" y="50" width="236" height="190" fill="url(#kcShade)"/>
+        <ellipse cx="94" cy="94" rx="58" ry="40" fill="url(#kcSheen)"/>
+        <path d="M66 112A46 46 0 0 1 96 70" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" opacity=".7" filter="url(#kcSoft)"/>
+      </g>
+    </g></g>
+  <ellipse class="cheekL" cx="73" cy="165" rx="13" ry="8" fill="url(#kcCheek)"/><ellipse class="cheekR" cx="186" cy="159" rx="11" ry="7" fill="url(#kcCheek)"/><g class="eyeL"><ellipse cx="97" cy="142" rx="21" ry="23" fill="url(#kcSclera)"/><g clip-path="url(#kcEyeL)"><g class="iris"><ellipse cx="101" cy="143" rx="14.5" ry="16" fill="url(#kcIris)"/><ellipse cx="101" cy="142" rx="7" ry="8" fill="#1E0630" opacity=".55"/><circle cx="106" cy="136" r="4.8" fill="#FFFFFF"/><circle cx="96" cy="150.5" r="2.1" fill="#FFFFFF" opacity=".85"/></g></g><path d="M75.2 140.3C74.7 139.6 74.4 137.5 74.4 136.1C74.3 134.7 74.5 133.2 74.7 131.8C75 130.4 75.4 129 76 127.6C76.6 126.3 77.3 125 78.2 123.8C79 122.6 80 121.5 81.1 120.5C82.1 119.5 83.4 118.6 84.6 117.9C85.9 117.1 87.2 116.5 88.6 116C89.9 115.6 91.4 115.3 92.8 115.1C94.2 115 95.7 115 97.1 115.1C98.5 115.3 99.9 115.6 101.2 116C102.5 116.4 103.8 117 105 117.6C106.1 118.3 107.3 119.1 108.3 120C109.3 120.8 110.2 121.8 111.1 122.8C111.9 123.8 113.2 125.3 113.3 126C113.4 126.8 112.5 127.5 111.8 127.2C111.2 127 110.3 125.5 109.4 124.7C108.5 124 107.6 123.3 106.6 122.7C105.6 122.1 104.6 121.6 103.6 121.2C102.5 120.8 101.4 120.5 100.4 120.3C99.3 120.1 98.2 120 97 120C95.9 120 94.8 120.1 93.7 120.3C92.6 120.5 91.6 120.8 90.5 121.2C89.5 121.6 88.4 122.1 87.5 122.7C86.5 123.2 85.6 123.9 84.7 124.7C83.8 125.4 83 126.3 82.2 127.2C81.5 128.1 80.8 129 80.2 130.1C79.6 131.1 79.1 132.2 78.6 133.3C78.2 134.4 77.8 135.6 77.6 136.8C77.3 138 77.5 139.9 77 140.5C76.6 141 75.6 141.1 75.2 140.3Z" fill="#3B1452"/></g><path class="arcR" d="M150.4 142Q163 128.4 175.6 142" fill="none" stroke="#3B1452" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><path class="smile" d="M120 159Q130 170 140 159" fill="none" stroke="#F0676B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  
+</svg>

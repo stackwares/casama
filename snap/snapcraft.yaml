@@ -1,0 +1,67 @@
+# The Casama desktop app as a snap (D-392). Packs the bundle scripts/package-linux.sh already
+# builds; it does not run Flutter. Use scripts/package-snap.sh, which unpacks the bundle into
+# build/snap-bundle/ first. Publishing is a store upload: ask Oliver (AGENTS.md).
+name: casama
+title: Casama
+base: core24
+adopt-info: casama
+summary: Bots that do the work, with tools and a computer of their own
+description: |
+  Casama gives you bots that do real work: they chat with you, use your apps and tools, keep
+  notes, run routines and have a computer of their own.
+
+  The desktop app adds what only a desktop can: let a bot use this computer (files and terminal,
+  only what you allow), run your own Casama server with Docker, a quick-ask hotkey, and the tray.
+website: https://casama.ai
+contact: mailto:hello@casama.ai
+source-code: https://github.com/stackwares/casama
+issues: https://casama.ai/help
+license: AGPL-3.0-only
+icon: snap/gui/casama.png
+grade: stable
+# Classic: bots can use this computer (files, terminal), the app runs a local server with Docker
+# and reads the front window for quick ask. A strict snap can do none of these (D-392).
+confinement: classic
+compression: lzo
+platforms:
+  amd64:
+  arm64:
+
+apps:
+  casama:
+    command: casama
+    desktop: meta/gui/casama.desktop
+    common-id: ai.casama.app
+
+parts:
+  casama:
+    plugin: dump
+    source: build/snap-bundle
+    # Libraries a desktop may lack. They go next to the plugins in lib/, found through RUNPATH, so
+    # nothing sets LD_LIBRARY_PATH: commands bots run on this computer must see the host's own
+    # libraries, untouched.
+    stage-packages:
+      - libayatana-appindicator3-1
+      - libjsoncpp25
+      - libsecret-1-0
+    override-build: |
+      craftctl default
+      craftctl set version="$(cat VERSION)"
+      triplet="$CRAFT_ARCH_TRIPLET_BUILD_FOR"
+      cd "$CRAFT_PART_INSTALL"
+      rm VERSION
+      for so in usr/lib/"$triplet"/libayatana-*.so.* usr/lib/"$triplet"/libdbusmenu-*.so.* \
+                usr/lib/"$triplet"/libjsoncpp.so.* usr/lib/"$triplet"/libsecret-1.so.*; do
+        [ -e "$so" ] && cp -P "$so" lib/
+      done
+      rm -rf usr etc var
+      # Plugins find each other and the libraries above in their own folder.
+      for so in lib/*.so*; do
+        [ -L "$so" ] || patchelf --force-rpath --set-rpath '$ORIGIN' "$so" || true
+      done
+    build-packages:
+      - patchelf
+    prime:
+      - casama
+      - lib
+      - data

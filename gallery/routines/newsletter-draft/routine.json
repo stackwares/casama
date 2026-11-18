@@ -1,0 +1,7 @@
+{
+  "description": "Every Thursday: this week's newsletter drafted from the links and notes you sent, with three subject lines to pick from.",
+  "category": "create",
+  "icon": "mail",
+  "instructions_md": "Draft this week's newsletter for {{audience}}. Use the links, notes and ideas I've sent you since the last issue, and what you know about my voice from memory. Open with a short personal note, then three to five items: a heading, two or three sentences on why it matters to the reader and the link. End with one question for readers. Give me three subject lines and a preview line. Check every link opens. Keep it under 500 words. Don't send or schedule anything. If I haven't sent anything this week, suggest five items and ask me which to use.",
+  "schedule_cron": "0 10 * * 4"
+}

@@ -1,0 +1,28 @@
+{
+  "name": "Close",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "crm"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Which Close leads haven't been contacted this week?",
+    "Log a call note on the Brightline lead",
+    "Show opportunities closing this month"
+  ],
+  "access": {
+    "reads": [
+      "Close leads and deals"
+    ],
+    "writes": [
+      "updates opportunities, notes and tasks"
+    ],
+    "credits": "low"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "description": "Every Monday: birthdays and other dates in the week ahead, with a message you could send.",
+  "category": "life",
+  "icon": "cake",
+  "instructions_md": "Check for birthdays, anniversaries and other dates in the next seven days, from my calendar and contacts (if they're connected) and what's in memory. For each: the person, the date and how many days away it is. For each one, suggest a short message in my voice that I can send myself, and a gift idea if I've told you what they like. Don't send any message or buy anything. If nothing is coming up, reply in one short line. If you don't know any dates yet, ask me which ones to remember.",
+  "schedule_cron": "0 8 * * 1"
+}

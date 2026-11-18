@@ -1,0 +1,7 @@
+{
+  "description": "Every morning: the five stories that matter on the topics you name, each with its source and a link.",
+  "category": "research",
+  "icon": "newspaper",
+  "instructions_md": "Brief me on today's news about {{topics}}. Search the web for stories from the last 24 hours and pick the five that matter most. For each: a headline, two sentences on what happened, the source and a link. Give more than one source when a story is disputed, and leave out opinion pieces and anything older than a day. If there was little news on a topic, say so and don't pad the list.",
+  "schedule_cron": "{{time.minute}} {{time.hour}} * * *"
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Feedly",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "news",
+    "rss"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "What's new in my Feedly feeds today?",
+    "Search my feeds for articles about AI regulation",
+    "Save this article to read later"
+  ],
+  "access": {
+    "reads": [
+      "Feedly feeds"
+    ],
+    "writes": [
+      "saves articles"
+    ],
+    "credits": "low"
+  }
+}

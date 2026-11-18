@@ -1,0 +1,14 @@
+[
+  {
+    "file": "og-bg-home-v1.png",
+    "slot": "og-bg-home-v1",
+    "prompt": "Dreamy deep-plum sky with soft lavender clouds and subtle cyan glow; calm darker left 55%, clear open spot right-of-center for mascot. No text, logos, UI, devices, or faces.",
+    "size": "1200x630"
+  },
+  {
+    "file": "wall-cloud-sea.png",
+    "slot": "wall-cloud-sea",
+    "prompt": "Low-contrast square chat wallpaper, top view sea of soft lavender and pale cyan clouds, calm uncluttered center, no focal point, no text or faces.",
+    "size": "1024x1024"
+  }
+]

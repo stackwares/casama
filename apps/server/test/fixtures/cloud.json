@@ -1,0 +1,52 @@
+{
+  "name": "cloud",
+  "turns": [
+    {
+      "when": { "systemIncludes": "extract lasting memories" },
+      "events": [
+        { "type": "text", "text": "{\"memories\":[]}" },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 300, "outputTokens": 10 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": { "lastRole": "user", "lastUserIncludes": "on the cloud computer" },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "c1",
+            "name": "shell__exec",
+            "args": { "command": "echo cloud-ok-$(uname -s) && sleep 2" }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 300, "outputTokens": 20 },
+          "finishReason": "tool-calls",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "shell.exec",
+        "lastUserIncludes": "on the cloud computer"
+      },
+      "events": [
+        { "type": "text", "text": "It ran on the cloud computer." },
+        {
+          "type": "finish",
+          "usage": { "inputTokens": 300, "outputTokens": 10 },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "name": "@casama/client",
+  "version": "0.1.0",
+  "description": "Typed TypeScript client for the Casama HTTP API, generated from its OpenAPI document, with helpers to ask a bot and watch its runs.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "homepage": "https://docs.casama.ai/develop/typescript",
+  "bugs": {
+    "email": "support@casama.ai"
+  },
+  "keywords": [
+    "casama",
+    "ai-agents",
+    "openapi",
+    "typescript",
+    "sdk"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "gen": "node scripts/gen.ts",
+    "prepublishOnly": "pnpm run build"
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0",
+    "typescript-api": "npm:typescript@^5.9.3"
+  }
+}

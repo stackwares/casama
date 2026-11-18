@@ -1,0 +1,10 @@
+{
+  "description": "Read any web page or PDF as clean text, and search the web and arXiv.",
+  "category": "data",
+  "color": "111111",
+  "homepage": "https://jina.ai",
+  "url": "https://mcp.jina.ai/sse",
+  "auth": ["none"],
+  "note": "No sign-in needed. Free use is rate limited.",
+  "capabilities": ["Read a web page or PDF", "Search the web", "Search arXiv papers", "Screenshot a page"]
+}

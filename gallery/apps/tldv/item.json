@@ -1,0 +1,26 @@
+{
+  "name": "tl;dv",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "meetings",
+    "transcripts"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Summarize my tl;dv meetings from this week",
+    "Find the call where we talked about the roadmap",
+    "List the action items from today's meeting"
+  ],
+  "access": {
+    "reads": [
+      "tl;dv recordings and notes"
+    ],
+    "credits": "low"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "Code review",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "code"
+  ],
+  "category": "build",
+  "icon": "git-pull-request",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-11",
+  "examples": [
+    "Review this pull request for bugs",
+    "Check this function for edge cases and missing tests",
+    "Rank the problems in this diff by severity"
+  ],
+  "access": {
+    "reads": [
+      "code you share"
+    ],
+    "credits": "medium"
+  }
+}

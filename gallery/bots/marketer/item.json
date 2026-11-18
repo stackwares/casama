@@ -1,0 +1,21 @@
+{
+  "name": "Marketer",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "create",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-09",
+  "examples": [
+    "Write three LinkedIn posts for our launch",
+    "Plan a two-week campaign for our new feature",
+    "Improve this landing page headline"
+  ]
+}

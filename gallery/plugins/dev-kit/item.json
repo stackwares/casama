@@ -1,0 +1,34 @@
+{
+  "name": "Dev kit",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "developer",
+    "github",
+    "code-review"
+  ],
+  "featured": true,
+  "version": 2,
+  "added": "2026-11-17",
+  "access": {
+    "reads": [
+      "GitHub pull requests",
+      "public GitHub repositories"
+    ],
+    "writes": [
+      "comments on pull requests"
+    ],
+    "credits": "medium"
+  },
+  "changelog": [
+    {
+      "version": 2,
+      "date": "2026-11-17",
+      "note": "A small tool server that reads public pull requests and shows them as cards."
+    }
+  ]
+}

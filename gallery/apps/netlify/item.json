@@ -1,0 +1,29 @@
+{
+  "name": "Netlify",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "hosting",
+    "deploys"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Did my last Netlify deploy succeed?",
+    "Start a new deploy of my site",
+    "List my Netlify sites"
+  ],
+  "access": {
+    "reads": [
+      "Netlify sites and deploys"
+    ],
+    "writes": [
+      "starts deploys and changes settings"
+    ],
+    "credits": "low"
+  }
+}

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A live run, collapsed (D-324, §6 E): inside the system's notification frame, which may give it
+     as little as 48 dp. The bot's own mark leads (its mascot or initials, BotArt.kt) with a dot
+     for how the run stands. Notification text styles, so it reads on every skin and in dark mode. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+    <FrameLayout
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginEnd="12dp">
+        <ImageView
+            android:id="@+id/live_mark"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:importantForAccessibility="no"
+            android:scaleType="fitCenter" />
+        <ImageView
+            android:id="@+id/live_badge"
+            android:layout_width="11dp"
+            android:layout_height="11dp"
+            android:layout_gravity="bottom|end"
+            android:importantForAccessibility="no"
+            android:src="@drawable/live_badge" />
+    </FrameLayout>
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/live_bot"
+            style="@android:style/TextAppearance.Material.Notification.Title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1" />
+        <TextView
+            android:id="@+id/live_step"
+            style="@android:style/TextAppearance.Material.Notification"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1" />
+    </LinearLayout>
+    <Chronometer
+        android:id="@+id/live_time"
+        style="@android:style/TextAppearance.Material.Notification.Time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:fontFeatureSettings="tnum" />
+</LinearLayout>

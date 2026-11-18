@@ -1,0 +1,8 @@
+{
+  "name": "Monday recap",
+  "description": "Every Monday: last week's stand-ups in five lines.",
+  "category": "work",
+  "icon": "calendar-check",
+  "instructions_md": "Read last week's stand-ups with list_notes and read_note. Write a recap for {{team}} in five lines at most: what got done, what's still open, and any blocker that came up twice.",
+  "schedule_cron": "{{time.minute}} {{time.hour}} * * 1"
+}

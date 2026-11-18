@@ -1,0 +1,70 @@
+# Listing kit: directories, lists and roundups
+
+Part F of `docs/SEO-PLAN.md` (D-381). Everything here uses the same words, so every place that
+describes Casama agrees with every other. Status as of 2026-11-18.
+
+## The words
+
+| Field | Text |
+|---|---|
+| Name | Casama |
+| Tagline (60 characters) | Open-source AI teammates with their own computers |
+| One sentence | Casama is an open-source app for AI teammates that each have their own computer, remember how you work and ask before anything risky. |
+| Short description (160) | Open-source AI teammates that do real work on computers of their own, remember how you like things and ask before anything risky. Self-host free or use the cloud. |
+| Long description | Casama gives people AI teammates, called bots, that do real work on computers of their own: they browse, fill in forms, write files and run code on a sandboxed Linux machine you can watch and take over. Bots remember what matters, start on schedules and triggers, and stop for your approval before risky steps such as sending, paying or deleting. Casama is open source under AGPL-3.0 and free to self-host with any AI model, and it is also offered as Casama Cloud. It has native apps for iPhone, iPad, Android, Mac, Windows, Linux and the web. |
+| Website | https://casama.ai |
+| Source | https://github.com/stackwares/casama |
+| Docs | https://docs.casama.ai |
+| Licence | AGPL-3.0 (SDKs, CLI, plugin kit: Apache-2.0) |
+| Pricing | Free to self-host. Cloud: Free, $15, $49, $99 a month |
+| Pricing page | https://casama.ai/pricing |
+| Categories | AI agents, AI assistants, self-hosted, productivity, automation |
+| Alternative to | OpenClaw, Hermes Agent, Grok Bot, Manus, Rakazo, OpenBot, MausBot, Claude Cowork, ChatGPT Dots, Meta Muse |
+| Platforms | iOS, iPadOS, Android, macOS, Windows, Linux, web, self-hosted (Docker) |
+| Contact shown to the public | hello@casama.ai |
+| Address for directory accounts | listings@casama.ai (an alias of the hello@ mailbox in Zoho, so sign-up mail and newsletters can be filtered) |
+| Address for notes sent by a person | oliver@casama.ai (also an alias of that mailbox) |
+| Logo | `site/favicon.png`, `site/assets/bots/casama-winky-animated.svg` |
+| Share image | `site/og-image.png` |
+| Screenshots | `docs-site/public/screens/` |
+| Maker | Stackwares (Oliver Martinez) |
+
+## GitHub lists
+
+| List | State |
+|---|---|
+| punkpeye/awesome-mcp-servers (Casama's MCP server) | Pull request open, waiting on the maintainer: https://github.com/punkpeye/awesome-mcp-servers/pull/19871. Both things its bot asked for are done (2026-11-18): the server is claimed and released on Glama (https://glama.ai/mcp/servers/stackwares/casama, release 0.1.0, maintenance rated B) and the Glama score badge is on the entry. Glama's build is set in its admin page, not in the repository: build step `npm install -g @casama/mcp`, command `casama-mcp --docs-only` |
+| e2b-dev/awesome-ai-agents | Pull request open: https://github.com/e2b-dev/awesome-ai-agents/pull/2016. The contributor agreement is signed and its check passes; waiting for a maintainer |
+| kyrolabs/awesome-agents | **Wait.** Its rules close pull requests from "brand new repo without demonstrated traction" automatically. Send after the launch, when the repository has stars and history |
+| awesome-selfhosted/awesome-selfhosted | **Wait until about March 2027.** It wants four months since the first tagged release. Goes to `awesome-selfhosted-data` |
+
+## Directories
+
+Tried on 2026-11-18. What blocks most of them today is that the repository has no stars yet.
+
+| Directory | State |
+|---|---|
+| AlternativeTo | **Submitted** 2026-11-18, complete: account `Casama` (https://alternativeto.net/user/casama/), e-mail listings@casama.ai, signed in through Oliver's GitHub. Five alternatives suggested (OpenClaw, Hermes Agent, Manus, Rakazo, n8n), pricing $15 to $99 a month, developer Stackwares. In the normal review queue, which is long; priority review is $15 and we don't pay |
+| OpenAlternative | **Wait.** Signed in with GitHub, not submitted: its rules want 250+ stars for a repository under six months old (50+ after that) |
+| AI Agents Directory | **Skipped.** Signed in with stackwares@gmail.com and filled the form, not submitted: a listing is either paid ($19 and up) or needs their badge with a link on our site. We do neither |
+| Open Source Alternatives | **Submitted** 2026-11-18 with listings@casama.ai. A free listing needs their badge on the README or the site; it is on the README only (Oliver left the call to me: one badge in the README for a directory AI assistants cite, nothing on casama.ai). They review within 72 hours of the badge going up |
+| Toolradar | **Submitted** 2026-11-18. Account listings@casama.ai (sign-in by e-mailed code, no password), company Casama verified by e-mail, product sent for review |
+| There's An AI For That | Not tried; submission may be paid, and we skip it if so |
+| aiagentstore.ai | **Skipped.** Account made with listings@casama.ai (login in Vaultwarden), but a listing costs $49.99; there is no free one |
+| SourceForge | Not tried: a mirror of the GitHub repository; the twins have one |
+| Product Hunt | With the launch, not before (`product-hunt.md`). The address `/products/casama` belongs to another product |
+
+## Places self-hosters install from
+
+| Platform | State |
+|---|---|
+| Coolify | Template at `deploy/coolify/casama.yaml`, not yet run on a Coolify server. Their catalog wants 1,000 stars and outside contributions are paused |
+| Dokploy | Template at `deploy/dokploy/`, not yet run on a Dokploy server. Parked until after the launch: there is no cloud account of ours to rent a spare server from, it must not be tried on the production VPS, and their catalog will look at the repository's stars too |
+| CasaOS | `deploy/casaos/` with a setup script. Stays in our repo: a store app would ship the same keys to everyone |
+| Umbrel, Unraid | No template: neither fits a 14-service stack that needs the Docker socket |
+| Railway, Render, DigitalOcean | Files already in `deploy/`; publishing a Railway template needs a Railway account |
+
+## Roundups
+
+Drafts are in `roundup-notes.md`. They are not sent: they should come from a person's own mailbox,
+and they land better once there is a launch to point to.

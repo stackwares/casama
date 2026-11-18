@@ -1,0 +1,28 @@
+{
+  "name": "Miro",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "whiteboard"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Summarize the sticky notes on my retro board",
+    "Add these ideas as sticky notes to my Miro board",
+    "Draw a user journey on the board"
+  ],
+  "access": {
+    "reads": [
+      "Miro boards"
+    ],
+    "writes": [
+      "adds notes, shapes and diagrams"
+    ],
+    "credits": "low"
+  }
+}

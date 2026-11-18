@@ -1,0 +1,21 @@
+{
+  "name": "Language partner",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "life",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "Let's practise Spanish, I'm a beginner",
+    "Role play ordering at a restaurant in French",
+    "Quiz me on the words I got wrong last time"
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "hello-pack",
+  "version": "1.0.0",
+  "description": "An example pack: a stand-up bot with its skill, a Monday routine, a notes server, an app to connect and a look.",
+  "author": { "name": "Casama" },
+  "repository": "https://github.com/stackwares/casama",
+  "license": "Apache-2.0",
+  "keywords": ["example", "pack", "standup"],
+  "extensions": {
+    "com.casama": {
+      "secrets": [
+        {
+          "name": "NOTES_SIGNATURE",
+          "description": "A line added to the end of every saved note, e.g. your team name.",
+          "server": "notes",
+          "env": "NOTES_SIGNATURE"
+        }
+      ],
+      "settings": [
+        {
+          "name": "NOTES_FOLDER",
+          "label": "Notes folder name",
+          "description": "The folder notes are saved in, inside the plugin's data folder.",
+          "server": "notes",
+          "env": "NOTES_FOLDER",
+          "default": "notes"
+        }
+      ]
+    }
+  }
+}

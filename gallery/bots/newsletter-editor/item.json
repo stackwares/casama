@@ -1,0 +1,21 @@
+{
+  "name": "Newsletter editor",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "create",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "Turn these notes into this week's issue",
+    "Give me three subject lines for this draft",
+    "Plan the next four issues"
+  ]
+}

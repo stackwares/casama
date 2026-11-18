@@ -1,0 +1,25 @@
+{
+  "name": "Birthdays and dates",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "birthdays",
+    "family",
+    "reminders"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "calendar",
+      "contacts",
+      "memory"
+    ],
+    "credits": "low"
+  }
+}

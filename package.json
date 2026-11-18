@@ -1,0 +1,26 @@
+{
+  "name": "casama",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test --concurrency=50%",
+    "gen": "pnpm --filter @casama/contracts gen && pnpm --filter @casama/contracts gen:analytics && pnpm --filter @casama/contracts gen:dart && pnpm --filter @casama/client gen"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.6",
+    "@resvg/resvg-js": "2.6.2",
+    "@types/node": "^26.6.6",
+    "turbo": "^2.11.10",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

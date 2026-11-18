@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "prompt": "Proofread this: 'Their going to the meeting tomorow, and they wants us to bring the reports wich we finished last week.'",
+      "expect": "Fixes they're, tomorrow, want, which; keeps the sentence's meaning and voice; lists what changed."
+    },
+    {
+      "prompt": "Proofread this short bio and keep my casual tone: 'hey im Sam, i build furniture out of old pallets and i love it alot.'",
+      "expect": "Corrects capitalization, I'm and a lot while keeping it casual; does not make it formal; lists the changes."
+    }
+  ]
+}

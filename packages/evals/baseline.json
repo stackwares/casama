@@ -1,0 +1,14 @@
+{
+  "fixtures/quick": {
+    "success_rate": 1,
+    "recorded_at": "2026-11-09T18:09:59.123Z",
+    "model": "fixture-main",
+    "tasks": 10
+  },
+  "live/only:arithmetic-exact,weekday,csv-total": {
+    "success_rate": 1,
+    "recorded_at": "2026-11-09T18:11:05.277Z",
+    "model": "openai/gpt-6-luna",
+    "tasks": 3
+  }
+}

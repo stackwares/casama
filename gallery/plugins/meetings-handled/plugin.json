@@ -1,0 +1,11 @@
+{
+  "description": "A meeting assistant: prepares tomorrow's meetings, files notes with decisions and action items, and follows up.",
+  "url": "https://github.com/stackwares/casama/tree/main/packs/meetings-handled",
+  "commit": "ca3813c705e42aaf297493a2d889207c79cf657b",
+  "icon": "users",
+  "adds": [
+    "A meeting assistant bot",
+    "Prep for tomorrow's meetings",
+    "Notes with action items and follow-up drafts"
+  ]
+}

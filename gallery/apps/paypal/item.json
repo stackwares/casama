@@ -1,0 +1,29 @@
+{
+  "name": "PayPal",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "payments",
+    "invoices"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Send a PayPal invoice for $500 to this client",
+    "Show my PayPal transactions this week",
+    "Has order 1234 been refunded?"
+  ],
+  "access": {
+    "reads": [
+      "PayPal transactions and orders"
+    ],
+    "writes": [
+      "creates and sends invoices"
+    ],
+    "credits": "low"
+  }
+}

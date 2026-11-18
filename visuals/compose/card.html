@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Page card</title>
+<!-- One 1200x630 share card for a casama.ai page: section background + real mascot + the page's title.
+     Rendered by visuals/render-cards.mjs. Query: bg=<file in visuals/cards/>, title=..., label=..., m=<left,top,size> to move the mascot off the art. -->
+<style>
+@font-face { font-family: "Google Sans"; src: url("/site/assets/fonts/GoogleSans-Regular.woff2") format("woff2"); font-weight: 400; }
+@font-face { font-family: "Google Sans"; src: url("/site/assets/fonts/GoogleSans-Bold.woff2") format("woff2"); font-weight: 700; }
+@font-face { font-family: "Libre Baskerville"; src: url("/site/assets/fonts/LibreBaskerville-Bold.woff2") format("woff2"); font-weight: 700; }
+html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #24112f; }
+.og { position: relative; width: 1200px; height: 630px; background: #24112f center / cover no-repeat; }
+.og::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(28, 10, 40, .62) 0%, rgba(28, 10, 40, .38) 50%, rgba(28, 10, 40, 0) 70%); }
+.mascot { position: absolute; width: 280px; height: 280px; right: 120px; top: 175px; filter: drop-shadow(0 18px 40px rgba(20, 0, 40, .35)); }
+.copy { position: absolute; left: 80px; top: 0; bottom: 0; width: 600px; display: flex; flex-direction: column; justify-content: center; color: #fbf6ff; }
+.word { font: 700 30px "Libre Baskerville", Georgia, serif; opacity: .92; margin-bottom: 26px; }
+.word span { font: 400 26px "Google Sans", system-ui, sans-serif; opacity: .8; }
+.title { font: 700 60px/1.1 "Google Sans", system-ui, sans-serif; letter-spacing: -.01em; text-wrap: balance; text-shadow: 0 2px 24px rgba(20, 0, 40, .5); }
+</style>
+</head>
+<body>
+<div class="og" id="og"><div class="copy"><div class="word" id="word">Casama</div><div class="title" id="title"></div></div>
+<img class="mascot" src="/site/assets/bots/casama-brand.svg" alt=""></div>
+<script>
+const q = new URLSearchParams(location.search);
+document.getElementById("og").style.backgroundImage = `url('/visuals/cards/${q.get("bg")}')`;
+const m = q.get("m");
+if (m) {
+  const [left, top, size] = m.split(",").map(Number);
+  Object.assign(document.querySelector(".mascot").style, { left: `${left}px`, top: `${top}px`, right: "auto", width: `${size}px`, height: `${size}px` });
+}
+const label = q.get("label");
+if (label) document.getElementById("word").insertAdjacentHTML("beforeend", ` <span>· ${label.replace(/[<&]/g, "")}</span>`);
+const title = document.getElementById("title");
+title.textContent = q.get("title") || "";
+// Long titles step down until they fit in four lines' worth of height.
+document.fonts.ready.then(() => {
+  for (let size = 60; size > 34 && title.offsetHeight > 300; size -= 4) title.style.fontSize = `${size - 4}px`;
+  document.body.dataset.ready = "1";
+});
+</script>
+</body>
+</html>

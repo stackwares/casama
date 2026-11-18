@@ -1,0 +1,436 @@
+/* Casama's look, the same as casama.link (link-site/link.css): plain white or plain dark grey pages,
+   Casama's purple for text and buttons only, Google Sans with Libre Baskerville for the wordmark and h2s,
+   JetBrains Mono for code. No tints, no gradients. */
+
+@font-face {
+  font-family: "Google Sans";
+  src: url("/brand/GoogleSans-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Google Sans";
+  src: url("/brand/GoogleSans-Medium.woff2") format("woff2");
+  font-weight: 500 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Google Sans";
+  src: url("/brand/GoogleSans-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Libre Baskerville";
+  src: url("/brand/LibreBaskerville-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Libre Baskerville";
+  src: url("/brand/LibreBaskerville-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/brand/JetBrainsMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  --casama-bg: #ffffff;
+  --casama-bg-2: #f4f4f6;
+  --casama-card: #f7f7f9;
+  --casama-ink: #1d1b20;
+  --casama-ink-2: #5d5a63;
+  --casama-line: #e3e2e7;
+  --casama-accent: #7a3fa8;
+  --casama-on-accent: #ffffff;
+  --casama-accent-soft: #f1e2fc;
+  --casama-good: #1f7a4d;
+  --casama-warn: #a2361f;
+  --casama-serif: "Libre Baskerville", Georgia, "Times New Roman", serif;
+}
+
+.dark {
+  --casama-bg: #1c1c1e;
+  --casama-bg-2: #2a2a2d;
+  --casama-card: #242427;
+  --casama-ink: #f2f1f4;
+  --casama-ink-2: #b4b1b9;
+  --casama-line: #38383c;
+  --casama-accent: #d9b6f7;
+  --casama-on-accent: #25102f;
+  --casama-accent-soft: #3a2a47;
+  --casama-good: #7fd6a6;
+  --casama-warn: #ffab96;
+}
+
+:root,
+.dark {
+  --vp-font-family-base:
+    "Google Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --vp-font-family-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --vp-c-bg: var(--casama-bg);
+  --vp-c-bg-alt: var(--casama-bg);
+  --vp-c-bg-elv: var(--casama-bg);
+  --vp-c-bg-soft: var(--casama-card);
+  --vp-c-divider: var(--casama-line);
+  --vp-c-border: var(--casama-line);
+  --vp-c-gutter: var(--casama-line);
+  --vp-c-text-1: var(--casama-ink);
+  --vp-c-text-2: var(--casama-ink-2);
+  --vp-c-text-3: color-mix(in oklab, var(--casama-ink-2) 75%, var(--casama-bg));
+
+  --vp-c-default-1: var(--casama-line);
+  --vp-c-default-2: var(--casama-bg-2);
+  --vp-c-default-3: var(--casama-bg-2);
+  --vp-c-default-soft: var(--casama-bg-2);
+
+  --vp-c-brand-1: var(--casama-accent);
+  --vp-c-brand-2: var(--casama-accent);
+  --vp-c-brand-3: var(--casama-accent);
+  --vp-c-brand-soft: var(--casama-accent-soft);
+
+  --vp-c-tip-1: var(--casama-accent);
+  --vp-c-tip-2: var(--casama-accent);
+  --vp-c-tip-3: var(--casama-accent);
+  --vp-c-tip-soft: var(--casama-accent-soft);
+
+  --vp-button-brand-border: transparent;
+  --vp-button-brand-text: var(--casama-on-accent);
+  --vp-button-brand-bg: var(--casama-accent);
+  --vp-button-brand-hover-border: transparent;
+  --vp-button-brand-hover-text: var(--casama-on-accent);
+  --vp-button-brand-hover-bg: var(--casama-accent);
+  --vp-button-brand-active-border: transparent;
+  --vp-button-brand-active-text: var(--casama-on-accent);
+  --vp-button-brand-active-bg: var(--casama-accent);
+  --vp-button-alt-border: transparent;
+  --vp-button-alt-text: var(--casama-ink);
+  --vp-button-alt-bg: var(--casama-bg-2);
+  --vp-button-alt-hover-border: transparent;
+  --vp-button-alt-hover-text: var(--casama-ink);
+  --vp-button-alt-hover-bg: var(--casama-bg-2);
+  --vp-button-alt-active-border: transparent;
+  --vp-button-alt-active-text: var(--casama-ink);
+  --vp-button-alt-active-bg: var(--casama-bg-2);
+
+  --vp-code-bg: var(--casama-bg-2);
+  --vp-code-block-bg: var(--casama-card);
+  --vp-code-block-divider-color: var(--casama-line);
+  --vp-code-copy-code-bg: var(--casama-bg-2);
+  --vp-code-tab-bg: var(--casama-card);
+  --vp-code-tab-divider: var(--casama-line);
+
+  --vp-nav-bg-color: color-mix(in oklab, var(--casama-bg) 92%, transparent);
+  --vp-local-nav-bg-color: var(--casama-bg);
+  --vp-sidebar-bg-color: var(--casama-bg);
+  --vp-home-hero-name-color: var(--casama-ink);
+  --vp-home-hero-name-background: none;
+  --vp-home-hero-image-background-image: none;
+  --vp-home-hero-image-filter: none;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--casama-accent);
+  color: var(--casama-on-accent);
+}
+
+/* Header: blurred, with a line only once the page scrolls (VitePress adds .has-sidebar/.top itself). */
+.VPNavBar:not(.home.top) .content-body,
+.VPNavBar.has-sidebar .content-body {
+  background: var(--vp-nav-bg-color) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.VPNavBar.home.top .divider-line {
+  background-color: transparent;
+}
+
+/* The Casama wordmark is Libre Baskerville Bold, like the app and casama.ai. */
+.VPNavBarTitle .title {
+  font: 700 22px / 1 var(--casama-serif);
+  letter-spacing: -0.03em;
+  color: var(--casama-ink);
+}
+
+/* Home hero: the wordmark in Libre Baskerville, the line under it in bold Google Sans. */
+.VPHero .main .name {
+  font-family: var(--casama-serif);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--casama-ink);
+}
+.VPHero .main .text {
+  font-family: var(--vp-font-family-base);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  color: var(--casama-ink);
+}
+.VPHero .main .tagline {
+  color: var(--casama-ink-2);
+}
+
+/* Headings: page titles in bold Google Sans, section titles in Libre Baskerville. */
+.vp-doc h1 {
+  font-family: var(--vp-font-family-base);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+}
+.vp-doc h2 {
+  font-family: var(--casama-serif);
+  font-weight: 400;
+  letter-spacing: -0.022em;
+  border-top-color: var(--casama-line);
+}
+.vp-doc h3,
+.vp-doc h4 {
+  font-weight: 700;
+}
+.vp-doc a {
+  font-weight: 600;
+  text-underline-offset: 0.24em;
+}
+
+/* Buttons are pills: 52px (big) or 40px (medium), bold, a little press on tap. */
+.VPButton {
+  border-radius: 999px !important;
+  border-color: transparent !important;
+  font-weight: 700 !important;
+  transition:
+    transform 0.14s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.2s ease;
+}
+.VPButton.medium {
+  padding: 0 18px;
+  line-height: 38px;
+  font-size: 15px;
+}
+.VPButton.big {
+  padding: 0 26px;
+  line-height: 50px;
+  font-size: 17px;
+}
+.VPButton:active {
+  transform: scale(0.96);
+}
+@media (hover: hover) and (pointer: fine) {
+  .VPButton:hover {
+    filter: brightness(1.08);
+  }
+}
+
+/* Cards: the feature boxes on the home page and the prev/next links. */
+.VPFeature,
+.VPDocFooter .pager-link {
+  background: var(--casama-card) !important;
+  border: 1px solid var(--casama-line) !important;
+  border-radius: 22px !important;
+}
+.VPFeature.link:hover,
+.VPDocFooter .pager-link:hover {
+  border-color: color-mix(in oklab, var(--casama-accent) 40%, var(--casama-line)) !important;
+}
+.VPFeature .title {
+  font-weight: 700;
+}
+
+/* Callouts sit on the card colour with a line, not a tinted fill. */
+.custom-block {
+  border-radius: 16px;
+}
+.custom-block.tip,
+.custom-block.info,
+.custom-block.details {
+  background: var(--casama-card);
+  border: 1px solid var(--casama-line);
+}
+
+.vp-doc div[class*="language-"] {
+  border-radius: 16px;
+}
+
+/* The animated mascot (BrandMark.vue) fills these boxes and fades in once drawn. */
+.casama-mark {
+  display: block;
+  flex: none;
+  contain: layout paint style;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.casama-mark.is-ready {
+  opacity: 1;
+}
+.casama-mark svg {
+  display: block;
+}
+
+.casama-mark-nav {
+  width: 34px;
+  height: 34px;
+  margin-right: 8px;
+}
+
+.casama-mark-hero {
+  width: 192px;
+  height: 192px;
+}
+
+@media (min-width: 640px) {
+  .casama-mark-hero {
+    width: 256px;
+    height: 256px;
+  }
+}
+
+@media (min-width: 960px) {
+  .casama-mark-hero {
+    width: 320px;
+    height: 320px;
+  }
+}
+
+/* Screenshots: a light and a dark version, switched with the theme */
+.casama-shot {
+  margin: 24px 0;
+}
+.casama-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.casama-shot figcaption {
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--vp-c-text-2);
+  text-align: center;
+}
+.casama-shot .shot-dark,
+.dark .casama-shot .shot-light {
+  display: none;
+}
+.dark .casama-shot .shot-dark {
+  display: block;
+}
+.home-shots {
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+.casama-shot-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+@media (max-width: 760px) {
+  .casama-shot-pair {
+    grid-template-columns: 1fr;
+  }
+  .home-shots {
+    padding: 16px 16px 48px;
+  }
+}
+
+/* A guide page's painted picture, under its title (D-379). */
+.vp-doc img.doc-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+  margin: 20px 0 28px;
+}
+
+/* 404 (NotFound.vue) */
+.casama-lost {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 64px 24px 96px;
+}
+.casama-lost-art {
+  aspect-ratio: 16 / 10;
+  display: grid;
+  place-items: center;
+  background: url("/lost.webp") center / cover no-repeat;
+  border-radius: 22px;
+  margin-bottom: 32px;
+}
+.casama-lost-art img {
+  width: 22%;
+  height: auto;
+  filter: drop-shadow(0 10px 24px rgba(40, 0, 80, 0.25));
+}
+.casama-lost h1 {
+  font-size: 32px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.casama-lost p {
+  margin-top: 14px;
+  color: var(--vp-c-text-2);
+  font-size: 17px;
+}
+.casama-lost ul {
+  margin-top: 20px;
+  padding-left: 20px;
+  list-style: disc;
+  line-height: 1.9;
+}
+.casama-lost a {
+  color: var(--vp-c-brand-1);
+  font-weight: 600;
+}
+
+/* The search box at the top of /faq (FaqFilter.vue) and the docs search's "Ask Casama Help" row. */
+.faq-filter {
+  margin: 0 0 24px;
+}
+.faq-filter input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 999px;
+  background: var(--vp-c-bg-soft);
+  font-size: 16px;
+}
+.faq-filter input:focus {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 1px;
+}
+.faq-filter-none {
+  margin: 16px 0 0;
+  font-weight: 600;
+}
+.faq-filter-ask,
+.casama-help-search-row {
+  margin-top: 12px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--vp-button-brand-bg);
+  color: var(--vp-button-brand-text);
+  font-weight: 600;
+  text-align: left;
+  line-height: 1.35;
+}
+.casama-help-search-row {
+  margin: 0;
+  align-self: flex-start;
+}
+.casama-help-search-row[hidden] {
+  display: none;
+}
+@media (hover: hover) {
+  .faq-filter-ask:hover,
+  .casama-help-search-row:hover {
+    background: var(--vp-button-brand-hover-bg);
+  }
+}

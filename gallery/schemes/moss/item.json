@@ -1,0 +1,17 @@
+{
+  "name": "Moss",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "green",
+    "calm"
+  ],
+  "featured": true,
+  "pick": "Soft greens with gentle contrast, made for long reading.",
+  "version": 1,
+  "added": "2026-11-11"
+}

@@ -1,0 +1,32 @@
+{
+  "name": "CSV cleanup",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "data",
+    "spreadsheets"
+  ],
+  "category": "data",
+  "icon": "sheet",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-11",
+  "examples": [
+    "Clean up this messy CSV and tell me what changed",
+    "Remove duplicate and empty rows from this export",
+    "Normalize the headers in this spreadsheet export"
+  ],
+  "access": {
+    "reads": [
+      "files you share"
+    ],
+    "writes": [
+      "creates a cleaned file"
+    ],
+    "credits": "low"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "description": "See campaigns, flows and results in your Klaviyo account.",
+  "category": "sales",
+  "color": "232426",
+  "homepage": "https://www.klaviyo.com",
+  "url": "https://mcp.klaviyo.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Review campaign results", "See flows and lists", "Look up profiles"]
+}

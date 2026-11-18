@@ -1,0 +1,22 @@
+{
+  "name": "Job search kit",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "jobs",
+    "job",
+    "career",
+    "hiring",
+    "interview",
+    "resume",
+    "work",
+    "applications"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18"
+}

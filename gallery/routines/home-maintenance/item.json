@@ -1,0 +1,33 @@
+{
+  "name": "Home maintenance",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "home",
+    "chores",
+    "household"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "memory",
+      "the web"
+    ],
+    "credits": "low"
+  },
+  "inputs": [
+    {
+      "key": "city",
+      "label": "Your city, for the season",
+      "type": "text",
+      "default": "my city",
+      "help": "Leave it as is and the bot uses what it knows."
+    }
+  ]
+}

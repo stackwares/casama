@@ -1,0 +1,148 @@
+{
+  "name": "team-computer",
+  "turns": [
+    {
+      "when": {
+        "systemIncludes": "extract lasting memories"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "{\"memories\":[]}"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "save the notes",
+        "systemIncludes": "workspace/bots/researcher"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "w1",
+            "name": "files.write",
+            "args": {
+              "path": "notes.md",
+              "content": "hello"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "files.write"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "l1",
+            "name": "files.list",
+            "args": {
+              "path": "shared"
+            }
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "files.list"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Saved."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
+        "lastUserIncludes": "look at the screen"
+      },
+      "events": [
+        {
+          "type": "tool_call",
+          "call": {
+            "callId": "d1",
+            "name": "desktop.snapshot",
+            "args": {}
+          }
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "tool",
+        "lastToolName": "desktop.snapshot"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "Looked."
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 100,
+            "outputTokens": 10
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    }
+  ]
+}

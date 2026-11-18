@@ -1,0 +1,26 @@
+{
+  "name": "trivago",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "travel",
+    "hotels"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Find hotels in Paris under $200 a night next month",
+    "Compare prices for this hotel across sites",
+    "When is Bali cheapest to visit?"
+  ],
+  "access": {
+    "reads": [
+      "trivago hotel prices"
+    ],
+    "credits": "low"
+  }
+}

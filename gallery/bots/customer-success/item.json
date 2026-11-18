@@ -1,0 +1,21 @@
+{
+  "name": "Customer success",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "Which accounts need attention this week?",
+    "Draft a check-in for a customer who went quiet",
+    "Write an onboarding plan for a new customer"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "description": "Create Tally forms and read their responses.",
+  "category": "productivity",
+  "color": "37352F",
+  "homepage": "https://tally.so",
+  "url": "https://api.tally.so/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["Create forms", "See your forms", "Read responses"]
+}

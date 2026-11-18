@@ -1,0 +1,26 @@
+{
+  "name": "Runway",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "video",
+    "ai"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Make a five-second video of waves at sunset with Runway",
+    "Generate a product shot of a coffee mug",
+    "Turn this idea into a short clip"
+  ],
+  "access": {
+    "writes": [
+      "makes videos and images on your credits"
+    ],
+    "credits": "medium"
+  }
+}

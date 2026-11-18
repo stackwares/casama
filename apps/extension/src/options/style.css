@@ -1,0 +1,287 @@
+/*
+ * The options page: first run, signing in, and Settings. Tokens and the shared controls are in
+ * ../ui/theme.css (the app's Plain theme); this file only lays the page out.
+ */
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--s-xxl) var(--s-md) 64px;
+}
+/* First run, sign-in and the other short steps: the app's sign-in sheet, a centred 440px column. */
+main.narrow {
+  max-width: 440px;
+  padding-top: 48px;
+}
+main.narrow > h1 {
+  font-size: var(--t-headline);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  text-align: center;
+  margin-bottom: var(--s-xs);
+}
+main.narrow > h1 + p.muted {
+  text-align: center;
+}
+
+header.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: var(--s-xl);
+}
+header.brand img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+header.brand strong {
+  font-size: var(--t-title-m);
+  font-weight: 700;
+  letter-spacing: -0.1px;
+}
+main.narrow header.brand {
+  flex-direction: column;
+  gap: var(--s-sm);
+  margin-bottom: var(--s-lg);
+}
+main.narrow header.brand img {
+  width: 72px;
+  height: 72px;
+}
+main.narrow header.brand strong {
+  font-size: var(--t-body);
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* Settings: page titles in the app bar's weight, cards as the app's settings groups. */
+main > h1 {
+  font-size: var(--t-title-l);
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+.card h2 {
+  margin-bottom: var(--s-xxs);
+}
+.card h3 {
+  font-weight: 700;
+}
+.card label.choice + label.choice {
+  border-top: 1px solid var(--hairline);
+}
+
+ul.points {
+  padding-left: 20px;
+  margin: 0 0 var(--s-sm);
+}
+ul.points li {
+  margin: var(--s-xs) 0;
+  line-height: 1.45;
+}
+ul.points li::marker {
+  color: var(--muted);
+}
+
+/* Bots and devices: list rows inside a card, hairline between, as GroupedCard. */
+ul.bots {
+  list-style: none;
+  padding: 0;
+  margin: var(--s-xs) 0 0;
+}
+ul.bots li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-sm);
+  padding: 10px 0;
+  border-top: 1px solid var(--hairline);
+  font-weight: 600;
+}
+ul.bots li.muted {
+  font-weight: 400;
+}
+ul.bots li:first-child {
+  border-top: 0;
+}
+
+footer {
+  margin-top: var(--s-xxl);
+  font-size: var(--t-small);
+  color: var(--muted);
+}
+footer a {
+  color: inherit;
+  font-weight: 500;
+}
+main.narrow footer {
+  text-align: center;
+}
+
+/* ---- Sign in ----------------------------------------------------------------------------- */
+
+/* "Server: Casama Cloud · Change", a quiet centred line under the title. */
+main.narrow [data-testid="server"] {
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--t-body);
+  margin-bottom: var(--s-lg);
+}
+main.narrow [data-testid="server"] strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+
+/* Continue with Apple / Google: full-width 50px pills, drawn as their branding guidelines ask. */
+.providers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-sm);
+  margin: 0;
+}
+.brand-pill {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-sm);
+  min-height: var(--h-brand);
+  border-radius: var(--r-pill);
+  font-size: var(--t-body-l);
+  font-weight: 600;
+  border: 1px solid var(--outline);
+  background: var(--bg);
+  color: var(--fg);
+}
+.brand-logo {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+}
+.brand-logo svg {
+  width: 100%;
+  height: 100%;
+}
+.brand-google,
+.brand-google:hover:not(:disabled) {
+  background: #ffffff;
+  color: #1f1f1f;
+  border-color: #747775;
+}
+.brand-apple,
+.brand-apple:hover:not(:disabled) {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+}
+.brand-pill:hover:not(:disabled) {
+  opacity: 0.9;
+}
+@media (prefers-color-scheme: dark) {
+  .brand-google,
+  .brand-google:hover:not(:disabled) {
+    background: #131314;
+    color: #e3e3e3;
+    border-color: #8e918f;
+  }
+  .brand-apple,
+  .brand-apple:hover:not(:disabled) {
+    background: #ffffff;
+    color: #000000;
+    border-color: #ffffff;
+  }
+}
+
+/* "or", between hairlines (labelMedium, onSurfaceVariant). */
+.or {
+  display: flex;
+  align-items: center;
+  gap: var(--s-sm);
+  margin: var(--s-lg) 0 var(--s-md);
+  color: var(--muted);
+  font-size: var(--t-small);
+  font-weight: 500;
+}
+.or::before,
+.or::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--hairline);
+}
+
+/* The email code form on the sign-in sheet: no card, a field and a full-width pill. */
+main.narrow form[data-testid="route-email"] {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+main.narrow form[data-testid="route-email"] h2 {
+  font-size: var(--t-section);
+  font-weight: 700;
+}
+main.narrow form[data-testid="route-email"] > p.muted {
+  font-size: var(--t-body);
+  margin-bottom: 0;
+}
+main.narrow form .row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--s-xxs);
+}
+main.narrow form .row button {
+  width: 100%;
+}
+main.narrow form .row button.primary {
+  min-height: var(--h-brand);
+  font-size: var(--t-body-l);
+  margin-top: var(--s-xxs);
+}
+main.narrow form .row button:not(.primary) {
+  border-color: transparent;
+}
+/* The six-digit code reads like the app's code boxes: large, spaced figures. */
+main.narrow input[data-testid="code-input"] {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* "Other ways to sign in": a quiet centred text button that opens to the other routes. */
+.other-ways {
+  margin-top: var(--s-lg);
+}
+.other-ways > summary {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: var(--t-body);
+  text-align: center;
+  padding: 10px 0;
+  border-radius: var(--r-pill);
+}
+.other-ways > summary:hover {
+  color: var(--fg);
+}
+.other-ways .card h2 {
+  font-size: var(--t-section);
+}
+
+/* "New to Casama? Create an account", and Back. */
+main.narrow > p:not(.muted) {
+  text-align: center;
+  color: var(--muted);
+  margin-top: var(--s-lg);
+}
+main.narrow > button {
+  display: flex;
+  margin: var(--s-lg) auto 0;
+}
+
+/* The agreement: its button spans the card. */
+main.narrow [data-testid="consent"] .row button.primary,
+main.narrow [data-testid="first-run-access"] .row button.primary {
+  width: 100%;
+  min-height: var(--h-brand);
+  font-size: var(--t-body-l);
+}

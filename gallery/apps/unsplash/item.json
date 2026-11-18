@@ -1,0 +1,25 @@
+{
+  "name": "Unsplash",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "photos"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Find a photo of a cozy café for my slide",
+    "Search Unsplash for mountain landscapes",
+    "Who took this photo, and how do I credit it?"
+  ],
+  "access": {
+    "reads": [
+      "Unsplash photos"
+    ],
+    "credits": "low"
+  }
+}

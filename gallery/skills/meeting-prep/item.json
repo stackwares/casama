@@ -1,0 +1,29 @@
+{
+  "name": "Meeting prep",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work"
+  ],
+  "category": "work",
+  "icon": "calendar-clock",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Prepare me for my call with Acme tomorrow",
+    "Brief me on the people in this meeting",
+    "What should I ask in my one-on-one this week?"
+  ],
+  "access": {
+    "reads": [
+      "the web",
+      "what you share"
+    ],
+    "credits": "low"
+  }
+}

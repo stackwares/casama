@@ -1,0 +1,39 @@
+{
+  "name": "Week ahead",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "planning",
+    "calendar",
+    "work"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "calendar",
+      "tickets",
+      "memory"
+    ],
+    "credits": "low"
+  },
+  "needs": {
+    "apps": [
+      "google_calendar"
+    ]
+  },
+  "inputs": [
+    {
+      "key": "time",
+      "label": "What time on Sunday?",
+      "type": "time",
+      "default": "18:00",
+      "help": "On Sunday, in your workspace's time zone."
+    }
+  ]
+}

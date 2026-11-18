@@ -1,0 +1,29 @@
+{
+  "name": "Systematic debugging",
+  "author": {
+    "name": "Jesse Vincent",
+    "url": "https://github.com/obra/superpowers"
+  },
+  "license": "MIT",
+  "tags": [
+    "build"
+  ],
+  "category": "build",
+  "icon": "bug",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "My tests pass locally but fail in CI. Help me find out why",
+    "This function returns the wrong total sometimes. Debug it step by step",
+    "Find the root cause of this crash before suggesting a fix"
+  ],
+  "access": {
+    "reads": [
+      "code you share"
+    ],
+    "runs_code": true,
+    "computer": true,
+    "credits": "medium"
+  }
+}

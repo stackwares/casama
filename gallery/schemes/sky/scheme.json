@@ -1,0 +1,12 @@
+{
+  "light": {
+    "seed": "#0A6CA6",
+    "background": "#FFFFFF",
+    "onBackground": "#191D20"
+  },
+  "dark": {
+    "seed": "#8FD0FF",
+    "background": "#1C1C1E",
+    "onBackground": "#EFF3F5"
+  }
+}

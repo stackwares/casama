@@ -1,0 +1,40 @@
+{
+  "name": "News brief",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "news",
+    "reading",
+    "research"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "the web",
+      "memory"
+    ],
+    "credits": "medium"
+  },
+  "inputs": [
+    {
+      "key": "time",
+      "label": "What time should it arrive?",
+      "type": "time",
+      "default": "07:00",
+      "help": "Every day. In your workspace's time zone."
+    },
+    {
+      "key": "topics",
+      "label": "Topics to follow",
+      "type": "text",
+      "default": "the topics in your memory",
+      "help": "A few words, such as energy policy and chip makers."
+    }
+  ]
+}

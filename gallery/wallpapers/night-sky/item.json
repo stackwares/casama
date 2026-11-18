@@ -1,0 +1,28 @@
+{
+  "name": "Night sky",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "space"
+  ],
+  "featured": true,
+  "pick": "Stars for night owls.",
+  "version": 2,
+  "added": "2026-11-11",
+  "changelog": [
+    {
+      "version": 2,
+      "date": "2026-11-18",
+      "note": "New painted art in the same mood."
+    },
+    {
+      "version": 1,
+      "date": "2026-11-11",
+      "note": "First version."
+    }
+  ]
+}

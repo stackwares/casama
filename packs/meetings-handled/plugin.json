@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "meetings-handled",
+  "version": "1.0.0",
+  "description": "A meeting assistant: prepares tomorrow's meetings, files notes with decisions and action items, and follows up.",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai"
+  },
+  "repository": "https://github.com/stackwares/casama",
+  "license": "Apache-2.0",
+  "keywords": ["meetings", "notes", "calendar"]
+}

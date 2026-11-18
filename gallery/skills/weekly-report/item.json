@@ -1,0 +1,29 @@
+{
+  "name": "Weekly report",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "writing"
+  ],
+  "category": "work",
+  "icon": "calendar-check",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-11",
+  "examples": [
+    "Write my weekly status report from these notes",
+    "Group this week's tickets into done, in progress and blocked",
+    "Draft a short update for my manager"
+  ],
+  "access": {
+    "reads": [
+      "tickets, chats and notes you share"
+    ],
+    "credits": "low"
+  }
+}

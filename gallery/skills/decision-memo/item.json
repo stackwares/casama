@@ -1,0 +1,28 @@
+{
+  "name": "Decision memo",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work"
+  ],
+  "category": "work",
+  "icon": "scale",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Write a decision memo on whether to hire or outsource support",
+    "Lay out the options and trade-offs for moving to a four-day week",
+    "Make a one-page memo recommending a CRM"
+  ],
+  "access": {
+    "reads": [
+      "what you share"
+    ],
+    "credits": "low"
+  }
+}

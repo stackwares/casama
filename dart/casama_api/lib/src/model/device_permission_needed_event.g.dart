@@ -1,0 +1,190 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'device_permission_needed_event.dart';
+
+// **************************************************************************
+// CopyWithGenerator
+// **************************************************************************
+
+abstract class _$DevicePermissionNeededEventCWProxy {
+  DevicePermissionNeededEvent v(int v);
+
+  DevicePermissionNeededEvent runId(String runId);
+
+  DevicePermissionNeededEvent seq(int seq);
+
+  DevicePermissionNeededEvent ts(DateTime ts);
+
+  DevicePermissionNeededEvent botId(String botId);
+
+  DevicePermissionNeededEvent type(DevicePermissionNeededEventTypeEnum type);
+
+  DevicePermissionNeededEvent payload(
+    DevicePermissionNeededEventPayload payload,
+  );
+
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `DevicePermissionNeededEvent(...).copyWith.fieldName(value)`.
+  ///
+  /// Example:
+  /// ```dart
+  /// DevicePermissionNeededEvent(...).copyWith(id: 12, name: "My name")
+  /// ```
+  DevicePermissionNeededEvent call({
+    int v,
+    String runId,
+    int seq,
+    DateTime ts,
+    String botId,
+    DevicePermissionNeededEventTypeEnum type,
+    DevicePermissionNeededEventPayload payload,
+  });
+}
+
+/// Callable proxy for `copyWith` functionality.
+/// Use as `instanceOfDevicePermissionNeededEvent.copyWith(...)` or call `instanceOfDevicePermissionNeededEvent.copyWith.fieldName(value)` for a single field.
+class _$DevicePermissionNeededEventCWProxyImpl
+    implements _$DevicePermissionNeededEventCWProxy {
+  const _$DevicePermissionNeededEventCWProxyImpl(this._value);
+
+  final DevicePermissionNeededEvent _value;
+
+  @override
+  DevicePermissionNeededEvent v(int v) => call(v: v);
+
+  @override
+  DevicePermissionNeededEvent runId(String runId) => call(runId: runId);
+
+  @override
+  DevicePermissionNeededEvent seq(int seq) => call(seq: seq);
+
+  @override
+  DevicePermissionNeededEvent ts(DateTime ts) => call(ts: ts);
+
+  @override
+  DevicePermissionNeededEvent botId(String botId) => call(botId: botId);
+
+  @override
+  DevicePermissionNeededEvent type(DevicePermissionNeededEventTypeEnum type) =>
+      call(type: type);
+
+  @override
+  DevicePermissionNeededEvent payload(
+    DevicePermissionNeededEventPayload payload,
+  ) => call(payload: payload);
+
+  /// Creates a new instance with the provided field values.
+  /// Omitted fields keep their values; explicit `null` clears nullable fields.
+  /// The public API rejects `null` for non-nullable fields. To update a single field use `DevicePermissionNeededEvent(...).copyWith.fieldName(value)`.
+  ///
+  /// Example:
+  /// ```dart
+  /// DevicePermissionNeededEvent(...).copyWith(id: 12, name: "My name")
+  /// ```
+  @override
+  DevicePermissionNeededEvent call({
+    Object? v = const $CopyWithPlaceholder(),
+    Object? runId = const $CopyWithPlaceholder(),
+    Object? seq = const $CopyWithPlaceholder(),
+    Object? ts = const $CopyWithPlaceholder(),
+    Object? botId = const $CopyWithPlaceholder(),
+    Object? type = const $CopyWithPlaceholder(),
+    Object? payload = const $CopyWithPlaceholder(),
+  }) {
+    return DevicePermissionNeededEvent(
+      v: v == const $CopyWithPlaceholder() || v == null
+          ? _value.v
+          // ignore: cast_nullable_to_non_nullable
+          : v as int,
+      runId: runId == const $CopyWithPlaceholder() || runId == null
+          ? _value.runId
+          // ignore: cast_nullable_to_non_nullable
+          : runId as String,
+      seq: seq == const $CopyWithPlaceholder() || seq == null
+          ? _value.seq
+          // ignore: cast_nullable_to_non_nullable
+          : seq as int,
+      ts: ts == const $CopyWithPlaceholder() || ts == null
+          ? _value.ts
+          // ignore: cast_nullable_to_non_nullable
+          : ts as DateTime,
+      botId: botId == const $CopyWithPlaceholder() || botId == null
+          ? _value.botId
+          // ignore: cast_nullable_to_non_nullable
+          : botId as String,
+      type: type == const $CopyWithPlaceholder() || type == null
+          ? _value.type
+          // ignore: cast_nullable_to_non_nullable
+          : type as DevicePermissionNeededEventTypeEnum,
+      payload: payload == const $CopyWithPlaceholder() || payload == null
+          ? _value.payload
+          // ignore: cast_nullable_to_non_nullable
+          : payload as DevicePermissionNeededEventPayload,
+    );
+  }
+}
+
+extension $DevicePermissionNeededEventCopyWith on DevicePermissionNeededEvent {
+  /// Returns a callable class used to build a new instance with modified fields.
+  /// Example: `instanceOfDevicePermissionNeededEvent.copyWith(...)` or `instanceOfDevicePermissionNeededEvent.copyWith.fieldName(...)`.
+  // ignore: library_private_types_in_public_api
+  _$DevicePermissionNeededEventCWProxy get copyWith =>
+      _$DevicePermissionNeededEventCWProxyImpl(this);
+}
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+DevicePermissionNeededEvent _$DevicePermissionNeededEventFromJson(
+  Map<String, dynamic> json,
+) => $checkedCreate('DevicePermissionNeededEvent', json, ($checkedConvert) {
+  $checkKeys(
+    json,
+    requiredKeys: const [
+      'v',
+      'run_id',
+      'seq',
+      'ts',
+      'bot_id',
+      'type',
+      'payload',
+    ],
+  );
+  final val = DevicePermissionNeededEvent(
+    v: $checkedConvert('v', (v) => (v as num).toInt()),
+    runId: $checkedConvert('run_id', (v) => v as String),
+    seq: $checkedConvert('seq', (v) => (v as num).toInt()),
+    ts: $checkedConvert('ts', (v) => DateTime.parse(v as String)),
+    botId: $checkedConvert('bot_id', (v) => v as String),
+    type: $checkedConvert(
+      'type',
+      (v) => $enumDecode(_$DevicePermissionNeededEventTypeEnumEnumMap, v),
+    ),
+    payload: $checkedConvert(
+      'payload',
+      (v) => DevicePermissionNeededEventPayload.fromJson(
+        v as Map<String, dynamic>,
+      ),
+    ),
+  );
+  return val;
+}, fieldKeyMap: const {'runId': 'run_id', 'botId': 'bot_id'});
+
+Map<String, dynamic> _$DevicePermissionNeededEventToJson(
+  DevicePermissionNeededEvent instance,
+) => <String, dynamic>{
+  'v': instance.v,
+  'run_id': instance.runId,
+  'seq': instance.seq,
+  'ts': instance.ts.toIso8601String(),
+  'bot_id': instance.botId,
+  'type': _$DevicePermissionNeededEventTypeEnumEnumMap[instance.type]!,
+  'payload': instance.payload.toJson(),
+};
+
+const _$DevicePermissionNeededEventTypeEnumEnumMap = {
+  DevicePermissionNeededEventTypeEnum.devicePeriodPermissionNeeded:
+      'device.permission_needed',
+};

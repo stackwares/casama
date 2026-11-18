@@ -1,0 +1,38 @@
+{
+  "description": "Outline, draft, proofread and share: skills for writing, plus a calm theme to write in.",
+  "icon": "pen-line",
+  "items": [
+    {
+      "type": "skill",
+      "id": "article-outline"
+    },
+    {
+      "type": "skill",
+      "id": "proofread"
+    },
+    {
+      "type": "skill",
+      "id": "rewrite-tone"
+    },
+    {
+      "type": "skill",
+      "id": "fact-check"
+    },
+    {
+      "type": "skill",
+      "id": "social-post"
+    },
+    {
+      "type": "routine",
+      "id": "reading-digest"
+    },
+    {
+      "type": "app",
+      "id": "wordpress"
+    },
+    {
+      "type": "theme",
+      "id": "postcard"
+    }
+  ]
+}

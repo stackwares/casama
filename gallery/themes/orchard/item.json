@@ -1,0 +1,29 @@
+{
+  "name": "Orchard",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "green",
+    "calm"
+  ],
+  "featured": true,
+  "pick": "Warm and friendly, like a sunny afternoon.",
+  "version": 3,
+  "added": "2026-11-11",
+  "changelog": [
+    {
+      "version": 3,
+      "date": "2026-11-18",
+      "note": "The painting has a night version now, for dark mode."
+    },
+    {
+      "version": 2,
+      "date": "2026-11-18",
+      "note": "Redesigned around the Greenhouse painting: new colors and fonts."
+    }
+  ]
+}

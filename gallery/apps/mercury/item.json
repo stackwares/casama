@@ -1,0 +1,26 @@
+{
+  "name": "Mercury",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "banking",
+    "business"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "What's my Mercury balance?",
+    "Show this month's largest transactions",
+    "How much did we spend on software last quarter?"
+  ],
+  "access": {
+    "reads": [
+      "Mercury balances and transactions"
+    ],
+    "credits": "low"
+  }
+}

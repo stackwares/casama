@@ -1,0 +1,34 @@
+{
+  "name": "Newsletter draft",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "newsletter",
+    "writing",
+    "email"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "chats",
+      "the web",
+      "memory"
+    ],
+    "credits": "medium"
+  },
+  "inputs": [
+    {
+      "key": "audience",
+      "label": "Who reads your newsletter?",
+      "type": "text",
+      "default": "the readers in your memory",
+      "help": "Such as small shop owners or parents of teenagers."
+    }
+  ]
+}

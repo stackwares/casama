@@ -1,0 +1,11 @@
+{
+  "description": "Manage posts, pages and site settings on your WordPress.com sites.",
+  "category": "productivity",
+  "color": "21759B",
+  "homepage": "https://wordpress.com",
+  "url": "https://public-api.wordpress.com/wpcom/v2/mcp/v1",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "note": "WordPress.com sites only, not self-hosted WordPress.",
+  "capabilities": ["Draft and edit posts", "Manage pages", "See site stats"]
+}

@@ -1,0 +1,29 @@
+{
+  "name": "Replicate",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "ai",
+    "models"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Find an image upscaling model on Replicate",
+    "Run this model on my photo",
+    "Did my last prediction finish?"
+  ],
+  "access": {
+    "reads": [
+      "Replicate models"
+    ],
+    "writes": [
+      "runs models on your credit"
+    ],
+    "credits": "medium"
+  }
+}

@@ -1,0 +1,11 @@
+name: casama_dart_workspace
+publish_to: none
+environment:
+  sdk: ^3.13.0
+workspace:
+  - casama_api
+  - casama_sdk
+  - cli
+  - computerd
+dev_dependencies:
+  lints: ^6.1.0

@@ -1,0 +1,20 @@
+{
+  "note": "Header pictures for casama.ai's core pages (D-379), made with codex/gpt-6-luna under the rules in docs/VISUALS-PLAN.md (no text, no app screens, no mascot). site/build.mjs shows site/assets/pages/<page>.jpg under the page title and reads the alt text from here.",
+  "images": [
+    {
+      "slug": "self-hosted",
+      "alt": "A cozy shelf at night with a small rounded box glowing softly beside a plant, books and a warm lamp, under a starry window.",
+      "prompt": "A cozy home corner at night: a small rounded box with one soft glowing light on a wooden shelf beside a plant and books, under a warm lamp, a window showing a starry purple sky. Painted, no text, no screens."
+    },
+    {
+      "slug": "open-source",
+      "alt": "A workshop with its big doors open onto a lavender evening garden, a long shared workbench and tools inside, lanterns along the path.",
+      "prompt": "A small workshop with its doors thrown wide open onto a lavender evening garden; a long shared workbench with tools hanging neatly; warm light spilling onto a lantern-lit path. Painted, no people, no text."
+    },
+    {
+      "slug": "security",
+      "alt": "A rounded wooden gate standing open under a glowing lantern, leading into a calm walled garden with flowers and a small pond at dusk.",
+      "prompt": "A calm walled garden at dusk seen through a sturdy rounded wooden gate with a soft lantern above it; flowers and a small pond inside; tall gentle hedges; safe, not fearful. Painted, no padlocks, no shields, no text."
+    }
+  ]
+}

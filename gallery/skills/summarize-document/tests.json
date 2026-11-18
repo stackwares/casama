@@ -1,0 +1,8 @@
+{
+  "cases": [
+    {
+      "prompt": "Summarize: 'The tenant shall pay rent of $1,200 on the 1st of each month. A late fee of $50 applies after the 5th. The lease runs 12 months from June 1, 2026. Either party may end it with 60 days' written notice. Pets are not allowed without written consent.'",
+      "expect": "Key points include $1,200 rent due the 1st, $50 late fee after the 5th, 12 months from June 1 2026, 60 days' written notice, no pets without consent. Flags the late fee and notice period as things to note."
+    }
+  ]
+}

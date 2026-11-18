@@ -1,0 +1,78 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "**",
+      "!**/generated",
+      "!**/*.generated.ts",
+      "!**/openapi.json",
+      "!dart",
+      "!client",
+      "!supabase",
+      "!**/*.md",
+      "!site",
+      "!gallery",
+      "!docs-site/public/brand",
+      "!link-site/assets/brand",
+      "!infra/helm/**/templates",
+      "!infra/compose/selfhost/kong.yml"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "style": {
+        "noNonNullAssertion": "off"
+      },
+      "complexity": {
+        "noCommaOperator": "off"
+      },
+      "suspicious": {
+        "noTemplateCurlyInString": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double"
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/test/**", "**/scripts/**", "examples/**/*.mjs", "infra/**/*.mjs"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "off"
+          },
+          "suspicious": {
+            "noAssignInExpressions": "off",
+            "noExplicitAny": "off",
+            "noUndeclaredEnvVars": "off"
+          }
+        }
+      }
+    }
+  ]
+}

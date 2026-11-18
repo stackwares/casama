@@ -1,0 +1,7 @@
+{
+  "description": "Each weekday morning: new mail sorted into reply, do later, read and ignore, with replies drafted for you to send.",
+  "category": "work",
+  "icon": "inbox",
+  "instructions_md": "Go through the mail that arrived in my inbox since the last weekday morning. Sort it into reply now, do later, read and ignore, with one line on why for each. For everything under reply now, write a reply in my voice and save it as a draft. Never send, archive or delete anything: I do that myself. Finish with a count for each group and the three messages I should open first. If no mail app is connected, tell me which one to connect.",
+  "schedule_cron": "{{time.minute}} {{time.hour}} * * 1-5"
+}

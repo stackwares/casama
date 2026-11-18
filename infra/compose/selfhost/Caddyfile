@@ -1,0 +1,84 @@
+# Global options. Sites and connected domains (D-329): when this server makes its own
+# certificates for them (CASAMA_SITES_OWN_EDGE=true), Caddy asks the API before each new one, and
+# the API says yes only for a live site address or a domain host it has proof for. Nothing uses
+# on-demand certificates while the switch is off.
+{
+	on_demand_tls {
+		ask http://api:8787/internal/tls-ask
+	}
+}
+
+# A deploy restarts the API (D-402). While it is away, a request waits for it (up to 30 s) instead of
+# failing with 502: Caddy retries only when it can't connect at all, so nothing reaches the API
+# twice. A body is held in memory (up to 4 MiB) so it can be sent again; a larger upload that
+# arrives during those seconds still fails.
+(api_hold) {
+	lb_try_duration 30s
+	lb_try_interval 250ms
+	request_buffers 4MiB
+}
+
+# One public address for everything: the Casama API and the Supabase gateway (Auth, REST,
+# Realtime), plus the web app when the `web` profile is on. CASAMA_SITE is a domain (automatic
+# HTTPS) or ":80" for plain HTTP behind another proxy or for local trials.
+{$CASAMA_SITE} {
+	encode zstd gzip
+	@supabase path /auth/v1/* /rest/v1/* /realtime/v1/*
+	handle @supabase {
+		reverse_proxy kong:8000
+	}
+	# Keep in step with the API's top-level routes (and the Helm ingress list): a path missing here
+	# falls through to the web app, which isn't running on API-only installs, and answers 502.
+	@api path /v1/* /hooks/* /link/* /telemetry/* /telephony/* /oauth/* /mcp /mcp/* /a2a/* /links/* /openapi.json /docs /docs/* /healthz /readyz /.well-known/apple-app-site-association /.well-known/assetlinks.json /.well-known/oauth-protected-resource /.well-known/oauth-protected-resource/* /.well-known/oauth-authorization-server
+	handle @api {
+		reverse_proxy api:8787 {
+			import api_hold
+		}
+	}
+	handle {
+		reverse_proxy web:80
+	}
+	# Without the web app (compose profile: web) the root answers with a short note.
+	# Only the root page: health checks and API paths must see the real error (install.sh waits on /readyz).
+	handle_errors 502 {
+		# Invite links (D-167) open the API's join page when the web app isn't running.
+		@join path /join/* /invites/*
+		handle @join {
+			rewrite /invites/* /join/{path.1}
+			reverse_proxy api:8787 {
+				import api_hold
+			}
+		}
+		handle {
+			@root path /
+			respond @root "Casama is running. Point the Casama app or CLI at this address, or start the web app (compose profile: web)." 200
+			respond "Casama isn't ready yet (or this part isn't running)." 502
+		}
+	}
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+	}
+}
+
+# Pages (D-119): bots' web pages on their own origin, so a page's scripts never share an origin
+# with Casama. CASAMA_PAGES_SITE is a domain of its own (pages.example.com, automatic HTTPS) or a
+# port (":8790", the default) for local trials; set CASAMA_PAGES_URL to match.
+{$CASAMA_PAGES_SITE} {
+	encode zstd gzip
+	reverse_proxy api:8790 {
+		import api_hold
+	}
+}
+
+# Auth email templates for Supabase Auth (GOTRUE_MAILER_TEMPLATES_*): internal network only, the
+# port isn't published.
+:8081 {
+	root * /srv/email-templates
+	file_server
+}
+
+# Sites and connected domains on this server's own edge (D-329): sites-edge-true.caddy when
+# CASAMA_SITES_OWN_EDGE=true, an empty file otherwise.
+import /etc/caddy/sites-edge-{$CASAMA_SITES_OWN_EDGE:false}.caddy

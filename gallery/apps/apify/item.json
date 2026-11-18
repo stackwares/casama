@@ -1,0 +1,29 @@
+{
+  "name": "Apify",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": [
+    "scraping",
+    "web"
+  ],
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Scrape the reviews from this product page with Apify",
+    "Find an Apify scraper for Google Maps listings",
+    "Run a scraper on this site and summarize the results"
+  ],
+  "access": {
+    "reads": [
+      "websites through Apify"
+    ],
+    "writes": [
+      "runs Apify actors on your plan"
+    ],
+    "credits": "medium"
+  }
+}

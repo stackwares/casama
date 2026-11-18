@@ -1,0 +1,31 @@
+{
+  "name": "Calendar invite",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "life"
+  ],
+  "category": "life",
+  "icon": "calendar-days",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-17",
+  "examples": [
+    "Add my flight and hotel to my calendar",
+    "Make a calendar invite from this email",
+    "Turn this class schedule into calendar events"
+  ],
+  "access": {
+    "reads": [
+      "text, emails and tickets you share"
+    ],
+    "writes": [
+      "creates .ics calendar files"
+    ],
+    "credits": "low"
+  }
+}

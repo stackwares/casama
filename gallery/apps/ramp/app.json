@@ -1,0 +1,11 @@
+{
+  "description": "Review spending, cards and reimbursements in your Ramp account.",
+  "category": "payments",
+  "color": "1F1F1D",
+  "homepage": "https://ramp.com",
+  "url": "https://mcp.ramp.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "note": "Needs a Ramp business account.",
+  "capabilities": ["Search transactions", "Review card spending", "Check reimbursements"]
+}

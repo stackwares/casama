@@ -1,0 +1,25 @@
+{
+  "name": "Workout plan",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "life"
+  ],
+  "category": "life",
+  "icon": "dumbbell",
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-13",
+  "examples": [
+    "Make a three-day gym plan for a beginner",
+    "Plan home workouts with only dumbbells",
+    "How should I progress my running over eight weeks?"
+  ],
+  "access": {
+    "credits": "low"
+  }
+}

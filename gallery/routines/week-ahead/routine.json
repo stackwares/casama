@@ -1,0 +1,7 @@
+{
+  "description": "Sunday evenings: next week's meetings, deadlines and clashes, and what to prepare before Monday.",
+  "category": "work",
+  "icon": "calendar-days",
+  "instructions_md": "Write my week ahead. From my calendar, open tickets and what's in memory, give me each day from Monday to Friday with its meetings and deadlines. Then point out clashes, days with no time for focused work, meetings with no agenda, and anything I should prepare before it happens. End with the three things that matter most this week. Fifteen lines at most. Don't accept, decline, move or create any events.",
+  "schedule_cron": "{{time.minute}} {{time.hour}} * * 0"
+}

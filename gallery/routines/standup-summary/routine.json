@@ -1,0 +1,7 @@
+{
+  "description": "Each weekday morning: what the team shipped yesterday, what's in progress and what's blocked, before the standup.",
+  "category": "build",
+  "icon": "list-checks",
+  "instructions_md": "Write a summary for this morning's standup. From GitHub, Linear or other connected tools, and from tickets and chats, list since the last weekday:\n\n1. What was merged or finished, with the person and a link.\n2. What's in progress, with the person.\n3. What's blocked or waiting on someone, and on whom.\n\nTen lines at most, grouped by person. Leave out bots and automatic updates. Don't comment on, assign or move anything. If no tool is connected, tell me which one to connect.",
+  "schedule_cron": "{{time.minute}} {{time.hour}} * * 1-5"
+}

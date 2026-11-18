@@ -1,0 +1,21 @@
+{
+  "name": "IT helpdesk",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "work",
+    "starter"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "examples": [
+    "My laptop won't connect to Wi-Fi",
+    "Help me set up a new phone for a new hire",
+    "Write a checklist for when someone leaves the team"
+  ]
+}

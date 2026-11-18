@@ -1,0 +1,10 @@
+{
+  "description": "Share booking links and manage your Cal.com bookings.",
+  "category": "productivity",
+  "color": "292929",
+  "homepage": "https://cal.com",
+  "url": "https://mcp.cal.com/mcp",
+  "auth": ["oauth"],
+  "oauthClient": "dcr",
+  "capabilities": ["See upcoming bookings", "Find open times", "Manage event types", "Reschedule or cancel bookings"]
+}

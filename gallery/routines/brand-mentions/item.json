@@ -1,0 +1,36 @@
+{
+  "name": "Brand mentions",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "Apache-2.0",
+  "tags": [
+    "mentions",
+    "reputation",
+    "marketing"
+  ],
+  "featured": false,
+  "version": 1,
+  "added": "2026-11-18",
+  "access": {
+    "reads": [
+      "the web",
+      "memory"
+    ],
+    "writes": [
+      "saves seen mentions to memory"
+    ],
+    "credits": "medium"
+  },
+  "inputs": [
+    {
+      "key": "names",
+      "label": "Names to look for",
+      "type": "text",
+      "default": "the names in your memory",
+      "help": "Your company, product or your own name."
+    }
+  ]
+}

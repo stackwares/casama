@@ -1,0 +1,48 @@
+{
+  "format": "casama.pack",
+  "version": 1,
+  "icon": "rocket",
+  "summary": "A chief of staff bot with investor updates, decision memos, specs, a morning plan and a Friday review.",
+  "inputs": [
+    {
+      "key": "company",
+      "label": "Your company's name",
+      "type": "text",
+      "default": "the company"
+    },
+    {
+      "key": "time",
+      "label": "What time should it arrive?",
+      "type": "time",
+      "default": "08:30",
+      "help": "In your time zone."
+    }
+  ],
+  "needs": {
+    "apps": ["notion", "google_calendar"]
+  },
+  "includes": [
+    {
+      "type": "skill",
+      "id": "decision-memo"
+    },
+    {
+      "type": "skill",
+      "id": "write-spec"
+    },
+    {
+      "type": "skill",
+      "id": "competitive-brief"
+    },
+    {
+      "type": "skill",
+      "id": "weekly-report"
+    }
+  ],
+  "workspace_skills": [],
+  "examples": [
+    "Draft this month's investor update",
+    "Write a decision memo on hiring a second engineer",
+    "What should I focus on today?"
+  ]
+}
