@@ -5066,5 +5066,22 @@
   "watchChannelRuns": "Working bots",
   "@watchChannelRuns": {"description": "Shown on the watch app (D-410). Notification channel name (Wear OS): a bot working right now."},
   "watchChannelOther": "Other",
-  "@watchChannelOther": {"description": "Shown on the watch app (D-410). Notification channel name (Wear OS): everything else."}
+  "@watchChannelOther": {"description": "Shown on the watch app (D-410). Notification channel name (Wear OS): everything else."},
+  "showList": "Show the list",
+  "hideList": "Hide the list",
+  "panePickLibrary": "Pick something from the Library to see it here.",
+  "panePickSetting": "Pick a setting to see it here.",
+  "trackpad": "Trackpad",
+  "trackpadHint": "One finger moves the pointer, two scroll, a tap clicks.",
+  "trackpadTakeControl": "Take control to use the trackpad.",
+  "foldScreenTitle": "Folding screen",
+  "foldRowHelp": "What Casama sees of this device's screens",
+  "foldScreenHelp": "How this device is held and where its fold is, as Casama sees it now. Open, close or fold the device and the numbers follow. Copy them if a screen looks wrong.",
+  "foldPose": "Pose",
+  "foldWindow": "Window",
+  "foldInsets": "Safe area",
+  "foldStrip": "Side strip",
+  "foldFold": "Fold",
+  "foldHinge": "Hinge",
+  "foldSystemSays": "What the system reports"
 }

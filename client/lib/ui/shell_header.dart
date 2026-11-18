@@ -1,12 +1,20 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_tokens.dart';
 import 'motion.dart';
+import 'shell_layout.dart';
+import 'side_strip.dart';
 
 /// Top bar for main screens: a bold title, an optional muted subtitle, and round icon actions.
+///
+/// Where the window has a side strip (an iPhone Duo, D-411) the Back button and the icon actions
+/// go into the strip and only the title row stays here. Beside its list in a two-pane layout, a
+/// page's first screen has no Back: it shows and hides the list instead.
 class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
   const ShellHeader({
     super.key,
@@ -35,7 +43,7 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
   /// After the title (a chevron that says the title opens a menu, for example).
   final Widget? titleTrailing;
 
-  /// Replaces the back button.
+  /// Replaces the back button. The bare button: the header places it.
   final Widget? leading;
   final List<Widget> actions;
   final PreferredSizeWidget? bottom;
@@ -58,8 +66,12 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     final routeCanPop = ModalRoute.of(context)?.impliesAppBarDismissal ?? false;
-    final phone = AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
-    final canPop = showBack ?? (routeCanPop || (phoneFallback != null && phone));
+    final shell = ShellLayout.maybeOf(context);
+    // No rail or sidebar to leave by: the page needs its own way back. Inside a pane the width
+    // says nothing, so the shell is asked.
+    final phone = shell?.navInPage ?? AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
+    final beside = shell != null && shell.splitDetail && isDetailRoot(context);
+    final canPop = !beside && (showBack ?? (routeCanPop || (phoneFallback != null && phone)));
     final titleBlock = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -105,17 +117,11 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
         child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4), child: title0),
       );
     }
-    return AppBar(
-      automaticallyImplyLeading: false,
-      toolbarHeight: toolbarHeight,
-      leadingWidth: 56,
-      leading:
-          leading ??
-          (canPop
-              ? Padding(
-                  padding: const EdgeInsets.only(left: 12),
-                  child: Center(
-                    child: HeaderIconButton(
+    final Widget? lead = beside
+        ? (shell.canToggleList ? const ListPaneToggle() : null)
+        : leading ??
+              (canPop
+                  ? HeaderIconButton(
                       icon: LucideIcons.arrowLeft,
                       tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                       onPressed: () {
@@ -126,14 +132,57 @@ class ShellHeader extends StatelessWidget implements PreferredSizeWidget {
                           navigator.maybePop();
                         }
                       },
-                    ),
-                  ),
-                )
-              : null),
-      titleSpacing: (leading != null || canPop) ? 4 : 20,
+                    )
+                  : null);
+    final slot = StripSlot.of(context);
+    final inRow = slot == null ? actions : [for (final a in actions) if (a is HeaderTextAction) a];
+    final bar = AppBar(
+      automaticallyImplyLeading: false,
+      toolbarHeight: toolbarHeight,
+      leadingWidth: 56,
+      leading: slot != null || lead == null
+          ? null
+          : Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: Center(child: lead),
+            ),
+      titleSpacing: slot == null && lead != null ? 4 : 20,
       title: title0,
-      actions: [...actions, const SizedBox(width: 12)],
+      actions: [...inRow, const SizedBox(width: 12)],
       bottom: bottom,
+    );
+    if (slot == null) return bar;
+    return StripButtons(
+      rect: slot,
+      buttons: [?lead, for (final a in actions) if (a is! HeaderTextAction) a],
+      child: bar,
+    );
+  }
+}
+
+/// A header action with words on it ("Save"). It stays in the title row when the icon actions
+/// move to the side strip, as text buttons do in Apple's vertical bars.
+class HeaderTextAction extends StatelessWidget {
+  const HeaderTextAction({super.key, required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => child;
+}
+
+/// Two panes: hides the list so the open page has the whole window, and brings it back.
+class ListPaneToggle extends ConsumerWidget {
+  const ListPaneToggle({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hidden = ref.watch(splitExpandedProvider);
+    final l10n = AppLocalizations.of(context);
+    return HeaderIconButton(
+      key: const Key('listPaneToggle'),
+      icon: hidden ? LucideIcons.panelLeftOpen : LucideIcons.panelLeftClose,
+      tooltip: hidden ? l10n.showList : l10n.hideList,
+      onPressed: ref.read(splitExpandedProvider.notifier).toggle,
     );
   }
 }

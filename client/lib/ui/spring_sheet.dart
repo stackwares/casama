@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/physics.dart';
 
+import '../core/fold/fold.dart';
+
 /// Shows a modal sheet anchored to the bottom edge of the screen.
 ///
 /// A spring-driven replacement for showModalBottomSheet. The sheet enters
@@ -181,7 +183,13 @@ class SpringSheetRoute<T> extends PopupRoute<T> {
     final double available = view.size.height - keyboard;
     // The content pads itself above the keyboard, so the keyboard's height
     // goes on top of the cap.
-    final double maxHeight = keyboard + math.max(0.0, math.min(available * _maxHeightFactor, available - view.padding.top - _minTopGap));
+    double maxHeight = keyboard + math.max(0.0, math.min(available * _maxHeightFactor, available - view.padding.top - _minTopGap));
+    // A folding phone (D-411): the sheet keeps to the page (not under the side strip) and to the
+    // half it belongs to while the fold divides the window: the trailing half of a fold that runs
+    // top to bottom, the lower half of one that runs side to side.
+    final FoldInfo fold = FoldInfo.of(context);
+    final Rect? gap = fold.gap;
+    if (gap != null && !fold.foldVertical) maxHeight = math.min(maxHeight, view.size.height - gap.bottom);
     final Widget sheet = Align(
       alignment: Alignment.bottomCenter,
       child: ConstrainedBox(
@@ -228,7 +236,12 @@ class SpringSheetRoute<T> extends PopupRoute<T> {
       ),
     );
     // Never under the status bar or the notch, however tall the content gets.
-    final Widget safe = SafeArea(left: false, right: false, bottom: false, child: sheet);
+    final Widget safe = SafeArea(
+      left: false,
+      right: false,
+      bottom: false,
+      child: Padding(padding: foldSideInsets(context), child: sheet),
+    );
 
     return capturedThemes?.wrap(safe) ?? safe;
   }

@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show ProviderListenable;
 
+import 'core/fold/fold.dart';
 import 'core/local_cache.dart';
 import 'core/media_cache.dart';
 import 'core/providers.dart';
@@ -41,6 +42,7 @@ import 'features/devices/device_sync.dart';
 import 'features/voice/call_bubble.dart';
 import 'features/selfhost/guided_setup.dart';
 import 'ui/effects.dart';
+import 'ui/outside_shell.dart';
 import 'features/island/island_bridge.dart';
 import 'features/widgets/glance_sync.dart';
 import 'features/watch/watch_bridge.dart';
@@ -123,7 +125,9 @@ class CasamaApp extends ConsumerWidget {
       scrollBehavior: const AppScrollBehavior(),
       // The wallpaper, painted once behind every navigator: pages are see-through over it, so it
       // stays still while they change and never blacks out or reloads between them.
-      builder: (context, child) => Effects(
+      // What the window is on a folding phone (D-411): its fold and its side strip, for everything.
+      builder: (context, child) => FoldScope(
+        child: Effects(
         fewer: appearance.fewerEffects,
         child: Wallpaper(
         child: RouteTitle(
@@ -152,6 +156,7 @@ class CasamaApp extends ConsumerWidget {
       ),
       ),
       ),
+      ),
     );
   }
 }
@@ -163,6 +168,12 @@ class _FirstRunSteps extends ConsumerWidget {
   const _FirstRunSteps({required this.push, required this.child});
   final PushRegistrar push;
   final Widget child;
+
+  /// A step covers the whole app. On a folding phone the step itself keeps clear of the side
+  /// strip and the fold (D-411), and the app's plain background fills what it leaves.
+  static Widget _cover(BuildContext context, Widget step) => Positioned.fill(
+    child: ColoredBox(color: Theme.of(context).scaffoldBackgroundColor, child: OutsideShell(child: step)),
+  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -181,12 +192,13 @@ class _FirstRunSteps extends ConsumerWidget {
         children: [
           child,
           if (name)
-            const Positioned.fill(child: NameStep())
+            _cover(context, const NameStep())
           else if (picks)
-            const Positioned.fill(child: GalleryPicksStep())
+            _cover(context, const GalleryPicksStep())
           else if (ask && signInDone)
-            Positioned.fill(
-              child: ValueListenableBuilder<bool>(
+            _cover(
+              context,
+              ValueListenableBuilder<bool>(
                 valueListenable: push.webBlocked,
                 builder: (context, blocked, _) => NotificationsPrimer(onEnable: push.enable, onLater: push.snooze, blocked: blocked),
               ),

@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../voice/call_tools_sheet.dart';
 import '../chat/chat_detail.dart';
+import '../../core/fold/fold.dart';
 import '../../core/billing.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../core/mac_bridge.dart';
@@ -446,6 +447,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     subtitle: l10n.permissionsRowHelp,
                     onTap: () => open('/settings/permissions'), selected: sel('/settings/permissions'),
                   ),
+                  // A phone that folds (D-411): what Casama sees of its screens, for checking a layout.
+                  if (windowFold(context).hasStrip || windowFold(context).fold != null)
+                    GroupedTile(
+                      key: const Key('settingsFold'),
+                      icon: LucideIcons.bookOpen,
+                      title: l10n.foldScreenTitle,
+                      subtitle: l10n.foldRowHelp,
+                      onTap: () => open('/settings/fold'), selected: sel('/settings/fold'),
+                    ),
                   if (ref.watch(companionProvider).supported)
                     GroupedTile(
                       key: const Key('settingsCompanion'),
@@ -540,7 +550,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   id: 'settings',
                   summary: l10n.settingsAdvancedSummary,
                   // Beside an open page inside it (wide windows), it stays open so the row shows.
-                  forceOpen: const ['/settings/secrets', '/settings/computers', '/settings/devices', '/settings/permissions', '/settings/companion'].any(sel),
+                  forceOpen: const ['/settings/secrets', '/settings/computers', '/settings/devices', '/settings/permissions', '/settings/fold', '/settings/companion'].any(sel),
                   children: [GroupedCard(children: advancedRows)],
                 ),
               // Help & support (D-298): Casama Help, the support team and the ids they ask for.

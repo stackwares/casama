@@ -17,6 +17,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/page.dart';
+import '../../ui/fold_split.dart';
 import '../../ui/shell_header.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/form_sheet.dart';
@@ -397,19 +398,25 @@ class _CallScreenState extends ConsumerState<CallScreen>
       captions: needsKey ? false : _captions,
       turns: turns,
     );
+    // A folding phone, partly folded (D-411): the bot and the captions on the half you look at, the
+    // buttons on the half under the hand. The page has no header then; Minimise joins the buttons.
+    final divided = FoldSplit.dividing(context);
+    final minimise = IconButton(
+      key: const Key('minimiseCall'),
+      tooltip: l10n.callMinimize,
+      icon: const Icon(LucideIcons.minimize2),
+      onPressed: _asking ? null : _leave,
+    );
     return Scaffold(
-      appBar: ShellHeader(
-        title: l10n.callWith(name),
-        actions: [
-          // Minimise: back to the app with the call still on (the bubble or the sidebar card).
-          IconButton(
-            key: const Key('minimiseCall'),
-            tooltip: l10n.callMinimize,
-            icon: const Icon(LucideIcons.minimize2),
-            onPressed: _asking ? null : _leave,
-          ),
-        ],
-      ),
+      appBar: divided
+          ? null
+          : ShellHeader(
+              title: l10n.callWith(name),
+              actions: [
+                // Minimise: back to the app with the call still on (the bubble or the sidebar card).
+                minimise,
+              ],
+            ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final side = pageSide(constraints.maxWidth);
@@ -469,6 +476,179 @@ class _CallScreenState extends ConsumerState<CallScreen>
             onTap: () => _openScreen(tileComputer),
             onClose: c.hideTile,
           );
+          // Who the call is with and how it is going.
+          final status = Row(
+            children: [
+              if (state == CallState.live) ...[
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: context.appColors.positive,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Expanded(
+                child: Text(
+                  switch (state) {
+                    CallState.connecting => l10n.callConnecting,
+                    CallState.live => l10n.callLive,
+                    CallState.ended => l10n.callEnded,
+                    CallState.failed =>
+                      needsKey
+                          ? l10n.callNeedsKeyTitle
+                          : (error == null
+                                ? l10n.callFailed
+                                : errorText(context, error)),
+                  },
+                  key: const Key('callStatus'),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: context.textTheme.bodyLarge?.copyWith(
+                    color: state == CallState.failed
+                        ? scheme.error
+                        : scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              if (state == CallState.live)
+                const SizedBox(width: 14),
+            ],
+          );
+          final head = <Widget>[
+            Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: context.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
+              ),
+            ),
+            const SizedBox(height: 4),
+            status,
+          ];
+          final progress = <Widget>[
+            if (c?.activeJob case final job? when !needsKey)
+              CallJobStrip(
+                key: ValueKey('job-${job.runId}'),
+                job: job,
+                onTap: () => _openJob(c!),
+              ),
+            if (latency != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  l10n.replyLatency(latency),
+                  key: const Key('replyLatency'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontFeatures: AppText.tabular,
+                  ),
+                ),
+              ),
+          ];
+          // The bot (and the captions), or what is missing for a call.
+          final Widget show = needsKey
+              ? Column(
+                  children: [
+                    Expanded(child: stage),
+                    Flexible(
+                      child: SingleChildScrollView(
+                        primary: false,
+                        child: _NeedsKeyCard(
+                          onAddKey: () => context.pushOnce(
+                            '/settings/keys?provider=google',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : stage;
+
+          if (divided) {
+            return FoldSplit(
+              whole: const SizedBox.shrink(),
+              first: SafeArea(
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(AppSpace.md, AppSpace.sm, AppSpace.md, AppSpace.xs),
+                      child: Column(children: [...head, ...progress, Expanded(child: show)]),
+                    ),
+                    if (tileComputer != null)
+                      Positioned.fill(
+                        child: CallTileCorner(
+                          insets: const EdgeInsets.all(AppSpace.sm),
+                          child: tile(large: false),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              second: SafeArea(
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: Padding(padding: const EdgeInsets.all(AppSpace.xs), child: minimise),
+                    ),
+                    const Spacer(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpace.md),
+                      child: Row(children: [for (final control in controls) Expanded(child: control)]),
+                    ),
+                    const Spacer(flex: 2),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          // Short and wide (a phone on its side, an iPhone Duo standing like a tent): the bot and
+          // the captions fill the height, the buttons stack beside them in twos.
+          if (tileComputer == null && constraints.maxWidth > constraints.maxHeight && constraints.maxHeight < 440) {
+            return SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(AppSpace.md, 0, AppSpace.md, AppSpace.sm),
+                child: Row(
+                  children: [
+                    Expanded(child: show),
+                    const SizedBox(width: AppSpace.md),
+                    SizedBox(
+                      width: math.min(240, constraints.maxWidth * 0.42),
+                      child: Column(
+                        children: [
+                          status,
+                          ...progress,
+                          const Spacer(),
+                          for (var i = 0; i < controls.length; i += 2)
+                            Padding(
+                              padding: const EdgeInsets.only(top: AppSpace.xs),
+                              child: Row(
+                                children: [
+                                  Expanded(child: controls[i]),
+                                  Expanded(child: i + 1 < controls.length ? controls[i + 1] : const SizedBox.shrink()),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
           final callColumn = Column(
             children: [
               Expanded(
@@ -481,97 +661,9 @@ class _CallScreenState extends ConsumerState<CallScreen>
                   ),
                   child: Column(
                     children: [
-                      Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: context.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.4,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          if (state == CallState.live) ...[
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: context.appColors.positive,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                          ],
-                          Expanded(
-                            child: Text(
-                              switch (state) {
-                                CallState.connecting => l10n.callConnecting,
-                                CallState.live => l10n.callLive,
-                                CallState.ended => l10n.callEnded,
-                                CallState.failed =>
-                                  needsKey
-                                      ? l10n.callNeedsKeyTitle
-                                      : (error == null
-                                            ? l10n.callFailed
-                                            : errorText(context, error)),
-                              },
-                              key: const Key('callStatus'),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: context.textTheme.bodyLarge?.copyWith(
-                                color: state == CallState.failed
-                                    ? scheme.error
-                                    : scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                          if (state == CallState.live)
-                            const SizedBox(width: 14),
-                        ],
-                      ),
-                      if (c?.activeJob case final job? when !needsKey)
-                        CallJobStrip(
-                          key: ValueKey('job-${job.runId}'),
-                          job: job,
-                          onTap: () => _openJob(c!),
-                        ),
-                      if (latency != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            l10n.replyLatency(latency),
-                            key: const Key('replyLatency'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: context.textTheme.labelSmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                              fontFeatures: AppText.tabular,
-                            ),
-                          ),
-                        ),
-                      Expanded(
-                        child: needsKey
-                            ? Column(
-                                children: [
-                                  Expanded(child: stage),
-                                  Flexible(
-                                    child: SingleChildScrollView(
-                                      primary: false,
-                                      child: _NeedsKeyCard(
-                                        onAddKey: () => context.pushOnce(
-                                          '/settings/keys?provider=google',
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : stage,
-                      ),
+                      ...head,
+                      ...progress,
+                      Expanded(child: show),
                     ],
                   ),
                 ),
