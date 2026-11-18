@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v4
         with: { node-version: 26, cache: pnpm }
       - uses: supabase/setup-cli@v3
@@ -81,7 +81,7 @@ jobs:
           if [[ $changed == true && $HAS_KEY == true ]]; then run=true; fi
           if [[ $changed == true && $HAS_KEY != true ]]; then echo "::warning::A prompt changed, but there's no OPENROUTER_API_KEY here: run the prompt checks by hand."; fi
           echo "run=$run" >> "$GITHUB_OUTPUT"
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         if: steps.diff.outputs.run == 'true'
       - uses: actions/setup-node@v4
         if: steps.diff.outputs.run == 'true'
