@@ -3,7 +3,14 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test } from "node:test";
 import worker from "../site/gallery-link.js";
-import { SEGMENT_ID, TOPIC_ID, checkLink, cleanEmail, signLink, sourceFrom } from "../site/newsletter.js";
+import {
+  checkLink,
+  cleanEmail,
+  SEGMENT_ID,
+  signLink,
+  sourceFrom,
+  TOPIC_ID,
+} from "../site/newsletter.js";
 
 let calls;
 let failWith = 0;
@@ -14,7 +21,11 @@ beforeEach(() => {
   globalThis.fetch = async (url, init = {}) => {
     const u = String(url);
     if (u.startsWith("https://api.resend.com/")) {
-      calls.push({ url: u, method: init.method, body: init.body ? JSON.parse(init.body) : undefined });
+      calls.push({
+        url: u,
+        method: init.method,
+        body: init.body ? JSON.parse(init.body) : undefined,
+      });
       if (failWith) return new Response("{}", { status: failWith });
       return Response.json({ id: "x" });
     }
@@ -26,16 +37,30 @@ afterEach(() => {
 });
 
 function limiter(allow = true) {
-  return { keys: [], async limit({ key }) { this.keys.push(key); return { success: allow }; } };
+  return {
+    keys: [],
+    async limit({ key }) {
+      this.keys.push(key);
+      return { success: allow };
+    },
+  };
 }
-const env = () => ({ RESEND_API_KEY: "re_test", NEWSLETTER_SECRET: "s3cret", NEWSLETTER_LIMIT: limiter() });
+const env = () => ({
+  RESEND_API_KEY: "re_test",
+  NEWSLETTER_SECRET: "s3cret",
+  NEWSLETTER_LIMIT: limiter(),
+});
 
 function post(path, fields, { headers = {}, environment = env() } = {}) {
   const body = new URLSearchParams(fields);
   const req = new Request(`https://casama.ai${path}`, {
     method: "POST",
     body,
-    headers: { "content-type": "application/x-www-form-urlencoded", "cf-connecting-ip": "203.0.113.7", ...headers },
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      "cf-connecting-ip": "203.0.113.7",
+      ...headers,
+    },
   });
   return worker.fetch(req, environment, { waitUntil() {} });
 }
@@ -75,9 +100,17 @@ test("a signed link checks out, and a changed, wrong-key or old one doesn't", as
 });
 
 test("subscribing sends one confirmation email and stores nothing yet", async () => {
-  const res = await post("/newsletter/subscribe", { email: "Ana@Example.com" }, { headers: { accept: "application/json", referer: "https://casama.ai/pricing" } });
+  const res = await post(
+    "/newsletter/subscribe",
+    { email: "Ana@Example.com" },
+    { headers: { accept: "application/json", referer: "https://casama.ai/pricing" } },
+  );
   assert.equal(res.status, 200);
-  assert.deepEqual(await res.json(), { ok: true, code: "sent", message: "We sent a link to ana@example.com. Open it to confirm, and you're on the list." });
+  assert.deepEqual(await res.json(), {
+    ok: true,
+    code: "sent",
+    message: "We sent a link to ana@example.com. Open it to confirm, and you're on the list.",
+  });
   assert.equal(calls.length, 1);
   assert.equal(calls[0].url, "https://api.resend.com/emails");
   const mail = calls[0].body;
@@ -98,20 +131,36 @@ test("a plain form post gets a page back", async () => {
 });
 
 test("bad addresses, bots and too many tries send nothing", async () => {
-  let res = await post("/newsletter/subscribe", { email: "nope" }, { headers: { accept: "application/json" } });
+  let res = await post(
+    "/newsletter/subscribe",
+    { email: "nope" },
+    { headers: { accept: "application/json" } },
+  );
   assert.equal(res.status, 400);
-  res = await post("/newsletter/subscribe", { email: "bot@example.com", website: "http://spam" }, { headers: { accept: "application/json" } });
+  res = await post(
+    "/newsletter/subscribe",
+    { email: "bot@example.com", website: "http://spam" },
+    { headers: { accept: "application/json" } },
+  );
   assert.equal(res.status, 200);
   const e = env();
   e.NEWSLETTER_LIMIT = limiter(false);
-  res = await post("/newsletter/subscribe", { email: "ana@example.com" }, { headers: { accept: "application/json" }, environment: e });
+  res = await post(
+    "/newsletter/subscribe",
+    { email: "ana@example.com" },
+    { headers: { accept: "application/json" }, environment: e },
+  );
   assert.equal(res.status, 429);
   assert.equal(calls.length, 0);
 });
 
 test("a failed send says so", async () => {
   failWith = 500;
-  const res = await post("/newsletter/subscribe", { email: "ana@example.com" }, { headers: { accept: "application/json" } });
+  const res = await post(
+    "/newsletter/subscribe",
+    { email: "ana@example.com" },
+    { headers: { accept: "application/json" } },
+  );
   assert.equal(res.status, 502);
   assert.equal((await res.json()).ok, false);
 });
@@ -132,12 +181,26 @@ test("opening the link only shows a Confirm button; posting it adds the contact"
   assert.deepEqual(create.body.segments, [{ id: SEGMENT_ID }]);
   assert.deepEqual(create.body.topics, [{ id: TOPIC_ID, subscription: "opt_in" }]);
   assert.deepEqual(create.body.properties, { signup_source: "home" });
-  assert.ok(calls.some((c) => c.method === "POST" && c.url.endsWith(`/contacts/ana%40example.com/segments/${SEGMENT_ID}`)));
-  assert.ok(calls.some((c) => c.method === "PATCH" && c.url.endsWith("/contacts/ana%40example.com") && c.body.unsubscribed === false));
+  assert.ok(
+    calls.some(
+      (c) =>
+        c.method === "POST" && c.url.endsWith(`/contacts/ana%40example.com/segments/${SEGMENT_ID}`),
+    ),
+  );
+  assert.ok(
+    calls.some(
+      (c) =>
+        c.method === "PATCH" &&
+        c.url.endsWith("/contacts/ana%40example.com") &&
+        c.body.unsubscribed === false,
+    ),
+  );
 });
 
 test("a bad or expired link is refused and adds nobody", async () => {
-  const qs = new URLSearchParams(await signLink("s3cret", "ana@example.com", "home", Date.now() - 8 * 86400 * 1000));
+  const qs = new URLSearchParams(
+    await signLink("s3cret", "ana@example.com", "home", Date.now() - 8 * 86400 * 1000),
+  );
   assert.equal((await get(`/newsletter/confirm?${qs}`)).status, 400);
   qs.set("t", String(Math.floor(Date.now() / 1000)));
   assert.equal((await post("/newsletter/confirm", Object.fromEntries(qs))).status, 400);
