@@ -8,6 +8,8 @@ import {
   type PushMessage,
   type PushSender,
   type VoipSender,
+  type WatchAlertSender,
+  type WatchPushTarget,
   type WidgetPushSender,
   type WidgetPushTarget,
 } from "@casama/agent";
@@ -32,6 +34,14 @@ describe("Casama Link: the push relay", () => {
   let lives: Array<{ targets: LiveTarget[]; update: LiveUpdate }>;
   let dead: string[];
   let refreshed: Array<{ targets: WidgetPushTarget[]; urgent: boolean }>;
+  let wrists: Array<{ targets: WatchPushTarget[]; message: PushMessage }> = [];
+  /** Casama Cloud's sender to Apple Watches' own tokens (D-410): records, reports dead tokens. */
+  const watchSender: WatchAlertSender = {
+    async sendWatch(t, m) {
+      wrists.push({ targets: t, message: m });
+      return { invalidTokens: t.map((x) => x.token).filter((x) => dead.includes(x)) };
+    },
+  };
   /** Casama Cloud's widget refresh sender (D-405): records, and reports the dead tokens. */
   const widgetSender: WidgetPushSender = {
     async sendWidgets(t, o) {
@@ -117,7 +127,7 @@ describe("Casama Link: the push relay", () => {
   beforeAll(async () => {
     cloud = await startHarness({
       env: { BILLING_ENABLED: "true" },
-      casamaLink: { push: firebase, voip: apple, widgets: widgetSender },
+      casamaLink: { push: firebase, voip: apple, widgets: widgetSender, watch: watchSender },
     });
     owner = await cloud.user("relay-owner@example.com");
     orgId = (
@@ -139,6 +149,7 @@ describe("Casama Link: the push relay", () => {
     lives = [];
     dead = [];
     refreshed = [];
+    wrists = [];
   });
 
   it("passes a followed run's state on to the phones (D-324)", async () => {
@@ -203,6 +214,39 @@ describe("Casama Link: the push relay", () => {
       invalidTokens: ["token-android-w"],
     });
     expect(refreshed).toEqual([{ targets: widgetTargets, urgent: false }]);
+  });
+
+  it("passes a linked server's alerts on to Apple Watches' own tokens (D-410)", async () => {
+    const watchTargets: WatchPushTarget[] = [
+      { token: "cd".repeat(32), sandbox: false },
+      { token: "ef".repeat(32), sandbox: true },
+    ];
+    dead = ["ef".repeat(32)];
+    const alert: PushMessage = { ...message, category: "REPLY", tag: "n-1" };
+    const res = await push({
+      tokens: watchTargets.map((t) => t.token),
+      watch: { targets: watchTargets, message: alert },
+    });
+    expect(res.status).toBe(200);
+    expect(await j(res)).toEqual({ sent: 2, invalid_tokens: ["ef".repeat(32)] });
+    expect(wrists).toEqual([{ targets: watchTargets, message: alert }]);
+    expect(sent).toEqual([]);
+    // The targets must be the tokens counted; one kind per request.
+    for (const bad of [
+      { tokens: ["someone-else-01"], watch: { targets: [watchTargets[0]], message } },
+      { tokens: ["cd".repeat(32)], watch: { targets: [watchTargets[0]], message }, message },
+      { tokens: ["cd".repeat(32)], watch: { targets: [], message } },
+    ])
+      expect((await push(bad)).status, JSON.stringify(bad).slice(0, 80)).toBe(400);
+    expect(wrists).toHaveLength(1);
+
+    // From the self-hosted side: the relay sender posts the same body.
+    wrists = [];
+    const relay = new CloudRelayPushSender({ url: CLOUD, key }, { fetch: net });
+    expect(await relay.sendWatch(watchTargets, alert)).toEqual({
+      invalidTokens: ["ef".repeat(32)],
+    });
+    expect(wrists).toEqual([{ targets: watchTargets, message: alert }]);
   });
 
   it("sends a linked server's notification and says which tokens are dead", async () => {

@@ -42,7 +42,8 @@ import 'package:casama_sdk/casama_sdk.dart';
 import '../../../ui/effects.dart';
 import '../../moderation/report_sheet.dart';
 import '../../app_lock/confirm_identity.dart';
-import '../../widgets/widget_nudge.dart';
+// The one nudge after an answered request: the watch's (D-410) or the widgets' (D-405).
+import '../../watch/watch_nudge.dart';
 
 // ---------------------------------------------------------------------------------------------
 // Messages
@@ -1595,7 +1596,7 @@ class _ApprovalPromptState extends ConsumerState<ApprovalPrompt> {
       ref.invalidate(approvalsProvider);
       // The server marked its notification read; the inbox list catches up.
       ref.invalidate(notificationsProvider);
-      unawaited(nudgeWidget(context, ref, WidgetNudge.needsYou));
+      unawaited(nudgeAfterAnswer(context, ref));
     }
   }
 

@@ -1,0 +1,11 @@
+/.gradle
+/.kotlin
+/build
+/app/build
+/local.properties
+/captures/
+.cxx/
+# The signing key lives in client/android/key.properties (never committed).
+key.properties
+**/*.keystore
+**/*.jks

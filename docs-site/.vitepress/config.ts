@@ -252,6 +252,8 @@ export default defineConfig({
           { text: "Bots in the notch and menu bar", link: "/guide/notch" },
           { text: "Bots on the Lock Screen", link: "/guide/lock-screen" },
           { text: "Widgets and controls", link: "/guide/widgets" },
+          { text: "Casama on Apple Watch", link: "/guide/apple-watch" },
+          { text: "Casama on Wear OS", link: "/guide/wear-os" },
           { text: "Coding agents", link: "/guide/coding-agents" },
           { text: "Teach by showing", link: "/guide/teach" },
           { text: "Routines and triggers", link: "/guide/routines" },

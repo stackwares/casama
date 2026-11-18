@@ -43,6 +43,7 @@ import 'features/selfhost/guided_setup.dart';
 import 'ui/effects.dart';
 import 'features/island/island_bridge.dart';
 import 'features/widgets/glance_sync.dart';
+import 'features/watch/watch_bridge.dart';
 import 'features/app_lock/lock_screen.dart';
 import 'features/permissions/permissions_reporter.dart';
 
@@ -76,6 +77,9 @@ class CasamaApp extends ConsumerWidget {
     keep(islandBridgeProvider);
     // Widgets on iPhone, Android and the Mac (D-405): the glance, carried while the app is open.
     keep(glanceSyncProvider);
+    // Apple Watch and Wear OS (D-410): signs a watch in when it asks, follows workspace switches
+    // and sign-out.
+    keep(watchBridgeProvider);
     // Mobile: share to bot.
     // A live call on the iPhone's lock screen and Dynamic Island (D-327 §9).
     keep(callGlanceSyncProvider);

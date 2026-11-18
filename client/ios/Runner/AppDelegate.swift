@@ -39,12 +39,19 @@ import native_geofence
       UNNotificationCategory(
         identifier: "APPROVAL",
         actions: [
-          UNNotificationAction(identifier: "approve", title: "Approve", options: [.foreground, .authenticationRequired]),
+          // "Allow", as the app and the watch say it (D-410); the id stays "approve".
+          UNNotificationAction(identifier: "approve", title: "Allow", options: [.foreground, .authenticationRequired]),
           UNNotificationAction(identifier: "deny", title: "Deny", options: [.foreground, .authenticationRequired, .destructive]),
         ],
         intentIdentifiers: [],
         options: []),
+      // Replies (D-410): no buttons on the phone; the category lets a paired Apple Watch show its
+      // own reply notification with quick replies.
+      UNNotificationCategory(identifier: "REPLY", actions: [], intentIdentifiers: [], options: []),
     ])
+    // The Apple Watch asks this phone to sign it in (D-410). Active before Flutter, so requests
+    // that wake the app in the background are held for Dart.
+    WatchBridge.shared.activate()
     // Controls and small widgets that open Casama at a place (D-405, ControlIntents.swift) hand
     // the path over the way Siri's Ask a bot does, queued until Flutter is ready.
     if #available(iOS 17.0, *) {
@@ -120,6 +127,10 @@ import native_geofence
     // Widgets (D-405): the widget key, redraws, which widgets are placed.
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CasamaWidgets") {
       WidgetsBridge.shared.attach(registrar.messenger())
+    }
+    // Apple Watch sign-in and Open on iPhone (D-410).
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CasamaWatch") {
+      WatchBridge.shared.attach(registrar.messenger())
     }
     // System permissions a bot needs on this phone (D-376).
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CasamaPermissions") {

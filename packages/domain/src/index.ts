@@ -44,4 +44,5 @@ export * from "./slug.ts";
 export * from "./teach.ts";
 export * from "./templates.ts";
 export * from "./totp.ts";
+export * from "./watch.ts";
 export * from "./workspace-files.ts";

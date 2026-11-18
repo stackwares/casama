@@ -216,8 +216,13 @@ const CHANGE_EVENTS = new Set([
 ]);
 
 /** Triggers that mean a person started the run (run_tracker.dart reads them the same way). */
-const PERSON_TRIGGERS = new Set(["chat", "mention", "voice", "replay", "teach"]);
-const UNFINISHED = new Set(["queued", "running", "waiting_approval", "waiting_takeover"]);
+export const PERSON_TRIGGERS = new Set(["chat", "mention", "voice", "replay", "teach"]);
+export const UNFINISHED_RUN_STATUSES = new Set([
+  "queued",
+  "running",
+  "waiting_approval",
+  "waiting_takeover",
+]);
 
 /** The events that change what a phone shows. */
 const LIVE_EVENTS = new Set([
@@ -346,7 +351,11 @@ export class LiveRunPusher {
       trigger: string | null;
       status: string;
     }>(sql`select created_by, trigger, status from public.runs where id = ${runId}::uuid`);
-    if (!r?.created_by || !PERSON_TRIGGERS.has(r.trigger ?? "") || !UNFINISHED.has(r.status)) {
+    if (
+      !r?.created_by ||
+      !PERSON_TRIGGERS.has(r.trigger ?? "") ||
+      !UNFINISHED_RUN_STATUSES.has(r.status)
+    ) {
       return;
     }
     const starts = await this.db.execute<LiveTarget & Record<string, unknown>>(sql`

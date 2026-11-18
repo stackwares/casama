@@ -44,6 +44,8 @@ export interface LinkOptions {
   voip?: import("@casama/agent").VoipSender;
   /** The relay's sender of widget refresh pushes (D-405). Unset: none. */
   widgets?: import("@casama/agent").WidgetPushSender;
+  /** The relay's sender of alerts to Apple Watches' own tokens (D-410). Unset: none. */
+  watch?: import("@casama/agent").WatchAlertSender;
   /** The relay for live view away from the computer (D-296). Unset: none. */
   turn?: import("../link/turn.ts").TurnProvider;
   /** Signed-out linking is limited per caller address. */
@@ -123,7 +125,13 @@ export function registerCasamaLinkRoutes(app: Hono, opts: LinkOptions) {
       liveView: turn ? (orgId) => liveViewIncluded(db, orgId) : undefined,
     });
   if (opts.push)
-    registerPushRelay(app, { push: opts.push, voip: opts.voip, widgets: opts.widgets, db });
+    registerPushRelay(app, {
+      push: opts.push,
+      voip: opts.voip,
+      widgets: opts.widgets,
+      watch: opts.watch,
+      db,
+    });
   if (turn) registerTurnRoutes(app, { db, turn });
 
   /**

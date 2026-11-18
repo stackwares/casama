@@ -272,6 +272,8 @@ export const PublicConfig = z
      * workspace's own key is still used first.
      */
     server_voice: z.array(z.enum(["live", "read_aloud", "dictation"])).optional(),
+    /** The server answers watch keys (D-410): older servers leave it out. */
+    watch: z.boolean().optional(),
     /**
      * Proofs a new account must carry in its user metadata (`signup_proof`), D-094. Empty: none.
      * app_check: a Firebase App Check token; pow: a solved GET /v1/signup/challenge puzzle.

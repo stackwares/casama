@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  CloudRelayPushSender,
   ComputerService,
   computerRates,
   createSafeFetch,
@@ -39,6 +40,7 @@ import { attachTelephony, phoneCalls } from "./api/routes/telephony.ts";
 import { pgRunEventHub } from "./api/run-event-hub.ts";
 import { dbosWorkflows } from "./api/workflows.ts";
 import {
+  apnsWatchFromEnv,
   apnsWidgetsFromEnv,
   billingFromEnv,
   casamaCloudProvider,
@@ -219,6 +221,8 @@ if (env.MODE === "api") {
     // Widget refresh pushes for answers and routine changes made here (D-405); the worker sends
     // the ones its runs and inbox rows cause.
     glance: apiGlancePusher(handle.db),
+    // Pushes the API sends itself: a watch's "Open on phone" (D-410).
+    notifications: apiNotifications(handle.db),
     // Outbound calls to addresses people type (password managers, Infisical, invites, memory
     // backends) can't reach private networks unless allowed (audit 2026-11: SSRF).
     apps: { fetch: createSafeFetch({ exemptCidrs: allowCidrs }) },
@@ -517,6 +521,26 @@ function apiGlancePusher(db: import("@casama/db").Database) {
   return new GlancePusher(db, widgetPushSender({ push, apple }), {
     onError: (e) => logger.warn("widget push", { error: e.message }),
   });
+}
+
+/**
+ * The API's own pushes (D-410): the worker's senders, so a watch's "Open on phone" reaches the
+ * phone the same way an inbox push does. Apple Watches' own tokens go with Apple's key, else the
+ * relay.
+ */
+function apiNotifications(db: import("@casama/db").Database) {
+  const push = serverPushSender({
+    db,
+    fcmServiceAccountJson: env.FCM_SERVICE_ACCOUNT
+      ? inlineOrFile(env.FCM_SERVICE_ACCOUNT)
+      : undefined,
+    cloud,
+    onRelayError: (e) => logger.warn("push relay", { error: e.message }),
+  });
+  const notifications = new NotificationService(db, push);
+  notifications.watch =
+    apnsWatchFromEnv(env) ?? (push instanceof CloudRelayPushSender ? push : undefined);
+  return notifications;
 }
 
 /**

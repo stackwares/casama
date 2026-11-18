@@ -10,6 +10,7 @@
  * Calls ring the same way: Android through Firebase, iPhones through Apple's call pushes, which
  * only Casama's own Apple key can send to the store app.
  */
+import type { WatchPushTarget } from "./apns.ts";
 import type { WidgetPushTarget } from "./glance-push.ts";
 import type { LiveTarget, LiveUpdate } from "./live-runs.ts";
 import type { PushMessage, PushSender } from "./notifications.ts";
@@ -65,7 +66,7 @@ export class CloudRelayPushSender implements PushSender {
    * server restarts. Notifications and iPhone call rings are refused separately, since a cloud
    * can run one without the other.
    */
-  private readonly refused = new Set<"push" | "voip" | "widget">();
+  private readonly refused = new Set<"push" | "voip" | "widget" | "watch">();
 
   constructor(cloud: { url: string; key: string }, o: CloudRelayOptions = {}) {
     this.base = cloud.url.replace(/\/$/, "");
@@ -73,7 +74,10 @@ export class CloudRelayPushSender implements PushSender {
     this.o = o;
   }
 
-  private async post(body: Record<string, unknown>, kind: "push" | "voip" | "widget" = "push") {
+  private async post(
+    body: Record<string, unknown>,
+    kind: "push" | "voip" | "widget" | "watch" = "push",
+  ) {
     if (this.refused.has(kind)) return { invalidTokens: [] };
     try {
       const res = await (this.o.fetch ?? fetch)(`${this.base}/link/v1/push`, {
@@ -148,6 +152,22 @@ export class CloudRelayPushSender implements PushSender {
     return this.post(
       { tokens: targets.map((t) => t.token), widget: { targets, urgent: o.urgent } },
       "widget",
+    );
+  }
+
+  /**
+   * Alerts to Apple Watches' own tokens (D-410): only Casama's Apple key can reach the store's
+   * watch app. With private notifications on, the relay gets no text, as for phones.
+   */
+  async sendWatch(targets: WatchPushTarget[], message: PushMessage) {
+    if (!targets.length) return { invalidTokens: [] };
+    const hide = (await this.o.private?.()) ?? false;
+    return this.post(
+      {
+        tokens: targets.map((t) => t.token),
+        watch: { targets, message: hide ? withoutText(message) : message },
+      },
+      "watch",
     );
   }
 

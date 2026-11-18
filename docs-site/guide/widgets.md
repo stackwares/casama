@@ -59,6 +59,11 @@ Casama's widgets go on the desktop and in Notification Center. They show the sam
 Casama when clicked; to act in place, use [the notch](./notch). Without the Mac app, your iPhone's
 widgets can appear on the Mac too (System Settings → Desktop & Dock → **Use iPhone widgets**).
 
+## On your wrist
+
+Casama has its own watch apps, with complications, a Smart Stack, controls and tiles. See
+[Casama on Apple Watch](./apple-watch) and [Casama on Wear OS](./wear-os).
+
 ## Keeping up
 
 Widgets update whenever Casama is open, and on their own about every half hour. When something they

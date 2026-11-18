@@ -50,6 +50,8 @@ export function registerSystemRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         wallpapers_enabled: Boolean(deps.env.UNSPLASH_ACCESS_KEY),
         chatgpt_sign_in: chatGptSignInEnabled(deps.env),
         server_voice: serverVoice(deps.env),
+        // Watch keys and their routes (D-410).
+        watch: true,
         signup_proofs: abuseControlsOn(deps.env) ? signupProofKinds(deps.env) : [],
         trace_url_template: deps.env.TRACE_URL_TEMPLATE ?? null,
         google_client_ids: googleClientIds(deps.env),

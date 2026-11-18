@@ -112,6 +112,8 @@ describe("openapi", () => {
             // Casama Help on the websites answers signed-out visitors (D-401).
             "/v1/support/web/config",
             "/v1/support/web/session",
+            // A watch with no phone app at hand asks for a sign-in code before it has a key (D-410).
+            "/v1/watch/codes",
           ].includes(path)
         )
           expect(Object.keys(op.responses)).toContain("401");

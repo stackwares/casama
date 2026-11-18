@@ -29,6 +29,7 @@ import {
   linkGalleryInstallQuietly,
   withStats,
 } from "../../services/gallery-usage.ts";
+import { refuseWatchDecision, watchSurface } from "./watch.ts";
 
 /** The gallery v2 fields a starter bot's template carries (D-315). */
 function pickTemplateExtras(t: GalleryExtras & { stats?: object }) {
@@ -310,6 +311,9 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
     const { decision, always_allow } = c.req.valid("json");
+    // A watch (D-410) allows only what the person lets it, never "always"; deny always works.
+    const watch = c.get("watchKey");
+    if (watch) await refuseWatchDecision(db, watch, id, decision, always_allow);
     let row: ApprovalRow | undefined;
     try {
       await withUserSession(db, claims, (tx) =>
@@ -335,6 +339,17 @@ export function registerAutonomyRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     await deps.workflows.signalRun(row.runId);
     // Widgets (D-405): the answerer's at once; the worker tells the run's people as it resumes.
     deps.glance?.changed(claims.sub, { urgent: true });
+    if (watch)
+      track(db, {
+        event: "watch_action",
+        userId: watch.userId,
+        orgId: watch.orgId,
+        properties: {
+          action: decision === "approved" ? "allow" : "deny",
+          surface: watchSurface(c.req.header("x-casama-surface")),
+          platform: watch.platform,
+        },
+      });
     return c.json(approvalOut(row), 200);
   });
 

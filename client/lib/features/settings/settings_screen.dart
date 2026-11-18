@@ -286,6 +286,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       subtitle: l10n.widgetsRow,
                       onTap: () => open('/settings/widgets'), selected: sel('/settings/widgets'),
                     ),
+                  // Apple Watch and Wear OS (D-410): on every platform, so watches can be managed
+                  // and signed in with a code from the desktop and web apps too.
+                  GroupedTile(
+                    key: const Key('settingsWatch'),
+                    icon: LucideIcons.watch,
+                    title: l10n.watchPhoneTitle,
+                    subtitle: l10n.watchPhoneRow,
+                    onTap: () => open('/settings/watch'), selected: sel('/settings/watch'),
+                  ),
                   // Tips and news by email (D-302); account emails have no switch.
                   _Find(title: l10n.emailTips, subtitle: l10n.emailTipsHelp, child: const EmailTipsTile()),
                   // Monthly gallery picks (D-315), opt-in.

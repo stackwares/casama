@@ -85,9 +85,10 @@ export const widgetClaims = (w: WidgetCaller): JwtClaims => ({
 const requireSession = (c: {
   get(k: "claims"): JwtClaims | undefined;
   get(k: "widgetKey"): WidgetCaller | undefined;
+  get(k: "watchKey"): unknown;
 }) => {
   const claims = c.get("claims");
-  if (!claims || c.get("widgetKey"))
+  if (!claims || c.get("widgetKey") || c.get("watchKey"))
     throw new ApiError(401, "unauthorized", "Missing or invalid bearer token");
   return claims;
 };
@@ -150,6 +151,7 @@ export function registerGlanceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
 
   app.openapi(routes.getGlance, async (c) => {
     const widget = c.get("widgetKey");
+    const watch = c.get("watchKey");
     const claims = c.get("claims");
     if (!claims) throw new ApiError(401, "unauthorized", "Missing or invalid bearer token");
     const asked = c.req.valid("query").org_id;
@@ -160,6 +162,12 @@ export function registerGlanceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         throw new ApiError(403, "forbidden", "This widget key reads another workspace");
       orgId = widget.orgId;
       priv = widget.private;
+    } else if (watch) {
+      // A watch reads its own workspace, privately when the person turned details off (D-410).
+      if (asked && asked !== watch.orgId)
+        throw new ApiError(403, "forbidden", "This watch key reads another workspace");
+      orgId = watch.orgId;
+      priv = !watch.showDetails;
     } else {
       if (!asked) throw new ApiError(400, "org_required", "Say which workspace (org_id)");
       if (!(await isMember(claims, asked)))

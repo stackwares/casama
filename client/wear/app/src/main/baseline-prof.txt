@@ -1,0 +1,25 @@
+# Baseline profile (installed by androidx.profileinstaller): the cold start into Now, the glance
+# decode and the list screens, compiled ahead of time so the first open is smooth on a watch.
+HSPLai/casama/wear/WearApp;->**(**)**
+HSPLai/casama/wear/Graph;->**(**)**
+HSPLai/casama/wear/ui/MainActivity;->**(**)**
+HSPLai/casama/wear/ui/WearRootKt;->**(**)**
+HSPLai/casama/wear/ui/screens/NowScreenKt;->**(**)**
+HSPLai/casama/wear/ui/screens/ListScreenKt;->**(**)**
+HSPLai/casama/wear/ui/components/ComponentsKt;->**(**)**
+HSPLai/casama/wear/ui/theme/ThemeKt;->**(**)**
+HSPLai/casama/wear/data/Session;->**(**)**
+HSPLai/casama/wear/data/GlanceCache;->**(**)**
+HSPLai/casama/wear/data/Settings;->**(**)**
+HSPLai/casama/wear/data/KeyStore;->**(**)**
+HSPLai/casama/wear/data/WatchApi;->**(**)**
+HSPLai/casama/wear/core/Decode;->**(**)**
+HSPLai/casama/wear/core/Logic;->**(**)**
+HSPLai/casama/wear/core/Format;->**(**)**
+HSPLai/casama/wear/tiles/CasamaTile;->**(**)**
+HSPLai/casama/wear/complications/CasamaComplication;->**(**)**
+Lai/casama/wear/**;
+Landroidx/wear/compose/**;
+Landroidx/compose/runtime/**;
+Landroidx/compose/ui/**;
+Landroidx/compose/foundation/**;

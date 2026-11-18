@@ -1,4 +1,7 @@
-/** Runs supabase/tests/*.test.sql against a throwaway database (no Docker needed). */
+/**
+ * Runs supabase/tests/*.test.sql against a throwaway database (no Docker needed). An argument
+ * narrows it to the files whose names contain it.
+ */
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,8 +12,10 @@ const db = await startTestDatabase();
 let failed = 0;
 try {
   await db.admin`create extension if not exists pgtap with schema extensions`;
+  // `node scripts/run-pgtap.ts watch_keys` runs only the files whose names contain that.
+  const only = process.argv[2];
   for (const file of readdirSync(testsDir)
-    .filter((f) => f.endsWith(".test.sql"))
+    .filter((f) => f.endsWith(".test.sql") && (!only || f.includes(only)))
     .sort()) {
     const sqlText = readFileSync(join(testsDir, file), "utf8");
     const lines: string[] = [];

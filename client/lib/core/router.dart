@@ -85,6 +85,7 @@ import '../features/auth/account_screen.dart';
 import '../features/auth/passkeys_screen.dart';
 import '../features/app_lock/app_lock_screen.dart';
 import '../features/widgets/widgets_screen.dart';
+import '../features/watch/watch_screen.dart';
 import '../features/auth/two_step_screen.dart';
 import '../features/board/board_screen.dart';
 import '../features/workspaces/join_flow.dart';
@@ -1013,6 +1014,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'widgets',
                 pageBuilder: _page((_, _) => const WidgetsScreen()),
+              ),
+              GoRoute(
+                path: 'watch',
+                pageBuilder: _page((_, _) => const WatchScreen()),
               ),
               GoRoute(
                 path: 'link',

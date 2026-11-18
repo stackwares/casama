@@ -22,9 +22,8 @@ private let shared = GlanceStore.defaults
 // glows from behind it and tints its timer; anything that needs the person turns orange, Finished
 // green, a problem yellow. On a dark glass card so it reads on any wallpaper.
 //
-// Apple Watch and CarPlay: they use the compact views for now. The extension runs on iOS 18 since
-// D-405, so .supplementalActivityFamilies([.small]) is open to a later change
-// (docs/ISLAND-AND-MENU-BAR-PLAN.md §19).
+// Apple Watch: its Smart Stack shows the small layout (RunWatchView, D-410). CarPlay uses the
+// compact views.
 
 enum RunTone {
   static let needsYou = Color(hex: 0xFF9F0A)
@@ -286,7 +285,7 @@ struct RunCompactTrailing: View {
 struct RunActivityWidget: Widget {
   var body: some WidgetConfiguration {
     ActivityConfiguration(for: RunActivityAttributes.self) { context in
-      RunLockScreenView(context: context)
+      RunActivityContent(context: context)
     } dynamicIsland: { context in
       let a = context.attributes
       let s = context.state
@@ -345,6 +344,52 @@ struct RunActivityWidget: Widget {
       .widgetURL(RunActivityLink.url(a.link))
       .keylineTint(tone)
     }
+    // A paired Apple Watch shows the run in its Smart Stack (D-410): the small layout below.
+    .supplementalActivityFamilies([.small])
+  }
+}
+
+/// The Lock Screen layout on the phone, the small one on a paired Apple Watch's Smart Stack.
+struct RunActivityContent: View {
+  let context: ActivityViewContext<RunActivityAttributes>
+  @Environment(\.activityFamily) private var family
+
+  var body: some View {
+    switch family {
+    case .small: RunWatchView(context: context)
+    default: RunLockScreenView(context: context)
+    }
+  }
+}
+
+/// The run on the watch (mockup "Working" on the Smart Stack): the bot, what it is doing and its
+/// clock. A tap opens the watch app at the run (it reads the link from the activity).
+struct RunWatchView: View {
+  let context: ActivityViewContext<RunActivityAttributes>
+  var body: some View {
+    let a = context.attributes
+    let s = context.state
+    let tone = runTone(s, a.art)
+    HStack(alignment: .center, spacing: 8) {
+      RunMark(attributes: a, state: s, size: 30)
+      VStack(alignment: .leading, spacing: 1) {
+        HStack(alignment: .firstTextBaseline, spacing: 4) {
+          Text(a.displayName)
+            .font(.system(.footnote, design: .rounded).weight(.semibold))
+            .lineLimit(1)
+          Spacer(minLength: 2)
+          RunTime(attributes: a, state: s)
+            .font(.system(.caption2, design: .rounded).weight(.semibold))
+            .foregroundColor(s.ended ? .white.opacity(0.55) : tone)
+        }
+        Text(runHeadline(a, s))
+          .font(.caption2.weight(.medium))
+          .foregroundColor(s.needsPerson || s.ended ? tone : .white.opacity(0.85))
+          .lineLimit(2)
+      }
+    }
+    .padding(.horizontal, 6)
+    .widgetURL(RunActivityLink.url(a.link))
   }
 }
 

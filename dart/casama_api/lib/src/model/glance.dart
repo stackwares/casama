@@ -7,6 +7,7 @@ import 'package:casama_api/src/model/glance_routine.dart';
 import 'package:casama_api/src/model/glance_creation.dart';
 import 'package:casama_api/src/model/glance_flags.dart';
 import 'package:casama_api/src/model/glance_starter.dart';
+import 'package:casama_api/src/model/glance_run.dart';
 import 'package:casama_api/src/model/glance_credits.dart';
 import 'package:casama_api/src/model/glance_done.dart';
 import 'package:casama_api/src/model/glance_routine_choice.dart';
@@ -40,6 +41,8 @@ class Glance {
     required  this.needs,
 
     required  this.bots,
+
+    required  this.runs,
 
     required  this.next,
 
@@ -117,6 +120,18 @@ class Glance {
 
 
   final List<GlanceBot> bots;
+
+
+
+  @JsonKey(
+    
+    name: r'runs',
+    required: true,
+    includeIfNull: false,
+  )
+
+
+  final List<GlanceRun> runs;
 
 
 
@@ -237,6 +252,7 @@ class Glance {
       other.orgId == orgId &&
       other.needs == needs &&
       other.bots == bots &&
+      other.runs == runs &&
       other.next == next &&
       other.routines == routines &&
       other.brief == brief &&
@@ -254,6 +270,7 @@ class Glance {
         orgId.hashCode +
         needs.hashCode +
         bots.hashCode +
+        runs.hashCode +
         next.hashCode +
         routines.hashCode +
         (brief == null ? 0 : brief.hashCode) +

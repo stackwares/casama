@@ -52,6 +52,7 @@ import * as system from "./system.ts";
 import * as teach from "./teach.ts";
 import * as telephony from "./telephony.ts";
 import * as voice from "./voice.ts";
+import * as watch from "./watch.ts";
 import * as watchers from "./watchers.ts";
 import * as workspaceFiles from "./workspace-files.ts";
 import * as workspaces from "./workspaces.ts";
@@ -114,6 +115,7 @@ export const routes = {
   ...domains,
   ...starters,
   ...glance,
+  ...watch,
 };
 export {
   aboutYou,
@@ -161,6 +163,7 @@ export {
   teach,
   telephony,
   voice,
+  watch,
   watchers,
   workspaceFiles,
   workspaces,

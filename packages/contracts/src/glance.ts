@@ -143,6 +143,29 @@ export const GlanceCredits = z
   })
   .openapi("GlanceCredits");
 
+/**
+ * A run a person started by hand that is live (D-410, docs/WATCH-PLAN.md §8.3), built from the
+ * same words as the island's pushes (live-runs.ts), so the watch, the Live Activity and the
+ * Android notification agree.
+ */
+export const GlanceRun = z
+  .object({
+    id: Uuid,
+    bot_id: Uuid,
+    bot: z.string().max(80),
+    bot_avatar: Avatar,
+    phase: z.enum(["working", "needs_ok", "take_over"]),
+    /** What it is doing in general words ("Searching the web"); empty when private. */
+    step: z.string().max(80),
+    steps: z.number().int().min(0),
+    started_at: ts,
+    /** While it waits on a request. */
+    approval_id: Uuid.nullable(),
+    risk: z.enum(["low", "medium", "high"]).nullable(),
+    link: z.string().max(300),
+  })
+  .openapi("GlanceRun");
+
 export const GlanceStarter = z
   .object({ emoji: z.string().max(16), text: z.string().max(120) })
   .openapi("GlanceStarter");
@@ -155,6 +178,8 @@ export const Glance = z
     org_id: Uuid,
     needs: z.object({ count: z.number().int().min(0), items: z.array(GlanceNeed).max(4) }),
     bots: z.array(GlanceBot).max(8),
+    /** Live runs the person started by hand, newest first (D-410). Older servers send none. */
+    runs: z.array(GlanceRun).max(3),
     next: z.array(GlanceRoutine).max(6),
     /** Every routine on the workspace's bots, the person's own first, for pickers (max 20). */
     routines: z.array(GlanceRoutineChoice).max(20),

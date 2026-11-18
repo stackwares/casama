@@ -268,6 +268,9 @@ describe("cross-tenant sweep (Phase 8 security review)", () => {
       // Sites (D-329): a report by address is signed out and answers the same 202 for any
       // address, so it reveals nothing; sites-serving.test.ts checks three reports take a site down.
       "createSiteReport",
+      // Watch settings (D-410) are the caller's own row, keyed by their user id; watch.test.ts
+      // checks a watch key can't read or change them.
+      "updateWatchPrefs",
     ]);
     for (const [path, ops] of Object.entries(doc.paths)) {
       if (!path.startsWith("/v1/")) continue;

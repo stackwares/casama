@@ -490,6 +490,10 @@ relay, like its other notifications. The push says only that something changed: 
 fetches what it shows from your server. Unlinked and without a key, iPhone and Mac widgets still
 refresh on their own schedule; Android widgets refresh through `FCM_SERVICE_ACCOUNT`.
 
+Watch apps (Apple Watch and Wear OS) reach your server with a key of their own and are signed in
+through the phone app, since a watch can't learn your server's address. Their pushes go through the
+same relay. See [Casama on Apple Watch](/guide/apple-watch).
+
 ## Push notifications
 
 | Name                   | Default   | What it does                                                                                                      |

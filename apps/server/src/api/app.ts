@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { resolveTxt as dnsResolveTxt } from "node:dns/promises";
+import { track } from "@casama/agent";
 import { openApiConfig, registerComponents } from "@casama/contracts";
 import { pgErrorCode, pgErrorMessage } from "@casama/db";
 import { captureError } from "@casama/observability";
@@ -79,10 +80,19 @@ import { registerSystemRoutes } from "./routes/system.ts";
 import { registerTeachRoutes } from "./routes/teach.ts";
 import { registerTelephonyRoutes } from "./routes/telephony.ts";
 import { registerVoiceRoutes } from "./routes/voice.ts";
+import {
+  registerWatchRoutes,
+  watchAction,
+  watchCaller,
+  watchClaims,
+  watchScope,
+  watchSurface,
+} from "./routes/watch.ts";
 import { registerWatcherRoutes } from "./routes/watchers.ts";
 import { registerWorkspaceFileRoutes } from "./routes/workspace-files.ts";
 import { registerWorkspaceRoutes } from "./routes/workspaces.ts";
 import type { AppDeps, AppEnv } from "./types.ts";
+import { clientIp } from "./util.ts";
 
 /**
  * Signed provider webhooks: billing (Dodo, RevenueCat), Stripe Issuing, the domain registrar,
@@ -281,6 +291,7 @@ export function createApp(deps: AppDeps) {
         "idempotency-key",
         "last-event-id",
         "x-request-id",
+        "x-casama-surface",
       ],
       allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       exposeHeaders: ["x-request-id", "idempotent-replayed", "retry-after", "content-disposition"],
@@ -303,6 +314,9 @@ export function createApp(deps: AppDeps) {
   // Optional bearer auth: verifies the token when present; routes that need it call requireClaims.
   // A widget key (D-405) reads as its person on the few routes it may use, and nowhere else.
   const widgetAuth = widgetCaller(deps);
+  // A watch key (D-410) acts as its person on the routes a watch may use, within its limits.
+  const watchAuth = watchCaller(deps);
+  const watchGuard = watchScope(deps.db);
   app.use("/v1/*", async (c, next) => {
     // Hosted MCP tool calls (D-117) arrive in-process with their person already resolved.
     const inProcess = (c.env as InProcessEnv | undefined)?.casamaClaims;
@@ -321,6 +335,34 @@ export function createApp(deps: AppDeps) {
       const widget = await widgetAuth(c.req.method, c.req.path, header.slice(7).trim());
       c.set("widgetKey", widget);
       c.set("claims", widgetClaims(widget));
+    } else if (header?.startsWith("Watch ")) {
+      const watch = await watchAuth(
+        c.req.method,
+        c.req.path,
+        header.slice(6).trim(),
+        clientIp((n) => c.req.header(n), deps.env.TRUSTED_CLIENT_IP_HEADER),
+      );
+      c.set("watchKey", watch);
+      c.set("claims", watchClaims(watch));
+      // Borrowed routes stay in the key's workspace (row-level security alone would open all the
+      // person's workspaces).
+      await watchGuard(watch, c.req.method, c.req.path, new URL(c.req.url).searchParams);
+      await next();
+      // What watches are used for (§15): suggestions done, routines run, runs stopped, replies
+      // read aloud. Decisions and asks are counted in their own routes.
+      const action = watchAction(c.req.method, c.req.path);
+      if (action && c.res.status < 300)
+        track(deps.db, {
+          event: "watch_action",
+          userId: watch.userId,
+          orgId: watch.orgId,
+          properties: {
+            action,
+            surface: watchSurface(c.req.header("x-casama-surface")),
+            platform: watch.platform,
+          },
+        });
+      return;
     }
     await next();
   });
@@ -340,6 +382,11 @@ export function createApp(deps: AppDeps) {
     rateLimit({
       perMinute: deps.env.RATE_LIMIT_PER_MINUTE,
       trustedIpHeader: deps.env.TRUSTED_CLIENT_IP_HEADER,
+      // A watch counts apart from its person's phone (it has its own 60 a minute too).
+      key: (c) => {
+        const watch = c.get("watchKey" as never) as { id: string } | undefined;
+        return watch ? `watch:${watch.id}` : undefined;
+      },
     }),
   );
   // Signed provider webhooks (Dodo and RevenueCat billing, Stripe Issuing, the domain registrar)
@@ -452,6 +499,7 @@ export function createApp(deps: AppDeps) {
   registerChatMediaRoutes(app, deps);
   registerCreationRoutes(app, deps);
   registerGlanceRoutes(app, deps);
+  registerWatchRoutes(app, deps);
   registerChatExportRoutes(app, deps);
   registerConnectAppRoutes(app, deps, instanceOwnerCheck(deps));
   registerSignInCodeRoutes(app, deps);

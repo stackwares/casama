@@ -62,7 +62,8 @@ It never makes a sound: the request's own notification is the one that tells you
 while Casama is closed, from the server, in the same way as on an iPhone.
 
 The **Bot** widget shows the running bot, its step and **Stop** while something runs. For every
-widget, see [Widgets and controls](./widgets).
+widget, see [Widgets and controls](./widgets). On a watch, see [Casama on Apple Watch](./apple-watch)
+and [Casama on Wear OS](./wear-os).
 
 ### Turning it off
 

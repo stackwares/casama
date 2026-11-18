@@ -8,9 +8,11 @@ import 'gallery_models.dart';
 import 'key_providers.dart';
 import 'gallery_parts.dart';
 import '../features/widgets/glance.dart';
+import '../features/watch/watch_models.dart';
 
 export 'gallery_models.dart';
 export '../features/widgets/glance.dart';
+export '../features/watch/watch_models.dart';
 export 'gallery_parts.dart';
 export 'key_providers.dart';
 
@@ -2169,6 +2171,40 @@ abstract class Backend {
   /// Where the server sends refresh pushes for this key's widgets: an Android phone's Firebase
   /// token (`fcm`) or a WidgetKit push token (`apns_widgets`). Sent with the widget key itself.
   Future<void> registerWidgetPushToken(String widgetKey, String token, {required String kind, bool? sandbox});
+
+  // Watches (D-410)
+  /// The person's signed-in watches in [orgId], most recently used first. Empty when the server
+  /// has no watch keys yet.
+  Future<List<WatchKeyView>> listWatchKeys(String orgId);
+
+  /// Signs a watch in from the phone: registers the fingerprint of the key the watch made (§8.2).
+  /// Registering the same fingerprint again updates it (another workspace, a new name).
+  Future<WatchKeyView> registerWatchKey({
+    required String orgId,
+    required String fingerprint,
+    required WatchSystem platform,
+    required String name,
+    String? model,
+    String? appVersion,
+    String? osVersion,
+  });
+
+  /// Removes a watch: its key stops working at once. A key already gone is fine.
+  Future<void> deleteWatchKey(String id);
+
+  /// The person's watch settings. Null when the server has none yet.
+  Future<WatchPrefsView?> watchPrefs();
+
+  /// Changes the person's watch settings. An empty [quickReplies] goes back to the built-in list.
+  Future<WatchPrefsView> updateWatchPrefs({WatchAllowance? allow, bool? showDetails, List<String>? quickReplies});
+
+  /// Which watch shows [code] (already normalized), before allowing it. Null for a wrong or
+  /// expired code.
+  Future<WatchCodeView?> watchCodeInfo(String code);
+
+  /// Allows the watch showing [code]: it is signed in to [orgId] as the person. Null for a wrong,
+  /// expired or used code.
+  Future<WatchKeyView?> claimWatchCode(String code, String orgId);
   Future<void> dismissSuggestion(String id, {bool dontSuggestAgain = false});
 
   /// Where each of these suggestions stands; ones that aren't yours are left out.

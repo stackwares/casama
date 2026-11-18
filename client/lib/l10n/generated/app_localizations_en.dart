@@ -14953,4 +14953,608 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get widgetThisMonth => 'This month';
+
+  @override
+  String get watchNow => 'Now';
+
+  @override
+  String get watchAsk => 'Ask';
+
+  @override
+  String watchAskBot(String bot) {
+    return 'Ask $bot';
+  }
+
+  @override
+  String get watchBots => 'Bots';
+
+  @override
+  String get watchUpNext => 'Up next';
+
+  @override
+  String get watchBrief => 'Brief';
+
+  @override
+  String get watchSettings => 'Settings';
+
+  @override
+  String get watchChat => 'Chat';
+
+  @override
+  String get watchTalk => 'Talk';
+
+  @override
+  String get watchCredits => 'Credits';
+
+  @override
+  String get watchNeedsYou => 'Needs you';
+
+  @override
+  String get watchNeedsYouOne => '1 needs you';
+
+  @override
+  String watchNeedsYouMany(String count) {
+    return '$count need you';
+  }
+
+  @override
+  String get watchNeedsOk => 'Needs your OK';
+
+  @override
+  String watchNeedsOkFrom(String bot) {
+    return '$bot needs your OK';
+  }
+
+  @override
+  String watchSuggests(String bot) {
+    return '$bot suggests';
+  }
+
+  @override
+  String get watchTakeOver => 'Wants you to take over';
+
+  @override
+  String get watchAllClear => 'All clear';
+
+  @override
+  String get watchNothingWaiting => 'Nothing needs you';
+
+  @override
+  String get watchAllow => 'Allow';
+
+  @override
+  String get watchDeny => 'Deny';
+
+  @override
+  String get watchHoldToAllow => 'Hold to allow';
+
+  @override
+  String get watchHoldHint => 'Allow this? Double tap to allow.';
+
+  @override
+  String get watchReview => 'Review';
+
+  @override
+  String get watchReviewOnIphone => 'Review on iPhone';
+
+  @override
+  String get watchReviewOnPhone => 'Review on phone';
+
+  @override
+  String get watchWhyHighRisk => 'High risk: answer on your phone';
+
+  @override
+  String get watchWhyPayment => 'Payments are answered on your phone';
+
+  @override
+  String get watchWhySetting => 'Your settings keep this on your phone';
+
+  @override
+  String get watchWhyWorkspace => 'Your workspace keeps this on your phone';
+
+  @override
+  String get watchWhyNotYours =>
+      'Only the person who started this chat can allow it';
+
+  @override
+  String get watchHighRisk => 'High risk';
+
+  @override
+  String get watchMediumRisk => 'Medium risk';
+
+  @override
+  String get watchLowRisk => 'Low risk';
+
+  @override
+  String get watchAllowed => 'Allowed';
+
+  @override
+  String get watchDenied => 'Denied';
+
+  @override
+  String get watchDone => 'Done';
+
+  @override
+  String get watchAlreadyAnswered => 'Already answered';
+
+  @override
+  String get watchLockToAllow =>
+      'Set a passcode on this watch to allow from it';
+
+  @override
+  String get watchDoIt => 'Do It';
+
+  @override
+  String get watchNotNow => 'Not now';
+
+  @override
+  String get watchOpenOnIphone => 'Open on iPhone';
+
+  @override
+  String get watchOpenOnPhone => 'Open on phone';
+
+  @override
+  String get watchSentToPhone => 'Sent to your phone';
+
+  @override
+  String get watchWorking => 'Working';
+
+  @override
+  String watchIsWorking(String bot) {
+    return '$bot is working';
+  }
+
+  @override
+  String get watchWaitingForYou => 'Waiting for you';
+
+  @override
+  String watchRepliedAt(String time) {
+    return 'Replied $time';
+  }
+
+  @override
+  String get watchIdle => 'Idle';
+
+  @override
+  String get watchOff => 'Off';
+
+  @override
+  String watchStepCount(String count) {
+    return 'Step $count';
+  }
+
+  @override
+  String get watchStop => 'Stop';
+
+  @override
+  String get watchStopped => 'Stopped';
+
+  @override
+  String get watchFinished => 'Finished';
+
+  @override
+  String get watchProblem => 'Stopped with a problem';
+
+  @override
+  String get watchCouldntFinish => 'Couldn\'t finish';
+
+  @override
+  String get watchListening => 'Listening…';
+
+  @override
+  String get watchTapToStop => 'Tap to stop';
+
+  @override
+  String get watchTypeInstead => 'Type instead';
+
+  @override
+  String get watchSending => 'Sending…';
+
+  @override
+  String get watchHeard => 'Heard';
+
+  @override
+  String get watchUndo => 'Undo';
+
+  @override
+  String get watchKeptOffline => 'Saved. It sends when you\'re back online';
+
+  @override
+  String watchKeptOld(String time) {
+    return 'Send what you asked at $time?';
+  }
+
+  @override
+  String get watchSend => 'Send';
+
+  @override
+  String get watchDiscard => 'Discard';
+
+  @override
+  String get watchMicDenied =>
+      'Allow the microphone in Settings to ask by voice';
+
+  @override
+  String get watchNoDictation =>
+      'This server has no voice service. Use Type instead';
+
+  @override
+  String get watchDidntCatch => 'Didn\'t catch that. Try again';
+
+  @override
+  String get watchReply => 'Reply';
+
+  @override
+  String get watchReadAloud => 'Read aloud';
+
+  @override
+  String get watchStopReading => 'Stop reading';
+
+  @override
+  String get watchContinuesOnIphone => 'Continues on iPhone';
+
+  @override
+  String get watchContinuesOnPhone => 'Continues on phone';
+
+  @override
+  String get watchReplyReady => 'Reply ready';
+
+  @override
+  String get watchYou => 'You';
+
+  @override
+  String get watchQuickYes => 'Yes';
+
+  @override
+  String get watchQuickNo => 'No';
+
+  @override
+  String get watchQuickTellMore => 'Tell me more';
+
+  @override
+  String get watchQuickNotNow => 'Not now';
+
+  @override
+  String get watchRunNow => 'Run Now';
+
+  @override
+  String get watchStarted => 'Started';
+
+  @override
+  String watchInMinutes(String minutes) {
+    return 'in $minutes min';
+  }
+
+  @override
+  String get watchNoRoutines => 'No routines yet';
+
+  @override
+  String watchBriefAt(String time) {
+    return 'Brief at $time';
+  }
+
+  @override
+  String watchBriefTomorrow(String time) {
+    return 'Brief at $time tomorrow';
+  }
+
+  @override
+  String get watchNoBrief => 'No brief set up';
+
+  @override
+  String get watchNoBots => 'No bots yet. Make one on your phone';
+
+  @override
+  String get watchSigningIn => 'Signing you in';
+
+  @override
+  String watchSignedInAs(String name) {
+    return 'Signed in as $name';
+  }
+
+  @override
+  String get watchOpenPhoneToFinishIphone =>
+      'Open Casama on your iPhone to finish';
+
+  @override
+  String get watchOpenPhoneToFinish => 'Open Casama on your phone to finish';
+
+  @override
+  String get watchUseCode => 'Sign in with a code';
+
+  @override
+  String get watchCodeHelp =>
+      'Type it in Casama on your phone or computer: Settings → Watch';
+
+  @override
+  String get watchNewCode => 'New code';
+
+  @override
+  String get watchSignedOut =>
+      'Signed out. Open Casama on your phone to sign in again';
+
+  @override
+  String get watchOpenToSignIn => 'Open Casama to sign in';
+
+  @override
+  String watchAsOf(String time) {
+    return 'as of $time';
+  }
+
+  @override
+  String get watchOffline => 'Offline';
+
+  @override
+  String get watchCouldntReach => 'Couldn\'t reach Casama';
+
+  @override
+  String get watchTryAgain => 'Try again';
+
+  @override
+  String get watchServerTooOld => 'Update your Casama server to use the watch';
+
+  @override
+  String get watchOutOfCredits => 'Out of credits';
+
+  @override
+  String get watchTalkOnPhone => 'Starting the call on your phone';
+
+  @override
+  String get watchSignOut => 'Sign out of this watch';
+
+  @override
+  String get watchHideDetails => 'Hide details when my wrist is down';
+
+  @override
+  String get watchReadRepliesAloud => 'Read replies aloud';
+
+  @override
+  String get watchAskUses => 'Ask uses';
+
+  @override
+  String get watchWorkspace => 'Workspace';
+
+  @override
+  String get watchSignedInAsLabel => 'Signed in as';
+
+  @override
+  String get watchCompNeedsYou => 'Needs you';
+
+  @override
+  String get watchCompAsk => 'Ask a bot';
+
+  @override
+  String get watchCompBot => 'Bot';
+
+  @override
+  String get watchCompUpNext => 'Up next';
+
+  @override
+  String get watchCompCasama => 'Casama';
+
+  @override
+  String get watchCompDescNeedsYou =>
+      'How many requests wait, and the first one';
+
+  @override
+  String get watchCompDescAsk => 'Ask a bot by voice in one tap';
+
+  @override
+  String get watchCompDescBot => 'Where a bot stands and what it is doing';
+
+  @override
+  String get watchCompDescUpNext => 'The next routine and when it runs';
+
+  @override
+  String get watchCompDescCredits => 'Credits used this period';
+
+  @override
+  String get watchNeedYouShort => 'need you';
+
+  @override
+  String get watchControlAsk => 'Ask Casama';
+
+  @override
+  String get watchControlTalk => 'Talk to a bot';
+
+  @override
+  String get watchControlRun => 'Run a routine';
+
+  @override
+  String watchSiriNeeds(String count, String text) {
+    return '$count need you. First: $text';
+  }
+
+  @override
+  String get watchPhoneTitle => 'Watch';
+
+  @override
+  String get watchPhoneIntro =>
+      'Answer bots, ask by voice and see who is working, from your wrist.';
+
+  @override
+  String get watchPhoneWatches => 'Signed-in watches';
+
+  @override
+  String get watchPhoneNone =>
+      'No watch signed in yet. Open Casama on your watch and it signs in by itself.';
+
+  @override
+  String watchPhoneLastUsed(String time) {
+    return 'Last used $time';
+  }
+
+  @override
+  String get watchPhoneNeverUsed => 'Not used yet';
+
+  @override
+  String get watchPhoneRemove => 'Remove';
+
+  @override
+  String watchPhoneRemoveTitle(String name) {
+    return 'Remove $name?';
+  }
+
+  @override
+  String get watchPhoneRemoveBody =>
+      'It signs out at once. You can sign it in again later.';
+
+  @override
+  String get watchPhoneUseCode => 'Sign in a watch with a code';
+
+  @override
+  String get watchPhoneCodeHint => 'The code on your watch';
+
+  @override
+  String watchPhoneCodeAsk(String name) {
+    return 'Sign in $name?';
+  }
+
+  @override
+  String watchPhoneCodeAskBody(String workspace) {
+    return 'It will be signed in to $workspace as you. Only allow a code shown on your own watch.';
+  }
+
+  @override
+  String get watchPhoneCodeAllow => 'Sign it in';
+
+  @override
+  String get watchPhoneCodeWrong =>
+      'That code didn\'t work. Check it on your watch';
+
+  @override
+  String watchPhoneSignedIn(String name) {
+    return '$name is signed in';
+  }
+
+  @override
+  String get watchPhoneAllowTitle => 'Allow from the watch';
+
+  @override
+  String get watchPhoneAllowMedium => 'Low and medium risk';
+
+  @override
+  String get watchPhoneAllowMediumBody =>
+      'Low risk in one tap, medium risk with a hold. High risk and payments always need your phone.';
+
+  @override
+  String get watchPhoneAllowLow => 'Low risk only';
+
+  @override
+  String get watchPhoneAllowNone => 'Never';
+
+  @override
+  String get watchPhoneDetails => 'Show details on the watch';
+
+  @override
+  String get watchPhoneDetailsBody =>
+      'Off: the watch shows counts and bot names, not what bots wrote.';
+
+  @override
+  String get watchPhoneQuickReplies => 'Quick replies';
+
+  @override
+  String get watchPhoneQuickRepliesBody =>
+      'Short answers you can send from a reply notification. Up to six.';
+
+  @override
+  String get watchPhoneQuickAdd => 'Add a quick reply';
+
+  @override
+  String get watchPhoneQuickReset => 'Use the built-in replies';
+
+  @override
+  String get watchPhoneHowTo => 'Add Casama to your watch face';
+
+  @override
+  String get watchPhoneHowToApple =>
+      'Touch and hold your watch face, tap Edit, then choose Casama for a complication. Turn the Digital Crown on the face to find Casama in the Smart Stack.';
+
+  @override
+  String get watchPhoneHowToWear =>
+      'Touch and hold your watch face to add a Casama complication. Swipe left from the face and tap + to add a Casama tile.';
+
+  @override
+  String watchPhoneSigningInBanner(String name) {
+    return 'Signing in $name…';
+  }
+
+  @override
+  String get watchPhoneLockAsk => 'Sign in your watch?';
+
+  @override
+  String get watchPhoneNudge =>
+      'Casama is on your watch too. Answer bots from your wrist.';
+
+  @override
+  String get watchPhoneHandoffTitle => 'From your watch';
+
+  @override
+  String get watchPhoneRow => 'Your bots on your Apple Watch or Wear OS watch';
+
+  @override
+  String get watchPhoneAllowLowBody =>
+      'Low risk in one tap. Everything else needs your phone.';
+
+  @override
+  String get watchPhoneAllowNoneBody =>
+      'The watch can only deny. Allow on your phone.';
+
+  @override
+  String get watchPhoneDetailsLockOff =>
+      'Turned off because the app lock is on, so your watch shows no words from your chats. Turn it on to see them.';
+
+  @override
+  String get watchPhoneQuickHint => 'A short reply';
+
+  @override
+  String get watchPhoneQuickTooLong => 'Up to 40 characters';
+
+  @override
+  String get watchPhoneQuickMoveUp => 'Move up';
+
+  @override
+  String get watchPhoneQuickMoveDown => 'Move down';
+
+  @override
+  String get watchPhoneQuickDelete => 'Delete this reply';
+
+  @override
+  String get watchPhoneCodeBody =>
+      'On your watch, open Casama and choose Sign in with a code.';
+
+  @override
+  String get watchPhoneAppleWatch => 'Apple Watch';
+
+  @override
+  String get watchPhoneWearOs => 'Wear OS';
+
+  @override
+  String get watchCompDescWorking => 'Who is working and what they are doing';
+
+  @override
+  String get watchCompDescBrief => 'This morning\'s brief';
+
+  @override
+  String get watchCodeWaiting => 'Waiting for the code…';
+
+  @override
+  String watchCodeA11y(String code) {
+    return 'Sign-in code $code';
+  }
+
+  @override
+  String get watchChooseBot => 'Choose a bot';
+
+  @override
+  String get watchChannelRequests => 'Requests';
+
+  @override
+  String get watchChannelReplies => 'Replies';
+
+  @override
+  String get watchChannelRuns => 'Working bots';
+
+  @override
+  String get watchChannelOther => 'Other';
 }

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature android:name="android.hardware.type.watch" />
+    <!-- Ask by voice (§6.1 C). Not required: a watch without a mic still answers and types. -->
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- A run started from the watch shows as an Ongoing Activity (§6.5); its notification is
+         posted by the app while it follows the run, no foreground service needed. On Wear OS 7
+         it may be promoted to a Live Update. -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+    <!-- No advertising id: firebase-messaging would otherwise merge this permission in. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+
+    <application
+        android:name=".WearApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/watch_comp_casama"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Casama.Wear">
+
+        <!-- Works without the phone once signed in (§2.2, decision 8's twin on Wear OS). -->
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="true" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+        <!-- Firebase is set up at run time from client/config/firebase.json (WearApp.kt). -->
+        <meta-data
+            android:name="firebase_messaging_auto_init_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="firebase_analytics_collection_enabled"
+            android:value="false" />
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            android:theme="@style/Theme.Casama.Wear">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- The phone link: sign_in answers, workspace switches, sign out (WATCH-PROTOCOL §2). -->
+        <service
+            android:name=".link.PhoneLinkService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data
+                    android:host="*"
+                    android:pathPrefix="/casama/watch"
+                    android:scheme="wear" />
+            </intent-filter>
+        </service>
+
+        <!-- Pushes to the watch's own Firebase token, drawn here (WATCH-PROTOCOL §4). -->
+        <service
+            android:name=".notify.WearMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <receiver
+            android:name=".notify.ActionReceiver"
+            android:exported="false" />
+
+        <!-- Tiles (§6.3). Each has a preview and a signed-out state. -->
+        <service
+            android:name=".tiles.NeedsYouTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_notification"
+            android:label="@string/watch_needs_you"
+            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+            <intent-filter>
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.wear.tiles.PREVIEW"
+                android:resource="@drawable/tile_preview_needs" />
+        </service>
+        <service
+            android:name=".tiles.AskTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_notification"
+            android:label="@string/watch_ask"
+            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+            <intent-filter>
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.wear.tiles.PREVIEW"
+                android:resource="@drawable/tile_preview_ask" />
+        </service>
+        <service
+            android:name=".tiles.UpNextTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_notification"
+            android:label="@string/watch_up_next"
+            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+            <intent-filter>
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.wear.tiles.PREVIEW"
+                android:resource="@drawable/tile_preview_up_next" />
+        </service>
+        <service
+            android:name=".tiles.BotTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_notification"
+            android:label="@string/watch_comp_bot"
+            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+            <intent-filter>
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.wear.tiles.PREVIEW"
+                android:resource="@drawable/tile_preview_bot" />
+        </service>
+        <!-- Complications (§6.3). The system asks at most every 5 minutes; the app also asks
+             for updates whenever the glance changes. -->
+        <service
+            android:name=".complications.NeedsYouComplication"
+            android:exported="true"
+            android:icon="@drawable/ic_notification"
+            android:label="@string/watch_comp_needs_you"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="SHORT_TEXT,LONG_TEXT" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="900" />
+        </service>
+        <service
+            android:name=".complications.CreditsComplication"
+            android:exported="true"
+            android:icon="@drawable/ic_notification"
+            android:label="@string/watch_credits"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="RANGED_VALUE" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="1800" />
+        </service>
+        <service
+            android:name=".complications.AskComplication"
+            android:exported="true"
+            android:icon="@drawable/ic_notification"
+            android:label="@string/watch_comp_ask"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="SMALL_IMAGE" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="0" />
+        </service>
+    </application>
+
+    <queries>
+        <!-- The system's text-to-speech engine, the fallback voice for Read aloud. -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+</manifest>

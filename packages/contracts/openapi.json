@@ -2453,6 +2453,9 @@
               ]
             }
           },
+          "watch": {
+            "type": "boolean"
+          },
           "signup_proofs": {
             "type": "array",
             "items": {
@@ -24953,6 +24956,13 @@
             },
             "maxItems": 8
           },
+          "runs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GlanceRun"
+            },
+            "maxItems": 3
+          },
           "next": {
             "type": "array",
             "items": {
@@ -25055,6 +25065,7 @@
           "org_id",
           "needs",
           "bots",
+          "runs",
           "next",
           "routines",
           "brief",
@@ -25200,6 +25211,83 @@
           "last_text",
           "last_at",
           "busy_at",
+          "link"
+        ]
+      },
+      "GlanceRun": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "bot_avatar": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "working",
+              "needs_ok",
+              "take_over"
+            ]
+          },
+          "step": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "steps": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "approval_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "risk": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              null
+            ]
+          },
+          "link": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "id",
+          "bot_id",
+          "bot",
+          "bot_avatar",
+          "phase",
+          "step",
+          "steps",
+          "started_at",
+          "approval_id",
+          "risk",
           "link"
         ]
       },
@@ -25660,6 +25748,932 @@
             "type": "boolean"
           }
         }
+      },
+      "WatchKey": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "platform": {
+            "$ref": "#/components/schemas/WatchPlatform"
+          },
+          "name": {
+            "type": "string"
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "app_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "os_version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "paired_by": {
+            "type": "string",
+            "enum": [
+              "phone",
+              "code"
+            ]
+          },
+          "has_push": {
+            "type": "boolean"
+          },
+          "last_used_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "org_id",
+          "platform",
+          "name",
+          "model",
+          "app_version",
+          "os_version",
+          "paired_by",
+          "has_push",
+          "last_used_at",
+          "created_at"
+        ]
+      },
+      "WatchPlatform": {
+        "type": "string",
+        "enum": [
+          "watchos",
+          "wearos"
+        ]
+      },
+      "WatchCodeClaim": {
+        "type": "object",
+        "properties": {
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "org_id"
+        ]
+      },
+      "DeletedWatchKey": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      },
+      "WatchApproval": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "bot_avatar": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "denied",
+              "expired"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 140
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 120
+            },
+            "maxItems": 3
+          },
+          "risk": {
+            "$ref": "#/components/schemas/WatchRisk"
+          },
+          "payment": {
+            "type": "boolean"
+          },
+          "can_allow": {
+            "type": "string",
+            "enum": [
+              "tap",
+              "hold",
+              "phone"
+            ]
+          },
+          "why_phone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "high_risk",
+              "payment",
+              "setting",
+              "workspace",
+              "not_yours",
+              null
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "link": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "id",
+          "run_id",
+          "bot_id",
+          "bot",
+          "bot_avatar",
+          "status",
+          "title",
+          "details",
+          "risk",
+          "payment",
+          "can_allow",
+          "why_phone",
+          "created_at",
+          "expires_at",
+          "link"
+        ]
+      },
+      "WatchRisk": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "WatchChat": {
+        "type": "object",
+        "properties": {
+          "bot": {
+            "$ref": "#/components/schemas/WatchBotHeader"
+          },
+          "conversation_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WatchMessage"
+            },
+            "maxItems": 12
+          },
+          "run_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "link": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "bot",
+          "conversation_id",
+          "messages",
+          "run_id",
+          "link"
+        ]
+      },
+      "WatchBotHeader": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "avatar": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "idle",
+              "working",
+              "waiting",
+              "disabled"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "avatar",
+          "status"
+        ]
+      },
+      "WatchMessage": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 1300
+          },
+          "cut": {
+            "type": "boolean"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WatchAttachment"
+            },
+            "maxItems": 3
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "can_speak": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "role",
+          "text",
+          "cut",
+          "attachments",
+          "at",
+          "can_speak"
+        ]
+      },
+      "WatchAttachment": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "page",
+              "image",
+              "video",
+              "audio",
+              "document",
+              "file",
+              "card",
+              "link"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "kind",
+          "title"
+        ]
+      },
+      "WatchCodeInfo": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "$ref": "#/components/schemas/WatchPlatform"
+          },
+          "name": {
+            "type": "string"
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "platform",
+          "name",
+          "model",
+          "expires_at"
+        ]
+      },
+      "WatchPrefs": {
+        "type": "object",
+        "properties": {
+          "allow": {
+            "$ref": "#/components/schemas/WatchAllowLevel"
+          },
+          "show_details": {
+            "type": "boolean"
+          },
+          "quick_replies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            "minItems": 1,
+            "maxItems": 6
+          }
+        },
+        "required": [
+          "allow",
+          "show_details",
+          "quick_replies"
+        ]
+      },
+      "WatchAllowLevel": {
+        "type": "string",
+        "enum": [
+          "medium",
+          "low",
+          "none"
+        ]
+      },
+      "WatchRun": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bot": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "bot_avatar": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "conversation_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "phase": {
+            "type": "string",
+            "enum": [
+              "working",
+              "needs_ok",
+              "take_over",
+              "finished",
+              "problem",
+              "stopped"
+            ]
+          },
+          "step": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "steps": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ended_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "approval": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WatchApproval"
+              },
+              {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              }
+            ]
+          },
+          "reply": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WatchMessage"
+              },
+              {
+                "type": [
+                  "object",
+                  "null"
+                ]
+              }
+            ]
+          },
+          "link": {
+            "type": "string",
+            "maxLength": 300
+          }
+        },
+        "required": [
+          "id",
+          "bot_id",
+          "bot",
+          "bot_avatar",
+          "conversation_id",
+          "phase",
+          "step",
+          "steps",
+          "started_at",
+          "ended_at",
+          "approval",
+          "reply",
+          "link"
+        ]
+      },
+      "WatchSelf": {
+        "type": "object",
+        "properties": {
+          "key_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "org_name": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "person": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 80
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "prefs": {
+            "$ref": "#/components/schemas/WatchPrefs"
+          },
+          "hide_reply_text": {
+            "type": "boolean"
+          },
+          "ask_bot_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "features": {
+            "type": "object",
+            "properties": {
+              "dictation": {
+                "type": "boolean"
+              },
+              "speech": {
+                "type": "boolean"
+              },
+              "out_of_credits": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "dictation",
+              "speech",
+              "out_of_credits"
+            ]
+          }
+        },
+        "required": [
+          "key_id",
+          "org_id",
+          "org_name",
+          "person",
+          "prefs",
+          "hide_reply_text",
+          "ask_bot_id",
+          "features"
+        ]
+      },
+      "WatchKeyList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WatchKey"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "WatchKeyRegister": {
+        "type": "object",
+        "properties": {
+          "org_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fingerprint": {
+            "$ref": "#/components/schemas/WatchFingerprint"
+          },
+          "platform": {
+            "$ref": "#/components/schemas/WatchPlatform"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "model": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "app_version": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "os_version": {
+            "type": "string",
+            "maxLength": 40
+          }
+        },
+        "required": [
+          "org_id",
+          "fingerprint",
+          "platform",
+          "name"
+        ]
+      },
+      "WatchFingerprint": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$",
+        "description": "sha256hex(\"casama-watch-key:\" + key)"
+      },
+      "WatchCode": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[0-9A-Z]{8}$"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "poll_every_s": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "code",
+          "expires_at",
+          "poll_every_s"
+        ]
+      },
+      "WatchCodeRequest": {
+        "type": "object",
+        "properties": {
+          "fingerprint": {
+            "$ref": "#/components/schemas/WatchFingerprint"
+          },
+          "platform": {
+            "$ref": "#/components/schemas/WatchPlatform"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "model": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "app_version": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "os_version": {
+            "type": "string",
+            "maxLength": 40
+          }
+        },
+        "required": [
+          "fingerprint",
+          "platform",
+          "name"
+        ]
+      },
+      "WatchSignedOut": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "WatchPrefsUpdate": {
+        "type": "object",
+        "properties": {
+          "allow": {
+            "$ref": "#/components/schemas/WatchAllowLevel"
+          },
+          "show_details": {
+            "type": "boolean"
+          },
+          "quick_replies": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            "maxItems": 6
+          }
+        }
+      },
+      "WatchSelfSaved": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "WatchSelfUpdate": {
+        "type": "object",
+        "properties": {
+          "push_token": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 8,
+            "maxLength": 4096
+          },
+          "push_kind": {
+            "type": "string",
+            "enum": [
+              "apns",
+              "fcm"
+            ]
+          },
+          "sandbox": {
+            "type": "boolean"
+          },
+          "app_version": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "os_version": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        }
+      },
+      "WatchAsked": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "message_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "run_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "heard": {
+            "type": "string",
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "conversation_id",
+          "message_id",
+          "run_id",
+          "heard"
+        ]
+      },
+      "WatchAsk": {
+        "type": "object",
+        "properties": {
+          "bot_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          },
+          "audio": {
+            "$ref": "#/components/schemas/WatchAudio"
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "asked_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "surface": {
+            "$ref": "#/components/schemas/WatchSurface"
+          }
+        },
+        "required": [
+          "bot_id"
+        ]
+      },
+      "WatchAudio": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "string",
+            "minLength": 16,
+            "maxLength": 1500000
+          },
+          "mime": {
+            "type": "string",
+            "enum": [
+              "audio/aac",
+              "audio/mp4",
+              "audio/m4a",
+              "audio/x-m4a",
+              "audio/ogg",
+              "audio/webm",
+              "audio/3gpp",
+              "audio/wav"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "mime"
+        ]
+      },
+      "WatchSurface": {
+        "type": "string",
+        "enum": [
+          "app",
+          "notification",
+          "complication",
+          "smart_stack",
+          "tile",
+          "control",
+          "siri"
+        ]
+      },
+      "WatchHandoffSent": {
+        "type": "object",
+        "properties": {
+          "sent": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sent"
+        ]
+      },
+      "WatchHandoff": {
+        "type": "object",
+        "properties": {
+          "link": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300,
+            "pattern": "^\\/(?![/\\\\])"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "link",
+          "title"
+        ]
       }
     },
     "parameters": {}
@@ -58032,6 +59046,1046 @@
           },
           "404": {
             "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/watch-codes/{code}/claim": {
+      "post": {
+        "operationId": "claimWatchCode",
+        "tags": [
+          "watch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Allow the watch showing this code: it is signed in to this workspace as the caller",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 12
+            },
+            "required": true,
+            "name": "code",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchCodeClaim"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchKey"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/watch-keys/{id}": {
+      "delete": {
+        "operationId": "deleteWatchKey",
+        "tags": [
+          "watch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Remove a watch: its key stops working at once",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedWatchKey"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/watch/approvals/{id}": {
+      "get": {
+        "operationId": "getWatchApproval",
+        "tags": [
+          "watch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "A request in everyday words, and whether this watch may allow it (tap, hold, phone)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchApproval"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/watch/chats/{bot_id}": {
+      "get": {
+        "operationId": "getWatchChat",
+        "tags": [
+          "watch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "A bot's latest chat as plain text, cut to fit a watch; cards, pages and files as one line",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "bot_id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Default: the latest direct chat"
+            },
+            "required": false,
+            "description": "Default: the latest direct chat",
+            "name": "conversation_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The chat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchChat"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/watch-codes/{code}": {
+      "get": {
+        "operationId": "getWatchCode",
+        "tags": [
+          "watch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Which watch shows this code, before allowing it. Five wrong tries end a code",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 12
+            },
+            "required": true,
+            "name": "code",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The watch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchCodeInfo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/watch-prefs": {
+      "get": {
+        "operationId": "getWatchPrefs",
+        "tags": [
+          "watch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "The person's watch settings: what a watch may allow, details, quick replies",
+        "responses": {
+          "200": {
+            "description": "Settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchPrefs"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "operationId": "updateWatchPrefs",
+        "tags": [
+          "watch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Change the person's watch settings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchPrefsUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchPrefs"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/watch/runs/{id}": {
+      "get": {
+        "operationId": "getWatchRun",
+        "tags": [
+          "watch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "A run's whole state. With `stream=1` (or `Accept: text/event-stream`): server-sent `run` events, each a whole WatchRun, ended by the server after 110 seconds or when the run ends; ask again to go on",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "0",
+                "1"
+              ]
+            },
+            "required": false,
+            "name": "stream",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The run",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchRun"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/watch/me": {
+      "get": {
+        "operationId": "getWatchSelf",
+        "tags": [
+          "watch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Who this watch is signed in as, its settings and what the server can do for it",
+        "responses": {
+          "200": {
+            "description": "This watch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchSelf"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/watch-keys": {
+      "get": {
+        "operationId": "listWatchKeys",
+        "tags": [
+          "watch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "The person's signed-in watches in a workspace",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "org_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Most recently used first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchKeyList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "registerWatchKey",
+        "tags": [
+          "watch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Sign a watch in from the phone: register the fingerprint of the key the watch made. Registering the same fingerprint again updates it",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchKeyRegister"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchKey"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/watch/codes": {
+      "post": {
+        "operationId": "requestWatchCode",
+        "tags": [
+          "watch"
+        ],
+        "summary": "A watch with no phone app at hand asks for a code to show (signed out; five an hour per address). It then tries GET /v1/watch/me with its key until the code is allowed",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchCodeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The code",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchCode"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/watch-keys/current": {
+      "delete": {
+        "operationId": "signOutWatch",
+        "tags": [
+          "watch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Sign out of this watch: its key is deleted",
+        "responses": {
+          "200": {
+            "description": "Signed out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchSignedOut"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateWatchSelf",
+        "tags": [
+          "watch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "A watch describes itself: its push token, app and system versions",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchSelfUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchSelfSaved"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/watch/ask": {
+      "post": {
+        "operationId": "watchAsk",
+        "tags": [
+          "watch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Ask a bot or reply in a chat, with text or a recording (transcribed and sent in one step). Without conversation_id it starts a new chat",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "description": "Retries with the same key return the first result"
+            },
+            "required": false,
+            "description": "Retries with the same key return the first result",
+            "name": "idempotency-key",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchAsk"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchAsked"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/watch/handoff": {
+      "post": {
+        "operationId": "watchHandoff",
+        "tags": [
+          "watch"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Open on iPhone / phone: the person's phones get a notification that opens the link",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchHandoff"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchHandoffSent"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
             "content": {
               "application/problem+json": {
                 "schema": {

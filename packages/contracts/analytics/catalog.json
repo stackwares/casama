@@ -1443,6 +1443,50 @@
       "funnels": []
     },
     {
+      "name": "watch_paired",
+      "by": ["server"],
+      "description": "A watch was signed in (D-410): from the phone app, or with a code the watch showed.",
+      "properties": {
+        "method": {
+          "type": "string",
+          "values": ["phone", "code"]
+        },
+        "platform": {
+          "type": "string",
+          "values": ["watchos", "wearos"]
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "watch_action",
+      "by": ["server"],
+      "description": "Something was done from a watch (D-410), and where on the watch: allowed or denied a request, did a suggestion, ran a routine, stopped a run, asked or replied, had a reply read aloud.",
+      "properties": {
+        "action": {
+          "type": "string",
+          "values": ["allow", "deny", "do_it", "run", "stop", "ask", "reply", "read_aloud"]
+        },
+        "surface": {
+          "type": "string",
+          "values": [
+            "app",
+            "notification",
+            "complication",
+            "smart_stack",
+            "tile",
+            "control",
+            "siri"
+          ]
+        },
+        "platform": {
+          "type": "string",
+          "values": ["watchos", "wearos"]
+        }
+      },
+      "funnels": []
+    },
+    {
       "name": "enable_analytics_sharing",
       "by": ["client"],
       "description": "Usage data sharing was turned on.",

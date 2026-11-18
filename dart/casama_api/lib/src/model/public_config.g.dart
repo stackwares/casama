@@ -29,6 +29,8 @@ abstract class _$PublicConfigCWProxy {
 
   PublicConfig serverVoice(List<PublicConfigServerVoiceEnum>? serverVoice);
 
+  PublicConfig watch(bool? watch);
+
   PublicConfig signupProofs(List<PublicConfigSignupProofsEnum>? signupProofs);
 
   PublicConfig traceUrlTemplate(String? traceUrlTemplate);
@@ -68,6 +70,7 @@ abstract class _$PublicConfigCWProxy {
     bool? wallpapersEnabled,
     bool? chatgptSignIn,
     List<PublicConfigServerVoiceEnum>? serverVoice,
+    bool? watch,
     List<PublicConfigSignupProofsEnum>? signupProofs,
     String? traceUrlTemplate,
     List<String>? googleClientIds,
@@ -129,6 +132,9 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
       call(serverVoice: serverVoice);
 
   @override
+  PublicConfig watch(bool? watch) => call(watch: watch);
+
+  @override
   PublicConfig signupProofs(List<PublicConfigSignupProofsEnum>? signupProofs) =>
       call(signupProofs: signupProofs);
 
@@ -184,6 +190,7 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
     Object? wallpapersEnabled = const $CopyWithPlaceholder(),
     Object? chatgptSignIn = const $CopyWithPlaceholder(),
     Object? serverVoice = const $CopyWithPlaceholder(),
+    Object? watch = const $CopyWithPlaceholder(),
     Object? signupProofs = const $CopyWithPlaceholder(),
     Object? traceUrlTemplate = const $CopyWithPlaceholder(),
     Object? googleClientIds = const $CopyWithPlaceholder(),
@@ -246,6 +253,10 @@ class _$PublicConfigCWProxyImpl implements _$PublicConfigCWProxy {
           ? _value.serverVoice
           // ignore: cast_nullable_to_non_nullable
           : serverVoice as List<PublicConfigServerVoiceEnum>?,
+      watch: watch == const $CopyWithPlaceholder()
+          ? _value.watch
+          // ignore: cast_nullable_to_non_nullable
+          : watch as bool?,
       signupProofs: signupProofs == const $CopyWithPlaceholder()
           ? _value.signupProofs
           // ignore: cast_nullable_to_non_nullable
@@ -344,6 +355,7 @@ PublicConfig _$PublicConfigFromJson(
             ?.map((e) => $enumDecode(_$PublicConfigServerVoiceEnumEnumMap, e))
             .toList(),
       ),
+      watch: $checkedConvert('watch', (v) => v as bool?),
       signupProofs: $checkedConvert(
         'signup_proofs',
         (v) => (v as List<dynamic>?)
@@ -418,6 +430,7 @@ Map<String, dynamic> _$PublicConfigToJson(PublicConfig instance) =>
       'server_voice': ?instance.serverVoice
           ?.map((e) => _$PublicConfigServerVoiceEnumEnumMap[e]!)
           .toList(),
+      'watch': ?instance.watch,
       'signup_proofs': ?instance.signupProofs
           ?.map((e) => _$PublicConfigSignupProofsEnumEnumMap[e]!)
           .toList(),

@@ -23961,6 +23961,1086 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This month'**
   String get widgetThisMonth;
+
+  /// Shown on the watch app (D-410). Title of the watch app's first screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get watchNow;
+
+  /// Shown on the watch app (D-410). The main button: ask a bot by voice.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask'**
+  String get watchAsk;
+
+  /// Shown on the watch app (D-410). Title of the Ask screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask {bot}'**
+  String watchAskBot(String bot);
+
+  /// Shown on the watch app (D-410). The list of bots.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots'**
+  String get watchBots;
+
+  /// Shown on the watch app (D-410). Routines in the order they will run.
+  ///
+  /// In en, this message translates to:
+  /// **'Up next'**
+  String get watchUpNext;
+
+  /// Shown on the watch app (D-410). This morning's brief.
+  ///
+  /// In en, this message translates to:
+  /// **'Brief'**
+  String get watchBrief;
+
+  /// Shown on the watch app (D-410). The watch app's settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get watchSettings;
+
+  /// Shown on the watch app (D-410). A bot's latest chat.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get watchChat;
+
+  /// Shown on the watch app (D-410). Start a voice call with a bot.
+  ///
+  /// In en, this message translates to:
+  /// **'Talk'**
+  String get watchTalk;
+
+  /// Shown on the watch app (D-410). The credits complication.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get watchCredits;
+
+  /// Shown on the watch app (D-410). Section title: requests waiting on the person.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs you'**
+  String get watchNeedsYou;
+
+  /// Shown on the watch app (D-410). One request waits.
+  ///
+  /// In en, this message translates to:
+  /// **'1 needs you'**
+  String get watchNeedsYouOne;
+
+  /// Shown on the watch app (D-410). Several requests wait.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} need you'**
+  String watchNeedsYouMany(String count);
+
+  /// Shown on the watch app (D-410). A bot is waiting for an answer.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs your OK'**
+  String get watchNeedsOk;
+
+  /// Shown on the watch app (D-410). A request from a bot.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} needs your OK'**
+  String watchNeedsOkFrom(String bot);
+
+  /// Shown on the watch app (D-410). A suggestion from a bot.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} suggests'**
+  String watchSuggests(String bot);
+
+  /// Shown on the watch app (D-410). A bot asks the person to take over its computer.
+  ///
+  /// In en, this message translates to:
+  /// **'Wants you to take over'**
+  String get watchTakeOver;
+
+  /// Shown on the watch app (D-410). Nothing needs the person and nothing is working.
+  ///
+  /// In en, this message translates to:
+  /// **'All clear'**
+  String get watchAllClear;
+
+  /// Shown on the watch app (D-410). Empty Needs you list.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing needs you'**
+  String get watchNothingWaiting;
+
+  /// Shown on the watch app (D-410). Allow a request.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get watchAllow;
+
+  /// Shown on the watch app (D-410). Deny a request.
+  ///
+  /// In en, this message translates to:
+  /// **'Deny'**
+  String get watchDeny;
+
+  /// Shown on the watch app (D-410). A medium-risk request: hold the button to allow.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold to allow'**
+  String get watchHoldToAllow;
+
+  /// Shown on the watch app (D-410). VoiceOver/TalkBack hint replacing the hold.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow this? Double tap to allow.'**
+  String get watchHoldHint;
+
+  /// Shown on the watch app (D-410). Open a request to look at it.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get watchReview;
+
+  /// Shown on the watch app (D-410). A request the watch will not allow (Apple Watch).
+  ///
+  /// In en, this message translates to:
+  /// **'Review on iPhone'**
+  String get watchReviewOnIphone;
+
+  /// Shown on the watch app (D-410). A request the watch will not allow (Wear OS).
+  ///
+  /// In en, this message translates to:
+  /// **'Review on phone'**
+  String get watchReviewOnPhone;
+
+  /// Shown on the watch app (D-410). Why a request is phone-only.
+  ///
+  /// In en, this message translates to:
+  /// **'High risk: answer on your phone'**
+  String get watchWhyHighRisk;
+
+  /// Shown on the watch app (D-410). Why a request is phone-only.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments are answered on your phone'**
+  String get watchWhyPayment;
+
+  /// Shown on the watch app (D-410). Why a request is phone-only.
+  ///
+  /// In en, this message translates to:
+  /// **'Your settings keep this on your phone'**
+  String get watchWhySetting;
+
+  /// Shown on the watch app (D-410). Why a request is phone-only.
+  ///
+  /// In en, this message translates to:
+  /// **'Your workspace keeps this on your phone'**
+  String get watchWhyWorkspace;
+
+  /// Shown on the watch app (D-410). Why a request is phone-only.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the person who started this chat can allow it'**
+  String get watchWhyNotYours;
+
+  /// Shown on the watch app (D-410). Marks a high-risk request.
+  ///
+  /// In en, this message translates to:
+  /// **'High risk'**
+  String get watchHighRisk;
+
+  /// Shown on the watch app (D-410). Marks a medium-risk request.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium risk'**
+  String get watchMediumRisk;
+
+  /// Shown on the watch app (D-410). Marks a low-risk request.
+  ///
+  /// In en, this message translates to:
+  /// **'Low risk'**
+  String get watchLowRisk;
+
+  /// Shown on the watch app (D-410). Shown with a tick after allowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed'**
+  String get watchAllowed;
+
+  /// Shown on the watch app (D-410). Shown after denying.
+  ///
+  /// In en, this message translates to:
+  /// **'Denied'**
+  String get watchDenied;
+
+  /// Shown on the watch app (D-410). Shown with a tick after Do It.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get watchDone;
+
+  /// Shown on the watch app (D-410). Someone answered the request already.
+  ///
+  /// In en, this message translates to:
+  /// **'Already answered'**
+  String get watchAlreadyAnswered;
+
+  /// Shown on the watch app (D-410). A watch without a passcode cannot allow.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a passcode on this watch to allow from it'**
+  String get watchLockToAllow;
+
+  /// Shown on the watch app (D-410). Accept a suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Do It'**
+  String get watchDoIt;
+
+  /// Shown on the watch app (D-410). Dismiss a suggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get watchNotNow;
+
+  /// Shown on the watch app (D-410). Carry on on the iPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Open on iPhone'**
+  String get watchOpenOnIphone;
+
+  /// Shown on the watch app (D-410). Carry on on the phone (Wear OS).
+  ///
+  /// In en, this message translates to:
+  /// **'Open on phone'**
+  String get watchOpenOnPhone;
+
+  /// Shown on the watch app (D-410). After Open on iPhone/phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to your phone'**
+  String get watchSentToPhone;
+
+  /// Shown on the watch app (D-410). A bot is working.
+  ///
+  /// In en, this message translates to:
+  /// **'Working'**
+  String get watchWorking;
+
+  /// Shown on the watch app (D-410). A bot is working.
+  ///
+  /// In en, this message translates to:
+  /// **'{bot} is working'**
+  String watchIsWorking(String bot);
+
+  /// Shown on the watch app (D-410). A bot waits on the person.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for you'**
+  String get watchWaitingForYou;
+
+  /// Shown on the watch app (D-410). When a bot last replied.
+  ///
+  /// In en, this message translates to:
+  /// **'Replied {time}'**
+  String watchRepliedAt(String time);
+
+  /// Shown on the watch app (D-410). A bot is not working.
+  ///
+  /// In en, this message translates to:
+  /// **'Idle'**
+  String get watchIdle;
+
+  /// Shown on the watch app (D-410). A bot is turned off.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get watchOff;
+
+  /// Shown on the watch app (D-410). How many steps a run has taken.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {count}'**
+  String watchStepCount(String count);
+
+  /// Shown on the watch app (D-410). Stop a run.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get watchStop;
+
+  /// Shown on the watch app (D-410). A run the person stopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get watchStopped;
+
+  /// Shown on the watch app (D-410). A run finished.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished'**
+  String get watchFinished;
+
+  /// Shown on the watch app (D-410). A run failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped with a problem'**
+  String get watchProblem;
+
+  /// Shown on the watch app (D-410). A run failed (notification title).
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t finish'**
+  String get watchCouldntFinish;
+
+  /// Shown on the watch app (D-410). The microphone is on.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening…'**
+  String get watchListening;
+
+  /// Shown on the watch app (D-410). Under the microphone while listening.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to stop'**
+  String get watchTapToStop;
+
+  /// Shown on the watch app (D-410). Open the system keyboard, Scribble and dictation.
+  ///
+  /// In en, this message translates to:
+  /// **'Type instead'**
+  String get watchTypeInstead;
+
+  /// Shown on the watch app (D-410). An ask is being sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get watchSending;
+
+  /// Shown on the watch app (D-410). What the server heard, shown for a moment.
+  ///
+  /// In en, this message translates to:
+  /// **'Heard'**
+  String get watchHeard;
+
+  /// Shown on the watch app (D-410). Take back an ask just sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get watchUndo;
+
+  /// Shown on the watch app (D-410). An ask kept while offline.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. It sends when you\'re back online'**
+  String get watchKeptOffline;
+
+  /// Shown on the watch app (D-410). A kept ask older than ten minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Send what you asked at {time}?'**
+  String watchKeptOld(String time);
+
+  /// Shown on the watch app (D-410). Send a kept ask.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get watchSend;
+
+  /// Shown on the watch app (D-410). Throw a kept ask away.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get watchDiscard;
+
+  /// Shown on the watch app (D-410). Microphone permission is off.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow the microphone in Settings to ask by voice'**
+  String get watchMicDenied;
+
+  /// Shown on the watch app (D-410). The server cannot transcribe.
+  ///
+  /// In en, this message translates to:
+  /// **'This server has no voice service. Use Type instead'**
+  String get watchNoDictation;
+
+  /// Shown on the watch app (D-410). Nothing was heard.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn\'t catch that. Try again'**
+  String get watchDidntCatch;
+
+  /// Shown on the watch app (D-410). Answer in the chat by voice.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get watchReply;
+
+  /// Shown on the watch app (D-410). Hear the reply.
+  ///
+  /// In en, this message translates to:
+  /// **'Read aloud'**
+  String get watchReadAloud;
+
+  /// Shown on the watch app (D-410). Stop reading aloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop reading'**
+  String get watchStopReading;
+
+  /// Shown on the watch app (D-410). A reply too long for the watch (Apple Watch).
+  ///
+  /// In en, this message translates to:
+  /// **'Continues on iPhone'**
+  String get watchContinuesOnIphone;
+
+  /// Shown on the watch app (D-410). A reply too long for the watch (Wear OS).
+  ///
+  /// In en, this message translates to:
+  /// **'Continues on phone'**
+  String get watchContinuesOnPhone;
+
+  /// Shown on the watch app (D-410). A reply arrived (notification).
+  ///
+  /// In en, this message translates to:
+  /// **'Reply ready'**
+  String get watchReplyReady;
+
+  /// Shown on the watch app (D-410). Marks the person's own message.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get watchYou;
+
+  /// Shown on the watch app (D-410). Default quick reply.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get watchQuickYes;
+
+  /// Shown on the watch app (D-410). Default quick reply.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get watchQuickNo;
+
+  /// Shown on the watch app (D-410). Default quick reply.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell me more'**
+  String get watchQuickTellMore;
+
+  /// Shown on the watch app (D-410). Default quick reply.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get watchQuickNotNow;
+
+  /// Shown on the watch app (D-410). Start a routine now.
+  ///
+  /// In en, this message translates to:
+  /// **'Run Now'**
+  String get watchRunNow;
+
+  /// Shown on the watch app (D-410). A routine was started.
+  ///
+  /// In en, this message translates to:
+  /// **'Started'**
+  String get watchStarted;
+
+  /// Shown on the watch app (D-410). A routine runs soon.
+  ///
+  /// In en, this message translates to:
+  /// **'in {minutes} min'**
+  String watchInMinutes(String minutes);
+
+  /// Shown on the watch app (D-410). Empty Up next.
+  ///
+  /// In en, this message translates to:
+  /// **'No routines yet'**
+  String get watchNoRoutines;
+
+  /// Shown on the watch app (D-410). When today's brief comes.
+  ///
+  /// In en, this message translates to:
+  /// **'Brief at {time}'**
+  String watchBriefAt(String time);
+
+  /// Shown on the watch app (D-410). When tomorrow's brief comes.
+  ///
+  /// In en, this message translates to:
+  /// **'Brief at {time} tomorrow'**
+  String watchBriefTomorrow(String time);
+
+  /// Shown on the watch app (D-410). No morning brief.
+  ///
+  /// In en, this message translates to:
+  /// **'No brief set up'**
+  String get watchNoBrief;
+
+  /// Shown on the watch app (D-410). No bots.
+  ///
+  /// In en, this message translates to:
+  /// **'No bots yet. Make one on your phone'**
+  String get watchNoBots;
+
+  /// Shown on the watch app (D-410). The phone is signing the watch in.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing you in'**
+  String get watchSigningIn;
+
+  /// Shown on the watch app (D-410). After signing in.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {name}'**
+  String watchSignedInAs(String name);
+
+  /// Shown on the watch app (D-410). Waiting for the phone app.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Casama on your iPhone to finish'**
+  String get watchOpenPhoneToFinishIphone;
+
+  /// Shown on the watch app (D-410). Waiting for the phone app (Wear OS).
+  ///
+  /// In en, this message translates to:
+  /// **'Open Casama on your phone to finish'**
+  String get watchOpenPhoneToFinish;
+
+  /// Shown on the watch app (D-410). Show a code instead.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with a code'**
+  String get watchUseCode;
+
+  /// Shown on the watch app (D-410). Under the sign-in code.
+  ///
+  /// In en, this message translates to:
+  /// **'Type it in Casama on your phone or computer: Settings → Watch'**
+  String get watchCodeHelp;
+
+  /// Shown on the watch app (D-410). Get another code.
+  ///
+  /// In en, this message translates to:
+  /// **'New code'**
+  String get watchNewCode;
+
+  /// Shown on the watch app (D-410). The key was removed.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out. Open Casama on your phone to sign in again'**
+  String get watchSignedOut;
+
+  /// Shown on the watch app (D-410). Complications and tiles when signed out.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Casama to sign in'**
+  String get watchOpenToSignIn;
+
+  /// Shown on the watch app (D-410). How old what is shown is.
+  ///
+  /// In en, this message translates to:
+  /// **'as of {time}'**
+  String watchAsOf(String time);
+
+  /// Shown on the watch app (D-410). No connection.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get watchOffline;
+
+  /// Shown on the watch app (D-410). A request failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach Casama'**
+  String get watchCouldntReach;
+
+  /// Shown on the watch app (D-410). Retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get watchTryAgain;
+
+  /// Shown on the watch app (D-410). The server is too old.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your Casama server to use the watch'**
+  String get watchServerTooOld;
+
+  /// Shown on the watch app (D-410). Asking is off; answers still work.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of credits'**
+  String get watchOutOfCredits;
+
+  /// Shown on the watch app (D-410). Talk starts the call on the phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting the call on your phone'**
+  String get watchTalkOnPhone;
+
+  /// Shown on the watch app (D-410). Sign out.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out of this watch'**
+  String get watchSignOut;
+
+  /// Shown on the watch app (D-410). Switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide details when my wrist is down'**
+  String get watchHideDetails;
+
+  /// Shown on the watch app (D-410). Switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Read replies aloud'**
+  String get watchReadRepliesAloud;
+
+  /// Shown on the watch app (D-410). Which bot Ask goes to.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask uses'**
+  String get watchAskUses;
+
+  /// Shown on the watch app (D-410). The workspace the watch shows.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspace'**
+  String get watchWorkspace;
+
+  /// Shown on the watch app (D-410). Label above the person in settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as'**
+  String get watchSignedInAsLabel;
+
+  /// Shown on the watch app (D-410). Complication's name in the face editor.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs you'**
+  String get watchCompNeedsYou;
+
+  /// Shown on the watch app (D-410). Complication's name.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a bot'**
+  String get watchCompAsk;
+
+  /// Shown on the watch app (D-410). Complication's name.
+  ///
+  /// In en, this message translates to:
+  /// **'Bot'**
+  String get watchCompBot;
+
+  /// Shown on the watch app (D-410). Complication's name.
+  ///
+  /// In en, this message translates to:
+  /// **'Up next'**
+  String get watchCompUpNext;
+
+  /// Shown on the watch app (D-410). Inline complication's name.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama'**
+  String get watchCompCasama;
+
+  /// Shown on the watch app (D-410). Complication description.
+  ///
+  /// In en, this message translates to:
+  /// **'How many requests wait, and the first one'**
+  String get watchCompDescNeedsYou;
+
+  /// Shown on the watch app (D-410). Complication description.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask a bot by voice in one tap'**
+  String get watchCompDescAsk;
+
+  /// Shown on the watch app (D-410). Complication description.
+  ///
+  /// In en, this message translates to:
+  /// **'Where a bot stands and what it is doing'**
+  String get watchCompDescBot;
+
+  /// Shown on the watch app (D-410). Complication description.
+  ///
+  /// In en, this message translates to:
+  /// **'The next routine and when it runs'**
+  String get watchCompDescUpNext;
+
+  /// Shown on the watch app (D-410). Complication description.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits used this period'**
+  String get watchCompDescCredits;
+
+  /// Shown on the watch app (D-410). Curved text beside the count on a corner complication.
+  ///
+  /// In en, this message translates to:
+  /// **'need you'**
+  String get watchNeedYouShort;
+
+  /// Shown on the watch app (D-410). Control name.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask Casama'**
+  String get watchControlAsk;
+
+  /// Shown on the watch app (D-410). Control name.
+  ///
+  /// In en, this message translates to:
+  /// **'Talk to a bot'**
+  String get watchControlTalk;
+
+  /// Shown on the watch app (D-410). Control name.
+  ///
+  /// In en, this message translates to:
+  /// **'Run a routine'**
+  String get watchControlRun;
+
+  /// Shown on the watch app (D-410). Siri says what needs the person.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} need you. First: {text}'**
+  String watchSiriNeeds(String count, String text);
+
+  /// Shown in Settings → Watch on the phone (D-410). Screen title.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch'**
+  String get watchPhoneTitle;
+
+  /// Shown in Settings → Watch on the phone (D-410). Intro line.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer bots, ask by voice and see who is working, from your wrist.'**
+  String get watchPhoneIntro;
+
+  /// Shown in Settings → Watch on the phone (D-410). Section title.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed-in watches'**
+  String get watchPhoneWatches;
+
+  /// Shown in Settings → Watch on the phone (D-410). Empty list.
+  ///
+  /// In en, this message translates to:
+  /// **'No watch signed in yet. Open Casama on your watch and it signs in by itself.'**
+  String get watchPhoneNone;
+
+  /// Shown in Settings → Watch on the phone (D-410). When a watch was last used.
+  ///
+  /// In en, this message translates to:
+  /// **'Last used {time}'**
+  String watchPhoneLastUsed(String time);
+
+  /// Shown in Settings → Watch on the phone (D-410). A watch never used.
+  ///
+  /// In en, this message translates to:
+  /// **'Not used yet'**
+  String get watchPhoneNeverUsed;
+
+  /// Shown in Settings → Watch on the phone (D-410). Remove a watch.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get watchPhoneRemove;
+
+  /// Shown in Settings → Watch on the phone (D-410). Confirm removal.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name}?'**
+  String watchPhoneRemoveTitle(String name);
+
+  /// Shown in Settings → Watch on the phone (D-410). Confirm removal body.
+  ///
+  /// In en, this message translates to:
+  /// **'It signs out at once. You can sign it in again later.'**
+  String get watchPhoneRemoveBody;
+
+  /// Shown in Settings → Watch on the phone (D-410). Open the code entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in a watch with a code'**
+  String get watchPhoneUseCode;
+
+  /// Shown in Settings → Watch on the phone (D-410). Code field label.
+  ///
+  /// In en, this message translates to:
+  /// **'The code on your watch'**
+  String get watchPhoneCodeHint;
+
+  /// Shown in Settings → Watch on the phone (D-410). Confirm a code.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in {name}?'**
+  String watchPhoneCodeAsk(String name);
+
+  /// Shown in Settings → Watch on the phone (D-410). Confirm a code body.
+  ///
+  /// In en, this message translates to:
+  /// **'It will be signed in to {workspace} as you. Only allow a code shown on your own watch.'**
+  String watchPhoneCodeAskBody(String workspace);
+
+  /// Shown in Settings → Watch on the phone (D-410). Confirm a code button.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign it in'**
+  String get watchPhoneCodeAllow;
+
+  /// Shown in Settings → Watch on the phone (D-410). Wrong code.
+  ///
+  /// In en, this message translates to:
+  /// **'That code didn\'t work. Check it on your watch'**
+  String get watchPhoneCodeWrong;
+
+  /// Shown in Settings → Watch on the phone (D-410). After a watch signs in.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is signed in'**
+  String watchPhoneSignedIn(String name);
+
+  /// Shown in Settings → Watch on the phone (D-410). Setting title.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow from the watch'**
+  String get watchPhoneAllowTitle;
+
+  /// Shown in Settings → Watch on the phone (D-410). Allow level (default).
+  ///
+  /// In en, this message translates to:
+  /// **'Low and medium risk'**
+  String get watchPhoneAllowMedium;
+
+  /// Shown in Settings → Watch on the phone (D-410). Allow level description.
+  ///
+  /// In en, this message translates to:
+  /// **'Low risk in one tap, medium risk with a hold. High risk and payments always need your phone.'**
+  String get watchPhoneAllowMediumBody;
+
+  /// Shown in Settings → Watch on the phone (D-410). Allow level.
+  ///
+  /// In en, this message translates to:
+  /// **'Low risk only'**
+  String get watchPhoneAllowLow;
+
+  /// Shown in Settings → Watch on the phone (D-410). Allow level: the watch can only deny.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get watchPhoneAllowNone;
+
+  /// Shown in Settings → Watch on the phone (D-410). Switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Show details on the watch'**
+  String get watchPhoneDetails;
+
+  /// Shown in Settings → Watch on the phone (D-410). Switch description.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: the watch shows counts and bot names, not what bots wrote.'**
+  String get watchPhoneDetailsBody;
+
+  /// Shown in Settings → Watch on the phone (D-410). Section title.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick replies'**
+  String get watchPhoneQuickReplies;
+
+  /// Shown in Settings → Watch on the phone (D-410). Section description.
+  ///
+  /// In en, this message translates to:
+  /// **'Short answers you can send from a reply notification. Up to six.'**
+  String get watchPhoneQuickRepliesBody;
+
+  /// Shown in Settings → Watch on the phone (D-410). Add button.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a quick reply'**
+  String get watchPhoneQuickAdd;
+
+  /// Shown in Settings → Watch on the phone (D-410). Reset button.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the built-in replies'**
+  String get watchPhoneQuickReset;
+
+  /// Shown in Settings → Watch on the phone (D-410). Section title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Casama to your watch face'**
+  String get watchPhoneHowTo;
+
+  /// Shown in Settings → Watch on the phone (D-410). How-to (Apple Watch).
+  ///
+  /// In en, this message translates to:
+  /// **'Touch and hold your watch face, tap Edit, then choose Casama for a complication. Turn the Digital Crown on the face to find Casama in the Smart Stack.'**
+  String get watchPhoneHowToApple;
+
+  /// Shown in Settings → Watch on the phone (D-410). How-to (Wear OS).
+  ///
+  /// In en, this message translates to:
+  /// **'Touch and hold your watch face to add a Casama complication. Swipe left from the face and tap + to add a Casama tile.'**
+  String get watchPhoneHowToWear;
+
+  /// Shown in Settings → Watch on the phone (D-410). Shown while the phone signs a watch in.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing in {name}…'**
+  String watchPhoneSigningInBanner(String name);
+
+  /// Shown in Settings → Watch on the phone (D-410). With the app lock on, asks before signing a watch in.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in your watch?'**
+  String get watchPhoneLockAsk;
+
+  /// Shown in Settings → Watch on the phone (D-410). One-time nudge after the first approval.
+  ///
+  /// In en, this message translates to:
+  /// **'Casama is on your watch too. Answer bots from your wrist.'**
+  String get watchPhoneNudge;
+
+  /// Shown in Settings → Watch on the phone (D-410). Notification title for Open on phone.
+  ///
+  /// In en, this message translates to:
+  /// **'From your watch'**
+  String get watchPhoneHandoffTitle;
+
+  /// Shown in Settings → Watch on the phone (D-410). Settings row subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bots on your Apple Watch or Wear OS watch'**
+  String get watchPhoneRow;
+
+  /// Shown in Settings → Watch on the phone (D-410). Allow level description (low risk only).
+  ///
+  /// In en, this message translates to:
+  /// **'Low risk in one tap. Everything else needs your phone.'**
+  String get watchPhoneAllowLowBody;
+
+  /// Shown in Settings → Watch on the phone (D-410). Allow level description (never).
+  ///
+  /// In en, this message translates to:
+  /// **'The watch can only deny. Allow on your phone.'**
+  String get watchPhoneAllowNoneBody;
+
+  /// Shown in Settings → Watch on the phone (D-410). Under Show details, after it was turned off because the app lock is on.
+  ///
+  /// In en, this message translates to:
+  /// **'Turned off because the app lock is on, so your watch shows no words from your chats. Turn it on to see them.'**
+  String get watchPhoneDetailsLockOff;
+
+  /// Shown in Settings → Watch on the phone (D-410). Quick reply field hint.
+  ///
+  /// In en, this message translates to:
+  /// **'A short reply'**
+  String get watchPhoneQuickHint;
+
+  /// Shown in Settings → Watch on the phone (D-410). Quick reply too long.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 40 characters'**
+  String get watchPhoneQuickTooLong;
+
+  /// Shown in Settings → Watch on the phone (D-410). Tooltip: move a quick reply up.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get watchPhoneQuickMoveUp;
+
+  /// Shown in Settings → Watch on the phone (D-410). Tooltip: move a quick reply down.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get watchPhoneQuickMoveDown;
+
+  /// Shown in Settings → Watch on the phone (D-410). Tooltip: delete a quick reply.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this reply'**
+  String get watchPhoneQuickDelete;
+
+  /// Shown in Settings → Watch on the phone (D-410). Code entry sheet subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'On your watch, open Casama and choose Sign in with a code.'**
+  String get watchPhoneCodeBody;
+
+  /// Shown in Settings → Watch on the phone (D-410). Heading in the how-to.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Watch'**
+  String get watchPhoneAppleWatch;
+
+  /// Shown in Settings → Watch on the phone (D-410). Heading in the how-to.
+  ///
+  /// In en, this message translates to:
+  /// **'Wear OS'**
+  String get watchPhoneWearOs;
+
+  /// Shown on the watch app (D-410). Complication description.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is working and what they are doing'**
+  String get watchCompDescWorking;
+
+  /// Shown on the watch app (D-410). Complication description.
+  ///
+  /// In en, this message translates to:
+  /// **'This morning\'s brief'**
+  String get watchCompDescBrief;
+
+  /// Shown on the watch app (D-410). Under the sign-in code while the watch waits for it to be typed.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the code…'**
+  String get watchCodeWaiting;
+
+  /// Shown on the watch app (D-410). Screen reader label for the sign-in code.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in code {code}'**
+  String watchCodeA11y(String code);
+
+  /// Shown on the watch app (D-410). Picker title for which bot Ask, a tile or a complication uses.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a bot'**
+  String get watchChooseBot;
+
+  /// Shown on the watch app (D-410). Notification channel name (Wear OS): requests and suggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get watchChannelRequests;
+
+  /// Shown on the watch app (D-410). Notification channel name (Wear OS): replies, briefs, routine results.
+  ///
+  /// In en, this message translates to:
+  /// **'Replies'**
+  String get watchChannelReplies;
+
+  /// Shown on the watch app (D-410). Notification channel name (Wear OS): a bot working right now.
+  ///
+  /// In en, this message translates to:
+  /// **'Working bots'**
+  String get watchChannelRuns;
+
+  /// Shown on the watch app (D-410). Notification channel name (Wear OS): everything else.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get watchChannelOther;
 }
 
 class _AppLocalizationsDelegate

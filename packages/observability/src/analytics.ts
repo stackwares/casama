@@ -103,7 +103,8 @@ class PostHogProductAnalytics implements ProductAnalytics {
       app: "casama",
       environment: this.environment,
       source: "server",
-      platform: "server",
+      // A server event about a device names it (watchos, wearos: D-410); others are the server's.
+      platform: typeof opts.properties?.platform === "string" ? opts.properties.platform : "server",
       server_version: this.version,
     };
 

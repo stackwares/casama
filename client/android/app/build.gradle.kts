@@ -110,4 +110,6 @@ dependencies {
     // Widgets fresh while the app is closed (GlanceRefresh.kt, D-405). home_widget brings WorkManager
     // in with `implementation`, which doesn't reach this module.
     implementation("androidx.work:work-runtime-ktx:2.11.2")
+    // The Wear OS link (WearBridge.kt, D-410): Data Layer messages with the watch app.
+    implementation("com.google.android.gms:play-services-wearable:20.0.1")
 }

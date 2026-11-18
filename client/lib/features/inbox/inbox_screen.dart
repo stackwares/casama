@@ -33,7 +33,8 @@ import '../pages/pages_screen.dart';
 import '../skills/skill_proposals.dart';
 import 'for_you.dart';
 import '../app_lock/confirm_identity.dart';
-import '../widgets/widget_nudge.dart';
+// The one nudge after an answered request: the watch's (D-410) or the widgets' (D-405).
+import '../watch/watch_nudge.dart';
 
 /// What the Inbox shows: everything, only what waits on a decision, morning briefs, or updates
 /// (D-253: what isn't already in a bot's chat). Pages moved to the Library (D-274).
@@ -557,7 +558,7 @@ class _ApprovalCardState extends ConsumerState<ApprovalCard> {
       ref.invalidate(approvalsProvider);
       ref.invalidate(notificationsProvider);
       showMessage(context, approve ? l10n.approved : l10n.denied);
-      unawaited(nudgeWidget(context, ref, WidgetNudge.needsYou));
+      unawaited(nudgeAfterAnswer(context, ref));
       widget.onDecided?.call();
     }
   }

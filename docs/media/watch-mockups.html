@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watch mockups</title>
+<!-- Mockups for docs/WATCH-PLAN.md. Mascot art comes from client/assets/mascots.
+     Apple Watch screens are drawn at 198 x 242 points (45 mm), Wear OS at 220 dp round. -->
+<style>
+  .km { font-family: var(--font-sans, system-ui); color: var(--foreground, #1d1b20); font-size: 12px; line-height: 1.35; }
+  .km * { box-sizing: border-box; }
+  .km h3 { font-size: 14px; font-weight: 650; margin: 0 0 2px; }
+  .km .note { color: var(--muted-foreground, #6b6873); font-size: 12.5px; margin: 0 0 14px; max-width: 72ch; }
+  .km section + section { margin-top: 38px; }
+  .km .row3 { display: grid; grid-template-columns: repeat(3, 222px); gap: 22px 18px; justify-content: center; }
+  .km figure { margin: 0; }
+  .km figcaption { color: var(--muted-foreground, #6b6873); font-size: 11.5px; margin-top: 8px; text-align: center; padding: 0 4px; }
+  .km figcaption b { color: var(--foreground, #1d1b20); font-weight: 650; display: block; }
+  @media (max-width: 720px) { .km .row3 { grid-template-columns: repeat(2, 222px); } }
+  @media (max-width: 480px) { .km .row3 { grid-template-columns: 222px; } }
+
+  /* ---------- shared tokens (both watches are dark: black is the plain background) ---------- */
+  .scr { --fg: #fff; --fg2: rgba(235,235,245,.66); --fg3: rgba(235,235,245,.38); --plat: #1c1c1f; --plat2: #2a2a2e;
+         --pri: #f2b0ec; --pri-fill: #9c3a9e; --wait: #f0a84a; --work: #5fd49a; --stop: #ff7a7a; --info: #6e9bff;
+         background: #000; color: var(--fg); position: relative; overflow: hidden; }
+  .scr svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .scr svg.f { fill: currentColor; stroke: none; }
+  .mk { object-fit: contain; flex: none; width: 30px; height: 30px; }
+  .ini { flex: none; width: 26px; height: 26px; border-radius: 9px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 12px;
+         background: linear-gradient(135deg, #6366f1, #4338ca); }
+  .wait { color: var(--wait); } .work { color: var(--work); } .pri { color: var(--pri); } .dim { color: var(--fg2); }
+  .one { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .c2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .c3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .r { display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .r .t { flex: 1; min-width: 0; }
+  .sp { flex: 1; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--work); display: inline-block; margin-right: 4px; vertical-align: 1px; }
+  .dot.wait { background: var(--wait); } .dot.info { background: var(--info); } .dot.high { background: var(--stop); }
+  .bar { display: inline-block; height: 8px; border-radius: 4px; background: var(--fg3); vertical-align: middle; }
+
+  /* ---------- Apple Watch ---------- */
+  .aw { width: 222px; }
+  .aw .case { width: 214px; margin: 0 auto; padding: 8px; border-radius: 54px; position: relative;
+              background: linear-gradient(150deg, #4a4a50, #1d1d20 60%); box-shadow: 0 10px 26px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.12); }
+  .aw .case::before { content: ""; position: absolute; right: -5px; top: 62px; width: 7px; height: 30px; border-radius: 3px; background: linear-gradient(90deg, #2a2a2d, #5a5a60); }
+  .aw .case::after  { content: ""; position: absolute; right: -3px; top: 112px; width: 4px; height: 44px; border-radius: 2px; background: #333337; }
+  .aw .scr { width: 198px; height: 242px; border-radius: 46px; display: flex; flex-direction: column;
+             font-family: ui-rounded, "SF Compact Rounded", "SF Pro Rounded", -apple-system, system-ui, sans-serif; font-size: 13.5px; line-height: 1.25; }
+  .aw .top { height: 34px; padding: 9px 16px 0 14px; display: flex; align-items: center; justify-content: space-between; font-size: 13.5px; font-weight: 650; flex: none; }
+  .aw .top .clk { color: var(--fg); font-variant-numeric: tabular-nums; }
+  .aw .body { flex: 1; padding: 2px 8px 0; display: flex; flex-direction: column; gap: 5px; min-height: 0; }
+  .aw .card { background: var(--plat); border-radius: 17px; padding: 8px 10px; }
+  .aw .card.needs { background: linear-gradient(180deg, rgba(240,168,74,.26), rgba(240,168,74,.13)); }
+  .aw .card.live  { background: linear-gradient(180deg, rgba(95,212,154,.22), rgba(95,212,154,.10)); }
+  .aw .eyebrow { font-size: 10.5px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase; }
+  .aw .h { font-size: 15px; font-weight: 650; line-height: 1.2; }
+  .aw .s { font-size: 12px; color: var(--fg2); }
+  .aw .tm { font-variant-numeric: tabular-nums; font-weight: 650; }
+  .g { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; flex: none;
+       background: rgba(255,255,255,.15); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14), inset 0 1px 0 rgba(255,255,255,.22); }
+  .g.sm { width: 26px; height: 26px; } .g.sm svg { width: 13px; height: 13px; }
+  .g.lg { width: 46px; height: 46px; } .g.lg svg { width: 21px; height: 21px; }
+  .g.pri { background: linear-gradient(180deg, #b651b8, #8e3190); } .g.stop { background: rgba(255,122,122,.22); color: var(--stop); }
+  .g.end { background: linear-gradient(180deg, #ff6f6f, #dd4444); }
+  .aw .bbar { flex: none; height: 58px; padding: 0 14px 10px; display: flex; align-items: flex-end; justify-content: space-between; }
+  .cap { border-radius: 999px; padding: 8px 12px; font-size: 14px; font-weight: 650; text-align: center; background: var(--plat2); }
+  .cap.ok { background: var(--wait); color: #201300; } .cap.go { background: var(--pri-fill); } .cap.sm { padding: 6px 10px; font-size: 12.5px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 2px 8px; font-size: 10.5px; font-weight: 700; background: rgba(255,255,255,.12); }
+  .ring { border-radius: 50%; display: grid; place-items: center; flex: none; }
+  .bub { border-radius: 15px; padding: 6px 9px; font-size: 12.5px; max-width: 86%; }
+  .bub.me { background: var(--pri-fill); align-self: flex-end; border-bottom-right-radius: 5px; }
+  .bub.bot { background: var(--plat); align-self: flex-start; border-bottom-left-radius: 5px; }
+  .wave { display: flex; align-items: center; gap: 3px; height: 20px; justify-content: center; }
+  .wave i { width: 3px; border-radius: 2px; background: var(--pri); }
+  /* notification long look */
+  .aw .sash { height: 30px; padding: 9px 14px 0; display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 750; letter-spacing: .05em; color: var(--pri); flex: none; }
+  .aw .sash .ic { width: 17px; height: 17px; border-radius: 50%; background: #fff; display: grid; place-items: center; }
+  .aw .sash .ic img { width: 14px; height: 14px; }
+  /* watch face */
+  .face { align-items: stretch; background: radial-gradient(120% 90% at 50% 0%, #3a1539 0%, #08060a 62%) !important; }
+  .face .inl { text-align: center; font-size: 11.5px; font-weight: 650; padding-top: 12px; color: var(--pri); }
+  .face .time { text-align: center; font-size: 58px; font-weight: 700; line-height: 1; letter-spacing: -.03em; margin: 2px 0 6px; font-variant-numeric: tabular-nums; }
+  .face .rect { margin: 0 12px; padding: 7px 10px; border-radius: 14px; background: rgba(255,255,255,.08); }
+  .face .circs { display: flex; justify-content: space-around; padding: 9px 14px 0; }
+  .circ { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.1); display: grid; place-items: center; text-align: center; position: relative; }
+  .circ b { font-size: 19px; font-weight: 750; line-height: 1; display: block; }
+  .circ small { font-size: 7px; font-weight: 750; letter-spacing: .05em; display: block; opacity: .8; }
+  .circ.gauge { background: conic-gradient(from 225deg, var(--pri) 0 46%, rgba(255,255,255,.18) 46% 75%, transparent 75%); }
+  .circ.gauge::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: #0c0a12; }
+  .circ.gauge span { position: relative; font-size: 12px; font-weight: 750; }
+  .stack { background: #000; padding: 0 8px; gap: 6px; }
+  .stack .w { border-radius: 22px; padding: 9px 11px; background: var(--plat); }
+
+  /* ---------- Wear OS ---------- */
+  .wo { width: 222px; }
+  .wo .case { width: 222px; height: 222px; border-radius: 50%; padding: 7px; margin: 0 auto; position: relative;
+              background: linear-gradient(150deg, #55555b, #18181a 62%); box-shadow: 0 10px 26px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.12); }
+  .wo .case::before { content: ""; position: absolute; right: -6px; top: 96px; width: 9px; height: 30px; border-radius: 4px; background: linear-gradient(90deg, #2a2a2d, #66666c); }
+  .wo .scr { --plat: #231d22; --plat2: #383037; --pri: #f2b0ec; --on-pri: #4a1249; --tone: #6b1f69; --on-tone: #faddf5;
+             width: 208px; height: 208px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; text-align: center;
+             font-family: "Google Sans Flex", "Google Sans", "Roboto Flex", Roboto, system-ui, sans-serif; font-size: 13px; line-height: 1.25; }
+  .wo .clk { font-size: 11px; font-weight: 600; padding-top: 9px; height: 26px; flex: none; color: var(--fg2); font-variant-numeric: tabular-nums; }
+  .wo .body { flex: 1; width: 100%; padding: 0 22px; display: flex; flex-direction: column; align-items: center; gap: 5px; min-height: 0; }
+  .wo .h { font-size: 15px; font-weight: 600; line-height: 1.2; }
+  .wo .s { font-size: 11.5px; color: var(--fg2); }
+  .wo .card { width: 100%; background: var(--plat); border-radius: 22px; padding: 8px 12px; text-align: left; }
+  .wo .card.needs { background: #4a3413; color: #ffe2b0; } .wo .card.needs .s { color: #e9c995; }
+  .wo .card.live { background: #17382a; } .wo .card.live .s { color: #b5e6cd; }
+  .wo .edge { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 136px; height: 44px; display: flex; align-items: center; justify-content: center; gap: 6px;
+              background: var(--pri); color: var(--on-pri); font-weight: 650; font-size: 14px; padding-bottom: 5px;
+              border-radius: 22px 22px 68px 68px / 20px 20px 44px 44px; }
+  .wo .edge.ok { background: var(--wait); color: #2b1a00; }
+  .wo .edge.stop { background: #5c1f1a; color: #ffb4a9; }
+  .wo .tb { border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; background: var(--tone); color: var(--on-tone); }
+  .wo .fab { width: 54px; height: 54px; border-radius: 20px; background: var(--pri); color: var(--on-pri); display: grid; place-items: center; }
+  .wo .fab svg { width: 24px; height: 24px; }
+  .wo .ib { width: 36px; height: 36px; border-radius: 50%; background: var(--tone); color: var(--on-tone); display: grid; place-items: center; }
+  .wo .arc { position: absolute; inset: 4px; border-radius: 50%; padding: 4px;
+             background: conic-gradient(from 210deg, var(--work) 0 38%, rgba(255,255,255,.14) 38% 83.3%, transparent 83.3%);
+             -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+  .wo .wface { background: radial-gradient(110% 110% at 50% 20%, #3a1539, #060406 70%) !important; }
+  .wo .wface .time { font-size: 46px; font-weight: 500; letter-spacing: -.02em; line-height: 1; margin-top: 30px; font-variant-numeric: tabular-nums; }
+  .wo .slot { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.2); display: grid; place-items: center; font-size: 15px; font-weight: 650; position: relative; }
+  .wo .slot small { position: absolute; bottom: 4px; font-size: 6.5px; font-weight: 700; letter-spacing: .04em; color: var(--fg2); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-kbd" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M7 10h.01M11 10h.01M15 10h.01M8 14h8"/></symbol>
+  <symbol id="i-spk" viewBox="0 0 24 24"><path d="M4 10v4h3l5 4V6L7 10z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></symbol>
+  <symbol id="i-end" viewBox="0 0 24 24"><path d="M3 14c5-5 13-5 18 0l-2.5 2.5-3-1.5v-2.5a9 9 0 0 0-7 0V15l-3 1.5z"/></symbol>
+  <symbol id="i-mute" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-bots" viewBox="0 0 24 24"><circle cx="8" cy="9" r="3"/><circle cx="16.5" cy="10" r="2.5"/><path d="M2.5 19c.6-3 2.8-4.5 5.5-4.5s4.9 1.500 5.500 4.500M15 14.700c2.600-.300 5 1 5.800 4"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.800"/><path d="M11 18.500h2"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5.500" y="10.500" width="13" height="9.500" rx="2.500"/><path d="M8.500 10.500V8a3.500 3.500 0 0 1 7 0v2.500"/></symbol>
+  <symbol id="i-off" viewBox="0 0 24 24"><path d="M3 9a14 14 0 0 1 4-2.700M21 9a14 14 0 0 0-8-3.400M6.500 12.500a9 9 0 0 1 3-1.900M17.500 12.500a9 9 0 0 0-2.500-1.700M9.500 16a4 4 0 0 1 5 0M12 19.500h.010M4 4l16 16"/></symbol>
+  <symbol id="i-tap" viewBox="0 0 24 24"><path d="M9 11V5.500a1.500 1.500 0 0 1 3 0V11l4.200.900a2 2 0 0 1 1.600 2.300l-.700 3.900a3 3 0 0 1-3 2.400H11a3 3 0 0 1-2.500-1.300L5.500 15a1.500 1.500 0 0 1 2.300-1.900z"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.500-7.970A5.500 5.500 0 0 1 17 9.500a4.250 4.250 0 0 1 .500 8.500z"/></symbol>
+</svg>
+<div class="km">
+
+<!-- ======================= APPLE WATCH: THE APP ======================= -->
+<section>
+  <h3>Apple Watch · the app</h3>
+  <p class="note">One list, most urgent first, and one big button to ask. Amber is only ever "needs you", green is only ever "working". Every screen is readable in two seconds and finished in one tap.</p>
+  <div class="row3">
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="top"><span></span><div class="clk">9:41</div></div>
+      <div class="body">
+        <div class="card needs">
+          <div class="r"><div class="eyebrow wait" style="flex:1">Needs you · 2</div></div>
+          <div class="r" style="margin-top:4px"><img class="mk" src="../../client/assets/mascots/winky.png" alt=""><div class="t"><div class="h one">Look up flights</div><div class="s one">Milo · low risk</div></div></div>
+        </div>
+        <div class="card live">
+          <div class="r"><img class="mk" style="width:26px;height:26px" src="../../client/assets/mascots/focused.png" alt=""><div class="t"><div class="r"><div class="h one" style="font-size:13.5px;flex:1">Ada</div><div class="s tm work">2:14</div></div><div class="s one" style="color:#b9ecd3">Reading your inbox</div></div></div>
+        </div>
+      </div>
+      <div class="bbar"><div class="g"><svg><use href="#i-bots"/></svg></div><div class="g lg pri"><svg><use href="#i-mic"/></svg></div><div class="g"><svg><use href="#i-clock"/></svg></div></div>
+    </div></div><figcaption><b>Now</b>What needs you, then who's working. Double Tap presses the mic.</figcaption></figure>
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="top"><div class="g sm"><svg><use href="#i-back"/></svg></div><div class="clk">9:41</div></div>
+      <div class="body" style="padding:0 10px">
+        <div class="r"><img class="mk" style="width:34px;height:34px" src="../../client/assets/mascots/winky.png" alt=""><div class="t"><div class="s">Milo wants to</div><div class="h">Look up flights</div></div></div>
+        <div class="s c2" style="margin-top:1px">Search flight prices from Manila to Lisbon, 12 to 20 June</div>
+        <div><span class="chip"><span class="dot info" style="margin:0"></span>Low risk</span></div>
+        <div class="sp"></div>
+        <div class="cap ok">Allow</div>
+        <div class="cap sm" style="margin-bottom:10px">Deny</div>
+      </div>
+    </div></div><figcaption><b>Allow or deny</b>What it wants, in everyday words. Low risk is one tap.</figcaption></figure>
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="top"><div class="g sm"><svg><use href="#i-back"/></svg></div><div class="clk">9:41</div></div>
+      <div class="body" style="padding:0 10px">
+        <div class="r"><img class="mk" style="width:30px;height:30px" src="../../client/assets/mascots/focused.png" alt=""><div class="t"><div class="s">Ada wants to</div><div class="h">Send an email</div></div></div>
+        <div class="card" style="padding:7px 9px"><div class="s one">To Sam Lee</div><div class="c2" style="font-size:12.5px">"Friday at 3 works for me. See you then."</div></div>
+        <div><span class="chip wait"><span class="dot wait" style="margin:0"></span>Medium risk</span></div>
+        <div class="sp"></div>
+        <div class="cap ok" style="margin-bottom:10px">Hold to allow</div>
+      </div>
+    </div></div><figcaption><b>Medium risk</b>Shows what will be sent. Allow needs a hold, so a stray touch can't send it.</figcaption></figure>
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="top"><div class="r" style="gap:5px"><img class="mk" style="width:22px;height:22px" src="../../client/assets/mascots/winky.png" alt=""><span class="pri">Milo</span><svg class="dim" style="width:11px;height:11px;transform:rotate(-90deg)"><use href="#i-back"/></svg></div><div class="clk">9:41</div></div>
+      <div class="body" style="align-items:center">
+        <div class="sp"></div>
+        <div class="g pri" style="width:58px;height:58px;box-shadow:0 0 0 7px rgba(242,176,236,.17), 0 0 0 15px rgba(242,176,236,.08)"><svg style="width:26px;height:26px"><use href="#i-mic"/></svg></div>
+        <div class="s pri" style="margin:9px 0 3px;font-weight:650">Listening…</div>
+        <div class="cap sm one" style="width:100%;text-align:left">🧾 Sum up my inbox</div>
+        <div class="cap sm one" style="width:100%;text-align:left;margin-bottom:9px">🗓 Plan my Friday</div>
+      </div>
+    </div></div><figcaption><b>Ask</b>Already listening when it opens. Or tap one of your starters; the keyboard is one scroll down.</figcaption></figure>
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="top"><div class="g sm"><svg><use href="#i-back"/></svg></div><div class="clk">9:41</div></div>
+      <div class="body" style="align-items:center;text-align:center">
+        <div class="ring" style="width:78px;height:78px;background:conic-gradient(var(--work) 0 34%, rgba(255,255,255,.12) 0)"><div class="ring" style="width:68px;height:68px;background:#000"><img class="mk" style="width:54px;height:54px" src="../../client/assets/mascots/winky.png" alt=""></div></div>
+        <div class="h" style="margin-top:3px">Milo is working</div>
+        <div class="s c2" style="padding:0 6px">Searching flights to Lisbon</div>
+      </div>
+      <div class="bbar"><div class="s tm work" style="padding:0 0 8px 4px">0:42</div><div class="g stop"><svg class="f"><use href="#i-stop"/></svg></div></div>
+    </div></div><figcaption><b>Working</b>The step in everyday words, a running clock, and Stop.</figcaption></figure>
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="top"><div class="r" style="gap:5px"><img class="mk" style="width:22px;height:22px" src="../../client/assets/mascots/winky.png" alt=""><span class="pri">Milo</span></div><div class="clk">9:42</div></div>
+      <div class="body" style="padding:0 12px">
+        <div style="font-size:14px;line-height:1.3">Cheapest is <b>TAP via Dubai, $612</b>, leaving 12 June at 21:40. Two more under $700. Want me to hold the TAP fare?</div>
+      </div>
+      <div class="bbar"><div class="g"><svg><use href="#i-spk"/></svg></div><div class="g lg pri"><svg><use href="#i-mic"/></svg></div><div class="g"><svg><use href="#i-phone"/></svg></div></div>
+    </div></div><figcaption><b>Reply</b>Read it, hear it, answer it, or carry on at the iPhone.</figcaption></figure>
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="top"><span class="pri">Bots</span><div class="clk">9:41</div></div>
+      <div class="body">
+        <div class="card r"><img class="mk" src="../../client/assets/mascots/winky.png" alt=""><div class="t"><div class="h one">Milo</div><div class="s one"><span class="dot wait"></span><span class="wait">Waiting for you</span></div></div></div>
+        <div class="card r"><img class="mk" src="../../client/assets/mascots/focused.png" alt=""><div class="t"><div class="h one">Ada</div><div class="s one"><span class="dot"></span><span class="work">Working</span> · 2:14</div></div></div>
+        <div class="card r"><div class="ini" style="width:30px;height:30px">S</div><div class="t"><div class="h one">Scout</div><div class="s one">Replied at 9:20</div></div></div>
+      </div>
+    </div></div><figcaption><b>Bots</b>Each bot's own face and where it stands. The crown scrolls.</figcaption></figure>
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="top"><span class="pri">Up next</span><div class="clk">9:41</div></div>
+      <div class="body">
+        <div class="card r"><div class="t"><div class="h one">Morning brief</div><div class="s one"><span class="tm" style="color:#fff">7:00</span> · Milo</div></div><div class="g sm"><svg class="f"><use href="#i-play"/></svg></div></div>
+        <div class="card r"><div class="t"><div class="h one">Inbox sweep</div><div class="s one"><span class="tm" style="color:#fff">9:00</span> · Ada</div></div><div class="g sm"><svg class="f"><use href="#i-play"/></svg></div></div>
+        <div class="card r"><div class="t"><div class="h one">Weekly report</div><div class="s one"><span class="tm" style="color:#fff">Fri 16:00</span> · Scout</div></div><div class="g sm"><svg class="f"><use href="#i-play"/></svg></div></div>
+      </div>
+    </div></div><figcaption><b>Routines</b>What runs next. Play runs one now, with a tick and a tap on the wrist.</figcaption></figure>
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="top"><span class="work tm">0:32</span><div class="clk">9:41</div></div>
+      <div class="body" style="align-items:center;text-align:center">
+        <img class="mk" style="width:58px;height:58px" src="../../client/assets/mascots/winky.png" alt="">
+        <div class="wave"><i style="height:6px"></i><i style="height:14px"></i><i style="height:20px"></i><i style="height:10px"></i><i style="height:17px"></i><i style="height:7px"></i><i style="height:13px"></i></div>
+        <div class="s c2" style="padding:0 4px">"…three flights under seven hundred dollars."</div>
+      </div>
+      <div class="bbar"><div class="g"><svg><use href="#i-mute"/></svg></div><div class="g lg end"><svg class="f"><use href="#i-end"/></svg></div><div class="g"><svg><use href="#i-spk"/></svg></div></div>
+    </div></div><figcaption><b>Talk</b>A live call on the wrist, with captions. Last phase.</figcaption></figure>
+
+  </div>
+</section>
+
+<!-- ======================= APPLE WATCH: NOTIFICATIONS ======================= -->
+<section>
+  <h3>Apple Watch · notifications</h3>
+  <p class="note">Most of what people do on a watch starts with a tap on the wrist. Each kind gets its own layout and buttons that finish the job on the watch.</p>
+  <div class="row3">
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="sash"><div class="ic"><img src="../../client/assets/mascots/winky.png" alt=""></div>CASAMA<div class="sp"></div><span style="color:var(--fg2);font-weight:600;letter-spacing:0">now</span></div>
+      <div class="body" style="padding:2px 10px 0">
+        <div class="eyebrow wait">Needs your OK</div>
+        <div class="h">Milo: look up flights</div>
+        <div class="s c2">Search flight prices from Manila to Lisbon</div>
+        <div class="sp"></div>
+        <div class="cap ok sm">Allow</div>
+        <div class="cap sm">Deny</div>
+        <div class="cap sm" style="margin-bottom:-14px;opacity:.6">Dismiss</div>
+      </div>
+    </div></div><figcaption><b>A bot needs your OK</b>Allow is the first button, so Double Tap answers it hands free.</figcaption></figure>
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="sash"><div class="ic"><img src="../../client/assets/mascots/winky.png" alt=""></div>CASAMA<div class="sp"></div><span style="color:var(--fg2);font-weight:600;letter-spacing:0">2m</span></div>
+      <div class="body" style="padding:2px 10px 0">
+        <div class="h pri">Milo</div>
+        <div class="c3" style="font-size:13px">Cheapest is TAP via Dubai, $612, leaving 12 June. Want me to hold the fare?</div>
+        <div class="sp"></div>
+        <div class="r" style="gap:5px"><div class="cap sm" style="flex:1">Yes</div><div class="cap sm" style="flex:1">No</div></div>
+        <div class="cap go sm r" style="justify-content:center;margin-bottom:8px"><svg style="width:13px;height:13px"><use href="#i-mic"/></svg>Reply</div>
+      </div>
+    </div></div><figcaption><b>A reply is ready</b>Your quick replies, or speak your own.</figcaption></figure>
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="sash"><div class="ic"><img src="../../client/assets/mascots/focused.png" alt=""></div>CASAMA<div class="sp"></div><span style="color:var(--fg2);font-weight:600;letter-spacing:0">7:02</span></div>
+      <div class="body" style="padding:2px 10px 0">
+        <div class="eyebrow pri">Ada suggests</div>
+        <div class="h">Move the dentist to Friday?</div>
+        <div class="s c2">Thursday clashes with the Acme call at 2.</div>
+        <div class="sp"></div>
+        <div class="cap go sm">Do It</div>
+        <div class="cap sm" style="margin-bottom:8px">Not now</div>
+      </div>
+    </div></div><figcaption><b>A suggestion</b>Do It starts the work and says so with a tick.</figcaption></figure>
+
+  </div>
+</section>
+
+<!-- ======================= APPLE WATCH: FACE, SMART STACK, CONTROLS ======================= -->
+<section>
+  <h3>Apple Watch · the watch face, the Smart Stack and controls</h3>
+  <p class="note">Knowing without opening anything. Complications show the count and the next thing; the Smart Stack brings the right card up by itself when a bot needs you or is working.</p>
+  <div class="row3">
+
+    <figure class="aw"><div class="case"><div class="scr face">
+      <div class="inl">2 need you</div>
+      <div class="time">9:41</div>
+      <div class="rect"><div class="r"><svg class="wait" style="width:13px;height:13px"><use href="#i-cloud"/></svg><div class="t"><div class="one" style="font-size:12px;font-weight:700">Milo needs your OK</div><div class="s one" style="font-size:11px">Look up flights</div></div></div></div>
+      <div class="circs">
+        <div class="circ"><div><b class="wait">2</b><small>NEED</small></div></div>
+        <div class="circ gauge"><span>62</span></div>
+        <div class="circ"><img class="mk" style="width:30px;height:30px" src="../../client/assets/mascots/winky.png" alt=""></div>
+      </div>
+    </div></div><figcaption><b>Complications</b>A line, a card, the count, credits, and a bot to ask.</figcaption></figure>
+
+    <figure class="aw"><div class="case"><div class="scr stack">
+      <div class="top" style="padding:9px 8px 0;justify-content:center"><div class="clk">9:41</div></div>
+      <div class="w" style="background:linear-gradient(180deg, rgba(95,212,154,.24), rgba(95,212,154,.10))"><div class="r"><img class="mk" style="width:26px;height:26px" src="../../client/assets/mascots/focused.png" alt=""><div class="t"><div class="r"><div class="h one" style="font-size:13.5px;flex:1">Ada</div><div class="s tm work">2:14</div></div><div class="s one" style="color:#b9ecd3">Reading your inbox</div></div></div></div>
+      <div class="w" style="background:linear-gradient(180deg, rgba(240,168,74,.26), rgba(240,168,74,.12))"><div class="r"><div class="t"><div class="eyebrow wait">Milo needs you</div><div class="h one" style="font-size:13px">Look up flights</div></div><div class="cap ok sm" style="padding:5px 10px;font-size:12px">Allow</div></div></div>
+      <div class="w"><div class="r"><div class="t"><div class="eyebrow dim">Up next · 7:00</div><div class="h one" style="font-size:13.5px">Morning brief</div></div><div class="g sm"><svg class="f"><use href="#i-play"/></svg></div></div></div>
+    </div></div><figcaption><b>Smart Stack</b>A running bot, a request with Allow in place, and what runs next.</figcaption></figure>
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="top" style="justify-content:center"><div class="clk">9:41</div></div>
+      <div class="body" style="align-items:center;justify-content:center;gap:9px">
+        <div class="r" style="gap:10px">
+          <div style="text-align:center"><div class="g pri" style="width:50px;height:50px;margin:0 auto 3px"><svg style="width:22px;height:22px"><use href="#i-mic"/></svg></div><div class="s">Ask</div></div>
+          <div style="text-align:center"><div class="g" style="width:50px;height:50px;margin:0 auto 3px"><svg style="width:22px;height:22px"><use href="#i-spk"/></svg></div><div class="s">Talk</div></div>
+          <div style="text-align:center"><div class="g" style="width:50px;height:50px;margin:0 auto 3px"><svg class="f" style="width:20px;height:20px"><use href="#i-play"/></svg></div><div class="s">Brief</div></div>
+        </div>
+        <div class="s" style="text-align:center;padding:0 10px 10px">Control Center, the Smart Stack, or the Action button</div>
+      </div>
+    </div></div><figcaption><b>Controls</b>Ask, talk, or run a routine without finding the app.</figcaption></figure>
+
+  </div>
+</section>
+
+<!-- ======================= WEAR OS: THE APP ======================= -->
+<section>
+  <h3>Wear OS · the app</h3>
+  <p class="note">The same screens, in the watch's own language: round layouts, a button that hugs the bottom edge, colours that follow the watch face, and the crown or bezel to scroll.</p>
+  <div class="row3">
+
+    <figure class="wo"><div class="case"><div class="scr">
+      <div class="clk">9:41</div>
+      <div class="body" style="padding:0 20px">
+        <div class="card needs"><div class="one" style="font-size:10.5px;font-weight:700;letter-spacing:.03em">NEEDS YOU · 2</div><div class="r" style="margin-top:2px"><img class="mk" style="width:26px;height:26px" src="../../client/assets/mascots/winky.png" alt=""><div class="t"><div class="h one" style="font-size:13.5px">Look up flights</div><div class="s one">Milo · low risk</div></div></div></div>
+        <div class="card live" style="padding:7px 12px"><div class="r"><img class="mk" style="width:22px;height:22px" src="../../client/assets/mascots/focused.png" alt=""><div class="t s one">Ada · working</div><div class="s work" style="font-weight:650">2:14</div></div></div>
+      </div>
+      <div class="edge"><svg><use href="#i-mic"/></svg>Ask</div>
+    </div></div><figcaption><b>Now</b>Needs you first, then who's working. Ask hugs the edge.</figcaption></figure>
+
+    <figure class="wo"><div class="case"><div class="scr">
+      <div class="clk">9:41</div>
+      <div class="body">
+        <img class="mk" style="width:30px;height:30px" src="../../client/assets/mascots/winky.png" alt="">
+        <div class="s" style="margin-top:-3px">Milo wants to</div>
+        <div class="h">Look up flights</div>
+        <div class="s one" style="max-width:150px">Manila to Lisbon</div>
+        <div class="tb" style="padding:4px 16px;margin-top:2px">Deny</div>
+      </div>
+      <div class="edge ok"><svg><use href="#i-check"/></svg>Allow</div>
+    </div></div><figcaption><b>Allow or deny</b>Allow is the edge button. Deny sits above it, smaller.</figcaption></figure>
+
+    <figure class="wo"><div class="case"><div class="scr">
+      <div class="clk">9:41</div>
+      <div class="body">
+        <div class="r" style="gap:5px;justify-content:center"><img class="mk" style="width:20px;height:20px" src="../../client/assets/mascots/winky.png" alt=""><span class="pri" style="font-weight:600">Milo</span></div>
+        <div class="fab" style="margin:3px 0 2px"><svg><use href="#i-mic"/></svg></div>
+        <div class="tb one" style="max-width:158px">🧾 Sum up my inbox</div>
+        <div class="tb one" style="max-width:146px">🗓 Plan my Friday</div>
+      </div>
+    </div></div><figcaption><b>Ask</b>Speak, or tap a starter. The keyboard is one scroll down.</figcaption></figure>
+
+    <figure class="wo"><div class="case"><div class="scr">
+      <div class="arc"></div>
+      <div class="clk">9:41</div>
+      <div class="body">
+        <img class="mk" style="width:50px;height:50px;margin-top:2px" src="../../client/assets/mascots/winky.png" alt="">
+        <div class="h">Milo is working</div>
+        <div class="s c2">Searching flights to Lisbon</div>
+        <div class="s work" style="font-weight:650">0:42</div>
+      </div>
+      <div class="edge stop" style="width:112px;height:38px"><svg class="f" style="width:13px;height:13px"><use href="#i-stop"/></svg>Stop</div>
+    </div></div><figcaption><b>Working</b>Progress runs round the edge. It also shows on the watch face while it runs.</figcaption></figure>
+
+    <figure class="wo"><div class="case"><div class="scr">
+      <div class="clk">9:42</div>
+      <div class="body" style="padding:0 24px">
+        <div class="pri" style="font-weight:600;font-size:12px">Milo</div>
+        <div style="font-size:13px;line-height:1.28">Cheapest is <b>TAP via Dubai, $612</b>, leaving 12 June. Want me to hold the fare?</div>
+        <div class="r" style="gap:8px;margin-top:3px"><div class="ib"><svg><use href="#i-spk"/></svg></div><div class="ib" style="background:var(--pri);color:var(--on-pri);width:44px;height:44px"><svg style="width:20px;height:20px"><use href="#i-mic"/></svg></div><div class="ib"><svg><use href="#i-phone"/></svg></div></div>
+      </div>
+    </div></div><figcaption><b>Reply</b>Hear it, answer it, or open it on the phone.</figcaption></figure>
+
+    <figure class="wo"><div class="case"><div class="scr">
+      <div class="clk">9:41</div>
+      <div class="body" style="padding:0 18px">
+        <div class="pri" style="font-weight:600;font-size:12px">Up next</div>
+        <div class="card r" style="padding:7px 8px 7px 13px"><div class="t"><div class="h one" style="font-size:13px">Morning brief</div><div class="s one"><span style="color:#fff;font-weight:600">7:00</span> · Milo</div></div><div class="ib" style="width:30px;height:30px"><svg class="f" style="width:13px;height:13px"><use href="#i-play"/></svg></div></div>
+        <div class="card r" style="padding:7px 8px 7px 13px"><div class="t"><div class="h one" style="font-size:13px">Inbox sweep</div><div class="s one"><span style="color:#fff;font-weight:600">9:00</span> · Ada</div></div><div class="ib" style="width:30px;height:30px"><svg class="f" style="width:13px;height:13px"><use href="#i-play"/></svg></div></div>
+        <div class="card" style="width:78%;padding:6px 12px;opacity:.55"><div class="h one" style="font-size:12px">Weekly report</div></div>
+      </div>
+    </div></div><figcaption><b>Routines</b>Rows shrink toward the edge as they scroll, as the system's own lists do.</figcaption></figure>
+
+  </div>
+</section>
+
+<!-- ======================= WEAR OS: TILES, FACE, NOTIFICATION ======================= -->
+<section>
+  <h3>Wear OS · tiles, the watch face and notifications</h3>
+  <p class="note">Tiles are one swipe from the watch face. Each answers one question and has one button.</p>
+  <div class="row3">
+
+    <figure class="wo"><div class="case"><div class="scr">
+      <div class="clk" style="color:var(--wait);font-weight:700;letter-spacing:.03em">NEEDS YOU</div>
+      <div class="body">
+        <div style="font-size:38px;font-weight:600;line-height:1;color:var(--wait)">2</div>
+        <div class="r" style="justify-content:center;gap:5px"><img class="mk" style="width:22px;height:22px" src="../../client/assets/mascots/winky.png" alt=""><div class="h" style="font-size:13.5px">Milo: look up flights</div></div>
+        <div class="s">Low risk</div>
+      </div>
+      <div class="edge ok"><svg><use href="#i-check"/></svg>Allow</div>
+    </div></div><figcaption><b>Needs you tile</b>The count, the first request, and Allow.</figcaption></figure>
+
+    <figure class="wo"><div class="case"><div class="scr">
+      <div class="clk pri" style="font-weight:700;letter-spacing:.03em">ASK MILO</div>
+      <div class="body">
+        <img class="mk" style="width:44px;height:44px" src="../../client/assets/mascots/winky.png" alt="">
+        <div class="tb one" style="max-width:158px">🧾 Sum up my inbox</div>
+        <div class="tb one" style="max-width:140px">🗓 Plan my Friday</div>
+      </div>
+      <div class="edge"><svg><use href="#i-mic"/></svg>Speak</div>
+    </div></div><figcaption><b>Ask tile</b>Starters that change through the day keep it from being a launcher.</figcaption></figure>
+
+    <figure class="wo"><div class="case"><div class="scr">
+      <div class="clk" style="font-weight:700;letter-spacing:.03em">UP NEXT</div>
+      <div class="body">
+        <div style="font-size:30px;font-weight:600;line-height:1.05;margin-top:4px">7:00</div>
+        <div class="h">Morning brief</div>
+        <div class="s">Milo · every day</div>
+        <div class="s" style="margin-top:2px">then 9:00 Inbox sweep</div>
+      </div>
+      <div class="edge" style="background:var(--tone);color:var(--on-tone)"><svg class="f" style="width:13px;height:13px"><use href="#i-play"/></svg>Run Now</div>
+    </div></div><figcaption><b>Up next tile</b>Counts down by itself; no refresh needed.</figcaption></figure>
+
+    <figure class="wo"><div class="case"><div class="scr wface">
+      <div class="time">9:41</div>
+      <div class="s" style="margin-top:2px">Wed 18 Nov</div>
+      <div class="r" style="gap:12px;margin-top:12px">
+        <div class="slot wait">2<small>NEED</small></div>
+        <div class="slot" style="border-color:transparent;background:conic-gradient(from 225deg, var(--pri) 0 46%, rgba(255,255,255,.18) 46% 75%, transparent 75%)"><div style="width:32px;height:32px;border-radius:50%;background:#0b0911;display:grid;place-items:center;font-size:12px">62</div></div>
+        <div class="slot" style="border-color:transparent"><img class="mk" style="width:30px;height:30px" src="../../client/assets/mascots/winky.png" alt=""></div>
+      </div>
+      <div class="r" style="position:absolute;bottom:13px;gap:4px;font-size:10px;color:var(--work);font-weight:650"><span class="dot" style="margin:0"></span>Ada 2:14</div>
+    </div></div><figcaption><b>Watch face</b>Complications for the count, credits and a bot. A running bot shows at the bottom.</figcaption></figure>
+
+    <figure class="wo"><div class="case"><div class="scr">
+      <div class="clk">9:41</div>
+      <div class="body" style="padding:0 20px">
+        <div class="card" style="border-radius:24px"><div class="r" style="gap:5px"><img class="mk" style="width:18px;height:18px" src="../../client/assets/mascots/winky.png" alt=""><div class="s one" style="flex:1">Milo · now</div></div><div class="h" style="font-size:13.5px;margin-top:2px">Needs your OK</div><div class="s c2">Search flight prices from Manila to Lisbon</div></div>
+        <div class="r" style="gap:6px"><div class="tb" style="background:var(--wait);color:#2b1a00">Allow</div><div class="tb">Deny</div></div>
+      </div>
+    </div></div><figcaption><b>Notification</b>Drawn by the watch app, so Allow works with the phone locked in a pocket.</figcaption></figure>
+
+    <figure class="wo"><div class="case"><div class="scr">
+      <div class="clk">9:41</div>
+      <div class="body" style="justify-content:center;padding-bottom:26px">
+        <div class="ib" style="width:58px;height:58px;background:#17382a;color:var(--work)"><svg style="width:30px;height:30px;stroke-width:2.4"><use href="#i-check"/></svg></div>
+        <div class="h">Allowed</div>
+        <div class="s">Milo is back at work</div>
+      </div>
+    </div></div><figcaption><b>Done</b>Every action ends in a clear tick and a tap on the wrist, then closes itself.</figcaption></figure>
+
+  </div>
+</section>
+
+<!-- ======================= STATES ======================= -->
+<section>
+  <h3>States both watches share</h3>
+  <p class="note">A watch is often offline, half asleep or in public. Each of those has a screen that is still true and still useful.</p>
+  <div class="row3">
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="top"><span></span><div class="clk">9:41</div></div>
+      <div class="body" style="align-items:center;text-align:center;justify-content:center;padding-bottom:22px">
+        <img class="mk" style="width:64px;height:64px" src="../../client/assets/mascots/winky.png" alt="">
+        <div class="h">Signing you in</div>
+        <div class="s" style="padding:0 8px">Open Casama on your iPhone to finish</div>
+      </div>
+    </div></div><figcaption><b>First open</b>The phone signs the watch in and says so. Nothing to type.</figcaption></figure>
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="top"><span></span><div class="clk">9:41</div></div>
+      <div class="body" style="align-items:center;text-align:center;justify-content:center">
+        <img class="mk" style="width:58px;height:58px" src="../../client/assets/mascots/sleepy.png" alt="">
+        <div class="h">All clear</div>
+        <div class="s">Brief at 7:00 tomorrow</div>
+      </div>
+      <div class="bbar"><div class="g"><svg><use href="#i-bots"/></svg></div><div class="g lg pri"><svg><use href="#i-mic"/></svg></div><div class="g"><svg><use href="#i-clock"/></svg></div></div>
+    </div></div><figcaption><b>Nothing waiting</b>Says so, and says what comes next.</figcaption></figure>
+
+    <figure class="aw"><div class="case"><div class="scr" style="filter:saturate(.55) brightness(.62)">
+      <div class="top"><span></span><div class="clk">9:41</div></div>
+      <div class="body">
+        <div class="card" style="background:transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)">
+          <div class="eyebrow wait">Needs you · 2</div>
+          <div class="r" style="margin-top:5px"><div class="ini" style="background:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)">M</div><div class="t"><span class="bar" style="width:86px"></span><br><span class="bar" style="width:54px;margin-top:5px"></span></div></div>
+        </div>
+        <div class="card" style="background:transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)"><div class="r"><div class="t s">Ada · <span class="bar" style="width:70px"></span></div><div class="s tm">2:14</div></div></div>
+      </div>
+    </div></div><figcaption><b>Wrist down</b>Dimmed, with your words hidden. Counts and clocks stay.</figcaption></figure>
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="top"><span></span><div class="clk">9:41</div></div>
+      <div class="body">
+        <div class="r" style="padding:0 6px;gap:5px"><svg class="dim" style="width:13px;height:13px"><use href="#i-off"/></svg><div class="s">No connection · as of 9:12</div></div>
+        <div class="card"><div class="eyebrow dim">Needs you · 2</div><div class="r" style="margin-top:4px"><img class="mk" style="opacity:.7" src="../../client/assets/mascots/winky.png" alt=""><div class="t"><div class="h one">Look up flights</div><div class="s one">Milo · low risk</div></div></div></div>
+        <div class="card" style="padding:7px 10px"><div class="one" style="font-size:12.5px">"Hold the TAP fare"</div><div class="s one">Sends when you're online</div></div>
+      </div>
+    </div></div><figcaption><b>Offline</b>Shows how old it is, drops the live colours, and keeps what you asked to send.</figcaption></figure>
+
+    <figure class="aw"><div class="case"><div class="scr">
+      <div class="top"><div class="g sm"><svg><use href="#i-back"/></svg></div><div class="clk">9:41</div></div>
+      <div class="body" style="padding:0 10px">
+        <div class="r"><img class="mk" style="width:30px;height:30px" src="../../client/assets/mascots/focused.png" alt=""><div class="t"><div class="s">Ada wants to</div><div class="h">Pay an invoice</div></div></div>
+        <div class="s c2">$1,240.00 to Acme Ltd from the business card</div>
+        <div><span class="chip" style="color:var(--stop)"><svg style="width:10px;height:10px"><use href="#i-lock"/></svg>High risk</span></div>
+        <div class="sp"></div>
+        <div class="cap sm r" style="justify-content:center"><svg style="width:13px;height:13px"><use href="#i-phone"/></svg>Review on iPhone</div>
+        <div class="cap sm" style="margin-bottom:10px">Deny</div>
+      </div>
+    </div></div><figcaption><b>High risk</b>Never allowed from the wrist. Deny is; the rest opens on the phone.</figcaption></figure>
+
+    <figure class="wo"><div class="case"><div class="scr">
+      <div class="clk">9:41</div>
+      <div class="body" style="justify-content:center;padding-bottom:10px">
+        <div class="s">Sign in with a code</div>
+        <div style="font-size:27px;font-weight:650;letter-spacing:.06em;line-height:1.1;font-variant-numeric:tabular-nums">KQ7 M2X</div>
+        <div class="s" style="padding:0 6px">Type it in Casama on your phone or computer</div>
+        <div class="s pri" style="font-weight:600;margin-top:2px">Waiting…</div>
+      </div>
+    </div></div><figcaption><b>No phone app at hand</b>A code to type into Casama anywhere. Never a password on the watch.</figcaption></figure>
+
+  </div>
+</section>
+
+</div>
+</body>
+</html>

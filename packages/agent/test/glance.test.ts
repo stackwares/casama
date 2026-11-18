@@ -257,6 +257,28 @@ describe("the glance", () => {
     expect(g.bots[1]).toMatchObject({ status: "idle", step: null });
   });
 
+  it("lists the person's live runs in the island's words (D-410)", async () => {
+    const g = await build();
+    // Ada's chat run waits on two requests: the newest one is shown, with its risk.
+    expect(g.runs).toHaveLength(1);
+    expect(g.runs[0]).toMatchObject({
+      bot_id: ids.ada,
+      bot: "Ada",
+      bot_avatar: "mascot:winky",
+      phase: "needs_ok",
+      step: "Reading a web page",
+      steps: 1,
+      approval_id: ids.approvalNew,
+      risk: "low",
+      link: `/approvals/${ids.approvalNew}`,
+    });
+    // Someone else's runs, routines' runs and sub-runs are not the person's live runs.
+    const theirs = await build({ userId: ids.other });
+    expect(theirs.runs).toEqual([]);
+    const priv = await build({ private: true });
+    expect(priv.runs[0]).toMatchObject({ phase: "needs_ok", step: "", steps: 1 });
+  });
+
   it("lists what runs next with how often in words", async () => {
     const g = await build();
     expect(g.next.map((r) => r.name)).toEqual([
