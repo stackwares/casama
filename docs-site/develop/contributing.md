@@ -192,7 +192,8 @@ Some things to know:
    Put upgrades in their own commit.
 7. **Docs change with the behavior** they describe. User docs live in `docs-site/`.
 8. **Format only what you touch.** Run `npx biome check --write <files>` on TypeScript you changed
-   and `dart format <files>` on Dart you changed. Don't reformat whole folders.
+   and `dart format <files>` on Dart files you created. Existing app code isn't at `dart format`'s
+   width, so edit existing Dart files by hand. Don't reformat whole folders.
 
 ## How decisions are recorded
 
