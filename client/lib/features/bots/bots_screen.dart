@@ -92,15 +92,14 @@ String chatListTime(BuildContext context, DateTime at) {
   return t.formattedDate(context);
 }
 
-/// Bots with the most recent chat first; bots never talked to keep their order after them.
+/// Bots with the most recent chat first; bots never talked to follow, newest created first.
 List<Bot> byRecentChat(List<Bot> bots) {
-  final order = {for (final (i, b) in bots.indexed) b.id: i};
   return [...bots]..sort((a, b) {
     final at = a.lastMessage?.at, bt = b.lastMessage?.at;
     if (at != null && bt != null) return bt.compareTo(at);
     if (at != null) return -1;
     if (bt != null) return 1;
-    return order[a.id]!.compareTo(order[b.id]!);
+    return b.createdAt.compareTo(a.createdAt);
   });
 }
 

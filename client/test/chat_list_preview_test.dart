@@ -29,6 +29,25 @@ void main() {
     expect(plainPreview('```sh\nls -la\n```'), 'ls -la');
   });
 
+  test('chatted bots come first, then never-chatted bots newest created first', () {
+    final backend = FakeBackend()
+      ..lastMessage = BotLastMessage(
+        text: 'Hi',
+        from: BotLastMessageFromEnum.bot,
+        fileName: null,
+        fileMime: null,
+        conversationId: 'c1',
+        at: DateTime(2026),
+      );
+    final older = backend.bot(id: 'old', name: 'Old', createdAt: DateTime(2025));
+    final newer = backend.bot(id: 'new', name: 'New', createdAt: DateTime(2027));
+    final chatted = backend.bot(createdAt: DateTime(2024));
+    expect(
+      byRecentChat([older, chatted, newer]).map((b) => b.id),
+      [botId, 'new', 'old'],
+    );
+  });
+
   Future<int?> previewLines(WidgetTester tester, FakeBackend backend) async {
     await setSize(tester, const Size(500, 1000));
     await tester.pumpWidget(harness(backend, const Scaffold(body: BotsList())));
