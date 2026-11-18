@@ -73,11 +73,11 @@ self-host with any AI model, and it is also offered as Casama Cloud.
 The full list is under [Features](#features).
 
 <p align="center">
-  <a href="https://casama.ai/assets/film/casama-film-16x9.mp4">
-    <img src="docs/media/film-poster.jpg" width="820" alt="Watch the Casama film: your AI assistant, with a computer of its own">
+  <a href="site/assets/film/casama-film-v7-16x9.mp4">
+    <img src="docs/media/film-v7-poster.jpg" width="820" alt="Watch the Casama film: your AI assistant, with a computer of its own">
   </a>
   <br>
-  <a href="https://casama.ai/assets/film/casama-film-16x9.mp4">▶ Watch the film</a> (86 seconds, with sound)
+  <a href="site/assets/film/casama-film-v7-16x9.mp4">▶ Watch the film</a> (86 seconds, with sound)
 </p>
 
 <p align="center">
