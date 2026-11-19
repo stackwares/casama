@@ -237,6 +237,67 @@ List<AttachmentRef> attachmentsOf(Object? content) {
   ];
 }
 
+/// An app mentioned in a message (`{ type: "app", ... }`, D-434).
+class MessageAppMention {
+  const MessageAppMention({
+    required this.integrationId,
+    required this.label,
+    this.toolkit,
+    this.appId,
+    this.source,
+  });
+
+  final String integrationId;
+  final String label;
+  final String? toolkit;
+  final String? appId;
+  final String? source;
+
+  AppMentionRef toRef() => AppMentionRef(integrationId: integrationId, toolkit: toolkit);
+
+  Map<String, Object?> toJson() => {
+    'integration_id': integrationId,
+    'label': label,
+    if (toolkit != null) 'toolkit': toolkit,
+    if (appId != null) 'app_id': appId,
+    if (source != null) 'source': source,
+  };
+
+  factory MessageAppMention.fromJson(Map<String, dynamic> j) => MessageAppMention(
+    integrationId: j['integration_id'] as String? ?? '',
+    label: j['label'] as String? ?? '',
+    toolkit: j['toolkit'] as String?,
+    appId: j['app_id'] as String?,
+    source: j['source'] as String?,
+  );
+
+  @override
+  bool operator ==(Object other) =>
+      other is MessageAppMention &&
+      other.integrationId == integrationId &&
+      other.toolkit == toolkit &&
+      other.label == label;
+
+  @override
+  int get hashCode => Object.hash(integrationId, toolkit, label);
+}
+
+/// Extracts `{ type: "app", ... }` parts from a message's stored content JSON (D-434).
+List<MessageAppMention> appMentionsOf(Object? content) {
+  if (content is! List) return const [];
+  return [
+    for (final p in content)
+      if (p is Map && p['type'] == 'app' && p['integration_id'] is String && p['label'] is String)
+        MessageAppMention(
+          integrationId: p['integration_id'] as String,
+          label: p['label'] as String,
+          toolkit: p['toolkit'] as String?,
+          appId: p['app_id'] as String?,
+          source: p['source'] as String?,
+        ),
+  ];
+}
+
 /// Where a pack comes from: a GitHub link (with the previewed commit), a reviewed pack from the
 /// plugin directory, a shared link, or the files of a pack someone picked.
 class PackFrom {
@@ -486,6 +547,7 @@ class ChatMessageView {
     required this.createdAt,
     this.runId,
     this.attachments = const [],
+    this.apps = const [],
     this.ui = const [],
     this.uiActionSurface,
     this.siblingIndex = 1,
@@ -529,6 +591,7 @@ class ChatMessageView {
     'created_at': createdAt.toIso8601String(),
     'run_id': runId,
     'attachments': [for (final a in attachments) a.toJson()],
+    if (apps.isNotEmpty) 'apps': [for (final a in apps) a.toJson()],
     'sibling_index': siblingIndex,
     'sibling_count': siblingCount,
     'bot_id': botId,
@@ -548,6 +611,10 @@ class ChatMessageView {
     attachments: [
       for (final a in (j['attachments'] as List? ?? const []))
         AttachmentRef.fromJson(a as Map<String, dynamic>),
+    ],
+    apps: [
+      for (final a in (j['apps'] as List? ?? const []))
+        MessageAppMention.fromJson(a as Map<String, dynamic>),
     ],
     siblingIndex: (j['sibling_index'] as num?)?.toInt() ?? 1,
     siblingCount: (j['sibling_count'] as num?)?.toInt() ?? 1,
@@ -582,6 +649,9 @@ class ChatMessageView {
   final String? botId;
   final String? runId;
   final List<AttachmentRef> attachments;
+
+  /// Apps mentioned in this message (D-434).
+  final List<MessageAppMention> apps;
 
   /// Interactive UIs in a bot's reply.
   final List<UiPart> ui;
@@ -1683,14 +1753,16 @@ abstract class Backend {
   /// their own, the runs point back at them.
   Future<String?> runForMessage(String messageId);
 
-  /// [skills]: skills picked with / in the composer (D-104). [idempotencyKey]: a UUID for this
-  /// message, the same on every try, so a repeat after a lost answer doesn't post it twice.
+  /// [skills]: skills picked with / in the composer (D-104). [apps]: apps picked with @ in the
+  /// composer (D-434). [idempotencyKey]: a UUID for this message, the same on every try, so a
+  /// repeat after a lost answer doesn't post it twice.
   Future<SendMessageResponse> send(
     String conversationId,
     String text, {
     List<AttachmentRef> attachments = const [],
     Map<String, Object?>? uiAction,
     List<String> skills = const [],
+    List<AppMentionRef> apps = const [],
     String? idempotencyKey,
   });
   /// Asks the run to stop. Throws [RunAlreadyFinished] when it has already ended (or is gone).
@@ -1700,8 +1772,9 @@ abstract class Backend {
   Future<SendMessageResponse> editMessage(
     String conversationId,
     String messageId,
-    String text,
-  );
+    String text, {
+    List<AppMentionRef> apps = const [],
+  });
 
   /// Deletes one message; the ones after it join the one before it (Add 11).
   Future<void> deleteMessage(String conversationId, String messageId);

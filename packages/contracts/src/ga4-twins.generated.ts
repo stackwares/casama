@@ -169,6 +169,9 @@ export const ANALYTICS_CLIENT_EVENTS: Record<string, string[]> = {
   "help_place_opened": [
     "place_id",
     "from"
+  ],
+  "app_mention_connect_started": [
+    "app_id"
   ]
 };
 

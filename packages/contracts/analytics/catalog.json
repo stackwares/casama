@@ -1681,6 +1681,39 @@
         }
       },
       "funnels": []
+    },
+    {
+      "name": "app_mentioned",
+      "by": ["server"],
+      "description": "A message mentioned a connected app with @ and resolved it for the run.",
+      "properties": {
+        "source": {
+          "type": "string",
+          "values": ["picker", "typed"]
+        },
+        "app_kind": {
+          "type": "string",
+          "values": ["mcp", "openapi", "composio", "pipedream", "local_mcp", "computer_mcp", "a2a"]
+        },
+        "app_id": {
+          "type": "string"
+        },
+        "preloaded": {
+          "type": "boolean"
+        }
+      },
+      "funnels": []
+    },
+    {
+      "name": "app_mention_connect_started",
+      "by": ["client"],
+      "description": "Someone tapped Connect on an unconnected app from the chat @ menu.",
+      "properties": {
+        "app_id": {
+          "type": "string"
+        }
+      },
+      "funnels": []
     }
   ]
 }

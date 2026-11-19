@@ -3,6 +3,7 @@ import type { Database } from "@casama/db";
 import {
   type ActionRule,
   APPROVAL_TTL_MS,
+  appByIdOrNull,
   CLOUD_LOCKED_MODEL,
   type CloudModelAssignment,
   cardResult,
@@ -154,6 +155,7 @@ const handOffMessage = (why: string) =>
 
 import { contentKeys } from "@casama/db";
 import { endRunSpan, recordRunSpan, runTraceId, startRunChildSpan } from "@casama/observability";
+import { type AppMentionPart, partsApps, toolMatchesToolkit } from "./app-mentions.ts";
 import { deviceDataOfRun } from "./attention.ts";
 import {
   checkinPrefetch,
@@ -180,10 +182,12 @@ import { postSuggestions, postTopicResults } from "./general.ts";
 import {
   DEFAULT_LAZY_THRESHOLD,
   isCoreTool,
+  type MentionedToolRequest,
   mergeToolGroups,
   planLazyTools,
   rememberedTools,
   resolveToolsLoad,
+  selectMentionedTools,
   TOOLS_LOAD,
   ToolsLoadArgs,
   toolGroup,
@@ -321,6 +325,7 @@ interface RunInfo {
     id: string;
     text: string;
     files?: FilePart[];
+    apps?: AppMentionPart[];
     confirmed?: ConfirmedCard | null;
   } | null;
   /** Langfuse traces allowed for this workspace (D-107). */
@@ -811,19 +816,77 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     const native = !!caps.deferredTools && threshold > 0 && available.length > threshold;
     const lazy = canLoad && !native ? planLazyTools(available, threshold) : null;
     const offered = canLoad && !lazy ? available.filter((t) => t.name !== TOOLS_LOAD) : available;
-    // The run starts with the groups this conversation used before: no tools.load step, and the
-    // same tool list as its last message, which keeps the provider's prompt cache.
-    const loaded: ToolDefinition[] = lazy
-      ? rememberedTools(lazy, info.toolGroups, (defs) =>
-          estimateTokens(JSON.stringify(registry.specs(defs))),
-        )
+    // Apps pointed at with `@App` (D-434): match strictly against this bot's loaded integration
+    // tools, preload them under their own budget before remembered groups, and add a short hint.
+    const mentionedApps = (info.current?.apps ?? [])
+      .map((part) => {
+        const specs = integrationSpecs.filter(
+          (s) =>
+            s.integrationId === part.integration_id &&
+            (!part.toolkit || toolMatchesToolkit(s.tool, part.toolkit)),
+        );
+        if (!specs.length) return null;
+        const first = specs[0] as IntegrationToolSpec;
+        return {
+          part,
+          group: toolGroup(first.fullName),
+          kind: first.kind,
+          toolNames: specs.map((s) => s.fullName),
+        };
+      })
+      .filter((x): x is NonNullable<typeof x> => !!x);
+    const tokensOf = (defs: ToolDefinition[]) =>
+      estimateTokens(JSON.stringify(registry.specs(defs)));
+    const mentionedSel =
+      mentionedApps.length && (lazy || native)
+        ? selectMentionedTools(
+            lazy ? available : offered,
+            mentionedApps.map(
+              (m): MentionedToolRequest => ({ group: m.group, toolNames: m.toolNames }),
+            ),
+            tokensOf,
+          )
+        : { loaded: [] as ToolDefinition[], loadedIndices: new Set<number>() };
+    const mentionedNames = new Set(mentionedSel.loaded.map((t) => t.name));
+    // The run starts with mentioned apps plus the groups this conversation used before: no
+    // tools.load step, and a stable sorted tool list that keeps the provider's prompt cache.
+    const rememberedLoaded = lazy
+      ? rememberedTools(lazy, info.toolGroups, tokensOf, mentionedNames)
       : [];
-    const remembered = [...new Set(loaded.map((t) => toolGroup(t.name)))];
+    const loaded: ToolDefinition[] = lazy
+      ? [...mentionedSel.loaded, ...rememberedLoaded].sort((a, b) => a.name.localeCompare(b.name))
+      : [];
+    const loadedNames = new Set(loaded.map((t) => t.name));
+    const alreadyLoadedGroups = lazy
+      ? [...lazy.groups.entries()]
+          .filter(([, tools]) => tools.length > 0 && tools.every((t) => loadedNames.has(t.name)))
+          .map(([g]) => g)
+          .sort()
+      : [];
     const lazyIndex = lazy
-      ? remembered.length
-        ? `${lazy.index}\nAlready loaded, call them directly: ${remembered.join(", ")}.`
+      ? alreadyLoadedGroups.length
+        ? `${lazy.index}\nAlready loaded, call them directly: ${alreadyLoadedGroups.join(", ")}.`
         : lazy.index
       : null;
+    if (mentionedApps.length && info.current) {
+      const list = mentionedApps.map((m) => `${m.part.label} (${m.group})`).join(", ");
+      info.current.text += `\n\nThe person pointed at these apps for this message: ${list}. Use them if the request needs an app.`;
+      for (const [idx, m] of mentionedApps.entries()) {
+        const preloaded = lazy || native ? mentionedSel.loadedIndices.has(idx) : true;
+        const catalogId = m.part.app_id && appByIdOrNull(m.part.app_id) ? m.part.app_id : undefined;
+        track(db, {
+          event: "app_mentioned",
+          userId: info.actingUserId ?? undefined,
+          orgId: info.orgId,
+          properties: {
+            source: m.part.source ?? "typed",
+            app_kind: m.kind,
+            ...(catalogId ? { app_id: catalogId } : {}),
+            preloaded,
+          },
+        });
+      }
+    }
     // Groups this run called, in order of first use, for the conversation to remember.
     const calledGroups: string[] = [];
     const specsNow = () =>
@@ -832,7 +895,9 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
         : native
           ? registry.specs(offered).map((spec, k) => ({
               ...spec,
-              deferred: !isCoreTool((offered[k] as ToolDefinition).name),
+              deferred:
+                !isCoreTool((offered[k] as ToolDefinition).name) &&
+                !mentionedNames.has((offered[k] as ToolDefinition).name),
             }))
           : registry.specs(offered);
     const toolSpecs = specsNow();
@@ -2159,6 +2224,7 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
         files: partsFiles(currentRow.content).filter(
           (f) => !f.path.startsWith("media:") || (f.uploaded && !fromBot(currentRow)),
         ),
+        apps: fromBot(currentRow) ? [] : partsApps(currentRow.content),
         // Send on a draft or Add on an event this bot showed (D-335, D-337): the matching call needs no
         // second yes.
         confirmed: fromBot(currentRow)

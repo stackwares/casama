@@ -1469,15 +1469,18 @@ class FakeBackend implements Backend {
   Future<void> setProfileSharedIn(String orgId, bool share) async =>
       profileShared[orgId] = share;
   final edits = <(String, String)>[];
+  final editApps = <List<AppMentionRef>>[];
   final branchSwitches = <String>[];
   List<String> siblings = const [];
   @override
   Future<SendMessageResponse> editMessage(
     String conversationId,
     String messageId,
-    String text,
-  ) async {
+    String text, {
+    List<AppMentionRef> apps = const [],
+  }) async {
     edits.add((messageId, text));
+    editApps.add(apps);
     return SendMessageResponse(
       messageId: 'm-edit',
       runId: 'run-edit',
@@ -4215,6 +4218,8 @@ class FakeBackend implements Backend {
   final failSends = <Object>[];
   /// The idempotency key of every send call, failed ones included.
   final sendKeys = <String?>[];
+  /// Apps passed with each send call (D-434).
+  final sentApps = <List<AppMentionRef>>[];
   @override
   Future<SendMessageResponse> send(
     String conversationId,
@@ -4222,6 +4227,7 @@ class FakeBackend implements Backend {
     List<AttachmentRef> attachments = const [],
     Map<String, Object?>? uiAction,
     List<String> skills = const [],
+    List<AppMentionRef> apps = const [],
     String? idempotencyKey,
   }) async {
     sendKeys.add(idempotencyKey);
@@ -4233,6 +4239,7 @@ class FakeBackend implements Backend {
     if (failSends.isNotEmpty) throw failSends.removeAt(0);
     sent.add(text);
     sentSkills.add(skills);
+    sentApps.add(apps);
     sentAttachments.add(attachments);
     if (uiAction != null) sentUiActions.add(uiAction);
     return SendMessageResponse(

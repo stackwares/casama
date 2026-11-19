@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../core/analytics.dart';
+import '../../core/backend.dart' show MessageAppMention;
 import '../../core/display_text.dart';
 import '../../core/local_cache.dart';
 import '../../core/providers.dart';
@@ -23,6 +25,10 @@ import '../../ui/bot_avatar.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/shell_header.dart';
 import '../chat/chat_screen.dart';
+import '../chat/widgets/mentions.dart' show AppMentionInfo;
+import '../integrations/app_logo.dart';
+import '../integrations/connect_app_sheet.dart';
+import '../integrations/integrations_screen.dart' show HubApp, hubAppsProvider;
 
 /// Group chats (D-118): 2 to 10 bots in one conversation, woken by @Name or @everyone.
 /// Group chats, shown from the offline cache first at launch and refreshed in the background,
@@ -754,19 +760,160 @@ class _BotPickRow extends StatelessWidget {
   }
 }
 
-/// Typing @ in a group chat lists its bots; picking one finishes the mention.
-/// The @-mention suggestions of a group chat's composer (D-118): what matches what's typed after
-/// "@", which one is highlighted, and the keys that pick one (Tab or Enter, arrows, Esc).
+/// Max distinct apps a single message can mention (D-434).
+const kMaxMentionedApps = 3;
+
+/// One selectable item in the unified `@` mention picker (D-118, D-434).
+sealed class MentionOption {
+  const MentionOption();
+  String get keyId;
+}
+
+class BotMentionOption extends MentionOption {
+  const BotMentionOption({required this.token, required this.label, this.bot});
+  final String token;
+  final String label;
+
+  /// Null for `@everyone`.
+  final Bot? bot;
+
+  @override
+  String get keyId => 'mention-$token';
+}
+
+class AppMentionOption extends MentionOption {
+  const AppMentionOption(this.app);
+  final AppMentionInfo app;
+
+  @override
+  String get keyId =>
+      'mention-app-${app.integrationId}${app.toolkit != null ? ':${app.toolkit}' : ''}';
+}
+
+class AddAppMentionOption extends MentionOption {
+  const AddAppMentionOption(this.app);
+  final AppMentionInfo app;
+
+  @override
+  String get keyId =>
+      'mention-add-${app.integrationId}${app.toolkit != null ? ':${app.toolkit}' : ''}';
+}
+
+class ConnectAppMentionOption extends MentionOption {
+  const ConnectAppMentionOption(this.app);
+  final CatalogApp app;
+
+  @override
+  String get keyId => 'mention-connect-${app.id}';
+}
+
+/// Builds the mentionable apps connected to [attachedIds] and (when [includeAddable]) the
+/// workspace apps not yet attached to this bot (D-434).
+({List<AppMentionInfo> connected, List<AppMentionInfo> addable})
+buildMentionableApps({
+  required List<Integration> integrations,
+  required Set<String> attachedIds,
+  required List<HubApp> hubApps,
+  AppCatalog? catalog,
+  bool includeAddable = false,
+}) {
+  final catalogById = <String, CatalogApp>{
+    for (final a in catalog?.apps ?? const <CatalogApp>[]) a.id: a,
+  };
+  final hubAppsByIntegration = <String, List<HubApp>>{};
+  for (final h in hubApps) {
+    if (h.status != ProviderAccountStatusEnum.connected) continue;
+    hubAppsByIntegration.putIfAbsent(h.hub.id, () => []).add(h);
+  }
+
+  List<AppMentionInfo> expand(Integration i) {
+    final isHub =
+        i.kind == IntegrationKind.composio ||
+        i.kind == IntegrationKind.pipedream;
+    if (isHub) {
+      final apps = hubAppsByIntegration[i.id] ?? const <HubApp>[];
+      return [
+        for (final h in apps)
+          AppMentionInfo(
+            integrationId: i.id,
+            label: h.name,
+            toolkit: h.slug,
+            appId: h.app?.id ?? h.slug,
+            color: h.app?.color ?? catalogById[h.app?.id ?? h.slug]?.color,
+            kind: i.kind,
+          ),
+      ];
+    }
+    return [
+      AppMentionInfo(
+        integrationId: i.id,
+        label: i.name,
+        appId: i.appId,
+        color: i.appId != null ? catalogById[i.appId!]?.color : null,
+        kind: i.kind,
+      ),
+    ];
+  }
+
+  final connected = <AppMentionInfo>[];
+  final connectedKeys = <String>{};
+  final addable = <AppMentionInfo>[];
+  final addableKeys = <String>{};
+
+  for (final i in integrations) {
+    if (i.status == IntegrationStatusEnum.error) continue;
+    final expanded = expand(i);
+    if (attachedIds.contains(i.id)) {
+      for (final a in expanded) {
+        final k = '${a.integrationId}:${a.toolkit ?? ''}';
+        if (connectedKeys.add(k)) connected.add(a);
+      }
+    } else if (includeAddable) {
+      for (final a in expanded) {
+        final k = '${a.integrationId}:${a.toolkit ?? ''}';
+        if (!connectedKeys.contains(k) && addableKeys.add(k)) addable.add(a);
+      }
+    }
+  }
+
+  return (connected: connected, addable: addable);
+}
+
+/// Typing `@` in any chat lists its bots (in group chats) and apps (D-118, D-434): what matches
+/// what's typed after "@", which one is highlighted, keyboard navigation (Tab/Enter, arrows, Esc),
+/// and the apps explicitly picked for the current draft message.
 class MentionController extends ChangeNotifier {
   MentionController(this.input) {
     input.addListener(_update);
   }
+
   final TextEditingController input;
+  bool _group = true;
   List<Bot> _bots = const [];
-  List<(String, String, Bot?)> options = const [];
+  List<AppMentionInfo> _apps = const [];
+  List<AppMentionInfo> _addableApps = const [];
+  List<CatalogApp> _catalogApps = const [];
+  final List<MessageAppMention> _pickedApps = [];
+
+  List<MentionOption> options = const [];
   int index = 0;
   RegExpMatch? _match;
   String? _dismissedFor;
+
+  /// Optional async handler for Add-to-bot and Connect rows (wired by [MentionPicker]).
+  void Function(MentionOption option)? onActionOption;
+
+  /// Fires when the user tries to pick a 4th app in one message.
+  VoidCallback? onMaxAppsReached;
+
+  /// Apps explicitly picked from the `@` menu that are still present in [input.text].
+  List<MessageAppMention> get pickedApps => List.unmodifiable(_pickedApps);
+
+  set group(bool v) {
+    if (_group == v) return;
+    _group = v;
+    _update();
+  }
 
   set bots(List<Bot> v) {
     if (listEquals(
@@ -779,39 +926,232 @@ class MentionController extends ChangeNotifier {
     _update();
   }
 
+  set apps(List<AppMentionInfo> v) {
+    if (_sameAppInfoList(v, _apps)) return;
+    _apps = v;
+    _update();
+  }
+
+  set addableApps(List<AppMentionInfo> v) {
+    if (_sameAppInfoList(v, _addableApps)) return;
+    _addableApps = v;
+    _update();
+  }
+
+  set catalogApps(List<CatalogApp> v) {
+    if (listEquals(
+      v.map((a) => a.id).toList(),
+      _catalogApps.map((a) => a.id).toList(),
+    )) {
+      return;
+    }
+    _catalogApps = v;
+    _update();
+  }
+
+  static bool _sameAppInfoList(List<AppMentionInfo> a, List<AppMentionInfo> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].integrationId != b[i].integrationId ||
+          a[i].toolkit != b[i].toolkit ||
+          a[i].label != b[i].label) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   bool get active => options.isNotEmpty;
+
+  static final _trigger = RegExp(r'(^|\s)@([\w .\-]{0,30})$');
 
   void _update() {
     final text = input.text;
-    final m = RegExp(r'(^|\s)@([\w ]{0,30})$').firstMatch(text);
+    // Prune any picked app whose @Label was deleted from the draft text.
+    if (_pickedApps.isNotEmpty) {
+      final lowerText = text.toLowerCase();
+      _pickedApps.removeWhere((p) => !lowerText.contains('@${p.label.toLowerCase()}'));
+    }
+
+    final m = _trigger.firstMatch(text);
     _match = m;
-    final q = m?.group(2)?.toLowerCase();
-    final next = m == null || _dismissedFor == text
-        ? const <(String, String, Bot?)>[]
-        : [
-            ('everyone', 'everyone', null),
-            for (final b in _bots)
-              if (b.name.toLowerCase().startsWith(q!)) (b.name, b.name, b),
-          ].where((o) => o.$1.toLowerCase().startsWith(q!)).toList();
+    final rawQ = m?.group(2);
+    final q = rawQ?.toLowerCase() ?? '';
+    final List<MentionOption> next;
+    if (m == null || _dismissedFor == text) {
+      next = const [];
+    } else {
+      final items = <MentionOption>[];
+
+      // 1. Bots (group chats only — preserves exact order: everyone, then bots).
+      if (_group && _bots.isNotEmpty) {
+        if ('everyone'.startsWith(q)) {
+          items.add(const BotMentionOption(token: 'everyone', label: 'everyone'));
+        }
+        for (final b in _bots) {
+          if (b.name.toLowerCase().startsWith(q)) {
+            items.add(BotMentionOption(token: b.name, label: b.name, bot: b));
+          }
+        }
+      }
+
+      // 2. Apps connected to this bot (or any bot in this group).
+      final matchingApps = _filterApps(_apps, q);
+      for (final a in matchingApps.take(8)) {
+        items.add(AppMentionOption(a));
+      }
+
+      // 3. Workspace apps not yet attached to this bot (direct chat only).
+      if (!_group && _addableApps.isNotEmpty) {
+        final matchingAddable = _filterApps(_addableApps, q);
+        for (final a in matchingAddable.take(5)) {
+          items.add(AddAppMentionOption(a));
+        }
+      }
+
+      // 4. Unconnected catalog apps (shown after 2 typed characters).
+      if (q.length >= 2 && _catalogApps.isNotEmpty) {
+        final alreadyIds = <String>{
+          for (final a in _apps) ...[?a.appId?.toLowerCase(), ?a.toolkit?.toLowerCase()],
+          for (final a in _addableApps) ...[?a.appId?.toLowerCase(), ?a.toolkit?.toLowerCase()],
+        };
+        final matchingCatalog = _filterCatalog(_catalogApps, q, alreadyIds);
+        for (final c in matchingCatalog.take(5)) {
+          items.add(ConnectAppMentionOption(c));
+        }
+      }
+
+      next = items;
+    }
     if (next.length != options.length || index >= next.length) index = 0;
     options = next;
     notifyListeners();
   }
 
-  /// Puts the chosen name in place of what was typed after "@".
-  void pick(int i) {
-    final m = _match;
-    if (m == null || i < 0 || i >= options.length) return;
+  static List<AppMentionInfo> _filterApps(List<AppMentionInfo> list, String q) {
+    if (q.isEmpty) return list;
+    final prefix = <AppMentionInfo>[];
+    final contains = <AppMentionInfo>[];
+    for (final a in list) {
+      final terms = [
+        a.label.toLowerCase(),
+        if (a.toolkit != null) a.toolkit!.toLowerCase(),
+        if (a.appId != null) a.appId!.toLowerCase(),
+      ];
+      if (terms.any((t) => t.startsWith(q))) {
+        prefix.add(a);
+      } else if (terms.any((t) => t.contains(q))) {
+        contains.add(a);
+      }
+    }
+    return [...prefix, ...contains];
+  }
+
+  static List<CatalogApp> _filterCatalog(
+    List<CatalogApp> list,
+    String q,
+    Set<String> excludeIds,
+  ) {
+    final prefix = <CatalogApp>[];
+    final contains = <CatalogApp>[];
+    for (final c in list) {
+      final idLower = c.id.toLowerCase();
+      if (excludeIds.contains(idLower)) continue;
+      final nameLower = c.name.toLowerCase();
+      if (nameLower.startsWith(q) || idLower.startsWith(q)) {
+        prefix.add(c);
+      } else if (nameLower.contains(q) || idLower.contains(q)) {
+        contains.add(c);
+      }
+    }
+    return [...prefix, ...contains];
+  }
+
+  /// Inserts `@[label] ` in place of what was typed after `@`, or appends it if `@` moved.
+  void insertMention(String label) {
     final text = input.text;
-    final start = text.length - m.group(2)!.length;
-    final value = '${text.substring(0, start)}${options[i].$1} ';
+    final m = _trigger.firstMatch(text);
+    final String value;
+    if (m != null) {
+      final start = text.length - m.group(2)!.length;
+      value = '${text.substring(0, start)}$label ';
+    } else {
+      final sep = text.isEmpty || text.endsWith(' ') ? '' : ' ';
+      value = '$text$sep@$label ';
+    }
     input.value = TextEditingValue(
       text: value,
       selection: TextSelection.collapsed(offset: value.length),
     );
   }
 
-  /// The composer asks first: Tab or Enter picks the highlighted name, arrows move, Esc closes.
+  /// Records a picked app (respecting the 3-app cap) and inserts `@[app.label] `.
+  /// Returns false if the 3-app limit was hit.
+  bool pickApp(AppMentionInfo app) {
+    final already = _pickedApps.any(
+      (p) => p.integrationId == app.integrationId && p.toolkit == app.toolkit,
+    );
+    if (!already && _pickedApps.length >= kMaxMentionedApps) {
+      _dismissedFor = input.text;
+      _update();
+      onMaxAppsReached?.call();
+      return false;
+    }
+    if (!already) {
+      _pickedApps.add(
+        MessageAppMention(
+          integrationId: app.integrationId,
+          label: app.label,
+          toolkit: app.toolkit,
+          appId: app.appId,
+          source: 'picker',
+        ),
+      );
+    }
+    insertMention(app.label);
+    return true;
+  }
+
+  /// Clears picked apps (e.g. after sending a message).
+  void clearPickedApps() {
+    if (_pickedApps.isEmpty) return;
+    _pickedApps.clear();
+    notifyListeners();
+  }
+
+  /// Restores picked apps (e.g. if sending failed before the bubble showed).
+  void restorePickedApps(List<MessageAppMention> apps) {
+    for (final a in apps) {
+      final exists = _pickedApps.any(
+        (p) => p.integrationId == a.integrationId && p.toolkit == a.toolkit,
+      );
+      if (!exists && _pickedApps.length < kMaxMentionedApps) {
+        _pickedApps.add(a);
+      }
+    }
+    notifyListeners();
+  }
+
+  /// Picks option [i]: bots & connected apps complete synchronously; Add/Connect delegate to
+  /// [onActionOption].
+  void pick(int i) {
+    if (_match == null || i < 0 || i >= options.length) return;
+    final option = options[i];
+    switch (option) {
+      case BotMentionOption(:final token):
+        insertMention(token);
+      case AppMentionOption(:final app):
+        pickApp(app);
+      case AddAppMentionOption():
+      case ConnectAppMentionOption():
+        final handler = onActionOption;
+        if (handler != null) {
+          handler(option);
+        }
+    }
+  }
+
+  /// The composer asks first: Tab or Enter picks the highlighted row, arrows move, Esc closes.
   KeyEventResult handleKey(KeyEvent e) {
     if (!active || e is KeyUpEvent) return KeyEventResult.ignored;
     final k = e.logicalKey;
@@ -848,26 +1188,67 @@ class MentionPicker extends ConsumerWidget {
     super.key,
     required this.botIds,
     required this.controller,
+    this.group,
     this.lastSpeakerId,
   });
+
   final List<String> botIds;
   final MentionController controller;
+
+  /// True in group chats (shows Bots + WhoAnswers); defaults to `botIds.length > 1`.
+  final bool? group;
 
   /// The bot that spoke last; with no mention, it answers (else the lead, the first of [botIds]).
   final String? lastSpeakerId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isGroup = group ?? botIds.length > 1;
     final bots = (ref.watch(botsProvider).value ?? const <Bot>[])
         .where((b) => botIds.contains(b.id))
         .toList();
-    controller.bots = bots;
+    final integrations = ref.watch(integrationsProvider).value ?? const <Integration>[];
+    final catalog = ref.watch(appCatalogProvider).value;
+    final hubApps = ref.watch(hubAppsProvider).value ?? const <HubApp>[];
+    final attachedIds = <String>{
+      for (final id in botIds)
+        ...(ref.watch(botIntegrationIdsProvider(id)).value ?? const <String>{}),
+    };
+    final org = ref.watch(currentOrgProvider);
+    final canManageBot = org == null || org.role != OrgRole.member;
+    final built = buildMentionableApps(
+      integrations: integrations,
+      attachedIds: attachedIds,
+      hubApps: hubApps,
+      catalog: catalog,
+      includeAddable: canManageBot && !isGroup && botIds.length == 1,
+    );
+
+    controller
+      ..group = isGroup
+      ..bots = isGroup ? bots : const []
+      ..apps = built.connected
+      ..addableApps = built.addable
+      ..catalogApps = catalog?.apps ?? const []
+      ..onMaxAppsReached = () {
+        if (context.mounted) showFailure(context, context.l10n.mentionMaxApps);
+      }
+      ..onActionOption = (option) => _handleActionOption(
+        context,
+        ref,
+        option,
+        isGroup: isGroup,
+        bots: bots,
+      );
+
     final scheme = context.colorScheme;
+    final l10n = context.l10n;
     return ListenableBuilder(
       listenable: controller,
       builder: (context, _) {
         final options = controller.options;
         if (options.isEmpty) {
+          if (!isGroup) return const SizedBox.shrink();
           return _WhoAnswers(
             bots: bots,
             text: controller.input.text,
@@ -875,41 +1256,368 @@ class MentionPicker extends ConsumerWidget {
             leadId: botIds.firstOrNull,
           );
         }
+
+        final botOptions = <(int, BotMentionOption)>[];
+        final appOptions = <(int, AppMentionOption)>[];
+        final addOptions = <(int, AddAppMentionOption)>[];
+        final connectOptions = <(int, ConnectAppMentionOption)>[];
+        for (final (i, o) in options.indexed) {
+          switch (o) {
+            case BotMentionOption():
+              botOptions.add((i, o));
+            case AppMentionOption():
+              appOptions.add((i, o));
+            case AddAppMentionOption():
+              addOptions.add((i, o));
+            case ConnectAppMentionOption():
+              connectOptions.add((i, o));
+          }
+        }
+
+        final hasAppsOrActions =
+            appOptions.isNotEmpty ||
+            addOptions.isNotEmpty ||
+            connectOptions.isNotEmpty;
+
+        // Pure bots-only menu (e.g. a group chat with no apps): keep the compact chip strip.
+        if (!hasAppsOrActions) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Wrap(
+              key: const Key('mentionPicker'),
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final (i, o) in botOptions)
+                  ActionChip(
+                    key: Key(o.keyId),
+                    backgroundColor: i == controller.index
+                        ? scheme.primaryContainer
+                        : null,
+                    side: BorderSide(
+                      color: i == controller.index
+                          ? scheme.primary.withValues(alpha: 0.5)
+                          : scheme.outlineVariant,
+                    ),
+                    avatar: o.bot == null
+                        ? GroupAvatar(bots: bots, size: 20)
+                        : BotAvatar(
+                            name: o.bot!.name,
+                            avatar: o.bot!.avatarUrl,
+                            size: 20,
+                          ),
+                    label: Text(
+                      o.bot == null ? l10n.mentionEveryone : o.label,
+                    ),
+                    onPressed: () => controller.pick(i),
+                  ),
+              ],
+            ),
+          );
+        }
+
+        // Detect bot-vs-app name collisions in group chats so rows get clear "Bot"/"App" badges.
+        final botNamesLower = {for (final b in bots) b.name.toLowerCase()};
+        final appNamesLower = {
+          for (final (_, a) in appOptions) a.app.label.toLowerCase(),
+        };
+        final showSections =
+            [
+              botOptions.isNotEmpty,
+              appOptions.isNotEmpty,
+              addOptions.isNotEmpty,
+              connectOptions.isNotEmpty,
+            ].where((x) => x).length >
+            1;
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 6),
-          child: Wrap(
-            key: const Key('mentionPicker'),
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              for (final (i, o) in options.indexed)
-                ActionChip(
-                  key: Key('mention-${o.$1}'),
-                  // The highlighted one is what Tab or Enter picks.
-                  backgroundColor: i == controller.index
-                      ? scheme.primaryContainer
-                      : null,
-                  side: BorderSide(
-                    color: i == controller.index
-                        ? scheme.primary.withValues(alpha: 0.5)
-                        : scheme.outlineVariant,
-                  ),
-                  avatar: o.$3 == null
-                      ? GroupAvatar(bots: bots, size: 20)
-                      : BotAvatar(
-                          name: o.$3!.name,
-                          avatar: o.$3!.avatarUrl,
-                          size: 20,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 260),
+            child: Material(
+              key: const Key('mentionPicker'),
+              color: scheme.surfaceContainerLowest,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+                side: BorderSide(color: scheme.outlineVariant),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (botOptions.isNotEmpty) ...[
+                      if (showSections)
+                        _MentionSectionLabel(l10n.mentionSectionBots),
+                      for (final (i, o) in botOptions)
+                        _MentionRow(
+                          key: Key(o.keyId),
+                          selected: i == controller.index,
+                          leading: o.bot == null
+                              ? GroupAvatar(bots: bots, size: 22)
+                              : BotAvatar(
+                                  name: o.bot!.name,
+                                  avatar: o.bot!.avatarUrl,
+                                  size: 22,
+                                ),
+                          title: o.bot == null ? l10n.mentionEveryone : o.label,
+                          badge:
+                              o.bot != null &&
+                                  appNamesLower.contains(
+                                    o.bot!.name.toLowerCase(),
+                                  )
+                              ? l10n.mentionBadgeBot
+                              : null,
+                          onTap: () => controller.pick(i),
                         ),
-                  label: Text(
-                    o.$3 == null ? context.l10n.mentionEveryone : o.$2,
-                  ),
-                  onPressed: () => controller.pick(i),
+                    ],
+                    if (appOptions.isNotEmpty) ...[
+                      if (showSections)
+                        _MentionSectionLabel(l10n.mentionSectionApps),
+                      for (final (i, o) in appOptions)
+                        _MentionRow(
+                          key: Key(o.keyId),
+                          selected: i == controller.index,
+                          leading: AppLogo(
+                            appId:
+                                o.app.appId ??
+                                (o.app.kind == IntegrationKind.mcp
+                                    ? 'mcp'
+                                    : null),
+                            name: o.app.label,
+                            color: o.app.color,
+                            icon: o.app.appId != null
+                                ? null
+                                : _iconForIntegrationKind(o.app.kind),
+                            size: 22,
+                          ),
+                          title: o.app.label,
+                          badge:
+                              isGroup &&
+                                  botNamesLower.contains(
+                                    o.app.label.toLowerCase(),
+                                  )
+                              ? l10n.mentionBadgeApp
+                              : null,
+                          onTap: () => controller.pick(i),
+                        ),
+                    ],
+                    if (addOptions.isNotEmpty) ...[
+                      _MentionSectionLabel(l10n.mentionSectionAddToBot),
+                      for (final (i, o) in addOptions)
+                        _MentionRow(
+                          key: Key(o.keyId),
+                          selected: i == controller.index,
+                          leading: AppLogo(
+                            appId:
+                                o.app.appId ??
+                                (o.app.kind == IntegrationKind.mcp
+                                    ? 'mcp'
+                                    : null),
+                            name: o.app.label,
+                            color: o.app.color,
+                            icon: o.app.appId != null
+                                ? null
+                                : _iconForIntegrationKind(o.app.kind),
+                            size: 22,
+                          ),
+                          title: o.app.label,
+                          trailingAction: l10n.mentionAddAction,
+                          onTap: () => controller.pick(i),
+                        ),
+                    ],
+                    if (connectOptions.isNotEmpty) ...[
+                      _MentionSectionLabel(l10n.mentionSectionConnect),
+                      for (final (i, o) in connectOptions)
+                        _MentionRow(
+                          key: Key(o.keyId),
+                          selected: i == controller.index,
+                          leading: AppLogo(
+                            appId: o.app.id,
+                            name: o.app.name,
+                            color: o.app.color,
+                            size: 22,
+                          ),
+                          title: o.app.name,
+                          trailingAction: l10n.mentionConnectAction,
+                          onTap: () => controller.pick(i),
+                        ),
+                    ],
+                  ],
                 ),
-            ],
+              ),
+            ),
           ),
         );
       },
+    );
+  }
+
+  Future<void> _handleActionOption(
+    BuildContext context,
+    WidgetRef ref,
+    MentionOption option, {
+    required bool isGroup,
+    required List<Bot> bots,
+  }) async {
+    switch (option) {
+      case AddAppMentionOption(:final app):
+        final botId = botIds.firstOrNull;
+        if (botId == null) return;
+        final ok = await runGuarded(context, () async {
+          await ref
+              .read(backendProvider)
+              .setBotIntegration(botId, app.integrationId, true);
+          return true;
+        });
+        if (ok != true) return;
+        ref
+          ..invalidate(botIntegrationIdsProvider(botId))
+          ..invalidate(integrationsProvider);
+        controller.pickApp(app);
+        if (context.mounted) {
+          final botName = bots.firstOrNull?.name ?? '';
+          if (botName.isNotEmpty) {
+            showSuccess(context, context.l10n.appAddedToBot(app.label, botName));
+          }
+        }
+      case ConnectAppMentionOption(:final app):
+        Analytics.log('app_mention_connect_started', {'app_id': app.id});
+        final created = await showConnectApp(context, app);
+        if (created == null) return;
+        final botId = !isGroup ? botIds.firstOrNull : null;
+        if (botId != null && context.mounted) {
+          await runGuarded(context, () async {
+            await ref
+                .read(backendProvider)
+                .setBotIntegration(botId, created.id, true);
+            return true;
+          });
+        }
+        ref
+          ..invalidate(integrationsProvider)
+          ..invalidate(hubAppsProvider);
+        for (final id in botIds) {
+          ref.invalidate(botIntegrationIdsProvider(id));
+        }
+        controller.pickApp(
+          AppMentionInfo(
+            integrationId: created.id,
+            label: app.name,
+            appId: app.id,
+            color: app.color,
+            kind: created.kind,
+          ),
+        );
+      case BotMentionOption():
+      case AppMentionOption():
+        break;
+    }
+  }
+
+  static IconData? _iconForIntegrationKind(IntegrationKind? kind) =>
+      switch (kind) {
+        IntegrationKind.mcp => null,
+        IntegrationKind.openapi => LucideIcons.braces,
+        IntegrationKind.composio => LucideIcons.blocks,
+        IntegrationKind.pipedream => LucideIcons.cable,
+        IntegrationKind.localMcp => LucideIcons.laptop,
+        IntegrationKind.a2a => LucideIcons.bot,
+        null => LucideIcons.plug,
+      };
+}
+
+class _MentionSectionLabel extends StatelessWidget {
+  const _MentionSectionLabel(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 2),
+      child: Text(
+        text,
+        style: context.textTheme.labelSmall?.copyWith(
+          color: context.colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _MentionRow extends StatelessWidget {
+  const _MentionRow({
+    super.key,
+    required this.selected,
+    required this.leading,
+    required this.title,
+    this.badge,
+    this.trailingAction,
+    required this.onTap,
+  });
+
+  final bool selected;
+  final Widget leading;
+  final String title;
+  final String? badge;
+  final String? trailingAction;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        color: selected ? scheme.primaryContainer.withValues(alpha: 0.6) : null,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          children: [
+            leading,
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            if (badge != null) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  badge!,
+                  style: context.textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+            if (trailingAction != null) ...[
+              const SizedBox(width: 8),
+              Text(
+                trailingAction!,
+                style: context.textTheme.labelMedium?.copyWith(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

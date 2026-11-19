@@ -6286,3 +6286,33 @@ now!").
   member, another workspace's bot, no list or unconfirmed email, Full access plus an allow rule,
   stranger's, "always" and stale approvals, the switch turned off mid-wait, the API's refusals, and
   ban/unban.
+
+## D-434 @mentioning connected apps in chat (2026-11-20)
+
+Let people `@mention` connected apps (MCP servers, OpenAPI sources, A2A agents, local MCP, and
+individual Composio/Pipedream toolkits) in any chat so the bot loads that app's tools on Turn 1
+instead of spending a turn discovering them via `tools.load`.
+
+- **One `@` picker everywhere:** In direct chats `@` lists apps attached to the bot, workspace
+  apps not yet attached (**Add to this bot**, gated on workspace admin/owner role), and
+  unconnected catalog apps (**Connect**, shown after 2 typed letters). In group chats the same
+  picker shows **Bots** first, then **Apps** (union across member bots), with **Bot** / **App**
+  badges on name collisions. Plain-text collisions in group chats favor the bot; picking the app
+  from the menu sends an explicit `apps` ref that disambiguates it.
+- **Structured wire + storage, zero DB migration:** `sendMessage`, `sendGroup`, and `editMessage`
+  accept optional `apps: [{ integrationId, toolkit? }]` (max 3). Resolved mentions are stored in
+  `messages.content` as `{ type: "app", integrationId, label, toolkit?, appId?, source }` parts
+  alongside the text part. Plain typed `@gmail` also resolves on exact unambiguous name/slug match
+  (including inbound messages from Telegram, Slack, Teams, and iMessage), while email addresses
+  stay plain text.
+- **Lazy preloading + hint-only prompt:** `runAgent` pre-expands only the mentioned integrations
+  (or single Composio/Pipedream toolkit) into Turn 1's active tool list via
+  `preloadLazyToolsForAppMentions` and appends an in-memory-only `<mentioned_apps>` hint telling
+  the model the user called out those apps — never forcing a tool call. In group chats, if an
+  answering bot does not have a mentioned app attached, the server emits a soft `notice`
+  (`app_not_available`).
+- **Tappable pills & composer hint:** `@App` renders as a brand-tinted pill with the app's logo
+  (or a muted non-tappable pill if the integration was later removed); tapping opens
+  `/settings/integrations/:id`. Direct chats with at least one connected app show
+  `Message <bot> · @ to mention an app`. Routine prompts are out of scope.
+

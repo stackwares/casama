@@ -68,6 +68,7 @@ class _Backend extends FakeBackend {
     List<AttachmentRef> attachments = const [],
     Map<String, Object?>? uiAction,
     List<String> skills = const [],
+    List<AppMentionRef> apps = const [],
     String? idempotencyKey,
   }) async {
     sentTo.add(conversationId);

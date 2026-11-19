@@ -3,6 +3,7 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:casama_api/src/model/app_mention_ref.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -21,6 +22,8 @@ class EditMessageRequest {
   EditMessageRequest({
 
     required  this.text,
+
+     this.apps,
   });
 
   @JsonKey(
@@ -35,15 +38,30 @@ class EditMessageRequest {
 
 
 
+      /// Connected apps picked with @ in the edited message
+  @JsonKey(
+    
+    name: r'apps',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<AppMentionRef>? apps;
+
+
+
 
 
     @override
     bool operator ==(Object other) => identical(this, other) || other is EditMessageRequest &&
-      other.text == text;
+      other.text == text &&
+      other.apps == apps;
 
     @override
     int get hashCode =>
-        text.hashCode;
+        text.hashCode +
+        apps.hashCode;
 
   factory EditMessageRequest.fromJson(Map<String, dynamic> json) => _$EditMessageRequestFromJson(json);
 

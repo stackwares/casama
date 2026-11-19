@@ -1129,11 +1129,15 @@ class SupabaseBackend implements Backend {
   Future<SendMessageResponse> editMessage(
     String conversationId,
     String messageId,
-    String text,
-  ) async => (await api.chat.editMessage(
+    String text, {
+    List<AppMentionRef> apps = const [],
+  }) async => (await api.chat.editMessage(
     id: conversationId,
     messageId: messageId,
-    editMessageRequest: EditMessageRequest(text: text),
+    editMessageRequest: EditMessageRequest(
+      text: text,
+      apps: apps.isEmpty ? null : apps,
+    ),
   )).data!;
 
   @override
@@ -1973,6 +1977,7 @@ class SupabaseBackend implements Backend {
           createdAt: DateTime.parse(r['created_at'] as String),
           runId: r['run_id'] as String?,
           attachments: _files(r['content']),
+          apps: appMentionsOf(r['content']),
           ui: _ui(r['content']),
           uiActionSurface: _uiAction(r['content']),
           routineName: _routineName(r['content']),
@@ -2069,6 +2074,7 @@ class SupabaseBackend implements Backend {
     List<AttachmentRef> attachments = const [],
     Map<String, Object?>? uiAction,
     List<String> skills = const [],
+    List<AppMentionRef> apps = const [],
     String? idempotencyKey,
   }) async => (await api.chat.sendMessage(
     id: conversationId,
@@ -2076,6 +2082,7 @@ class SupabaseBackend implements Backend {
     sendMessageRequest: SendMessageRequest(
       text: text,
       skills: skills.isEmpty ? null : skills,
+      apps: apps.isEmpty ? null : apps,
       attachments: attachments.isEmpty
           ? null
           : [

@@ -647,6 +647,7 @@ Class | Method | HTTP request | Description
  - [Announcement](doc/Announcement.md)
  - [AnswerMcpQuestionBody](doc/AnswerMcpQuestionBody.md)
  - [AppCatalog](doc/AppCatalog.md)
+ - [AppMentionRef](doc/AppMentionRef.md)
  - [AppleSignInTokenRequest](doc/AppleSignInTokenRequest.md)
  - [AppleSignInTokenResult](doc/AppleSignInTokenResult.md)
  - [ApplyComputerUpdateRequest](doc/ApplyComputerUpdateRequest.md)

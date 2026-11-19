@@ -4,6 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:casama_api/src/model/ui_action_part.dart';
+import 'package:casama_api/src/model/app_mention_ref.dart';
 import 'package:casama_api/src/model/message_attachment.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -29,6 +30,8 @@ class SendMessageRequest {
      this.uiAction,
 
      this.skills,
+
+     this.apps,
   });
 
   @JsonKey(
@@ -80,6 +83,19 @@ class SendMessageRequest {
 
 
 
+      /// Connected apps picked with @ in the composer; the run preloads their tools
+  @JsonKey(
+    
+    name: r'apps',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final List<AppMentionRef>? apps;
+
+
+
 
 
     @override
@@ -87,14 +103,16 @@ class SendMessageRequest {
       other.text == text &&
       other.attachments == attachments &&
       other.uiAction == uiAction &&
-      other.skills == skills;
+      other.skills == skills &&
+      other.apps == apps;
 
     @override
     int get hashCode =>
         text.hashCode +
         attachments.hashCode +
         uiAction.hashCode +
-        skills.hashCode;
+        skills.hashCode +
+        apps.hashCode;
 
   factory SendMessageRequest.fromJson(Map<String, dynamic> json) => _$SendMessageRequestFromJson(json);
 

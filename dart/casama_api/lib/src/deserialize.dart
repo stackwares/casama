@@ -46,6 +46,7 @@ import 'package:casama_api/src/model/agent_import_plan_sources.dart';
 import 'package:casama_api/src/model/announcement.dart';
 import 'package:casama_api/src/model/answer_mcp_question_body.dart';
 import 'package:casama_api/src/model/app_catalog.dart';
+import 'package:casama_api/src/model/app_mention_ref.dart';
 import 'package:casama_api/src/model/apple_sign_in_token_request.dart';
 import 'package:casama_api/src/model/apple_sign_in_token_result.dart';
 import 'package:casama_api/src/model/apply_computer_update_request.dart';
@@ -996,6 +997,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return AnswerMcpQuestionBody.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AppCatalog':
           return AppCatalog.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'AppMentionRef':
+          return AppMentionRef.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AppleSignInTokenRequest':
           return AppleSignInTokenRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'AppleSignInTokenResult':

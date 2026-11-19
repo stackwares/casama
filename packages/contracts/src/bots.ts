@@ -200,6 +200,18 @@ export const UiActionPart = z
   })
   .openapi("UiActionPart");
 
+export const AppMentionRef = z
+  .object({
+    integration_id: Uuid,
+    toolkit: z
+      .string()
+      .min(1)
+      .max(80)
+      .optional()
+      .openapi({ description: "Hub toolkit or app slug (Composio or Pipedream)" }),
+  })
+  .openapi("AppMentionRef");
+
 export const SendMessageRequest = z
   .object({
     text: z.string().trim().max(100_000).default(""),
@@ -212,6 +224,9 @@ export const SendMessageRequest = z
       .openapi({
         description: "Skills picked with / in the composer; the run loads them up front",
       }),
+    apps: z.array(AppMentionRef).max(3).optional().openapi({
+      description: "Connected apps picked with @ in the composer; the run preloads their tools",
+    }),
   })
   .refine((b) => b.text.length > 0 || (b.attachments?.length ?? 0) > 0 || !!b.ui_action, {
     message: "Send some text or an attachment",
@@ -220,7 +235,12 @@ export const SendMessageRequest = z
   .openapi("SendMessageRequest");
 
 export const EditMessageRequest = z
-  .object({ text: z.string().trim().min(1).max(100_000) })
+  .object({
+    text: z.string().trim().min(1).max(100_000),
+    apps: z.array(AppMentionRef).max(3).optional().openapi({
+      description: "Connected apps picked with @ in the edited message",
+    }),
+  })
   .openapi("EditMessageRequest");
 
 export const SwitchBranchRequest = z

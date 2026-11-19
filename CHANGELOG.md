@@ -9,6 +9,13 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- `@mention` connected apps in chat (D-434): type `@` in any direct or group chat to mention a
+  connected app (MCP server, OpenAPI source, A2A agent, local MCP, or individual Composio/Pipedream
+  toolkit like `@Gmail` or `@Linear`). Picking or typing an `@App` preloads only that app's tools on
+  the first turn, renders a tappable app pill that opens its connection settings, lets admins add an
+  unattached workspace app to the bot inline, and offers **Connect** for catalog apps after two
+  typed letters. Plain-text `@App` mentions also work from Telegram, Slack, Teams, and iMessage.
+  See [Mention an app with @](https://docs.casama.ai/guide/connections#mention-an-app-with-).
 - Clickable links in Casama Help (D-431): answers from the support assistant in the app and on
   casama.ai/docs can now link straight to the exact screen, section or store page you need
   (`casama://app/...` in the app, `https://casama.ai/open/...` on the web) with up to two **Go to**

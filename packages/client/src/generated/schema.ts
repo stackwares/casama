@@ -8666,6 +8666,14 @@ export interface components {
         };
         EditMessageRequest: {
             text: string;
+            /** @description Connected apps picked with @ in the edited message */
+            apps?: components["schemas"]["AppMentionRef"][];
+        };
+        AppMentionRef: {
+            /** Format: uuid */
+            integration_id: string;
+            /** @description Hub toolkit or app slug (Composio or Pipedream) */
+            toolkit?: string;
         };
         BotA2a: {
             workspace_enabled: boolean;
@@ -8806,6 +8814,8 @@ export interface components {
             ui_action?: components["schemas"]["UiActionPart"];
             /** @description Skills picked with / in the composer; the run loads them up front */
             skills?: string[];
+            /** @description Connected apps picked with @ in the composer; the run preloads their tools */
+            apps?: components["schemas"]["AppMentionRef"][];
         };
         MessageAttachment: {
             /** @description Where the file is on the bot's computer, under its home folder (upload it first); or media:<id> from POST /v1/media, which needs no computer */

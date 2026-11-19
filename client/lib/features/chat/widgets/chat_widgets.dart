@@ -55,6 +55,7 @@ class UserBubble extends StatelessWidget {
     super.key,
     required this.text,
     this.attachments = const [],
+    this.apps = const [],
     this.onEdit,
     this.siblingIndex = 1,
     this.siblingCount = 1,
@@ -69,6 +70,7 @@ class UserBubble extends StatelessWidget {
   });
   final String text;
   final List<AttachmentRef> attachments;
+  final List<MessageAppMention> apps;
 
   /// When it was sent (D-387), shown in its menu.
   final DateTime? sentAt;
@@ -222,11 +224,11 @@ class UserBubble extends StatelessWidget {
                 child: Builder(
                   builder: (context) {
                     final style = context.textTheme.bodyLarge?.copyWith(height: 1.4, color: ChatLook.userText(context));
-                    // In a group chat, @mentions of its bots stand out (D-118).
+                    // @mentions of bots (D-118) and apps (D-434) stand out as pills.
                     final mentions = MentionScope.maybeOf(context);
                     if (mentions == null) return Text(text, style: style);
                     return Text.rich(
-                      TextSpan(children: mentionSpans(mentions, text, style)),
+                      TextSpan(children: mentionSpans(mentions, text, style, messageApps: apps)),
                       style: style,
                     );
                   },

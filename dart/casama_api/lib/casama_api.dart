@@ -118,6 +118,7 @@ export 'package:casama_api/src/model/agent_import_plan_sources.dart';
 export 'package:casama_api/src/model/announcement.dart';
 export 'package:casama_api/src/model/answer_mcp_question_body.dart';
 export 'package:casama_api/src/model/app_catalog.dart';
+export 'package:casama_api/src/model/app_mention_ref.dart';
 export 'package:casama_api/src/model/apple_sign_in_token_request.dart';
 export 'package:casama_api/src/model/apple_sign_in_token_result.dart';
 export 'package:casama_api/src/model/apply_computer_update_request.dart';

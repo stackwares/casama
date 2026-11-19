@@ -1,10 +1,8 @@
 # @mention an app in chat: plan
 
-Status: **waiting for Oliver** (written 2026-11-19). Nothing is built. Code starts when the choices
-in §11 are answered or the defaults are accepted.
+Status: **done** (D-434; written 2026-11-19; implemented Phases 0–3 on 2026-11-20).
 
-Record the result as a decision in `docs/DECISIONS.md` when the first phase lands (check the highest
-number first; it was D-427 on 2026-11-19).
+Recorded as decision **D-434** in `docs/DECISIONS.md`.
 
 ## 0. Summary
 
@@ -205,14 +203,14 @@ less on lazy runs where the bot would have called `tools.load`. Measure with
 
 ## 10. Phases
 
-### Phase 0: checks (half a day)
+### Phase 0: checks (done 2026-11-20)
 
-- How plugin tools are named and grouped.
-- Whether shipped builds skip unknown message parts (§4.3).
-- Who may attach an integration to a bot.
-- The size in tokens of the biggest real apps (Composio Gmail, GitHub MCP), to set the budget.
+- **Plugin tool naming & grouping:** Plugin stdio MCP servers are `integrations` with `kind = 'computer_mcp'` (remote ones use `kind = 'mcp'`). Tools are named `${kind}.${name}.${tool}` via `integrationToolName`. `INTEGRATION_KINDS` in `packages/agent/src/lazy-tools.ts` was missing `'computer_mcp'` and `'a2a'`; adding both gives each plugin server (`computer_mcp.<name>`) and A2A agent (`a2a.<name>`) its own lazy group. Hub integrations store connected slugs in `config.toolkits` (`composio`) or `config.apps` (`pipedream`), and their tool names start with `<normalized_slug>_`.
+- **Shipped builds & unknown parts (§4.3):** Verified across `client/lib/core/supabase_backend.dart`, `client/lib/core/backend.dart`, `client/lib/features/chat/chat_controller.dart`, and `dart/casama_api`. Every reader filters `content` parts by `p['type'] == ...` and ignores unknown part types, so build 44 and earlier cleanly show plain `@Label` text. No minimum-version stripping is needed on the server.
+- **Who may attach an integration to a bot:** `POST /v1/bots/{id}/integrations` checks RLS `public.can_manage_bot(bot_id)` (the bot's creator, a workspace owner/admin on a team-visible bot, or a user with an `edit`/`admin` bot grant), plus `local_mcp` requires `config.owner_user_id === user_id`.
+- **Token budget:** `estimateTokens` uses `ceil(JSON.stringify(specs).length / 4)`. A typical tool spec is ~120–220 tokens; Composio Gmail (~20–30 tools) is ~3.5k–5.5k tokens and medium MCP servers are ~3k–7k tokens, while very large 50+ tool MCP servers exceed 10k tokens. Keeping `MENTIONED_TOOL_TOKENS = 8_000` preloads normal apps (and 2–3 smaller ones) while falling back to the note-only hint on oversized servers.
 
-Done when: this plan is updated with the answers.
+Done when: this plan is updated with the answers. **Done.**
 
 ### Phase 1: server (1.5 days)
 

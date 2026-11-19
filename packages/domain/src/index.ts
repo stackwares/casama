@@ -5,6 +5,7 @@ export * from "./action-rules.ts";
 export * from "./agent-import.ts";
 export * from "./agent-plugins.ts";
 export * from "./app-config.ts";
+export * from "./app-mentions.ts";
 export * from "./approvals.ts";
 export * from "./apps.ts";
 export * from "./browser-guard.ts";

@@ -616,6 +616,72 @@ abstract class AppLocalizations {
   /// **'Message {bot}'**
   String messageHint(String bot);
 
+  /// No description provided for @messageHintWithApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Message {bot} · @ to mention an app'**
+  String messageHintWithApps(String bot);
+
+  /// No description provided for @mentionSectionBots.
+  ///
+  /// In en, this message translates to:
+  /// **'Bots'**
+  String get mentionSectionBots;
+
+  /// No description provided for @mentionSectionApps.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps'**
+  String get mentionSectionApps;
+
+  /// No description provided for @mentionSectionAddToBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to this bot'**
+  String get mentionSectionAddToBot;
+
+  /// No description provided for @mentionSectionConnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get mentionSectionConnect;
+
+  /// No description provided for @mentionBadgeBot.
+  ///
+  /// In en, this message translates to:
+  /// **'Bot'**
+  String get mentionBadgeBot;
+
+  /// No description provided for @mentionBadgeApp.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get mentionBadgeApp;
+
+  /// No description provided for @mentionAddAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get mentionAddAction;
+
+  /// No description provided for @mentionConnectAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get mentionConnectAction;
+
+  /// No description provided for @mentionMaxApps.
+  ///
+  /// In en, this message translates to:
+  /// **'You can mention up to 3 apps per message.'**
+  String get mentionMaxApps;
+
+  /// No description provided for @mentionRemovedApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed app'**
+  String get mentionRemovedApp;
+
   /// No description provided for @send.
   ///
   /// In en, this message translates to:

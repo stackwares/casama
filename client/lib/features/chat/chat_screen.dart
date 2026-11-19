@@ -33,6 +33,7 @@ import '../../ui/bottom_padding.dart';
 import '../groups/empty_group.dart';
 import 'delete_chat.dart';
 import '../groups/group_chats.dart';
+import '../integrations/integrations_screen.dart' show HubApp, hubAppsProvider;
 import '../island/run_tracker.dart';
 import '../billing/out_of_credits.dart';
 import '../billing/paywall.dart';
@@ -771,8 +772,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // The message shows at once and is delivered when its files are up (no waiting at Send).
     final uploads = inFlight.isEmpty ? null : Future.wait([for (final p in inFlight) p.upload!]).then((r) => r.every((ok) => ok));
     final skills = text == null ? [..._pickedSkills] : const <String>[];
+    final apps = text == null ? [..._mentions.pickedApps] : const <MessageAppMention>[];
     if (text == null) {
       _sentEpoch++;
+      _mentions.clearPickedApps();
       _input.clear();
       setState(() {
         _pending.removeWhere(items.contains);
@@ -784,7 +787,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     var notSent = false;
     final ok = await runGuarded(context, () async {
       try {
-        await ref.read(chatControllerProvider(widget.botId).notifier).send(message, attachments: attachments, skills: skills, uploads: uploads);
+        await ref.read(chatControllerProvider(widget.botId).notifier).send(message, attachments: attachments, skills: skills, apps: apps, uploads: uploads);
       } on UploadsFailed {
         notSent = true;
       }
@@ -799,6 +802,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           _pending.insertAll(0, [for (final p in items) if (!_pending.contains(p)) p]);
           _pickedSkills.addAll([for (final s in skills) if (!_pickedSkills.contains(s)) s]);
         });
+        _mentions.restorePickedApps(apps);
       }
       return;
     }
@@ -810,6 +814,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         _pending.insertAll(0, [for (final p in items) if (!_pending.contains(p)) p]);
         _pickedSkills.addAll([for (final s in skills) if (!_pickedSkills.contains(s)) s]);
       });
+      _mentions.restorePickedApps(apps);
       showFailure(context, context.l10n.messageNotSent);
       return;
     }
@@ -912,7 +917,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (text == null || text.trim().isEmpty || text.trim() == e.text.trim() || !mounted) return;
     _stickToBottom = true;
     Analytics.feature('edit_resend');
-    await runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).edit(e.id, text));
+    final lower = text.toLowerCase();
+    final keptApps = [
+      for (final a in e.apps)
+        if (lower.contains('@${a.label.toLowerCase()}')) a.toRef(),
+    ];
+    await runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).edit(e.id, text, apps: keptApps));
   }
 
   /// Dictation: tap to start, tap again to stop. The recording goes to the server (Whisper, which
@@ -1156,16 +1166,50 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     Future<void>.delayed(const Duration(milliseconds: 150), apply);
   }
 
-  /// In a group chat, the messages' @mentions of its bots show as pills that open their profiles.
+  /// Messages' @mentions of bots (in group chats, D-118) and apps (in any chat, D-434) show as
+  /// pills that open the bot's profile or the app's connection page.
   Widget _withMentions(Widget thread) {
-    if (!widget.group) return thread;
-    final ids = ref.watch(groupChatsProvider).value?.where((g) => g.id == widget.conversationId).firstOrNull?.botIds ?? const <String>[];
-    final bots = ref.watch(botsProvider).value ?? const <Bot>[];
+    final ids = widget.group
+        ? (ref.watch(groupChatsProvider).value?.where((g) => g.id == widget.conversationId).firstOrNull?.botIds.toList() ?? const <String>[])
+        : [widget.botId];
+    final bots = widget.group
+        ? [for (final b in ref.watch(botsProvider).value ?? const <Bot>[]) if (ids.contains(b.id)) b]
+        : const <Bot>[];
+    final integrationsAsync = ref.watch(integrationsProvider);
+    final integrations = integrationsAsync.value ?? const <Integration>[];
+    final catalog = ref.watch(appCatalogProvider).value;
+    final hubApps = ref.watch(hubAppsProvider).value ?? const <HubApp>[];
+    final attachedIds = <String>{
+      for (final id in ids) ...(ref.watch(botIntegrationIdsProvider(id)).value ?? const <String>{}),
+    };
+    final built = buildMentionableApps(
+      integrations: integrations,
+      attachedIds: attachedIds,
+      hubApps: hubApps,
+      catalog: catalog,
+    );
     return MentionScope(
-      bots: [for (final b in bots) if (ids.contains(b.id)) b],
+      bots: bots,
+      apps: built.connected,
+      knownIntegrationIds: integrationsAsync.hasValue ? {for (final i in integrations) i.id} : null,
       onOpen: (bot) => context.pushOnce('/bots/${bot.id}/settings'),
+      onOpenApp: (id) => context.pushOnce('/settings/integrations/$id'),
       child: thread,
     );
+  }
+
+  /// True when [botId] has at least one connected app (direct or via a hub), so the direct-chat
+  /// composer placeholder hints that `@` mentions an app (D-434).
+  bool _hasConnectedApps(String botId) {
+    final integrations = ref.watch(integrationsProvider).value ?? const <Integration>[];
+    final attachedIds = ref.watch(botIntegrationIdsProvider(botId)).value ?? const <String>{};
+    if (attachedIds.isEmpty || integrations.isEmpty) return false;
+    final hubApps = ref.watch(hubAppsProvider).value ?? const <HubApp>[];
+    return buildMentionableApps(
+      integrations: integrations,
+      attachedIds: attachedIds,
+      hubApps: hubApps,
+    ).connected.isNotEmpty;
   }
 
   /// Reads [m] aloud in its bot's voice, or stops when it's the one being read.
@@ -1527,12 +1571,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         ReadAloudBar(chatKey: widget.botId, onShowMessage: (id) => setState(() => _focusPending = id)),
-                        if (widget.group)
-                          MentionPicker(
-                            botIds: ref.watch(groupChatsProvider).value?.where((g) => g.id == widget.conversationId).firstOrNull?.botIds.toList() ?? const [],
-                            controller: _mentions,
-                            lastSpeakerId: chat.lastSpeakerId,
-                          ),
+                        MentionPicker(
+                          botIds: widget.group
+                              ? (ref.watch(groupChatsProvider).value?.where((g) => g.id == widget.conversationId).firstOrNull?.botIds.toList() ?? const [])
+                              : [widget.botId],
+                          group: widget.group,
+                          controller: _mentions,
+                          lastSpeakerId: widget.group ? chat.lastSpeakerId : null,
+                        ),
                         _SkillPicker(
                           botId: widget.botId,
                           input: _input,
@@ -1546,10 +1592,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         ChatComposer(
                           controller: _input,
                           focusNode: _focus,
-                          keyHandler: widget.group ? _mentions.handleKey : null,
+                          keyHandler: _mentions.handleKey,
                           allowSendWhileRunning: !widget.group,
-                          // A group's line above says which bot answers; the hint names the group, like the header.
-                          hint: l10n.messageHint(group == null ? name : groupTitle(group, groupBots)),
+                          // A group's line above says which bot answers; direct chats hint @ when apps are connected (D-434).
+                          hint: group != null
+                              ? l10n.messageHint(groupTitle(group, groupBots))
+                              : _hasConnectedApps(widget.botId)
+                                  ? l10n.messageHintWithApps(name)
+                                  : l10n.messageHint(name),
                           running: chat.running,
                           onSend: _sendFromComposer,
                           onStop: () => runGuarded(context, controller.cancel),
@@ -1796,6 +1846,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 text: e.text,
                 sentAt: e.at,
                 attachments: e.attachments,
+                apps: e.apps,
                 uploading: e.uploading,
                 onResend: e.failed ? () => runGuarded(context, () => ref.read(chatControllerProvider(widget.botId).notifier).resend(e.id)) : null,
                 onDiscard: e.failed ? () => ref.read(chatControllerProvider(widget.botId).notifier).discardUnsent(e.id) : null,

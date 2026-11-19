@@ -302,6 +302,41 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String messageHintWithApps(String bot) {
+    return 'Message $bot · @ to mention an app';
+  }
+
+  @override
+  String get mentionSectionBots => 'Bots';
+
+  @override
+  String get mentionSectionApps => 'Apps';
+
+  @override
+  String get mentionSectionAddToBot => 'Add to this bot';
+
+  @override
+  String get mentionSectionConnect => 'Connect';
+
+  @override
+  String get mentionBadgeBot => 'Bot';
+
+  @override
+  String get mentionBadgeApp => 'App';
+
+  @override
+  String get mentionAddAction => 'Add';
+
+  @override
+  String get mentionConnectAction => 'Connect';
+
+  @override
+  String get mentionMaxApps => 'You can mention up to 3 apps per message.';
+
+  @override
+  String get mentionRemovedApp => 'Removed app';
+
+  @override
   String get send => 'Send';
 
   @override

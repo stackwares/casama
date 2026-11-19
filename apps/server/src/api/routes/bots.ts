@@ -1,10 +1,12 @@
 import {
+  EventBus,
   existingWelcome,
   handleWelcomeAction,
   lockChat,
   memoryStoreFor,
   milestone,
   PLATFORM_OPENROUTER_CREDENTIAL_ID,
+  resolveMessageAppParts,
   type StoredMemory,
   setWelcomeContentSource,
   spaceName,
@@ -15,6 +17,7 @@ import {
 import { ProviderId, pageKey, routes } from "@casama/contracts";
 import { contentKeys, type JwtClaims, pgErrorCode, schema, withUserSession } from "@casama/db";
 import {
+  type AppMentionRefInput,
   BOT_TEMPLATES,
   CLOUD_LOCKED_MODEL,
   cloudRunPolicy,
@@ -867,7 +870,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.editMessage, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id, message_id } = c.req.valid("param");
-    const { text } = c.req.valid("json");
+    const { text, apps: pickedApps } = c.req.valid("json");
     const created = await withUserSession(db, claims, async (tx) => {
       const [m] = await tx.execute<{
         org_id: string;
@@ -891,18 +894,26 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           "run_in_progress",
           "Wait for the bot to finish, or stop it, before editing",
         );
+      const { parts: appParts } = await resolveMessageAppParts(tx, {
+        botIds: [m.bot_id],
+        actingUserId: claims.sub,
+        text,
+        picked: pickedApps,
+      });
       const [run] = await tx.execute<{ id: string }>(sql`
         insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger)
         values (${m.org_id}::uuid, ${m.bot_id}::uuid, ${id}::uuid, ${claims.sub}::uuid, 'chat') returning id`);
-      // The new text keeps the original's attachments and picked skills.
+      // The new text keeps the original's attachments and picked skills, and re-resolves @App mentions.
       const kept = Array.isArray(m.content)
-        ? (m.content as Array<{ type?: string }>).filter((p) => p.type !== "text")
+        ? (m.content as Array<{ type?: string }>).filter(
+            (p) => p.type !== "text" && p.type !== "app",
+          )
         : [];
       if (!m.parent) await tx.execute(sql`select set_config('casama.branch_root', 'on', true)`);
       const [msg] = await tx.execute<{ id: string }>(sql`
         insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id, parent_message_id)
         values (${m.org_id}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid,
-                ${contentKeys.sealJson(m.org_id, [{ type: "text", text }, ...kept])}::jsonb, ${run?.id}::uuid, ${m.parent}::uuid)
+                ${contentKeys.sealJson(m.org_id, [{ type: "text", text }, ...kept, ...appParts])}::jsonb, ${run?.id}::uuid, ${m.parent}::uuid)
         returning id`);
       await tx.execute(sql`
         update public.conversations set head_message_id = ${msg?.id}::uuid, last_message_at = now() where id = ${id}::uuid`);
@@ -945,6 +956,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     text: string,
     parts: unknown[],
     messageId: string | null = null,
+    pickedApps?: AppMentionRefInput[],
   ) => {
     const created = await withUserSession(db, claims, async (tx) => {
       const [conv] = await tx.execute<{ org_id: string; bot_id: string }>(
@@ -964,10 +976,20 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           last?.bot_id && members.some((m) => m.id === last.bot_id) ? last.bot_id : conv.bot_id,
         ];
       }
+      const { parts: appParts, unavailableLabels } = await resolveMessageAppParts(tx, {
+        botIds: targets,
+        actingUserId: claims.sub,
+        text,
+        picked: pickedApps,
+        reservedNames: [...members.map((m) => m.name), "everyone", "all", "team"],
+        allBotIds: members.map((m) => m.id),
+        orgId: conv.org_id,
+      });
+      const allParts = [...parts, ...appParts];
       // The send's key is the message's id (D-402), so a retry can't post it a second time.
       const [msg] = await tx.execute<{ id: string }>(sql`
         insert into public.messages (id, org_id, conversation_id, role, author_user_id, content)
-        values (coalesce(${messageId}::uuid, gen_random_uuid()), ${conv.org_id}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid, ${contentKeys.sealJson(conv.org_id, parts)}::jsonb) returning id`);
+        values (coalesce(${messageId}::uuid, gen_random_uuid()), ${conv.org_id}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid, ${contentKeys.sealJson(conv.org_id, allParts)}::jsonb) returning id`);
       const runIds: string[] = [];
       for (const botId of targets) {
         const [run] = await tx.execute<{ id: string }>(sql`
@@ -978,8 +1000,24 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       await tx.execute(
         sql`update public.conversations set last_message_at = now() where id = ${id}::uuid`,
       );
-      return { messageId: msg?.id as string, runIds };
+      const targetNames = targets
+        .map((t) => members.find((m) => m.id === t)?.name)
+        .filter((n): n is string => !!n);
+      return { messageId: msg?.id as string, runIds, unavailableLabels, targetNames };
     });
+    if (created.unavailableLabels.length > 0 && created.runIds[0]) {
+      const appsText = created.unavailableLabels.join(", ");
+      const noticeMessage =
+        created.targetNames.length === 1
+          ? `@${created.targetNames[0]} doesn't have ${appsText} connected.`
+          : `None of the replying bots have ${appsText} connected.`;
+      await new EventBus(db)
+        .append(created.runIds[0], "notice", {
+          code: "app_not_available",
+          message: noticeMessage,
+        })
+        .catch(() => {});
+    }
     for (const r of created.runIds) await deps.workflows.startRun(r);
     return {
       message_id: created.messageId,
@@ -992,7 +1030,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   app.openapi(routes.sendMessage, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
-    const { text, attachments, ui_action, skills: picked } = c.req.valid("json");
+    const { text, attachments, ui_action, skills: picked, apps: pickedApps } = c.req.valid("json");
     // The app retries a send that didn't get an answer (D-402) with the same Idempotency-Key. The
     // idempotency middleware replays a send that finished; a UUID key is also the message's id, so
     // a retry that arrives while the first send is still being answered can't post it twice.
@@ -1065,6 +1103,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
             ...(picked ?? []).map((name) => ({ type: "skill", name })),
           ],
           messageId,
+          pickedApps,
         ),
       );
       if ("replay" in group) return group.replay;
@@ -1111,8 +1150,8 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           // own instructions, a cheaper model and fewer tools, so it must not be the one to
           // answer), and not a call's tool run (it does one thing and never looks for new messages).
           if (!ui_action) {
-            const [active] = await tx.execute<{ id: string; org_id: string }>(sql`
-              select r.id, r.org_id from public.runs r
+            const [active] = await tx.execute<{ id: string; org_id: string; bot_id: string }>(sql`
+              select r.id, r.org_id, r.bot_id from public.runs r
               where r.conversation_id = ${id}::uuid and r.status in ('queued', 'running')
                 and r.cancel_requested_at is null
                 and r.trigger not in ('routine', 'voice', 'watcher') and r.routine_id is null
@@ -1120,12 +1159,19 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
                 and exists (select 1 from public.messages m where m.run_id = r.id and m.role = 'user')
               order by r.created_at desc limit 1`);
             if (active) {
+              const { parts: appParts } = await resolveMessageAppParts(tx, {
+                botIds: [active.bot_id],
+                actingUserId: claims.sub,
+                text,
+                picked: pickedApps,
+              });
               const [msg] = await tx.execute<{ id: string }>(sql`
                 insert into public.messages (id, org_id, conversation_id, role, author_user_id, content, run_id)
                 values (coalesce(${messageId}::uuid, gen_random_uuid()), ${active.org_id}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid,
                         ${contentKeys.sealJson(active.org_id, [
                           { type: "text", text },
                           ...fileParts(attachments),
+                          ...appParts,
                         ])}::jsonb, ${active.id}::uuid)
                 returning id`);
               await tx
@@ -1151,6 +1197,12 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
               "workspace_suspended",
               "This workspace is suspended. Contact the instance owner.",
             );
+          const { parts: appParts } = await resolveMessageAppParts(tx, {
+            botIds: [conv.botId],
+            actingUserId: claims.sub,
+            text,
+            picked: pickedApps,
+          });
           const [run] = await tx
             .insert(runs)
             .values({
@@ -1170,6 +1222,7 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
                     ...fileParts(attachments),
                     ...(ui_action ? [{ type: "ui_action", ...ui_action }] : []),
                     ...(picked ?? []).map((name) => ({ type: "skill", name })),
+                    ...appParts,
                   ])}::jsonb, ${run.id}::uuid)
           returning id`);
           await tx

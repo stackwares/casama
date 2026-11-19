@@ -42,7 +42,16 @@ const GROUP_PURPOSE: Record<string, string> = {
   projects:
     "keep work that takes several files or sessions (a game, an app, a site) together: start one and what you make is filed under it",
 };
-const INTEGRATION_KINDS = new Set(["mcp", "openapi", "composio", "pipedream", "local_mcp", "app"]);
+const INTEGRATION_KINDS = new Set([
+  "mcp",
+  "openapi",
+  "composio",
+  "pipedream",
+  "local_mcp",
+  "computer_mcp",
+  "a2a",
+  "app",
+]);
 
 export const isCoreTool = (name: string) =>
   CORE_PREFIXES.some((p) => name === p || name.startsWith(p));
@@ -104,8 +113,55 @@ export function planLazyTools(
 export const REMEMBERED_GROUPS = 6;
 /** Remembered definitions stay under this many tokens, so an old habit can't bloat every call. */
 export const REMEMBERED_TOOL_TOKENS = 6_000;
+/** Mentioned `@App` tools preload before remembered groups under their own budget (D-434). */
+export const MENTIONED_TOOL_TOKENS = 8_000;
 /** Group names kept on the conversation; more than are loaded, so a skipped big group can return. */
 const REMEMBERED_KEPT = 12;
+
+export interface MentionedToolRequest {
+  /** Integration tool group, e.g. `mcp.linear`, `composio.apps`, `computer_mcp.figma`. */
+  group: string;
+  /** Exact full tool names belonging to this mentioned app (filtered to one toolkit for hubs). */
+  toolNames: string[];
+}
+
+/**
+ * Selects tool definitions for `@App` mentions that fit within `MENTIONED_TOOL_TOKENS`.
+ * Keeps each mentioned app atomic: if an app's tools exceed the remaining budget it is skipped
+ * (the model still receives its name and group so it can call `tools.load` if needed).
+ * Returned tools are sorted by name for prompt-cache stability.
+ */
+export function selectMentionedTools(
+  available: ToolDefinition[],
+  requests: MentionedToolRequest[],
+  tokensOf: (defs: ToolDefinition[]) => number,
+  budget = MENTIONED_TOOL_TOKENS,
+): { loaded: ToolDefinition[]; loadedIndices: Set<number> } {
+  const byName = new Map(available.map((t) => [t.name, t]));
+  const seen = new Set<string>();
+  const picked: ToolDefinition[] = [];
+  const loadedIndices = new Set<number>();
+  let tokens = 0;
+
+  for (const [idx, req] of requests.entries()) {
+    const defs = req.toolNames
+      .map((n) => byName.get(n))
+      .filter((d): d is ToolDefinition => !!d && !isCoreTool(d.name) && !seen.has(d.name))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    if (!defs.length) continue;
+    const size = tokensOf(defs);
+    if (tokens + size > budget) continue;
+    tokens += size;
+    loadedIndices.add(idx);
+    for (const d of defs) {
+      seen.add(d.name);
+      picked.push(d);
+    }
+  }
+
+  picked.sort((a, b) => a.name.localeCompare(b.name));
+  return { loaded: picked, loadedIndices };
+}
 
 /**
  * The tools to load at the start of a run: the conversation's groups, most recent first, while
@@ -115,19 +171,24 @@ export function rememberedTools(
   plan: LazyPlan,
   groups: string[],
   tokensOf: (defs: ToolDefinition[]) => number,
+  alreadyLoaded?: Set<string>,
 ): ToolDefinition[] {
-  const chosen: string[] = [];
+  const chosen: ToolDefinition[] = [];
+  const chosenGroups = new Set<string>();
   let tokens = 0;
   for (const g of groups) {
-    if (chosen.length >= REMEMBERED_GROUPS) break;
-    const tools = plan.groups.get(g);
-    if (!tools || chosen.includes(g)) continue;
+    if (chosenGroups.size >= REMEMBERED_GROUPS) break;
+    const raw = plan.groups.get(g);
+    if (!raw || chosenGroups.has(g)) continue;
+    const tools = alreadyLoaded ? raw.filter((t) => !alreadyLoaded.has(t.name)) : raw;
+    if (!tools.length) continue;
     const size = tokensOf(tools);
     if (tokens + size > REMEMBERED_TOOL_TOKENS) continue;
     tokens += size;
-    chosen.push(g);
+    chosenGroups.add(g);
+    chosen.push(...tools);
   }
-  return chosen.sort().flatMap((g) => plan.groups.get(g) as ToolDefinition[]);
+  return chosen.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /** A conversation's groups after a run used `used`: those first, then the earlier ones. */

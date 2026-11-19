@@ -5170,10 +5170,36 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 100000
+          },
+          "apps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppMentionRef"
+            },
+            "maxItems": 3,
+            "description": "Connected apps picked with @ in the edited message"
           }
         },
         "required": [
           "text"
+        ]
+      },
+      "AppMentionRef": {
+        "type": "object",
+        "properties": {
+          "integration_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "toolkit": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "Hub toolkit or app slug (Composio or Pipedream)"
+          }
+        },
+        "required": [
+          "integration_id"
         ]
       },
       "BotA2a": {
@@ -5732,6 +5758,14 @@
             },
             "maxItems": 5,
             "description": "Skills picked with / in the composer; the run loads them up front"
+          },
+          "apps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppMentionRef"
+            },
+            "maxItems": 3,
+            "description": "Connected apps picked with @ in the composer; the run preloads their tools"
           }
         }
       },

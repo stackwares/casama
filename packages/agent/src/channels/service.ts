@@ -9,6 +9,7 @@
 import { contentKeys, type Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
+import { resolveMessageAppParts } from "../app-mentions.ts";
 import { creationVisibleToRun } from "../creations.ts";
 import { setChannelReaction } from "../reactions.ts";
 import { ToolError, type ToolRegistry } from "../tools/registry.ts";
@@ -226,6 +227,11 @@ export async function handleInbound(
     const got = m.files?.length
       ? await receiveFiles(db, c, conversationId, m, deps)
       : { parts: [], notes: [] };
+    const { parts: appParts } = await resolveMessageAppParts(db, {
+      botIds: [c.bot_id],
+      actingUserId: c.created_by,
+      text: m.text,
+    }).catch(() => ({ parts: [], unavailableLabels: [] }));
     const [run] = await db.execute<{ id: string }>(sql`
       insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger)
       values (${c.org_id}::uuid, ${c.bot_id}::uuid, ${conversationId}::uuid, ${c.created_by}::uuid, 'channel') returning id`);
@@ -251,6 +257,7 @@ export async function handleInbound(
                   sender_name: m.senderName ?? null,
                 },
                 ...got.parts,
+                ...appParts,
               ])}::jsonb,
               ${run?.id}::uuid)
       returning id`);

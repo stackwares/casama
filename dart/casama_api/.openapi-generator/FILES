@@ -118,6 +118,7 @@ lib/src/model/agent_import_plan_sources.dart
 lib/src/model/announcement.dart
 lib/src/model/answer_mcp_question_body.dart
 lib/src/model/app_catalog.dart
+lib/src/model/app_mention_ref.dart
 lib/src/model/apple_sign_in_token_request.dart
 lib/src/model/apple_sign_in_token_result.dart
 lib/src/model/apply_computer_update_request.dart

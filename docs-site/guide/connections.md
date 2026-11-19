@@ -37,6 +37,24 @@ in as above. Bots never sign in for you, and no admin has to enable an app first
 - Apps the workspace already has get no button. The bot uses them, or adds them to itself, instead.
 - The card can offer apps from the gallery too.
 
+### Mention an app with `@`
+
+Type `@` in any chat to point a bot straight at a connected app — for example, *"Check `@Gmail` for
+invoices from `@Stripe`."* Casama loads that app's tools on the first turn so the bot doesn't spend
+a step looking for them.
+
+- **Direct chats:** `@` lists apps attached to this bot (including individual apps connected through
+  Composio or Pipedream). Workspace owners and admins also see **Add to this bot** for apps already
+  connected elsewhere in the workspace, and after two typed letters **Connect** offers catalog apps
+  you haven't connected yet.
+- **Group chats:** The same `@` menu lists **Bots** first, then **Apps** across the group's bots.
+  If a bot and an app share a name, both rows are badged **Bot** or **App** so you can pick the one
+  you mean.
+- **Chat apps:** Typing `@Gmail` or `@Linear` from Telegram, Slack, Teams, or iMessage works too when
+  the name matches one of the bot's connected apps.
+- Up to three apps can be mentioned per message. Tap any `@App` pill in a sent message to open its
+  connection page.
+
 ### Two accounts of one app
 
 To connect a second account of the same app, such as a work and a personal Gmail, tap the app on

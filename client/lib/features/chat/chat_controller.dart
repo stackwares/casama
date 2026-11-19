@@ -28,6 +28,7 @@ class MessageEntry extends ChatEntry {
     required this.text,
     this.streaming = false,
     this.attachments = const [],
+    this.apps = const [],
     this.siblingIndex = 1,
     this.siblingCount = 1,
     this.botId,
@@ -58,15 +59,19 @@ class MessageEntry extends ChatEntry {
   final bool streaming;
   final List<AttachmentRef> attachments;
 
+  /// Apps mentioned in this message (D-434).
+  final List<MessageAppMention> apps;
+
   /// Edited versions of a message are siblings; arrows switch between them (D-108).
   final int siblingIndex;
   final int siblingCount;
-  MessageEntry copyWith({String? id, String? text, bool? streaming, List<AttachmentRef>? attachments, bool? uploading, bool? failed, String? botId}) => MessageEntry(
+  MessageEntry copyWith({String? id, String? text, bool? streaming, List<AttachmentRef>? attachments, List<MessageAppMention>? apps, bool? uploading, bool? failed, String? botId}) => MessageEntry(
         id: id ?? this.id,
         role: role,
         text: text ?? this.text,
         streaming: streaming ?? this.streaming,
         attachments: attachments ?? this.attachments,
+        apps: apps ?? this.apps,
         siblingIndex: siblingIndex,
         siblingCount: siblingCount,
         botId: botId ?? this.botId,
@@ -311,7 +316,7 @@ class NoticeEntry extends ChatEntry {
 }
 
 /// What a message was sent with: Retry after a failed run sends exactly this again (Fix 12).
-typedef SentMessage = ({String text, List<AttachmentRef> attachments, List<String> skills, Map<String, Object?>? uiAction});
+typedef SentMessage = ({String text, List<AttachmentRef> attachments, List<String> skills, List<MessageAppMention> apps, Map<String, Object?>? uiAction});
 
 class ChatState {
   const ChatState({
@@ -953,13 +958,15 @@ class ChatController extends Notifier<ChatState> {
                       prev.siblingCount == m.siblingCount &&
                       prev.runId == m.runId &&
                       prev.at == m.createdAt.toLocal() &&
-                      _sameAttachments(prev.attachments, m.attachments) =>
+                      _sameAttachments(prev.attachments, m.attachments) &&
+                      _sameApps(prev.apps, m.apps) =>
                 prev,
               _ => MessageEntry(
                 id: m.id,
                 role: m.role,
                 text: m.text,
                 attachments: m.attachments,
+                apps: m.apps,
                 siblingIndex: m.siblingIndex,
                 siblingCount: m.siblingCount,
                 botId: m.botId,
@@ -995,6 +1002,15 @@ class ChatController extends Notifier<ChatState> {
           a[i].size != b[i].size) {
         return false;
       }
+    }
+    return true;
+  }
+
+  static bool _sameApps(List<MessageAppMention> a, List<MessageAppMention> b) {
+    if (identical(a, b)) return true;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
     }
     return true;
   }
@@ -1227,10 +1243,10 @@ class ChatController extends Notifier<ChatState> {
   }
 
   /// Edits a sent message and reruns from there; the old branch stays (D-108).
-  Future<void> edit(String messageId, String text) async {
+  Future<void> edit(String messageId, String text, {List<AppMentionRef> apps = const []}) async {
     final id = state.conversationId;
     if (id == null || state.running || text.trim().isEmpty) return;
-    await _backend.editMessage(id, messageId, text.trim());
+    await _backend.editMessage(id, messageId, text.trim(), apps: apps);
     await open(id);
   }
 
@@ -1253,7 +1269,7 @@ class ChatController extends Notifier<ChatState> {
     final id = state.conversationId;
     final asked = questionFor(replyId);
     if (id == null || state.running || asked == null) return;
-    await _backend.editMessage(id, asked.id, asked.text.trim());
+    await _backend.editMessage(id, asked.id, asked.text.trim(), apps: [for (final a in asked.apps) a.toRef()]);
     await open(id);
   }
 
@@ -1299,7 +1315,7 @@ class ChatController extends Notifier<ChatState> {
   /// A send that finds no server (a restart, a dropped connection) tries again by itself for
   /// about 30 s ([sendRetryDelays]) while the bubble shows it sending; every try carries the same
   /// [idempotencyKey], so the server posts the message once. Try Again passes the key back.
-  Future<void> send(String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction, List<String> skills = const [], Future<bool>? uploads, String? idempotencyKey}) async {
+  Future<void> send(String text, {List<AttachmentRef> attachments = const [], Map<String, Object?>? uiAction, List<String> skills = const [], List<MessageAppMention> apps = const [], Future<bool>? uploads, String? idempotencyKey}) async {
     final trimmed = text.trim();
     if (trimmed.isEmpty && attachments.isEmpty && uiAction == null) return;
     // While the bot works, a plain message joins its run (it decides what to do with it); group
@@ -1334,13 +1350,13 @@ class ChatController extends Notifier<ChatState> {
         ref.invalidate(conversationsProvider(botId));
       }
       to = conversationId;
-      final local = MessageEntry(id: 'local-${DateTime.now().microsecondsSinceEpoch}', role: 'user', text: trimmed, attachments: attachments, uploading: uploads != null, at: DateTime.now());
+      final local = MessageEntry(id: 'local-${DateTime.now().microsecondsSinceEpoch}', role: 'user', text: trimmed, attachments: attachments, apps: apps, uploading: uploads != null, at: DateTime.now());
       optimistic = local;
       _sending[local.id] = key;
       if (state.conversationId == to) {
         state = state.copyWith(
           entries: [...state.entries, local],
-          lastSent: (text: trimmed, attachments: attachments, skills: skills, uiAction: uiAction),
+          lastSent: (text: trimmed, attachments: attachments, skills: skills, apps: apps, uiAction: uiAction),
           sending: true,
           answeredUi: uiAction == null ? null : {...state.answeredUi, '${uiAction['surface_id']}'},
         );
@@ -1357,8 +1373,9 @@ class ChatController extends Notifier<ChatState> {
         _updateLocal(to, local.id, (m) => m.copyWith(uploading: false));
       }
       final target = to;
+      final appRefs = [for (final a in apps) a.toRef()];
       sent = await _deliver(
-        () => _backend.send(target, trimmed, attachments: attachments, uiAction: uiAction, skills: skills, idempotencyKey: key),
+        () => _backend.send(target, trimmed, attachments: attachments, uiAction: uiAction, skills: skills, apps: appRefs, idempotencyKey: key),
         // The request is on its way; the next message may go.
         onWay: () {
           if (!turn.isCompleted) turn.complete();
@@ -1372,7 +1389,7 @@ class ChatController extends Notifier<ChatState> {
       if (o != null && chat != null) {
         _sending.remove(o.id);
         if (_updateLocal(chat, o.id, (m) => m.copyWith(failed: true, uploading: false))) {
-          _unsent[o.id] = (skills: skills, uiAction: uiAction, key: key);
+          _unsent[o.id] = (skills: skills, apps: apps, uiAction: uiAction, key: key);
         }
       }
       if (chat == null || state.conversationId == chat) state = state.copyWith(sending: false);
@@ -1411,7 +1428,7 @@ class ChatController extends Notifier<ChatState> {
 
   /// What failed messages were sent with, so Try Again sends exactly the same thing, with the
   /// same idempotency key (an answer that was lost may mean the server has it already).
-  final _unsent = <String, ({List<String> skills, Map<String, Object?>? uiAction, String key})>{};
+  final _unsent = <String, ({List<String> skills, List<MessageAppMention> apps, Map<String, Object?>? uiAction, String key})>{};
 
   /// Runs [attempt] until it reaches the server: a connection failure tries again after each of
   /// [sendRetryDelays]; any other error, or the last failure, is thrown. [onWay] runs once the
@@ -1437,7 +1454,7 @@ class ChatController extends Notifier<ChatState> {
     final m = state.entries[i] as MessageEntry;
     final extra = _unsent.remove(id);
     state = state.copyWith(entries: [...state.entries]..removeAt(i));
-    await send(m.text, attachments: m.attachments, skills: extra?.skills ?? const [], uiAction: extra?.uiAction, idempotencyKey: extra?.key);
+    await send(m.text, attachments: m.attachments, skills: extra?.skills ?? const [], apps: extra?.apps ?? m.apps, uiAction: extra?.uiAction, idempotencyKey: extra?.key);
   }
 
   /// Drops a message that didn't reach the server.
@@ -1451,7 +1468,7 @@ class ChatController extends Notifier<ChatState> {
   Future<void> retry() async {
     final last = state.lastSent;
     if (last != null) {
-      await send(last.text, attachments: last.attachments, skills: last.skills, uiAction: last.uiAction);
+      await send(last.text, attachments: last.attachments, skills: last.skills, apps: last.apps, uiAction: last.uiAction);
       return;
     }
     final rerun = state.rerunId;
