@@ -61,6 +61,7 @@ import 'read_aloud.dart';
 import 'widgets/composer.dart';
 import 'widgets/error_details.dart';
 import 'widgets/reply_usage.dart';
+import 'widgets/screen_held_actions.dart';
 import 'widgets/reactions.dart';
 import 'widgets/shared_files.dart';
 import '../../core/analytics.dart';
@@ -1693,6 +1694,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       return (b?.name ?? name, b?.avatarUrl ?? avatar);
     }
 
+    /// The newest "a person is in control" notice, while no "bot is back" notice came after it: it
+    /// carries Hand Back (the buttons themselves check who holds the screen now).
+    final heldNotice = () {
+      for (var j = entries.length - 1; j >= 0; j--) {
+        final e = entries[j];
+        if (e is NoticeEntry && e.kind == NoticeKind.botControl) return -1;
+        if (e is NoticeEntry && e.kind == NoticeKind.userControl) return e.refId == null ? -1 : j;
+      }
+      return -1;
+    }();
+    void openLive(String computerId) => context.pushOnce('/computer/live?c=$computerId');
+
     /// The running step in everyday words, or that the bot waits for the person while they have
     /// its screen: the newest of the control notices (or an unanswered takeover request) decides.
     String? workingStatus() {
@@ -2003,6 +2016,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 },
                 onDetails: () => showErrorDetails(context, entry: n, botId: widget.botId),
               );
+              if (i == heldNotice) {
+                final c = n.refId!;
+                return Column(children: [line, ScreenHeldActions(computerId: c, onOpenLive: () => openLive(c))]);
+              }
               if (!(last && n.kind == NoticeKind.failed && !chat.running)) return line;
               final fix = errorFix(context, ref, n, widget.botId);
               final canRetry = chat.canRetry;
@@ -2080,10 +2097,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             delay: afterReply ? const Duration(milliseconds: 1200) : Duration.zero,
             child: Padding(
               padding: EdgeInsets.only(top: afterReply ? gap : 0),
-              child: WorkingIndicator(status: status, botName: who, botAvatar: face, showIcon: !widget.group),
+              // Waiting for the screen: tapping the line hands it back, like the button on the notice.
+              child: status == context.l10n.activityWaitingForScreen && heldNotice >= 0
+                  ? GestureDetector(
+                      key: const Key('workingHandBack'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
+                        final c = (entries[heldNotice] as NoticeEntry).refId!;
+                        handBackScreen(context, ref, c, onOpenLive: () => openLive(c));
+                      },
+                      child: WorkingIndicator(status: status, botName: who, botAvatar: face, showIcon: !widget.group),
+                    )
+                  : WorkingIndicator(status: status, botName: who, botAvatar: face, showIcon: !widget.group),
             ),
           ),
-          inputs: (status, who, face, afterReply),
+          inputs: (status, who, face, afterReply, heldNotice),
         ),
       );
     }

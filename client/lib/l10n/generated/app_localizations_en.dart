@@ -1521,6 +1521,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Paused: a person is in control of the screen';
 
   @override
+  String get letBotUseTerminal => 'Let it use terminal & files';
+
+  @override
+  String get screenHandedBack => 'Handed the screen back';
+
+  @override
   String get privateComputer => 'Private computer';
 
   @override

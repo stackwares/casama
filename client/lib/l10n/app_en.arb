@@ -475,6 +475,8 @@
   "liveResume": "Resume",
   "paused": "Paused",
   "pausedUserInControl": "Paused: a person is in control of the screen",
+  "letBotUseTerminal": "Let it use terminal & files",
+  "screenHandedBack": "Handed the screen back",
   "privateComputer": "Private computer",
   "profileDesktop": "Desktop",
   "profileHeadless": "Headless",

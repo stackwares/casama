@@ -2626,6 +2626,18 @@ abstract class AppLocalizations {
   /// **'Paused: a person is in control of the screen'**
   String get pausedUserInControl;
 
+  /// No description provided for @letBotUseTerminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Let it use terminal & files'**
+  String get letBotUseTerminal;
+
+  /// No description provided for @screenHandedBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Handed the screen back'**
+  String get screenHandedBack;
+
   /// No description provided for @privateComputer.
   ///
   /// In en, this message translates to:
