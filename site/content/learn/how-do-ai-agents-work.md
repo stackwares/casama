@@ -20,6 +20,8 @@ Every agent, whatever it is called, does roughly this:
 One pass through the loop is a step. A simple task takes a handful. A research task can take
 dozens. Each step is a call to an AI model, which is why long tasks cost more than a chat message.
 
+{{figure: agent-loop}}
+
 ## The parts
 
 | Part | What it does |

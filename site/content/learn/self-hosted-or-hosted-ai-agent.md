@@ -21,6 +21,8 @@ order: 8
 | Reach from your phone | Needs a public address or a relay | Built in |
 | Region locks | None | Sometimes |
 
+{{figure: hosted-vs-self-hosted}}
+
 ## Choose self-hosted if
 
 - Your email, files or customer data shouldn't sit on someone else's servers.

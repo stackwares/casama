@@ -20,6 +20,8 @@ Facts about Grok Bot come from its own public pages and from press, and were che
 
 Grok Bot is a closed, hosted product from a large lab, sold as part of a subscription with a weekly usage pool. Casama is open source. You can run it on your own server for free with any model, or use Casama Cloud, where credits are dollars and each bot has budgets you set.
 
+{{figure: shared-vs-own-computer}}
+
 ## Choose Grok Bot if
 
 {{best-at: grok-bot}}

@@ -28,6 +28,7 @@
   <link rel="preload" href="/assets/fonts/GoogleSans-Bold.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/GoogleSans-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/site.css">
+  <link rel="stylesheet" href="/showcase.css">
 
   <script type="application/ld+json">
   [{
@@ -202,17 +203,22 @@
           <img src="/assets/bots/casama-focused-animated.svg" alt="" width="40" height="40">
           <div class="chat-who">
             <strong>Anna</strong>
-            <span><span class="live-dot" aria-hidden="true"></span>Working on her computer</span>
+            <span><span class="live-dot" aria-hidden="true"></span><span data-chat-status>Working on her computer</span></span>
           </div>
-          <span class="chat-cost">$0.019 today</span>
+          <span class="chat-cost" data-chat-cost>$0.019 today</span>
         </div>
         <div class="chat-body">
           <p class="bubble you">Find flights to Lisbon for May 8 to 12 and a hotel in the old town, under $1,200.</p>
           <p class="bubble bot">I compared flights and hotels on my computer. Best fit: a direct TAP flight and Casa Lumen in Alfama, $1,104 in total.</p>
           <div class="run-card">
             <span class="run-card-title">Anna's computer</span>
-            <span class="run-ok">41 flights and 18 hotels checked</span>
-            <span class="run-meta">Checkpoint 7 saved</span>
+            <div class="run-screen" aria-hidden="true">
+              <div class="run-screen-bar"><span class="run-screen-dots"></span><span class="run-screen-url" data-run-url>Lisbon · May 8–12</span></div>
+              <div class="run-rows" data-run-rows></div>
+              <div class="run-progress"><span data-run-progress></span></div>
+            </div>
+            <span class="run-ok" data-run-ok>41 flights and 18 hotels checked</span>
+            <span class="run-meta" data-run-meta>Checkpoint 7 saved</span>
           </div>
           <div class="ask-card" id="ask-card" data-state="ask" aria-live="polite">
             <p class="ask-title">Anna needs your OK</p>
@@ -239,15 +245,114 @@
         </div>
         <figcaption><strong>Casama in a minute and a half.</strong> It books a trip on its own computer and waits for your OK to pay, works all night, has your brief ready by morning, and answers when you text it or call it. <a class="text-link" href="/assets/film/casama-film-v7-16x9.mp4" data-film-open>Watch it full size with sound</a><span class="reel-note">Casama's screens are recreated in code and show only what the app does. The airlines, shops and prices are made up, and the pictures, clips and music are AI-generated.</span></figcaption>
       </figure>
-      <div class="shot-pair">
-        <figure class="shot">
-          <img class="shot-light" src="/assets/screens/mac-group-light.webp" alt="A group chat: you ask everyone to plan Sam's birthday, Nova hands the invite to Ada and the RSVP page to Milo, and Ada's invite comes back" width="2000" height="1330" loading="lazy" decoding="async">
-          <img class="shot-dark" src="/assets/screens/mac-group-dark.webp" alt="" width="2000" height="1330" loading="lazy" decoding="async">
-          <figcaption><strong>Group chats.</strong> Ask @everyone and the lead splits the work. Each bot starts on its part right away.</figcaption>
+      <div class="showcase">
+        <figure class="scene scene-desk" data-scene="group">
+          <div class="scene-stage">
+            <div class="dev-window" role="img" aria-label="A Casama group chat on a desktop. You ask everyone to plan Sam's 30th; Nova splits the work, and Ada, Milo and Nova start at the same time. Ada's invite, Nova's shortlist of three restaurants and Milo's RSVP page come back, and replies start arriving.">
+              <div class="win-bar"><i></i><i></i><i></i><span>Casama</span></div>
+              <div class="win-body">
+                <aside class="app-side">
+                  <div class="side-space"><img src="/assets/bots/casama-brand.svg" alt="" width="22" height="22" loading="lazy" decoding="async"><b>Maya's space</b></div>
+                  <div class="side-item">Needs you</div>
+                  <div class="side-item">Updates</div>
+                  <div class="side-label">Bots</div>
+                  <div class="side-bot" data-bot="ada"><img src="/assets/bots/casama-lovey.svg" alt="" width="22" height="22" loading="lazy" decoding="async"><span><b>Ada</b><small data-bot-status>Invite ready</small></span><i class="side-dot"></i></div><div class="side-bot" data-bot="milo"><img src="/assets/bots/casama-cool.svg" alt="" width="22" height="22" loading="lazy" decoding="async"><span><b>Milo</b><small data-bot-status>RSVP page live</small></span><i class="side-dot"></i></div><div class="side-bot" data-bot="nova"><img src="/assets/bots/casama-starry.svg" alt="" width="22" height="22" loading="lazy" decoding="async"><span><b>Nova</b><small data-bot-status>Booked a table hold</small></span><i class="side-dot"></i></div><div class="side-bot" data-bot="juno"><img src="/assets/bots/casama-sleepy.svg" alt="" width="22" height="22" loading="lazy" decoding="async"><span><b>Juno</b><small data-bot-status>Idle</small></span><i class="side-dot"></i></div>
+                  <div class="side-label">Group chats</div>
+                  <div class="side-bot active"><span class="side-grp"></span><span><b>Sam's birthday</b><small data-rsvp-side>5 of 8 going</small></span></div>
+                  <div class="side-foot"><span>Library</span><span>Tasks</span></div>
+                </aside>
+                <section class="app-chat">
+                  <header class="app-head"><span class="ava-stack"><span class="ava-ring" data-bot="nova"><img src="/assets/bots/casama-starry.svg" alt="" width="22" height="22" loading="lazy" decoding="async"></span><span class="ava-ring" data-bot="ada"><img src="/assets/bots/casama-lovey.svg" alt="" width="22" height="22" loading="lazy" decoding="async"></span><span class="ava-ring" data-bot="milo"><img src="/assets/bots/casama-cool.svg" alt="" width="22" height="22" loading="lazy" decoding="async"></span><span class="ava-ring" data-bot="juno"><img src="/assets/bots/casama-sleepy.svg" alt="" width="22" height="22" loading="lazy" decoding="async"></span></span><span class="app-head-who"><b>Sam's birthday</b><small>Ada, Milo, Nova and Juno</small></span></header>
+                  <div class="msgs" data-msgs>
+                    <div class="m you" data-step="you"><p><span class="at">@everyone</span> Sam turns 30 on Saturday the 28th, dinner for 8 in Brooklyn. Nova, shortlist 3 cosy Italian places. Ada, write a short invite. Milo, make a simple RSVP page.</p></div>
+                    <div class="m bot" data-who="nova" data-step="split"><img src="/assets/bots/casama-starry.svg" alt="" width="24" height="24" loading="lazy" decoding="async"><div class="m-col"><b class="m-name">Nova</b><p>Splitting it up: <span class="at">@Ada</span> takes the invite, <span class="at">@Milo</span> the RSVP page, and I’ll shortlist three places near Sam.</p><span class="m-usage">$0.004 · 1.2k tokens</span></div></div>
+                    <div class="m bot" data-who="milo" data-step="milo1"><img src="/assets/bots/casama-cool.svg" alt="" width="24" height="24" loading="lazy" decoding="async"><div class="m-col"><b class="m-name">Milo</b><p>On it, building the RSVP page now.</p></div></div>
+                    <div class="m bot" data-who="ada" data-step="ada"><img src="/assets/bots/casama-lovey.svg" alt="" width="24" height="24" loading="lazy" decoding="async"><div class="m-col"><b class="m-name">Ada</b><div class="m-card invite"><img class="card-art" src="/assets/showcase/invite-art.webp" alt="" width="600" height="220" loading="lazy" decoding="async"><small>Invite</small><b>Sam’s turning 30: dinner, Saturday 28 November</b><p>No gifts, no fuss. Just a long table, good pasta and the best person we know.</p></div><span class="m-usage">$0.006 · 2.1k tokens</span></div></div>
+                    <div class="m bot" data-who="nova" data-step="nova2"><img src="/assets/bots/casama-starry.svg" alt="" width="24" height="24" loading="lazy" decoding="async"><div class="m-col"><b class="m-name">Nova</b><div class="m-card list"><small>Shortlist · Brooklyn</small><ul><li><img class="li-pic" src="/assets/showcase/place-osteria.webp" alt="" width="160" height="160" loading="lazy" decoding="async"><span><b>Osteria Nove</b><small>Carroll Gardens · ★ 4.7</small></span><em>Table for 8 · 7:30</em></li><li><img class="li-pic" src="/assets/showcase/place-fiore.webp" alt="" width="160" height="160" loading="lazy" decoding="async"><span><b>Casa Fiore</b><small>Williamsburg · ★ 4.6</small></span><em>Table for 8 · 8:00</em></li><li><img class="li-pic" src="/assets/showcase/place-lume.webp" alt="" width="160" height="160" loading="lazy" decoding="async"><span><b>Pasta Lume</b><small>Fort Greene · ★ 4.5</small></span><em>Long table · 7:45</em></li></ul></div><span class="m-usage">$0.011 · 3.4k tokens</span></div></div>
+                    <div class="m bot" data-who="milo" data-step="milo2"><img src="/assets/bots/casama-cool.svg" alt="" width="24" height="24" loading="lazy" decoding="async"><div class="m-col"><b class="m-name">Milo</b><div class="m-card page"><div class="page-bar"><i></i><span>sams30.casama.page</span></div><img class="page-hero" src="/assets/showcase/rsvp-hero.webp" alt="" width="600" height="240" loading="lazy" decoding="async"><div class="page-body"><b>Sam’s 30th</b><small>Saturday 28 Nov · 7:30 pm · Brooklyn</small><div class="page-btns"><span>I’m in</span><span>Can’t make it</span></div><em data-rsvp>5 of 8 going</em></div></div><span class="m-usage">$0.009 · 2.8k tokens</span></div></div>
+                    <div class="m bot m-typing" data-typing hidden><img src="/assets/bots/casama-starry.svg" alt="" width="24" height="24" loading="lazy" decoding="async"><div class="m-col"><b class="m-name"></b><p class="dots"><i></i><i></i><i></i></p></div></div>
+                  </div>
+                  <div class="composer"><span class="c-ico"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="c-ph">Message Sam's birthday</span><span class="c-ico"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span><span class="c-send"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span></div>
+                </section>
+              </div>
+            </div>
+            <button type="button" class="scene-toggle" data-scene-toggle aria-pressed="false" hidden><span class="scene-toggle-icon" aria-hidden="true"></span><span class="visually-hidden" data-scene-toggle-label>Pause animation</span></button>
+          </div>
+          <figcaption><strong>Group chats.</strong> Ask @everyone and the lead splits the work. Each bot starts on its part right away, and you watch it all come together.</figcaption>
         </figure>
-        <figure class="shot">
-          <img class="shot-light" src="/assets/screens/mac-nova-light.webp" alt="Nova plans a weekend in Kyoto and shows each day's stops on a map in the chat" width="2000" height="1330" loading="lazy" decoding="async">
-          <img class="shot-dark" src="/assets/screens/mac-nova-dark.webp" alt="" width="2000" height="1330" loading="lazy" decoding="async">
+        <figure class="scene scene-tablet" data-scene="takeover">
+          <div class="scene-stage">
+            <div class="dev-tablet" role="img" aria-label="Casama on a tablet, with the chat on one side and Kai's computer live on the other. Kai fills in a parking permit form on its own computer and asks before paying $48 for 12 months. You take over, switch it to 6 months, and hand back; Kai pays $26 and the permit is renewed.">
+              <div class="tab-screen">
+                <section class="app-chat tab-chat">
+                  <header class="app-head"><img src="/assets/bots/casama-thinker.svg" alt="" width="26" height="26" loading="lazy" decoding="async"><span class="app-head-who"><b>Kai</b><small>Errands</small></span></header>
+                  <div class="msgs" data-msgs>
+                    <div class="m you" data-step="you"><p>Renew my parking permit before Friday. Same car, same zone.</p></div>
+                    <div class="m bot" data-who="kai" data-step="ack"><img src="/assets/bots/casama-thinker.svg" alt="" width="24" height="24" loading="lazy" decoding="async"><div class="m-col"><b class="m-name">Kai</b><p>On it. I'm on the city's permit site now. Watch along if you like.</p><span class="m-usage">$0.002 · 0.7k tokens</span></div></div>
+                    <div class="m bot" data-who="kai" data-step="ask"><img src="/assets/bots/casama-thinker.svg" alt="" width="24" height="24" loading="lazy" decoding="async"><div class="m-col"><b class="m-name">Kai</b><div class="m-card ask" data-ask><b>Kai needs your OK</b><p data-ask-text>Pay $48 for 12 months with your card ending 4242.</p><div class="ask-btns"><span class="m-btn primary">Approve</span><span class="m-btn" data-take-btn>Take over</span></div></div></div></div>
+                    <div class="m sys" data-step="took"><p>You took over Kai's computer</p></div>
+                    <div class="m sys" data-step="back"><p>You handed it back to Kai</p></div>
+                    <div class="m bot" data-who="kai" data-step="done"><img src="/assets/bots/casama-thinker.svg" alt="" width="24" height="24" loading="lazy" decoding="async"><div class="m-col"><b class="m-name">Kai</b><p>Got it, 6 months instead. Paid $26, your permit now runs to 6 June, and the receipt is in your Library.</p><span class="m-usage">$0.009 · 2.6k tokens</span></div></div>
+                    <div class="m bot m-typing" data-typing hidden><img src="/assets/bots/casama-starry.svg" alt="" width="24" height="24" loading="lazy" decoding="async"><div class="m-col"><b class="m-name"></b><p class="dots"><i></i><i></i><i></i></p></div></div>
+                  </div>
+                  <div class="composer"><span class="c-ico"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="c-ph">Message Kai</span><span class="c-ico"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span><span class="c-send"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span></div>
+                </section>
+                <section class="vm" data-vm>
+                  <div class="vm-bar"><span class="vm-dot"></span><b>Kai's computer</b><span class="vm-who" data-vm-who>Live</span><span class="m-btn sm" data-vm-btn>Take over</span></div>
+                  <div class="vm-view" data-vm-view>
+                    <div class="vm-page" data-vm-page>
+                      <div class="br-bar"><i></i><i></i><i></i><span>parking.harbor-city.org/renew</span></div>
+                      <div class="pg">
+                        <div class="pg-head"><span class="pg-logo"></span><span><b>Harbor City</b><small>Residential parking permit</small></span></div>
+                        <div class="pg-steps"><span class="on">1 Vehicle</span><span class="on">2 Permit</span><span class="on">3 Pay</span></div>
+                        <label class="pg-field" data-f="plate"><small>Licence plate</small><span class="pg-input" data-plate>7KDM214</span></label>
+                        <label class="pg-field" data-f="zone"><small>Zone</small><span class="pg-input sel" data-zone>Zone 4 · Riverside</span></label>
+                        <div class="pg-field"><small>Length</small>
+                          <div class="pg-radios"><span class="pg-radio" data-len="12">12 months <b>$48</b></span><span class="pg-radio on" data-len="6">6 months <b>$26</b></span></div>
+                        </div>
+                        <span class="pg-pay" data-pay>Pay $26</span>
+                      </div>
+                      <div class="pg-done on" data-done><span class="pg-check"></span><b>Permit renewed</b><small>Zone 4 · valid until 6 June · receipt sent</small></div>
+                      <span class="cur kai" data-cur="kai"><svg viewBox="0 0 16 16"><path d="M2 1l11 6-5 1.5L6 14z"/></svg><em>Kai</em></span>
+                      <span class="cur you" data-cur="you"><svg viewBox="0 0 16 16"><path d="M2 1l11 6-5 1.5L6 14z"/></svg><em>You</em></span>
+                    </div>
+                  </div>
+                  <div class="vm-foot"><span data-vm-check>Checkpoint 4 saved</span><span data-vm-status>Done</span></div>
+                </section>
+              </div>
+            </div>
+            <button type="button" class="scene-toggle" data-scene-toggle aria-pressed="false" hidden><span class="scene-toggle-icon" aria-hidden="true"></span><span class="visually-hidden" data-scene-toggle-label>Pause animation</span></button>
+          </div>
+          <figcaption><strong>Watch and take over.</strong> See a bot's computer live while it works. Take the controls for a step, then hand them back and it carries on.</figcaption>
+        </figure>
+        <figure class="scene scene-phone" data-scene="map">
+          <div class="scene-stage">
+            <div class="dev-phone" role="img" aria-label="Casama on a phone. You ask Nova to plan a weekend in Kyoto, and a map card appears in the chat: for each day, numbered stops drop onto the map in walking order and the route draws between them.">
+              <div class="phone-screen">
+                <div class="phone-status"><span>9:41</span><span class="phone-island"></span><span class="phone-sig"><i></i><i></i><i></i></span></div>
+                <header class="app-head"><span class="h-ico"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></span><img src="/assets/bots/casama-starry.svg" alt="" width="26" height="26" loading="lazy" decoding="async"><span class="app-head-who"><b>Nova</b><small>Travel planner</small></span><span class="h-ico"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></span></header>
+                <div class="msgs" data-msgs>
+                  <div class="m you" data-step="you"><p>Plan a 3-day weekend in Kyoto in early December for two. One neighbourhood a day, a dinner spot each night. Show the stops on a map.</p></div>
+                  <div class="m bot" data-who="nova" data-step="ack"><img src="/assets/bots/casama-starry.svg" alt="" width="24" height="24" loading="lazy" decoding="async"><div class="m-col"><b class="m-name">Nova</b><p>On it. I checked December dates and your saved travel likes first.</p><span class="m-usage">$0.003 · 0.9k tokens</span></div></div>
+                  <div class="m bot" data-who="nova" data-step="map"><img src="/assets/bots/casama-starry.svg" alt="" width="24" height="24" loading="lazy" decoding="async"><div class="m-col"><b class="m-name">Nova</b><div class="m-card mapcard"><b>Kyoto, 4–6 Dec · one neighbourhood a day</b><div class="map-tabs"><span class="on" data-tab="0">Fri<i> · Arashiyama</i></span><span class="" data-tab="1">Sat<i> · Higashiyama</i></span><span class="" data-tab="2">Sun<i> · Central</i></span></div><div class="day-pics"><img data-daypic="0" class="day-pic on" src="/assets/showcase/kyoto-arashiyama.webp" alt="" width="480" height="200" loading="lazy" decoding="async"><img data-daypic="1" class="day-pic" src="/assets/showcase/kyoto-higashiyama.webp" alt="" width="480" height="200" loading="lazy" decoding="async"><img data-daypic="2" class="day-pic" src="/assets/showcase/kyoto-central.webp" alt="" width="480" height="200" loading="lazy" decoding="async"></div><svg class="map" viewBox="0 0 280 200" preserveAspectRatio="xMidYMid slice">
+  <rect class="map-land" width="280" height="200"/>
+  <path class="map-park" d="M0 0 H70 C 60 30 30 40 20 80 C 14 110 0 120 0 130 Z"/>
+  <path class="map-park" d="M280 40 C 250 60 248 100 252 130 C 256 160 262 180 280 200 Z"/>
+  <rect class="map-park" x="140" y="30" width="34" height="26" rx="4"/>
+  <g class="map-street"><path d="M100 18 V196"/><path d="M115 18 V196"/><path d="M130 18 V196"/><path d="M145 18 V196"/><path d="M160 18 V196"/><path d="M175 18 V196"/><path d="M92 28 H180"/><path d="M92 43 H180"/><path d="M92 58 H180"/><path d="M92 73 H180"/><path d="M92 88 H180"/><path d="M92 103 H180"/><path d="M92 118 H180"/><path d="M92 133 H180"/><path d="M92 148 H180"/><path d="M92 163 H180"/><path d="M92 178 H180"/><path d="M92 193 H180"/></g>
+  <path class="map-river" d="M30 200 C 44 160 30 140 44 120 C 56 100 40 70 60 0"/>
+  <path class="map-river" d="M194 0 C 190 50 196 90 192 130 C 189 160 194 180 192 200"/>
+  <g class="map-day on" data-day="0"><path class="route" pathLength="1" d="M62 96 L54 72 L34 54 L46 126 L80 112"/><g class="pin" style="--i:0"><circle cx="62" cy="96" r="8"/><text class="pin-n" x="62" y="99.1">1</text><text class="pin-l" x="73" y="99.6" text-anchor="start">Tenryū-ji</text></g><g class="pin" style="--i:1"><circle cx="54" cy="72" r="8"/><text class="pin-n" x="54" y="75.1">2</text><text class="pin-l" x="65" y="75.6" text-anchor="start">Bamboo grove</text></g><g class="pin" style="--i:2"><circle cx="34" cy="54" r="8"/><text class="pin-n" x="34" y="57.1">3</text><text class="pin-l" x="45" y="57.6" text-anchor="start">Ōkōchi Sansō</text></g><g class="pin" style="--i:3"><circle cx="46" cy="126" r="8"/><text class="pin-n" x="46" y="129.1">4</text><text class="pin-l" x="57" y="129.6" text-anchor="start">Togetsukyō Bridge</text></g><g class="pin" style="--i:4"><circle cx="80" cy="112" r="8"/><text class="pin-n" x="80" y="115.1">5</text><text class="pin-l" x="91" y="115.6" text-anchor="start">Dinner · Saga</text></g></g><g class="map-day" data-day="1"><path class="route" pathLength="1" d="M236 152 L226 132 L218 106 L204 95 L186 78"/><g class="pin" style="--i:0"><circle cx="236" cy="152" r="8"/><text class="pin-n" x="236" y="155.1">1</text><text class="pin-l" x="225" y="155.6" text-anchor="end">Kiyomizu-dera</text></g><g class="pin" style="--i:1"><circle cx="226" cy="132" r="8"/><text class="pin-n" x="226" y="135.1">2</text><text class="pin-l" x="215" y="135.6" text-anchor="end">Sannenzaka</text></g><g class="pin" style="--i:2"><circle cx="218" cy="106" r="8"/><text class="pin-n" x="218" y="109.1">3</text><text class="pin-l" x="207" y="109.6" text-anchor="end">Yasaka Shrine</text></g><g class="pin" style="--i:3"><circle cx="204" cy="95" r="8"/><text class="pin-n" x="204" y="98.1">4</text><text class="pin-l" x="193" y="98.6" text-anchor="end">Gion</text></g><g class="pin" style="--i:4"><circle cx="186" cy="78" r="8"/><text class="pin-n" x="186" y="81.1">5</text><text class="pin-l" x="175" y="81.6" text-anchor="end">Dinner · Pontochō</text></g></g><g class="map-day" data-day="2"><path class="route" pathLength="1" d="M146 110 L112 86 L156 42 L182 58 L172 96"/><g class="pin" style="--i:0"><circle cx="146" cy="110" r="8"/><text class="pin-n" x="146" y="113.1">1</text><text class="pin-l" x="135" y="113.6" text-anchor="end">Nishiki Market</text></g><g class="pin" style="--i:1"><circle cx="112" cy="86" r="8"/><text class="pin-n" x="112" y="89.1">2</text><text class="pin-l" x="123" y="89.6" text-anchor="start">Nijō Castle</text></g><g class="pin" style="--i:2"><circle cx="156" cy="42" r="8"/><text class="pin-n" x="156" y="45.1">3</text><text class="pin-l" x="167" y="45.6" text-anchor="start">Imperial Palace</text></g><g class="pin" style="--i:3"><circle cx="182" cy="58" r="8"/><text class="pin-n" x="182" y="61.1">4</text><text class="pin-l" x="193" y="61.6" text-anchor="start">Kamo river walk</text></g><g class="pin" style="--i:4"><circle cx="172" cy="96" r="8"/><text class="pin-n" x="172" y="99.1">5</text><text class="pin-l" x="183" y="99.6" text-anchor="start">Dinner · Kiyamachi</text></g></g>
+</svg><small>Numbered stops in walking order, dinner last.</small></div><span class="m-usage">$0.012 · 3.8k tokens</span></div></div>
+                  <div class="m bot" data-who="nova" data-step="saved"><img src="/assets/bots/casama-starry.svg" alt="" width="24" height="24" loading="lazy" decoding="async"><div class="m-col"><b class="m-name">Nova</b><p>Saved to your Library as “Kyoto weekend”. Want me to hold the three dinners?</p></div></div>
+                  <div class="m bot m-typing" data-typing hidden><img src="/assets/bots/casama-starry.svg" alt="" width="24" height="24" loading="lazy" decoding="async"><div class="m-col"><b class="m-name"></b><p class="dots"><i></i><i></i><i></i></p></div></div>
+                </div>
+                <div class="composer"><span class="c-ico"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span class="c-ph">Message Nova</span><span class="c-ico"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span><span class="c-send"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span></div>
+                <span class="phone-home"></span>
+              </div>
+            </div>
+            <button type="button" class="scene-toggle" data-scene-toggle aria-pressed="false" hidden><span class="scene-toggle-icon" aria-hidden="true"></span><span class="visually-hidden" data-scene-toggle-label>Pause animation</span></button>
+          </div>
           <figcaption><strong>Answers you can use.</strong> Maps, cards, pages and games show up right in the chat and stay in your Library.</figcaption>
         </figure>
       </div>
@@ -731,6 +836,7 @@
   </footer>
 
   <script src="/site.js"></script>
+  <script src="/showcase.js"></script>
   <script src="/assets/brand/casama-mark.js"></script>
 </body>
 </html>

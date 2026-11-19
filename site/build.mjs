@@ -38,11 +38,11 @@ const rivals = new Map(rivalData.rivals.map((r) => [r.id, r]));
 const staticPages = json("static-pages.json");
 
 /**
- * A page's picture: site/assets/blog/<name>.jpg for posts and site/assets/pages/<name>.jpg for core pages
- * such as self-hosted (1200x630), with a .webp beside it when there is one and alt text from that folder's
+ * A page's picture: site/assets/blog/<name>.jpg for posts, site/assets/pages/<name>.jpg for core pages
+ * such as self-hosted, and site/assets/pages/<section>/<name>.jpg for written pages in a section (1200x630), with a .webp beside it when there is one and alt text from that folder's
  * manifest.json. A page without a file simply has no picture.
  */
-const ART_DIRS = { blog: "blog", "": "pages" };
+const ART_DIRS = { blog: "blog", "": "pages", alternatives: "pages/alternatives", compare: "pages/compare", learn: "pages/learn", "use-cases": "pages/use-cases" };
 const artAlts = new Map();
 function altsIn(folder) {
   if (!artAlts.has(folder)) {
@@ -449,11 +449,29 @@ const newsBox = (id, heading = "Get what's new, once a month") => `<aside class=
   </form>
 </aside>`;
 
+/** Explainer diagrams: site/assets/diagrams/<name>.svg, with alt text, caption and size in manifest.json. */
+let diagramManifest = null;
+function diagramFor(name, where) {
+  if (!diagramManifest) {
+    try { diagramManifest = JSON.parse(read(join(HERE, "assets", "diagrams", "manifest.json"))); } catch { diagramManifest = {}; }
+  }
+  const d = diagramManifest[name];
+  if (!existsSync(join(HERE, "assets", "diagrams", `${name}.svg`))) { fail(`${where}: no diagram site/assets/diagrams/${name}.svg`); return null; }
+  if (!d?.alt) { fail(`${where}: diagram "${name}" has no alt text in assets/diagrams/manifest.json`); return null; }
+  return { alt: d.alt, caption: d.caption ?? "", width: d.width ?? 960, height: d.height ?? 540 };
+}
+const figureHtml = (name, where) => {
+  const d = diagramFor(name, where);
+  if (!d) return "";
+  return `<figure class="page-figure"><img src="/assets/diagrams/${name}.svg" width="${d.width}" height="${d.height}" alt="${esc(d.alt)}" loading="lazy">${d.caption ? `<figcaption>${esc(d.caption)}</figcaption>` : ""}</figure>`;
+};
+
 const tokensFor = (page) => (name, args) => {
   if (name === "compare") {
     const rowAt = args.indexOf("rows");
     return compareTable(rowAt < 0 ? args : args.slice(0, rowAt), page.file, rowAt < 0 ? null : args.slice(rowAt + 1));
   }
+  if (name === "figure") return figureHtml(args[0] ?? "", page.file);
   if (name === "sources") return sourcesList(args, page.file);
   if (name === "best-at") return bullets(args, "best_at", page.file);
   if (name === "limits") return bullets(args, "limits", page.file);
@@ -689,6 +707,7 @@ function twin(page) {
       const keys = rowAt < 0 ? ROWS.map((r) => r.key) : ids.slice(rowAt + 1);
       return [`| | Casama | ${list.map((r) => r.name).join(" | ")} |`, `|---|---|${list.map(() => "---").join("|")}|`, ...keys.map((key) => `| ${ROWS.find((r) => r.key === key)?.label} | ${casama[key] ?? ""} | ${list.map((r) => r.facts[key]?.value ?? "Not confirmed").join(" | ")} |`)].join("\n");
     }
+    if (name === "figure") { const d = diagramFor(ids[0] ?? "", page.file); return d ? `*Diagram: ${d.alt}*${d.caption ? `\n\n${d.caption}` : ""}` : ""; }
     if (name === "bots") return botDirectoryText();
     if (name === "plans") return plans.plans.map((p) => `- **${p.name}**: ${p.price}. ${p.credits} of credits a month, ${p.bots} bots, ${p.computers}, ${p.storage} Library, ${p.seats}.`).join("\n");
     if (name === "sources") return ids.map((id) => rivals.get(id)).filter(Boolean).map((r) => `- ${r.name} (checked ${r.checked ?? rivalData.checked}): ${[...new Set(Object.values(r.facts).map((f) => f?.source).filter(Boolean))].join(", ")}`).join("\n");

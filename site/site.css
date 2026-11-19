@@ -167,6 +167,43 @@ button { cursor: pointer; }
 .ask-what { margin-top: 4px; }
 .ask-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .ask-card[data-state="done"] .ask-actions { display: none; }
+/* the hero chat plays itself (site.js): it fills in, the bot works on its computer, asks, gets an OK, then starts over.
+   Without JavaScript, or with reduced motion, it stays the finished still above. */
+.run-screen { display: none; }
+.chat.is-live .chat-body { position: relative; }
+.chat.is-live .run-screen { display: grid; gap: 6px; margin: 8px 0 6px; padding: 8px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); overflow: hidden; }
+.run-screen-bar { display: flex; align-items: center; gap: 8px; font: 400 11px/1 var(--font-mono); color: var(--ink-2); }
+.run-screen-dots { width: 26px; height: 6px; background: radial-gradient(circle, var(--line) 3px, transparent 3.5px) 0 0 / 10px 6px repeat-x; }
+.run-screen-url { flex: 1; min-width: 0; padding: 4px 8px; border-radius: 6px; background: var(--bg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.run-rows { position: relative; height: 84px; overflow: hidden; }
+.run-row { position: absolute; left: 0; right: 0; height: 24px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px; border-radius: 6px; font-size: 12px;
+  background: var(--bg); transition: transform .35s cubic-bezier(.2,.8,.2,1), opacity .35s, background-color .3s, color .3s; }
+.run-row b { font: 500 12px/1 var(--font-mono); }
+.run-row.best { background: color-mix(in oklab, var(--good) 18%, var(--bg)); color: var(--ink); }
+.run-row.best b { color: var(--good); }
+.run-row.best::before { content: "✓"; color: var(--good); font-weight: 700; margin-right: -2px; }
+.run-row.best span { margin-right: auto; }
+.run-progress { height: 3px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.run-progress span { display: block; height: 100%; width: 0; background: var(--accent); border-radius: inherit; transition: width .4s linear; }
+.chat.is-live [data-step] { transition: opacity .4s ease, transform .45s cubic-bezier(.2,.8,.2,1); }
+.chat.is-live [data-step].off { opacity: 0; transform: translateY(10px) scale(.98); pointer-events: none; }
+.chat.is-live .bubble.you { transform-origin: 100% 100%; }
+.chat.is-live .chat-body.fading > * { opacity: 0; transition: opacity .5s ease; }
+.typing { display: inline-flex; gap: 4px; padding: 13px 14px; }
+.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-2); animation: typing-dot 1s infinite ease-in-out; }
+.typing i:nth-child(2) { animation-delay: .15s; }
+.typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes typing-dot { 0%, 60%, 100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+.chat.is-live .ask-card.asking { animation: ask-glow 1.8s ease-in-out infinite; }
+@keyframes ask-glow { 50% { box-shadow: 0 0 0 5px color-mix(in oklab, var(--accent) 22%, transparent); } }
+.chat.is-live .live-dot { animation: live-pulse 1.6s ease-in-out infinite; }
+@keyframes live-pulse { 50% { box-shadow: 0 0 0 4px color-mix(in oklab, var(--good) 25%, transparent); } }
+.chat.is-live .live-dot.idle { animation: none; background: var(--ink-2); }
+.tap-cursor { position: absolute; z-index: 2; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; pointer-events: none;
+  background: color-mix(in oklab, var(--ink) 22%, transparent); border: 2px solid color-mix(in oklab, var(--ink) 55%, transparent);
+  transition: left .9s cubic-bezier(.4,0,.2,1), top .9s cubic-bezier(.4,0,.2,1), opacity .3s, transform .15s; }
+.tap-cursor.press { transform: scale(.7); }
+.btn.tapped { filter: brightness(1.15); transform: scale(.96); }
 
 /* ---------------------------------------------------------------- sections */
 .section { padding-top: var(--section); }

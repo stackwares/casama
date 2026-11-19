@@ -1,0 +1,26 @@
+{
+  "shared-vs-own-computer": {
+    "alt": "Two diagrams side by side. On the left, three bots all feed into one shared computer that holds one set of files and a shared setup, so what one bot does can affect the others. On the right, three bots each have their own computer with their own files and sign-ins, so each bot is walled off from the others, as in Casama.",
+    "caption": "Bots on one shared computer share its files and setup. In Casama, each bot works on its own computer.",
+    "width": 960,
+    "height": 540
+  },
+  "approval-flow": {
+    "alt": "A flow diagram of how an approval works in Casama. The bot works until it reaches a risky step such as sending, paying, deleting or publishing. It pauses and asks you; waiting costs nothing, and no answer in 24 hours counts as a deny. If you approve, the bot carries on. If you deny, the step does not run. Separately, a checkpoint is saved before a destructive command so the computer can be restored.",
+    "caption": "A risky step waits for your answer: approve and the bot carries on, deny and the step doesn't run.",
+    "width": 960,
+    "height": 540
+  },
+  "agent-loop": {
+    "alt": "A diagram of how an AI agent works. A goal enters a loop of three stages: plan, which picks one step; act, which uses tools on the agent's computer; and check, which reads the result. If the task is not done, the loop goes round again from plan. The agent leaves the loop in one of two ways: done, when the task is finished, or ask you, when it needs a decision or approval.",
+    "caption": "An agent plans a step, acts with its tools, checks the result and repeats until it is done or needs you.",
+    "width": 960,
+    "height": 540
+  },
+  "hosted-vs-self-hosted": {
+    "alt": "Two columns comparing Casama Cloud with self-hosted Casama. Casama Cloud: Casama runs the servers and computers, Casama picks and runs the models, you pay with credits, and you just sign up and start. Self-hosted: your own server or Mac runs everything, you use your own model keys or local models, it is free to run, and you update and back up yourself.",
+    "caption": "Casama Cloud is run for you and paid in credits; self-hosted is free to run on your own machine with your own models.",
+    "width": 960,
+    "height": 540
+  }
+}

@@ -53,6 +53,8 @@ Every tool has a risk level, and each bot has one of three settings:
 | Ask for risky actions (the default) | Sending email or chat messages, calling people, making a page public, deleting outside its workspace, paid data lookups, and tools you marked "always asks" |
 | Act on its own | Nothing, except high-risk actions on your own computer |
 
+{{figure: approval-flow}}
+
 On top of that:
 
 - **Payments always ask**, under every setting.

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" width="960" height="540" role="img"><style>
+.bg{fill:#ffffff}.ink{fill:#24112f}.mut{fill:#5b4a6b}.box{fill:#ece8fb;stroke:#6b4fd8;stroke-width:2}.plain{fill:#f6f4fb;stroke:#c9c2dd;stroke-width:2}.acc{fill:#6b4fd8}.onacc{fill:#ffffff}.cy{fill:#d9f2f8;stroke:#5cc8e0;stroke-width:2}.ln{stroke:#6b4fd8;stroke-width:3;fill:none}.ah{fill:#6b4fd8}.div{stroke:#c9c2dd;stroke-width:2;stroke-dasharray:6 6}
+text{font-family:"Google Sans",system-ui,-apple-system,sans-serif}
+@media (prefers-color-scheme: dark){.bg{fill:#1f1d24}.ink{fill:#f2eef9}.mut{fill:#b9b0c9}.box{fill:#2c2836;stroke:#9a85f0}.plain{fill:#2c2836;stroke:#4a4458}.acc{fill:#9a85f0}.onacc{fill:#1f1d24}.cy{fill:#1f3a42;stroke:#5cc8e0}.ln{stroke:#9a85f0}.ah{fill:#9a85f0}.div{stroke:#4a4458}}
+</style>
+<rect class="bg" width="960" height="540"/>
+<line class="div" x1="480" y1="40" x2="480" y2="500"/>
+<text class="ink" x="240" y="62" text-anchor="middle" font-size="26" font-weight="700">One computer for every bot</text>
+<text class="ink" x="720" y="62" text-anchor="middle" font-size="26" font-weight="700">A computer per bot (Casama)</text>
+<g font-size="20" text-anchor="middle">
+<rect class="box" x="70" y="110" width="110" height="64" rx="14"/><text class="ink" x="125" y="149">Bot A</text>
+<rect class="box" x="205" y="110" width="110" height="64" rx="14"/><text class="ink" x="260" y="149">Bot B</text>
+<rect class="box" x="340" y="110" width="110" height="64" rx="14"/><text class="ink" x="395" y="149">Bot C</text>
+<path class="ln" d="M125 176V236M260 176V236M395 176V236"/>
+<path class="ah" d="M117 232h16l-8 12zM252 232h16l-8 12zM387 232h16l-8 12z"/>
+<rect class="plain" x="60" y="248" width="400" height="190" rx="18"/>
+<text class="ink" x="260" y="290" font-size="22" font-weight="700">Shared computer</text>
+<rect class="cy" x="90" y="312" width="160" height="56" rx="12"/><text class="ink" x="170" y="346">One set of files</text>
+<rect class="cy" x="270" y="312" width="160" height="56" rx="12"/><text class="ink" x="350" y="346">Shared setup</text>
+<text class="mut" x="260" y="406" font-size="17">What one bot does can affect the others</text>
+</g>
+<g font-size="20" text-anchor="middle">
+<g><rect class="box" x="510" y="110" width="110" height="52" rx="14"/><text class="ink" x="565" y="143">Bot A</text>
+<path class="ln" d="M565 164V200"/><path class="ah" d="M557 196h16l-8 12z"/>
+<rect class="cy" x="500" y="210" width="130" height="150" rx="14"/><text class="ink" x="565" y="244" font-weight="700" font-size="18">Computer</text><text class="mut" x="565" y="284" font-size="16">Own files</text><text class="mut" x="565" y="312" font-size="16">Own sign-ins</text></g>
+<g><rect class="box" x="655" y="110" width="110" height="52" rx="14"/><text class="ink" x="710" y="143">Bot B</text>
+<path class="ln" d="M710 164V200"/><path class="ah" d="M702 196h16l-8 12z"/>
+<rect class="cy" x="645" y="210" width="130" height="150" rx="14"/><text class="ink" x="710" y="244" font-weight="700" font-size="18">Computer</text><text class="mut" x="710" y="284" font-size="16">Own files</text><text class="mut" x="710" y="312" font-size="16">Own sign-ins</text></g>
+<g><rect class="box" x="800" y="110" width="110" height="52" rx="14"/><text class="ink" x="855" y="143">Bot C</text>
+<path class="ln" d="M855 164V200"/><path class="ah" d="M847 196h16l-8 12z"/>
+<rect class="cy" x="790" y="210" width="130" height="150" rx="14"/><text class="ink" x="855" y="244" font-weight="700" font-size="18">Computer</text><text class="mut" x="855" y="284" font-size="16">Own files</text><text class="mut" x="855" y="312" font-size="16">Own sign-ins</text></g>
+<text class="mut" x="720" y="406" font-size="17">Each bot is walled off from the others</text>
+</g>
+</svg>

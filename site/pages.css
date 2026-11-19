@@ -92,3 +92,8 @@
 .prose .news-box .footer-news-note { margin: 8px 0 0 !important; }
 .prose .news-box .footer-news-note.is-good { color: var(--good); }
 .prose .news-box .footer-news-note.is-bad { color: var(--warn); }
+
+/* Explainer diagrams ({{figure: name}}) */
+.page-figure { margin: 28px auto; text-align: center; }
+.page-figure img { display: block; max-width: 100%; height: auto; margin: 0 auto; border-radius: var(--radius); border: 1px solid var(--line); }
+.page-figure figcaption { margin-top: 10px; font-size: 0.9rem; color: var(--ink-2); }
