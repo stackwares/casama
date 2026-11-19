@@ -81,6 +81,19 @@ export const Announcement = z
   })
   .openapi("Announcement");
 
+// A string, not an enum, in the contract: generated Dart decodes enums strictly, so a reporter added
+// later would break older apps' whole settings parse. The server checks the value (checkAppConfig).
+const CrashReporter = z.string().openapi({ description: "sentry, crashlytics, posthog or none" });
+const CrashReporterChoice = z.object({
+  default: CrashReporter.optional(),
+  ios: CrashReporter.optional(),
+  android: CrashReporter.optional(),
+  macos: CrashReporter.optional(),
+  windows: CrashReporter.optional(),
+  linux: CrashReporter.optional(),
+  web: CrashReporter.optional(),
+});
+
 export const RemoteAppConfig = z
   .object({
     min_versions: PerPlatform.openapi({
@@ -107,6 +120,11 @@ export const RemoteAppConfig = z
     names: z.record(z.string(), z.record(z.string(), z.string())).optional().openapi({
       description:
         "Display names the server knows (apps: tool-call app names by slug; dns_providers), filled in when served, never stored",
+    }),
+    // D-417: optional, so older apps and servers ignore it.
+    crash_reporter: CrashReporterChoice.optional().openapi({
+      description:
+        "The one crash reporter the apps run, per platform over default; taken on the next launch, and an app falls back to its build's own choice when the named one isn't in that build",
     }),
   })
   .openapi("RemoteAppConfig");

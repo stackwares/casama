@@ -9,7 +9,8 @@
  *
  * Off when: the script tag has no data-dsn (self-hosted web app builds), on localhost, when the
  * browser sends Do Not Track or Global Privacy Control, and in the web app when its "Share usage
- * data and crash reports" switch is off. At most 10 reports per page load.
+ * data and crash reports" switch is off or its chosen crash reporter isn't Sentry (D-417). At most
+ * 10 reports per page load.
  *
  *   <script src="/errors.js" data-dsn="https://…@….ingest.sentry.io/…" data-surface="site"></script>
  */
@@ -30,6 +31,9 @@
     // The web app's switch, as shared_preferences stores it on the web.
     try {
       if (window.localStorage && localStorage.getItem("flutter.casama.analytics_enabled") === "false") return;
+      // One crash reporter at a time (D-417): the web app keeps the one it chose; quiet unless Sentry.
+      var chosen = window.localStorage && localStorage.getItem("flutter.casama.crash_reporter");
+      if (chosen && chosen.indexOf("sentry") < 0) return;
     } catch (e) { /* storage blocked: the app's own Dart reporter still follows the switch */ }
   } catch (e) {
     return;

@@ -82,6 +82,10 @@ that build goes out for review, check the store forms still match:
   Firebase Cloud Messaging. Google is a service provider here, so it is not "shared".
 - The privacy policy (casama.ai/privacy) names Firebase Crashlytics in the processors table.
 
+Since D-417 an app runs only one crash reporter at a time (Sentry, Crashlytics or PostHog), switched
+remotely. The answers above don't change: declare what any of them may collect, because the owner
+can switch without a store review.
+
 ## Still open
 
 - Screenshots (Play phone 1080x1920, tablets 1440x2560) and the review screenshots for the

@@ -422,6 +422,10 @@ app without a release. The settings are JSON:
   `write.draft`, `write.rewrite`, `write.shorten`, `write.reply` (writing in a text box). Up to 40,
   1 to 1,000 characters each.
 - `quick_reactions` (D-372): the 1 to 8 emoji offered first when reacting to a message.
+- `crash_reporter` (D-417): which one crash reporter the apps run, `sentry`, `crashlytics`, `posthog`
+  or `none`, as `default` and per platform, for example
+  `{ "default": "sentry", "android": "crashlytics" }`. Apps take it on their next launch. See
+  [Which crash reporter runs](/self-hosting/configuration#which-crash-reporter-runs).
 
 The server adds `names` (display names for tool-call apps and DNS providers) to what it sends; it
 isn't something you set. Older apps ignore every field they don't know.

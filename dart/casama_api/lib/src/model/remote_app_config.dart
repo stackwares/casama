@@ -6,6 +6,7 @@
 import 'package:casama_api/src/model/announcement.dart';
 import 'package:casama_api/src/model/remote_app_config_min_versions.dart';
 import 'package:casama_api/src/model/remote_app_config_update_urls.dart';
+import 'package:casama_api/src/model/remote_app_config_crash_reporter.dart';
 import 'package:casama_api/src/model/remote_app_config_maintenance.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -41,6 +42,8 @@ class RemoteAppConfig {
      this.quickReactions,
 
      this.names,
+
+     this.crashReporter,
   });
 
   @JsonKey(
@@ -156,6 +159,18 @@ class RemoteAppConfig {
 
 
 
+  @JsonKey(
+    
+    name: r'crash_reporter',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final RemoteAppConfigCrashReporter? crashReporter;
+
+
+
 
 
     @override
@@ -168,7 +183,8 @@ class RemoteAppConfig {
       other.links == links &&
       other.prompts == prompts &&
       other.quickReactions == quickReactions &&
-      other.names == names;
+      other.names == names &&
+      other.crashReporter == crashReporter;
 
     @override
     int get hashCode =>
@@ -180,7 +196,8 @@ class RemoteAppConfig {
         links.hashCode +
         prompts.hashCode +
         quickReactions.hashCode +
-        names.hashCode;
+        names.hashCode +
+        crashReporter.hashCode;
 
   factory RemoteAppConfig.fromJson(Map<String, dynamic> json) => _$RemoteAppConfigFromJson(json);
 

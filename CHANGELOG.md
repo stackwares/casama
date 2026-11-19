@@ -9,6 +9,12 @@ The server, apps, CLI, SDK and MCP server share one version number.
 
 ## [Unreleased]
 
+- One crash reporter at a time (D-417): an app runs Sentry, Firebase Crashlytics or PostHog error
+  tracking, never two, and the server owner switches which one in Admin → App settings
+  (`crash_reporter`, per platform over a default) without a release. Apps take a change on their
+  next launch and fall back to their build's own choice when the named one isn't in the build.
+  Official builds default to Sentry and upload crash symbols to every configured reporter, Sentry
+  included. See [Which crash reporter runs](https://docs.casama.ai/self-hosting/configuration#which-crash-reporter-runs).
 - Paste a bot's setup (D-415): bring a bot over from Grok Bot, Meta Muse, ChatGPT Dots, Claude Duet,
   Hark Pro, Instinct or another app. Casama gives you a prompt to send your old bot; paste its reply and review its
   instructions, schedules, skills, apps and memories before the bot is created. Lines that look like

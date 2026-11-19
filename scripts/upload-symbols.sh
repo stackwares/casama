@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # Uploads debug symbols so crashes read as real functions and lines: to PostHog error tracking
-# (docs/ANALYTICS-PLAN.md §8.4) and, in official builds, to Firebase Crashlytics (D-416). Never fails
+# (docs/ANALYTICS-PLAN.md §8.4) and, in official builds, to Firebase Crashlytics (D-416) and Sentry.
+# Every configured reporter gets them, not only the one the apps run now: the owner can switch the
+# crash reporter remotely (D-417), and the crashes after a switch need symbols too. Never fails
 # a build: with no CLI or no key it says so and moves on, and a failed upload is a warning.
 #
 #   scripts/upload-symbols.sh web     <build/web>                 source maps (dart2js build) of the web app
 #   scripts/upload-symbols.sh apple   <folder> [ios|mac]          every dSYM under the folder (iOS archive or macOS products)
-#   scripts/upload-symbols.sh android <mapping.txt> <res xml>     R8 mapping of an Android release build (Crashlytics)
+#   scripts/upload-symbols.sh android <mapping.txt> <res xml> [sentry props]  R8 mapping of an Android release build (Crashlytics, Sentry)
 #
 # PostHog needs its CLI (npm i -g @posthog/cli) and POSTHOG_CLI_API_KEY, a personal API key with error
 # tracking write and organization read scopes; POSTHOG_CLI_PROJECT_ID and POSTHOG_CLI_HOST are read by the CLI.
@@ -17,6 +19,13 @@
 #   dSYMs:   Crashlytics' upload-symbols tool, from the firebase-ios-sdk package the build already
 #            checked out (or CRASHLYTICS_UPLOAD_SYMBOLS=/path/to/upload-symbols).
 #   Android: the firebase CLI (npm i -g firebase-tools), signed in with `firebase login`.
+#
+# Sentry runs only when CASAMA_OFFICIAL_BUILD=1 and SENTRY_AUTH_TOKEN is set (in the environment or
+# ~/.config/casama/sentry-cli.env, gitignored, outside the repo; Vaultwarden "Keys & Signing"), with
+# sentry-cli installed (brew install getsentry/tools/sentry-cli). SENTRY_ORG is required too;
+# SENTRY_PROJECT defaults to casama-app. dSYMs go up as debug files; the R8 mapping goes up under the
+# ProGuard UUID that package-android.sh writes into the build (sentry-debug-meta.properties).
+# No Sentry web source maps: the web app's Sentry traces come from its Dart code, see D-417.
 #
 # An iOS archive holds some dSYMs twice ("objective_c.framework.dSYM" and "objective_c.framework
 # 1.dSYM", the same UUID: Xcode copies native-asset frameworks' dSYMs once per target that embeds
@@ -42,6 +51,30 @@ posthog_ready() {
   fi
   if ! command -v posthog-cli >/dev/null 2>&1; then
     echo "upload-symbols: posthog-cli is not installed (npm i -g @posthog/cli), skipping PostHog ($kind symbols)."
+    return 1
+  fi
+}
+
+sentry_env="${SENTRY_CLI_ENV_FILE:-$HOME/.config/casama/sentry-cli.env}"
+if [[ -z "${SENTRY_AUTH_TOKEN:-}" && -r "$sentry_env" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  . "$sentry_env"
+  set +a
+fi
+export SENTRY_PROJECT="${SENTRY_PROJECT:-casama-app}"
+sentry_ready() {
+  [[ "$official" == "1" ]] || return 1
+  if [[ -z "${SENTRY_AUTH_TOKEN:-}" ]]; then
+    echo "upload-symbols: SENTRY_AUTH_TOKEN is not set, skipping Sentry ($kind symbols)."
+    return 1
+  fi
+  if [[ -z "${SENTRY_ORG:-}" ]]; then
+    echo "upload-symbols: SENTRY_ORG is not set, skipping Sentry ($kind symbols)."
+    return 1
+  fi
+  if ! command -v sentry-cli >/dev/null 2>&1; then
+    echo "upload-symbols: sentry-cli is not installed (brew install getsentry/tools/sentry-cli), skipping Sentry ($kind symbols)."
     return 1
   fi
 }
@@ -111,26 +144,46 @@ case "$kind" in
           || echo "upload-symbols: warning: dSYMs were not uploaded to Crashlytics."
       fi
     fi
+
+    if sentry_ready; then
+      sentry-cli debug-files upload "$stage" \
+        || echo "upload-symbols: warning: dSYMs were not uploaded to Sentry."
+    fi
     ;;
 
   android)
+    # android <mapping.txt> <crashlytics resource xml> [sentry-debug-meta.properties]
     mapping="$dir"
     resource="${3:-}"
+    sentry_meta="${4:-}"
     if [[ "$official" != "1" ]]; then exit 0; fi
-    if [[ -z "$mapping" || ! -f "$mapping" ]]; then echo "upload-symbols: no R8 mapping at '$mapping', skipping Crashlytics."; exit 0; fi
-    if [[ -z "$resource" || ! -f "$resource" ]]; then echo "upload-symbols: no mapping id resource at '$resource', skipping Crashlytics."; exit 0; fi
-    if ! command -v firebase >/dev/null 2>&1; then
+    if [[ -z "$mapping" || ! -f "$mapping" ]]; then echo "upload-symbols: no R8 mapping at '$mapping', skipping."; exit 0; fi
+    if [[ -z "$resource" || ! -f "$resource" ]]; then
+      echo "upload-symbols: no mapping id resource at '$resource', skipping Crashlytics."
+    elif ! command -v firebase >/dev/null 2>&1; then
       echo "upload-symbols: the firebase CLI is not installed (npm i -g firebase-tools), skipping Crashlytics."
-      exit 0
+    else
+      app_id=$(firebase_value FIREBASE_ANDROID_APP_ID FIREBASE_APP_ID)
+      if [[ -z "$app_id" ]]; then
+        echo "upload-symbols: no Firebase Android app id, skipping Crashlytics."
+      else
+        firebase crashlytics:mappingfile:upload --app="$app_id" --resource-file="$resource" "$mapping" \
+          || echo "upload-symbols: warning: the R8 mapping was not uploaded to Crashlytics."
+      fi
     fi
-    app_id=$(firebase_value FIREBASE_ANDROID_APP_ID FIREBASE_APP_ID)
-    if [[ -z "$app_id" ]]; then echo "upload-symbols: no Firebase Android app id, skipping Crashlytics."; exit 0; fi
-    firebase crashlytics:mappingfile:upload --app="$app_id" --resource-file="$resource" "$mapping" \
-      || echo "upload-symbols: warning: the R8 mapping was not uploaded to Crashlytics."
+    if [[ -n "$sentry_meta" ]] && sentry_ready; then
+      uuid=$(sed -n 's/^io\.sentry\.ProguardUuids=//p' "$sentry_meta" 2>/dev/null | head -n 1)
+      if [[ -z "$uuid" ]]; then
+        echo "upload-symbols: no ProGuard UUID in '$sentry_meta', skipping Sentry."
+      else
+        sentry-cli upload-proguard --uuid "$uuid" "$mapping" \
+          || echo "upload-symbols: warning: the R8 mapping was not uploaded to Sentry."
+      fi
+    fi
     ;;
 
   *)
-    echo "usage: upload-symbols.sh web <dir> | apple <dir> [ios|mac] | android <mapping.txt> <resource.xml>" >&2
+    echo "usage: upload-symbols.sh web <dir> | apple <dir> [ios|mac] | android <mapping.txt> <resource.xml> [sentry-debug-meta.properties]" >&2
     exit 2
     ;;
 esac

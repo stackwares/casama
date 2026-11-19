@@ -7,6 +7,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'billing.dart' show defaultStore, RevenueCatStore;
 import 'config.dart';
+import 'crash_reporter.dart';
 import 'crashlytics.dart';
 import 'distribution.dart';
 import 'telemetry_web_stub.dart' if (dart.library.js_interop) 'telemetry_web.dart';
@@ -20,12 +21,14 @@ import 'push.dart' show PushConfig;
 ///   --dart-define=POSTHOG_API_KEY=...     PostHog errors and screen analytics
 ///   --dart-define=POSTHOG_HOST=...        PostHog Cloud region or a self-hosted instance
 ///   --dart-define=POSTHOG_ENVIRONMENT=... production|staging|development
-///   --dart-define=ERROR_REPORTING=auto|sentry|posthog|none
+///   --dart-define=ERROR_REPORTING=auto|sentry|posthog|crashlytics|none  the build's crash reporter
 ///   --dart-define=ANALYTICS_PROVIDERS=posthog,ga4  product analytics providers (empty: every configured one)
 ///   --dart-define=GA4_ENABLED=true                  Google Analytics 4 when ANALYTICS_PROVIDERS is empty
 ///   --dart-define=FIREBASE_WEB_MEASUREMENT_ID=...   the web app's GA4 stream (D-397)
-///   --dart-define=CRASHLYTICS_ENABLED=true          Firebase Crashlytics as well, iOS/Android/macOS (D-416)
-/// The "Share usage data and crash reports" switch turns every crash reporter off with the analytics.
+///   --dart-define=CRASHLYTICS_ENABLED=true          Firebase Crashlytics can run, iOS/Android/macOS (D-416)
+/// One crash reporter runs per launch (D-417): the remote settings' `crash_reporter`, else the build's
+/// ERROR_REPORTING, among those this build has ([CrashReporters]).
+/// The "Share usage data and crash reports" switch turns the crash reporter off with the analytics.
 /// Payloads never carry message text, prompts, secrets or emails.
 ///
 /// Native PostHog auto-init is disabled in the iOS and macOS Info.plists and the Android
@@ -85,8 +88,29 @@ class Telemetry {
   /// whole, Crashlytics stops collecting; see [Analytics.setConsentEnabled]).
   static bool crashConsent = true;
 
-  static bool get sentryErrors => sentryDsn.isNotEmpty && (mode == 'auto' || mode == 'sentry');
-  static bool get posthogErrors => posthogOn && (mode == 'posthog' || (mode == 'auto' && sentryDsn.isEmpty));
+  /// The crash reporters this build can run on this platform (D-417). `ERROR_REPORTING=none` rules
+  /// them all out.
+  static Set<CrashReporterKind> get availableCrashReporters => {
+        if (sentryDsn.isNotEmpty && mode != 'none') CrashReporterKind.sentry,
+        if (posthogOn) CrashReporterKind.posthog,
+        if (CrashlyticsReporter.available) CrashReporterKind.crashlytics,
+      };
+
+  /// Sentry is this launch's crash reporter (it isn't even initialised otherwise).
+  static bool get sentryErrors => CrashReporters.active == CrashReporterKind.sentry;
+
+  /// PostHog captures exceptions this launch (its analytics and replay don't depend on this).
+  static bool get posthogErrors => CrashReporters.active == CrashReporterKind.posthog;
+
+  /// Picks this launch's one crash reporter. Called once, before any reporter starts; a remote
+  /// change fetched later applies on the next launch.
+  static Future<CrashReporterKind> chooseCrashReporter() async {
+    final available = availableCrashReporters;
+    final remote = available.isEmpty ? null : await CrashReporters.savedRemoteChoice(platformName);
+    CrashReporters.active = CrashReporters.choose(remote: remote, buildMode: mode, available: available);
+    unawaited(CrashReporters.remember());
+    return CrashReporters.active;
+  }
 
   static final _secrets = [
     RegExp(r'\b(sk|pk|rk)-[A-Za-z0-9_-]{12,}'),
@@ -203,6 +227,8 @@ class Telemetry {
 
   /// Starts error reporting (if configured) and runs the app.
   static Future<void> run(Widget app) async {
+    // First: which one crash reporter runs (D-417). Everything below starts only that one.
+    await chooseCrashReporter();
     if (posthogOn) {
       posthogReady = _setUpPosthog().catchError((Object _) {});
       // On the web, setup first downloads posthog-js (up to 3 s on a slow connection); the app's
@@ -220,6 +246,8 @@ class Telemetry {
         consent: crashConsent,
         keys: {'distribution': distributionName, 'environment': posthogEnv, 'server_kind': serverKind},
       ));
+    } else {
+      unawaited(CrashlyticsReporter.stopUnused());
     }
     if (sentryErrors) {
       await SentryFlutter.init((o) {
@@ -302,6 +330,7 @@ class Telemetry {
     await Posthog().register('platform', platformName);
     await Posthog().register('distribution', distributionName);
     await Posthog().register('server_kind', 'unknown');
+    await Posthog().register('crash_reporter', CrashReporters.active.name);
   }
 
   // Rate-limiting for reported exceptions (ANALYTICS-PLAN §8.2):
@@ -312,7 +341,7 @@ class Telemetry {
   static const int _maxExceptionsPerMinute = 20;
   static const Duration _fingerprintCooldown = Duration(minutes: 5);
 
-  /// Captures an unexpected exception or warning to PostHog / Sentry if configured.
+  /// Captures an unexpected exception or warning to this launch's crash reporter, if any.
   /// Rate-limited to protect quotas against reconnect / retry loops.
   static Future<void> captureException(
     Object error,

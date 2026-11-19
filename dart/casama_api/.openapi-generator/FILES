@@ -637,6 +637,7 @@ lib/src/model/relayed_analytics_event.dart
 lib/src/model/release_lease_request.dart
 lib/src/model/remote_access_status.dart
 lib/src/model/remote_app_config.dart
+lib/src/model/remote_app_config_crash_reporter.dart
 lib/src/model/remote_app_config_maintenance.dart
 lib/src/model/remote_app_config_min_versions.dart
 lib/src/model/remote_app_config_update_urls.dart

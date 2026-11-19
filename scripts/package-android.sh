@@ -42,10 +42,21 @@ if [[ "${CASAMA_OFFICIAL_BUILD:-0}" == "1" ]] && command -v firebase >/dev/null 
     || { echo "package-android: couldn't make a Crashlytics mapping file id (firebase login?)."; rm -f "$mapping_id"; }
 fi
 
+# Sentry (D-417): a fresh ProGuard UUID in the app's assets, which the Sentry SDK reads, and the
+# same mapping uploaded under it, so a remote switch to Sentry still gets readable Java/Kotlin frames.
+# Only with SENTRY_AUTH_TOKEN (in the environment or ~/.config/casama/sentry-cli.env).
+sentry_meta=android/app/src/main/assets/sentry-debug-meta.properties
+rm -f "$sentry_meta"
+sentry_env="${SENTRY_CLI_ENV_FILE:-$HOME/.config/casama/sentry-cli.env}"
+if [[ "${CASAMA_OFFICIAL_BUILD:-0}" == "1" ]] && { [[ -n "${SENTRY_AUTH_TOKEN:-}" ]] || grep -qs '^SENTRY_AUTH_TOKEN=.' "$sentry_env"; }; then
+  mkdir -p "$(dirname "$sentry_meta")"
+  printf 'io.sentry.ProguardUuids=%s\n' "$(uuidgen | tr '[:upper:]' '[:lower:]')" > "$sentry_meta"
+fi
+
 flutter build "$target" --release \
   --dart-define=CASAMA_API_URL="${CASAMA_API_URL:-https://api.casama.ai}" \
   ${defines[@]+"${defines[@]}"} \
   ${extra[@]+"${extra[@]}"} \
   "$@"
-# The R8 mapping to Crashlytics (never fails the build).
-../scripts/upload-symbols.sh android build/app/outputs/mapping/release/mapping.txt "$mapping_id"
+# The R8 mapping to Crashlytics and Sentry (never fails the build).
+../scripts/upload-symbols.sh android build/app/outputs/mapping/release/mapping.txt "$mapping_id" "$sentry_meta"

@@ -545,6 +545,7 @@ import 'package:casama_api/src/model/relayed_analytics_event.dart';
 import 'package:casama_api/src/model/release_lease_request.dart';
 import 'package:casama_api/src/model/remote_access_status.dart';
 import 'package:casama_api/src/model/remote_app_config.dart';
+import 'package:casama_api/src/model/remote_app_config_crash_reporter.dart';
 import 'package:casama_api/src/model/remote_app_config_maintenance.dart';
 import 'package:casama_api/src/model/remote_app_config_min_versions.dart';
 import 'package:casama_api/src/model/remote_app_config_update_urls.dart';
@@ -2021,6 +2022,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return RemoteAccessStatus.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RemoteAppConfig':
           return RemoteAppConfig.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'RemoteAppConfigCrashReporter':
+          return RemoteAppConfigCrashReporter.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RemoteAppConfigMaintenance':
           return RemoteAppConfigMaintenance.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'RemoteAppConfigMinVersions':

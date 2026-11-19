@@ -4,9 +4,11 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
+import 'crash_reporter.dart';
 import 'push.dart' show PushConfig;
 
-/// Firebase Crashlytics, a second crash reporter next to PostHog or Sentry (D-416).
+/// Firebase Crashlytics, one of the crash reporters (D-416); it runs only when it's the one chosen
+/// for this launch ([CrashReporters], D-417).
 ///
 ///   --dart-define=CRASHLYTICS_ENABLED=true   (client/config/telemetry.json, official builds only)
 ///
@@ -53,13 +55,19 @@ class CrashlyticsReporter {
       mode != 'none' &&
       platformSupported(isWeb: isWeb, platform: platform);
 
-  static bool get on => configured(
+  /// Whether this build can run Crashlytics here at all.
+  static bool get available => configured(
     flag: flag,
     firebase: PushConfig.enabled,
     mode: const String.fromEnvironment('ERROR_REPORTING', defaultValue: 'auto'),
     isWeb: kIsWeb,
     platform: defaultTargetPlatform,
   );
+
+  /// Whether Crashlytics runs this launch: it can, and it's the chosen reporter (D-417). Otherwise
+  /// its collection stays off (the native default) and its error hooks aren't installed.
+  static bool get on =>
+      available && CrashReporters.active == CrashReporterKind.crashlytics;
 
   static CrashlyticsSink? _sink;
   static bool _collecting = false;
@@ -89,6 +97,31 @@ class CrashlyticsReporter {
     } catch (_) {
       // Crash reporting is never worth failing startup for.
     }
+  }
+
+  /// When this build has Crashlytics but another reporter was chosen (D-417): keeps collection off
+  /// and drops what the native SDK kept on the device, so switching back later never sends old
+  /// reports. The SDK itself still loads with Firebase; it just never sends.
+  static Future<void> stopUnused() async {
+    if (!available || on) return;
+    try {
+      if (Firebase.apps.isEmpty) {
+        await Firebase.initializeApp(options: PushConfig.options)
+            .timeout(const Duration(seconds: 5));
+      }
+      await stopWith(FirebaseCrashlyticsSink());
+    } catch (_) {}
+  }
+
+  /// [stopUnused] with a given sink (tests). Leaves no sink behind, so nothing records.
+  @visibleForTesting
+  static Future<void> stopWith(CrashlyticsSink sink) async {
+    _sink = null;
+    _collecting = false;
+    try {
+      await sink.setCollectionEnabled(false);
+      await sink.deleteUnsentReports();
+    } catch (_) {}
   }
 
   /// [start] with a given sink (tests).

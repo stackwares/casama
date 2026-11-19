@@ -637,6 +637,7 @@ export 'package:casama_api/src/model/relayed_analytics_event.dart';
 export 'package:casama_api/src/model/release_lease_request.dart';
 export 'package:casama_api/src/model/remote_access_status.dart';
 export 'package:casama_api/src/model/remote_app_config.dart';
+export 'package:casama_api/src/model/remote_app_config_crash_reporter.dart';
 export 'package:casama_api/src/model/remote_app_config_maintenance.dart';
 export 'package:casama_api/src/model/remote_app_config_min_versions.dart';
 export 'package:casama_api/src/model/remote_app_config_update_urls.dart';

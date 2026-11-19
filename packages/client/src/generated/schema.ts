@@ -11855,6 +11855,23 @@ export interface components {
                     [key: string]: string;
                 };
             };
+            /** @description The one crash reporter the apps run, per platform over default; taken on the next launch, and an app falls back to its build's own choice when the named one isn't in that build */
+            crash_reporter?: {
+                /** @description sentry, crashlytics, posthog or none */
+                default?: string;
+                /** @description sentry, crashlytics, posthog or none */
+                ios?: string;
+                /** @description sentry, crashlytics, posthog or none */
+                android?: string;
+                /** @description sentry, crashlytics, posthog or none */
+                macos?: string;
+                /** @description sentry, crashlytics, posthog or none */
+                windows?: string;
+                /** @description sentry, crashlytics, posthog or none */
+                linux?: string;
+                /** @description sentry, crashlytics, posthog or none */
+                web?: string;
+            };
         };
         Announcement: {
             id: string;

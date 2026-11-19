@@ -16,6 +16,12 @@ export type AppPlatform = (typeof APP_PLATFORMS)[number];
 export const VERSION_PLATFORMS = [...APP_PLATFORMS, "chrome"] as const;
 export type VersionPlatform = (typeof VERSION_PLATFORMS)[number];
 
+/** The crash reporters an app can run, one at a time (D-417). */
+export const CRASH_REPORTERS = ["sentry", "crashlytics", "posthog", "none"] as const;
+export type CrashReporter = (typeof CRASH_REPORTERS)[number];
+/** Which crash reporter the apps run: `default` for every platform, a platform's own key over it. */
+export type CrashReporterChoice = Partial<Record<"default" | AppPlatform, CrashReporter>>;
+
 export interface Announcement {
   /** Stable id: an app hides an announcement once its id is dismissed. */
   id: string;
@@ -61,6 +67,12 @@ export interface RemoteAppConfig {
    * stored or edited.
    */
   names?: Record<string, Record<string, string>>;
+  /**
+   * The one crash reporter the apps run (D-417), per platform over `default`. An app takes a
+   * change on its next launch, and falls back to its build's own choice when the named one isn't
+   * in that build. Optional: older servers and apps don't know it.
+   */
+  crash_reporter?: CrashReporterChoice;
 }
 
 /** Keys the server fills in when it serves the settings; a saved copy that has them drops them. */
@@ -121,6 +133,7 @@ export function checkAppConfig(raw: unknown): { config?: RemoteAppConfig; errors
         "links",
         "prompts",
         "quick_reactions",
+        "crash_reporter",
         ...SERVED_APP_CONFIG_KEYS,
       ].includes(key)
     )
@@ -278,6 +291,24 @@ export function checkAppConfig(raw: unknown): { config?: RemoteAppConfig; errors
     else quick_reactions = norm as string[];
   }
 
+  const crash_reporter: CrashReporterChoice = {};
+  if (raw.crash_reporter !== undefined && raw.crash_reporter !== null) {
+    if (!isRecord(raw.crash_reporter))
+      errors.push(`crash_reporter must map default or platforms to ${CRASH_REPORTERS.join(", ")}`);
+    else
+      for (const [k, v] of Object.entries(raw.crash_reporter)) {
+        const key = k === "default" ? k : APP_PLATFORMS.find((p) => p === k);
+        if (!key)
+          errors.push(
+            `crash_reporter.${k} isn't default or a platform (${APP_PLATFORMS.join(", ")})`,
+          );
+        else if (v === null || v === "") continue;
+        else if (!CRASH_REPORTERS.includes(v as CrashReporter))
+          errors.push(`crash_reporter.${k} must be one of ${CRASH_REPORTERS.join(", ")}`);
+        else crash_reporter[key] = v as CrashReporter;
+      }
+  }
+
   if (errors.length) return { errors };
   return {
     errors,
@@ -290,6 +321,7 @@ export function checkAppConfig(raw: unknown): { config?: RemoteAppConfig; errors
       ...(Object.keys(links).length ? { links } : {}),
       ...(Object.keys(prompts).length ? { prompts } : {}),
       ...(quick_reactions ? { quick_reactions } : {}),
+      ...(Object.keys(crash_reporter).length ? { crash_reporter } : {}),
     },
   };
 }

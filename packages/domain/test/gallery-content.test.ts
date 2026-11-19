@@ -99,6 +99,22 @@ describe("remote app settings", () => {
     expect(bad.errors).toHaveLength(5);
   });
 
+  it("takes one crash reporter per platform over a default (D-417)", () => {
+    const { config, errors } = checkAppConfig({
+      crash_reporter: { default: "sentry", ios: "crashlytics", web: "", android: null },
+    });
+    expect(errors).toEqual([]);
+    expect(config?.crash_reporter).toEqual({ default: "sentry", ios: "crashlytics" });
+    expect(checkAppConfig({ crash_reporter: {} }).config?.crash_reporter).toBeUndefined();
+    const bad = checkAppConfig({ crash_reporter: { default: "bugsnag", chrome: "sentry" } });
+    expect(bad.config).toBeUndefined();
+    expect(bad.errors).toEqual([
+      "crash_reporter.default must be one of sentry, crashlytics, posthog, none",
+      "crash_reporter.chrome isn't default or a platform (ios, android, macos, windows, linux, web)",
+    ]);
+    expect(checkAppConfig({ crash_reporter: "sentry" }).errors).toHaveLength(1);
+  });
+
   it("takes a minimum version for Casama for Chrome but keeps announcements to the apps", () => {
     const { config, errors } = checkAppConfig({
       min_versions: { chrome: "0.2.0" },

@@ -280,8 +280,9 @@ input and output, with secrets and model keys removed. Workspaces can opt out wi
   workspace, never as a person being active. Deleting your account also deletes your analytics.
 - **On someone else's server:** the official app connected to a self-hosted server sends crash
   reports and one anonymous "the app was used today" ping a day. No screens, no events, no account id.
-- **Error reports:** Sent to Sentry/PostHog when configured. The official iOS, Android and macOS apps
-  also send crash reports to Firebase Crashlytics, without your account id. Reports never carry
+- **Error reports:** An app sends crash reports to one service at a time: Sentry, PostHog or, in the
+  official iOS, Android and macOS apps, Firebase Crashlytics. Which one can change without an app
+  update; the reports themselves stay the same, without your account id. Reports never carry
   message text, prompts, secrets, personal device data, or email addresses. Turning off **Share
   Usage Data** stops crash reports too, and deletes Crashlytics reports not yet sent. Builds you make
   yourself send nothing to Crashlytics (it needs `CRASHLYTICS_ENABLED` and your own Firebase project).

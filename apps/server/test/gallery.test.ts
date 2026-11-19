@@ -330,6 +330,36 @@ describe("gallery", () => {
     resetAppConfigCache();
   });
 
+  it("stores and serves the crash reporter choice, and refuses a bad one (D-417)", async () => {
+    resetAppConfigCache();
+    const bad = await h.request("/v1/admin/app-config", {
+      method: "PUT",
+      token: owner.token,
+      json: { crash_reporter: { ios: "bugsnag" } },
+    });
+    expect(bad.status).toBe(400);
+    expect(JSON.stringify(await j(bad))).toContain("crash_reporter.ios must be one of");
+    const set = await h.request("/v1/admin/app-config", {
+      method: "PUT",
+      token: owner.token,
+      json: { crash_reporter: { default: "sentry", android: "crashlytics" } },
+    });
+    expect(set.status).toBe(200);
+    const stored = await j(await h.request("/v1/admin/app-config", { token: owner.token }));
+    expect(stored.crash_reporter).toEqual({ default: "sentry", android: "crashlytics" });
+    // What the editor got back saves again unchanged.
+    const again = await h.request("/v1/admin/app-config", {
+      method: "PUT",
+      token: owner.token,
+      json: stored,
+    });
+    expect(again.status).toBe(200);
+    const live = await j(await h.request("/v1/app-config"));
+    expect(live.crash_reporter).toEqual({ default: "sentry", android: "crashlytics" });
+    await h.request("/v1/admin/app-config", { method: "PUT", token: owner.token, json: {} });
+    resetAppConfigCache();
+  });
+
   it("serves links, prompts and the owner's quick reactions in the app settings (D-372)", async () => {
     resetAppConfigCache();
     const set = await h.request("/v1/admin/app-config", {

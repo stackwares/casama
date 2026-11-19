@@ -1147,6 +1147,7 @@ Class | Method | HTTP request | Description
  - [ReleaseLeaseRequest](doc/ReleaseLeaseRequest.md)
  - [RemoteAccessStatus](doc/RemoteAccessStatus.md)
  - [RemoteAppConfig](doc/RemoteAppConfig.md)
+ - [RemoteAppConfigCrashReporter](doc/RemoteAppConfigCrashReporter.md)
  - [RemoteAppConfigMaintenance](doc/RemoteAppConfigMaintenance.md)
  - [RemoteAppConfigMinVersions](doc/RemoteAppConfigMinVersions.md)
  - [RemoteAppConfigUpdateUrls](doc/RemoteAppConfigUpdateUrls.md)

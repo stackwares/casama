@@ -25,6 +25,8 @@ abstract class _$RemoteAppConfigCWProxy {
 
   RemoteAppConfig names(Map<String, Map<String, String>>? names);
 
+  RemoteAppConfig crashReporter(RemoteAppConfigCrashReporter? crashReporter);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `RemoteAppConfig(...).copyWith.fieldName(value)`.
@@ -43,6 +45,7 @@ abstract class _$RemoteAppConfigCWProxy {
     Map<String, String>? prompts,
     List<String>? quickReactions,
     Map<String, Map<String, String>>? names,
+    RemoteAppConfigCrashReporter? crashReporter,
   });
 }
 
@@ -87,6 +90,10 @@ class _$RemoteAppConfigCWProxyImpl implements _$RemoteAppConfigCWProxy {
   RemoteAppConfig names(Map<String, Map<String, String>>? names) =>
       call(names: names);
 
+  @override
+  RemoteAppConfig crashReporter(RemoteAppConfigCrashReporter? crashReporter) =>
+      call(crashReporter: crashReporter);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `RemoteAppConfig(...).copyWith.fieldName(value)`.
@@ -106,6 +113,7 @@ class _$RemoteAppConfigCWProxyImpl implements _$RemoteAppConfigCWProxy {
     Object? prompts = const $CopyWithPlaceholder(),
     Object? quickReactions = const $CopyWithPlaceholder(),
     Object? names = const $CopyWithPlaceholder(),
+    Object? crashReporter = const $CopyWithPlaceholder(),
   }) {
     return RemoteAppConfig(
       minVersions:
@@ -147,6 +155,10 @@ class _$RemoteAppConfigCWProxyImpl implements _$RemoteAppConfigCWProxy {
           ? _value.names
           // ignore: cast_nullable_to_non_nullable
           : names as Map<String, Map<String, String>>?,
+      crashReporter: crashReporter == const $CopyWithPlaceholder()
+          ? _value.crashReporter
+          // ignore: cast_nullable_to_non_nullable
+          : crashReporter as RemoteAppConfigCrashReporter?,
     );
   }
 }
@@ -222,6 +234,12 @@ RemoteAppConfig _$RemoteAppConfigFromJson(
           (k, e) => MapEntry(k, Map<String, String>.from(e as Map)),
         ),
       ),
+      crashReporter: $checkedConvert(
+        'crash_reporter',
+        (v) => v == null
+            ? null
+            : RemoteAppConfigCrashReporter.fromJson(v as Map<String, dynamic>),
+      ),
     );
     return val;
   },
@@ -229,6 +247,7 @@ RemoteAppConfig _$RemoteAppConfigFromJson(
     'minVersions': 'min_versions',
     'updateUrls': 'update_urls',
     'quickReactions': 'quick_reactions',
+    'crashReporter': 'crash_reporter',
   },
 );
 
@@ -243,4 +262,5 @@ Map<String, dynamic> _$RemoteAppConfigToJson(RemoteAppConfig instance) =>
       'prompts': ?instance.prompts,
       'quick_reactions': ?instance.quickReactions,
       'names': ?instance.names,
+      'crash_reporter': ?instance.crashReporter?.toJson(),
     };

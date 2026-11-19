@@ -746,6 +746,36 @@ dropped, and secret-looking values and emails are redacted. Apps you build yours
 Crashlytics with `CRASHLYTICS_ENABLED=true` in `client/config/telemetry.json` (iOS, Android and macOS);
 it follows the app's "Share usage data and crash reports" switch.
 
+### Which crash reporter runs
+
+An app runs one crash reporter at a time (D-417): Sentry, Firebase Crashlytics or PostHog error
+tracking, or none. Two at once would fight over native crash signals and split the same crash
+across two dashboards. Your apps' build decides what they can run: Sentry needs `SENTRY_DSN`, PostHog
+needs `POSTHOG_API_KEY`, Crashlytics needs `CRASHLYTICS_ENABLED=true` and a Firebase project and runs
+only on iOS, Android and macOS, and `ERROR_REPORTING=none` rules them all out.
+
+You can switch which one runs without a new build, from the remote app settings in Admin → App
+settings ([Remote app settings](/self-hosting/operations#remote-app-settings)):
+
+```json
+{ "crash_reporter": { "default": "sentry", "android": "crashlytics", "ios": "crashlytics" } }
+```
+
+Keys are `default` and the platforms `ios`, `android`, `macos`, `windows`, `linux` and `web`; values
+are `sentry`, `crashlytics`, `posthog` or `none`. At each launch, before any reporter starts, the app
+picks:
+
+1. this platform's value, else `default`, from the settings it saved at its last check;
+2. if that's not set, or the build can't run it on this platform, the build's own
+   `ERROR_REPORTING` (`auto` means Sentry when there's a DSN, else PostHog when there's a key);
+3. if the build can't run that either, none.
+
+`none` always turns crash reports off. A change reaches an app within half an hour and takes effect
+the next time it starts; apps that don't know the setting ignore it. The "Share usage data and crash
+reports" switch still turns the chosen reporter off. PostHog's product analytics don't depend on this
+setting. Official builds upload crash symbols to every reporter they're set up for (scripts/upload-symbols.sh),
+so a switch never leaves crashes unreadable. Support details (Settings → Help) show the reporter in use.
+
 ## Backups and alerts
 
 These are read by the optional `backup` and `monitoring` profiles, not by the server. They're

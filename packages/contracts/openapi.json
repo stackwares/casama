@@ -17412,6 +17412,40 @@
               }
             },
             "description": "Display names the server knows (apps: tool-call app names by slug; dns_providers), filled in when served, never stored"
+          },
+          "crash_reporter": {
+            "type": "object",
+            "properties": {
+              "default": {
+                "type": "string",
+                "description": "sentry, crashlytics, posthog or none"
+              },
+              "ios": {
+                "type": "string",
+                "description": "sentry, crashlytics, posthog or none"
+              },
+              "android": {
+                "type": "string",
+                "description": "sentry, crashlytics, posthog or none"
+              },
+              "macos": {
+                "type": "string",
+                "description": "sentry, crashlytics, posthog or none"
+              },
+              "windows": {
+                "type": "string",
+                "description": "sentry, crashlytics, posthog or none"
+              },
+              "linux": {
+                "type": "string",
+                "description": "sentry, crashlytics, posthog or none"
+              },
+              "web": {
+                "type": "string",
+                "description": "sentry, crashlytics, posthog or none"
+              }
+            },
+            "description": "The one crash reporter the apps run, per platform over default; taken on the next launch, and an app falls back to its build's own choice when the named one isn't in that build"
           }
         },
         "required": [

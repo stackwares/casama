@@ -21,6 +21,7 @@ import 'remote_content.dart';
 /// and feature switches. Read without signing in, refreshed every half hour and when the app comes
 /// back to the front, and kept on the device so a minimum version holds offline too.
 
+// Also read at startup, before any crash reporter starts (crash_reporter.dart, D-417).
 const _savedKey = 'remoteConfig.saved';
 const _dismissedKey = 'remoteConfig.dismissed';
 

@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/billing.dart';
+import '../../core/crash_reporter.dart';
 import '../../core/dev_server.dart';
 import '../../core/haptics.dart';
 import '../../core/providers.dart';
@@ -99,6 +100,7 @@ String supportDetails(WidgetRef ref) {
     if (backend.userId != null) 'Account ID: ${backend.userId}',
     if (billing != null && billing.enabled) 'Plan: ${billing.planCode}',
     'Server: ${serverHost(backend.apiUrl)}',
+    'Crash reports: ${CrashReporters.active.name}',
   ].join('\n');
 }
 
