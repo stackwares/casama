@@ -4,6 +4,7 @@ SIGN IN WITH THE DEMO ACCOUNT
 1. Tap "Continue with Email", then "Use a Password Instead".
 2. Enter the demo email and password and tap "Sign in". No code or two-step sign-in is needed.
 3. The first screen asks to agree that chats go to outside AI providers. Tap "Agree and Continue".
+To try registration instead (invite-only), use invite code REVIEW-XXXXXX.
 The workspace shows the Free plan but has Pro limits and $50 of credits for review, so every feature works without buying anything.
 
 WHAT TO TRY
