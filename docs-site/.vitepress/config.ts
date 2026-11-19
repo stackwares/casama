@@ -330,6 +330,8 @@ export default defineConfig({
       { icon: "x", link: "https://x.com/CasamaAI", ariaLabel: "Casama on X" },
       { icon: "bluesky", link: "https://bsky.app/profile/casama.ai", ariaLabel: "Casama on Bluesky" },
       { icon: "youtube", link: "https://www.youtube.com/@casamaai", ariaLabel: "Casama on YouTube" },
+      { icon: "instagram", link: "https://www.instagram.com/casamaai/", ariaLabel: "Casama on Instagram" },
+      { icon: "facebook", link: "https://www.facebook.com/casamaai", ariaLabel: "Casama on Facebook" },
     ],
     search: { provider: "local" },
     outline: { level: [2, 3] },

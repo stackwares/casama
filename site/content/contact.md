@@ -24,7 +24,7 @@ updated: 2026-11-19
 - Follow along on [X](https://x.com/CasamaAI), [Bluesky](https://bsky.app/profile/casama.ai),
   [Threads](https://www.threads.com/@casamaai) and [Mastodon](https://mastodon.social/@casamaai),
   and watch how-to videos on [YouTube](https://www.youtube.com/@casamaai).
-- We're also on [Instagram](https://www.instagram.com/casamaai/),
+- We're also on [Instagram](https://www.instagram.com/casamaai/), [Facebook](https://www.facebook.com/casamaai),
   [TikTok](https://www.tiktok.com/@casama.ai) and [Reddit](https://www.reddit.com/user/casamaai/).
 
 These are for news and conversation. For anything about your account, use support below: we won't

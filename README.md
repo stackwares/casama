@@ -32,6 +32,7 @@
   <a href="https://x.com/CasamaAI"><img src="https://img.shields.io/badge/X-@CasamaAI-000000?logo=x" alt="Follow Casama on X"></a>
   <a href="https://bsky.app/profile/casama.ai"><img src="https://img.shields.io/badge/Bluesky-@casama.ai-0285FF?logo=bluesky&logoColor=white" alt="Follow Casama on Bluesky"></a>
   <a href="https://www.youtube.com/@casamaai"><img src="https://img.shields.io/badge/YouTube-@casamaai-FF0000?logo=youtube&logoColor=white" alt="Casama on YouTube"></a>
+  <a href="https://www.facebook.com/casamaai"><img src="https://img.shields.io/badge/Facebook-casamaai-1877F2?logo=facebook&logoColor=white" alt="Casama on Facebook"></a>
 </p>
 
 ---
