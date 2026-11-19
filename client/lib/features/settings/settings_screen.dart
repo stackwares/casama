@@ -42,6 +42,7 @@ import '../notifications/newsletter.dart';
 import '../app_lock/app_lock.dart';
 import '../notifications/push_prefs.dart';
 import '../notifications/quiet_hours.dart';
+import '../voice/full_screen_calls.dart';
 import '../companion/companion.dart';
 import '../referrals/invite_friends.dart';
 import '../sites/domains_providers.dart';
@@ -277,6 +278,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   // Which kinds push (D-325).
                   _Find(title: l10n.pushPrefsTitle, child: const PushPrefsTile()),
+                  // Bots' calls ringing on the full screen, when Android 14+ has it off (D-424).
+                  _Find(title: l10n.callFullScreenTitle, child: const FullScreenCallsTile()),
                   // Widgets on the Home screen, Lock Screen and desktop (D-405).
                   if (!kIsWeb &&
                       const {TargetPlatform.iOS, TargetPlatform.android, TargetPlatform.macOS}.contains(defaultTargetPlatform))
@@ -660,6 +663,7 @@ Map<String, String> _settingsSearchWords(AppLocalizations l10n, {String? orgName
   l10n.appearance: 'theme dark mode light mode night colors colours fonts font text size background wallpaper look style themes effects motion animations',
   l10n.quietHours: 'do not disturb dnd sleep mute silence notifications schedule',
   l10n.pushPrefsTitle: 'notifications push alerts replies sounds',
+  l10n.callFullScreenTitle: 'calls phone ring ringing lock screen full screen incoming answer',
   l10n.emailTips: 'email newsletter tips news unsubscribe',
   l10n.galleryDigestEmails: 'email gallery digest monthly picks',
   l10n.newsletterTitle: 'email newsletter monthly news updates subscribe unsubscribe',

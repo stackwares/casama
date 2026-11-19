@@ -8147,6 +8147,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callDecline => 'Decline';
 
   @override
+  String get callFullScreenTitle => 'Calls on the Lock Screen';
+
+  @override
+  String get callFullScreenOff =>
+      'Off: a bot\'s call shows only as a notification. Tap to let calls ring on the full screen.';
+
+  @override
   String get encryption => 'Encrypt Content';
 
   @override

@@ -55,6 +55,10 @@ abstract class CallSurface {
   Future<void> end(String id);
   Stream<(CallAction, IncomingCall)> get actions;
 
+  /// Rings the person already answered on the phone's calling screen while no app was listening
+  /// (Android, app closed: the plugin keeps them, but its answer event went nowhere) (D-424).
+  Future<List<IncomingCall>> answered();
+
   /// The iOS PushKit token (null elsewhere).
   Future<String?> voipToken();
 }
@@ -69,6 +73,8 @@ class NoCallSurface implements CallSurface {
   Future<void> end(String id) async {}
   @override
   Stream<(CallAction, IncomingCall)> get actions => const Stream.empty();
+  @override
+  Future<List<IncomingCall>> answered() async => const [];
   @override
   Future<String?> voipToken() async => null;
 }
@@ -109,6 +115,22 @@ class NativeCallSurface implements CallSurface {
   });
 
   @override
+  Future<List<IncomingCall>> answered() async {
+    // iOS hands a cold-start answer to Dart itself (and lists the app's own outgoing calls here).
+    if (defaultTargetPlatform != TargetPlatform.android) return const [];
+    try {
+      final calls = await FlutterCallkitIncoming.activeCalls();
+      return [
+        for (final c in calls)
+          if (c.isAccepted) ?IncomingCall.fromData(c.extra ?? {'call_id': c.id}),
+      ];
+    } catch (e) {
+      debugPrint('answered rings not read: $e');
+      return const [];
+    }
+  }
+
+  @override
   Future<String?> voipToken() async {
     if (defaultTargetPlatform != TargetPlatform.iOS) return null;
     final t = await FlutterCallkitIncoming.getDevicePushTokenVoIP();
@@ -134,6 +156,9 @@ class PhoneCalls {
   final _subs = <StreamSubscription<Object?>>[];
   var _started = false;
 
+  /// Rings already answered here: the answer event and the launch check can both report one.
+  final _answered = <String>{};
+
   Future<void> start() async {
     if (_started) return;
     _started = true;
@@ -149,6 +174,11 @@ class PhoneCalls {
         }),
       );
     }
+    // Android, opened by Answer with the app closed: the answer event fired before anything here
+    // listened, so the answered ring is picked up from the plugin instead (D-424).
+    for (final call in await surface.answered()) {
+      unawaited(answer(call));
+    }
     try {
       final token = await surface.voipToken();
       if (token != null) await ref.read(backendProvider).registerVoipToken(token);
@@ -158,6 +188,7 @@ class PhoneCalls {
   }
 
   Future<void> answer(IncomingCall call) async {
+    if (!_answered.add(call.id)) return;
     try {
       await ref.read(backendProvider).answerCall(call.id);
     } catch (_) {

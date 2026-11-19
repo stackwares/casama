@@ -286,6 +286,16 @@
             android:name="com.hiennv.flutter_callkit_incoming.CallkitNotificationService"
             android:foregroundServiceType="phoneCall|microphone"
             tools:replace="android:foregroundServiceType" />
+        <!-- Answering a ring (D-424): the plugin's Answer goes through this see-through activity, which
+             starts the app without FLAG_ACTIVITY_NEW_TASK. MainActivity has taskAffinity="", so that
+             made a second MainActivity, with its own Flutter engine, in this activity's task: the old
+             engine answered the call out of sight while a fresh app opened on Home. singleInstance
+             makes Android start the app in its own task, so the running app comes forward. -->
+        <activity
+            android:name="com.hiennv.flutter_callkit_incoming.TransparentActivity"
+            android:launchMode="singleInstance"
+            android:taskAffinity=""
+            android:excludeFromRecents="true" />
         <!-- Notifications from apps the person picks (D-151). -->
         <service android:label="Casama" android:name="notification.listener.service.NotificationListener" android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="true">
             <intent-filter>

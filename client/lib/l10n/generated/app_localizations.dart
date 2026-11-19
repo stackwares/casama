@@ -12706,6 +12706,18 @@ abstract class AppLocalizations {
   /// **'Decline'**
   String get callDecline;
 
+  /// No description provided for @callFullScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calls on the Lock Screen'**
+  String get callFullScreenTitle;
+
+  /// No description provided for @callFullScreenOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off: a bot\'s call shows only as a notification. Tap to let calls ring on the full screen.'**
+  String get callFullScreenOff;
+
   /// No description provided for @encryption.
   ///
   /// In en, this message translates to:

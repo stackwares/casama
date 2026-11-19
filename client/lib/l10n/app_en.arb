@@ -2474,6 +2474,8 @@
   "@callIncoming": {"placeholders": {"name": {"type": "String"}}},
   "callAnswer": "Answer",
   "callDecline": "Decline",
+  "callFullScreenTitle": "Calls on the Lock Screen",
+  "callFullScreenOff": "Off: a bot's call shows only as a notification. Tap to let calls ring on the full screen.",
   "encryption": "Encrypt Content",
   "encryptionHelp": "Messages, memories, tickets, pages and knowledge are encrypted before they're stored, with this workspace's own key. Search then matches titles and meaning, not exact words in encrypted text.",
   "encryptionOff": "Off",

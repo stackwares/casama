@@ -1,6 +1,7 @@
 package ai.casama.app
 
 import android.app.Activity
+import android.app.KeyguardManager
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -108,11 +109,34 @@ class MainActivity : FlutterFragmentActivity() {
         super.cleanUpFlutterEngine(flutterEngine)
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        unlockForAnsweredRing(intent)
+    }
+
+    /**
+     * Answer on a ring (D-424), tapped on the Lock Screen: the plugin's see-through activity shows
+     * over the lock, but the app doesn't (it never shows over the lock), so the call screen would sit
+     * behind it. Ask for the unlock; Android 14+ with the full-screen ring off answers from the
+     * notification, so this is the usual way in there.
+     */
+    private fun unlockForAnsweredRing(intent: Intent?) {
+        if (intent?.action?.endsWith(CALLKIT_ACCEPT) != true) return
+        val keyguard = getSystemService(KeyguardManager::class.java) ?: return
+        if (keyguard.isKeyguardLocked) keyguard.requestDismissKeyguard(this, null)
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        unlockForAnsweredRing(intent)
         // The call notification, tapped: the call screen.
         if (intent.action == CallService.ACTION_OPEN) CallBridge.send("open")
         PushNotifications.deliver(intent)
+    }
+
+    private companion object {
+        /** flutter_callkit_incoming's Answer, as its TransparentActivity starts the app. */
+        const val CALLKIT_ACCEPT = "com.hiennv.flutter_callkit_incoming.ACTION_CALL_ACCEPT"
     }
 
     override fun onPause() {
