@@ -1,0 +1,22 @@
+{
+  "name": "Higgsfield",
+  "author": {
+    "name": "Casama",
+    "url": "https://casama.ai",
+    "handle": "casama"
+  },
+  "license": "CC0-1.0",
+  "tags": ["image-generation", "video-generation", "creative"],
+  "version": 1,
+  "added": "2026-11-19",
+  "examples": [
+    "Generate a cinematic video of a rainy Tokyo street at night",
+    "Create three product images with a clean studio background",
+    "Upscale this image and save it to my Higgsfield assets"
+  ],
+  "access": {
+    "reads": ["your Higgsfield assets"],
+    "writes": ["generates images and video using your credits"],
+    "credits": "high"
+  }
+}
