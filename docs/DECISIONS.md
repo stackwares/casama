@@ -6238,7 +6238,10 @@ own KYC and credits.
   email goes through Resend and the server logs a warning. When both fail, the main error is thrown.
 - **Auth mail switches by hand:** Supabase Auth takes one SMTP server, so sign-in links move to
   Resend SMTP with a `.env` change plus `auth` and `kong` recreated (`docs/EMAIL-RUNBOOK.md`).
+- **Casama's own Resend account:** the backup lives on a Resend account of its own (admin@casama.ai,
+  login in Vaultwarden "Casama · Resend account login (admin@casama.ai)"), not the shared one that
+  holds the newsletter and sayainvitations.com, so it has its own free allowance (100 a day, 3,000 a
+  month): enough for a short outage, upgrade for a long one. The newsletter stays on the shared
+  account for now.
 - **Key:** send-only and limited to notify.casama.ai, in Vaultwarden "Casama · Resend API key (app
   mail backup, notify.casama.ai)".
-- **Limits:** Resend's free plan (100 a day, 3,000 a month) is shared with the newsletter and
-  sayainvitations.com; enough for a short outage, upgrade for a long one.

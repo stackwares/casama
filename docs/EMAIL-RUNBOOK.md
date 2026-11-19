@@ -40,8 +40,8 @@ Then send yourself a sign-in link (a real address such as `hello+test@casama.ai`
 arrives. Only `auth` and `kong` change; the API and worker keep ZeptoMail with Resend behind it
 until they are next recreated.
 
-Resend's free plan allows **100 emails a day and 3,000 a month**, shared with the newsletter and
-sayainvitations.com. For an outage longer than a day, upgrade the Resend plan.
+The backup is on Casama's own Resend account (admin@casama.ai, login in Vaultwarden). Its free plan
+allows **100 emails a day and 3,000 a month**. For an outage longer than a day, upgrade that plan.
 
 ## Switch back
 
