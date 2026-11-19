@@ -27,6 +27,17 @@ if [[ ! -s build/web/main.dart.wasm || ! -s build/web/index.html ]]; then
   echo "No web build in client/build/web. Run scripts/build-web.sh first." >&2
   exit 1
 fi
+# Both builds ship, always: Wasm for current browsers and the JavaScript fallback (main.dart.js +
+# CanvasKit) for browsers without WasmGC, such as older Safari and Firefox before 147.
+FILES_WASM=(main.dart.wasm main.dart.mjs canvaskit/skwasm.js canvaskit/skwasm.wasm canvaskit/skwasm_heavy.js canvaskit/skwasm_heavy.wasm)
+FILES_FALLBACK=(main.dart.js canvaskit/canvaskit.js canvaskit/canvaskit.wasm canvaskit/chromium/canvaskit.js canvaskit/chromium/canvaskit.wasm)
+for f in "${FILES_WASM[@]}" "${FILES_FALLBACK[@]}"; do
+  [[ -s "build/web/$f" ]] || { echo "This build is missing $f; rebuild with scripts/build-web.sh." >&2; exit 1; }
+done
+grep -q '"compileTarget":"dart2js"' build/web/flutter_bootstrap.js || {
+  echo "This build's flutter_bootstrap.js doesn't offer the JavaScript fallback; rebuild with scripts/build-web.sh." >&2
+  exit 1
+}
 # app.casama.ai must talk to Casama Cloud. A build without CASAMA_API_URL falls back to
 # http://localhost:8787 and shows "Can't reach your Casama server" to everyone (2026-11-16), and
 # one without the official config has no analytics or web push. Build it with:
@@ -82,6 +93,16 @@ for path in $(node -e 'console.log(Object.keys(require("./build/web-host/large-f
   got=$(curl -s -o /dev/null -w '%{http_code} %{content_type}' -H 'Accept-Encoding: br' "$URL$path")
   if [[ "$got" == "200 $want"* ]]; then echo "OK $path ($got)"; else echo "FAILED $path: $got" >&2; fail=1; fi
 done
+# Both builds answer live, whether from static assets or R2.
+for f in "${FILES_WASM[@]}" "${FILES_FALLBACK[@]}"; do
+  case "$f" in *.wasm) want=application/wasm ;; *) want=text/javascript ;; esac
+  got=$(curl -s -o /dev/null -w '%{http_code} %{content_type}' -H 'Accept-Encoding: br' "$URL/$f")
+  if [[ "$got" == "200 $want"* ]]; then echo "OK /$f"; else echo "FAILED /$f: $got" >&2; fail=1; fi
+done
+curl -fsS "$URL/flutter_bootstrap.js" | grep -q '"compileTarget":"dart2js"' || {
+  echo "FAILED: the live flutter_bootstrap.js doesn't offer the JavaScript fallback." >&2
+  fail=1
+}
 live=$(curl -s "$URL/version.json")
 echo "Live version.json: $live"
 [[ $fail == 0 ]] || { echo "A large file isn't served right. Roll back with: (cd client && wrangler rollback)" >&2; exit 1; }

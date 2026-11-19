@@ -60,6 +60,19 @@ if ! grep -q 'dart2wasm' "$boot" || ! grep -q 'main.dart.wasm' "$boot"; then
   echo "flutter_bootstrap.js does not offer the Wasm build." >&2
   exit 1
 fi
+# Every build also carries the JavaScript fallback for browsers without WasmGC (older Safari, and
+# every Firefox before 147 by Flutter's own rule): main.dart.js with the CanvasKit renderer. A
+# build without it leaves those browsers on the loading screen.
+for f in main.dart.js canvaskit/canvaskit.js canvaskit/canvaskit.wasm canvaskit/chromium/canvaskit.js canvaskit/chromium/canvaskit.wasm; do
+  if [[ ! -s "build/web/$f" ]]; then
+    echo "Release web build is missing $f, the fallback for browsers without WasmGC." >&2
+    exit 1
+  fi
+done
+if ! grep -q '"compileTarget":"dart2js"' "$boot" || ! grep -q '"mainJsPath":"main.dart.js"' "$boot"; then
+  echo "flutter_bootstrap.js does not offer the JavaScript fallback build." >&2
+  exit 1
+fi
 # RevenueCat isn't used on the web (store purchases are App Store and Google Play only, D-297; the web
 # app's store is NoStore), but purchases_flutter loads its 1 MB web SDK as soon as it registers,
 # before the first frame. An empty file stands in, so the plugin's load still succeeds.
@@ -67,6 +80,49 @@ rc=build/web/assets/packages/purchases_flutter/assets/web/purchases_js_hybrid_ma
 if [[ -f "$rc" ]]; then
   echo '/* RevenueCat is not used on the web (scripts/build-web.sh). */' > "$rc"
 fi
+# The loading screen's progress bar (web/boot.js) counts bytes against the real sizes of the files
+# a start can load: every main and renderer file Flutter picks between, plus the font manifest and
+# the launch fonts. Dart, not Python or Node: the self-host image has only Flutter.
+sizes_dir=$(mktemp -d)
+sizes_tool="$sizes_dir/boot_files.dart"
+cat > "$sizes_tool" <<'DART'
+import 'dart:convert';
+import 'dart:io';
+
+void main(List<String> args) {
+  final web = args.single;
+  const candidates = [
+    'main.dart.mjs', 'main.dart.wasm', 'main.dart.js',
+    'canvaskit/skwasm.js', 'canvaskit/skwasm.wasm',
+    'canvaskit/skwasm_heavy.js', 'canvaskit/skwasm_heavy.wasm',
+    'canvaskit/chromium/canvaskit.js', 'canvaskit/chromium/canvaskit.wasm',
+    'canvaskit/canvaskit.js', 'canvaskit/canvaskit.wasm',
+  ];
+  final always = <String>['assets/FontManifest.json'];
+  final manifest = jsonDecode(File('$web/assets/FontManifest.json').readAsStringSync()) as List;
+  for (final family in manifest) {
+    for (final font in (family as Map)['fonts'] as List) {
+      always.add('assets/${(font as Map)['asset']}');
+    }
+  }
+  final sizes = <String, int>{};
+  for (final path in [...candidates, ...always]) {
+    final file = File('$web/$path');
+    if (file.existsSync()) sizes[path] = file.lengthSync();
+  }
+  stdout.write(jsonEncode({'sizes': sizes, 'always': always}));
+}
+DART
+boot_files=$(dart "$sizes_tool" build/web)
+rm -rf "$sizes_dir"
+marker='/* casama-boot-files */'
+if ! grep -qF "$marker" "$boot"; then
+  echo "web/flutter_bootstrap.js lost its '$marker' line; the loading screen needs it." >&2
+  exit 1
+fi
+BOOT_FILES="window.casamaBoot && casamaBoot.files($boot_files);" MARKER="$marker" \
+  perl -0pi -e 's/\Q$ENV{MARKER}\E/$ENV{BOOT_FILES}/' "$boot"
+grep -q 'casamaBoot.files({"sizes"' "$boot"
 echo "Wasm web build is ready (build/web/main.dart.wasm)."
 # Source maps to PostHog error tracking when a key is set; otherwise a note and nothing else.
 "$root/scripts/upload-symbols.sh" web build/web

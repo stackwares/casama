@@ -15,19 +15,6 @@
     the `--base-href` argument provided to `flutter build`.
   -->
   <base href="$FLUTTER_BASE_HREF">
-  <!-- Links to a screen (…/settings/billing, …/open/join/…, D-326) open it. The app reads its
-       route from the part after #, so a path is moved there before the app starts. -->
-  <script>
-    (function () {
-      var base = new URL(document.baseURI).pathname;
-      var l = window.location;
-      if (l.hash || l.pathname.indexOf(base) !== 0) return;
-      var route = l.pathname.slice(base.length);
-      if (!route || route === 'index.html') return;
-      history.replaceState(null, '', base + '#/' + route + l.search);
-    })();
-  </script>
-
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="Sign in to Casama: AI teammates with their own computers that remember how you work and ask before anything risky.">
@@ -59,29 +46,104 @@
   <title>Casama — AI teammates with their own computers</title>
   <link rel="manifest" href="manifest.json">
   <!-- Launch screen until Flutter draws its first frame (image from scripts/casama-splash.py).
-       The float rests at the same centred 160px box Flutter's first frame draws. -->
+       The float rests at the same centred 160px box Flutter's first frame draws. Below it, boot.js
+       shows loading progress, a slow or offline note, and Reload when something goes wrong. The
+       status line sits where Flutter's own "Connecting to Casama…" line appears next. -->
   <style>
-    html, body { margin: 0; height: 100%; background: #FFFFFF; }
-    #splash { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
-    #splash img { width: 160px; height: auto; animation: casama-splash 2.6s ease-in-out infinite; }
+    :root {
+      --boot-bg: #FFFFFF; --boot-ink: #1d1b20; --boot-muted: #5f5c66; --boot-track: rgba(29, 27, 32, 0.08);
+      --boot-accent: #7a3fa8; --boot-on-accent: #FFFFFF; --boot-ring: rgba(122, 63, 168, 0.35);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --boot-bg: #1C1C1E; --boot-ink: #f2f1f4; --boot-muted: #a7a4ad; --boot-track: rgba(242, 241, 244, 0.12);
+        --boot-accent: #d9b6f7; --boot-on-accent: #25102f; --boot-ring: rgba(217, 182, 247, 0.4);
+      }
+    }
+    html, body { margin: 0; height: 100%; background: var(--boot-bg); }
+    [hidden] { display: none !important; }
+    #splash { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+      font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--boot-ink);
+      -webkit-font-smoothing: antialiased; }
+    #splash img { display: block; width: 160px; height: auto; animation: casama-splash 2.6s ease-in-out infinite; }
     @keyframes casama-splash {
       0%, 100% { transform: translateY(0) scale(1); }
       50% { transform: translateY(-8px) scale(1.035); }
     }
+    #boot { position: absolute; left: 16px; right: 16px; top: calc(50% + 96px); display: flex;
+      flex-direction: column; align-items: center; text-align: center; opacity: 0; visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0s linear 0.3s; }
+    #splash.is-loading #boot { opacity: 1; visibility: visible; transition: opacity 0.3s ease; }
+    #boot-text { margin: 0; color: var(--boot-muted); font-variant-numeric: tabular-nums; }
+    #boot-bar { position: relative; width: 168px; height: 4px; margin-top: 12px; border-radius: 2px;
+      background: var(--boot-track); overflow: hidden; }
+    #boot-fill { position: absolute; inset: 0; border-radius: inherit; background: var(--boot-accent);
+      transform-origin: left center; transform: scaleX(0.02); transition: transform 0.35s ease-out; }
+    #boot-bar.is-indeterminate #boot-fill { width: 40%; transform: none; transition: none;
+      animation: casama-boot-stripe 1.3s ease-in-out infinite; }
+    @keyframes casama-boot-stripe {
+      0% { left: -40%; }
+      100% { left: 100%; }
+    }
+    #boot-hint { margin: 10px 0 0; max-width: 300px; font-size: 13px; color: var(--boot-muted);
+      opacity: 0; transition: opacity 0.3s ease; min-height: 1.45em; }
+    #boot-hint.is-on { opacity: 1; }
+    #boot-help { display: none; flex-direction: column; align-items: center; max-width: 320px; margin-top: 4px; }
+    #boot-help.is-on { display: flex; animation: casama-boot-in 0.3s ease-out; }
+    @keyframes casama-boot-in {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: none; }
+    }
+    #boot-title { margin: 8px 0 4px; font-size: 16px; font-weight: 600; color: var(--boot-ink); }
+    #boot-body { margin: 0; color: var(--boot-muted); }
+    .boot-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 16px; }
+    .boot-actions button { font: inherit; font-weight: 600; min-height: 40px; padding: 0 20px; border-radius: 20px;
+      border: 0; cursor: pointer; }
+    .boot-actions button:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--boot-ring); }
+    #boot-reload { background: var(--boot-accent); color: var(--boot-on-accent); }
+    #boot-clear { background: transparent; color: var(--boot-accent); }
+    #boot-code { margin: 14px 0 0; font-size: 12px; color: var(--boot-muted); opacity: 0.8;
+      user-select: text; -webkit-user-select: text; word-break: break-word; }
+    /* Trouble: the cloud stops floating and the help sits under it in the normal flow, so it
+       fits a short screen (and scrolls on a very short one). */
+    #splash.is-help, #splash.is-failed { flex-direction: column; overflow-y: auto; padding: 24px 16px;
+      box-sizing: border-box; }
+    #splash.is-help #boot, #splash.is-failed #boot { position: static; margin-top: 16px; }
+    #splash.is-failed img { animation: none; opacity: 0.55; filter: grayscale(0.4); }
+    #splash.is-failed #boot-text, #splash.is-failed #boot-bar, #splash.is-failed #boot-hint { display: none; }
+    @media (max-height: 480px) {
+      #splash.is-help img, #splash.is-failed img { width: 96px; }
+    }
     @media (prefers-reduced-motion: reduce) {
       #splash img { animation: none; }
+      #boot-fill { transition: none; }
+      #boot-bar.is-indeterminate #boot-fill { animation: none; left: 0; width: 100%; opacity: 0.4; }
     }
-    @media (prefers-color-scheme: dark) { html, body { background: #1C1C1E; } }
   </style>
 </head>
 <body>
-  <div id="splash" aria-hidden="true"><picture><source srcset="splash/casama.webp" type="image/webp"><img src="splash/casama.png" alt="" fetchpriority="high"></picture></div>
-  <script>
-    window.addEventListener('flutter-first-frame', function () {
-      var s = document.getElementById('splash');
-      if (s) s.remove();
-    });
-  </script>
+  <div id="splash">
+    <picture aria-hidden="true"><source srcset="splash/casama.webp" type="image/webp"><img src="splash/casama.png" alt="" fetchpriority="high"></picture>
+    <div id="boot">
+      <p id="boot-text">Loading Casama…</p>
+      <div id="boot-bar" class="is-indeterminate" role="progressbar" aria-label="Loading Casama" aria-valuemin="0" aria-valuemax="100"><div id="boot-fill"></div></div>
+      <p id="boot-hint" aria-live="polite"></p>
+      <div id="boot-help" role="alert">
+        <p id="boot-title"></p>
+        <p id="boot-body"></p>
+        <div class="boot-actions">
+          <button id="boot-reload" type="button">Reload</button>
+          <button id="boot-clear" type="button">Reload without cache</button>
+        </div>
+        <p id="boot-code"></p>
+      </div>
+    </div>
+    <noscript><p style="position:absolute;left:16px;right:16px;top:calc(50% + 96px);margin:0;text-align:center">Casama needs JavaScript. Turn it on in your browser's settings, then reload.</p></noscript>
+  </div>
+  <!-- Loading progress, the route fix for deep links and the hand-off at Flutter's first frame.
+       Before flutter_bootstrap.js, so it sees every file Flutter asks for. A file, not inline
+       code: the self-host image's CSP allows scripts from 'self' only. -->
+  <script src="boot.js"></script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
