@@ -5,6 +5,8 @@ import { createServer, type Http2Server, type ServerHttp2Stream } from "node:htt
 import type { AddressInfo } from "node:net";
 import {
   ApnsVoipSender,
+  callDeclineSecret,
+  callDeclineToken,
   expireCalls,
   NotificationService,
   RecordingPushSender,
@@ -12,7 +14,7 @@ import {
   ToolRegistry,
 } from "@casama/agent";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { type Harness, j, startHarness } from "./helpers.ts";
+import { type Harness, JWT_SECRET, j, startHarness } from "./helpers.ts";
 
 let h: Harness;
 let apns: Http2Server;
@@ -80,9 +82,12 @@ beforeAll(async () => {
   await h.tdb
     .admin`insert into public.voip_tokens (user_id, token) values (${user.id}, 'iphone-token'), (${user.id}, 'gone-token')`;
   notifications = new NotificationService(h.handle.db, push);
+  // The API's own push sender (answers and declines stop the other devices' rings, D-425).
+  (h.deps as { notifications?: NotificationService }).notifications = notifications;
   registerPhoneCallTools(reg, {
     db: h.handle.db,
     notifications,
+    declineSecret: callDeclineSecret(JWT_SECRET),
     voip: new ApnsVoipSender({
       keyP8,
       keyId: "KEY123",
@@ -142,7 +147,12 @@ describe("phone calls", () => {
     expect(push.calls[0]).toMatchObject({
       tokens: ["android-1"],
       ttlSeconds: 45,
-      data: { kind: "call", call_id: vc!.id, bot_id: botId },
+      data: {
+        kind: "call",
+        call_id: vc!.id,
+        bot_id: botId,
+        decline_token: callDeclineToken(callDeclineSecret(JWT_SECRET), vc!.id),
+      },
     });
     const [banner] = await h.tdb.admin<
       { payload: { call_id: string } }[]
@@ -218,6 +228,87 @@ describe("phone calls", () => {
       push_status: "deferred",
       payload: { title: "Max wanted to talk", body: "Can I book the 7am instead?" },
     });
+  });
+
+  it("Decline with the app closed: the ring's own token declines that call, and nothing else (D-424)", async () => {
+    await call("Want me to reorder coffee?");
+    const [vc] = await h.tdb.admin<
+      { id: string }[]
+    >`select id from public.voice_calls where status = 'ringing'`;
+    const token = push.calls.at(-1)!.data.decline_token!;
+    const decline = (id: string, t: string) =>
+      h.request(`/v1/calls/${id}/decline-ring`, { method: "POST", json: { token: t } });
+    // Another call's token, or a made-up one, is refused.
+    const [other] = await h.tdb.admin<{ id: string }[]>`select gen_random_uuid() as id`;
+    expect(
+      (await decline(vc!.id, callDeclineToken(callDeclineSecret(JWT_SECRET), other!.id))).status,
+    ).toBe(403);
+    expect((await decline(vc!.id, "x".repeat(32))).status).toBe(403);
+    expect((await decline("not-a-uuid", token)).status).toBe(403);
+
+    const r = await decline(vc!.id, token);
+    expect(r.status).toBe(200);
+    expect(await j(r)).toEqual({ declined: true });
+    const [after] = await h.tdb.admin<
+      { status: string }[]
+    >`select status from public.voice_calls where id = ${vc!.id}`;
+    expect(after!.status).toBe("declined");
+    // Already over: nothing changes.
+    expect(await j(await decline(vc!.id, token))).toEqual({ declined: false });
+  });
+
+  it("answering, declining or missing a call stops the ring on every phone and closes the banners (D-425)", async () => {
+    const cancels = (id: string) =>
+      push.calls.filter((c) => c.data.kind === "call_cancel" && c.data.call_id === id);
+    const ended = async (id: string) =>
+      (
+        await h.tdb.admin`
+          select 1 from public.notifications where kind = 'call' and payload->>'call_id' = ${id} and (payload->>'ended')::boolean`
+      ).length;
+    const ringing = async () =>
+      (
+        await h.tdb.admin<
+          { id: string }[]
+        >`select id from public.voice_calls where status = 'ringing'`
+      )[0]!.id;
+
+    // Answered on one device: the cancel goes to the Android phone and the iPhone (as a
+    // background push); the device that answered knows to keep its call.
+    await call("The build is green, ship it?");
+    const answered = await ringing();
+    expect(cancels(answered)).toHaveLength(0);
+    expect(
+      (await h.request(`/v1/calls/${answered}/answer`, { method: "POST", token: user.token }))
+        .status,
+    ).toBe(200);
+    expect(cancels(answered)).toEqual([
+      {
+        tokens: ["android-1", "ios-fcm"],
+        data: { kind: "call_cancel", call_id: answered },
+        ttlSeconds: 45,
+      },
+    ]);
+    expect(await ended(answered)).toBe(1);
+
+    // Declined.
+    await call("Lunch?");
+    const declined = await ringing();
+    await h.request(`/v1/calls/${declined}/decline`, { method: "POST", token: user.token });
+    expect(cancels(declined)).toHaveLength(1);
+    expect(await ended(declined)).toBe(1);
+    // Declining again changes nothing and sends nothing.
+    await h.request(`/v1/calls/${declined}/decline`, { method: "POST", token: user.token });
+    expect(cancels(declined)).toHaveLength(1);
+
+    // Missed (the worker's minute tick).
+    await call("Still there?");
+    const missed = await ringing();
+    await h.tdb
+      .admin`update public.voice_calls set expires_at = now() - interval '1 second' where id = ${missed}`;
+    await expireCalls({ db: h.handle.db, notifications });
+    expect(cancels(missed)).toHaveLength(1);
+    expect(await ended(missed)).toBe(1);
+
   });
 
   it("doesn't ring during quiet hours; it leaves a notification instead", async () => {

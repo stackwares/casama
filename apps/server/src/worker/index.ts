@@ -106,6 +106,8 @@ import {
 } from "./workflows.ts";
 
 export interface WorkerOptions {
+  /** Signs Android rings' decline tokens (D-424; `callDeclineSecret`). */
+  callDeclineSecret?: string;
   /** Where the Library keeps files copied off computers (D-276). */
   objects?: import("@casama/sandbox").ObjectStore;
   /** This server's own addresses (API, web app, sign-in), which bots never open (D-323). */
@@ -607,7 +609,7 @@ export async function startWorker(opts: WorkerOptions) {
       : push instanceof CloudRelayPushSender
         ? push.voip()
         : undefined);
-  registerPhoneCallTools(tools, { db, notifications, voip });
+  registerPhoneCallTools(tools, { db, notifications, voip, declineSecret: opts.callDeclineSecret });
   // Payments (D-142): the workspace's own card issuing account.
   const payments = {
     db,

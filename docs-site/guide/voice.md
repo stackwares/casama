@@ -230,6 +230,10 @@ When you answer, the live call opens in the same conversation and the bot speaks
 - Your quiet hours apply. During quiet hours nothing rings, and you get a notification with the
   reason when they end. See [Attention and notifications](/guide/attention).
 - Only one call rings for you at a time.
+- It rings on all your devices. Once you answer or decline on one, the others stop ringing. An
+  iPhone stops only while Casama is running in the background; otherwise its ring runs out on its own.
+- On Android, **Calls on the Lock Screen** shows in Settings → App when Android has full-screen
+  rings turned off. Without it, a call shows as a notification; **Answer** on it still opens the call.
 - The bot can only call the person it's working for.
 
 ### Server setup for ringing phones

@@ -3,8 +3,11 @@
 import {
   answerGreeting,
   CALL_CONTEXT_TURNS,
+  callDeclineSecret,
+  callDeclineTokenValid,
   callGreeting,
   callNotAnswered,
+  cancelRing,
   earlierInConversation,
   milestone,
   todayLine,
@@ -630,6 +633,8 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       update public.voice_calls set status = 'answered', answered_at = now()
       where id = ${id}::uuid and status = 'ringing' and expires_at > now() returning id`);
     if (!ok) throw new ApiError(409, "call_over", "This call has already ended");
+    // The person's other devices stop ringing (D-425).
+    await cancelRing({ db, notifications: deps.notifications }, claims.sub, id);
     return c.json(callOut(await myCall(claims, id)), 200);
   });
 
@@ -637,7 +642,32 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
     await myCall(claims, id);
-    await callNotAnswered({ db }, id, "declined");
+    if (await callNotAnswered({ db }, id, "declined"))
+      await cancelRing({ db, notifications: deps.notifications }, claims.sub, id);
     return c.json(callOut(await myCall(claims, id)), 200);
+  });
+
+  // Decline on Android's calling screen with the app closed (D-424): no sign-in there, so the
+  // ring's own token (from the push) declines that one call. Not in the API contract: only the
+  // app's background handler sends it.
+  app.post("/v1/calls/:id/decline-ring", async (c) => {
+    const secret = deps.env.SUPABASE_JWT_SECRET;
+    const id = c.req.param("id");
+    const body = (await c.req.json().catch(() => null)) as { token?: unknown } | null;
+    const token = typeof body?.token === "string" ? body.token : "";
+    if (
+      !secret ||
+      !/^[0-9a-f-]{36}$/i.test(id) ||
+      !callDeclineTokenValid(callDeclineSecret(secret), id, token)
+    )
+      return c.json({ error: "invalid_token" }, 403);
+    const declined = await callNotAnswered({ db }, id, "declined");
+    if (declined) {
+      const [u] = await db.execute<{ user_id: string }>(
+        sql`select user_id from public.voice_calls where id = ${id}::uuid`,
+      );
+      if (u) await cancelRing({ db, notifications: deps.notifications }, u.user_id, id);
+    }
+    return c.json({ declined }, 200);
   });
 }

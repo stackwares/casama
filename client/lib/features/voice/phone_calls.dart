@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -7,10 +8,12 @@ import 'package:flutter_callkit_incoming/entities/entities.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:casama_sdk/casama_sdk.dart';
+import 'package:http/http.dart' as http;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../core/providers.dart';
 import '../../core/router.dart';
+import '../../core/server_address.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
@@ -142,11 +145,93 @@ final callSurfaceProvider = Provider<CallSurface>(
   (ref) => !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.android) ? NativeCallSurface() : NoCallSurface(),
 );
 
-/// Android: a call push while the app is in the background or closed rings the calling screen.
+/// Rings answered on this phone (D-424, D-425). A cancel for one of these is about this phone's own
+/// call, which keeps going.
+final answeredRings = <String>{};
+
+/// Rings stopped because the call was taken, declined or missed elsewhere (D-425): the Decline
+/// event ending them makes isn't the person's, so nothing declines them on the server.
+final cancelledRings = <String>{};
+
+/// The call was answered, declined or missed on another device (D-425): stop ringing here. Never
+/// a call answered here: [answeredRings] (this isolate) or the plugin's own answered flag (Android,
+/// any isolate). iOS's `endCall` after a VoIP ring ends that ring whatever the id, so it is only
+/// called while a call with this id is up.
+Future<void> stopRing(String id, {Future<List<CallKitParams>> Function()? active, Future<void> Function(String id)? end}) async {
+  if (answeredRings.contains(id)) return;
+  List<CallKitParams> calls;
+  try {
+    calls = await (active ?? FlutterCallkitIncoming.activeCalls)();
+  } catch (e) {
+    debugPrint('ring not stopped: $e');
+    return;
+  }
+  final ring = calls.where((c) => c.id == id).firstOrNull;
+  if (ring == null || ring.isAccepted) return;
+  cancelledRings.add(id);
+  try {
+    await (end ?? FlutterCallkitIncoming.endCall)(id);
+  } catch (e) {
+    debugPrint('ring not stopped: $e');
+  }
+}
+
+/// The call id in a `call_cancel` push (D-425), or null for any other push.
+String? cancelledCallId(Map<String, dynamic> data) {
+  final id = data['call_id'];
+  return data['kind'] == 'call_cancel' && id is String && id.isNotEmpty ? id : null;
+}
+
+/// Pushes while the app is in the background or closed: on Android a call push rings the calling
+/// screen; on both phones a `call_cancel` stops a ring another device took (D-425). Android runs
+/// this in its own isolate; iPhones in the app's (a background push, so only while it runs).
 @pragma('vm:entry-point')
 Future<void> casamaBackgroundMessage(RemoteMessage message) async {
+  final cancelled = cancelledCallId(message.data);
+  if (cancelled != null) return stopRing(cancelled);
+  if (defaultTargetPlatform != TargetPlatform.android) return;
   final call = message.data['kind'] == 'call' ? IncomingCall.fromData(message.data) : null;
-  if (call != null) await NativeCallSurface().show(call);
+  if (call == null) return;
+  // Listening before the ring shows, so a quick Decline isn't missed.
+  final token = message.data['decline_token'];
+  final declined = token is String && token.isNotEmpty ? ringDeclined(callKitEvents, call.id) : null;
+  await NativeCallSurface().show(call);
+  if (declined != null && await declined && !cancelledRings.contains(call.id)) await sendRingDecline(call.id, token as String);
+}
+
+/// Android, app closed (D-424): Decline on the calling screen goes only to the isolate that rang,
+/// which has no sign-in. True once this ring is declined; false when it's answered, ends or times
+/// out, or after [limit] (a little over the ring's 45 seconds).
+Future<bool> ringDeclined(Stream<CallEvent?> events, String id, {Duration limit = const Duration(seconds: 60)}) =>
+    events
+        .map(
+          (e) => switch (e) {
+            CallEventActionCallDecline(:final callKitParams) when callKitParams.id == id => true,
+            CallEventActionCallAccept(:final callKitParams) when callKitParams.id == id => false,
+            CallEventActionCallEnded(:final callKitParams) when callKitParams.id == id => false,
+            CallEventActionCallTimeout(id: final i) when i == id => false,
+            _ => null,
+          },
+        )
+        .firstWhere((d) => d != null, orElse: () => false)
+        .then((d) => d!)
+        .timeout(limit, onTimeout: () => false)
+        .catchError((Object _) => false);
+
+/// Declines the ring with its own token from the push: no sign-in needed, good for this call only.
+/// Already over (or an older server): nothing changes, the call is missed as before.
+Future<void> sendRingDecline(String id, String token, {http.Client? client, Future<String> Function()? apiUrl}) async {
+  final c = client ?? http.Client();
+  try {
+    final base = await (apiUrl ?? () async => (await ServerAddress.load()).apiUrl)();
+    await c
+        .post(Uri.parse('$base/v1/calls/$id/decline-ring'), headers: {'content-type': 'application/json'}, body: jsonEncode({'token': token}))
+        .timeout(const Duration(seconds: 15));
+  } catch (e) {
+    debugPrint('ring decline not sent: $e');
+  } finally {
+    if (client == null) c.close();
+  }
 }
 
 /// Answers and declines, wherever they come from.
@@ -156,24 +241,23 @@ class PhoneCalls {
   final _subs = <StreamSubscription<Object?>>[];
   var _started = false;
 
-  /// Rings already answered here: the answer event and the launch check can both report one.
-  final _answered = <String>{};
-
   Future<void> start() async {
     if (_started) return;
     _started = true;
     final surface = ref.read(callSurfaceProvider);
     if (!surface.native) return;
     _subs.add(surface.actions.listen((a) => unawaited(a.$1 == CallAction.accept ? answer(a.$2) : decline(a.$2.id))));
-    // Android: a call push while the app is open.
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      _subs.add(
-        FirebaseMessaging.onMessage.listen((m) {
-          final call = m.data['kind'] == 'call' ? IncomingCall.fromData(m.data) : null;
-          if (call != null) unawaited(surface.show(call));
-        }),
-      );
-    }
+    // While the app is open: a call push rings (Android), and a cancel stops a ring another
+    // device took (both phones, D-425).
+    _subs.add(
+      FirebaseMessaging.onMessage.listen((m) {
+        final cancelled = cancelledCallId(m.data);
+        if (cancelled != null) return unawaited(stopRing(cancelled));
+        if (defaultTargetPlatform != TargetPlatform.android) return;
+        final call = m.data['kind'] == 'call' ? IncomingCall.fromData(m.data) : null;
+        if (call != null) unawaited(surface.show(call));
+      }),
+    );
     // Android, opened by Answer with the app closed: the answer event fired before anything here
     // listened, so the answered ring is picked up from the plugin instead (D-424).
     for (final call in await surface.answered()) {
@@ -188,7 +272,8 @@ class PhoneCalls {
   }
 
   Future<void> answer(IncomingCall call) async {
-    if (!_answered.add(call.id)) return;
+    // The answer event and the launch check can both report one ring.
+    if (!answeredRings.add(call.id)) return;
     try {
       await ref.read(backendProvider).answerCall(call.id);
     } catch (_) {
@@ -206,6 +291,8 @@ class PhoneCalls {
   }
 
   Future<void> decline(String id) async {
+    // Ended because another device took it (D-425), not declined by the person.
+    if (cancelledRings.contains(id)) return;
     try {
       await ref.read(backendProvider).declineCall(id);
     } catch (_) {

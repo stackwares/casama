@@ -140,8 +140,11 @@ class PushRegistrar {
     _started = true;
     try {
       if (Firebase.apps.isEmpty) await Firebase.initializeApp(options: PushConfig.options);
-      // Phone calls (D-135): on Android a call push rings even when the app is closed.
-      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) FirebaseMessaging.onBackgroundMessage(casamaBackgroundMessage);
+      // Phone calls (D-135): on Android a call push rings even when the app is closed. On both
+      // phones a call's cancel stops a ring another device took (D-425; iPhones: in the app's isolate).
+      if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS)) {
+        FirebaseMessaging.onBackgroundMessage(casamaBackgroundMessage);
+      }
       final messaging = FirebaseMessaging.instance;
       await _listenForTaps(messaging);
       final status = (await messaging.getNotificationSettings()).authorizationStatus;

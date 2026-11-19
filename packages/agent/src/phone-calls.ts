@@ -6,6 +6,7 @@
  * Answering opens the live call (D-065) in the run's conversation and the bot speaks first.
  * A declined or missed call becomes a normal push with the reason. Quiet hours apply.
  */
+import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Database } from "@casama/db";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
@@ -68,6 +69,28 @@ export interface PhoneCallDeps {
   db: Database;
   notifications?: NotificationService;
   voip?: VoipSender;
+  /** Signs Android rings' decline tokens ([callDeclineSecret]); none: no token is sent. */
+  declineSecret?: string;
+}
+
+/**
+ * The secret behind ring decline tokens (D-424): the JWT secret, so nothing new has to be
+ * configured. The API checks with the same one.
+ */
+export const callDeclineSecret = (jwtSecret: string) => `call-decline:${jwtSecret}`;
+
+/**
+ * A ring's decline token (D-424): Decline on Android's calling screen with the app closed has no
+ * sign-in to hand, so the ring carries this, good for declining that one call only.
+ */
+export function callDeclineToken(secret: string, callId: string): string {
+  return createHmac("sha256", secret).update(`decline:${callId}`).digest("base64url").slice(0, 32);
+}
+
+export function callDeclineTokenValid(secret: string, callId: string, token: string): boolean {
+  const a = Buffer.from(token);
+  const b = Buffer.from(callDeclineToken(secret, callId));
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 /** Rings the person's devices for a new call row. */
@@ -93,7 +116,13 @@ export async function ringCall(deps: PhoneCallDeps, userId: string, call: CallPa
     await deps.notifications.push
       .sendCall(
         android.map((d) => d.fcm_token),
-        { kind: "call", ...stringify(call) },
+        {
+          kind: "call",
+          ...stringify(call),
+          ...(deps.declineSecret
+            ? { decline_token: callDeclineToken(deps.declineSecret, call.call_id) }
+            : {}),
+        },
         RING_SECONDS,
       )
       .catch(() => {});
@@ -101,6 +130,30 @@ export async function ringCall(deps: PhoneCallDeps, userId: string, call: CallPa
   await db.execute(sql`
     insert into public.notifications (user_id, kind, payload, push_status)
     values (${userId}::uuid, 'call', ${JSON.stringify({ title: call.bot_name, body: call.reason, ...call })}::jsonb, 'sent')`);
+}
+
+/**
+ * Stops the ring on the person's other devices once the call is answered, declined or missed
+ * (D-425): a `call_cancel` data message to their phones (Android ends its calling screen, even with
+ * the app closed; an iPhone ends its CallKit ring if the app is running) and a `call` row, which the
+ * desktop and web banners and open apps hear over Realtime. Every device gets it: the one that
+ * answered knows it did and keeps its call.
+ */
+export async function cancelRing(deps: PhoneCallDeps, userId: string, callId: string) {
+  const { db } = deps;
+  const phones = await db.execute<{ fcm_token: string }>(sql`
+    select fcm_token from public.devices where user_id = ${userId}::uuid and platform in ('android', 'ios')`);
+  if (phones.length && deps.notifications?.push.sendCall)
+    await deps.notifications.push
+      .sendCall(
+        phones.map((d) => d.fcm_token),
+        { kind: "call_cancel", call_id: callId },
+        RING_SECONDS,
+      )
+      .catch(() => {});
+  await db.execute(sql`
+    insert into public.notifications (user_id, kind, payload, push_status)
+    values (${userId}::uuid, 'call', ${JSON.stringify({ call_id: callId, ended: true })}::jsonb, 'sent')`);
 }
 
 const stringify = (c: CallPayload) =>
@@ -124,6 +177,8 @@ export async function callNotAnswered(
     from public.bots b where vc.id = ${callId}::uuid and vc.status = 'ringing' and b.id = vc.bot_id
     returning vc.user_id, vc.org_id, vc.bot_id, vc.reason, vc.conversation_id, b.name`);
   if (!c) return false;
+  // From the API, its caller stops the ring itself (with the API's push sender).
+  if (deps.notifications) await cancelRing(deps, c.user_id, callId);
   const message = {
     title: status === "missed" ? `Missed call from ${c.name}` : `${c.name} wanted to talk`,
     body: c.reason,

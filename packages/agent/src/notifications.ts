@@ -114,7 +114,10 @@ export function pushText(title: string, body: string, max = PUSH_BODY_CHARS) {
 /** Sends push notifications to device tokens. */
 export interface PushSender {
   send(tokens: string[], message: PushMessage): Promise<{ invalidTokens: string[] }>;
-  /** A data-only, high-priority message that rings (Android calls, D-135). */
+  /**
+   * A data-only, high-priority message that rings (Android calls, D-135), or stops a ring
+   * (`call_cancel`, D-425). iPhones get it as a background push (no alert).
+   */
   sendCall?(
     tokens: string[],
     data: Record<string, string>,
@@ -395,7 +398,17 @@ export class FcmPushSender implements PushSender {
           method: "POST",
           headers: { authorization: `Bearer ${access}`, "content-type": "application/json" },
           body: JSON.stringify({
-            message: { token, data, android: { priority: "HIGH", ttl: `${ttlSeconds}s` } },
+            message: {
+              token,
+              data,
+              android: { priority: "HIGH", ttl: `${ttlSeconds}s` },
+              // iPhones (a ring's cancel, D-425): a background push with no alert. Never VoIP:
+              // every VoIP push must report a call to CallKit. Android ignores this part.
+              apns: {
+                headers: { "apns-priority": "5", "apns-push-type": "background" },
+                payload: { aps: { "content-available": 1 } },
+              },
+            },
           }),
         },
       );

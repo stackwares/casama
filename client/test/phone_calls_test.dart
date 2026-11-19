@@ -12,6 +12,9 @@ import 'package:casama/features/voice/full_screen_calls.dart';
 import 'package:casama/features/voice/phone_calls.dart';
 import 'package:casama/l10n/generated/app_localizations.dart';
 import 'package:casama_sdk/casama_sdk.dart';
+import 'package:flutter_callkit_incoming/entities/entities.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 
 import 'app_test.dart' show setSize;
 import 'fake_backend.dart';
@@ -187,5 +190,86 @@ void main() {
     await tester.pumpWidget(tile());
     await tester.pump();
     expect(find.byKey(const Key('settingsFullScreenCalls')), findsNothing);
+  });
+
+  // Android, app closed (D-424): the isolate that rang hears Decline and declines with the ring's token.
+  group('Decline with the app closed', () {
+    CallKitParams params(String id) => CallKitParams(id: id);
+
+    test('declining this ring: true; answering, ending or timing out: false; other calls are ignored', () async {
+      Future<bool> after(List<CallEvent> events) {
+        final c = StreamController<CallEvent?>();
+        final r = ringDeclined(c.stream, 'c1');
+        for (final e in events) {
+          c.add(e);
+        }
+        return r;
+      }
+
+      expect(await after([CallEventActionCallDecline(params('other')), CallEventActionCallDecline(params('c1'))]), isTrue);
+      expect(await after([CallEventActionCallAccept(params('c1'))]), isFalse);
+      expect(await after([CallEventActionCallEnded(params('c1'))]), isFalse);
+      expect(await after([const CallEventActionCallTimeout('c1')]), isFalse);
+      // Nothing happens: it stops waiting.
+      expect(await ringDeclined(const Stream<CallEvent?>.empty(), 'c1'), isFalse);
+      expect(await ringDeclined(StreamController<CallEvent?>().stream, 'c1', limit: const Duration(milliseconds: 10)), isFalse);
+    });
+
+    test("sends the ring's token to the server, signed out; a failure is only logged", () async {
+      final sent = <http.Request>[];
+      final ok = MockClient((r) async {
+        sent.add(r);
+        return http.Response('{"declined":true}', 200);
+      });
+      await sendRingDecline('c1', 'tok', client: ok, apiUrl: () async => 'https://api.example.com');
+      expect(sent.single.url.toString(), 'https://api.example.com/v1/calls/c1/decline-ring');
+      expect(sent.single.headers.containsKey('authorization'), isFalse);
+      expect(sent.single.body, '{"token":"tok"}');
+
+      final down = MockClient((_) async => throw http.ClientException('offline'));
+      await sendRingDecline('c1', 'tok', client: down, apiUrl: () async => 'https://api.example.com');
+    });
+  });
+
+  // Another device answered, declined or missed the call (D-425): the ring stops here.
+  group('ring stopped elsewhere', () {
+    CallKitParams ring(String id, {bool accepted = false}) => CallKitParams(id: id, isAccepted: accepted);
+
+    test('a call_cancel push names the call; other pushes are not cancels', () {
+      expect(cancelledCallId({'kind': 'call_cancel', 'call_id': 'c9'}), 'c9');
+      expect(cancelledCallId({'kind': 'call', 'call_id': 'c9'}), isNull);
+      expect(cancelledCallId({'kind': 'call_cancel', 'call_id': ''}), isNull);
+    });
+
+    test('ends the ring showing here; never a call answered here or one not ringing here', () async {
+      final ended = <String>[];
+      Future<void> stop(String id, List<CallKitParams> active) => stopRing(id, active: () async => active, end: (i) async => ended.add(i));
+
+      await stop('r1', [ring('r1')]);
+      expect(ended, ['r1']);
+      expect(cancelledRings, contains('r1'));
+
+      // Answered on this phone: its own call goes on.
+      answeredRings.add('r2');
+      await stop('r2', [ring('r2')]);
+      // Answered from the calling screen in another isolate (Android): the plugin knows.
+      await stop('r3', [ring('r3', accepted: true)]);
+      // Not ringing here (iOS would end its last ring whatever the id).
+      await stop('r4', [ring('other')]);
+      expect(ended, ['r1']);
+    });
+
+    testWidgets('the Decline event a stopped ring sends declines nothing on the server', (tester) async {
+      await setSize(tester, const Size(400, 800));
+      final backend = FakeBackend()..ringing.add(_call('call-6', 'hi'));
+      final surface = _NativeSurface();
+      await tester.pumpWidget(_app(backend, calls: FakeCallConnector(), surface: surface));
+      await tester.pump();
+      await stopRing('call-6', active: () async => [ring('call-6')], end: (_) async {});
+      surface.taps.add((CallAction.decline, _ring('call-6')));
+      await tester.pump();
+      await tester.pump();
+      expect(backend.callActions, isEmpty);
+    });
   });
 }
