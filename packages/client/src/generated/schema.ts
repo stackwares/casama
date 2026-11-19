@@ -2722,6 +2722,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/admin-bot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The admin bot: which bot may propose admin actions in the owner's chat (owner only) */
+        get: operations["adminBot"];
+        /**
+         * Turn the admin bot on or off, or choose its bot (owner only)
+         * @description Every admin action the bot proposes still waits for the owner's approval in the app (D-435).
+         */
+        put: operations["setAdminBot"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/capacity": {
         parameters: {
             query?: never;
@@ -10400,6 +10421,16 @@ export interface components {
             };
             created_at: string;
         };
+        AdminBotSetting: {
+            enabled: boolean;
+            /**
+             * Format: uuid
+             * @description The bot. It must be in a workspace whose every member is an instance owner (INSTANCE_ADMIN_EMAILS).
+             */
+            bot_id: string | null;
+            /** @description False when INSTANCE_ADMIN_EMAILS isn't set: the admin bot can't be used. */
+            available: boolean;
+        };
         ServerCapacity: {
             /** @description Memory hosted computers may use (COMPUTER_HOST_MEMORY_GB); 0 = none set */
             budget_mb: number;
@@ -10653,6 +10684,11 @@ export interface components {
             /** @description Open the paywall on this plan; turning it on turns it off on every other plan */
             paywall_default?: boolean;
             paywall_popular?: boolean;
+        };
+        SetAdminBotRequest: {
+            enabled: boolean;
+            /** Format: uuid */
+            bot_id?: string | null;
         };
         SetConnectionSettingsRequest: {
             /** @enum {string} */
@@ -24137,6 +24173,95 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AbuseEventList"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    adminBot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The admin bot: which bot may propose admin actions in the owner's chat (owner only) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminBotSetting"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setAdminBot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetAdminBotRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminBotSetting"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
                 };
             };
             /** @description Not authenticated */
