@@ -4,8 +4,14 @@
   "color": "111111",
   "homepage": "https://higgsfield.ai",
   "url": "https://mcp.higgsfield.ai/mcp",
-  "auth": ["oauth"],
+  "auth": [
+    "oauth"
+  ],
   "oauthClient": "dcr",
-  "note": "Requires an active Higgsfield subscription. Generations use your workspace credits.",
-  "capabilities": ["Generate images and video", "Upscale and edit assets", "Manage Higgsfield projects"]
+  "note": "Generations use your Higgsfield credits.",
+  "capabilities": [
+    "Generate images",
+    "Generate video",
+    "Edit photos and video"
+  ]
 }
