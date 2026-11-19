@@ -23,6 +23,7 @@ import 'web_auth_sheet.dart';
 import 'backend.dart';
 import 'chatgpt_connect.dart';
 import '../features/widgets/widget_key_store.dart';
+import '../features/watch/watch_key_store.dart';
 import 'telemetry.dart';
 
 const _terminal = {'run.completed', 'run.failed', 'run.cancelled'};
@@ -385,6 +386,13 @@ class SupabaseBackend implements Backend {
       await WidgetKeyStore.clear();
       try {
         await deleteWidgetKey(widgetKey.id).timeout(const Duration(seconds: 5));
+      } catch (_) {}
+    }
+    // So do the watches this phone signed in (D-410 §8.2). The list stays: the watch bridge
+    // forgets it and tells the watches once it sees the sign-out (watch_bridge.dart).
+    for (final watch in await WatchKeyStore.load()) {
+      try {
+        await deleteWatchKey(watch.keyId).timeout(const Duration(seconds: 5));
       } catch (_) {}
     }
     // Forget the Google account too, so the next Continue with Google offers every account.
@@ -4280,6 +4288,112 @@ class SupabaseBackend implements Backend {
       data: {'token': token, 'kind': kind, 'sandbox': ?sandbox},
       options: Options(headers: {'Authorization': 'Widget $widgetKey'}, contentType: 'application/json'),
     );
+  }
+
+  // Watches (D-410). Raw JSON, like the widget keys: these routes may be newer than the generated
+  // client.
+  @override
+  Future<List<WatchKeyView>> listWatchKeys(String orgId) async {
+    try {
+      final res = await api.api.dio.get<Map<String, dynamic>>(
+        '/v1/watch-keys',
+        queryParameters: {'org_id': orgId},
+        options: Options(headers: authHeaders),
+      );
+      final items = res.data?['items'];
+      return [
+        for (final i in items is List ? items : const [])
+          if (i is Map) WatchKeyView.fromJson(Map<String, Object?>.from(i)),
+      ];
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return const [];
+      rethrow;
+    }
+  }
+
+  @override
+  Future<WatchKeyView> registerWatchKey({
+    required String orgId,
+    required String fingerprint,
+    required WatchSystem platform,
+    required String name,
+    String? model,
+    String? appVersion,
+    String? osVersion,
+  }) async {
+    String? cut(String? s, int max) => s == null || s.isEmpty ? null : (s.length > max ? s.substring(0, max) : s);
+    final res = await api.api.dio.post<Map<String, dynamic>>(
+      '/v1/watch-keys',
+      data: {
+        'org_id': orgId,
+        'fingerprint': fingerprint,
+        'platform': platform.name,
+        'name': cut(name, 80) ?? 'Watch',
+        'model': ?cut(model, 80),
+        'app_version': ?cut(appVersion, 40),
+        'os_version': ?cut(osVersion, 40),
+      },
+      options: Options(headers: authHeaders, contentType: 'application/json'),
+    );
+    return WatchKeyView.fromJson(Map<String, Object?>.from(res.data!));
+  }
+
+  @override
+  Future<void> deleteWatchKey(String id) async {
+    try {
+      await api.api.dio.delete<Object>('/v1/watch-keys/$id', options: Options(headers: authHeaders));
+    } on DioException catch (e) {
+      if (e.response?.statusCode != 404) rethrow;
+    }
+  }
+
+  @override
+  Future<WatchPrefsView?> watchPrefs() async {
+    try {
+      final res = await api.api.dio.get<Map<String, dynamic>>('/v1/watch-prefs', options: Options(headers: authHeaders));
+      return WatchPrefsView.fromJson(Map<String, Object?>.from(res.data!));
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<WatchPrefsView> updateWatchPrefs({WatchAllowance? allow, bool? showDetails, List<String>? quickReplies}) async {
+    final res = await api.api.dio.patch<Map<String, dynamic>>(
+      '/v1/watch-prefs',
+      data: {'allow': ?allow?.name, 'show_details': ?showDetails, 'quick_replies': ?quickReplies},
+      options: Options(headers: authHeaders, contentType: 'application/json'),
+    );
+    return WatchPrefsView.fromJson(Map<String, Object?>.from(res.data!));
+  }
+
+  @override
+  Future<WatchCodeView?> watchCodeInfo(String code) async {
+    try {
+      final res = await api.api.dio.get<Map<String, dynamic>>('/v1/watch-codes/$code', options: Options(headers: authHeaders));
+      return WatchCodeView.fromJson(Map<String, Object?>.from(res.data!));
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  @override
+  Future<WatchKeyView?> claimWatchCode(String code, String orgId) async {
+    try {
+      final res = await api.api.dio.post<Map<String, dynamic>>(
+        '/v1/watch-codes/$code/claim',
+        data: {'org_id': orgId},
+        options: Options(headers: authHeaders, contentType: 'application/json'),
+      );
+      return WatchKeyView.fromJson(Map<String, Object?>.from(res.data!));
+    } on DioException catch (e) {
+      // Wrong, expired, or used by another watch a moment ago.
+      final status = e.response?.statusCode;
+      if (status == 404 || status == 409) return null;
+      rethrow;
+    }
   }
 
   @override

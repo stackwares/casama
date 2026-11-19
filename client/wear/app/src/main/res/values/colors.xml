@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WATCH-PROTOCOL §6: the only colours that mean something. Mirrored in ui/theme/Colors.kt. -->
+<resources>
+    <color name="casama_needs">#FFF0A84A</color>
+    <color name="casama_working">#FF5FD49A</color>
+    <color name="casama_orchid">#FFF2B0EC</color>
+    <color name="casama_on_orchid">#FF3B0A3D</color>
+    <color name="casama_stop">#FFFF6B6B</color>
+    <color name="casama_secondary">#FF9A9AA0</color>
+    <color name="casama_card">#FF1C1C1E</color>
+</resources>

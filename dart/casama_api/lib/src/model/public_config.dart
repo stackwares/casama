@@ -42,6 +42,8 @@ class PublicConfig {
 
      this.serverVoice,
 
+     this.watch,
+
      this.signupProofs,
 
      this.traceUrlTemplate,
@@ -186,6 +188,18 @@ class PublicConfig {
 
   @JsonKey(
     
+    name: r'watch',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final bool? watch;
+
+
+
+  @JsonKey(
+    
     name: r'signup_proofs',
     required: false,
     includeIfNull: false,
@@ -318,6 +332,7 @@ class PublicConfig {
       other.wallpapersEnabled == wallpapersEnabled &&
       other.chatgptSignIn == chatgptSignIn &&
       other.serverVoice == serverVoice &&
+      other.watch == watch &&
       other.signupProofs == signupProofs &&
       other.traceUrlTemplate == traceUrlTemplate &&
       other.googleClientIds == googleClientIds &&
@@ -341,6 +356,7 @@ class PublicConfig {
         wallpapersEnabled.hashCode +
         chatgptSignIn.hashCode +
         serverVoice.hashCode +
+        watch.hashCode +
         signupProofs.hashCode +
         (traceUrlTemplate == null ? 0 : traceUrlTemplate.hashCode) +
         googleClientIds.hashCode +

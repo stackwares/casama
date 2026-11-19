@@ -32,6 +32,7 @@ import '../../ui/mascot.dart';
 import '../../ui/page.dart';
 import '../../ui/tab_reselect.dart';
 import '../../ui/shell_header.dart';
+import '../../ui/shell_layout.dart';
 import '../settings/me_avatar.dart';
 import '../settings/model_keys_screen.dart';
 import 'model_picker.dart';
@@ -573,16 +574,20 @@ class _GroupChatsSection extends ConsumerWidget {
 }
 
 class BotsScreen extends ConsumerWidget {
-  const BotsScreen({super.key});
+  const BotsScreen({super.key, this.selectedBotId});
+
+  /// The chat open beside this list (two panes): its row is marked.
+  final String? selectedBotId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final org = ref.watch(currentOrgProvider);
     // Phones: the person's avatar (Settings) on the left, the workspace under the title (tap to
     // switch), and "+" on the right. Tablets have both in the rail already (D-176).
+    // Beside a rail (two panes on a tablet) the rail has both; in a pane the width says nothing.
     final phone =
-        AppBreakpoints.of(MediaQuery.sizeOf(context).width) ==
-        WindowSize.compact;
+        ShellLayout.maybeOf(context)?.navInPage ??
+        AppBreakpoints.of(MediaQuery.sizeOf(context).width) == WindowSize.compact;
     // Tapping Chats again scrolls this list to the top (TabReselect); so does the iOS status bar.
     return PrimaryScrollController(
       controller: TabReselect.chats,
@@ -590,12 +595,7 @@ class BotsScreen extends ConsumerWidget {
         appBar: ShellHeader(
           title: context.l10n.navChats,
           subtitle: org?.name,
-          leading: phone
-              ? const Padding(
-                  padding: EdgeInsets.only(left: 12),
-                  child: Center(child: MeButton()),
-                )
-              : null,
+          leading: phone ? const MeButton() : null,
           titleTrailing: org == null
               ? null
               : Icon(
@@ -623,12 +623,12 @@ class BotsScreen extends ConsumerWidget {
         ),
         // About you (D-169): the one-time name card for people who joined before it was asked.
         // A server this computer runs: what its setup still has left (D-309).
-        body: const Column(
+        body: Column(
           children: [
-            FinishSetupCard(),
+            const FinishSetupCard(),
             // Casama's monthly email (D-408): asked once, where the server sends it.
-            NewsletterCard(),
-            Expanded(child: BotsList()),
+            const NewsletterCard(),
+            Expanded(child: BotsList(selectedBotId: selectedBotId)),
           ],
         ),
       ),

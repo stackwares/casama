@@ -5040,6 +5040,172 @@ export const modelCredentials = pgTable("model_credentials", {
 	check("model_credentials_provider_check", sql`provider = ANY (ARRAY['openai'::text, 'anthropic'::text, 'google'::text, 'xai'::text, 'openrouter'::text, 'openai_compatible'::text, 'fal'::text, 'brave_search'::text, 'tavily'::text, 'deepgram'::text, 'elevenlabs'::text, 'cartesia'::text, 'fish_audio'::text, 'chatgpt'::text, 'treg'::text, 'google_maps'::text, 'mapbox'::text, 'parallel'::text, 'serper'::text])`),
 ]);
 
+export const widgetKeys = pgTable("widget_keys", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	orgId: uuid("org_id").notNull(),
+	platform: text().notNull(),
+	keyHash: text("key_hash").notNull(),
+	label: text(),
+	private: boolean().default(false).notNull(),
+	pushToken: text("push_token"),
+	pushKind: text("push_kind"),
+	pushSandbox: boolean("push_sandbox"),
+	lastUsedAt: timestamp("last_used_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("widget_keys_push_idx").using("btree", table.pushToken.asc().nullsLast().op("text_ops")).where(sql`(push_token IS NOT NULL)`),
+	index("widget_keys_user_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops"), table.orgId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "widget_keys_user_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "widget_keys_org_id_fkey"
+		}).onDelete("cascade"),
+	unique("widget_keys_key_hash_key").on(table.keyHash),
+	pgPolicy("widget_keys_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
+	pgPolicy("widget_keys_update", { as: "permissive", for: "update", to: ["authenticated"] }),
+	pgPolicy("widget_keys_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
+	check("widget_keys_platform_check", sql`platform = ANY (ARRAY['ios'::text, 'android'::text, 'macos'::text])`),
+	check("widget_keys_key_hash_check", sql`(char_length(key_hash) >= 32) AND (char_length(key_hash) <= 128)`),
+	check("widget_keys_label_check", sql`char_length(label) <= 80`),
+	check("widget_keys_push_token_check", sql`(char_length(push_token) >= 8) AND (char_length(push_token) <= 4096)`),
+	check("widget_keys_push_kind_check", sql`push_kind = ANY (ARRAY['apns_widgets'::text, 'fcm'::text])`),
+	check("widget_keys_check", sql`(push_token IS NULL) = (push_kind IS NULL)`),
+]);
+
+export const newsletterSubscriptions = pgTable("newsletter_subscriptions", {
+	userId: uuid("user_id").primaryKey().notNull(),
+	subscribed: boolean().default(false).notNull(),
+	changedVia: text("changed_via"),
+	changedAt: timestamp("changed_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	askedAt: timestamp("asked_at", { withTimezone: true, mode: 'string' }),
+	resendEmail: text("resend_email"),
+	syncDue: boolean("sync_due").default(false).notNull(),
+	syncTries: integer("sync_tries").default(0).notNull(),
+	syncedAt: timestamp("synced_at", { withTimezone: true, mode: 'string' }),
+	version: integer().default(0).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("newsletter_subscriptions_due_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops")).where(sql`sync_due`),
+	index("newsletter_subscriptions_email_idx").using("btree", sql`lower(resend_email)`).where(sql`(resend_email IS NOT NULL)`),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "newsletter_subscriptions_user_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("newsletter_subscriptions_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
+	check("newsletter_subscriptions_changed_via_check", sql`changed_via = ANY (ARRAY['settings'::text, 'signup'::text, 'card'::text, 'email'::text])`),
+	check("newsletter_subscriptions_resend_email_check", sql`char_length(resend_email) <= 320`),
+]);
+
+export const watchKeys = pgTable("watch_keys", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	userId: uuid("user_id").notNull(),
+	orgId: uuid("org_id").notNull(),
+	platform: text().notNull(),
+	keyHash: text("key_hash").notNull(),
+	name: text().notNull(),
+	model: text(),
+	appVersion: text("app_version"),
+	osVersion: text("os_version"),
+	pairedBy: text("paired_by").default('phone').notNull(),
+	pushToken: text("push_token"),
+	pushKind: text("push_kind"),
+	pushSandbox: boolean("push_sandbox"),
+	lastUsedAt: timestamp("last_used_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("watch_keys_push_idx").using("btree", table.pushToken.asc().nullsLast().op("text_ops")).where(sql`(push_token IS NOT NULL)`),
+	index("watch_keys_user_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops"), table.orgId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "watch_keys_user_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "watch_keys_org_id_fkey"
+		}).onDelete("cascade"),
+	unique("watch_keys_key_hash_key").on(table.keyHash),
+	pgPolicy("watch_keys_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
+	pgPolicy("watch_keys_delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
+	check("watch_keys_model_check", sql`char_length(model) <= 80`),
+	check("watch_keys_platform_check", sql`platform = ANY (ARRAY['watchos'::text, 'wearos'::text])`),
+	check("watch_keys_key_hash_check", sql`key_hash ~ '^[0-9a-f]{64}$'::text`),
+	check("watch_keys_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 80)`),
+	check("watch_keys_app_version_check", sql`char_length(app_version) <= 40`),
+	check("watch_keys_os_version_check", sql`char_length(os_version) <= 40`),
+	check("watch_keys_paired_by_check", sql`paired_by = ANY (ARRAY['phone'::text, 'code'::text])`),
+	check("watch_keys_push_token_check", sql`(char_length(push_token) >= 8) AND (char_length(push_token) <= 4096)`),
+	check("watch_keys_push_kind_check", sql`push_kind = ANY (ARRAY['apns'::text, 'fcm'::text])`),
+	check("watch_keys_check", sql`(push_token IS NULL) = (push_kind IS NULL)`),
+]);
+
+export const watchKeyRequests = pgTable("watch_key_requests", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	codeHash: text("code_hash").notNull(),
+	keyHash: text("key_hash").notNull(),
+	platform: text().notNull(),
+	name: text().notNull(),
+	model: text(),
+	appVersion: text("app_version"),
+	osVersion: text("os_version"),
+	tries: integer().default(0).notNull(),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '00:10:00'::interval)`).notNull(),
+	claimedBy: uuid("claimed_by"),
+	claimedOrg: uuid("claimed_org"),
+	claimedAt: timestamp("claimed_at", { withTimezone: true, mode: 'string' }),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("watch_key_requests_expires_idx").using("btree", table.expiresAt.asc().nullsLast().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.claimedBy],
+			foreignColumns: [users.id],
+			name: "watch_key_requests_claimed_by_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.claimedOrg],
+			foreignColumns: [organizations.id],
+			name: "watch_key_requests_claimed_org_fkey"
+		}).onDelete("set null"),
+	unique("watch_key_requests_code_hash_key").on(table.codeHash),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+	check("watch_key_requests_code_hash_check", sql`(char_length(code_hash) >= 32) AND (char_length(code_hash) <= 128)`),
+	check("watch_key_requests_key_hash_check", sql`key_hash ~ '^[0-9a-f]{64}$'::text`),
+	check("watch_key_requests_platform_check", sql`platform = ANY (ARRAY['watchos'::text, 'wearos'::text])`),
+	check("watch_key_requests_name_check", sql`(char_length(name) >= 1) AND (char_length(name) <= 80)`),
+	check("watch_key_requests_model_check", sql`char_length(model) <= 80`),
+	check("watch_key_requests_app_version_check", sql`char_length(app_version) <= 40`),
+	check("watch_key_requests_os_version_check", sql`char_length(os_version) <= 40`),
+]);
+
+export const watchPrefs = pgTable("watch_prefs", {
+	userId: uuid("user_id").primaryKey().notNull(),
+	allow: text().default('medium').notNull(),
+	showDetails: boolean("show_details").default(true).notNull(),
+	quickReplies: text("quick_replies").array(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "watch_prefs_user_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("watch_prefs_select", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(user_id = ( SELECT auth.uid() AS uid))` }),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"] }),
+	check("watch_prefs_allow_check", sql`allow = ANY (ARRAY['medium'::text, 'low'::text, 'none'::text])`),
+	check("watch_prefs_quick_replies_check", sql`(quick_replies IS NULL) OR ((cardinality(quick_replies) >= 1) AND (cardinality(quick_replies) <= 6))`),
+]);
+
 export const agentImportFiles = pgTable("agent_import_files", {
 	importId: uuid("import_id").notNull(),
 	path: text().notNull(),

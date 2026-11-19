@@ -217,6 +217,7 @@ import 'package:casama_api/src/model/deleted_routine.dart';
 import 'package:casama_api/src/model/deleted_rule.dart';
 import 'package:casama_api/src/model/deleted_teach.dart';
 import 'package:casama_api/src/model/deleted_user_fact.dart';
+import 'package:casama_api/src/model/deleted_watch_key.dart';
 import 'package:casama_api/src/model/deleted_watcher.dart';
 import 'package:casama_api/src/model/deleted_widget_key.dart';
 import 'package:casama_api/src/model/device_access_requested_event.dart';
@@ -328,6 +329,7 @@ import 'package:casama_api/src/model/glance_need.dart';
 import 'package:casama_api/src/model/glance_needs.dart';
 import 'package:casama_api/src/model/glance_routine.dart';
 import 'package:casama_api/src/model/glance_routine_choice.dart';
+import 'package:casama_api/src/model/glance_run.dart';
 import 'package:casama_api/src/model/glance_starter.dart';
 import 'package:casama_api/src/model/glance_task.dart';
 import 'package:casama_api/src/model/glance_tasks.dart';
@@ -796,6 +798,32 @@ import 'package:casama_api/src/model/voice_turns_request_turns_inner.dart';
 import 'package:casama_api/src/model/wallpaper_download_request.dart';
 import 'package:casama_api/src/model/wallpaper_photo.dart';
 import 'package:casama_api/src/model/wallpaper_photo_list.dart';
+import 'package:casama_api/src/model/watch_approval.dart';
+import 'package:casama_api/src/model/watch_ask.dart';
+import 'package:casama_api/src/model/watch_asked.dart';
+import 'package:casama_api/src/model/watch_attachment.dart';
+import 'package:casama_api/src/model/watch_audio.dart';
+import 'package:casama_api/src/model/watch_bot_header.dart';
+import 'package:casama_api/src/model/watch_chat.dart';
+import 'package:casama_api/src/model/watch_code.dart';
+import 'package:casama_api/src/model/watch_code_claim.dart';
+import 'package:casama_api/src/model/watch_code_info.dart';
+import 'package:casama_api/src/model/watch_code_request.dart';
+import 'package:casama_api/src/model/watch_handoff.dart';
+import 'package:casama_api/src/model/watch_handoff_sent.dart';
+import 'package:casama_api/src/model/watch_key.dart';
+import 'package:casama_api/src/model/watch_key_list.dart';
+import 'package:casama_api/src/model/watch_key_register.dart';
+import 'package:casama_api/src/model/watch_message.dart';
+import 'package:casama_api/src/model/watch_prefs.dart';
+import 'package:casama_api/src/model/watch_prefs_update.dart';
+import 'package:casama_api/src/model/watch_run.dart';
+import 'package:casama_api/src/model/watch_self.dart';
+import 'package:casama_api/src/model/watch_self_features.dart';
+import 'package:casama_api/src/model/watch_self_person.dart';
+import 'package:casama_api/src/model/watch_self_saved.dart';
+import 'package:casama_api/src/model/watch_self_update.dart';
+import 'package:casama_api/src/model/watch_signed_out.dart';
 import 'package:casama_api/src/model/watcher.dart';
 import 'package:casama_api/src/model/watcher_list.dart';
 import 'package:casama_api/src/model/welcome_chat.dart';
@@ -1289,6 +1317,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return DeletedTeach.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedUserFact':
           return DeletedUserFact.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'DeletedWatchKey':
+          return DeletedWatchKey.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedWatcher':
           return DeletedWatcher.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'DeletedWidgetKey':
@@ -1529,6 +1559,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return GlanceRoutine.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'GlanceRoutineChoice':
           return GlanceRoutineChoice.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'GlanceRun':
+          return GlanceRun.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'GlanceStarter':
           return GlanceStarter.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'GlanceTask':
@@ -2534,6 +2566,70 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return WallpaperPhoto.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WallpaperPhotoList':
           return WallpaperPhotoList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchAllowLevel':
+          
+          
+        case 'WatchApproval':
+          return WatchApproval.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchAsk':
+          return WatchAsk.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchAsked':
+          return WatchAsked.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchAttachment':
+          return WatchAttachment.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchAudio':
+          return WatchAudio.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchBotHeader':
+          return WatchBotHeader.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchChat':
+          return WatchChat.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchCode':
+          return WatchCode.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchCodeClaim':
+          return WatchCodeClaim.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchCodeInfo':
+          return WatchCodeInfo.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchCodeRequest':
+          return WatchCodeRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchHandoff':
+          return WatchHandoff.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchHandoffSent':
+          return WatchHandoffSent.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchKey':
+          return WatchKey.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchKeyList':
+          return WatchKeyList.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchKeyRegister':
+          return WatchKeyRegister.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchMessage':
+          return WatchMessage.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchPlatform':
+          
+          
+        case 'WatchPrefs':
+          return WatchPrefs.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchPrefsUpdate':
+          return WatchPrefsUpdate.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchRisk':
+          
+          
+        case 'WatchRun':
+          return WatchRun.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchSelf':
+          return WatchSelf.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchSelfFeatures':
+          return WatchSelfFeatures.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchSelfPerson':
+          return WatchSelfPerson.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchSelfSaved':
+          return WatchSelfSaved.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchSelfUpdate':
+          return WatchSelfUpdate.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchSignedOut':
+          return WatchSignedOut.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WatchSurface':
+          
+          
         case 'Watcher':
           return Watcher.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WatcherList':

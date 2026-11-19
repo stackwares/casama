@@ -461,10 +461,43 @@ export async function fcmTokenGone(res: Response) {
   return /UNREGISTERED|registration token|message\.token/i.test(body);
 }
 
+/**
+ * What kind of push a watch reads (D-410, docs/WATCH-PROTOCOL.md §4), from the inbox kind the
+ * phone already reads in `kind` (which keeps its own values, such as `approval_request`).
+ */
+export function watchKind(kind: string, message: Record<string, unknown> = {}): string {
+  switch (kind) {
+    case "approval_request":
+    case "approval":
+      return "approval";
+    case "suggestion":
+      return "suggestion";
+    case "reply":
+      return message.failed === true ? "failed" : "reply";
+    case "routine_result":
+      return message.brief === true ? "brief" : "routine";
+    case "checkin_summary":
+      return "brief";
+    case "takeover":
+      return "takeover";
+    default:
+      return "other";
+  }
+}
+
+/** Inbox kinds whose push names the reply it is about (message_id, §4). */
+const REPLY_KINDS = new Set(["reply", "routine_result", "checkin_summary"]);
+
 /** In-app inbox row plus push to the user's devices. */
 export class NotificationService {
   readonly db: Database;
   readonly push: PushSender;
+  /**
+   * Alerts straight to Apple Watches' own tokens (D-410): this server's Apple key, or Casama
+   * Cloud's relay. Unset: Apple Watches get only the iPhone's pushes, mirrored. Wear OS watches'
+   * tokens go through [push] as data messages either way.
+   */
+  watch?: import("./apns.ts").WatchAlertSender;
   /**
    * Hears every inbox row this service adds, after it is written, whatever the push settings
    * (the widgets' refresh pushes, D-405). Must not throw or block.
@@ -534,7 +567,9 @@ export class NotificationService {
     this.heard(userId, kind);
     // The inbox row is in; a push provider error mustn't fail the caller.
     if (!later && !held)
-      await this.pushTo(userId, row?.id ?? "", kind, { ...message, urgent }, prefs).catch(() => {});
+      await this.pushTo(userId, row?.id ?? "", kind, { ...message, urgent }, prefs, orgId).catch(
+        () => {},
+      );
     return row?.id;
   }
 
@@ -571,6 +606,7 @@ export class NotificationService {
     kind: string,
     message: PushMessage & Record<string, unknown>,
     prefs?: PushPrefs,
+    orgId?: string | null,
   ) {
     const devices = await this.db.execute<{
       fcm_token: string;
@@ -580,12 +616,27 @@ export class NotificationService {
     }>(
       sql`select fcm_token, platform, data_pushes, push_version from public.devices where user_id = ${userId}::uuid`,
     );
-    if (!devices.length) return;
+    // The person's watches with their own push token (D-410), in the workspace this is about.
+    const watches = await this.db
+      .execute<{ push_token: string; push_kind: "apns" | "fcm"; push_sandbox: boolean | null }>(sql`
+        select distinct on (push_token) push_token, push_kind, push_sandbox from public.watch_keys
+        where user_id = ${userId}::uuid and push_token is not null
+          ${orgId ? sql`and org_id = ${orgId}::uuid` : sql``}`)
+      .catch(
+        () =>
+          [] as Array<{
+            push_token: string;
+            push_kind: "apns" | "fcm";
+            push_sandbox: boolean | null;
+          }>,
+      );
+    if (!devices.length && !watches.length) return;
     prefs ??= await this.prefs(userId);
     const str = (v: unknown) => (typeof v === "string" && v ? v : null);
     const group = pushGroup(kind);
     const conversationId = str(message.conversation_id);
     const botId = str(message.bot_id);
+    const runId = str(message.run_id);
     const approvalId = kind === "approval_request" ? str(message.approval_id) : null;
     const risk = str(message.risk);
     // A suggestion carries its id and the buttons to act on it from the notification (D-247).
@@ -596,7 +647,22 @@ export class NotificationService {
         ? { body: message.failed === true ? "Couldn't finish" : `${message.title} replied` }
         : {};
     const text = { ...pushText(message.title, message.body), ...hidden };
-    const tag = str(message.tag);
+    // A watch that gets both the phone's copy (mirrored) and its own shows one: Apple folds pushes
+    // with the same collapse id, so every push a watch can get has one (§4).
+    const appleWatch = watches.some((w) => w.push_kind === "apns");
+    const tag = str(message.tag) ?? (appleWatch && notificationId ? `n-${notificationId}` : null);
+    // Which reply a reply, routine or brief push is about, so a watch can show it (§4).
+    const messageId =
+      str(message.message_id) ??
+      (runId && REPLY_KINDS.has(kind)
+        ? ((
+            await this.db
+              .execute<{ id: string }>(sql`
+                select id from public.messages where run_id = ${runId}::uuid and role = 'assistant'
+                order by created_at desc limit 1`)
+              .catch(() => [] as Array<{ id: string }>)
+          )[0]?.id ?? null)
+        : null);
     // Whose push it is, so the web app's notification shows the bot's own picture (mascot,
     // image or initials) instead of only Chrome's logo. Long values (an inline image) stay out.
     const [bot] = botId
@@ -623,6 +689,9 @@ export class NotificationService {
       data: {
         notification_id: notificationId,
         kind,
+        // The watch's kinds (D-410, §4); `kind` keeps the values phones already read.
+        watch_kind: watchKind(kind, message),
+        link: str(message.link) ?? "/",
         ...(tag ? { tag } : {}),
         ...(conversationId ? { conversation_id: conversationId } : {}),
         ...(botId ? { bot_id: botId } : {}),
@@ -631,12 +700,17 @@ export class NotificationService {
         ...(approvalId ? { approval_id: approvalId } : {}),
         ...(approvalId && risk ? { risk } : {}),
         ...(suggestionId ? { suggestion_id: suggestionId } : {}),
+        ...(runId && REPLY_KINDS.has(kind) ? { run_id: runId } : {}),
+        ...(messageId ? { message_id: messageId } : {}),
       },
       ...(suggestionId
         ? { category: "SUGGESTION" }
         : approvalButtons
           ? { category: "APPROVAL" }
-          : {}),
+          : // A reply's quick replies on the watch (D-410); phones without the category ignore it.
+            kind === "reply" && message.failed !== true
+            ? { category: "REPLY" }
+            : {}),
     };
     // Casama for Chrome (D-323) always draws its own, with Approve and Deny on approvals.
     const drawsItself = (d: { platform: string; data_pushes: boolean; push_version: number }) =>
@@ -661,6 +735,71 @@ export class NotificationService {
     }
     for (const t of invalid)
       await this.db.execute(sql`delete from public.devices where fcm_token = ${t}`);
+    if (watches.length) await this.pushToWatches(watches, base, userId);
+  }
+
+  /**
+   * The same push to the person's watches' own tokens (D-410, §4): a Wear OS watch gets a
+   * data-only message it draws itself (title and body in the data), an Apple Watch an alert straight
+   * to Apple with the phone copy's category, data and collapse id. Tokens Apple or Firebase say are
+   * gone are cleared from their keys.
+   */
+  private async pushToWatches(
+    watches: Array<{ push_token: string; push_kind: "apns" | "fcm"; push_sandbox: boolean | null }>,
+    base: PushMessage,
+    userId: string,
+  ) {
+    const invalid: string[] = [];
+    const wear = watches.filter((w) => w.push_kind === "fcm").map((w) => w.push_token);
+    if (wear.length) {
+      const { invalidTokens } = await this.push
+        .send(wear, {
+          ...base,
+          dataOnly: true,
+          data: { ...base.data, title: base.title, body: base.body, user_id: userId },
+        })
+        .catch(() => ({ invalidTokens: [] as string[] }));
+      invalid.push(...invalidTokens);
+    }
+    const apple = watches.filter((w) => w.push_kind === "apns");
+    if (apple.length && this.watch) {
+      const { invalidTokens } = await this.watch
+        .sendWatch(
+          apple.map((w) => ({ token: w.push_token, sandbox: w.push_sandbox === true })),
+          base,
+        )
+        .catch(() => ({ invalidTokens: [] as string[] }));
+      invalid.push(...invalidTokens);
+    }
+    for (const t of invalid)
+      await this.db.execute(sql`
+        update public.watch_keys set push_token = null, push_kind = null, push_sandbox = null
+        where push_token = ${t}`);
+  }
+
+  /**
+   * "Open on iPhone" / "Open on phone" from a watch (D-410): a notification on the person's own
+   * phones that opens [link], with no inbox row. Answers how many phones it went to.
+   */
+  async handoff(
+    userId: string,
+    o: { title: string; link: string; body?: string; tag?: string },
+  ): Promise<number> {
+    const phones = await this.db.execute<{ fcm_token: string }>(sql`
+      select fcm_token from public.devices
+      where user_id = ${userId}::uuid and platform in ('ios', 'android')`);
+    if (!phones.length) return 0;
+    const tokens = phones.map((p) => p.fcm_token);
+    const { invalidTokens } = await this.push.send(tokens, {
+      ...pushText(o.title, o.body ?? "From your watch"),
+      link: o.link,
+      tag: o.tag ?? "watch-handoff",
+      priority: "high",
+      data: { kind: "other", watch_kind: "other", link: o.link, tag: o.tag ?? "watch-handoff" },
+    });
+    for (const t of invalidTokens)
+      await this.db.execute(sql`delete from public.devices where fcm_token = ${t}`);
+    return tokens.length - invalidTokens.length;
   }
 
   /**
@@ -692,6 +831,7 @@ export class NotificationService {
     const due = await this.db.execute<{
       id: string;
       user_id: string;
+      org_id: string | null;
       kind: string;
       payload: PushMessage & Record<string, unknown>;
       read: boolean;
@@ -699,11 +839,11 @@ export class NotificationService {
       update public.notifications set push_status = 'sent'
       where id in (select id from public.notifications where push_status = 'deferred' and push_after <= now()
                    order by push_after limit ${limit} for update skip locked)
-      returning id, user_id, kind, payload, read_at is not null as read`);
+      returning id, user_id, org_id, kind, payload, read_at is not null as read`);
     for (const n of due) {
       // Already seen in the app: no need to buzz the phone now.
       if (n.read) continue;
-      await this.pushTo(n.user_id, n.id, n.kind, n.payload).catch(() => {});
+      await this.pushTo(n.user_id, n.id, n.kind, n.payload, undefined, n.org_id).catch(() => {});
     }
     return due.length;
   }

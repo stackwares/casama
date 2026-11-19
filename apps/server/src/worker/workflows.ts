@@ -38,6 +38,7 @@ import {
   sendDueSuggestions,
   sweepEncryption,
   sweepLiveTokens,
+  sweepWatchCodes,
   syncComposioTriggers,
   UPDATED_ERROR_CODE,
   waiveFailedRun,
@@ -423,10 +424,15 @@ export const routinesTickWorkflow = DBOS.registerWorkflow(
       name: "retime-routines",
     });
     // The island's live tokens (D-324): gone 12 hours on, whether or not their run ended.
-    if (new Date(scheduledAt).getUTCMinutes() % 10 === 5)
+    if (new Date(scheduledAt).getUTCMinutes() % 10 === 5) {
       await DBOS.runStep(() => sweepLiveTokens(rt().db).catch(captureStep("live-tokens", 0)), {
         name: "live-tokens",
       });
+      // Watch sign-in codes (D-410): good for ten minutes, kept a day for the record.
+      await DBOS.runStep(() => sweepWatchCodes(rt().db).catch(captureStep("watch-codes", 0)), {
+        name: "watch-codes",
+      });
+    }
     // Routines that end (D-262): past their end time, they switch off.
     await DBOS.runStep(() => expireRoutines(rt().db).catch(captureStep("expire-routines", 0)), {
       name: "expire-routines",

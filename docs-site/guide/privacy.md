@@ -190,6 +190,9 @@ While the lock is on:
   or the screen lock, as before.
 - [Widgets](./widgets) show only counts, bot names and times, and their buttons open Casama,
   unless you turn on **Show details in widgets** in Settings → Widgets.
+- Your [watch](./apple-watch) shows counts and bot names only, not what bots wrote, until you turn
+  on **Show details on the watch** in Settings → Watch. A watch has a key of its own that can answer
+  low and medium risk requests and nothing above them; remove it in Settings → Watch.
 
 If unlocking can't work (you removed the device's passcode, or typed the wrong PIN five times),
 tap **Sign Out** on the lock screen and sign in again. Signing out from the lock screen turns the

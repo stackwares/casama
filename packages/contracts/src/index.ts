@@ -54,6 +54,7 @@ export * from "./support.ts";
 export * from "./teach.ts";
 export * from "./telephony.ts";
 export * from "./voice.ts";
+export * from "./watch.ts";
 export * from "./watchers.ts";
 export * from "./workspace-files.ts";
 export * from "./workspaces.ts";

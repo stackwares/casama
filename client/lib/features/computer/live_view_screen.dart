@@ -11,6 +11,7 @@ import 'package:casama_sdk/casama_sdk.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:share_plus/share_plus.dart' show XFile;
 
+import '../../core/fold/fold.dart';
 import '../../core/live.dart';
 import '../../core/providers.dart';
 import '../../core/share.dart';
@@ -20,8 +21,10 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/adaptive_modal.dart';
 import '../../ui/app_card.dart';
+import '../../ui/fold_split.dart';
 import '../../ui/form_sheet.dart';
 import '../../ui/shell_header.dart';
+import '../../ui/side_strip.dart';
 import '../../ui/glow_button.dart';
 import '../teach/teach_draft_screen.dart';
 import 'computer_update.dart';
@@ -60,6 +63,11 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
   Timer? _shotTimer;
   Timer? _pingTimer;
   final _transform = TransformationController();
+
+  /// The trackpad's pointer on the computer's screen, while the trackpad is in use (a folding
+  /// phone, partly folded, D-411). Null otherwise.
+  final _padPointer = ValueNotifier<Offset?>(null);
+  Offset _padScrollCarry = Offset.zero;
   final _focus = FocusNode();
   // The phone keyboard types into a hidden field that always holds one invisible character, so
   // Backspace on an "empty" field still registers (and reaches the computer).
@@ -132,6 +140,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     _pingTimer?.cancel();
     _answerTimer?.cancel();
     _idleRecheck?.cancel();
+    _padPointer.dispose();
     _privacyTimer?.cancel();
     _redialTimer?.cancel();
     _presence.dispose();
@@ -595,6 +604,7 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     if (!_controlling) return;
     final p = _toRemote(e.localPosition, box);
     if (p == null) return;
+    if (_padPointer.value != null) _padPointer.value = p;
     _send(NekoInput.move(p.dx.round(), p.dy.round()));
     if (down == null) return;
     final button = e.kind == PointerDeviceKind.mouse
@@ -607,6 +617,56 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
   }
 
   int _lastButton = 1;
+
+  // --- the trackpad (D-411): the lower half of a propped-up folding phone ---
+
+  Size get _remoteSize => _conn?.screenSize.value ?? const Size(1280, 800);
+
+  /// Shows the trackpad's pointer while the trackpad is on screen, and takes it away after.
+  void _syncPad(bool on) {
+    if (on == (_padPointer.value != null)) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _padPointer.value = on ? _remoteSize.center(Offset.zero) : null;
+    });
+  }
+
+  void _padMove(Offset delta) {
+    if (!_controlling) return;
+    final screen = _remoteSize;
+    final at = _padPointer.value ?? screen.center(Offset.zero);
+    // The pad is about half as wide as the computer's screen in its own pixels.
+    final next = Offset(
+      (at.dx + delta.dx * 2.2).clamp(0.0, screen.width - 1),
+      (at.dy + delta.dy * 2.2).clamp(0.0, screen.height - 1),
+    );
+    _padPointer.value = next;
+    _send(NekoInput.move(next.dx.round(), next.dy.round()));
+  }
+
+  void _padTap() {
+    final at = _padPointer.value;
+    if (!_controlling || at == null) return;
+    final button = _rightClick ? 3 : 1;
+    HapticsHelper.selection();
+    _send(NekoInput.move(at.dx.round(), at.dy.round()));
+    _send(NekoInput.button(button, down: true));
+    _send(NekoInput.button(button, down: false));
+    _recorder?.click(at.dx.round(), at.dy.round(), button: button);
+    if (_rightClick) setState(() => _rightClick = false);
+  }
+
+  /// Two fingers: the page follows them, as on a laptop's trackpad.
+  void _padScroll(Offset delta) {
+    if (!_controlling) return;
+    _padScrollCarry += delta / 14;
+    final dx = _padScrollCarry.dx.truncate();
+    final dy = _padScrollCarry.dy.truncate();
+    if (dx == 0 && dy == 0) return;
+    _padScrollCarry -= Offset(dx.toDouble(), dy.toDouble());
+    _send(NekoInput.scroll(-dx, -dy));
+    _recorder?.scroll(-dx, -dy);
+  }
 
   KeyEventResult _key(FocusNode _, KeyEvent e) {
     if (!_controlling) return KeyEventResult.ignored;
@@ -694,6 +754,62 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
     final canvas = _canvas(context, conn: conn, state: state, hint: !immersive && !widget.embedded && AppBreakpoints.of(media.size.width) == WindowSize.compact);
     final dock = _Dock(floating: immersive, compact: widget.embedded, children: _dockChildren(context, holder: holder));
     final typing = _typingField();
+
+    // A folding phone, partly folded (D-411): the computer's screen on one side of the fold and
+    // everything you touch on the other. Propped up, that is a small laptop: the screen on top, a
+    // trackpad, the keys and Hand Back under the hand.
+    final divided = !widget.embedded && FoldSplit.dividing(context);
+    _syncPad(divided && _controlling);
+    if (divided) {
+      return Scaffold(
+        body: FoldSplit(
+          whole: const SizedBox.shrink(),
+          first: ColoredBox(
+            color: Colors.black,
+            child: SafeArea(child: canvas),
+          ),
+          second: SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(AppSpace.sm, AppSpace.xs, AppSpace.xs, AppSpace.xs),
+                  child: Row(
+                    children: [
+                      HeaderIconButton(
+                        icon: LucideIcons.arrowLeft,
+                        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                        onPressed: () => Navigator.of(context).maybePop(),
+                      ),
+                      const SizedBox(width: AppSpace.xs),
+                      // Half a screen held like a book is narrow: the dot says it, a tap the rest.
+                      if (FoldInfo.of(context).foldVertical)
+                        _StatusChip(state: state, rtt: _rtt, holder: holder, onDark: false, dotOnly: true, fallbackHelp: fallbackHelp, onRetry: onRetry)
+                      else
+                        Flexible(child: status),
+                      const Spacer(),
+                      more,
+                    ],
+                  ),
+                ),
+                for (final b in banners)
+                  Padding(padding: const EdgeInsets.fromLTRB(AppSpace.sm, 0, AppSpace.sm, AppSpace.xs), child: b),
+                Expanded(
+                  child: _Trackpad(
+                    enabled: _controlling,
+                    hint: _controlling ? l10n.trackpadHint : l10n.trackpadTakeControl,
+                    onMove: _padMove,
+                    onScroll: _padScroll,
+                    onTap: _padTap,
+                  ),
+                ),
+                dock,
+                typing,
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     final screen = conn?.screenSize.value ?? const Size(1280, 800);
     final rail = (media.size.width - media.size.height * screen.width / screen.height) / 2;
@@ -827,7 +943,12 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
       appBar: ShellHeader(
         title: l10n.liveView,
         actions: [
-          Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Center(child: status)),
+          // In an iPhone Duo's side strip (D-411) there is room for the dot, not the words; a
+          // tap on it says the rest.
+          if (StripSlot.of(context) != null)
+            _StatusChip(state: state, rtt: _rtt, holder: holder, onDark: false, dotOnly: true, fallbackHelp: fallbackHelp, onRetry: onRetry)
+          else
+            Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Center(child: status)),
           if (minimize)
             HeaderIconButton(key: const Key('liveMinimize'), tooltip: l10n.liveMinimize, icon: LucideIcons.minimize2, onPressed: () => Navigator.of(context).maybePop()),
           more,
@@ -1041,7 +1162,24 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
                                 _recorder?.scroll((e.scrollDelta.dx / 20).round(), (e.scrollDelta.dy / 20).round());
                               }
                             },
-                            child: video,
+                            child: ValueListenableBuilder<Offset?>(
+                              valueListenable: _padPointer,
+                              child: video,
+                              builder: (context, at, video) => at == null
+                                  ? video!
+                                  : Stack(
+                                      fit: StackFit.expand,
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        video!,
+                                        Positioned(
+                                          left: at.dx / size.width * s.width,
+                                          top: at.dy / size.height * s.height,
+                                          child: const IgnorePointer(child: _PadPointer()),
+                                        ),
+                                      ],
+                                    ),
+                            ),
                           );
                         },
                       ),
@@ -1121,6 +1259,73 @@ class _LiveViewScreenState extends ConsumerState<LiveViewScreen> with WidgetsBin
         maxLines: null,
       ),
     ),
+  );
+}
+
+/// The trackpad under a propped-up folding phone's fold (D-411): one finger moves the pointer, two
+/// scroll, a tap clicks. The dock's right-click button makes the next tap a right click, as it does
+/// for a tap on the screen itself.
+class _Trackpad extends StatelessWidget {
+  const _Trackpad({required this.enabled, required this.hint, required this.onMove, required this.onScroll, required this.onTap});
+  final bool enabled;
+  final String hint;
+  final ValueChanged<Offset> onMove;
+  final ValueChanged<Offset> onScroll;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSpace.sm, 0, AppSpace.sm, AppSpace.sm),
+      child: Semantics(
+        label: context.l10n.trackpad,
+        hint: hint,
+        child: GestureDetector(
+          key: const Key('liveTrackpad'),
+          behavior: HitTestBehavior.opaque,
+          onTap: enabled ? onTap : null,
+          onScaleUpdate: enabled ? (d) => d.pointerCount >= 2 ? onScroll(d.focalPointDelta) : onMove(d.focalPointDelta) : null,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: context.appColors.hairline),
+            ),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpace.md),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(LucideIcons.mousePointer2, size: 22, color: scheme.onSurfaceVariant.withValues(alpha: enabled ? 0.55 : 0.35)),
+                    const SizedBox(height: AppSpace.xs),
+                    Text(
+                      hint,
+                      textAlign: TextAlign.center,
+                      style: context.textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant.withValues(alpha: 0.8)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The trackpad's pointer on the computer's screen: its tip is the spot a tap clicks.
+class _PadPointer extends StatelessWidget {
+  const _PadPointer();
+
+  @override
+  Widget build(BuildContext context) => const Icon(
+    LucideIcons.mousePointer2,
+    size: 22,
+    color: Colors.white,
+    shadows: [Shadow(color: Colors.black, blurRadius: 3), Shadow(color: Colors.black87, blurRadius: 1)],
   );
 }
 

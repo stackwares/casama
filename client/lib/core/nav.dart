@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../ui/shell_layout.dart';
+
 /// Every page the user opened with [GoRouter.push], bottom to top, as its location.
 List<Uri> _pushedLocations(List<RouteMatchBase> matches, [List<Uri>? out]) {
   final found = out ?? <Uri>[];
@@ -57,7 +59,14 @@ extension GoRouterSwapTo on GoRouter {
 }
 
 extension BuildContextPushOnce on BuildContext {
-  /// [GoRouterPushOnce.pushOnce] on this context's router.
-  Future<T?> pushOnce<T extends Object?>(String location, {Object? extra}) =>
-      GoRouter.of(this).pushOnce<T>(location, extra: extra);
+  /// [GoRouterPushOnce.pushOnce] on this context's router. From the list of a two-pane layout
+  /// (D-411) the page opens beside the list, in place of the one there, as a tap on a chat does:
+  /// pushing would stack it over the last one and give it a Back that leads nowhere new.
+  Future<T?> pushOnce<T extends Object?>(String location, {Object? extra}) {
+    if (getInheritedWidgetOfExactType<ShellLayout>()?.pane == PaneRole.list) {
+      GoRouter.of(this).go(location, extra: extra);
+      return Future<T?>.value();
+    }
+    return GoRouter.of(this).pushOnce<T>(location, extra: extra);
+  }
 }

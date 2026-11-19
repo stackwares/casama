@@ -39,12 +39,19 @@ import native_geofence
       UNNotificationCategory(
         identifier: "APPROVAL",
         actions: [
-          UNNotificationAction(identifier: "approve", title: "Approve", options: [.foreground, .authenticationRequired]),
+          // "Allow", as the app and the watch say it (D-410); the id stays "approve".
+          UNNotificationAction(identifier: "approve", title: "Allow", options: [.foreground, .authenticationRequired]),
           UNNotificationAction(identifier: "deny", title: "Deny", options: [.foreground, .authenticationRequired, .destructive]),
         ],
         intentIdentifiers: [],
         options: []),
+      // Replies (D-410): no buttons on the phone; the category lets a paired Apple Watch show its
+      // own reply notification with quick replies.
+      UNNotificationCategory(identifier: "REPLY", actions: [], intentIdentifiers: [], options: []),
     ])
+    // The Apple Watch asks this phone to sign it in (D-410). Active before Flutter, so requests
+    // that wake the app in the background are held for Dart.
+    WatchBridge.shared.activate()
     // Controls and small widgets that open Casama at a place (D-405, ControlIntents.swift) hand
     // the path over the way Siri's Ask a bot does, queued until Flutter is ready.
     if #available(iOS 17.0, *) {
@@ -121,9 +128,21 @@ import native_geofence
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CasamaWidgets") {
       WidgetsBridge.shared.attach(registrar.messenger())
     }
+    // Apple Watch sign-in and Open on iPhone (D-410).
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CasamaWatch") {
+      WatchBridge.shared.attach(registrar.messenger())
+    }
     // System permissions a bot needs on this phone (D-376).
     if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CasamaPermissions") {
       PermissionsBridge.shared.attach(registrar.messenger())
+    }
+    // A folding iPhone (D-411): its hinge, fold and status area, and files dropped from the app
+    // beside this one.
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CasamaFold") {
+      FoldBridge.shared.attach(registrar.messenger())
+    }
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "CasamaDrop") {
+      DropBridge.shared.attach(registrar.messenger())
     }
   }
 }
@@ -463,6 +482,251 @@ final class PermissionsBridge {
       SFSpeechRecognizer.requestAuthorization { _ in done(state(id)) }
     default:
       done(state(id))
+    }
+  }
+}
+
+// MARK: - The fold (D-411): an iPhone Duo's hinge, fold and status area, for lib/core/fold/fold.dart.
+// Flutter doesn't report them on iOS yet (flutter/flutter#193025). Everything here is iOS 27.1 and
+// later; before that, and on an iPhone without a hinge, the stream stays silent and the app lays
+// itself out as on any iPhone.
+
+final class FoldBridge: NSObject, FlutterStreamHandler {
+  static let shared = FoldBridge()
+
+  private var sink: FlutterEventSink?
+  private var last: [String: Any]?
+  private weak var probe: UIView?
+
+  func attach(_ messenger: FlutterBinaryMessenger) {
+    FlutterEventChannel(name: "casama/fold", binaryMessenger: messenger).setStreamHandler(self)
+  }
+
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    sink = events
+    last = nil
+    install(tries: 40)
+    return nil
+  }
+
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    sink = nil
+    return nil
+  }
+
+  /// The view Flutter draws in. It may not be on screen yet when Dart first listens.
+  static var flutterView: UIView? {
+    for scene in UIApplication.shared.connectedScenes {
+      guard let windowScene = scene as? UIWindowScene else { continue }
+      for window in windowScene.windows {
+        if let controller = window.rootViewController as? FlutterViewController, controller.isViewLoaded {
+          return controller.view
+        }
+      }
+    }
+    return nil
+  }
+
+  private func install(tries: Int) {
+    guard #available(iOS 27.1, *) else { return }
+    if let probe {
+      probe.setNeedsLayout()
+      return
+    }
+    guard let host = FoldBridge.flutterView else {
+      if tries > 0 {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in self?.install(tries: tries - 1) }
+      }
+      return
+    }
+    let view = FoldProbe(frame: host.bounds)
+    view.report = { [weak self] values in self?.send(values) }
+    host.addSubview(view)
+    probe = view
+  }
+
+  private func send(_ values: [String: Any]) {
+    guard let sink else { return }
+    if let last {
+      // The hinge reports its angle many times a second while it moves. Only the angle changing
+      // by less than two degrees is not news.
+      var a = last, b = values
+      let moved = abs(((a.removeValue(forKey: "angle") as? Double) ?? 0) - ((b.removeValue(forKey: "angle") as? Double) ?? 0))
+      if moved < 2, NSDictionary(dictionary: a).isEqual(to: b) { return }
+    }
+    last = values
+    sink(values)
+  }
+}
+
+/// An invisible view over Flutter's that reads the hinge, the regions iOS reserves and the side of
+/// the vertical bar. The fold lags the hinge by up to a second, and UIKit lays a view out again
+/// when a region it read during layout changes, so the regions are read in `layoutSubviews`.
+@available(iOS 27.1, *)
+private final class FoldProbe: UIView {
+  var report: (([String: Any]) -> Void)?
+  private var hinge: UIHinge?
+
+  override init(frame: CGRect) {
+    super.init(frame: frame)
+    isUserInteractionEnabled = false
+    isAccessibilityElement = false
+    backgroundColor = .clear
+    isOpaque = false
+    autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    addInteraction(
+      UIHingeInteraction { [weak self] _, update in
+        self?.hinge = update.hinge
+        self?.setNeedsLayout()
+        self?.read()
+      })
+    registerForTraitChanges(UITraitCollection.systemTraitsAffectingVerticalBarEdge) { (view: FoldProbe, _: UITraitCollection) in
+      view.read()
+    }
+  }
+
+  @available(*, unavailable)
+  required init?(coder: NSCoder) {
+    return nil
+  }
+
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    read()
+  }
+
+  override func safeAreaInsetsDidChange() {
+    super.safeAreaInsetsDidChange()
+    read()
+  }
+
+  private func numbers(_ r: CGRect) -> [Double] {
+    [Double(r.minX), Double(r.minY), Double(r.width), Double(r.height)]
+  }
+
+  private func word(_ status: UIHinge.Status) -> String {
+    switch status {
+    case .closed: return "closed"
+    case .partiallyOpen: return "partlyOpen"
+    case .fullyOpen: return "open"
+    default: return "unknown"
+    }
+  }
+
+  /// The vertical bar follows the hardware, so it is reported as a side of the screen.
+  private var barSide: String {
+    let rightToLeft = effectiveUserInterfaceLayoutDirection == .rightToLeft
+    switch traitCollection.verticalBarEdge {
+    case .leading: return rightToLeft ? "right" : "left"
+    case .trailing: return rightToLeft ? "left" : "right"
+    default: return "none"
+    }
+  }
+
+  func read() {
+    // No hinge: an ordinary iPhone. Nothing is sent, and Dart keeps "no fold".
+    guard let hinge else { return }
+    var values: [String: Any] = [
+      "hinge": word(hinge.status),
+      "angle": Double(hinge.angle) * 180 / Double.pi,
+      "bar": barSide,
+      "foldActive": false,
+    ]
+    if let fold = reservedRegions(kind: .division, options: [.includeInactive]).first {
+      values["fold"] = numbers(fold.frame)
+      values["foldActive"] = fold.isActive
+    }
+    values["cameras"] = reservedRegions(kind: .occlusion).filter { $0.isActive }.map { numbers($0.frame) }
+    if let scene = window?.windowScene {
+      values["fullScreen"] = scene.isFullScreen
+      if let status = scene.statusBarManager?.statusBarFrame, !status.isEmpty {
+        values["status"] = numbers(convert(status, from: nil))
+      }
+    }
+    report?(values)
+  }
+}
+
+// MARK: - Dropped files (D-411): beside another app (Split View on an iPhone Duo or an iPad), a
+// file, a photo or text dragged onto Casama goes to the chat on screen. Dart says when there is
+// one (lib/core/dropped_files.dart); without one the drop is refused.
+
+final class DropBridge: NSObject, UIDropInteractionDelegate {
+  static let shared = DropBridge()
+
+  private var channel: FlutterMethodChannel?
+  private var accepting = false
+  private var installed = false
+
+  func attach(_ messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(name: "casama/drop", binaryMessenger: messenger)
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard call.method == "accept", let on = call.arguments as? Bool else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      self?.accepting = on
+      self?.install()
+      result(nil)
+    }
+    self.channel = channel
+  }
+
+  private func install() {
+    guard !installed, let host = FoldBridge.flutterView else { return }
+    host.addInteraction(UIDropInteraction(delegate: self))
+    installed = true
+  }
+
+  func dropInteraction(_ interaction: UIDropInteraction, canHandle session: UIDropSession) -> Bool {
+    accepting
+  }
+
+  func dropInteraction(_ interaction: UIDropInteraction, sessionDidUpdate session: UIDropSession) -> UIDropProposal {
+    UIDropProposal(operation: accepting ? .copy : .forbidden)
+  }
+
+  func dropInteraction(_ interaction: UIDropInteraction, performDrop session: UIDropSession) {
+    let folder = FileManager.default.temporaryDirectory.appendingPathComponent("dropped/\(UUID().uuidString)", isDirectory: true)
+    try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+    let group = DispatchGroup()
+    let lock = NSLock()
+    var files: [String] = []
+    var texts: [String] = []
+    for item in session.items {
+      let provider = item.itemProvider
+      // Plain text and links become text in the message; everything else is a file.
+      let isText = provider.hasItemConformingToTypeIdentifier("public.plain-text") || provider.hasItemConformingToTypeIdentifier("public.url")
+      let isFile = provider.hasItemConformingToTypeIdentifier("public.file-url") || !isText
+      if isFile, let type = provider.registeredTypeIdentifiers.first(where: { $0 != "public.file-url" }) ?? provider.registeredTypeIdentifiers.first {
+        group.enter()
+        provider.loadFileRepresentation(forTypeIdentifier: type) { url, _ in
+          defer { group.leave() }
+          guard let url else { return }
+          var name = provider.suggestedName ?? url.lastPathComponent
+          if !name.contains("."), !url.pathExtension.isEmpty { name += ".\(url.pathExtension)" }
+          let to = folder.appendingPathComponent(name)
+          // The file iOS hands over is deleted when this block returns, so it is copied now.
+          if (try? FileManager.default.copyItem(at: url, to: to)) != nil {
+            lock.lock()
+            files.append(to.path)
+            lock.unlock()
+          }
+        }
+      } else if provider.canLoadObject(ofClass: NSString.self) {
+        group.enter()
+        _ = provider.loadObject(ofClass: NSString.self) { text, _ in
+          defer { group.leave() }
+          if let text = text as? String {
+            lock.lock()
+            texts.append(text)
+            lock.unlock()
+          }
+        }
+      }
+    }
+    group.notify(queue: .main) { [weak self] in
+      self?.channel?.invokeMethod("dropped", arguments: ["files": files, "text": texts.joined(separator: "\n")])
     }
   }
 }

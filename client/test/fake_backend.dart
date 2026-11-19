@@ -763,6 +763,95 @@ class FakeBackend implements Backend {
   Future<void> registerWidgetPushToken(String widgetKey, String token, {required String kind, bool? sandbox}) async =>
       widgetPushTokens.add((widgetKey, token, kind));
 
+  // Watches (D-410)
+  /// The signed-in watches [listWatchKeys] answers (all workspaces; filtered by org).
+  List<WatchKeyView> watchKeys = [];
+
+  /// Registrations, as (org, fingerprint, name); deleted ids.
+  final watchKeysRegistered = <(String, String, String)>[];
+  final watchKeysDeleted = <String>[];
+
+  /// Fails registrations while set.
+  Object? watchRegisterError;
+
+  /// What [watchPrefs] answers; null is a server from before watches.
+  WatchPrefsView? storedWatchPrefs = const WatchPrefsView(quickReplies: ['On my way', 'Thanks', 'Yes', 'No']);
+  final watchPrefsUpdates = <({WatchAllowance? allow, bool? showDetails, List<String>? quickReplies})>[];
+
+  /// Codes a watch shows, by normalized code; claimed codes, as (code, org).
+  final watchCodes = <String, WatchCodeView>{};
+  final watchCodesClaimed = <(String, String)>[];
+
+  @override
+  Future<List<WatchKeyView>> listWatchKeys(String orgId) async => [for (final k in watchKeys) if (k.orgId == orgId) k];
+
+  @override
+  Future<WatchKeyView> registerWatchKey({
+    required String orgId,
+    required String fingerprint,
+    required WatchSystem platform,
+    required String name,
+    String? model,
+    String? appVersion,
+    String? osVersion,
+  }) async {
+    final error = watchRegisterError;
+    if (error != null) throw error;
+    watchKeysRegistered.add((orgId, fingerprint, name));
+    final key = WatchKeyView(
+      id: 'watch${watchKeysRegistered.length}',
+      orgId: orgId,
+      platform: platform,
+      name: name,
+      model: model,
+      createdAt: DateTime.utc(2026, 11, 19),
+    );
+    watchKeys = [...watchKeys, key];
+    return key;
+  }
+
+  @override
+  Future<void> deleteWatchKey(String id) async {
+    watchKeysDeleted.add(id);
+    watchKeys = [for (final k in watchKeys) if (k.id != id) k];
+  }
+
+  @override
+  Future<WatchPrefsView?> watchPrefs() async => storedWatchPrefs;
+
+  @override
+  Future<WatchPrefsView> updateWatchPrefs({WatchAllowance? allow, bool? showDetails, List<String>? quickReplies}) async {
+    watchPrefsUpdates.add((allow: allow, showDetails: showDetails, quickReplies: quickReplies));
+    final now = storedWatchPrefs ?? const WatchPrefsView();
+    return storedWatchPrefs = now.copyWith(
+      allow: allow,
+      showDetails: showDetails,
+      // Empty goes back to the built-in list.
+      quickReplies: quickReplies == null ? null : (quickReplies.isEmpty ? const ['On my way', 'Thanks', 'Yes', 'No'] : quickReplies),
+    );
+  }
+
+  @override
+  Future<WatchCodeView?> watchCodeInfo(String code) async => watchCodes[code];
+
+  @override
+  Future<WatchKeyView?> claimWatchCode(String code, String orgId) async {
+    final info = watchCodes.remove(code);
+    if (info == null) return null;
+    watchCodesClaimed.add((code, orgId));
+    final key = WatchKeyView(
+      id: 'code-watch${watchCodesClaimed.length}',
+      orgId: orgId,
+      platform: info.platform,
+      name: info.name,
+      model: info.model,
+      pairedBy: 'code',
+      createdAt: DateTime.utc(2026, 11, 19),
+    );
+    watchKeys = [...watchKeys, key];
+    return key;
+  }
+
   @override
   Future<void> dismissSuggestion(
     String id, {

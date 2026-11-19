@@ -30,23 +30,26 @@ PDF renderer, Caddy for HTTPS, the web app, and Prometheus and Grafana for monit
 
 | Folder                  | What's in it                                                                                                       |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `apps/server`           | The API (`src/api`) and the worker (`src/worker`), billing, Casama Link (`src/link`) and the pages server (`src/pages`) |
+| `apps/server`           | The API (`src/api`, with the watch routes in `src/api/routes/watch.ts`) and the worker (`src/worker`), billing, Casama Link (`src/link`) and the pages server (`src/pages`) |
 | `apps/supervisor`       | The supervisor's HTTP API and terminal proxy                                                                       |
-| `packages/contracts`    | Every route and schema (Zod). The OpenAPI document and the Dart client are generated from it                      |
-| `packages/agent`        | The agent runtime: the run loop, context building, memory, tools, the model gateway and integrations              |
+| `packages/contracts`    | Every route and schema (Zod), including the watch's (`src/watch.ts`, `src/routes/watch.ts`). The OpenAPI document and the Dart client are generated from it |
+| `packages/agent`        | The agent runtime: the run loop, context building, memory, tools, the model gateway and integrations; the watch's plain words and snapshots (`src/watch.ts`) |
 | `packages/db`           | The Drizzle schema pulled from the migrations, the database client, `withUserSession`, and test helpers           |
-| `packages/domain`       | Pure logic with no I/O: roles, approvals, budgets, limits                                                          |
+| `packages/domain`       | Pure logic with no I/O: roles, approvals, budgets, limits, and which risks a watch may allow (`src/watch.ts`)     |
 | `packages/sandbox`      | The computer provider interface, the Docker provider, the `computerd` client and object stores                    |
 | `packages/mcp`          | `@casama/mcp`, the MCP server that lets coding tools drive your bots                                               |
 | `packages/plugin-check` | `casama-plugin-check`, the plugin checker, also run as a GitHub Action                                              |
 | `packages/evals`        | Agent evaluations and their tasks                                                                                  |
 | `packages/observability`| Logging, OpenTelemetry and error reporting                                                                         |
 | `client`                | The Flutter app for iOS, Android, macOS, Windows, Linux and the web                                                |
+| `client/ios/CasamaWatch` | The Apple Watch app (SwiftUI, watchOS 26). `CasamaWatchWidgets` beside it holds its complications, Smart Stack widgets and controls; `Shared` holds what both use (API client, models, key store, words) |
+| `client/wear`           | The Wear OS app: its own Gradle project, so phone builds never build it. Compose screens, tiles, complications, notifications |
+| `client/lib/features/watch` | The phone's side of watches: the bridge that signs a watch in, and Settings → Watch                           |
 | `dart/casama_api`       | The generated Dart REST client. Don't edit it by hand                                                              |
 | `dart/casama_sdk`       | The [Dart SDK](/develop/sdk): sign-in, typed run events, live run watching                                         |
 | `dart/cli`              | The [`casama` CLI](/develop/cli)                                                                                   |
 | `dart/computerd`        | The agent inside each computer, and on your own machine in desktop companion mode                                 |
-| `supabase`              | Migrations (the source of truth for the schema) and pgTAP tests in `supabase/tests`                               |
+| `supabase`              | Migrations (the source of truth for the schema) and pgTAP tests in `supabase/tests`. Watch keys are in `20270207100001_watch_keys.sql` |
 | `infra`                 | Compose files, computer images, the egress proxy, TURN, the remote access connector, backups, Helm, monitoring    |
 | `ee`                    | Enterprise features under a separate license: audit log export and SAML single sign-on                            |
 | `skills`                | The skills bundled with every server                                                                               |
@@ -56,7 +59,7 @@ PDF renderer, Caddy for HTTPS, the web app, and Prometheus and Grafana for monit
 | `docs-site`             | These docs (VitePress)                                                                                             |
 | `deploy`                | One-click deploy templates for hosting platforms                                                                   |
 | `examples`              | A sample plugin and a sample SDK app                                                                               |
-| `scripts`               | Development, test and packaging scripts                                                                            |
+| `scripts`               | Development, test and packaging scripts. For the watch apps: `gen-watch-strings.mjs` (their words, from `app_en.arb`), `package-wear.sh`, `test-watch-swift.sh`, `test-wear-kotlin.sh` |
 | `docs`                  | Project records: architecture notes and the decision log                                                          |
 
 ## One chat message, end to end
@@ -103,6 +106,8 @@ The schema is in `supabase/migrations`. The tables you'll meet first:
   **`secrets`** and **`model_credentials`**.
 - **`creations`**: the Library, one row per thing a bot made (pages, images, files).
 - **`usage_ledger`**: every model call and every second of computer time, with its cost.
+- **`watch_keys`**: one row per signed-in watch (only the key's fingerprint), with **`watch_key_requests`**
+  for sign-in codes and **`watch_prefs`** for what a person's watches may do.
 
 Model keys and named secrets live in Supabase Vault. Tables hold only a reference to them.
 

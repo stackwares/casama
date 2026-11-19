@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:casama_sdk/casama_sdk.dart' show CreationKind;
 import 'backend.dart' show PackFrom;
 import 'widgets.dart';
 
@@ -23,7 +22,10 @@ import '../features/bots/watchers_screen.dart';
 import '../features/search/search_view.dart';
 import '../features/groups/group_chats.dart';
 import '../features/library/creation_detail.dart';
-import '../features/library/library_screen.dart';
+import '../features/settings/fold_screen.dart';
+import '../ui/outside_shell.dart';
+import '../ui/shell_layout.dart';
+import 'app_page.dart';
 import '../features/welcome/welcome_screen.dart';
 import '../features/selfhost/guided_setup.dart';
 import '../features/selfhost/local_server.dart';
@@ -37,7 +39,6 @@ import '../features/auth/sign_in_screen.dart';
 import '../features/link/link_screen.dart';
 import '../features/link/link_server_screen.dart';
 import '../features/link/pairing.dart';
-import '../features/bots/bots_screen.dart';
 import '../features/computer/computer_screen.dart';
 import '../features/computer/computers_screen.dart';
 import '../features/computer/live_view_screen.dart';
@@ -67,7 +68,6 @@ import '../features/gallery/gallery_submit.dart';
 import '../features/settings/appearance_screen.dart';
 import '../features/settings/customize_screen.dart';
 import '../features/usage/usage_screen.dart';
-import '../features/settings/settings_screen.dart';
 import '../features/skills/skill_catalog_screen.dart';
 import '../features/skills/skills_screen.dart';
 import '../features/timeline/timeline_screen.dart';
@@ -84,6 +84,7 @@ import '../features/auth/account_screen.dart';
 import '../features/auth/passkeys_screen.dart';
 import '../features/app_lock/app_lock_screen.dart';
 import '../features/widgets/widgets_screen.dart';
+import '../features/watch/watch_screen.dart';
 import '../features/auth/two_step_screen.dart';
 import '../features/board/board_screen.dart';
 import '../features/workspaces/join_flow.dart';
@@ -115,12 +116,46 @@ String _screenName(GoRouterState state) {
 GoRouterPageBuilder _page(
   Widget Function(BuildContext context, GoRouterState state) build,
 ) =>
-    (context, state) => MaterialPage<void>(
+    (context, state) => AppPage<void>(
       key: state.pageKey,
       name: state.name ?? _screenName(state),
       arguments: state.extra,
       child: build(context, state),
     );
+
+/// A [_page] outside the app shell (sign-in, the welcome steps, a join link): it fills the window, so
+/// it keeps clear of a folding phone's side strip and fold by itself (D-411).
+GoRouterPageBuilder _outside(
+  Widget Function(BuildContext context, GoRouterState state) build,
+) => _page((context, state) => OutsideShell(child: build(context, state)));
+
+/// A [_page] that is a list other pages open from (Settings): with two panes the shell shows it
+/// on the left and the page opened from it has nothing of its own to go back to (D-411).
+GoRouterPageBuilder _listPage(
+  Widget Function(BuildContext context, GoRouterState state) build,
+) =>
+    (context, state) => _ListPage<void>(
+      key: state.pageKey,
+      name: state.name ?? _screenName(state),
+      arguments: state.extra,
+      child: build(context, state),
+    );
+
+class _ListPage<T> extends AppPage<T> implements ListRootPage {
+  const _ListPage({required super.child, super.key, super.name, super.arguments});
+}
+
+class _TabPage<T> extends CustomTransitionPage<T> implements ListRootPage {
+  const _TabPage({
+    required super.child,
+    required super.transitionsBuilder,
+    super.key,
+    super.name,
+    super.arguments,
+    super.transitionDuration,
+    super.reverseTransitionDuration,
+  });
+}
 
 /// The web and desktop are click and open: pages and tabs switch there with no transition.
 bool _switchesInstantly(BuildContext context) =>
@@ -137,7 +172,7 @@ GoRouterPageBuilder _tab(
   final duration = MediaQuery.disableAnimationsOf(context) || _switchesInstantly(context)
       ? Duration.zero
       : tabSwitchDuration;
-  return CustomTransitionPage<void>(
+  return _TabPage<void>(
     key: state.pageKey,
     name: state.name ?? _screenName(state),
     arguments: state.extra,
@@ -277,31 +312,31 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/sign-in',
-        pageBuilder: _page((_, _) => const SignInScreen()),
+        pageBuilder: _outside((_, _) => const SignInScreen()),
       ),
       GoRoute(
         path: '/onboarding',
-        pageBuilder: _page((_, _) => const OnboardingScreen()),
+        pageBuilder: _outside((_, _) => const OnboardingScreen()),
       ),
       GoRoute(
         path: '/setup',
-        pageBuilder: _page((_, _) => const SetupScreen()),
+        pageBuilder: _outside((_, _) => const SetupScreen()),
       ),
       GoRoute(
         path: '/welcome',
-        pageBuilder: _page((_, _) => const WelcomeScreen()),
+        pageBuilder: _outside((_, _) => const WelcomeScreen()),
       ),
       GoRoute(
         path: '/two-step',
-        pageBuilder: _page((_, _) => const TwoStepPromptScreen()),
+        pageBuilder: _outside((_, _) => const TwoStepPromptScreen()),
       ),
       GoRoute(
         path: '/new-password',
-        pageBuilder: _page((_, _) => const NewPasswordScreen()),
+        pageBuilder: _outside((_, _) => const NewPasswordScreen()),
       ),
       GoRoute(
         path: '/join/:token',
-        pageBuilder: _page(
+        pageBuilder: _outside(
           (_, s) => JoinScreen(
             key: ValueKey(s.uri.toString()),
             invite: s.pathParameters['token']!,
@@ -316,7 +351,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/i/:code',
-        pageBuilder: _page(
+        pageBuilder: _outside(
           (_, s) => InviteLinkScreen(
             key: ValueKey(s.pathParameters['code']),
             code: s.pathParameters['code']!,
@@ -326,7 +361,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // A sign-in QR code read by the phone's camera (D-296): casama.ai/pair#v=1&s=…&c=…
       GoRoute(
         path: '/pair',
-        pageBuilder: _page(
+        pageBuilder: _outside(
           (context, s) => PairLandingScreen(
             key: ValueKey(s.uri.toString()),
             link: PairLink.fromValues({
@@ -340,7 +375,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Where a self-hosted server sends its owner to approve its link code (D-296).
       GoRoute(
         path: '/link',
-        pageBuilder: _page(
+        pageBuilder: _outside(
           (_, s) => LinkServerScreen(
             key: ValueKey(s.uri.toString()),
             code: s.uri.queryParameters['code'],
@@ -391,23 +426,23 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/joined/:orgId',
-        pageBuilder: _page(
+        pageBuilder: _outside(
           (_, s) => JoinedScreen(orgId: s.pathParameters['orgId']!),
         ),
       ),
       GoRoute(
         path: '/join-team',
-        pageBuilder: _page((_, _) => const JoinTeamScreen()),
+        pageBuilder: _outside((_, _) => const JoinTeamScreen()),
       ),
       GoRoute(
         path: '/oauth/consent/:id',
-        pageBuilder: _page(
+        pageBuilder: _outside(
           (_, s) => McpConsentScreen(requestId: s.pathParameters['id']!),
         ),
       ),
       GoRoute(
         path: '/import/:token',
-        pageBuilder: _page(
+        pageBuilder: _outside(
           (_, s) => ImportBotScreen(token: s.pathParameters['token']!),
         ),
       ),
@@ -417,20 +452,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           key: state.pageKey,
           child: PasskeySuggestion(
             child: WhatsNewGate(
-              child: HomeShell(location: state.uri.path, child: child),
+              child: HomeShell(location: state.uri.path, uri: state.uri, child: child),
             ),
           ),
         ),
         routes: [
           GoRoute(
             path: '/bots',
-            pageBuilder: _tab(
-              (context, _) =>
-                  layoutFor(MediaQuery.sizeOf(context).width) ==
-                      LayoutSize.desktop
-                  ? const SizedBox.shrink()
-                  : const BotsScreen(),
-            ),
+            // The list on a phone; nothing where the shell lists the chats itself (D-383, D-411).
+            pageBuilder: _tab((_, _) => const ChatsTabPage()),
             routes: [
               GoRoute(
                 path: ':botId/chat',
@@ -617,15 +647,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           // The Library (D-274): everything bots made. ?kind=, ?bot= and ?q= filter it.
           GoRoute(
             path: '/library',
-            pageBuilder: _tab(
-              (_, s) => LibraryScreen(
-                key: ValueKey(s.uri.query),
-                kind: CreationKind.values.where((k) => k.value == s.uri.queryParameters['kind']).firstOrNull,
-                botId: s.uri.queryParameters['bot'],
-                projectId: s.uri.queryParameters['project'],
-                query: s.uri.queryParameters['q'] ?? '',
-              ),
-            ),
+            pageBuilder: _tab((_, s) => LibraryTabPage(uri: s.uri)),
             routes: [
               GoRoute(
                 path: ':id',
@@ -727,7 +749,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/settings',
-            pageBuilder: _page((_, _) => const SettingsScreen()),
+            pageBuilder: _listPage((_, _) => const SettingsRootPage()),
             routes: [
               GoRoute(
                 path: 'keys',
@@ -962,6 +984,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'permissions',
                 pageBuilder: _page((_, _) => const DevicePermissionsScreen()),
               ),
+              // A folding phone's screens as Casama sees them (D-411).
+              GoRoute(
+                path: 'fold',
+                pageBuilder: _page((_, _) => const FoldScreen()),
+              ),
               GoRoute(
                 path: 'admin',
                 pageBuilder: _page((_, s) => AdminScreen(tab: s.uri.queryParameters['tab'])),
@@ -1012,6 +1039,10 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'widgets',
                 pageBuilder: _page((_, _) => const WidgetsScreen()),
+              ),
+              GoRoute(
+                path: 'watch',
+                pageBuilder: _page((_, _) => const WatchScreen()),
               ),
               GoRoute(
                 path: 'link',

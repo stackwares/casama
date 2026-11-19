@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:stupid_simple_sheet/stupid_simple_sheet.dart';
 
+import '../core/fold/fold.dart';
 import '../theme/app_tokens.dart';
 
 extension AdaptiveSheetRouteX on Widget {
@@ -54,8 +55,9 @@ class TallSheet extends StatelessWidget {
     final body = Material(
       type: MaterialType.transparency,
       child: Padding(
-        // Rises with the keyboard so the field being typed in stays visible.
-        padding: EdgeInsets.only(bottom: view.viewInsets.bottom),
+        // Rises with the keyboard so the field being typed in stays visible. On an iPhone Duo the
+        // content keeps clear of the side strip (D-411); the sheet's surface runs under it.
+        padding: foldSideInsets(context, besideFold: false).copyWith(bottom: view.viewInsets.bottom),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

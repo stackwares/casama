@@ -1,9 +1,11 @@
 /**
  * Apple's push service (APNs) over HTTP/2 with a token (.p8) key, as Apple's provider API
- * documents. Shared by iPhone call rings (PushKit, D-135) and widget refresh pushes (D-405).
+ * documents. Shared by iPhone call rings (PushKit, D-135), widget refresh pushes (D-405) and
+ * alerts to Apple Watches' own tokens (D-410).
  */
 import { createPrivateKey, createSign } from "node:crypto";
 import { connect } from "node:http2";
+import type { PushMessage } from "./notifications.ts";
 
 export const APNS_PRODUCTION_URL = "https://api.push.apple.com";
 export const APNS_SANDBOX_URL = "https://api.sandbox.push.apple.com";
@@ -107,5 +109,79 @@ export class ApnsClient {
       session.close();
     }
     return out;
+  }
+}
+
+/** Where a push to a watch's own token goes (D-410): Apple's token and its environment. */
+export interface WatchPushTarget {
+  token: string;
+  sandbox: boolean;
+}
+
+/**
+ * Sends alerts straight to Apple Watches' own tokens (D-410, docs/WATCH-PROTOCOL.md §4): with this
+ * server's Apple key, or through Casama Cloud's relay (CloudRelayPushSender.sendWatch).
+ */
+export interface WatchAlertSender {
+  sendWatch(targets: WatchPushTarget[], message: PushMessage): Promise<{ invalidTokens: string[] }>;
+}
+
+/** The watch app's bundle id, under the phone app's. */
+export const watchAppTopic = (appBundleId = "ai.casama.app") => `${appBundleId}.watchkitapp`;
+
+/**
+ * An alert's body as Apple reads it: the same category, thread and data as the phone's copy, so the
+ * watch app's notification layouts and buttons work on either.
+ */
+export function apnsAlertBody(message: PushMessage): string {
+  return JSON.stringify({
+    aps: {
+      alert: { title: message.title, body: message.body },
+      sound: "default",
+      ...(message.category ? { category: message.category } : {}),
+      ...(message.threadId ? { "thread-id": message.threadId } : {}),
+      ...(message.interruption ? { "interruption-level": message.interruption } : {}),
+    },
+    ...message.data,
+    ...(message.link ? { link: message.link } : {}),
+    ...(message.tag ? { tag: message.tag } : {}),
+  });
+}
+
+/**
+ * Alerts to Apple Watch apps' own tokens (D-410, Phase 5), so a watch away from its phone hears
+ * a request. Each carries the phone copy's `apns-collapse-id`, so a watch that gets both shows one.
+ */
+export class ApnsWatchSender implements WatchAlertSender {
+  private readonly client: ApnsClient;
+  private readonly topic: string;
+  constructor(client: ApnsClient, o: { appBundleId?: string } = {}) {
+    this.client = client;
+    this.topic = watchAppTopic(o.appBundleId);
+  }
+
+  async sendWatch(targets: WatchPushTarget[], message: PushMessage) {
+    const invalidTokens: string[] = [];
+    const body = apnsAlertBody(message);
+    const headers = () => ({
+      "apns-topic": this.topic,
+      "apns-push-type": "alert",
+      "apns-priority": message.priority === "normal" ? "5" : "10",
+      "apns-expiration": String(Math.floor(Date.now() / 1000) + 86_400),
+      ...(message.tag && Buffer.byteLength(message.tag) <= 64
+        ? { "apns-collapse-id": message.tag }
+        : {}),
+    });
+    for (const sandbox of [false, true]) {
+      const tokens = targets.filter((t) => t.sandbox === sandbox).map((t) => t.token);
+      if (!tokens.length) continue;
+      try {
+        const results = await this.client.sendAll(tokens, headers, body, { sandbox });
+        invalidTokens.push(...results.filter(apnsTokenGone).map((r) => r.token));
+      } catch {
+        // Apple out of reach: the phone's copy still mirrors to the watch.
+      }
+    }
+    return { invalidTokens };
   }
 }

@@ -445,7 +445,7 @@ Every event in §6 exists to answer one of these. If an event answers none of th
 |---|---|
 | `app` | `casama` |
 | `environment` | `production`, `staging`, `development` |
-| `platform` | `ios`, `android`, `macos`, `windows`, `linux`, `web`, `server` |
+| `platform` | `ios`, `android`, `macos`, `windows`, `linux`, `web`, `server`; `watchos`, `wearos` on server events about a watch (`watch_paired`, `watch_action`, D-410) |
 | `distribution` | `app_store`, `google_play`, `mac_app_store`, `direct`, `web` (app only) |
 | `server_kind` | `cloud`, `self_hosted`, `local` (app only) |
 | `source` | `client`, `server` |

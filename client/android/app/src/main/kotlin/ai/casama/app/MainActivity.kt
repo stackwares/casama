@@ -62,6 +62,8 @@ class MainActivity : FlutterFragmentActivity() {
         // icon to the home screen. The glance itself goes through home_widget.
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "casama/widgets")
             .setMethodCallHandler { call, result -> WidgetChannel.handle(applicationContext, call, result) }
+        // Wear OS (D-410): signing a watch in, workspace switches and sign-out (WATCH-PROTOCOL §3).
+        WearBridge.attach(MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "casama/watch"), this)
         // The island on Android (D-324, Phase 5): the app's feed drawn as live notifications.
         val island = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "casama/island")
         LiveRun.channel = island
@@ -102,6 +104,7 @@ class MainActivity : FlutterFragmentActivity() {
         CallService.stop(applicationContext)
         PushNotifications.detach()
         LiveRun.channel = null
+        WearBridge.detach()
         super.cleanUpFlutterEngine(flutterEngine)
     }
 

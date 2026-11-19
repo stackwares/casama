@@ -61,6 +61,7 @@ import 'package:casama_api/src/api/teach_api.dart';
 import 'package:casama_api/src/api/telephony_api.dart';
 import 'package:casama_api/src/api/usage_api.dart';
 import 'package:casama_api/src/api/voice_api.dart';
+import 'package:casama_api/src/api/watch_api.dart';
 import 'package:casama_api/src/api/watchers_api.dart';
 import 'package:casama_api/src/api/webhooks_api.dart';
 import 'package:casama_api/src/api/widgets_api.dart';
@@ -439,6 +440,12 @@ class CasamaApi {
   /// by doing that all interceptors will not be executed
   VoiceApi getVoiceApi() {
     return VoiceApi(dio);
+  }
+
+  /// Get WatchApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  WatchApi getWatchApi() {
+    return WatchApi(dio);
   }
 
   /// Get WatchersApi instance, base route and serializer can be overridden by a given but be careful,

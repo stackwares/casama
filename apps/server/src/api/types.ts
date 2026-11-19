@@ -40,6 +40,8 @@ export interface AppDeps {
     voip?: import("@casama/agent").VoipSender;
     /** The push relay's sender of widget refresh pushes (D-405). */
     widgets?: import("@casama/agent").WidgetPushSender;
+    /** The push relay's sender of alerts to Apple Watches' own tokens (D-410). */
+    watch?: import("@casama/agent").WatchAlertSender;
     /** The relay for live view away from the computer (D-296). */
     turn?: import("../link/turn.ts").TurnProvider;
   };
@@ -76,6 +78,20 @@ export interface AppDeps {
   readiness: Record<string, () => Promise<void>>;
   /** Widget refresh pushes for changes made through the API (D-405); unset: none. */
   glance?: import("@casama/agent").GlancePusher;
+  /** Pushes the API sends itself, such as a watch's "Open on phone" (D-410); unset: none. */
+  notifications?: import("@casama/agent").NotificationService;
+}
+
+/** A request signed with a watch key (D-410): whose watch, in which workspace, with which limits. */
+export interface WatchCaller {
+  id: string;
+  userId: string;
+  orgId: string;
+  platform: "watchos" | "wearos";
+  /** What the person lets their watches allow (watch_prefs.allow). */
+  allow: "medium" | "low" | "none";
+  /** Show details on the watch; off is private. */
+  showDetails: boolean;
 }
 
 /** A request signed with a widget key (D-405): who it reads for, in which workspace. */
@@ -91,5 +107,6 @@ export type AppEnv = {
     claims?: JwtClaims;
     requestId: string;
     widgetKey?: WidgetCaller;
+    watchKey?: WatchCaller;
   };
 };

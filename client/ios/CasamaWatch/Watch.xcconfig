@@ -1,0 +1,7 @@
+// The watch targets' base settings (D-410). Not Flutter/Debug.xcconfig or Release.xcconfig:
+// those pull in the CocoaPods settings for Runner, which would link iOS frameworks into a watchOS
+// binary. Only Flutter's generated values are needed here, for the version.
+#include? "../Flutter/Generated.xcconfig"
+
+MARKETING_VERSION = $(FLUTTER_BUILD_NAME)
+CURRENT_PROJECT_VERSION = $(FLUTTER_BUILD_NUMBER)

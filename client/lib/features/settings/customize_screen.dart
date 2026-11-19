@@ -83,13 +83,15 @@ class _CustomizeScreenState extends ConsumerState<CustomizeScreen> {
         title: l10n.customize,
         actions: [
           if (custom)
-            Padding(
-              padding: const EdgeInsets.only(right: AppSpace.xxs),
-              child: TextButton.icon(
-                key: const Key('saveTheme'),
-                onPressed: () => saveCurrentLook(context, ref),
-                icon: const Icon(LucideIcons.bookmarkPlus, size: 18),
-                label: Text(l10n.save),
+            HeaderTextAction(
+              child: Padding(
+                padding: const EdgeInsets.only(right: AppSpace.xxs),
+                child: TextButton.icon(
+                  key: const Key('saveTheme'),
+                  onPressed: () => saveCurrentLook(context, ref),
+                  icon: const Icon(LucideIcons.bookmarkPlus, size: 18),
+                  label: Text(l10n.save),
+                ),
               ),
             ),
         ],

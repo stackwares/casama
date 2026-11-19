@@ -80,6 +80,9 @@ Approval notifications have **Approve** and **Deny** buttons on iPhone, Mac and 
 to unlock the device first. The app opens on the approval and shows the answer. High-risk
 approvals only have **Review**, which opens them so you can read everything first.
 
+On a watch, the buttons are **Allow** and **Deny** and work without the phone: see
+[Casama on Apple Watch](./apple-watch) and [Casama on Wear OS](./wear-os).
+
 ::: tip Self-hosting
 Push needs a Firebase project: the server needs its service account and the apps must be built
 with the same project. Without it, the in-app inbox still works. See

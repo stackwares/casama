@@ -518,6 +518,22 @@ Class | Method | HTTP request | Description
 [*VoiceApi*](doc/VoiceApi.md) | [**transcribeAudio**](doc/VoiceApi.md#transcribeaudio) | **POST** /v1/voice/transcribe | Dictation: send recorded audio (raw body, audio/_* content type, up to 10 MB)
 [*VoiceApi*](doc/VoiceApi.md) | [**voiceHeartbeat**](doc/VoiceApi.md#voiceheartbeat) | **POST** /v1/voice/live/{id}/heartbeat | Keep a live call&#39;s server record open; calls silent for 2 minutes are ended and billed
 [*VoiceApi*](doc/VoiceApi.md) | [**voiceTool**](doc/VoiceApi.md#voicetool) | **POST** /v1/voice/tool | Run a tool call from a live call as an agent run (same approvals); waits up to 25 s
+[*WatchApi*](doc/WatchApi.md) | [**claimWatchCode**](doc/WatchApi.md#claimwatchcode) | **POST** /v1/watch-codes/{code}/claim | Allow the watch showing this code: it is signed in to this workspace as the caller
+[*WatchApi*](doc/WatchApi.md) | [**deleteWatchKey**](doc/WatchApi.md#deletewatchkey) | **DELETE** /v1/watch-keys/{id} | Remove a watch: its key stops working at once
+[*WatchApi*](doc/WatchApi.md) | [**getWatchApproval**](doc/WatchApi.md#getwatchapproval) | **GET** /v1/watch/approvals/{id} | A request in everyday words, and whether this watch may allow it (tap, hold, phone)
+[*WatchApi*](doc/WatchApi.md) | [**getWatchChat**](doc/WatchApi.md#getwatchchat) | **GET** /v1/watch/chats/{bot_id} | A bot&#39;s latest chat as plain text, cut to fit a watch; cards, pages and files as one line
+[*WatchApi*](doc/WatchApi.md) | [**getWatchCode**](doc/WatchApi.md#getwatchcode) | **GET** /v1/watch-codes/{code} | Which watch shows this code, before allowing it. Five wrong tries end a code
+[*WatchApi*](doc/WatchApi.md) | [**getWatchPrefs**](doc/WatchApi.md#getwatchprefs) | **GET** /v1/watch-prefs | The person&#39;s watch settings: what a watch may allow, details, quick replies
+[*WatchApi*](doc/WatchApi.md) | [**getWatchRun**](doc/WatchApi.md#getwatchrun) | **GET** /v1/watch/runs/{id} | A run&#39;s whole state. With &#x60;stream&#x3D;1&#x60; (or &#x60;Accept: text/event-stream&#x60;): server-sent &#x60;run&#x60; events, each a whole WatchRun, ended by the server after 110 seconds or when the run ends; ask again to go on
+[*WatchApi*](doc/WatchApi.md) | [**getWatchSelf**](doc/WatchApi.md#getwatchself) | **GET** /v1/watch/me | Who this watch is signed in as, its settings and what the server can do for it
+[*WatchApi*](doc/WatchApi.md) | [**listWatchKeys**](doc/WatchApi.md#listwatchkeys) | **GET** /v1/watch-keys | The person&#39;s signed-in watches in a workspace
+[*WatchApi*](doc/WatchApi.md) | [**registerWatchKey**](doc/WatchApi.md#registerwatchkey) | **POST** /v1/watch-keys | Sign a watch in from the phone: register the fingerprint of the key the watch made. Registering the same fingerprint again updates it
+[*WatchApi*](doc/WatchApi.md) | [**requestWatchCode**](doc/WatchApi.md#requestwatchcode) | **POST** /v1/watch/codes | A watch with no phone app at hand asks for a code to show (signed out; five an hour per address). It then tries GET /v1/watch/me with its key until the code is allowed
+[*WatchApi*](doc/WatchApi.md) | [**signOutWatch**](doc/WatchApi.md#signoutwatch) | **DELETE** /v1/watch-keys/current | Sign out of this watch: its key is deleted
+[*WatchApi*](doc/WatchApi.md) | [**updateWatchPrefs**](doc/WatchApi.md#updatewatchprefs) | **PATCH** /v1/watch-prefs | Change the person&#39;s watch settings
+[*WatchApi*](doc/WatchApi.md) | [**updateWatchSelf**](doc/WatchApi.md#updatewatchself) | **PUT** /v1/watch-keys/current | A watch describes itself: its push token, app and system versions
+[*WatchApi*](doc/WatchApi.md) | [**watchAsk**](doc/WatchApi.md#watchask) | **POST** /v1/watch/ask | Ask a bot or reply in a chat, with text or a recording (transcribed and sent in one step). Without conversation_id it starts a new chat
+[*WatchApi*](doc/WatchApi.md) | [**watchHandoff**](doc/WatchApi.md#watchhandoff) | **POST** /v1/watch/handoff | Open on iPhone / phone: the person&#39;s phones get a notification that opens the link
 [*WatchersApi*](doc/WatchersApi.md) | [**createPageWatcher**](doc/WatchersApi.md#createpagewatcher) | **POST** /v1/watchers | Watch part of a public page; the bot is woken when it changes
 [*WatchersApi*](doc/WatchersApi.md) | [**deleteWatcher**](doc/WatchersApi.md#deletewatcher) | **DELETE** /v1/watchers/{id} | 
 [*WatchersApi*](doc/WatchersApi.md) | [**listWatchers**](doc/WatchersApi.md#listwatchers) | **GET** /v1/watchers | 
@@ -785,6 +801,7 @@ Class | Method | HTTP request | Description
  - [DeletedRule](doc/DeletedRule.md)
  - [DeletedTeach](doc/DeletedTeach.md)
  - [DeletedUserFact](doc/DeletedUserFact.md)
+ - [DeletedWatchKey](doc/DeletedWatchKey.md)
  - [DeletedWatcher](doc/DeletedWatcher.md)
  - [DeletedWidgetKey](doc/DeletedWidgetKey.md)
  - [DeviceAccessRequestedEvent](doc/DeviceAccessRequestedEvent.md)
@@ -902,6 +919,7 @@ Class | Method | HTTP request | Description
  - [GlanceNeeds](doc/GlanceNeeds.md)
  - [GlanceRoutine](doc/GlanceRoutine.md)
  - [GlanceRoutineChoice](doc/GlanceRoutineChoice.md)
+ - [GlanceRun](doc/GlanceRun.md)
  - [GlanceStarter](doc/GlanceStarter.md)
  - [GlanceTask](doc/GlanceTask.md)
  - [GlanceTasks](doc/GlanceTasks.md)
@@ -1393,6 +1411,36 @@ Class | Method | HTTP request | Description
  - [WallpaperDownloadRequest](doc/WallpaperDownloadRequest.md)
  - [WallpaperPhoto](doc/WallpaperPhoto.md)
  - [WallpaperPhotoList](doc/WallpaperPhotoList.md)
+ - [WatchAllowLevel](doc/WatchAllowLevel.md)
+ - [WatchApproval](doc/WatchApproval.md)
+ - [WatchAsk](doc/WatchAsk.md)
+ - [WatchAsked](doc/WatchAsked.md)
+ - [WatchAttachment](doc/WatchAttachment.md)
+ - [WatchAudio](doc/WatchAudio.md)
+ - [WatchBotHeader](doc/WatchBotHeader.md)
+ - [WatchChat](doc/WatchChat.md)
+ - [WatchCode](doc/WatchCode.md)
+ - [WatchCodeClaim](doc/WatchCodeClaim.md)
+ - [WatchCodeInfo](doc/WatchCodeInfo.md)
+ - [WatchCodeRequest](doc/WatchCodeRequest.md)
+ - [WatchHandoff](doc/WatchHandoff.md)
+ - [WatchHandoffSent](doc/WatchHandoffSent.md)
+ - [WatchKey](doc/WatchKey.md)
+ - [WatchKeyList](doc/WatchKeyList.md)
+ - [WatchKeyRegister](doc/WatchKeyRegister.md)
+ - [WatchMessage](doc/WatchMessage.md)
+ - [WatchPlatform](doc/WatchPlatform.md)
+ - [WatchPrefs](doc/WatchPrefs.md)
+ - [WatchPrefsUpdate](doc/WatchPrefsUpdate.md)
+ - [WatchRisk](doc/WatchRisk.md)
+ - [WatchRun](doc/WatchRun.md)
+ - [WatchSelf](doc/WatchSelf.md)
+ - [WatchSelfFeatures](doc/WatchSelfFeatures.md)
+ - [WatchSelfPerson](doc/WatchSelfPerson.md)
+ - [WatchSelfSaved](doc/WatchSelfSaved.md)
+ - [WatchSelfUpdate](doc/WatchSelfUpdate.md)
+ - [WatchSignedOut](doc/WatchSignedOut.md)
+ - [WatchSurface](doc/WatchSurface.md)
  - [Watcher](doc/Watcher.md)
  - [WatcherList](doc/WatcherList.md)
  - [WelcomeChat](doc/WelcomeChat.md)

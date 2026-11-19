@@ -6581,6 +6581,230 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/watch-codes/{code}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Allow the watch showing this code: it is signed in to this workspace as the caller */
+        post: operations["claimWatchCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/watch-keys/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a watch: its key stops working at once */
+        delete: operations["deleteWatchKey"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/watch/approvals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A request in everyday words, and whether this watch may allow it (tap, hold, phone) */
+        get: operations["getWatchApproval"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/watch/chats/{bot_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A bot's latest chat as plain text, cut to fit a watch; cards, pages and files as one line */
+        get: operations["getWatchChat"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/watch-codes/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Which watch shows this code, before allowing it. Five wrong tries end a code */
+        get: operations["getWatchCode"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/watch-prefs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The person's watch settings: what a watch may allow, details, quick replies */
+        get: operations["getWatchPrefs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change the person's watch settings */
+        patch: operations["updateWatchPrefs"];
+        trace?: never;
+    };
+    "/v1/watch/runs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A run's whole state. With `stream=1` (or `Accept: text/event-stream`): server-sent `run` events, each a whole WatchRun, ended by the server after 110 seconds or when the run ends; ask again to go on */
+        get: operations["getWatchRun"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/watch/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Who this watch is signed in as, its settings and what the server can do for it */
+        get: operations["getWatchSelf"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/watch-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The person's signed-in watches in a workspace */
+        get: operations["listWatchKeys"];
+        put?: never;
+        /** Sign a watch in from the phone: register the fingerprint of the key the watch made. Registering the same fingerprint again updates it */
+        post: operations["registerWatchKey"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/watch/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** A watch with no phone app at hand asks for a code to show (signed out; five an hour per address). It then tries GET /v1/watch/me with its key until the code is allowed */
+        post: operations["requestWatchCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/watch-keys/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** A watch describes itself: its push token, app and system versions */
+        put: operations["updateWatchSelf"];
+        post?: never;
+        /** Sign out of this watch: its key is deleted */
+        delete: operations["signOutWatch"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/watch/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask a bot or reply in a chat, with text or a recording (transcribed and sent in one step). Without conversation_id it starts a new chat */
+        post: operations["watchAsk"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/watch/handoff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Open on iPhone / phone: the person's phones get a notification that opens the link */
+        post: operations["watchHandoff"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -7384,6 +7608,7 @@ export interface components {
             wallpapers_enabled?: boolean;
             chatgpt_sign_in?: boolean;
             server_voice?: ("live" | "read_aloud" | "dictation")[];
+            watch?: boolean;
             signup_proofs?: ("app_check" | "pow")[];
             trace_url_template?: string | null;
             google_client_ids?: string[];
@@ -13550,6 +13775,7 @@ export interface components {
                 items: components["schemas"]["GlanceNeed"][];
             };
             bots: components["schemas"]["GlanceBot"][];
+            runs: components["schemas"]["GlanceRun"][];
             next: components["schemas"]["GlanceRoutine"][];
             routines: components["schemas"]["GlanceRoutineChoice"][];
             brief: components["schemas"]["GlanceBrief"];
@@ -13601,6 +13827,25 @@ export interface components {
             last_at: string | null;
             /** Format: date-time */
             busy_at: string | null;
+            link: string;
+        };
+        GlanceRun: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            bot_id: string;
+            bot: string;
+            bot_avatar: string;
+            /** @enum {string} */
+            phase: "working" | "needs_ok" | "take_over";
+            step: string;
+            steps: number;
+            /** Format: date-time */
+            started_at: string;
+            /** Format: uuid */
+            approval_id: string | null;
+            /** @enum {string|null} */
+            risk: "low" | "medium" | "high" | null;
             link: string;
         };
         GlanceRoutine: {
@@ -13714,6 +13959,235 @@ export interface components {
         };
         WidgetKeyUpdate: {
             private?: boolean;
+        };
+        WatchKey: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            org_id: string;
+            platform: components["schemas"]["WatchPlatform"];
+            name: string;
+            model: string | null;
+            app_version: string | null;
+            os_version: string | null;
+            /** @enum {string} */
+            paired_by: "phone" | "code";
+            has_push: boolean;
+            /** Format: date-time */
+            last_used_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        /** @enum {string} */
+        WatchPlatform: "watchos" | "wearos";
+        WatchCodeClaim: {
+            /** Format: uuid */
+            org_id: string;
+        };
+        DeletedWatchKey: {
+            /** Format: uuid */
+            deleted: string;
+        };
+        WatchApproval: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            run_id: string;
+            /** Format: uuid */
+            bot_id: string;
+            bot: string;
+            bot_avatar: string;
+            /** @enum {string} */
+            status: "pending" | "approved" | "denied" | "expired";
+            title: string;
+            details: string[];
+            risk: components["schemas"]["WatchRisk"];
+            payment: boolean;
+            /** @enum {string} */
+            can_allow: "tap" | "hold" | "phone";
+            /** @enum {string|null} */
+            why_phone: "high_risk" | "payment" | "setting" | "workspace" | "not_yours" | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            expires_at: string;
+            link: string;
+        };
+        /** @enum {string} */
+        WatchRisk: "low" | "medium" | "high";
+        WatchChat: {
+            bot: components["schemas"]["WatchBotHeader"];
+            /** Format: uuid */
+            conversation_id: string | null;
+            messages: components["schemas"]["WatchMessage"][];
+            /** Format: uuid */
+            run_id: string | null;
+            link: string;
+        };
+        WatchBotHeader: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            avatar: string;
+            /** @enum {string} */
+            status: "idle" | "working" | "waiting" | "disabled";
+        };
+        WatchMessage: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            role: "user" | "assistant";
+            text: string;
+            cut: boolean;
+            attachments: components["schemas"]["WatchAttachment"][];
+            /** Format: date-time */
+            at: string;
+            can_speak: boolean;
+        };
+        WatchAttachment: {
+            /** @enum {string} */
+            kind: "page" | "image" | "video" | "audio" | "document" | "file" | "card" | "link";
+            title: string;
+        };
+        WatchCodeInfo: {
+            platform: components["schemas"]["WatchPlatform"];
+            name: string;
+            model: string | null;
+            /** Format: date-time */
+            expires_at: string;
+        };
+        WatchPrefs: {
+            allow: components["schemas"]["WatchAllowLevel"];
+            show_details: boolean;
+            quick_replies: string[];
+        };
+        /** @enum {string} */
+        WatchAllowLevel: "medium" | "low" | "none";
+        WatchRun: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            bot_id: string;
+            bot: string;
+            bot_avatar: string;
+            /** Format: uuid */
+            conversation_id: string | null;
+            /** @enum {string} */
+            phase: "working" | "needs_ok" | "take_over" | "finished" | "problem" | "stopped";
+            step: string;
+            steps: number;
+            /** Format: date-time */
+            started_at: string;
+            /** Format: date-time */
+            ended_at: string | null;
+            approval: components["schemas"]["WatchApproval"] & (Record<string, never> | null);
+            reply: components["schemas"]["WatchMessage"] & (Record<string, never> | null);
+            link: string;
+        };
+        WatchSelf: {
+            /** Format: uuid */
+            key_id: string;
+            /** Format: uuid */
+            org_id: string;
+            org_name: string;
+            person: {
+                name: string;
+            };
+            prefs: components["schemas"]["WatchPrefs"];
+            hide_reply_text: boolean;
+            /** Format: uuid */
+            ask_bot_id: string | null;
+            features: {
+                dictation: boolean;
+                speech: boolean;
+                out_of_credits: boolean;
+            };
+        };
+        WatchKeyList: {
+            items: components["schemas"]["WatchKey"][];
+        };
+        WatchKeyRegister: {
+            /** Format: uuid */
+            org_id: string;
+            fingerprint: components["schemas"]["WatchFingerprint"];
+            platform: components["schemas"]["WatchPlatform"];
+            name: string;
+            model?: string;
+            app_version?: string;
+            os_version?: string;
+        };
+        /** @description sha256hex("casama-watch-key:" + key) */
+        WatchFingerprint: string;
+        WatchCode: {
+            code: string;
+            /** Format: date-time */
+            expires_at: string;
+            poll_every_s: number;
+        };
+        WatchCodeRequest: {
+            fingerprint: components["schemas"]["WatchFingerprint"];
+            platform: components["schemas"]["WatchPlatform"];
+            name: string;
+            model?: string;
+            app_version?: string;
+            os_version?: string;
+        };
+        WatchSignedOut: {
+            /** @enum {boolean} */
+            ok: true;
+        };
+        WatchPrefsUpdate: {
+            allow?: components["schemas"]["WatchAllowLevel"];
+            show_details?: boolean;
+            quick_replies?: string[] | null;
+        };
+        WatchSelfSaved: {
+            /** @enum {boolean} */
+            ok: true;
+        };
+        WatchSelfUpdate: {
+            push_token?: string | null;
+            /** @enum {string} */
+            push_kind?: "apns" | "fcm";
+            sandbox?: boolean;
+            app_version?: string;
+            os_version?: string;
+            name?: string;
+        };
+        WatchAsked: {
+            /** Format: uuid */
+            conversation_id: string;
+            /** Format: uuid */
+            message_id: string;
+            /** Format: uuid */
+            run_id: string | null;
+            heard: string;
+        };
+        WatchAsk: {
+            /** Format: uuid */
+            bot_id: string;
+            /** Format: uuid */
+            conversation_id?: string;
+            text?: string;
+            audio?: components["schemas"]["WatchAudio"];
+            language?: string;
+            /** Format: date-time */
+            asked_at?: string;
+            surface?: components["schemas"]["WatchSurface"];
+        };
+        WatchAudio: {
+            data: string;
+            /** @enum {string} */
+            mime: "audio/aac" | "audio/mp4" | "audio/m4a" | "audio/x-m4a" | "audio/ogg" | "audio/webm" | "audio/3gpp" | "audio/wav";
+        };
+        /** @enum {string} */
+        WatchSurface: "app" | "notification" | "complication" | "smart_stack" | "tile" | "control" | "siri";
+        WatchHandoffSent: {
+            sent: number;
+        };
+        WatchHandoff: {
+            link: string;
+            title: string;
         };
     };
     responses: never;
@@ -36820,6 +37294,781 @@ export interface operations {
             };
             /** @description Not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    claimWatchCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchCodeClaim"];
+            };
+        };
+        responses: {
+            /** @description Signed in */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchKey"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteWatchKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeletedWatchKey"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getWatchApproval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The request */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchApproval"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getWatchChat: {
+        parameters: {
+            query?: {
+                /** @description Default: the latest direct chat */
+                conversation_id?: string;
+            };
+            header?: never;
+            path: {
+                bot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The chat */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchChat"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getWatchCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The watch */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchCodeInfo"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getWatchPrefs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchPrefs"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateWatchPrefs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchPrefsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchPrefs"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getWatchRun: {
+        parameters: {
+            query?: {
+                stream?: "0" | "1";
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The run */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchRun"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    getWatchSelf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description This watch */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchSelf"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    listWatchKeys: {
+        parameters: {
+            query: {
+                org_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Most recently used first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchKeyList"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    registerWatchKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchKeyRegister"];
+            };
+        };
+        responses: {
+            /** @description Signed in */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchKey"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    requestWatchCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchCodeRequest"];
+            };
+        };
+        responses: {
+            /** @description The code */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchCode"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateWatchSelf: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchSelfUpdate"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchSelfSaved"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    signOutWatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Signed out */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchSignedOut"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    watchAsk: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Retries with the same key return the first result */
+                "idempotency-key"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchAsk"];
+            };
+        };
+        responses: {
+            /** @description Sent */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchAsked"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Rate limited */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    watchHandoff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchHandoff"];
+            };
+        };
+        responses: {
+            /** @description Sent */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WatchHandoffSent"];
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Not authenticated */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

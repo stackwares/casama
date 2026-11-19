@@ -49,6 +49,7 @@ export const GLANCE_LIMITS = {
   recent: 6,
   tasks: 3,
   starters: 4,
+  runs: 3,
   briefChars: 600,
 } as const;
 
@@ -324,7 +325,52 @@ export async function buildGlance(db: Database, o: BuildGlanceOptions): Promise<
                              when 'in_progress' then 2 else 3 end, t.updated_at desc
       limit ${GLANCE_LIMITS.tasks}`);
 
-    return { misc, needs, bots, next, routines, brief, lately, recent, tasks };
+    // Live runs the person started by hand (D-410): the island's own (live-runs.ts PERSON_TRIGGERS),
+    // top-level only, newest first. A run left unfinished for half a day is not live any more.
+    const runs = await tx.execute<{
+      id: string;
+      bot_id: string;
+      bot: string;
+      bot_avatar: string | null;
+      status: string;
+      conversation_id: string | null;
+      conv_kind: string | null;
+      started_at: string | null;
+      created_at: string;
+      steps: number;
+      step_type: string | null;
+      step_payload: unknown;
+      takeover: boolean;
+      approval_id: string | null;
+      approval_risk: string | null;
+      approval_tool: string | null;
+    }>(sql`
+      select r.id, r.bot_id, b.name as bot, b.avatar_url as bot_avatar, r.status, r.conversation_id,
+             c.kind as conv_kind, r.started_at, r.created_at,
+             (select count(*)::int from public.run_events e
+               where e.run_id = r.id and e.type = 'tool.started') as steps,
+             ev.type as step_type, ev.payload as step_payload,
+             exists (select 1 from public.takeover_requests t where t.run_id = r.id
+                     and t.status in ('pending', 'taken') and t.expires_at > now()) as takeover,
+             ap.id as approval_id, ap.risk as approval_risk, ap.tool_name as approval_tool
+      from public.runs r
+      join public.bots b on b.id = r.bot_id
+      left join public.conversations c on c.id = r.conversation_id
+      left join lateral (
+        select e.type, e.payload from public.run_events e
+        where e.run_id = r.id and e.type in ('tool.started', 'message.delta')
+        order by e.seq desc limit 1) ev on true
+      left join lateral (
+        select a.id, a.risk, a.tool_name from public.approvals a
+        where a.run_id = r.id and a.status = 'pending' and a.expires_at > now()
+        order by a.created_at desc limit 1) ap on true
+      where r.org_id = ${org}::uuid and r.created_by = ${me}::uuid and r.parent_run_id is null
+        and r.trigger in ('chat', 'mention', 'voice', 'replay', 'teach')
+        and r.status in ('queued', 'running', 'waiting_approval', 'waiting_takeover')
+        and r.created_at > now() - interval '12 hours'
+      order by r.created_at desc limit ${GLANCE_LIMITS.runs}`);
+
+    return { misc, needs, bots, next, routines, brief, lately, recent, tasks, runs };
   });
 
   const priv = o.private === true;
@@ -386,6 +432,50 @@ export async function buildGlance(db: Database, o: BuildGlanceOptions): Promise<
       last_at: last ? iso(last.at) : null,
       busy_at: isoOrNull(b.busy_at),
       link: `/bots/${b.id}/chat`,
+    };
+  });
+
+  // The person's live runs (D-410) in the island's words, so the watch and the Lock Screen agree.
+  const runs: Glance["runs"] = q.runs.map((r) => {
+    const phase: Glance["runs"][0]["phase"] =
+      r.approval_id || r.status === "waiting_approval"
+        ? "needs_ok"
+        : r.takeover || r.status === "waiting_takeover"
+          ? "take_over"
+          : "working";
+    const step =
+      phase === "needs_ok"
+        ? r.approval_tool
+          ? liveStepWords(r.approval_tool)
+          : LIVE_LABELS.needsOk
+        : phase === "take_over"
+          ? LIVE_LABELS.takeOver
+          : r.step_type === "tool.started"
+            ? liveStepWords(
+                String((contentKeys.open(r.step_payload) as { tool?: unknown } | null)?.tool ?? ""),
+              )
+            : r.step_type === "message.delta"
+              ? LIVE_LABELS.writing
+              : LIVE_LABELS.thinking;
+    const risk = r.approval_risk;
+    return {
+      id: r.id,
+      bot_id: r.bot_id,
+      bot: glanceCut(r.bot, 80),
+      bot_avatar: avatar(r.bot_avatar),
+      phase,
+      step: priv ? "" : glanceCut(step, 80),
+      steps: r.steps,
+      started_at: iso(r.started_at ?? r.created_at),
+      approval_id: r.approval_id,
+      risk: risk === "low" || risk === "medium" || risk === "high" ? risk : null,
+      link: r.approval_id
+        ? `/approvals/${r.approval_id}`
+        : !r.conversation_id
+          ? `/bots/${r.bot_id}/chat`
+          : r.conv_kind === "group"
+            ? `/groups/${r.conversation_id}`
+            : `/bots/${r.bot_id}/chat?c=${r.conversation_id}`,
     };
   });
 
@@ -530,6 +620,7 @@ export async function buildGlance(db: Database, o: BuildGlanceOptions): Promise<
     org_id: org,
     needs: { count: needsCount, items: needsItems },
     bots,
+    runs,
     next,
     routines,
     brief,

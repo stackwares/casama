@@ -3,6 +3,7 @@ import {
   AiSdkGateway,
   ApnsClient,
   ApnsVoipSender,
+  ApnsWatchSender,
   ApnsWidgetSender,
   builtinTools,
   CloudRelayPushSender,
@@ -397,6 +398,13 @@ export async function startWorker(opts: WorkerOptions) {
       onRelayError: (e) => opts.logger.warn("push relay", { error: e.message }),
     });
   const notifications = new NotificationService(db, push);
+  // Apple Watches' own tokens (D-410): this server's Apple key, else the cloud's relay, since only
+  // Casama's key can reach the store's watch app.
+  notifications.watch = opts.apns
+    ? new ApnsWatchSender(new ApnsClient(opts.apns), { appBundleId: opts.apnsAppTopic })
+    : push instanceof CloudRelayPushSender
+      ? push
+      : undefined;
   // The island's pushes (D-324): a followed run's state to the phones that follow it, while the
   // app sleeps. Every run event this worker appends passes by.
   const livePusher = new LiveRunPusher(db, push, {

@@ -1,0 +1,45 @@
+{
+  "bot": {
+    "id": "22222222-2222-4222-8222-222222222222",
+    "name": "Milo",
+    "avatar": "mascot:focused",
+    "status": "idle"
+  },
+  "conversation_id": "66666666-6666-4666-8666-666666666666",
+  "messages": [
+    {
+      "id": "77777777-7777-4777-8777-777777777771",
+      "role": "assistant",
+      "text": "Morning! Dana asked to move the call. Want me to find a time?",
+      "cut": false,
+      "attachments": [],
+      "at": "2026-11-19T09:10:00.000Z",
+      "can_speak": true
+    },
+    {
+      "id": "77777777-7777-4777-8777-777777777772",
+      "role": "user",
+      "text": "Book Thursday with Dana",
+      "cut": false,
+      "attachments": [],
+      "at": "2026-11-19T09:13:00.000Z",
+      "can_speak": false
+    },
+    {
+      "id": "77777777-7777-4777-8777-777777777773",
+      "role": "assistant",
+      "text": "Done. I booked Thursday at 3 with Dana and sent her the invite. Her flight lands at 1:40, so there's time.",
+      "cut": false,
+      "attachments": [
+        {
+          "kind": "page",
+          "title": "Q4 pricing"
+        }
+      ],
+      "at": "2026-11-19T09:14:30.000Z",
+      "can_speak": true
+    }
+  ],
+  "run_id": null,
+  "link": "/bots/22222222-2222-4222-8222-222222222222/chat?c=66666666-6666-4666-8666-666666666666"
+}

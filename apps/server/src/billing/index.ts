@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import {
   ApnsClient,
   ApnsVoipSender,
+  ApnsWatchSender,
   ApnsWidgetSender,
   computerProviderCostUsd,
   computerRates,
@@ -25,10 +26,14 @@ export * from "./service.ts";
 export * from "./types.ts";
 
 /** PEM/JSON given inline or as a file path. */
-export const inlineOrFile = (v: string) =>
-  !v.trim().startsWith("{") && !v.includes("-----BEGIN") && existsSync(v)
+export const inlineOrFile = (v: string) => {
+  // A PEM key kept on one line in an env file (Compose's .env has no multi-line values) writes
+  // its line breaks as \n. JSON keeps its own escapes, so only a bare PEM is unescaped.
+  if (v.trim().startsWith("-----BEGIN")) return v.trim().replace(/\\n/g, "\n");
+  return !v.trim().startsWith("{") && !v.includes("-----BEGIN") && existsSync(v)
     ? readFileSync(v, "utf8")
     : v;
+};
 
 /**
  * Widget refresh pushes straight to Apple (D-405), with the same Apple key as call rings
@@ -37,6 +42,23 @@ export const inlineOrFile = (v: string) =>
 export function apnsWidgetsFromEnv(env: Env): ApnsWidgetSender | undefined {
   if (!env.APNS_KEY_P8 || !env.APNS_KEY_ID || !env.APNS_TEAM_ID) return undefined;
   return new ApnsWidgetSender(
+    new ApnsClient({
+      keyP8: inlineOrFile(env.APNS_KEY_P8),
+      keyId: env.APNS_KEY_ID,
+      teamId: env.APNS_TEAM_ID,
+      url: env.APNS_URL,
+    }),
+    { appBundleId: env.APNS_TOPIC_APP },
+  );
+}
+
+/**
+ * Alerts straight to Apple Watches' own tokens (D-410), with the same Apple key and the watch
+ * app's topic (APNS_TOPIC_APP + ".watchkitapp"). Unset without a key.
+ */
+export function apnsWatchFromEnv(env: Env): ApnsWatchSender | undefined {
+  if (!env.APNS_KEY_P8 || !env.APNS_KEY_ID || !env.APNS_TEAM_ID) return undefined;
+  return new ApnsWatchSender(
     new ApnsClient({
       keyP8: inlineOrFile(env.APNS_KEY_P8),
       keyId: env.APNS_KEY_ID,
@@ -142,6 +164,8 @@ export function linkFromEnv(env: Env, db?: Database) {
     // ...their widget refresh pushes (D-405): Android through Firebase, iPhones and Macs through
     // this cloud's Apple key (skipped without one).
     widgets: push ? widgetPushSender({ push, apple: apnsWidgetsFromEnv(env) }) : undefined,
+    // ...alerts to their Apple Watches' own tokens (D-410) through this cloud's Apple key...
+    watch: apnsWatchFromEnv(env),
     // ...and their iPhone call rings through this cloud's Apple key.
     voip:
       env.APNS_KEY_P8 && env.APNS_KEY_ID && env.APNS_TEAM_ID

@@ -17,6 +17,8 @@ abstract class _$GlanceCWProxy {
 
   Glance bots(List<GlanceBot> bots);
 
+  Glance runs(List<GlanceRun> runs);
+
   Glance next(List<GlanceRoutine> next);
 
   Glance routines(List<GlanceRoutineChoice> routines);
@@ -49,6 +51,7 @@ abstract class _$GlanceCWProxy {
     String orgId,
     GlanceNeeds needs,
     List<GlanceBot> bots,
+    List<GlanceRun> runs,
     List<GlanceRoutine> next,
     List<GlanceRoutineChoice> routines,
     GlanceBrief? brief,
@@ -82,6 +85,9 @@ class _$GlanceCWProxyImpl implements _$GlanceCWProxy {
 
   @override
   Glance bots(List<GlanceBot> bots) => call(bots: bots);
+
+  @override
+  Glance runs(List<GlanceRun> runs) => call(runs: runs);
 
   @override
   Glance next(List<GlanceRoutine> next) => call(next: next);
@@ -126,6 +132,7 @@ class _$GlanceCWProxyImpl implements _$GlanceCWProxy {
     Object? orgId = const $CopyWithPlaceholder(),
     Object? needs = const $CopyWithPlaceholder(),
     Object? bots = const $CopyWithPlaceholder(),
+    Object? runs = const $CopyWithPlaceholder(),
     Object? next = const $CopyWithPlaceholder(),
     Object? routines = const $CopyWithPlaceholder(),
     Object? brief = const $CopyWithPlaceholder(),
@@ -157,6 +164,10 @@ class _$GlanceCWProxyImpl implements _$GlanceCWProxy {
           ? _value.bots
           // ignore: cast_nullable_to_non_nullable
           : bots as List<GlanceBot>,
+      runs: runs == const $CopyWithPlaceholder() || runs == null
+          ? _value.runs
+          // ignore: cast_nullable_to_non_nullable
+          : runs as List<GlanceRun>,
       next: next == const $CopyWithPlaceholder() || next == null
           ? _value.next
           // ignore: cast_nullable_to_non_nullable
@@ -220,6 +231,7 @@ Glance _$GlanceFromJson(Map<String, dynamic> json) => $checkedCreate(
         'org_id',
         'needs',
         'bots',
+        'runs',
         'next',
         'routines',
         'brief',
@@ -243,6 +255,12 @@ Glance _$GlanceFromJson(Map<String, dynamic> json) => $checkedCreate(
         'bots',
         (v) => (v as List<dynamic>)
             .map((e) => GlanceBot.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      ),
+      runs: $checkedConvert(
+        'runs',
+        (v) => (v as List<dynamic>)
+            .map((e) => GlanceRun.fromJson(e as Map<String, dynamic>))
             .toList(),
       ),
       next: $checkedConvert(
@@ -304,6 +322,7 @@ Map<String, dynamic> _$GlanceToJson(Glance instance) => <String, dynamic>{
   'org_id': instance.orgId,
   'needs': instance.needs.toJson(),
   'bots': instance.bots.map((e) => e.toJson()).toList(),
+  'runs': instance.runs.map((e) => e.toJson()).toList(),
   'next': instance.next.map((e) => e.toJson()).toList(),
   'routines': instance.routines.map((e) => e.toJson()).toList(),
   'brief': instance.brief?.toJson(),
