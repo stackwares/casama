@@ -1,6 +1,6 @@
 # After a call: the call card: plan
 
-Status: **built** (2026-11-19, D-428). Oliver left every §10 choice to the defaults ("you decide all for me").
+Status: **built** (2026-11-19, D-429). Oliver left every §10 choice to the defaults ("you decide all for me").
 
 Oliver, 2026-11-19: "after a call we only see a chat bubble with the duration of the call. What
 could we improve here? … make it the best it can be."
