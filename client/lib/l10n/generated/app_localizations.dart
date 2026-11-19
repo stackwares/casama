@@ -16033,13 +16033,13 @@ abstract class AppLocalizations {
   /// No description provided for @paywallDisclosureStore.
   ///
   /// In en, this message translates to:
-  /// **'{price} {period}, renewing automatically until you cancel. Payment is charged to your {store} account. Cancel anytime in your {store} account settings at least 24 hours before it renews.'**
+  /// **'{price} {period}, renewing automatically until you cancel. Payment is charged to your {store}. Cancel anytime in your {store} settings at least 24 hours before it renews.'**
   String paywallDisclosureStore(String price, String period, String store);
 
   /// No description provided for @paywallDisclosureStoreTrial.
   ///
   /// In en, this message translates to:
-  /// **'Free for {days} days, then {price} {period}, renewing automatically until you cancel. Payment is charged to your {store} account when the trial ends. Cancel in your {store} account settings at least 24 hours before the trial ends and you won\'t be charged.'**
+  /// **'Free for {days} days, then {price} {period}, renewing automatically until you cancel. Payment is charged to your {store} when the trial ends. Cancel in your {store} settings at least 24 hours before the trial ends and you won\'t be charged.'**
   String paywallDisclosureStoreTrial(
     int days,
     String price,
@@ -16092,7 +16092,7 @@ abstract class AppLocalizations {
   /// No description provided for @storeAccountGoogle.
   ///
   /// In en, this message translates to:
-  /// **'Google Play'**
+  /// **'Google Play account'**
   String get storeAccountGoogle;
 
   /// No description provided for @termsOfUse.

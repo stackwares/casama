@@ -816,6 +816,7 @@ void main() {
       final disclosure = tester.widget<Text>(find.byKey(const Key('purchaseDisclosure'))).data!;
       expect(disclosure, contains(r'$9.99 per month'));
       expect(disclosure, contains('Apple Account'));
+      expect(disclosure, isNot(contains('Account account')), reason: 'the store name already says account');
       expect(disclosure, contains('24 hours before it renews'));
       expect(find.byKey(const Key('termsOfUse')), findsOneWidget);
       await tester.tap(find.byKey(const Key('privacyPolicy')));
