@@ -10330,7 +10330,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String paywallDisclosureStore(String price, String period, String store) {
-    return '$price $period, renewing automatically until you cancel. Payment is charged to your $store account. Cancel anytime in your $store account settings at least 24 hours before it renews.';
+    return '$price $period, renewing automatically until you cancel. Payment is charged to your $store. Cancel anytime in your $store settings at least 24 hours before it renews.';
   }
 
   @override
@@ -10340,7 +10340,7 @@ class AppLocalizationsEn extends AppLocalizations {
     String period,
     String store,
   ) {
-    return 'Free for $days days, then $price $period, renewing automatically until you cancel. Payment is charged to your $store account when the trial ends. Cancel in your $store account settings at least 24 hours before the trial ends and you won\'t be charged.';
+    return 'Free for $days days, then $price $period, renewing automatically until you cancel. Payment is charged to your $store when the trial ends. Cancel in your $store settings at least 24 hours before the trial ends and you won\'t be charged.';
   }
 
   @override
@@ -10377,7 +10377,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get storeAccountApple => 'Apple Account';
 
   @override
-  String get storeAccountGoogle => 'Google Play';
+  String get storeAccountGoogle => 'Google Play account';
 
   @override
   String get termsOfUse => 'Terms of Use';
