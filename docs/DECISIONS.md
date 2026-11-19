@@ -6322,3 +6322,22 @@ instead of spending a turn discovering them via `tools.load`.
   `/settings/integrations/:id`. Direct chats with at least one connected app show
   `Message <bot> · @ to mention an app`. Routine prompts are out of scope.
 
+
+## D-437 A phone's push and call-ring tokens follow whoever signed in on it last (2026-11-20)
+
+A bot's "Ringing you now" never rang an iPhone that had switched accounts: the phone signed out of
+one account and into another, and neither its push token (`devices`) nor its PushKit token
+(`voip_tokens`) ever moved to the new account. Three causes:
+
+- **Sign-out left both rows behind,** so the old account's pushes and calls kept reaching that phone.
+- **The new account couldn't take them:** both tables key on the token, and the app's upsert hit
+  the old account's row, which RLS hides, so Postgres refused it (`42501`). This held even after a
+  relaunch.
+- **Both registrars ran once per app session,** so a sign-in after a sign-out without restarting
+  the app didn't register at all.
+
+Fixes: a `before insert` trigger on both tables (`take_over_device_token`, security definer) removes
+a row with the same token that belongs to someone else, only when the row being inserted is the
+signed-in person's own; so the latest sign-in on a phone owns its tokens, and shipped apps get
+this without an update. The app now deletes this device's two rows on Sign Out and Sign Out
+Everywhere, and registers push and the VoIP token again on every sign-in.

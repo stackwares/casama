@@ -460,6 +460,7 @@ class SupabaseBackend implements Backend {
       } catch (_) {}
     }
     final me = userId;
+    await _giveBackPushTokens();
     await _takeBackKeys();
     // Forget the Google account too, so the next Continue with Google offers every account.
     if (_googleSetUp != null) {
@@ -480,6 +481,22 @@ class SupabaseBackend implements Backend {
       if (isSignedIn) await WatchKeyStore.signOutFailed(me);
       rethrow;
     }
+  }
+
+  /// This device's push and call-ring tokens go with the session (D-437): a shared phone mustn't
+  /// keep buzzing and ringing for someone who signed out. The next account's registration takes
+  /// them over anyway, but someone may not sign in again at all.
+  Future<void> _giveBackPushTokens() async {
+    final device = _deviceToken;
+    final voip = _voipToken;
+    _deviceToken = null;
+    _voipToken = null;
+    try {
+      if (device != null) await supabase.from('devices').delete().eq('fcm_token', device).timeout(const Duration(seconds: 5));
+    } catch (_) {}
+    try {
+      if (voip != null) await supabase.from('voip_tokens').delete().eq('token', voip).timeout(const Duration(seconds: 5));
+    } catch (_) {}
   }
 
   /// The keys this device handed out go with the session, while it can still delete them. Used by
@@ -588,6 +605,7 @@ class SupabaseBackend implements Backend {
   Future<void> signOutEverywhere() async {
     // First, while this session still works: the watches' and this device's widget keys.
     final me = userId;
+    await _giveBackPushTokens();
     await _takeBackKeys(everywhere: true);
     await _endSession(me, () => supabase.auth.signOut(scope: sb.SignOutScope.global));
   }
@@ -3095,12 +3113,17 @@ class SupabaseBackend implements Backend {
   Future<void> registerVoipToken(String token) async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null || token.isEmpty) return;
+    _voipToken = token;
     await supabase.from('voip_tokens').upsert({
       'user_id': userId,
       'token': token,
       'last_seen_at': DateTime.now().toUtc().toIso8601String(),
     }, onConflict: 'token');
   }
+
+  /// This device's push and VoIP tokens as registered, so signing out can take them back (D-437).
+  String? _deviceToken;
+  String? _voipToken;
 
   /// This phone's Firebase token, once registered: an iPhone's live tokens carry it, since Firebase
   /// needs it beside the Live Activity's own token (D-324, decision 8).
@@ -3191,6 +3214,7 @@ class SupabaseBackend implements Backend {
   Future<void> registerDevice(String platform, String token) async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return;
+    _deviceToken = token;
     final row = {
       'user_id': userId,
       'platform': platform,

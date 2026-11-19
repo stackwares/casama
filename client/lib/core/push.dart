@@ -171,6 +171,22 @@ class PushRegistrar {
     }
   }
 
+  /// Every sign-in, not just the first: another account signing in after a sign-out, without the
+  /// app restarting, registers this device again so its pushes go to whoever is signed in now
+  /// (D-437).
+  Future<void> signedIn() async {
+    if (!_started) return start();
+    try {
+      final messaging = FirebaseMessaging.instance;
+      final status = (await messaging.getNotificationSettings()).authorizationStatus;
+      if (status == AuthorizationStatus.authorized || status == AuthorizationStatus.provisional) {
+        await _register(messaging);
+      }
+    } catch (e) {
+      debugPrint('push registration failed: $e');
+    }
+  }
+
   /// This phone's Firebase token without asking for notification permission (D-324): a Live
   /// Activity's server updates need it beside the activity's own token, even with alerts off.
   /// Null when push isn't set up or the phone has no token yet.
@@ -239,6 +255,9 @@ class PushRegistrar {
 
   var _listening = false;
 
+  /// [_register] runs on every sign-in; one token refresh listener is enough.
+  var _refreshing = false;
+
   /// Taps first, before the token: getting one waits on APNs and the network and can fail (no APNs
   /// token yet on an iPhone's first launch, offline, a server error), and a tap that started the app
   /// has to open its screen even then.
@@ -279,8 +298,11 @@ class PushRegistrar {
         await messaging.setForegroundNotificationPresentationOptions(alert: false, badge: true, sound: false);
       }
       if (token != null) await _backend.registerDevice(_platform(), token);
-      // ignore: deprecated_member_use
-      _subs.add(messaging.onTokenRefresh.listen((t) => _backend.registerDevice(_platform(), t)));
+      if (!_refreshing) {
+        _refreshing = true;
+        // ignore: deprecated_member_use
+        _subs.add(messaging.onTokenRefresh.listen((t) => _backend.registerDevice(_platform(), t)));
+      }
     } catch (e) {
       // Push is best effort; the in-app inbox still has every notification.
       debugPrint('push registration failed: $e');
@@ -420,7 +442,7 @@ final pushProvider = Provider<PushRegistrar>((ref) {
     ref.listen<int>(inboxBadgeProvider, (_, count) => unawaited(notificationsChannel.invokeMethod('badge', {'count': count}).catchError((_) => null)), fireImmediately: true);
   }
   ref.listen(signedInProvider, (_, next) {
-    if (next.value == true) unawaited(registrar.start());
+    if (next.value == true) unawaited(registrar.signedIn());
   }, fireImmediately: true);
   return registrar;
 });

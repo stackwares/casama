@@ -263,6 +263,13 @@ class PhoneCalls {
     for (final call in await surface.answered()) {
       unawaited(answer(call));
     }
+  }
+
+  /// The iPhone's PushKit token, on every sign-in: another account signing in after a sign-out
+  /// takes this phone's call rings over (D-437).
+  Future<void> registerToken() async {
+    final surface = ref.read(callSurfaceProvider);
+    if (!surface.native) return;
     try {
       final token = await surface.voipToken();
       if (token != null) await ref.read(backendProvider).registerVoipToken(token);
@@ -313,7 +320,7 @@ final phoneCallsProvider = Provider<PhoneCalls>((ref) {
   final calls = PhoneCalls(ref);
   ref.onDispose(calls.dispose);
   ref.listen(signedInProvider, (_, next) {
-    if (next.value == true) unawaited(calls.start());
+    if (next.value == true) unawaited(calls.start().then((_) => calls.registerToken()));
   }, fireImmediately: true);
   return calls;
 });
