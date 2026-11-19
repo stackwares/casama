@@ -1405,6 +1405,20 @@ class ChatController extends Notifier<ChatState> {
         );
   }
 
+  final _followedWaiting = <String>{};
+
+  /// A run in this chat asked the person for something (an approval, the screen) while another
+  /// run is the one on screen (D-413): a second bot in a group chat, or a routine beside a reply.
+  /// Its card is shown only by following it, so this chat moves to that run; before, the card
+  /// stayed out of the chat until the run on screen ended, and the bot that asked looked stuck.
+  /// When it ends, the chat reloads and follows what is still going. Once per run: an old
+  /// notification must not pull the chat back.
+  void followWaiting(String conversationId, String runId) {
+    if (state.conversationId != conversationId || !state.running || state.activeRunId == runId) return;
+    if (!_followedWaiting.add(runId)) return;
+    _attach(runId);
+  }
+
   void _startWatchdog(String runId) {
     _watchdog?.cancel();
     _watchdog = Timer.periodic(_watchdogTick, (_) => unawaited(_checkRun(runId)));

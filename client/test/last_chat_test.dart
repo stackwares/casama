@@ -181,7 +181,9 @@ void main() {
             kind: 'routine_result',
             title: '',
             body: '',
-            link: '/bots/$botId/chat?c=c1',
+            // For the conversation the chat opens on: one for another topic of the bot isn't
+            // shown here, and stays unread (D-413).
+            link: '/bots/$botId/chat?c=$convId',
             createdAt: DateTime.now(),
             botId: botId,
           ),

@@ -11,6 +11,7 @@ import {
 import { sql } from "drizzle-orm";
 import { attentionHold, type HoldReason, type Why } from "./attention.ts";
 import type { LiveTarget, LiveUpdate } from "./live-runs.ts";
+import { WATCHER_NO_MATCH } from "./watcher-match.ts";
 
 export interface PushMessage {
   title: string;
@@ -888,14 +889,19 @@ export async function replyPush(
   minMs = REPLY_PUSH_MIN_MS,
 ) {
   if (!notifications || !run.createdBy || !run.conversationId || run.parentRunId) return;
-  if (run.trigger !== "chat" && run.trigger !== "mention") return;
+  // A watcher that fired has news the person asked to be told (D-413): always, however fast it
+  // was. Before, nothing told them; its answer sat in a chat they had no reason to open.
+  const watcher = run.trigger === "watcher";
+  if (run.trigger !== "chat" && run.trigger !== "mention" && !watcher) return;
+  // The change wasn't what it watched for: the person isn't told.
+  if (watcher && outcome.ok && outcome.text.trim() === WATCHER_NO_MATCH) return;
   const [r] = await db.execute<{ ms: number; title: string | null; kind: string | null }>(sql`
     select (extract(epoch from (now() - r.created_at)) * 1000)::float8 as ms,
            c.title, c.kind
     from public.runs r left join public.conversations c on c.id = r.conversation_id
     where r.id = ${run.runId}::uuid`);
   // How long the person has waited, queue included.
-  if (!r || r.ms < minMs) return;
+  if (!r || r.ms < (watcher ? 0 : minMs)) return;
   // The phone already says "Casama" above a push: the default bot shows the chat's title (D-312).
   const title =
     run.botName.trim().toLowerCase() === "casama" ? r.title?.trim() || "Casama" : run.botName;

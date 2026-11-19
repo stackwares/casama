@@ -95,7 +95,7 @@ and tap **Save**.
 
 | App       | One conversation per                                         | How the reply goes back                       |
 | --------- | ------------------------------------------------------------ | --------------------------------------------- |
-| Telegram  | Chat                                                         | A message in the same chat                    |
+| Telegram  | Chat, or each topic in a group with topics                   | A message in the same chat, in the same topic |
 | Email     | Sender plus subject (`Re:` and `Fwd:` are ignored)           | A reply email with `Re:` and threading headers |
 | SMS       | Phone number                                                 | A text message                                |
 | Slack     | Slack thread                                                 | A reply in that thread                        |
@@ -304,7 +304,8 @@ iMessage has no bot API, so your own Mac does the work through the desktop app.
 4. In the bot's **Chat apps**, connect **iMessage** and pick your **Mac**.
 
 Your Mac reads new messages and sends replies through Messages. Casama checks for new messages every
-minute. The first check only takes a starting point, so old messages are never answered. Only the
+minute. The first check only takes a starting point, so old messages are never answered. Only
+one-to-one messages are read; group chats are left alone. Only the
 Mac's owner can connect it, and only bots allowed on that Mac can use it. Photos and files go both
 ways once the Mac has the latest desktop app; until then, the bot's files arrive as links. See
 [Your own computer](/guide/companion).

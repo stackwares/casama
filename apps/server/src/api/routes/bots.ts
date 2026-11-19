@@ -1107,15 +1107,15 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           await lockChat(tx, id);
           // Sent while the bot is working on something here: the message joins that run, which sees
           // it before its next step and decides whether to fold it in, switch, or finish first.
-          // Not a routine's run (a brief or a check-in working in this chat has its own
-          // instructions, a cheaper model and fewer tools, so it must not be the one to answer),
-          // and not a call's tool run (it does one thing and never looks for new messages).
+          // Not a routine's or a watcher's run (a brief or a check-in working in this chat has its
+          // own instructions, a cheaper model and fewer tools, so it must not be the one to
+          // answer), and not a call's tool run (it does one thing and never looks for new messages).
           if (!ui_action) {
             const [active] = await tx.execute<{ id: string; org_id: string }>(sql`
               select r.id, r.org_id from public.runs r
               where r.conversation_id = ${id}::uuid and r.status in ('queued', 'running')
                 and r.cancel_requested_at is null
-                and r.trigger not in ('routine', 'voice') and r.routine_id is null
+                and r.trigger not in ('routine', 'voice', 'watcher') and r.routine_id is null
                 and r.voice_call is null and r.parent_run_id is null
                 and exists (select 1 from public.messages m where m.run_id = r.id and m.role = 'user')
               order by r.created_at desc limit 1`);

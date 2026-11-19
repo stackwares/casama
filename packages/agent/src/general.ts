@@ -8,6 +8,7 @@
  */
 import { contentKeys, type Database } from "@casama/db";
 import { sql } from "drizzle-orm";
+import { WATCHER_NO_MATCH } from "./watcher-match.ts";
 
 /** The person's General conversation with a bot, made when they have none. */
 export async function mainConversation(db: Database, orgId: string, botId: string, userId: string) {
@@ -210,6 +211,13 @@ export async function postTopicResults(
   let posted = 0;
   for (const r of rows) {
     const reply = partsText(contentKeys.open(r.content));
+    // A watcher whose change wasn't what it watched for (D-413): nothing to tell.
+    if (reply === WATCHER_NO_MATCH) {
+      await db.execute(
+        sql`update public.conversations set result_run_id = ${r.run_id}::uuid where id = ${r.topic_id}::uuid`,
+      );
+      continue;
+    }
     const line = resultLine(reply) || "Done.";
     const id = await postFromBot(db, {
       orgId: r.org_id,

@@ -123,6 +123,70 @@ describe("watchers", () => {
     expect(r).toEqual({ status: "completed", trigger: "watcher" });
   });
 
+  /** What the bot posted in the person's General with this bot, and their reply notifications. */
+  const told = async () => {
+    const posts = await h.tdb.admin<{ content: Array<Record<string, string>> }[]>`
+      select m.content from public.messages m join public.conversations c on c.id = m.conversation_id
+      where c.bot_id = ${botId} and c.is_main and m.role = 'assistant' order by m.created_at`;
+    const pushes = await h.tdb.admin<{ payload: { body: string; link: string } }[]>`
+      select payload from public.notifications where user_id = ${owner.id} and kind = 'reply' order by created_at`;
+    return { posts: posts.map((p) => p.content), pushes: pushes.map((p) => p.payload) };
+  };
+  const toldAfter = async (n: number) => {
+    for (let i = 0; i < 100; i++) {
+      const t = await told();
+      if (t.posts.length >= n) return t;
+      await new Promise((res) => setTimeout(res, 100));
+    }
+    return told();
+  };
+
+  it("a watcher that fired tells the person: a line in General that opens its topic, and a notification (D-413)", async () => {
+    // It ran in a chat of its own. Before, that was the only place its answer ever was.
+    const [topic] = await h.tdb.admin<
+      { id: string; parent: string | null; posts_result: boolean; is_main: boolean }[]
+    >`select c.id, c.parent_conversation_id as parent, c.posts_result, c.is_main
+      from public.watchers w join public.conversations c on c.id = w.conversation_id where w.name = 'Price drop'`;
+    const [general] = await h.tdb.admin<{ id: string }[]>`
+      select id from public.conversations where bot_id = ${botId} and created_by = ${owner.id} and is_main`;
+    expect(topic).toMatchObject({ parent: general?.id, posts_result: true, is_main: false });
+    const { posts, pushes } = await toldAfter(1);
+    expect(posts).toHaveLength(1);
+    expect(posts[0]).toEqual([
+      { type: "text", text: "Heads up: it changed." },
+      { type: "topic", conversation_id: topic!.id, title: "Watching: Price drop" },
+    ]);
+    expect(pushes).toHaveLength(1);
+    expect(pushes[0]).toMatchObject({
+      body: "Heads up: it changed.",
+      link: `/bots/${botId}/chat?c=${topic!.id}`,
+    });
+  });
+
+  it("a change that isn't what it watched for tells nobody", async () => {
+    const before = await told();
+    await reg.get("watchers.create")!.execute(
+      {
+        name: "Quiet page",
+        kind: "time",
+        at: new Date(Date.now() + 60_000).toISOString(),
+      } as never,
+      ctx(),
+    );
+    // The bot looks at it and answers NO_MATCH (the fixture).
+    const fired = await check(new Date(Date.now() + 5 * 60_000));
+    expect(fired.length).toBeGreaterThanOrEqual(1);
+    const [reply] = await h.tdb.admin<{ content: Array<{ text: string }> }[]>`
+      select m.content from public.messages m join public.watchers w on w.conversation_id = m.conversation_id
+      where w.name = 'Quiet page' and m.role = 'assistant'`;
+    expect(reply?.content[0]?.text).toBe("NO_MATCH");
+    // The end of the run posts and pushes; give it the time it would take.
+    await new Promise((res) => setTimeout(res, 1500));
+    const after = await told();
+    expect(after.posts).toEqual(before.posts);
+    expect(after.pushes).toEqual(before.pushes);
+  });
+
   it("a time watcher fires once and finishes; a reply watcher fires on a person's comment", async () => {
     await reg.get("watchers.create")!.execute(
       {

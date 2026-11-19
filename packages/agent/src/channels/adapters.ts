@@ -302,6 +302,15 @@ export function splitText(text: string, max: number): string[] {
 // ------------------------------------------------------------------ Telegram (Bot API)
 const hasAny = (o: Record<string, unknown>, keys: string[]) => keys.some((k) => o[k] != null);
 
+/**
+ * Where a Telegram message goes: the chat, and in a group with topics the topic it was asked in
+ * (D-413). Without the topic, every answer landed in the group's General topic.
+ */
+const telegramTo = (reply: Record<string, unknown>) => ({
+  chat_id: reply.chat_id,
+  ...(reply.message_thread_id != null ? { message_thread_id: reply.message_thread_id } : {}),
+});
+
 const telegram: ChannelAdapter = {
   kind: "telegram",
   maxText: 4096,
@@ -351,16 +360,19 @@ const telegram: ChannelAdapter = {
             .filter((x) => typeof x === "string" && x)
             .join("\n");
     if (!text && !files.length) return [];
+    // A topic of a forum group is its own thread: its own conversation here, answered there.
+    const topic =
+      m.is_topic_message === true && m.message_thread_id != null ? m.message_thread_id : null;
     return [
       {
         messageId: u.update_id !== undefined ? `u${u.update_id}` : undefined,
-        threadKey: `chat:${chat.id}`,
+        threadKey: topic === null ? `chat:${chat.id}` : `chat:${chat.id}:topic:${topic}`,
         sender: String(from?.id ?? chat.id),
         senderName:
           [from?.first_name, from?.last_name].filter(Boolean).join(" ") ||
           (from?.username as string | undefined),
         text,
-        reply: { chat_id: chat.id },
+        reply: { chat_id: chat.id, ...(topic === null ? {} : { message_thread_id: topic }) },
         ref: m.message_id !== undefined ? `${chat.id}:${m.message_id}` : undefined,
         ...(files.length ? { files } : {}),
       },
@@ -407,6 +419,8 @@ const telegram: ChannelAdapter = {
     const post = (html: boolean) => {
       const form = new FormData();
       form.set("chat_id", String(reply.chat_id));
+      if (reply.message_thread_id != null)
+        form.set("message_thread_id", String(reply.message_thread_id));
       form.set(field as string, blobOf(file), file.name);
       if (file.caption) {
         form.set("caption", html ? toTelegramHtml(file.caption) : toPlain(file.caption));
@@ -469,7 +483,7 @@ const telegram: ChannelAdapter = {
     await f(`${base(cfg, "https://api.telegram.org")}/bot${s.bot_token}/sendChatAction`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ chat_id: reply.chat_id, action: "typing" }),
+      body: JSON.stringify({ ...telegramTo(reply), action: "typing" }),
     });
   },
   async sendApproval(cfg, s, reply, approval, f) {
@@ -478,7 +492,7 @@ const telegram: ChannelAdapter = {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          chat_id: reply.chat_id,
+          ...telegramTo(reply),
           text: `<b>Approval needed</b>\n${escapeHtml(approval.summary)}`,
           parse_mode: "HTML",
           reply_markup: {
@@ -538,7 +552,7 @@ const telegram: ChannelAdapter = {
       f(`${base(cfg, "https://api.telegram.org")}/bot${s.bot_token}/sendMessage`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ chat_id: reply.chat_id, ...body }),
+        body: JSON.stringify({ ...telegramTo(reply), ...body }),
       });
     let first = await post({ text: toTelegramHtml(text), parse_mode: "HTML" });
     if (first.status === 400) first = await post({ text: toPlain(text) });

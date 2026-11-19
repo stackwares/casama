@@ -1871,7 +1871,7 @@ class SupabaseBackend implements Backend {
   Future<String?> activeRun(String conversationId) async {
     final rows = await supabase
         .from('runs')
-        .select('id')
+        .select('id, status')
         .eq('conversation_id', conversationId)
         .inFilter('status', [
           'queued',
@@ -1880,8 +1880,13 @@ class SupabaseBackend implements Backend {
           'waiting_takeover',
         ])
         .order('created_at', ascending: false)
-        .limit(1);
-    return rows.isEmpty ? null : rows.first['id'] as String;
+        .limit(10);
+    if (rows.isEmpty) return null;
+    // Several runs can be going in one chat (a group's bots, a routine beside a reply). The one
+    // waiting for the person comes first (D-413): its card is what they need to see; following a
+    // working one instead hid the card until that run ended.
+    final waiting = rows.where((r) => r['status'] == 'waiting_approval' || r['status'] == 'waiting_takeover').firstOrNull;
+    return (waiting ?? rows.first)['id'] as String;
   }
 
   @override
@@ -2733,6 +2738,7 @@ class SupabaseBackend implements Backend {
       heldReason: row['held_reason'] as String?,
       botId: payload['bot_id'] as String?,
       conversationId: payload['conversation_id'] as String?,
+      runId: payload['run_id'] as String?,
       pushStatus: row['push_status'] as String?,
     );
   }

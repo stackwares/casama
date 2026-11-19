@@ -19,6 +19,11 @@ export interface ToolContext {
   checkpoint?: (label: string) => Promise<{ checkpointId: string; label: string }>;
   /** The automatic checkpoint before a command that deletes; skipped when one is recent (D-413). */
   checkpointBefore?: (label: string) => Promise<void>;
+  /**
+   * Takes the computer's screen (its browser and desktop) for this run, waiting a while when
+   * another run has it; throws `screen_busy` when it stays in use (D-413).
+   */
+  claimScreen?: () => Promise<void>;
   /** Sleeps and wakes the bot's computer: a fresh system with the same files (D-240). */
   restartComputer?: () => Promise<void>;
   /** Aborted when the run is cancelled while this tool is working; long commands stop with it. */

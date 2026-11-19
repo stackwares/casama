@@ -5206,6 +5206,52 @@ export const watchPrefs = pgTable("watch_prefs", {
 	check("watch_prefs_quick_replies_check", sql`(quick_replies IS NULL) OR ((cardinality(quick_replies) >= 1) AND (cardinality(quick_replies) <= 6))`),
 ]);
 
+export const channelRunReplies = pgTable("channel_run_replies", {
+	runId: uuid("run_id").primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	reply: jsonb().notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("channel_run_replies_created_idx").using("btree", table.createdAt.asc().nullsLast().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.runId],
+			foreignColumns: [runs.id],
+			name: "channel_run_replies_run_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "channel_run_replies_org_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+]);
+
+export const computerScreenLeases = pgTable("computer_screen_leases", {
+	computerId: uuid("computer_id").primaryKey().notNull(),
+	orgId: uuid("org_id").notNull(),
+	botId: uuid("bot_id").notNull(),
+	runId: uuid("run_id").notNull(),
+	expiresAt: timestamp("expires_at", { withTimezone: true, mode: 'string' }).notNull(),
+}, (table) => [
+	index("computer_screen_leases_run_idx").using("btree", table.runId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.computerId],
+			foreignColumns: [computers.id],
+			name: "computer_screen_leases_computer_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.orgId],
+			foreignColumns: [organizations.id],
+			name: "computer_screen_leases_org_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.botId],
+			foreignColumns: [bots.id],
+			name: "computer_screen_leases_bot_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("casama_worker_all", { as: "permissive", for: "all", to: ["casama_worker"], using: sql`true`, withCheck: sql`true`  }),
+]);
+
 export const agentImportFiles = pgTable("agent_import_files", {
 	importId: uuid("import_id").notNull(),
 	path: text().notNull(),

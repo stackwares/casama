@@ -24,6 +24,27 @@
     {
       "when": {
         "lastRole": "user",
+        "lastUserIncludes": "Quiet page"
+      },
+      "events": [
+        {
+          "type": "text",
+          "text": "NO_MATCH"
+        },
+        {
+          "type": "finish",
+          "usage": {
+            "inputTokens": 50,
+            "outputTokens": 5
+          },
+          "finishReason": "stop",
+          "model": ""
+        }
+      ]
+    },
+    {
+      "when": {
+        "lastRole": "user",
         "lastUserIncludes": "watcher"
       },
       "events": [

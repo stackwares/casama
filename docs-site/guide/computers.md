@@ -169,6 +169,11 @@ they did. Tap **Connect** to start a session.
 The bot's browser keeps its profile in the home folder, so cookies and sign-ins survive sleep,
 wake and restores. Sign in once, and the bot stays signed in.
 
+A computer has one browser and one screen, so one piece of work uses them at a time. When the bot
+works in two chats at once and both need the browser, the second waits up to a minute and a half
+for the first; if the browser is still in use, the bot goes on with what doesn't need it, or tells
+you it is waiting. On a team computer the same holds between bots.
+
 When a site needs you, for example a password or a two-step code, the bot can ask you to take over.
 You sign in yourself in the live view, and nothing you type reaches the bot. See
 [Take control](#take-control-and-hand-back).

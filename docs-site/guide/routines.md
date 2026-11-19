@@ -199,6 +199,9 @@ How watchers work:
 - The first check only records the starting point.
 - Checks don't use the model, so an unchanged check costs nothing. When something changes, the bot
   gets a run with what changed, your condition and what to do, and decides whether it counts.
+- When it counts, the bot tells you: a line in your General chat with the bot that opens the
+  watcher's own topic, and a notification. A watcher you asked for from a chat app answers there
+  too. When the change isn't what you asked about, you hear nothing.
 - A watcher can expire after a set number of days.
 
 To manage them, open **Bot profile → Watchers**. Each shows **Watching**, **Paused**, **Done** or

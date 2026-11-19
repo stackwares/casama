@@ -323,4 +323,38 @@ void main() {
       expect(backend.loads.length, greaterThan(before));
     },
   );
+  test('a run that asks for the person is followed over the one that is only working', () async {
+    final (c, backend, controller) = chat();
+    backend.threads[_a] = [_msg('a1', 'user', 'Plan the launch', 'run-1')];
+    backend.working[_a] = 'run-1';
+    await controller.open(_a);
+    expect(stateOf(c).activeRunId, 'run-1');
+
+    // Another bot of the chat (or a routine) needs an approval: its card only shows by following it.
+    controller.followWaiting(_a, 'run-2');
+    expect(stateOf(c).activeRunId, 'run-2');
+    expect(backend.watched, ['run-1', 'run-2']);
+    backend
+        .streamOf('run-2')
+        .add(
+          ev(1, 'approval.requested', {
+            'approval_id': 'ap-1',
+            'tool': 'email.send',
+            'args_redacted': <String, dynamic>{},
+            'risk': 'medium',
+            'summary': 'Send the invite',
+            'expires_at': DateTime(2026, 11, 2).toIso8601String(),
+          }),
+        );
+    await settle();
+    expect(stateOf(c).entries.whereType<ApprovalEntry>(), hasLength(1));
+
+    // The same notice again (the inbox refreshed) doesn't pull the chat back and forth.
+    controller.followWaiting(_a, 'run-1');
+    controller.followWaiting(_a, 'run-2');
+    expect(backend.watched, ['run-1', 'run-2', 'run-1']);
+    // Not for another chat, and not while nothing runs here.
+    controller.followWaiting(_b, 'run-3');
+    expect(stateOf(c).activeRunId, 'run-1');
+  });
 }

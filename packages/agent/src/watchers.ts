@@ -15,6 +15,9 @@ import { createAdapter, loadIntegration } from "./integrations.ts";
 import { loadSecrets } from "./secrets.ts";
 import { ToolError, type ToolRegistry } from "./tools/registry.ts";
 import { browserCaller, browserDevicesFor, firstOnline } from "./user-browser.ts";
+import { WATCHER_NO_MATCH } from "./watcher-match.ts";
+
+export { WATCHER_NO_MATCH };
 
 type StartRun = (runId: string) => Promise<void>;
 
@@ -153,14 +156,25 @@ async function currentValue(d: WatcherDeps, w: WatcherRow, now: Date): Promise<s
   }
 }
 
-/** Starts the bot on a match, in the watcher's own conversation. */
+/**
+ * Starts the bot on a match, in the watcher's own conversation. That conversation is a topic under
+ * the person's General (D-413): its result is posted there as a line that opens the topic, as a
+ * routine's is (D-253). Before, the answer only ever sat in a "Watching: …" chat that nothing
+ * pointed to, so a watcher that fired looked like it had done nothing.
+ */
 async function fire(d: WatcherDeps, w: WatcherRow, change: string) {
   return d.db.transaction(async (tx) => {
     let conv = w.conversation_id;
     if (!conv) {
+      // General first: the first personal chat of a person with a bot would become General itself.
+      if (w.created_by)
+        await tx.execute(
+          sql`select public.main_conversation(${w.org_id}::uuid, ${w.bot_id}::uuid, ${w.created_by}::uuid)`,
+        );
       const [c] = await tx.execute<{ id: string }>(sql`
-        insert into public.conversations (org_id, bot_id, title, created_by)
-        values (${w.org_id}::uuid, ${w.bot_id}::uuid, ${`Watching: ${w.name}`.slice(0, 200)}, ${w.created_by}::uuid) returning id`);
+        insert into public.conversations (org_id, bot_id, title, created_by, personal, posts_result)
+        values (${w.org_id}::uuid, ${w.bot_id}::uuid, ${`Watching: ${w.name}`.slice(0, 200)}, ${w.created_by}::uuid,
+                ${w.created_by !== null}, ${w.created_by !== null}) returning id`);
       conv = c?.id ?? null;
       await tx.execute(
         sql`update public.watchers set conversation_id = ${conv}::uuid where id = ${w.id}::uuid`,
@@ -174,7 +188,7 @@ async function fire(d: WatcherDeps, w: WatcherRow, change: string) {
       w.condition_md ? `You were watching for: ${w.condition_md}` : "",
       w.kind === "time" ? "The time you were waiting for has come." : `What changed:\n${change}`,
       w.on_match_md ? `What to do: ${w.on_match_md}` : "Tell the person what happened, briefly.",
-      "If the change doesn't actually meet what you were watching for, say so in one line and do nothing else.",
+      `If the change doesn't actually meet what you were watching for, reply with exactly ${WATCHER_NO_MATCH} and nothing else: the person is then not told.`,
     ]
       .filter(Boolean)
       .join("\n\n");
@@ -183,6 +197,14 @@ async function fire(d: WatcherDeps, w: WatcherRow, change: string) {
       values (${w.org_id}::uuid, ${conv}::uuid, 'user', ${w.created_by}::uuid, ${contentKeys.sealJson(w.org_id, [{ type: "text", text }])}::jsonb, ${run?.id}::uuid)`);
     return run?.id as string;
   });
+}
+
+/** The chat-app conversation a watcher was asked for in, if any: its news goes back there. */
+export async function watcherAskedIn(db: Database, watcherConversationId: string) {
+  const [w] = await db.execute<{ asked_in: string | null }>(sql`
+    select target ->> 'asked_in' as asked_in from public.watchers
+    where conversation_id = ${watcherConversationId}::uuid limit 1`);
+  return w?.asked_in ?? null;
 }
 
 /**
@@ -326,6 +348,13 @@ export function registerWatcherTools(registry: ToolRegistry, deps: { db: Databas
       }
       const owner = await actingUserOf(db, ctx.runId);
       const every = (args.check_every_minutes ?? (args.kind === "time" ? 1 : 15)) * 60;
+      // Asked for from a chat app (D-413): the news goes back there too. Kept with the target;
+      // only a direct chat with this bot counts, as for routines.
+      const [here] = await db.execute<{ id: string }>(sql`
+        select c.id from public.runs r join public.conversations c on c.id = r.conversation_id
+        where r.id = ${ctx.runId}::uuid and c.bot_id = ${ctx.botId}::uuid and c.kind = 'direct'
+          and exists (select 1 from public.channel_threads t where t.conversation_id = c.id)`);
+      if (here) target = { ...target, asked_in: here.id };
       const [w] = await db.execute<{ id: string }>(sql`
         insert into public.watchers (org_id, bot_id, created_by, name, kind, target, condition_md, on_match_md, check_every_seconds, expires_at)
         values (${ctx.orgId}::uuid, ${ctx.botId}::uuid, ${owner}::uuid, ${args.name}, ${args.kind}, ${JSON.stringify(target)}::jsonb,

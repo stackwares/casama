@@ -254,6 +254,13 @@ export async function handleInbound(
               ])}::jsonb,
               ${run?.id}::uuid)
       returning id`);
+    // Where this run's answer goes (D-413): the target that came with this message, not whatever
+    // the thread's newest message brought.
+    if (run?.id)
+      await db.execute(sql`
+        insert into public.channel_run_replies (run_id, org_id, reply)
+        values (${run.id}::uuid, ${c.org_id}::uuid, ${JSON.stringify(m.reply)}::jsonb)
+        on conflict (run_id) do nothing`);
     // Which message this is in the app, so reactions to it there land here (D-331).
     if (m.ref && saved?.id) await linkMessage(db, c, m.ref, saved.id);
     await db.execute(
@@ -485,9 +492,34 @@ export async function sendThrough(
 }
 
 /** After a run in a channel thread's conversation: its reply goes back to the thread. */
+/**
+ * The chat-app thread of a conversation, with where a run's words go (D-413): the target that came
+ * with the message that started [runId], when it has one, else the thread's newest.
+ */
+async function threadFor(db: Database, conversationId: string, runId?: string | null) {
+  const [t] = await db.execute<{
+    channel_id: string;
+    thread_key: string;
+    reply: Record<string, unknown>;
+  }>(sql`
+    select channel_id, thread_key, reply from public.channel_threads where conversation_id = ${conversationId}::uuid limit 1`);
+  if (!t || !runId) return t ?? null;
+  const [own] = await db.execute<{ reply: Record<string, unknown> | null }>(
+    sql`select reply from public.channel_run_replies where run_id = ${runId}::uuid`,
+  );
+  return own?.reply ? { ...t, reply: own.reply } : t;
+}
+
 export async function replyToChannel(
   db: Database,
-  run: { conversationId: string | null; messageId?: string | null; runId?: string },
+  run: {
+    conversationId: string | null;
+    messageId?: string | null;
+    /** The run whose files go along with the reply. */
+    runId?: string;
+    /** The run that speaks, when its files don't go along (words said before acting). */
+    speakingRunId?: string;
+  },
   text: string,
   f: typeof fetch,
   local?: LocalTunnel,
@@ -507,12 +539,7 @@ export async function replyToChannel(
   if (!run.conversationId) return;
   const files = run.runId ? await replyFiles(db, run.runId, extras?.kept) : [];
   if (!text.trim() && !files.length) return;
-  const [t] = await db.execute<{
-    channel_id: string;
-    thread_key: string;
-    reply: Record<string, unknown>;
-  }>(sql`
-    select channel_id, thread_key, reply from public.channel_threads where conversation_id = ${run.conversationId}::uuid limit 1`);
+  const t = await threadFor(db, run.conversationId, run.runId ?? run.speakingRunId);
   if (!t) return;
   const c = await loadChannel(db, t.channel_id);
   if (!c?.enabled) return;
@@ -677,8 +704,7 @@ export function startChannelTyping(
   };
   if (!run.conversationId) return stop;
   void (async () => {
-    const [t] = await db.execute<{ channel_id: string; reply: Record<string, unknown> }>(sql`
-      select channel_id, reply from public.channel_threads where conversation_id = ${run.conversationId}::uuid limit 1`);
+    const t = await threadFor(db, run.conversationId as string, run.runId);
     if (!t || stopped) return;
     const c = await loadChannel(db, t.channel_id);
     const adapter = c ? ADAPTERS[c.kind] : undefined;
@@ -913,6 +939,10 @@ export async function purgeSeenInbound(db: Database) {
   const rows = await db.execute<{ n: number }>(sql`
     with d as (delete from public.channel_inbound_seen where seen_at < now() - interval '7 days' returning 1)
     select count(*)::int as n from d`);
+  // A run's own reply target (D-413) is only read while the run answers.
+  await db.execute(
+    sql`delete from public.channel_run_replies where created_at < now() - interval '7 days'`,
+  );
   return rows[0]?.n ?? 0;
 }
 
@@ -925,9 +955,10 @@ export async function postApprovalToChannel(
   conversationId: string,
   approval: { id: string; summary: string },
   f: typeof fetch,
+  /** The run that asks: the request goes where its answer will. */
+  runId?: string,
 ) {
-  const [t] = await db.execute<{ channel_id: string; reply: Record<string, unknown> }>(sql`
-    select channel_id, reply from public.channel_threads where conversation_id = ${conversationId}::uuid limit 1`);
+  const t = await threadFor(db, conversationId, runId);
   if (!t) return false;
   const c = await loadChannel(db, t.channel_id);
   const adapter = c ? ADAPTERS[c.kind] : undefined;
