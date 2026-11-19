@@ -130,6 +130,20 @@ button { cursor: pointer; }
 .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 26px; margin-top: 36px; }
 .hero-note { margin-top: 28px; color: var(--ink-2); font-size: var(--fs-small); max-width: 56ch; }
 @media (max-width: 960px) { .hero { grid-template-columns: 1fr; } }
+/* One column from here down, so the headline takes the whole width instead of 14ch. */
+@media (max-width: 960px) { .hero h1 { max-width: none; font-size: min(8vw, 72px); } }
+/* Phones: the headline fills the column (the widest phrase, "that do the work", takes about 92% of
+   it), less air above it, and the buttons stack full width under the thumb. */
+@media (max-width: 600px) {
+  .hero { padding-top: 28px; }
+  .hero .eyebrow { margin-bottom: 16px; }
+  .hero h1 { font-size: calc(12.4vw - 2px); }
+  .hero .lead { margin-top: 20px; }
+  .hero .hero-actions { margin-top: 28px; gap: 10px; }
+  .hero .hero-actions .btn { flex: 1 1 100%; }
+  .hero .hero-actions .text-link { margin-top: 8px; }
+  .hero-note { margin-top: 18px; }
+}
 
 /* the example chat */
 .chat { padding: 18px; border-radius: calc(var(--radius) + 4px); background: var(--card); border: 1px solid var(--line); font-size: var(--fs-small); }
