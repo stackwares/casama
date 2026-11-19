@@ -6298,17 +6298,23 @@ instead of spending a turn discovering them via `tools.load`.
   unconnected catalog apps (**Connect**, shown after 2 typed letters). In group chats the same
   picker shows **Bots** first, then **Apps** (union across member bots), with **Bot** / **App**
   badges on name collisions. Plain-text collisions in group chats favor the bot; picking the app
-  from the menu sends an explicit `apps` ref that disambiguates it.
+  from the menu sends an explicit `apps` ref that disambiguates it. **Connect** adds the new
+  connection to the bot that will answer (the chat's bot; in a group the bots the message names,
+  else the last speaker, else the lead), and for a Composio or Pipedream hub the mention names the
+  app inside it (`toolkit`), so the server can match it.
 - **Structured wire + storage, zero DB migration:** `sendMessage`, `sendGroup`, and `editMessage`
-  accept optional `apps: [{ integrationId, toolkit? }]` (max 3). Resolved mentions are stored in
-  `messages.content` as `{ type: "app", integrationId, label, toolkit?, appId?, source }` parts
+  accept optional `apps: [{ integration_id, toolkit? }]` (max 3). Resolved mentions are stored in
+  `messages.content` as `{ type: "app", integration_id, label, toolkit?, app_id?, source }` parts
   alongside the text part. Plain typed `@gmail` also resolves on exact unambiguous name/slug match
   (including inbound messages from Telegram, Slack, Teams, and iMessage), while email addresses
   stay plain text.
 - **Lazy preloading + hint-only prompt:** `runAgent` pre-expands only the mentioned integrations
   (or single Composio/Pipedream toolkit) into Turn 1's active tool list via
-  `preloadLazyToolsForAppMentions` and appends an in-memory-only `<mentioned_apps>` hint telling
-  the model the user called out those apps — never forcing a tool call. In group chats, if an
+  `selectMentionedTools` (own 8,000-token budget, before remembered groups; an app over budget
+  gets the note only) and appends a one-line note to the model's copy of the message ("The person
+  pointed at these apps…"), never to the stored text and never forcing a tool call. The
+  `app_mentioned` event is sent inside a run step, so a run resuming after an approval doesn't
+  count it again. In group chats, if an
   answering bot does not have a mentioned app attached, the server emits a soft `notice`
   (`app_not_available`).
 - **Tappable pills & composer hint:** `@App` renders as a brand-tinted pill with the app's logo

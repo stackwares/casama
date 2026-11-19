@@ -1487,12 +1487,26 @@ class MentionPicker extends ConsumerWidget {
         Analytics.log('app_mention_connect_started', {'app_id': app.id});
         final created = await showConnectApp(context, app);
         if (created == null) return;
-        final botId = !isGroup ? botIds.firstOrNull : null;
-        if (botId != null && context.mounted) {
+        // The new connection goes to the bot that will answer: this chat's bot, or in a group the
+        // bots the message goes to (@everyone: the lead, who plans first). Else the run would only
+        // say it doesn't have the app.
+        final answerers = !isGroup
+            ? [?botIds.firstOrNull]
+            : [
+                for (final b in groupAnswerers(
+                      bots,
+                      controller.input.text,
+                      lastSpeakerId: lastSpeakerId,
+                      leadId: botIds.firstOrNull,
+                    ) ??
+                    [?bots.where((b) => b.id == botIds.firstOrNull).firstOrNull])
+                  b.id,
+              ];
+        if (answerers.isNotEmpty && context.mounted) {
           await runGuarded(context, () async {
-            await ref
-                .read(backendProvider)
-                .setBotIntegration(botId, created.id, true);
+            for (final id in answerers) {
+              await ref.read(backendProvider).setBotIntegration(id, created.id, true);
+            }
             return true;
           });
         }
@@ -1505,6 +1519,13 @@ class MentionPicker extends ConsumerWidget {
         controller.pickApp(
           AppMentionInfo(
             integrationId: created.id,
+            // A hub connection (Composio, Pipedream) holds many apps: name the one picked, or
+            // the server can't match the reference to the hub's toolkit.
+            toolkit: switch (created.kind) {
+              IntegrationKind.composio => app.composio ?? app.id,
+              IntegrationKind.pipedream => app.id,
+              _ => null,
+            },
             label: app.name,
             appId: app.id,
             color: app.color,
@@ -1690,6 +1711,32 @@ class GroupAvatar extends StatelessWidget {
   }
 }
 
+/// Whether [lower] (lowercased message text) @mentions [bot] by name.
+bool mentionsBot(String lower, Bot bot) =>
+    RegExp('(^|[^\\w@])@${RegExp.escape(bot.name.toLowerCase())}(?!\\w)').hasMatch(lower);
+
+/// Who a group message goes to (D-118): the bots it @mentions, or with no mention the last bot that
+/// spoke (else the lead); null for @everyone. Matches the server's rule.
+List<Bot>? groupAnswerers(List<Bot> bots, String text, {String? lastSpeakerId, String? leadId}) {
+  if (bots.isEmpty) return const [];
+  final lower = text.toLowerCase();
+  final everyone = RegExp(
+    r'(^|[^\w@])@(everyone|all|team)\b',
+    caseSensitive: false,
+  ).hasMatch(text);
+  if (everyone) return null;
+  final named = [
+    for (final b in [...bots]..sort((a, b) => b.name.length - a.name.length))
+      if (mentionsBot(lower, b)) b,
+  ];
+  if (named.isNotEmpty) return named;
+  return [
+    bots.where((b) => b.id == lastSpeakerId).firstOrNull ??
+        bots.where((b) => b.id == leadId).firstOrNull ??
+        bots.first,
+  ];
+}
+
 /// Who a group message goes to (D-118), shown above the composer: the bots it @mentions, everyone,
 /// or with no mention the last bot that spoke (else the lead). Matches the server's rule.
 class _WhoAnswers extends StatelessWidget {
@@ -1710,22 +1757,9 @@ class _WhoAnswers extends StatelessWidget {
 
   Widget _line(BuildContext context) {
     final l10n = context.l10n;
-    final lower = text.toLowerCase();
-    final everyone = RegExp(
-      r'(^|[^\w@])@(everyone|all|team)\b',
-      caseSensitive: false,
-    ).hasMatch(text);
-    final named = [
-      for (final b in [...bots]..sort((a, b) => b.name.length - a.name.length))
-        if (RegExp('(^|[^\\w@])@${RegExp.escape(b.name.toLowerCase())}(?!\\w)')
-            .hasMatch(lower))
-          b,
-    ];
-    final fallback =
-        bots.where((b) => b.id == lastSpeakerId).firstOrNull ??
-        bots.where((b) => b.id == leadId).firstOrNull ??
-        bots.first;
-    final who = everyone ? null : (named.isEmpty ? [fallback] : named);
+    final who = groupAnswerers(bots, text, lastSpeakerId: lastSpeakerId, leadId: leadId);
+    // Nobody named: the answer goes to the fallback bot, and the line hints at @.
+    final noneNamed = who != null && !mentionsBot(text.toLowerCase(), who.first);
     final label = who == null
         ? l10n.groupEveryoneAnswers
         : l10n.groupWhoAnswers(who.map((b) => b.name).join(', '));
@@ -1753,7 +1787,7 @@ class _WhoAnswers extends StatelessWidget {
                     text: label,
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  if (named.isEmpty && !everyone)
+                  if (noneNamed)
                     TextSpan(text: ' · ${l10n.groupMentionHint}'),
                 ],
               ),

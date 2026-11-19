@@ -32,6 +32,18 @@ Integration _integration(
 
 /// End-to-end widget tests for @mentioning connected apps (D-434).
 void main() {
+  test('groupAnswerers follows the server: named bots, else last speaker, else lead; null for everyone', () {
+    final fake = FakeBackend();
+    final ada = fake.bot(id: 'a', name: 'Ada');
+    final writer = fake.bot(id: 'w', name: 'Writer');
+    final bots = [ada, writer];
+    expect(groupAnswerers(bots, '@Writer draft it @gma')?.map((b) => b.id), ['w']);
+    expect(groupAnswerers(bots, 'hi @gma', lastSpeakerId: 'w', leadId: 'a')?.map((b) => b.id), ['w']);
+    expect(groupAnswerers(bots, 'hi', leadId: 'a')?.map((b) => b.id), ['a']);
+    expect(groupAnswerers(bots, 'mail me at x@writer.com', leadId: 'a')?.map((b) => b.id), ['a']);
+    expect(groupAnswerers(bots, '@everyone go'), isNull);
+  });
+
   testWidgets(
     'direct chat @ menu shows attached direct + hub apps, Add to this bot, and Connect after 2 chars',
     (tester) async {

@@ -871,21 +871,26 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
     if (mentionedApps.length && info.current) {
       const list = mentionedApps.map((m) => `${m.part.label} (${m.group})`).join(", ");
       info.current.text += `\n\nThe person pointed at these apps for this message: ${list}. Use them if the request needs an app.`;
-      for (const [idx, m] of mentionedApps.entries()) {
-        const preloaded = lazy || native ? mentionedSel.loadedIndices.has(idx) : true;
-        const catalogId = m.part.app_id && appByIdOrNull(m.part.app_id) ? m.part.app_id : undefined;
-        track(db, {
-          event: "app_mentioned",
-          userId: info.actingUserId ?? undefined,
-          orgId: info.orgId,
-          properties: {
-            source: m.part.source ?? "typed",
-            app_kind: m.kind,
-            ...(catalogId ? { app_id: catalogId } : {}),
-            preloaded,
-          },
-        });
-      }
+      // Once per run: a step, so a run resuming after an approval doesn't count the mention again.
+      await step("app-mentioned", async () => {
+        for (const [idx, m] of mentionedApps.entries()) {
+          const preloaded = lazy || native ? mentionedSel.loadedIndices.has(idx) : true;
+          const catalogId =
+            m.part.app_id && appByIdOrNull(m.part.app_id) ? m.part.app_id : undefined;
+          track(db, {
+            event: "app_mentioned",
+            userId: info.actingUserId ?? undefined,
+            orgId: info.orgId,
+            properties: {
+              source: m.part.source ?? "typed",
+              app_kind: m.kind,
+              ...(catalogId ? { app_id: catalogId } : {}),
+              preloaded,
+            },
+          });
+        }
+        return true;
+      });
     }
     // Groups this run called, in order of first use, for the conversation to remember.
     const calledGroups: string[] = [];
