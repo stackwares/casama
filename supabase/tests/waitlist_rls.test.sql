@@ -3,7 +3,7 @@
 -- the worker can reach what its sweep needs; and the rules the hook and the claim rely on hold.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(37);
+select plan(38);
 
 insert into auth.users (id, email, aud, role) values
   ('10000000-0000-0000-0000-0000000007a1', 'wl-member@example.com', 'authenticated', 'authenticated'),
@@ -57,8 +57,10 @@ select is((select outcome from public.waitlist_claim('second@example.com', 'LAUN
 select is((select priority from public.waitlist_entries where email = 'second@example.com'), 10,
   'near the front');
 select is((select used from public.invite_campaigns where code = 'LAUNCH-DAY'), 1, 'the total is never passed');
-select is((select outcome from public.waitlist_claim('wl-other@example.com', 'LAUNCH-DAY', 3)), 'admitted',
-  'someone with an account is told they are in');
+select is((select outcome from public.waitlist_claim('wl-other@example.com', 'LAUNCH-DAY', 3)), 'waitlisted',
+  'someone with an account gets the answer a stranger would, so nothing can be probed');
+select is((select outcome from public.waitlist_claim('first@example.com', 'LAUNCH-DAY', 3)), 'admitted',
+  'the address the code let in is still told it is in');
 select is((select count(*)::int from public.waitlist_entries where email = 'wl-other@example.com'), 0,
   'and uses up nothing');
 select is((select outcome from public.waitlist_claim('friend@example.com', 'W7A1XZ', 3)), 'waitlisted',

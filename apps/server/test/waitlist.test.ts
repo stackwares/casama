@@ -478,6 +478,12 @@ describe("the waitlist", () => {
       expect(await j(again)).toEqual({ ok: true });
       // An address that already has an account gets the same answer too.
       expect(await j(await k.join(stranger.email))).toEqual({ ok: true });
+      // ...but isn't put on the list: the row would never turn `joined`, and a batch would email
+      // someone who has an account "You're in".
+      expect(
+        await h.tdb.admin`select 1 from public.waitlist_entries
+          where email_key = public.email_key(${stranger.email.toUpperCase()})`,
+      ).toHaveLength(0);
       const rows = await h.tdb.admin<Record<string, any>[]>`
         select * from public.waitlist_entries where email_key = public.email_key('rae@gmail.com')`;
       expect(rows).toHaveLength(1);
@@ -789,8 +795,16 @@ describe("the waitlist", () => {
       expect((await j(await k.redeem("Camp-A+x@example.dev", "SHOWHN-TEST"))).outcome).toBe(
         "admitted",
       );
-      // Nor does someone who already has an account.
+      // Nor does someone who already has an account, however their inbox is written.
       expect((await j(await k.redeem(stranger.email, "SHOWHN-TEST"))).outcome).toBe("admitted");
+      const dotted = await h.user("dot.ted@gmail.com");
+      expect((await j(await k.redeem("Dotted+x@gmail.com", "SHOWHN-TEST"))).outcome).toBe(
+        "admitted",
+      );
+      expect(
+        await h.tdb.admin`select 1 from public.waitlist_entries
+          where email_key = public.email_key(${dotted.email})`,
+      ).toHaveLength(0);
       expect((await j(await k.redeem("camp-b@example.dev", "SHOWHN-TEST"))).outcome).toBe(
         "admitted",
       );
@@ -804,6 +818,28 @@ describe("the waitlist", () => {
       });
       expect(await hookVerdict(await k.hook("camp-c@example.dev"))).toBe(403);
       expect((await j(await preview("SHOWHN-TEST"))).available).toBe(false);
+      // With the code used up, someone with an account or already let in gets the stranger's
+      // answer: the code can't be used to find out who has an account or is on the list.
+      await h.tdb.admin`insert into public.waitlist_entries (email, email_key, status, admitted_at)
+        values ('hand-in@example.dev', public.email_key('hand-in@example.dev'), 'admitted', now())`;
+      for (const who of [stranger.email, "dotted@gmail.com", "hand-in@example.dev"])
+        expect(await j(await k.redeem(who, "SHOWHN-TEST"))).toEqual({
+          outcome: "waitlisted",
+          kind: "campaign",
+        });
+      expect(await k.entry("hand-in@example.dev")).toMatchObject({
+        status: "admitted",
+        priority: 0,
+        invite_code: null,
+      });
+      // Only the address this code let in hears it is in: a second tap on the same link.
+      expect((await j(await k.redeem("camp-a@example.dev", "SHOWHN-TEST"))).outcome).toBe(
+        "admitted",
+      );
+      expect(
+        await h.tdb.admin`select 1 from public.waitlist_entries
+          where email_key = public.email_key(${stranger.email})`,
+      ).toHaveLength(0);
       const [row] = (
         await j(await h.request("/v1/admin/invite-campaigns", { token: owner.token }))
       ).items.filter((i: { code: string }) => i.code === "SHOWHN-TEST");
@@ -923,6 +959,11 @@ describe("the waitlist", () => {
       expect(pv).toMatchObject({ kind: "personal", inviter_name: "Ana", available: false });
       const early = await j(await k.redeem("friend-0@example.dev", code));
       expect(early).toEqual({ outcome: "waitlisted", kind: "personal" });
+      // A locked code (every member has one) answers an existing account the same way.
+      expect(await j(await k.redeem(stranger.email, code))).toEqual({
+        outcome: "waitlisted",
+        kind: "personal",
+      });
       expect(await k.entry("friend-0@example.dev")).toMatchObject({
         status: "waiting",
         priority: 10,
@@ -1044,8 +1085,8 @@ describe("the waitlist", () => {
   });
 
   it("a deleted account leaves no address behind, and its inbox can still come back", async () => {
-    const gone = await h.user("goner@example.dev");
     await joinWaitlist(h.handle.db, { email: "goner@example.dev", note: "Remember me" });
+    const gone = await h.user("goner@example.dev");
     await h.tdb
       .admin`update public.waitlist_entries set status = 'admitted', admitted_at = now() where email = 'goner@example.dev'`;
     await linkWaitlistSignups({ db: h.handle.db, referrals: true });

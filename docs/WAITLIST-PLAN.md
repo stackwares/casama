@@ -340,7 +340,7 @@ Signed out, each needs a solved sign-up puzzle (the proof of work of D-094, sing
 | Route | Does | Answers |
 |---|---|---|
 | `POST /v1/waitlist` | Adds the address, or does nothing if it's there | Always the same "You're on the list", whether the address is new, already waiting, already in, or has an account. Nothing can be probed |
-| `POST /v1/waitlist/redeem` | Claims an invite code for an address (§7) | Admitted; or code not found; or code used up (the address is put on the list, near the front) |
+| `POST /v1/waitlist/redeem` | Claims an invite code for an address (§7) | Admitted; or code not found; or code used up (the address is put on the list, near the front). An address that has an account or is already let in gets the answer a stranger would get for that code and uses up nothing, unless this code let it in; joining likewise adds no row for an existing account. Nothing can be probed |
 | `GET /v1/invites/preview?code=` | What the invite page shows: the inviter's first name or the campaign's label, and whether invites are left | D-211's `/v1/referral/preview` stays for shipped apps |
 | `POST /v1/waitlist/leave` | Removes the address, from a signed link in the email | Done |
 

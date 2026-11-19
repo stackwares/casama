@@ -374,6 +374,9 @@ export async function joinsFrom(db: Database, hash: string): Promise<number> {
 /**
  * Puts an address on the list, or leaves it as it is when it's already there (a repeat can add
  * the self-hosting box, the first note and a yes to the monthly email, never take them away).
+ * An address that already has an account is left off: the caller still answers "You're on the
+ * list" (nothing may be probed), but a waiting row would never become `joined` and a batch would
+ * send that person a "You're in" email. Returns null then.
  */
 export async function joinWaitlist(
   db: Database,
@@ -388,6 +391,8 @@ export async function joinWaitlist(
       ${!!e.selfHosting}, ${short(e.note, 280)}, ${e.ipHash ?? null},
       ${news}, case when ${news} then now() end, case when ${news} then ${NEWSLETTER_WORDING} end
     where public.email_key(${e.email}) is not null
+      and not exists (select 1 from auth.users u
+                      where public.email_key(u.email::text) = public.email_key(${e.email}))
     on conflict (email_key) do update set
       self_hosting = w.self_hosting or excluded.self_hosting,
       note = coalesce(w.note, excluded.note),
