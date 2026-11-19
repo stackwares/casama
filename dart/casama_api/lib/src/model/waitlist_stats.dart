@@ -4,6 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:casama_api/src/model/waitlist_stats_by_source_inner.dart';
+import 'package:casama_api/src/model/waitlist_batch.dart';
 import 'package:copy_with_extension/copy_with_extension.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -40,6 +41,8 @@ class WaitlistStats {
     required  this.bySource,
 
     required  this.byVia,
+
+     this.lastBatch,
   });
 
   @JsonKey(
@@ -162,6 +165,18 @@ class WaitlistStats {
 
 
 
+  @JsonKey(
+    
+    name: r'last_batch',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final WaitlistBatch? lastBatch;
+
+
+
 
 
     @override
@@ -175,7 +190,8 @@ class WaitlistStats {
       other.admittedToday == admittedToday &&
       other.emailsToday == emailsToday &&
       other.bySource == bySource &&
-      other.byVia == byVia;
+      other.byVia == byVia &&
+      other.lastBatch == lastBatch;
 
     @override
     int get hashCode =>
@@ -188,7 +204,8 @@ class WaitlistStats {
         admittedToday.hashCode +
         emailsToday.hashCode +
         bySource.hashCode +
-        byVia.hashCode;
+        byVia.hashCode +
+        (lastBatch == null ? 0 : lastBatch.hashCode);
 
   factory WaitlistStats.fromJson(Map<String, dynamic> json) => _$WaitlistStatsFromJson(json);
 

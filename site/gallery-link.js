@@ -723,6 +723,9 @@ const BEACON_EVENTS = {
   copy_install: {},
   plan_click: { plan: ["free", "plus", "pro", "max", "self_hosted"] },
   start_click: { via: ["link"] },
+  // The waitlist page (D-427): seen, and a join that went through (the address never leaves the page).
+  waitlist_view: {},
+  waitlist_join: { form: ["page", "inline"] },
 };
 export function beaconEvent(name, data) {
   if (typeof name !== "string" || !Object.hasOwn(BEACON_EVENTS, name)) return null;

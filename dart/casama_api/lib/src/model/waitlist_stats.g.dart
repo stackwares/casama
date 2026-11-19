@@ -27,6 +27,8 @@ abstract class _$WaitlistStatsCWProxy {
 
   WaitlistStats byVia(List<WaitlistStatsBySourceInner> byVia);
 
+  WaitlistStats lastBatch(WaitlistBatch? lastBatch);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `WaitlistStats(...).copyWith.fieldName(value)`.
@@ -46,6 +48,7 @@ abstract class _$WaitlistStatsCWProxy {
     int emailsToday,
     List<WaitlistStatsBySourceInner> bySource,
     List<WaitlistStatsBySourceInner> byVia,
+    WaitlistBatch? lastBatch,
   });
 }
 
@@ -89,6 +92,10 @@ class _$WaitlistStatsCWProxyImpl implements _$WaitlistStatsCWProxy {
   WaitlistStats byVia(List<WaitlistStatsBySourceInner> byVia) =>
       call(byVia: byVia);
 
+  @override
+  WaitlistStats lastBatch(WaitlistBatch? lastBatch) =>
+      call(lastBatch: lastBatch);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `WaitlistStats(...).copyWith.fieldName(value)`.
@@ -109,6 +116,7 @@ class _$WaitlistStatsCWProxyImpl implements _$WaitlistStatsCWProxy {
     Object? emailsToday = const $CopyWithPlaceholder(),
     Object? bySource = const $CopyWithPlaceholder(),
     Object? byVia = const $CopyWithPlaceholder(),
+    Object? lastBatch = const $CopyWithPlaceholder(),
   }) {
     return WaitlistStats(
       waiting: waiting == const $CopyWithPlaceholder() || waiting == null
@@ -154,6 +162,10 @@ class _$WaitlistStatsCWProxyImpl implements _$WaitlistStatsCWProxy {
           ? _value.byVia
           // ignore: cast_nullable_to_non_nullable
           : byVia as List<WaitlistStatsBySourceInner>,
+      lastBatch: lastBatch == const $CopyWithPlaceholder()
+          ? _value.lastBatch
+          // ignore: cast_nullable_to_non_nullable
+          : lastBatch as WaitlistBatch?,
     );
   }
 }
@@ -222,6 +234,12 @@ WaitlistStats _$WaitlistStatsFromJson(
             )
             .toList(),
       ),
+      lastBatch: $checkedConvert(
+        'last_batch',
+        (v) => v == null
+            ? null
+            : WaitlistBatch.fromJson(v as Map<String, dynamic>),
+      ),
     );
     return val;
   },
@@ -232,6 +250,7 @@ WaitlistStats _$WaitlistStatsFromJson(
     'emailsToday': 'emails_today',
     'bySource': 'by_source',
     'byVia': 'by_via',
+    'lastBatch': 'last_batch',
   },
 );
 
@@ -247,4 +266,5 @@ Map<String, dynamic> _$WaitlistStatsToJson(WaitlistStats instance) =>
       'emails_today': instance.emailsToday,
       'by_source': instance.bySource.map((e) => e.toJson()).toList(),
       'by_via': instance.byVia.map((e) => e.toJson()).toList(),
+      'last_batch': ?instance.lastBatch?.toJson(),
     };

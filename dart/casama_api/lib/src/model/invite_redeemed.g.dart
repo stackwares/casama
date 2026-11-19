@@ -106,4 +106,5 @@ const _$InviteRedeemedOutcomeEnumEnumMap = {
 const _$InviteRedeemedKindEnumEnumMap = {
   InviteRedeemedKindEnum.personal: 'personal',
   InviteRedeemedKindEnum.campaign: 'campaign',
+  InviteRedeemedKindEnum.oneTime: 'one_time',
 };

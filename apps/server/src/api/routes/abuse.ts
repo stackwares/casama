@@ -23,12 +23,19 @@ import {
   verifyPow,
 } from "../../services/abuse.ts";
 import {
+  claimInvite,
+  cleanEmail,
   gateClosed,
   getSignupGate,
   inviteOnlyMessage,
   isAppleRelay,
+  isDisposableEmail,
   RELAY_MESSAGE,
+  type RefusalReason,
+  resolveInviteCode,
   signupAllowed,
+  trackClaim,
+  trackRefused,
   waitlistAvailable,
 } from "../../services/waitlist.ts";
 import type { AppDeps, AppEnv } from "../types.ts";
@@ -86,14 +93,25 @@ export function registerAbuseRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
       // The gate is on but nobody configured the hook secret: refuse rather than trust anyone.
       return c.json({ error: { http_code: 500, message: "Sign-up hook is not configured" } }, 500);
     }
+    const payload = JSON.parse(body || "{}") as {
+      user?: {
+        email?: string;
+        app_metadata?: { provider?: string };
+        user_metadata?: {
+          signup_proof?: { kind?: string; token?: string; challenge?: string; nonce?: string };
+          /** An invite code the app sent with the sign-up (options.data.invite_code, §7.3). */
+          invite_code?: unknown;
+        };
+      };
+    };
+    const user = payload.user ?? {};
+    const provider = user.app_metadata?.provider ?? "email";
     // Self-host sign-up allowlist (D-145): only these emails or domains may sign up, by any method.
     const allow = (env.SIGNUP_ALLOWED_EMAILS ?? "")
       .split(",")
       .map((a) => a.trim().toLowerCase())
       .filter(Boolean);
-    const email = String(
-      (JSON.parse(body || "{}") as { user?: { email?: string } }).user?.email ?? "",
-    ).toLowerCase();
+    const email = String(user.email ?? "").toLowerCase();
     const domain = email.split("@")[1] ?? "";
     const listed =
       !!email &&
@@ -108,13 +126,57 @@ export function registerAbuseRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
             select true as ok from public.invites
             where lower(email::text) = ${email} and accepted_at is null and expires_at > now() limit 1`)
         : [];
-      if (!invited?.ok && !listed)
+      if (!invited?.ok && !listed) {
+        trackRefused("invited_only");
         return refusal(
           "This server takes new accounts by invitation only. Ask whoever runs it to invite this email address.",
         );
+      }
     } else if (allow.length && !listed) {
+      trackRefused("allowlist");
       return refusal("Sign-up on this server is limited to approved email addresses.");
     }
+
+    // The sign-up proof (D-094) for email and phone sign-ups. Google, Apple and SSO sign-ins
+    // already prove a real account elsewhere. Checked once: rule 4 below needs it before it
+    // claims a code (so Auth's sign-up can't be used to spend codes without the puzzle), and the
+    // check after the rules then reuses the answer.
+    const needsProof = abuseControlsOn(env) && (provider === "email" || provider === "phone");
+    let proofRefusal: Response | null | undefined;
+    const checkProof = async (): Promise<Response | null> => {
+      if (proofRefusal !== undefined) return proofRefusal;
+      const proof = user.user_metadata?.signup_proof;
+      const kinds = signupProofKinds(env);
+      const refuse = async (reason: string) => {
+        await db.execute(sql`
+          insert into public.abuse_events (kind, detail)
+          values ('signup_blocked', ${JSON.stringify({ reason, email_domain: (user.email ?? "").split("@")[1] ?? null })}::jsonb)`);
+        return refusal("Sign-up needs a check from the app. Update the app and try again.");
+      };
+      const verdict = async (): Promise<Response | null> => {
+        if (!proof?.kind || !kinds.includes(proof.kind as "pow")) return refuse("missing_proof");
+        if (proof.kind === "pow") {
+          const v = verifyPow(secret, proof.challenge ?? "", proof.nonce ?? "");
+          if (!v.ok) return refuse(`pow_${v.reason}`);
+          if (!(await useChallenge(db, proof.challenge ?? ""))) return refuse("pow_reused");
+          return null;
+        }
+        if (!env.APP_CHECK_PROJECT_NUMBER) return refuse("app_check_unconfigured");
+        try {
+          await verifyAppCheck(proof.token ?? "", {
+            projectNumber: env.APP_CHECK_PROJECT_NUMBER,
+            jwksUrl: env.APP_CHECK_JWKS_URL,
+            issuerBase: env.APP_CHECK_ISSUER_BASE,
+          });
+          return null;
+        } catch {
+          return refuse("app_check_invalid");
+        }
+      };
+      proofRefusal = await verdict();
+      return proofRefusal;
+    };
+
     // Casama Cloud's waitlist (docs/WAITLIST-PLAN.md): while the gate is on, a new account is
     // made only for an address that was let in, or invited to a workspace with a seat for it.
     // This runs before Auth sends anything, so a refused person costs no sign-in email.
@@ -135,48 +197,48 @@ export function registerAbuseRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           503,
         );
       }
-      if (!allowed) return refusal(isAppleRelay(email) ? RELAY_MESSAGE : inviteOnlyMessage(env));
+      let reason: RefusalReason = isAppleRelay(email) ? "relay" : "gate";
+      // Rule 4 (§2.1, §7.3): an invite code sent with the sign-up is claimed for this address,
+      // exactly as POST /v1/waitlist/redeem would, and a good one lets the sign-up through. A code
+      // that's used up puts the address on the waitlist, near the front (§7.4).
+      const raw = user.user_metadata?.invite_code;
+      const address = cleanEmail(email);
+      if (
+        !allowed &&
+        typeof raw === "string" &&
+        raw.trim() &&
+        address &&
+        !isDisposableEmail(address)
+      ) {
+        if (needsProof) {
+          const bad = await checkProof();
+          if (bad) return bad;
+        }
+        try {
+          const code = await resolveInviteCode(db, raw.slice(0, 200));
+          const claimed = code
+            ? await claimInvite(db, {
+                email: address,
+                code,
+                perPerson: (await getSignupGate(db)).invites_per_person,
+                source: "signup",
+              })
+            : null;
+          if (claimed) trackClaim(claimed, "signup");
+          if (claimed?.outcome === "admitted") allowed = true;
+          else reason = claimed ? "code_used_up" : "code_not_found";
+        } catch (err) {
+          // The puzzle is spent by now, so Auth trying again wouldn't help: refuse.
+          deps.logger.error("signup invite claim failed", { error: (err as Error).message });
+        }
+      }
+      if (!allowed) {
+        trackRefused(reason);
+        return refusal(reason === "relay" ? RELAY_MESSAGE : inviteOnlyMessage(env));
+      }
     }
-    if (!abuseControlsOn(env)) return c.json({}, 200);
-    const payload = JSON.parse(body || "{}") as {
-      user?: {
-        email?: string;
-        app_metadata?: { provider?: string };
-        user_metadata?: {
-          signup_proof?: { kind?: string; token?: string; challenge?: string; nonce?: string };
-        };
-      };
-    };
-    const user = payload.user ?? {};
-    const provider = user.app_metadata?.provider ?? "email";
-    // Google, Apple and SSO sign-ins already prove a real account elsewhere.
-    if (provider !== "email" && provider !== "phone") return c.json({}, 200);
-    const proof = user.user_metadata?.signup_proof;
-    const kinds = signupProofKinds(env);
-    const refuse = async (reason: string) => {
-      await db.execute(sql`
-        insert into public.abuse_events (kind, detail)
-        values ('signup_blocked', ${JSON.stringify({ reason, email_domain: (user.email ?? "").split("@")[1] ?? null })}::jsonb)`);
-      return refusal("Sign-up needs a check from the app. Update the app and try again.");
-    };
-    if (!proof?.kind || !kinds.includes(proof.kind as "pow")) return refuse("missing_proof");
-    if (proof.kind === "pow") {
-      const v = verifyPow(secret, proof.challenge ?? "", proof.nonce ?? "");
-      if (!v.ok) return refuse(`pow_${v.reason}`);
-      if (!(await useChallenge(db, proof.challenge ?? ""))) return refuse("pow_reused");
-      return c.json({}, 200);
-    }
-    if (!env.APP_CHECK_PROJECT_NUMBER) return refuse("app_check_unconfigured");
-    try {
-      await verifyAppCheck(proof.token ?? "", {
-        projectNumber: env.APP_CHECK_PROJECT_NUMBER,
-        jwksUrl: env.APP_CHECK_JWKS_URL,
-        issuerBase: env.APP_CHECK_ISSUER_BASE,
-      });
-      return c.json({}, 200);
-    } catch {
-      return refuse("app_check_invalid");
-    }
+    if (!needsProof) return c.json({}, 200);
+    return (await checkProof()) ?? c.json({}, 200);
   });
 
   // The egress proxy reports what it blocked (internal token checked by the /internal/* middleware).
@@ -220,7 +282,8 @@ export function registerAbuseRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           await db.execute(sql`
             insert into public.notifications (user_id, kind, payload)
             select u.id, 'abuse', ${JSON.stringify({ title: "A workspace was suspended", body: `${kind} on computer ${b.computer}`, link: "/settings/admin" })}::jsonb
-            from auth.users u where lower(u.email) = any(${admins})`);
+            from auth.users u
+            where lower(u.email) in (select jsonb_array_elements_text(${JSON.stringify(admins)}::jsonb))`);
       }
     }
     await db.execute(sql`

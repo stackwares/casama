@@ -823,6 +823,7 @@ import 'package:casama_api/src/model/voice_transcript_request_turns_inner.dart';
 import 'package:casama_api/src/model/voice_transcript_request_usage.dart';
 import 'package:casama_api/src/model/voice_turns_request.dart';
 import 'package:casama_api/src/model/voice_turns_request_turns_inner.dart';
+import 'package:casama_api/src/model/waitlist_batch.dart';
 import 'package:casama_api/src/model/waitlist_changed.dart';
 import 'package:casama_api/src/model/waitlist_entry.dart';
 import 'package:casama_api/src/model/waitlist_joined.dart';
@@ -2654,6 +2655,8 @@ final _regMap = RegExp(r'^Map<String,(.*)>$');
           return VoiceTurnsRequest.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'VoiceTurnsRequestTurnsInner':
           return VoiceTurnsRequestTurnsInner.fromJson(value as Map<String, dynamic>) as ReturnType;
+        case 'WaitlistBatch':
+          return WaitlistBatch.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WaitlistChanged':
           return WaitlistChanged.fromJson(value as Map<String, dynamic>) as ReturnType;
         case 'WaitlistEntry':

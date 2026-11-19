@@ -7,11 +7,17 @@ part of 'redeem_invite_request.dart';
 // **************************************************************************
 
 abstract class _$RedeemInviteRequestCWProxy {
-  RedeemInviteRequest email(String email);
+  RedeemInviteRequest email(String? email);
 
   RedeemInviteRequest code(String code);
 
   RedeemInviteRequest proof(WaitlistProof proof);
+
+  RedeemInviteRequest idToken(String? idToken);
+
+  RedeemInviteRequest provider(RedeemInviteRequestProviderEnum? provider);
+
+  RedeemInviteRequest tokenNonce(String? tokenNonce);
 
   RedeemInviteRequest source_(String? source_);
 
@@ -26,9 +32,12 @@ abstract class _$RedeemInviteRequestCWProxy {
   /// RedeemInviteRequest(...).copyWith(id: 12, name: "My name")
   /// ```
   RedeemInviteRequest call({
-    String email,
+    String? email,
     String code,
     WaitlistProof proof,
+    String? idToken,
+    RedeemInviteRequestProviderEnum? provider,
+    String? tokenNonce,
     String? source_,
     bool? newsletter,
   });
@@ -42,13 +51,24 @@ class _$RedeemInviteRequestCWProxyImpl implements _$RedeemInviteRequestCWProxy {
   final RedeemInviteRequest _value;
 
   @override
-  RedeemInviteRequest email(String email) => call(email: email);
+  RedeemInviteRequest email(String? email) => call(email: email);
 
   @override
   RedeemInviteRequest code(String code) => call(code: code);
 
   @override
   RedeemInviteRequest proof(WaitlistProof proof) => call(proof: proof);
+
+  @override
+  RedeemInviteRequest idToken(String? idToken) => call(idToken: idToken);
+
+  @override
+  RedeemInviteRequest provider(RedeemInviteRequestProviderEnum? provider) =>
+      call(provider: provider);
+
+  @override
+  RedeemInviteRequest tokenNonce(String? tokenNonce) =>
+      call(tokenNonce: tokenNonce);
 
   @override
   RedeemInviteRequest source_(String? source_) => call(source_: source_);
@@ -70,14 +90,17 @@ class _$RedeemInviteRequestCWProxyImpl implements _$RedeemInviteRequestCWProxy {
     Object? email = const $CopyWithPlaceholder(),
     Object? code = const $CopyWithPlaceholder(),
     Object? proof = const $CopyWithPlaceholder(),
+    Object? idToken = const $CopyWithPlaceholder(),
+    Object? provider = const $CopyWithPlaceholder(),
+    Object? tokenNonce = const $CopyWithPlaceholder(),
     Object? source_ = const $CopyWithPlaceholder(),
     Object? newsletter = const $CopyWithPlaceholder(),
   }) {
     return RedeemInviteRequest(
-      email: email == const $CopyWithPlaceholder() || email == null
+      email: email == const $CopyWithPlaceholder()
           ? _value.email
           // ignore: cast_nullable_to_non_nullable
-          : email as String,
+          : email as String?,
       code: code == const $CopyWithPlaceholder() || code == null
           ? _value.code
           // ignore: cast_nullable_to_non_nullable
@@ -86,6 +109,18 @@ class _$RedeemInviteRequestCWProxyImpl implements _$RedeemInviteRequestCWProxy {
           ? _value.proof
           // ignore: cast_nullable_to_non_nullable
           : proof as WaitlistProof,
+      idToken: idToken == const $CopyWithPlaceholder()
+          ? _value.idToken
+          // ignore: cast_nullable_to_non_nullable
+          : idToken as String?,
+      provider: provider == const $CopyWithPlaceholder()
+          ? _value.provider
+          // ignore: cast_nullable_to_non_nullable
+          : provider as RedeemInviteRequestProviderEnum?,
+      tokenNonce: tokenNonce == const $CopyWithPlaceholder()
+          ? _value.tokenNonce
+          // ignore: cast_nullable_to_non_nullable
+          : tokenNonce as String?,
       source_: source_ == const $CopyWithPlaceholder()
           ? _value.source_
           // ignore: cast_nullable_to_non_nullable
@@ -111,27 +146,53 @@ extension $RedeemInviteRequestCopyWith on RedeemInviteRequest {
 // **************************************************************************
 
 RedeemInviteRequest _$RedeemInviteRequestFromJson(Map<String, dynamic> json) =>
-    $checkedCreate('RedeemInviteRequest', json, ($checkedConvert) {
-      $checkKeys(json, requiredKeys: const ['email', 'code', 'proof']);
-      final val = RedeemInviteRequest(
-        email: $checkedConvert('email', (v) => v as String),
-        code: $checkedConvert('code', (v) => v as String),
-        proof: $checkedConvert(
-          'proof',
-          (v) => WaitlistProof.fromJson(v as Map<String, dynamic>),
-        ),
-        source_: $checkedConvert('source', (v) => v as String?),
-        newsletter: $checkedConvert('newsletter', (v) => v as bool?),
-      );
-      return val;
-    }, fieldKeyMap: const {'source_': 'source'});
+    $checkedCreate(
+      'RedeemInviteRequest',
+      json,
+      ($checkedConvert) {
+        $checkKeys(json, requiredKeys: const ['code', 'proof']);
+        final val = RedeemInviteRequest(
+          email: $checkedConvert('email', (v) => v as String?),
+          code: $checkedConvert('code', (v) => v as String),
+          proof: $checkedConvert(
+            'proof',
+            (v) => WaitlistProof.fromJson(v as Map<String, dynamic>),
+          ),
+          idToken: $checkedConvert('id_token', (v) => v as String?),
+          provider: $checkedConvert(
+            'provider',
+            (v) => $enumDecodeNullable(
+              _$RedeemInviteRequestProviderEnumEnumMap,
+              v,
+            ),
+          ),
+          tokenNonce: $checkedConvert('token_nonce', (v) => v as String?),
+          source_: $checkedConvert('source', (v) => v as String?),
+          newsletter: $checkedConvert('newsletter', (v) => v as bool?),
+        );
+        return val;
+      },
+      fieldKeyMap: const {
+        'idToken': 'id_token',
+        'tokenNonce': 'token_nonce',
+        'source_': 'source',
+      },
+    );
 
 Map<String, dynamic> _$RedeemInviteRequestToJson(
   RedeemInviteRequest instance,
 ) => <String, dynamic>{
-  'email': instance.email,
+  'email': ?instance.email,
   'code': instance.code,
   'proof': instance.proof.toJson(),
+  'id_token': ?instance.idToken,
+  'provider': ?_$RedeemInviteRequestProviderEnumEnumMap[instance.provider],
+  'token_nonce': ?instance.tokenNonce,
   'source': ?instance.source_,
   'newsletter': ?instance.newsletter,
+};
+
+const _$RedeemInviteRequestProviderEnumEnumMap = {
+  RedeemInviteRequestProviderEnum.apple: 'apple',
+  RedeemInviteRequestProviderEnum.google: 'google',
 };

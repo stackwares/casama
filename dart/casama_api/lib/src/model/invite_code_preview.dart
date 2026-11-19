@@ -125,7 +125,9 @@ enum InviteCodePreviewKindEnum {
 @JsonValue(r'personal')
 personal(r'personal'),
 @JsonValue(r'campaign')
-campaign(r'campaign');
+campaign(r'campaign'),
+@JsonValue(r'one_time')
+oneTime(r'one_time');
 
 const InviteCodePreviewKindEnum(this.value);
 

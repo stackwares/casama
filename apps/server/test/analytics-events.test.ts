@@ -35,7 +35,8 @@ it("reports each new sign-up once, never old accounts, opt-outs, or anything whe
     expect(await sweepSignups(h.db, rec)).toBe(1);
     expect(rec.events).toHaveLength(1);
     expect(rec.events[0]).toMatchObject({ event: "signed_up", distinctId: a.id });
-    expect(rec.events[0]?.properties).toEqual({ method: expect.any(String) });
+    // With how the person got past Casama Cloud's waitlist (D-427): none on a server without one.
+    expect(rec.events[0]?.properties).toEqual({ method: expect.any(String), admitted_via: "none" });
     expect(JSON.stringify(rec.events[0] ?? {})).not.toContain("example.com");
 
     // Second pass: already reported.
@@ -61,11 +62,21 @@ it("first completed interactive run is first_value, once, and automation never c
 
     await runCompletedMilestones(h.db, { userId: a.id, orgId, trigger: "chat" }, rec);
     expect(rec.events.map((e) => e.event)).toEqual(["milestone_reached", "first_value"]);
-    expect(rec.events[1]?.properties).toMatchObject({ kind: "chat" });
+    expect(rec.events[1]?.properties).toMatchObject({ kind: "chat", admitted_via: "none" });
     expect(rec.events[1]?.setOnce).toMatchObject({ first_value_kind: "chat" });
 
     await runCompletedMilestones(h.db, { userId: a.id, orgId, trigger: "chat" }, rec);
     expect(rec.events).toHaveLength(2); // once per person
+
+    // Someone let in with an invite code says so (D-427), matched on the inbox before the
+    // waitlist sweep has tied the account to its entry.
+    const c = await createAuthUser(tdb.admin, "c.friend@example.com");
+    await tdb.admin`
+      insert into public.waitlist_entries (email, email_key, status, admitted_at, admitted_via)
+      values ('c.friend@example.com', public.email_key('c.friend@example.com'), 'admitted', now(), 'campaign:SHOWHN')`;
+    const rec3 = new Recorder();
+    await runCompletedMilestones(h.db, { userId: c.id, orgId, trigger: "chat" }, rec3);
+    expect(rec3.events[1]?.properties).toMatchObject({ kind: "chat", admitted_via: "code" });
 
     // Opted out: the milestone is recorded in our own database, nothing is sent.
     const rec2 = new Recorder();

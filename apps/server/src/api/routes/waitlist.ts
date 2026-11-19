@@ -7,12 +7,14 @@
 import { routes } from "@casama/contracts";
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { useChallenge, verifyPow } from "../../services/abuse.ts";
+import { IdTokenError, IdTokenVerifier, idTokenAudiences } from "../../services/id-token.ts";
 import { referralConfig } from "../../services/referrals.ts";
 import {
   addWaitlistEntries,
   campaignCodeForm,
   checkSignupGate,
   claimInvite,
+  claimVia,
   cleanEmail,
   createCampaign,
   gateClosed,
@@ -30,6 +32,8 @@ import {
   removeWaitlistEntry,
   resolveInviteCode,
   setSignupGate,
+  trackClaim,
+  trackJoined,
   updateCampaign,
   type WaitlistRow,
   waitlistAvailable,
@@ -80,7 +84,12 @@ export function registerWaitlistRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
   const inviteLink = (code: string) => `${new URL("/invite", env.WAITLIST_URL).toString()}/${code}`;
 
   const on = () => {
-    if (!available) throw new ApiError(404, "waitlist_off", "This server has no waitlist");
+    if (!available)
+      throw new ApiError(
+        404,
+        "waitlist_off",
+        "The waitlist is part of Casama Cloud. On this server, people get in through workspace invites or SIGNUP_ALLOWED_EMAILS.",
+      );
   };
   const caller = (c: { req: { header(n: string): string | undefined } }) =>
     clientIp((n) => c.req.header(n), env.TRUSTED_CLIENT_IP_HEADER);
@@ -101,6 +110,17 @@ export function registerWaitlistRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const gate = await getSignupGate(db);
     return { gate, closed: gateClosed(gate) };
   };
+  // Apple's and Google's keys are cached in the verifier; tests swap the fetch on deps.
+  let verifier: { fetch: typeof fetch; v: IdTokenVerifier } | null = null;
+  const idTokens = () => {
+    const f = deps.idTokenFetch ?? fetch;
+    if (verifier?.fetch !== f)
+      verifier = {
+        fetch: f,
+        v: new IdTokenVerifier({ audiences: idTokenAudiences(env), fetch: f }),
+      };
+    return verifier.v;
+  };
 
   // --- no sign-in -------------------------------------------------------------------------------
 
@@ -114,7 +134,7 @@ export function registerWaitlistRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     const hash = ipHash(secret, ip);
     if ((await joinsFrom(db, hash)) >= JOINS_PER_DAY)
       throw new ApiError(429, "too_many_attempts", "Too many tries today. Try again tomorrow.");
-    await joinWaitlist(db, {
+    const joined = await joinWaitlist(db, {
       email: address,
       source: body.source,
       ref: body.ref,
@@ -123,6 +143,7 @@ export function registerWaitlistRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       newsletter: body.newsletter,
       ipHash: hash,
     });
+    if (joined?.created) trackJoined(joined.id, !!body.self_hosting, body.source ?? null);
     // The same answer whoever the address belongs to: nothing here says who is on the list.
     return c.json({ ok: true as const }, 200);
   });
@@ -134,8 +155,26 @@ export function registerWaitlistRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
     tries(key);
     misses.check(key);
     const body = c.req.valid("json");
-    const address = email(body.email);
+    // Checked before the puzzle is spent: an address that can't be one costs nothing.
+    if (body.email) email(body.email);
     await prove(body.proof);
+    // An ID token from the native Apple or Google sheet (§7.3): the address inside it, which may be
+    // an Apple "Hide My Email" address. The app signs in with the same token afterwards.
+    let address: string;
+    if (body.id_token && body.provider) {
+      try {
+        const t = await idTokens().verify(body.provider, body.id_token, body.token_nonce);
+        address = email(t.email);
+      } catch (err) {
+        if (!(err instanceof IdTokenError)) throw err;
+        if (err.reason === "keys_unavailable")
+          throw new ApiError(503, "unavailable", "Couldn't check that sign-in. Try again.");
+        if (err.reason === "unconfigured")
+          throw new ApiError(400, "provider_off", "This server doesn't take that sign-in method.");
+        misses.miss(key);
+        throw new ApiError(400, "bad_id_token", "That sign-in didn't work. Try again.");
+      }
+    } else address = email(body.email ?? "");
     const notFound = () => {
       misses.miss(key);
       return new ApiError(
@@ -156,6 +195,7 @@ export function registerWaitlistRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) 
       ipHash: ipHash(secret, ip),
     });
     if (!claimed) throw notFound();
+    trackClaim(claimed, claimVia(body.source, !!body.id_token));
     return c.json({ outcome: claimed.outcome, kind: claimed.kind }, 200);
   });
 

@@ -151,7 +151,10 @@ export async function instanceOwners(db: Database, adminEmails?: string) {
     .filter(Boolean);
   return db.execute<{ id: string; email: string | null }>(
     list.length
-      ? sql`select id, email from auth.users where lower(email) = any(${list})`
+      ? // A JS array in a drizzle template becomes a value list ("($1, $2)"), never an array, so
+        // `= any(${list})` failed whenever INSTANCE_ADMIN_EMAILS was set.
+        sql`select id, email from auth.users
+            where lower(email) in (select jsonb_array_elements_text(${JSON.stringify(list)}::jsonb))`
       : sql`select id, email from auth.users order by created_at limit 1`,
   );
 }

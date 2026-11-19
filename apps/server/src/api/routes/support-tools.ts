@@ -11,6 +11,7 @@
 import { type Database, type JwtClaims, withUserSession } from "@casama/db";
 import { cloudModelDailyCap } from "@casama/domain";
 import { sql } from "drizzle-orm";
+import { gateClosed, getSignupGate, memberInvites } from "../../services/waitlist.ts";
 
 type Billing = {
   enabled: boolean;
@@ -81,13 +82,20 @@ export const LOOKUP_TOOLS = [
     function: {
       name: "get_invites",
       description:
-        "Invites to workspaces sent to this person's email, and their requests to join workspaces. For an owner or admin, also the invites and join requests waiting in the open workspace.",
+        "Invites to workspaces sent to this person's email, and their requests to join workspaces. For an owner or admin, also the invites and join requests waiting in the open workspace. While Casama Cloud is invite-only, also this person's own invite code and how many invites they have left.",
       parameters: { type: "object", properties: {} },
     },
   },
 ] as const;
 
-export function supportLookups(db: Database, billing: Billing) {
+export function supportLookups(
+  db: Database,
+  billing: Billing,
+  opts: {
+    /** Casama Cloud's waitlist (D-427) exists on this server, and the link base for invite codes. */
+    waitlist?: { inviteBase: string } | null;
+  } = {},
+) {
   const asPerson = <T>(claims: JwtClaims, fn: Parameters<typeof withUserSession<T>>[2]) =>
     withUserSession(db, claims, fn);
 
@@ -435,6 +443,37 @@ export function supportLookups(db: Database, billing: Billing) {
         asked: iso(j.created_at),
       })),
     };
+    // Casama Cloud while it's invite-only (D-427): the person's own invites, so Help can say how
+    // many friends they can still let in and where to send them.
+    if (opts.waitlist) {
+      try {
+        const gate = await getSignupGate(db);
+        if (gateClosed(gate)) {
+          const mineLeft = await memberInvites(db, claims.sub, gate.invites_per_person);
+          const [rc] = await db.execute<{ code: string }>(
+            sql`select code from public.referral_codes where user_id = ${claims.sub}::uuid`,
+          );
+          out.cloud_invite_only = {
+            new_accounts:
+              "by invitation: join the waitlist at casama.ai/waitlist, or claim an invite code there or with I Have an Invite on the app's sign-in screen",
+            my_invite_code: rc?.code ?? null,
+            my_invite_link: rc?.code ? `${opts.waitlist.inviteBase}/${rc.code}` : null,
+            invites_total: mineLeft.total,
+            invites_used: mineLeft.used,
+            invites_left: mineLeft.unlocked ? mineLeft.left : 0,
+            invites_unlocked: mineLeft.unlocked,
+            ...(mineLeft.unlocked
+              ? {}
+              : {
+                  how_to_unlock:
+                    "Invites unlock after this person's first finished chat with a bot",
+                }),
+          };
+        }
+      } catch {
+        // The rest of the answer still helps.
+      }
+    }
     if (orgId) {
       const admin = await asPerson(claims, async (tx) => {
         const [r] = await tx.execute<{ ok: boolean }>(

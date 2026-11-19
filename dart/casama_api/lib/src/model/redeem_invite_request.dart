@@ -21,11 +21,17 @@ class RedeemInviteRequest {
   /// Returns a new [RedeemInviteRequest] instance.
   RedeemInviteRequest({
 
-    required  this.email,
+     this.email,
 
     required  this.code,
 
     required  this.proof,
+
+     this.idToken,
+
+     this.provider,
+
+     this.tokenNonce,
 
      this.source_,
 
@@ -35,12 +41,12 @@ class RedeemInviteRequest {
   @JsonKey(
     
     name: r'email',
-    required: true,
+    required: false,
     includeIfNull: false,
   )
 
 
-  final String email;
+  final String? email;
 
 
 
@@ -65,6 +71,42 @@ class RedeemInviteRequest {
 
 
   final WaitlistProof proof;
+
+
+
+  @JsonKey(
+    
+    name: r'id_token',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? idToken;
+
+
+
+  @JsonKey(
+    
+    name: r'provider',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final RedeemInviteRequestProviderEnum? provider;
+
+
+
+  @JsonKey(
+    
+    name: r'token_nonce',
+    required: false,
+    includeIfNull: false,
+  )
+
+
+  final String? tokenNonce;
 
 
 
@@ -99,6 +141,9 @@ class RedeemInviteRequest {
       other.email == email &&
       other.code == code &&
       other.proof == proof &&
+      other.idToken == idToken &&
+      other.provider == provider &&
+      other.tokenNonce == tokenNonce &&
       other.source_ == source_ &&
       other.newsletter == newsletter;
 
@@ -107,6 +152,9 @@ class RedeemInviteRequest {
         email.hashCode +
         code.hashCode +
         proof.hashCode +
+        idToken.hashCode +
+        provider.hashCode +
+        tokenNonce.hashCode +
         source_.hashCode +
         newsletter.hashCode;
 
@@ -120,4 +168,20 @@ class RedeemInviteRequest {
   }
 
 }
+
+
+enum RedeemInviteRequestProviderEnum {
+@JsonValue(r'apple')
+apple(r'apple'),
+@JsonValue(r'google')
+google(r'google');
+
+const RedeemInviteRequestProviderEnum(this.value);
+
+final String value;
+
+@override
+String toString() => value;
+}
+
 

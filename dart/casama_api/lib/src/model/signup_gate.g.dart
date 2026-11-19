@@ -17,6 +17,8 @@ abstract class _$SignupGateCWProxy {
 
   SignupGate dailyEmailsMax(int dailyEmailsMax);
 
+  SignupGate batchHourUtc(int? batchHourUtc);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `SignupGate(...).copyWith.fieldName(value)`.
@@ -31,6 +33,7 @@ abstract class _$SignupGateCWProxy {
     int invitesPerPerson,
     int dailyAdmit,
     int dailyEmailsMax,
+    int? batchHourUtc,
   });
 }
 
@@ -58,6 +61,10 @@ class _$SignupGateCWProxyImpl implements _$SignupGateCWProxy {
   SignupGate dailyEmailsMax(int dailyEmailsMax) =>
       call(dailyEmailsMax: dailyEmailsMax);
 
+  @override
+  SignupGate batchHourUtc(int? batchHourUtc) =>
+      call(batchHourUtc: batchHourUtc);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `SignupGate(...).copyWith.fieldName(value)`.
@@ -73,6 +80,7 @@ class _$SignupGateCWProxyImpl implements _$SignupGateCWProxy {
     Object? invitesPerPerson = const $CopyWithPlaceholder(),
     Object? dailyAdmit = const $CopyWithPlaceholder(),
     Object? dailyEmailsMax = const $CopyWithPlaceholder(),
+    Object? batchHourUtc = const $CopyWithPlaceholder(),
   }) {
     return SignupGate(
       mode: mode == const $CopyWithPlaceholder() || mode == null
@@ -100,6 +108,10 @@ class _$SignupGateCWProxyImpl implements _$SignupGateCWProxy {
           ? _value.dailyEmailsMax
           // ignore: cast_nullable_to_non_nullable
           : dailyEmailsMax as int,
+      batchHourUtc: batchHourUtc == const $CopyWithPlaceholder()
+          ? _value.batchHourUtc
+          // ignore: cast_nullable_to_non_nullable
+          : batchHourUtc as int?,
     );
   }
 }
@@ -147,6 +159,10 @@ SignupGate _$SignupGateFromJson(Map<String, dynamic> json) => $checkedCreate(
         'daily_emails_max',
         (v) => (v as num).toInt(),
       ),
+      batchHourUtc: $checkedConvert(
+        'batch_hour_utc',
+        (v) => (v as num?)?.toInt(),
+      ),
     );
     return val;
   },
@@ -155,6 +171,7 @@ SignupGate _$SignupGateFromJson(Map<String, dynamic> json) => $checkedCreate(
     'invitesPerPerson': 'invites_per_person',
     'dailyAdmit': 'daily_admit',
     'dailyEmailsMax': 'daily_emails_max',
+    'batchHourUtc': 'batch_hour_utc',
   },
 );
 
@@ -165,6 +182,7 @@ Map<String, dynamic> _$SignupGateToJson(SignupGate instance) =>
       'invites_per_person': instance.invitesPerPerson,
       'daily_admit': instance.dailyAdmit,
       'daily_emails_max': instance.dailyEmailsMax,
+      'batch_hour_utc': ?instance.batchHourUtc,
     };
 
 const _$SignupGateModeEnumEnumMap = {

@@ -2,7 +2,8 @@
  * `signed_up` events (D-208, ANALYTICS-PLAN §4.3, §6.1). Sign-up is a database trigger the API never
  * sees, so the worker sweeps profiles that have not been reported yet. It reads the sign-up method
  * through a security-definer function (the worker never reads auth.* itself, D-095).
- * Only the provider name leaves (email, google, apple…): never an address or a name.
+ * Only the provider name leaves (email, google, apple…): never an address or a name. With it goes
+ * how the person got past Casama Cloud's waitlist (D-427): batch, hand, code, or none.
  */
 import type { Database } from "@casama/db";
 import {
@@ -20,6 +21,15 @@ export async function sweepSignups(db: Database, analytics?: ProductAnalytics): 
     sql`select user_id, created_at, provider from public.worker_new_signups(200)`,
   );
   if (rows.length === 0) return 0;
+  const via = new Map<string, string>();
+  try {
+    const found = await db.execute<{ user_id: string; admitted_via: string }>(
+      sql`select user_id, admitted_via from public.worker_admitted_via(array(select jsonb_array_elements_text(${JSON.stringify(rows.map((r) => r.user_id))}::text::jsonb))::uuid[])`,
+    );
+    for (const f of found) via.set(f.user_id, f.admitted_via);
+  } catch {
+    // The event matters more than this one property.
+  }
   for (const r of rows) {
     const at = new Date(r.created_at);
     a.capture({
@@ -27,7 +37,7 @@ export async function sweepSignups(db: Database, analytics?: ProductAnalytics): 
       distinctId: r.user_id,
       uuid: deterministicUuid("signed_up", r.user_id),
       timestamp: at,
-      properties: { method: r.provider },
+      properties: { method: r.provider, admitted_via: via.get(r.user_id) ?? "none" },
       setOnce: { signup_method: r.provider, signup_at: at.toISOString() },
     });
   }

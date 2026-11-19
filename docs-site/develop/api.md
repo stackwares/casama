@@ -158,20 +158,58 @@ Signed out. The first two need a solved sign-up puzzle (see `GET /v1/signup/chal
 | Route | What it does | Errors |
 | --- | --- | --- |
 | `POST /v1/waitlist` | Adds an email address to the waitlist. Sends no email. Answers the same for every address | 400 `bad_email`, 400 `disposable_email`, 403 `proof_required`, 404 `waitlist_off`, 429 `too_many_attempts` |
-| `POST /v1/waitlist/redeem` | Claims an invite code for an email address, which can then sign up with any sign-in method | 400 `bad_email`, 400 `disposable_email`, 403 `proof_required`, 404 `invite_not_found`, 404 `waitlist_off`, 429 `too_many_attempts` |
+| `POST /v1/waitlist/redeem` | Claims an invite code for an email address, which can then sign up with any sign-in method. Takes `email`, or an Apple or Google ID token instead (below) | 400 `bad_email`, 400 `disposable_email`, 400 `bad_id_token`, 400 `provider_off`, 403 `proof_required`, 404 `invite_not_found`, 404 `waitlist_off`, 429 `too_many_attempts`, 503 when Apple's or Google's keys can't be fetched |
 | `GET /v1/invites/preview?code=` | Says what an invite code is and whether it has an invite left | 404, 429 |
 | `POST /v1/waitlist/leave` | Takes an address off the waitlist, with the token from its "You're in" email | 400, 404, 429 |
+
+A code is a member's 6-character code, a campaign code, the one-time code from a "You're in" email
+(`XXXX-XXXX`, good for one more address), or an invite link. `kind` in the answer is `personal`,
+`campaign` or `one_time`.
+
+**With an ID token.** For Sign in with Apple and Google's own sign-in sheet, send the ID token
+instead of `email`, and the address inside it is let in. That is how an Apple "Hide My Email"
+address gets an invite. Then sign in with the same token.
+
+```json
+{
+  "code": "SHOWHN-DEC8",
+  "id_token": "<the ID token>",
+  "provider": "apple",
+  "token_nonce": "<the raw nonce the token was requested with>",
+  "proof": { "challenge": "…", "nonce": "…" },
+  "source": "app_ios"
+}
+```
+
+The server checks the token's signature against Apple's or Google's published keys, its issuer,
+its expiry and its audience (one of the client ids Auth accepts: `APPLE_SIGNIN_APP_ID` and
+`APPLE_SIGNIN_SERVICES_ID` for Apple, `GOOGLE_AUTH_CLIENT_ID` for Google). When the token carries
+a `nonce` claim, send the raw nonce as `token_nonce`: the claim must be its SHA-256 in hex, as Auth
+checks it. A Google address must be verified.
+
+**At sign-up.** A sign-up can carry the code in its user metadata, and the sign-up hook claims it for
+the sign-up's address on the spot, the same way. With supabase-js or supabase_flutter that is
+`options.data.invite_code` (`data: { "invite_code": "SHOWHN-DEC8" }`). A used-up code puts the
+address on the waitlist and the sign-up is refused with the usual sentence. An email sign-up still
+needs its `signup_proof`, and the proof is checked before the code is used.
 
 Instance owners only:
 
 | Route | What it does | Errors |
 | --- | --- | --- |
-| `GET /v1/admin/waitlist` | Numbers, the gate and a page of entries | 401, 403, 404 |
+| `GET /v1/admin/waitlist` | Numbers, the gate, the daily batch's last day (`stats.last_batch`) and a page of entries | 401, 403, 404 |
 | `POST /v1/admin/waitlist/admit` | Lets in chosen entries, or the next N. They are let in as their "You're in" emails go out, never more than the day's number | 400, 401, 403, 404 |
 | `POST /v1/admin/waitlist/entries` | Lets addresses in by hand | 400, 401, 403, 404 |
 | `DELETE /v1/admin/waitlist/entries/{id}` | Removes an entry. A removed address can no longer sign up | 401, 403, 404 |
 | `GET /v1/admin/signup-gate` | Reads the sign-up gate | 401, 403, 404 |
 | `PUT /v1/admin/signup-gate` | Turns the gate on or off and sets its opening time and numbers. Fields left out keep their value. Takes effect within 15 seconds | 400, 401, 403, 404 |
+
+**The daily batch.** With `daily_admit` above 0, once a day from `batch_hour_utc` (UTC, default 15)
+the worker chooses up to `daily_admit` people from the waitlist, never more than the day's
+"You're in" emails (`daily_emails_max`) have room for. It skips the day and sends the instance
+owners a notification when the day before was busy: computers used 7/9 of the memory set aside
+for them (`COMPUTER_HOST_MEMORY_GB`) at their peak, or model spend on Casama's key passed 60% of
+`OPENROUTER_DAILY_CAP_USD` (default 50). Owners can still let people in by hand.
 | `GET /v1/admin/invite-campaigns` | Lists campaign invite codes | 401, 403, 404 |
 | `POST /v1/admin/invite-campaigns` | Makes a campaign code with a total | 400 `bad_code`, 401, 403, 404, 409 when the code exists |
 | `PATCH /v1/admin/invite-campaigns/{code}` | Changes a code's total, dates or name, or turns it off | 400, 401, 403, 404 |

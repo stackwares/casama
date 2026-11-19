@@ -43,6 +43,13 @@ The server, apps, CLI, SDK and MCP server share one version number.
   - Fixed: when the sign-up hook refuses someone (the waitlist, `SIGNUP_ALLOWED_EMAILS`,
     `SIGNUP_INVITED_ONLY` and Casama Cloud's sign-up check), the reason now reaches the apps. Before,
     Auth showed "Unexpected status code returned from hook: 403" for every refusal.
+  - In the apps: **Join the Waitlist** and **I Have an Invite** on the sign-in screen, a sheet
+    instead of a toast when a sign-up is refused, invites left in Invite Friends, and Admin →
+    Waitlist for owners (the numbers, Admit, codes, the switch). A code works with every sign-in,
+    including Apple's Hide My Email: the app checks the code with the Apple or Google sign-in
+    before signing in. Each "You're in" email carries a one-time code for one more address.
+  - An optional daily batch lets in a set number of people at a set hour, and skips the day (with
+    a notification to the owners) when yesterday's computers or model spend ran high.
 - Calls end in one card in the chat instead of a bubble per sentence (D-429): a short summary,
   next steps you can hand to the bot with one tap, what the bot did on the call, the transcript
   folded in (searchable for long calls), Call back, Copy, Share and Delete. A missed call from the

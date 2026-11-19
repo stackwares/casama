@@ -1247,6 +1247,67 @@ class AdminJsonSetting {
   final Map<String, dynamic> builtIn;
 }
 
+// --- Casama Cloud's waitlist and invite gate (D-427) ---------------------------------------------
+
+/// What a person types on Join the Waitlist (WAITLIST-PLAN §5.2).
+class WaitlistJoin {
+  const WaitlistJoin({required this.email, this.note, this.selfHosting = false, this.newsletter = false});
+  final String email;
+
+  /// "What would you have a bot do first?", one optional line.
+  final String? note;
+  final bool selfHosting;
+
+  /// A yes to Casama's monthly email; never assumed.
+  final bool newsletter;
+}
+
+/// How an Apple or Google sign-in with an invite code ended (§7.3).
+enum InviteSignInResult {
+  /// The code let the address in and the app signed in with the same token.
+  signedIn,
+
+  /// The code is real but its invites are gone: the address is on the waitlist, ahead of the line.
+  waitlisted,
+
+  /// The person closed the system sheet.
+  cancelled,
+
+  /// This device has no system sheet for that provider (the web, Windows, Linux, a Mac build
+  /// without the entitlement): the token can't come first, so the email path is the way in.
+  unavailable,
+}
+
+/// The gate setting as Admin shows it: the generated state plus the daily batch hour, which newer
+/// servers send (null on servers that don't).
+class AdminSignupGate {
+  const AdminSignupGate({required this.state, this.batchHourUtc});
+  final SignupGateState state;
+  final int? batchHourUtc;
+
+  SignupGate get gate => state.gate;
+  bool get closed => state.closed;
+}
+
+/// The daily batch's last run, when the server reports one.
+class WaitlistLastBatch {
+  const WaitlistLastBatch({this.at, this.count, this.skippedDetail});
+  final DateTime? at;
+  final int? count;
+
+  /// Why the day was skipped (the server's sentence), when it was.
+  final String? skippedDetail;
+}
+
+/// Admin → Waitlist: the numbers, the gate and a page of entries.
+class AdminWaitlist {
+  const AdminWaitlist({required this.stats, required this.gate, required this.items, this.lastBatch});
+  final WaitlistStats stats;
+  final AdminSignupGate gate;
+  final List<WaitlistEntry> items;
+  final WaitlistLastBatch? lastBatch;
+}
+
 abstract class Backend {
   // Auth
   Stream<bool> get signedInChanges;
@@ -2577,6 +2638,51 @@ abstract class Backend {
 
   /// Whether new accounts here are only for emails someone on the server invited.
   bool get signUpsByInvitation;
+
+  // Casama Cloud's waitlist and invite gate (D-427)
+  /// Set while this server takes new accounts only from its waitlist and invite codes (Casama
+  /// Cloud, `signup_gate` in /v1/config). Null when sign-ups are open; self-hosted servers never send it.
+  PublicConfigSignupGate? get signupGate;
+
+  /// Puts an address on the waitlist (solves the sign-up puzzle first). The same answer every time.
+  Future<void> joinWaitlist(WaitlistJoin join);
+
+  /// Who an invite code is from (a campaign's label or the member's first name) and whether it has
+  /// an invite left. Throws a 404 problem for a code that doesn't exist.
+  Future<InviteCodePreview> previewInviteCode(String code);
+
+  /// Claims an invite code for an email address; afterwards that address can sign up any way.
+  Future<InviteRedeemed> redeemInviteForEmail(String code, String email, {bool? newsletter});
+
+  /// Whether this device can get an Apple or Google ID token from the system sheet before signing
+  /// in, which an invite needs (§7.3). False where only the browser flow exists.
+  bool inviteSignInAvailable(String provider);
+
+  /// Apple or Google with an invite code: the system sheet first, then the code and its token to the
+  /// server, and only when it lets the address in, the sign-in with the same token and nonce.
+  Future<InviteSignInResult> signInWithInvite(String provider, String code);
+
+  /// A sign-in email for a new account that carries [inviteCode] in its sign-up data, so the server
+  /// lets it in on the spot (§2.1 rule 4).
+  Future<void> sendMagicLinkWithInvite(String email, String inviteCode);
+
+  // Admin → Waitlist (owner only)
+  Future<AdminWaitlist> adminWaitlist({String? status, String? query, int limit = 50, int offset = 0});
+
+  /// Lets in the next [count] in line, or the entries [ids]; returns how many.
+  Future<int> adminAdmitWaitlist({int? count, List<String>? ids});
+
+  /// Adds and admits addresses by hand; [notify] sends each the "You're in" email.
+  Future<WaitlistChanged> adminAddWaitlistEntries(List<String> emails, {bool notify = false});
+  Future<void> adminRemoveWaitlistEntry(String id);
+  Future<AdminSignupGate> adminSignupGate();
+
+  /// Changes some of mode, opens_at, invites_per_person, daily_admit, daily_emails_max,
+  /// batch_hour_utc (JSON names; a null opens_at clears it).
+  Future<AdminSignupGate> adminSetSignupGate(Map<String, Object?> changes);
+  Future<List<InviteCampaign>> adminInviteCampaigns();
+  Future<InviteCampaign> adminCreateInviteCampaign(CreateInviteCampaignRequest request);
+  Future<InviteCampaign> adminUpdateInviteCampaign(String code, UpdateInviteCampaignRequest request);
 
   /// Private notifications on this server (its owner): with it on, the push relay on Casama Cloud
   /// is given no text, and the app loads what happened from the server itself.

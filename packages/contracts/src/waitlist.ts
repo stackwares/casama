@@ -29,13 +29,25 @@ export const WaitlistJoined = z.object({ ok: z.literal(true) }).openapi("Waitlis
 
 export const RedeemInviteRequest = z
   .object({
-    email: z.string().min(3).max(254),
-    /** A member's code, a campaign code, or the invite link itself. */
+    /** The address to let in. Leave it out when `id_token` is sent: the token's address is used. */
+    email: z.string().min(3).max(254).optional(),
+    /** A member's code, a campaign code, a "You're in" email's one-time code, or the invite link itself. */
     code: z.string().min(1).max(200),
     proof: WaitlistProof,
+    /**
+     * Phase 2 (D-427): an ID token from the native Apple or Google sign-in sheet. The server checks it
+     * against Apple's or Google's keys and lets in the address inside it, which is how an Apple
+     * "Hide My Email" address gets in. The app then signs in with the same token.
+     */
+    id_token: z.string().min(20).max(8000).optional(),
+    provider: z.enum(["apple", "google"]).optional(),
+    /** The raw nonce the token was requested with, when there was one (Apple always). */
+    token_nonce: z.string().min(1).max(200).optional(),
     source: z.string().max(64).optional(),
     newsletter: z.boolean().optional(),
   })
+  .refine((r) => !!r.email !== !!r.id_token, { message: "Send email or id_token, not both" })
+  .refine((r) => !r.id_token || !!r.provider, { message: "id_token needs provider" })
   .openapi("RedeemInviteRequest");
 
 export const InviteRedeemed = z
@@ -45,13 +57,14 @@ export const InviteRedeemed = z
      * left, so the address is on the waitlist, ahead of the people without one.
      */
     outcome: z.enum(["admitted", "waitlisted"]),
-    kind: z.enum(["personal", "campaign"]),
+    /** one_time: the code from a "You're in" email, good for one more address. */
+    kind: z.enum(["personal", "campaign", "one_time"]),
   })
   .openapi("InviteRedeemed");
 
 export const InviteCodePreview = z
   .object({
-    kind: z.enum(["personal", "campaign"]),
+    kind: z.enum(["personal", "campaign", "one_time"]),
     /** A campaign's name. */
     label: z.string().nullable(),
     /** The inviting member's first name, when they set one. */
@@ -81,6 +94,8 @@ export const SignupGate = z
     daily_admit: z.number().int().min(0).max(10_000),
     /** "You're in" emails a day at most. */
     daily_emails_max: z.number().int().min(0).max(100_000),
+    /** The hour (UTC, 0–23) the daily automatic batch runs; 15 when unset. */
+    batch_hour_utc: z.number().int().min(0).max(23).optional(),
   })
   .openapi("SignupGate");
 
@@ -102,6 +117,20 @@ const Funnel = z.object({
   first_chat: z.number().int(),
 });
 
+export const WaitlistBatch = z
+  .object({
+    /** The UTC day (YYYY-MM-DD). */
+    day: z.string(),
+    ran_at: z.iso.datetime(),
+    /** People it chose for "You're in" emails. */
+    admitted: z.number().int(),
+    /** Why it let nobody in: capacity, model_spend, no_mail, nobody_waiting or error; null when it ran. */
+    skipped_reason: z.string().nullable(),
+    /** The same in a sentence, for Admin. */
+    detail: z.string().nullable(),
+  })
+  .openapi("WaitlistBatch");
+
 export const WaitlistStats = z
   .object({
     /** On the list, not yet chosen. */
@@ -119,8 +148,10 @@ export const WaitlistStats = z
     emails_today: z.number().int(),
     /** By the page or app people joined from. */
     by_source: z.array(Funnel),
-    /** By how people got in: batch, auto, admin, invite, campaign:<code>, or still waiting. */
+    /** By how people got in: batch, auto, admin, invite, campaign:<code>, one_time:<entry>, or still waiting. */
     by_via: z.array(Funnel),
+    /** The daily automatic batch's latest day; null before it first ran. */
+    last_batch: WaitlistBatch.nullable().optional(),
   })
   .openapi("WaitlistStats");
 

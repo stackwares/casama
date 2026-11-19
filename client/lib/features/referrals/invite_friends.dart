@@ -15,6 +15,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_tokens.dart';
 import '../../ui/app_card.dart';
 import '../../ui/page.dart';
+import '../auth/invite_gate.dart' show openHaveInvite;
 import '../workspaces/join_flow.dart' show JoinCard, JoinCardSkeleton;
 
 /// Invite friends (D-211): your invite code and link, what it has earned you, and who invited you.
@@ -293,6 +294,17 @@ class _InviteFriendsScreenState extends ConsumerState<InviteFriendsScreen> {
       SectionHeader(title: l10n.inviteFriendsProgress),
       GroupedCard(
         children: [
+          // While Casama Cloud is invite-only (D-427): how many of this member's invites are left.
+          // Never "invite friends to get in" (App Store 3.2.2): these let others in, not this person.
+          if (r.invites case final invites?)
+            GroupedTile(
+              key: const Key('inviteFriendsInvites'),
+              icon: LucideIcons.ticket,
+              title: l10n.inviteFriendsInvitesLeft(invites.left),
+              subtitle: invites.unlocked
+                  ? l10n.inviteFriendsInvitesUsed(invites.used, invites.total)
+                  : l10n.inviteFriendsInvitesLocked,
+            ),
           GroupedTile(
             key: const Key('inviteFriendsJoined'),
             icon: LucideIcons.users,
@@ -499,6 +511,13 @@ class _InviteLinkScreenState extends ConsumerState<InviteLinkScreen> {
 
   Future<void> _accept() async {
     final signedIn = ref.read(signedInProvider).value == true;
+    // Casama Cloud while it's invite-only (D-427): the code is the way in, so it goes to I Have an
+    // Invite, filled in. The server attaches the referral once the account exists.
+    if (!signedIn && ref.read(backendProvider).signupGate != null) {
+      await openHaveInvite(context, code: widget.code);
+      if (mounted && ref.read(signedInProvider).value == true) _done();
+      return;
+    }
     if (!signedIn) {
       ref.read(pendingReferralProvider.notifier).set(widget.code);
       context.go('/sign-in');

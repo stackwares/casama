@@ -23,6 +23,7 @@ import 'margin_card.dart';
 import 'pricing_tab.dart';
 import 'remote_settings_cards.dart';
 import 'reports_tab.dart';
+import 'waitlist_tab.dart';
 
 /// Null when the signed-in user is not this instance's owner.
 final adminOverviewProvider = FutureProvider<AdminOverview?>((ref) async {
@@ -46,7 +47,7 @@ class AdminScreen extends ConsumerWidget {
   /// The tab to open on (`?tab=domains` from a notification), or the overview.
   final String? tab;
 
-  static const _tabs = ['overview', 'users', 'workspaces', 'services', 'pricing', 'reports', 'domains', 'support', 'abuse'];
+  static const _tabs = ['overview', 'users', 'workspaces', 'services', 'pricing', 'reports', 'domains', 'support', 'abuse', 'waitlist'];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -77,13 +78,14 @@ class AdminScreen extends ConsumerWidget {
                   Tab(height: 40, text: l10n.adminDomains),
                   Tab(height: 40, text: l10n.adminSupport),
                   Tab(height: 40, text: l10n.adminAbuse),
+                  Tab(height: 40, text: l10n.adminWaitlist),
                 ],
               )),
             ),
           ),
         ),
         body: const TabBarView(
-          children: [_Overview(), _Users(), _Orgs(), _Services(), PricingTab(), ReportsTab(), AdminDomainsTab(), SupportTicketsTab(), _Abuse()],
+          children: [_Overview(), _Users(), _Orgs(), _Services(), PricingTab(), ReportsTab(), AdminDomainsTab(), SupportTicketsTab(), _Abuse(), AdminWaitlistTab()],
         ),
       ),
     );

@@ -279,30 +279,48 @@ class SupabaseBackend implements Backend {
   /// True when the system sheet finished (signed in, or the person cancelled). False when the
   /// sheet never opened, so the caller opens the browser instead.
   Future<bool> _signInWithAppleNative() async {
-    if (!await SignInWithApple.isAvailable()) return false;
+    final sheet = await _appleSheet();
+    if (sheet == null) return false;
+    final credential = sheet.credential;
+    if (credential == null) return true;
+    await _finishAppleSignIn(credential, _appleIdToken(credential), sheet.rawNonce);
+    return true;
+  }
+
+  /// Apple's system sheet: the credential and the raw nonce it was asked with. Null when the sheet
+  /// never opened; a null credential when the person closed it.
+  Future<({AuthorizationCredentialAppleID? credential, String rawNonce})?> _appleSheet() async {
+    if (!await SignInWithApple.isAvailable()) return null;
     final rawNonce = supabase.auth.generateRawNonce();
-    final AuthorizationCredentialAppleID credential;
     try {
-      credential = await SignInWithApple.getAppleIDCredential(
+      final credential = await SignInWithApple.getAppleIDCredential(
         scopes: const [
           AppleIDAuthorizationScopes.email,
           AppleIDAuthorizationScopes.fullName,
         ],
         nonce: appleNonceHash(rawNonce),
       );
+      return (credential: credential, rawNonce: rawNonce);
     } on SignInWithAppleAuthorizationException catch (error) {
-      if (error.code == AuthorizationErrorCode.canceled) return true;
-      if (appleSheetUnavailable(error)) return false;
+      if (error.code == AuthorizationErrorCode.canceled) return (credential: null, rawNonce: rawNonce);
+      if (appleSheetUnavailable(error)) return null;
       rethrow;
     } on SignInWithAppleNotSupportedException {
-      return false;
+      return null;
     }
+  }
+
+  static String _appleIdToken(AuthorizationCredentialAppleID credential) {
     final idToken = credential.identityToken;
     if (idToken == null) {
       throw const sb.AuthException(
         'Apple did not return a sign-in token. Try again.',
       );
     }
+    return idToken;
+  }
+
+  Future<void> _finishAppleSignIn(AuthorizationCredentialAppleID credential, String idToken, String rawNonce) async {
     await supabase.auth.signInWithIdToken(
       provider: sb.OAuthProvider.apple,
       idToken: idToken,
@@ -318,7 +336,6 @@ class SupabaseBackend implements Backend {
       ),
     );
     await _saveAppleName(credential.givenName, credential.familyName);
-    return true;
   }
 
   /// Google's SDK may be set up only once per launch, so its nonce and client are too. Supabase
@@ -341,38 +358,55 @@ class SupabaseBackend implements Backend {
   /// True when Google's sheet finished (signed in, or the person cancelled). False when this
   /// platform or server can't use it, or it failed on its own, so the caller opens the browser.
   Future<bool> _signInWithGoogleNative() async {
-    final client = googleNativeClient(
-      defaultTargetPlatform,
-      config?.googleClientIds ?? const [],
-    );
-    if (client == null) return false;
-    // Set up for another server's client earlier in this launch: its token would be refused here.
-    if (_googleClient != null && _googleClient != client) return false;
-    final String? idToken;
-    try {
-      await _setUpGoogle(client);
-      if (!GoogleSignIn.instance.supportsAuthenticate()) return false;
-      final account = await GoogleSignIn.instance.authenticate();
-      idToken = account.authentication.idToken;
-    } on GoogleSignInException catch (error) {
-      if (googleSheetUnavailable(error)) return false;
-      return true;
-    } on PlatformException {
-      return false;
-    } on MissingPluginException {
-      return false;
-    }
-    if (idToken == null) {
-      throw const sb.AuthException(
-        'Google did not return a sign-in token. Try again.',
-      );
-    }
+    final sheet = await _googleSheet();
+    if (sheet == null) return false;
+    final idToken = sheet.idToken;
+    if (idToken == null) return true;
     await supabase.auth.signInWithIdToken(
       provider: sb.OAuthProvider.google,
       idToken: idToken,
       nonce: _googleRawNonce,
     );
     return true;
+  }
+
+  /// The client Google's own sheet would use here, or null where there is none.
+  String? get _googleNativeClientHere {
+    final client = googleNativeClient(
+      defaultTargetPlatform,
+      config?.googleClientIds ?? const [],
+    );
+    if (client == null) return null;
+    // Set up for another server's client earlier in this launch: its token would be refused here.
+    if (_googleClient != null && _googleClient != client) return null;
+    return client;
+  }
+
+  /// Google's own sheet: its ID token (asked with [_googleRawNonce]). Null when the sheet can't be
+  /// used here; a null token when the person closed it.
+  Future<({String? idToken})?> _googleSheet() async {
+    final client = _googleNativeClientHere;
+    if (client == null) return null;
+    final String? idToken;
+    try {
+      await _setUpGoogle(client);
+      if (!GoogleSignIn.instance.supportsAuthenticate()) return null;
+      final account = await GoogleSignIn.instance.authenticate();
+      idToken = account.authentication.idToken;
+    } on GoogleSignInException catch (error) {
+      if (googleSheetUnavailable(error)) return null;
+      return (idToken: null);
+    } on PlatformException {
+      return null;
+    } on MissingPluginException {
+      return null;
+    }
+    if (idToken == null) {
+      throw const sb.AuthException(
+        'Google did not return a sign-in token. Try again.',
+      );
+    }
+    return (idToken: idToken);
   }
 
   /// Apple sends the name once, on the first authorization, and not inside the token. Saving it
@@ -5100,6 +5134,217 @@ class SupabaseBackend implements Backend {
 
   @override
   bool get signUpsByInvitation => config?.signupsByInvitation ?? false;
+
+  // --- Casama Cloud's waitlist and invite gate (D-427) --------------------------------------------
+
+  @override
+  PublicConfigSignupGate? get signupGate {
+    final gate = config?.signupGate;
+    return gate != null && gate.mode == 'invite_only' ? gate : null;
+  }
+
+  /// Where a join or claim came from, for the owner's numbers by source.
+  static String get _appSource {
+    if (kIsWeb) return 'app_web';
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.iOS => 'app_ios',
+      TargetPlatform.android => 'app_android',
+      TargetPlatform.macOS => 'app_macos',
+      TargetPlatform.windows => 'app_windows',
+      TargetPlatform.linux => 'app_linux',
+      TargetPlatform.fuchsia => 'app',
+    };
+  }
+
+  /// A solved sign-up puzzle (D-094), good once; the waitlist routes always need one. Solved off the
+  /// UI thread.
+  Future<WaitlistProof> _waitlistProof() async {
+    final ch = (await api.system.getSignupChallenge()).data!;
+    final nonce = await compute(_solvePuzzle, (ch.challenge, ch.difficulty));
+    return WaitlistProof(challenge: ch.challenge, nonce: nonce);
+  }
+
+  /// Calls [send] with a fresh proof; a proof the server turned down is replaced once.
+  Future<T> _withProof<T>(Future<T> Function(WaitlistProof proof) send) async {
+    try {
+      return await send(await _waitlistProof());
+    } on DioException catch (e) {
+      if (problemOf(e)?.code != 'proof_required') rethrow;
+      return send(await _waitlistProof());
+    }
+  }
+
+  @override
+  Future<void> joinWaitlist(WaitlistJoin join) => _withProof(
+    (proof) => api.api.getWaitlistApi().joinWaitlist(
+      joinWaitlistRequest: JoinWaitlistRequest(
+        email: join.email.trim(),
+        proof: proof,
+        source_: _appSource,
+        note: join.note == null || join.note!.trim().isEmpty ? null : join.note!.trim(),
+        selfHosting: join.selfHosting,
+        newsletter: join.newsletter,
+      ),
+    ),
+  );
+
+  @override
+  Future<InviteCodePreview> previewInviteCode(String code) async =>
+      (await api.api.getWaitlistApi().previewInviteCode(code: code)).data!;
+
+  @override
+  Future<InviteRedeemed> redeemInviteForEmail(String code, String email, {bool? newsletter}) async =>
+      (await _withProof(
+        (proof) => api.api.getWaitlistApi().redeemInvite(
+          redeemInviteRequest: RedeemInviteRequest(
+            code: code,
+            email: email.trim(),
+            proof: proof,
+            source_: _appSource,
+            newsletter: newsletter,
+          ),
+        ),
+      )).data!;
+
+  @override
+  bool inviteSignInAvailable(String provider) => switch (provider) {
+    'apple' => nativeAppleSignIn,
+    'google' => _googleNativeClientHere != null,
+    _ => false,
+  };
+
+  @override
+  Future<InviteSignInResult> signInWithInvite(String provider, String code) async {
+    if (!inviteSignInAvailable(provider)) return InviteSignInResult.unavailable;
+    Future<InviteRedeemed> redeem(String idToken, String? rawNonce) async => (await _withProof(
+      (proof) => api.api.getWaitlistApi().redeemInvite(
+        redeemInviteRequest: RedeemInviteRequest(
+          code: code,
+          idToken: idToken,
+          provider: provider == 'apple'
+              ? RedeemInviteRequestProviderEnum.apple
+              : RedeemInviteRequestProviderEnum.google,
+          tokenNonce: rawNonce,
+          proof: proof,
+          source_: _appSource,
+        ),
+      ),
+    )).data!;
+    if (provider == 'apple') {
+      final sheet = await _appleSheet();
+      if (sheet == null) return InviteSignInResult.unavailable;
+      final credential = sheet.credential;
+      if (credential == null) return InviteSignInResult.cancelled;
+      final idToken = _appleIdToken(credential);
+      final r = await redeem(idToken, sheet.rawNonce);
+      if (r.outcome != InviteRedeemedOutcomeEnum.admitted) return InviteSignInResult.waitlisted;
+      await _finishAppleSignIn(credential, idToken, sheet.rawNonce);
+      return InviteSignInResult.signedIn;
+    }
+    final sheet = await _googleSheet();
+    if (sheet == null) return InviteSignInResult.unavailable;
+    final idToken = sheet.idToken;
+    if (idToken == null) return InviteSignInResult.cancelled;
+    final r = await redeem(idToken, _googleRawNonce);
+    if (r.outcome != InviteRedeemedOutcomeEnum.admitted) return InviteSignInResult.waitlisted;
+    await supabase.auth.signInWithIdToken(
+      provider: sb.OAuthProvider.google,
+      idToken: idToken,
+      nonce: _googleRawNonce,
+    );
+    return InviteSignInResult.signedIn;
+  }
+
+  @override
+  Future<void> sendMagicLinkWithInvite(String email, String inviteCode) async =>
+      supabase.auth.signInWithOtp(
+        email: email,
+        data: {...?await _signupData(), 'invite_code': inviteCode},
+        emailRedirectTo: _authRedirect,
+      );
+
+  @override
+  Future<AdminWaitlist> adminWaitlist({String? status, String? query, int limit = 50, int offset = 0}) async {
+    // Read as JSON, not the generated model alone: newer servers add the batch hour and the last
+    // batch, which an app built before them shouldn't need.
+    final json = (await api.api.dio.get<Map<String, dynamic>>(
+      '/v1/admin/waitlist',
+      queryParameters: {
+        'status': ?status,
+        if (query != null && query.trim().isNotEmpty) 'q': query.trim(),
+        'limit': limit,
+        'offset': offset,
+      },
+    )).data!;
+    final page = WaitlistPage.fromJson(json);
+    final stats = json['stats'];
+    return AdminWaitlist(
+      stats: page.stats,
+      gate: _gateFrom(json['gate'], page.gate),
+      items: page.items,
+      lastBatch: stats is Map ? _lastBatch(stats) : null,
+    );
+  }
+
+  static AdminSignupGate _gateFrom(Object? raw, SignupGateState state) {
+    final gate = raw is Map ? raw['gate'] : null;
+    final hour = gate is Map ? gate['batch_hour_utc'] : null;
+    return AdminSignupGate(state: state, batchHourUtc: hour is num ? hour.toInt() : null);
+  }
+
+  /// `last_batch: {at, count}`, or `last_batch_at` and `last_batch_count`; null when neither is sent.
+  static WaitlistLastBatch? _lastBatch(Map stats) {
+    final nested = stats['last_batch'];
+    final at = nested is Map ? nested['at'] ?? nested['ran_at'] : stats['last_batch_at'];
+    final count = nested is Map ? nested['count'] ?? nested['admitted'] : stats['last_batch_count'];
+    if (at == null && count == null) return null;
+    final skipped = nested is Map && nested['skipped_reason'] != null;
+    final detail = nested is Map ? nested['detail'] : null;
+    return WaitlistLastBatch(
+      at: at is String ? DateTime.tryParse(at) : null,
+      count: count is num ? count.toInt() : null,
+      skippedDetail: skipped ? (detail is String && detail.isNotEmpty ? detail : 'Skipped') : null,
+    );
+  }
+
+  @override
+  Future<int> adminAdmitWaitlist({int? count, List<String>? ids}) async =>
+      (await api.admin.adminAdmitWaitlist(
+        admitWaitlistRequest: AdmitWaitlistRequest(count: count, ids: ids),
+      )).data!.count;
+
+  @override
+  Future<WaitlistChanged> adminAddWaitlistEntries(List<String> emails, {bool notify = false}) async =>
+      (await api.admin.adminAddWaitlistEntries(
+        addWaitlistEntriesRequest: AddWaitlistEntriesRequest(emails: emails, notify: notify),
+      )).data!;
+
+  @override
+  Future<void> adminRemoveWaitlistEntry(String id) async => api.admin.adminRemoveWaitlistEntry(id: id);
+
+  @override
+  Future<AdminSignupGate> adminSignupGate() async {
+    final json = (await api.api.dio.get<Map<String, dynamic>>('/v1/admin/signup-gate')).data!;
+    return _gateFrom(json, SignupGateState.fromJson(json));
+  }
+
+  @override
+  Future<AdminSignupGate> adminSetSignupGate(Map<String, Object?> changes) async {
+    final json = (await api.api.dio.put<Map<String, dynamic>>('/v1/admin/signup-gate', data: changes)).data!;
+    return _gateFrom(json, SignupGateState.fromJson(json));
+  }
+
+  @override
+  Future<List<InviteCampaign>> adminInviteCampaigns() async =>
+      (await api.admin.adminInviteCampaigns()).data!.items;
+
+  @override
+  Future<InviteCampaign> adminCreateInviteCampaign(CreateInviteCampaignRequest request) async =>
+      (await api.admin.adminCreateInviteCampaign(createInviteCampaignRequest: request)).data!;
+
+  @override
+  Future<InviteCampaign> adminUpdateInviteCampaign(String code, UpdateInviteCampaignRequest request) async =>
+      (await api.admin.adminUpdateInviteCampaign(code: code, updateInviteCampaignRequest: request)).data!;
 
   @override
   Future<void> setPrivateNotifications(bool on) => api.admin.setRemoteAccessSettings(

@@ -150,6 +150,15 @@ test("beacon events come only from the closed list", async () => {
   );
 });
 
+test("the waitlist page's funnel steps are on the list, with nothing personal (D-427)", () => {
+  assert.deepEqual(beaconEvent("waitlist_view"), { name: "waitlist_view", params: {} });
+  assert.deepEqual(beaconEvent("waitlist_join", { form: "inline" }), {
+    name: "waitlist_join",
+    params: { form: "inline" },
+  });
+  assert.equal(beaconEvent("waitlist_join", { form: "someone@example.com" }), null);
+});
+
 test("the docs, gallery and casama.link count here, and unknown sites are dropped", async () => {
   env.VISITS.rows = [];
   const res = await call("/b", {

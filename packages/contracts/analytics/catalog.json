@@ -90,10 +90,14 @@
     {
       "name": "signed_up",
       "by": ["server"],
-      "description": "A new account exists (swept from new profiles).",
+      "description": "A new account exists (swept from new profiles). admitted_via: how it got past Casama Cloud's waitlist (D-427).",
       "properties": {
         "method": {
           "type": "string"
+        },
+        "admitted_via": {
+          "type": "string",
+          "values": ["batch", "hand", "code", "none"]
         }
       },
       "funnels": ["F1", "F2"],
@@ -245,7 +249,7 @@
     {
       "name": "first_value",
       "by": ["server"],
-      "description": "A person's first finished run of their own.",
+      "description": "A person's first finished run of their own. admitted_via: how they got past Casama Cloud's waitlist (D-427).",
       "properties": {
         "kind": {
           "type": "string",
@@ -253,6 +257,10 @@
         },
         "minutes_since_signup": {
           "type": "number"
+        },
+        "admitted_via": {
+          "type": "string",
+          "values": ["batch", "hand", "code", "none"]
         }
       },
       "funnels": ["F2", "F3"]
@@ -393,6 +401,64 @@
       },
       "funnels": ["F7"],
       "ga4_twin": { "name": "join_group", "params": ["via", "status"] }
+    },
+    {
+      "name": "waitlist_joined",
+      "by": ["server"],
+      "description": "An address joined Casama Cloud's waitlist (D-427). Personless; never the address.",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "self_hosting": {
+          "type": "boolean"
+        }
+      },
+      "funnels": ["F1"]
+    },
+    {
+      "name": "invite_claimed",
+      "by": ["server"],
+      "description": "An invite code was claimed for an address (D-427): on the website, in the app, at sign-up, or with an Apple or Google sign-in token. Personless; never the code or the address.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "values": ["personal", "campaign", "one_time"]
+        },
+        "outcome": {
+          "type": "string",
+          "values": ["admitted", "waitlisted"]
+        },
+        "via": {
+          "type": "string",
+          "values": ["web", "app", "signup", "id_token"]
+        }
+      },
+      "funnels": ["F1"]
+    },
+    {
+      "name": "waitlist_admitted",
+      "by": ["server"],
+      "description": "Someone was let in past Casama Cloud's waitlist (D-427): by the daily batch, by an owner, or with a code. Personless.",
+      "properties": {
+        "via": {
+          "type": "string",
+          "values": ["batch", "hand", "code"]
+        }
+      },
+      "funnels": ["F1"]
+    },
+    {
+      "name": "signup_refused",
+      "by": ["server"],
+      "description": "Auth's sign-up hook turned a new account away (D-427 waitlist, D-145 allowlist, D-296 invited only). Personless.",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "values": ["gate", "relay", "allowlist", "invited_only", "code_not_found", "code_used_up"]
+        }
+      },
+      "funnels": ["F1"]
     },
     {
       "name": "member_joined",
