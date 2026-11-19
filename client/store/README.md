@@ -47,7 +47,7 @@ nothing has been sent for review.
   from the profile, and builds without Sparkle (auto_updater is swapped for
   `tool/appstore/auto_updater_stub`). An archive uploaded straight from Xcode would be refused.
 - Before sending for review (preflight 2026-11-19): attach a screen recording of a real iPhone and
-  Mac run to the review notes; keep `review@casama.ai` on Pro with extra credits (the notes say
+  Mac run to the review notes; keep `review@casama.ai` on Pro limits (owner overrides) with $50 of credits, set 2026-11-19 (the notes say
   so); the watch and iPhone Duo screenshots need a build that contains the watch app and Duo
   layout, otherwise remove them.
 

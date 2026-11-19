@@ -4,7 +4,7 @@ SIGN IN WITH THE DEMO ACCOUNT
 1. Tap "Continue with Email", then "Use a Password Instead".
 2. Enter the demo email and password and tap "Sign in". No code or two-step sign-in is needed.
 3. The first screen asks to agree that chats go to outside AI providers. Tap "Agree and Continue".
-The workspace is on the Pro plan with extra credits, so every feature works without buying anything.
+The workspace shows the Free plan but has Pro limits and $50 of credits for review, so every feature works without buying anything.
 
 WHAT TO TRY
 - Chat: open the bot "Casama" and ask, e.g. "Find three well-reviewed Italian restaurants in Lisbon and compare them in a table."
@@ -24,7 +24,7 @@ EXTERNAL SERVICES
 OpenRouter (AI models), Google Gemini Live (calls), RevenueCat (in-app purchases), Sign in with Apple, Google Sign-In and passkeys, Composio (connections to Gmail etc.), Firebase (push, crash reports), PostHog (analytics; can be turned off in Settings > Privacy), ZeptoMail (account email).
 
 PURCHASES
-Plus, Pro and Max (monthly or yearly) are auto-renewing subscriptions; credit packs are consumables. All are in-app purchases in Settings > Billing. Credit packs show once a workspace has a paid plan, as the demo does. Credits from the App Store never expire. Pro has a 1-week free trial for eligible new subscribers.
+Plus, Pro and Max (monthly or yearly) are auto-renewing subscriptions; credit packs are consumables. All are in-app purchases in Settings > Billing. Credit packs show once a workspace subscribes to any plan (a sandbox purchase shows them). Credits from the App Store never expire. Pro has a 1-week free trial for eligible new subscribers.
 
 REGIONAL DIFFERENCES
 - United States storefront only: the paywall also offers web checkout next to in-app purchase, and a workspace admin can buy a website domain with a web payment (Settings > Domains > Find a Domain). Everywhere else: in-app purchase only, and domain buying is hidden.
