@@ -63,7 +63,8 @@ curl -s https://casama.example.com/v1/config
 | `google_client_ids` | Google client ids Auth accepts, for Google's own sign-in sheet in the apps |
 | `sign_in_codes` | Whether this server makes scan-to-sign-in codes (see below) |
 | `signups_open` | `false` when new accounts can't be made here, so a client should offer only sign-in |
-| `signups_by_invitation` | Whether new accounts are only for email addresses someone on this server invited |
+| `signups_by_invitation` | Whether new accounts are only for email addresses someone on this server invited. Also `true` while Casama Cloud's sign-up gate is on |
+| `signup_gate` | Only while Casama Cloud's gate is on: `{ "mode": "invite_only", "waitlist_url": "…" }`. Absent otherwise |
 
 The fields after `default_reasoning_effort` are optional and may be missing on some servers.
 
@@ -128,6 +129,7 @@ A few endpoints need no bearer token:
   [remote app settings](/self-hosting/operations#remote-app-settings)) and `GET /v1/signup/challenge`
 - `GET /v1/join/preview` and `GET /v1/referral/preview`, which show what an invite opens before
   you join
+- the [waitlist routes](#the-waitlist-casama-cloud)
 - `POST /v1/auth/pairing-codes/redeem`, which trades a scanned sign-in code for a one-time sign-in
   token
 - `/healthz` and `/readyz`
@@ -143,6 +145,36 @@ When `sign_in_codes` is `true` in `/v1/config`, a signed-in client can make a on
 `POST /v1/auth/pairing-codes` and show it as a QR code. The other device posts the scanned code to
 `POST /v1/auth/pairing-codes/redeem` and gets a one-time sign-in token back. The apps use this to
 sign a phone in to a server reached through [Casama Link](/guide/casama-link).
+
+## The waitlist (Casama Cloud)
+
+Casama Cloud can take new accounts by invitation only. The routes below exist only there. A server
+without the waitlist, such as a self-hosted one, answers every one of them with 404
+`waitlist_off`. While the gate is on, `GET /v1/config` carries `signup_gate` and
+`signups_by_invitation: true`.
+
+Signed out. The first two need a solved sign-up puzzle (see `GET /v1/signup/challenge`):
+
+| Route | What it does | Errors |
+| --- | --- | --- |
+| `POST /v1/waitlist` | Adds an email address to the waitlist. Sends no email. Answers the same for every address | 400 `bad_email`, 400 `disposable_email`, 403 `proof_required`, 404 `waitlist_off`, 429 `too_many_attempts` |
+| `POST /v1/waitlist/redeem` | Claims an invite code for an email address, which can then sign up with any sign-in method | 400 `bad_email`, 400 `disposable_email`, 403 `proof_required`, 404 `invite_not_found`, 404 `waitlist_off`, 429 `too_many_attempts` |
+| `GET /v1/invites/preview?code=` | Says what an invite code is and whether it has an invite left | 404, 429 |
+| `POST /v1/waitlist/leave` | Takes an address off the waitlist, with the token from its "You're in" email | 400, 404, 429 |
+
+Instance owners only:
+
+| Route | What it does | Errors |
+| --- | --- | --- |
+| `GET /v1/admin/waitlist` | Numbers, the gate and a page of entries | 401, 403, 404 |
+| `POST /v1/admin/waitlist/admit` | Lets in chosen entries, or the next N. They are let in as their "You're in" emails go out, never more than the day's number | 400, 401, 403, 404 |
+| `POST /v1/admin/waitlist/entries` | Lets addresses in by hand | 400, 401, 403, 404 |
+| `DELETE /v1/admin/waitlist/entries/{id}` | Removes an entry. A removed address can no longer sign up | 401, 403, 404 |
+| `GET /v1/admin/signup-gate` | Reads the sign-up gate | 401, 403, 404 |
+| `PUT /v1/admin/signup-gate` | Turns the gate on or off and sets its opening time and numbers. Fields left out keep their value. Takes effect within 15 seconds | 400, 401, 403, 404 |
+| `GET /v1/admin/invite-campaigns` | Lists campaign invite codes | 401, 403, 404 |
+| `POST /v1/admin/invite-campaigns` | Makes a campaign code with a total | 400 `bad_code`, 401, 403, 404, 409 when the code exists |
+| `PATCH /v1/admin/invite-campaigns/{code}` | Changes a code's total, dates or name, or turns it off | 400, 401, 403, 404 |
 
 ## Errors
 

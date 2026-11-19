@@ -18,6 +18,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { waitlistPage } from "./waitlist-ui.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
@@ -481,7 +482,12 @@ const tokensFor = (page) => (name, args) => {
   if (name === "help") return helpPage(page);
   if (name === "faq") return faqSection(page);
   if (name === "newsletter") return newsBox("news-page", "Sign up");
-  if (name === "cta") return `<p class="page-cta"><a class="btn primary" href="https://app.casama.ai">Start free</a> <a class="text-link" href="https://docs.casama.ai/self-hosting/">Run it on your own server</a></p>`;
+  if (name === "waitlist") {
+    page.scripts = ["/assets/waitlist.js"];
+    return waitlistPage();
+  }
+  // waitlist copy: docs/WAITLIST-PLAN.md §12 (back to "Start free" → https://app.casama.ai on launch day)
+  if (name === "cta") return `<p class="page-cta"><!-- waitlist copy: docs/WAITLIST-PLAN.md §12 --><a class="btn primary" href="/get/start">Join the waitlist</a> <a class="text-link" href="https://docs.casama.ai/self-hosting/">Run it on your own server</a></p>`;
   fail(`${page.file}: unknown token {{${name}}}`);
   return "";
 };
@@ -623,7 +629,8 @@ function render(page) {
   if ((meta.title ?? "").length > 65) fail(`${page.file}: title is ${meta.title.length} characters (keep it to 65)`);
   const { html } = markdown(page.body, tokensFor(page));
   const words = plainWords(html);
-  if (!page.isIndex && words < MIN_WORDS) fail(`${page.file}: ${words} words (pages need ${MIN_WORDS})`);
+  const minWords = meta.min_words === undefined ? MIN_WORDS : Number(meta.min_words);
+  if (!page.isIndex && words < minWords) fail(`${page.file}: ${words} words (pages need ${minWords})`);
   const sec = SECTIONS[page.section] ?? SECTIONS[""];
   const crumbs = [{ name: "Casama", path: "/" }];
   if (sec.crumb) crumbs.push({ name: sec.crumb, path: `/${page.section}/` });
@@ -717,7 +724,9 @@ function twin(page) {
     if (name === "help") return faqGroups.map((g) => `## ${g.name}\n\n${faqText(g.items)}`).join("\n\n") + "\n\nStill stuck? Email support@casama.ai. Signed up? Open Help & support in the app for account help.";
     if (name === "faq") { const items = billingQuestions(); return `${items.length ? `## Plans and billing questions\n\n${faqText(items)}\n\n` : ""}More questions: ${SITE}/help`; }
     if (name === "newsletter") return `Sign up with the form at ${SITE}/newsletter. You'll get an email with a link to confirm.`;
-    if (name === "cta") return `Start free at https://app.casama.ai, or run it on your own server: https://docs.casama.ai/self-hosting/`;
+    if (name === "waitlist") return `Casama Cloud is invite-only for now. Join the waitlist with the form at ${SITE}/waitlist, or enter an invite code there. Running Casama on your own server is open to everyone: https://docs.casama.ai/self-hosting/`;
+    // waitlist copy: docs/WAITLIST-PLAN.md §12
+    if (name === "cta") return `Join the waitlist at ${SITE}/waitlist (Casama Cloud is invite-only for now), or run it on your own server: https://docs.casama.ai/self-hosting/`;
     return "";
   });
   return `# ${meta.h1 ?? meta.title}\n\n${meta.lead ? `${meta.lead}\n\n` : ""}Updated ${meta.updated}. Page: ${page.url}\n\n${body.trim().replace(/\]\((\/[^)\s]*)\)/g, `](${SITE}$1)`)}\n`;

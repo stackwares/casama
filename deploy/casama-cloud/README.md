@@ -91,3 +91,27 @@ download a backup folder, `age -d -i key.txt -o postgres.dump postgres.dump.age`
   Cloud project in Play Console), reCAPTCHA Enterprise for web. The server already verifies
   tokens for project number 278631205206; until the apps send them, sign-ups use the
   proof-of-work puzzle.
+
+## 6. The sign-up gate (waitlist)
+
+Casama Cloud can take new accounts by invitation only. Nothing changes until an owner turns the
+gate on, and it never reaches existing accounts. Production changes here need Oliver's yes.
+
+- `SIGNUP_WAITLIST` stays `auto` (the waitlist exists because billing is on).
+- `WAITLIST_URL` is where refusals and the apps point people. The default,
+  `https://casama.ai/waitlist`, is right for Casama Cloud.
+- While the gate is on, set `REFERRAL_LINK_BASE=https://casama.ai/invite`, so the link members
+  share opens the claim page. Put it back to `https://casama.ai/i` when the gate is off.
+- The sign-up hook (`SIGNUP_HOOK_ENABLED=true`) must be on: the gate is checked there.
+
+Turn the gate on and off with `scripts/waitlist.sh`, signed in as the instance owner:
+
+```sh
+scripts/waitlist.sh gate      # show it
+scripts/waitlist.sh on        # new accounts by invitation only
+scripts/waitlist.sh open      # open sign-up to everyone
+scripts/waitlist.sh stats     # the funnel
+```
+
+A change takes effect within 15 seconds, with no deploy. The same script lets people in
+(`admit`, `add`) and manages campaign codes (`code create|list|set`).

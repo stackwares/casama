@@ -26,6 +26,23 @@ The server, apps, CLI, SDK and MCP server share one version number.
   something breaks, no cookie, and Do Not Track or Global Privacy Control turns it off.
   iOS crash symbols reach PostHog again: an archive holds some dSYMs twice, and the upload now
   sends each one once. Packaging scripts also upload dSYMs and the Android R8 mapping to Crashlytics.
+- A waitlist and invite gate for Casama Cloud (it stays off until an owner turns it on; self-hosted
+  servers are unaffected, and existing accounts never are):
+  - While it is on, a new account can be made only for an email address that was let in: from the
+    waitlist, with an invite code claimed together with that address, or added by hand. A workspace
+    invite also works when the workspace has a free seat. It holds for every way of signing up
+    (email link, password, Apple, Google, the CLI), and a refused sign-up sends no email.
+  - Joining the waitlist sends no email. People let in get one "You're in" email, at most a set
+    number a day.
+  - Campaign codes: an owner makes a code with a total and optional per-day number and dates.
+    Members' invites: each member's Invite Friends code lets in a few friends once they have
+    finished a first chat.
+  - Owners run it with `scripts/waitlist.sh` (stats, admit, add, codes, on and off) or the
+    `/v1/admin/signup-gate` route. `GET /v1/config` gains `signup_gate`. See
+    [Getting an invite](https://docs.casama.ai/guide/getting-an-invite).
+  - Fixed: when the sign-up hook refuses someone (the waitlist, `SIGNUP_ALLOWED_EMAILS`,
+    `SIGNUP_INVITED_ONLY` and Casama Cloud's sign-up check), the reason now reaches the apps. Before,
+    Auth showed "Unexpected status code returned from hook: 403" for every refusal.
 
 - The `casama` CLI covers most of the app. New commands: `chats` (read, export, share, branch,
   delete), `routines` (list, create, edit, run, delete), `approvals` (answer what bots are waiting

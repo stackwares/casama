@@ -31,6 +31,8 @@ abstract class _$ReferralCWProxy {
 
   Referral redeemUntil(DateTime? redeemUntil);
 
+  Referral invites(ReferralInvites? invites);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Referral(...).copyWith.fieldName(value)`.
@@ -52,6 +54,7 @@ abstract class _$ReferralCWProxy {
     num earnedUsd,
     ReferralInvitedBy? invitedBy,
     DateTime? redeemUntil,
+    ReferralInvites? invites,
   });
 }
 
@@ -99,6 +102,9 @@ class _$ReferralCWProxyImpl implements _$ReferralCWProxy {
   @override
   Referral redeemUntil(DateTime? redeemUntil) => call(redeemUntil: redeemUntil);
 
+  @override
+  Referral invites(ReferralInvites? invites) => call(invites: invites);
+
   /// Creates a new instance with the provided field values.
   /// Omitted fields keep their values; explicit `null` clears nullable fields.
   /// The public API rejects `null` for non-nullable fields. To update a single field use `Referral(...).copyWith.fieldName(value)`.
@@ -121,6 +127,7 @@ class _$ReferralCWProxyImpl implements _$ReferralCWProxy {
     Object? earnedUsd = const $CopyWithPlaceholder(),
     Object? invitedBy = const $CopyWithPlaceholder(),
     Object? redeemUntil = const $CopyWithPlaceholder(),
+    Object? invites = const $CopyWithPlaceholder(),
   }) {
     return Referral(
       enabled: enabled == const $CopyWithPlaceholder() || enabled == null
@@ -172,6 +179,10 @@ class _$ReferralCWProxyImpl implements _$ReferralCWProxy {
           ? _value.redeemUntil
           // ignore: cast_nullable_to_non_nullable
           : redeemUntil as DateTime?,
+      invites: invites == const $CopyWithPlaceholder()
+          ? _value.invites
+          // ignore: cast_nullable_to_non_nullable
+          : invites as ReferralInvites?,
     );
   }
 }
@@ -229,6 +240,12 @@ Referral _$ReferralFromJson(Map<String, dynamic> json) => $checkedCreate(
         'redeem_until',
         (v) => v == null ? null : DateTime.parse(v as String),
       ),
+      invites: $checkedConvert(
+        'invites',
+        (v) => v == null
+            ? null
+            : ReferralInvites.fromJson(v as Map<String, dynamic>),
+      ),
     );
     return val;
   },
@@ -255,4 +272,5 @@ Map<String, dynamic> _$ReferralToJson(Referral instance) => <String, dynamic>{
   'earned_usd': instance.earnedUsd,
   'invited_by': instance.invitedBy?.toJson(),
   'redeem_until': instance.redeemUntil?.toIso8601String(),
+  'invites': ?instance.invites?.toJson(),
 };

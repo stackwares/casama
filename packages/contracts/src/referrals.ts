@@ -32,6 +32,18 @@ export const Referral = z
       .nullable(),
     /** Until when you can still enter a friend's code; null when you can't (any more). */
     redeem_until: z.iso.datetime().nullable(),
+    /**
+     * While new accounts are by invitation (docs/WAITLIST-PLAN.md): how many people your code can
+     * let in. `unlocked` turns true after your first finished chat. Left out when sign-up is open.
+     */
+    invites: z
+      .object({
+        total: z.number().int(),
+        used: z.number().int(),
+        left: z.number().int(),
+        unlocked: z.boolean(),
+      })
+      .optional(),
   })
   .openapi("Referral");
 

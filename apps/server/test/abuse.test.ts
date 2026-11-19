@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { internalToken } from "../src/api/routes/local.ts";
 import { standardWebhookSignature } from "../src/billing/dodo.ts";
 import { leadingZeroBits } from "../src/services/abuse.ts";
-import { type Harness, j, startHarness } from "./helpers.ts";
+import { type Harness, hookVerdict, j, startHarness } from "./helpers.ts";
 
 const HOOK_SECRET = `whsec_${Buffer.from("hook-secret-0123456789abcdef").toString("base64")}`;
 let h: Harness;
@@ -100,9 +100,9 @@ describe("sign-up gate", () => {
   });
 
   it("rejects unsigned hook calls and sign-ups without a proof", async () => {
-    expect((await hook(emailUser(), false)).status).toBe(401);
+    expect(await hookVerdict(await hook(emailUser(), false))).toBe(401);
     const res = await hook(emailUser());
-    expect(res.status).toBe(403);
+    expect(await hookVerdict(res)).toBe(403);
     expect((await j(res)).error.http_code).toBe(403);
     const [ev] = await h.tdb.admin<{ n: number }[]>`
       select count(*)::int as n from public.abuse_events where kind = 'signup_blocked'`;
@@ -110,7 +110,9 @@ describe("sign-up gate", () => {
   });
 
   it("lets Google, Apple and SSO sign-ups through", async () => {
-    expect((await hook({ user: { app_metadata: { provider: "google" } } })).status).toBe(200);
+    expect(await hookVerdict(await hook({ user: { app_metadata: { provider: "google" } } }))).toBe(
+      200,
+    );
   });
 
   it("accepts a solved puzzle once", async () => {
@@ -118,21 +120,25 @@ describe("sign-up gate", () => {
     expect(ch.difficulty).toBe(8);
     const nonce = solve(ch.challenge, ch.difficulty);
     const proof = { kind: "pow", challenge: ch.challenge, nonce };
-    expect((await hook(emailUser(proof))).status).toBe(200);
-    expect((await hook(emailUser(proof))).status).toBe(403);
+    expect(await hookVerdict(await hook(emailUser(proof)))).toBe(200);
+    expect(await hookVerdict(await hook(emailUser(proof)))).toBe(403);
     const bad = await j(await h.request("/v1/signup/challenge"));
     expect(
-      (await hook(emailUser({ kind: "pow", challenge: bad.challenge, nonce: "x" }))).status,
+      await hookVerdict(
+        await hook(emailUser({ kind: "pow", challenge: bad.challenge, nonce: "x" })),
+      ),
     ).toBe(403);
     const forged = `${ch.challenge.slice(0, -3)}abc`;
-    expect((await hook(emailUser({ kind: "pow", challenge: forged, nonce }))).status).toBe(403);
+    expect(
+      await hookVerdict(await hook(emailUser({ kind: "pow", challenge: forged, nonce }))),
+    ).toBe(403);
   });
 
   it("accepts a valid App Check token for this project only", async () => {
     const good = await signAppCheck("projects/123456");
-    expect((await hook(emailUser({ kind: "app_check", token: good }))).status).toBe(200);
+    expect(await hookVerdict(await hook(emailUser({ kind: "app_check", token: good })))).toBe(200);
     const other = await signAppCheck("projects/999");
-    expect((await hook(emailUser({ kind: "app_check", token: other }))).status).toBe(403);
+    expect(await hookVerdict(await hook(emailUser({ kind: "app_check", token: other })))).toBe(403);
   });
 });
 

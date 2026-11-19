@@ -136,6 +136,19 @@ Built on the branch `worktree-casama-connect`. Checked against the real Cloudfla
 - **On devices:** the QR scanner, opening a `/pair` link from the camera, and Keep This Mac Awake were checked by widget tests only.
 - **Decide later, with numbers:** whether live video away from home needs a meter or a cap (it costs $0.05 per GB after the first 1,000 GB a month and isn't metered per workspace), and whether to add an `abuse@` mailbox (the docs name `security@` for reports about an address).
 
+## Waitlist and invite gate (D-427, `docs/WAITLIST-PLAN.md`)
+
+| Item | Needed for | Status |
+| --- | --- | --- |
+| A yes for each go-live step: push, `scripts/deploy-prod.sh --dry-run` then `--yes` (one migration, `20270215100001_waitlist.sql`), the casama.ai deploy, `REFERRAL_LINK_BASE=https://casama.ai/invite` in the server's env, then `scripts/waitlist.sh on` | The gate being on before the Hacker News post | Built and tested locally 2026-11-19. Nothing deployed. The order and the checks are in the plan's "Status of the build" |
+| ZeptoMail's KYC review (submitted 2026-11-19) | More than 25 "You're in" emails a day, and a Hacker News code above about 60 a day | Until it passes: `daily_emails_max` stays 25. Raise it with `scripts/waitlist.sh set daily_emails_max N` |
+| OpenRouter's daily cap, $50 today, to $100 (agreed 2026-11-19, to do when the gate goes on) | New people spending free credits without stopping model calls for everyone | Until then keep admissions at 50 a day or fewer |
+| The larger server before 8 Dec: yes agreed 2026-11-19, to be decided for good by 1 Dec | The Hacker News code's size: 60 then 30 a day on the current server, 200 then 100 on the larger one | Open |
+| The campaign codes themselves: one for self-hosters (for the Show HN post and the remote-access docs page), one for App Review | The post, the docs note and the review notes | Made with `scripts/waitlist.sh code create CODE "Label" MAX [--per-day N] [--expires ISO]` once the server is deployed. The docs page and the review notes get the code then |
+| App Store review notes, both store descriptions and Play's "Sign-in details" | Review passing while Cloud is invite-only (plan §9) | The text is in the plan's "Status of the build", ready to paste. `client/store/` is not changed yet, so a metadata sync before the gate is on doesn't publish it early |
+| A yes for app build 46 (web first), then the store uploads | The native waitlist screens and Admin → Waitlist (Phase 2) | Not started |
+| A look at the new pages in a browser: `/waitlist`, `/invite/<code>`, `/waitlist/leave`, the home page buttons | They were checked by tests and by reading the code, not seen rendered | `python3 scripts/serve-web.py`, then localhost:8731/waitlist |
+
 ## Decisions only Oliver can make
 
 | Decision                      | Default used                                                              |

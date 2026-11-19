@@ -136,6 +136,30 @@
       },
       {
         "@type": "Question",
+        "name": "Why is Casama Cloud invite-only?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "We're letting people in as we add capacity, so Casama stays fast for everyone who is in. Running Casama on your own server is open to everyone, with no invite and no waitlist."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I get an invite?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Join the waitlist at casama.ai/waitlist and we'll email you when it's your turn. Or ask someone who uses Casama: every member has a few invites to share."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "I have an invite code. What now?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Go to casama.ai/waitlist and enter it with your email. Then sign in with that address. Google, Apple and the email link all work, as long as it's the same address."
+        }
+      },
+      {
+        "@type": "Question",
         "name": "Can I use my own server from my phone?",
         "acceptedAnswer": {
           "@type": "Answer",
@@ -180,7 +204,8 @@
         <a href="/download">Download</a>
         <a href="https://docs.casama.ai">Docs</a>
       </nav>
-      <a class="btn sm primary" href="https://app.casama.ai">Open app</a>
+      <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
+      <a class="btn sm primary" href="https://app.casama.ai">Sign in</a>
     </div>
   </header>
 
@@ -191,9 +216,10 @@
         <h1 id="hero-title"><span class="ph">AI teammates</span> <span class="ph">that do the work</span> <span class="ph">on their own</span> <span class="ph">computers.</span></h1>
         <p class="lead">Ask a Casama bot to book the trip, answer the email or build the site. It remembers how you like things done, keeps going while you're away, and asks before it pays, sends or deletes anything.</p>
         <div class="hero-actions">
-          <a class="btn primary" href="/get/start">Start free</a>
+          <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
+          <a class="btn primary" href="/get/start?from=home">Join the waitlist</a>
           <a class="btn film-btn" href="/assets/film/casama-film-v7-16x9.mp4" data-film-open aria-haspopup="dialog"><span class="film-btn-play" aria-hidden="true"></span>Watch the film <span class="film-btn-time">1½ min</span></a>
-          <a class="text-link" href="/download">Download the app</a>
+          <a class="text-link" href="https://docs.casama.ai/self-hosting/">Run it yourself</a>
         </div>
         <p class="hero-note">For iPhone, iPad, Android, Mac, Windows, Linux and the web. Or run it free on your own server.</p>
       </div>
@@ -591,30 +617,37 @@
       <h2 id="pricing-title">Start free. Pay when you need more.</h2>
       <p class="section-lead">On Casama Cloud, credits are dollars: they pay for AI models, computer time, calls and images. Every plan includes some each month.</p>
 
+      <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
+      <p class="section-lead">Casama Cloud is invite-only for now. Running Casama on your own server is open to everyone.</p>
+
       <div class="plans">
         <article class="card plan">
           <h3>Free</h3>
           <p class="price">$0<small>a month</small></p>
           <p>$1 of credits every month, 3 bots, 1 cloud computer with 5 hours of computer time, and 1 seat. Continue with Google or Apple and start in seconds.</p>
-          <a class="btn" href="https://app.casama.ai">Start on Free</a>
+          <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
+          <a class="btn" href="/get/start?from=pricing">Join the waitlist</a>
         </article>
         <article class="card plan">
           <h3>Plus</h3>
           <p class="price">$15<small>a month, or $150 a year</small></p>
           <p>$5 of credits every month, 10 bots, 2 cloud computers with 30 hours of computer time, 10 GB for your Library, and 1 seat. Buy credit packs when a busy month needs more.</p>
-          <a class="btn" href="https://app.casama.ai">Get Plus</a>
+          <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
+          <a class="btn" href="/get/start?from=pricing">Join the waitlist</a>
         </article>
         <article class="card plan plan-pick">
           <h3>Pro <span class="brand-tag">7 days free</span></h3>
           <p class="price">$49<small>a month, or $490 a year</small></p>
           <p>$15 of credits every month, unlimited bots, 5 cloud computers with 100 hours of computer time, 50 GB for your Library, and 3 seats. Add people for $12 a month each.</p>
-          <a class="btn primary" href="https://app.casama.ai">Try Pro free for 7 days</a>
+          <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
+          <a class="btn primary" href="/get/start?from=pricing">Join the waitlist</a>
         </article>
         <article class="card plan">
           <h3>Max</h3>
           <p class="price">$99<small>a month, or $899 a year</small></p>
           <p>$30 of credits every month, unlimited bots, 10 cloud computers with 300 hours of computer time, 200 GB for your Library, and 10 seats. Add people for $12 a month each.</p>
-          <a class="btn" href="https://app.casama.ai">Get Max</a>
+          <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
+          <a class="btn" href="/get/start?from=pricing">Join the waitlist</a>
         </article>
       </div>
 
@@ -704,6 +737,21 @@
           <summary>Can I run it on my own server?</summary>
           <p>Yes. Casama is open source under AGPL-3.0. One command installs the whole stack with Docker on a Linux server, a home server or a Mac, or start it from the Mac and Linux app. Self-hosting is free, with no limit on users or bots.</p>
         </details>
+        <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
+        <details class="qa">
+          <summary>Why is Casama Cloud invite-only?</summary>
+          <p>We're letting people in as we add capacity, so Casama stays fast for everyone who is in. Running Casama on your own server is open to everyone, with no invite and no waitlist.</p>
+        </details>
+        <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
+        <details class="qa">
+          <summary>How do I get an invite?</summary>
+          <p>Join the waitlist at <a class="text-link" href="/waitlist">casama.ai/waitlist</a> and we'll email you when it's your turn. Or ask someone who uses Casama: every member has a few invites to share.</p>
+        </details>
+        <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
+        <details class="qa">
+          <summary>I have an invite code. What now?</summary>
+          <p>Go to <a class="text-link" href="/waitlist">casama.ai/waitlist</a> and enter it with your email. Then sign in with that address. Google, Apple and the email link all work, as long as it's the same address.</p>
+        </details>
         <details class="qa">
           <summary>Can I use my own server from my phone?</summary>
           <p>Yes. Turn on Casama Link and your server gets its own address, with no domain, port forwarding or VPN to set up. Scan a QR code with the Casama app to sign in, and notifications reach your phone like any other app's. Your traffic goes straight to your computer, never through Casama's servers. It's free on every plan; watching a bot's computer live while you're away from home comes with Plus and up.</p>
@@ -732,8 +780,9 @@
             <button type="button" class="btn sm" id="copy-install" aria-label="Copy the install command">Copy</button>
           </div>
           <div class="hero-actions">
-            <a class="btn primary" href="/get/start">Start free</a>
-            <a class="text-link" href="/download">Download the app</a>
+            <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
+            <a class="btn primary" href="/get/start?from=home">Join the waitlist</a>
+            <a class="text-link" href="https://docs.casama.ai/self-hosting/">Run it yourself</a>
             <a class="text-link" href="https://github.com/stackwares/casama">Read the source on GitHub</a>
           </div>
         </div>

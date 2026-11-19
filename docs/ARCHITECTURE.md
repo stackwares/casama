@@ -128,6 +128,8 @@ Worker / API ── SupervisorProvider (HTTP + bearer) ──▶ Supervisor cont
 
 - `services/abuse.ts` and `routes/abuse.ts`: sign-up hook (App Check or proof of work), `/v1/signup/challenge`, `/internal/abuse` for egress reports, suspension; admin suspend/lift and `/v1/admin/abuse`. Egress proxy: mail and mining ports and pools refused and reported. `ComputerService.checkCanStart` (suspended, unverified free workspaces). App: sign-up proof, banner, owner console Abuse tab.
 
+Waitlist and invite gate (Casama Cloud only; `docs/WAITLIST-PLAN.md`): one more rule in the same sign-up hook, so it holds for every way of making an account. While the `signup_gate` setting (in `instance_settings`) says `invite_only`, a new account is allowed only for an email address that was let in (`waitlist_entries`: a waitlist batch, an invite code claimed with that address, or added by hand) or that has a standing workspace invite with a free seat. Campaign codes live in `invite_campaigns`; members' codes are their D-211 referral codes. `services/waitlist.ts` has the rule, the routes' logic and the worker loop that sends the "You're in" emails (capped by `daily_emails_max`) and ties sign-ups to their entries. `SIGNUP_WAITLIST=auto` means it exists only where billing is on. The hook's refusals answer 200 with an `error` body, the only form Auth passes on to the app.
+
 ## Worker database role (D-095)
 
 - The worker connects as `casama_worker` (`WORKER_DATABASE_URL`): explicit per-table policies, Vault read and update, two narrow `public.worker_*` functions instead of `auth.users`, its own `dbos` schema; no superuser or RLS bypass. New tables call `public.allow_worker`.

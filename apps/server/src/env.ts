@@ -176,6 +176,15 @@ export const EnvSchema = z.object({
   REFERRAL_REDEEM_DAYS: z.coerce.number().int().min(0).max(90).default(7),
   /** Where invite links point; the code is appended (casama.ai/i/<code>, served by site/). */
   REFERRAL_LINK_BASE: z.url().default("https://casama.ai/i"),
+  /**
+   * The waitlist and invite gate (docs/WAITLIST-PLAN.md). auto: there when billing is on (Casama
+   * Cloud), and even then sign-up stays open until an owner turns the gate on in Admin. A
+   * self-hosted server leaves this alone; its own switches are SIGNUP_ALLOWED_EMAILS,
+   * SIGNUP_INVITED_ONLY and DISABLE_SIGNUP.
+   */
+  SIGNUP_WAITLIST: z.enum(["auto", "on", "off"]).default("auto"),
+  /** Where the apps and refusals send people to join the waitlist or enter a code. */
+  WAITLIST_URL: z.url().default("https://casama.ai/waitlist"),
   /** Dodo Payments (web, desktop, credit packs). */
   DODO_API_KEY: z.string().optional(),
   DODO_WEBHOOK_SECRET: z.string().optional(),

@@ -286,6 +286,20 @@ export async function startHarness(
 /** Response body as a loosely typed value for assertions. */
 export const j = (res: Response): Promise<any> => res.json();
 
+/**
+ * What Auth's before-user-created hook decided: 200 when it let the sign-up through, else the
+ * status it tells Auth to answer with. A refusal the person should read is an HTTP 200 with the
+ * error in its body, because Auth passes the message on only then.
+ */
+export async function hookVerdict(res: Response): Promise<number> {
+  if (res.status !== 200) return res.status;
+  const body = (await res
+    .clone()
+    .json()
+    .catch(() => ({}))) as { error?: { http_code?: number } };
+  return body.error?.http_code ?? 200;
+}
+
 async function freePort() {
   const s = createNetServer();
   await new Promise<void>((r) => s.listen(0, "127.0.0.1", r));

@@ -20,17 +20,27 @@
  * listing or release file changes here, in GET_LINKS, and nowhere else. /get/start is "Start free":
  * the web app, or the phone's app store once STORES_LIVE is on.
  *
+ * https://casama.ai/invite/<code> is the invite page while Casama Cloud is invite-only (docs/WAITLIST-PLAN.md
+ * §7): a member's 6-character code or a campaign code (4 to 32 letters, digits and hyphens). It shows who
+ * invited you and claims the invite for an email address. /i/<code> gets the same claim form while
+ * /v1/config says the sign-up gate is on, and /invite/<code> goes to /i/<code> for a member's code once
+ * sign-up is open. While the gate is on, /get/start goes to /waitlist (a static page) instead of the app.
+ * /waitlist/leave?t=<token> asks before it removes an address from the waitlist. The forms are
+ * site/waitlist-ui.js, wired by site/assets/waitlist.js.
+ *
  * /newsletter/* is the monthly email's sign-up and double opt-in (D-404, site/newsletter.js).
  *
  * /assets/film/* (D-390) comes here too, only to answer byte-range requests: static assets always
  * send the whole file with 200, and Safari won't play a video that way.
  */
 import { handleNewsletter } from "./newsletter.js";
+import { leaveBlock, NO_SCRIPT, redeemForm } from "./waitlist-ui.js";
 
 const TYPES = "theme|scheme|wallpaper|skill|app|bot|routine|plugin|set";
 const GALLERY = "https://gallery.casama.ai";
 const API = "https://api.casama.ai";
 const WEB_APP = "https://app.casama.ai";
+const SITE = "https://casama.ai";
 const DOWNLOAD_PAGE = "https://casama.ai/download";
 
 // Where each download button goes (D-377). The App Store, Google Play and Firefox addresses are
@@ -75,6 +85,13 @@ export default {
     if (url.pathname.startsWith("/assets/film/")) return servePartial(request, env);
     if (url.pathname === "/open" || url.pathname.startsWith("/open/")) return openLink(request, url);
     if (url.pathname === "/get" || url.pathname.startsWith("/get/")) return getLink(request, url, env, ctx);
+    if (url.pathname === "/waitlist/leave") return leavePage();
+    if (url.pathname === "/invite" || url.pathname.startsWith("/invite/")) {
+      const code = /^\/invite\/([0-9A-Za-z-]{4,32})\/?$/.exec(url.pathname);
+      if (!code) return inviteNotFound();
+      trackFunnel(request, env, ctx, "invite_open");
+      return inviteClaimPage(code[1].toUpperCase());
+    }
     const invite = /^\/i\/([0-9A-Za-z]{6})\/?$/.exec(url.pathname);
     if (invite) {
       // The funnel step only, never the code (D-398).
@@ -118,6 +135,19 @@ export async function getLink(request, url, env, ctx) {
   const platform = url.pathname.slice("/get".length).replace(/^\/+|\/+$/g, "").toLowerCase();
   let location = DOWNLOAD_PAGE;
   const ua = request.headers.get("user-agent") ?? "";
+  if (platform === "start" && (await signupGated()) === true) {
+    // Casama Cloud is invite-only: everyone goes to the waitlist, on every device.
+    const to = new URL(`${SITE}/waitlist`);
+    for (const key of ["from", "ref", "utm_campaign"]) {
+      const value = url.searchParams.get(key);
+      if (value) to.searchParams.set(key, value.slice(0, 64));
+    }
+    trackFunnel(request, env, ctx, "start_click", { via: "get" });
+    return new Response(null, {
+      status: 302,
+      headers: { location: to.toString(), "cache-control": "private, no-store", vary: "user-agent", "x-robots-tag": "noindex" },
+    });
+  }
   if (platform === "start") {
     location = WEB_APP;
     if (STORES_LIVE && /iPhone|iPad|iPod/.test(ua)) location = GET_LINKS.ios;
@@ -201,14 +231,37 @@ function openPage(app, web) {
 </html>`;
 }
 
+/**
+ * Whether Casama Cloud's sign-up gate is on: true when /v1/config has `signup_gate`, false when it
+ * doesn't, null when the config can't be read. Cached at the edge for a minute.
+ */
+export async function signupGated() {
+  try {
+    const res = await fetch(`${API}/v1/config`, { cf: { cacheTtl: 60, cacheEverything: true } });
+    if (!res.ok) return null;
+    const config = await res.json();
+    return Boolean(config && config.signup_gate);
+  } catch {
+    return null;
+  }
+}
+
 async function invitePage(code) {
   let preview = null;
-  try {
-    const res = await fetch(`${API}/v1/referral/preview?code=${code}`, { cf: { cacheTtl: 300 } });
-    if (res.ok) preview = await res.json();
-  } catch {
-    // The page still shows the code and the app links when the API is briefly unreachable.
-  }
+  const [, gated] = await Promise.all([
+    (async () => {
+      try {
+        const res = await fetch(`${API}/v1/referral/preview?code=${code}`, { cf: { cacheTtl: 300 } });
+        if (res.ok) preview = await res.json();
+      } catch {
+        // The page still shows the code and the app links when the API is briefly unreachable.
+      }
+    })(),
+    signupGated(),
+  ]);
+  // While sign-up is gated, the page also claims the invite for an email address. Otherwise it is
+  // exactly the page it always was.
+  const claim = gated === true;
   const name = preview?.inviter_name ?? "";
   const who = name ? `${name} invited you to Casama` : "You're invited to Casama";
   const bonus = Number(preview?.welcome_usd ?? 0);
@@ -229,26 +282,152 @@ async function invitePage(code) {
 <meta property="og:description" content="${esc(about)}">
 <meta property="og:image" content="https://casama.ai/og-image.png">
 <link rel="icon" type="image/svg+xml" href="/assets/bots/casama-winky-animated.svg">
-<style>${PAGE_CSS}</style>
+<style>${PAGE_CSS}${claim ? FORM_CSS : ""}</style>
 </head>
 <body>
 <main>
   <a class="logo" href="https://casama.ai" aria-label="Casama home"><span data-casama-mark></span>Casama</a>
   <h1>${esc(who)}</h1>
   <p>${esc(about)}</p>
-  <div class="code" aria-label="Invite code">${esc(code)}</div>
+  <div class="code" aria-label="Invite code">${esc(code)}</div>${
+    claim ? `\n  ${redeemForm({ code, label: "Claim my invite", source: "invite" })}\n  ${NO_SCRIPT}` : ""
+  }
   <a class="btn primary" href="casama://app/i/${esc(code)}">Open in Casama</a>
   <a class="btn" href="https://casama.ai/download">Get Casama</a>
   <p class="small">Already have the app? It opens this invite by itself. Otherwise, after signing up go to Settings → Invite friends and enter the code within a week.</p>
-</main>
+</main>${claim ? '\n<script src="/assets/waitlist.js"></script>' : ""}
 <script src="/assets/brand/casama-mark.js"></script>
 </body>
 </html>`;
   return new Response(html, {
     status: 200,
-    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=300" },
+    headers: { "content-type": "text/html; charset=utf-8", "cache-control": claim ? "public, max-age=60" : "public, max-age=300" },
   });
 }
+
+/** What the pages below may load and talk to: this site, and the API the forms post to. */
+const FORM_CSP =
+  "default-src 'none'; style-src 'unsafe-inline'; script-src 'self'; connect-src 'self' https://api.casama.ai; font-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
+
+/** A page in the shared look with the waitlist script; noindex, and never cached by a shared cache for long. */
+function formPage({ title, description = "", body, status = 200, cache = "public, max-age=60" }) {
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>${esc(title)}</title>${description ? `\n<meta name="description" content="${esc(description)}">` : ""}
+<meta property="og:title" content="${esc(title)}">${description ? `\n<meta property="og:description" content="${esc(description)}">` : ""}
+<meta property="og:image" content="https://casama.ai/og-image.png">
+<link rel="icon" type="image/svg+xml" href="/assets/bots/casama-winky-animated.svg">
+<style>${PAGE_CSS}${FORM_CSS}</style>
+</head>
+<body>
+<main>
+  <a class="logo" href="https://casama.ai" aria-label="Casama home"><span data-casama-mark></span>Casama</a>
+${body}
+</main>
+<script src="/assets/waitlist.js"></script>
+<script src="/assets/brand/casama-mark.js"></script>
+</body>
+</html>`;
+  return new Response(html, {
+    status,
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": cache,
+      "content-security-policy": FORM_CSP,
+      "referrer-policy": "no-referrer",
+      "x-robots-tag": "noindex",
+    },
+  });
+}
+
+/** /invite/<code>: claim an invite for an email address (docs/WAITLIST-PLAN.md §7). */
+async function inviteClaimPage(code) {
+  // A member's code goes to the older page once sign-up is open to everyone.
+  if (/^[0-9A-Z]{6}$/.test(code) && (await signupGated()) === false) {
+    return new Response(null, { status: 302, headers: { location: `${SITE}/i/${code}`, "cache-control": "private, no-store", "x-robots-tag": "noindex" } });
+  }
+  let preview = null;
+  try {
+    const res = await fetch(`${API}/v1/invites/preview?code=${encodeURIComponent(code)}`, { cf: { cacheTtl: 60 } });
+    if (res.status === 404) return inviteNotFound();
+    if (res.ok) preview = await res.json();
+  } catch {
+    // The claim form still works when the preview can't be read: redeeming says what is true.
+  }
+  if (preview && preview.available === false) {
+    return formPage({
+      title: "These invites are gone",
+      body: `  <h1>These invites are gone.</h1>
+  <p>Join the waitlist and we'll put you near the front. Running Casama on your own server is open to everyone.</p>
+  ${redeemForm({ code, label: "Join the waitlist", source: "invite" })}
+  ${NO_SCRIPT}
+  <p class="small"><a href="${esc(SITE)}/waitlist">More about the waitlist</a></p>`,
+    });
+  }
+  const name = preview?.kind === "personal" && preview.inviter_name ? String(preview.inviter_name) : "";
+  const label = preview?.kind === "campaign" && preview.label ? String(preview.label) : "";
+  const who = name ? `${name} invited you to Casama` : "You're invited to Casama";
+  const bonus = preview?.kind === "personal" ? Number(preview.welcome_usd ?? 0) : 0;
+  const dollars = Number.isInteger(bonus) ? `$${bonus}` : `$${bonus.toFixed(2)}`;
+  const about =
+    "AI teammates that get things done for you, each on its own computer. Enter your email to claim your invite." +
+    (bonus > 0 ? ` You'll get ${dollars} of free usage after your first chat.` : "");
+  return formPage({
+    title: who,
+    description: about,
+    body: `  <h1>${esc(who)}</h1>${label ? `\n  <p class="wl-label">${esc(label)}</p>` : ""}
+  <p>${esc(about)}</p>
+  ${redeemForm({ code, label: "Claim my invite", source: "invite" })}
+  ${NO_SCRIPT}
+  <p class="small">Already have an account? <a href="${WEB_APP}">Sign in</a></p>`,
+  });
+}
+
+/** An invite code that doesn't exist, or can't be one. */
+function inviteNotFound() {
+  return formPage({
+    title: "Invite not found",
+    status: 404,
+    body: `  <h1>We couldn't find that invite.</h1>
+  <p>Check the code and try again, or join the waitlist and we'll email you when it's your turn.</p>
+  <a class="btn primary" href="${SITE}/waitlist">Join the waitlist</a>`,
+  });
+}
+
+/** /waitlist/leave?t=<token>: asks first. Mail scanners open links, so opening this never removes anything. */
+function leavePage() {
+  return formPage({
+    title: "Leave the waitlist",
+    cache: "private, no-store",
+    body: `  ${leaveBlock()}
+  <noscript><p class="wl-note">Removing your address needs JavaScript. Or email <a href="mailto:hello@casama.ai">hello@casama.ai</a>.</p></noscript>`,
+  });
+}
+
+/** Extra rules for the pages with forms (the invite pages, /waitlist/leave). */
+const FORM_CSS = `
+  [hidden] { display: none !important; }
+  .wl-form { display: grid; gap: 14px; margin-top: 18px; text-align: left; }
+  .wl-field { display: grid; gap: 6px; }
+  .wl-field span { font-size: 15px; color: var(--muted); }
+  .wl-field input { width: 100%; min-height: 52px; padding: 0 20px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; }
+  .wl-field input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-color: transparent; }
+  button.btn { width: 100%; border: 0; cursor: pointer; font-family: inherit; }
+  .wl-form .btn { margin-top: 0; }
+  button.btn[disabled] { opacity: .6; cursor: default; }
+  .wl-status { margin: 0; min-height: 1.5em; font-size: 15px; color: var(--muted); }
+  .wl-status.is-bad { color: var(--ink); font-weight: 700; }
+  .wl-label { color: var(--ink); font-weight: 700; }
+  .wl-result { margin-top: 18px; }
+  .wl-result p { color: var(--ink); }
+  .wl-note { font-size: 15px; }
+  .wl-note a { color: var(--accent); }
+`;
 
 /** The look shared by the pages this worker serves (casama.link's, D-319). */
 const PAGE_CSS = `

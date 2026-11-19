@@ -298,8 +298,17 @@ export const PublicConfig = z
      * remote access on, D-296), so the apps offer only sign-in.
      */
     signups_open: z.boolean().optional(),
-    /** New accounts only for emails someone on this server invited (D-296). */
+    /**
+     * New accounts only for emails that were invited: by someone on this server (D-296), or let
+     * in while Casama Cloud's gate is on (see `signup_gate`).
+     */
     signups_by_invitation: z.boolean().optional(),
+    /**
+     * Casama Cloud's waitlist and invite gate (docs/WAITLIST-PLAN.md), present only while new
+     * accounts are by invitation there: the apps then offer the waitlist and an invite code field.
+     * `mode` is a plain string so a later mode doesn't break older apps.
+     */
+    signup_gate: z.object({ mode: z.string(), waitlist_url: z.string() }).optional(),
     /**
      * The push project's sender id (its Firebase project number), when this server sends pushes.
      * Casama for Chrome registers for pushes with it (D-323); without it the extension checks

@@ -469,6 +469,29 @@ if (env.MODE === "api") {
       );
     }
   }
+  // The waitlist (docs/WAITLIST-PLAN.md): "You're in" emails and tying sign-ups to their entries,
+  // every minute. The API's connection, because it reads sign-in emails.
+  {
+    const { startWaitlist, waitlistAvailable } = await import("./services/waitlist.ts");
+    if (waitlistAvailable(env)) {
+      const { newsletterConfig } = await import("./services/newsletter.ts");
+      const { referralConfig } = await import("./services/referrals.ts");
+      const { internalToken } = await import("./api/routes/local.ts");
+      const waitlistDb = createDb(env.DATABASE_URL, { max: 1 });
+      stoppers.push(waitlistDb.close);
+      stoppers.push(
+        startWaitlist({
+          db: waitlistDb.db,
+          email: workerEmail,
+          env,
+          secret: internalToken(env),
+          referrals: referralConfig(env).enabled,
+          newsletter: newsletterConfig(env),
+          log: (msg, extra) => logger.info(msg, extra),
+        }),
+      );
+    }
+  }
   // Gallery v2 (D-315): use counts and rewards hourly, the health check daily, monthly picks.
   {
     const { startGalleryJobs } = await import("./services/gallery-jobs.ts");

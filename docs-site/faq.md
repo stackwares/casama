@@ -92,6 +92,22 @@ available. The code is on
 [GitHub](https://github.com/stackwares/casama). See [Open source](https://casama.ai/open-source)
 and [LICENSING.md](https://github.com/stackwares/casama/blob/main/LICENSING.md).
 
+### Why is Casama Cloud invite-only?
+
+We're letting people in as we add capacity, so Casama stays fast for everyone who is in. Running
+Casama on your own server is open to everyone, with no invite and no waitlist. See
+[Getting an invite](/guide/getting-an-invite).
+
+### How do I get an invite?
+
+Join the waitlist at casama.ai/waitlist and we'll email you once, when it's your turn. Or ask
+someone who uses Casama: every member has a few invites to share.
+
+### I have an invite code. What now?
+
+Go to casama.ai/waitlist and enter it with your email. Then sign in with that address. Google,
+Apple and the email link all work, as long as it's the same address.
+
 ## Plans & billing
 
 ### Is it free?
