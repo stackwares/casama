@@ -458,6 +458,45 @@
 
   var panelOpen = false;
 
+  /* Phones: the panel fills the screen, but an open keyboard only shrinks the visual viewport
+     (Chrome on Android and Safari on iOS), and focusing the box pans the page up, which pushed the
+     header and the conversation off the top. While the panel is open on a phone, pin it to the
+     visual viewport so it always sits between the top of the screen and the keyboard. */
+  var phone = window.matchMedia("(max-width: 639px)");
+  var fitting = false;
+
+  function fitPanel() {
+    if (!ui || ui.mode !== "panel" || !panelOpen) return;
+    var vv = window.visualViewport;
+    var s = ui.root.style;
+    if (!vv || !phone.matches) {
+      s.top = s.height = s.bottom = "";
+      return;
+    }
+    var log = ui.log;
+    var atEnd = log.scrollHeight - log.scrollTop - log.clientHeight < 40;
+    s.top = Math.max(0, vv.offsetTop) + "px";
+    s.height = vv.height + "px";
+    s.bottom = "auto";
+    if (atEnd) log.scrollTop = log.scrollHeight;
+  }
+
+  function startFitting() {
+    if (fitting || !window.visualViewport) return;
+    fitting = true;
+    window.visualViewport.addEventListener("resize", fitPanel);
+    window.visualViewport.addEventListener("scroll", fitPanel);
+    fitPanel();
+  }
+
+  function stopFitting() {
+    if (!fitting) return;
+    fitting = false;
+    window.visualViewport.removeEventListener("resize", fitPanel);
+    window.visualViewport.removeEventListener("scroll", fitPanel);
+    if (ui) ui.root.style.top = ui.root.style.height = ui.root.style.bottom = "";
+  }
+
   function focusables(root) {
     return Array.prototype.filter.call(
       root.querySelectorAll('a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'),
@@ -484,6 +523,7 @@
     if (!ui || ui.mode !== "panel" || !panelOpen) return;
     panelOpen = false;
     ui.root.hidden = true;
+    stopFitting();
     document.documentElement.classList.remove("cmh-locked");
     try { window.dispatchEvent(new CustomEvent("casama-help-panel", { detail: { open: false } })); } catch (e) { /* fine */ }
     var back = ui.opener;
@@ -509,7 +549,8 @@
         ui.opener = options.opener && options.opener !== document.body ? options.opener : ui.opener;
         ui.root.hidden = false;
         panelOpen = true;
-        if (window.matchMedia("(max-width: 639px)").matches) document.documentElement.classList.add("cmh-locked");
+        if (phone.matches) document.documentElement.classList.add("cmh-locked");
+        startFitting();
         try { window.dispatchEvent(new CustomEvent("casama-help-panel", { detail: { open: true } })); } catch (e) { /* fine */ }
       }
     }
