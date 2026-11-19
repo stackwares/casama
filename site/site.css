@@ -115,10 +115,16 @@ button { cursor: pointer; }
 .site-nav { display: flex; gap: 26px; margin-left: auto; }
 .site-nav a { font-size: var(--fs-small); font-weight: 700; text-decoration: none; padding: 8px 0; text-underline-offset: 6px; text-decoration-thickness: 2px; }
 @media (hover: hover) { .site-nav a:hover { text-decoration: underline; text-decoration-color: var(--accent); } }
+/* Header actions: a quiet Sign in link beside the Join the waitlist button. */
+.header-cta { display: flex; align-items: center; gap: 20px; }
+.header-signin { font-size: var(--fs-small); font-weight: 700; text-decoration: none; padding: 8px 0; text-underline-offset: 6px; text-decoration-thickness: 2px; }
+@media (hover: hover) { .header-signin:hover { text-decoration: underline; text-decoration-color: var(--accent); } }
+.header-cta .btn { white-space: nowrap; }
 @media (max-width: 860px) {
   .site-nav { display: none; }
-  .header-inner > .btn { margin-left: auto; }
+  .header-inner > .btn, .header-inner > .header-cta { margin-left: auto; }
 }
+@media (max-width: 480px) { .header-signin { display: none; } .header-inner { gap: 12px; } }
 
 /* ---------------------------------------------------------------- hero */
 .hero { padding-top: clamp(56px, 9vw, 128px); display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(40px, 5vw, 72px); align-items: center; }
@@ -489,4 +495,18 @@ button { cursor: pointer; }
 .dl-news-card { max-width: 640px; margin: 0 auto; padding: 24px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); }
 .dl-news-card h2 { font: 700 var(--fs-h3)/1.2 var(--font-sans); letter-spacing: -0.01em; }
 .dl-news-card p { margin-top: 8px; color: var(--ink-2); }
-.dl-news-card .footer-news { margin-top: 14px; max-width: none; }
+.dl-news-card .footer-news, .dl-news-card .wl-inline { margin-top: 14px; max-width: none; }
+
+/* The small join form (home page, blog posts, changelog, download): email and button on one row,
+   one line of status under it. site/assets/waitlist.js wires it. */
+.wl-inline { max-width: 460px; margin-top: 28px; }
+.wl-inline-row { display: flex; gap: 8px; }
+.wl-inline input[type="email"] { flex: 1; min-width: 0; min-height: 48px; padding: 0 18px; border: 1.5px solid var(--line); border-radius: 999px; background: var(--bg); color: var(--ink); font: inherit; font-size: var(--fs-small); }
+.wl-inline input[type="email"]:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.wl-inline .btn { flex: none; border: 0; cursor: pointer; white-space: nowrap; }
+.wl-inline .btn[disabled] { opacity: .6; cursor: default; }
+.wl-inline .wl-status { margin: 8px 0 0; min-height: 1.5em; font-size: var(--fs-small); color: var(--ink-2); }
+.wl-inline .wl-status.is-bad { color: var(--warn); }
+.wl-inline-done { max-width: 460px; margin-top: 28px; padding: 16px 20px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); }
+.wl-inline-done:focus { outline: none; }
+@media (max-width: 420px) { .wl-inline-row { flex-direction: column; } .wl-inline .btn { width: 100%; min-height: 48px; } }

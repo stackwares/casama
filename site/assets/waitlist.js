@@ -323,39 +323,80 @@
     target.hidden = false;
   }
 
-  function bindJoin(form) {
+  /**
+   * Wires a join form. `body(f, email)` adds the form's own fields to the request; `done()` runs after
+   * the join. The full /waitlist form and the small inline forms share this: one solver, one POST.
+   */
+  function wireJoin(form, body, done) {
     var status = form.querySelector("[data-wl-status]");
-    var joined = document.querySelector("[data-wl-joined]");
-    form.hidden = false;
     form.addEventListener("focusin", warm, { once: true });
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       if (form._busy) return;
-      var f = form.elements;
-      var email = clip(f.email.value, 254);
+      var email = clip(form.elements.email.value, 254);
       if (!email) return;
-      var body = { email: email, source: sourceFor(form), newsletter: !!f.newsletter.checked, self_hosting: !!f.self_hosting.checked };
+      var payload = { email: email, source: sourceFor(form) };
       var ref = refValue();
-      if (ref) body.ref = ref;
-      var note = clip(f.note.value, 280);
-      if (note) body.note = note;
+      if (ref) payload.ref = ref;
+      body(form.elements, payload);
       busy(form, true);
       say(status, "One moment…", false);
-      postWithProof("/v1/waitlist", body).then(
-        function () {
-          form.hidden = true;
-          if (joined) {
-            joined.hidden = false;
-            joined.setAttribute("tabindex", "-1");
-            joined.focus();
-          }
-        },
+      postWithProof("/v1/waitlist", payload).then(
+        function () { done(form); },
         function (err) {
           say(status, err.message || GENERIC, true);
           busy(form, false);
         }
       );
     });
+  }
+
+  function bindJoin(form) {
+    var joined = document.querySelector("[data-wl-joined]");
+    form.hidden = false;
+    var prefill = clip(params.get("email"), 254); // from the small forms' no-JavaScript fallback
+    if (prefill && form.elements.email && !form.elements.email.value) form.elements.email.value = prefill;
+    wireJoin(
+      form,
+      function (f, payload) {
+        payload.newsletter = !!f.newsletter.checked;
+        payload.self_hosting = !!f.self_hosting.checked;
+        var note = clip(f.note.value, 280);
+        if (note) payload.note = note;
+      },
+      function () {
+        form.hidden = true;
+        if (joined) {
+          joined.hidden = false;
+          joined.setAttribute("tabindex", "-1");
+          joined.focus();
+        }
+      }
+    );
+  }
+
+  // waitlist copy: docs/WAITLIST-PLAN.md §12 (the /waitlist page's joined message, less the newsletter clause: these forms don't ask)
+  var JOINED = "You're on the list. We're letting people in every day. You'll get one email when it's your turn, and nothing else.";
+
+  /** The small email-only form (home page, blog posts, changelog, download). Joining swaps it for the joined message. */
+  function bindInline(form) {
+    wireJoin(
+      form,
+      function (f, payload) {
+        payload.newsletter = false;
+        payload.self_hosting = false;
+      },
+      function () {
+        var msg = node("p", "wl-inline-done");
+        msg.setAttribute("role", "status");
+        msg.setAttribute("tabindex", "-1");
+        var strong = node("strong", "", "You're on the list.");
+        msg.appendChild(strong);
+        msg.appendChild(document.createTextNode(JOINED.slice("You're on the list.".length)));
+        form.parentNode.replaceChild(msg, form);
+        msg.focus();
+      }
+    );
   }
 
   function bindRedeem(form) {
@@ -419,6 +460,7 @@
 
   function init() {
     Array.prototype.forEach.call(document.querySelectorAll("form[data-wl-join]"), bindJoin);
+    Array.prototype.forEach.call(document.querySelectorAll("form[data-wl-inline]"), bindInline);
     Array.prototype.forEach.call(document.querySelectorAll("form[data-wl-redeem]"), bindRedeem);
     Array.prototype.forEach.call(document.querySelectorAll("[data-wl-leave]"), bindLeave);
   }

@@ -205,7 +205,10 @@
         <a href="https://docs.casama.ai">Docs</a>
       </nav>
       <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
-      <a class="btn sm primary" href="https://app.casama.ai">Sign in</a>
+      <div class="header-cta">
+        <a class="header-signin" href="https://app.casama.ai">Sign in</a>
+        <a class="btn sm primary" href="/waitlist">Join the waitlist</a>
+      </div>
     </div>
   </header>
 
@@ -215,9 +218,17 @@
         <p class="eyebrow">Open source · Free to start</p>
         <h1 id="hero-title"><span class="ph">AI teammates</span> <span class="ph">that do the work</span> <span class="ph">on their own</span> <span class="ph">computers.</span></h1>
         <p class="lead">Ask a Casama bot to book the trip, answer the email or build the site. It remembers how you like things done, keeps going while you're away, and asks before it pays, sends or deletes anything.</p>
+        <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
+        <form class="wl-inline" data-wl-inline data-source="home-hero" action="/waitlist" method="get" aria-label="Join the waitlist">
+          <label class="visually-hidden" for="hero-wl-email">Email address</label>
+          <div class="wl-inline-row">
+            <input id="hero-wl-email" type="email" name="email" required autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com">
+            <button class="btn primary" type="submit">Join the waitlist</button>
+          </div>
+          <p class="wl-status" role="status" aria-live="polite" data-wl-status>Casama Cloud is invite-only for now.</p>
+        </form>
+        <noscript><p class="hero-note"><a href="/waitlist">Join the waitlist</a></p></noscript>
         <div class="hero-actions">
-          <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
-          <a class="btn primary" href="/get/start?from=home">Join the waitlist</a>
           <a class="btn film-btn" href="/assets/film/casama-film-v7-16x9.mp4" data-film-open aria-haspopup="dialog"><span class="film-btn-play" aria-hidden="true"></span>Watch the film <span class="film-btn-time">1½ min</span></a>
           <a class="text-link" href="https://docs.casama.ai/self-hosting/">Run it yourself</a>
         </div>
@@ -779,9 +790,17 @@
             <code id="install-code">git clone https://github.com/stackwares/casama &amp;&amp; ./casama/install.sh --local</code>
             <button type="button" class="btn sm" id="copy-install" aria-label="Copy the install command">Copy</button>
           </div>
+          <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
+          <form class="wl-inline" data-wl-inline data-source="home-cta" action="/waitlist" method="get" aria-label="Join the waitlist">
+            <label class="visually-hidden" for="cta-wl-email">Email address</label>
+            <div class="wl-inline-row">
+              <input id="cta-wl-email" type="email" name="email" required autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com">
+              <button class="btn primary" type="submit">Join the waitlist</button>
+            </div>
+            <p class="wl-status" role="status" aria-live="polite" data-wl-status>Casama Cloud is invite-only for now.</p>
+          </form>
+          <noscript><p class="hero-note"><a href="/waitlist">Join the waitlist</a></p></noscript>
           <div class="hero-actions">
-            <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
-            <a class="btn primary" href="/get/start?from=home">Join the waitlist</a>
             <a class="text-link" href="https://docs.casama.ai/self-hosting/">Run it yourself</a>
             <a class="text-link" href="https://github.com/stackwares/casama">Read the source on GitHub</a>
           </div>
@@ -838,6 +857,8 @@
         <nav aria-label="Product">
           <h2>Product</h2>
           <a href="https://app.casama.ai">Casama Cloud</a>
+          <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
+          <a href="/waitlist">Waitlist</a>
           <a href="/download">Download</a>
           <a href="#features">Features</a>
           <a href="/pricing">Pricing</a>
@@ -886,6 +907,7 @@
 
   <script src="/errors.js" data-dsn="https://86edd9eaf9c8b7f88c6a1cf3b71a1e94@o219011.ingest.us.sentry.io/4512413457776640" data-surface="site"></script>
   <script src="/site.js"></script>
+  <script src="/assets/waitlist.js"></script>
   <script src="/showcase.js"></script>
   <script src="/assets/brand/casama-mark.js"></script>
 </body>

@@ -316,6 +316,8 @@ ${heroHtml(item)}
     <a class="btn" href="https://casama.ai/download">Get Casama</a>
     <button class="btn quiet" type="button" data-copy="${esc(item.type === "set" ? C.pageUrl(item) : C.shareLink(item))}">${svgIcon("link", 17)}<span>Copy link</span></button>
   </div>
+  <!-- waitlist copy: docs/WAITLIST-PLAN.md §12 -->
+  <p class="small">Casama Cloud is invite-only for now. <a href="https://casama.ai/waitlist">Join the waitlist</a></p>
   ${hint(item.type) ? `<p class="small">${esc(hint(item.type))}</p>` : ""}
   ${extrasHtml(item)}
   ${factsHtml(item)}
