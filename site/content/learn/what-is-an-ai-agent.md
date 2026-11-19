@@ -22,6 +22,8 @@ Three things make that possible:
 3. **A place to work.** It needs somewhere to run those tools: your own computer, a browser, or a
    computer of its own in the cloud.
 
+{{figure: agent-loop}}
+
 ## What an agent can do
 
 - **Work that takes many steps**: research a topic across twenty sources and write it up, or clean

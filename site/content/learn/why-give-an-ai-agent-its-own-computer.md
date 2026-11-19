@@ -45,6 +45,8 @@ Some products give every agent its own machine. Others run all of a person's age
 machine. One each means a research agent that installs odd software can't break the assistant that
 handles your mail, and each can be limited to the sites it needs.
 
+{{figure: shared-vs-own-computer}}
+
 ## How Casama does it
 
 Every Casama bot works on its own isolated Linux machine with a shell, files and a browser, and

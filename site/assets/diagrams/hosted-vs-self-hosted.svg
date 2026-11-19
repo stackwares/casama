@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" width="960" height="540" role="img"><style>
+.bg{fill:#ffffff}.ink{fill:#24112f}.mut{fill:#5b4a6b}.box{fill:#ece8fb;stroke:#6b4fd8;stroke-width:2}.plain{fill:#f6f4fb;stroke:#c9c2dd;stroke-width:2}.acc{fill:#6b4fd8}.onacc{fill:#ffffff}.cy{fill:#d9f2f8;stroke:#5cc8e0;stroke-width:2}.ln{stroke:#6b4fd8;stroke-width:3;fill:none}.ah{fill:#6b4fd8}.div{stroke:#c9c2dd;stroke-width:2;stroke-dasharray:6 6}
+text{font-family:"Google Sans",system-ui,-apple-system,sans-serif}
+@media (prefers-color-scheme: dark){.bg{fill:#1f1d24}.ink{fill:#f2eef9}.mut{fill:#b9b0c9}.box{fill:#2c2836;stroke:#9a85f0}.plain{fill:#2c2836;stroke:#4a4458}.acc{fill:#9a85f0}.onacc{fill:#1f1d24}.cy{fill:#1f3a42;stroke:#5cc8e0}.ln{stroke:#9a85f0}.ah{fill:#9a85f0}.div{stroke:#4a4458}}
+</style>
+<rect class="bg" width="960" height="540"/>
+<text class="ink" x="480" y="62" text-anchor="middle" font-size="26" font-weight="700">Casama Cloud or self-hosted</text>
+<line class="div" x1="480" y1="100" x2="480" y2="500"/>
+<g font-size="18" text-anchor="middle">
+<text class="ink" x="240" y="130" font-size="24" font-weight="700">Casama Cloud</text>
+<text class="mut" x="240" y="156" font-size="17">Hosted by Casama</text>
+<rect class="box" x="70" y="186" width="340" height="62" rx="14"/><text class="ink" x="240" y="224">Casama runs servers and computers</text>
+<rect class="box" x="70" y="268" width="340" height="62" rx="14"/><text class="ink" x="240" y="306">Casama picks and runs the models</text>
+<rect class="box" x="70" y="350" width="340" height="62" rx="14"/><text class="ink" x="240" y="388">You pay with credits</text>
+<rect class="cy" x="70" y="436" width="340" height="52" rx="14"/><text class="ink" x="240" y="469" font-size="18">Sign up and start</text>
+<text class="ink" x="720" y="130" font-size="24" font-weight="700">Self-hosted</text>
+<text class="mut" x="720" y="156" font-size="17">Run by you, free</text>
+<rect class="box" x="550" y="186" width="340" height="62" rx="14"/><text class="ink" x="720" y="224">Your server or Mac runs it all</text>
+<rect class="box" x="550" y="268" width="340" height="62" rx="14"/><text class="ink" x="720" y="306">Your model keys or local models</text>
+<rect class="box" x="550" y="350" width="340" height="62" rx="14"/><text class="ink" x="720" y="388">Free to run; model keys are yours</text>
+<rect class="cy" x="550" y="436" width="340" height="52" rx="14"/><text class="ink" x="720" y="469" font-size="18">You update and back up</text>
+</g>
+</svg>

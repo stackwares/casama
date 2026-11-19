@@ -35,6 +35,8 @@ Email is the riskiest thing to hand an agent, because it is where strangers can 
 | Training | A plain statement that your data isn't used to train models, or a server you run |
 | Spending | Payments always ask |
 
+{{figure: approval-flow}}
+
 ## Start small
 
 1. Connect one account with read access only.

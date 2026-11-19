@@ -1,0 +1,30 @@
+{
+  "note": "Header pictures for casama.ai written pages (round 7), made with codex/gpt-6-luna: no text, no app screens, no mascot. site/build.mjs shows <name>.jpg under the page title with this alt text.",
+  "images": [
+    {
+      "slug": "openclaw",
+      "alt": "A quiet harbor at twilight with rowboats tied at a wooden pier while one small boat glides across the lake toward an island with a lit cottage.",
+      "prompt": "A quiet harbor at twilight: several small rowboats tied at a wooden pier, one boat gliding away across calm water toward a small island with a warmly lit cottage."
+    },
+    {
+      "slug": "hermes-agent",
+      "alt": "An old post office desk at night with sealed letters, a wax seal and an inkwell, and through the open window a paper bird kite flying toward the stars.",
+      "prompt": "A cozy old post office desk at night with sealed letters, a wax seal and an inkwell; through an open window a folded paper kite shaped like a bird flies toward the stars."
+    },
+    {
+      "slug": "grok-bot",
+      "alt": "A hillside village under a violet evening sky where every small round house has its own lit window and its own chimney, joined by a winding path.",
+      "prompt": "Under a violet evening sky, a hillside village where every little house has its own warm lit window and its own small chimney with a curl of smoke, a winding path between them."
+    },
+    {
+      "slug": "manus",
+      "alt": "A cozy study with a large map unrolled on a wooden table beside a brass compass and a lamp, balcony doors open to a starry sky over rooftops.",
+      "prompt": "A cozy study with a large unrolled map on a wooden table, a brass compass, pins and a lamp, balcony doors open onto a starry sky over rooftops."
+    },
+    {
+      "slug": "n8n",
+      "alt": "A wooden waterwheel feeding small wooden channels of softly glowing water that run between raised flower and vegetable beds at sunset.",
+      "prompt": "A gentle wooden waterwheel feeding a network of small wooden channels that carry softly glowing water between raised garden beds, warm evening light."
+    }
+  ]
+}

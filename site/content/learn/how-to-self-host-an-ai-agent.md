@@ -14,6 +14,8 @@ order: 9
   local model running in Ollama.
 - **Optional: a domain**, if other people will reach the server over the internet.
 
+{{figure: hosted-vs-self-hosted}}
+
 ## The steps
 
 These use Casama, which is open source and free to self-host. Other self-hosted agents follow the

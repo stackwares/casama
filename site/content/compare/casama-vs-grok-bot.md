@@ -24,6 +24,8 @@ order: 24
 
 Facts about Grok Bot were checked on November 18, 2026. The sources are at the end of this page.
 
+{{figure: shared-vs-own-computer}}
+
 ## Where Grok Bot wins
 
 {{best-at: grok-bot}}

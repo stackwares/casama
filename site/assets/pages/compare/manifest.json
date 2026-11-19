@@ -1,0 +1,45 @@
+{
+  "note": "Header pictures for casama.ai written pages (round 7), made with codex/gpt-6-luna: no text, no app screens, no mascot. site/build.mjs shows <name>.jpg under the page title with this alt text.",
+  "images": [
+    {
+      "slug": "grok-bot-pricing",
+      "alt": "A brass weighing scale on a wooden table by a dusk window, a few glowing coins in one pan and a small sprouting plant in the other, beside a warm lamp.",
+      "prompt": "An old brass weighing scale on a wooden table by a window at dusk: one pan holds a few softly glowing coins, the other a small potted sprouting plant; lavender evening light, a warm lamp."
+    },
+    {
+      "slug": "is-grok-bot-free",
+      "alt": "An open wooden garden gate under wisteria at dawn, round stepping stones leading through it into a sunlit wildflower meadow.",
+      "prompt": "An open wooden garden gate with no lock at dawn, round stepping stones leading through it into a sunlit wildflower meadow, soft peach and lavender sky."
+    },
+    {
+      "slug": "grok-bot-templates",
+      "alt": "A craft table in soft window light with sewing patterns, felt cut-out shapes, spools of thread, boxes of buttons and a pincushion.",
+      "prompt": "A cozy craft table seen from slightly above with neat stacks of paper patterns, cut-out shapes, spools of thread and small open boxes of buttons, soft lavender light from a window."
+    },
+    {
+      "slug": "openclaw-alternatives",
+      "alt": "A forest path at dusk that splits into several trails, each lit by a different softly colored lantern hanging from the trees, with fireflies.",
+      "prompt": "A fork in a forest path at dusk with several trails branching out, each trail lit by a different softly colored hanging lantern, fireflies between the trees."
+    },
+    {
+      "slug": "openclaw-vs-hermes-agent",
+      "alt": "Two small lighthouses on cliffs facing each other across a calm bay at dusk, with a lit cottage on the beach between them.",
+      "prompt": "Two small lighthouses on neighboring cliffs facing each other across a calm bay at dusk, a third little glowing cottage on the beach between them."
+    },
+    {
+      "slug": "grok-bot-alternatives",
+      "alt": "Paper lanterns of many shapes and soft colors floating over a calm pond at night, reflected in the water between the reeds.",
+      "prompt": "Many paper lanterns of different shapes and soft colors floating over a calm pond at night, reflected in the water, reeds at the edges."
+    },
+    {
+      "slug": "casama-vs-grok-bot",
+      "alt": "Two paths over lavender hills at dusk, one leading to a single walled tower with one gate and the other to an open village of cottages with gardens.",
+      "prompt": "Two paths over rolling lavender hills at dusk: one leads to a single tall walled tower with one gate, the other to an open village of small cottages with lit windows and gardens."
+    },
+    {
+      "slug": "best-open-source-ai-agents",
+      "alt": "A bright greenhouse in the morning with shelves of seedlings in little pots, watering cans on a long shared potting bench and doors open to a garden.",
+      "prompt": "A bright greenhouse in the morning with open wooden shelves of seedlings in little pots, watering cans and a long shared potting bench, doors open to a garden."
+    }
+  ]
+}

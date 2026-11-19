@@ -1,0 +1,15 @@
+{
+  "note": "Header pictures for casama.ai written pages (round 7), made with codex/gpt-6-luna: no text, no app screens, no mascot. site/build.mjs shows <name>.jpg under the page title with this alt text.",
+  "images": [
+    {
+      "slug": "what-is-an-ai-agent",
+      "alt": "A tidy desk by a window at night with a small glowing orb of light above an open notebook, a cup of tea, a plant and a desk lamp.",
+      "prompt": "A tidy desk by a window at night with a small softly glowing orb of light hovering above an open notebook, a cup of tea, a desk lamp and a plant, city lights far outside."
+    },
+    {
+      "slug": "how-to-self-host-an-ai-agent",
+      "alt": "A cozy home workshop with softly glowing rounded boxes on a wooden cabinet under a warm lamp, a toolbox, a plant and snow falling outside the window.",
+      "prompt": "A small cozy home workshop with a sturdy wooden cabinet holding a few softly glowing rounded boxes, a warm lamp, a toolbox and a plant, a little window with falling snow outside."
+    }
+  ]
+}
