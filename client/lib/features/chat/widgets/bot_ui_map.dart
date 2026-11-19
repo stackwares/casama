@@ -15,6 +15,13 @@ import '../../../core/link_browser.dart';
 /// for a self-built app's light use but not for the store apps (D-310).
 const kMapTilerKey = String.fromEnvironment('CASAMA_MAPTILER_KEY');
 
+/// Once MapTiler fails in this app session (quota 429, blocked key, outage), every map card stays
+/// on OpenStreetMap for the rest of the session instead of retrying MapTiler on each new card.
+final ValueNotifier<bool> _sessionOsmFallback = ValueNotifier<bool>(false);
+
+@visibleForTesting
+void resetMapTileFallbackForTest() => _sessionOsmFallback.value = false;
+
 /// A place on a map card, read from a bot's `{lat, lng}`.
 LatLng? _point(Object? v) {
   if (v is! Map) return null;
@@ -88,51 +95,41 @@ final mapComponent = ComponentImplementation(
 
 /// A map in a bot's card: one finger scrolls the chat past it, two fingers move and zoom it, and
 /// the corner button opens it full screen.
-class BotMapCard extends StatefulWidget {
+class BotMapCard extends StatelessWidget {
   const BotMapCard({
     super.key,
     required this.spec,
     this.mapTilerKey = kMapTilerKey,
     this.tileProvider,
+    this.osmFallback,
   });
 
   final MapCardSpec spec;
   final String mapTilerKey;
   final TileProvider? tileProvider;
-
-  @override
-  State<BotMapCard> createState() => _BotMapCardState();
-}
-
-class _BotMapCardState extends State<BotMapCard> {
-  final ValueNotifier<bool> _osmFallback = ValueNotifier<bool>(false);
-
-  @override
-  void dispose() {
-    _osmFallback.dispose();
-    super.dispose();
-  }
+  final ValueNotifier<bool>? osmFallback;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final fallback = osmFallback ?? _sessionOsmFallback;
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.tile),
       child: SizedBox(
-        height: widget.spec.height,
+        height: spec.height,
         child: Stack(
           children: [
             Positioned.fill(
               child: _MapView(
-                spec: widget.spec,
+                spec: spec,
                 flags:
                     InteractiveFlag.pinchZoom |
                     InteractiveFlag.pinchMove |
                     InteractiveFlag.doubleTapZoom |
                     InteractiveFlag.scrollWheelZoom,
-                mapTilerKey: widget.mapTilerKey,
-                tileProvider: widget.tileProvider,
-                osmFallback: _osmFallback,
+                mapTilerKey: mapTilerKey,
+                tileProvider: tileProvider,
+                osmFallback: fallback,
               ),
             ),
             Positioned(
@@ -148,11 +145,11 @@ class _BotMapCardState extends State<BotMapCard> {
                     builder: (context) => Scaffold(
                       appBar: AppBar(title: Text(l10n.mapTitle)),
                       body: _MapView(
-                        spec: widget.spec,
+                        spec: spec,
                         flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-                        mapTilerKey: widget.mapTilerKey,
-                        tileProvider: widget.tileProvider,
-                        osmFallback: _osmFallback,
+                        mapTilerKey: mapTilerKey,
+                        tileProvider: tileProvider,
+                        osmFallback: fallback,
                       ),
                     ),
                   ),

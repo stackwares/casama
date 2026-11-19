@@ -60,7 +60,12 @@ class _FallbackTestTileProvider extends TileProvider {
 }
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    resetMapTileFallbackForTest();
+  });
+
+  tearDown(resetMapTileFallbackForTest);
 
   List<Map<String, Object?>> card(List<Map<String, Object?>> components) => [
     {
@@ -222,11 +227,44 @@ void main() {
     },
   );
 
+  testWidgets('stays on MapTiler when a single tile returns 404', (
+    tester,
+  ) async {
+    await setSize(tester, const Size(400, 600));
+    final tiles = _FallbackTestTileProvider(mapTilerStatusCode: 404);
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: BotMapCard(
+            spec: const MapCardSpec(
+              center: LatLng(37.7749, -122.4194),
+              zoom: 12,
+              markers: [],
+              path: [],
+              height: 220,
+            ),
+            mapTilerKey: 'test-key',
+            tileProvider: tiles,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(
+      tester.widget<TileLayer>(find.byType(TileLayer)).urlTemplate,
+      contains('api.maptiler.com'),
+    );
+  });
+
   testWidgets(
-    'stays on MapTiler when a single tile returns 404',
+    'keeps OpenStreetMap across newly mounted map cards for the rest of the session',
     (tester) async {
       await setSize(tester, const Size(400, 600));
-      final tiles = _FallbackTestTileProvider(mapTilerStatusCode: 404);
+      final firstTiles = _FallbackTestTileProvider(mapTilerStatusCode: 429);
       await tester.pumpWidget(
         MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -241,7 +279,7 @@ void main() {
                 height: 220,
               ),
               mapTilerKey: 'test-key',
-              tileProvider: tiles,
+              tileProvider: firstTiles,
             ),
           ),
         ),
@@ -251,7 +289,46 @@ void main() {
 
       expect(
         tester.widget<TileLayer>(find.byType(TileLayer)).urlTemplate,
-        contains('api.maptiler.com'),
+        contains('tile.openstreetmap.org'),
+      );
+
+      // Mount a brand-new BotMapCard in the same session with its own tile provider.
+      final secondTiles = _FallbackTestTileProvider(mapTilerStatusCode: 429);
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: BotMapCard(
+              key: const Key('secondMapCard'),
+              spec: const MapCardSpec(
+                center: LatLng(35.6762, 139.6503),
+                zoom: 11,
+                markers: [],
+                path: [],
+                height: 220,
+              ),
+              mapTilerKey: 'test-key',
+              tileProvider: secondTiles,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(
+        tester.widget<TileLayer>(find.byType(TileLayer)).urlTemplate,
+        contains('tile.openstreetmap.org'),
+      );
+      expect(
+        secondTiles.requestedUrls.any((u) => u.contains('api.maptiler.com')),
+        isFalse,
+      );
+      expect(
+        secondTiles.requestedUrls.any(
+          (u) => u.contains('tile.openstreetmap.org'),
+        ),
+        isTrue,
       );
     },
   );

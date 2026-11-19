@@ -6127,3 +6127,13 @@ cookies and could set cookies on `.casama.ai`.
 - **Privacy:** the privacy page has a waitlist section. An entry is in the account's data export (`account.json`, `waitlist`). When an account is deleted its entry keeps only the inbox's hash and how it got in, so the same inbox can come back; the address, the line the person wrote and the network hash go (`waitlist_forget_account`). The network hash is cleared after 30 days anyway.
 - **Tests:** `apps/server/test/waitlist.test.ts` (45), `supabase/tests/waitlist_rls.test.sql` (37), `scripts/site-waitlist.test.mjs` (18); the older hook tests read a refusal through `hookVerdict`.
 - **Not built yet:** the native screens in the app and Admin → Waitlist (Phase 2, build 46), the daily automatic batch and analytics events (Phase 3). **Not deployed:** nothing is live until Oliver says; the go-live steps are in the plan's "Status of the build".
+
+## D-428 MapTiler key set up with session-wide OpenStreetMap fallback (2026-11-19)
+
+Amends D-322's note that no MapTiler key was configured.
+
+- **Key setup (Oliver: "it should be map tiler and if it fails then we use openstreet maps fallback"):** MapTiler Cloud account created via `stackwares@gmail.com` with key `Casama` saved in Vaultwarden (`Casama · MapTiler Cloud API key (CASAMA_MAPTILER_KEY)`), written to gitignored `client/config/maps.json`, and stored in the `CASAMA_MAPS_JSON` GitHub Actions secret for official builds (`CASAMA_OFFICIAL_BUILD=1`).
+- **Session-wide fallback (`client/lib/features/chat/widgets/bot_ui_map.dart`):** `BotMapCard` uses MapTiler streets (`streets-v2` / `streets-v2-dark`) when `CASAMA_MAPTILER_KEY` is non-empty. On any non-404 tile load failure (401/403/429/5xx or network error), a session-wide `ValueNotifier<bool>` (`_sessionOsmFallback`) flips to `true`, switching the active card, full-screen map view, and any subsequently mounted map cards in the same app session directly to OpenStreetMap (`https://tile.openstreetmap.org/{z}/{x}/{y}.png`, retina off, attribution updated) so new cards do not keep failing MapTiler requests first.
+- **Remaining launch gates:** upgrade the MapTiler Cloud account from Free (100k API requests/month, non-commercial use only) to Flex before shipping commercial builds with the key, and add origin/key restrictions in MapTiler Cloud (`app.casama.ai`, `localhost` for web; note native mobile/desktop `flutter_map` requests do not send an HTTP `Origin`).
+- **Tests:** `client/test/map_card_test.dart` (429 triggers fallback and retains it in full screen; single 404 stays on MapTiler; second `BotMapCard` in the same session starts on OpenStreetMap without requesting MapTiler).
+
