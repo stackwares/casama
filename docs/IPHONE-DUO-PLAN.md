@@ -2,8 +2,8 @@
 
 Status: **approved and built, D-411** (2026-11-19). Oliver said "go and build all now", taking
 every §8 default, and then "You decide all for me" on what was left open (§11.5). It was built on
-branch `worktree-iphone-duo` (cut from origin/main `b1f64481`) and goes to main through a pull
-request. Nothing is deployed and there is no store build. What was built, where it differs from
+branch `worktree-iphone-duo` (cut from origin/main `b1f64481`) and has been on main since
+2026-11-19 (pull request #16). Nothing is deployed and there is no store build. What was built, where it differs from
 this plan, and what has not been checked yet are in **§11**. Sections 0 to 10 are the proposal as
 approved.
 
@@ -645,8 +645,14 @@ On 2026-11-19 Oliver answered the three open points with "You decide all for me"
 - **Two panes stay on for every window from 840 to 1099 points** (decision 1 as proposed). A
   13-inch iPad held upright and a 900-point window were rendered and looked right: the rail, the
   list at 360 points, the page beside it.
-- **It lands on main through a pull request**, merged when CI is green. A pull request rather
-  than a merge in the main checkout, which holds other sessions' uncommitted work.
+- **It lands on main through a pull request** (#16, merged 2026-11-19). A pull request rather
+  than a merge in the main checkout, which holds other sessions' uncommitted work. The plan was to
+  merge when CI was green. Main's own backend job was red (lint and a stale Drizzle schema, both
+  from other work), so the pull request carries a fix for each in its own commit. Oliver then
+  asked why it could not merge before CI, and it was merged when every check that runs this change
+  had passed: the Flutter job, lint, typecheck, the server tests and pgTAP. The backend job's last
+  three steps (the Docker sandbox tests, computerd's tests and the CLI end to end run) were still
+  running; none of them runs code this work touches.
 - **No app builds for the stores and no deploys.** The next regular build carries it. Store
   uploads and production deploys stay Oliver's to ask for.
 
