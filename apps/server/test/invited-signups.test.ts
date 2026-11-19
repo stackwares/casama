@@ -109,3 +109,25 @@ describe("sign-up by invitation, with the hook's secret missing", () => {
     expect(await hookVerdict(res)).toBe(500);
   });
 });
+
+describe("sign-ups at addresses that can't receive mail", () => {
+  let h: Harness;
+  beforeAll(async () => {
+    h = await startHarness({
+      env: { SIGNUP_REFUSE_TEST_DOMAINS: "true", AUTH_HOOK_SECRET: `v1,${HOOK_SECRET}` },
+    });
+  }, 60_000);
+  afterAll(() => h?.stop());
+
+  it("refuses example.com and the test names, so Auth's email doesn't bounce", async () => {
+    for (const email of ["island-1@example.com", "a@box.test", "a@x.invalid"]) {
+      const res = await hook(h, email);
+      expect(await hookVerdict(res), email).toBe(403);
+      expect((await j(res)).error.message).toContain("can receive mail");
+    }
+  });
+
+  it("lets real addresses through", async () => {
+    expect(await hookVerdict(await hook(h, "hello+rec3@casama.ai"))).toBe(200);
+  });
+});

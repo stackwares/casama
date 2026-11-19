@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { type MailTransport, smtpEmail } from "../src/services/email.ts";
+import {
+  isUndeliverableAddress,
+  type MailTransport,
+  resendEmail,
+  smtpEmail,
+} from "../src/services/email.ts";
 
 describe("smtpEmail", () => {
   it("sends through the transport with the configured sender", async () => {
@@ -16,11 +21,11 @@ describe("smtpEmail", () => {
       transport,
     );
     expect(email.enabled).toBe(true);
-    await email.send({ to: "ada@example.com", subject: "Join", text: "Hi", html: "<p>Hi</p>" });
+    await email.send({ to: "ada@casama.ai", subject: "Join", text: "Hi", html: "<p>Hi</p>" });
     expect(sent).toEqual([
       {
         from: "Casama <hello@casama.ai>",
-        to: "ada@example.com",
+        to: "ada@casama.ai",
         subject: "Join",
         text: "Hi",
         html: "<p>Hi</p>",
@@ -40,5 +45,47 @@ describe("smtpEmail", () => {
   it("builds a real nodemailer transport when none is given", async () => {
     const email = await smtpEmail({ host: "127.0.0.1", port: 2525 }, "x@example.com");
     expect(email.enabled).toBe(true);
+  });
+});
+
+describe("undeliverable addresses", () => {
+  it("knows the names set aside for examples and tests", () => {
+    for (const bad of [
+      "test@example.com",
+      "island-1@EXAMPLE.com",
+      "a@mail.example.org",
+      "a@example.net",
+      "a@host.test",
+      "a@x.invalid",
+      "a@localhost",
+      "a@box.localhost",
+      "a@shop.example",
+      "no-domain",
+    ])
+      expect(isUndeliverableAddress(bad), bad).toBe(true);
+    for (const good of ["ada@casama.ai", "a@gmail.com", "a@example.co", "a@myexample.com", "a@test.io"])
+      expect(isUndeliverableAddress(good), good).toBe(false);
+  });
+
+  it("skips them instead of sending, over SMTP and Resend", async () => {
+    let smtpCalls = 0;
+    const smtp = await smtpEmail({ host: "h", port: 587 }, "x@casama.ai", {
+      sendMail: async () => {
+        smtpCalls++;
+        return {};
+      },
+    });
+    await smtp.send({ to: "test@example.com", subject: "s", text: "t" });
+    expect(smtpCalls).toBe(0);
+
+    let fetches = 0;
+    const resend = resendEmail("key", "x@casama.ai", (async () => {
+      fetches++;
+      return new Response("{}");
+    }) as unknown as typeof fetch);
+    await resend.send({ to: "island-9@example.com", subject: "s", text: "t" });
+    expect(fetches).toBe(0);
+    await resend.send({ to: "ada@casama.ai", subject: "s", text: "t" });
+    expect(fetches).toBe(1);
   });
 });

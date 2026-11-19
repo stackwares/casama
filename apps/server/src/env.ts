@@ -344,6 +344,12 @@ export const EnvSchema = z.object({
    * lets invited people in; emails on SIGNUP_ALLOWED_EMAILS are let in too.
    */
   SIGNUP_INVITED_ONLY: bool.optional(),
+  /**
+   * Refuse email sign-ups at addresses that can never receive mail (example.com, .test,
+   * .invalid, ...), so Auth's confirmation emails don't bounce off them. On for Casama Cloud;
+   * off by default so local setups and tests can use made-up addresses.
+   */
+  SIGNUP_REFUSE_TEST_DOMAINS: bool.optional(),
   /** Encryption at rest (D-136): the server key that wraps workspace data keys (32 bytes, base64), and older keys during a rotation (comma-separated). */
   CONTENT_ENCRYPTION_KEY: z.string().optional(),
   CONTENT_ENCRYPTION_KEY_PREVIOUS: z.string().optional(),

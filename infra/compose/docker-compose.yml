@@ -119,6 +119,8 @@ x-casama: &casama
     DISABLE_SIGNUP: ${DISABLE_SIGNUP:-}
     # New accounts by invitation only (D-296); the sign-up hook checks it. Needs SIGNUP_HOOK_ENABLED.
     SIGNUP_INVITED_ONLY: ${SIGNUP_INVITED_ONLY:-}
+    # Refuse sign-ups at addresses that can't receive mail (example.com, .test, ...).
+    SIGNUP_REFUSE_TEST_DOMAINS: ${SIGNUP_REFUSE_TEST_DOMAINS:-}
     # Plans and payments (Phase 7): off for self-hosting; Casama Cloud turns it on (D-197).
     BILLING_ENABLED: ${BILLING_ENABLED:-false}
     # Signed-out rate limits: the header holding the caller's address (cf-connecting-ip behind Cloudflare).
