@@ -193,11 +193,14 @@ What to know:
 - A call with no speech from either side for a minute ends by itself, so a forgotten call doesn't
   keep running. It waits while a task it started is still running.
 - A call lasts at most an hour. About a minute before, the bot tells you it'll have to hang up
-  soon; at the hour it says goodbye and the call ends, with the usual recap in the chat.
-- On a call paid from your workspace's credits, the server watches what the call spends. When the
-  credits, the workspace's daily or monthly spending limit, or the bot's daily budget are about a
-  minute from running out, the bot tells you it'll have to hang up soon; when they run out, it says
-  goodbye and the call ends. A call can't start once one of them has run out.
+  soon; at the hour it says goodbye, the call closes without reconnecting, and the usual recap lands
+  in the chat.
+- On a call paid from your workspace's credits (or subject to quotas or budgets), the server checks
+  before starting (and caps a workspace at 3 open billable calls at once), then watches headroom
+  every 20 seconds mid-call. About a minute before credits, the workspace's daily or monthly
+  spending limit, or the bot's daily budget run out, the bot warns you; when hit, it says a short
+  goodbye explaining why, closes cleanly without reconnecting, and posts the recap in the chat. See
+  [When a live call ends for a limit](/guide/limits#when-a-live-call-ends-for-a-limit).
 - On Gemini Live, **Usage** records what the call actually cost, from the token counts Gemini
   reports; other calls are estimated by the minute.
 - You can interrupt. When you start speaking, the bot stops talking and listens.
@@ -279,4 +282,5 @@ through the banner while the app is open. See [Configuration](/self-hosting/conf
 - [Attention and notifications](/guide/attention)
 - [Autonomy and approvals](/guide/autonomy)
 - [Usage and budgets](/guide/usage)
+- [Limits](/guide/limits)
 - [Chat apps](/guide/chat-apps)

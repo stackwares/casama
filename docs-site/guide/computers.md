@@ -347,6 +347,9 @@ casama computer restore <checkpoint-id>
 
 ## Limits
 
+- Shell commands time out after 10 minutes by default; a bot can ask for up to 1 hour on a
+  command.
+- Browser actions time out after 90 seconds, and desktop actions time out after 60 seconds.
 - The 10 GB disk size isn't enforced yet on the Docker provider.
 - Restore points save the whole home folder each time rather than only what changed.
 - Personal computers (your own, through the desktop app) have no **Manage** tab. See
@@ -357,6 +360,8 @@ casama computer restore <checkpoint-id>
   blocking doesn't apply there.
 - There's no setting in the app for per-workspace domain allow or deny lists.
 
+For every timeout and cap across Casama, see [Limits](/guide/limits).
+
 ## Related
 
 - [Your own computer](/guide/companion)
@@ -364,3 +369,4 @@ casama computer restore <checkpoint-id>
 - [Coding agents](/guide/coding-agents)
 - [Self-hosting computers](/self-hosting/computers)
 - [Autonomy and approvals](/guide/autonomy)
+- [Limits](/guide/limits)

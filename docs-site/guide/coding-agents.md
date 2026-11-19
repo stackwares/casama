@@ -147,6 +147,9 @@ How much each agent may do on its own depends on where it runs:
 
 ## Limits
 
+- Setup and git helper commands around a coding agent (such as installing its CLI or checking
+  `git diff`) time out after 2 minutes. The coding agent run itself uses the 1–120 minute timeout
+  above (30 minutes by default on a computer, 60 in the cloud).
 - Pi, T3 Code, Kimi Code and your own agents run only on your computer, with your own sign-ins.
   They can't be set up on the bot's computer yet.
 - Gemini CLI, OpenCode and Cline aren't listed yet: they haven't passed a real run.
@@ -164,3 +167,4 @@ How much each agent may do on its own depends on where it runs:
 - [Computers](/guide/computers)
 - [Autonomy and approvals](/guide/autonomy)
 - [Projects and the ticket board](/guide/projects)
+- [Limits](/guide/limits)

@@ -244,5 +244,6 @@ See [Computers](/guide/computers).
 - [Bots](/guide/bots)
 - [Notifications and attention](/guide/attention)
 - [Usage, budgets and plans](/guide/usage)
+- [Limits](/guide/limits)
 - [Computers](/guide/computers)
 - [Connections](/guide/connections)

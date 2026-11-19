@@ -263,9 +263,10 @@ opened Casama for a week, the bot looks at most once a day, and after a month it
 you're back.
 
 Check-ins use the bot's cheap model when it has one, and stop for the day once they reach the daily
-limit. Their cost comes out of your usage like any other run. A look that finds nothing writes
-nothing and sends nothing. If your phone shares health data, the brief can also run when you wake
-up, and the scheduled time becomes the fallback.
+limit. Each check-in run gets up to 8 steps (instead of the usual 40) and trims app reads at
+8,000 characters so briefs and looks finish quickly. Their cost comes out of your usage like any
+other run. A look that finds nothing writes nothing and sends nothing. If your phone shares health
+data, the brief can also run when you wake up, and the scheduled time becomes the fallback.
 
 A look starts by reading your recent mail (Gmail), the next two days of your Google Calendar and
 the board, before the bot thinks about any of it. When a scheduled look reads exactly what the
@@ -289,6 +290,8 @@ Self-hosted servers have no such limits.
 
 ## Limits
 
+- Check-ins (morning briefs and looks) are capped at 8 steps per run rather than 40. See
+  [Limits](/guide/limits).
 - Device routines can only be created by asking a bot; **New routine** doesn't offer them.
 - Focus and Do Not Disturb events, and Android's first unlock as a wake-up signal, aren't collected
   yet.
@@ -306,3 +309,4 @@ Self-hosted servers have no such limits.
 - [Devices](/guide/devices)
 - [Attention and notifications](/guide/attention)
 - [Projects and the ticket board](/guide/projects)
+- [Limits](/guide/limits)

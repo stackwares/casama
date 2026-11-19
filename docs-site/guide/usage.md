@@ -104,11 +104,12 @@ has left (at least one cent).
 
 | Limit | Value |
 | --- | --- |
-| Steps per run | 40 |
+| Steps per run | 40 (8 for [check-ins](/guide/routines#check-ins)) |
 | Time per run | 30 minutes |
 | Repeated actions | See [the loop guard](/guide/autonomy#the-loop-guard) |
 
-Projects have their own budget and deadline. See [Projects](/guide/projects).
+Projects have their own budget and deadline. See [Projects](/guide/projects). For every timeout,
+call guardrail and workspace cap in one place, see [Limits](/guide/limits).
 
 ## Workspace quotas
 
@@ -125,7 +126,8 @@ The monthly limit counts the workspace's spend since the start of the calendar m
 ## When a run hits a limit
 
 Limits are checked when a run starts and before every model step. A run that hits one ends as
-failed with a clear message and a stable code:
+failed with a clear message and a stable code (for live calls, see
+[When a live call ends for a limit](/guide/limits#when-a-live-call-ends-for-a-limit)):
 
 | Code | Meaning |
 | --- | --- |
@@ -301,6 +303,7 @@ owner sets still apply.
 
 ## Related
 
+- [Limits](/guide/limits)
 - [Casama Link](/guide/casama-link)
 - [Autonomy, approvals and action rules](/guide/autonomy)
 - [Projects](/guide/projects)

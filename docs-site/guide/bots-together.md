@@ -166,6 +166,7 @@ For the protocol details, see [Agent-to-agent (A2A)](/develop/a2a).
 
 - [Group chats](/guide/group-chats)
 - [Autonomy and approvals](/guide/autonomy)
+- [Limits](/guide/limits)
 - [Apps and connections](/guide/connections)
 - [Agent-to-agent (A2A)](/develop/a2a)
 - [Sharing bots](/guide/sharing)
