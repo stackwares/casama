@@ -33,6 +33,7 @@ import '../../ui/bottom_padding.dart';
 import '../groups/empty_group.dart';
 import 'delete_chat.dart';
 import '../groups/group_chats.dart';
+import '../island/run_tracker.dart';
 import '../billing/out_of_credits.dart';
 import '../billing/paywall.dart';
 import '../../ui/edge_fade.dart';
@@ -483,15 +484,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     DroppedFiles.take(_droppedFromApp);
     _lifecycle = AppLifecycleListener(onResume: _markShownRead);
     _input.addListener(_saveDraftSoon);
-    // The chat's id changes without a reopen when the first send creates it or New chat clears it.
-    ref.listenManual(chatControllerProvider(widget.botId).select((s) => s.conversationId), (_, next) {
-      if (!_opening && _draftKey != null) _bindDraft(next);
-    });
-    // Replies to the chat on screen don't push to any of the person's devices (D-325).
-    ref.listenManual(chatControllerProvider(widget.botId).select((s) => s.conversationId), (_, next) {
-      _focusedConversation = next;
-      _chatFocus.open(next);
-    }, fireImmediately: true);
+    _listenToBot();
     // What this chat shows (a routine's result, a reply) is read once the chat is open, including
     // notifications that arrive while it is.
     ref.listenManual(notificationsProvider, (_, next) {
@@ -510,7 +503,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       }
       // Read means seen: not while the window is behind others or the tab is hidden (D-383).
       // Coming back to the front marks them.
-      if (_appInFront) Future.microtask(() => ref.read(notificationsProvider.notifier).markBotChatRead(botId));
+      if (_appInFront) Future.microtask(() => ref.read(notificationsProvider.notifier).markBotChatRead(botId, conversationId: ref.read(chatControllerProvider(botId)).conversationId));
     }, fireImmediately: true);
     Future.microtask(() async {
       final c = ref.read(chatControllerProvider(widget.botId).notifier)..group = widget.group;
@@ -523,6 +516,35 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
   }
 
+  final _botListeners = <ProviderSubscription<String?>>[];
+
+  /// Follows which conversation the bot on screen has open. The router keeps this screen when
+  /// the person goes from one bot to another (the sidebar on a computer), so these are bound again
+  /// for the new bot (D-413): they used to stay on the first bot, whose chat was then reported as
+  /// "on screen" for good, and its replies stopped notifying on every device.
+  void _listenToBot() {
+    for (final s in _botListeners) {
+      s.close();
+    }
+    _botListeners
+      ..clear()
+      // The chat's id changes without a reopen when the first send creates it or New chat clears it.
+      ..add(
+        ref.listenManual(chatControllerProvider(widget.botId).select((s) => s.conversationId), (_, next) {
+          if (!_opening && _draftKey != null) _bindDraft(next);
+        }),
+      )
+      // Replies to the chat on screen don't push to any of the person's devices (D-325).
+      ..add(
+        ref.listenManual(chatControllerProvider(widget.botId).select((s) => s.conversationId), (_, next) {
+          _focusedConversation = next;
+          _chatFocus.open(next);
+          // Its notifications are read once it is the one showing.
+          if (next != null && _appInFront) Future.microtask(_markShownRead);
+        }, fireImmediately: true),
+      );
+  }
+
   /// On a computer, a chat opens ready to type in (D-383). Not over a dialog or sheet, which
   /// keeps the keyboard.
   void _focusComposerSoon() {
@@ -533,13 +555,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _markShownRead() {
-    if (mounted) unawaited(ref.read(notificationsProvider.notifier).markBotChatRead(widget.botId).catchError((_) {}));
+    if (mounted) {
+      unawaited(
+        ref
+            .read(notificationsProvider.notifier)
+            .markBotChatRead(widget.botId, conversationId: ref.read(chatControllerProvider(widget.botId)).conversationId)
+            .catchError((_) {}),
+      );
+    }
   }
 
   @override
   void didUpdateWidget(ChatScreen old) {
     super.didUpdateWidget(old);
-    if (old.botId != widget.botId || old.conversationId != widget.conversationId || old.focusMessageId != widget.focusMessageId) {
+    if (old.botId != widget.botId) _listenToBot();
+    if (old.botId != widget.botId || old.conversationId != widget.conversationId || old.focusMessageId != widget.focusMessageId || old.group != widget.group) {
       if (old.botId != widget.botId && widget.focusMessageId == null) _focusComposerSoon();
       // Keep what was typed in the chat being left before the next one opens.
       _saveDraft();
@@ -1145,6 +1175,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final chat = ref.watch(chatControllerProvider(widget.botId).select((c) => _chatFrame(c, group: widget.group)));
     final controller = ref.read(chatControllerProvider(widget.botId).notifier);
     final computer = computerForBot(ref.watch(computersProvider).value ?? const [], widget.botId, defaultComputerId: bot?.defaultComputerId);
+    // A topic that finishes, or starts needing the person, while another one is on screen: its
+    // chip follows (D-413). The chips used to keep "working" until this chat itself changed.
+    ref.listen(botProvider(widget.botId).select((b) => b?.status), (prev, next) {
+      if (prev != next) ref.invalidate(conversationsProvider(widget.botId));
+    });
+    ref.listen(
+      runTrackerProvider.select(
+        (runs) => [
+          for (final r in runs)
+            if (r.botId == widget.botId) '${r.runId}:${r.status}:${r.ended}',
+        ].join(','),
+      ),
+      (prev, next) {
+        if (prev != next) ref.invalidate(conversationsProvider(widget.botId));
+      },
+    );
     ref.listen(chatControllerProvider(widget.botId), (prev, next) {
       // General and topics (D-253): the chips and statuses follow what happens here.
       if (prev?.conversationId != next.conversationId || (prev?.running ?? false) != next.running) {
@@ -2085,6 +2131,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   /// Opens General or a topic (D-253) in this chat screen.
   void _openConversation(String id) {
     ref.invalidate(conversationsProvider(widget.botId));
+    // The address can already name this conversation while the screen shows another one: New
+    // topic and a new chat's first message don't change the address. Going to the same address
+    // does nothing, so the person was stuck in the new topic (D-413); open it here instead.
+    if (widget.conversationId == id && ref.read(chatControllerProvider(widget.botId)).conversationId != id) {
+      _saveDraft();
+      _rowCache.clear();
+      _stickToBottom = true;
+      setState(() => _opening = true);
+      Future.microtask(() async {
+        final c = ref.read(chatControllerProvider(widget.botId).notifier)..group = widget.group;
+        try {
+          await c.open(id);
+        } finally {
+          if (mounted && _opening) setState(() => _opening = false);
+          if (mounted) unawaited(_bindDraft(ref.read(chatControllerProvider(widget.botId)).conversationId));
+        }
+      });
+      return;
+    }
     context.go('/bots/${widget.botId}/chat?c=$id');
   }
 
@@ -2138,7 +2203,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         },
         onOpen: (id) {
           Navigator.of(sheetContext).pop();
-          context.go('/bots/${widget.botId}/chat?c=$id');
+          _openConversation(id);
         },
         onDelete: (c) async {
           final name = ref.read(botProvider(widget.botId))?.name ?? '';

@@ -90,6 +90,7 @@ import { searchDomains } from "../sites/buying.ts";
 import { sitesSettings } from "../sites/config.ts";
 import { drainSteps } from "./drain.ts";
 import { keyQueuedRuns, runPartitionKey } from "./run-queue.ts";
+import { RunSlots, STARTED_PER_WORKING } from "./run-slots.ts";
 import {
   analyticsDailyWorkflow,
   billingSettleWorkflow,
@@ -718,6 +719,10 @@ export async function startWorker(opts: WorkerOptions) {
   });
   configureWorkflows({
     db,
+    slots: new RunSlots(
+      opts.runConcurrency ?? 20,
+      Math.min(opts.runWorkspaceConcurrency ?? 5, opts.runConcurrency ?? 20),
+    ),
     billing: opts.billing,
     telemetry: opts.telemetry,
     gateway,
@@ -822,10 +827,14 @@ export async function startWorker(opts: WorkerOptions) {
   await keyQueuedRuns(db).catch((e: Error) =>
     opts.logger?.warn?.("couldn't key queued runs", { error: e.message }),
   );
+  // How many runs work at once is kept by RunSlots (D-413). The queue admits more than that,
+  // because it counts a run until it ends: runs waiting for a person would otherwise use up the
+  // places and leave every new message queued. Its limits now only bound how many started runs
+  // (working, waiting for a slot, or waiting for a person) a worker holds.
   const perWorkspace = Math.min(opts.runWorkspaceConcurrency ?? 5, opts.runConcurrency ?? 20);
   await DBOS.registerQueue(QUEUES.runs, {
-    workerConcurrency: opts.runConcurrency ?? 20,
-    ...(perWorkspace > 0 ? { partitionConcurrency: perWorkspace } : {}),
+    workerConcurrency: (opts.runConcurrency ?? 20) * STARTED_PER_WORKING,
+    ...(perWorkspace > 0 ? { partitionConcurrency: perWorkspace * STARTED_PER_WORKING } : {}),
     minPollingIntervalMs: 100,
   });
   await DBOS.registerQueue(QUEUES.system, { workerConcurrency: 5, minPollingIntervalMs: 250 });

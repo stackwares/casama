@@ -1,4 +1,5 @@
 import { fetchThumbnail } from "./computerd-client.ts";
+import { slowFetch, streamFetch } from "./long-fetch.ts";
 import { ndjson } from "./ndjson.ts";
 import {
   type CheckpointRef,
@@ -50,10 +51,11 @@ export class SupervisorProvider implements SandboxProvider {
     };
   }
 
-  async call(path: string, init: RequestInit = {}): Promise<Response> {
+  /** `via`: `slowFetch` or `streamFetch` for calls that outlast fetch's own 300 second limits. */
+  async call(path: string, init: RequestInit = {}, via: typeof fetch = fetch): Promise<Response> {
     let res: Response;
     try {
-      res = await fetch(`${this.baseUrl}${path}`, {
+      res = await via(`${this.baseUrl}${path}`, {
         ...init,
         headers: { ...this.authHeaders, ...(init.headers as Record<string, string>) },
       });
@@ -74,21 +76,27 @@ export class SupervisorProvider implements SandboxProvider {
     return res;
   }
 
-  private json(path: string, method: string, body?: unknown) {
-    return this.call(path, {
-      method,
-      headers: { "content-type": "application/json" },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
+  private json(path: string, method: string, body?: unknown, via: typeof fetch = fetch) {
+    return this.call(
+      path,
+      {
+        method,
+        headers: { "content-type": "application/json" },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      },
+      via,
+    );
   }
 
+  // Starting, waking and sleeping a computer answer when the work is done: pulling an image,
+  // restoring or archiving a home folder of several gigabytes takes longer than five minutes.
   async create(spec: ComputerSpec) {
-    await this.json("/computers", "POST", spec);
+    await this.json("/computers", "POST", spec, slowFetch);
     return this.handle(spec.ref);
   }
 
   async resume(ref: string, snapshot?: SnapshotRef, spec?: Partial<ComputerSpec>) {
-    await this.json(`/computers/${ref}/resume`, "POST", { snapshot, spec });
+    await this.json(`/computers/${ref}/resume`, "POST", { snapshot, spec }, slowFetch);
     return this.handle(ref);
   }
 
@@ -98,7 +106,9 @@ export class SupervisorProvider implements SandboxProvider {
   }
 
   async sleep(ref: string) {
-    return (await (await this.json(`/computers/${ref}/sleep`, "POST")).json()) as SnapshotRef;
+    return (await (
+      await this.json(`/computers/${ref}/sleep`, "POST", undefined, slowFetch)
+    ).json()) as SnapshotRef;
   }
 
   async destroy(ref: string) {
@@ -137,18 +147,23 @@ export class SupervisorProvider implements SandboxProvider {
     return {
       ref,
       async *exec(cmd: string, opts: ExecOptions = {}): AsyncIterable<ExecChunk> {
-        const res = await self.call(`${base}/exec`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            cmd,
-            cwd: opts.cwd,
-            env: opts.env,
-            timeoutMs: opts.timeoutMs,
-            stdin: opts.stdin,
-          }),
-          signal: opts.signal,
-        });
+        // A command may print nothing for a long time; its own timeout ends it, not the stream's.
+        const res = await self.call(
+          `${base}/exec`,
+          {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              cmd,
+              cwd: opts.cwd,
+              env: opts.env,
+              timeoutMs: opts.timeoutMs,
+              stdin: opts.stdin,
+            }),
+            signal: opts.signal,
+          },
+          streamFetch,
+        );
         if (!res.body) throw new SandboxError("supervisor_error", "exec returned no body");
         yield* ndjson<ExecChunk>(res.body);
       },
@@ -211,8 +226,11 @@ export class SupervisorProvider implements SandboxProvider {
         headers: self.authHeaders,
       }),
       checkpoint: async (label) =>
-        (await (await self.json(`${base}/checkpoints`, "POST", { label })).json()) as CheckpointRef,
-      restore: async (cp) => void (await self.json(`${base}/checkpoints/restore`, "POST", cp)),
+        (await (
+          await self.json(`${base}/checkpoints`, "POST", { label }, slowFetch)
+        ).json()) as CheckpointRef,
+      restore: async (cp) =>
+        void (await self.json(`${base}/checkpoints/restore`, "POST", cp, slowFetch)),
       health: async () => (await (await self.call(`${base}/health`)).json()) as HealthStatus,
     };
   }

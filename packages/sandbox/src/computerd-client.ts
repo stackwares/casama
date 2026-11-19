@@ -1,3 +1,4 @@
+import { slowFetch, streamFetch } from "./long-fetch.ts";
 import { ndjson } from "./ndjson.ts";
 import {
   type ExecChunk,
@@ -35,10 +36,16 @@ export class ComputerdClient {
     return { ...this.extraHeaders, authorization: `Bearer ${this.token}` };
   }
 
-  private async call(path: string, init: RequestInit = {}, expectOk = true) {
+  /** `via`: `slowFetch` or `streamFetch` for calls that outlast fetch's own 300 second limits. */
+  private async call(
+    path: string,
+    init: RequestInit = {},
+    expectOk = true,
+    via: typeof fetch = fetch,
+  ) {
     let res: Response;
     try {
-      res = await fetch(`${this.baseUrl}${path}`, {
+      res = await via(`${this.baseUrl}${path}`, {
         ...init,
         headers: { ...this.authHeaders, ...(init.headers as Record<string, string>) },
       });
@@ -60,18 +67,24 @@ export class ComputerdClient {
   }
 
   async *exec(cmd: string, opts: ExecOptions = {}): AsyncIterable<ExecChunk> {
-    const res = await this.call("/exec", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        cmd,
-        cwd: opts.cwd,
-        env: opts.env,
-        timeout_ms: opts.timeoutMs,
-        stdin: opts.stdin,
-      }),
-      signal: opts.signal,
-    });
+    // A command may print nothing for a long time; its own timeout ends it, not the stream's.
+    const res = await this.call(
+      "/exec",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          cmd,
+          cwd: opts.cwd,
+          env: opts.env,
+          timeout_ms: opts.timeoutMs,
+          stdin: opts.stdin,
+        }),
+        signal: opts.signal,
+      },
+      true,
+      streamFetch,
+    );
     if (!res.body) throw new SandboxError("computerd_error", "exec returned no body");
     // Hanging up doesn't stop the command: computerd keeps it running until it exits, so a
     // cancelled run would leave it working (a coding agent could go on for an hour). Kill it.
@@ -138,18 +151,24 @@ export class ComputerdClient {
 
   /** Streams a gzip tarball of the home directory. */
   async archive(): Promise<ReadableStream<Uint8Array>> {
-    const res = await this.call("/archive", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: "{}",
-    });
+    const res = await this.call(
+      "/archive",
+      { method: "POST", headers: { "content-type": "application/json" }, body: "{}" },
+      true,
+      slowFetch,
+    );
     if (!res.body) throw new SandboxError("computerd_error", "archive returned no body");
     return res.body;
   }
 
   /** Replaces the home directory with a gzip tarball. */
   async restore(archive: Uint8Array | ReadableStream<Uint8Array>) {
-    await this.call("/restore", { method: "POST", body: archive, duplex: "half" } as RequestInit);
+    await this.call(
+      "/restore",
+      { method: "POST", body: archive, duplex: "half" } as RequestInit,
+      true,
+      slowFetch,
+    );
   }
 
   async health(): Promise<HealthStatus> {

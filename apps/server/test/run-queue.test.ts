@@ -78,8 +78,10 @@ describe("runs wait in their workspace's line", () => {
     const [q] = await h.handle.db.execute<Record<string, unknown>>(
       sql`select * from dbos.queues where name = 'runs'`,
     );
+    // The queue admits ten started runs for each one that may work (D-413): RunSlots keeps the
+    // five working per workspace, so runs waiting for a person don't use the places up.
     const limit = Object.entries(q ?? {}).find(([k]) => k.startsWith("partition_concurrency"));
-    expect(Number(limit?.[1])).toBe(5);
+    expect(Number(limit?.[1])).toBe(50);
   }, 60_000);
 
   it("a run queued without a workspace key gets one", async () => {

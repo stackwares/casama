@@ -22,6 +22,10 @@ export const IDLE_SLEEP_CHOICES = [5, 15, 30, 60] as const;
 export const RESET_STALE_MS = 20 * 60_000;
 export const CHECKPOINT_KEEP = 20;
 export const CHECKPOINT_MAX_AGE_DAYS = 7;
+/** Automatic checkpoints (before a command that deletes) are at least this far apart. */
+export const SAFETY_CHECKPOINT_GAP_S = 600;
+/** ...and at least this many times what the last one took: a 4 minute archive, every 80 minutes. */
+export const SAFETY_CHECKPOINT_COST_FACTOR = 20;
 
 /** What a computer costs per hour: per vCPU plus per GiB of memory (USD, D-180). */
 export interface ComputerRate {
@@ -653,13 +657,39 @@ export class ComputerService {
     const c = await this.byId(computerId);
     if (!c) throw new Error("computer_not_found");
     const h = handle ?? (await this.ensureRunning(computerId));
+    const from = Date.now();
     const ref: CheckpointRef = await h.checkpoint(label);
+    // How long it took is kept with it: the next automatic one is spaced by that (D-413).
+    const stored = { ...ref, took_ms: Date.now() - from };
     const [row] = await this.db.execute<{ id: string }>(sql`
       insert into public.checkpoints (org_id, computer_id, run_id, label, storage_ref)
-      values (${c.org_id}::uuid, ${computerId}::uuid, ${runId}::uuid, ${label.slice(0, 200)}, ${JSON.stringify(ref)}::jsonb)
+      values (${c.org_id}::uuid, ${computerId}::uuid, ${runId}::uuid, ${label.slice(0, 200)}, ${JSON.stringify(stored)}::jsonb)
       returning id`);
     await this.prune(computerId);
     return { checkpointId: row?.id as string, ref };
+  }
+
+  /**
+   * Whether the newest checkpoint is recent enough to stand in for a new automatic one (D-413).
+   * A checkpoint archives the whole home folder, and one was taken before every command that
+   * deletes something: with a large home each `rm -rf` of a build folder waited four minutes (and
+   * past five the command failed without running). Now the next automatic one waits at least
+   * SAFETY_CHECKPOINT_GAP_S, and longer the more the last one cost, so saving them never takes
+   * more than a small share of the bot's time. Checkpoints the bot or a person asks for by name
+   * are always taken.
+   */
+  async hasFreshCheckpoint(computerId: string) {
+    const [last] = await this.db.execute<{ age_s: number; took_ms: number | null }>(sql`
+      select extract(epoch from now() - created_at)::float as age_s,
+             (storage_ref ->> 'took_ms')::float as took_ms
+      from public.checkpoints where computer_id = ${computerId}::uuid
+      order by created_at desc limit 1`);
+    if (!last) return false;
+    const gap = Math.max(
+      SAFETY_CHECKPOINT_GAP_S,
+      (Number(last.took_ms ?? 0) / 1000) * SAFETY_CHECKPOINT_COST_FACTOR,
+    );
+    return Number(last.age_s) < gap;
   }
 
   /** Keeps the last 20 checkpoints per computer or 7 days, whichever is fewer. */

@@ -206,6 +206,11 @@ change. The bot saves one automatically before commands that destroy data, such 
 `rm -f`, `git reset --hard`, `git clean -f`, force pushes, package uninstalls, `dd`, `mkfs` and
 `truncate -s 0`. Bots can also save one on purpose before risky work.
 
+Saving one copies the whole home folder, so automatic restore points are at least ten minutes
+apart, and further apart on a computer with a large home folder. A command that deletes something
+soon after one was saved runs without saving another. Restore points you or the bot ask for are
+always saved.
+
 To restore one:
 
 1. Open the computer panel and go to **Manage**.
