@@ -5964,10 +5964,13 @@ class FakeBackend implements Backend {
   final dismissed = <String>[];
   List<TakeoverRequest> openTakeovers = [];
 
+  /// Another person has the screen.
+  var leaseHeldByOther = false;
+
   Lease _lease() => Lease(
     computerId: computerId,
-    holderType: leaseHeld ? LeaseHolderTypeEnum.user : LeaseHolderTypeEnum.bot,
-    holderId: leaseHeld ? 'me' : null,
+    holderType: leaseHeld || leaseHeldByOther ? LeaseHolderTypeEnum.user : LeaseHolderTypeEnum.bot,
+    holderId: leaseHeld ? 'me' : leaseHeldByOther ? 'someone' : null,
     mode: LeaseModeEnum.control,
     expiresAt: leaseHeld
         ? DateTime.now().add(const Duration(minutes: 15))

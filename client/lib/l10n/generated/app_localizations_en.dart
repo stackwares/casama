@@ -1521,6 +1521,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Paused: a person is in control of the screen';
 
   @override
+  String get letBotUseTerminal => 'Let it use terminal & files';
+
+  @override
+  String get screenHandedBack => 'Handed the screen back';
+
+  @override
   String get privateComputer => 'Private computer';
 
   @override
@@ -6395,10 +6401,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dismissSuggestion => 'Dismiss this suggestion?';
 
   @override
+  String dismissSuggestionHelp(String bot) {
+    return 'Choose whether $bot can bring it up again.';
+  }
+
+  @override
   String get justThisOnce => 'Just This Once';
 
   @override
+  String justThisOnceHelp(String bot) {
+    return 'Hide it for now. If it still matters later, $bot may suggest it again.';
+  }
+
+  @override
   String get dontSuggestAgain => 'Don\'t Suggest It Again';
+
+  @override
+  String dontSuggestAgainHelp(String bot) {
+    return 'Gone for good. $bot will remember you\'d rather not.';
+  }
+
+  @override
+  String wontSuggestAgain(String bot) {
+    return 'Got it. $bot won\'t suggest that again.';
+  }
 
   @override
   String get doIt => 'Do It';

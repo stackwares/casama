@@ -26,9 +26,31 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('dismiss-s1')));
     await tester.pumpAndSettle();
+    // The sheet shows what is being dismissed and what each choice does.
+    expect(find.descendant(of: find.byKey(const Key('dismissPreview')), matching: find.text('Reply to Ana')), findsOneWidget);
+    expect(find.textContaining('will remember'), findsOneWidget);
     await tester.tap(find.byKey(const Key('dismissNever')));
     await tester.pumpAndSettle();
     expect(backend.suggestionActions, ['never:s1']);
+    expect(find.textContaining("won't suggest that again"), findsOneWidget);
+  });
+
+  testWidgets('dismissing just this once, or cancelling, from the sheet', (tester) async {
+    await setSize(tester, const Size(900, 1200));
+    final backend = FakeBackend();
+    await tester.pumpWidget(harness(backend, const InboxScreen()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('dismiss-s1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('dismissCancel')));
+    await tester.pumpAndSettle();
+    expect(backend.suggestionActions, isEmpty);
+    await tester.tap(find.byKey(const Key('dismiss-s1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('dismissOnce')));
+    await tester.pumpAndSettle();
+    expect(backend.suggestionActions, ['dismiss:s1']);
+    expect(find.textContaining("won't suggest that again"), findsNothing);
   });
 
   testWidgets('check-ins turn on from bot settings', (tester) async {
