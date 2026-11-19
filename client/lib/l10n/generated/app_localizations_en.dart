@@ -12381,6 +12381,83 @@ class AppLocalizationsEn extends AppLocalizations {
   String get galleryPicksSkip => 'Skip for now';
 
   @override
+  String galleryPicksAddNamed(String name) {
+    return 'Add $name';
+  }
+
+  @override
+  String get galleryPicksBestMatch => 'Best match';
+
+  @override
+  String get galleryPicksInside => 'What\'s inside';
+
+  @override
+  String galleryPicksBots(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count bots',
+      one: '1 bot',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String galleryPicksSkills(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count skills',
+      one: '1 skill',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String galleryPicksRoutines(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count routines',
+      one: '1 routine',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String galleryPicksApps(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count apps',
+      one: '1 app',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String galleryPicksPlugins(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count plugins',
+      one: '1 plugin',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String galleryPicksLooks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count looks',
+      one: '1 look',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String galleryPicksAdded(String name) {
     return 'Added $name';
   }

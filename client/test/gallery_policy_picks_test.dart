@@ -31,6 +31,23 @@ const _sets = [
   ),
 ];
 
+/// A set that lists what it adds: a skill the gallery has and an app it doesn't list.
+const _kitWithItems = GalleryItem(
+  id: 'reading-kit',
+  type: 'set',
+  name: 'Reading kit',
+  authorName: 'Casama',
+  license: 'CC0-1.0',
+  icon: 'book-open',
+  description: 'Summaries of what you read.',
+  document: {
+    'items': [
+      {'type': 'app', 'id': 'gmail'},
+      {'type': 'skill', 'id': 'pdf-summary'},
+    ],
+  },
+);
+
 const _skill = GalleryItem(
   id: 'pdf-summary',
   type: 'skill',
@@ -44,13 +61,14 @@ const _skill = GalleryItem(
 class _GalleryBackend extends FakeBackend {
   final installedSets = <String>[];
   List<String> missingApps = const [];
+  List<GalleryItem> sets = _sets;
 
   @override
   Future<GalleryPage> galleryEverything() async =>
       const GalleryPage(available: true, items: [_skill]);
 
   @override
-  Future<List<GalleryItem>> gallerySets() async => _sets;
+  Future<List<GalleryItem>> gallerySets() async => sets;
 
   @override
   Future<GalleryInstallResult> installGallerySet(
@@ -164,6 +182,116 @@ void main() {
       isNotEmpty,
     );
   });
+
+  test('a starter pick says whether what the person shared matched it', () {
+    expect(starterPick(_sets, null).matched, isFalse);
+    expect(
+      starterPick(
+        _sets,
+        const AboutYouView(about: 'I just like gardening.'),
+      ).matched,
+      isFalse,
+    );
+    final student = starterPick(
+      _sets,
+      const AboutYouView(about: 'Studying for my university exams.'),
+    );
+    expect(student.set.id, 'student-kit');
+    expect(student.matched, isTrue);
+  });
+
+  testWidgets(
+    'the best match leads the list with a badge, and Add names the set',
+    (tester) async {
+      await setSize(tester, const Size(500, 1000));
+      final backend = _GalleryBackend()
+        ..about = const AboutYouView(about: 'Student at college.');
+      await tester.pumpWidget(harness(backend, const GalleryPicksStep()));
+      await tester.pumpAndSettle();
+      final student = tester.getTopLeft(
+        find.byKey(const Key('galleryPicksSet-student-kit')),
+      );
+      final founder = tester.getTopLeft(
+        find.byKey(const Key('galleryPicksSet-founder-kit')),
+      );
+      expect(student.dy, lessThan(founder.dy));
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('galleryPicksSet-student-kit')),
+          matching: find.byKey(const Key('galleryPicksBestMatch')),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Add Student kit'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('galleryPicksSet-founder-kit')));
+      await tester.pumpAndSettle();
+      expect(find.text('Add Founder kit'), findsOneWidget);
+      // The badge stays with the set that matched.
+      expect(find.byKey(const Key('galleryPicksBestMatch')), findsOneWidget);
+    },
+  );
+
+  testWidgets('with nothing shared to match, no set is called the best match', (
+    tester,
+  ) async {
+    await setSize(tester, const Size(500, 1000));
+    await tester.pumpWidget(
+      harness(_GalleryBackend(), const GalleryPicksStep()),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('galleryPicksBestMatch')), findsNothing);
+    expect(find.text('Add Founder kit'), findsOneWidget);
+  });
+
+  testWidgets(
+    'the picked set shows what it adds, named from the gallery or its id',
+    (tester) async {
+      await setSize(tester, const Size(500, 1000));
+      final backend = _GalleryBackend()..sets = [_kitWithItems, ..._sets];
+      await tester.pumpWidget(harness(backend, const GalleryPicksStep()));
+      await tester.pumpAndSettle();
+      // Pre-picked (first, nothing shared), so it is open: a count line and a chip per item.
+      expect(find.text('1 skill · 1 app'), findsOneWidget);
+      expect(find.text('PDF summary'), findsOneWidget);
+      expect(find.text('Gmail'), findsOneWidget);
+
+      // Picking another set closes it.
+      await tester.tap(find.byKey(const Key('galleryPicksSet-student-kit')));
+      await tester.pumpAndSettle();
+      expect(find.text('PDF summary'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'a wide window previews the picked set beside the list and adds it',
+    (tester) async {
+      await setSize(tester, const Size(1280, 820));
+      final backend = _GalleryBackend()..sets = [_kitWithItems, ..._sets];
+      await tester.pumpWidget(harness(backend, const GalleryPicksStep()));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('galleryPicksPreview-reading-kit')),
+        findsOneWidget,
+      );
+      expect(find.text('What\'s inside'), findsOneWidget);
+      expect(find.text('PDF summary'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('galleryPicksSet-student-kit')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('galleryPicksPreview-student-kit')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('galleryPicksPreview-reading-kit')),
+        findsNothing,
+      );
+      await tester.tap(find.byKey(const Key('galleryPicksAdd')));
+      await tester.pumpAndSettle();
+      expect(backend.installedSets, ['student-kit']);
+    },
+  );
 
   testWidgets('the step stays hidden when the gallery has no sets', (
     tester,

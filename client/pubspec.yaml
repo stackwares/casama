@@ -134,6 +134,8 @@ flutter:
     - assets/tray_icon.png
     - assets/mascots/
     - assets/apps/
+    # Starter set covers on Picks for you (lib/features/welcome/gallery_picks_step.dart).
+    - assets/sets/
     - assets/fonts/
   # Type (D-087, D-163): Google Sans is the default look's face (D-266) and the one text family in
   # the font manifest, which the web app downloads in full before its first frame. Libre
