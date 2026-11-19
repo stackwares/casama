@@ -79,8 +79,9 @@ Docs: `pnpm --filter @casama/docs dev` (http://localhost:5173).
    upgrades in their own commit.
 8. **Docs change with behavior** in `docs-site/`. Write for users: plain words, the app's exact
    labels in **bold**, real commands, no internal references.
-9. **Format only what you touch:** `npx biome check --write <files>`, `dart format <files>`.
-   Never reformat whole folders.
+9. **Format only what you touch:** `npx biome check --write <files>` on TypeScript you changed,
+   `dart format <files>` only on Dart files you created (existing app code isn't at its width, so
+   edit those by hand). Never reformat whole folders.
 10. **Decisions:** search `docs/DECISIONS.md` (entries `D-001`...) before changing behavior that
     looks deliberate; add a short entry for a new choice the code doesn't explain.
     `docs/ARCHITECTURE.md` maps features to files.
