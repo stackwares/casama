@@ -382,10 +382,23 @@ class NotificationsNotifier extends AsyncNotifier<List<NotificationView>> {
   }
 
   /// Marks read what a bot's chat already shows (its replies and results), once the chat is open.
-  Future<void> markBotChatRead(String botId) async {
+  /// [conversationId]: the conversation on screen. A notification for another conversation of
+  /// the bot (a topic's reply while General is open) stays unread (D-413); before, opening any
+  /// chat of the bot marked them all, so that reply never showed anywhere.
+  Future<void> markBotChatRead(String botId, {String? conversationId}) async {
+    bool shown(NotificationView n) {
+      final of = Uri.tryParse(n.link ?? '')?.queryParameters['c'];
+      return conversationId == null || of == null || of == conversationId;
+    }
+
     final unread = [
       for (final n in state.value ?? const <NotificationView>[])
-        if (n.readAt == null && !n.isRequest && n.botId == botId && (n.link?.startsWith('/bots/$botId/chat') ?? false)) n.id,
+        if (n.readAt == null &&
+            !n.isRequest &&
+            // A reply in the group chat on screen links to the group, whichever bot spoke.
+            ((n.botId == botId && (n.link?.startsWith('/bots/$botId/chat') ?? false) && shown(n)) ||
+                (conversationId != null && n.link == '/groups/$conversationId')))
+          n.id,
     ];
     for (final id in unread) {
       await markRead(id);

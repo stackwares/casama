@@ -340,8 +340,9 @@ first. Risky steps such as sending, booking, paying or deleting wait for your OK
 rules can allow an action (optionally within limits, such as recipients at one domain or a maximum
 amount), always ask, or hand it to you to finish.
 
-You can also set budgets and stop a run at any time. Destructive commands take a checkpoint first,
-so you can roll the computer back. Every run keeps a timeline of each step, what it cost and why.
+You can also set budgets and stop a run at any time. Destructive commands take a checkpoint first
+(a recent one counts), so you can roll the computer back. Every run keeps a timeline of each step,
+what it cost and why.
 See [Autonomy and approvals](/guide/autonomy).
 
 ### Can a bot spend my money without asking?

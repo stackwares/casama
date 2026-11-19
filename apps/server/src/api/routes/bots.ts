@@ -1,6 +1,7 @@
 import {
   existingWelcome,
   handleWelcomeAction,
+  lockChat,
   memoryStoreFor,
   milestone,
   PLATFORM_OPENROUTER_CREDENTIAL_ID,
@@ -938,7 +939,13 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   });
 
   /** A message in a group chat (D-118): the mentioned bots (or @everyone's lead, or whoever spoke last) each get a run. */
-  const sendGroup = async (claims: JwtClaims, id: string, text: string, parts: unknown[]) => {
+  const sendGroup = async (
+    claims: JwtClaims,
+    id: string,
+    text: string,
+    parts: unknown[],
+    messageId: string | null = null,
+  ) => {
     const created = await withUserSession(db, claims, async (tx) => {
       const [conv] = await tx.execute<{ org_id: string; bot_id: string }>(
         sql`select org_id, bot_id from public.conversations where id = ${id}::uuid`,
@@ -957,9 +964,10 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           last?.bot_id && members.some((m) => m.id === last.bot_id) ? last.bot_id : conv.bot_id,
         ];
       }
+      // The send's key is the message's id (D-402), so a retry can't post it a second time.
       const [msg] = await tx.execute<{ id: string }>(sql`
-        insert into public.messages (org_id, conversation_id, role, author_user_id, content)
-        values (${conv.org_id}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid, ${contentKeys.sealJson(conv.org_id, parts)}::jsonb) returning id`);
+        insert into public.messages (id, org_id, conversation_id, role, author_user_id, content)
+        values (coalesce(${messageId}::uuid, gen_random_uuid()), ${conv.org_id}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid, ${contentKeys.sealJson(conv.org_id, parts)}::jsonb) returning id`);
       const runIds: string[] = [];
       for (const botId of targets) {
         const [run] = await tx.execute<{ id: string }>(sql`
@@ -993,13 +1001,26 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     const sent = async () => {
       if (!messageId) return null;
       const [m] = await withUserSession(db, claims, (tx) =>
-        tx.execute<{ id: string; run_id: string | null; joined: boolean }>(sql`
+        tx.execute<{ id: string; run_id: string | null; joined: boolean; woken: string[] }>(sql`
           select m.id, m.run_id, exists (
             select 1 from public.messages f where f.run_id = m.run_id and f.role = 'user'
-              and f.created_at < m.created_at) as joined
+              and f.created_at < m.created_at) as joined,
+            -- A group message has no run of its own: the runs it woke point at it.
+            (select coalesce(jsonb_agg(r.id order by r.created_at, r.id), '[]'::jsonb)
+             from public.runs r where r.trigger_message_id = m.id and r.trigger = 'chat') as woken
           from public.messages m
           where m.id = ${messageId}::uuid and m.conversation_id = ${id}::uuid and m.role = 'user'`),
       );
+      if (m && !m.run_id && m.woken?.length)
+        return c.json(
+          {
+            message_id: m.id,
+            run_id: m.woken[0] as string,
+            conversation_id: id,
+            run_ids: m.woken,
+          },
+          202,
+        );
       if (!m?.run_id) return null;
       return c.json(
         {
@@ -1032,15 +1053,23 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         sql`select kind from public.conversations where id = ${id}::uuid`,
       ),
     );
-    if (kind?.kind === "group")
-      return c.json(
-        await sendGroup(claims, id, text, [
-          { type: "text", text },
-          ...fileParts(attachments),
-          ...(picked ?? []).map((name) => ({ type: "skill", name })),
-        ]),
-        202,
+    if (kind?.kind === "group") {
+      const group = await orSent(() =>
+        sendGroup(
+          claims,
+          id,
+          text,
+          [
+            { type: "text", text },
+            ...fileParts(attachments),
+            ...(picked ?? []).map((name) => ({ type: "skill", name })),
+          ],
+          messageId,
+        ),
       );
+      if ("replay" in group) return group.replay;
+      return c.json(group.done, 202);
+    }
     // Welcome chat (D-129): its scripted card actions are answered without a model.
     if (ui_action?.name.startsWith("welcome.")) {
       const [conv] = await withUserSession(db, claims, (tx) =>
@@ -1068,46 +1097,49 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         return c.json({ message_id: r.messageId, run_id: r.runId, conversation_id: id }, 202);
       }
     }
-    // Sent while the bot is working on something here: the message joins that run, which sees it
-    // before its next step and decides whether to fold it in, switch, or finish first.
-    if (!ui_action) {
-      const joined = await orSent(() =>
-        withUserSession(db, claims, async (tx) => {
-          const [active] = await tx.execute<{ id: string; org_id: string }>(sql`
-          select r.id, r.org_id from public.runs r
-          where r.conversation_id = ${id}::uuid and r.status in ('queued', 'running')
-            and r.cancel_requested_at is null
-            and exists (select 1 from public.messages m where m.run_id = r.id and m.role = 'user')
-          order by r.created_at desc limit 1`);
-          if (!active) return null;
-          const [msg] = await tx.execute<{ id: string }>(sql`
-          insert into public.messages (id, org_id, conversation_id, role, author_user_id, content, run_id)
-          values (coalesce(${messageId}::uuid, gen_random_uuid()), ${active.org_id}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid,
-                  ${contentKeys.sealJson(active.org_id, [
-                    { type: "text", text },
-                    ...fileParts(attachments),
-                  ])}::jsonb, ${active.id}::uuid)
-          returning id`);
-          await tx
-            .update(conversations)
-            .set({ lastMessageAt: sql`now()` })
-            .where(eq(conversations.id, id));
-          return { runId: active.id, messageId: (msg as { id: string }).id };
-        }),
-      );
-      if ("replay" in joined) return joined.replay;
-      if (joined.done) {
-        const j = joined.done;
-        await deps.workflows.signalRun(j.runId).catch(() => {});
-        return c.json(
-          { message_id: j.messageId, run_id: j.runId, conversation_id: id, joined: true },
-          202,
-        );
-      }
-    }
     return withSpan("chat.send", { conversation_id: id }, async (span) => {
       const sentNow = await orSent(() =>
         withUserSession(db, claims, async (tx) => {
+          // One send at a time per chat (D-413). Two devices of the same account sending at the same
+          // moment both found no run working and each started one, so two runs answered at once.
+          // The lock is also what a run takes before it hands unseen messages to a follow-up, so a
+          // message can't join a run that has stopped looking.
+          await lockChat(tx, id);
+          // Sent while the bot is working on something here: the message joins that run, which sees
+          // it before its next step and decides whether to fold it in, switch, or finish first.
+          // Not a routine's run (a brief or a check-in working in this chat has its own
+          // instructions, a cheaper model and fewer tools, so it must not be the one to answer),
+          // and not a call's tool run (it does one thing and never looks for new messages).
+          if (!ui_action) {
+            const [active] = await tx.execute<{ id: string; org_id: string }>(sql`
+              select r.id, r.org_id from public.runs r
+              where r.conversation_id = ${id}::uuid and r.status in ('queued', 'running')
+                and r.cancel_requested_at is null
+                and r.trigger not in ('routine', 'voice') and r.routine_id is null
+                and r.voice_call is null and r.parent_run_id is null
+                and exists (select 1 from public.messages m where m.run_id = r.id and m.role = 'user')
+              order by r.created_at desc limit 1`);
+            if (active) {
+              const [msg] = await tx.execute<{ id: string }>(sql`
+                insert into public.messages (id, org_id, conversation_id, role, author_user_id, content, run_id)
+                values (coalesce(${messageId}::uuid, gen_random_uuid()), ${active.org_id}::uuid, ${id}::uuid, 'user', ${claims.sub}::uuid,
+                        ${contentKeys.sealJson(active.org_id, [
+                          { type: "text", text },
+                          ...fileParts(attachments),
+                        ])}::jsonb, ${active.id}::uuid)
+                returning id`);
+              await tx
+                .update(conversations)
+                .set({ lastMessageAt: sql`now()` })
+                .where(eq(conversations.id, id));
+              return {
+                joined: true as const,
+                runId: active.id,
+                messageId: (msg as { id: string }).id,
+                orgId: active.org_id,
+              };
+            }
+          }
           const [conv] = await tx.select().from(conversations).where(eq(conversations.id, id));
           if (!conv) throw new ApiError(404, "conversation_not_found", "Conversation not found");
           const [org] = await tx.execute<{ suspended: boolean }>(
@@ -1144,13 +1176,30 @@ export function registerBotRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
             .update(conversations)
             .set({ lastMessageAt: sql`now()` })
             .where(eq(conversations.id, conv.id));
-          return { runId: run.id, messageId: (msg as { id: string }).id, orgId: conv.orgId };
+          return {
+            joined: false as const,
+            runId: run.id,
+            messageId: (msg as { id: string }).id,
+            orgId: conv.orgId,
+          };
         }),
       );
       if ("replay" in sentNow) return sentNow.replay;
       const created = sentNow.done;
       span.setAttribute("run_id", created.runId);
       span.setAttribute("org_id", created.orgId);
+      if (created.joined) {
+        await deps.workflows.signalRun(created.runId).catch(() => {});
+        return c.json(
+          {
+            message_id: created.messageId,
+            run_id: created.runId,
+            conversation_id: id,
+            joined: true,
+          },
+          202,
+        );
+      }
       milestone(db, claims.sub, "first_message", created.orgId);
       try {
         await deps.workflows.startRun(created.runId);

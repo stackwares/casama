@@ -38,7 +38,6 @@ import '../features/link/link_screen.dart';
 import '../features/link/link_server_screen.dart';
 import '../features/link/pairing.dart';
 import '../features/bots/bots_screen.dart';
-import '../features/chat/chat_screen.dart';
 import '../features/computer/computer_screen.dart';
 import '../features/computer/computers_screen.dart';
 import '../features/computer/live_view_screen.dart';
@@ -436,7 +435,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: ':botId/chat',
                 pageBuilder: _page(
-                  (_, s) => ChatScreen(
+                  (_, s) => BotChatScreen(
                     botId: s.pathParameters['botId']!,
                     conversationId: s.uri.queryParameters['c'],
                     focusMessageId: s.uri.queryParameters['m'],

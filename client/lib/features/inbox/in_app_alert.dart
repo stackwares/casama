@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/backend.dart';
+import '../../core/chat_focus.dart';
 import '../../core/providers.dart';
 import '../../core/widgets.dart';
 import '../../theme/app_tokens.dart';
@@ -45,11 +46,14 @@ class _InAppAlertBannerState extends ConsumerState<InAppAlertBanner> {
   bool _isHere(NotificationView n) {
     final link = n.openLink;
     if (link == null) return false;
-    final path = Uri.tryParse(link)?.path;
-    return path != null &&
-        path.isNotEmpty &&
-        path != '/' &&
-        widget.location == path;
+    final uri = Uri.tryParse(link);
+    final path = uri?.path;
+    if (uri == null || path == null || path.isEmpty || path == '/' || widget.location != path) return false;
+    // A bot's chats share one path (D-253): a reply in another topic of the bot on screen is
+    // somewhere else, and gets its banner (D-413). Before, it was never shown at all.
+    final conversation = uri.queryParameters['c'];
+    final open = ref.read(chatFocusProvider).conversation;
+    return conversation == null || open == null || conversation == open;
   }
 
   void _open(NotificationView n) {

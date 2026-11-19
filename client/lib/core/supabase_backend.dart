@@ -2784,6 +2784,14 @@ class SupabaseBackend implements Backend {
                 out.add(ConversationActivity.run(run is String ? run : null));
               },
             )
+            // A person sent a message here (D-413), maybe from their other device.
+            .onBroadcast(
+              event: 'conversation_message',
+              callback: (message) {
+                final data = message['payload'] is Map ? message['payload'] as Map : message;
+                if (data['message_id'] case final String id) out.add(ConversationActivity.message(id));
+              },
+            )
             // A message's reactions changed (D-331): only that message is refreshed.
             .onBroadcast(
               event: 'message_reaction',

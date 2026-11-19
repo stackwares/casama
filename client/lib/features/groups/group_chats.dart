@@ -120,6 +120,27 @@ class GroupChatScreen extends ConsumerWidget {
   }
 }
 
+/// A bot's chat by link (`/bots/{bot}/chat?c={conversation}`). When the conversation is a group
+/// chat (a reply or an approval there linked to the bot that spoke, D-413), the group opens as
+/// the group; the bot's own chat screen showed its thread under one bot's name.
+class BotChatScreen extends ConsumerWidget {
+  const BotChatScreen({super.key, required this.botId, this.conversationId, this.focusMessageId, this.draft});
+  final String botId;
+  final String? conversationId;
+  final String? focusMessageId;
+  final String? draft;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = conversationId;
+    final group = c == null
+        ? null
+        : ref.watch(groupChatsProvider.select((groups) => groups.value?.where((g) => g.id == c).firstOrNull));
+    if (group != null) return ChatScreen(botId: group.botId, conversationId: group.id, focusMessageId: focusMessageId, group: true);
+    return ChatScreen(botId: botId, conversationId: c, focusMessageId: focusMessageId, draft: draft);
+  }
+}
+
 /// A group chat while the list of groups loads: the chat's header, the thread's placeholder
 /// bubbles and the composer's outline, where [ChatScreen] puts them.
 class _GroupChatSkeleton extends StatelessWidget {

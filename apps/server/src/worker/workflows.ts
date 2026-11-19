@@ -93,6 +93,8 @@ let runtime:
       voice?: VoiceRuntime;
       billing?: import("../billing/service.ts").BillingService;
       telemetry?: { url: string; version: string };
+      /** How many runs work at once (D-413); without it every started run works. */
+      slots?: import("./run-slots.ts").RunSlots;
       /** Fixture mode: the model picker uses Casama's short list instead of calling providers. */
       offlineModels?: boolean;
       /** ChatGPT plan sign-in endpoints (tests point them at a fake OpenAI). */
@@ -255,15 +257,39 @@ export function openStepOutput(value: unknown): unknown {
   return superjson.parse(contentKeys.open(sealed) as string);
 }
 
-function runAgentDurably(runId: string) {
-  // Read outside a step: a run's workspace never changes, so replays see the same value.
-  let org: Promise<string | null> | undefined;
-  const orgOf = () => {
-    org ??= rt()
-      .db.execute<{ org_id: string }>(sql`select org_id from public.runs where id = ${runId}::uuid`)
-      .then((r) => r[0]?.org_id ?? null);
-    return org;
+async function runAgentDurably(runId: string) {
+  // Read outside a step: a run's workspace and parent never change, so replays see the same.
+  let row: Promise<{ org_id: string; child: boolean } | null> | undefined;
+  const rowOf = () => {
+    row ??= rt()
+      .db.execute<{ org_id: string; child: boolean }>(
+        sql`select org_id, parent_run_id is not null as child from public.runs where id = ${runId}::uuid`,
+      )
+      .then((r) => r[0] ?? null);
+    return row;
   };
+  const orgOf = async () => (await rowOf())?.org_id ?? null;
+  // A run holds a working slot while it works, not while it waits for a person (D-413). A run
+  // another run asked for works inside that run's slot: taking its own could leave both waiting.
+  const slots = rt().slots;
+  const known = slots ? await rowOf() : null;
+  const workspace = slots && known && !known.child ? known.org_id : null;
+  const waiting = <T>(wait: () => Promise<T>) =>
+    slots && workspace ? slots.idle(workspace, wait) : wait();
+  if (slots && workspace) await slots.acquire(workspace);
+  try {
+    return await runAgentSteps(runId, orgOf, waiting);
+  } finally {
+    if (slots && workspace) slots.release(workspace);
+  }
+}
+
+function runAgentSteps(
+  runId: string,
+  orgOf: () => Promise<string | null>,
+  /** Runs a wait for a person without holding the run's working slot. */
+  waiting: <T>(wait: () => Promise<T>) => Promise<T>,
+) {
   return runAgent(runId, {
     ...rt().agent,
     // Gated (D-402): a stopping worker finishes the steps in flight and starts no new one.
@@ -277,26 +303,34 @@ function runAgentDurably(runId: string) {
       ) as T;
     },
     // Waits durably (days if needed) without holding a process: woken by decisions and cancels.
+    // The first look holds the slot (a replay finds the answer already there); the waiting doesn't.
     waitUntil: async (name, done, timeoutMs) => {
       const deadline = (await DBOS.now()) + timeoutMs;
-      for (;;) {
-        if (await gatedStep(() => DBOS.runStep(done, { name: `${name}-check` }))) return;
-        const now = await DBOS.now();
-        if (now >= deadline) return;
-        await DBOS.recv("signal", Math.max(1, Math.min(300, Math.ceil((deadline - now) / 1000))));
-      }
+      if (await gatedStep(() => DBOS.runStep(done, { name: `${name}-check` }))) return;
+      await waiting(async () => {
+        for (;;) {
+          const now = await DBOS.now();
+          if (now >= deadline) return;
+          await DBOS.recv("signal", Math.max(1, Math.min(300, Math.ceil((deadline - now) / 1000))));
+          if (await gatedStep(() => DBOS.runStep(done, { name: `${name}-check` }))) return;
+        }
+      });
     },
     waitForApproval: async (approvalId, run, timeoutMs) => {
       const deadline = (await DBOS.now()) + timeoutMs;
-      for (;;) {
-        const state = await gatedStep(() =>
+      const pending = async () =>
+        (await gatedStep(() =>
           DBOS.runStep(() => approvalState(rt().db, approvalId, run), { name: "approval-state" }),
-        );
-        if (state !== "pending") return;
-        const now = await DBOS.now();
-        if (now >= deadline) return;
-        await DBOS.recv("signal", Math.max(1, Math.min(300, Math.ceil((deadline - now) / 1000))));
-      }
+        )) === "pending";
+      if (!(await pending())) return;
+      await waiting(async () => {
+        for (;;) {
+          const now = await DBOS.now();
+          if (now >= deadline) return;
+          await DBOS.recv("signal", Math.max(1, Math.min(300, Math.ceil((deadline - now) / 1000))));
+          if (!(await pending())) return;
+        }
+      });
     },
   });
 }

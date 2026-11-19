@@ -120,12 +120,16 @@ class ReactionPerson {
 }
 
 /// Something happened in an open conversation (D-224, D-331): a run started there ([runId]; null
-/// after Realtime reconnects), or a message's reactions changed ([reactionMessageId]).
+/// after Realtime reconnects), a message's reactions changed ([reactionMessageId]), or a person
+/// sent a message there ([messageId], D-413: from another device it may join the run already
+/// working, so no run starts to tell this one).
 class ConversationActivity {
-  const ConversationActivity.run(this.runId) : reactionMessageId = null;
-  const ConversationActivity.reaction(String messageId) : runId = null, reactionMessageId = messageId;
+  const ConversationActivity.run(this.runId) : reactionMessageId = null, messageId = null;
+  const ConversationActivity.reaction(String messageId) : runId = null, reactionMessageId = messageId, messageId = null;
+  const ConversationActivity.message(String this.messageId) : runId = null, reactionMessageId = null;
   final String? runId;
   final String? reactionMessageId;
+  final String? messageId;
   bool get isReaction => reactionMessageId != null;
 }
 

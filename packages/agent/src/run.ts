@@ -868,6 +868,22 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
       return { status: "completed" };
     }
 
+    // The run ends, then looks once more for messages it never saw (D-413): one sent while the
+    // memory step ran joined this run after its last look, and nothing would answer it. It gets a
+    // run of its own. Same step name as before, so runs in flight during an update replay cleanly.
+    const completeRun = async (messageId: string, seen: string[]) => {
+      const asked = info.current;
+      const late = await step("complete", async () => {
+        await finishCompleted(db, info, messageId, bus);
+        if (!info.conversationId || info.group || !asked) return null;
+        return followUpRun(db, info, asked.id, seen).catch((err) => {
+          log?.warn("late follow-up failed", { run_id: runId, error: (err as Error).message });
+          return null;
+        });
+      });
+      if (late) await deps.startRun?.(late).catch(() => {});
+    };
+
     // Replay runs (D-127): the steps run first without the model; if they stop, the model takes over
     // from that step with what happened.
     if (info.replay) {
@@ -904,7 +920,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
           messageId: await step("replay-message-id", async () => randomUUID()),
         };
         await step("finish", () => saveFinalMessage(db, info, done, bus));
-        await step("complete", () => finishCompleted(db, info, done.messageId, bus));
+        await completeRun(done.messageId, []);
         return { status: "completed" };
       }
       if (info.current) info.current.text = `${info.current.text}\n\n${res.content}`;
@@ -1730,7 +1746,7 @@ export async function runAgent(runId: string, deps: RunDeps): Promise<{ status: 
             return 0;
           }),
     );
-    await step("complete", () => finishCompleted(db, info, finalMessage.messageId, bus));
+    await completeRun(finalMessage.messageId, [...arrived]);
     // Chat apps (D-134): a reply in a thread from Telegram, email, … goes back there.
     await step("channel-reply", () =>
       replyToChannel(
@@ -2128,6 +2144,38 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     // model sees an unanswered request and picks it back up on the next message, so a stopped bot
     // seems impossible to stop.
     const earlier = idx >= 0 ? msgs.slice(0, idx) : msgs;
+    // What the bot said after this run's message was sent, on the branch being shown (D-413): a
+    // message sent while the last reply was being written gets its own run, and that reply now
+    // sits after it in the chat. Without this the new run never saw the reply and did the earlier
+    // request all over again.
+    const later =
+      row.conv_kind !== "group" && currentRow?.role === "user" && currentRow.run_id === runId
+        ? await db.execute<{
+            id: string;
+            role: string;
+            content: unknown;
+            run_id: string | null;
+            created_at: Date;
+            bot_id: string | null;
+            bot_name: string | null;
+          }>(sql`
+            with recursive up as (
+              select m.id, m.role, m.content, m.run_id, m.created_at, m.parent_message_id, m.bot_id, 0 as depth
+              from public.messages m
+              where m.id = (select head_message_id from public.conversations where id = ${row.conversation_id}::uuid)
+              union all
+              select m.id, m.role, m.content, m.run_id, m.created_at, m.parent_message_id, m.bot_id, up.depth + 1
+              from public.messages m join up on m.id = up.parent_message_id
+              where up.depth < 200 and up.id <> ${currentRow.id}::uuid
+            )
+            select up.id, up.role, up.content, up.run_id, up.created_at, up.bot_id, null::text as bot_name
+            from up
+            where exists (select 1 from up o where o.id = ${currentRow.id}::uuid)
+              and up.id <> ${currentRow.id}::uuid and up.role = 'assistant'
+              and up.run_id is distinct from ${runId}::uuid
+            order by up.depth desc`)
+        : [];
+    const answeredSince = new Set(later.map((m) => m.run_id).filter((id): id is string => !!id));
     const runIds = [
       ...new Set(
         earlier
@@ -2137,8 +2185,14 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
     ];
     const ended = new Map<string, string>();
     if (runIds.length) {
-      const rows = await db.execute<{ id: string; stopped: boolean; error: string | null }>(sql`
+      const rows = await db.execute<{
+        id: string;
+        stopped: boolean;
+        error: string | null;
+        active: boolean;
+      }>(sql`
         select r.id, r.cancel_requested_at is not null or r.status = 'cancelled' as stopped,
+               r.status in ('queued', 'running', 'waiting_approval', 'waiting_takeover') as active,
                case when r.status = 'failed' and not exists (
                  select 1 from public.messages a where a.run_id = r.id and a.role = 'assistant')
                  -- Interrupted by an update (D-402): a new run picks it up, nothing blocked it.
@@ -2156,6 +2210,13 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
           ended.set(
             r.id,
             `[Your work on this ended without a reply (${r.error}). Don't silently retry the same approach; if it comes up, say what blocked you.]`,
+          );
+        // Still going in another run of this chat (D-413): a routine that fired meanwhile, or a
+        // request waiting for the person's yes. Two runs doing the same request did it twice.
+        else if (r.active && !answeredSince.has(r.id))
+          ended.set(
+            r.id,
+            "[You're already working on this in another run that is still going (it may be waiting for the person's yes). Don't start it again here; answer what is asked now.]",
           );
       }
     }
@@ -2190,6 +2251,13 @@ async function loadRun(db: Database, runId: string): Promise<RunInfo | null> {
         };
       })
       .filter((t) => t.msg.content.length > 0);
+    // Later replies keep the last earlier message's id: the summary is marked by time, and a mark
+    // at a later reply would drop this run's own message from the history that follows.
+    const before = turns.at(-1)?.id ?? "";
+    for (const m of later) {
+      const text = partsText(m.content);
+      if (text) turns.push({ id: before, msg: { role: "assistant", content: text } });
+    }
     history = turns.map((t) => t.msg);
     historyIds = turns.map((t) => t.id);
   }
@@ -3160,6 +3228,20 @@ async function toolStep(
       }
       return computer;
     };
+    const takeCheckpoint = async (label: string) => {
+      const c = await getComputer();
+      const { checkpointId } = await (deps.computers as ComputerService).checkpoint(
+        c.id,
+        label,
+        info.runId,
+        c.handle,
+      );
+      await emit("checkpoint.created", {
+        checkpoint_id: checkpointId,
+        label: label.slice(0, 200),
+      });
+      return { checkpointId, label };
+    };
     const toolCtx = {
       runId: info.runId,
       botId: info.botId,
@@ -3272,20 +3354,13 @@ async function toolStep(
               libraryHooks(deps, info),
             )
           : undefined,
-        checkpoint: deps.computers
+        checkpoint: deps.computers ? takeCheckpoint : undefined,
+        // Before a command that deletes: not when a recent checkpoint already covers it (D-413).
+        checkpointBefore: deps.computers
           ? async (label: string) => {
               const c = await getComputer();
-              const { checkpointId } = await (deps.computers as ComputerService).checkpoint(
-                c.id,
-                label,
-                info.runId,
-                c.handle,
-              );
-              await emit("checkpoint.created", {
-                checkpoint_id: checkpointId,
-                label: label.slice(0, 200),
-              });
-              return { checkpointId, label };
+              if (await (deps.computers as ComputerService).hasFreshCheckpoint(c.id)) return;
+              await takeCheckpoint(label);
             }
           : undefined,
         restartComputer: deps.computers
@@ -3561,9 +3636,23 @@ async function arrivedMessages(db: Database, runId: string, currentId: string, s
   return rows.map((r) => ({ id: r.id, text: partsText(r.content) }));
 }
 
+/**
+ * One at a time per conversation (D-413): a send that joins the run working in a chat, and that run
+ * handing what it never saw to a follow-up. Both take this lock first, in a transaction. A run ends
+ * (its status is written) before it looks for leftovers, so a message either joins a run that will
+ * still look, or finds the run ended and starts its own. Without it a message sent in the seconds
+ * between a run's last look and its end was attached to a finished run and never answered.
+ */
+export async function lockChat(tx: Pick<Database, "execute">, conversationId: string) {
+  await tx.execute(
+    sql`select pg_advisory_xact_lock(hashtextextended(${`chat:${conversationId}`}, 0))`,
+  );
+}
+
 /** Moves messages the run never saw to a new run of their own, and returns its id. */
 async function followUpRun(db: Database, info: RunInfo, currentId: string, seen: string[]) {
   return db.transaction(async (tx) => {
+    if (info.conversationId) await lockChat(tx, info.conversationId);
     const left = await tx.execute<{ id: string; author_user_id: string | null }>(sql`
       select id, author_user_id from public.messages
       where run_id = ${info.runId}::uuid and role = 'user' and id::text <> ${currentId}
@@ -3687,6 +3776,41 @@ export function pickupNote(actions: Array<{ tool: string | null; args: unknown }
   ].join("\n\n");
 }
 
+/**
+ * Where a run's message goes in a direct chat (D-413). It answers `intended`: the person's message,
+ * or the last thing this run said. When the chat has moved on from there on the branch being shown
+ * (the person sent another message, a routine posted, another run replied), the message goes at the
+ * end of that branch. Before, it stayed under `intended` as a side branch, so the reply streamed
+ * and then was gone from the chat on the next load. When the person switched to a branch without
+ * `intended` (they edited an earlier message), it stays with what it answers and doesn't pull them
+ * back. Locks the conversation's row, so nothing else is appended in between.
+ */
+async function replyParent(
+  tx: Pick<Database, "execute">,
+  conversationId: string,
+  intended: string | null,
+): Promise<string | null> {
+  if (!intended) return null;
+  const [c] = await tx.execute<{ head: string | null }>(sql`
+    select head_message_id as head from public.conversations
+    where id = ${conversationId}::uuid for no key update`);
+  const head = c?.head ?? null;
+  if (!head || head === intended) return intended;
+  const [at] = await tx.execute<{ there: boolean; shown: boolean }>(sql`
+    with recursive up as (
+      select id, parent_message_id, 0 as depth from public.messages where id = ${head}::uuid
+      union all
+      select m.id, m.parent_message_id, up.depth + 1 from public.messages m
+      join up on m.id = up.parent_message_id
+      where up.depth < 2000 and up.id <> ${intended}::uuid
+    )
+    select exists (select 1 from public.messages where id = ${intended}::uuid) as there,
+           exists (select 1 from up where id = ${intended}::uuid) as shown`);
+  // Deleted meanwhile: the end of the shown branch (the insert trigger picks it).
+  if (!at?.there) return null;
+  return at.shown ? head : intended;
+}
+
 /** Text a step said alongside its tool calls, kept as its own message in the thread. */
 async function saveInterimMessage(
   db: Database,
@@ -3706,14 +3830,18 @@ async function saveInterimMessage(
   }
   const content = [{ type: "text", text }];
   // Group messages are stored flat (D-118).
-  const parent = info.group
+  const answers = info.group
     ? null
     : (after ?? (info.current && /^[0-9a-f-]{36}$/.test(info.current.id) ? info.current.id : null));
-  await db.execute(sql`
-    insert into public.messages (id, org_id, conversation_id, role, content, run_id, parent_message_id, bot_id)
-    values (${said.messageId}::uuid, ${info.orgId}::uuid, ${info.conversationId}::uuid, 'assistant', ${contentKeys.sealJson(info.orgId, content)}::jsonb,
-            ${info.runId}::uuid, ${parent}::uuid, ${info.botId}::uuid)
-    on conflict (id) do nothing`);
+  const conversationId = info.conversationId as string;
+  await db.transaction(async (tx) => {
+    const parent = await replyParent(tx, conversationId, answers);
+    await tx.execute(sql`
+      insert into public.messages (id, org_id, conversation_id, role, content, run_id, parent_message_id, bot_id)
+      values (${said.messageId}::uuid, ${info.orgId}::uuid, ${conversationId}::uuid, 'assistant', ${contentKeys.sealJson(info.orgId, content)}::jsonb,
+              ${info.runId}::uuid, ${parent}::uuid, ${info.botId}::uuid)
+      on conflict (id) do nothing`);
+  });
   await (await busFn()).append(info.runId, "message.completed", {
     message_id: said.messageId,
     content,
@@ -3789,11 +3917,19 @@ async function saveFinalMessage(
     ...kept.map((k) => ({ type: "creation", ...k })),
   ];
   if (info.conversationId) {
-    await db.execute(sql`
-      insert into public.messages (id, org_id, conversation_id, role, content, run_id, parent_message_id, bot_id)
-      values (${final.messageId}::uuid, ${info.orgId}::uuid, ${info.conversationId}::uuid, 'assistant', ${contentKeys.sealJson(info.orgId, content)}::jsonb, ${info.runId}::uuid,
-              ${info.group ? null : (after ?? (info.current && /^[0-9a-f-]{36}$/.test(info.current.id) ? info.current.id : null))}::uuid, ${info.botId}::uuid)
-      on conflict (id) do update set content = excluded.content`);
+    const conversationId = info.conversationId;
+    const answers = info.group
+      ? null
+      : (after ??
+        (info.current && /^[0-9a-f-]{36}$/.test(info.current.id) ? info.current.id : null));
+    await db.transaction(async (tx) => {
+      const parent = await replyParent(tx, conversationId, answers);
+      await tx.execute(sql`
+        insert into public.messages (id, org_id, conversation_id, role, content, run_id, parent_message_id, bot_id)
+        values (${final.messageId}::uuid, ${info.orgId}::uuid, ${conversationId}::uuid, 'assistant', ${contentKeys.sealJson(info.orgId, content)}::jsonb, ${info.runId}::uuid,
+                ${parent}::uuid, ${info.botId}::uuid)
+        on conflict (id) do update set content = excluded.content`);
+    });
     // In a group chat, several bots answer at once; their replies append to the thread (D-118).
     if (info.group) {
       wakes = await wakeMentioned(db, info, final, bus);

@@ -41,32 +41,62 @@ export async function runStreaming(
   ctx: Pick<ToolContext, "output">,
   h: SandboxHandle,
   cmd: string,
-  opts: { cwd?: string; timeoutMs?: number; env?: Record<string, string>; signal?: AbortSignal },
+  opts: {
+    cwd?: string;
+    timeoutMs?: number;
+    env?: Record<string, string>;
+    signal?: AbortSignal;
+    /** How long after the command's own timeout its exit is still waited for. */
+    exitGraceMs?: number;
+  },
 ) {
   let pending = "";
   let out = "";
   let code = -1;
   let timedOut = false;
   let truncated = false;
+  let exited = false;
   let last = 0;
-  for await (const c of h.exec(cmd, opts)) {
-    if (c.type === "stdout" || c.type === "stderr") {
-      out += c.data;
-      pending += c.data;
-      if (Date.now() - last > 250) {
-        await ctx.output(pending);
-        pending = "";
-        last = Date.now();
+  // The computer stops the command at its timeout and says so. When that word never comes (a
+  // background process kept the output open, the computer froze), waiting ends a minute later
+  // instead of holding the run until its own time limit (D-413). Hanging up stops the command.
+  const limit = opts.timeoutMs
+    ? AbortSignal.timeout(opts.timeoutMs + (opts.exitGraceMs ?? EXIT_GRACE_MS))
+    : null;
+  const signal = limit
+    ? opts.signal
+      ? AbortSignal.any([opts.signal, limit])
+      : limit
+    : opts.signal;
+  try {
+    const { exitGraceMs: _grace, ...execOpts } = opts;
+    for await (const c of h.exec(cmd, { ...execOpts, signal })) {
+      if (c.type === "stdout" || c.type === "stderr") {
+        out += c.data;
+        pending += c.data;
+        if (Date.now() - last > 250) {
+          await ctx.output(pending);
+          pending = "";
+          last = Date.now();
+        }
+      } else if (c.type === "exit") {
+        exited = true;
+        code = c.code;
+        timedOut = c.timedOut;
+        truncated = c.truncated;
       }
-    } else if (c.type === "exit") {
-      code = c.code;
-      timedOut = c.timedOut;
-      truncated = c.truncated;
     }
+  } catch (err) {
+    if (!limit?.aborted || opts.signal?.aborted) throw err;
+    timedOut = true;
   }
   if (pending) await ctx.output(pending);
-  return { out, code, timedOut, truncated };
+  // The stream ended without the command's exit: the computer restarted or the link dropped.
+  return { out, code, timedOut, truncated, lost: !exited && !timedOut };
 }
+
+/** How long after a command's own timeout its exit is still waited for. */
+export const EXIT_GRACE_MS = 60_000;
 
 /** Phase 2 tools: shell, files, browser (agent-browser) and checkpoints. All require a computer. */
 export function registerComputerTools(registry: ToolRegistry) {
@@ -91,8 +121,10 @@ export function registerComputerTools(registry: ToolRegistry) {
     }),
     async execute(args, ctx) {
       const h = await needComputer(ctx);
-      if (isDestructive(args.command) && ctx.checkpoint) {
-        await ctx.checkpoint(`Before: ${args.command.slice(0, 120)}`);
+      if (isDestructive(args.command)) {
+        const label = `Before: ${args.command.slice(0, 120)}`;
+        if (ctx.checkpointBefore) await ctx.checkpointBefore(label);
+        else if (ctx.checkpoint) await ctx.checkpoint(label);
       }
       const r = await runStreaming(ctx, h, args.command, {
         cwd: args.cwd,
@@ -101,7 +133,9 @@ export function registerComputerTools(registry: ToolRegistry) {
       });
       const status = r.timedOut
         ? `timed out after ${args.timeout_s ?? 600}s`
-        : `exit code ${r.code}`;
+        : r.lost
+          ? "the connection to your computer dropped before this finished, and the command was stopped (it may have done part of its work; check before running it again)"
+          : `exit code ${r.code}`;
       return {
         content: `${status}${r.truncated ? " (output truncated)" : ""}\n${r.out}`,
         preview: `${status}${r.out ? `: ${r.out.trim().split("\n").slice(-1)[0]?.slice(0, 200)}` : ""}`,

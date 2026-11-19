@@ -522,10 +522,22 @@ class ChatController extends Notifier<ChatState> {
         if (state.conversationId == id) await _loadReactions(id, [message]);
         return;
       }
+      // A person's message (D-413): from this device it is on screen already; from another one
+      // it is put in, also while the bot works (it joined that run, so nothing else will say).
+      if (activity.messageId case final message?) {
+        if (state.conversationId == id && !_shows(message)) await _catchUp(id);
+        return;
+      }
       final runId = activity.runId;
       // A message sent here attaches its own run; a moment's wait keeps this from racing it.
       await Future<void>.delayed(const Duration(milliseconds: 400));
-      if (state.conversationId != id || state.running) return;
+      if (state.conversationId != id) return;
+      // A run is on screen: the thread isn't reloaded under it (its steps would go), but what
+      // was added meanwhile is put in. The new run is followed when this one ends.
+      if (state.running) {
+        if (runId != null && runId != state.activeRunId) await _catchUp(id);
+        return;
+      }
       // Already following it, or a reconnect while nothing changed: open() checks anyway.
       if (runId != null && state.lastRunId == runId) return;
       // A background refresh: when the server is briefly unreachable, the next change tries again
@@ -544,6 +556,69 @@ class ChatController extends Notifier<ChatState> {
     _watching = null;
   }
 
+  /// Whether the message with this id is on screen, or is one this device is sending right now.
+  bool _shows(String messageId) =>
+      _sending.containsValue(messageId) || state.entries.any((e) => e is MessageEntry && e.id == messageId);
+
+  bool _catchingUp = false;
+  bool _catchUpAgain = false;
+
+  /// Puts in the messages of the thread that this screen doesn't show yet, without reloading it
+  /// (D-413): a message from the person's other device, a routine's or another run's reply. A
+  /// reload would do it too, but it drops the steps of the run on screen. Each goes after the
+  /// message before it in the thread. The words of the run being followed come on its own stream.
+  Future<void> _catchUp(String id) async {
+    if (_catchingUp) {
+      _catchUpAgain = true;
+      return;
+    }
+    _catchingUp = true;
+    try {
+      do {
+        _catchUpAgain = false;
+        final List<ChatMessageView> messages;
+        try {
+          messages = await _backend.messages(id, limit: pageSize);
+        } catch (e) {
+          // A background read: the next change, or the next open, tries again.
+          debugPrint('chat catch-up failed: $e');
+          return;
+        }
+        if (state.conversationId != id) return;
+        final entries = [...state.entries];
+        var changed = false;
+        String? previous;
+        for (final m in messages) {
+          if (entries.any((e) => e is MessageEntry && e.id == m.id)) {
+            previous = m.id;
+            continue;
+          }
+          if (_sending.containsValue(m.id)) continue;
+          if (m.role != 'user' && m.runId != null && m.runId == state.activeRunId) continue;
+          final built = _entriesOf(id, [m]);
+          // Only messages that show as a bubble: the rest have no id on screen to tell them by.
+          if (!built.any((e) => e is MessageEntry && e.id == m.id)) continue;
+          final after = previous == null ? -1 : entries.lastIndexWhere((e) => e is MessageEntry && e.id == previous);
+          // Nothing before it is on screen: it is older than what is loaded, or the first message.
+          if (after < 0 && entries.isNotEmpty) {
+            if (previous != null) continue;
+            entries.insertAll(0, built);
+          } else {
+            entries.insertAll(after + 1, built);
+          }
+          previous = m.id;
+          changed = true;
+        }
+        if (changed) {
+          state = state.copyWith(entries: entries);
+          unawaited(_loadReactions(id, [for (final m in messages) m.id]));
+        }
+      } while (_catchUpAgain && state.conversationId == id);
+    } finally {
+      _catchingUp = false;
+    }
+  }
+
   /// Opens a conversation (or the most recent one when null).
   ChatState _fromMessages(
     String id,
@@ -557,7 +632,12 @@ class ChatController extends Notifier<ChatState> {
       hasEarlier: hasEarlier,
       lastSent: state.conversationId == id ? state.lastSent : null,
       loadingEarlier: state.conversationId == id && state.loadingEarlier,
-      entries: [..._placeDeviceCards([..._entriesOf(id, messages), ..._keptFailure(id, messages)]), ..._notDelivered(id)],
+      entries: [
+        ..._placeDeviceCards([..._entriesOf(id, messages), ..._keptFailure(id, messages)]),
+        // A message on its way that this load already brought shows once, as the saved one.
+        for (final e in _notDelivered(id))
+          if (!(e is MessageEntry && messages.any((m) => m.id == _sending[e.id]))) e,
+      ],
       answeredUi: {for (final m in messages) ?m.uiActionSurface},
       reactions: state.conversationId == id ? state.reactions : const {},
     );
@@ -626,11 +706,41 @@ class ChatController extends Notifier<ChatState> {
   }
 
   /// Messages the server doesn't have yet, so a reload can't bring them back (Fix 11): ones that
-  /// failed to send (kept for Try Again) and ones still waiting for their files.
-  static bool _local(ChatEntry e) => e is MessageEntry && (e.failed || e.uploading);
+  /// failed to send (kept for Try Again), ones still waiting for their files, and ones on their
+  /// way (a reload that came before the server had the message used to drop its bubble).
+  bool _local(ChatEntry e) => e is MessageEntry && (e.failed || e.uploading || _sending.containsKey(e.id));
+
+  /// Messages being sent right now: the bubble's id, and the id the server will give the message
+  /// (the send's idempotency key). A reload that already brings the message replaces the bubble.
+  final _sending = <String, String>{};
 
   List<ChatEntry> _notDelivered(String id) =>
       state.conversationId == id ? [for (final e in state.entries) if (_local(e)) e] : (_parked[id] ?? const []);
+
+  /// Changes a message this device is still sending ([change] returning null removes it), in the
+  /// chat on screen or, once the person has moved to another chat, among the ones kept for when
+  /// they come back. Returns whether it was found.
+  bool _updateLocal(String conversationId, String localId, MessageEntry? Function(MessageEntry) change) {
+    bool mine(ChatEntry x) => x is MessageEntry && x.id == localId;
+    if (state.conversationId == conversationId) {
+      final i = state.entries.indexWhere(mine);
+      if (i < 0) return false;
+      final next = change(state.entries[i] as MessageEntry);
+      state = state.copyWith(entries: next == null ? ([...state.entries]..removeAt(i)) : ([...state.entries]..[i] = next));
+      return true;
+    }
+    final parked = _parked[conversationId];
+    final i = parked?.indexWhere(mine) ?? -1;
+    if (parked == null || i < 0) return false;
+    final next = change(parked[i] as MessageEntry);
+    final list = next == null ? ([...parked]..removeAt(i)) : ([...parked]..[i] = next);
+    if (list.isEmpty) {
+      _parked.remove(conversationId);
+    } else {
+      _parked[conversationId] = list;
+    }
+    return true;
+  }
 
   /// The same, for chats this controller has moved away from: they come back with the chat.
   final _parked = <String, List<ChatEntry>>{};
@@ -787,17 +897,31 @@ class ChatController extends Notifier<ChatState> {
     }
   }
 
+  /// Every open of a chat gets a number. An open that is no longer the newest stops where it is:
+  /// tapping one topic and then another used to let the slower first load put its thread, and
+  /// its working run, over the chat opened after it (D-413).
+  int _openGen = 0;
+
+  /// The open in flight, for a message sent while its chat is still loading.
+  Future<void>? _openDone;
+
   /// [around]: a message to have loaded even when it is older than the first page (a search hit).
-  Future<void> open(String? conversationId, {String? around}) async {
+  Future<void> open(String? conversationId, {String? around}) {
+    final gen = ++_openGen;
     _opening = true;
-    try {
-      await _open(conversationId, around: around);
-    } finally {
-      _opening = false;
-    }
+    final done = () async {
+      try {
+        await _open(gen, conversationId, around: around);
+      } finally {
+        if (gen == _openGen) _opening = false;
+      }
+    }();
+    _openDone = done;
+    return done;
   }
 
-  Future<void> _open(String? conversationId, {String? around}) async {
+  Future<void> _open(int gen, String? conversationId, {String? around}) async {
+    bool stale() => gen != _openGen;
     final sub = _sub;
     _sub = null;
     unawaited(sub?.cancel());
@@ -815,6 +939,7 @@ class ChatController extends Notifier<ChatState> {
 
     Future<void> loadCached(String targetId) async {
       final cached = await cacheRead(cache, 'msgs:$targetId');
+      if (stale()) return;
       if (cached is List && cached.isNotEmpty) {
         try {
           _setIfChanged(
@@ -831,14 +956,18 @@ class ChatController extends Notifier<ChatState> {
     if (id == null) {
       final saved =
           state.conversationId ?? await cacheRead(cache, 'lastconv:$botId');
+      if (stale()) return;
       if (saved is String && !showingCached) {
         await loadCached(saved);
+        if (stale()) return;
       }
       try {
         final list = await _backend.conversations(botId);
+        if (stale()) return;
         id = list.isEmpty ? null : list.first.id;
         unawaited(cacheWrite(cache, 'lastconv:$botId', id));
       } catch (_) {
+        if (stale()) return;
         if (saved is! String) {
           state = const ChatState(loadFailed: true);
           return;
@@ -853,6 +982,7 @@ class ChatController extends Notifier<ChatState> {
     final key = 'msgs:$id';
     if (!showingCached || state.conversationId != id) {
       await loadCached(id);
+      if (stale()) return;
     }
     final List<ChatMessageView> messages;
     // A reload keeps what the person has already scrolled back through.
@@ -860,6 +990,7 @@ class ChatController extends Notifier<ChatState> {
     try {
       messages = await _backend.messages(id, limit: want, around: around);
     } catch (_) {
+      if (stale()) return;
       if (showingCached && state.conversationId == id) {
         state = state.copyWith(offline: true);
         return;
@@ -868,6 +999,7 @@ class ChatController extends Notifier<ChatState> {
       state = ChatState(conversationId: conversationId == null ? null : id, loadFailed: true);
       return;
     }
+    if (stale()) return;
     unawaited(
       cacheWrite(cache, key, [
         for (final m
@@ -888,6 +1020,8 @@ class ChatController extends Notifier<ChatState> {
     unawaited(_loadReactions(id, [for (final m in messages) m.id]));
     unawaited(_recoverDeviceCards(id, messages));
     final active = await _backend.activeRun(id);
+    // Another chat was opened meanwhile: this one's run must not start streaming into it.
+    if (stale()) return;
     if (active != null) {
       _attach(active);
     } else {
@@ -974,6 +1108,9 @@ class ChatController extends Notifier<ChatState> {
   }
 
   Future<void> newChat() async {
+    // A chat still loading must not land on top of the new one.
+    _openGen++;
+    _opening = false;
     await _sub?.cancel();
     _releaseRun();
     _unfollow();
@@ -1004,58 +1141,87 @@ class ChatController extends Notifier<ChatState> {
     _sendQueue = turn.future;
     final SendMessageResponse sent;
     MessageEntry? optimistic;
+    // The chat this message belongs to. The person may open another one before the send comes
+    // back; what the send does afterwards goes to this chat, never to the one on screen (D-413).
+    String? to;
     try {
+      // Sent while the chat is still loading (no saved copy, as on the web): wait for it, instead
+      // of starting a new conversation because no id is known yet.
+      if (state.conversationId == null && _opening) {
+        try {
+          await _openDone;
+        } catch (_) {}
+      }
       var conversationId = state.conversationId;
       if (conversationId == null) {
+        final gen = _openGen;
         await before;
         conversationId = state.conversationId ?? (await _backend.createConversation(botId)).id;
-        state = state.copyWith(conversationId: conversationId);
-        _follow(conversationId);
+        if (gen == _openGen && state.conversationId == null) {
+          state = state.copyWith(conversationId: conversationId);
+          _follow(conversationId);
+        }
         ref.invalidate(conversationsProvider(botId));
       }
+      to = conversationId;
       final local = MessageEntry(id: 'local-${DateTime.now().microsecondsSinceEpoch}', role: 'user', text: trimmed, attachments: attachments, uploading: uploads != null, at: DateTime.now());
       optimistic = local;
-      state = state.copyWith(
-        entries: [...state.entries, local],
-        lastSent: (text: trimmed, attachments: attachments, skills: skills, uiAction: uiAction),
-        sending: true,
-        answeredUi: uiAction == null ? null : {...state.answeredUi, '${uiAction['surface_id']}'},
-      );
+      _sending[local.id] = key;
+      if (state.conversationId == to) {
+        state = state.copyWith(
+          entries: [...state.entries, local],
+          lastSent: (text: trimmed, attachments: attachments, skills: skills, uiAction: uiAction),
+          sending: true,
+          answeredUi: uiAction == null ? null : {...state.answeredUi, '${uiAction['surface_id']}'},
+        );
+      }
       await before;
       if (uploads != null) {
         final ready = await uploads;
-        final i = state.entries.indexWhere((x) => x is MessageEntry && x.id == local.id);
         if (!ready) {
-          if (i >= 0) state = state.copyWith(entries: [...state.entries]..removeAt(i));
+          _sending.remove(local.id);
+          _updateLocal(to, local.id, (_) => null);
           optimistic = null;
           throw const UploadsFailed();
         }
-        if (i >= 0) state = state.copyWith(entries: [...state.entries]..[i] = local.copyWith(uploading: false));
+        _updateLocal(to, local.id, (m) => m.copyWith(uploading: false));
       }
-      final to = conversationId;
+      final target = to;
       sent = await _deliver(
-        () => _backend.send(to, trimmed, attachments: attachments, uiAction: uiAction, skills: skills, idempotencyKey: key),
+        () => _backend.send(target, trimmed, attachments: attachments, uiAction: uiAction, skills: skills, idempotencyKey: key),
         // The request is on its way; the next message may go.
         onWay: () {
           if (!turn.isCompleted) turn.complete();
         },
       );
     } catch (_) {
-      // It didn't reach the server: the bubble stays, marked, with what Try Again needs.
+      // It didn't reach the server: the bubble stays, marked, with what Try Again needs. In a chat
+      // the person has left meanwhile, it is there when they come back.
       final o = optimistic;
-      final i = o == null ? -1 : state.entries.indexWhere((x) => x is MessageEntry && x.id == o.id);
-      if (o != null && i >= 0) {
-        state = state.copyWith(entries: [...state.entries]..[i] = o.copyWith(failed: true, uploading: false));
-        _unsent[o.id] = (skills: skills, uiAction: uiAction, key: key);
+      final chat = to;
+      if (o != null && chat != null) {
+        _sending.remove(o.id);
+        if (_updateLocal(chat, o.id, (m) => m.copyWith(failed: true, uploading: false))) {
+          _unsent[o.id] = (skills: skills, uiAction: uiAction, key: key);
+        }
       }
-      state = state.copyWith(sending: false);
+      if (chat == null || state.conversationId == chat) state = state.copyWith(sending: false);
       rethrow;
     } finally {
       if (!turn.isCompleted) turn.complete();
     }
+    final shown = optimistic;
+    _sending.remove(shown.id);
+    if (state.conversationId != to) {
+      // Another chat is on screen now. The message is sent; its run belongs to the chat it was
+      // sent in, so it isn't followed here (it used to stream into whatever chat was open, with
+      // a Stop button that stopped the other chat's run). The island and notifications follow it.
+      _updateLocal(to, shown.id, (_) => null);
+      _runs.startedHere(sent.runId, botId: botId, conversationId: to);
+      return;
+    }
     // The bubble takes the id the server gave the message, so it can be edited right away (Fix 13)
     // and a reload finds it unchanged. A reload that already brought the message wins.
-    final shown = optimistic;
     final at = state.entries.indexWhere((x) => x is MessageEntry && x.id == shown.id);
     if (at >= 0) {
       final known = state.entries.any((x) => x is MessageEntry && x.id == sent.messageId);
@@ -1064,8 +1230,12 @@ class ChatController extends Notifier<ChatState> {
       );
     }
     state = state.copyWith(sending: false);
-    // Joined the run already on screen: keep following it.
-    if (sent.joined == true && state.activeRunId == sent.runId) return;
+    // The run already on screen (the message joined it, or a reload attached it first): keep
+    // following it. Attaching again replayed its steps onto the ones already shown.
+    if (state.activeRunId == sent.runId) {
+      _runs.chatStarted(sent.runId, botId: botId, conversationId: to, sentHere: true);
+      return;
+    }
     _attach(sent.runId, sentHere: true);
   }
 
@@ -1200,7 +1370,14 @@ class ChatController extends Notifier<ChatState> {
             }
           },
           onDone: () {
-            if (state.activeRunId == runId) state = state.copyWith(clearActiveRun: true);
+            // The stream closed and no ending was shown (the server ended the run without
+            // saying how, or the run is gone): nothing more will come, so nothing stays "Thinking".
+            final unsaid = state.activeRunId == runId;
+            if (unsaid) {
+              final entries = [...state.entries]..removeWhere((x) => x is MessageEntry && x.streaming && x.text.trim().isEmpty);
+              _finishStreaming(entries);
+              state = state.copyWith(entries: entries, clearActiveRun: true);
+            }
             // Ended runs already told the tracker; one this chat lost track of is its to follow.
             if (_followedRun == runId) _releaseRun();
             ref.invalidate(botsProvider);
@@ -1209,13 +1386,20 @@ class ChatController extends Notifier<ChatState> {
             ref.invalidate(usageMonthProvider);
             final conv = state.conversationId;
             if (group && conv != null) unawaited(Future<void>.delayed(const Duration(milliseconds: 300), () => open(conv)));
-            // A message sent too late for that run gets a follow-up run; follow it too.
             if (!group && conv != null) {
+              // No ending shown: the saved thread says how it ended (a failure gets its notice).
+              if (unsaid) {
+                unawaited(open(conv).catchError((Object e) => debugPrint('chat refresh failed: $e')));
+                return;
+              }
+              // A message sent too late for that run gets a follow-up run; follow it too.
               unawaited(
                 _backend.activeRun(conv).then((next) {
                   if (next != null && next != runId && state.activeRunId == null && state.conversationId == conv) _attach(next);
                 }).catchError((_) {}),
               );
+              // What was added to the chat while the run was on screen (D-413).
+              unawaited(_catchUp(conv));
             }
           },
         );

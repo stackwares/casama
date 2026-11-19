@@ -749,9 +749,9 @@ export async function replyPush(
 ) {
   if (!notifications || !run.createdBy || !run.conversationId || run.parentRunId) return;
   if (run.trigger !== "chat" && run.trigger !== "mention") return;
-  const [r] = await db.execute<{ ms: number; title: string | null }>(sql`
+  const [r] = await db.execute<{ ms: number; title: string | null; kind: string | null }>(sql`
     select (extract(epoch from (now() - r.created_at)) * 1000)::float8 as ms,
-           c.title
+           c.title, c.kind
     from public.runs r left join public.conversations c on c.id = r.conversation_id
     where r.id = ${run.runId}::uuid`);
   // How long the person has waited, queue included.
@@ -766,7 +766,12 @@ export async function replyPush(
     title,
     // notify() makes it plain text and cuts it (D-312).
     body: body.slice(0, 4000),
-    link: `/bots/${run.botId}/chat?c=${run.conversationId}`,
+    // A group chat opens as the group (D-413): the bot's own chat screen showed the group's
+    // thread under one bot's name and sent into it by direct-chat rules.
+    link:
+      r.kind === "group"
+        ? `/groups/${run.conversationId}`
+        : `/bots/${run.botId}/chat?c=${run.conversationId}`,
     bot_id: run.botId,
     run_id: run.runId,
     conversation_id: run.conversationId,
