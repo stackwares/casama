@@ -62,6 +62,9 @@ class _StripButtonsState extends State<StripButtons> {
     // buttons it left in the window's overlay would never be laid out either (Flutter asserts on
     // that), so such a page has no portal at all.
     if (!TickerMode.valuesOf(context).enabled) return page;
+    // Flutter forgets that a controller was showing when its portal leaves the tree, as it does
+    // while another page (Memory, say) covers this one, so the buttons would not come back.
+    if (!_portal.isShowing) _portal.show();
     final route = ModalRoute.of(context);
     return OverlayPortal(
       controller: _portal,
@@ -124,7 +127,13 @@ class _StripColumn extends StatelessWidget {
                   child: SizedBox(
                     height: _slot,
                     width: double.infinity,
-                    child: Center(child: children[i]),
+                    // A button wider than the strip shrinks rather than wrapping its words.
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: children[i],
+                      ),
+                    ),
                   ),
                 ),
             ],

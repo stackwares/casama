@@ -315,4 +315,52 @@ void main() {
       expect(find.byKey(const Key('tabSearch')), findsNothing);
     },
   );
+
+  testWidgets(
+    'closed: the strip buttons come back after a page covers them, and Save stays in the title row',
+    (tester) async {
+      await _pumpApp(tester, DuoPose.closed);
+      bool inStrip(String key) {
+        final found = find.byKey(Key(key)).hitTestable();
+        if (found.evaluate().isEmpty) return false;
+        return tester.getRect(found).left >= 466 - 84;
+      }
+
+      // The chat list: Memory over it and back.
+      expect(inStrip('createMenu'), isTrue);
+      _router(tester).push('/bots/$botId/memory');
+      await _settle(tester);
+      expect(inStrip('createMenu'), isFalse);
+      _router(tester).pop();
+      await _settle(tester);
+      expect(inStrip('createMenu'), isTrue, reason: 'chat list after Memory');
+      expect(inStrip('tabSearch'), isTrue, reason: 'chat list after Memory');
+
+      // The bot's profile: the same, its Back included.
+      _router(tester).push('/bots/$botId/settings');
+      await _settle(tester);
+      Finder back() => find.byTooltip('Back').hitTestable();
+      expect(tester.getRect(back()).left, greaterThanOrEqualTo(466 - 84));
+      await tester.tap(find.byKey(const Key('botTile-memory')));
+      await _settle(tester);
+      expect(_location(tester), '/bots/$botId/memory');
+      await tester.tap(back());
+      await _settle(tester);
+      expect(_location(tester), '/bots/$botId/settings');
+      expect(back(), findsOneWidget, reason: 'profile after Memory');
+      expect(tester.getRect(back()).left, greaterThanOrEqualTo(466 - 84));
+
+      // An edit brings Save, which stays on one line in the title row, not in the strip.
+      await tester.enterText(find.byType(TextField).first, 'Renamed');
+      await _settle(tester);
+      final save = find.byKey(const Key('botProfileSave'));
+      expect(save, findsOneWidget);
+      expect(tester.getRect(save).right, lessThanOrEqualTo(466 - 84));
+      final word = tester.getRect(
+        find.descendant(of: save, matching: find.text('Save')),
+      );
+      expect(word.height, lessThan(30), reason: 'one line');
+    },
+    variant: _iphone,
+  );
 }
