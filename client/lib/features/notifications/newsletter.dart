@@ -229,15 +229,20 @@ class _NewsletterCardState extends ConsumerState<NewsletterCard> {
                   right: AppSpace.xs,
                   top: AppSpace.xs,
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                // Side by side when they fit; stacked (Yes on top) in a narrow card or with
+                // large text, instead of running off the edge.
+                child: OverflowBar(
+                  alignment: MainAxisAlignment.end,
+                  overflowAlignment: OverflowBarAlignment.end,
+                  overflowDirection: VerticalDirection.up,
+                  spacing: AppSpace.xs,
+                  overflowSpacing: AppSpace.xs,
                   children: [
                     TextButton(
                       key: const Key('newsletterCardNo'),
                       onPressed: () => _answer(false),
                       child: Text(l10n.newsletterCardNo),
                     ),
-                    const SizedBox(width: AppSpace.xs),
                     FilledButton.tonal(
                       key: const Key('newsletterCardYes'),
                       onPressed: () => _answer(true),
