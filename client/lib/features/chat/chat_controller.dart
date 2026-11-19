@@ -241,6 +241,36 @@ class CallRecapEntry extends ChatEntry {
   String get key => liveCallId ?? messageId ?? 'call';
 }
 
+/// An older page in front of the chat's entries. A call whose card is already on screen (a card
+/// is always newer than its turns) gets the older page's turns of it put in front of its own,
+/// instead of a second card for the same call.
+List<ChatEntry> mergeEarlierCalls(List<ChatEntry> older, List<ChatEntry> current) {
+  final onScreen = <String, int>{
+    for (final (i, e) in current.indexed)
+      if (e is CallRecapEntry && e.liveCallId != null) e.key: i,
+  };
+  if (onScreen.isEmpty) return [...older, ...current];
+  final merged = [...current];
+  final kept = <ChatEntry>[];
+  for (final e in older) {
+    final at = e is CallRecapEntry ? onScreen[e.key] : null;
+    if (e is! CallRecapEntry || at == null) {
+      kept.add(e);
+      continue;
+    }
+    final card = merged[at] as CallRecapEntry;
+    final known = {for (final t in card.turns) t.messageId};
+    merged[at] = CallRecapEntry(
+      messageId: card.messageId,
+      call: card.call,
+      liveCallId: card.liveCallId,
+      turns: [for (final t in e.turns) if (!known.contains(t.messageId)) t, ...card.turns],
+      at: card.at,
+    );
+  }
+  return [...kept, ...merged];
+}
+
 /// One spoken turn of a call, shown inside its card.
 class CallTurnView {
   const CallTurnView({required this.messageId, required this.role, required this.text, required this.at});
@@ -673,7 +703,16 @@ class ChatController extends Notifier<ChatState> {
       if (at < 0) {
         missing = true;
       } else {
-        entries[at] = card;
+        // Turns an earlier page brought in stay (this read has only the newest page).
+        final shown = entries[at] as CallRecapEntry;
+        final fresh = {for (final t in card.turns) t.messageId};
+        entries[at] = CallRecapEntry(
+          messageId: card.messageId,
+          call: card.call,
+          liveCallId: card.liveCallId,
+          turns: [for (final t in shown.turns) if (!fresh.contains(t.messageId) && (card.turns.isEmpty || t.at.isBefore(card.turns.first.at))) t, ...card.turns],
+          at: card.at,
+        );
         changed = true;
       }
     }
@@ -1017,7 +1056,7 @@ class ChatController extends Notifier<ChatState> {
       if (older.isNotEmpty) _oldestId = older.first.id;
       if (older.length < pageSize) _firstId = _oldestId;
       state = state.copyWith(
-        entries: [..._entriesOf(id, older), ...state.entries],
+        entries: mergeEarlierCalls(_entriesOf(id, older), state.entries),
         answeredUi: {...state.answeredUi, for (final m in older) ?m.uiActionSurface},
         hasEarlier: older.length >= pageSize,
         loadingEarlier: false,

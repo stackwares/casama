@@ -39,7 +39,8 @@ export interface CallStep {
   label: string;
   task: string;
   doable: boolean;
-  state: "open" | "started" | "dismissed";
+  /** starting: claimed while its run is being made, so a second tap can't start it again. */
+  state: "open" | "starting" | "started" | "dismissed";
   run_id: string | null;
 }
 
@@ -191,10 +192,15 @@ export function actionLine(
 }
 
 /** The quick tools run on a call, oldest first, as card lines. */
-export async function callActions(db: Db, liveCallId: string): Promise<CallAction[]> {
+export async function callActions(
+  db: Db,
+  liveCallId: string,
+  conversationId: string,
+): Promise<CallAction[]> {
   const rows = await db.execute<{ id: string; voice_call: Record<string, unknown> | null }>(sql`
     select id, voice_call from public.runs
-    where trigger = 'voice' and voice_call->>'live_call_id' = ${liveCallId}
+    where conversation_id = ${conversationId}::uuid and trigger = 'voice'
+      and voice_call->>'live_call_id' = ${liveCallId}
     order by created_at limit 50`);
   return rows.flatMap((r) => {
     const v = r.voice_call ?? {};
@@ -262,10 +268,9 @@ export function recapText(part: CallPart): string {
 /** Sends "this message changed" to open chats of its conversation (best effort). */
 export async function announceMessageChange(db: Db, conversationId: string, messageId: string) {
   try {
-    await db.execute(sql`
-      select realtime.send(
-        jsonb_build_object('kind', 'changed', 'message_id', ${messageId}::uuid),
-        'message_changed', 'conversation:' || ${conversationId}, true)`);
+    await db.execute(
+      sql`select public.announce_message_change(${conversationId}::uuid, ${messageId}::uuid)`,
+    );
   } catch {
     // No Realtime (tests, some self-hosts): the chat sees it on its next load.
   }
@@ -292,7 +297,7 @@ export async function postCallRecap(
     select end_reason, phone_call_id, started_at::text, ended_at::text, bot_id
     from public.live_calls where id = ${call.id}::uuid`);
   const tasks = await callTasks(db, call.id);
-  const actions = await callActions(db, call.id);
+  const actions = await callActions(db, call.id, call.conversation_id);
   if (Math.round(seconds) <= 0 && tasks.length === 0 && actions.length === 0) return null;
   const [t] = await db.execute<{ total: number; worded: number }>(sql`
     select count(*)::int as total, count(m.id)::int as worded
@@ -343,9 +348,11 @@ export async function summariesOn(db: Db, botId: string) {
 }
 
 /** Reads a card's `call` part and the rest of its content, for an update. */
-export async function readCard(db: Db, messageId: string) {
+export async function readCard(db: Db, messageId: string, opts: { lock?: boolean } = {}) {
   const [row] = await db.execute<{ org_id: string; conversation_id: string; content: unknown }>(
-    sql`select org_id, conversation_id, content from public.messages where id = ${messageId}::uuid`,
+    opts.lock
+      ? sql`select org_id, conversation_id, content from public.messages where id = ${messageId}::uuid for update`
+      : sql`select org_id, conversation_id, content from public.messages where id = ${messageId}::uuid`,
   );
   if (!row) return null;
   const parts = contentKeys.open(row.content);
@@ -366,4 +373,29 @@ export async function writeCard(
     update public.messages set content = ${contentKeys.sealJson(card.orgId, content)}::jsonb
     where id = ${messageId}::uuid`);
   await announceMessageChange(db, card.conversationId, messageId);
+}
+
+/**
+ * Changes a card under a row lock, so two changes at once (two taps, two devices) never undo each
+ * other: [change] gets the card as it is now and may throw to refuse. Open chats hear of it after.
+ */
+export async function updateCard<T>(
+  db: Db,
+  messageId: string,
+  change: (part: CallPart) => T,
+): Promise<T | null> {
+  const done = await db.transaction(async (tx) => {
+    const t = tx as unknown as Db;
+    const card = await readCard(t, messageId, { lock: true });
+    if (!card) return null;
+    const out = change(card.part);
+    const content = [{ type: "text", text: recapText(card.part) }, card.part];
+    await t.execute(sql`
+      update public.messages set content = ${contentKeys.sealJson(card.orgId, content)}::jsonb
+      where id = ${messageId}::uuid`);
+    return { out, conversationId: card.conversationId };
+  });
+  if (!done) return null;
+  await announceMessageChange(db, done.conversationId, messageId);
+  return done.out;
 }

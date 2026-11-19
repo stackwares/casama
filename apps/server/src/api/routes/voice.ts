@@ -1,4 +1,5 @@
 /** Voice (Phase 6, D-065): dictation, read aloud, live-call sessions, tool forwarding, transcripts. */
+import { randomUUID } from "node:crypto";
 
 import {
   answerGreeting,
@@ -28,7 +29,7 @@ import {
   postCallRecap,
   settleCall,
 } from "../../billing/live-calls.ts";
-import { readCard, writeCard } from "../../services/call-recap.ts";
+import { updateCard } from "../../services/call-recap.ts";
 import { createRelay, relayedUsage, relayUrl } from "../live-relay.ts";
 
 /** Live calls on the server's key one workspace can have open at once. */
@@ -105,9 +106,12 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
     let saved = 0;
     for (const t of turns) {
       await db.transaction(async (tx) => {
-        if (liveCallId && t.id) {
+        // Every turn of a live call is recorded (a server id when the app sent none), so deleting
+        // the call finds them all.
+        const turnId = liveCallId ? (t.id ?? `srv-${randomUUID()}`) : null;
+        if (liveCallId && turnId) {
           const [fresh] = await tx.execute(sql`
-            insert into public.live_call_turns (live_call_id, turn_id) values (${liveCallId}::uuid, ${t.id})
+            insert into public.live_call_turns (live_call_id, turn_id) values (${liveCallId}::uuid, ${turnId})
             on conflict do nothing returning turn_id`);
           if (!fresh) return;
         }
@@ -116,10 +120,10 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
           values (${conv.orgId}::uuid, ${conv.id}::uuid, ${t.role}, ${t.role === "user" ? userId : null}::uuid,
                   ${contentKeys.sealJson(conv.orgId, [{ type: "text", text: t.text, voice: true, ...(liveCallId ? { call: liveCallId } : {}) }])}::jsonb)
           returning id`);
-        if (liveCallId && t.id && m)
+        if (liveCallId && turnId && m)
           await tx.execute(sql`
             update public.live_call_turns set message_id = ${m.id}::uuid
-            where live_call_id = ${liveCallId}::uuid and turn_id = ${t.id}`);
+            where live_call_id = ${liveCallId}::uuid and turn_id = ${turnId}`);
         saved++;
       });
     }
@@ -490,10 +494,16 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
         },
         200,
       );
+    // The call it belongs to, only when it's the caller's call in this chat (its card lists it).
+    const toolCall = body.live_call_id
+      ? await myLiveCall(claims, body.live_call_id).catch(() => null)
+      : null;
+    const toolCallId =
+      toolCall && toolCall.conversation_id === body.conversation_id ? toolCall.id : null;
     const [run] = await db.execute<{ id: string }>(sql`
       insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger, voice_call)
       values (${bot.orgId}::uuid, ${bot.id}::uuid, ${body.conversation_id}::uuid, ${claims.sub}::uuid, 'voice',
-              ${JSON.stringify({ call_id: body.call_id, name: body.name, arguments: body.arguments ?? {}, ...(body.live_call_id ? { live_call_id: body.live_call_id } : {}) })}::jsonb)
+              ${JSON.stringify({ call_id: body.call_id, name: body.name, arguments: body.arguments ?? {}, ...(toolCallId ? { live_call_id: toolCallId } : {}) })}::jsonb)
       returning id`);
     const runId = (run as { id: string }).id;
     await deps.workflows.startRun(runId);
@@ -641,70 +651,81 @@ export function registerVoiceRoutes(app: OpenAPIHono<AppEnv>, deps: AppDeps) {
   });
 
   // The call card's next steps and deleting a call (call card plan) ---------------
+  /** The caller's own call whose chat they can still see, and its card message. */
   const myCard = async (claims: JwtClaims, id: string) => {
     const live = await myLiveCall(claims, id);
+    const bot = await visibleBot(claims, live.bot_id);
+    await visibleConversation(claims, live.conversation_id, bot.id);
     const [r] = await db.execute<{ recap_message_id: string | null }>(
       sql`select recap_message_id from public.live_calls where id = ${live.id}::uuid`,
     );
-    const card = r?.recap_message_id ? await readCard(db, r.recap_message_id) : null;
-    if (!r?.recap_message_id || !card) throw new ApiError(404, "call_not_found", "Call not found");
-    return { live, messageId: r.recap_message_id, card };
+    return { live, bot, messageId: r?.recap_message_id ?? null };
   };
 
   app.openapi(routes.updateCallStep, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id, step_id } = c.req.valid("param");
     const { action } = c.req.valid("json");
-    const { live, messageId, card } = await myCard(claims, id);
-    const step = card.part.next_steps.find((s) => s.id === step_id);
-    if (!step) throw new ApiError(404, "step_not_found", "That step isn't on this call");
-    if (step.state !== "open")
-      throw new ApiError(409, "step_used", "That step was already started or dismissed");
-    if (action === "dismiss") {
-      step.state = "dismissed";
-      await writeCard(db, messageId, card);
-      return c.json({ run_id: null }, 200);
-    }
-    if (!step.doable)
-      throw new ApiError(409, "step_not_doable", "That step is one only you can do");
-    const bot = await visibleBot(claims, live.bot_id);
-    await visibleConversation(claims, live.conversation_id, bot.id);
-    // An ordinary chat run, like start_task: the step's task as the person's message.
-    const runId = await withUserSession(db, claims, async (tx) => {
-      const [r] = await tx.execute<{ id: string }>(sql`
-        insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger)
-        values (${bot.orgId}::uuid, ${bot.id}::uuid, ${live.conversation_id}::uuid, ${claims.sub}::uuid, 'chat')
-        returning id`);
-      const rid = (r as { id: string }).id;
-      await tx.execute(sql`
-        insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
-        values (${bot.orgId}::uuid, ${live.conversation_id}::uuid, 'user', ${claims.sub}::uuid,
-                ${contentKeys.sealJson(bot.orgId, [{ type: "text", text: step.task }])}::jsonb, ${rid}::uuid)`);
-      await tx.execute(
-        sql`update public.conversations set last_message_at = now() where id = ${live.conversation_id}::uuid`,
-      );
-      return rid;
+    const { live, bot, messageId } = await myCard(claims, id);
+    if (!messageId) throw new ApiError(404, "call_not_found", "Call not found");
+    // Claimed under the card's lock: a second tap, here or on another device, finds it taken.
+    const claimed = await updateCard(db, messageId, (part) => {
+      const step = part.next_steps.find((s) => s.id === step_id);
+      if (!step) throw new ApiError(404, "step_not_found", "That step isn't on this call");
+      if (step.state !== "open")
+        throw new ApiError(409, "step_used", "That step was already started or dismissed");
+      if (action === "start" && !step.doable)
+        throw new ApiError(409, "step_not_doable", "That step is one only you can do");
+      step.state = action === "dismiss" ? "dismissed" : "starting";
+      return { ...step };
     });
-    // Used up only once the run starts (D-306): a failed start leaves the step to try again.
+    if (!claimed) throw new ApiError(404, "call_not_found", "Call not found");
+    if (action === "dismiss") return c.json({ run_id: null }, 200);
+    const setStep = (state: "open" | "started", runId: string | null) =>
+      updateCard(db, messageId, (part) => {
+        const step = part.next_steps.find((s) => s.id === step_id);
+        if (step) {
+          step.state = state;
+          step.run_id = runId;
+        }
+      });
+    let runId: string | null = null;
     try {
+      // An ordinary chat run, like start_task: the step's task as the person's message.
+      runId = await withUserSession(db, claims, async (tx) => {
+        const [r] = await tx.execute<{ id: string }>(sql`
+          insert into public.runs (org_id, bot_id, conversation_id, created_by, trigger)
+          values (${bot.orgId}::uuid, ${bot.id}::uuid, ${live.conversation_id}::uuid, ${claims.sub}::uuid, 'chat')
+          returning id`);
+        const rid = (r as { id: string }).id;
+        await tx.execute(sql`
+          insert into public.messages (org_id, conversation_id, role, author_user_id, content, run_id)
+          values (${bot.orgId}::uuid, ${live.conversation_id}::uuid, 'user', ${claims.sub}::uuid,
+                  ${contentKeys.sealJson(bot.orgId, [{ type: "text", text: claimed.task }])}::jsonb, ${rid}::uuid)`);
+        await tx.execute(
+          sql`update public.conversations set last_message_at = now() where id = ${live.conversation_id}::uuid`,
+        );
+        return rid;
+      });
       await deps.workflows.startRun(runId);
     } catch (e) {
-      await db.execute(sql`
-        update public.runs set status = 'failed', ended_at = now(),
-          error = ${JSON.stringify({ message: "Couldn't start" })}::jsonb
-        where id = ${runId}::uuid and status = 'queued'`);
+      // Used up only once the run starts (D-306): a failed start leaves the step to try again.
+      if (runId)
+        await db.execute(sql`
+          update public.runs set status = 'failed', ended_at = now(),
+            error = ${JSON.stringify({ message: "Couldn't start" })}::jsonb
+          where id = ${runId}::uuid and status = 'queued'`);
+      await setStep("open", null);
       throw e;
     }
-    step.state = "started";
-    step.run_id = runId;
-    await writeCard(db, messageId, card);
+    await setStep("started", runId);
     return c.json({ run_id: runId }, 200);
   });
 
   app.openapi(routes.deleteLiveCall, async (c) => {
     const claims = requireClaims(c.get("claims"));
     const { id } = c.req.valid("param");
-    const live = await myLiveCall(claims, id);
+    const { live } = await myCard(claims, id);
     if (!live.ended_at) throw new ApiError(409, "call_live", "Hang up before deleting the call");
     const [busy] = await db.execute<{ id: string }>(sql`
       select id from public.runs where conversation_id = ${live.conversation_id}::uuid

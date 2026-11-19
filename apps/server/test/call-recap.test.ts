@@ -354,8 +354,13 @@ describe("the call card (call card plan)", () => {
     expect((await step(stranger.token, "s1", "start")).status).toBe(404);
     expect((await step(c.owner.token, "s2", "start")).status).toBe(409);
     expect((await step(c.owner.token, "s2", "dismiss")).status).toBe(200);
-    const started = await step(c.owner.token, "s1", "start");
-    expect(started.status, await started.clone().text()).toBe(200);
+    // Two taps at once (two devices): one starts it, the other finds it taken.
+    const both = await Promise.all([
+      step(c.owner.token, "s1", "start"),
+      step(c.owner.token, "s1", "start"),
+    ]);
+    expect(both.map((r) => r.status).sort()).toEqual([200, 409]);
+    const started = both.find((r) => r.status === 200) as Response;
     const runId = (await j(started)).run_id as string;
     expect(runId).toMatch(/^[0-9a-f-]{36}$/);
     expect((await step(c.owner.token, "s1", "start")).status).toBe(409);
@@ -433,6 +438,22 @@ describe("the call card (call card plan)", () => {
       ["t0", "assistant", "Hi"],
       ["t1", "user", "Bye"],
     ]);
+    // A turn sent at hang-up without an id is recorded with the call too.
+    const noId = await h.request("/v1/voice/transcript", {
+      method: "POST",
+      token: c.owner.token,
+      json: {
+        conversation_id: c.convId,
+        live_call_id: c.liveCallId,
+        turns: [{ role: "assistant", text: "Talk soon" }],
+        seconds: 0,
+      },
+    });
+    expect(noId.status).toBe(200);
+    // That post ended the call (too short for a card); reopened so the hang-up below posts one.
+    await h.handle.db.execute(
+      sql`update public.live_calls set ended_at = null where id = ${c.liveCallId}::uuid`,
+    );
     const del = () =>
       h.request(`/v1/voice/live/${c.liveCallId}`, { method: "DELETE", token: c.owner.token });
     expect((await del()).status).toBe(409);
@@ -444,7 +465,7 @@ describe("the call card (call card plan)", () => {
     ).toBe(404);
     const res = await del();
     expect(res.status, await res.clone().text()).toBe(200);
-    expect((await j(res)).deleted).toBe(3);
+    expect((await j(res)).deleted).toBe(4);
     const left = await h.handle.db.execute<{ n: number }>(
       sql`select count(*)::int as n from public.messages where conversation_id = ${c.convId}::uuid`,
     );

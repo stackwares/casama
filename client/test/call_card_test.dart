@@ -1,6 +1,7 @@
 import 'package:casama/core/backend.dart';
 import 'package:casama/core/local_cache.dart';
 import 'package:casama/core/providers.dart';
+import 'package:casama/features/chat/chat_controller.dart';
 import 'package:casama/features/chat/chat_screen.dart';
 import 'package:casama/l10n/generated/app_localizations.dart';
 import 'package:flutter/services.dart';
@@ -377,4 +378,40 @@ void main() {
       expect(find.byKey(const Key('callCard-$liveCall')), findsNothing);
     },
   );
+
+  test('an older page puts its turns into the card on screen instead of a second card', () {
+    final at = DateTime(2026, 11, 19, 14);
+    CallTurnView t(String id, int s) => CallTurnView(
+      messageId: id,
+      role: 'user',
+      text: id,
+      at: at.add(Duration(seconds: s)),
+    );
+    final onScreen = CallRecapEntry(
+      messageId: 'm-card',
+      call: null,
+      liveCallId: liveCall,
+      turns: [t('t3', 3), t('t4', 4)],
+    );
+    final fromOlder = CallRecapEntry(
+      messageId: null,
+      call: null,
+      liveCallId: liveCall,
+      turns: [t('t1', 1), t('t2', 2)],
+    );
+    final other = NoticeEntry(
+      kind: NoticeKind.routine,
+      text: 'Morning news',
+      at: at,
+    );
+    final merged = mergeEarlierCalls([other, fromOlder], [onScreen]);
+    expect(merged.whereType<CallRecapEntry>(), hasLength(1));
+    expect(merged.first, same(other));
+    expect((merged.last as CallRecapEntry).turns.map((x) => x.messageId), [
+      't1',
+      't2',
+      't3',
+      't4',
+    ]);
+  });
 }

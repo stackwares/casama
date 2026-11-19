@@ -858,7 +858,8 @@ class _StepRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final scheme = context.colorScheme;
-    final started = step.state == 'started';
+    // Starting (its run is being made) shows as started.
+    final started = step.state == 'started' || step.state == 'starting';
     final big = MediaQuery.textScalerOf(context).scale(1) > 1.3;
     final label = Text(
       step.label,

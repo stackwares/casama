@@ -9,3 +9,23 @@ alter table public.live_calls
 
 create index if not exists live_calls_summary_pending_idx on public.live_calls (ended_at)
   where summary_state = 'pending';
+
+-- Tells a conversation's open chats that a message changed (a call card posted, its summary or a
+-- next step written). The worker's role has no grant on the realtime schema, so it goes through
+-- this function like every other broadcast. The message carries only the id; joining the topic
+-- needs access to the conversation.
+create or replace function public.announce_message_change(p_conversation uuid, p_message uuid)
+returns void
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  perform realtime.send(
+    jsonb_build_object('kind', 'changed', 'message_id', p_message),
+    'message_changed',
+    'conversation:' || p_conversation::text,
+    true
+  );
+end;
+$$;
+revoke all on function public.announce_message_change(uuid, uuid) from public, anon, authenticated;
+grant execute on function public.announce_message_change(uuid, uuid) to casama_worker;
